@@ -34,6 +34,7 @@
 { 0xcfb1a480, 0xc78f, 0x11d1, \
   {0xbe, 0xa2, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
+class nsINetContainerApplication;
 
 /**
  * The nsINetService interface provides an API to the networking service.
@@ -67,6 +68,15 @@ struct nsINetService : public nsISupports
     NS_IMETHOD OpenBlockingStream(nsIURL *aUrl, 
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream) = 0;
+
+    /**
+     * Get the container application for the net service.
+     *
+     * @param aContainer An output parameter to receive the container
+     *                   application.
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetContainerApplication(nsINetContainerApplication **aContainer)=0;
 };
 
 
@@ -76,5 +86,9 @@ struct nsINetService : public nsISupports
  */
 extern "C" NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
                                              nsISupports* aOuter);
+
+extern "C" NS_NET nsresult NS_InitINetService(nsINetContainerApplication *aContainer);
+
+extern "C" NS_NET nsresult NS_ShutdownINetService();
 
 #endif /* nsINetService_h___ */

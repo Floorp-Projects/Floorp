@@ -38,6 +38,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIURL.h                      \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
+          nsINetContainerApplication.h  \
           $(NULL)
 
 include $(DEPTH)/config/config.mk

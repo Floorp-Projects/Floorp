@@ -20,9 +20,11 @@
 #include "nsNetStream.h"
 #include "net.h"
 #include "mktrace.h"
+#include "plstr.h"
 
 #include "nsString.h"
 #include "nsIProtocolConnection.h"
+#include "nsINetContainerApplication.h"
 
 /* XXX: Legacy definitions... */
 MWContext *new_stub_context();
@@ -64,10 +66,10 @@ extern "C" void NET_ClientProtocolInitialize()
 }
 
 static NS_DEFINE_IID(kIProtocolConnectionIID,  NS_IPROTOCOLCONNECTION_IID);
+static NS_DEFINE_IID(kINetContainerApplicationIID,  NS_INETCONTAINERAPPLICATION_IID);
 
 
-
-nsNetlibService::nsNetlibService()
+nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
 {
     NS_INIT_REFCNT();
 
@@ -76,9 +78,42 @@ nsNetlibService::nsNetlibService()
     /* Initialize netlib with 32 sockets... */
     NET_InitNetLib(0, 32);
 
-    /* XXX: How should the User Agent get initialized? */
-    XP_AppCodeName = strdup("Mozilla");
-    XP_AppVersion = strdup("5.0 Netscape/5.0 (Windows;I;x86;en)");
+    mContainer = aContainerApp;
+    NS_IF_ADDREF(mContainer);
+    if (NULL != mContainer) {
+        nsAutoString str;
+        
+        mContainer->GetAppCodeName(str);
+        XP_AppCodeName = str.ToNewCString();
+        mContainer->GetAppVersion(str);
+        XP_AppVersion = str.ToNewCString();
+        mContainer->GetAppName(str);
+        XP_AppName = str.ToNewCString();
+        mContainer->GetPlatform(str);
+        XP_AppPlatform = str.ToNewCString();
+        mContainer->GetLanguage(str);
+        XP_AppLanguage = str.ToNewCString();
+    }
+    else {
+        // XXX: Where should the defaults really come from
+        XP_AppCodeName = PL_strdup("Mozilla");
+        XP_AppVersion = PL_strdup("5.0 Netscape/5.0 (Windows;I;x86;en)");
+        XP_AppName = PL_strdup("Netscape");
+
+        /* 
+         * XXX: Some of these should come from resources and/or 
+         * platform-specific code. 
+         */
+        XP_AppLanguage = PL_strdup("en");
+#ifdef XP_WIN
+        XP_AppPlatform = PL_strdup("Win32");
+#elif defined(XP_MAC)
+        XP_AppPlatform = PL_strdup("MacPPC");
+#elif defined(XP_UNIX)
+        /* XXX: Need to differentiate between various Unisys */
+        XP_AppPlatform = PL_strdup("Unix");
+#endif
+    }
 }
 
 
@@ -94,7 +129,8 @@ nsNetlibService::~nsNetlibService()
         free_stub_context((MWContext *)m_stubContext);
         m_stubContext = NULL;
     }
-
+    
+    NS_IF_RELEASE(mContainer);
     NET_ShutdownNetLib();
 }
 
@@ -255,30 +291,97 @@ loser:
     return NS_FALSE;
 }
 
+NS_IMETHODIMP
+nsNetlibService::GetContainerApplication(nsINetContainerApplication **aContainer)
+{
+    *aContainer = mContainer;
+
+    NS_IF_ADDREF(mContainer);
+    
+    return NS_OK;
+}
+
+nsresult
+nsNetlibService::SetContainerApplication(nsINetContainerApplication *aContainer)
+{
+    NS_IF_RELEASE(mContainer);
+
+    mContainer = aContainer;
+    
+    NS_IF_ADDREF(mContainer);
+
+    if (mContainer) {
+        nsAutoString str;
+
+        PR_FREEIF(XP_AppCodeName);
+        mContainer->GetAppCodeName(str);
+        XP_AppCodeName = str.ToNewCString();
+        PR_FREEIF(XP_AppVersion);
+        mContainer->GetAppVersion(str);
+        XP_AppVersion = str.ToNewCString();
+        PR_FREEIF(XP_AppName);
+        mContainer->GetAppName(str);
+        XP_AppName = str.ToNewCString();
+        PR_FREEIF(XP_AppPlatform);
+        mContainer->GetPlatform(str);
+        XP_AppPlatform = str.ToNewCString();
+        PR_FREEIF(XP_AppLanguage);
+        mContainer->GetLanguage(str);
+        XP_AppLanguage = str.ToNewCString();
+    }
+    
+    return NS_OK;
+}
+
 
 extern "C" {
+
+static nsNetlibService *pNetlib = NULL;
+
 /*
  * Factory for creating instance of the NetlibService...
  */
 NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
                                   nsISupports* aOuter)
 {
-    static nsNetlibService *pNetlib = NULL;
-
     if (NULL != aOuter) {
         return NS_ERROR_NO_AGGREGATION;
     }
 
-    /* XXX: For now only allow a single instance of the Netlib Service */
     if (NULL == pNetlib) {
-        pNetlib = new nsNetlibService();
-    }
-
-    if (NULL == pNetlib) {
-        return NS_ERROR_OUT_OF_MEMORY;
+        nsresult res;
+        res = NS_InitINetService(NULL);
+        if (NS_OK != res) {
+            return res;
+        }
     }
 
     return pNetlib->QueryInterface(kINetServiceIID, (void**)aInstancePtrResult);
+}
+
+NS_NET nsresult NS_InitINetService(nsINetContainerApplication *aContainer)
+{
+    /* XXX: For now only allow a single instance of the Netlib Service */
+    if (NULL == pNetlib) {
+        pNetlib = new nsNetlibService(aContainer);
+        if (NULL == pNetlib) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    else {
+        pNetlib->SetContainerApplication(aContainer);
+    }
+
+    NS_ADDREF(pNetlib);
+    return NS_OK;
+}
+
+NS_NET nsresult NS_ShutdownINetService()
+{
+    nsNetlibService *service = pNetlib;
+
+    NS_IF_RELEASE(service);
+    return NS_OK;
 }
 
 }; /* extern "C" */

@@ -27,6 +27,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIURL.h                      \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
+          nsINetContainerApplication.h  \
           $(NULL)
 
 DIRS = tests
