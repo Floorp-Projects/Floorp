@@ -145,8 +145,6 @@ protected:
 
   PRBool DrainOverflowLines();
 
-  PRBool RemoveChild(nsLineBox* aLines, nsIFrame* aChild);
-
   virtual PRIntn GetSkipSides() const;
 
   virtual void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
@@ -296,6 +294,8 @@ protected:
 
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
+  void VerifyFrameCount(nsLineBox* line);
+  void VerifyOverflowSituation();
 #endif
 
   nsLineBox* mLines;

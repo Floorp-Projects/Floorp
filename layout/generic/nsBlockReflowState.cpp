@@ -69,6 +69,7 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_INCREMENTAL_REFLOW
 #undef REFLOW_STATUS_COVERAGE
 #undef NOISY_FINAL_SIZE
+#undef NOISY_REMOVE_FRAME
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
@@ -79,6 +80,7 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_INCREMENTAL_REFLOW
 #undef REFLOW_STATUS_COVERAGE
 #undef NOISY_FINAL_SIZE
+#undef NOISY_REMOVE_FRAME
 #endif
 
 //----------------------------------------------------------------------
@@ -118,18 +120,6 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
     sc = psc;
   }
   printf("\n");
-}
-#endif
-
-#ifdef NS_DEBUG
-static void
-VerifyLineLength(nsLineBox* aLine)
-{
-  nsIFrame* frame = aLine->mFirstChild;
-  PRInt32 n = aLine->mChildCount;
-  while (--n >= 0) {
-    frame->GetNextSibling(&frame);
-  }
 }
 #endif
 
@@ -1338,6 +1328,9 @@ nsBlockFrame::UpdateBulletPosition()
     }
     mState |= NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
   }
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
 }
 
 nsresult
@@ -1846,9 +1839,22 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       if (nsnull == frame) {
         break;
       }
-      rv = ReflowInlineFrame(aState, aLine, frame, &keepLineGoing);
-      if (NS_FAILED(rv)) {
-        return rv;
+      while (keepLineGoing) {
+        PRInt32 oldCount = aLine->ChildCount();
+        rv = ReflowInlineFrame(aState, aLine, frame, &keepLineGoing);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        if (aLine->ChildCount() != oldCount) {
+          // We just created a continuation for aFrame AND its going
+          // to end up on this line (e.g. :first-letter
+          // situation). Therefore we have to loop here before trying
+          // to pull another frame.
+          frame->GetNextSibling(&frame);
+        }
+        else {
+          break;
+        }
       }
     }
 
@@ -1868,8 +1874,8 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
  */
 nsresult
 nsBlockFrame::PullFrame(nsBlockReflowState& aState,
-                         nsLineBox* aLine,
-                         nsIFrame*& aFrameResult)
+                        nsLineBox* aLine,
+                        nsIFrame*& aFrameResult)
 {
   nsresult rv = NS_OK;
   PRBool stopPulling;
@@ -1972,14 +1978,14 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
         aState.mPrevChild->SetNextSibling(frame);
       }
       frame->SetNextSibling(nsnull);
-#ifdef NS_DEBUG
-      VerifyLineLength(aLine);
-#endif
     }
 
     // Stop pulling because we found a frame to pull
     aStopPulling = PR_TRUE;
     aFrameResult = frame;
+#ifdef DEBUG
+    VerifyFrameCount(mLines);
+#endif
   }
   return NS_OK;
 }
@@ -2619,6 +2625,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
     }
   }
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
   return rv;
 }
 
@@ -2652,6 +2661,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (NS_FAILED(rv)) {
     return rv;
   }
+#ifdef REALLY_NOISY_REFLOW_CHILD
+  nsFrame::ListTag(stdout, aFrame);
+  printf(": status=%x\n", frameReflowStatus);
+#endif
 
 #if defined(REFLOW_STATUS_COVERAGE)
   RecordReflowStatus(PR_FALSE, frameReflowStatus);
@@ -2725,8 +2738,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
 
       // Split line, but after the frame just reflowed
-      aFrame->GetNextSibling(&aFrame);
-      rv = SplitLine(aState, aLine, aFrame);
+      nsIFrame* nextFrame;
+      aFrame->GetNextSibling(&nextFrame);
+      rv = SplitLine(aState, aLine, nextFrame);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -2782,9 +2796,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
  */
 nsresult
 nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
-                                     nsLineBox* aLine,
-                                     nsIFrame* aFrame,
-                                     PRBool& aMadeNewFrame)
+                                    nsLineBox* aLine,
+                                    nsIFrame* aFrame,
+                                    PRBool& aMadeNewFrame)
 {
   aMadeNewFrame = PR_FALSE;
   nsresult rv;
@@ -2796,10 +2810,10 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
   if (nsnull != nextInFlow) {
     aMadeNewFrame = PR_TRUE;
     aLine->mChildCount++;
-#ifdef NS_DEBUG
-    VerifyLineLength(aLine);
-#endif
   }
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
   return rv;
 }
 
@@ -2810,9 +2824,8 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 {
   PRInt32 pushCount = aLine->ChildCount() -
     aState.mInlineReflow->GetCurrentFrameNum();
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("nsBlockFrame::SplitLine: pushing %d frames",
-                  pushCount));
+//printf("BEFORE (pushCount=%d):\n", pushCount);
+//aLine->List(stdout, 0);
   if (0 != pushCount) {
     NS_ASSERTION(aLine->ChildCount() > pushCount, "bad push");
     NS_ASSERTION(nsnull != aFrame, "whoops");
@@ -2832,7 +2845,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
         to = insertedLine;
       } else {
         to->mFirstChild = aFrame;
-        to->mChildCount += pushCount;
+        to->mChildCount = pushCount;
         to->MarkDirty();
       }
     } else {
@@ -2844,15 +2857,15 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     }
     to->SetIsBlock(aLine->IsBlock());
     aLine->mChildCount -= pushCount;
-#ifdef NS_DEBUG
-    VerifyLineLength(aLine);
-#endif
 
     // Let inline reflow know that some frames are no longer part of
     // its state.
     if (!aLine->IsBlock()) {
       aState.mInlineReflow->ChangeFrameCount(aLine->ChildCount());
     }
+#ifdef DEBUG
+    VerifyFrameCount(mLines);
+#endif
   }
   return NS_OK;
 }
@@ -3212,20 +3225,17 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState)
   nsIFrame* lastFrame = lastLine->LastChild();
   lastFrame->SetNextSibling(nsnull);
 
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("nsBlockFrame::PushLines: line=%p prevInFlow=%p nextInFlow=%p",
-      mOverflowLines, mPrevInFlow, mNextInFlow));
-#ifdef NS_DEBUG
-  if (GetVerifyTreeEnable()) {
-//XXX    VerifyChildCount(mLines);
-//XXX    VerifyChildCount(mOverflowLines, PR_TRUE);
-  }
+#ifdef DEBUG
+  VerifyOverflowSituation();
 #endif
 }
 
 PRBool
 nsBlockFrame::DrainOverflowLines()
 {
+#ifdef DEBUG
+  VerifyOverflowSituation();
+#endif
   PRBool drained = PR_FALSE;
 
   // First grab the prev-in-flows overflow lines
@@ -3234,9 +3244,6 @@ nsBlockFrame::DrainOverflowLines()
     nsLineBox* line = prevBlock->mOverflowLines;
     if (nsnull != line) {
       drained = PR_TRUE;
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("nsBlockFrame::DrainOverflowLines: line=%p prevInFlow=%p",
-          line, prevBlock));
       prevBlock->mOverflowLines = nsnull;
 
       // Make all the frames on the mOverflowLines list mine
@@ -3269,9 +3276,6 @@ nsBlockFrame::DrainOverflowLines()
     // This can happen when we reflow and not everything fits and then
     // we are told to reflow again before a next-in-flow is created
     // and reflows.
-    NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-       ("nsBlockFrame::DrainOverflowLines: from me, line=%p",
-        mOverflowLines));
     nsLineBox* lastLine = nsLineBox::LastLine(mLines);
     if (nsnull == lastLine) {
       mLines = mOverflowLines;
@@ -3287,12 +3291,6 @@ nsBlockFrame::DrainOverflowLines()
     mOverflowLines = nsnull;
     drained = PR_TRUE;
   }
-
-#ifdef NS_DEBUG
-  if (GetVerifyTreeEnable()) {
-//XXX    VerifyChildCount(mLines, PR_TRUE);
-  }
-#endif
   return drained;
 }
 
@@ -3441,6 +3439,9 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     lastLine->MarkDirty();
   }
 
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
   MarkEmptyLines(aPresContext);
 
   return NS_OK;
@@ -3631,6 +3632,9 @@ nsBlockFrame::InsertNewFrames(nsIPresContext& aPresContext,
     newFrame = next;
   }
 
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
   MarkEmptyLines(aPresContext);
   return NS_OK;
 }
@@ -3721,8 +3725,6 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
   return rv;
 }
 
-// XXX simplify this by using RemoveChild and DeleteChildsNextInFlow
-
 nsresult
 nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
                             nsIFrame* aDeletedFrame)
@@ -3765,13 +3767,21 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       nsIFrame* parent;
       aDeletedFrame->GetParent(&parent);
       NS_ASSERTION(flow == parent, "messed up delete code");
+      NS_ASSERTION(line->Contains(aDeletedFrame), "frame not in line");
 #endif
 
-      // Get the deleted frames next sibling
-      nsIFrame* nextFrame;
-      aDeletedFrame->GetNextSibling(&nextFrame);
+      // See if the frame being deleted is the last one on the line
+      PRBool isLastFrameOnLine = PR_FALSE;
+      if (1 == line->mChildCount) {
+        isLastFrameOnLine = PR_TRUE;
+      }
+      else if (line->LastChild() == aDeletedFrame) {
+        isLastFrameOnLine = PR_TRUE;
+      }
 
       // Remove aDeletedFrame from the line
+      nsIFrame* nextFrame;
+      aDeletedFrame->GetNextSibling(&nextFrame);
       if (line->mFirstChild == aDeletedFrame) {
         line->mFirstChild = nextFrame;
       }
@@ -3794,9 +3804,17 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       // to destroy that too.
       nsIFrame* nextInFlow;
       aDeletedFrame->GetNextInFlow(&nextInFlow);
-      if (nsnull != nextInFlow) {
-        aDeletedFrame->BreakFromNextFlow();
+      nsSplittableType st;
+      aDeletedFrame->IsSplittable(st);
+      if (NS_FRAME_NOT_SPLITTABLE != st) {
+        aDeletedFrame->RemoveFromFlow();
       }
+#ifdef NOISY_REMOVE_FRAME
+      printf("DoRemoveFrame: prevLine=%p line=%p frame=",
+             prevLine, line);
+      nsFrame::ListTag(stdout, aDeletedFrame);
+      printf(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
+#endif
       aDeletedFrame->DeleteFrame(aPresContext);
       aDeletedFrame = nextInFlow;
 
@@ -3806,15 +3824,20 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
         *linep = next;
         line->mNext = nsnull;
         delete line;
+        line = next;
       }
       else {
-        // XXX if we just removed a place-holder frame don't bother
-        // marking the line dirty.
+        // Make the line that just lost a frame dirty
         line->MarkDirty();
-        linep = &line->mNext;
+
+        // If we just removed the last frame on the line then we need
+        // to advance to the next line.
+        if (isLastFrameOnLine) {
+          prevLine = line;
+          linep = &line->mNext;
+          line = next;
+        }
       }
-      prevLine = line;
-      line = next;
 
       // See if we should keep looking in the current flow's line list.
       if (nsnull != aDeletedFrame) {
@@ -3839,9 +3862,13 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
       prevLine = nsnull;
       line = flow->mLines;
+      linep = &flow->mLines;
       prevSibling = nsnull;
     }
   }
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
   MarkEmptyLines(aPresContext);
   return NS_OK;
 }
@@ -3950,91 +3977,15 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                      nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
-
   nsIFrame* nextInFlow;
-  nsBlockFrame* parent;
-   
   aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
+  nsBlockFrame* parent;
   nextInFlow->GetParent((nsIFrame**)&parent);
-
-  // If the next-in-flow has a next-in-flow then delete it, too (and
-  // delete it first).
-  nsIFrame* nextNextInFlow;
-  nextInFlow->GetNextInFlow(&nextNextInFlow);
-  if (nsnull != nextNextInFlow) {
-    parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
-  }
-
-  // Disconnect the next-in-flow from the flow list
-  nextInFlow->BreakFromPrevFlow();
-
-  // Remove nextInFlow from the parents line list. Also remove it from
-  // the sibling list.
-  if (RemoveChild(parent->mLines, nextInFlow)) {
-    NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-       ("nsBlockFrame::DeleteNextInFlowsFor: frame=%p (from mLines)",
-        nextInFlow));
-    goto done;
-  }
-
-  // If we get here then we didn't find the child on the line list. If
-  // it's not there then it has to be on the overflow lines list.
-  if (nsnull != mOverflowLines) {
-    if (RemoveChild(parent->mOverflowLines, nextInFlow)) {
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("nsBlockFrame::DeleteNextInFlowsFor: frame=%p (from overflow)",
-          nextInFlow));
-      goto done;
-    }
-  }
-  NS_NOTREACHED("can't find next-in-flow in overflow list");
-
- done:;
-  // If the parent is us then we will finish reflowing and update the
-  // content offsets of our parents when we are a pseudo-frame; if the
-  // parent is not us then it's a next-in-flow which means it will get
-  // reflowed by our parent and fix its content offsets. So there.
-
-  // Delete the next-in-flow frame and adjust its parents child count
-  nextInFlow->DeleteFrame(aPresContext);
-
-#ifdef NS_DEBUG
-  aChild->GetNextInFlow(&nextInFlow);
-  NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
-#endif
-}
-
-PRBool
-nsBlockFrame::RemoveChild(nsLineBox* aLines, nsIFrame* aChild)
-{
-  nsLineBox* line = aLines;
-  nsIFrame* prevChild = nsnull;
-  while (nsnull != line) {
-    nsIFrame* child = line->mFirstChild;
-    PRInt32 n = line->ChildCount();
-    while (--n >= 0) {
-      nsIFrame* nextChild;
-      child->GetNextSibling(&nextChild);
-      if (child == aChild) {
-        if (child == line->mFirstChild) {
-          line->mFirstChild = nextChild;
-        }
-        if (0 == --line->mChildCount) {
-          line->mFirstChild = nsnull;
-        }
-        if (nsnull != prevChild) {
-          // Take child out of sibling list too
-          prevChild->SetNextSibling(nextChild);
-        }
-        return PR_TRUE;
-      }
-      prevChild = child;
-      child = nextChild;
-    }
-    line = line->mNext;
-  }
-  return PR_FALSE;
+  NS_PRECONDITION(nsnull != parent, "next-in-flow with no parent");
+  NS_PRECONDITION(nsnull != parent->mLines, "next-in-flow with weird parent");
+  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
+  parent->DoRemoveFrame(aPresContext, nextInFlow);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -5048,6 +4999,9 @@ nsAnonymousBlockFrame::RemoveFirstFrame()
     // Break linkage to next child after stolen frame
     firstChild->SetNextSibling(nsnull);
   }
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
 }
 
 void
@@ -5106,6 +5060,9 @@ nsAnonymousBlockFrame::RemoveFramesFrom(nsIFrame* aFrame)
       line = next;
     }
   }
+#ifdef DEBUG
+  VerifyFrameCount(mLines);
+#endif
 }
 
 #if 0
@@ -5128,5 +5085,65 @@ nsBlockFrame::ComputeCollapsedTopMargin(const nsHTMLReflowState& aReflowState)
     }
   }
   return myTopMargin;
+}
+#endif
+
+#ifdef DEBUG
+void
+nsBlockFrame::VerifyFrameCount(nsLineBox* line)
+{
+  if (line) {
+    // First add up the counts on each line
+    nsLineBox* line0 = line;
+    PRInt32 count = 0;
+    while (nsnull != line) {
+      count += line->mChildCount;
+      line = line->mNext;
+    }
+
+    // Then count the frames
+    PRInt32 frameCount = 0;
+    nsIFrame* frame = line0->mFirstChild;
+    while (nsnull != frame) {
+      frameCount++;
+      frame->GetNextSibling(&frame);
+    }
+    NS_ASSERTION(count == frameCount, "bad line list");
+
+    // Next: test that each line has right number of frames on it
+    line = line0;
+    nsLineBox* prevLine = nsnull;
+    while (nsnull != line) {
+      count = line->mChildCount;
+      frame = line->mFirstChild;
+      while (--count >= 0) {
+        frame->GetNextSibling(&frame);
+      }
+      prevLine = line;
+      line = line->mNext;
+      if ((nsnull != line) && (0 != line->mChildCount)) {
+        NS_ASSERTION(frame == line->mFirstChild, "bad line list");
+      }
+    }
+  }
+}
+
+// Its possible that a frame can have some frames on an overflow
+// list. But its never possible for multiple frames to have overflow
+// lists. Check that this fact is actually true.
+void
+nsBlockFrame::VerifyOverflowSituation()
+{
+  PRBool haveOverflow = PR_FALSE;
+  nsBlockFrame* flow = (nsBlockFrame*) GetFirstInFlow();
+  while (nsnull != flow) {
+    if (nsnull != flow->mOverflowLines) {
+      NS_ASSERTION(nsnull != flow->mOverflowLines->mFirstChild,
+                   "bad overflow list");
+      NS_ASSERTION(!haveOverflow, "two frames with overflow lists");
+      haveOverflow = PR_TRUE;
+    }
+    flow = (nsBlockFrame*) flow->mNextInFlow;
+  }
 }
 #endif
