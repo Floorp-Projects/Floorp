@@ -70,6 +70,8 @@ public:
   nsLabelFrame();
   virtual ~nsLabelFrame();
 
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -119,7 +121,6 @@ protected:
   nsIFormControlFrame* mControlFrame;
   nsRect mTranslatedRect;
 
-  nsCOMPtr<nsIPresContext> mPresContext;
 };
 
 nsresult
@@ -156,8 +157,16 @@ nsLabelFrame::nsLabelFrame()
 
 nsLabelFrame::~nsLabelFrame()
 {
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 }
+
+
+NS_IMETHODIMP
+nsLabelFrame::Destroy(nsIPresContext *aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  return nsHTMLContainerFrame::Destroy(aPresContext);
+}
+
 
 void
 nsLabelFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
@@ -569,7 +578,6 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
       NS_ASSERTION(nextFrame == mFrames.FirstChild(), "unexpected next reflow command frame");
     }
   } else if (eReflowReason_Initial == aReflowState.reason) {
-    mPresContext = aPresContext;
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   } 
 

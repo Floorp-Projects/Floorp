@@ -83,7 +83,6 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   mTranslatedRect = nsRect(0,0,0,0);
   mDidInit = PR_FALSE;
   mRenderer.SetNameSpace(kNameSpaceID_None);
-  mPresContext    = nsnull;
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
@@ -93,11 +92,17 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
 {
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::Destroy(nsIPresContext *aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
   }
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -525,7 +530,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsHTMLButtonControlFrame", aReflowState.reason);
 
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    mPresContext = aPresContext;
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }

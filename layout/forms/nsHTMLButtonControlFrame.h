@@ -63,6 +63,7 @@ public:
   ~nsHTMLButtonControlFrame();
 
 
+  NS_IMETHOD  Destroy(nsIPresContext *aPresContext);
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -155,8 +156,6 @@ protected:
   nsRect mTranslatedRect;
   PRBool mDidInit;
   nsButtonFrameRenderer mRenderer;
-
-  nsIPresContext * mPresContext;
 
   //Resize Reflow OpitmizationSize;
   nsSize                mCacheSize;

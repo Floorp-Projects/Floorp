@@ -69,7 +69,8 @@ public:
   nsImageControlFrame();
   ~nsImageControlFrame();
 
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -147,7 +148,6 @@ protected:
   nsRect mTranslatedRect;
   PRBool mGotFocus;
 
-  nsCOMPtr<nsIPresContext> mPresContext;
 };
 
 
@@ -163,12 +163,18 @@ nsImageControlFrame::nsImageControlFrame()
 
 nsImageControlFrame::~nsImageControlFrame()
 {
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsImageControlFrame::Destroy(nsIPresContext *aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
   }
+  return nsImageControlFrameSuper::Destroy(aPresContext);
 }
 
 nsresult
@@ -261,7 +267,6 @@ nsImageControlFrame::Reflow(nsIPresContext*         aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame", aReflowState.reason);
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    mPresContext = aPresContext;
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
