@@ -33,13 +33,14 @@ static HMODULE hmodRes;
 static BOOL prnEscape (HDC hdc, long lEscape);
 MRESULT EXPENTRY prnDlgProc (HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
 
+#define SHIFT_PTR(ptr,offset) ( *((LONG*)&ptr) += offset )
 
 
 class PRTQUEUE
 {
 public:
    PRTQUEUE (const PRQINFO3* pPQI3)  { InitWithPQI3 (pPQI3); }
-   PRTQUEUE (const PRTQUEUE& PQInfo) { InitWithPQI3 (&PQInfo.PQI3 ()); }
+   PRTQUEUE (const PRTQUEUE& PQInfo);
   ~PRTQUEUE (void) { free (mpPQI3); }
 
    PRQINFO3& PQI3 () const { return *mpPQI3; }
@@ -49,15 +50,37 @@ public:
    const char* QueueName  () const { return mpPQI3->pszComment; }
    
 private:
-   PRTQUEUE& operator = (const PRTQUEUE& z);         // prevent copying
+   PRTQUEUE& operator = (const PRTQUEUE& z);        // prevent copying
    void InitWithPQI3 (const PRQINFO3* pInfo);
 
    PRQINFO3* mpPQI3;
-   CHAR  mDriverName  [DRIV_NAME_SIZE + 1];          // Driver name
-   CHAR  mDeviceName  [DRIV_DEVICENAME_SIZE + 1];    // Device name
-   CHAR  mPrinterName [PRINTERNAME_SIZE + 1];        // Printer name
+   unsigned  mPQI3BufSize;
+   char mDriverName  [DRIV_NAME_SIZE + 1];          // Driver name
+   char mDeviceName  [DRIV_DEVICENAME_SIZE + 1];    // Device name
+   char mPrinterName [PRINTERNAME_SIZE + 1];        // Printer name
 };
 
+
+PRTQUEUE::PRTQUEUE (const PRTQUEUE& PQInfo)
+{
+   mPQI3BufSize = PQInfo.mPQI3BufSize;
+   mpPQI3 = (PRQINFO3*)malloc (mPQI3BufSize);
+   memcpy (mpPQI3, PQInfo.mpPQI3, mPQI3BufSize);    // Copy entire buffer
+
+   long Diff = (long)mpPQI3 - (long)PQInfo.mpPQI3;  // Calculate the difference between addresses
+   SHIFT_PTR (mpPQI3->pszName,       Diff);         // Modify internal pointers accordingly
+   SHIFT_PTR (mpPQI3->pszSepFile,    Diff);
+   SHIFT_PTR (mpPQI3->pszPrProc,     Diff);
+   SHIFT_PTR (mpPQI3->pszParms,      Diff);
+   SHIFT_PTR (mpPQI3->pszComment,    Diff);
+   SHIFT_PTR (mpPQI3->pszPrinters,   Diff);
+   SHIFT_PTR (mpPQI3->pszDriverName, Diff);
+   SHIFT_PTR (mpPQI3->pDriverData,   Diff);
+
+   strcpy (mDriverName, PQInfo.mDriverName);
+   strcpy (mDeviceName, PQInfo.mDeviceName);
+   strcpy (mPrinterName, PQInfo.mPrinterName);
+}
 
 void PRTQUEUE::InitWithPQI3 (const PRQINFO3* pInfo)
 {
@@ -67,6 +90,7 @@ void PRTQUEUE::InitWithPQI3 (const PRQINFO3* pInfo)
    mpPQI3 = (PRQINFO3*)malloc (SizeNeeded);
    ::SplQueryQueue (NULL, pInfo->pszName, 3, mpPQI3, SizeNeeded, &SizeNeeded);
 
+   mPQI3BufSize = SizeNeeded;
 
    PCHAR sep = strchr (pInfo->pszDriverName, '.');
 
