@@ -439,7 +439,7 @@ NS_IMETHODIMP
 nsFingerChannel::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
     if (!mActAsObserver) {
       // acting as a listener
-      return mListener->OnStartRequest(this, aContext);
+      return mListener->OnStartRequest(this, mResponseContext);
     } else {
       // we don't want to pass our AsyncWrite's OnStart through
       // we just ignore this
@@ -464,7 +464,7 @@ nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
           rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
           if (NS_FAILED(rv)) return rv;
         }
-        rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
+        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, aStatusArg);
         mTransport = 0;
         return rv;
     } else {
@@ -508,7 +508,7 @@ nsFingerChannel::OnDataAvailable(nsIChannel* aChannel, nsISupports* aContext,
                                nsIInputStream *aInputStream, PRUint32 aSourceOffset,
                                PRUint32 aLength) {
     mContentLength = aLength;
-    return mListener->OnDataAvailable(this, aContext, aInputStream, aSourceOffset, aLength);
+    return mListener->OnDataAvailable(this, mResponseContext, aInputStream, aSourceOffset, aLength);
 }
 
 nsresult
