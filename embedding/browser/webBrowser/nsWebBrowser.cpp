@@ -1662,26 +1662,31 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
 /* void deactivate (); */
 NS_IMETHODIMP nsWebBrowser::Deactivate(void)
 {
-    /* At this time we don't clear mWWatch's ActiveWindow; we just allow
-       the presumed other newly active window to set it when it comes in.
-       This seems harmless and maybe safer, but we have no real evidence
-       either way just yet. */
+  /* At this time we don't clear mWWatch's ActiveWindow; we just allow
+     the presumed other newly active window to set it when it comes in.
+     This seems harmless and maybe safer, but we have no real evidence
+     either way just yet. */
 
-    NS_ENSURE_STATE(mDocShell);
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-    if(!presShell)
-        return NS_OK;
-
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-        nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
-        if(privateDOMWindow)
-          privateDOMWindow->Deactivate();
-    }
-
+  NS_ENSURE_STATE(mDocShell);
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if(!presShell)
     return NS_OK;
+
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (domWindow) {
+    nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+    if(privateDOMWindow) {
+      nsCOMPtr<nsIFocusController> focusController;
+      privateDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
+      if (focusController)
+        focusController->SetActive(PR_FALSE);
+      privateDOMWindow->Deactivate();
+    }
+  }
+
+  return NS_OK;
 }
 
 /* void setFocusAtFirstElement (); */
