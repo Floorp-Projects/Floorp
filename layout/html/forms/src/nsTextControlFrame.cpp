@@ -1479,27 +1479,28 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   fontMet->GetAveCharWidth(charWidth);
   fontMet->GetMaxAdvance(charMaxAdvance);
 
-  // calc the min width and pref width. Pref Width is calced by multiplying the size times avecharwidth 
-  float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
-
-  // To better match IE, take the maximum character width(in twips) and remove 4 pixels
-  // add this on as additional padding(internalPadding)
-  nscoord internalPadding = 0;
-  internalPadding = PR_MAX(charMaxAdvance - NSToCoordRound(4 * p2t), 0);
-  // round to a multiple of p2t
-  nscoord t = NSToCoordRound(p2t); 
-  nscoord rest = internalPadding % t; 
-  if (rest < t - rest) {
-    internalPadding -= rest;
-  } else {
-    internalPadding += t - rest;
-  }
-
   // Set the width equal to the width in characters
   aDesiredSize.width = GetCols() * charWidth;
-  // Now add the extra padding on (so that small input sizes work well)
-  aDesiredSize.width += internalPadding;
+
+  // To better match IE, take the maximum character width(in twips) and remove
+  // 4 pixels add this on as additional padding(internalPadding). But only do
+  // this if charMaxAdvance != charWidth; if they are equal, this is almost
+  // certainly a fixed-width font.
+  if (charWidth != charMaxAdvance) {
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    nscoord internalPadding = PR_MAX(charMaxAdvance - NSToCoordRound(4 * p2t), 0);
+    // round to a multiple of p2t
+    nscoord t = NSToCoordRound(p2t); 
+    nscoord rest = internalPadding % t; 
+    if (rest < t - rest) {
+      internalPadding -= rest;
+    } else {
+      internalPadding += t - rest;
+    }
+    // Now add the extra padding on (so that small input sizes work well)
+    aDesiredSize.width += internalPadding;
+  }
 
   // Set the height equal to total number of rows (times the height of each
   // line, of course)
