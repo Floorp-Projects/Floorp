@@ -125,8 +125,44 @@ public:
      * Writes a string representation of the URI. 
      * Free string with delete[].
      */
-    NS_IMETHOD ToNewCString(const char* *uriString) = 0;
+    NS_IMETHOD ToNewCString(char* *uriString) = 0;
 
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// The "Typical URL" Implementation
+
+// XXX regenerate:
+#define NS_ITYPICALURL_IID                           \
+{ /* 5053f850-f11e-11d2-9322-000000000000 */         \
+    0x5053f850,                                      \
+    0xf11e,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+// XXX regenerate:
+#define NS_TYPICALURL_CID                            \
+{ /* 8ffae6d0-ee37-11d2-9322-000000000000 */         \
+    0x8ffae6d0,                                      \
+    0xee37,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+/**
+ * The nsITypicalUrl interface defines the initializer for a URL
+ * implementation that only supports the accessors of nsIUrl.
+ *
+ * Protocol writers can obtain one by calling the component manager
+ * to create an instance of a typical URL by the CID, and then call
+ * the Init routine on it and finally QueryInterface to get the nsIUrl
+ * to return.
+ */
+class nsITypicalUrl : public nsISupports
+{
+public:
+    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl) = 0;
 };
 
 #endif /* nsIIUrl_h___ */

@@ -19,7 +19,8 @@ DEPTH = ..\..
 
 MODULE = netwerk
 
-#DIRS=            \
-#	$(NULL)
+DIRS=        \
+        http \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

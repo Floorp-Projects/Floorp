@@ -24,6 +24,10 @@
 #include "prprf.h"
 
 static NS_DEFINE_CID(kTypicalUrlCID, NS_TYPICALURL_CID);
+static NS_DEFINE_CID(kThisTypicalUrlImplementationCID,
+                     NS_THIS_TYPICALURL_IMPLEMENTATION_CID);
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsUrl methods:
@@ -51,7 +55,7 @@ nsUrl::~nsUrl()
     if (mSpec)          delete[] mSpec;
 }
 
-nsresult
+NS_IMETHODIMP
 nsUrl::Init(const char* aSpec,
             nsIUrl* aBaseUrl)
 {
@@ -64,10 +68,15 @@ NS_IMETHODIMP
 nsUrl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(kTypicalUrlCID) ||  // used by Equals
+    if (aIID.Equals(kThisTypicalUrlImplementationCID) ||        // used by Equals
         aIID.Equals(nsIUrl::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(kISupportsIID)) {
         *aInstancePtr = NS_STATIC_CAST(nsIUrl*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsITypicalUrl::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsITypicalUrl*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -154,7 +163,10 @@ nsUrl::Equals(nsIUrl* other)
     if (other) {
 //        NS_LOCK_INSTANCE();
         nsUrl* otherUrl;
-        if (NS_SUCCEEDED(other->QueryInterface(kTypicalUrlCID, (void**)&otherUrl))) {
+        nsresult rv =
+            other->QueryInterface(kThisTypicalUrlImplementationCID,
+                                  (void**)&otherUrl);
+        if (NS_SUCCEEDED(rv)) {
             eq = PRBool((0 == PL_strcmp(mScheme, otherUrl->mScheme)) && 
                         (0 == PL_strcasecmp(mHost, otherUrl->mHost)) &&
                         (mPort == otherUrl->mPort) &&
@@ -198,7 +210,7 @@ nsUrl::Clone(nsIUrl* *result)
 }
 
 NS_IMETHODIMP
-nsUrl::ToNewCString(const char* *result)
+nsUrl::ToNewCString(char* *result)
 {
     nsAutoString string;
 //    NS_LOCK_INSTANCE();

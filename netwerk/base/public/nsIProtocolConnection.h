@@ -42,7 +42,7 @@ public:
 
     // can be called after Open
     // freed by caller with delete[]
-    NS_IMETHOD GetContentType(char* *contentType);
+    NS_IMETHOD GetContentType(char* *contentType) = 0;
 
     // blocking:
     NS_IMETHOD GetInputStream(nsIInputStream* *result) = 0;

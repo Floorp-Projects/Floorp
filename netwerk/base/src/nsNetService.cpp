@@ -18,6 +18,7 @@
 
 #include "nsNetService.h"
 #include "nsIProtocolHandler.h"
+#include "nsIProtocolConnection.h"
 #include "nsUrl.h"
 #include "nscore.h"
 #include "nsString2.h"
@@ -143,9 +144,9 @@ nsNetService::MakeAbsoluteUrl(const char* aSpec,
 }
 
 NS_IMETHODIMP
-nsNetService::NewUrl(nsIUrl* *result, 
-                     const char* aSpec,
-                     nsIUrl* aBaseUrl)
+nsNetService::NewUrl(const char* aSpec,
+                     nsIUrl* aBaseUrl,
+                     nsIUrl* *result)
 {
     nsresult rv;
     char schemeBuf[MAX_SCHEME_LENGTH];
@@ -160,7 +161,7 @@ nsNetService::NewUrl(nsIUrl* *result,
     rv = GetProtocolHandler(scheme, &handler);
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewUrl(result, aSpec, aBaseUrl);
+    rv = handler->NewUrl(aSpec, aBaseUrl, result);
     NS_RELEASE(handler);
     return rv;
 }
@@ -181,8 +182,19 @@ nsNetService::NewConnection(nsIUrl* url,
     rv = GetProtocolHandler(scheme, &handler);
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewConnection(url, eventSink, group, result);
+    nsIProtocolConnection* connection;
+    rv = handler->NewConnection(url, eventSink, &connection);
     NS_RELEASE(handler);
+    if (NS_FAILED(rv)) return rv;
+
+    if (group) {
+        rv = group->AppendElement(connection);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(connection);
+            return rv;
+        }
+    }
+    *result = connection;
     return rv;
 }
 

@@ -23,15 +23,15 @@
 #include "nsAgg.h"
 
 // XXX regenerate:
-#define NS_TYPICALURL_CID                            \
-{ /* 8ffae6d0-ee37-11d2-9322-000000000000 */         \
-    0x8ffae6d0,                                      \
-    0xee37,                                          \
+#define NS_THIS_TYPICALURL_IMPLEMENTATION_CID        \
+{ /* 905ed480-f11f-11d2-9322-000000000000 */         \
+    0x905ed480,                                      \
+    0xf11f,                                          \
     0x11d2,                                          \
     {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
 }
 
-class nsUrl : public nsIUrl
+class nsUrl : public nsIUrl, public nsITypicalUrl
 {
 public:
     NS_DECL_AGGREGATED
@@ -57,16 +57,18 @@ public:
     NS_IMETHOD Equals(nsIUrl* other);
     NS_IMETHOD Clone(nsIUrl* *result);
 
-    NS_IMETHOD ToNewCString(const char* *result);
+    NS_IMETHOD ToNewCString(char* *result);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // nsITypicalUrl methods:
+
+    NS_IMETHOD Init(const char* spec, nsIUrl* baseUrl);
 
     ////////////////////////////////////////////////////////////////////////////
     // nsUrl methods:
 
     nsUrl(nsISupports* outer);
     virtual ~nsUrl();
-
-    nsresult Init(const char* aSpec,
-                  nsIUrl* aBaseURL);
 
 protected:
     nsresult Parse(const char* spec, nsIUrl* aBaseUrl);

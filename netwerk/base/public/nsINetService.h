@@ -66,9 +66,9 @@ public:
      * to the protocol handler for that scheme. QueryInterface can be used
      * on the resulting URL object to obtain a more specific type of URL.
      */
-    NS_IMETHOD NewUrl(nsIUrl* *result, 
-                      const char* aSpec,
-                      nsIUrl* aBaseUrl) = 0;
+    NS_IMETHOD NewUrl(const char* aSpec,
+                      nsIUrl* aBaseUrl,
+                      nsIUrl* *result) = 0;
 
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,

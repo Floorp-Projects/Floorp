@@ -1,5 +1,3 @@
-#!gmake
-#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -15,34 +13,37 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
-MODULE=netwerk
+MODULE = netwerk
+
+DEPTH = ..\..\..\..
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=netwerk
+DLLNAME=http
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-CPP_OBJS=                            \
-        .\$(OBJDIR)\nsNetFactory.obj \
-	$(NULL)
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+
+CPP_OBJS =                                         \
+        .\$(OBJDIR)\nsHttpProtocolHandler.obj      \
+        .\$(OBJDIR)\nsHttpProtocolConnection.obj   \
+        .\$(OBJDIR)\nsHttpFactory.obj              \
+        $(NULL)
 
 LLIBS=                                \
-        $(DIST)\lib\netwerkbase_s.lib \
+        $(DIST)\lib\netwerk.lib       \
         $(DIST)\lib\xpcom32.lib       \
         $(DIST)\lib\raptorbase.lib    \
         $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  
 
-MISCDEP=$(LLIBS)
-
-LINCS=  -I$(PUBLIC)\netwerk \
+LINCS =                     \
         -I$(PUBLIC)\xpcom   \
         -I$(PUBLIC)\raptor  \
+        -I$(PUBLIC)\netwerk \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
