@@ -30,6 +30,8 @@
 
 class urpManager {
 
+friend void send_thread_start (void * arg);
+
 public:
 	urpManager(PRBool IsClient, bcIORB *orb, urpConnection* connection);
 	~urpManager();
@@ -37,25 +39,31 @@ public:
                                 PRUint16 methodIndex,
                           nsIInterfaceInfo* interfaceInfo,
                           bcICall *call,
-                          PRUint32 paramCount, const nsXPTMethodInfo* info);
+                          PRUint32 paramCount, const nsXPTMethodInfo* info,
+			  urpConnection* conn);
 	nsresult ReadMessage(urpConnection* conn, PRBool ic);
 	nsresult SetCall(bcICall* call, PRMonitor *m);
 	nsresult RemoveCall();
 private:
-	nsHashtable* connTable;
 	nsHashtable* monitTable;
 	bcIORB *broker;
-	urpConnection* connection;
 /* for ReadReply */
 	nsIInterfaceInfo *interfaceInfo;
     void TransformMethodIDAndIID();
     nsresult ReadReply(urpPacket* message, char header,
-                        bcICall* call, PRUint32 paramCount, const nsXPTMethodInfo *info, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex);
-    nsresult ReadLongRequest(char header, urpPacket* message);
+                        bcICall* call, PRUint32 paramCount, 
+			const nsXPTMethodInfo *info, 
+			nsIInterfaceInfo *interfaceInfo, 
+			PRUint16 methodIndex, urpConnection* conn);
+    nsresult ReadLongRequest(char header, urpPacket* message,
+				bcIID iid, bcOID oid, bcTID tid,
+				PRUint16 methodId, urpConnection* conn);
     nsresult ReadShortRequest(char header, urpPacket* message);
     nsresult SendReply(bcTID tid, bcICall* call, PRUint32 paramCount,
                    const nsXPTMethodInfo* info,
-                   nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex);
+                   nsIInterfaceInfo *interfaceInfo, 
+		   PRUint16 methodIndex, urpConnection* conn);
 };
+
 
 #endif

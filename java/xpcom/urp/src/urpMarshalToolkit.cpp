@@ -134,17 +134,19 @@ urpMarshalToolkit::WriteElement(bcIUnMarshaler *um, nsXPTParamInfo * param, uint
             	   }
                    data = *(char **)data;
                    size_t length = 0;
-                   if (type == nsXPTType::T_WCHAR_STR) {
-                    length = nsCRT::strlen((const PRUnichar*)data);
-                    length *= 2;
-                    length +=2;
-                    for (int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
+		   if(data != nsnull) {
+                      if (type == nsXPTType::T_WCHAR_STR) {
+                       length = nsCRT::strlen((const PRUnichar*)data);
+                       length *= 2;
+                       length +=2;
+                       for (int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
                         char c = ((char*)data)[i];
-                    }
-                   } else {
-                    length = nsCRT::strlen((const char*)data);
-                    length+=1;
-                   }
+                       }
+                      } else {
+                       length = nsCRT::strlen((const char*)data);
+                       length+=1;
+                      }
+		   }
                    message->WriteString((char*)data,length);
                    break;
                   }
@@ -216,6 +218,14 @@ urpMarshalToolkit::WriteParams(bcICall *call, PRUint32 paramCount, const nsXPTMe
 	nsresult rv = NS_OK;
 	bcIAllocator * allocator = new urpAllocator(nsAllocator::GetGlobalAllocator());
 	bcIUnMarshaler *um = call->GetUnMarshaler();
+	if(!isClient) {
+	   nsresult result;
+	   um->ReadSimple(&result, bc_T_U32);
+	   if(!NS_SUCCEEDED(result)) {
+	      printf("Returned result is error on server side\n");
+	   }
+	   message->WriteInt(result);
+	}
 	for(i=0;i<paramCount;i++) {
 	    short cache_index;
 	    nsXPTParamInfo param = info->GetParam(i);
@@ -242,7 +252,8 @@ nsresult
 urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
                         nsIInterfaceInfo* interfaceInfo, urpPacket* message,
                         PRUint16 methodIndex, bcIAllocator* allocator,
-			bcIMarshaler* m, bcIORB *broker, urpManager* man) {
+			bcIMarshaler* m, bcIORB *broker, urpManager* man,
+			urpConnection* conn) {
 	void* data = allocator->Alloc(sizeof(void*));
 	nsresult r = NS_OK;
 	switch(type) {
@@ -321,7 +332,7 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
                     nsIID iid = ReadType(message);
                     nsISupports *proxy = NULL;
                     if (oid != 0) {
-			   urpStub* stub = new urpStub(man);
+			   urpStub* stub = new urpStub(man, conn);
 			   broker->RegisterStubWithOID(stub, &oid);
                     }
                     m->WriteSimple(&oid, XPTType2bcXPType(type));
@@ -345,7 +356,7 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
 		   m->WriteSimple(&arraySize,bc_T_U32);
 		   char *current = *(char**)data;
 		   for (int i = 0; i < arraySize; i++) {
-			ReadElement(param,datumType.TagPart(),interfaceInfo, message, methodIndex, allocator, m, broker, man);
+			ReadElement(param,datumType.TagPart(),interfaceInfo, message, methodIndex, allocator, m, broker, man, conn);
 		   }
 		} else {
 		   size_t length = 0;
@@ -368,11 +379,18 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
 }
 
 nsresult
-urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpManager* man) {
+urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpManager* man, urpConnection* conn) {
 	bcIAllocator * allocator = new urpAllocator(nsAllocator::GetGlobalAllocator());
 	bcIMarshaler* m = call->GetMarshaler();
 	int i;
 	nsresult rv = NS_OK;
+	if(isClient) {
+	   nsresult result = message->ReadInt();
+	   m->WriteSimple(&result, bc_T_U32);
+	   if (!NS_SUCCEEDED(result)) {
+		printf("Returned result is error on client side\n");
+	   }
+	}
 	for(i=0;i<paramCount;i++) {
 	    short cache_index;
 	    nsXPTParamInfo param = info->GetParam(i);
@@ -384,7 +402,7 @@ urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, 
 	    }
 
 	    rv = ReadElement(&param, param.GetType().TagPart(), interfaceInfo, 
-		message, methodIndex, allocator, m, orb, man);
+		message, methodIndex, allocator, m, orb, man, conn);
 	    if(NS_FAILED(rv)) {
 		delete allocator;
 		delete m;

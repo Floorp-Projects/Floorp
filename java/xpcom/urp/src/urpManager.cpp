@@ -69,6 +69,29 @@ struct localThreadArg {
     }
 };
 
+struct sendThreadArg {
+    urpManager* man;
+    char header;
+    urpPacket* message;
+    bcIID iid;
+    bcOID oid;
+    bcTID tid;
+    PRUint16 methodId;
+    urpConnection* connection;
+    sendThreadArg(urpManager* m, char header, urpPacket* message, bcIID iid,
+    		  bcOID oid, bcTID tid, PRUint16 methodId,
+		  urpConnection* conn) {
+	this->man = m;
+	this->header = header;
+	this->message = message;
+	this->iid = iid;
+	this->oid = oid;
+	this->tid = tid;
+	this->methodId = methodId;
+	this->connection = conn;
+    }
+};
+
 struct monitCall {
     PRMonitor *mon;
     bcICall* call;
@@ -86,12 +109,23 @@ void thread_start( void *arg )
     nsresult rv = manager->ReadMessage( connection, ic );
 }
 
+void send_thread_start (void * arg) {
+    urpManager *manager = ((sendThreadArg *)arg)->man;
+    char header = ((sendThreadArg *)arg)->header;
+    urpPacket* mes = ((sendThreadArg *)arg)->message;
+    bcIID iid = ((sendThreadArg *)arg)->iid;
+    bcOID oid = ((sendThreadArg *)arg)->oid;
+    bcTID tid = ((sendThreadArg *)arg)->tid;
+    PRUint16 methodId = ((sendThreadArg *)arg)->methodId;
+    urpConnection* conn = ((sendThreadArg *)arg)->connection;
+    nsresult rv = manager->ReadLongRequest(header, mes, iid, oid,
+						tid, methodId, conn);
+}
+
 urpManager::urpManager(PRBool IsClient, bcIORB *orb, urpConnection* conn) {
     broker = orb;
     monitTable = new nsHashtable(20);
     if(IsClient) {
-	connTable = nsnull;
-	connection = conn;
 	localThreadArg *arg = new localThreadArg( this, conn, PR_TRUE );
 	PRThread *thr = PR_CreateThread( PR_USER_THREAD,
                                                   thread_start,
@@ -104,16 +138,13 @@ urpManager::urpManager(PRBool IsClient, bcIORB *orb, urpConnection* conn) {
 	   printf("Error couldn't run listener\n");
 	   exit(-1);
 	}
-    } else {
-	connection = nsnull;
-	connTable = new nsHashtable(20);
     }
 }
 
 
 urpManager::~urpManager() {
-   if(connTable)
-	delete connTable;
+   if(monitTable)
+	delete monitTable;
 }
 
 
@@ -122,7 +153,8 @@ void urpManager::SendUrpRequest(bcOID oid, bcIID iid,
                                 PRUint16 methodIndex,
                           nsIInterfaceInfo* interfaceInfo,
 			  bcICall *call,
-			  PRUint32 paramCount, const nsXPTMethodInfo* info) {
+			  PRUint32 paramCount, const nsXPTMethodInfo* info,
+			  urpConnection* connection) {
 	printf("this is method sendUrpRequest and mid is %x\n",methodIndex);
 	long size = 0;
 	long messagesCount = 0;
@@ -169,18 +201,12 @@ void urpManager::SendUrpRequest(bcOID oid, bcIID iid,
 	mt->WriteType(iid, message);
 	mt->WriteOid(oid, message);
 	bcTID thrID = (bcTID)PR_GetCurrentThread();
-printf("OID is written %ld\n", thrID);
+printf("OID is written %ld\n", oid);
 	mt->WriteThreadID(thrID, message);
 	broker = call->GetORB();
 	mt->WriteParams(call, paramCount, info, interfaceInfo, message, methodIndex);
 	delete mt;
-	if(connTable) {
-	   bcTID thrID = (bcTID)PR_GetCurrentThread();
-           threadHashKey thrHK(thrID);
-           urpConnection* con = connTable->Get(&thrHK);
-	   con->Write(message);
-	} else
-	   connection->Write(message);
+	connection->Write(message);
 	delete message;
 }
 
@@ -192,11 +218,12 @@ nsresult
 urpManager::ReadReply(urpPacket* message, char header,
 		    bcICall* call, PRUint32 paramCount, 
 		    const nsXPTMethodInfo *info, 
-		    nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex) {
+		    nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex,
+		    urpConnection* conn) {
 	nsresult rv = NS_OK;
         printf("this is method readReply\n");
 	urpMarshalToolkit* mt = new urpMarshalToolkit(PR_TRUE); 
-	rv = mt->ReadParams(paramCount, info, message, interfaceInfo, methodIndex, call, broker, this);
+	rv = mt->ReadParams(paramCount, info, message, interfaceInfo, methodIndex, call, broker, this, conn);
 	delete mt;
 	return rv;
 }
@@ -204,22 +231,45 @@ urpManager::ReadReply(urpPacket* message, char header,
 nsresult
 urpManager::ReadMessage(urpConnection* conn, PRBool isClient) {
 	nsresult rv = NS_OK;
-	if(!isClient) {
-	   bcTID thrID = (bcTID)PR_GetCurrentThread();
-           threadHashKey thrHK(thrID);
-           connTable->Put(&thrHK, conn);
-	}
+	PRBool inserted = PR_FALSE;
+	bcTID tid;
 	while(conn->GetStatus() == urpSuccess) {
 	   urpPacket* message = conn->Read();
 	   char header = message->ReadByte();
-	   bcTID tid;
 	   if((header & BIG_HEADER) != 0) { // full header?
-               if((header & REQUEST) != 0) // a request ?
-                   rv = ReadLongRequest(header, message);
-               else { // a reply
+               if((header & REQUEST) != 0) { // a request ?
+		   bcIID iid;
+        	   bcOID oid;
+        	   PRUint16 methodId;
+		   if((header & LONGMETHODID) != 0) // usigned short ?
+                        methodId = message->ReadShort();
+                   else
+                        methodId = message->ReadByte();
+
+        	   urpMarshalToolkit* mt = new urpMarshalToolkit(PR_FALSE);
+        	   if((header & NEWTYPE) != 0)
+                        iid = mt->ReadType(message);
+
+        	   if((header & NEWOID) != 0) // new oid?
+                        oid = mt->ReadOid(message);
+
+        	   if((header & NEWTID) != 0) // new thread id ?
+                        tid = mt->ReadThreadID(message);
+
+		   delete mt;
+
+		   sendThreadArg *arg = new sendThreadArg( this, header, 
+					message, iid, oid, tid, methodId, conn);
+        	   PRThread *thr = PR_CreateThread( PR_USER_THREAD,
+                                                  send_thread_start,
+                                                  arg,
+                                                  PR_PRIORITY_NORMAL,
+                                                  PR_GLOBAL_THREAD,
+                                                  PR_UNJOINABLE_THREAD,
+                                                  0);
+	       } else { // a reply
 		   bcIID iid; bcOID oid; bcMID mid;
 
-		   bcTID tid;
 		   urpMarshalToolkit* mt = new urpMarshalToolkit(PR_TRUE);
 		   if((header & NEWTID) != 0) { // new thread id ?
 		      printf("new threadID\n");
@@ -248,20 +298,17 @@ urpManager::ReadMessage(urpConnection* conn, PRBool isClient) {
   		   nsXPTMethodInfo* info;
   		   interfaceInfo->GetMethodInfo(mid, (const nsXPTMethodInfo **)&info);
   		   PRUint32 paramCount = info->GetParamCount();
-                   ReadReply(message, header, mc->call, paramCount, info, interfaceInfo, mid);
+                   ReadReply(message, header, mc->call, paramCount, 
+			info, interfaceInfo, mid, conn);
 		   PR_EnterMonitor(mc->mon);
 		   PR_Notify(mc->mon);
 		   PR_ExitMonitor(mc->mon);
 		}
            }
-           else // only a short request header
-               rv = ReadShortRequest(header, message);
-	   delete message;
-	}
-	if(!isClient) {
-	   bcTID thrID = (bcTID)PR_GetCurrentThread();
-	   threadHashKey thrHK(thrID);
-	   connTable->Remove(&thrHK);
+           else { // only a short request header
+//               rv = ReadShortRequest(header, message);
+	       break;
+	   }
 	}
 	return rv;
 }
@@ -277,7 +324,8 @@ urpManager::ReadShortRequest(char header, urpPacket* message) {
 nsresult
 urpManager::SendReply(bcTID tid, bcICall* call, PRUint32 paramCount,
 		   const nsXPTMethodInfo* info, 
-		   nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex) {
+		   nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex,
+		   urpConnection* connection) {
 	nsresult rv = NS_OK;
 	char header = (char)BIG_HEADER;
 	header |= NEWTID;
@@ -289,39 +337,19 @@ urpManager::SendReply(bcTID tid, bcICall* call, PRUint32 paramCount,
 			methodIndex);
 	delete mt;
 	if(NS_FAILED(rv)) return rv;
-	if(connTable) {
-	   bcTID thrID = (bcTID)PR_GetCurrentThread();
-           threadHashKey thrHK(thrID);
-           urpConnection* con = (urpConnection*)connTable->Get(&thrHK);
-	   con->Write(message);
-	} else
-	   connection->Write(message);
+	connection->Write(message);
 	delete message;
 	return rv;
 }
 	
 
 nsresult
-urpManager::ReadLongRequest(char header, urpPacket* message) {
-	bcIID iid;
-	bcOID oid;
-	bcTID tid;
-	PRUint16 methodId;
+urpManager::ReadLongRequest(char header, urpPacket* message,
+				bcIID iid, bcOID oid, bcTID tid,
+				PRUint16 methodId, urpConnection* conn) {
 	nsresult rv = NS_OK;
-	if((header & LONGMETHODID) != 0) // usigned short ?
-                        methodId = message->ReadShort();
-                else
-                        methodId = message->ReadByte();
 
 	urpMarshalToolkit* mt = new urpMarshalToolkit(PR_FALSE);
-	if((header & NEWTYPE) != 0)
-                        iid = mt->ReadType(message);
-
-        if((header & NEWOID) != 0) // new oid?
-                        oid = mt->ReadOid(message);
-
-        if((header & NEWTID) != 0) // new thread id ?
-                        tid = mt->ReadThreadID(message);
 
 printf("method readLongRequest: tid %ld %ld\n",tid,oid);
 	char ignore_cache = ((header & IGNORECACHE) != 0); // do not use cache for this request?
@@ -356,11 +384,13 @@ char* name;
         interfaceInfo->GetMethodInfo(methodId,(const nsXPTMethodInfo **)&info);
 	PRUint32 paramCount = info->GetParamCount();
 	bcICall *call = broker->CreateCall(&iid, &oid, methodId);
-	mt->ReadParams(paramCount, info, message, interfaceInfo, methodId, call, broker, this);
+	mt->ReadParams(paramCount, info, message, interfaceInfo, methodId, call, broker, this, conn);
 	delete mt;
+	delete message;
         //nb return value; excepion handling
         broker->SendReceive(call);
-	rv = SendReply(tid, call, paramCount, info, interfaceInfo, methodId);
+	rv = SendReply(tid, call, paramCount, info, interfaceInfo, 
+			methodId, conn);
 	return rv;
 }
 

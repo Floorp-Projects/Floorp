@@ -35,7 +35,7 @@ public:
 	urpMarshalToolkit(PRBool isClient);
 	~urpMarshalToolkit();
 
-    nsresult ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpManager* man);
+    nsresult ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpManager* man, urpConnection* conn);
     nsresult WriteParams(bcICall *call, PRUint32 paramCount, const nsXPTMethodInfo * info, nsIInterfaceInfo* interfaceInfo, urpPacket* message,
                         PRUint16 methodIndex);
     void WriteType(bcIID iid, urpPacket* message);
@@ -55,7 +55,8 @@ private:
     nsresult ReadElement(nsXPTParamInfo * param, uint8 type,
                         nsIInterfaceInfo* interfaceInfo, urpPacket* message,
                         PRUint16 methodIndex, bcIAllocator * allocator,
-			bcIMarshaler* m, bcIORB *orb, urpManager* man);
+			bcIMarshaler* m, bcIORB *orb, urpManager* man, 
+			urpConnection* conn);
     bcXPType XPTType2bcXPType(uint8 type);
 };
 

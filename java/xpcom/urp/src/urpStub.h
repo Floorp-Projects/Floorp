@@ -30,11 +30,12 @@
 
 class urpStub : public bcIStub {
  public:
-    urpStub(urpManager* man);
+    urpStub(urpManager* man, urpConnection* con);
     virtual ~urpStub();
     virtual void Dispatch(bcICall *call) ;
  private:
     urpManager* manager;
+    urpConnection* connection;
 };
 
 #endif

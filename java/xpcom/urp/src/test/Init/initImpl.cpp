@@ -28,6 +28,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIComponentManager.h"
 #include "urpITest.h"
+#include "urpTestImpl.h"
 
 static char * className = "initImpl";
 
@@ -103,6 +104,10 @@ initImpl::initImpl() {
     for (unsigned int i = 0; i < 4; i++) {
         printf("valueArray[%d]=%s\n",i,(*valueArray2)[i]);
     }
+
+    urpITest *object = new urpTestImpl();
+    object->AddRef();
+    serverComponent->Test6(object);
     {
         urpITest *p1;
         serverComponent->Test7(&p1);

@@ -30,8 +30,9 @@
 #include "urpManager.h"
 
 
-urpStub::urpStub(urpManager* man) {
+urpStub::urpStub(urpManager* man, urpConnection* conn) {
   manager = man;
+  connection = conn;
 }
 
 
@@ -72,7 +73,7 @@ printf("ThreadID is written %d %p %p %p %p\n",paramCount, call, mon, manager, th
      exit(-1);
   }
   manager->SendUrpRequest(oid, iid, mid, interfaceInfo, call, paramCount,
-		 info);
+		 info, connection);
   if(NS_FAILED(PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT))) {
 	printf("Can't wait on cond var\n");
 	exit(-1);

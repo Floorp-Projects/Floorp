@@ -17,7 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Igor Kushnirskiy <idk@eng.sun.com>
+ * Sergey Lunegov <lvv@sparc.spb.su>
  */
 
 /*
@@ -85,16 +85,19 @@ urpComponentLoader::urpComponentLoader()
         return;
     }
     _orb->GetORB(&orb);
-    bcOID oid;
+//    bcOID oid;
+    bcOID oid = -860880895;
     transport = new urpConnector();
-    PRStatus status = transport->Open("socket,host=indra,port=20009");
+    PRStatus status = transport->Open("socket,host=localhost,port=20009");
     if(status != PR_SUCCESS) {
         printf("Error during opening connection\n");
         exit(-1);
     }
-    man = new urpManager(PR_TRUE, nsnull, transport->GetConnection());
-    stub = new urpStub(man);
-    oid = orb->RegisterStub(stub);
+    urpConnection* conn = transport->GetConnection();
+    man = new urpManager(PR_TRUE, nsnull, conn);
+    stub = new urpStub(man, conn);
+//    oid = orb->RegisterStub(stub);
+    orb->RegisterStubWithOID(stub, &oid);
     xpcomStubsAndProxies->GetProxy(oid, NS_GET_IID(nsIComponentManager), orb, &proxy);
     compM = (nsIComponentManager*)proxy;
 }

@@ -87,9 +87,12 @@ nsIInterfaceInfo *interfaceInfo;
         printf("Error during opening connection\n");
         exit(-1);
     }
-    urpManager* man = new urpManager(PR_TRUE, nsnull, transport->GetConnection());
-    stub = new urpStub(man);
-    bcOID oid = orb->RegisterStub(stub);
+    urpConnection* conn = transport->GetConnection();
+    urpManager* man = new urpManager(PR_TRUE, nsnull, conn);
+    stub = new urpStub(man, conn);
+bcOID oid = 1221591041;
+//    bcOID oid = orb->RegisterStub(stub);
+    orb->RegisterStubWithOID(stub, &oid);
     printf("---urpTestImpl oid=%ld iid=%s\n",oid, NS_GET_IID(urpITest).ToString());
     r = xpcomStubsAndProxies->GetProxy(oid,NS_GET_IID(urpITest),orb,(nsISupports**)&proxy);
     if (NS_FAILED(r)) {
@@ -148,7 +151,7 @@ nsIInterfaceInfo *interfaceInfo;
     }
 
     /*********************************************/
-//    proxy->Test6(object);
+    proxy->Test6(object);
     /*********************************************/
     {
         urpITest *p1;
@@ -167,6 +170,7 @@ nsIInterfaceInfo *interfaceInfo;
 
 
     }
-//    trans->Close();
+    delete conn;
+    transport->Close();
 }
 
