@@ -279,8 +279,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     
     nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[self getBrowserView] getContentWindow]);
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
-    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-    piWindow->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    nsIChromeEventHandler *chromeHandler = piWIndow->GetChromeEventHandler();
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(chromeHandler));
     if ( rec )
       rec->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
@@ -734,9 +733,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   if (showBlocker) {
     nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([mBrowserView getContentWindow]);
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(domWindow));
-    PRBool isUnrequested;
-    piWindow->IsLoadingOrRunningTimeout(&isUnrequested);
-    if (isUnrequested) {
+    if (piWindow->IsLoadingOrRunningTimeout()) {
       // A popup is being opened while the page is currently loading.  Offer to block the
       // popup.
       nsAlertController* controller = CHBrowserService::GetAlertController();
