@@ -18,7 +18,9 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 10-February-2001
+ *    Gordon Sheridan  <gordon@netscape.com>
+ *    Patrick C. Beard <beard@netscape.com>
+ *    Darin Fisher     <darin@netscape.com>
  */
 
 
@@ -27,14 +29,17 @@
 
 #include "nspr.h"
 #include "nsICacheService.h"
+#include "nsCacheSession.h"
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
 #include "nsCacheRequest.h"
 
 
 class nsCacheDeviceElement {
-public:
-    nsCacheDeviceElement(PRUint32 id, nsCacheDevice * cacheDevice)
+private:
+    friend class nsCacheService;
+
+    nsCacheDeviceElement(const char * id, nsCacheDevice * cacheDevice)
         : deviceID(id),
           device(cacheDevice)
     {
@@ -43,22 +48,17 @@ public:
 
     ~nsCacheDeviceElement() {}
 
-private:
-    friend class nsCacheService;
-
-
-
     PRCList *                     GetListNode(void)         { return &link; }
     static nsCacheDeviceElement * GetInstance(PRCList * qp) {
         return (nsCacheDeviceElement*)((char*)qp - offsetof(nsCacheDeviceElement, link));
     }
 
     PRCList        link;
-    PRUint32       deviceID;
+    const char *   deviceID;
     nsCacheDevice *device;
 };
 
-
+#if 0
 typedef struct {
     PLDHashNumber  keyHash;
     char *         clientID;
@@ -98,7 +98,7 @@ private:
     PLDHashTable           table;
     PRBool                 initialized;
 };
-
+#endif
 
 /**
  *  nsCacheService
@@ -117,41 +117,56 @@ public:
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& iid, void* *result);
 
+    // service accessor for related classes (nsCacheSession, nsCacheEntry, etc.)
+    static nsCacheService *
+    GlobalInstance(void) { return gService; };
+
+    nsresult       OpenCacheEntry(nsCacheSession *           session,
+                                  const char *               clientKey, 
+                                  nsCacheAccessMode          accessRequested,
+                                  nsICacheEntryDescriptor ** result);
+
+    nsresult       AsyncOpenCacheEntry(nsCacheSession *   session,
+                                       const char *       key, 
+                                       nsCacheAccessMode  accessRequested,
+                                       nsICacheListener * listener);
+
+    void           CloseDescriptor(nsCacheEntryDescriptor * descriptor);
+
 private:
 
+    nsresult       CommonOpenCacheEntry(nsCacheSession *   session,
+                                        const char *       clientKey,
+                                        nsCacheAccessMode  accessRequested,
+                                        nsICacheListener * listener,
+                                        nsCacheRequest **  request,
+                                        nsCacheEntry **    entry);
+
     nsresult       ActivateEntry(nsCacheRequest * request, nsCacheEntry ** entry);
-    nsCacheEntry * SearchActiveEntries(const nsCString * key);
+
     nsresult       SearchCacheDevices(nsCacheEntry *entry, nsCacheDevice ** result);
 
-    nsresult       CommonOpenCacheEntry(const char *clientID, const char *clientKey,
-                                        PRUint32  accessRequested, PRBool  streamBased,
-                                        nsCacheRequest **request, nsCacheEntry **entry);
+    nsresult       Doom(nsCacheEntry * entry);
 
-    nsresult       OpenCacheEntry(const char *clientID, const char *clientKey, 
-                                  PRUint32  accessRequested, PRBool  streamBased,
-                                  nsICacheEntryDescriptor **result);
 
-    nsresult       AsyncOpenCacheEntry(const char *  clientID, const char *  key, 
-                                       PRUint32  accessRequested, PRBool streamBased, 
-                                       nsICacheListener *listener);
+    void           DeactivateEntry(nsCacheEntry * entry);
 
     /**
      *  Data Members
      */
-    static nsCacheService * gService;  // "There can be only one..."
 
     enum {
         cacheServiceActiveMask    = 1
     };
 
-    PRLock*                 mCacheServiceLock;
+    static nsCacheService * gService;  // there can be only one...
 
+    PRLock*                 mCacheServiceLock;
     PRCList                 mDeviceList;
-    nsCacheClientHashTable  mClientIDs;
+    //    nsCacheClientHashTable  mClientIDs;
     nsCacheEntryHashTable   mActiveEntries;
     PRCList                 mDoomedEntries;
 };
-
 
 
 #endif // _nsCacheService_h_
