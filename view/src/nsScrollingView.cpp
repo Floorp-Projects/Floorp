@@ -986,7 +986,8 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       if (NS_OK == win->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh)) {
         if (((mSizeX > controlRect.width) &&
             (mScrollPref != nsScrollPreference_kNeverScroll)) ||
-            (mScrollPref == nsScrollPreference_kAlwaysScroll))
+            (mScrollPref == nsScrollPreference_kAlwaysScroll) ||
+            (mScrollPref == nsScrollPreference_kAlwaysScrollHorizontal))
         {
           hasHorizontal = PR_TRUE;
         }
@@ -1052,7 +1053,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
           scrollv->SetPosition(0);  // make sure thumb is at the top
 
-          if (mScrollPref == nsScrollPreference_kAlwaysScroll)
+          if (mScrollPref == nsScrollPreference_kAlwaysScroll || mScrollPref == nsScrollPreference_kAlwaysScrollVertical)
           {
             ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_TRUE);
             win->Enable(PR_FALSE);
@@ -1124,7 +1125,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
           scrollh->SetPosition(0);  // make sure thumb is all the way to the left
 
-          if (mScrollPref == nsScrollPreference_kAlwaysScroll)
+          if (mScrollPref == nsScrollPreference_kAlwaysScroll || mScrollPref == nsScrollPreference_kAlwaysScrollHorizontal)
           {
             ((ScrollBarView *)mHScrollBarView)->SetEnabled(PR_TRUE);
             win->Enable(PR_FALSE);

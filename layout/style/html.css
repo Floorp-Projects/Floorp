@@ -1183,9 +1183,7 @@ sourcetext { /* XXX should not be in HTML namespace */
 }
 
 :-moz-select-scrolled-content {
-  background: inherit;
-  display: inherit;
-  padding: inherit;
+  overflow: -moz-scrollbars-vertical ! important;
 }
 
 :scrolled-content {
@@ -1301,14 +1299,15 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 /* combobox dropdown list hidden */
 select:-moz-dropdown-list {
-  visibility:collapse;
+  z-index: 2147483647;
 }
 
-/* combobox dropdown list visible */
+/* combobox dropdown list visible 
 select[-moz-dropdown-active]:-moz-dropdown-list {
   visibility: visible;
   z-index: 2147483647;
 }
+*/
 
 :-moz-anonymous-block {
   display: block;

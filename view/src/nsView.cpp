@@ -855,10 +855,11 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
 
     /* You would think that doing a move and resize all in one operation would
      * be faster but its not. Something is really broken here. So I'm comenting 
-     * this out for now
+     * this out for now 
     // if we moved and resized do it all in one shot
     if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED && mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
     {
+
       nscoord parx = 0, pary = 0;
       nsIWidget         *pwidget = nsnull;
 
@@ -877,14 +878,14 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       else if (bounds.width == width && bounds.height == bounds.height)
          mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
       else {
+         printf("%d) SetBounds(%d,%d,%d,%d)\n", this, x, y, width, height);
          mWindow->Resize(x,y,width,height, PR_TRUE);
          mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
          mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
          return NS_OK;
       }
     } 
-    */
-
+  */
     // if we just resized do it
     if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
     {
@@ -895,8 +896,10 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       nsRect bounds;
       mWindow->GetBounds(bounds);
 
-      if (bounds.width != width || bounds.height != bounds.height)
+      if (bounds.width != width || bounds.height != bounds.height) {
+        printf("%d) Resize(%d,%d)\n", this, width, height);
         mWindow->Resize(width,height, PR_TRUE);
+      }
 
       mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
     } 
@@ -915,8 +918,10 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       nsRect bounds;
       mWindow->GetBounds(bounds);
       
-      if (bounds.x != x || bounds.y != y) 
+      if (bounds.x != x || bounds.y != y) {
+         printf("%d) Move(%d,%d)\n", this, x, y);
          mWindow->Move(x,y);
+      }
 
       mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
     }        

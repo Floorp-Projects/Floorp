@@ -163,6 +163,13 @@ nsScrollFrame::GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* a
        case nsScrollPreference_kAlwaysScroll:
          *aScrollPreference = AlwaysScroll;
          break;
+       case nsScrollPreference_kAlwaysScrollHorizontal:
+         *aScrollPreference = AlwaysScrollHorizontal;
+         break;
+       case nsScrollPreference_kAlwaysScrollVertical:
+         *aScrollPreference = AlwaysScrollVertical;
+         break;
+
      }
 
      return NS_OK;
@@ -438,9 +445,25 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
     scrollingView->CreateScrollControls();
 
     // Set the scrolling view's scroll preference
-    nsScrollPreference scrollPref = (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)
-                                    ? nsScrollPreference_kAlwaysScroll :
-                                      nsScrollPreference_kAuto;
+    nsScrollPreference scrollPref;
+    
+    switch (display->mOverflow)
+    {
+       case NS_STYLE_OVERFLOW_SCROLL:
+       scrollPref = nsScrollPreference_kAlwaysScroll;
+       break;
+
+       case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+       scrollPref = nsScrollPreference_kAlwaysScrollHorizontal;
+       break;
+
+       case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+       scrollPref = nsScrollPreference_kAlwaysScrollVertical;
+       break;
+
+       default:
+       scrollPref = nsScrollPreference_kAuto;
+    }
 
     // If this is a scroll frame for a viewport and its webshell 
     // has its scrolling set, use that value
@@ -533,7 +556,7 @@ nsScrollFrame::CalculateScrollAreaSize(nsIPresContext*          aPresContext,
   }
 
   // See whether we have 'auto' scrollbars
-  if (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL) {
+  if (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
     // Always show both scrollbars, so subtract for the space taken up by the
     // vertical scrollbar
     if (!unconstrainedWidth) {
@@ -575,7 +598,7 @@ nsScrollFrame::CalculateScrollAreaSize(nsIPresContext*          aPresContext,
 
   // If scrollbars are always visible, then subtract for the height of the
   // horizontal scrollbar
-  if ((NS_STYLE_OVERFLOW_SCROLL == aReflowState.mStyleDisplay->mOverflow) &&
+  if ((NS_STYLE_OVERFLOW_SCROLL == aReflowState.mStyleDisplay->mOverflow || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) &&
       !unconstrainedWidth) {
     aScrollAreaSize->height -= aSBHeight;
   }
@@ -775,35 +798,38 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
 
     PRBool  mustReflow = PR_FALSE;
 
-    // There are two cases to consider
-    if (roomForVerticalScrollbar) {
-      if (kidDesiredSize.height <= scrollAreaSize.height) {
-        // We left room for the vertical scrollbar, but it's not needed;
-        // reflow with a larger computed width
-        // XXX We need to be checking for horizontal scrolling...
-        kidReflowState.availableWidth += sbWidth;
-        kidReflowState.mComputedWidth += sbWidth;
-        scrollAreaSize.width += sbWidth;
-        mustReflow = PR_TRUE;
-#ifdef NOISY_SECOND_REFLOW
-        ListTag(stdout);
-        printf(": kid-height=%d < scrollArea-height=%d\n",
-               kidDesiredSize.height, scrollAreaSize.height);
-#endif
-      }
-    } else {
-      if (kidDesiredSize.height > scrollAreaSize.height) {
-        // We didn't leave room for the vertical scrollbar, but it turns
-        // out we needed it
-        kidReflowState.availableWidth -= sbWidth;
-        kidReflowState.mComputedWidth -= sbWidth;
-        scrollAreaSize.width -= sbWidth;
-        mustReflow = PR_TRUE;
-#ifdef NOISY_SECOND_REFLOW
-        ListTag(stdout);
-        printf(": kid-height=%d > scrollArea-height=%d\n",
-               kidDesiredSize.height, scrollAreaSize.height);
-#endif
+    if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL)
+    {
+      // There are two cases to consider
+      if (roomForVerticalScrollbar) {
+        if (kidDesiredSize.height <= scrollAreaSize.height) {
+          // We left room for the vertical scrollbar, but it's not needed;
+          // reflow with a larger computed width
+          // XXX We need to be checking for horizontal scrolling...
+          kidReflowState.availableWidth += sbWidth;
+          kidReflowState.mComputedWidth += sbWidth;
+          scrollAreaSize.width += sbWidth;
+          mustReflow = PR_TRUE;
+  #ifdef NOISY_SECOND_REFLOW
+          ListTag(stdout);
+          printf(": kid-height=%d < scrollArea-height=%d\n",
+                 kidDesiredSize.height, scrollAreaSize.height);
+  #endif
+        }
+      } else {
+        if (kidDesiredSize.height > scrollAreaSize.height) {
+          // We didn't leave room for the vertical scrollbar, but it turns
+          // out we needed it
+          kidReflowState.availableWidth -= sbWidth;
+          kidReflowState.mComputedWidth -= sbWidth;
+          scrollAreaSize.width -= sbWidth;
+          mustReflow = PR_TRUE;
+  #ifdef NOISY_SECOND_REFLOW
+          ListTag(stdout);
+          printf(": kid-height=%d > scrollArea-height=%d\n",
+                 kidDesiredSize.height, scrollAreaSize.height);
+  #endif
+        }
       }
     }
 
@@ -829,22 +855,27 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
   
-  // Make sure the height of the scrolled frame fills the entire scroll area,
-  // unless we're shrink wrapping
-  if (NS_AUTOHEIGHT != aReflowState.mComputedHeight) {
-    if (kidDesiredSize.height < scrollAreaSize.height) {
-      kidDesiredSize.height = scrollAreaSize.height;
+  if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL)
+  {
 
-      // If there's an auto horizontal scrollbar and the scrollbar will be
-      // visible then subtract for the space taken up by the scrollbar;
-      // otherwise, we'll end up with a vertical scrollbar even if we don't
-      // need one...
-      if ((NS_STYLE_OVERFLOW_SCROLL != aReflowState.mStyleDisplay->mOverflow) &&
-          (kidDesiredSize.width > scrollAreaSize.width)) {
-        kidDesiredSize.height -= sbHeight;
+    // Make sure the height of the scrolled frame fills the entire scroll area,
+    // unless we're shrink wrapping
+    if (NS_AUTOHEIGHT != aReflowState.mComputedHeight) {
+      if (kidDesiredSize.height < scrollAreaSize.height) {
+        kidDesiredSize.height = scrollAreaSize.height;
+
+        // If there's an auto horizontal scrollbar and the scrollbar will be
+        // visible then subtract for the space taken up by the scrollbar;
+        // otherwise, we'll end up with a vertical scrollbar even if we don't
+        // need one...
+        if ((NS_STYLE_OVERFLOW_SCROLL != aReflowState.mStyleDisplay->mOverflow && aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) &&
+            (kidDesiredSize.width > scrollAreaSize.width)) {
+          kidDesiredSize.height -= sbHeight;
+        }
       }
     }
   }
+
   // Make sure the width of the scrolled frame fills the entire scroll area
   if (kidDesiredSize.width < scrollAreaSize.width) {
     kidDesiredSize.width = scrollAreaSize.width;
@@ -862,7 +893,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.width += border.left + border.right;
 
   if ((kidDesiredSize.height > scrollAreaSize.height) ||
-      (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL)) {
+      (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL)) {
     aDesiredSize.width += sbWidth;
   }
   
@@ -876,7 +907,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   }
   aDesiredSize.height += border.top + border.bottom;
   // XXX This should really be "if we have a visible horizontal scrollbar"...
-  if (NS_STYLE_OVERFLOW_SCROLL == aReflowState.mStyleDisplay->mOverflow) {
+  if (NS_STYLE_OVERFLOW_SCROLL == aReflowState.mStyleDisplay->mOverflow || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) {
     aDesiredSize.height += sbHeight;
   }
 
