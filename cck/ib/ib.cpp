@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <Winbase.h>
 #include <direct.h>
+#include <stdio.h>
 #include "globals.h"
 #include "comp.h"
 #include "ib.h"
@@ -10,6 +11,8 @@
 #include "resource.h"
 #include "NewDialog.h"
 #define MAX_SIZE 1024
+#define CRVALUE 0x0D
+#define BUF_SIZE 4096
 
 int interpret(char *cmd);
 
@@ -1141,6 +1144,57 @@ void CreateLinuxInstaller()
 	DeleteFile(templinuxPath + xpiDir + "\\N6Setup.exe");
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
 	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
+
+	FILE *fout = fopen(templinuxPath+"\\config.tmp", "wb");
+	if (!fout)
+	{
+		AfxMessageBox("Cannot open output file", MB_OK);
+		exit(3);
+	}	
+	FILE *fin = fopen(templinuxPath+"\\Config.ini", "rb");
+	if (!fin)
+	{
+		AfxMessageBox("Cannot open Config.ini file", MB_OK);
+		exit(3);
+	}
+	else 
+	{
+		char inbuf[BUF_SIZE], outbuf[BUF_SIZE];
+		int cnt2=0;
+		while(!feof(fin))
+		{
+			int count = fread(&inbuf, sizeof(char), sizeof(inbuf), fin);
+			if (ferror(fin))
+			{
+				AfxMessageBox("Error in reading Config.ini file", MB_OK);
+				exit(3);
+			}
+			char *cpin = inbuf;
+			char *cpout = outbuf;
+			while (count-- > 0)
+			{
+				if (*cpin == CRVALUE)
+					cpin++;
+				else
+				{
+					*cpout++ = *cpin++;
+					cnt2++;
+				}
+			}
+			fwrite(&outbuf, sizeof(char), cnt2, fout);
+			if (ferror(fout))
+			{
+				AfxMessageBox("Error in writing Config.ini file", MB_OK);
+				exit(3);
+			}
+			cnt2=0;
+		}
+		fclose(fin);
+	}
+	fclose(fout);
+	DeleteFile(templinuxPath+"\\Config.ini");
+	rename(templinuxPath+"\\config.tmp",templinuxPath+"\\config.ini");	
+	
 	_chdir(outputPath);
 	templinuxPath = tempPath;
 	templinuxPath.Replace("\\", "/");
