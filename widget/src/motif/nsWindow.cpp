@@ -46,7 +46,6 @@
 
 #define DBG 0
 
-extern void XtMoveWidget(Widget w, Position x, Position y);
 
 Widget gFirstTopLevelWindow = 0;
 
@@ -656,7 +655,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
   mBounds.y = aY;
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
-  XtMoveWidget(mWidget, (Position)aX,(Position)GetYCoord(aY));
+  XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
 //    XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
 }
 
