@@ -57,7 +57,7 @@ NS_NewCanvasXULFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // QueryInterface
 //
 NS_INTERFACE_MAP_BEGIN(nsCanvasFrame)
-    NS_INTERFACE_MAP_ENTRY(nsICanvasBoxObject)
+    NS_INTERFACE_MAP_ENTRY(nsICanvasFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 nsCanvasFrame::nsCanvasFrame(nsIPresShell* aPresShell)

@@ -44,8 +44,8 @@
 #include "nsICanvasRenderingContext.h"
 
 class nsCanvasFrame :
-    public nsLeafBoxFrame,
-    public nsICanvasBoxObject
+    public nsLeafBoxFrame, // this must be the first thing we inherit from, due to nsFrame operator delete business
+    public nsICanvasFrame
 {
 public:
     nsCanvasFrame(nsIPresShell* aPresShell);
@@ -68,8 +68,8 @@ public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
-    // nsICanvasBoxObject interface
-    NS_DECL_NSICANVASBOXOBJECT
+    // nsICanvasFrame interface
+    NS_DECL_NSICANVASFRAME
 
 protected:
     nsPresContext* mPresContext;

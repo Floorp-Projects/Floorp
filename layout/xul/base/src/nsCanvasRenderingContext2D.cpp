@@ -49,6 +49,10 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
 
+#include "nsPrintfCString.h"
+
+#include "nsReadableUtils.h"
+
 #include <cairo.h>
 
 class nsCanvasRenderingContext2D :
@@ -114,12 +118,15 @@ NS_NewCanvasRenderingContext2D(nsICanvasRenderingContext2D** aResult)
 NS_IMPL_ISUPPORTS2(nsCanvasRenderingContext2D, nsICanvasRenderingContext2D, nsICanvasRenderingContext)
 
 static PRBool
-ColorStringToColor (const char *str, nscolor &color)
+ColorStringToColor (const nsAString& style, nscolor &color)
 {
-    if (!str || !str[0])
+    nsCAutoString str;
+    str.Assign(NS_ConvertUTF16toUTF8(style));
+
+    if (str.IsEmpty())
         return PR_FALSE;
 
-    int slen = nsCRT::strlen(str);
+    int slen = str.Length();
 
     if (str[0] == '#') {
         unsigned int shift = 0;
@@ -139,7 +146,7 @@ ColorStringToColor (const char *str, nscolor &color)
         } else if (slen == 7) {
             char *ss = nsnull;
             unsigned long l;
-            l = strtoul (str+1, &ss, 16);
+            l = strtoul (nsPromiseFlatCString(str).get()+1, &ss, 16);
             if (*ss != 0) {
                 return PR_FALSE;
             }
@@ -150,11 +157,11 @@ ColorStringToColor (const char *str, nscolor &color)
         }
     }
 
-    if (nsCRT::strncmp(str, "rgb(", 4) == 0) {
+    if (StringBeginsWith(style, NS_LITERAL_STRING("rgb("))) {
         // ...
     }
 
-    if (NS_ColorNameToRGB(NS_ConvertUTF8toUTF16(str), &color))
+    if (NS_ColorNameToRGB(style, &color))
         return PR_TRUE;
 
     return PR_FALSE;
@@ -192,11 +199,9 @@ nsCanvasRenderingContext2D::SetCairoColor(nscolor c)
     double r = double(NS_GET_R(c) / 255.0);
     double g = double(NS_GET_G(c) / 255.0);
     double b = double(NS_GET_B(c) / 255.0);
-    double a = double(NS_GET_A(c) / 255.0);
 
 //    fprintf (stderr, "::SetCairoColor r: %g g: %g b: %g a: %g\n", r, g, b, a);
     cairo_set_rgb_color (mCairo, r, g, b);
-    cairo_set_alpha (mCairo, a);
 }
 
 NS_IMETHODIMP
@@ -314,9 +319,10 @@ nsCanvasRenderingContext2D::Paint(nsPresContext*       aPresContext,
             mDirty = PR_FALSE;
         }
 
-        nsPoint dst = mCanvasFrame->GetPosition();
+        nsPoint dstpt = mCanvasFrame->GetPosition();
         nsRect src(0, 0, NSIntPixelsToTwips(mWidth, mPixelsToTwips), NSIntPixelsToTwips(mHeight, mPixelsToTwips));
-        return aRenderingContext.DrawImage(mImageContainer, &src, &dst);
+        nsRect dst(dstpt.x, dstpt.y, src.width, src.height);
+        return aRenderingContext.DrawImage(mImageContainer, src, dst);
     }
 
     return NS_OK;
@@ -325,6 +331,13 @@ nsCanvasRenderingContext2D::Paint(nsPresContext*       aPresContext,
 //
 // nsCanvasRenderingContext2D impl
 //
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetCanvas(nsIBoxObject **canvas)
+{
+    //NS_IF_ADDREF(*canvas = mCanvasFrame);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //
 // state
@@ -374,37 +387,128 @@ nsCanvasRenderingContext2D::Translate(float x, float y)
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetStrokeColor(const char* color)
+nsCanvasRenderingContext2D::SetGlobalAlpha(float globalAlpha)
 {
-    nscolor c;
-    if (ColorStringToColor(color, c)) {
-        mStrokeColor = (mStrokeColor & 0xff000000) | (c & 0x00ffffff);
+    cairo_set_alpha (mCairo, globalAlpha);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetGlobalAlpha(float *globalAlpha)
+{
+    double d = cairo_current_alpha(mCairo);
+    *globalAlpha = (float) d;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetStrokeStyle(const nsAString& style)
+{
+    if (ColorStringToColor(style, mStrokeColor))
         return NS_OK;
-    }
 
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetFillColor(const char* color)
+nsCanvasRenderingContext2D::GetStrokeStyle(nsAString& style)
 {
-    nscolor c;
-    if (ColorStringToColor(color, c)) {
-        mFillColor = (mFillColor & 0xff000000) | (c & 0x00ffffff);
+    style.Assign(NS_ConvertUTF8toUTF16(nsPrintfCString(100, "#%08x", mStrokeColor)));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetFillStyle(const nsAString& style)
+{
+    if (ColorStringToColor(style, mFillColor))
         return NS_OK;
-    }
 
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetAlpha(float alpha)
+nsCanvasRenderingContext2D::GetFillStyle(nsAString& style)
 {
-    // XXX change the alpha of both the stroke and fill colors
-    PRUint8 alpha8 = (PRUint8) (alpha * 255.0);
-    mFillColor = (mFillColor & 0x00ffffff) | (alpha8 << 24);
-    mStrokeColor = (mStrokeColor & 0x00ffffff) | (alpha8 << 24);
+    style.Assign(NS_ConvertUTF8toUTF16(nsPrintfCString(100, "#%08x", mFillColor)));
+    return NS_OK;
+}
 
+//
+// gradients and patterns
+//
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, float y1,
+                                                 nsICanvasGradient **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, float x1, float y1, float r1,
+                                                 nsICanvasGradient **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
+                                          const nsAString& repetition,
+                                          nsICanvasPattern **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//
+// shadows
+//
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetShadowOffsetX(float x)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetShadowOffsetX(float *x)
+{
+    *x = 0.0f;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetShadowOffsetY(float y)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetShadowOffsetY(float *y)
+{
+    *y = 0.0f;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetShadowBlur(float blur)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetShadowBlur(float *blur)
+{
+    *blur = 0.0f;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetShadowColor(const nsAString& color)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
+{
     return NS_OK;
 }
 
@@ -471,7 +575,7 @@ nsCanvasRenderingContext2D::ClosePath()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::FillPath()
+nsCanvasRenderingContext2D::Fill()
 {
     SetCairoColor(mFillColor);
     cairo_fill(mCairo);
@@ -479,7 +583,7 @@ nsCanvasRenderingContext2D::FillPath()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::StrokePath()
+nsCanvasRenderingContext2D::Stroke()
 {
     SetCairoColor(mStrokeColor);
     cairo_stroke(mCairo);
@@ -494,43 +598,43 @@ nsCanvasRenderingContext2D::Clip()
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::MoveToPoint(float x, float y)
+nsCanvasRenderingContext2D::MoveTo(float x, float y)
 {
     cairo_move_to(mCairo, x, y);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::AddLineToPoint(float x, float y)
+nsCanvasRenderingContext2D::LineTo(float x, float y)
 {
     cairo_line_to(mCairo, x, y);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::AddQuadraticCurveToPoint(float cpx, float cpy, float x, float y)
+nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, float y)
 {
     cairo_curve_to(mCairo, cpx, cpy, cpx, cpy, x, y);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::AddBezierCurveToPoint(float cp1x, float cp1y,
-                                                  float cp2x, float cp2y,
-                                                  float x, float y)
+nsCanvasRenderingContext2D::BezierCurveTo(float cp1x, float cp1y,
+                                          float cp2x, float cp2y,
+                                          float x, float y)
 {
     cairo_curve_to(mCairo, cp1x, cp1y, cp2x, cp2y, x, y);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::AddArcToPoint(float x1, float y1, float x2, float y2, float radius)
+nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float radius)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::AddArc(float x, float y, float r, float startAngle, float endAngle, int clockwise)
+nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, int clockwise)
 {
     if (clockwise)
         cairo_arc (mCairo, x, y, r, startAngle, endAngle);
@@ -540,7 +644,7 @@ nsCanvasRenderingContext2D::AddArc(float x, float y, float r, float startAngle, 
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::AddRect(float x, float y, float w, float h)
+nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 {
     cairo_rectangle (mCairo, x, y, w, h);
     return NS_OK;
@@ -558,13 +662,21 @@ nsCanvasRenderingContext2D::SetLineWidth(float width)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetLineCap(const char *capstyle)
+nsCanvasRenderingContext2D::GetLineWidth(float *width)
+{
+    double d = cairo_current_line_width(mCairo);
+    *width = (float) d;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
 {
     cairo_line_cap_t cap;
 
-    if (nsCRT::strcmp(capstyle, "round") == 0)
+    if (capstyle.EqualsLiteral("round"))
         cap = CAIRO_LINE_CAP_ROUND;
-    else if (nsCRT::strcmp(capstyle, "square") == 0)
+    else if (capstyle.EqualsLiteral("square"))
         cap = CAIRO_LINE_CAP_SQUARE;
     else
         return NS_ERROR_NOT_IMPLEMENTED;
@@ -574,20 +686,52 @@ nsCanvasRenderingContext2D::SetLineCap(const char *capstyle)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetLineJoin(const char *joinstyle)
+nsCanvasRenderingContext2D::GetLineCap(nsAString& capstyle)
+{
+    cairo_line_cap_t cap = cairo_current_line_cap(mCairo);
+
+    if (cap == CAIRO_LINE_CAP_ROUND)
+        capstyle.AssignLiteral("round");
+    else if (cap == CAIRO_LINE_CAP_SQUARE)
+        capstyle.AssignLiteral("square");
+    else
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetLineJoin(const nsAString& joinstyle)
 {
     cairo_line_join_t j;
 
-    if (nsCRT::strcmp(joinstyle, "round") == 0)
+    if (joinstyle.EqualsLiteral("round"))
         j = CAIRO_LINE_JOIN_ROUND;
-    else if (nsCRT::strcmp(joinstyle, "bevel") == 0)
+    else if (joinstyle.EqualsLiteral("bevel"))
         j = CAIRO_LINE_JOIN_BEVEL;
-    else if (nsCRT::strcmp(joinstyle, "miter") == 0)
+    else if (joinstyle.EqualsLiteral("miter"))
         j = CAIRO_LINE_JOIN_MITER;
     else
         return NS_ERROR_NOT_IMPLEMENTED;
 
     cairo_set_line_join (mCairo, j);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle)
+{
+    cairo_line_join_t j = cairo_current_line_join(mCairo);
+
+    if (j == CAIRO_LINE_JOIN_ROUND)
+        joinstyle.AssignLiteral("round");
+    else if (j == CAIRO_LINE_JOIN_BEVEL)
+        joinstyle.AssignLiteral("bevel");
+    else if (j == CAIRO_LINE_JOIN_MITER)
+        joinstyle.AssignLiteral("miter");
+    else
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
@@ -598,13 +742,22 @@ nsCanvasRenderingContext2D::SetMiterLimit(float miter)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMiterLimit(float *miter)
+{
+    double d = cairo_current_miter_limit(mCairo);
+    *miter = (float) d;
+    return NS_OK;
+}
+
 //
 // image
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::DrawImage(nsIDOMHTMLImageElement *aImage, int x, int y, int w, int h, const char *composite)
+nsCanvasRenderingContext2D::DrawImage()
 {
+#if 0
     nsCOMPtr<nsIImageLoadingContent> contentImage(aImage);
     nsCOMPtr<imgIRequest> request;
     contentImage->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST, getter_AddRefs(request));
@@ -713,35 +866,18 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMHTMLImageElement *aImage, int x, int
     cairo_surface_destroy(surface);
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::DrawImageFromRect(nsIDOMHTMLImageElement *aImage, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, const char *composite)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// shadows..
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetShadow(float width, float height, float blur, const char *color)
-{
+#endif
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::ClearShadow()
+nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetCompositeOperation(const char *composite)
-{
-    cairo_operator_t the_op;
+    cairo_operator_t cairo_op;
 
 #define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
-    if (nsCRT::strcmp (composite, cvsop) == 0) \
-        the_op = CAIRO_OPERATOR_##cairoop;
+    if (op.EqualsLiteral(cvsop))   \
+        cairo_op = CAIRO_OPERATOR_##cairoop;
 
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
     else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
@@ -759,6 +895,38 @@ nsCanvasRenderingContext2D::SetCompositeOperation(const char *composite)
     else CANVAS_OP_TO_CAIRO_OP("over", OVER)
     else return NS_ERROR_NOT_IMPLEMENTED;
 
-    cairo_set_operator(mCairo, the_op);
+#undef CANVAS_OP_TO_CAIRO_OP
+
+    cairo_set_operator(mCairo, cairo_op);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
+{
+    cairo_operator_t cairo_op = cairo_current_operator(mCairo);
+
+#define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
+    if (cairo_op == CAIRO_OPERATOR_##cairoop) \
+        op.AssignLiteral(cvsop);
+
+    CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
+    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
+    else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
+    else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
+    else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
+    else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
+    else CANVAS_OP_TO_CAIRO_OP("over", OVER)
+    else return NS_ERROR_FAILURE;
+
+#undef CANVAS_OP_TO_CAIRO_OP
+
     return NS_OK;
 }
