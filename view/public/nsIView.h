@@ -428,6 +428,13 @@ public:
    */
   NS_IMETHOD SetViewFlags(PRInt32 aFlags) = 0;
 
+  /**
+   * Remove flags from view to allow customization of view behavior during
+   * event handling
+   * @param aFlags flags to be removed from view
+   */
+  NS_IMETHOD ClearViewFlags(PRInt32 aFlags) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

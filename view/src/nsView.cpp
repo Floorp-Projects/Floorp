@@ -1296,6 +1296,12 @@ NS_IMETHODIMP nsView :: SetViewFlags(PRInt32 aFlags)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsView :: ClearViewFlags(PRInt32 aFlags)
+{
+  mVFlags &= ~aFlags;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
 {
   nsIView   *ancestor;
