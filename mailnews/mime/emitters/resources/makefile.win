@@ -19,7 +19,7 @@
 #
 
 DEPTH=..\..\..\..
-DIRS= skin content
+DIRS= content
 
 include <$(DEPTH)\config\rules.mak>
 
