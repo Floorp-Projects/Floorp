@@ -302,7 +302,7 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
   }
 
   // XXX Should focus only this presContext
-  //Focus();
+  Focus();
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
