@@ -351,7 +351,6 @@
 		};
 		29B97314FDCFA39411CA2CEA = {
 			children = (
-				3FB2BA7C0545E9F4002B9691,
 				F51842F30206168101A966FE,
 				080E96DDFE201D6D7F000001,
 				F5571935022B401B010001CA,
@@ -1398,13 +1397,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		3FB2BA7C0545E9F4002B9691 = {
-			children = (
-			);
-			isa = PBXGroup;
-			name = "New Files";
-			refType = 4;
 		};
 		3FB2BA7D0545EA80002B9691 = {
 			fileEncoding = 30;
