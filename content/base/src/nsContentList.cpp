@@ -378,9 +378,9 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
       else
         PL_DHashTableRawRemove(&gContentListHashTable, entry);
     }
-  }
 
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   *aInstancePtrResult = list;
   NS_ADDREF(*aInstancePtrResult);
