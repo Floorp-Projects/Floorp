@@ -1139,7 +1139,7 @@ PRIntn  whichSide=0;
         {
           nsRect borderInside(borderOutside);
           nsBorderEdge * neighbor;
-          if (PR_TRUE==aBorderEdges->mOutsideEdge)
+          if (PR_TRUE==aBorderEdges->mOutsideEdge && segment->mInsideNeighbor)
             neighbor = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_LEFT].ElementAt(0));
           else
             neighbor = (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
