@@ -94,7 +94,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
 #include "nsStyleLinkElement.h"
-#include "nsIImageLoadingContent.h"
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
