@@ -452,10 +452,19 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
   } // switch 
 
   int pointSize;
-  char szFacename[FACESIZE];
+  char *szFacename;
 
-  sscanf( szFontNameSize, "%d.%s", &pointSize, szFacename);
+  pointSize = atoi(szFontNameSize);
 
+  szFacename = strchr(szFontNameSize, '.');
+  szFacename++;
+
+#ifdef OLDCODE
+  PRUnichar name[FACESIZE];
+  name[0] = 0;
+  MultiByteToWideChar(0, szFacename,
+                      strlen(szFacename) + 1, name, sizeof(name)/sizeof(name[0]));
+#endif
   aFont->name.AssignWithConversion(szFacename);
 
   // Do Style
