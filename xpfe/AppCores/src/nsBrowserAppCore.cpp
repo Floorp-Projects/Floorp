@@ -320,7 +320,7 @@ nsBrowserAppCore::Back()
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::Reload(enum nsURLReloadType)
+nsBrowserAppCore::Reload(nsURLReloadType aType)
 {
 	printf("fix me!\n");
 	NS_ASSERTION(0,"fix me!");
