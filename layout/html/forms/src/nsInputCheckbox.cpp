@@ -273,21 +273,6 @@ nsInputCheckbox::Reset()
   }
 }  
 
-nsresult
-nsInputCheckbox::CreateFrame(nsIPresContext* aPresContext,
-                             nsIFrame* aParentFrame,
-                             nsIStyleContext* aStyleContext,
-                             nsIFrame*& aResult)
-{
-  nsIFrame* frame = new nsInputCheckboxFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
 void nsInputCheckbox::GetType(nsString& aResult) const
 {
   aResult = "checkbox";

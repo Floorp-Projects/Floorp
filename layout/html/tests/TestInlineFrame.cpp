@@ -82,9 +82,6 @@ public:
                    nscoord aHeight,
                    PRBool  aIsSplittable = PR_FALSE);
 
-  nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                        nsIFrame* aParentFrame);
-
   // Accessors
   nscoord   GetWidth() {return mWidth;}
   void      SetWidth(nscoord aWidth);
@@ -160,12 +157,6 @@ FixedSizeContent::FixedSizeContent(nscoord aWidth,
   mWidth = aWidth;
   mHeight = aHeight;
   mIsSplittable = aIsSplittable;
-}
-
-nsIFrame* FixedSizeContent::CreateFrame(nsIPresContext* aPresContext,
-                                        nsIFrame* aParentFrame)
-{
-  return new FixedSizeFrame(this, aParentFrame);
 }
 
 // Change the width of the content triggering an incremental reflow

@@ -996,7 +996,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
       // add blank frames for frameset cells that had no content provided
       for (int blankX = mChildCount; blankX < numCells; blankX++) {
         // XXX the blank frame is using the content of its parent - at some point it should just have null content
-        // XXX bypassing nsHTMLBase::CreateFrame; all we need is a simple blank frame.
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame(mContent, this);
         //GetStyleContext(&aPresContext, blankFrame->mStyleContext); // set the blank frame's style context
         if (nsnull == lastChild) {

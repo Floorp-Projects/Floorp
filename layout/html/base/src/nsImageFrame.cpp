@@ -65,10 +65,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
 
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);

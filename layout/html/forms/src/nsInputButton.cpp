@@ -72,11 +72,6 @@ public:
   nsInputButton (nsIAtom* aTag, nsIFormManager* aManager,
                  nsButtonType aType);
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
-
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
@@ -228,30 +223,6 @@ nsInputButton::GetDefaultLabel(nsString& aString)
   } else {
     aString = " ";
   }
-}
-
-nsresult
-nsInputButton::CreateFrame(nsIPresContext* aPresContext,
-                           nsIFrame* aParentFrame,
-                           nsIStyleContext* aStyleContext,
-                           nsIFrame*& aResult)
-{
-  nsIFrame* frame = nsnull;
-  if (kButton_Hidden == mType) {
-    nsresult rv = nsFrame::NewFrame(&frame, this, aParentFrame);
-    if (NS_OK != rv) {
-      return rv;
-    }
-  } 
-  else {
-    frame = new nsInputButtonFrame(this, aParentFrame);
-    if (nsnull == frame) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
 }
 
 PRInt32

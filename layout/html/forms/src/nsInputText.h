@@ -39,11 +39,6 @@ public:
   typedef nsInput nsInputTextSuper;
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
-
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
 

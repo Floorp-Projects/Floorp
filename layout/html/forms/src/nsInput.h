@@ -44,14 +44,6 @@ public:
     */
   nsInput(nsIAtom* aTag, nsIFormManager* aManager);
 
-  /**
-    * @see nsIContentDelegate CreateFrame
-    */
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult) = 0;
-
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
   static void MapAttributesInto(nsIHTMLAttributes* aAttributes,
                                 nsIStyleContext* aContext,

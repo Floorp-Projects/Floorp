@@ -58,11 +58,6 @@ public:
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
 };
 
 class BulletFrame : public nsFrame, private nsIInlineReflow {
@@ -148,21 +143,6 @@ Bullet::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
   fprintf(out, "Bullet RefCnt=%d<>\n", mRefCnt);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Bullet::CreateFrame(nsIPresContext*  aPresContext,
-                    nsIFrame*        aParentFrame,
-                    nsIStyleContext* aStyleContext,
-                    nsIFrame*&       aResult)
-{
-  BulletFrame* frame = new BulletFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aResult = frame;
-  frame->SetStyleContext(aPresContext, aStyleContext);
   return NS_OK;
 }
 

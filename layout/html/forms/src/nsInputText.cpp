@@ -360,21 +360,6 @@ nsInputText::GetTextType() const
   return mType;
 }
 
-nsresult
-nsInputText::CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult)
-{
-  nsIFrame* frame = new nsInputTextFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
 PRInt32 
 nsInputText::GetMaxNumValues()
 {

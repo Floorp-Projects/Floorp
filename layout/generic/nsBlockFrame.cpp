@@ -1746,6 +1746,26 @@ nsBlockFrame::AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFrame)
       isBlock = PR_FALSE;
     }
 
+    // XXX CONSTRUCTION See if it wants to be absolutely positioned or scrolled
+    // if overflows...
+#if 0
+    nsIFrame* kidFrame = nsnull;
+    nsresult rv;
+    if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
+      rv = nsAbsoluteFrame::NewFrame(&kidFrame, aKid, aParentFrame);
+      if (NS_OK == rv) {
+        kidFrame->SetStyleContext(aPresContext, kidSC);
+      }
+    }
+    else if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
+             (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
+      rv = NS_NewScrollFrame(&kidFrame, aKid, aParentFrame);
+      if (NS_OK == rv) {
+        kidFrame->SetStyleContext(aPresContext, kidSC);
+      }
+    }
+#endif
+
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
     // block then make a new line and put the child in that line.
@@ -1796,6 +1816,14 @@ nsBlockFrame::AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFrame)
 
     // Remember the previous frame
     prevFrame = frame;
+
+    // XXX CONSTRUCTION This needs to go somewhere...
+#if 0
+    if (NS_OK == rv) {
+      // Wrap the frame in a view if necessary
+      rv = CreateViewForFrame(aPresContext, kidFrame, kidSC, PR_FALSE);
+    }
+#endif
   }
 
   if (0 != pendingInlines) {
