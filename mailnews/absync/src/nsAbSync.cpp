@@ -2265,7 +2265,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   //
   PRUnichar aChar = '_';
 
-  if (!aTagName->CompareWithConversion("phone", 5))
+  if (!aTagName->CompareWithConversion("phone", PR_TRUE, 5))
   {
     if (aTagName->FindChar(aChar) != -1)
       mPhoneTypes->AppendString(NS_ConvertASCIItoUCS2(aTagValue->ToNewCString()));
