@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Scott Collins <scc@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // nsWeakReference.cpp
@@ -110,9 +111,9 @@ nsWeakReference::QueryInterface( const nsIID& aIID, void** aInstancePtr )
       return NS_ERROR_NULL_POINTER;
 
     nsISupports* foundInterface;
-    if ( aIID.Equals(nsCOMTypeInfo<nsIWeakReference>::GetIID()) )
+    if ( aIID.Equals(NS_GET_IID(nsIWeakReference)) )
       foundInterface = NS_STATIC_CAST(nsIWeakReference*, this);
-    else if ( aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) )
+    else if ( aIID.Equals(NS_GET_IID(nsISupports)) )
       foundInterface = NS_STATIC_CAST(nsISupports*, this);
     else
       foundInterface = 0;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsFileSpecImpl.h"// Always first, to ensure that it compiles alone.
@@ -71,7 +72,7 @@ nsresult nsFileSpecImpl::MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** r
 	nsFileSpecImpl* it = new nsFileSpecImpl(inSpec);
 	if (!it)
 		return NS_ERROR_OUT_OF_MEMORY;
-	return it->QueryInterface(nsIFileSpec::GetIID(), (void **) result);
+	return it->QueryInterface(NS_GET_IID(nsIFileSpec), (void **) result);
 } // nsFileSpecImpl::MakeInterface
 
 #define FILESPEC(ifilespec) ((nsFileSpecImpl*)ifilespec)->mFileSpec
@@ -796,12 +797,12 @@ nsresult NS_NewFileSpecWithSpec(const nsFileSpec& aSrcFileSpec, nsIFileSpec **re
 nsresult NS_NewFileSpec(nsIFileSpec** result)
 //----------------------------------------------------------------------------------------
 {
-	return nsFileSpecImpl::Create(nsnull, nsIFileSpec::GetIID(), (void**)result);
+	return nsFileSpecImpl::Create(nsnull, NS_GET_IID(nsIFileSpec), (void**)result);
 }
 
 //----------------------------------------------------------------------------------------
 nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result)
 //----------------------------------------------------------------------------------------
 {
-	return nsDirectoryIteratorImpl::Create(nsnull, nsIDirectoryIterator::GetIID(), (void**)result);
+	return nsDirectoryIteratorImpl::Create(nsnull, NS_GET_IID(nsIDirectoryIterator), (void**)result);
 }

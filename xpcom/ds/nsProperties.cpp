@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -69,9 +70,9 @@ nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-	 if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	 if (aIID.Equals(NS_GET_IID(nsISupports)))
 	     *aInstancePtr = GetInner();
-	 else if (aIID.Equals(nsIProperties::GetIID()))
+	 else if (aIID.Equals(NS_GET_IID(nsIProperties)))
 	     *aInstancePtr = NS_STATIC_CAST(nsIProperties*, this);
 	 else {
 	     *aInstancePtr = nsnull;
@@ -149,7 +150,7 @@ nsProperties::HasProperty(const char* prop, nsISupports* expectedValue)
 nsresult
 NS_NewIProperties(nsIProperties* *result)
 {
-    return nsProperties::Create(NULL, nsIProperties::GetIID(), (void**)result);
+    return nsProperties::Create(NULL, NS_GET_IID(nsIProperties), (void**)result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIFileStream.h"
@@ -539,7 +540,7 @@ NS_COM nsresult NS_NewTypicalInputFileStream(
 
     *aResult = nsnull;
     if (NS_SUCCEEDED(rv)) {
-      if (NS_SUCCEEDED(supports->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inStr))) {
+      if (NS_SUCCEEDED(supports->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inStr))) {
         *aResult = inStr;
       }
       NS_RELEASE(supports);
@@ -594,7 +595,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
 
     *aResult = nsnull;
     if (NS_SUCCEEDED(rv)) { 
-      if (NS_SUCCEEDED(supports->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&outStr))) {
+      if (NS_SUCCEEDED(supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)&outStr))) {
         *aResult = outStr;
       }
       NS_RELEASE(supports);
@@ -613,7 +614,7 @@ NS_COM nsresult NS_NewTypicalOutputFileStream(
 
     *aResult = nsnull;
     if (NS_SUCCEEDED(rv)) { 
-      if (NS_SUCCEEDED(supports->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&outStr))) {
+      if (NS_SUCCEEDED(supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)&outStr))) {
         *aResult = outStr;
       }
     }

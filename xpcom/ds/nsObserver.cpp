@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -74,9 +75,9 @@ nsObserver::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsISupports)))
 	     *aInstancePtr = GetInner();
-	 else if(aIID.Equals(nsIObserver::GetIID()))
+	 else if(aIID.Equals(NS_GET_IID(nsIObserver)))
 	     *aInstancePtr = NS_STATIC_CAST(nsIObserver*, this);
 	 else {
 	     *aInstancePtr = nsnull;

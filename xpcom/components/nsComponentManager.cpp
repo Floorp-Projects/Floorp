@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <stdlib.h>
@@ -337,8 +338,7 @@ nsComponentManagerImpl::PlatformInit(void)
         rv = NS_RegistryGetFactory(&registryFactory);
         if (NS_SUCCEEDED(rv))
         {
-            NS_DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID);
-            rv = registryFactory->CreateInstance(NULL, kRegistryIID,(void **)&mRegistry);
+            rv = registryFactory->CreateInstance(NULL, NS_GET_IID(nsIRegistry),(void **)&mRegistry);
             if (NS_FAILED(rv)) return rv;
             NS_RELEASE(registryFactory);
         }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsISupports.h"
@@ -152,7 +153,7 @@ nsFoo::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 }
 
 // Implement the nsISupports methods:
-NS_IMPL_ISUPPORTS(nsFoo, nsIFoo::GetIID());
+NS_IMPL_ISUPPORTS(nsFoo, NS_GET_IID(nsIFoo));
 
 // Implement the method(s) of the interface:
 NS_IMETHODIMP
@@ -168,7 +169,7 @@ PR_IMPLEMENT(nsresult)
 NS_NewFoo(nsIFoo* *result, const char* name)
 {
     // Use the constructor method to create this. Don't duplicate work.
-    nsresult rv = nsFoo::Create(NULL, nsIFoo::GetIID(),
+    nsresult rv = nsFoo::Create(NULL, NS_GET_IID(nsIFoo),
                                 (void**)result);
     if (NS_SUCCEEDED(rv)) {
         // Only initialize if the constructor succeeded:

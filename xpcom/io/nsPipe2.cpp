@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIPipe.h"
@@ -196,24 +197,24 @@ nsPipe::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (aInstancePtr == nsnull)
         return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIBufferInputStream::GetIID()) ||
-        aIID.Equals(nsIInputStream::GetIID()) ||
-        aIID.Equals(nsIBaseStream::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIBufferInputStream)) ||
+        aIID.Equals(NS_GET_IID(nsIInputStream)) ||
+        aIID.Equals(NS_GET_IID(nsIBaseStream))) {
         nsIBufferInputStream* in = GetInputStream();
         NS_ADDREF(in);
         *aInstancePtr = in;
         return NS_OK;
     }
-    if (aIID.Equals(nsIBufferOutputStream::GetIID()) ||
-        aIID.Equals(nsIOutputStream::GetIID()) ||
-        aIID.Equals(nsIBaseStream::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIBufferOutputStream)) ||
+        aIID.Equals(NS_GET_IID(nsIOutputStream)) ||
+        aIID.Equals(NS_GET_IID(nsIBaseStream))) {
         nsIBufferOutputStream* out = GetOutputStream();
         NS_ADDREF(out);
         *aInstancePtr = out;
         return NS_OK;
     }
-    if (aIID.Equals(nsIPipe::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIPipe)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = this;
         NS_ADDREF_THIS();
         return NS_OK;

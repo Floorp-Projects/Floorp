@@ -17,6 +17,8 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -282,8 +284,7 @@ private:
     PRUint32 SegOffset(PRUint32 aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
-static NS_DEFINE_IID(kIInputStream, NS_IINPUTSTREAM_IID);
-NS_IMPL_ISUPPORTS(nsStorageInputStream, kIInputStream)
+NS_IMPL_ISUPPORTS1(nsStorageInputStream, nsIInputStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInputStream)

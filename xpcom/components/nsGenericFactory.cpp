@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsGenericFactory.h"
@@ -82,7 +83,7 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 {
     nsresult rv;
     nsIGenericFactory* fact;
-    rv = nsGenericFactory::Create(NULL, nsIGenericFactory::GetIID(), (void**)&fact);
+    rv = nsGenericFactory::Create(NULL, NS_GET_IID(nsIGenericFactory), (void**)&fact);
     if (NS_FAILED(rv)) return rv;
     rv = fact->SetConstructor(constructor);
     if (NS_FAILED(rv)) goto error;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsSupportsArray.h"
@@ -385,7 +386,7 @@ NS_COM nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
 {
   nsresult rv;
-  rv = nsSupportsArray::Create(NULL, nsISupportsArray::GetIID(),
+  rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
                                (void**)aInstancePtrResult);
   return rv;
 }

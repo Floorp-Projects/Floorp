@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Scott Collins <scc@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsISupports.idl"
@@ -105,7 +106,7 @@ CallQueryReferent( nsIWeakReference* aSource, T** aDestination )
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->QueryReferent(nsCOMTypeInfo<T>::GetIID(), (void**)aDestination);
+    return aSource->QueryReferent(NS_GET_IID(T), (void**)aDestination);
   }
 
 

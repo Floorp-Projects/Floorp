@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -232,7 +233,7 @@ nsresult nsObserverService::Notify( nsISupports *aSubject,
             if ( NS_SUCCEEDED( rv ) ) {                           
                 // Convert item to nsIObserver.
                 nsIObserver *observer;
-                rv = base->QueryInterface( nsIObserver::GetIID(), (void**)&observer );
+                rv = base->QueryInterface( NS_GET_IID(nsIObserver), (void**)&observer );
                 if ( NS_SUCCEEDED( rv ) && observer ) {
                     // Tell the observer what's up.
                     observer->Observe( aSubject, aTopic, someData );
