@@ -1230,6 +1230,7 @@ nsFrame::DidReflow(nsIPresContext* aPresContext,
                      ("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY);
+  }
 
   return NS_OK;
 }
