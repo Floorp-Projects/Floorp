@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMaiInterfaceHypertext.h"
+#include "nsIAccessibleDocument.h"
 #include "nsPIAccessNode.h"
 
 G_BEGIN_DECLS
