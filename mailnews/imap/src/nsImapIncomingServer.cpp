@@ -67,6 +67,7 @@
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
 #include "nsICachedNetData.h"
+#include "nsImapUrl.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -896,29 +897,30 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 {
   // folderPath is in canonical format, i.e., hierarchy separator has been replaced with '/'
 	nsresult rv;
-    PRBool found = PR_FALSE;
+  PRBool found = PR_FALSE;
 	PRBool haveParent = PR_FALSE;
-    nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
-    nsCOMPtr<nsIMsgFolder> aFolder;
-    PRBool explicitlyVerify = PR_FALSE;
+  nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
+  nsCOMPtr<nsIMsgFolder> aFolder;
+  PRBool explicitlyVerify = PR_FALSE;
     
-    if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
+  if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
 
-	if (mDoingSubscribeDialog) {
+	if (mDoingSubscribeDialog) 
+  {
 		rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
 		return rv;
 	}
 
-    nsCAutoString dupFolderPath(folderPath);
-    if (dupFolderPath.Last() == hierarchyDelimiter)
-    {
-        dupFolderPath.SetLength(dupFolderPath.Length()-1);
-        // *** this is what we did in 4.x in order to list uw folder only
-        // mailbox in order to get the \NoSelect flag
-        explicitlyVerify = !(boxFlags & kNameSpace);
-    }
+  nsCAutoString dupFolderPath(folderPath);
+  if (dupFolderPath.Last() == hierarchyDelimiter)
+  {
+      dupFolderPath.SetLength(dupFolderPath.Length()-1);
+      // *** this is what we did in 4.x in order to list uw folder only
+      // mailbox in order to get the \NoSelect flag
+      explicitlyVerify = !(boxFlags & kNameSpace);
+  }
 
-    nsCAutoString folderName(dupFolderPath);
+  nsCAutoString folderName(dupFolderPath);
         
     nsCAutoString uri;
 	nsXPIDLCString serverUri;
@@ -1021,9 +1023,14 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       // online name needs to use the correct hierarchy delimiter (I think...)
       // or the canonical path - one or the other, but be consistent.
       dupFolderPath.ReplaceChar('/', hierarchyDelimiter);
+      if (hierarchyDelimiter != '/')
+        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*,(const char*) dupFolderPath));
+
       if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
 				|| nsCRT::strcmp((const char *) onlineName, dupFolderPath))
 				imapFolder->SetOnlineName(dupFolderPath);
+      if (hierarchyDelimiter != '/')
+        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*,(const char*) folderName));
 			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))
 				child->SetName(unicodeName);
       if (isAOLServer && onlineName && !nsCRT::strcasecmp(onlineName, "RECYCLE"))

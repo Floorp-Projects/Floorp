@@ -1408,8 +1408,9 @@ NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
 
   nsCOMPtr<nsIMsgDatabase> db; 
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
-  m_onlineFolderName = aOnlineFolderName;
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  // do this after GetDBFolderInfoAndDB, because it crunches m_onlineFolderName (not sure why)
+  m_onlineFolderName = aOnlineFolderName;
   if(NS_SUCCEEDED(rv) && folderInfo)
   {
     nsAutoString onlineName; onlineName.AssignWithConversion(aOnlineFolderName);
@@ -1479,7 +1480,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
       }
     }
   }
-    return openErr;
+  return openErr;
 }
 
 nsresult

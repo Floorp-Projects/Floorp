@@ -139,7 +139,19 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
 		PR_FREEIF(uri);
 		PR_FREEIF(hostname);
 	}
-	*folderName = nsEscape((const char *) onlineName, url_Path);
+  // if the hierarchy delimiter is not '/', then we want to escape slashes;
+  // otherwise, we do want to escape slashes.
+  // we want to escape slashes and '^' first, otherwise, nsEscape will lose them
+  PRBool escapeSlashes = (GetHierarchyDelimiter(aImapFolder) != (PRUnichar) '/');
+  if (escapeSlashes && (const char *) onlineName)
+  {
+    nsXPIDLCString escapedOnlineName;
+    rv = nsImapUrl::EscapeSlashes((const char *) onlineName, getter_Copies(escapedOnlineName));
+    if (NS_SUCCEEDED(rv))
+      onlineName = (const char *) escapedOnlineName;
+  }
+  // need to escape everything else
+  *folderName = nsEscape((const char *) onlineName, url_Path);
     return rv;
 }
 
@@ -2074,8 +2086,11 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
             urlSpec.AppendWithConversion(hierarchySeparator);
             if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
             {
-                urlSpec.Append((const char *) folderName);
-                urlSpec.AppendWithConversion(hierarchySeparator);
+              nsXPIDLCString canonicalName;
+
+              nsImapUrl::ConvertToCanonicalFormat(folderName, (char) hierarchySeparator, getter_Copies(canonicalName));
+              urlSpec.Append((const char *) canonicalName);
+              urlSpec.AppendWithConversion(hierarchySeparator);
             }
 			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newFolderName);
 			char *escapedFolderName = nsEscape(utfNewName, url_Path);

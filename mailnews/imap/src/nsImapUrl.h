@@ -63,6 +63,10 @@ public:
 	nsImapUrl();
 	virtual ~nsImapUrl();
 
+  static nsresult ConvertToCanonicalFormat(const char *folderName, char onlineDelimiter, char **resultingCanonicalPath);
+  static nsresult EscapeSlashes(const char *sourcePath, char **resultPath);
+  static nsresult UnescapeSlashes(char *path);
+
 protected:
 	virtual nsresult ParseUrl();
 	virtual const char * GetUserName() { return m_userName;}
@@ -72,7 +76,7 @@ protected:
 	// handle the imap specific parsing
 	void		ParseImapPart(char *imapPartOfUrl);
 
-	char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
+	static char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
 	void		ParseFolderPath(char **resultingCanonicalPath);
 	void		ParseSearchCriteriaString();
 	void		ParseChildDiscoveryDepth();

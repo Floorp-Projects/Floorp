@@ -762,6 +762,8 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
 	else
     rv = nsCRT::strdup("");
 
+  if (delimiterToUse != '/')
+    UnescapeSlashes(rv);
 	char *onlineNameAdded = nsnull;
 	AddOnlineDirectoryIfNecessary(rv, &onlineNameAdded);
 	if (onlineNameAdded)
@@ -776,6 +778,94 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
 		nsCRT::free(rv);
 
 	return retVal;
+}
+
+// escape '/' as ^, ^ -> ^^ - use UnescapeSlashes to revert
+/* static */ nsresult nsImapUrl::EscapeSlashes(const char *sourcePath, char **resultPath)
+{
+  NS_ENSURE_ARG(sourcePath);
+  NS_ENSURE_ARG(resultPath);
+  PRInt32 extra = 0;
+  PRInt32 len = nsCRT::strlen(sourcePath);
+  const char *src = sourcePath;
+
+  for (PRInt32 i = 0; i < len; i++)
+  {
+    if (*src == '^')
+      extra += 1; /* ^ -> ^^ */
+    src++;
+  }
+  char* result = (char *)nsMemory::Alloc(len + extra + 1);
+  if (!result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  register unsigned char* dst = (unsigned char *) result;
+  src = sourcePath;
+  for (i = 0; i < len; i++)
+  {
+    unsigned char c = *src++;
+    if (c == '/') 
+      *dst++ = '^';
+    else if (c == '^')
+    {
+      *dst++ = '^';
+      *dst++ = '^';
+    }
+    else
+      *dst++ = c;
+  }
+  *dst = '\0';     /* tack on eos */
+  *resultPath = result;
+  return NS_OK;
+}
+
+/* static */ nsresult nsImapUrl::UnescapeSlashes(char *sourcePath)
+{
+    register char *src = sourcePath;
+    register char *dst = sourcePath;
+
+    while (*src)
+    {
+      if (*src == '^')
+      {
+        if (*(src + 1) == '^')
+        {
+          *dst++ = '^';
+          src++;   // skip over second '^'
+        }
+        else
+          *dst++ = '/';
+        src++;
+      }
+      else
+        *dst++ = *src++;
+    }
+
+    *dst = 0;
+    return NS_OK;
+}
+
+/*  static */ nsresult nsImapUrl::ConvertToCanonicalFormat(const char *folderName, char onlineDelimiter, char **resultingCanonicalPath)
+{
+	// Now, start the conversion to canonical form.
+
+  char *canonicalPath;
+  if (onlineDelimiter != '/')
+  {
+    nsXPIDLCString escapedPath;
+
+    EscapeSlashes(folderName, getter_Copies(escapedPath));
+	  canonicalPath = ReplaceCharsInCopiedString(escapedPath, onlineDelimiter ,
+                                                 '/');
+  }
+  else
+  {
+    canonicalPath = nsCRT::strdup(folderName);
+  }
+	if (canonicalPath)
+    *resultingCanonicalPath = canonicalPath;
+
+  return (canonicalPath) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 // Converts the real online name on the server to canonical format:
@@ -844,24 +934,11 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 		}
 	}
 
+
 	if (!currentPath)
 		goto done;
 
-	// Now, start the conversion to canonical form.
-	canonicalPath = ReplaceCharsInCopiedString(currentPath, delimiterToUse ,
-                                               '/');
-	
-	// eat any escape characters for escaped dir separators
-	if (canonicalPath)
-	{
-		char *currentEscapeSequence = PL_strstr(canonicalPath, "\\/");
-		while (currentEscapeSequence)
-		{
-			PL_strcpy(currentEscapeSequence, currentEscapeSequence+1);
-			currentEscapeSequence = PL_strstr(currentEscapeSequence+1, "\\/");
-		}
-        *allocatedPath = canonicalPath;
-	}
+  rv = ConvertToCanonicalFormat(currentPath, delimiterToUse, allocatedPath);
 
 done:
   PR_FREEIF(onlineDir);
