@@ -3247,6 +3247,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } break;
 #endif
 
+    case nsIDOMKeyEvent::DOM_VK_TAB: {
+      return NS_OK;
+    }
+
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
       if (isControl) {
