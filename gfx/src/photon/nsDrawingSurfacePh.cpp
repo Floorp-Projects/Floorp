@@ -280,6 +280,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
   mPixmap      = NULL;
   mDrawContext = PhDCGetCurrent();
 
+ PgSetDrawBufferSize(8 * 1024 );  
+
 /* Code to clear the clipping from the GC */
   /* Activate this GC */
   Select();
@@ -308,6 +310,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 {
   /* Init a Off-Screen Drawing Surface */
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height this=<%p> w,h=(%ld,%ld) aGC=<%p>\n", this, aWidth, aHeight, aGC));
+
+ PgSetDrawBufferSize(8 * 1024 );  
 
   mGC = aGC;
   mWidth = aWidth;
