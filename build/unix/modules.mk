@@ -45,6 +45,7 @@ BUILD_MODULE_DIRS_dbm 		= $(NSPRPUB_DIR) dbm
 BUILD_MODULE_DIRS_js		+= js
 BUILD_MODULE_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom intl/unicharutil/public intl/uconv/public
 BUILD_MODULE_DIRS_necko		= $(BUILD_MODULE_DIRS_xpcom) netwerk
+BUILD_MODULE_DIRS_transformiix	= extensions/transformiix
 
 
 BUILD_MODULE_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DIRS_$(mod)))

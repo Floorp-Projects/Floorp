@@ -112,6 +112,54 @@ END_XPCOM_STANDALONE_MAKEFILES
 return 0
 fi
 
+# transformiix standalone mode
+if [ `echo "$BUILD_MODULES" | grep -c transformiix` != 0 ]; then
+  add_makefiles <<END_TRANSFORMIIX_STANDALONE_MAKEFILES
+#
+# General
+#
+Makefile
+build/Makefile
+build/unix/Makefile
+build/unix/mozilla-config
+build/unix/nspr_my_config.mk
+build/unix/nspr_my_overrides.mk
+config/Makefile
+config/autoconf.mk
+config/mkdepend/Makefile
+config/mkdetect/Makefile
+#
+# extensions/transformiix
+#
+# extensions/transformiix/build/Makefile
+extensions/transformiix/source/base/Makefile
+# extensions/transformiix/source/examples/mozilla/Transformiix/content/Makefile
+# extensions/transformiix/source/examples/mozilla/Transformiix/skin/Makefile
+# extensions/transformiix/source/examples/mozilla/Makefile
+# extensions/transformiix/source/examples/Makefile
+extensions/transformiix/source/main/Makefile
+extensions/transformiix/source/net/Makefile
+extensions/transformiix/source/xml/dom/standalone/Makefile
+extensions/transformiix/source/xml/dom/Makefile
+extensions/transformiix/source/xml/dom/mozImpl/Makefile
+extensions/transformiix/source/xml/parser/Makefile
+extensions/transformiix/source/xml/printer/Makefile
+extensions/transformiix/source/xml/util/Makefile
+extensions/transformiix/source/xml/Makefile
+extensions/transformiix/source/xpath/Makefile
+extensions/transformiix/source/xslt/functions/Makefile
+extensions/transformiix/source/xslt/util/Makefile
+extensions/transformiix/source/xslt/Makefile
+extensions/transformiix/source/Makefile
+extensions/transformiix/Makefile
+#
+# End of transformiix Makefiles
+#
+END_TRANSFORMIIX_STANDALONE_MAKEFILES
+return 0
+fi
+
+
 add_makefiles <<END_NGMAKEFILES
 Makefile
 build/Makefile
