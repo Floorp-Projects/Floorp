@@ -34,6 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gFolderPickerTree = null;
+var gServerURI;
 
 function onLoad()
 {
@@ -52,11 +53,24 @@ function onLoad()
         realFolder.setInVFEditSearchScope(true, false);
     }
   }
+
+  var serverMenu = document.getElementById("serverMenu"); 
+  var menuitems = serverMenu.getElementsByTagName("menuitem");
+
+  if (window.arguments[0].serverURI)
+  {
+    
+    reRootFolderPicker(window.arguments[0].serverURI);
+    var menuitems = serverMenu.getElementsByAttribute("id", gServerURI);
+    serverMenu.selectedItem = menuitems[0];
+  }
+  else 
+    reRootFolderPicker(menuitems[1]);     
 }
 
 function onUnLoad()
 {
-  // generateFoldersToSearchList();
+  resetFolderToSearchAttribute();
 }
 
 function onOK()
@@ -67,8 +81,20 @@ function onOK()
 
 function onCancel()
 {
-  // generateFoldersToSearchList will undo all of our folder property changes for us
-  generateFoldersToSearchList(); // ignore return string 
+  // onunload will clear out the folder attributes we changed
+}
+
+function onServerClick(event)
+{  
+  // re-root the folder list based on the newly chosen account...
+  var item = event.target;
+  reRootFolderPicker(item.id); 
+}
+
+function reRootFolderPicker(aServerURI)
+{
+  gServerURI = aServerURI; 
+  gFolderPickerTree.setAttribute('ref', gServerURI);
 }
 
 function addFolderToSearchListString(aFolder, aCurrentSearchURIString)
@@ -93,6 +119,27 @@ function processSearchSettingForFolder(aFolder, aCurrentSearchURIString)
 function generateFoldersToSearchList()
 {
   var uriSearchString = "";
+  
+  var rootFolder  = GetMsgFolderFromUri(gServerURI, false); 
+
+  if (rootFolder)
+  {
+    uriSearchString = processSearchSettingForFolder(rootFolder, uriSearchString);
+
+    var allFolders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    rootFolder.ListDescendents(allFolders);
+    var numFolders = allFolders.Count();
+    for (var folderIndex = 0; folderIndex < numFolders; folderIndex++)
+      uriSearchString = processSearchSettingForFolder(allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder), uriSearchString);
+  }
+
+  return uriSearchString;
+}
+
+function resetFolderToSearchAttribute()
+{
+  // iterates over all accounts and all folders, clearing out the inVFEditScope property in case
+  // we set it.
   var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
   var allServers = accountManager.allServers;
   var numServers = allServers.Count();
@@ -101,17 +148,13 @@ function generateFoldersToSearchList()
     var rootFolder  = allServers.GetElementAt(index).QueryInterface(Components.interfaces.nsIMsgIncomingServer).rootFolder;
     if (rootFolder)
     {
-      uriSearchString = processSearchSettingForFolder(rootFolder, uriSearchString);
-
       var allFolders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
       rootFolder.ListDescendents(allFolders);
       var numFolders = allFolders.Count();
       for (var folderIndex = 0; folderIndex < numFolders; folderIndex++)
-        uriSearchString = processSearchSettingForFolder(allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder), uriSearchString);
+        allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder).setInVFEditSearchScope(false, false);
     }
   } // for each account
-
-  return uriSearchString;
 }
 
 function ReverseStateFromNode(row)

@@ -52,6 +52,24 @@
 <script type="application/x-javascript" src="chrome://messenger/content/virtualFolderListDialog.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
+  <hbox pack="end" align="center">
+    <label value="&server.label;" accesskey="&server.accesskey;" control="serverMenu"/>
+    <menulist oncommand="onServerClick(event);" id="serverMenu" 
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+              sortDirection="ascending" ref="msgaccounts:/" flex="1">
+      <template>
+        <rule NC:CanSearchMessages="true">
+          <menupopup>
+            <menuitem class="menuitem-iconic" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menulist>
+  </hbox>
+
+  <separator class="thin"/>
+
   <description>&virtualFolderDesc.label;</description>
     <tree id="folderPickerTree"
           flex="1"

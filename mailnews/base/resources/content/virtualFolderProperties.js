@@ -68,19 +68,25 @@ function onLoad()
   else // we are creating a new virtual folder
   {
     // it is possible that we were given arguments to pre-fill the dialog with...
-    gSearchTermSession = arguments.searchTermSession || 
-                         Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
+    gSearchTermSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
+
+    if (arguments.searchTerms) // then add them to our search session
+    {
+      var count = arguments.searchTerms.Count();
+      for (var searchIndex = 0; searchIndex < count; )
+        gSearchTermSession.appendTerm(arguments.searchTerms.QueryElementAt(searchIndex++, Components.interfaces.nsIMsgSearchTerm));
+    }
     if (arguments.preselectedURI)
     {
       gSearchFolderURIs = arguments.preselectedURI;
-      var selectedFolder = GetResourceFromUri(gSearchFolderURIs); 
-      var folderToSearch = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-
+      var folderToSearch = GetMsgFolderFromUri(arguments.preselectedURI, false);
       SetFolderPicker(folderToSearch.parent ? folderToSearch.parent.URI : gSearchFolderURIs, "msgNewFolderPicker");
     }
     if (arguments.newFolderName) 
       document.getElementById("name").value = arguments.newFolderName;
-    
+    if (arguments.searchFolderURIs)
+      gSearchFolderURIs = arguments.searchFolderURIs;
+
     setupSearchRows(gSearchTermSession.searchTerms);
     doEnabling(); // we only need to disable/enable the OK button for new virtual folders
   }
@@ -204,9 +210,10 @@ function doEnabling()
 
 function chooseFoldersToSearch()
 {
+  var folder  = GetMsgFolderFromUri(window.arguments[0].preselectedURI, false);
   var dialog = window.openDialog("chrome://messenger/content/virtualFolderListDialog.xul", "",
                                  "chrome,titlebar,modal,centerscreen,resizable",
-                                 {preselectedURI:window.arguments[0].preselectedURI,
+                                 {serverURI:folder.rootFolder.URI,
                                   searchFolderURIs:gSearchFolderURIs,
                                   okCallback:onFolderListDialogCallback}); 
 }
