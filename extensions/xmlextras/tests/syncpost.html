@@ -1,0 +1,18 @@
+<html>
+<body>
+<h1>Posting test</h1>
+<script>
+var x = document.implementation.createDocument("", "test", null);
+x.documentElement.appendChild(document.createTextNode("Foo"));
+
+var p = new XMLHttpRequest();
+p.open("POST", "http://blueviper/cgi-bin/time2.cgi", false);
+p.send(x);
+var d = p.responseXML;
+var s = new XMLSerializer()
+str = s.serializeToString(d);
+alert(str);
+alert(p.getAllResponseHeaders());
+</script>
+</body>
+</html>
