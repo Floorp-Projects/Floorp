@@ -25,6 +25,7 @@
 #include "nsDBFolderInfo.h"
 #include "nsMsgDatabase.h"
 #include "nsMsgFolderFlags.h"
+#include "nsIPref.h"
 static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
 static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
 
@@ -49,6 +50,8 @@ static const char * kExpiredMarkColumnName = "expiredMark";
 static const char * kVersionColumnName = "version";
 static const char * kCharacterSetColumnName = "charSet";
 static const char * kLocaleColumnName = "locale";
+
+static nsString gDefaultCharacterSet;	// default charset
 
 NS_IMPL_ADDREF(nsDBFolderInfo)
 NS_IMPL_RELEASE(nsDBFolderInfo)
@@ -101,6 +104,23 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	m_unreadPendingMessages = 0;
 
 	m_mdbTokensInitialized = FALSE;
+
+	// Initialize a default charset to a pref default.
+	if (gDefaultCharacterSet.IsEmpty())
+	{
+		nsresult rv;
+		nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			PRUnichar *prefCharset = nsnull;
+			rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &prefCharset);
+			if (NS_SUCCEEDED(rv))
+			{
+				gDefaultCharacterSet.Assign(prefCharset);
+				PR_Free(prefCharset);
+			}
+		}
+	}
 
 	if (mdb)
 	{
@@ -552,7 +572,12 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 NS_IMETHODIMP
 nsDBFolderInfo::GetCharacterSet(nsString *result) 
 {
-	return GetProperty(kCharacterSetColumnName, result);
+	nsresult rv = GetProperty(kCharacterSetColumnName, result);
+
+	if (NS_SUCCEEDED(rv) && result->IsEmpty())
+		result->Assign(gDefaultCharacterSet.GetUnicode());
+
+	return rv;
 }
 
 NS_IMETHODIMP
