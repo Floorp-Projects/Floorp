@@ -25,6 +25,124 @@
 */
 
 
+  function BeginDragTree ( event )
+  {
+    //XXX we rely on a capturer to already have determined which item the mouse was over
+    //XXX and have set an attribute.
+    
+    // if the click is on the tree proper, ignore it. We only care about clicks on
+    // items.
+    var tree = document.getElementById("bookmarksTree");
+    if ( event.target == tree )
+      return true;  // continue propagating the event
+    
+    var childWithDatabase = tree;
+    if ( ! childWithDatabase )
+      return false;
+    
+    var dragStarted = false;
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+      if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+      if ( trans ) {
+//        trans.addDataFlavor("moz/toolbaritem");
+        var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
+        if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
+        trans.addDataFlavor("text/plain");
+        var genTextData = Components.classes["component://netscape/supports-string"].createInstance();
+        if ( genTextData ) genTextData = genTextData.QueryInterface(Components.interfaces.nsISupportsString);
+        
+        if ( genData && genTextData ) {
+        
+        // id (url) is on the <treeitem> which is two levels above the <treecell> which is
+        // the target of the event.
+		var id = event.target.parentNode.parentNode.getAttribute("id");
+		genData.data = id;
+        genTextData.data = id;
+        
+		dump("ID: " + id + "\n");
+
+		var database = childWithDatabase.database;
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if ((!rdf) || (!database))	{ dump("CAN'T GET DATABASE\n"); return(false); }
+
+		// make sure its a bookmark, bookmark separator, or bookmark folder
+		var src = rdf.GetResource(id, true);
+		var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
+		var target = database.GetTarget(src, prop, true);
+/*
+pinkerton
+this doesn't work anymore (target is null), not sure why.
+		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFResource);
+		if (target)	target = target.Value;
+		if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
+
+		dump("Type: '" + target + "'\n");
+
+		if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
+		   (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
+		   (target != "http://home.netscape.com/NC-rdf#Folder"))	return(false);
+*/
+
+//        trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
+          trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
+          var transArray = Components.classes["component://netscape/supports-array"].createInstance();
+          if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
+          if ( transArray ) {
+            // put it into the transferable as an |nsISupports|
+            var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+            transArray.AppendElement(genTrans);
+            var nsIDragService = Components.interfaces.nsIDragService;
+            dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                                nsIDragService.DRAGDROP_ACTION_MOVE );
+            dragStarted = true;
+          }
+        } // if data object
+      } // if transferable
+    } // if drag service
+
+    return !dragStarted;  // don't propagate the event if a drag has begun
+
+  } // BeginDragTree
+
+
+  function DragOverTree ( event )
+  {
+    var validFlavor = false;
+    var dragSession = null;
+    var retVal = true;
+
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      dragSession = dragService.getCurrentSession();
+      if ( dragSession ) {
+        if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
+          validFlavor = true;
+        else if ( dragSession.isDataFlavorSupported("text/plain") )
+          validFlavor = true;
+        //XXX other flavors here...
+
+        // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
+        if ( validFlavor ) {
+          //XXX this is really slow and likes to refresh N times per second.
+          var rowGroup = event.target.parentNode.parentNode;
+          rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+          dragSession.canDrop = true;
+          // necessary??
+          retVal = false; // do not propagate message
+        }
+      }
+    }
+
+    return retVal;
+
+  } // DragOverTree
+
+
 
 function copySelectionToClipboard()
 {

@@ -24,6 +24,12 @@
   var defaultStatus = "default status text";
   var explicitURL = false;
 
+
+  function GeneralDrag ( event )
+  {
+    dump("****** GENERAL DRAG ********\n");
+  }
+  
   function BeginDragPersonalToolbar ( event )
   {
     //XXX we rely on a capturer to already have determined which item the mouse was over
@@ -210,7 +216,7 @@ this doesn't work anymore (target is null), not sure why.
         if ( validFlavor ) {
           //XXX this is really slow and likes to refresh N times per second.
           var toolbar = document.getElementById("PersonalToolbar");
-          toolbar.setAttribute ( "tb-triggerrepaint", 0 );
+          toolbar.setAttribute ( "dd-triggerrepaint", 0 );
           dragSession.canDrop = true;
         }
       }
