@@ -189,5 +189,5 @@ PRBool nsAllocator::FetchAllocator()
 {
     nsAllocatorImpl::Create(NULL, nsIAllocator::GetIID(), (void**)&mAllocator);
     NS_ASSERTION(mAllocator, "failed to get Allocator!");
-    return (PRBool) mAllocator;
+    return (mAllocator ? PR_TRUE : PR_FALSE);
 }    
