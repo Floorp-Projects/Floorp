@@ -41,31 +41,31 @@ public:
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
-  NS_IMETHOD    GetMedia(nsString& aMedia)=0;
-  NS_IMETHOD    SetMedia(const nsString& aMedia)=0;
+  NS_IMETHOD    GetMedia(nsAWritableString& aMedia)=0;
+  NS_IMETHOD    SetMedia(const nsAReadableString& aMedia)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLSTYLEELEMENT   \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
-  NS_IMETHOD    GetMedia(nsString& aMedia);  \
-  NS_IMETHOD    SetMedia(const nsString& aMedia);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetMedia(nsAWritableString& aMedia);  \
+  NS_IMETHOD    SetMedia(const nsAReadableString& aMedia);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLSTYLEELEMENT(_to)  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to GetMedia(aMedia); } \
-  NS_IMETHOD    SetMedia(const nsString& aMedia) { return _to SetMedia(aMedia); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetMedia(nsAWritableString& aMedia) { return _to GetMedia(aMedia); } \
+  NS_IMETHOD    SetMedia(const nsAReadableString& aMedia) { return _to SetMedia(aMedia); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLStyleElementClass(nsIScriptContext *aContext, void **aPrototype);

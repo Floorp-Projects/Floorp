@@ -90,7 +90,7 @@ public:
 
   NS_IMETHOD    Clone(nsIDOMRange** aReturn)=0;
 
-  NS_IMETHOD    ToString(nsString& aReturn)=0;
+  NS_IMETHOD    ToString(nsAWritableString& aReturn)=0;
 };
 
 
@@ -117,7 +117,7 @@ public:
   NS_IMETHOD    InsertNode(nsIDOMNode* aN);  \
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN);  \
   NS_IMETHOD    Clone(nsIDOMRange** aReturn);  \
-  NS_IMETHOD    ToString(nsString& aReturn);  \
+  NS_IMETHOD    ToString(nsAWritableString& aReturn);  \
 
 
 
@@ -144,7 +144,7 @@ public:
   NS_IMETHOD    InsertNode(nsIDOMNode* aN) { return _to InsertNode(aN); }  \
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN) { return _to SurroundContents(aN); }  \
   NS_IMETHOD    Clone(nsIDOMRange** aReturn) { return _to Clone(aReturn); }  \
-  NS_IMETHOD    ToString(nsString& aReturn) { return _to ToString(aReturn); }  \
+  NS_IMETHOD    ToString(nsAWritableString& aReturn) { return _to ToString(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **aPrototype);

@@ -28,7 +28,7 @@
 #include "nsIDOMPlugin.h"
 
 class nsIDOMNavigator;
-class nsIPluginHost;
+struct nsIPluginHost;
 
 class PluginArrayImpl : public nsIScriptObjectOwner, public nsIDOMPluginArray {
 public:
@@ -42,7 +42,7 @@ public:
 
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMPlugin** aReturn);
-  NS_IMETHOD NamedItem(const nsString& aName, nsIDOMPlugin** aReturn);
+  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn);
   NS_IMETHOD Refresh(PRBool aReloadDocuments);
 
 private:
@@ -66,12 +66,12 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void* aScriptObject);
 
-  NS_IMETHOD GetDescription(nsString& aDescription);
-  NS_IMETHOD GetFilename(nsString& aFilename);
-  NS_IMETHOD GetName(nsString& aName);
+  NS_IMETHOD GetDescription(nsAWritableString& aDescription);
+  NS_IMETHOD GetFilename(nsAWritableString& aFilename);
+  NS_IMETHOD GetName(nsAWritableString& aName);
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMMimeType** aReturn);
-  NS_IMETHOD NamedItem(const nsString& aName, nsIDOMMimeType** aReturn);
+  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn);
 
 private:
   nsresult GetMimeTypes();

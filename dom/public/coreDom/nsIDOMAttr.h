@@ -39,31 +39,31 @@ class nsIDOMAttr : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMATTR_IID; return iid; }
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
 
   NS_IMETHOD    GetSpecified(PRBool* aSpecified)=0;
 
-  NS_IMETHOD    GetValue(nsString& aValue)=0;
-  NS_IMETHOD    SetValue(const nsString& aValue)=0;
+  NS_IMETHOD    GetValue(nsAWritableString& aValue)=0;
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue)=0;
 
   NS_IMETHOD    GetOwnerElement(nsIDOMElement** aOwnerElement)=0;
 };
 
 
 #define NS_DECL_IDOMATTR   \
-  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
   NS_IMETHOD    GetSpecified(PRBool* aSpecified);  \
-  NS_IMETHOD    GetValue(nsString& aValue);  \
-  NS_IMETHOD    SetValue(const nsString& aValue);  \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue);  \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue);  \
   NS_IMETHOD    GetOwnerElement(nsIDOMElement** aOwnerElement);  \
 
 
 
 #define NS_FORWARD_IDOMATTR(_to)  \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
   NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return _to GetSpecified(aSpecified); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue) { return _to SetValue(aValue); } \
   NS_IMETHOD    GetOwnerElement(nsIDOMElement** aOwnerElement) { return _to GetOwnerElement(aOwnerElement); } \
 
 

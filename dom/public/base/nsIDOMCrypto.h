@@ -39,19 +39,19 @@ class nsIDOMCrypto : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCRYPTO_IID; return iid; }
 
-  NS_IMETHOD    GetVersion(nsString& aVersion)=0;
+  NS_IMETHOD    GetVersion(nsAWritableString& aVersion)=0;
 
   NS_IMETHOD    GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMCRMFObject** aReturn)=0;
 
-  NS_IMETHOD    ImportUserCertificates(const nsString& aNickname, const nsString& aCmmfResponse, PRBool aDoForcedBackup, nsString& aReturn)=0;
+  NS_IMETHOD    ImportUserCertificates(const nsAReadableString& aNickname, const nsAReadableString& aCmmfResponse, PRBool aDoForcedBackup, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    PopChallengeResponse(const nsString& aChallenge, nsString& aReturn)=0;
+  NS_IMETHOD    PopChallengeResponse(const nsAReadableString& aChallenge, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    Random(PRInt32 aNumBytes, nsString& aReturn)=0;
+  NS_IMETHOD    Random(PRInt32 aNumBytes, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    SignText(JSContext* cx, jsval* argv, PRUint32 argc, nsString& aReturn)=0;
+  NS_IMETHOD    SignText(JSContext* cx, jsval* argv, PRUint32 argc, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    Alert(const nsString& aMessage)=0;
+  NS_IMETHOD    Alert(const nsAReadableString& aMessage)=0;
 
   NS_IMETHOD    Logout()=0;
 
@@ -60,26 +60,26 @@ public:
 
 
 #define NS_DECL_IDOMCRYPTO   \
-  NS_IMETHOD    GetVersion(nsString& aVersion);  \
+  NS_IMETHOD    GetVersion(nsAWritableString& aVersion);  \
   NS_IMETHOD    GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMCRMFObject** aReturn);  \
-  NS_IMETHOD    ImportUserCertificates(const nsString& aNickname, const nsString& aCmmfResponse, PRBool aDoForcedBackup, nsString& aReturn);  \
-  NS_IMETHOD    PopChallengeResponse(const nsString& aChallenge, nsString& aReturn);  \
-  NS_IMETHOD    Random(PRInt32 aNumBytes, nsString& aReturn);  \
-  NS_IMETHOD    SignText(JSContext* cx, jsval* argv, PRUint32 argc, nsString& aReturn);  \
-  NS_IMETHOD    Alert(const nsString& aMessage);  \
+  NS_IMETHOD    ImportUserCertificates(const nsAReadableString& aNickname, const nsAReadableString& aCmmfResponse, PRBool aDoForcedBackup, nsAWritableString& aReturn);  \
+  NS_IMETHOD    PopChallengeResponse(const nsAReadableString& aChallenge, nsAWritableString& aReturn);  \
+  NS_IMETHOD    Random(PRInt32 aNumBytes, nsAWritableString& aReturn);  \
+  NS_IMETHOD    SignText(JSContext* cx, jsval* argv, PRUint32 argc, nsAWritableString& aReturn);  \
+  NS_IMETHOD    Alert(const nsAReadableString& aMessage);  \
   NS_IMETHOD    Logout();  \
   NS_IMETHOD    DisableRightClick();  \
 
 
 
 #define NS_FORWARD_IDOMCRYPTO(_to)  \
-  NS_IMETHOD    GetVersion(nsString& aVersion) { return _to GetVersion(aVersion); } \
+  NS_IMETHOD    GetVersion(nsAWritableString& aVersion) { return _to GetVersion(aVersion); } \
   NS_IMETHOD    GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMCRMFObject** aReturn) { return _to GenerateCRMFRequest(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    ImportUserCertificates(const nsString& aNickname, const nsString& aCmmfResponse, PRBool aDoForcedBackup, nsString& aReturn) { return _to ImportUserCertificates(aNickname, aCmmfResponse, aDoForcedBackup, aReturn); }  \
-  NS_IMETHOD    PopChallengeResponse(const nsString& aChallenge, nsString& aReturn) { return _to PopChallengeResponse(aChallenge, aReturn); }  \
-  NS_IMETHOD    Random(PRInt32 aNumBytes, nsString& aReturn) { return _to Random(aNumBytes, aReturn); }  \
-  NS_IMETHOD    SignText(JSContext* cx, jsval* argv, PRUint32 argc, nsString& aReturn) { return _to SignText(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    Alert(const nsString& aMessage) { return _to Alert(aMessage); }  \
+  NS_IMETHOD    ImportUserCertificates(const nsAReadableString& aNickname, const nsAReadableString& aCmmfResponse, PRBool aDoForcedBackup, nsAWritableString& aReturn) { return _to ImportUserCertificates(aNickname, aCmmfResponse, aDoForcedBackup, aReturn); }  \
+  NS_IMETHOD    PopChallengeResponse(const nsAReadableString& aChallenge, nsAWritableString& aReturn) { return _to PopChallengeResponse(aChallenge, aReturn); }  \
+  NS_IMETHOD    Random(PRInt32 aNumBytes, nsAWritableString& aReturn) { return _to Random(aNumBytes, aReturn); }  \
+  NS_IMETHOD    SignText(JSContext* cx, jsval* argv, PRUint32 argc, nsAWritableString& aReturn) { return _to SignText(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    Alert(const nsAReadableString& aMessage) { return _to Alert(aMessage); }  \
   NS_IMETHOD    Logout() { return _to Logout(); }  \
   NS_IMETHOD    DisableRightClick() { return _to DisableRightClick(); }  \
 

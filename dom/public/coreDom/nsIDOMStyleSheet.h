@@ -40,7 +40,7 @@ class nsIDOMStyleSheet : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSTYLESHEET_IID; return iid; }
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
@@ -49,34 +49,34 @@ public:
 
   NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)=0;
 
-  NS_IMETHOD    GetHref(nsString& aHref)=0;
+  NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
 
-  NS_IMETHOD    GetTitle(nsString& aTitle)=0;
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle)=0;
 
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia)=0;
 };
 
 
 #define NS_DECL_IDOMSTYLESHEET   \
-  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
   NS_IMETHOD    GetOwnerNode(nsIDOMNode** aOwnerNode);  \
   NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet);  \
-  NS_IMETHOD    GetHref(nsString& aHref);  \
-  NS_IMETHOD    GetTitle(nsString& aTitle);  \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref);  \
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle);  \
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia);  \
 
 
 
 #define NS_FORWARD_IDOMSTYLESHEET(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
   NS_IMETHOD    GetOwnerNode(nsIDOMNode** aOwnerNode) { return _to GetOwnerNode(aOwnerNode); } \
   NS_IMETHOD    GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to GetTitle(aTitle); } \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle) { return _to GetTitle(aTitle); } \
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia) { return _to GetMedia(aMedia); } \
 
 

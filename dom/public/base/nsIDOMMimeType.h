@@ -37,29 +37,29 @@ class nsIDOMMimeType : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMMIMETYPE_IID; return iid; }
 
-  NS_IMETHOD    GetDescription(nsString& aDescription)=0;
+  NS_IMETHOD    GetDescription(nsAWritableString& aDescription)=0;
 
   NS_IMETHOD    GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)=0;
 
-  NS_IMETHOD    GetSuffixes(nsString& aSuffixes)=0;
+  NS_IMETHOD    GetSuffixes(nsAWritableString& aSuffixes)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
 };
 
 
 #define NS_DECL_IDOMMIMETYPE   \
-  NS_IMETHOD    GetDescription(nsString& aDescription);  \
+  NS_IMETHOD    GetDescription(nsAWritableString& aDescription);  \
   NS_IMETHOD    GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin);  \
-  NS_IMETHOD    GetSuffixes(nsString& aSuffixes);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    GetSuffixes(nsAWritableString& aSuffixes);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
 
 
 
 #define NS_FORWARD_IDOMMIMETYPE(_to)  \
-  NS_IMETHOD    GetDescription(nsString& aDescription) { return _to GetDescription(aDescription); } \
+  NS_IMETHOD    GetDescription(nsAWritableString& aDescription) { return _to GetDescription(aDescription); } \
   NS_IMETHOD    GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin) { return _to GetEnabledPlugin(aEnabledPlugin); } \
-  NS_IMETHOD    GetSuffixes(nsString& aSuffixes) { return _to GetSuffixes(aSuffixes); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetSuffixes(nsAWritableString& aSuffixes) { return _to GetSuffixes(aSuffixes); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitMimeTypeClass(nsIScriptContext *aContext, void **aPrototype);

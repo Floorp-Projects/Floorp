@@ -44,7 +44,7 @@ public:
   //nsIDOMWindowCollection interface
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMWindow** aReturn);
-  NS_IMETHOD NamedItem(const nsString& aName, nsIDOMWindow** aReturn);
+  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMWindow** aReturn);
 
   //nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);

@@ -41,13 +41,13 @@ class nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLSELECTELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
 
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex)=0;
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex)=0;
 
-  NS_IMETHOD    GetValue(nsString& aValue)=0;
-  NS_IMETHOD    SetValue(const nsString& aValue)=0;
+  NS_IMETHOD    GetValue(nsAWritableString& aValue)=0;
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue)=0;
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
   NS_IMETHOD    SetLength(PRUint32 aLength)=0;
@@ -62,8 +62,8 @@ public:
   NS_IMETHOD    GetMultiple(PRBool* aMultiple)=0;
   NS_IMETHOD    SetMultiple(PRBool aMultiple)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
   NS_IMETHOD    GetSize(PRInt32* aSize)=0;
   NS_IMETHOD    SetSize(PRInt32 aSize)=0;
@@ -82,11 +82,11 @@ public:
 
 
 #define NS_DECL_IDOMHTMLSELECTELEMENT   \
-  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex);  \
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex);  \
-  NS_IMETHOD    GetValue(nsString& aValue);  \
-  NS_IMETHOD    SetValue(const nsString& aValue);  \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue);  \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
   NS_IMETHOD    SetLength(PRUint32 aLength);  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
@@ -95,8 +95,8 @@ public:
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
   NS_IMETHOD    GetMultiple(PRBool* aMultiple);  \
   NS_IMETHOD    SetMultiple(PRBool aMultiple);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
   NS_IMETHOD    GetSize(PRInt32* aSize);  \
   NS_IMETHOD    SetSize(PRInt32 aSize);  \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
@@ -109,11 +109,11 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLSELECTELEMENT(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex) { return _to GetSelectedIndex(aSelectedIndex); } \
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex) { return _to SetSelectedIndex(aSelectedIndex); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue) { return _to SetValue(aValue); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
   NS_IMETHOD    SetLength(PRUint32 aLength) { return _to SetLength(aLength); } \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
@@ -122,8 +122,8 @@ public:
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
   NS_IMETHOD    GetMultiple(PRBool* aMultiple) { return _to GetMultiple(aMultiple); } \
   NS_IMETHOD    SetMultiple(PRBool aMultiple) { return _to SetMultiple(aMultiple); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
   NS_IMETHOD    GetSize(PRInt32* aSize) { return _to GetSize(aSize); } \
   NS_IMETHOD    SetSize(PRInt32 aSize) { return _to SetSize(aSize); } \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \

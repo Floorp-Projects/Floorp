@@ -38,8 +38,8 @@ class nsIDOMHTMLLIElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLLIELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 
   NS_IMETHOD    GetValue(PRInt32* aValue)=0;
   NS_IMETHOD    SetValue(PRInt32 aValue)=0;
@@ -47,16 +47,16 @@ public:
 
 
 #define NS_DECL_IDOMHTMLLIELEMENT   \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
   NS_IMETHOD    GetValue(PRInt32* aValue);  \
   NS_IMETHOD    SetValue(PRInt32 aValue);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLLIELEMENT(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
   NS_IMETHOD    GetValue(PRInt32* aValue) { return _to GetValue(aValue); } \
   NS_IMETHOD    SetValue(PRInt32 aValue) { return _to SetValue(aValue); } \
 

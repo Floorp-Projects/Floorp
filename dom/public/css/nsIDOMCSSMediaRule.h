@@ -44,7 +44,7 @@ public:
 
   NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules)=0;
 
-  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn)=0;
+  NS_IMETHOD    InsertRule(const nsAReadableString& aRule, PRUint32 aIndex, PRUint32* aReturn)=0;
 
   NS_IMETHOD    DeleteRule(PRUint32 aIndex)=0;
 };
@@ -53,7 +53,7 @@ public:
 #define NS_DECL_IDOMCSSMEDIARULE   \
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia);  \
   NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules);  \
-  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn);  \
+  NS_IMETHOD    InsertRule(const nsAReadableString& aRule, PRUint32 aIndex, PRUint32* aReturn);  \
   NS_IMETHOD    DeleteRule(PRUint32 aIndex);  \
 
 
@@ -61,7 +61,7 @@ public:
 #define NS_FORWARD_IDOMCSSMEDIARULE(_to)  \
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia) { return _to GetMedia(aMedia); } \
   NS_IMETHOD    GetCssRules(nsIDOMCSSRuleList** aCssRules) { return _to GetCssRules(aCssRules); } \
-  NS_IMETHOD    InsertRule(const nsString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to InsertRule(aRule, aIndex, aReturn); }  \
+  NS_IMETHOD    InsertRule(const nsAReadableString& aRule, PRUint32 aIndex, PRUint32* aReturn) { return _to InsertRule(aRule, aIndex, aReturn); }  \
   NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to DeleteRule(aIndex); }  \
 
 

@@ -56,6 +56,7 @@ protected:
     void            GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable);
     void            GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable);    
     void            GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable);
+    void            GetVariableTypeForReturnValue(char *aBuffer, IdlVariable &aVariable);
 
     void            GetParameterType(char *aBuffer, IdlParameter &aParameter);
     void            GetInterfaceIID(char *aBuffer, IdlInterface &aInterface);

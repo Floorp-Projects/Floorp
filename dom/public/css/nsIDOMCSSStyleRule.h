@@ -39,23 +39,23 @@ class nsIDOMCSSStyleRule : public nsIDOMCSSRule {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLERULE_IID; return iid; }
 
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText)=0;
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText)=0;
+  NS_IMETHOD    GetSelectorText(nsAWritableString& aSelectorText)=0;
+  NS_IMETHOD    SetSelectorText(const nsAReadableString& aSelectorText)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
 };
 
 
 #define NS_DECL_IDOMCSSSTYLERULE   \
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText);  \
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);  \
+  NS_IMETHOD    GetSelectorText(nsAWritableString& aSelectorText);  \
+  NS_IMETHOD    SetSelectorText(const nsAReadableString& aSelectorText);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
 
 
 
 #define NS_FORWARD_IDOMCSSSTYLERULE(_to)  \
-  NS_IMETHOD    GetSelectorText(nsString& aSelectorText) { return _to GetSelectorText(aSelectorText); } \
-  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText) { return _to SetSelectorText(aSelectorText); } \
+  NS_IMETHOD    GetSelectorText(nsAWritableString& aSelectorText) { return _to GetSelectorText(aSelectorText); } \
+  NS_IMETHOD    SetSelectorText(const nsAReadableString& aSelectorText) { return _to SetSelectorText(aSelectorText); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
 
 

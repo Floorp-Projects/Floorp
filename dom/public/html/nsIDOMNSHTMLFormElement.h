@@ -39,7 +39,7 @@ class nsIDOMNSHTMLFormElement : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLFORMELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetEncoding(nsString& aEncoding)=0;
+  NS_IMETHOD    GetEncoding(nsAWritableString& aEncoding)=0;
 
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 
@@ -48,14 +48,14 @@ public:
 
 
 #define NS_DECL_IDOMNSHTMLFORMELEMENT   \
-  NS_IMETHOD    GetEncoding(nsString& aEncoding);  \
+  NS_IMETHOD    GetEncoding(nsAWritableString& aEncoding);  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNSHTMLFORMELEMENT(_to)  \
-  NS_IMETHOD    GetEncoding(nsString& aEncoding) { return _to GetEncoding(aEncoding); } \
+  NS_IMETHOD    GetEncoding(nsAWritableString& aEncoding) { return _to GetEncoding(aEncoding); } \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to NamedItem(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn) { return _to Item(aIndex, aReturn); }  \
 

@@ -38,20 +38,20 @@ class nsIDOMHTMLHeadElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLHEADELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetProfile(nsString& aProfile)=0;
-  NS_IMETHOD    SetProfile(const nsString& aProfile)=0;
+  NS_IMETHOD    GetProfile(nsAWritableString& aProfile)=0;
+  NS_IMETHOD    SetProfile(const nsAReadableString& aProfile)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLHEADELEMENT   \
-  NS_IMETHOD    GetProfile(nsString& aProfile);  \
-  NS_IMETHOD    SetProfile(const nsString& aProfile);  \
+  NS_IMETHOD    GetProfile(nsAWritableString& aProfile);  \
+  NS_IMETHOD    SetProfile(const nsAReadableString& aProfile);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLHEADELEMENT(_to)  \
-  NS_IMETHOD    GetProfile(nsString& aProfile) { return _to GetProfile(aProfile); } \
-  NS_IMETHOD    SetProfile(const nsString& aProfile) { return _to SetProfile(aProfile); } \
+  NS_IMETHOD    GetProfile(nsAWritableString& aProfile) { return _to GetProfile(aProfile); } \
+  NS_IMETHOD    SetProfile(const nsAReadableString& aProfile) { return _to SetProfile(aProfile); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLHeadElementClass(nsIScriptContext *aContext, void **aPrototype);
