@@ -185,16 +185,7 @@ sub End {
 
 sub Char {
     my $parser = shift;
-    my($text) = @_;
-    my $currentList = $parser->{'Current List'};
-    my $position = $#$currentList;
-    if (($position > 0) and ($currentList->[$position-1] eq '0')) {
-        # we already have some text, just stick it on the end
-        $currentList->[$position] .= $text;
-    } else {
-        # new text node
-        push(@$currentList, 0 => $text);
-    }
+    push(@{$parser->{'Current List'}}, 0 => @_);
 }
 
 sub Final {
