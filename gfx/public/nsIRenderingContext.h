@@ -688,6 +688,16 @@ public:
    */
   NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts) = 0;
 
+
+  /**
+   * fill a path.. given a point array.  The Path currently supported is a Quadratic
+   * Bezier curve
+   * @param aPointArray an array of points on the path
+   * @param aNumPts number of points in the array
+   */
+  NS_IMETHOD FillPath(nsPathPoint aPointArray[],PRInt32 aNumPts) = 0;
+
+
   /**
    * Copy offscreen pixelmap to this RenderingContext.
    * @param aSrcSurf drawing surface to copy bits from
