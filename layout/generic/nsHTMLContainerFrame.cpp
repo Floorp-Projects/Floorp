@@ -224,52 +224,56 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
                                          const nsStylePosition* aPosition,
                                          nsIFrame*&             aPlaceholderFrame)
 {
+  // Initialize OUT parameter
   aPlaceholderFrame = nsnull;
 
-  nsIFrame* nextSibling;
-
   // See if the element wants to be floated or absolutely positioned
-  if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+  PRBool  isFloated = NS_STYLE_FLOAT_NONE != aDisplay->mFloats;
+  PRBool  isAbsolute = NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition;
+
+  if (isFloated || isAbsolute) {
+    nsIFrame* nextSibling;
+
+    // Set aFrame's next sibling to nsnull, and remember the current next
+    // sibling pointer
     aFrame->GetNextSibling(nextSibling);
     aFrame->SetNextSibling(nsnull);
 
-    // Create a placeholder frame that will serve as the anchor point.
-    nsPlaceholderFrame* placeholder =
-      CreatePlaceholderFrame(aPresContext, aFrame);
+    if (isFloated) {
+      // Create a placeholder frame that will serve as the anchor point.
+      nsPlaceholderFrame* placeholder =
+        CreatePlaceholderFrame(aPresContext, aFrame);
+  
+      // See if we need to wrap the frame in a BODY frame
+      nsIFrame*  wrapperFrame;
+      if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
+        // Bind the wrapper frame to the placeholder
+        placeholder->SetAnchoredItem(wrapperFrame);
+      }
+  
+      aPlaceholderFrame = placeholder;
 
-    // See if we need to wrap the frame in a BODY frame
-    nsIFrame*  wrapperFrame;
-    if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
-      // Bind the wrapper frame to the placeholder
-      placeholder->SetAnchoredItem(wrapperFrame);
+    } else {
+      // Create a placeholder frame that will serve as the anchor point.
+      nsAbsoluteFrame* placeholder =
+        CreateAbsolutePlaceholderFrame(aPresContext, aFrame);
+  
+      // See if we need to wrap the frame in a BODY frame
+      nsIFrame*  wrapperFrame;
+      if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
+        // Bind the wrapper frame to the placeholder
+        placeholder->SetAbsoluteFrame(wrapperFrame);
+      }
+  
+      aPlaceholderFrame = placeholder;
     }
 
-    aPlaceholderFrame = placeholder;
-
-  } else if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
-    aFrame->GetNextSibling(nextSibling);
-    aFrame->SetNextSibling(nsnull);
-
-    // Create a placeholder frame that will serve as the anchor point.
-    nsAbsoluteFrame* placeholder =
-      CreateAbsolutePlaceholderFrame(aPresContext, aFrame);
-
-    // See if we need to wrap the frame in a BODY frame
-    nsIFrame*  wrapperFrame;
-    if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
-      // Bind the wrapper frame to the placeholder
-      placeholder->SetAbsoluteFrame(wrapperFrame);
-    }
-
-    aPlaceholderFrame = placeholder;
-  }
-
-  if (nsnull == aPlaceholderFrame) {
-    return PR_FALSE;
-  } else {
+    // Set the placeholder's next sibling to what aFrame's next sibling was
     aPlaceholderFrame->SetNextSibling(nextSibling);
     return PR_TRUE;
   }
+
+  return PR_FALSE;
 }
 
 /**
@@ -310,95 +314,6 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
     aNextInFlowResult = nextInFlow;
   }
   return NS_OK;
-}
-
-// Walk the new frames and check if there are any elements that need
-// wrapping. For floating frames we create a placeholder frame to wrap
-// around the original frame. In addition, if the floating object
-// needs a body frame, provide that too.
-
-// For placeholder frames we...
-
-// For frames that require scrolling we...
-
-nsresult
-nsHTMLContainerFrame::WrapFrames(nsIPresContext& aPresContext,
-                                 nsIFrame* aPrevFrame, nsIFrame* aNewFrame)
-{
-  nsresult rv = NS_OK;
-
-  nsIFrame* frame = aNewFrame;
-  while (nsnull != frame) {
-    const nsStyleDisplay* display;
-    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-
-    // See if the element wants to be floated
-    if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-      // Create a placeholder frame that will serve as the anchor point.
-      nsPlaceholderFrame* placeholder =
-        CreatePlaceholderFrame(aPresContext, frame);
-      if (nsnull == placeholder) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      // Remove the floated element from the flow, and replace it with
-      // the placeholder frame
-      if (nsnull == aPrevFrame) {
-        mFirstChild = placeholder;
-      } else {
-        aPrevFrame->SetNextSibling(placeholder);
-      }
-      nsIFrame* nextSibling;
-      frame->GetNextSibling(nextSibling);
-      placeholder->SetNextSibling(nextSibling);
-      frame->SetNextSibling(nsnull);
-
-      // If the floated element can contain children then wrap it in a
-      // BODY frame before floating it
-      nsIContent* content;
-      PRBool isContainer;
-      frame->GetContent(content);
-      if (nsnull != content) {
-        content->CanContainChildren(isContainer);
-        if (isContainer) {
-          // Wrap the floated element in a BODY frame.
-          nsIFrame* wrapperFrame;
-          rv = NS_NewBodyFrame(content, this, wrapperFrame, PR_FALSE);
-          if (NS_OK != rv) {
-            return rv;
-          }
-    
-          // The body wrapper frame gets the original style context,
-          // and the floated frame gets a pseudo style context
-          nsIStyleContext*  kidStyle;
-          frame->GetStyleContext(&aPresContext, kidStyle);
-          wrapperFrame->SetStyleContext(&aPresContext, kidStyle);
-          NS_RELEASE(kidStyle);
-
-          nsIStyleContext* pseudoStyle;
-          pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
-                                                                  wrapperFrame);
-          frame->SetStyleContext(&aPresContext, pseudoStyle);
-          NS_RELEASE(pseudoStyle);
-    
-          // Init the body frame
-          wrapperFrame->Init(aPresContext, frame);
-
-          // Bind the wrapper frame to the placeholder
-          placeholder->SetAnchoredItem(wrapperFrame);
-        }
-        NS_RELEASE(content);
-      }
-
-      frame = placeholder;
-    }
-
-    // Remember the previous frame
-    aPrevFrame = frame;
-    frame->GetNextSibling(frame);
-  }
-
-  return rv;
 }
 
 nsresult

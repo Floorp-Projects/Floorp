@@ -49,9 +49,6 @@ public:
                               nsIContent* aChild,
                               nsIAtom* aAttribute);
 
-  nsresult WrapFrames(nsIPresContext& aPresContext,
-                      nsIFrame* aPrevFrame, nsIFrame* aFrame);
-
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
   nsAbsoluteFrame* CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
@@ -60,6 +57,11 @@ public:
                             nsIFrame*       aFrame,
                             nsIFrame*&      aWrapperFrame);
 
+  // If the frame should be floated or absolutely positioned creates a placeholder
+  // frame and returns PR_TRUE. The sibling list is modified so aFrame's next
+  // sibling pointer is set to nsnull, and aPlaceholderFrame's sibling pointer
+  // is set to what aFrame's sibling pointer was. It's up to the caller to adjust
+  // any previous sibling pointers.
   PRBool MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
                             nsIFrame*              aFrame,
                             const nsStyleDisplay*  aDisplay,
