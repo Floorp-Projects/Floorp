@@ -40,6 +40,8 @@
 
 #include "nsIDOMEventListener.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMTextListener.h"
+#include "nsIDOMCompositionListener.h"
 #include "nsIScrollPositionListener.h"
 #include "nsISelectionListener.h"
 #include "nsISelectionController.h"
@@ -66,7 +68,7 @@
 enum {
   eRepeatingNone,
   eRepeatingChar,
-  eRepeatingReverseChar,
+  eRepeatingCharReverse,
   eRepeatingForward,
   eRepeatingReverse
 }; 
@@ -75,6 +77,8 @@ const int kMaxBadCharsBeforeCancel = 3;
 
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIDOMKeyListener,
+                        public nsIDOMTextListener,
+                        public nsIDOMCompositionListener,
                         public nsIObserver,
                         public nsIScrollPositionListener,
                         public nsISelectionListener,
@@ -98,6 +102,15 @@ public:
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
+  // ----- nsIDOMTextListener ----------------------------
+  NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
+
+  // ----- nsIDOMCompositionListener ----------------------------
+  NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent);
+
   // ----- nsIScrollPositionListener --------------------
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, 
                                       nscoord aX, nscoord aY);
@@ -114,6 +127,9 @@ protected:
   static int PR_CALLBACK PrefsReset(const char* aPrefName, void* instance);
 
   // Helper methods
+  nsresult HandleChar(PRUnichar aChar);
+  void HandleBackspace();
+  void SaveFind();
   nsresult GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind);
   void StartTimeout();
   nsresult Init();
@@ -130,6 +146,10 @@ protected:
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
 
+  nsresult GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent, 
+                                    nsIContent **aTargetContent, 
+                                    nsIPresShell **aTargetPresShell);
+
   // Get selection and selection controller for current pres shell
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
                     nsISelection **aDomSel);
@@ -137,8 +157,8 @@ protected:
                          nsIDOMRange *aRange, PRBool aMustBeVisible, 
                          PRBool aGetTopVisibleLeaf,
                          nsIDOMRange **aNewRange);
-  nsresult FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, 
-                     PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
+  nsresult FindItNow(nsIPresShell *aPresShell, PRBool aIsRepeatingSameChar, 
+                     PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred);
   nsresult GetSearchContainers(nsISupports *aContainer, 
                                PRBool aIsRepeatingSameChar,
                                PRBool aIsFirstVisiblePreferred, 
@@ -146,7 +166,7 @@ protected:
                                nsIPresShell **aPresShell, 
                                nsIPresContext **aPresContext);
   void DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, 
-                     PRBool aClearStatus);
+                     PRBool aClearStatus, const PRUnichar *aText = nsnull);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
   // Used by GetInstance and ReleaseInstance
@@ -155,6 +175,7 @@ protected:
   // Current find state
   nsString mTypeAheadBuffer;
   nsString mFindNextBuffer;
+  nsString mIMEString;
 
   // PRBool's are used instead of PRPackedBool's where the address of the
   // boolean variable is getting passed into a method. For example:
@@ -176,10 +197,10 @@ protected:
   PRPackedBool mIsMenuBarActive;
   PRPackedBool mIsMenuPopupActive;
   PRPackedBool mIsFirstVisiblePreferred;
+  PRPackedBool mIsIMETypeAheadActive;
   PRInt32 mBadKeysSinceMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
-
 
   static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
