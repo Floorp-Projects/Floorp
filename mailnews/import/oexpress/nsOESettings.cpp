@@ -579,6 +579,9 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 			id->SetEmail( pEmail);
 			if (pReply)
 				id->SetReplyTo( pReply);
+
+      // Outlook Express users are used to top style quoting.
+      id->SetReplyOnTop(1); 
 			pAcc->AddIdentity( id);
 
 			IMPORT_LOG0( "Created identity and added to the account\n");
