@@ -407,7 +407,7 @@ if (defined $ref) {
 if (defined $ref && 0 < @$ref) {
     # Do surgery on the query to tell it to patch in the bugs_activity
     # table.
-    $query =~ s/bugs,/bugs, bugs_activity,/;
+    $query =~ s/profiles assign,/profiles assign, bugs_activity,/;
     
     my @list;
     foreach my $f (@$ref) {
