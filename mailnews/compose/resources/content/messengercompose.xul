@@ -39,6 +39,7 @@ Rights Reserved.
   
 
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+<html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>

@@ -41,6 +41,7 @@
 			  width="640" height="480">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPagePlain.html"/>
   <broadcaster id="canPrint"/>
