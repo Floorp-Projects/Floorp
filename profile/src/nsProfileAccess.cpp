@@ -1255,20 +1255,17 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
         if (isOld50) // Some format which was used around M10-M11. Can we forget about it?
         {
-            nsAutoString dirNameString;
 
             rv = aRegistry->GetString(profKey, 
                                       kRegistryDirectoryString.get(), 
                                       getter_Copies(regData));
             if (NS_FAILED(rv)) return rv;
 
-            nsSimpleCharString decodedDirName;
             PRBool haveHexBytes = PR_TRUE;
 
             // Decode the directory name to return the ordinary string
             nsCAutoString regDataCString; regDataCString.AssignWithConversion(regData);
             nsInputStringStream stream(regDataCString.get());
-            nsPersistentFileDescriptor descriptor;
 
             char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
             // The first 8 bytes of the data should be a hex version of the data size to follow.
@@ -1292,6 +1289,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
                 }
             }
 
+            nsAutoString dirNameString;
             if (haveHexBytes)
             {
                 PR_sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
@@ -1310,10 +1308,8 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
                 // Make sure we are null terminated
                 bigBuffer[bytesRead]='\0';
-                descriptor.SetData(bigBuffer, bytesRead);				
-                descriptor.GetData(decodedDirName);
 
-                dirNameString.AssignWithConversion(decodedDirName);
+                dirNameString.AssignWithConversion(nsDependentCString(bigBuffer, bytesRead).get());
             }
             else
                 dirNameString = regData;
