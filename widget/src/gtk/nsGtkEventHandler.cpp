@@ -211,6 +211,7 @@ struct nsKeyConverter nsKeycodes[] = {
   // Some shifted keys, see bug 15463.
   // These should be subject to different keyboard mappings;
   // how do we do that in gtk?
+  { NS_VK_SLASH,      GDK_question },
   { NS_VK_SEMICOLON, GDK_colon },
   { NS_VK_BACK_QUOTE, GDK_asciitilde },
   { NS_VK_COMMA, GDK_less },
