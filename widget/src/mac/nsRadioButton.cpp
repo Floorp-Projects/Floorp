@@ -60,13 +60,14 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(PRBool aState) 
 {
-	mButtonSet = aState;
+	mValue = (aState ? 1 : 0);
 	Invalidate(PR_TRUE);
 	return NS_OK;
 }
@@ -77,7 +78,7 @@ NS_METHOD nsRadioButton::SetState(PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-	aState = mButtonSet;
+	aState = (mValue != 0);
 	return NS_OK;
 }
 
