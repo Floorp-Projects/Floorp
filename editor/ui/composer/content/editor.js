@@ -70,14 +70,18 @@ var gTagModeButton;
 var gSourceModeButton;
 var gPreviewModeButton;
 var gIsHTMLEditor = false;
-var gColorObj = new Object();
+var gColorObj = { LastTextColor:"", LastBackgroundColor:"", LastHighlightColor:"",
+                  Type:"", SelectedType:"", NoDefault:false, Cancel:false,
+                  HighlightColor:"", BackgroundColor:"", PageColor:"",
+                  TextColor:"", TableColor:"", CellColor:""
+                };
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
 var gCSSPrefListener;
 var gPrefs;
 
 // These must be kept in synch with the XUL <options> lists
-var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
+var gFontSizeNames = ["xx-small","x-small","small","medium","large","x-large","xx-large"];
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
@@ -102,11 +106,11 @@ nsButtonPrefListener.prototype =
     if (prefName.substr(0, this.domain.length) != this.domain) return;
 
     var cmd = document.getElementById("cmd_highlight");
-    var mixedObj = new Object();
     if (cmd && gIsHTMLEditor) {
       var prefs = GetPrefs();
       var useCSS = prefs.getBoolPref(prefName);
       if (useCSS && gEditor && gIsHTMLEditor) {
+        var mixedObj = {};
         var state = gEditor.getHighlightColorState(mixedObj);
         cmd.setAttribute("state", state);
         cmd.removeAttribute("collapsed");
@@ -128,7 +132,7 @@ function AfterHighlightColorChange()
 
   var button = document.getElementById("cmd_highlight");
   if (button) {
-    var mixedObj = new Object();
+    var mixedObj = {};
     var state = gEditor.getHighlightColorState(mixedObj);
     button.setAttribute("state", state);
     onHighlightColorChange();
@@ -877,10 +881,9 @@ function initFontFaceMenu(menuPopup)
     var children = menuPopup.childNodes;
     if (!children) return;
 
-    var firstHas = new Object();
-    var anyHas = new Object();
-    var allHas = new Object();
-    allHas.value = false;
+    var firstHas = { value: false };
+    var anyHas = { value: false };
+    var allHas = { value: false };
 
     // we need to set or clear the checkmark for each menu item since the selection
     // may be in a new location from where it was when the menu was previously opened
@@ -919,10 +922,9 @@ function initFontSizeMenu(menuPopup)
     var children = menuPopup.childNodes;
     if (!children) return;
 
-    var firstHas = new Object();
-    var anyHas = new Object();
-    var allHas = new Object();
-    allHas.value = false;
+    var firstHas = { value: false };
+    var anyHas = { value: false };
+    var allHas = { value: false };
 
     var sizeWasFound = false;
 
@@ -1077,11 +1079,11 @@ function GetBackgroundElementWithColor()
   gColorObj.BackgroundColor = "";
   gColorObj.SelectedType = "";
 
-  var tagNameObj = new Object();
+  var tagNameObj = { value: "" };
   var numSelected;
   var element;
   try {
-    var elt = new Object();
+    var elt = { value: null };
     numSelected = gEditor.getSelectedOrParentTableElement(elt, tagNameObj);
     element = elt.value;
   }
@@ -2035,7 +2037,7 @@ function InitObjectPropertiesMenuitem(id)
 
 function InitParagraphMenu()
 {
-  var mixedObj = new Object();
+  var mixedObj = { value: null };
   var state;
   try {
     state = gEditor.getParagraphState(mixedObj);
@@ -2063,10 +2065,10 @@ function InitParagraphMenu()
 
 function GetListStateString()
 {
-  var mixedObj = new Object();
-  var hasOL = new Object();
-  var hasUL = new Object();
-  var hasDL = new Object();
+  var mixedObj = { value: null };
+  var hasOL = { value: false };
+  var hasUL = { value: false };
+  var hasDL = { value: false };
   gEditor.getListState(mixedObj, hasOL, hasUL, hasDL);
 
   if (mixedObj.value)
@@ -2078,9 +2080,9 @@ function GetListStateString()
 
   if (hasDL.value)
   {
-    var hasLI = new Object();
-    var hasDT = new Object();
-    var hasDD = new Object();
+    var hasLI = { value: false };
+    var hasDT = { value: false };
+    var hasDD = { value: false };
     gEditor.getListItemState(mixedObj, hasLI, hasDT, hasDD);
     if (mixedObj.value)
       return "mixed";
@@ -2114,8 +2116,8 @@ function InitListMenu()
 
 function GetAlignmentString()
 {
-  var mixedObj = new Object();
-  var alignObj = new Object();
+  var mixedObj = { value: null };
+  var alignObj = { value: null };
   gEditor.getAlignment(mixedObj, alignObj);
 
   if (mixedObj.value)
@@ -2543,12 +2545,12 @@ function InitJoinCellMenuitem(id)
   if (!menuItem) return;
 
   // Use "Join selected cells if there's more than 1 cell selected
-  var tagNameObj = new Object();
   var numSelected;
   var foundElement;
   
   try {
-    var elt = new Object();
+    var elt = { value: null };
+    var tagNameObj = {};
     numSelected = gEditor.getSelectedOrParentTableElement(elt,
                                           tagNameObj);
     foundElement = elt.value;
@@ -2607,8 +2609,8 @@ function goUpdateTableMenuItems(commandset)
   if (!(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
       IsEditingRenderedHTML())
   {
-    var tagNameObj = new Object();
-    var element = new Object();
+    var tagNameObj = { value: "" };
+    var element = { value: null };
     try {
       gEditor.getSelectedOrParentTableElement(element, tagNameObj);
     }
@@ -2740,9 +2742,9 @@ function GetNumberOfContiguousSelectedRows()
 {
   if (!gIsHTMLEditor) return 0;
 
-  var cellObj = new Object();
-  var rowObj = new Object();
-  var colObj = new Object();
+  var cellObj = { value: null };
+  var rowObj = { value: 0 };
+  var colObj = { value: 0 };
   gEditor.getFirstSelectedCellInTable(cellObj, rowObj, colObj);
   var cell = cellObj.value;
   if (!cell)
@@ -2773,9 +2775,9 @@ function GetNumberOfContiguousSelectedColumns()
 {
   if (!gIsHTMLEditor) return 0;
 
-  var cellObj = new Object();
-  var colObj = new Object();
-  var rowObj = new Object();
+  var cellObj = { value: null };
+  var colObj = { value: 0 };
+  var rowObj = { value: 0 };
   gEditor.getFirstSelectedCellInTable(cellObj, rowObj, colObj);
   var cell = cellObj.value;
   if (!cell)

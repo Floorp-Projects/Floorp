@@ -424,10 +424,8 @@ function SaveFilePickerDirectory(filePicker, fileType)
 function GetDefaultBrowserColors()
 {
   var prefs = GetPrefs();
-  var colors = new Object();
+  var colors = { TextColor:0, BackgroundColor:0, LinkColor:0, VisitedLinkColor:0 };
   var useSysColors = false;
-  colors.TextColor = 0;
-  colors.BackgroundColor = 0;
   try { useSysColors = prefs.getBoolPref("browser.display.use_system_colors"); } catch (e) {}
 
   if (!useSysColors)

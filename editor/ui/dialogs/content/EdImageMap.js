@@ -31,7 +31,7 @@ var imageEl;
 var srcInputValue = null;
 var marquee = null;
 var frameDoc = null;
-var buttonArray = new Array();
+var buttonArray = [];
 
 function Startup(){
   if (!InitEditorShell())

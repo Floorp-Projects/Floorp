@@ -166,9 +166,8 @@ function onAccept()
     }
     // Detect when entire cells are selected:
       // Get number of cells selected
-    var tagNameObj = new Object;
-    var countObj = new Object;
-    tagNameObj.value = "";
+    var tagNameObj = { value: "" };
+    var countObj = { value: 0 };
     var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
     var deletePlaceholder = false;
 

@@ -53,11 +53,13 @@ var curRowIndex;
 var curColIndex;
 var curColSpan;
 var SelectedCellsType = 1;
-var SELECT_CELL = 1;
-var SELECT_ROW = 2;
-var SELECT_COLUMN = 3;
-var RESET_SELECTION = 0;
-var cellData = new Object;
+const SELECT_CELL = 1;
+const SELECT_ROW = 2;
+const SELECT_COLUMN = 3;
+const RESET_SELECTION = 0;
+var cellData = { cell:null, startRowIndex:0, startColIndex:0, rowSpan:0, colSpan:0,
+                 actualRowSpan:0, actualColSpan:0, isSelected:false
+               };
 var AdvancedEditUsed;
 var alignWasChar = false;
 
@@ -155,8 +157,8 @@ function Startup()
   }
   globalTableElement = TableElement.cloneNode(false);
 
-  var tagNameObj = new Object;
-  var countObj = new Object;
+  var tagNameObj = { value: "" };
+  var countObj = { value: 0 };
   var tableOrCellElement = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
   gSelectedCellCount = countObj.value;
 
@@ -383,15 +385,15 @@ function InitCellPanel()
 function GetCellData(rowIndex, colIndex)
 {
   // Get actual rowspan and colspan
-  var startRowIndexObj = new Object;
-  var startColIndexObj = new Object;
-  var rowSpanObj = new Object;
-  var colSpanObj = new Object;
-  var actualRowSpanObj = new Object;
-  var actualColSpanObj = new Object;
-  var isSelectedObj = new Object;
+  var startRowIndexObj = { value: 0 };
+  var startColIndexObj = { value: 0 };
+  var rowSpanObj = { value: 0 };
+  var colSpanObj = { value: 0 };
+  var actualRowSpanObj = { value: 0 };
+  var actualColSpanObj = { value: 0 };
+  var isSelectedObj = { value: false };
   if (!cellData)
-    cellData = new Object;
+    cellData = { cell: null };
 
   try {
     cellData.cell =
@@ -429,7 +431,7 @@ function GetColorAndUpdate(ColorWellID)
   var colorWell = document.getElementById(ColorWellID);
   if (!colorWell) return;
 
-  var colorObj = new Object;
+  var colorObj = { Type:"", TableColor:0, CellColor:0, NoDefault:false, Cancel:false, BackgroundColor:0 };
 
   switch( ColorWellID )
   {
@@ -442,8 +444,6 @@ function GetColorAndUpdate(ColorWellID)
       colorObj.CellColor = CellColor;
       break;
   }
-  // Avoid the JS warning
-  colorObj.NoDefault = false;
   window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", colorObj);
 
   // User canceled the dialog
@@ -707,9 +707,8 @@ function DoCellSelection()
       break;
   }
   // Get number of cells selected
-  var tagNameObj = new Object;
-  var countObj = new Object;
-  tagNameObj.value = "";
+  var tagNameObj = { value: "" };
+  var countObj = { value: 0 };
   var tableOrCellElement = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
   if (tagNameObj.value == "td")
     gSelectedCellCount = countObj.value;
