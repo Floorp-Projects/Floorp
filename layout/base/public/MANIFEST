@@ -43,3 +43,5 @@ nsIStyleSheetLinkingElement.h
 nsITextContent.h
 nsTextFragment.h
 nsIAnonymousContent.h
+nsILayoutHistoryState.h
+nsIStatefulFrame.h

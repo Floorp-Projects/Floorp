@@ -40,6 +40,7 @@ class nsICaret;
 class nsIStyleContext;
 class nsIFrameSelection;
 class nsIFrameManager;
+class nsILayoutHistoryState;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -336,6 +337,18 @@ public:
 
   // XXX events
   // XXX selection
+  
+  /**
+   * Get the history state for the current document 
+   */
+  NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
+
+  /**
+   * Capture frame state for the frame subtree rooted at aFrame.
+   * aState is the document state storage object onto which each frame 
+   * stores its state.
+   */
+  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add
@@ -349,6 +362,7 @@ public:
    * Set the verify-reflow enable flag.
    */
   static NS_LAYOUT void SetVerifyReflowEnable(PRBool aEnabled);
+
 };
 
 /**

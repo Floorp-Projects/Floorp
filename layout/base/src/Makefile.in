@@ -63,6 +63,7 @@ CPPSRCS =				\
 	nsTextFragment.cpp		\
 	nsTextNode.cpp			\
 	nsXIFConverter.cpp		\
+	nsLayoutHistoryState.cpp \
 	$(NULL)
 
 EXPORTS = \
