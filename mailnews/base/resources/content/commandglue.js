@@ -143,12 +143,19 @@ function ChangeFolderByDOMNode(folderNode)
 {
   var uri = folderNode.getAttribute('id');
   dump(uri + "\n");
-  if(uri)
+  
+  if (uri)
 	  ChangeFolderByURI(uri);
 }
 
 function ChangeFolderByURI(uri)
 {
+  var resource = RDF.GetResource(uri);
+  var msgfolder =
+      resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  window.title = "Netscape: " + msgfolder.name + " on " +
+      msgfolder.server.prettyName;
+
   var folder = GetThreadTreeFolder();
   var beforeTime = new Date();
   folder.setAttribute('ref', uri);
