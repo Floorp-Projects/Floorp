@@ -28,6 +28,7 @@
 #include "ifuncns.h"
 #include "parser.h"
 #include "rdi.h"
+#include "shlobj.h"
 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_CLIENT_BROWSER_KEY         "Software\\Clients\\StartMenuInternet"
@@ -253,6 +254,10 @@ void ParseAllUninstallLogs()
 
     /* update Wininit.ini to remove itself at reboot */
     RemoveUninstaller(ugUninstall.szUninstallFilename);
+
+    // Calling SHChangeNotify() will update the file association icons
+    // in case they had been reset.
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
   }
 
   /* Broadcast message only if the windows registry keys exist

@@ -42,6 +42,8 @@
 #include "nsString.h"
 #include "nsINativeAppSupportWin.h"
 #include "nsIStringBundle.h"
+#include "nsDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
 #define MOZ_CLIENT_BROWSER_KEY "Software\\Clients\\StartMenuInternet"
@@ -243,13 +245,15 @@ struct FileTypeRegistryEntry : public ProtocolRegistryEntry {
     const char **ext;
     nsCString desc;
     nsCString defDescKey;
+    nsCString iconFile;
     FileTypeRegistryEntry ( const char **ext, const char *fileType, 
-        const char *desc, const char *defDescKey )
+        const char *desc, const char *defDescKey, const char *iconFile )
         : ProtocolRegistryEntry( fileType ),
           fileType( fileType ),
           ext( ext ),
           desc( desc ),
-          defDescKey(defDescKey) {
+          defDescKey(defDescKey),
+          iconFile(iconFile) {
     }
     nsresult set();
     nsresult reset();
@@ -260,8 +264,8 @@ struct FileTypeRegistryEntry : public ProtocolRegistryEntry {
 // Extends FileTypeRegistryEntry by setting an additional handler for an "edit" command.
 struct EditableFileTypeRegistryEntry : public FileTypeRegistryEntry {
     EditableFileTypeRegistryEntry( const char **ext, const char *fileType, 
-        const char *desc, const char *defDescKey )
-        : FileTypeRegistryEntry( ext, fileType, desc, defDescKey ) {
+        const char *desc, const char *defDescKey, const char *iconFile )
+        : FileTypeRegistryEntry( ext, fileType, desc, defDescKey, iconFile ) {
     }
     nsresult set();
 };
@@ -707,6 +711,7 @@ nsresult FileTypeRegistryEntry::set() {
 
         // If we just created this file type entry, set description and default icon.
         if ( NS_SUCCEEDED( rv ) ) {
+            nsCAutoString iconFileToUse;
             nsCAutoString descKey( "Software\\Classes\\" );
             descKey += protocol;
             RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey.get(), NULL, "" );
@@ -724,12 +729,48 @@ nsresult FileTypeRegistryEntry::set() {
             iconKey += protocol;
             iconKey += "\\DefaultIcon";
 
-            RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey.get(), NULL,
-                                     nsCAutoString( thisApplication() + NS_LITERAL_CSTRING(",0") ).get() );
+            iconFileToUse = thisApplication() + NS_LITERAL_CSTRING( ",0" );
 
-            if ( iconEntry.currentSetting().IsEmpty() ) {
-                iconEntry.set();
+            // Check to see if there's an icon file name associated with this extension.
+            // If there is, then we need to use this icon file.  If not, then we default
+            // to the main app's icon.
+            if ( !iconFile.IsEmpty() ) {
+                nsCOMPtr<nsIFile> iconFileSpec;
+                PRBool            flagExists;
+
+                // Use the directory service to get the path to the chrome folder.  The
+                // icons will be located in [chrome dir]\icons\default.
+                // The abs path to the icon has to be in the short filename
+                // format, else it won't work under win9x systems.
+                rv = NS_GetSpecialDirectory( NS_APP_CHROME_DIR, getter_AddRefs( iconFileSpec ) );
+                if ( NS_SUCCEEDED( rv ) ) {
+                    iconFileSpec->AppendNative( NS_LITERAL_CSTRING( "icons" ) );
+                    iconFileSpec->AppendNative( NS_LITERAL_CSTRING( "default" ) );
+                    iconFileSpec->AppendNative( iconFile );
+
+                    // Check to make sure that the icon file exists on disk.
+                    iconFileSpec->Exists( &flagExists );
+                    if ( flagExists ) {
+                        rv = iconFileSpec->GetNativePath( iconFileToUse );
+                        if ( NS_SUCCEEDED( rv ) ) {
+                            TCHAR buffer[MAX_PATH];
+                            DWORD len;
+
+                            // Get the short path name (8.3) format for iconFileToUse
+                            // else it won't work under win9x.
+                            len = ::GetShortPathName( iconFileToUse.get(), buffer, sizeof buffer );
+                            NS_ASSERTION ( (len > 0) && ( len < sizeof buffer ), "GetShortPathName failed!" );
+                            iconFileToUse.Assign( buffer );
+                            iconFileToUse.Append( NS_LITERAL_CSTRING( ",0" ) );
+                        }
+
+                    }
+                }
             }
+
+            RegistryEntry iconEntry( HKEY_LOCAL_MACHINE, iconKey.get(), NULL, iconFileToUse.get() );
+            if( !iconEntry.currentSetting().Equals( iconFileToUse ) )
+                iconEntry.set();
         }
     }
 

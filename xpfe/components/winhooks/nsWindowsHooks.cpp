@@ -99,19 +99,19 @@ const char *xulExts[]  = { ".xul", 0 };
 const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
 
 static FileTypeRegistryEntry
-    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",          "jpegfile" ),
-    gif(   gifExts,  "MozillaGIF",   "GIF Image",           "giffile" ),
-    png(   pngExts,  "MozillaPNG",   "PNG Image",           "pngfile" ),
-    mng(   mngExts,  "MozillaMNG",   "MNG Image",           "" ),
-    xbm(   xbmExts,  "MozillaXBM",   "XBM Image",           "xbmfile" ),
-    bmp(   bmpExts,  "MozillaBMP",   "BMP Image",           "" ),
-    ico(   icoExts,  "MozillaICO",   "Icon",                "icofile" ),
-    xml(   xmlExts,  "MozillaXML",   "XML Document",        "xmlfile" ),
-    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",      "" ),
-    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "" );
+    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "image-file.ico"),
+    gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "image-file.ico"),
+    png(   pngExts,  "MozillaPNG",   "PNG Image",            "pngfile",  "image-file.ico"),
+    mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
+    xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
+    bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
+    ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "image-file.ico"),
+    xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "doc-file.ico"),
+    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "doc-file.ico"),
+    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "doc-file.ico");
 
 static EditableFileTypeRegistryEntry
-    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile" );
+    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile",  "doc-file.ico");
 
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
@@ -670,6 +670,10 @@ nsWindowsHooks::SetRegistry() {
     } else {
         (void) gopher.reset();
     }
+
+    // Call SHChangeNotify() to notify the windows shell that file
+    // associations changed, and that an update of the icons need to occur.
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
 
     return NS_OK;
 }
