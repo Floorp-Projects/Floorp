@@ -113,6 +113,8 @@ PRBool nsFileWidget::Show()
     // make things shorter
     GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
 
+    gtk_file_selection_set_filename(fs, (const gchar*)nsAutoCString(mDefault));
+
     if (mNumberOfFilters != 0)
     {
       gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), mFilterMenu);
@@ -296,10 +298,7 @@ NS_IMETHODIMP  nsFileWidget::GetSelectedType(PRInt16& theType)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP  nsFileWidget::SetDefaultString(const nsString& aString)
 {
-  if (mWidget) {
-    gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
-                                    (const gchar*)nsAutoCString(aString));
-  }
+  mDefault = aString;
   return NS_OK;
 }
 
