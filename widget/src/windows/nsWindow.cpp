@@ -469,14 +469,6 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         someWindow = (nsWindow*)::GetWindowLong(pnmh->hwndFrom, GWL_USERDATA); 
       }
     }
-    // Do the same for combo box change notifications.
-    else if (msg == WM_COMMAND) {
-      WORD wNotifyCode = HIWORD(wParam); // notification code
-      if ((CBN_SELENDOK == wNotifyCode) || (CBN_SELENDCANCEL == wNotifyCode)) {
-        someWindow = (nsWindow*)::GetWindowLong((HWND) lParam, GWL_USERDATA);
-      }
-    }
-
 
     if (nsnull != someWindow) {
         LRESULT retValue;
