@@ -57,7 +57,7 @@
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
 
 #define PREF_GENERAL_STARTUP_BROWSER "general.startup.browser"
 #define PREF_GENERAL_STARTUP_MAIL "general.startup.mail"
