@@ -21,8 +21,7 @@
 
 #include <windows.h> // for cheesy nsIPrompt implementation
 
-// Local Includes
-
+// Mozilla Includes
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -36,32 +35,69 @@
 #include "nsCWebBrowser.h"
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
+#include "nsIProfileChangeStatus.h"
+
+// Local includes
 #include "resource.h"
- 
 
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
 
-nsVoidArray WebBrowserChrome::sBrowserList;
 
 WebBrowserChrome::WebBrowserChrome()
 {
 	NS_INIT_REFCNT();
     mNativeWindow = nsnull;
-    mUI = nsnull;
 }
 
 WebBrowserChrome::~WebBrowserChrome()
 {
-    if (mUI)
-    {
-        delete mUI;
-    }
+    WebBrowserChromeUI::Destroyed(this);
 }
 
-void WebBrowserChrome::SetUI(WebBrowserChromeUI *aUI)
+nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
+                                         PRInt32 aCX, PRInt32 aCY,
+                                         nsIWebBrowser **aBrowser)
 {
-    mUI = aUI;
+    NS_ENSURE_ARG_POINTER(aBrowser);
+    *aBrowser = nsnull;
+
+    mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
+    
+    if (!mWebBrowser)
+        return NS_ERROR_FAILURE;
+
+    (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+
+    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
+    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+
+    nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface(mWebBrowser);
+
+    mNativeWindow = WebBrowserChromeUI::CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+
+    if (!mNativeWindow)
+        return NS_ERROR_FAILURE;
+
+    browserBaseWindow->InitWindow( mNativeWindow,
+                             nsnull, 
+                             aX, aY, aCX, aCY);
+    browserBaseWindow->Create();
+
+    nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+    (void)mWebBrowser->AddWebBrowserListener(thisListener, 
+        NS_GET_IID(nsIWebProgressListener));
+
+    // The window has been created. Now register for history notifications
+    mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsISHistoryListener));
+
+    if (mWebBrowser) {
+      *aBrowser = mWebBrowser;
+      NS_ADDREF(*aBrowser);
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
@@ -79,6 +115,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
    NS_INTERFACE_MAP_ENTRY(nsISHistoryListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
@@ -105,88 +142,34 @@ NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstance
 
 NS_IMETHODIMP WebBrowserChrome::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 {
-   mUI->UpdateStatusBarText(this, aStatus);
-   return NS_OK;
+    WebBrowserChromeUI::UpdateStatusBarText(this, aStatus);
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
-   NS_ENSURE_ARG_POINTER(aWebBrowser);
-   NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_NOT_INITIALIZED);
-   *aWebBrowser = mWebBrowser;
-   NS_IF_ADDREF(*aWebBrowser);
-
-   return NS_OK;
+    NS_ENSURE_ARG_POINTER(aWebBrowser);
+    *aWebBrowser = mWebBrowser;
+    NS_IF_ADDREF(*aWebBrowser);
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
-   NS_ENSURE_ARG(aWebBrowser);   // Passing nsnull is NOT OK
-   NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_NOT_INITIALIZED);
-   NS_ERROR("Who be calling me");
-   mWebBrowser = aWebBrowser;
-   return NS_OK;
+    mWebBrowser = aWebBrowser;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetChromeFlags(PRUint32* aChromeMask)
 {
-  *aChromeMask = mChromeFlags;
-  return NS_OK;
+    *aChromeMask = mChromeFlags;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 {
-  if (mUI) {
-    NS_ERROR("cheesy implementation can't change chrome flags on the fly");
-    return NS_ERROR_FAILURE;
-  }
-  mChromeFlags = aChromeMask;
-  return NS_OK;
-}
-
-nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
-                                         PRInt32 aCX, PRInt32 aCY,
-                                         nsIWebBrowser **aBrowser)
-{
-    NS_ENSURE_ARG_POINTER(aBrowser);
-    *aBrowser = nsnull;
-
-    mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
-    
-    if (!mWebBrowser)
-        return NS_ERROR_FAILURE;
-
-    (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
-
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
-    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
-
-    
-    mBaseWindow = do_QueryInterface(mWebBrowser);
-    mNativeWindow = mUI->CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
-
-    if (!mNativeWindow)
-        return NS_ERROR_FAILURE;
-
-    mBaseWindow->InitWindow( mNativeWindow,
-                             nsnull, 
-                             aX, aY, aCX, aCY);
-    mBaseWindow->Create();
-
-    nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
-    (void)mWebBrowser->AddWebBrowserListener(thisListener, 
-        NS_GET_IID(nsIWebProgressListener));
-
-    // The window has been created. Now register for history notifications
-    mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsISHistoryListener));
-
-    if (mWebBrowser) {
-      *aBrowser = mWebBrowser;
-      NS_ADDREF(*aBrowser);
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
+    mChromeFlags = aChromeMask;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
@@ -197,23 +180,27 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
-  nsresult                      rv;
-  nsCOMPtr<nsIWebBrowserChrome> parent;
-  nsCOMPtr<nsIWebBrowserChrome> newChrome;
+  // Create the chrome object. Note that it leaves this function
+  // with an extra reference so that it can released correctly during
+  // destruction (via Win32UI::Destroy)
 
-  if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
-    parent = dont_QueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
-  rv = ::CreateBrowserWindow(aChromeFlags, parent, getter_AddRefs(newChrome));
+  nsresult rv;
 
-  if (NS_SUCCEEDED(rv) && newChrome)
+  nsIWebBrowserChrome *newChrome = nsnull;
+  rv = ::CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull, &newChrome);
+  if (NS_SUCCEEDED(rv))
+  {
     newChrome->GetWebBrowser(_retval);
+  }
+
   return rv;
 }
 
 
 NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  WebBrowserChromeUI::Destroy(this);
+  return NS_OK;
 }
 
 
@@ -247,7 +234,7 @@ NS_IMETHODIMP WebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRe
                                                   PRInt32 curSelfProgress, PRInt32 maxSelfProgress,
                                                   PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
-    mUI->UpdateProgress(this, curTotalProgress, maxTotalProgress);
+    WebBrowserChromeUI::UpdateProgress(this, curTotalProgress, maxTotalProgress);
     return NS_OK;
 }
 
@@ -256,14 +243,14 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
 {
     if ((progressStateFlags & STATE_START) && (progressStateFlags & STATE_IS_DOCUMENT))
     {
-        mUI->UpdateBusyState(this, PR_TRUE);
+        WebBrowserChromeUI::UpdateBusyState(this, PR_TRUE);
     }
 
     if ((progressStateFlags & STATE_STOP) && (progressStateFlags & STATE_IS_DOCUMENT))
     {
-        mUI->UpdateBusyState(this, PR_FALSE);
-        mUI->UpdateProgress(this, 0, 100);
-        mUI->UpdateStatusBarText(this, nsnull);
+        WebBrowserChromeUI::UpdateBusyState(this, PR_FALSE);
+        WebBrowserChromeUI::UpdateProgress(this, 0, 100);
+        WebBrowserChromeUI::UpdateStatusBarText(this, nsnull);
     }
 
     return NS_OK;
@@ -274,7 +261,7 @@ NS_IMETHODIMP WebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
                                                  nsIRequest* aRequest,
                                                  nsIURI *location)
 {
-    mUI->UpdateCurrentURI(this);
+    WebBrowserChromeUI::UpdateCurrentURI(this);
     return NS_OK;
 }
 
@@ -284,7 +271,7 @@ WebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
                                  nsresult aStatus,
                                  const PRUnichar* aMessage)
 {
-    mUI->UpdateStatusBarText(this, aMessage);
+    WebBrowserChromeUI::UpdateStatusBarText(this, aMessage);
     return NS_OK;
 }
 
@@ -410,8 +397,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
 
   PRUnichar * uriStr = nsnull;
   uriStr = uriAStr.ToNewUnicode();
-  if (mUI)
-    mUI->UpdateStatusBarText(this, uriStr);
+  WebBrowserChromeUI::UpdateStatusBarText(this, uriStr);
   nsCRT::free(uriStr);
 
   return NS_OK;
@@ -447,7 +433,8 @@ NS_IMETHODIMP WebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt
 /* void setFocus (); */
 NS_IMETHODIMP WebBrowserChrome::SetFocus()
 {
-   return mBaseWindow->SetFocus();
+    nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface(mWebBrowser);
+   return browserBaseWindow->SetFocus();
 }
 
 /* attribute wstring title; */
@@ -469,6 +456,7 @@ NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool * aVisibility)
 {
     NS_ENSURE_ARG_POINTER(aVisibility);
     *aVisibility = PR_TRUE;
+    return NS_OK;
 }
 NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
 {
@@ -483,6 +471,23 @@ NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
    *aSiteWindow = mNativeWindow;
    return NS_OK;
 }
+
+
+//*****************************************************************************
+// WebBrowserChrome::nsIObserver
+//*****************************************************************************   
+
+NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    nsresult rv = NS_OK;
+	if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    {
+		// A profile change means death for this window
+	    WebBrowserChromeUI::Destroy(this);
+    }
+    return rv;
+}
+
 
 //*****************************************************************************
 // WebBrowserChrome::nsIPrompt

@@ -37,29 +37,22 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIWebBrowser.h"
-#include "nsVoidArray.h"
+#include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsISHistoryListener.h"
 
 class WebBrowserChromeUI
 {
 public:
-    virtual nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome) = 0;
-    virtual void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText) = 0;
-    virtual void UpdateCurrentURI(nsIWebBrowserChrome *aChrome) = 0;
-    virtual void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy) = 0;
-    virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax) = 0;
-    virtual void GetResourceStringById(PRInt32 aID, char ** aReturn) =0;
+    static nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
+	static void Destroy(nsIWebBrowserChrome* chrome);
+	static void Destroyed(nsIWebBrowserChrome* chrome);
+    static void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText);
+    static void UpdateCurrentURI(nsIWebBrowserChrome *aChrome);
+    static void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy);
+    static void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax);
+    static void GetResourceStringById(PRInt32 aID, char ** aReturn);
 };
-
-#define NS_DECL_WEBBROWSERCHROMEUI \
-  public: \
-    virtual nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome); \
-    virtual void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText); \
-    virtual void UpdateCurrentURI(nsIWebBrowserChrome *aChrome); \
-    virtual void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy); \
-    virtual void UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax); \
-    virtual void GetResourceStringById(PRInt32 aID, char ** aReturn);
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
@@ -67,13 +60,13 @@ class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
                            public nsISHistoryListener,
+						   public nsIObserver,
                            public nsSupportsWeakReference
+
 {
 public:
     WebBrowserChrome();
     virtual ~WebBrowserChrome();
-
-    void SetUI(WebBrowserChromeUI *aUI);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBBROWSERCHROME
@@ -82,6 +75,7 @@ public:
     NS_DECL_NSIPROMPT
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSISHISTORYLISTENER
+    NS_DECL_NSIOBSERVER
 
     nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY,
                            nsIWebBrowser **aBrowser);
@@ -92,12 +86,8 @@ protected:
    nativeWindow mNativeWindow;
    PRUint32     mChromeFlags;
    
-   WebBrowserChromeUI *mUI;
    nsCOMPtr<nsIWebBrowser> mWebBrowser;
-   nsCOMPtr<nsIBaseWindow> mBaseWindow;
    nsCOMPtr<nsIWebBrowserChrome> mTopWindow;
-    
-   static nsVoidArray sBrowserList;
 };
 
 #endif /* __WebBrowserChrome__ */

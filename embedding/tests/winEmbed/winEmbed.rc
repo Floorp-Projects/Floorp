@@ -77,23 +77,6 @@ BEGIN
 END
 
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-MOZ_GetURI DIALOG DISCARDABLE  22, 17, 210, 40
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "New address"
-FONT 8, "MS Sans Serif"
-BEGIN
-    EDITTEXT        MOZ_EDIT_URI,34,6,171,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,74,23,30,13,WS_GROUP
-    PUSHBUTTON      "Cancel",IDNO,109,23,30,13,WS_GROUP
-    LTEXT           "Address:",IDC_STATIC,4,7,30,8
-END
-
-
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -239,7 +222,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_EIRE
 //
 
 IDD_CHOOSEPROFILE DIALOG DISCARDABLE  0, 0, 186, 154
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Choose Profile"
 FONT 8, "MS Sans Serif"
 BEGIN
