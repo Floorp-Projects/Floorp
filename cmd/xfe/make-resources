@@ -87,5 +87,10 @@ cat ${RESOURCES} ${LOCALE_MAP} ${STRS} | sed \
 	 s/@MAIL_IM_HACK@/${MAIL_IM_HACK}/g;
 	 s/@NEWS_IM_HACK@/${NEWS_IM_HACK}/g;
 	 s/@URLVERSION@/${VERS}/g;
-	 s/@MOZ_USER_DIR@/${MOZ_USER_DIR}/g" > ${DEST}
+	 s/@MOZ_USER_DIR@/${MOZ_USER_DIR}/g;
+	 /@INCLUDE resources-translations@.*/ {
+	   # Sed sucks!  I have to hard code the filename
+	   r resources-translations
+	   d
+	   }" > ${DEST}
 
