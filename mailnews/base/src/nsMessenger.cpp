@@ -47,7 +47,6 @@
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsTextFormatter.h"
 #include "nsIFileSpec.h"
 #ifdef XP_MAC
 #include "nsIAppleFileDecoder.h"
@@ -1765,20 +1764,7 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
       if (NS_SUCCEEDED(rv))
       {
         if ( (m_doCharsetConversion) && (m_outputFormat.EqualsWithConversion(TEXT_PLAIN)) )
-        {
-          PRUnichar       *u = nsnull; 
-          nsAutoString    fmt; fmt.AssignWithConversion("%s");
-          
-          u = nsTextFormatter::smprintf(fmt.get(), m_dataBuffer); // this converts UTF-8 to UCS-2 
-          if (u)
-          {
-            PRInt32   newLen = nsCRT::strlen(u);
-            m_msgBuffer.Append(u, newLen);
-            PR_FREEIF(u);
-          }
-          else
-            m_msgBuffer.AppendWithConversion(m_dataBuffer, readCount);
-        }
+          m_msgBuffer.Append(NS_ConvertUTF8toUCS2(m_dataBuffer, readCount));
         else
           rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
 

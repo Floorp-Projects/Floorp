@@ -298,12 +298,6 @@ void DIR_SetFileName(char** filename, const char* leafName);
 static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
 
 
-// This can now use nsTextFormatter. 
-// e.g.
-// #include "nsTextFormatter.h"
-// nsString aString(""); 
-// nsAutoString fmt("%s"); 
-// PRUnichar *uniBuffer = nsTextFormatter::smprintf(fmt.get(), aBuffer); // this converts UTF-8 to UCS-2 
 // Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
 PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer)

@@ -72,7 +72,6 @@
 #include "nsMsgPrompts.h"
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
-#include "nsTextFormatter.h"
 #include "nsIEditor.h"
 #include "nsIPlaintextEditor.h"
 #include "nsEscape.h"
@@ -1782,20 +1781,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
 		rv = NS_OK;
 	newBuf[numWritten] = '\0';
 	if (NS_SUCCEEDED(rv) && numWritten > 0)
-	{
-    PRUnichar       *u = nsnull; 
-    nsAutoString    fmt; fmt.Assign(NS_LITERAL_STRING("%s"));
-
-    u = nsTextFormatter::smprintf(fmt.get(), newBuf); // this converts UTF-8 to UCS-2 
-    if (u)
-    {
-      PRInt32   newLen = nsCRT::strlen(u);
-      mMsgBody.Append(u, newLen);
-      PR_FREEIF(u);
-    }
-    else
-      mMsgBody.AppendWithConversion(newBuf, numWritten);
-	}
+    mMsgBody.Append(NS_ConvertUTF8toUCS2(newBuf, numWritten));
 
 	PR_FREEIF(newBuf);
 	return rv;
