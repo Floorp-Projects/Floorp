@@ -96,8 +96,8 @@
 <!ENTITY  mediaCharset          "Encoding:">
 <!ENTITY  mediaDimensions       "Dimensions:">
 <!ENTITY  mediaEncryption       "Encryption:">
-<!ENTITY  mediaTitle            "title Attribute:">
-<!ENTITY  mediaLongdesc         "longdesc Attribute:">
+<!ENTITY  mediaTitle            "Title Attribute:">
+<!ENTITY  mediaLongdesc         "Long Description:">
 <!ENTITY  mediaSaveAs           "Save As...">
 <!ENTITY  mediaSaveAsAccesskey  "S">
 
