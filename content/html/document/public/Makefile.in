@@ -28,8 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 
-XPIDLSRCS = nsIWyciwygChannel.idl \
-            $(NULL)
+XPIDLSRCS 	= \
+		nsIImageDocument.idl \
+		nsIWyciwygChannel.idl \
+        	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
