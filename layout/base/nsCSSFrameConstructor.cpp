@@ -8585,7 +8585,13 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
       // Get the geometric parent. Use the prev sibling if we have it;
       // otherwise use the next sibling
-      if (!prevSibling && !nextSibling) {
+      if (prevSibling) {
+        prevSibling->GetParent(&parentFrame);
+      }
+      else if (nextSibling) {
+        nextSibling->GetParent(&parentFrame);
+      }
+      else {
         // No previous or next sibling so treat this like an appended frame.
         isAppend = PR_TRUE;
       
