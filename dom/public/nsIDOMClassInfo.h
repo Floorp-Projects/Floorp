@@ -297,8 +297,10 @@ typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                             \
     static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);   \
                                                                            \
-    nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));   \
-    if (sof) {                                                             \
+    nsresult rv;                                                           \
+    nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID,     \
+                                                          &rv));           \
+    if (NS_SUCCEEDED(rv)) {                                                \
       foundInterface =                                                     \
         sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);            \
                                                                            \
@@ -307,6 +309,9 @@ typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
                                                                            \
         return NS_OK;                                                      \
       }                                                                    \
+    } else {                                                               \
+      *aInstancePtr = 0;                                                   \
+      return rv;                                                           \
     }                                                                      \
   } else
 
@@ -321,13 +326,18 @@ typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
     } else {                                                               \
       static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID); \
                                                                            \
-      nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID)); \
-      if (sof) {                                                           \
+      nsresult rv;                                                         \
+      nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID,   \
+                                                            &rv));         \
+      if (NS_SUCCEEDED(rv)) {                                              \
         foundInterface =                                                   \
           sof->GetExternalClassInfoInstance(NS_LITERAL_STRING(#_class));   \
                                                                            \
         if (foundInterface)                                                \
           NS_CLASSINFO_NAME(_class) = foundInterface;                      \
+      } else {                                                             \
+        *aInstancePtr = 0;                                                 \
+        return rv;                                                         \
       }                                                                    \
     }                                                                      \
   } else
