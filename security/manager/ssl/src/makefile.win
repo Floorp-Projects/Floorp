@@ -114,7 +114,6 @@ OBJS = \
     .\$(OBJDIR)\nsNSSIOLayer.obj \
     .\$(OBJDIR)\nsNSSModule.obj \
     .\$(OBJDIR)\nsSSLSocketProvider.obj \
-    .\$(OBJDIR)\nsSecureBrowserUIImpl.obj \
     .\$(OBJDIR)\nsTLSSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
     .\$(OBJDIR)\nsPK11TokenDB.obj \
