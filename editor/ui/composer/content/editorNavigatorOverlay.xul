@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+
+<!-- retrieve generic commands -->
+<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/editorNavigatorOverlay.dtd" >
+
+<overlay id="mailNavigatorOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript">
+  <![CDATA[    function editLink(aLinkURL)
+      {        urlSecurityCheck(aLinkURL, window.document);  // XXX what is this? Why do we pass the chrome doc?
+        editPage(aLinkURL, window, false);
+      }
+
+    // XXX Cleanup needed here! Specifically:
+    //     1) rename this function to |editPage|
+    //     2) move |editPage| from utilityOverlay.js into this file, as well as any UI that uses it
+    //        (which, at time of writing, is:
+    //         * view source "edit page" menu item
+    //         * navigator "edit page" menu item
+    //         * "Open in Composer" item in Open Location dialog
+    //        |editPage| should be renamed |editURL|
+    function overlay_editPage(aDocument)      
+      {        if (!aDocument)
+          aDocument = window._content.document;
+        
+        editPage(aDocument.URL, window, false); 
+      }
+
+    function initEditorContextMenuItems(aEvent)
+      {
+        var shouldShowEditPage = !gContextMenu.onImage && !gContextMenu.onLink && !gContextMenu.onTextInput && !gContextMenu.inDirList;
+        gContextMenu.showItem( "context-editpage", shouldShowEditPage );
+  
+        var shouldShowEditLink = gContextMenu.onSaveableLink; 
+        gContextMenu.showItem( "context-editlink", shouldShowEditLink );
+  
+        var appsSeparator = document.getElementById("context-sep-apps");
+        var tempElement = appsSeparator.previousSibling;
+        if (tempElement.localName == "menuseparator") 
+          gContextMenu.showItem("context-sep-apps", false);
+      }
+      
+    function initEditorContextMenuListener(aEvent)
+      {
+        var popup = document.getElementById("contentAreaContextMenu");
+        popup.addEventListener("popupshowing", initEditorContextMenuItems, false);
+      }
+    
+    addEventListener("load", initEditorContextMenuListener, false);
+  ]]>
+  </script>         
+
+  <!-- navigator specific commands -->
+  <commandset id="tasksCommands">
+    <!-- XXX insert commands here -->
+  </commandset>
+         
+  <!-- navigator specific UI items -->
+  <menupopup id="menu_NewPopup">
+    <!-- XXX insert File->New Menu add-ins here -->
+  </menupopup>
+
+  <menupopup id="menu_FilePopup">
+    <!-- XXX insert File Menu add-ins here -->
+  </menupopup>
+
+  <popup id="contentAreaContextMenu">
+    <menuseparator id="context-sep-apps" insertafter="context-sep-save"/>
+    <menuitem id="context-editpage"
+              label="&editPageCmd.label;"
+              accesskey="&editPageCmd.accesskey;"
+              oncommand="overlay_editPage(gContextMenu.target.ownerDocument);"
+              insertafter="context-sep-save"/>
+    <menuitem id="context-editlink"
+              label="&editLinkCmd.label;"
+              accesskey="&editLinkCmd.accesskey;"
+              oncommand="editLink(gContextMenu.linkURL());"
+              insertafter="context-sep-save"/>
+  </popup> 
+  
+</overlay>
+
