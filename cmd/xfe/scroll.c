@@ -1279,7 +1279,7 @@ fe_scroller_resize (Widget widget, XtPointer closure)
 	 Note: don't use CONTEXT_DATA (context)->active_url_count
 	 here, that only counts foreground transfers, not images.
        */
-      if (XP_IsContextBusy (context)) {
+      if (LO_LayingOut(context)) {
 	CONTEXT_DATA (context)->relayout_required = True;
       } else {
 
