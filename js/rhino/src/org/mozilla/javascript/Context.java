@@ -2199,8 +2199,10 @@ public class Context {
             activationNames.remove(name);
     }
 
-// Rudimentary support for Design-by-Contract
-    static void codeBug() {
+    /**
+     * Throws RuntimeException to indicate failed assertion.
+     */
+    public static void codeBug() throws RuntimeException {
         throw new RuntimeException("FAILED ASSERTION");
     }
 
