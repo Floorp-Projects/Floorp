@@ -29,7 +29,6 @@
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
-#include "nsINetSupport.h"
 #include "nsIPostToServer.h"
 #include "nsIFactory.h"
 #include "nsIContentViewerContainer.h"
@@ -95,7 +94,6 @@ NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
  * represents the set of documents actively being loaded...
  */
 class nsDocumentBindInfo : public nsIStreamListener, 
-                           public nsINetSupport,
                            public nsIRefreshUrl,
                            public nsIDocumentLoadInfo
 {
@@ -126,18 +124,6 @@ public:
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRInt32 aLength);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString& aMsg);
 
-	/* nsINetSupport interface methods */
-    NS_IMETHOD_(void) Alert(const nsString &aText);
-    NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
-    NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
-                               const nsString &aDefault,
-                               nsString &aResult);
-    NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
-                                              nsString &aUser,
-                                              nsString &aPassword);
-    NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
-                                       nsString &aPassword);
-
     nsresult GetStatus(void) { return mStatus; }
 
     /* nsIDocumentLoadInfo interface methods */
@@ -159,7 +145,6 @@ protected:
     nsIContentViewerContainer* m_Container;
     nsISupports*        m_ExtraInfo;
     nsIStreamObserver*  m_Observer;
-    nsINetSupport*      m_NetSupport;
     nsIStreamListener*  m_NextStream;
     nsDocLoaderImpl*    m_DocLoader;
 
@@ -1041,7 +1026,6 @@ nsDocumentBindInfo::nsDocumentBindInfo()
     m_Container = nsnull;
     m_ExtraInfo = nsnull;
     m_Observer = nsnull;
-    m_NetSupport = nsnull;
     m_NextStream = nsnull;
     m_DocLoader = nsnull;
     mStatus = NS_OK;
@@ -1068,10 +1052,6 @@ nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
 
     m_Observer = anObserver;
     NS_IF_ADDREF(m_Observer);
-	m_NetSupport = NULL;
-    if (m_Observer) {
-        m_Observer->QueryInterface(kINetSupportIID, (void **) &m_NetSupport);
-    }
 
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
@@ -1092,7 +1072,6 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
     NS_IF_RELEASE(m_NextStream);
     NS_IF_RELEASE(m_Container);
     NS_IF_RELEASE(m_Observer);
-    NS_IF_RELEASE(m_NetSupport);
     NS_IF_RELEASE(m_ExtraInfo);
 }
 
@@ -1131,11 +1110,6 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kDocumentBindInfoIID)) {
     *aInstancePtrResult = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtrResult = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1420,55 +1394,6 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
     m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
 
     return rv;
-}
-
-NS_IMETHODIMP_(void)
-nsDocumentBindInfo::Alert(const nsString &aText)
-{
-    if (nsnull != m_NetSupport) {
-        m_NetSupport->Alert(aText);
-    }
-}
-
-NS_IMETHODIMP_(PRBool)
-nsDocumentBindInfo::Confirm(const nsString &aText)
-{
-    if (nsnull != m_NetSupport) {
-        return m_NetSupport->Confirm(aText);
-    }
-    return PR_FALSE;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsDocumentBindInfo::Prompt(const nsString &aText,
-                           const nsString &aDefault,
-                           nsString &aResult)
-{
-    if (nsnull != m_NetSupport) {
-        return m_NetSupport->Prompt(aText, aDefault, aResult);
-    }
-    return PR_FALSE;
-}
-
-NS_IMETHODIMP_(PRBool) 
-nsDocumentBindInfo::PromptUserAndPassword(const nsString &aText,
-                                          nsString &aUser,
-                                          nsString &aPassword)
-{
-    if (nsnull != m_NetSupport) {
-        return m_NetSupport->PromptUserAndPassword(aText, aUser, aPassword);
-    }
-    return PR_FALSE;
-}
-
-NS_IMETHODIMP_(PRBool) 
-nsDocumentBindInfo::PromptPassword(const nsString &aText,
-                                   nsString &aPassword)
-{
-    if (nsnull != m_NetSupport) {
-        return m_NetSupport->PromptPassword(aText, aPassword);
-    }
-    return PR_FALSE;
 }
 
 NS_IMETHODIMP 
