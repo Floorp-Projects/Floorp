@@ -255,10 +255,10 @@ nsHTMLContentSinkStream::InitEncoders()
 void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 {
   if (mBufferSize < aNewSize) {
-    if(mBuffer) delete [] mBuffer;
+    if(mBuffer) nsMemory::Free(mBuffer);
 
     mBufferSize = 2*aNewSize+1; // make this twice as large
-    mBuffer = new char[mBufferSize];
+    mBuffer = NS_STATIC_CAST(char *, nsMemory::Alloc(mBufferSize));
     if(mBuffer){ 
       mBuffer[0] = 0;
     }
