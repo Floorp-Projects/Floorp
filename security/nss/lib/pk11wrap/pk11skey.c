@@ -88,7 +88,7 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
 	return symKey;
     }
 
-    symKey = (PK11SymKey *)PORT_Alloc(sizeof(PK11SymKey));
+    symKey = PORT_New(PK11SymKey);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -1450,8 +1450,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    symKey->size = keySize;
 	    if (key_size == 0) templateCount--;
 
-	    mechParams = (CK_ECDH1_DERIVE_PARAMS *) 
-		PORT_ZAlloc(sizeof(CK_ECDH1_DERIVE_PARAMS));
+	    mechParams = PORT_ZNew(CK_ECDH1_DERIVE_PARAMS); 
 	    mechParams->kdf = CKD_SHA1_KDF;
 	    mechParams->ulSharedDataLen = 0;
 	    mechParams->pSharedData = NULL;
@@ -1547,8 +1546,7 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    symKey->size = keySize;
 	    if (key_size == 0) templateCount--;
 
-	    mechParams = (CK_ECDH1_DERIVE_PARAMS *) 
-		PORT_ZAlloc(sizeof(CK_ECDH1_DERIVE_PARAMS));
+	    mechParams = PORT_ZNew(CK_ECDH1_DERIVE_PARAMS);
 	    if ((kdf < CKD_NULL) || (kdf > CKD_SHA1_KDF)) {
 		PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 		break;
