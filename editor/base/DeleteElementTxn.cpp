@@ -61,7 +61,7 @@ nsresult DeleteElementTxn::Do(void)
   nsAutoString elementTag="text node";
   if (element)
     element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement = (nsCOMPtr<nsIDOMElement>)mParent;
+  nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)mParent;
   nsAutoString parentElementTag="text node";
   if (parentElement)
     parentElement->GetTagName(parentElementTag);

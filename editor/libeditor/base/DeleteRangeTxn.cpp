@@ -369,11 +369,11 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           break;
 #ifdef NS_DEBUG
         // begin debug output
-        nsCOMPtr<nsIDOMElement> childElement = (nsCOMPtr<nsIDOMElement>)child;
+        nsCOMPtr<nsIDOMElement> childElement = (nsISupports*)child;
         nsAutoString childElementTag="text node";
         if (childElement)
           childElement->GetTagName(childElementTag);
-        nsCOMPtr<nsIDOMElement> parentElement = (nsCOMPtr<nsIDOMElement>)parent;
+        nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)parent;
         nsAutoString parentElementTag="text node";
         if (parentElement)
           parentElement->GetTagName(parentElementTag);
@@ -432,11 +432,11 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
             break;
 #ifdef NS_DEBUG
           // begin debug output
-          nsCOMPtr<nsIDOMElement> childElement = (nsCOMPtr<nsIDOMElement>)child;
+          nsCOMPtr<nsIDOMElement> childElement = (nsISupports*)child;
           nsAutoString childElementTag="text node";
           if (childElement)
             childElement->GetTagName(childElementTag);
-          nsCOMPtr<nsIDOMElement> parentElement = (nsCOMPtr<nsIDOMElement>)parent;
+          nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)parent;
           nsAutoString parentElementTag="text node";
           if (parentElement)
             parentElement->GetTagName(parentElementTag);
@@ -488,7 +488,7 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
       aList->AppendElement(parentAsISupports);
 #ifdef NS_DEBUG
         // begin debug output
-        nsCOMPtr<nsIDOMElement> parentElement = (nsCOMPtr<nsIDOMElement>)parent;
+        nsCOMPtr<nsIDOMElement> parentElement = (nsISupports*)parent;
         nsAutoString parentElementTag="text node";
         if (parentElement)
           parentElement->GetTagName(parentElementTag);

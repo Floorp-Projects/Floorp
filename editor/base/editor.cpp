@@ -769,7 +769,7 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
           result = range->GetStartParent(getter_AddRefs(node));
           if ((NS_SUCCEEDED(result)) && (node))
           {
-            nsCOMPtr<nsIDOMCharacterData> nodeAsText = (nsCOMPtr<nsIDOMCharacterData>)node;
+            nsCOMPtr<nsIDOMCharacterData> nodeAsText = (nsISupports*)node;
             if (nodeAsText)
             {
               PRInt32 offset;
