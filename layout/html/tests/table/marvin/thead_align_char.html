@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
+<html>
+<head>
+<!-- testcase: thead_align_char.html --> 
+<!-- description: HTML 4.0 THEAD element/ALIGN-char attribute/value --> 
+<!-- Author: Christine Dreckman  Date: 1/27/99 -->
+<!-- CONFIDENTIAL AND PROPRIETARY TEST SCRIPT OF NETSCAPE COMMUNICATIONS CORPORATION 
+Copyright © 1999 Netscape Communications Corporation. All Rights Reserved. Use of this Test Script is 
+subject to the terms of the applicable license agreement from Netscape Communications Corporation. -->
+<!-- Purpose: To test the ALIGN-char attribute/value of the THEAD element. -->
+<!-- Expected result: The numbers in the THEAD section should align on the decimal point -->
+<title>thead_align_char</title>
+</head>
+
+<body>
+<p>In this test, the THEAD section of the table contains numbers with decimals. The test uses the attribute/value ALIGN=char without the additional CHAR attribute to specify a particular character. Therefore, ALIGN=char should cause the numbers to align to the default value (decimal point).</p>
+
+<table border>
+<thead align="char">
+<tr>
+<td>55.00</td>
+<td>55555.00</td>
+<td>555.00</td>
+</tr>
+<tr>
+<td>1234.56</td>
+<td>123.45</td>
+<td>12345.67</td>
+</tr>
+</thead>
+<tfoot>
+<tr>
+<td>This text is in the TFOOT</td>
+<td>This text is in the TFOOT</td>
+<td>This text is in the TFOOT</td>
+</tr>
+</tfoot>
+<tbody >
+<tr>
+<td>This text is in the TBODY</td>
+<td>This text is in the TBODY</td>
+<td>This text is in the TBODY</td>
+</tr>
+<tbody>
+</table>
+
+</body>
+</html>

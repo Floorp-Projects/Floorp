@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<!-- test case: colgroup_valign_bottom.html -->
+<!-- description: HTML 4.0 COLGROUP element with VALIGN attribute. Value=bottom --> 
+<!-- Author: Christine Dreckman Date: 2/19/99 -->
+<!-- CONFIDENTIAL AND PROPRIETARY TEST SCRIPT OF NETSCAPE COMMUNICATIONS CORPORATION 
+Copyright © 1999 Netscape Communications Corporation. All Rights Reserved. Use of this Test Script is 
+subject to the terms of the applicable license agreement from Netscape Communications Corporation -->
+<!-- Purpose: To test the VALIGN/bottom attribute/value of the COLGROUP element tag -->
+<!-- Expected result: A table with two distinct column groups should be displayed. The first column group has two columns and the second column group has three columns. Text in the cells should be bottom-aligned -->
+<title>colgroup_valign_bottom.html</title>
+
+<style type="text/css">
+	TD { height: 50px }
+	TH { height: 50px }
+</style>
+
+</head>
+<body>
+<p>Colgroups are used to identify column groups. The table below has two distinct column groups; 'Airport Location' and 'Car Rental Information'. The first column group contains two columns and the second column group contains three columns.</p>
+
+<p>In this test case, the cell text should be bottom-aligned.</p>
+<table BORDER >
+<colgroup valign="bottom">
+<colgroup valign="bottom">
+<tr>
+<th COLSPAN="2">Airport Location</th>
+<th COLSPAN="3">Car Rental information</th>
+</tr>
+
+<tr>
+<th>Country</th>
+<th>City</th>
+<th>ABC Company</th>
+<th>EFG Company</th>
+<th>XYZ Company</th>
+</tr>
+
+<tr>
+<td>France</td>
+<td>Paris</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>Germany</td>
+<td>Frankfurt</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>England</td>
+<td>London</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>Netherlands</td>
+<td>Amsterdam</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+
+<tr>
+<td>USA</td>
+<td>New York</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+
+</table>
+</body>
+</html>
