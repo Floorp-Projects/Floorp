@@ -78,6 +78,8 @@ static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
+#define DEBUGCMDS 0
+
 #include "nsIWebShell.h"
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
@@ -287,7 +289,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 void 
 nsWebShellWindow::UpdateButtonStatus(PRBool aIsBusy)
 {
-  if (aIsBusy) {
+  /*if (aIsBusy) {
     SetCommandEnabled(nsAutoString("nsCmd:BrowserBack"), PR_FALSE);
     SetCommandEnabled(nsAutoString("nsCmd:BrowserForward"), PR_FALSE);
     SetCommandEnabled(nsAutoString("nsCmd:BrowserReload"), PR_FALSE);
@@ -306,7 +308,7 @@ nsWebShellWindow::UpdateButtonStatus(PRBool aIsBusy)
       SetCommandEnabled(nsAutoString("nsCmd:BrowserPrint"), PR_TRUE);
       NS_RELEASE(contentWebShell);
     }
-  }
+  }*/
 }
 
 NS_IMETHODIMP 
@@ -484,13 +486,15 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
     toolbar = FindNamedDOMNode(nsAutoString("toolbar"), window, endCount, ++count); 
   } // for each toolbar
   
-  /*PRInt32 i, n = mCommands.Count();
+  // XXX hack until Command DOM is available
+  // Enable All Command
+  PRInt32 i, n = mCommands.Count();
   for (i = 0; i < n; i++) {
     nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
     cmd->SetEnabled(PR_TRUE);
   }
-  SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
-  */
+  //SetCommandEnabled(nsAutoString("nsCmd:BrowserStop"), PR_FALSE);
+  
   UpdateButtonStatus(PR_FALSE);
 }
 
@@ -503,18 +507,17 @@ void nsWebShellWindow::ConnectCommandToOneGUINode(
   nsAutoString cmdAtom("cmd");
   nsString nodeCmdName;
   theNodeAsElement->GetAttribute(cmdAtom, nodeCmdName);
-  nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(nodeCmdName));
+  nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(nodeCmdName)); 
   if (cmd) {
     nsString guiDisplayName; // ok, this doesn't work.  How do I get the button text? jrm
     theNodeAsElement->GetAttribute(nsAutoString("name"), guiDisplayName);
-#if 0
-    printf(
-        "Linking cmd [%s] to %s [%s]\n",
-        nsAutoCString(nodeCmdName),
-        nsAutoCString(theGuiNodeType),
-        nsAutoCString(guiDisplayName)
-        );
-#endif
+
+    if (DEBUGCMDS) printf("Linking cmd [%s] to %s [%s]\n",
+                          nodeCmdName.ToNewCString(),
+                          theGuiNodeType.ToNewCString(),
+                          guiDisplayName.ToNewCString()
+                          );
+
     cmd->AddUINode(aNode);
   }
 } // nsWebShellWindow::ConnectCommandToOneGUINode
@@ -747,6 +750,9 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
   nsCOMPtr<nsIWebShell> contentWebShell;
   mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), *getter_AddRefs(contentWebShell));
+
+  nsCOMPtr<nsIWebShell> toolbarWebShell;
+  mWebShell->FindChildWithName(nsAutoString("browser.toolbar"), *getter_AddRefs(toolbarWebShell));
   if (contentWebShell) {
     ///////////////////////////////
     // Find the Toolbar DOM  and Load all the commands
@@ -758,6 +764,7 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     if (!parent)
       return NS_ERROR_FAILURE;
     LoadCommands(contentWebShell, toolbarDOMDoc);
+    //LoadCommands(toolbarWebShell, toolbarDOMDoc);
           
     PRInt32 count = 0;
     nsCOMPtr<nsIDOMNode> imgNode(FindNamedDOMNode(nsAutoString("IMG"), parent, count, 7));
