@@ -695,10 +695,10 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
       switch(theTag) {
         case eHTMLTag_html:
-        case eHTMLTag_comment:
         case eHTMLTag_script:
         case eHTMLTag_markupDecl:
           break;  // simply pass these through to token handler without further ado...
+        case eHTMLTag_comment:
         case eHTMLTag_newline:
         case eHTMLTag_whitespace:
           if(mMisplacedContent.GetSize()<=0) // fix for bugs 17017,18308,23765, and 24275
@@ -1781,7 +1781,17 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           eHTMLTags theParentTag=mBodyContext->Last();
           if(kNotFound==GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) {
 
-            PopStyle(theChildTag);
+            // Ref: bug 30487
+            // Make sure that we don't cross boundaries, of certain elements,
+            // to close stylistic information.
+            // Ex. <font face="helvetica"><table><tr><td></font></td></tr></table> some text...
+            // In the above ex. the orphaned FONT tag, inside TD, should cross TD boundaryto 
+            // close the FONT tag above TABLE. 
+            static eHTMLTags gBarriers[]={eHTMLTag_td,eHTMLTag_th};
+
+            if(!FindTagInSet(theParentTag,gBarriers,sizeof(gBarriers)/sizeof(theParentTag))) {
+              PopStyle(theChildTag);
+            }
 
             // If the bit kHandleStrayTag is set then we automatically open up a matching
             // start tag ( compatibility ).  Currently this bit is set on P tag.

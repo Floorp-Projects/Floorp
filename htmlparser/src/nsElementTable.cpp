@@ -1953,23 +1953,34 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
   }
   else if(IsResidualStyleTag(mTagID)){
 
+    // Ref. bug 37618
+    // Before finding a close target, for the current tag, make sure
+    // that the tag above does not gate.
+    // Ex. <font><select><option></font></select>
+    // Here the /FONT inside OPTION should not close try to close FONT
+    // above SELECT. This would cause select to get closed!!!
+    eHTMLTags thePrevTag=(eHTMLTags)aContext.Last();
+
+    if(IsInlineParent(thePrevTag)) {
+    
       //we intentionally make 2 passes: 
       //The first pass tries to exactly match, the 2nd pass matches the group.
-    PRInt32 theIndexCopy=theIndex;
-    while(--theIndex>=anIndex){
-      eHTMLTags theTag=aContext.TagAt(theIndex);
-      if(theTag==mTagID) {
-        return theTag;
+      PRInt32 theIndexCopy=theIndex;
+      while(--theIndex>=anIndex){
+        eHTMLTags theTag=aContext.TagAt(theIndex);
+        if(theTag==mTagID) {
+          return theTag;
+        }
+      }
+      theIndex=theIndexCopy;
+      while(--theIndex>=anIndex){
+        eHTMLTags theTag=aContext.TagAt(theIndex);
+        if(gHTMLElements[theTag].IsMemberOf(mParentBits)) {
+          return theTag;
+        }
       }
     }
-    theIndex=theIndexCopy;
-    while(--theIndex>=anIndex){
-      eHTMLTags theTag=aContext.TagAt(theIndex);
-      if(gHTMLElements[theTag].IsMemberOf(mParentBits)) {
-        return theTag;
-      }
-    }
-
+    
   }
   return result;
 }
