@@ -93,6 +93,10 @@ public:
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) { mTotalPages = aTotal; return NS_OK; }
 
+  // Gets the dead space (the gray area) around the Print Preview Page
+  NS_IMETHOD GetDeadSpaceValue(nscoord* aValue) { *aValue = NS_INCHES_TO_TWIPS(0.25); return NS_OK; };
+  
+
   // Async Printing
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
                         nsIPrintSettings* aPrintSettings);

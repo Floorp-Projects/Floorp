@@ -883,6 +883,13 @@ PluginViewerImpl::GetIsFramesetDocument(PRBool *aIsFramesetDocument)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute long printPreviewNumPages; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* void exitPrintPreview (); */
 NS_IMETHODIMP 
 PluginViewerImpl::ExitPrintPreview()

@@ -99,6 +99,11 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute boolean isFramesetDocument;
 
   /**
+   * This returns the total number of pages for the Print Preview
+   */
+  readonly attribute long printPreviewNumPages;
+
+  /**
    * Print the specified DOM window
    *
    * aThePrintOptions - Printer Settings for the print job
