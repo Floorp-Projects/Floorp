@@ -1576,7 +1576,11 @@ static REGERR nr_FindAtLevel(REGFILE *reg,
             return err;
 
         /* check to see if it's the one we want */
+#ifdef XP_UNIX
+        if (XP_STRCMP(namebuf, pName) == 0) {
+#else
         if (XP_STRCASECMP(namebuf, pName) == 0) {
+#endif
             /* Found it! */
             if ( pDesc != NULL ) {
                 COPYDESC( pDesc, &desc );
