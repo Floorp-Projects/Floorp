@@ -202,11 +202,10 @@ void FE_LoadGridCellFromHistory(
 
 void FE_SetRefreshURLTimer(
 	MWContext*				context,
-	uint32 					seconds,
-	char*					refresh_url)
+	URL_Struct*				URL_s)
 {
 	if (ExtractHyperView(context))
-		ExtractHyperView(context)->SetTimerURL(seconds, refresh_url);
+		ExtractHyperView(context)->SetTimerURL(URL_s->refresh, URL_s->refresh_url);
 }
 
 void FE_ShowScrollBars(MWContext *context, XP_Bool show)
