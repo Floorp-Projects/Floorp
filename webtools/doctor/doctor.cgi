@@ -132,15 +132,17 @@ if ($action eq "edit")
  
   $vars->{'file'} = $request->param('file');
   
-  if ($request->param('content') && $request->param('version'))
+  if ($request->param('content'))
   {
     ValidateContent();
     $vars->{'content'} = $request->param('content');
     $vars->{'version'} = $request->param('version');
+    $vars->{'line_endings'} = $request->param('line_endings');
   }
   else
   {
-    ($vars->{'content'}, $vars->{'version'}) = RetrieveFile($request->param('file'));
+    ($vars->{'content'}, $vars->{'version'}, $vars->{'line_endings'}) 
+      = RetrieveFile($request->param('file'));
   }
   
   print $request->header;
@@ -287,7 +289,12 @@ sub RetrieveFile
   my $version = "";
   if ($errors =~ /VERS:\s([0-9.]+)\s/) { $version = $1 }
   
-  return ($output, $version);
+  # Figure out the line-ending style by examining the content of the file.
+  my $line_endings = "unix";
+  if ($output =~ /\r\n/s) { $line_endings = "windows" }
+  elsif ($output =~ /\r[^\n]/s) { $line_endings = "mac" }
+
+  return ($output, $version, $line_endings);
 }
 
 sub ReviewChanges 
@@ -331,6 +338,7 @@ sub ReviewChanges
   $vars->{'file'} = $file;
   $vars->{'content'} = $request->param('content');
   $vars->{'version'} = $request->param('version');
+  $vars->{'line_endings'} = $request->param('line_endings');
   
   print $request->header;
   $template->process("review.tmpl", $vars)
@@ -436,9 +444,13 @@ sub ReplaceFile
   my ($file) = @_;
   
   my $content = $request->param('content');
-  
-  # Replace funky end-of-line combinations with good ole unix equivalents.
-  $content =~ s/\r\n|\r/\n/g;
+  my $line_endings = $request->param('line_endings');
+
+  # Replace the Windows-style line endings in which browsers send content
+  # with line endings appropriate to the file being replaced if the file
+  # has Unix- or Mac-style line endings.
+  if ($line_endings eq "unix") { $content =~ s/\r\n/\n/g }
+  if ($line_endings eq "mac") { $content =~ s/\r\n/\r/g }
   
   if (!open(DOC, ">$file"))
   {
@@ -450,10 +462,6 @@ sub ReplaceFile
   print DOC $content;
   close(DOC);
 }
-
-#$windows = ($content =~ /\r\n/);
-#$unix = ($content =~ /\n/);
-#$mac = ($content =~ /\r/);
 
 sub DiffFile
 {
