@@ -194,7 +194,6 @@ ICONS_LIB	= $(DIST)/lib/lib$(LITE_PREFIX)xfeicons.a
 
 DTWIDGETS_LIB	= $(DIST)/lib/libDtWidgets.a
 XFE_WIDGETS_LIB	= $(DIST)/lib/libXfeWidgets.a
-COMBOBOX_LIB	= $(DIST)/lib/libComboBox.a
 
 ifeq ($(OS_ARCH),AIX)
 NSPR_LIB	= 
@@ -767,9 +766,6 @@ $(MICROLINE_LIB):
 
 $(ICONS_LIB):
 	cd icons; $(MAKE)
-
-$(COMBOBOX_LIB):
-	cd combobox; $(MAKE)
 
 $(DTWIDGETS_LIB):
 	cd DtWidgets; $(MAKE)
