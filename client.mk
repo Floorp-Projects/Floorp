@@ -54,7 +54,7 @@
 # and commit this file on that tag.
 #MOZ_CO_TAG = <tag>
 NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
-PSM_CO_TAG = SeaMonkey_M14_BRANCH
+PSM_CO_TAG = SECURITY_CLIENT_BRANCH
 BUILD_MODULES = all
 
 #######################################################################
