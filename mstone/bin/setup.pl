@@ -122,11 +122,13 @@ sub configUserLdif {
     $ans = <STDIN>; chomp $ans;
     $args = $ans if ($ans);
 
+    my $perlbin = "/usr/bin/perl";
+
     $params{DEBUG} &&
-	print "perl/bin/perl -Ibin -- bin/makeusers.pl $mode -w $params{WORKLOAD} -b '$basedn' -o $name $args\n";
+	print "$perlbin -Ibin -- bin/makeusers.pl $mode -w $params{WORKLOAD} -b '$basedn' -o $name $args\n";
 
     print "\nGenerating $name (this can take a while)\n";
-    system "perl/bin/perl -Ibin -- bin/makeusers.pl $mode -w $params{WORKLOAD} -b '$basedn' -o $name $args"
+    system "$perlbin -Ibin -- bin/makeusers.pl $mode -w $params{WORKLOAD} -b '$basedn' -o $name $args"
 	|| warn "$@";
     print "LDIF generation complete.  See $name\n";
     print "\tSee the manual or INSTALL to create users using the LDIF file.\n";

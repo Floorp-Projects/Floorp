@@ -73,6 +73,7 @@ typedef struct pish_command {
     char *	filename;
     int 	numRecipients;	/* recpients per message */
     int 	msgsize;	/* message size without trailing CRLF.CRLF */
+    char *	msgMailFrom;	/* message mail from (envelope sender) */
     char *	msgdata;	/* cache the file in mem */
     int		useEHLO;	/* use EHLO instead of HELO */
     int 	useAUTHLOGIN;	/* use AUTH LOGIN to authenticate */

@@ -46,9 +46,10 @@
 
   # These usually dont need to be set.  These are the defaults
   GnuPlot	gnuplot/gnuplot
-  RSH		/usr/bin/rsh
+  RSH		ssh
 # RSH		/usr/bin/remsh		# HP-UX uses this path
-  RCP		/usr/bin/rcp
+  RCP		scp
+#  RCP		/usr/bin/rcp
   tempDir	/var/tmp		# client machine directory
   chartWidth	640
   chartHeight	480

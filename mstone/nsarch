@@ -35,21 +35,21 @@
 # Figure out standard system names
 
 UNAME_REPORTS=`uname`
-UNAME_OS_ARCH=`uname -s`
+UNAME_OS_SYSTEM=`uname -s`
 UNAME_OS_RELEASE=`uname -r`
 
-OS_ARCH=$UNAME_OS_ARCH
-OS_RELEASE=$UNAME_OS_RELEASE
-OS_CONFIG=${OS_ARCH}${OS_RELEASE}
+OS_SYSTEM=${UNAME_OS_SYSTEM}
+OS_RELEASE=${UNAME_OS_RELEASE}
+OS_CONFIG=${OS_SYSTEM}${OS_RELEASE}
 
-if [ "$UNAME_OS_ARCH" = "SunOS" ]; then
+if [ "$UNAME_OS_SYSTEM" = "SunOS" ]; then
   PROCESSOR=`uname -p`
   if [ "$PROCESSOR" = "i386" ]; then
     BUILD_ARCH=x86
   else
-    BUILD_ARCH=SPARC
+    BUILD_ARCH=sparc
   fi
-  BUILD_OS=SOLARIS
+  BUILD_OS=Solaris
   if [ "$UNAME_OS_RELEASE" = "5.5" ]; then
     BUILD_VER=2.5
   elif [ "$UNAME_OS_RELEASE" = "5.5.1" ]; then
@@ -60,41 +60,44 @@ if [ "$UNAME_OS_ARCH" = "SunOS" ]; then
     BUILD_VER=7
   elif [ "$UNAME_OS_RELEASE" = "5.8" ]; then
     BUILD_VER=8
+  elif [ "$UNAME_OS_RELEASE" = "5.9" ]; then
+    BUILD_VER=9
   fi
+  OS_CONFIG=${OS_SYSTEM}${OS_RELEASE}_${BUILD_ARCH}
 
-elif [ "$UNAME_OS_ARCH" = "HP-UX" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "HP-UX" ]; then
   BUILD_ARCH=HPPA
-  BUILD_OS=$UNAME_OS_ARCH
+  BUILD_OS=$UNAME_OS_SYSTEM
   BUILD_VER=$OS_RELEASE
 
-elif [ "$UNAME_OS_ARCH" = "AIX" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "AIX" ]; then
   BUILD_ARCH=POWER
-  BUILD_OS=$UNAME_OS_ARCH
+  BUILD_OS=$UNAME_OS_SYSTEM
   BUILD_VER=`uname -v`.`uname -r`
   OS_CONFIG=${BUILD_OS}${BUILD_VER}
 
-elif [ "$UNAME_OS_ARCH" = "OSF1" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "OSF1" ]; then
   BUILD_ARCH=ALPHA
-  BUILD_OS=$UNAME_OS_ARCH
+  BUILD_OS=$UNAME_OS_SYSTEM
   BUILD_VER=$OS_RELEASE
 
-elif [ "$UNAME_OS_ARCH" = "IRIX64" -o "$UNAME_OS_ARCH" = "IRIX" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "IRIX64" -o "$UNAME_OS_SYSTEM" = "IRIX" ]; then
   BUILD_ARCH=MIPS
   BUILD_OS=IRIX
   BUILD_VER=$OS_RELEASE
   OS_CONFIG=${BUILD_OS}${OS_RELEASE}
 
-elif [ "$UNAME_OS_ARCH" = "BSD/386" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "BSD/386" ]; then
   BUILD_ARCH=x86
   BUILD_OS=BSDI
   BUILD_VER=$OS_RELEASE
 
-elif [ "$UNAME_OS_ARCH" = "SCO_SV" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "SCO_SV" ]; then
   BUILD_ARCH=x86
   BUILD_OS=SCO
   BUILD_VER=$OS_RELEASE
 
-elif [ "$UNAME_OS_ARCH" = "UNIX_SV" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "UNIX_SV" ]; then
   # Check for braindamage
   grep NCR /etc/bcheckrc > /dev/null 2>&1
   BUILD_ARCH=x86
@@ -105,27 +108,27 @@ elif [ "$UNAME_OS_ARCH" = "UNIX_SV" ]; then
   fi
   BUILD_VER=$OS_RELEASE
 
-elif [ "$UNAME_OS_ARCH" = "NEWS-OS" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "NEWS-OS" ]; then
   BUILD_ARCH=`uname -p`
   BUILD_OS=SONY
   BUILD_VER=$OS_RELEASE
 
-elif [ "$UNAME_OS_ARCH" = "UNIX_System_V" ]; then
+elif [ "$UNAME_OS_SYSTEM" = "UNIX_System_V" ]; then
   BUILD_ARCH=`uname -p`
   BUILD_OS=NEC
   BUILD_VER=$OS_RELEASE
 
-elif [ $UNAME_OS_ARCH = Linux ]; then
+elif [ $UNAME_OS_SYSTEM = Linux ]; then
   BUILD_ARCH=`uname -m`
   if [ -n "`echo $BUILD_ARCH | grep -e '86$'`" ] ; then
 	  BUILD_ARCH=x86
   fi
-  BUILD_OS=$UNAME_OS_ARCH
+  BUILD_OS=$UNAME_OS_SYSTEM
   BUILD_VER=`echo $OS_RELEASE | cut -f1,2 -d.`
   OS_CONFIG=${BUILD_OS}${BUILD_VER}_${BUILD_ARCH}
 fi
 
-case "$UNAME_OS_ARCH" in
+case "$UNAME_OS_SYSTEM" in
 SINIX*|ReliantUNIX*)
   BUILD_ARCH=`uname -p`
   BUILD_OS="ReliantUNIX"

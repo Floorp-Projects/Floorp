@@ -34,10 +34,10 @@
 # This file deals with the graphs data only
 # Interfaces to gnuplot to generate gifs for HTML inclusion.
 
-# Type of images to hold plots (e.g. png, gif, jpeg, tiff, etc)
+# Type of images to hold plots (e.g. png, gif, jpeg, svg, tiff, pbm, etc)
 unless ($params{IMAGETYPE}) {
     # Should probe gnuplot and see if it can generate one of:
-    #	png, gif, jpeg, tiff, or pbm.
+    #	png, gif, jpeg, svg, tiff, or pbm.
     # Not all the programs that use args.pl need this (or have gnuplot, yet)
     my $outfile = "$tmpbase/termtypes.out";
     my %types = ();		# hash of interesting types that we spot
@@ -73,9 +73,10 @@ unless ($params{IMAGETYPE}) {
     # now check through the output for terminal types we can use.
     # I havent verified the jpeg or tiff types.  e-mail me success or failure
     while (<NEW>) {
-	(/\sgif\s/) && ++$types{"gif"} && next;
 	(/\spng\s/) && ++$types{"png"} && next;
+	(/\sgif\s/) && ++$types{"gif"} && next;
 	(/\sjpeg\s/) && ++$types{"jpeg"} && next;
+	(/\ssvg\s/) && ++$types{"svg"} && next;
 	(/\stiff\s/) && ++$types{"tiff"} && next;
 	(/\spbm\s/) && ++$types{"pbm"} && next;
     }
@@ -87,10 +88,12 @@ unless ($params{IMAGETYPE}) {
     # The ordering here determines our preferences
     # This list is by likely browser compatibility and image compactness
     # png is about 10x smaller than gif
+    # svg is smooth and scalable but usually requires a plug-in
     # jpeg will probably look bad, but will be directly supported
     if ($types{"png"}) { $params{IMAGETYPE}="png"; }
     elsif ($types{"gif"}) { $params{IMAGETYPE}="gif"; }
     elsif ($types{"jpeg"}) { $params{IMAGETYPE}="jpeg"; }
+    elsif ($types{"svg"}) { $params{IMAGETYPE}="svg"; }
     elsif ($types{"tiff"}) { $params{IMAGETYPE}="tiff"; }
     elsif ($types{"pbm"}) { $params{IMAGETYPE}="pbm"; }
     else {
@@ -273,6 +276,8 @@ sub genPlot {
     # Setup output "terminal type"
     if ($params{IMAGETYPE} eq "gif") { # gif type has different arguments
 	print SCRIPT "set terminal $params{IMAGETYPE} small size $params{CHARTWIDTH},$params{CHARTHEIGHT}\n";
+    } elsif ($params{IMAGETYPE} eq "svg") { # svg type has different args too
+	print SCRIPT "set terminal $params{IMAGETYPE} size $params{CHARTWIDTH} $params{CHARTHEIGHT}\n";
     } else {			# most types work like this
 	print SCRIPT "set terminal $params{IMAGETYPE} small color\n";
 	if (($params{CHARTWIDTH} != 640) || ($params{CHARTHEIGHT} != 480)) {

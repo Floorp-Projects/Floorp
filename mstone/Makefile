@@ -20,7 +20,7 @@ PERL_DIR	= $(wildcard perl5.*)
 GDFILES		= gd.txt gd.html libgd.* gd.h demoin.gif gddemo giftogd webgif
 GNUPLOTFILES	= gnuplot Copyright gnuplot_x11 gnuplot.1 gnuplot.gih 
 
-VERSION		= 4.2
+VERSION		= 4.3
 TARBALL		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).tar.gz
 ZIPFILE		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).zip
 TARBALL_ALL	= mstone-$(VERSION)-all$(OBJDIR_TAG).tar.gz
