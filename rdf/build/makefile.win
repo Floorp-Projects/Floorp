@@ -61,28 +61,9 @@ LINCS=  -I$(PUBLIC)\rdf                 \
 
 include <$(DEPTH)\config\rules.mak>
 
-XPTYPELIBS=\
-        nsIRDFCompositeDataSource.xpt   \
-        nsIRDFContainer.xpt             \
-        nsIRDFContainerUtils.xpt        \
-        nsIRDFDataSource.xpt            \
-        nsIRDFLiteral.xpt               \
-        nsIRDFNode.xpt                  \
-        nsIRDFObserver.xpt              \
-        nsIRDFPurgeableDataSource.xpt   \
-        nsIRDFResource.xpt              \
-        nsIRDFService.xpt               \
-        nsIRDFXMLDataSource.xpt         \
-        nsIRDFXMLSource.xpt             \
-        nsISimpleEnumerator.xpt         \
-        $(NULL)
-
-
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-        $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\nsISupports.xpt   $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpccomponents.xpt $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpcjsid.xpt       $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpctest.xpt       $(DIST)\bin\components
-        -for %i in ($(XPTYPELIBS)) do $(MAKE_INSTALL) %i $(DIST)\bin\components
