@@ -22,9 +22,9 @@
 use diagnostics;
 use strict;
 
-print "Content-type: multipart/x-mixed-replace;boundary=ThisRandomString\n";
+print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n";
 print "\n";
-print "--ThisRandomString\n";
+print "--thisrandomstring\n";
 
 
 require "CGI.pl";
@@ -392,7 +392,7 @@ my $buglist = join(":", @bugarray);
 
 
 print "\n";
-print "--ThisRandomString\n";
+print "--thisrandomstring\n";
 
 
 my $toolong = 0;
@@ -594,4 +594,4 @@ if ($count > 0) {
         print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Make changes to several of these bugs at once.</A>\n";
     }
 }
-print "\n--ThisRandomString--\n";
+print "\n--thisrandomstring--\n";
