@@ -84,10 +84,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
   const char *pluginsDir = sysdir.GetCString(); // native path
   if (pluginsDir != NULL)
   {
-      const char* allocPath;
-      
-      allocPath = PL_strdup(pluginsDir);
-      *(nsFileSpec*)this = allocPath;
+      *(nsFileSpec*)this = pluginsDir;
   }
 }
 
