@@ -329,7 +329,9 @@ protected:
   PRBool     ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                            const nsAString & inParam,
                                            nsACString& outCommandID,
-                                           nsACString& outParam);
+                                           nsACString& outParam,
+                                           PRBool& isBoolean,
+                                           PRBool& boolValue);
   nsCOMPtr<nsICommandManager> mMidasCommandManager;
   PRBool                      mEditingIsOn;
 
