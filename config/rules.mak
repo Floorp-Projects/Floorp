@@ -586,10 +586,7 @@ clobber::
 #//------------------------------------------------------------------------
 !if defined(JAVA_OR_NSJVM)
 GARBAGE	= $(JMC_GEN_DIR) $(JMC_HEADERS) $(JMC_STUBS) \
-	  $(JDK_STUB_DIR) $(JRI_GEN_DIR) $(JDK_GEN_DIR)
-!ifdef REGENERATE
-GARBAGE = $(GARBAGE) $(JNI_GEN_DIR) 
-!endif
+	  $(JDK_STUB_DIR) $(JRI_GEN_DIR) $(JDK_GEN_DIR) $(JNI_GEN_DIR) 
 !endif
 
 
