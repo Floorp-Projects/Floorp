@@ -46,10 +46,10 @@ else {
 }
 
 %colormap = (
-  success    => '00ff00',
-  busted     => 'red',
-  building   => 'yellow',
-  testfailed => 'orange'
+  success    => '11DD11',
+  busted     => 'EE0000',
+  building   => 'EEFF00',
+  testfailed => 'FFAA00'
 );
 
 %images = (
