@@ -87,27 +87,27 @@
               <rows>
                 <row>
                   <text value="&props.name.label;"/>
-                  <textfield id="ifl_name" readonly="true"/>
+                  <textbox id="ifl_name" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.value.label;"/>
-                  <textfield id="ifl_value" readonly="true"/>
+                  <textbox id="ifl_value" readonly="true"/>
                 </row>
                 <row>
                   <text id="ifl_domaintype" value="&props.domain.label;"/>
-                  <textfield id="ifl_domain" readonly="true"/>
+                  <textbox id="ifl_domain" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.path.label;"/>
-                  <textfield id="ifl_path" readonly="true"/>
+                  <textbox id="ifl_path" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.secure.label;"/>
-                  <textfield id="ifl_secure" readonly="true"/>
+                  <textbox id="ifl_secure" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.expires.label;"/>
-                  <textfield id="ifl_expires" readonly="true"/>
+                  <textbox id="ifl_expires" readonly="true"/>
                 </row>
               </rows>
             </grid>

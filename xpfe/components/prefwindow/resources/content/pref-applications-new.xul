@@ -53,22 +53,22 @@
       <row>
         <text class="label" value="&newDescription.label;" accesskey="&newDescription.accesskey;"
               for="description"/>
-        <textfield id="description" flex="1"/>
+        <textbox id="description" flex="1"/>
       </row>
       <row>
         <text class="label" value="&newExtensions.label;" accesskey="&newExtensions.accesskey;"
               for="extensions"/>
-        <textfield id="extensions" flex="1"/>
+        <textbox id="extensions" flex="1"/>
       </row>
       <row>
         <text class="label" value="&newMIME.label;" accesskey="&newMIME.accesskey;"
               for="mimeType"/>
-        <textfield id="mimeType" flex="1"/>
+        <textbox id="mimeType" flex="1"/>
       </row>
       <row>
         <text class="label" value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
               for="appPath"/>
-        <textfield id="appPath" flex="1"/>
+        <textbox id="appPath" flex="1"/>
       </row>
       <row>
         <spring/>

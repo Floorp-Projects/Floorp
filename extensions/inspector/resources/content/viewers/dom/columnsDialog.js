@@ -136,7 +136,7 @@ ColumnsDialog.prototype =
     text.setAttribute("value", "Attr");
     box.appendChild(text);
 
-    var txf = document.createElementNS(kXULNSURI, "textfield");
+    var txf = document.createElementNS(kXULNSURI, "textbox");
     txf.setAttribute("class", "attr-column-selector");
     txf.setAttribute("flex", 1);
     box.appendChild(txf);
@@ -199,7 +199,7 @@ ColumnsDialog.prototype =
   getColumnValue: function(aColBox)
   {
     if (aColBox._isAttrCol) {
-      var txf = aColBox.getElementsByTagName("textfield")[0];
+      var txf = aColBox.getElementsByTagName("textbox")[0];
       return "@" + txf.value;
     } else {
       return aColBox._ColValue;

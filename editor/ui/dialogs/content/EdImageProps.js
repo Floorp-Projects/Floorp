@@ -174,7 +174,7 @@ function Startup()
   // Initialize widgets with image attributes in the case where the entire dialog isn't visible
   onMoreFewerImage();  // this call will initialize all widgets if entire dialog is visible
 
-  SetTextfieldFocus(dialog.srcInput);
+  SetTextboxFocus(dialog.srcInput);
 
   SetWindowLocation();
 }
@@ -257,7 +257,7 @@ function chooseFile()
   }
   GetImageFromURL();
   // Put focus into the input field
-  SetTextfieldFocus(dialog.srcInput);
+  SetTextboxFocus(dialog.srcInput);
 }
 
 function GetImageFromURL()
@@ -403,7 +403,7 @@ function onMoreFewerImage()
     // Show the "Advanced Edit" button on same line as "More Properties"
     dialog.AdvancedEditButton.setAttribute("collapsed","false");
     dialog.AdvancedEditButton2.setAttribute("collapsed","true");
-    // Weird caret appearing when we collapse, so force focus to URL textfield
+    // Weird caret appearing when we collapse, so force focus to URL textbox
     dialog.srcInput.focus();
   }
   else
@@ -573,7 +573,7 @@ function ValidateData()
   if (doAltTextError && !alt)
   {
     ShowInputErrorMessage(GetString("NoAltText"));
-    SetTextfieldFocus(dialog.altTextInput);
+    SetTextboxFocus(dialog.altTextInput);
     doAltTextError = false;
     return false;
   }
@@ -600,7 +600,7 @@ function ValidateData()
     {
       if ( !SeeMore )
         onMoreFewerImage();
-      SetTextfieldFocus(dialog.widthInput);
+      SetTextboxFocus(dialog.widthInput);
       return false;
     }
     if (isPercentWidth)
@@ -612,7 +612,7 @@ function ValidateData()
     {
       if ( !SeeMore )
         onMoreFewerImage();
-      SetTextfieldFocus(dialog.heightInput);
+      SetTextboxFocus(dialog.heightInput);
       return false;
     }
     if (isPercentHeight)

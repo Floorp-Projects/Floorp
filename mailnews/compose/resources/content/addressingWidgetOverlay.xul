@@ -59,8 +59,8 @@ Rights Reserved.
           </treecell>
           <treecell class="treecell-addressingWidget" autostretch="never">
             <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
-            <textfield id="msgRecipient#1" flex="1"
-                       class="plain textfield-addressingWidget"
+            <textbox id="msgRecipient#1" flex="1"
+                       class="plain textbox-addressingWidget"
                        style="width:0px;" allowevents="true"
                        onkeypress="awRecipientKeyPress(event, this)"
                        onkeydown="awRecipientKeyDown(event, this)"

@@ -59,7 +59,7 @@ Rights Reserved.
       <separator class="thin"/>
       <box autostretch="never">
         <text class="label" style="width: 8em;" value="&incomingServerLabel.label;" for="hostname"/>
-        <textfield wsm_persist="true" id="hostname" flex="1"/>
+        <textbox wsm_persist="true" id="hostname" flex="1"/>
       </box>
     </titledbox>
 
@@ -69,7 +69,7 @@ Rights Reserved.
       <separator class="thin"/>
       <box autostretch="never">
         <text class="label" value="&smtpServerLabel.label;" for="smtphostname" style="width: 8em;"/>
-        <textfield id="smtphostname" wsm_persist="true" flex="1"/>
+        <textbox id="smtphostname" wsm_persist="true" flex="1"/>
       </box>
     </titledbox>
 

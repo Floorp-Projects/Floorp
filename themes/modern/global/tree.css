@@ -194,12 +194,12 @@ treerow[mode="inline-edit"] > .treecell-editable {
   margin-left: 0px;
 }
 
-.textfield-inline-edit {
+.textbox-inline-edit {
   margin: 0px !important;
   border: 1px solid #000000 !important;
 }
 
-.textfield-inline-edit > .textfield-internal-box {
+.textbox-inline-edit > .textbox-internal-box {
   border: none !important;
   padding: 1px !important;
 }

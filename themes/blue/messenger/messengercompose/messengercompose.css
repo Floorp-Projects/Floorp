@@ -66,18 +66,18 @@ menulist.outset[open="true"] > .menu-text
 }
 */
 
-textfield.addressingWidget[autocomplete="true"] {
+textbox.addressingWidget[autocomplete="true"] {
     border              : 2px solid #FFFFFF;
     margin              : 1px;
 }
 
-textfield.addressingWidget[autocomplete="true"][focused="true"]
+textbox.addressingWidget[autocomplete="true"][focused="true"]
 {
     border              : 2px solid #6699cc;
     margin              : 1px;
 }
 
-textfield.addressingWidget[autocomplete="true"] > box
+textbox.addressingWidget[autocomplete="true"] > box
 {
     border              : none;
 }

@@ -145,7 +145,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   </toolbar>
   
   <toolbar id="ToolbarEval">
-    <textfield id="TextfieldEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
+    <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
     <button id="ButtonEval" value="&evaluate.label;" class="button-toolbar" oncommand="evaluateTypein()"/>
   </toolbar>
 </toolbox>

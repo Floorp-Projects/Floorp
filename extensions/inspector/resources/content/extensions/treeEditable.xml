@@ -63,7 +63,7 @@
           this.mEditingItem = item;
 
           editor.focus();
-          // if it proves to be a textfield... select it's text
+          // if it proves to be a textbox... select it's text
           if (editor.select) editor.select();
         ]]></body>
       </method>
@@ -86,7 +86,7 @@
 
       <method name="createDefaultEditor">
         <body><![CDATA[
-          var el = document.createElement("textfield");
+          var el = document.createElement("textbox");
           return el;
         ]]></body>
       </method>

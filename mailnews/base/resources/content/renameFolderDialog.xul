@@ -47,7 +47,7 @@
     <spring flex="100%"/>
 
     <text value="&rename.label;" class="label" accesskey="&rename.accesskey;" for="name"/>
-    <textfield tabindex="0" id="name" oninput="doEnabling();"/>
+    <textbox tabindex="0" id="name" oninput="doEnabling();"/>
 
     <spring flex="100%"/>
 

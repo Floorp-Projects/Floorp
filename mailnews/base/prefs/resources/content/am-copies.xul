@@ -40,7 +40,7 @@
       
     <box autostretch="never">
       <checkbox wsm_persist="true" id="identity.bccOthers" value="&bccAddress.label;"/>
-      <textfield wsm_persist="true" id="identity.bccList" flex="1"/>
+      <textbox wsm_persist="true" id="identity.bccList" flex="1"/>
     </box>
   </titledbox>
   

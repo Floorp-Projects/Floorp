@@ -227,9 +227,9 @@
     collapsed="true"/>
 
   <vbox id="input-widgets">
-    <textfield id="multiline-input" multiline="true" flex="1" height="100px"
+    <textbox id="multiline-input" multiline="true" flex="1" height="100px"
       class="multiline-input-widget" collapsed="true"/>
-    <textfield id="input" class="input-widget"/>
+    <textbox id="input" class="input-widget"/>
   </vbox>
 
 </vbox> <!-- outer-box -->

@@ -104,7 +104,7 @@
   <rows>
     <row>
       <text value="&textInput.label;"/>
-      <textfield id="textInput" flex="1" oninput="doEnabling()"/>
+      <textbox id="textInput" flex="1" oninput="doEnabling()"/>
     </row>
     <row id="filterBox" hidden="true">
       <text value="&filterMenuList.label;"/>

@@ -37,12 +37,12 @@ var vxPalette =
     this.insertSingleElement("button", attributes, values, "Insert Button " + nElements);    
   },
 
-  insertTextFieldElement: function (aType)
+  insertTextboxElement: function (aType)
   {
-    var nElements = this.incrementElementCount("textfield");
+    var nElements = this.incrementElementCount("textbox");
     var attributes = ["value", "id"];
-    var values = ["Textfield " + nElements, "textfield_" + nElements];
-    this.insertSingleElement("textfield", attributes, values, "Insert Textfield " + nElements);
+    var values = ["Textbox " + nElements, "textbox" + nElements];
+    this.insertSingleElement("textbox", attributes, values, "Insert Textbox " + nElements);
   },
 
   insertRadioGroup: function ()

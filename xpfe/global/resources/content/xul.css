@@ -515,12 +515,12 @@ progressmeter {
   -moz-binding: url(chrome://global/content/xulBindings.xml#progressmeter);
 }
 
-textfield {
-  -moz-binding: url(chrome://global/content/xulBindings.xml#textfield);
+textbox {
+  -moz-binding: url(chrome://global/content/xulBindings.xml#textbox);
   -moz-user-select: text;
 }
 
-textfield[multiline="true"] {
+textbox[multiline="true"] {
   -moz-binding: url(chrome://global/content/xulBindings.xml#textarea);
 }
 
@@ -540,7 +540,7 @@ text[editable="true"][mode="edit"] {
   -moz-binding: url(chrome://global/content/xulBindings.xml#text-editable-edit);
 }
 
-textfield[autocomplete="true"] {
+textbox[autocomplete="true"] {
   -moz-binding: url(chrome://global/content/autocomplete.xml#autocomplete);
 }
 

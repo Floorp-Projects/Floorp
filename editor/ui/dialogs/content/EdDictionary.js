@@ -49,7 +49,7 @@ function Startup()
 
   // Select the supplied word if it is already in the list
   SelectWordToAddInList();
-  SetTextfieldFocus(WordInput);
+  SetTextboxFocus(WordInput);
 
   SetWindowLocation();
 }

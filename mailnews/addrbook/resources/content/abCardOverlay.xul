@@ -52,28 +52,28 @@ Rights Reserved.
 							<spring flex="1"/>
 							<text for="FirstName" value="&FirstName.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="FirstName" flex="1" oninput="top.GenerateDisplayName()"/>
+								<textbox id="FirstName" flex="1" oninput="top.GenerateDisplayName()"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="LastName" value="&LastName.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="LastName" flex="1" oninput="top.GenerateDisplayName()"/>
+								<textbox id="LastName" flex="1" oninput="top.GenerateDisplayName()"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="DisplayName" value="&DisplayName.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="DisplayName" flex="1" oninput="top.DisplayNameChanged()"/>
+								<textbox id="DisplayName" flex="1" oninput="top.DisplayNameChanged()"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="NickName" value="&NickName.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="NickName" flex="1"/>
+								<textbox id="NickName" flex="1"/>
 							</box>
 						</box>
 					</box>
@@ -89,14 +89,14 @@ Rights Reserved.
 							<spring flex="1"/>
 							<text for="PrimaryEmail" value="&PrimaryEmail.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="PrimaryEmail" flex="1"/>
+								<textbox id="PrimaryEmail" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="SecondEmail" value="&SecondEmail.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="SecondEmail" flex="1"/>
+								<textbox id="SecondEmail" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
@@ -122,35 +122,35 @@ Rights Reserved.
 							<spring flex="1"/>
 							<text for="WorkPhone" value="&WorkPhone.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WorkPhone" flex="1"/>
+								<textbox id="WorkPhone" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="HomePhone" value="&HomePhone.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="HomePhone" flex="1"/>
+								<textbox id="HomePhone" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="FaxNumber" value="&FaxNumber.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="FaxNumber" flex="1"/>
+								<textbox id="FaxNumber" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="PagerNumber" value="&PagerNumber.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="PagerNumber" flex="1"/>
+								<textbox id="PagerNumber" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="CellularNumber" value="&CellularNumber.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="CellularNumber" flex="1"/>
+								<textbox id="CellularNumber" flex="1"/>
 							</box>
 						</box>
 					</box>
@@ -169,45 +169,45 @@ Rights Reserved.
 							<spring flex="1"/>
 							<text for="HomeAddress" value="&HomeAddress.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="HomeAddress" flex="1"/>
+								<textbox id="HomeAddress" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="HomeAddress2" value="&HomeAddress2.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="HomeAddress2" flex="1"/>
+								<textbox id="HomeAddress2" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="HomeCity" value="&HomeCity.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="HomeCity" flex="1"/>
+								<textbox id="HomeCity" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="HomeState" value="&HomeState.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="HomeState" flex="1"/>
+								<textbox id="HomeState" flex="1"/>
 								<spring class="stateZipSpacer"/>
 								<text for="HomeZipCode" value="&HomeZipCode.label;" class="CardEditLabel"/>
-								<textfield id="HomeZipCode" flex="1"/>
+								<textbox id="HomeZipCode" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="HomeCountry" value="&HomeCountry.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="HomeCountry" flex="1"/>
+								<textbox id="HomeCountry" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WebPage2" value="&HomeWebPage.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WebPage2" flex="1"/>
+								<textbox id="WebPage2" flex="1"/>
 							</box>
 						</box>
 					</box>
@@ -222,66 +222,66 @@ Rights Reserved.
 							<spring flex="1"/>
 							<text for="JobTitle" value="&JobTitle.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="JobTitle" flex="1"/>
+								<textbox id="JobTitle" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="Department" value="&Department.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="Department" flex="1"/>
+								<textbox id="Department" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="Company" value="&Company.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="Company" flex="1"/>
+								<textbox id="Company" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WorkAddress" value="&WorkAddress.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WorkAddress" flex="1"/>
+								<textbox id="WorkAddress" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WorkAddress2" value="&WorkAddress2.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WorkAddress2" flex="1"/>
+								<textbox id="WorkAddress2" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WorkCity" value="&WorkCity.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WorkCity" flex="1"/>
+								<textbox id="WorkCity" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WorkState" value="&WorkState.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WorkState" flex="1"/>
+								<textbox id="WorkState" flex="1"/>
 								<spring class="stateZipSpacer"/>
 								<text for="WorkZipCode" value="&WorkZipCode.label;" class="CardEditLabel"/>
-								<textfield id="WorkZipCode" flex="1"/>
+								<textbox id="WorkZipCode" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WorkCountry" value="&WorkCountry.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WorkCountry" flex="1"/>
+								<textbox id="WorkCountry" flex="1"/>
 							</box>
 						</box>
 						<box orient="horizontal">
 							<spring flex="1"/>
 							<text for="WebPage1" value="&WorkWebPage.label;" class="CardEditLabel"/>
 							<box class="CardEditWidth">
-								<textfield id="WebPage1" flex="1"/>
+								<textbox id="WebPage1" flex="1"/>
 							</box>
 						</box>
 					</box>
@@ -295,19 +295,19 @@ Rights Reserved.
 				<box align="vertical" class="alignBoxWithFieldset">
 					<box flex="1">
 						<text for="Custom1" value="&Custom1.label;" class="CardEditLabel"/>
-						<textfield id="Custom1" flex="1"/>
+						<textbox id="Custom1" flex="1"/>
 					</box>
 					<box flex="1">
 						<text for="Custom2" value="&Custom2.label;" class="CardEditLabel"/>
-						<textfield id="Custom2" flex="1"/>
+						<textbox id="Custom2" flex="1"/>
 					</box>
 					<box flex="1">
 						<text for="Custom3" value="&Custom3.label;" class="CardEditLabel"/>
-						<textfield id="Custom3" flex="1"/>
+						<textbox id="Custom3" flex="1"/>
 					</box>
 					<box flex="1">
 						<text for="Custom4" value="&Custom4.label;" class="CardEditLabel"/>
-						<textfield id="Custom4" flex="1"/>
+						<textbox id="Custom4" flex="1"/>
 					</box>
 				</box>
 
@@ -317,7 +317,7 @@ Rights Reserved.
 					</title>
 		
 					<box align="vertical" style="width:100%">
-						<textfield id="Notes" multiline="true" rows="15" wrap="virtual"/>
+						<textbox id="Notes" multiline="true" rows="15" wrap="virtual"/>
 					</box>
 				</titledbox>
 

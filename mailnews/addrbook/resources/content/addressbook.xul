@@ -214,7 +214,7 @@ Rights Reserved.
 				<box orient="vertical" flex="100%">
 					<spring flex="1"/> 
 					<!--html id="searchlabel">&showNames.label;</html>
-					<textfield id="searchtext" type="text" align="bottom"/> 
+					<textbox id="searchtext" type="text" align="bottom"/> 
 					<spring flex="1"/--> 
 				</box>
 

@@ -71,14 +71,14 @@ Contributor(s):
           <box autostretch="never" halign="right">
             <text class="label" value="&location;"/>
           </box>
-          <textfield id="dialog.location" class="scrollfield" readonly="" flex="1"/>
+          <textbox id="dialog.location" class="scrollfield" readonly="" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
           <box autostretch="never" halign="right">
             <text class="label" value="&saving;"/>
           </box>
-          <textfield id="dialog.fileName" class="scrollfield" readonly="" flex="1"/>
+          <textbox id="dialog.fileName" class="scrollfield" readonly="" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>

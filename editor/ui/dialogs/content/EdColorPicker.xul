@@ -82,7 +82,7 @@
     <text class="label" value="&setColor2.label;"/>
     <text class="label" value="&setColorExample.label;"/>
     <box valign="middle" autostretch="never" flex="1=">
-      <textfield id="ColorInput" style="width: 8em" oninput="SetColorSwatch()"/>
+      <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch()"/>
       <spring flex="1"/>
       <spring id="ColorPickerSwatch"/>
       <spring flex="1"/>

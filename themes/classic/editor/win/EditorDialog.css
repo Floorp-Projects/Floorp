@@ -195,7 +195,7 @@ tree.list {
 /* use outset shape for a button look */
 .colorpicker {
   border: 1px outset #CCCCCC;
-  /* This should be the same as for textfield */
+  /* This should be the same as for textbox */
   margin-left: 4px;
   /* For a little extra space between buttons */
   margin-bottom: 2px;

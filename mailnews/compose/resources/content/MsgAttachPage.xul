@@ -20,7 +20,7 @@
 	<box align="horizontal">
         <spring style="width:10px" />
 		<text value="Web Page (URL):"/>
-		<textfield id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
+		<textbox id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
         <spring style="width:10px" />
 	</box>
 	

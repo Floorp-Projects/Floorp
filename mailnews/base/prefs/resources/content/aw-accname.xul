@@ -45,7 +45,7 @@ Rights Reserved.
     <separator class="thin"/>
     <box autostretch="never">
       <text class="label" value="&accnameLabel.label;" for="prettyName" style="width: 8em;"/>
-      <textfield id="prettyName" size="40" wsm_persist="true" flex="1"/>
+      <textbox id="prettyName" size="40" wsm_persist="true" flex="1"/>
     </box>
   </box>
     

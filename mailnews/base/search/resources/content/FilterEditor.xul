@@ -49,7 +49,7 @@ Rights Reserved.
   
   <box autostretch="never">
     <text class="label" value="&filterName.label;"/>
-    <textfield flex="1" id="filterName"/>
+    <textbox flex="1" id="filterName"/>
   </box>
 
   <titledbox value="&conditions.label;" orient="vertical">

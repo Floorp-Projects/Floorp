@@ -71,7 +71,7 @@
               prefattribute="checked"/>
     <box autostretch="never">
       <text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
-      <textfield id="wrapLength" size="3" pref="true" preftype="int"
+      <textbox id="wrapLength" size="3" pref="true" preftype="int"
                  prefstring="mailnews.wraplength" prefattribute="value"/>
       <text class="label" value="&char.label;"/>
     </box>	

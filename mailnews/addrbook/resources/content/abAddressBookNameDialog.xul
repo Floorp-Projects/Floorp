@@ -43,7 +43,7 @@ Rights Reserved.
 
 		<text for="name" style="margin-bottom:.3em" value="&name.label;"/>
 		
-		<textfield tabindex="0" id="name" style="width: 100%"/>
+		<textbox tabindex="0" id="name" style="width: 100%"/>
 		
 		<spring flex="1"/>
 		

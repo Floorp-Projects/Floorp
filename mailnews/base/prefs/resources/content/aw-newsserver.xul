@@ -45,7 +45,7 @@ Rights Reserved.
     <separator class="thin"/>
     <box autostretch="never">
       <text class="label" for="hostname" value="&incomingServerLabel.label;" style="width: 8em;"/>
-      <textfield id="hostname" wsm_persist="true" flex="1"/>
+      <textbox id="hostname" wsm_persist="true" flex="1"/>
     </box>
   
   </box>

@@ -593,7 +593,7 @@ function getFormElementValue(formElement) {
     return formElement.selectedItem.data;
   }
   
-  else if (type == "textfield" &&
+  else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
       var filespec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
@@ -603,7 +603,7 @@ function getFormElementValue(formElement) {
       return null;
     }
   }
-  else if (type == "textfield" &&
+  else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsILocalFile") {
     if (formElement.value) {
       var localfile = Components.classes["component://mozilla/file/local"].createInstance(Components.interfaces.nsILocalFile);
@@ -670,7 +670,7 @@ function setFormElementValue(formElement, value) {
     formElement.selectedItem = selectedItem;
   }
   // handle nsIFileSpec
-  else if (type == "textfield" &&
+  else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (value) {
       var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
@@ -687,7 +687,7 @@ function setFormElementValue(formElement, value) {
     }
   }
 
-  else if (type == "textfield" &&
+  else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsILocalFile") {
     if (value) {
       var localfile = value.QueryInterface(Components.interfaces.nsILocalFile);

@@ -44,7 +44,7 @@ Rights Reserved.
     <separator class="thin"/>
     <box autostretch="never">
       <text class="label" value="&usernameLabel.label;" for="username" style="width: 8em;"/>
-      <textfield id="username" wsm_persist="true" flex="1"/>
+      <textbox id="username" wsm_persist="true" flex="1"/>
     </box>
 <!--
     <separator/>
@@ -59,7 +59,7 @@ Rights Reserved.
         <text class="label" value="&passwordDesc.label;"/>
         <box autostretch="never">
           <text class="label" value="&passwordLabel.label;" for="password"/>
-          <textfield type="password" id="password" wsm_persist="true"/>
+          <textbox type="password" id="password" wsm_persist="true"/>
         </box>
       </box>
     </titledbox>

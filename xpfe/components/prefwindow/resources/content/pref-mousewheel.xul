@@ -126,7 +126,7 @@
           <radio group="mousewheelWithNoKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <hbox autostretch="never">
-              <textfield id="mousewheelWithNoKeyNumlines" size="3" 
+              <textbox id="mousewheelWithNoKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"
                          prefattribute="value"/>
               <text class="label" value="&scrollLines.label;"/>
@@ -149,7 +149,7 @@
           <radio group="mousewheelWithAltKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <hbox autostretch="never">
-              <textfield id="mousewheelWithAltKeyNumlines" size="3" 
+              <textbox id="mousewheelWithAltKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"
                          prefattribute="value"/>
               <text class="label" value="&scrollLines.label;"/>
@@ -172,7 +172,7 @@
           <radio group="mousewheelWithCtrlKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <hbox autostretch="never">
-              <textfield id="mousewheelWithCtrlKeyNumlines" size="3" 
+              <textbox id="mousewheelWithCtrlKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"
                          prefattribute="value"/>
               <text class="label" value="&scrollLines.label;"/>
@@ -195,7 +195,7 @@
           <radio group="mousewheelWithShiftKeyAction" data="0" value="&scroll.label;" accesskey="&scroll.accesskey;"/>
           <box orient="vertical" autostretch="never">
             <hbox autostretch="never">
-              <textfield id="mousewheelWithShiftKeyNumlines" size="3" 
+              <textbox id="mousewheelWithShiftKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"
                          prefattribute="value"/>
               <text class="label" value="&scrollLines.label;"/>

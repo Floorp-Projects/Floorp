@@ -5,7 +5,7 @@
  **/
  
 /* outer frame */
-  textfield
+  textbox
     {
       margin              : 1px 5px 2px 5px;
       border-top          : 1px solid ThreeDShadow;
@@ -18,13 +18,13 @@
       cursor              : text;
     }
     
-  textfield[readonly="true"]
+  textbox[readonly="true"]
     {
       background-color    : ThreeDFace;
     }
   
 /* internal frame */
-  .textfield-internal-box, .textarea-internal-box
+  .textbox-internal-box, .textarea-internal-box
     {
       margin              : 0px;
       padding             : 1px 2px 1px 2px;
@@ -35,7 +35,7 @@
     }
   
 /* internal text widget */
-  .textfield-input, .textfield-textarea
+  .textbox-input, .textbox-textarea
     {
       border              : none !important;
       margin              : 0px;
@@ -45,17 +45,17 @@
       color               : inherit;
     }
 
-  textfield[disabled="true"] 
+  textbox[disabled="true"] 
     {
       cursor              : default !important;
       background-color    : ThreeDFace;
       color               : GrayText;
     } 
     
-/** plain atomic textfields, class="plain" **/
-  textfield.plain, 
-  textfield.plain > .textfield-internal-box, 
-  textfield.plain > .textarea-internal-box
+/** plain atomic textboxs, class="plain" **/
+  textbox.plain, 
+  textbox.plain > .textbox-internal-box, 
+  textbox.plain > .textarea-internal-box
     {
       padding             : 0px !important;
       margin              : 0px !important;
@@ -63,7 +63,7 @@
     }
 
 /* autocomplete text field */
-  .textfield-popup > menuitem
+  .textbox-popup > menuitem
     {
       max-width            : none !important;
     }

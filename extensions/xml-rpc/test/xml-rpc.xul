@@ -60,7 +60,7 @@ var Listener = {
 <box orient="vertical" flex="1">
 <spring flex="1"/>
 <text value="Enter a state code:"/>
-<textfield id="statecode"/>
+<textbox id="statecode"/>
 <text value="Statename:"/>
 <text id="statename" value=" "/>
 <spring flex="1"/>

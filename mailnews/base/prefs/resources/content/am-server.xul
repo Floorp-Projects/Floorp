@@ -57,16 +57,16 @@ Contributors:
       </row>
       <row autostretch="never">
             <text class="label" value="&serverName.label;"/>
-            <!-- when #14295 is fixed, remove disabled="true" -->
-            <textfield wsm_persist="true" disabled="true" size="25" id="server.hostName"/>
+            <!-- XXX: when #14295 is fixed, remove disabled="true" -->
+            <textbox wsm_persist="true" disabled="true" size="25" id="server.hostName"/>
       </row>
       <row autostretch="never">
         <box iscontrolcontainer="true" autostretch="never">
             <text hidable="true" hidefor="nntp" class="label" id="userNameLabel" value="&userName.label;"/>
         </box>
         <box iscontrolcontainer="true" autostretch="never">
-            <!-- when #14295 is fixed, remove disabled="true" -->
-            <textfield hidable="true" hidefor="nntp" wsm_persist="true" disabled="true" size="25" id="server.username"/>
+            <!-- XXX: when #14295 is fixed, remove disabled="true" -->
+            <textbox hidable="true" hidefor="nntp" wsm_persist="true" disabled="true" size="25" id="server.username"/>
         </box>
       </row>
       <row>
@@ -74,7 +74,7 @@ Contributors:
             <text class="label" value="&port.label;"/>
         </box>
         <box autostretch="never">
-            <textfield autostretch="never" wsm_persist="true" size="5" id="server.port"/>
+            <textbox autostretch="never" wsm_persist="true" size="5" id="server.port"/>
         </box>
       </row>
     </rows>
@@ -93,7 +93,7 @@ Contributors:
 -->
   <box orient="horizontal" autostretch="never">
     <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;" oncommand="setupBiffUI();"/>
-    <textfield wsm_persist="true" id="server.biffMinutes" size="3" observes="broadcaster_doBiff"/>
+    <textbox wsm_persist="true" id="server.biffMinutes" size="3" observes="broadcaster_doBiff"/>
     <text class="label" id="biffEnd" for="server.biffMinutes" value="&biffEnd.label;" observes="broadcaster_doBiff"/>
   </box>
   <!-- POP3 -->
@@ -110,7 +110,7 @@ Contributors:
   </box>
   <box iscontrolcontainer="true" autostretch="never">
     <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
-    <textfield wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
+    <textbox wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
     <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
   </box>
   <separator class="thin"/>
@@ -154,7 +154,7 @@ Contributors:
     <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.notifyOn"
                 value="&maxMessagesStart.label;"/>
     <box iscontrolcontainer="true" autostretch="never">
-      <textfield wsm_persist="true" id="nntp.maxArticles" size="6"/>
+      <textbox wsm_persist="true" id="nntp.maxArticles" size="6"/>
       <text class="label" for="nntp.maxArticles" value="&maxMessagesEnd.label;"/>
     </box>
   </box>
@@ -173,7 +173,7 @@ Contributors:
 
   <box orient="vertical" iscontrolcontainer="true">
     <text class="label" value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
-    <textfield hidable="true" hidefor="imap,pop3" wsm_persist="true" id="nntp.newsrcFilePath"
+    <textbox hidable="true" hidefor="imap,pop3" wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"/>
   </box>
   </box>
@@ -181,7 +181,7 @@ Contributors:
   <spring flex="100%"/>
   <box orient="vertical">
     <text class="label" value="&localPath.label;" for="server.localPath"/>
-    <textfield wsm_persist="true" id="server.localPath"
+    <textbox wsm_persist="true" id="server.localPath"
             datatype="nsIFileSpec"/>
   </box>
 </window>

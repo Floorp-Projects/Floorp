@@ -209,7 +209,7 @@ function SelectListType()
       break;
     case 2:
       NewType = "ol";
-      SetTextfieldFocus(dialog.StartingNumberInput);
+      SetTextboxFocus(dialog.StartingNumberInput);
       break;
     case 3:
       NewType = "dl";
@@ -242,7 +242,7 @@ function SelectBulletStyle()
     if (NumberStyleIndex != index)
     {
       NumberStyleIndex = index;
-      SetTextfieldFocus(dialog.StartingNumberInput);
+      SetTextboxFocus(dialog.StartingNumberInput);
     }
   }
 }

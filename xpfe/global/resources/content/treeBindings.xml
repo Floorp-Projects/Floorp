@@ -76,8 +76,8 @@
               box.setAttribute("mode", "edit");
               box.firstChild.setAttribute("hidden", "true");
               const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-              var field = document.createElementNS(kXULNS, "textfield");
-              field.className = "textfield-inline-edit";
+              var field = document.createElementNS(kXULNS, "textbox");
+              field.className = "textbox-inline-edit";
               field.setAttribute("flex", "1");
               field.setAttribute("value", box.firstChild.getAttribute("value"));
               box.appendChild(field);

@@ -5,7 +5,7 @@
  **/
  
 /* outer frame */
-  textfield
+  textbox
     {
       border              : 1px inset ThreeDLightShadow;
       font                : inherit;
@@ -17,25 +17,25 @@
       cursor              : text;
     }
     
-  textfield[readonly="true"]
+  textbox[readonly="true"]
     {
       background-color    : -moz-field;
     }
   
-  textfield[focused="true"]
+  textbox[focused="true"]
     {
       border              : 2px solid -moz-mac-focusring;
       margin              : 0px 2px 1px 3px;
     }
     
-  textfield[focused="true"][readonly="true"]
+  textbox[focused="true"][readonly="true"]
     {
       border              : 1px inset #CCCCCC;
       margin              : 1px 3px 2px 4px;
     }
 
 /* internal frame */
-  .textfield-internal-box 
+  .textbox-internal-box 
     {
       margin              : 0px;
       padding             : 1px 2px 1px 2px;
@@ -45,7 +45,7 @@
       color               : inherit;
     }
   
-  textfield[disabled="true"] > .textfield-internal-box
+  textbox[disabled="true"] > .textbox-internal-box
     {
       border              : 1px solid ThreeDShadow;
     }
@@ -56,7 +56,7 @@
     }
   
 /* internal text widget */
-  .textfield-input, .textfield-textarea
+  .textbox-input, .textbox-textarea
     {
       border              : none !important;
       margin              : 0px;
@@ -66,15 +66,15 @@
       color               : inherit;
     }
 
-  textfield[disabled="true"] 
+  textbox[disabled="true"] 
     {
       cursor              : default ! important;
     } 
     
-/** plain atomic textfields, class="plain" **/
-  textfield.plain, 
-  textfield.plain > .textfield-internal-box, 
-  textfield.plain > .textarea-internal-box
+/** plain atomic textboxs, class="plain" **/
+  textbox.plain, 
+  textbox.plain > .textbox-internal-box, 
+  textbox.plain > .textarea-internal-box
     {
       padding             : 0px !important;
       margin              : 0px !important;
@@ -82,7 +82,7 @@
     }
 
 /* autocomplete text field */
-  .textfield-popup > menuitem
+  .textbox-popup > menuitem
   {
       max-width            : none !important;
   }

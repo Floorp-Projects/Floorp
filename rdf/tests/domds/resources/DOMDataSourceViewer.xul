@@ -11,7 +11,9 @@
 
 <script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
-  <textfield value="chrome://communicator/content/domviewer/domviewer.html" type="text" name="url" id="url" onkeypress="if (event.keyCode == 13) loadUrl();"/>
+  <textbox value="chrome://communicator/content/domviewer/domviewer.html"
+           type="text" name="url" id="url"
+           onkeypress="if (event.keyCode == 13) loadUrl();"/>
   <box>
     <text value="Show:"/>
     <checkbox oncommand="setMode('content', event.target.checked);" value="Content"/>

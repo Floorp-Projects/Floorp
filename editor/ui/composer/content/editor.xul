@@ -228,7 +228,7 @@
       </stack>
       <box align="vertical">
         <text class="label" id="doctype-text" style="width:1em" crop="right"/>
-        <textfield class="source-editor plain" id="content-source" multiline="true" rows="1"
+        <textbox class="source-editor plain" id="content-source" multiline="true" rows="1"
                    flex="1" style="width:1em; height:1em;"/>
       </box>
     </deck>

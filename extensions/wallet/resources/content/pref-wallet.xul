@@ -65,7 +65,7 @@
             for="walletServer"
             value="&walletServer.label;"
             accesskey="&walletServer.accesskey;"/>
-      <textfield id="walletServer"
+      <textbox id="walletServer"
                  flex="1"
                  pref="true"
                  preftype="string"

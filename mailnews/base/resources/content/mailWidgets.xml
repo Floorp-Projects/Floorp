@@ -268,7 +268,7 @@
   <binding id="searchvalue" name="searchValue" extends="xul:deck">
     <!-- yeah yeah, this stuff needs to be localized. I'm working on it! -->
     <content>
-      <xul:textfield flex="1" class="search-value-textfield"/>
+      <xul:textbox flex="1" class="search-value-textbox"/>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
           <xul:menuitem data="2" stringTag="priorityLowest" class="search-value-menuitem"/>

@@ -14,5 +14,5 @@
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/nodeText/nodeText.js"/>
 
-  <textfield id="txNodeValue" readonly="true" multiline="true" flex="1"/>
+  <textbox id="txNodeValue" readonly="true" multiline="true" flex="1"/>
 </window>

@@ -21,7 +21,7 @@
     <html>&accountSettingsDesc.label;</html>
     <box autostretch="never">
       <text class="label" value="&accountName.label;" for="server.prettyName"/>
-      <textfield wsm_persist="true" size="30" id="server.prettyName" flex="1"/>
+      <textbox wsm_persist="true" size="30" id="server.prettyName" flex="1"/>
     </box>
     
     <separator class="thin"/>
@@ -38,19 +38,19 @@
         <rows>
           <row autostretch="never">
             <text class="label" value="&name.label;" for="identity.fullName"/>
-            <textfield wsm_persist="true" id="identity.fullName" size="30"/>
+            <textbox wsm_persist="true" id="identity.fullName" size="30"/>
           </row>
           <row autostretch="never">
             <text class="label" value="&email.label;" for="identity.email"/>
-            <textfield wsm_persist="true" id="identity.email" />
+            <textbox wsm_persist="true" id="identity.email" />
           </row>
           <row autostretch="never">
             <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
-            <textfield wsm_persist="true" id="identity.replyTo"/>
+            <textbox wsm_persist="true" id="identity.replyTo"/>
           </row>
           <row autostretch="never">
             <text class="label" value="&organization.label;" for="identity.organization"/>
-            <textfield wsm_persist="true" id="identity.organization"/>
+            <textbox wsm_persist="true" id="identity.organization"/>
           </row>
         </rows>
       </grid>
@@ -59,7 +59,7 @@
         <checkbox wsm_persist="true" id="identity.attachSignature" value="&signature.label;" flex="1"/>
       </box>
       <box autostretch="never" class="indent">
-        <textfield wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"/>
+        <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"/>
         <button class="dialog push" name="browse" type="button" value="&choose.label;"  
                 oncommand="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </box>

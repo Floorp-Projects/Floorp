@@ -45,7 +45,7 @@ Rights Reserved.
     <separator class="thin"/>
     <box autostretch="never">
       <text class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"/>
-      <textfield mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="6"/>
+      <textbox mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="6"/>
     </box>
     <separator/>  
     <grid>
@@ -60,7 +60,7 @@ Rights Reserved.
         <row>
           <box autostretch="never">
             <text class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
-            <textfield wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
+            <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
             <text id="postEmailText"/>
           </box>
         </row>

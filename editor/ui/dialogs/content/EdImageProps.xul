@@ -65,7 +65,7 @@
             value = "&locationEditField.label;"
             tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
             />
-          <textfield 
+          <textbox
             id         = "srcInput" 
             oninput    = "doOverallEnabling()"
             onmouseup  = "doOverallEnabling()"
@@ -80,7 +80,7 @@
             for     = "altTextInput"
             tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
             value   = "&altTextEditField.label;" />
-          <textfield
+          <textbox
             id     ="altTextInput"
             style  = "min-width : 20em"/>
           <spring/> <!-- placeholder for 3rd column -->
@@ -168,7 +168,7 @@
                   id    = "widthLabel"
                   for   = "widthInput"
                   value = "&widthEditField.label;" />
-                <textfield
+                <textbox
                   id       = "widthInput" 
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
@@ -183,7 +183,7 @@
                   id    = "heightLabel"
                   for   = "heightInput"
                   value = "&heightEditField.label;" />
-                <textfield 
+                <textbox
                   id       = "heightInput" 
                   class    = "narrow"
                   onfocus  = "oldSourceInt = this.value;"
@@ -246,7 +246,7 @@
                   class = "label align-right" 
                   id    = "leftrightLabel"
                   value = "&leftRightEditField.label;"/>
-                <textfield 
+                <textbox
                   class     = "narrow"
                   id        = "imageleftrightInput" 
                   oninput   = "forceInteger(this.id)"/>
@@ -260,7 +260,7 @@
                   class = "label align-right" 
                   id    = "topbottomLabel"
                   value = "&topBottomEditField.label;"/>
-                <textfield 
+                <textbox
                   class     = "narrow"
                   id        = "imagetopbottomInput" 
                   oninput   = "forceInteger(this.id)"/>
@@ -273,7 +273,7 @@
                 <text class = "label align-right" 
                   id    = "borderLabel"
                   value = "&borderEditField.label;"/>
-                <textfield
+                <textbox
                   class     = "narrow"
                   id        = "border" 
                   oninput   = "forceInteger(this.id)"/>

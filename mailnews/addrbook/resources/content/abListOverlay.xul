@@ -38,21 +38,21 @@ Rights Reserved.
 			<spring flex="1"/>
 			<text for="ListName" value="&ListName.label;" class="CardEditLabel"/>
 			<box class="CardEditWidth">
-				<textfield id="ListName" flex="1"/>
+				<textbox id="ListName" flex="1"/>
 			</box>
 		</box>
 		<box orient="horizontal">
 			<spring flex="1"/>
 			<text for="ListNickName" value="&ListNickName.label;" class="CardEditLabel"/>
 			<box class="CardEditWidth">
-				<textfield id="ListNickName" flex="1"/>
+				<textbox id="ListNickName" flex="1"/>
 			</box>
 		</box>
 		<box orient="horizontal">
 			<spring flex="1"/>
 			<text for="ListDescription" value="&ListDescription.label;" class="CardEditLabel"/>
 			<box class="CardEditWidth">
-				<textfield id="ListDescription" flex="1"/>
+				<textbox id="ListDescription" flex="1"/>
 			</box>
 		</box>
 	</box>
@@ -75,7 +75,7 @@ Rights Reserved.
 					<treeitem>
 						<treerow>
 							<treecell allowevents="true">
-								<textfield id="address#1"
+								<textbox id="address#1"
 											flex="100%"
 											onkeypress="handleKeyPress(this, event);"
 											onclick="awNotAnEmptyArea(event);"

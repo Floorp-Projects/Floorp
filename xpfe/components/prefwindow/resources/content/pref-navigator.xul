@@ -68,7 +68,7 @@
     <html>&homePageIntro.label;</html>
     <box autostretch="never">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
-      <textfield id="browserStartupHomepage" flex="1" wsm_persist="true"
+      <textbox id="browserStartupHomepage" flex="1" wsm_persist="true"
                  pref="true" preftype="string" prefstring="browser.startup.homepage"
                  prefattribute="value"/>  <!-- we may wish to change this to data
                                                when we support fancy formatted local filenames -->

@@ -258,7 +258,7 @@
       <row autostretch="never">
         <text class="label" value="&mimetype.label;" accesskey="&mimetype.accesskey;"
               for="mimeType"/>
-        <textfield id="mimeType" flex="1"/>
+        <textbox id="mimeType" flex="1"/>
       </row>
     </rows>
   </grid>
@@ -279,7 +279,7 @@
       </box>
       <box autostretch="never">
         <radio data="2" value="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
-        <textfield id="appPath" flex="1" onchange="selectAppRadio();"/>
+        <textbox id="appPath" flex="1" onchange="selectAppRadio();"/>
       </box>
       <box autostretch="never" halign="right">
         <button value="&browse.label;" accesskey="&browse.accesskey;"

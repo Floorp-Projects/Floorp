@@ -58,12 +58,12 @@ function validate() {
 
 function onInit() {
   gPrefsBundle = document.getElementById("bundle_prefs");
-  var smtpTextField = document.getElementById("smtphostname");
+  var smtpTextBox = document.getElementById("smtphostname");
 
   var smtpServer = parent.smtpService.defaultServer;
-  if (smtpTextField && smtpTextField.value == "" &&
+  if (smtpTextBox && smtpTextBox.value == "" &&
       smtpServer.hostname)
-    smtpTextField.value = smtpServer.hostname;
+    smtpTextBox.value = smtpServer.hostname;
 
   // modify the value in the smtp display if we already have a 
   // smtp server so that the single string displays the 

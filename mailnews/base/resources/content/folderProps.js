@@ -61,7 +61,7 @@ function folderPropsOnLoad()
 		var name = document.getElementById("name");
 		name.value = window.arguments[0].name;
 //		name.setSelectionRange(0,-1);
-//		name.focusTextField();
+//		name.focusTextBox();
 
 	}
 	// this hex value come from nsMsgFolderFlags.h

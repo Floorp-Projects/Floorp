@@ -22,14 +22,14 @@
  */
 
 /* ===== textfield.css ==================================================
-  == Styles used by the XUL textfield element.
+  == Styles used by the XUL textbox element.
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: textfield ::::: */
+/* ::::: textbox ::::: */
 
-textfield {
+textbox {
   cursor: text;
   margin: 2px 4px;
   background-color: #FFFFFF;
@@ -37,28 +37,28 @@ textfield {
   font: inherit;
 }
 
-textfield,
-textfield[readonly="true"][focused="true"] {
+textbox,
+textbox[readonly="true"][focused="true"] {
   border-top: 1px solid #A8B5C6;
   border-right: 1px solid #E2E8F0;
   border-bottom: 1px solid #E2E8F0;
   border-left: 1px solid #A8B5C6;
 }
 
-.textfield-internal-box,
+.textbox-internal-box,
 .textarea-internal-box {
   padding: 1px 0px 1px 2px;
 }
 
-.textfield-internal-box,
+.textbox-internal-box,
 .textarea-internal-box,
-textfield[readonly="true"][focused="true"] > .textfield-internal-box,
-textfield[readonly="true"][focused="true"] > .textarea-internal-box {
+textbox[readonly="true"][focused="true"] > .textbox-internal-box,
+textbox[readonly="true"][focused="true"] > .textarea-internal-box {
   border: 1px solid #757C8A;
 }
 
-.textfield-input,
-.textfield-textarea {
+.textbox-input,
+.textbox-textarea {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
@@ -69,43 +69,43 @@ textfield[readonly="true"][focused="true"] > .textarea-internal-box {
 
 /* ..... readonly state ..... */
 
-textfield[readonly="true"] {
+textbox[readonly="true"] {
   background-color: #B4C3D4;
 }
 
 /* ..... focused state ..... */
 
-textfield[focused="true"] {
+textbox[focused="true"] {
   border: 1px solid #96A7BD;
 }
 
-textfield[focused="true"] > .textfield-internal-box,
-textfield[focused="true"] > .textarea-internal-box {
+textbox[focused="true"] > .textbox-internal-box,
+textbox[focused="true"] > .textarea-internal-box {
   border-color: #000000;
 }
 
 /* ..... disabled state ..... */
 
-textfield[disabled="true"] > .textfield-internal-box {
+textbox[disabled="true"] > .textbox-internal-box {
   background-color: #B4C3D4;
 }
 
-textfield[disabled="true"] {
+textbox[disabled="true"] {
   cursor: default !important;
   color: #85959E;
 }
 
-/* ::::: plain textfield ::::: */
+/* ::::: plain textbox ::::: */
 
-textfield.plain,
-textfield.plain > .textfield-internal-box,
-textfield.plain > .textarea-internal-box {
+textbox.plain,
+textbox.plain > .textbox-internal-box,
+textbox.plain > .textarea-internal-box {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
 }
 
-/* ::::: scrollable textfield ::::: */
+/* ::::: scrollable textbox ::::: */
 
 .scrollfield {
   margin: 1px 0px 0px 0px;
@@ -113,7 +113,7 @@ textfield.plain > .textarea-internal-box {
   background: inherit;
 }
 
-.scrollfield > .textfield-internal-box,
+.scrollfield > .textbox-internal-box,
 .scrollfield > .textarea-internal-box {
   margin: 0px !important;
   border: none !important;
@@ -122,6 +122,6 @@ textfield.plain > .textarea-internal-box {
 
 /* ::::: autocomplete text field ::::: */
 
-.textfield-popup > menuitem {
+.textbox-popup > menuitem {
   max-width: none !important;
 }

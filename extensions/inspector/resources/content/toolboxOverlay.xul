@@ -57,7 +57,7 @@
         <box autostretch="never" valign="middle" flex="1">
           <image id="imgURLBarIcon"/>
 
-          <textfield 
+          <textbox
             id="tfURLBar" class="plain" flex="1" 
             observes="cmdGotoURL"
             tooltip="PPTooltip" tooltiptext="Enter a URL to inspect"/>  

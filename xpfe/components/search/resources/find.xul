@@ -41,7 +41,7 @@
         <menuitem value="&doesntcontain.label;" data="doesntcontain"/>
       </menupopup>
     </menulist>
-    <textfield id="findtext" type="text" width="20" onkeypress="if (event.keyCode == 13) { doFind(); }" />
+    <textbox id="findtext" type="text" width="20" onkeypress="if (event.keyCode == 13) { doFind(); }" />
     <button value="&search.button.label;" oncommand="doFind();"/>
   </box>          
           

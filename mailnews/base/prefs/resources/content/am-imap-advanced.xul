@@ -19,7 +19,7 @@
 
 <box>
   <text value="&serverDirectory.label;" class="label"/>
-  <textfield imap_persist="true" id="serverDirectory"/>
+  <textbox imap_persist="true" id="serverDirectory"/>
 </box>
 
 <checkbox imap_persist="true" id="usingSubscription" value="&usingSubscription.label;"/>
@@ -39,17 +39,17 @@
     <row>
       <separator class="indent"/>
       <text for="personalNamespace" class="label" value="&personalNamespace.label;"/>
-      <textfield imap_persist="true" id="personalNamespace" />
+      <textbox imap_persist="true" id="personalNamespace" />
     </row>
     <row>
       <separator class="indent"/>
       <text for="publicNamespace" class="label" value="&publicNamespace.label;"/>
-      <textfield imap_persist="true" id="publicNamespace"/>
+      <textbox imap_persist="true" id="publicNamespace"/>
     </row>
     <row>
       <separator class="indent"/>
       <text for="otherUsersNamespace" class="label" value="&otherUsersNamespace.label;"/>
-      <textfield imap_persist="true" id="otherUsersNamespace"/>
+      <textbox imap_persist="true" id="otherUsersNamespace"/>
     </row>
   </rows>
 </grid>

@@ -421,7 +421,7 @@ searchterm
     padding             : 0px;
   }
   
-.textfield-mailcardicon
+.textbox-mailcardicon
   {
     list-style-image    : url("chrome://messenger/skin/abcard.gif");
   }

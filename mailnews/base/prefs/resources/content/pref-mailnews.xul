@@ -85,8 +85,8 @@ Contributor(s):
       <box autostretch="never">
         <text class="label" value="&location.label;" accesskey="&location.accesskey;" 
                    for="mailnews.start_page.url"/>
-        <textfield id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
-                   prefstring="mailnews.start_page.url" prefattribute="value"/>
+        <textbox id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
+                 prefstring="mailnews.start_page.url" prefattribute="value"/>
       </box>
 
     <box autostretch="never" halign="right">

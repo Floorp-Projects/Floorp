@@ -24,13 +24,13 @@
     <rows>
       <row  autostretch="never">
         <text class="label" value="&accountName.label;" for="server.prettyName"/>
-        <textfield wsm_persist="true" size="30" id="server.prettyName"/>
+        <textbox wsm_persist="true" size="30" id="server.prettyName"/>
       </row>
     </rows>
   </grid>
   <spring flex="1"/>
   <box align="vertical">
     <text value="&localPath.label;"/>
-    <textfield wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"/>
+    <textbox wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"/>
   </box>
 </window>

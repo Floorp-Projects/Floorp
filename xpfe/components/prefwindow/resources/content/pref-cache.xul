@@ -63,7 +63,7 @@
         <row>
           <text class="label" value="&memCache.label;" accesskey="&memCache.accesskey;" for="browserCacheMemoryCache"/>
           <box autostretch="never">
-            <textfield id="browserCacheMemoryCache" size="5" pref="true" preftype="int"
+            <textbox id="browserCacheMemoryCache" size="5" pref="true" preftype="int"
                        prefstring="browser.cache.memory_cache_size" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
           </box>
@@ -73,7 +73,7 @@
         <row>
           <text class="label" value="&diskCache.label;" accesskey="&diskCache.accesskey;" for="browserCacheDiskCache"/>
           <box autostretch="never">
-            <textfield id="browserCacheDiskCache" size="5" pref="true" preftype="int"
+            <textbox id="browserCacheDiskCache" size="5" pref="true" preftype="int"
                        prefstring="browser.cache.disk_cache_size" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
           </box>

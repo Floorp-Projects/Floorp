@@ -34,7 +34,7 @@
   <box id="smtpServerEditor" orient="vertical">
     <box autostretch="never">
       <text class="label" value="&serverName.label;"/>
-      <textfield wsm_persist="true" id="smtp.hostname" flex="1"/>
+      <textbox wsm_persist="true" id="smtp.hostname" flex="1"/>
     </box>
     <!-- use a grid here when it's implemented -->
     <box orient="vertical">
@@ -48,7 +48,7 @@
       <box orient="vertical" style="margin-left: 2em">
         <box autostretch="never">
           <text id="smtpusernamelabel" class="label" value="&userName.label;"/>
-          <textfield wsm_persist="true" id="smtp.username" flex="1"/>
+          <textbox wsm_persist="true" id="smtp.username" flex="1"/>
         </box>
       </box>
      </box>

@@ -12,7 +12,10 @@
 
   <script type="text/javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "emailCollectionNewsgroup", "addressingAutocomplete", "enableCABsizeLimit", "CABsizeLimit"];
+    var _elementIDs = ["emailCollection", "emailCollectionIncoming",
+                       "emailCollectionOutgoing", "emailCollectionNewsgroup",
+                       "addressingAutocomplete", "enableCABsizeLimit",
+                       "CABsizeLimit"];
   ]]>
 
 	function Startup(){
@@ -76,7 +79,7 @@
 			<checkbox id="enableCABsizeLimit" value="&useCABSizelimitPart1.label;"
 				pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
 				prefattribute="checked"/>
-			<textfield id="CABsizeLimit" size="6" pref="true" preftype="int"
+			<textbox id="CABsizeLimit" size="6" pref="true" preftype="int"
 					prefstring="mail.collect_email_address_size_limit" prefattribute="value"/>
 			<text id="useCABSizelimitPart2" class="label" value="&useCABSizelimitPart2.label;"/>
 		</box> 

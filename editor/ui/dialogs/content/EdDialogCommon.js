@@ -114,22 +114,22 @@ function ValidateNumberString(value, minValue, maxValue)
   return "";
 }
 
-function SetTextfieldFocusById(id)
+function SetTextboxFocusById(id)
 {
-  SetTextfieldFocus(document.getElementById(id));
+  SetTextboxFocus(document.getElementById(id));
 }
 
-function SetTextfieldFocus(textfield)
+function SetTextboxFocus(textbox)
 {
-  if (textfield)
+  if (textbox)
   {
     // Select entire contents
     // This "fixes" bug 48400 temporarily by 
-    //   not calling "select" on empty textfields
-    if (textfield.value.length > 0)
-      textfield.select();
+    //   not calling "select" on empty textboxes
+    if (textbox.value.length > 0)
+      textbox.select();
 
-    textfield.focus();
+    textbox.focus();
   }
 }
 

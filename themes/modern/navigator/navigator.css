@@ -195,7 +195,7 @@
   background: url("chrome://navigator/skin/toolbar/nav-groove-rit-btm.gif") no-repeat;
 }
 
-/* ::::: urlbar - the box that contains the url textfield ::::: */
+/* ::::: urlbar - the box that contains the url textbox ::::: */
 
 #urlbar-group {
   -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#urlbar-group");

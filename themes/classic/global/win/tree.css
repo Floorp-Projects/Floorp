@@ -270,20 +270,20 @@ treerow[mode="inline-edit"]
     margin-left           : 0px;
   }
 
-.textfield-inline-edit 
+.textbox-inline-edit 
   {
     border                : 1px solid WindowFrame !important;
     margin                : 0px !important;
   }
 
-.textfield-inline-edit > .textfield-internal-box > .textfield-input 
+.textbox-inline-edit > .textbox-internal-box > .textbox-input 
   {
     border                : none !important;
     padding               : 0px !important;
     margin                : 0px !important;
   }
 
-.textfield-inline-edit > .textfield-internal-box 
+.textbox-inline-edit > .textbox-internal-box 
   {
     border                : none !important;
     padding               : 1px !important;

@@ -76,7 +76,7 @@
                 prefattribute="checked" oncommand="ftpCheck();"/>
     </vbox>
     <hbox class="indent">
-      <textfield id="advancedMailFTPAddress"
+      <textbox id="advancedMailFTPAddress"
                  pref="true" preftype="string" prefstring="network.ftp.anonymous_password"
                  prefattribute="value" flex="2"/>
       <spring flex="1"/>

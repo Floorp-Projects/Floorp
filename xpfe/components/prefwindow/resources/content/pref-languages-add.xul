@@ -55,7 +55,7 @@
 
   <box autostretch="never">
     <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
-    <textfield id="languages.other" size="6" />
+    <textbox id="languages.other" size="6" />
     <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>
   </box>
 

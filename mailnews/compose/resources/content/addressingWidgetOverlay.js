@@ -429,7 +429,7 @@ function awAppendNewRow(setFocus)
           
           // We always clone the first row.  The problem is that the first row
           // could be focused.  When we clone that row, we end up with a cloned
-          // XUL textfield that has a focused attribute set.  Therefore we think
+          // XUL textbox that has a focused attribute set.  Therefore we think
           // we're focused and don't properly refocus.  The best solution to this
           // would be to clone a template row that didn't really have any presentation,
           // rather than using the real visible first row of the tree.

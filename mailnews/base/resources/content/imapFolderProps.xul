@@ -50,7 +50,7 @@
   	<box orient="vertical">
   		<box id="nameBox" orient="vertical">
   			<text class="label" value="&folderProps.name.label;" />
-  			<textfield id="name" readonly="true" />
+  			<textbox id="name" readonly="true" />
   		</box>
   
   	</box>

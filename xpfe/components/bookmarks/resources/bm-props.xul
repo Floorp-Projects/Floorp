@@ -72,19 +72,19 @@
           <rows>
             <row>
               <text class="label" value="&bookmarks.name.label;" for="name"/>
-              <textfield id="name"/>
+              <textbox id="name"/>
             </row>
             <row id="locationrow">
               <text class="label" value="&bookmarks.location.label;" for="url"/>
-        			<textfield id="url" />
+        			<textbox id="url" />
             </row>
             <row id="shortcutrow">
               <text class="label" value="&bookmarks.shortcut.label;" for="shortcut"/>
-  		      	<textfield id="shortcut" />
+  		      	<textbox id="shortcut" />
             </row>
             <row>
               <text class="label" value="&bookmarks.description.label;" for="description"/>
-        			<textfield multiline="true" wrap="virtual" id="description" flex="1"/>
+        			<textbox multiline="true" wrap="virtual" id="description" flex="1"/>
             </row>
           </rows>
         </grid>
@@ -194,7 +194,7 @@
               <row autostretch="never">
           			<text class="label" value="&every.label;" for="duration"/>
                 <box autostretch="never">
-            			<textfield id="duration" size="4" value="60" />
+            			<textbox id="duration" size="4" value="60" />
     		        	<text class="label" value="&minutes.label;" />
     		        </box>
               </row>

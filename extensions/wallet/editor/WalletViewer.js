@@ -216,12 +216,12 @@ nsWalletViewer.prototype =
 
   function Append(thisMenuList) {
 
-    /* Note: we always want a zero-length textfield so the user
+    /* Note: we always want a zero-length textbox so the user
      * can start typing in a new value.  So we need to determine
-     * if user has started typing into the zero-length textfield
+     * if user has started typing into the zero-length textbox
      * in which case it's time to create yet another zero-length
      * one.  We also need to determine if user has removed all
-     * text in a textfield in which case that textfield needs to
+     * text in a textbox in which case that textbox needs to
      * be removed
      */
 
@@ -232,7 +232,7 @@ nsWalletViewer.prototype =
     }
     thisMenuItem.setAttribute('value',thisMenuList.value);
 
-    /* determine previous size of textfield */
+    /* determine previous size of textbox */
     var len = Number(thisMenuItem.getAttribute("len"));
 
     /* update previous size */

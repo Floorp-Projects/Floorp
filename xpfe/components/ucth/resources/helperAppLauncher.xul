@@ -70,7 +70,7 @@
                                accesskey="&runApp.accesskey;"/>
                     </box>
                     <box class="indent">
-                        <textfield id="appName" readonly="true" flex="1"/>
+                        <textbox id="appName" readonly="true" flex="1"/>
                         <button id="chooseApp"
                                 class="dialog"
                                 value="&chooseApp.label;"

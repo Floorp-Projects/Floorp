@@ -81,7 +81,7 @@ Rights Reserved.
             </row>
             <row>
           		<text class="label" id="foldertextlabel" value="..." for="namefield"/>
-          		<textfield id="namefield" flex="1" oninput="trackGroupInTree();"/>
+          		<textbox id="namefield" flex="1" oninput="trackGroupInTree();"/>
             </row>
           </rows>
         </grid>

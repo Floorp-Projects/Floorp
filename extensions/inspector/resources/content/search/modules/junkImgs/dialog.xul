@@ -21,13 +21,13 @@
     <html style="width: 400px">&junkImgsDescription;</html>
     <box autostretch="never">
       <text id="txSearchPath" value="Search Path:"/>
-      <textfield id="txfSearchPath" flex="1" style="width: 25em;" persist="true"/>
+      <textbox id="txfSearchPath" flex="1" style="width: 25em;" persist="true"/>
       <button id="btnSearchPathBrowser" value="Browse" onclick="dialog.browse()"/>
     </box>
     <!--
     <box autostretch="never">
       <text id="txRemotePath" value="Target URL:"/>
-      <textfield id="txfRemotePath" flex="1" persist="true"/>
+      <textbox id="txfRemotePath" flex="1" persist="true"/>
     </box>
     <box autostretch="never">
       <checkbox id="cbIsSkin" value="Target is a Skin" checked="true" persist="true"/>

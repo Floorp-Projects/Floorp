@@ -52,8 +52,8 @@ Contributor(s): Kin Blas <kin@netscape.com>
     </vbox>
     
     <vbox>
-      <textfield id="dialog.findKey" oninput="doEnabling();"/>
-      <textfield id="dialog.replaceKey" oninput="doEnabling();"/>
+      <textbox id="dialog.findKey" oninput="doEnabling();"/>
+      <textbox id="dialog.replaceKey" oninput="doEnabling();"/>
       <vbox autostretch="never">
         <checkbox id="dialog.caseSensitive" value="&caseSensitiveCheckbox.label;"/>
         <checkbox id="dialog.wrap" value="&wrapCheckbox.label;"/>

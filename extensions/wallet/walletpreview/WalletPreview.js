@@ -88,12 +88,12 @@ function Startup() {
       menuList.setAttribute("allowevents", "true");
       menuList.appendChild(menuPopup);
 
-      var textField = document.createElement("textfield");
-      textField.setAttribute("value", prefillList[i+1]);
-      textField.setAttribute("readonly", "true");
+      var textBox = document.createElement("textbox");
+      textBox.setAttribute("value", prefillList[i+1]);
+      textBox.setAttribute("readonly", "true");
 
       var row = document.createElement("row");
-      row.appendChild(textField);
+      row.appendChild(textBox);
       row.appendChild(menuList);
 
       var rows = document.getElementById("rows");

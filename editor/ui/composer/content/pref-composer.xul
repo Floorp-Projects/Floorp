@@ -54,7 +54,7 @@
     <title value="&recentFiles.title;"/>
     <box align="horizontal" valign="middle">
       <text value="&documentsInMenu;"/>
-      <textfield 
+      <textbox
         id="recentFiles"
         name="recent string" 
         type="text" 
@@ -141,7 +141,7 @@
         name       = "autosave" 
         prefattribute="checked"
       />
-      <textfield 
+      <textbox
         id="autoSaveAmount"
         name="time" 
         type="text" 
@@ -169,7 +169,7 @@
         prefindex  = "0" 
         prefstring = "editor.use_html_editor"
       />
-      <textfield 
+      <textbox
         name = "&chooseButton.label;"
         pref       = "true" 
         preftype   = "string" 
@@ -192,7 +192,7 @@
         prefstring ="editor.use_image_editor"
       />
 
-      <textfield 
+      <textbox
         name="chooseButton.label" 
         pref       = "true" 
         preftype   = "string" 

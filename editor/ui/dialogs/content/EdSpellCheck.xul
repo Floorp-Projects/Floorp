@@ -57,7 +57,7 @@
       <row valign="middle" autostretch="never">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
         <box valign="middle" autostretch="never">
-          <textfield id="ReplaceWord" oninput="ChangeReplaceWord()" style="width: 14em"/>
+          <textbox id="ReplaceWord" oninput="ChangeReplaceWord()" style="width: 14em"/>
           <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
         </box>
       </row>

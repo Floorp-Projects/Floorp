@@ -55,8 +55,8 @@
              oncommand="nsVFD.insertMenuElement('combobox');"/>
              
     <!-- text input commands -->
-    <command id="cmd_insert_textfield"      
-             oncommand="nsVFD.insertTextElement('textfield');"/>
+    <command id="cmd_insert_textbox"      
+             oncommand="nsVFD.insertTextElement('textbox');"/>
     <command id="cmd_insert_textarea"
              oncommand="nsVFD.insertTextElement('textarea');"/>
     <command id="cmd_insert_rtf_editor"

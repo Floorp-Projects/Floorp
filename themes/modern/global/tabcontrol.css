@@ -314,7 +314,7 @@ tab:hover:active[selected="true"] > box > box > .tab-image-right-btm {
 /* ::::: special looks for widgets in tabpanels ::::: */
 
 tree.tabpanel,
-textfield.tabpanel {
+textbox.tabpanel {
   border-top: 1px solid #ACB9B9;
   border-right: 1px solid #ECF0F0;
   border-bottom: 1px solid #ECF0F0;
@@ -322,10 +322,10 @@ textfield.tabpanel {
 }
 
 tree.tabpanel > .tree-container-treerows,
-textfield.tabpanel > .textfield-internal-box {
+textbox.tabpanel > .textbox-internal-box {
   border: 1px solid #6E7676;
 }
 
-textfield.tabpanel[focused="true"] {
+textbox.tabpanel[focused="true"] {
   border: 1px solid #909090;
 }

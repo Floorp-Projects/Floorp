@@ -64,7 +64,7 @@
       <separator class="thin"/>
 
       <box autostretch="never">
-        <textfield id="dialog.input" flex="1" oninput="doEnabling();"/>
+        <textbox id="dialog.input" flex="1" oninput="doEnabling();"/>
         <button value="&chooseFile.label;" onclick="onChooseFile();"/>
       </box>
       <box autostretch="never" valign="center">
