@@ -38,7 +38,7 @@ sub BuildMozilla()
 	{
 		use Moz;
 
-		chdir("::::"); # assuming this script is in "...:mozilla:build:mac:", change dir to just above "mozilla"
+		chdir(":::"); # assuming this script is in "...:mozilla:build:mac:", change dir to just above "mozilla"
 
 
 		# Ideally, we would set the target name like so:
@@ -47,80 +47,81 @@ sub BuildMozilla()
 
 
 		$D = $main::DEBUG ? " (Debug)" : "";	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+		$dist_dir = ":dist:";
 
 
 			#
 			# Build the appropriate target of each project
 			#
 
-		Moz::BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              				"Stub Library");
-		Moz::BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"Stub Library");
-		Moz::BuildProject(":mozilla:cmd:macfe:projects:client:Navigator.mcp",    				"Stub Library");
+		Moz::BuildProject(":lib:mac:NSStdLib:NSStdLib.mcp",              	"Stub Library");
+		Moz::BuildProject(":lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stub Library");
+		Moz::BuildProject(":cmd:macfe:projects:client:Navigator.mcp",    	"Stub Library");
 
-		Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
-		Moz::BuildProject(":mozilla:cmd:macfe:restext:NavStringLibPPC.mcp");
-		Moz::BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.prj");
 
-		if ( $main::DEBUG )
-			{
-				Moz::BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPCDebug.mcp");
-				Moz::BuildProject(":mozilla:dbm:macbuild:DBMPPCDebug.mcp");
-			}
-		else
-			{
-				Moz::BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp");
-				Moz::BuildProject(":mozilla:dbm:macbuild:DBMPPC.mcp");
-			}
-
-		Moz::BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"PPC Shared Library$D");
-		Moz::BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              				"PPC Shared Library");
-		Moz::BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",	"PPC Shared Library$D");
+		Moz::BuildProject(":lib:mac:NSRuntime:NSRuntime.mcp");						symlink(":lib:mac:NSRuntime:NSRuntimePPCLib", "${dist_dir}NSRuntimePPCLib");
+		Moz::BuildProject(":cmd:macfe:restext:NavStringLibPPC.mcp");			symlink(":cmd:macfe:restext:", "${dist_dir}");
+		Moz::BuildProject(":lib:mac:MoreFiles:build:MoreFilesPPC.prj");		symlink(":lib:mac:MoreFiles:build:", "${dist_dir}");
 
 		if ( $main::DEBUG )
 			{
-				Moz::BuildProject(":mozilla:xpcom:macbuild:xpcomPPCDebug.mcp");
+				Moz::BuildProject(":nsprpub:macbuild:NSPR20PPCDebug.mcp");		symlink(":nsprpub:macbuild:", "${dist_dir}");
+				Moz::BuildProject(":dbm:macbuild:DBMPPCDebug.mcp");						symlink(":dbm:macbuild:", "${dist_dir}");
 			}
 		else
 			{
-				Moz::BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp");
+				Moz::BuildProject(":nsprpub:macbuild:NSPR20PPC.mcp");					symlink(":nsprpub:macbuild:", "${dist_dir}");
+				Moz::BuildProject(":dbm:macbuild:DBMPPC.mcp");								symlink(":dbm:macbuild:", "${dist_dir}");
 			}
 
-		Moz::BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp");
-		Moz::BuildProject(":mozilla:modules:zlib:macbuild:zlib.mcp",            			  "PPC Shared Library$D");
-		Moz::BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",                    			  "PPC Shared Library$D");
-		Moz::BuildProject(":mozilla:sun-java:stubs:macbuild:JavaStubs.mcp",      				"PPC Shared Library$D");
+		Moz::BuildProject(":lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"PPC Shared Library$D");	symlink(":lib:mac:MacMemoryAllocator:", "${dist_dir}");
+		Moz::BuildProject(":lib:mac:NSStdLib:NSStdLib.mcp",              				"PPC Shared Library");		symlink(":lib:mac:NSStdLib:", "${dist_dir}");
+		Moz::BuildProject(":modules:security:freenav:macbuild:NoSecurity.mcp",	"PPC Shared Library$D");	symlink(":modules:security:freenav:macbuild:", "${dist_dir}");
 
 		if ( $main::DEBUG )
 			{
-				Moz::BuildProject(":mozilla:js:jsj:macbuild:JSJ_PPCDebug.mcp");
-				Moz::BuildProject(":mozilla:js:macbuild:JavaScriptPPCDebug.mcp");
+				Moz::BuildProject(":xpcom:macbuild:xpcomPPCDebug.mcp");	symlink(":xpcom:macbuild:", "${dist_dir}");
 			}
 		else
 			{
-				Moz::BuildProject(":mozilla:js:jsj:macbuild:JSJ_PPC.mcp");
-				Moz::BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp");
+				Moz::BuildProject(":xpcom:macbuild:xpcomPPC.mcp");			symlink(":xpcom:macbuild:", "${dist_dir}");
 			}
 
-		Moz::BuildProject(":mozilla:nav-java:stubs:macbuild:NavJavaStubs.mcp",   				"PPC Shared Library$D");
-
-
-		# the following `if' can be fixed when we either rename the debug target of the RDF project, or of all the other projects
+		Moz::BuildProject(":lib:mac:PowerPlant:PowerPlant.mcp");															symlink(":lib:mac:PowerPlant:", "${dist_dir}");
+		Moz::BuildProject(":modules:zlib:macbuild:zlib.mcp",        "PPC Shared Library$D");	symlink(":modules:zlib:macbuild:", "${dist_dir}");
+		Moz::BuildProject(":jpeg:macbuild:JPEG.mcp",                "PPC Shared Library$D");	symlink(":jpeg:macbuild:", "${dist_dir}");
+		Moz::BuildProject(":sun-java:stubs:macbuild:JavaStubs.mcp",	"PPC Shared Library$D");	symlink(":sun-java:stubs:macbuild:", "${dist_dir}");
 
 		if ( $main::DEBUG )
 			{
-				Moz::BuildProject(":mozilla:modules:rdf:macbuild:RDF.mcp",               		"PPC Shared Library +D -LDAP");
+				Moz::BuildProject(":js:jsj:macbuild:JSJ_PPCDebug.mcp");		symlink(":js:jsj:macbuild:", "${dist_dir}");
+				Moz::BuildProject(":js:macbuild:JavaScriptPPCDebug.mcp");	symlink(":js:macbuild:", "${dist_dir}");
 			}
 		else
 			{
-				Moz::BuildProject(":mozilla:modules:rdf:macbuild:RDF.mcp",               		"PPC Shared Library -LDAP");
+				Moz::BuildProject(":js:jsj:macbuild:JSJ_PPC.mcp");				symlink(":js:jsj:macbuild:", "${dist_dir}");
+				Moz::BuildProject(":js:macbuild:JavaScriptPPC.mcp");			symlink(":js:macbuild:", "${dist_dir}");
 			}
 
-		Moz::BuildProject(":mozilla:modules:xml:macbuild:XML.mcp",               				"PPC Shared Library$D");
-		Moz::BuildProject(":mozilla:modules:libfont:macbuild:FontBroker.mcp",    				"PPC Library$D");
-		Moz::BuildProject(":mozilla:modules:schedulr:macbuild:Schedulr.mcp",     				"PPC Shared Library$D");
-		Moz::BuildProject(":mozilla:network:macbuild:network.mcp",											"PPC Library (Debug Moz)");
-		Moz::BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",   					"PPC Library$D");
-		Moz::BuildProject(":mozilla:cmd:macfe:projects:client:Navigator.mcp",   				"Moz PPC App$D");
+		Moz::BuildProject(":nav-java:stubs:macbuild:NavJavaStubs.mcp",	"PPC Shared Library$D");	symlink(":nav-java:stubs:macbuild:", "${dist_dir}");
+
+
+			# the following `if' can be fixed when we either rename the debug target of the RDF project, or of all the other projects
+		if ( $main::DEBUG )
+			{
+				Moz::BuildProject(":modules:rdf:macbuild:RDF.mcp", "PPC Shared Library +D -LDAP");		symlink(":modules:rdf:macbuild:", "${dist_dir}");
+			}
+		else
+			{
+				Moz::BuildProject(":modules:rdf:macbuild:RDF.mcp", "PPC Shared Library -LDAP");				symlink(":modules:rdf:macbuild:", "${dist_dir}");
+			}
+
+		Moz::BuildProject(":modules:xml:macbuild:XML.mcp",            "PPC Shared Library$D");		symlink(":modules:xml:macbuild:", "${dist_dir}");
+		Moz::BuildProject(":modules:libfont:macbuild:FontBroker.mcp",	"PPC Library$D");
+		Moz::BuildProject(":modules:schedulr:macbuild:Schedulr.mcp",  "PPC Shared Library$D");		symlink(":modules:schedulr:macbuild:", "${dist_dir}");
+		Moz::BuildProject(":network:macbuild:network.mcp",						"PPC Library (Debug Moz)");
+		Moz::BuildProject(":cmd:macfe:Composer:build:Composer.mcp",   "PPC Library$D");
+		Moz::BuildProject(":cmd:macfe:projects:client:Navigator.mcp", "Moz PPC App$D");
 	}
 
 1;
