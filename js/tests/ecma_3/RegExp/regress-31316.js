@@ -29,6 +29,8 @@ var i = 0;
 var bug = 31316;
 var summary = 'Regression test for Bugzilla bug 31316';
 var cnEmptyString = '';
+var status = '';
+var statusmessages = new Array();
 var pattern = '';
 var patterns = new Array();
 var string = '';
@@ -39,6 +41,7 @@ var expectedmatch = '';
 var expectedmatches = new Array();
 
 
+status = inSection(1);
 pattern = /<([^\/<>][^<>]*[^\/])>|<([^\/<>])>/;
 string = '<p>Some<br />test</p>';
 actualmatch = string.match(pattern);
@@ -53,6 +56,7 @@ test();
 
 function addThis()
 {
+  statusmessages[i] = status;
   patterns[i] = pattern;
   strings[i] = string;
   actualmatches[i] = actualmatch;
@@ -66,6 +70,6 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
-  testRegExp(patterns, strings, actualmatches, expectedmatches);
+  testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
   exitFunc ('test');
 }
