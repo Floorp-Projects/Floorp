@@ -582,7 +582,7 @@ nsPrefMigration::GetDirFromPref(const char *oldProfilePath, const char* newProfi
   if (NS_FAILED(rv)) return rv;   
 
   foundPref = m_prefs->CopyCharPref(pref, oldPath);
-  if((foundPref == 0) && (*oldPath))
+  if((foundPref == 0) && (*oldPath) && (PL_strlen(*oldPath) > 0))
   {
 #ifdef XP_UNIX
     // what if they don't want to go to <profile>/<newDirName>?
