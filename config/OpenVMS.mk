@@ -37,20 +37,19 @@ OS_CXXFLAGS	+= -DVMS
 ifdef INTERNAL_TOOLS
 CC		= c89
 CCC		= cxx
+ifeq ($(PROGRAM),xpidl)
+OS_CFLAGS	= $(ACDEFINES) -Wc,names=\(short,as\) -DAS_IS
+else
 OS_CFLAGS	= $(ACDEFINES) -O -Wc,names=\(short,as\) -DAS_IS
+endif
 OS_CXXFLAGS	= $(ACDEFINES) -O -Wc,names=\(short,as\) -DAS_IS
 OS_LDFLAGS	=
 endif
 
 # This is where our Sharable Image trickery goes.
-ifdef BUILD_OPT
-VMS_DEBUG	= -O
-else
-VMS_DEBUG	= -g
-endif
-AS		= vmsas $(VMS_DEBUG)
+AS		= vmsas $(OS_CFLAGS)
 LD		= vmsld MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
-		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=)) $(VMS_DEBUG)
+		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=)) $(OS_LDFLAGS)
 DSO_LDOPTS	=
 EXTRA_DSO_LDOPTS+= $(EXTRA_LIBS)
 MKSHLIB		= $(LD)
