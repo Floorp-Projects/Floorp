@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -22,9 +22,11 @@
 #include "structs.h"
 #include "ctxtfunc.h"
 #include "xp_list.h"
+#include "plstr.h"
 
 #include "nsString.h"
 #include "nsIStreamListener.h"
+#include "nsINetSupport.h"
 #include "nsNetStream.h"
 
 /****************************************************************************/
@@ -45,26 +47,180 @@ stub_noop(int x, ...)
     return 0;
 }
 
-PRIVATE void stub_GraphProgressInit(MWContext  *context, 
-                                    URL_Struct *URL_s, 
-                                    int32       content_length)
+static nsIStreamListener *getStreamListener(URL_Struct *URL_s) 
 {
-    nsConnectionInfo *pConn;
-
-    if (NULL != URL_s->fe_data) {
-
-       if (URL_s->load_background)
-          return;
+    nsIStreamListener *res = NULL;
+    
+    if (URL_s->fe_data) {
         /* 
          * Retrieve the nsConnectionInfo object from the fe_data field
          * of the URL_Struct...
          */
-        pConn = (nsConnectionInfo *)URL_s->fe_data;
-        if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
-            nsAutoString status;
-
-            pConn->pConsumer->OnProgress(pConn->pURL, 0, content_length, status);
+        nsConnectionInfo *pConn = (nsConnectionInfo *)URL_s->fe_data;
+        if (pConn) {
+            res = pConn->pConsumer;
         }
+    }
+
+    NS_IF_ADDREF(res);
+
+    return res;
+}
+
+static nsINetSupport *getNetSupport(URL_Struct *URL_s) 
+{
+    nsIStreamListener *isl = getStreamListener(URL_s);
+    if (isl) {
+        nsINetSupport *ins;
+        isl->QueryInterface(kINetSupportIID, (void **) &ins);
+        isl->Release();
+        return ins;
+    }
+    return NULL;
+}
+
+void stub_Alert(MWContext *context,
+                const char *msg)
+{
+    nsINetSupport *ins;
+
+    if (ins = getNetSupport(context->modular_data)) {
+        nsString str(msg);
+        ins->Alert(str);
+        ins->Release();
+    } else {
+        printf("Alert: %s", msg);
+    }
+}
+
+extern "C" void FE_Alert(MWContext *context, const char *msg)
+{
+    stub_Alert(context, msg);
+}
+
+XP_Bool stub_Confirm(MWContext *context,
+                     const char *msg)
+{
+    nsINetSupport *ins;
+    
+    if (ins = getNetSupport(context->modular_data)) {
+        XP_Bool res;
+        nsString str(msg);
+        res = ins->Confirm(str);
+        ins->Release();
+        return res;
+    } else {
+        printf("Confirm: %s", msg);
+    }
+    return FALSE;
+}
+
+char *stub_Prompt(MWContext *context,
+                  const char *msg,
+                  const char *def)
+{
+    nsINetSupport *ins;
+    
+    if (ins = getNetSupport(context->modular_data)) {
+        nsString str(msg);
+        nsString defStr(def);
+        nsString res;
+        if (ins->Prompt(msg, defStr, res)) {
+            ins->Release();
+            return res.ToNewCString();
+        }
+        ins->Release();
+    } else {
+        char buf[256];
+        printf("%s\n", msg);
+        printf("Prompt: ");
+        scanf("%s", buf);
+        if (PL_strlen(buf)) {
+            return PL_strdup(buf);
+        }
+    }
+
+    return NULL;
+}
+
+PRIVATE XP_Bool
+stub_PromptUsernameAndPassword(MWContext *context,
+                               const char *msg,
+                               char **username,
+                               char **password)
+{
+    nsINetSupport *ins;
+    
+    if (ins = getNetSupport(context->modular_data)) {
+        nsString str(msg);
+        nsString userStr;
+        nsString pwdStr;
+        if (ins->PromptUserAndPassword(msg, userStr, pwdStr)) {
+            ins->Release();
+            *username = userStr.ToNewCString();
+            *password = pwdStr.ToNewCString();
+            return TRUE;
+        }
+        ins->Release();
+    } else {
+        char buf[256];
+        printf("%s\n", msg);
+        printf("Username: ");
+        scanf("%s", buf);
+        *username = PL_strdup(buf);
+        printf("Password: ");
+        scanf("%s", buf);
+        *password = PL_strdup(buf);
+        if (**username) {
+             return TRUE;
+        }
+        PR_FREEIF(*username);
+        PR_FREEIF(*password);
+    }
+
+    return FALSE;
+}
+
+char *stub_PromptPassword(MWContext *context,
+                          const char *msg)
+{
+    nsINetSupport *ins;
+    
+    if (ins = getNetSupport(context->modular_data)) {
+        nsString str(msg);
+        nsString res;
+        if (ins->PromptPassword(msg, res)) {
+            ins->Release();
+            return res.ToNewCString();
+        }
+        ins->Release();
+    } else {
+        char buf[256];
+        printf("%s\n", msg);
+        printf("Password: ");
+        scanf("%s", buf);
+        if (PL_strlen(buf)) {
+            return PL_strdup(buf);
+        }
+    }
+
+    return NULL;
+}
+
+PRIVATE void stub_GraphProgressInit(MWContext  *context, 
+                                    URL_Struct *URL_s, 
+                                    int32       content_length)
+{
+    nsIStreamListener *pListener;
+
+    if (URL_s->load_background)
+        return;
+
+    if (pListener = getStreamListener(URL_s)) {
+        nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
+        nsAutoString status;
+        pListener->OnProgress(pConn->pURL, 0, content_length, status);
+        pListener->Release();
     }
 }
 
@@ -75,22 +231,17 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
                                 int32       bytes_since_last_time,
                                 int32       content_length)
 {
-    nsConnectionInfo *pConn;
+    nsIStreamListener *pListener;
 
-    if (NULL != URL_s->fe_data) {
-       if (URL_s->load_background)
-          return;
-        /* 
-         * Retrieve the nsConnectionInfo object from the fe_data field
-         * of the URL_Struct...
-         */
-        pConn = (nsConnectionInfo *)URL_s->fe_data;
-        if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
-            nsAutoString status;
+    if (URL_s->load_background)
+        return;
 
-            pConn->pConsumer->OnProgress(pConn->pURL, bytes_received, 
-                                         content_length, status);
-        }
+    if (pListener = getStreamListener(URL_s)) {
+        nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
+        nsAutoString status;
+        pListener->OnProgress(pConn->pURL, bytes_received, 
+                              content_length, status);
+        pListener->Release();
     }
 }
 
@@ -99,32 +250,39 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
                                        int32       content_length,
                                        int32       total_bytes_read)
 {
-    nsConnectionInfo *pConn;
-
     /*
      * XXX: Currently this function never calls OnProgress(...) because
      *      netlib calls FE_GraphProgressDestroy(...) after closing the
      *      stream...  So, OnStopBinding(...) has already been called and
      *      the nsConnectionInfo->pConsumer has been released and NULLed...
      */
-    if (NULL != URL_s->fe_data) {
-       if (URL_s->load_background)
-          return;
-        /* 
-         * Retrieve the nsConnectionInfo object from the fe_data field
-         * of the URL_Struct...
-         */
-        pConn = (nsConnectionInfo *)URL_s->fe_data;
-        if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
-            nsAutoString status;
+    nsIStreamListener *pListener;
 
-            pConn->pConsumer->OnProgress(pConn->pURL, total_bytes_read, 
-                                         content_length, status);
-        }
+    if (URL_s->load_background)
+        return;
+
+    if (pListener = getStreamListener(URL_s)) {
+        nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
+        nsAutoString status;
+        pListener->OnProgress(pConn->pURL, total_bytes_read, 
+                              content_length, status);
     }
 }
 
+PRIVATE void stub_Progress(MWContext *context, const char *msg)
+{
+    nsIStreamListener *pListener;
 
+    if (pListener = getStreamListener(context->modular_data)) {
+        nsConnectionInfo *pConn = 
+            (nsConnectionInfo *) context->modular_data->fe_data;
+        nsAutoString status(msg);
+        pListener->OnProgress(pConn->pURL, -1, -1, status);
+        pListener->Release();
+    } else {
+        printf("%s\n", msg);
+    }
+}
 
 
 #define MAKE_FE_TYPES_PREFIX(func)	func##_t
@@ -183,8 +341,8 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
 #define stub_EndPreSection                  (EndPreSection_t)stub_noop
 #define stub_SetProgressBarPercent          (SetProgressBarPercent_t)stub_noop
 #define stub_SetBackgroundColor             (SetBackgroundColor_t)stub_noop
-#define stub_Progress                       (Progress_t)stub_noop
-#define stub_Alert                          (Alert_t)stub_noop
+#define stub_Progress                       (Progress_t)stub_Progress
+#define stub_Alert                          (Alert_t)stub_Alert
 #define stub_SetCallNetlibAllTheTime        (SetCallNetlibAllTheTime_t)stub_noop
 #define stub_ClearCallNetlibAllTheTime      (ClearCallNetlibAllTheTime_t)stub_noop
 #define stub_GraphProgressInit              (GraphProgressInit_t)stub_GraphProgressInit
@@ -194,11 +352,11 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
 #define stub_UseFancyNewsgroupListing       (UseFancyNewsgroupListing_t)stub_noop
 #define stub_FileSortMethod                 (FileSortMethod_t)stub_noop
 #define stub_ShowAllNewsArticles            (ShowAllNewsArticles_t)stub_noop
-#define stub_Confirm                        (Confirm_t)stub_noop
-#define stub_Prompt                         (Prompt_t)stub_noop
+#define stub_Confirm                        (Confirm_t)stub_Confirm
+#define stub_Prompt                         (Prompt_t)stub_Prompt
 #define stub_PromptWithCaption              (PromptWithCaption_t)stub_noop
-#define stub_PromptUsernameAndPassword      (PromptUsernameAndPassword_t)stub_noop
-#define stub_PromptPassword                 (PromptPassword_t)stub_noop
+#define stub_PromptUsernameAndPassword      (PromptUsernameAndPassword_t)stub_PromptUsernameAndPassword
+#define stub_PromptPassword                 (PromptPassword_t)stub_PromptPassword
 #define stub_EnableClicking                 (EnableClicking_t)stub_noop
 #define stub_AllConnectionsComplete         (AllConnectionsComplete_t)stub_noop
 #define stub_ImageSize                      (ImageSize_t)stub_noop
@@ -227,7 +385,7 @@ ContextFuncs stub_context_funcs;
 
 XP_List *stub_context_list = NULL;
 
-MWContext *new_stub_context()
+MWContext *new_stub_context(URL_Struct *URL_s)
 {
     static int funcsInitialized = 0;
     MWContext *context;
@@ -247,6 +405,7 @@ MWContext *new_stub_context()
     if (nsnull != context) {
         context->funcs = &stub_context_funcs;
         context->type  = MWContextBrowser;
+        context->modular_data = URL_s;
 
         if (nsnull != stub_context_list) {
             XP_ListAddObjectToEnd(stub_context_list, context);
@@ -260,13 +419,15 @@ void free_stub_context(MWContext *window_id)
 {
     TRACEMSG(("Freeing stub context...\n"));
 
-    if (stub_context_list) {
-        PRBool result;
-
-        result = XP_ListRemoveObject(stub_context_list, window_id);
-        PR_ASSERT(PR_TRUE == result);
+    if (window_id) {
+        if (stub_context_list) {
+            PRBool result;
+        
+            result = XP_ListRemoveObject(stub_context_list, window_id);
+            PR_ASSERT(PR_TRUE == result);
+        }
+        free(window_id);
     }
-    free(window_id);
 }
 
 

@@ -42,7 +42,7 @@ extern "C" {
 
 extern "C" {
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX)
 DB *
 dbopen(const char *fname, int flags,int mode, DBTYPE type, 
        const void *openinfo)
@@ -755,7 +755,9 @@ XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
 
     switch (type) {
         case xpURL:
-        case xpFileToPost: {
+        case xpFileToPost:
+        case xpHTTPCookie:
+        {
             XP_File fp;
             char* newName = WH_FileName(name, type);
 
@@ -822,7 +824,13 @@ WH_FileName (const char *NetName, XP_FileType type)
 {
     MOZ_FUNCTION_STUB;
 
-    if ((type == xpURL) || (type == xpFileToPost)) {
+    if (type == xpHTTPCookie) {
+#ifdef XP_PC
+        return PL_strdup("cookies.txt");
+#else
+        return PL_strdup("cookies");
+#endif
+    } else if ((type == xpURL) || (type == xpFileToPost)) {
         /*
          * This is the body of XP_NetToDosFileName(...) which is implemented 
          * for Windows only in fegui.cpp
@@ -954,12 +962,6 @@ char *INTL_ResourceCharSet(void)
  * From ns/cmd/winfe/cfe.cpp
  *---------------------------------------------------------------------------
  */
-
-void FE_Alert(MWContext *pContext, const char *pMsg)
-{
-    MOZ_FUNCTION_STUB;
-}
-
 
 int32 FE_GetContextID(MWContext *pContext)
 {

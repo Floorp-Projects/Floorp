@@ -35,7 +35,7 @@ extern "C" {
 #include "nsINetContainerApplication.h"
 
 /* XXX: Legacy definitions... */
-MWContext *new_stub_context();
+MWContext *new_stub_context(URL_Struct *URL_s);
 void free_stub_context(MWContext *window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
@@ -94,7 +94,9 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
 {
     NS_INIT_REFCNT();
 
-    m_stubContext = new_stub_context();
+    /*
+      m_stubContext = new_stub_context();
+    */
 
     /* Initialize netlib with 32 sockets... */
     NET_InitNetLib(0, 32);
@@ -108,6 +110,8 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
                                      NET_CacheConverter);
     NET_RegisterContentTypeConverter("*", FO_NGLAYOUT, NULL,
                                      NET_NGLayoutConverter);
+    NET_RegisterContentTypeConverter(APPLICATION_HTTP_INDEX, FO_NGLAYOUT,
+                                    NULL, NET_HTTPIndexFormatToHTMLConverter);
 
     NET_RegisterUniversalEncodingConverter("chunked",
                                            NULL,
@@ -163,10 +167,12 @@ nsNetlibService::~nsNetlibService()
 {
     TRACEMSG(("nsNetlibService is being destroyed...\n"));
 
-    if (NULL != m_stubContext) {
+    /*
+      if (NULL != m_stubContext) {
         free_stub_context((MWContext *)m_stubContext);
         m_stubContext = NULL;
-    }
+      }
+    */
     
     NS_IF_RELEASE(mContainer);
     NET_ShutdownNetLib();
@@ -174,7 +180,7 @@ nsNetlibService::~nsNetlibService()
 
 
 nsresult nsNetlibService::OpenStream(nsIURL *aUrl, 
-                                          nsIStreamListener *aConsumer)
+                                     nsIStreamListener *aConsumer)
 {
     URL_Struct *URL_s;
     nsConnectionInfo *pConn;
@@ -221,16 +227,23 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
      * XXX:  Currently the return value form InitializeURLInfo(...) is 
      *       ignored...  Should the connection abort if it fails?
      */
-     result = aUrl->QueryInterface(kIProtocolConnectionIID, (void**)&pProtocol);
-     if (NS_OK == result) {
-         pProtocol->InitializeURLInfo(URL_s);
-         NS_RELEASE(pProtocol);
-     }
-
+    result = aUrl->QueryInterface(kIProtocolConnectionIID, (void**)&pProtocol);
+    if (NS_OK == result) {
+        pProtocol->InitializeURLInfo(URL_s);
+        NS_RELEASE(pProtocol);
+    }
+    
+    MWContext *stubContext = new_stub_context(URL_s);
     /* Start the URL load... */
+/*
+    NET_GetURL (URL_s,                      // URL_Struct
+                FO_CACHE_AND_NGLAYOUT,      // FO_Present_type
+                (MWContext *)m_stubContext, // MWContext
+                bam_exit_routine);          // Exit routine...
+*/
     NET_GetURL (URL_s,                      /* URL_Struct      */
                 FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
-                (MWContext *)m_stubContext, /* MWContext       */
+                (MWContext *)stubContext,   /* MWContext       */
                 bam_exit_routine);          /* Exit routine... */
 
     /* Remember, the URL_s may have been freed ! */
@@ -312,10 +325,18 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
 /*        printf("+++ Loading %s\n", aUrl); */
 
+        MWContext *stubContext = new_stub_context(URL_s);
+
         /* Start the URL load... */
+/*
+        NET_GetURL (URL_s,                      // URL_Struct
+                    FO_CACHE_AND_NGLAYOUT,      // FO_Present_type
+                    (MWContext *)m_stubContext, // MWContext
+                    bam_exit_routine);          // Exit routine...
+*/
         NET_GetURL (URL_s,                      /* URL_Struct      */
                     FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
-                    (MWContext *)m_stubContext, /* MWContext       */
+                    (MWContext *)  stubContext, /* MWContext       */
                     bam_exit_routine);          /* Exit routine... */
 
         /* Remember, the URL_s may have been freed ! */
@@ -484,6 +505,9 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
 
         /* Delete the URL_Struct... */
         NET_FreeURLStruct(URL_s);
+    }
+    if (NULL != window_id) {
+//        free_stub_context(window_id);
     }
 }
 

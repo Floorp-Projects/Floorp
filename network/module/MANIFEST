@@ -4,6 +4,7 @@
 
 nsIStreamListener.h
 nsINetService.h
+nsINetSupport.h
 nsIRelatedLinks.h
 nsIURL.h
 nsIPostToServer.h

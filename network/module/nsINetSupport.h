@@ -33,11 +33,12 @@ public:
                              const nsString &aDefault,
                              nsString &aResult) = 0;
 
-  NS_IMETHOD_(PRBool) PasswordPrompt(const nsString &aText,
-                                     nsString &aUser,
-                                     nsString &aPassword) = 0;
+  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                            nsString &aUser,
+                                            nsString &aPassword) = 0;
 
-  
+  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                     nsString &aPassword) = 0;  
 };
 
 #endif
