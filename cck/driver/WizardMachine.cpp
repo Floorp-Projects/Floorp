@@ -104,8 +104,9 @@ BOOL CWizardMachineApp::InitInstance()
 
 	Path = GetModulePath();
 
-	_getcwd(currDirPath, MAX_SIZE);
-	strcat(currDirPath, "\\");
+	//_getcwd(currDirPath, MAX_SIZE);
+	//strcat(currDirPath, "\\");
+	strcpy(currDirPath, Path);
 
 	CString outputFile = Path + "output.dat";
 	out = OpenAFile(outputFile, "w");
@@ -152,17 +153,19 @@ BOOL CWizardMachineApp::InitInstance()
 		strncpy(tmpStr, iniFile, strlen(iniFile) - strlen(strstr(iniFile,"iniFiles")));
 	}
 
+	strcat(currDirPath, "..\\..\\");
+
 	strcpy(iniFilePath, currDirPath);
-	strcat(iniFilePath, "..\\");
+	//strcat(iniFilePath, "..\\");
 	strcpy(imagesPath, currDirPath);
-	strcat(imagesPath, "..\\");
+	//strcat(imagesPath, "..\\");
 
 	if (tmpStr) {
 		strcat(iniFilePath, tmpStr);
 		strcat(imagesPath, tmpStr);
 
 		strcpy(customizationPath, currDirPath);
-		strcat(customizationPath, "..\\");
+		//strcat(customizationPath, "..\\");
 		strcat(customizationPath, tmpStr);
 		strcat(customizationPath, "customizations\\");
 	}
@@ -1249,7 +1252,7 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 	WIDGET* curWidget = targetWidget;
 
 	CFileFind fileList;
-	BOOL dirFound = fileList.FindFile(parentDirPath);
+	BOOL dirFound = fileList.FindFile(CString(currDirPath) + parentDirPath);
 
 	if(curWidget->type == "ListBox")
 	{
