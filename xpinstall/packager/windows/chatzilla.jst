@@ -11,6 +11,11 @@ addFile("Chatzilla Chrome",
         getFolder("Chrome"),        // target folder
         "");                        // target subdir 
 
+addDirectory("Chatzilla Icons",
+             "bin/chrome/icons",  // jar source folder
+             getFolder("Chrome", "icons"), // target folder
+             "");                 // target subdir
+
 registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "content/chatzilla/");
 registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "skin/modern/chatzilla/");
 registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "locale/en-US/chatzilla/");
