@@ -1,0 +1,98 @@
+PACKAGE = libart
+PKG_CFLAGS = -I.. -DLIBART_COMPILATION
+
+OBJECTS = \
+	art_affine.obj \
+	art_alphagamma.obj \
+	art_bpath.obj \
+	art_gray_svp.obj \
+	art_misc.obj \
+	art_pixbuf.obj \
+	art_rect.obj \
+	art_rect_svp.obj \
+	art_rect_uta.obj \
+	art_rgb.obj \
+	art_rgba.obj \
+	art_rgb_affine.obj \
+	art_rgb_affine_private.obj \
+	art_rgb_bitmap_affine.obj \
+	art_rgb_pixbuf_affine.obj \
+	art_rgb_rgba_affine.obj \
+	art_rgb_svp.obj \
+	art_svp.obj \
+	art_svp_ops.obj \
+	art_svp_point.obj \
+	art_svp_render_aa.obj \
+	art_svp_vpath.obj \
+	art_svp_vpath_stroke.obj \
+	art_svp_wind.obj \
+	art_uta.obj \
+	art_uta_ops.obj \
+	art_uta_rect.obj \
+	art_uta_svp.obj \
+	art_uta_vpath.obj \
+	art_vpath.obj \
+	art_vpath_bpath.obj \
+	art_vpath_dash.obj \
+	art_vpath_svp.obj \
+
+testOBJECTS = \
+	testart.obj \
+	testuta.obj \
+
+## common stuff
+## compiler and linker switches
+!IFNDEF DEBUG
+# Full optimization:
+OPTIMIZE = -Ox -MD
+LINKDEBUG =
+!ELSE
+# Debugging:
+OPTIMIZE = -Zi -MDd
+LINKDEBUG = /debug
+!ENDIF
+
+# cl -? describes the options
+CC = cl -G5 -GF $(OPTIMIZE) -W3 -nologo
+
+# No general LDFLAGS needed
+LDFLAGS = /link $(LINKDEBUG)
+INSTALL = copy
+
+CFLAGS = -I. -DHAVE_CONFIG_H
+
+## targets
+all : \
+	config.h \
+	art_config.h \
+	$(PACKAGE).dll
+
+$(PACKAGE).dll : $(OBJECTS) $(PACKAGE).def
+	$(CC) $(CFLAGS) -LD -Fe$(PACKAGE).dll $(OBJECTS) user32.lib advapi32.lib wsock32.lib $(LDFLAGS) /def:$(PACKAGE).def
+
+config.h: config.h.win32
+	copy config.h.win32 config.h
+
+art_config.h : gen_art_config.exe
+	gen_art_config.exe > art_config.h
+
+gen_art_config.exe : gen_art_config.obj
+	$(CC) $(CFLAGS) -Fegen_art_config.exe gen_art_config.obj user32.lib
+
+.c.obj :
+	$(CC) $(CFLAGS) -GD -c $(PKG_CFLAGS) $<
+
+clean:
+	del config.h
+	del *.exe
+	del *.obj
+	del *.dll
+	del *.lib
+	del *.err
+	del *.map
+	del *.sym
+	del *.exp
+	del *.lk1
+	del *.mk1
+	del *.pdb
+	del *.ilk
