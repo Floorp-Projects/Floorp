@@ -320,21 +320,19 @@ FIELDSET {
 
 UL, MENU, DIR {
   display: block;
-  margin-left: 20px;
   margin-right: 0;
   margin-bottom: auto;
   margin-top: auto;
-  padding-left: 20px;
   list-style-type: disc;
+  margin-left: 40px;
 }
 OL {
   display: block;
-  margin-left: 20px;
   margin-right: 0;
   margin-bottom: auto;
   margin-top: auto;
-  padding-left: 20px;
   list-style-type: decimal;
+  margin-left: 40px;
 }
 
 // 2 deep unordered lists use a circle
@@ -373,8 +371,6 @@ LI {
 }
 UL LI, OL LI, MENU LI, DIR LI {
   list-style-position: outside;
-  margin-left: -20px;
-  padding-left: 20px;
 }
 :BULLET {
   display: inline;
