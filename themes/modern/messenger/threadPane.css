@@ -187,8 +187,11 @@ treecol.junkStatusHeader {
   list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
 }
 
+/* "unknown" now looks like "not junk".  see bug #182386 */
 treechildren:-moz-tree-image(junkStatusCol) {
-  list-style-image: url("chrome://messenger/skin/icons/message-junk-unknown.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+  padding-left: 0px;
+  padding-right: 4px;
 }
 
 treechildren:-moz-tree-image(junkStatusCol, junk) {
