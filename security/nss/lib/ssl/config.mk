@@ -34,18 +34,29 @@
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
-SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
-IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
+IMPORT_LIBRARY = $(OBJDIR)/$(IMPORT_LIB_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION)$(IMPORT_LIB_SUFFIX)
 
 RES = $(OBJDIR)/ssl.res
 RESNAME = ssl.rc
 
+ifdef NS_USE_GCC
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib \
+	-lnss3 \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+else # ! NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/nss3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
+endif # NS_USE_GCC
+
 else
 
 

@@ -78,10 +78,23 @@ ifeq ($(OS_TARGET),OSF1)
 endif
 
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WIN16 and WINCE
+ifdef NS_USE_GCC
+# Ideally, we want to use assembler
+#     ASFILES  = mpi_x86.s
+#     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE \
+#                -DMP_ASSEMBLY_DIV_2DX1D
+# but we haven't figured out how to make it work, so we are not
+# using assembler right now.
+    ASFILES  =
+    DEFINES += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT
+else
     ASFILES  = mpi_x86.asm
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+endif
 ifdef BUILD_OPT
+ifndef NS_USE_GCC
     OPTIMIZER += -Ox  # maximum optimization for freebl
+endif
 endif
 endif
 

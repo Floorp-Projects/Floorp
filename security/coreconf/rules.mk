@@ -52,7 +52,7 @@ endif
 platform::
 	@echo $(OBJDIR_NAME)
 
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 USE_NT_C_SYNTAX=1
 endif
 
@@ -285,7 +285,7 @@ endif
 
 $(PROGRAM): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS))
 else
 ifdef XP_OS2_VACPP
@@ -337,7 +337,11 @@ ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.1)
 	-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 else
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+ifdef NS_USE_GCC
+	$(LINK_DLL) $(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS) $(RES)
+else
 	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS) $(RES))
+endif
 else
 ifdef XP_OS2_VACPP
 	$(MKSHLIB) $(DLLFLAGS) $(LDFLAGS) $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
@@ -357,7 +361,11 @@ ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
 # The resource compiler does not understand the -U option.
+ifdef NS_USE_GCC
+	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) -o $@ $<
+else
 	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
+endif
 	@echo $(RES) finished
 endif
 
@@ -368,7 +376,7 @@ $(MAPFILE): $(LIBRARY_NAME).def
 
 $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 	$(MKPROG) $(OBJDIR)/$(PROG_PREFIX)$*$(OBJ_SUFFIX) -Fe$@ -link \
 	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 else
@@ -388,14 +396,12 @@ NEED_ABSOLUTE_PATH := 1
 PWD := $(shell pwd)
 endif
 
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
-ifndef NS_USE_GCC
+ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 NEED_ABSOLUTE_PATH := 1
 ifeq (,$(findstring ;,$(PATH)))
 PWD :=  $(subst \,/,$(shell cygpath -w `pwd`))
 else
 PWD := $(shell pwd)
-endif
 endif
 endif
 
@@ -429,7 +435,7 @@ endif
 endif
 
 ifndef XP_OS2_VACPP
-ifneq (,$(filter-out WIN%,$(OS_TARGET)))
+ifneq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $<

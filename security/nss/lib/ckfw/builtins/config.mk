@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.6 $ $Date: 2002/07/29 21:48:39 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.7 $ $Date: 2003/04/20 04:23:25 $ $Name:  $"
 
 #
 #  Override TARGETS variable so that only shared libraries
@@ -43,7 +43,7 @@ IMPORT_LIBRARY =
 PROGRAM        =
 
 ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
-    SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+    SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
 endif
 
 ifdef BUILD_IDG

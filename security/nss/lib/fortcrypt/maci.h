@@ -78,7 +78,7 @@ extern "C"
 
 #ifndef RETURN_TYPE
 #if defined( _WIN32 ) || defined( __WIN32__ )
-#define RETURN_TYPE  extern _declspec( dllimport ) int _cdecl
+#define RETURN_TYPE  extern __declspec( dllimport ) int _cdecl
 #elif defined( _WINDOWS ) || defined( _Windows )
 #define RETURN_TYPE  extern int _far _pascal
 #else
