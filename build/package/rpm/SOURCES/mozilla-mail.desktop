@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Mozilla Mail
+Comment=Read Mail with Mozilla
+Exec=/usr/bin/mozilla -mail
+Icon=mozilla-mail-icon.gif
+Terminal=0
+Type=Application
