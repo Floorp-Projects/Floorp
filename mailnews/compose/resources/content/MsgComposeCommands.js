@@ -32,6 +32,7 @@ var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
 var documentLoaded = false;
+var contentChanged = false;
 
 var Bundle = srGetStrBundle("chrome://messengercompose/locale/composeMsgs.properties"); 
 
@@ -333,6 +334,8 @@ function ComposeLoad()
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
         ComposeStartup();
     }
+	window.tryToClose=ComposeCanClose;
+
 }
 
 function ComposeUnload(calledFromExit)
@@ -449,36 +452,41 @@ function GenericSendMessage( msgType )
 				dump("failed to SetAttachments\n");
 			}
 		
-		    // Before sending the message, check what to do with HTML message, eventually abort.
-            action = DetermineHTMLAction();
-            if (action == msgCompSendFormat.AskUser)
-            {
-                var result = {action:msgCompSendFormat.PlainText, abort:false};
-	            window.openDialog("chrome://messengercompose/content/askSendFormat.xul",
-	                                "askSendFormatDialog", "chrome,modal",
-	                                result);
-	            if (result.abort)
-	                return;
-	             action = result.action;
-            }
-            switch (action)
-            {
-                case msgCompSendFormat.PlainText:
-                    msgCompFields.SetTheForcePlainText(true);
-                    msgCompFields.SetUseMultipartAlternativeFlag(false);
-                    break;
-                case msgCompSendFormat.HTML:
-                    msgCompFields.SetTheForcePlainText(false);
-                    msgCompFields.SetUseMultipartAlternativeFlag(false);
-                    break;
-                case msgCompSendFormat.Both:
-                    msgCompFields.SetTheForcePlainText(false);
-                    msgCompFields.SetUseMultipartAlternativeFlag(true);
-			        break;	    
-               default: dump("\###SendMessage Error: invalid action value\n"); return;
-            }
+			if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
+			{
+				// Before sending the message, check what to do with HTML message, eventually abort.
+				action = DetermineHTMLAction();
+				if (action == msgCompSendFormat.AskUser)
+				{
+					var result = {action:msgCompSendFormat.PlainText, abort:false};
+					window.openDialog("chrome://messengercompose/content/askSendFormat.xul",
+										"askSendFormatDialog", "chrome,modal",
+										result);
+					if (result.abort)
+						return;
+					 action = result.action;
+				}
+				switch (action)
+				{
+					case msgCompSendFormat.PlainText:
+						msgCompFields.SetTheForcePlainText(true);
+						msgCompFields.SetUseMultipartAlternativeFlag(false);
+						break;
+					case msgCompSendFormat.HTML:
+						msgCompFields.SetTheForcePlainText(false);
+						msgCompFields.SetUseMultipartAlternativeFlag(false);
+						break;
+					case msgCompSendFormat.Both:
+						msgCompFields.SetTheForcePlainText(false);
+						msgCompFields.SetUseMultipartAlternativeFlag(true);
+						break;	    
+				   default: dump("\###SendMessage Error: invalid action value\n"); return;
+				}
+			}
 			try {
 				msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
+				contentChanged = false;
+				msgCompose.bodyModified = false;
 			}
 			catch (ex) {
 				dump("failed to SendMsg\n");
@@ -745,6 +753,61 @@ function SetComposeWindowTitle(event)
 	}
 	/* i18N todo:  this should not be hard coded, either */
 	window.title = "Compose: "+ newTitle;
+}
+
+// Check for changes to document and allow saving before closing
+// This is hooked up to the OS's window close widget (e.g., "X" for Windows)
+function ComposeCanClose()
+{
+	// Returns FALSE only if user cancels save action
+	if (contentChanged || msgCompose.bodyModified)
+	{
+		var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+		commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+		if (commonDialogsService)
+		{
+            var result = {value:0};
+			commonDialogsService.UniversalDialog(
+				window,
+				null,
+				Bundle.GetStringFromName("saveDlogTitle"),
+				Bundle.GetStringFromName("saveDlogMessage"),
+				null,
+				Bundle.GetStringFromName("saveDlogSaveBtn"),
+				Bundle.GetStringFromName("saveDlogCancelBtn"),
+				Bundle.GetStringFromName("saveDlogDontSaveBtn"),
+				null,
+				null,
+				null,
+				{value:0},
+				{value:0},
+				"chrome://global/skin/question-icon.gif",
+				{value:"false"},
+				3,
+				0,
+				0,
+				result
+				);
+			if (result)
+			{
+				switch (result.value)
+				{
+					case 0: //Save
+						SaveAsDraft();
+						break;
+					case 1:	//Cancel
+						return false;
+					case 2:	//Don't Save
+						break;	
+				}	
+			}
+		}
+				
+		msgCompose.bodyModified = false;
+		contentChanged = false;
+	}
+
+	return true;
 }
 
 function CloseWindow()

@@ -33,6 +33,7 @@ Rights Reserved.
         xmlns:nc="http://home.netscape.com/NC-rdf#"
 		onunload="ComposeUnload()"
 		onload="ComposeLoad()"
+        onclose="return ComposeCanClose()"
 		width="640" height="480"
 		title="&msgComposeWindow.title;"
 		align="vertical"> 
@@ -394,7 +395,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<box align="horizontal">
 					<html:div>&fromAddr.label;</html:div>
 					<spring style="width:0.5em"/>
-					<html:select id="msgIdentity" flex="100%"/>
+					<html:select id="msgIdentity" flex="100%"
+						onchange="contentChanged=true;"/>
 				</box>
 				<spring style="height:0.5em"/>
 
@@ -408,6 +410,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				    <html:input id="msgSubject" type="text" flex="100%"
 						onkeyup="SetComposeWindowTitle(event.which);"
 						onkeydown="if (event.which == 9) contentWindow.focus();"
+						onchange="contentChanged=true;"
 						/>
 				</box>
 				<spring style="height:0.5em"/>
@@ -422,7 +425,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:8.5em; background-color:white; border-top:solid black 1px">
 					<tree id="attachmentBucket" flex="100%" style="width:0px"
-						onkeypress="if (event.which == 8) RemoveSelectedAttachment();">
+						onkeypress="if (event.which == 8) RemoveSelectedAttachment();"
+						onchange="contentChanged=true;">
 						<treecol style="width:100%"/>
 
 						<treechildren id="bucketBody">

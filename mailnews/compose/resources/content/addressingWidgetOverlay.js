@@ -234,9 +234,12 @@ function awAppendNewRow(setFocus)
 	
 	if ( body && treeitem1 )
 	{
+		var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).value;
+
 		awCopyNode(treeitem1, body, 0);
 		top.MAX_RECIPIENTS++;
 
+		awGetPopupElement(top.MAX_RECIPIENTS).value = lastRecipientType;
 		// focus on new input widget
 		if (setFocus)
 		{

@@ -46,7 +46,8 @@ Rights Reserved.
 					<treeitem>
 						<treerow>
 							<treecell allowevents="true" onclick="awNotAnEmptyArea(event)">
-								<html:select id="msgRecipientType#1">
+								<html:select id="msgRecipientType#1"
+									onchange="contentChanged=true;">
 									<html:option value="addr_to">&toAddr.label;</html:option>
 									<html:option value="addr_cc">&ccAddr.label;</html:option>
 									<html:option value="addr_bcc">&bccAddr.label;</html:option>
@@ -68,7 +69,7 @@ Rights Reserved.
 											onkeyup="if (event.which == 13)
 											{ AutoCompleteAddress(this); awReturnHit(this); }"
 											onkeydown="if (event.which == 9) awTabFromRecipient(this, event);"
-											onchange="awInputChanged(this);"
+											onchange="contentChanged=true; awInputChanged(this);"
 											/>
 							</treecell>
 						</treerow>
