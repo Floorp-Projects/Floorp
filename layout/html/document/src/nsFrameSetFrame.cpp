@@ -303,16 +303,17 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext)
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
   nsHTMLValue htmlVal;
-  PRInt32 intVal;
   nsIHTMLContent* content = nsnull;
   mContent->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (nsnull != content) {
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::border, htmlVal))) {
-      if (eHTMLUnit_Pixel == htmlVal.GetUnit()) {
+      nsHTMLUnit unit = htmlVal.GetUnit();
+      PRInt32 intVal = 0;
+      if (eHTMLUnit_Pixel == unit) {
         intVal = htmlVal.GetPixelValue();
-      } else {
+      } else if (eHTMLUnit_Integer == unit) {
         intVal = htmlVal.GetIntValue();
-      }
+      } 
       if (intVal < 0) {
         intVal = 0;
       }
