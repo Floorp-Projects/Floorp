@@ -20,9 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+MODULE=necko
+REQUIRES	= xpcom string pref nkcache mimetype intl exthandler
 include <$(DEPTH)/config/config.mak>
 
-MODULE=necko
 
 LIBRARY_NAME=nkhttp_s
 

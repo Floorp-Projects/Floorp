@@ -23,6 +23,7 @@
 MODULE = necko
 
 DEPTH = ..\..\..\..
+REQUIRES	= xpcom string mimetype
 
 LIBRARY_NAME=nkviewsource_s
 

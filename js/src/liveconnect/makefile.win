@@ -45,7 +45,8 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
-
+MODULE = java
+REQUIRES=xpcom js xpconnect
 include <$(DEPTH)/config/config.mak>
 
 !ifdef NSJVM
@@ -107,7 +108,11 @@ OBJS=                                       \
 #// install headers
 #//
 #//------------------------------------------------------------------------
+!ifdef MOZ_TRACK_MODULE_DEPS
+INSTALL_DIR=$(XPDIST)\include\$(MODULE)
+!else
 INSTALL_DIR=$(XPDIST)\include
+!endif
 INSTALL_FILE_LIST=	\
 	jsjava.h \
 !ifdef MOZ_OJI
@@ -131,9 +136,8 @@ JNI_GEN=                            \
 
 !endif
 
-MODULE = java
 EXPORTS =				       \
- 	$(JNI_GEN_DIR)\netscape_javascript_JSObject.h    \
+	$(JNI_GEN_DIR)\netscape_javascript_JSObject.h    \
 	$(NULL)
 
 

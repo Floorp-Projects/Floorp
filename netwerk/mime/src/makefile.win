@@ -18,9 +18,10 @@
 # Contributor(s): 
 
 DEPTH = ..\..\..
-include <$(DEPTH)/config/config.mak>
+MODULE = mimetype
+REQUIRES	= xpcom string necko pref
 
-MODULE = necko
+include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME = nkmime_s
 

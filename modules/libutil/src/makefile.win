@@ -29,9 +29,10 @@ CPPSRCS=stopwatch.cpp \
 CPP_OBJS=.\$(OBJDIR)\stopwatch.obj \
 	 $(NULL)
 
-C_OBJS=.\$(OBJDIR)\obs.obj 
+C_OBJS=.\$(OBJDIR)\obs.obj
 
-
+LINCS=-I$(DEPTH)\include
+REQUIRES=xpcom
 !include $(DEPTH)\config\rules.mak
 
 install::  $(LIBRARY)

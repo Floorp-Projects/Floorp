@@ -20,11 +20,13 @@
 #
 
 DEPTH = ..\..\..
-include <$(DEPTH)/config/config.mak>
 
 MODULE		= nkcache
 LIBRARY_NAME	= nkcache
 MODULE_NAME	= cacheservice
+REQUIRES	= xpcom string necko pref
+
+include <$(DEPTH)/config/config.mak>
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 

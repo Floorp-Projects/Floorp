@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 MODULE = necko
+REQUIRES	= xpcom string
 
 DEPTH=..\..\..
 

@@ -18,9 +18,10 @@
 # Contributor(s): 
 
 DEPTH = ..\..\..
-include <$(DEPTH)/config/config.mak>
-
 MODULE = necko
+REQUIRES	= xpcom string
+
+include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=nkconv_s
 

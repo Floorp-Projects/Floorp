@@ -60,7 +60,7 @@ DEFFILE=jpg$(MOZ_BIGS)$(VERSION_NUMBER).def
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//  -Zi -GM needed to compile mmx functions in assembly.
 LCFLAGS = -Zi -GM
-LINCS = -I$(PUBLIC)/java
+LINCS = -I$(XPDIST)\include
 
 #//------------------------------------------------------------------------
 #// 
@@ -96,8 +96,8 @@ JPEG_OBJS=        .\$(OBJDIR)\jdapimin.obj \
 		  .\$(OBJDIR)\jfdctflt.obj \
 		  .\$(OBJDIR)\jfdctfst.obj \
 		  .\$(OBJDIR)\jfdctint.obj \
- 		  .\$(OBJDIR)\jcapimin.obj \
-  	  	  .\$(OBJDIR)\jcparam.obj \
+		  .\$(OBJDIR)\jcapimin.obj \
+	  	  .\$(OBJDIR)\jcparam.obj \
 		  .\$(OBJDIR)\jcapistd.obj \
 		  .\$(OBJDIR)\jcmarker.obj \
 		  .\$(OBJDIR)\jcinit.obj \
@@ -109,7 +109,7 @@ JPEG_OBJS=        .\$(OBJDIR)\jdapimin.obj \
 		  .\$(OBJDIR)\jccolor.obj \
 		  .\$(OBJDIR)\jcphuff.obj \
 		  .\$(OBJDIR)\jcdctmgr.obj \
- 		  .\$(OBJDIR)\jcprepct.obj \
+		  .\$(OBJDIR)\jcprepct.obj \
 		  $(NULL)
 
 

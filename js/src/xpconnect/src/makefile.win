@@ -37,6 +37,7 @@ DEPTH=..\..\..\..
 MODULE=xpconnect
 LIBRARY_NAME=xpc$(MOZ_BITS)$(VERSION_NUMBER)
 MODULE_NAME=xpconnect
+REQUIRES=xpcom string js dom caps
 
 #PDBFILE		= $(DLLNAME).pdb
 #MAPFILE		= $(DLLNAME).map

@@ -36,7 +36,8 @@ DEPTH=..\..\..\..
 
 
 DIRS	= idl components
-
+MODULE=xpconnect_tests
+REQUIRES = xpcom string js xpconnect
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestXPC.exe
 PROGRAMS = $(PROG1)

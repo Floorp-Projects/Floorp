@@ -38,7 +38,8 @@ MAKE_OBJ_TYPE	= DLL
 DLLNAME		= xpctest
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 
-MODULE=xpconnect
+MODULE=xpconnect_tests
+REQUIRES=xpcom string xpconnect js timer
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 

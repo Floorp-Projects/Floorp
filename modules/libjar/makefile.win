@@ -33,6 +33,7 @@ DIRS=standalone
 MODULE=jar
 LIBRARY_NAME=jar$(VERSION_NUMBER)
 MODULE_NAME=nsJarModule
+REQUIRES= xpcom string caps zlib
 
 DEPTH=..\..
 

@@ -20,7 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-
+MODULE = mpfilelocprovider
+REQUIRES=xpcom string
 LIBRARY_NAME=mpfilelocprovider_s
 
 

@@ -19,9 +19,9 @@
 #
 # Contributor(s): 
 
-MODULE = mime
-
 DEPTH = ..\..\..
+MODULE = mimetype
+
 include <$(DEPTH)/config/config.mak>
 
 XPIDL_MODULE = mimetype

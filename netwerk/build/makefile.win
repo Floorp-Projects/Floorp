@@ -20,11 +20,13 @@
 # Contributor(s): 
 
 DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
 
 MODULE		= necko
 LIBRARY_NAME	= necko
 MODULE_NAME	= necko_core_and_primary_protocols
+REQUIRES	= xpcom string nkcache pref mimetype util jar locale intl zlib
+
+include <$(DEPTH)/config/config.mak>
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 

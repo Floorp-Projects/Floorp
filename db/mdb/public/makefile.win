@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..
 
-MODULE=msgmdb
+MODULE=mork
+XPIDL_MODULE=msgmdb
 
 XPIDLSRCS =							\
 			$(NULL)
