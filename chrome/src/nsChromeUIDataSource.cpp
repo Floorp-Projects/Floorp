@@ -399,14 +399,14 @@ nsChromeUIDataSource::OnMove(nsIRDFResource* aOldSource,
 nsresult
 NS_NewChromeUIDataSource(nsIRDFDataSource* aComposite, nsIRDFDataSource** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (! aResult)
+      return NS_ERROR_NULL_POINTER;
 
-    // No addrefs. The composite addrefs us already.
-    nsChromeUIDataSource* ChromeUIDataSource = new nsChromeUIDataSource(aComposite);
-    if (ChromeUIDataSource == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *aResult = ChromeUIDataSource;
-    return NS_OK;
+  // No addrefs. The composite addrefs us already.
+  nsChromeUIDataSource* ChromeUIDataSource = new nsChromeUIDataSource(aComposite);
+  if (ChromeUIDataSource == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+  *aResult = ChromeUIDataSource;
+  return NS_OK;
 }
