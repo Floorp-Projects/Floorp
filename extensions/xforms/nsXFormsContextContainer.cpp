@@ -177,7 +177,7 @@ nsXFormsContextContainer::CloneState(nsIDOMElement *aElement)
 
   nsAutoString modelID;
   PRInt32 position, size;
-  other->GetContext(modelID, getter_AddRefs(mContextNode), &position, &size);
+  other->GetContext(modelID, getter_AddRefs(mBoundNode), &position, &size);
 
   return NS_OK;
 }
