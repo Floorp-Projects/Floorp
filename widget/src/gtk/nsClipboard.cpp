@@ -188,7 +188,7 @@ void nsClipboard::Init(void)
   sSelTypes[TARGET_TEXT_PLAIN]    = gdk_atom_intern(kTextMime, FALSE);
   sSelTypes[TARGET_TEXT_XIF]      = gdk_atom_intern(kXIFMime, FALSE);
   sSelTypes[TARGET_TEXT_UNICODE]  = gdk_atom_intern(kUnicodeMime, FALSE);
-  sSelTypes[TARGET_UTF8]          = gdk_atom_intern("UTF8", FALSE);
+  sSelTypes[TARGET_UTF8]          = gdk_atom_intern("UTF8_STRING", FALSE);
   sSelTypes[TARGET_TEXT_HTML]     = gdk_atom_intern(kHTMLMime, FALSE);
   sSelTypes[TARGET_AOLMAIL]       = gdk_atom_intern(kAOLMailMime, FALSE);
   sSelTypes[TARGET_IMAGE_PNG]     = gdk_atom_intern(kPNGImageMime, FALSE);
