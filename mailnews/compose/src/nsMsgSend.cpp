@@ -85,6 +85,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 // defined in msgCompGlue.cpp
 extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
 extern PRBool INTL_stateful_charset(const char *charset);
+extern PRBool INTL_7bit_data_part(const char *charset, const char *string, const PRUint32 size);
 
 extern MimeEncoderData * MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 extern MimeEncoderData * MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
@@ -2404,8 +2405,26 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		just before writing it out, but that will require a fix that is less safe
 		and takes more memory. */
 	PR_FREEIF(m_attachment1_encoding);
-	if (INTL_stateful_charset(m_fields->GetCharacterSet()) || /* CS_JIS or CS_2022_KR */
-		  mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length))
+
+  // Check if the part contains 7 bit only. Re-label charset if necessary.
+  PRBool body_is_us_ascii;
+  if (INTL_stateful_charset(m_fields->GetCharacterSet())) {
+    body_is_us_ascii = INTL_7bit_data_part(m_fields->GetCharacterSet(), m_attachment1_body, m_attachment1_body_length); 
+  }
+  else {
+    body_is_us_ascii = mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length);
+    if (!body_is_us_ascii && !PL_strcasecmp(m_fields->GetCharacterSet(), "us-ascii")) {
+      // got 8 bit, re-label to Latin1
+      m_fields->SetCharacterSet("iso-8859-1", NULL);
+    }
+  }
+  if (body_is_us_ascii && PL_strcasecmp(m_fields->GetCharacterSet(), "us-ascii")) {
+    // 7 bit only, re-label to us-ascii
+    m_fields->SetCharacterSet("us-ascii", NULL);
+  }
+
+	if (INTL_stateful_charset(m_fields->GetCharacterSet()) ||
+		  body_is_us_ascii)
 		m_attachment1_encoding = PL_strdup (ENCODING_7BIT);
 	else if (mime_use_quoted_printable_p)
 		m_attachment1_encoding = PL_strdup (ENCODING_QUOTED_PRINTABLE);
