@@ -268,7 +268,7 @@ const nsAReadableString& CStartToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
-      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
+      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID).get());
     }
   }
   return mTextValue;
@@ -455,7 +455,7 @@ const nsAReadableString& CEndToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
-      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
+      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID).get());
     }
   }
   return mTextValue;
@@ -2273,7 +2273,7 @@ const char* GetTagName(PRInt32 aTag) {
       return gUserdefined;
     else return 0;
   }
-  return result;
+  return result.get();
 }
 
 

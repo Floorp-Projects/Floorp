@@ -31,7 +31,7 @@ nsParserService::nsParserService() : mEntries(0)
 nsParserService::~nsParserService()
 {
   nsObserverEntry *entry = nsnull;
-  while(entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.Pop())) {
+  while( (entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.Pop())) ) {
     NS_RELEASE(entry);
   }
 }
@@ -60,7 +60,7 @@ nsParserService::HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const
 NS_IMETHODIMP 
 nsParserService::HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const
 {
-  aTag.AssignWithConversion( nsHTMLTags::GetStringValue((nsHTMLTag)aId) );
+  aTag.AssignWithConversion( nsHTMLTags::GetStringValue((nsHTMLTag)aId).get() );
   return NS_OK;
 }
   
