@@ -1,9 +1,10 @@
 #import <Cocoa/Cocoa.h>
 #import <PreferencePanes/NSPreferencePane.h>
+#import "PreferencePaneBase.h"
 
 class nsIPref;
 
-@interface OrgMozillaChimeraPreferencePrivacy : NSPreferencePane
+@interface OrgMozillaChimeraPreferencePrivacy : PreferencePaneBase
 {
   IBOutlet id mCookies;
   IBOutlet NSButton* mPromptForCookie;
@@ -11,15 +12,20 @@ class nsIPref;
   IBOutlet NSButton* mEnableJS;
   IBOutlet NSButton* mEnableJava;
   
-  nsIPref* mPrefService;					// strong ref, but can't use comPtr here
+  IBOutlet NSButton* mLeaveEncrypted;
+  IBOutlet NSButton* mLoadLowGrade;
+  IBOutlet NSButton* mViewMixed;  
 }
 
 -(IBAction) clearCookies:(id)aSender;
--(IBAction) clearDiskCache:(id)aSender;
 
 -(IBAction) clickPromptForCookie:(id)sender;
 -(IBAction) clickEnableCookies:(id)sender;
 -(IBAction) clickEnableJS:(id)sender;
 -(IBAction) clickEnableJava:(id)sender;
+
+-(IBAction) clickEnableLeaveEncrypted:(id)sender;
+-(IBAction) clickEnableLoadLowGrade:(id)sender;
+-(IBAction) clickEnableViewMixed:(id)sender;
 
 @end

@@ -10,10 +10,12 @@
         {
             ACTIONS = {
                 clearCookies = id; 
-                clearDiskCache = id; 
                 clickEnableCookies = id; 
                 clickEnableJS = id; 
                 clickEnableJava = id; 
+                clickEnableLeaveEncrypted = id; 
+                clickEnableLoadLowGrade = id; 
+                clickEnableViewMixed = id; 
                 clickPromptForCookie = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferencePrivacy; 
@@ -22,7 +24,10 @@
                 mCookies = id; 
                 mEnableJS = NSButton; 
                 mEnableJava = NSButton; 
+                mLeaveEncrypted = NSButton; 
+                mLoadLowGrade = NSButton; 
                 mPromptForCookie = NSButton; 
+                mViewMixed = NSButton; 
             }; 
             SUPERCLASS = NSPreferencePane; 
         }

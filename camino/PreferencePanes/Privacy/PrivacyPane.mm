@@ -4,7 +4,11 @@
 #include "nsIServiceManagerUtils.h"
 #include "nsIPref.h"
 #include "nsCCookieManager.h"
-#include "nsICacheService.h"
+
+// prefs for showing security dialogs
+#define WEAK_SITE_PREF       "security.warn_entering_weak"
+#define LEAVE_SITE_PREF      "security.warn_leaving_secure"
+#define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 
 @implementation OrgMozillaChimeraPreferencePrivacy
 
@@ -14,21 +18,6 @@
   [super dealloc];
 }
 
-- (id) initWithBundle:(NSBundle *) bundle
-{
-  self = [super initWithBundle:bundle] ;
-  
-  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
-  NS_ASSERTION(prefService, "Could not get pref service, pref panel left uninitialized");
-  mPrefService = prefService.get();
-  NS_IF_ADDREF(mPrefService);
-  
-  return self;
-}
-
-- (void)awakeFromNib
-{
-}
 
 - (void)mainViewDidLoad
 {
@@ -48,6 +37,8 @@
   mPrefService->GetBoolPref("network.cookie.warnAboutCookies", &warnAboutCookies);
   [mPromptForCookie setState:(warnAboutCookies ? NSOnState : NSOffState)];
   
+  // Set initial value on Java/JavaScript checkboxes
+  
   PRBool jsEnabled = PR_TRUE;
   mPrefService->GetBoolPref("javascript.enabled", &jsEnabled);
   [mEnableJS setState:(jsEnabled ? NSOnState : NSOffState)];
@@ -55,6 +46,20 @@
   PRBool javaEnabled = PR_TRUE;
   mPrefService->GetBoolPref("security.enable_java", &javaEnabled);
   [mEnableJava setState:(javaEnabled ? NSOnState : NSOffState)];
+  
+  // Set initial value on Security checkboxes
+  
+  PRBool leaveEncrypted = PR_TRUE;
+  mPrefService->GetBoolPref(LEAVE_SITE_PREF, &leaveEncrypted);
+  [mLeaveEncrypted setState:(leaveEncrypted ? NSOnState : NSOffState)];
+  
+  PRBool loadLowGrade = PR_TRUE;
+  mPrefService->GetBoolPref(WEAK_SITE_PREF, &loadLowGrade);
+  [mLoadLowGrade setState:(loadLowGrade ? NSOnState : NSOffState)];
+
+  PRBool viewMixed = PR_TRUE;
+  mPrefService->GetBoolPref(MIXEDCONTENT_PREF, &viewMixed);
+  [mViewMixed setState:(viewMixed ? NSOnState : NSOffState)];
 }
 
 //
@@ -70,28 +75,13 @@
 }
 
 //
-// clearDiskCache:
-//
-// Clear the user's disk cache
-//
--(IBAction) clearDiskCache:(id)aSender
-{
-  nsCOMPtr<nsICacheService> cacheServ ( do_GetService("@mozilla.org/network/cache-service;1") );
-  if ( cacheServ )
-    cacheServ->EvictEntries(nsICache::STORE_ON_DISK);
-}
-
-//
 // clickPromptForCookie:
 //
 // Set if the user should be prompted for each cookie
 //
 -(IBAction) clickPromptForCookie:(id)sender
 {
-  if ( !mPrefService )
-    return;
-  mPrefService->SetBoolPref("network.cookie.warnAboutCookies",
-                            [mPromptForCookie state] == NSOnState ? PR_TRUE : PR_FALSE);
+  [self setPref:"network.cookie.warnAboutCookies" toBoolean:[sender state] == NSOnState];
 }
 
 //
@@ -114,10 +104,7 @@
 //
 -(IBAction) clickEnableJS:(id)sender
 {
-  if ( !mPrefService )
-    return;
-  mPrefService->SetBoolPref("javascript.enabled",
-                            [mEnableJS state] == NSOnState ? PR_TRUE : PR_FALSE);
+  [self setPref:"javascript.enabled" toBoolean:[sender state] == NSOnState];
 }
 
 //
@@ -127,10 +114,30 @@
 //
 -(IBAction) clickEnableJava:(id)sender
 {
-  if ( !mPrefService )
-    return;
-  mPrefService->SetBoolPref("security.enable_java",
-                            [mEnableJava state] == NSOnState ? PR_TRUE : PR_FALSE);
+  [self setPref:"security.enable_java" toBoolean:[sender state] == NSOnState];
+}
+
+//
+// clickEnableViewMixed:
+// clickEnableLoadLowGrade:
+// clickEnableLeaveEncrypted:
+//
+// Set prefs for warnings/alerts wrt secure sites
+//
+
+-(IBAction) clickEnableViewMixed:(id)sender
+{
+  [self setPref:MIXEDCONTENT_PREF toBoolean:[sender state] == NSOnState];
+}
+
+-(IBAction) clickEnableLoadLowGrade:(id)sender
+{
+  [self setPref:WEAK_SITE_PREF toBoolean:[sender state] == NSOnState];
+}
+
+-(IBAction) clickEnableLeaveEncrypted:(id)sender
+{
+  [self setPref:LEAVE_SITE_PREF toBoolean:[sender state] == NSOnState];
 }
 
 @end

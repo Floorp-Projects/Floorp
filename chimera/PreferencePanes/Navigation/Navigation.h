@@ -51,4 +51,6 @@
 - (NSString*)getSystemHomePage;
 - (NSString*)getCurrentHomePage;
 
+-(IBAction) clearDiskCache:(id)aSender;
+
 @end
