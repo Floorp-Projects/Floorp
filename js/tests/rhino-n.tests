@@ -20,6 +20,8 @@ ecma_3/String/regress-104375.js
 ecma_3/RegExp/regress-105972.js
 #See bug number 104077
 js1_5/Regress/regress-104077.js
+#See bug number 120194
+ecma/TypeConversion/9.5-2.js
 #
 # Unfixable bugs:
 #
