@@ -287,8 +287,7 @@ content/xbl/builtin/Makefile
 content/xbl/builtin/unix/Makefile
 content/xbl/builtin/win/Makefile
 content/xsl/Makefile
-content/xsl/document/Makefile
-content/xsl/document/src/Makefile
+content/xsl/public/Makefile
 content/shared/Makefile
 content/shared/public/Makefile
 content/shared/src/Makefile
