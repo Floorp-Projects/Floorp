@@ -455,8 +455,8 @@ private:
     nsXULAttributes*       mAttributes;         // [OWNER]
     nsVoidArray*		   mBroadcastListeners; // [WEAK]
     nsIDOMXULElement*      mBroadcaster;        // [WEAK]
-    nsIController*         mController;         // [OWNER]
-    nsCOMPtr<nsIRDFCompositeDataSource> mDatabase; // [OWNER]    
+    nsCOMPtr<nsIController>             mController; // [OWNER]
+    nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;   // [OWNER]    
 
     // An unreferenced bare pointer to an aggregate that can implement
     // element-specific APIs.
@@ -557,7 +557,6 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mAttributes(nsnull),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
-      mController(nsnull),
       mInnerXULElement(nsnull),
       mLazyState(0)
 {
@@ -649,8 +648,6 @@ RDFElementImpl::~RDFElementImpl()
             RemoveBroadcastListener("*", xulListener->mListener);
         }
     }
-
-    NS_IF_RELEASE(mController);
 
     // Delete the aggregated interface, if one exists.
     delete mInnerXULElement;
@@ -3496,17 +3493,15 @@ RDFElementImpl::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 RDFElementImpl::GetController(nsIController** aResult)
 {
-  NS_IF_ADDREF(mController);
   *aResult = mController;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 RDFElementImpl::SetController(nsIController* aController)
 {
-  NS_IF_RELEASE(mController);
   mController = aController;
-  NS_IF_ADDREF(mController);
   return NS_OK;
 }
 
