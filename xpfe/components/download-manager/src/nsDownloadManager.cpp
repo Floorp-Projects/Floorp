@@ -544,6 +544,16 @@ nsDownloadManager::CancelDownload(const char* aPersistentDescriptor)
     if (NS_FAILED(rv)) return rv;
   }
   
+  // if there's a progress dialog open for the item,
+  // we have to notify it that we're cancelling
+  nsCOMPtr<nsIProgressDialog> dialog;
+  internalDownload->GetDialog(getter_AddRefs(dialog));
+  if (dialog) {
+    observer = do_QueryInterface(dialog);
+    rv = observer->Observe(download, "oncancel", nsnull);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
   return rv;
 }
 
