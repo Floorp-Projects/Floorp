@@ -57,9 +57,9 @@ function Startup()
       if (!pref.GetBoolPref("wallet.enabled")) {
         var element;
         element = document.getElementById("nopreview");
-        element.setAttribute("style","display: none;" );
+        element.setAttribute("hidden", "true");
         element = document.getElementById("nocapture");
-        element.setAttribute("style","display: none;" );
+        element.setAttribute("hidden", "true");
       }
     } catch(e) {
       dump("wallet.enabled pref is missing from all.js");
@@ -72,15 +72,15 @@ function Startup()
   var tab = window.arguments[0];
   if (tab == "S") {
     element = document.getElementById("signonTab");
-    element.setAttribute("selected","true" );
+    element.setAttribute("hidden", "true");
     element = document.getElementById("panel");
     element.setAttribute("index","0" );
 
     // hide non-used tabs
     element = document.getElementById("nopreview");
-    element.setAttribute("style", "display: none");
+    element.setAttribute("hidden", "true");
     element = document.getElementById("nocapture");
-    element.setAttribute("style", "display: none");
+    element.setAttribute("hidden", "true");
   } else if (tab == "W") {
     element = document.getElementById("signonviewer");
     element.setAttribute("title", element.getAttribute("alttitle"));
@@ -89,9 +89,9 @@ function Startup()
     element = document.getElementById("nopreview");
     element.selected = true;
     element = document.getElementById("signonTab");
-    element.setAttribute("style", "display: none");
+    element.setAttribute("hidden", "true");
     element = document.getElementById("signonSitesTab");
-    element.setAttribute("style", "display: none");
+    element.setAttribute("hidden", "true");
 
     element = document.getElementById("panel");
     element.setAttribute("index","2" );

@@ -70,15 +70,11 @@
 	    <parameter name="aDir"/>
 	    <body>
 	    <![CDATA[
-		  var next = null;
-	      if (aDir == -1) 
-		  	next = this.selectedTab.previousSibling;
-	      else if (aDir == 1) 
-		  	next = this.selectedTab.nextSibling;
-		  if (next) {
-		    this.selectedTab = next;
-		    next.focus();
-		  }
+              var next = this.selectedTab[aDir == -1 ? "previousSibling" : "nextSibling"];
+              if (next && !next.getAttribute("hidden")) {
+                this.selectedTab = next;
+                next.focus();
+              }
 	    ]]>
 	    </body>
       </method>
