@@ -576,6 +576,7 @@ function cmdAblePlugin(e)
                 display(getMsg(MSG_CANT_DISABLE, e.plugin.id));
                 return;
             }
+            e.plugin.prefs["enabled"] = false;
         }
         else if (!("disablePlugin" in e.plugin.scope))
         {
@@ -588,7 +589,6 @@ function cmdAblePlugin(e)
         }
 
         e.plugin.enabled = false;
-        e.plugin.prefs["enabled"] = false;
     }
     else
     {
@@ -606,11 +606,11 @@ function cmdAblePlugin(e)
                 e.plugin.prefs["enabled"] = false;
                 return;
             }
+            e.plugin.prefs["enabled"] = true;
         }
         else if (!("enablePlugin" in e.plugin.scope))
         {
             display(getMsg(MSG_CANT_ENABLE, e.plugin.id));
-            e.plugin.prefs["enabled"] = false;
             return;
         }
         else
@@ -619,7 +619,6 @@ function cmdAblePlugin(e)
         }
 
         e.plugin.enabled = true;
-        e.plugin.prefs["enabled"] = true;
     }
 }
 
