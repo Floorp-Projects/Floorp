@@ -36,7 +36,7 @@
 
 #include "nsISupports.idl"
 
-interface nsICookie;
+interface nsICookie2;
 interface nsIURI;
 interface nsIChannel;
 
@@ -102,19 +102,12 @@ interface nsICookiePermission : nsISupports
    *        the corresponding to aURI
    * @param aCookie
    *        the cookie being added to the cookie database
-   * @param aNumCookiesFromHost
-   *        the number of cookies this host already has set
-   * @param aChangingCookie
-   *        PR_TRUE if the cookie is being modified; otherwise, the cookie
-   *        is new
    *
    * @return true if the cookie can be set.
    */
   boolean canSetCookie(in nsIURI     aURI,
                        in nsIChannel aChannel,
-                       in nsICookie  aCookie,
-                       in long       aNumCookiesFromHost,
-                       in boolean    aChangingCookie);
+                       in nsICookie2 aCookie);
 };
 
 %{ C++

@@ -106,7 +106,6 @@ class nsCookieService : public nsICookieService
     PRBool                        GetExpiry(nsCookieAttributes &aCookie, nsInt64 aServerTime, nsInt64 aCurrentTime, nsCookieStatus aStatus);
     void                          RemoveAllFromMemory();
     void                          RemoveExpiredCookies(nsInt64 aCurrentTime, PRInt32 &aOldestPosition);
-    PRBool                        FindCookiesFromHost(nsCookie *aCookie, PRUint32 &aCountFromHost, nsInt64 aCurrentTime);
     PRBool                        FindPosition(nsCookie *aCookie, PRInt32 &aInsertPosition, PRInt32 &aDeletePosition, nsInt64 aCurrentTime);
     void                          UpdateCookieIcon();
 
