@@ -88,6 +88,8 @@ nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
     : mListener(listener)
     , mCallbacks(callbacks)
     , mConnection(nsnull)
+    , mReqUploadStreamOffset(0)
+    , mReqUploadStreamLength(0)
     , mResponseHead(nsnull)
     , mContentLength(-1)
     , mContentRead(0)
@@ -173,6 +175,10 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
 #endif
 
     mReqUploadStream = requestBody;
+    if (mReqUploadStream) {
+        mReqUploadStream->Available(&mReqUploadStreamLength);
+        mReqUploadStreamOffset = 0;
+    }
 
     // If the request body does not include headers or if there is no request
     // body, then we must add the header/body separator manually.
@@ -231,8 +237,17 @@ nsHttpTransaction::OnDataWritable(nsIOutputStream *os)
     if (n != 0)
         return os->WriteFrom(mReqHeaderStream, NS_HTTP_BUFFER_SIZE, &n);
 
-    if (mReqUploadStream)
-        return os->WriteFrom(mReqUploadStream, NS_HTTP_BUFFER_SIZE, &n);
+    if (mReqUploadStream) {
+        nsresult rv = os->WriteFrom(mReqUploadStream, NS_HTTP_BUFFER_SIZE, &n);
+        if (NS_SUCCEEDED(rv)) {
+            mReqUploadStreamOffset += n;
+            if (mProgressSink)
+                mProgressSink->OnProgress(nsnull, nsnull,
+                                          mReqUploadStreamOffset,
+                                          mReqUploadStreamLength);
+        }
+        return rv;
+    }
 
     return NS_BASE_STREAM_CLOSED;
 }
@@ -344,6 +359,7 @@ nsHttpTransaction::Restart()
     seekable = do_QueryInterface(mReqUploadStream);
     if (seekable)
         seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    mReqUploadStreamOffset = 0;
 
     // just in case the connection is holding the last reference to us...
     NS_ADDREF_THIS();
