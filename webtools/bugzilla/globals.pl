@@ -91,7 +91,7 @@ sub ConnectToDatabase {
             $::dbwritesallowed = 0;
         }
 	$::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
-            || die "Can't connect to database server.\n";
+	    || die $DBI::errstr;
     }
 }
 
