@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+*/
+#include "nsISupports.idl"
+#include "domstubs.idl"
+#include "nsIPrompt.idl"
+#include "nsIWebProgressListener.idl"
+
+interface nsIDOMWindowInternal;
+
+[scriptable, uuid(2080d500-149e-11d5-9daa-e276a42bc27c)]
+interface nsIMsgComposeProgress: nsIWebProgressListener {
+
+  /* Open the progress widget, usually it's a dialog
+     you can specify the subject of the message,
+     and specify if it a save or send operation
+  */
+  void openProgress(in nsIDOMWindowInternal parent, in wstring subject, in boolean itsASaveOperation);
+  
+  /* Close the progress widget, usually it's a dialog */
+  void closeProgress(in boolean forceClose);
+  
+  /* Register a Web Progress Listener */
+  void registerListener(in nsIWebProgressListener listener);
+
+  /* Unregister a Web Progress Listener */
+  void unregisterListener(in nsIWebProgressListener listener);
+  
+  /* Retrive the prompter, needed to display modal dialog on top of progress dialog */
+  nsIPrompt getPrompter();
+
+  /* Indicated if the user asked to cancel the current process */
+  attribute boolean processCanceledByUser;
+};
+
+

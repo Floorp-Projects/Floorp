@@ -1,0 +1,15 @@
+<!--LOCALIZATION NOTE sendprogress.dtd Main UI for Send Message Progress Dialog -->
+<!ENTITY sendWindow.title "Sending Messages"> 
+<!ENTITY titlePrefixSave "Saving Messages -"> 
+<!ENTITY titlePrefixSend "Sending Messages -"> 
+<!ENTITY status   "Status:"> 
+<!ENTITY progress "Progress:">
+
+<!ENTITY keepProgressDialogUpMsg.label "Keep this window open after the message is successfully sent."> 
+
+<!ENTITY dialogCancel.label "Cancel"> 
+<!ENTITY dialogClose.label "Close">
+
+
+<!ENTITY messageSent "Your message has been sent">
+<!ENTITY messageSaved "Your message has been saved">
