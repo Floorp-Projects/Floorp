@@ -187,6 +187,16 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     }
     else if (mMode == modeSave) {
       result = ::GetSaveFileName(&ofn);
+      if (!result) {
+        // Error, find out what kind.
+        DWORD error = ::GetLastError();
+        if (error == ERROR_INVALID_PARAMETER) {
+          // Parameter error; probably the default file name is too long.
+          // Try again, without a starting file name.
+          ofn.lpstrFile[0] = 0;
+          result = ::GetSaveFileName(&ofn);
+        }
+      }
     }
     else {
       NS_ASSERTION(0, "Only load, save and getFolder are supported modes"); 
