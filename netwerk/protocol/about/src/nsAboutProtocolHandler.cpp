@@ -130,13 +130,14 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     if (NS_FAILED(rv)) return rv;
     
     // look up a handler to deal with "whatStr"
-    nsAutoString progID(NS_ABOUT_MODULE_PROGID_PREFIX);
-    nsAutoString what(whatStr);
+    nsAutoString progID; progID.AssignWithConversion(NS_ABOUT_MODULE_PROGID_PREFIX);
+    nsAutoString what; what.AssignWithConversion(whatStr);
     nsCRT::free(whatStr);
 
     // only take up to a question-mark if there is one:
     PRInt32 amt = what.Find("?");
-    progID.Append(what, amt);   // if amt == -1, take it all
+      // STRING USE WARNING: this use needs to be examined -- scc
+    progID.Append(what.GetUnicode(), amt);   // if amt == -1, take it all
     
     char* progIDStr = progID.ToNewCString();
     if (progIDStr == nsnull)
