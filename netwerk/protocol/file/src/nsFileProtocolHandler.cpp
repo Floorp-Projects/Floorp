@@ -35,29 +35,18 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFileProtocolHandler::nsFileProtocolHandler()
-    : mPool(nsnull), mSuspended(nsnull)
 {
     NS_INIT_REFCNT();
 }
 
-#define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (8*1024)
-
 nsresult
 nsFileProtocolHandler::Init()
 {
-    nsresult rv;
-    rv = NS_NewThreadPool(&mPool, NS_FILE_TRANSPORT_WORKER_COUNT,
-                          NS_FILE_TRANSPORT_WORKER_COUNT,
-                          NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
-    return rv;
+    return NS_OK;
 }
 
 nsFileProtocolHandler::~nsFileProtocolHandler()
 {
-    // this will wait for all outstanding requests to be processed, then
-    // join with the worker threads, and finally free the pool:
-    NS_IF_RELEASE(mPool);
-    NS_IF_RELEASE(mSuspended);
 }
 
 NS_IMPL_ISUPPORTS2(nsFileProtocolHandler,

@@ -56,10 +56,6 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
-
-protected:
-    nsIThreadPool*      mPool;
-    nsISupportsArray*   mSuspended;
 };
 
 #endif /* nsFileProtocolHandler_h___ */
