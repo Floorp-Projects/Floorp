@@ -742,6 +742,20 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     // Mmm, we have an editor already. That means that someone loaded more than
     // one URL into the content area. Let's tear down what we have, and rip 'em a
     // new one.
+
+    // first, unregister the selection listener, if there was one
+    if (mStateMaintainer)
+    {
+      nsCOMPtr<nsIDOMSelection> domSelection;
+      // using a scoped result, because we don't really care if this fails
+      nsresult result = GetEditorSelection(getter_AddRefs(domSelection));
+      if (NS_SUCCEEDED(result) && domSelection)
+      {
+        domSelection->RemoveSelectionListener(mStateMaintainer);
+        NS_IF_RELEASE(mStateMaintainer);
+      }
+    }
+    
     mEditorType = eUninitializedEditorType;
     mEditor = 0;  // clear out the nsCOMPtr
     
