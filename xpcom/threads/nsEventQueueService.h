@@ -24,30 +24,25 @@
 #include "nsHashtable.h"
 
 class nsIEventQueue;
+class EventQueueEntry;
 
-////////////////////////////////////////////////////////////////////////////////
-
-/* This class is used with the EventQueueEntries to allow us to nest
-   event queues */
-class EventQueueStack
-{
+// because available enumerators can't handle deletions during enumeration
+class EventQueueEntryEnumerator {
 public:
-	EventQueueStack(EventQueueStack* next = NULL);
-	~EventQueueStack();
-
-	nsIEventQueue* GetEventQueue();
-	EventQueueStack* GetNext();
-  void SetNext(EventQueueStack* aStack);
-
+  EventQueueEntryEnumerator();
+  virtual ~EventQueueEntryEnumerator();
+  void             Reset(EventQueueEntry *aStart);
+  EventQueueEntry *Get(void);
+  void             Skip(EventQueueEntry *aSkip);
 private:
-	nsIEventQueue* mEventQueue;
-	EventQueueStack* mNextQueue;
+  EventQueueEntry *mCurrent;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEventQueueServiceImpl : public nsIEventQueueService
 {
+friend EventQueueEntry;
 public:
   nsEventQueueServiceImpl();
   virtual ~nsEventQueueServiceImpl();
@@ -75,9 +70,13 @@ public:
 
 private:
   NS_IMETHOD CreateEventQueue(PRThread *aThread);
+  void       AddEventQueueEntry(EventQueueEntry *aEntry);
+  void       RemoveEventQueueEntry(EventQueueEntry *aEntry);
 
-  nsHashtable* mEventQTable;
-  PRMonitor*   mEventQMonitor;
+  nsHashtable     *mEventQTable;
+  EventQueueEntry *mBaseEntry;
+  PRMonitor       *mEventQMonitor;
+  EventQueueEntryEnumerator mEnumerator;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -38,6 +38,10 @@ public:
     id = aID;
   }
   
+  ThreadKey(const ThreadKey &aKey) {
+    id = aKey.id;
+  }
+  
   PRUint32 HashValue(void) const {
     return (PRUint32)id;
   }
@@ -63,7 +67,7 @@ public:
 class EventQueueEntry : public nsISupports 
 {
 public:
-  EventQueueEntry();
+  EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &aKey);
   virtual ~EventQueueEntry();
 
   // nsISupports interface...
@@ -74,23 +78,41 @@ public:
   
   nsresult       AddQueue(void);
   void           RemoveQueue(nsIEventQueue *aQueue); // queue goes dark, and is released
+  ThreadKey     *TheThreadKey(void)
+                   { return &mHashKey; }
 
-private: 
-  nsIEventQueue *mQueue;
+  // methods for accessing the linked list of event queue entries
+  void           Link(EventQueueEntry *aAfter);
+  void           Unlink(void);
+  EventQueueEntry *Next(void)
+                   { return mNextEntry; }
+
+private:
+  nsIEventQueue           *mQueue;
+  ThreadKey                mHashKey;
+  nsEventQueueServiceImpl *mService; // weak reference, obviously
+  EventQueueEntry         *mPrevEntry,
+                          *mNextEntry;
 };
 
 /* nsISupports interface implementation... */
 NS_IMPL_ISUPPORTS0(EventQueueEntry)
 
-EventQueueEntry::EventQueueEntry()
+EventQueueEntry::EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &aKey) :
+                 mHashKey(aKey), mPrevEntry(0), mNextEntry(0)
 {
   NS_INIT_REFCNT();
+  mService = aService;
   MakeNewQueue(&mQueue);
   NS_ASSERTION(mQueue, "EventQueueEntry constructor failed");
+  if (mService)
+    mService->AddEventQueueEntry(this);
 }
 
 EventQueueEntry::~EventQueueEntry()
 {
+  if (mService)
+    mService->RemoveEventQueueEntry(this);
   NS_IF_RELEASE(mQueue);
 }
 
@@ -125,7 +147,7 @@ nsresult EventQueueEntry::MakeNewQueue(nsIEventQueue **aQueue)
       NS_RELEASE(queue);
       queue = 0;  // redundant, but makes me feel better
     }
-  }
+  }	
   *aQueue = queue;
   return rv;
 }
@@ -158,7 +180,68 @@ void EventQueueEntry::RemoveQueue(nsIEventQueue *aQueue)
   // everyone else lets go
 }
 
+// this is an apology for symmetry breaking between EventQueueEntry and nsEventQueueServiceImpl.
+// the latter handles both sides of the dual data structure containing the former, those being
+// nsEventQueueServiceImpl's hashtable and linked list, while the former contains the code
+// for handling linked lists, on which the latter relies. if that was complicated, it's because
+// it is, and thus the apology.
+void EventQueueEntry::Link(EventQueueEntry *aAfter)
+{
+  if (aAfter) {
+    mNextEntry = aAfter->mNextEntry;
+    if (mNextEntry)
+      mNextEntry->mPrevEntry = this;
+    aAfter->mNextEntry = this;
+  } else
+    mNextEntry = 0;
+  mPrevEntry = aAfter;
+}
+
+void EventQueueEntry::Unlink(void)
+{
+  if (mNextEntry)
+    mNextEntry->mPrevEntry = mPrevEntry;
+  if (mPrevEntry)
+    mPrevEntry->mNextEntry = mNextEntry;
+  mNextEntry = 0;
+  mPrevEntry = 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+EventQueueEntryEnumerator::EventQueueEntryEnumerator()
+{
+  mCurrent = 0;
+}
+
+EventQueueEntryEnumerator::~EventQueueEntryEnumerator()
+{
+}
+
+void EventQueueEntryEnumerator::Reset(EventQueueEntry *aStart)
+{
+  mCurrent = aStart;
+}
+
+void EventQueueEntryEnumerator::Skip(EventQueueEntry *aSkip)
+{
+  if (mCurrent == aSkip)
+    mCurrent = aSkip->Next();
+}
+
+EventQueueEntry *
+EventQueueEntryEnumerator::Get(void)
+{
+  EventQueueEntry *rtnval = mCurrent;
+  if (mCurrent)
+    mCurrent = mCurrent->Next();
+  return rtnval;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/* TODO: unify the dual, redundant data structures holding EventQueueEntrys:
+   they're held simultaneously in both a hashtable and a linked list.
+*/
 
 nsEventQueueServiceImpl::nsEventQueueServiceImpl()
 {
@@ -166,23 +249,18 @@ nsEventQueueServiceImpl::nsEventQueueServiceImpl()
 
   mEventQTable   = new nsHashtable(16);
   mEventQMonitor = PR_NewMonitor();
-}
-
-static PRBool
-DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
-{
-  EventQueueEntry* evQueueEntry = (EventQueueEntry*)aData;
-
-  if (NULL != evQueueEntry) {
-    delete evQueueEntry;
-  }
-  return PR_TRUE;
+  mBaseEntry     = 0;
 }
 
 nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
 {
-  // Destroy any remaining PLEventQueue's still in the hash table...
-  mEventQTable->Enumerate(DeleteEntry);
+  EventQueueEntry *entry;
+
+  // Destroy any remaining PLEventQueues
+  mEnumerator.Reset(mBaseEntry);
+  while ((entry = mEnumerator.Get()) != 0)
+    delete entry;
+
   delete mEventQTable;
 
   PR_DestroyMonitor(mEventQMonitor);
@@ -242,13 +320,11 @@ nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread)
   /* create only one event queue chain per thread... */
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
   if (NULL == evQueueEntry) {
-    evQueueEntry = new EventQueueEntry();  
+    evQueueEntry = new EventQueueEntry(this, key);  
     if (NULL == evQueueEntry) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
     }
-
-    mEventQTable->Put(&key, evQueueEntry);
   }
   NS_ADDREF(evQueueEntry);
 
@@ -256,6 +332,31 @@ done:
   // Release the EventQ lock...
   PR_ExitMonitor(mEventQMonitor);
   return rv;
+}
+
+void
+nsEventQueueServiceImpl::AddEventQueueEntry(EventQueueEntry *aEntry)
+{
+  EventQueueEntry *last, *current;
+
+  // add to the hashtable, then to the end of the linked list
+  mEventQTable->Put(aEntry->TheThreadKey(), aEntry);
+  if (mBaseEntry) {
+    for (last = 0, current = mBaseEntry; current; current = current->Next())
+      last = current;
+    aEntry->Link(last);
+  } else
+    mBaseEntry = aEntry;
+}
+
+void
+nsEventQueueServiceImpl::RemoveEventQueueEntry(EventQueueEntry *aEntry)
+{
+  mEventQTable->Remove(aEntry->TheThreadKey());
+  if (mBaseEntry == aEntry)
+    mBaseEntry = aEntry->Next();
+  mEnumerator.Skip(aEntry);
+  aEntry->Unlink();
 }
 
 NS_IMETHODIMP
@@ -269,17 +370,10 @@ nsEventQueueServiceImpl::DestroyThreadEventQueue(void)
   PR_EnterMonitor(mEventQMonitor);
 
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
-  if (NULL != evQueueEntry) {
-    nsrefcnt refcnt;
-
-    NS_RELEASE2(evQueueEntry, refcnt);
-    // Remove the entry from the hash table if this was the last reference...
-    if (0 == refcnt) {
-      mEventQTable->Remove(&key);
-    }
-  } else {
+  if (NULL != evQueueEntry)
+    NS_RELEASE(evQueueEntry);
+  else
     rv = NS_ERROR_FAILURE;
-  }
 
   // Release the EventQ lock...
   PR_ExitMonitor(mEventQMonitor);
@@ -323,12 +417,11 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
 
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
   if (NULL == evQueueEntry) {
-    evQueueEntry = new EventQueueEntry();  
+    evQueueEntry = new EventQueueEntry(this, key);  
     if (NULL == evQueueEntry) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
     }
-    mEventQTable->Put(&key, evQueueEntry);
   }
   else {
     // An entry was already present. We need to push a new
@@ -363,15 +456,9 @@ nsEventQueueServiceImpl::PopThreadEventQueue(nsIEventQueue *aQueue)
     nsrefcnt refcnt;
 
     NS_RELEASE2(evQueueEntry, refcnt);
-    // Remove the entry from the hash table if this was the last reference...
-    if (0 == refcnt) {
-      mEventQTable->Remove(&key);
-    }
-    else {
-      // We must be popping. (note: doesn't this always want to be executed?)
-      // aQueue->ProcessPendingEvents(); // (theoretically not necessary)
+    // If this wasn't the last reference, we must be popping.
+    if (refcnt > 0)
       evQueueEntry->RemoveQueue(aQueue);
-    }
   } else {
     rv = NS_ERROR_FAILURE;
   }
@@ -414,26 +501,31 @@ done:
 }
 
 #ifdef XP_MAC
-// Callback from the enumeration of the HashTable.
-static  PRBool EventDispatchingFunc(nsHashKey *aKey, void *aData, void* closure)
-{
-	EventQueueEntry* entry = (EventQueueEntry*) aData;
-	nsIEventQueue* eventQueue = entry->GetEventQueue();
-	
-	if (eventQueue) {
-		eventQueue->ProcessPendingEvents();
-		NS_RELEASE(eventQueue);
-	}
-
-	return true;
-}
-
 // MAC specific. Will go away someday
+// Bwah ha ha h ha ah aha ha ha
 NS_IMETHODIMP nsEventQueueServiceImpl::ProcessEvents() 
 {
-	if ( mEventQTable )
-		mEventQTable->Enumerate( EventDispatchingFunc, NULL  );
-	return NS_OK;
+  if (mEventQTable) {
+    EventQueueEntry *entry;
+    nsIEventQueue   *queue;
+
+    // never use the hashtable enumerator if there's a chance (there is) that an
+    // event queue entry could be destroyed while inside. this enumerator can
+    // handle that.
+    PR_EnterMonitor(mEventQMonitor);
+    mEnumerator.Reset(mBaseEntry);
+    while ((entry = mEnumerator.Get()) != 0) {
+      PR_ExitMonitor(mEventQMonitor);
+      queue = entry->GetEventQueue();
+	  if (queue) {
+	    queue->ProcessPendingEvents();
+	    NS_RELEASE(queue);
+      }
+      PR_EnterMonitor(mEventQMonitor);
+    }
+    PR_ExitMonitor(mEventQMonitor);
+  }
+  return NS_OK;
 }
 
 #endif 
