@@ -83,9 +83,11 @@ function historyOnSelect(event)
         if (match && match.length>1)
             gLastHostname = match[1];
         
-        gHistoryStatus.label = url;
+        if (gHistoryStatus)
+            gHistoryStatus.label = url;
     } else {
-        gHistoryStatus.label = "";
+        if (gHistoryStatus)
+            gHistoryStatus.label = "";
     }
 
     if (gLastHostname) {
