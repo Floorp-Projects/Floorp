@@ -31,6 +31,7 @@
  * GPL.
  */
 #include "prlog.h"
+#include <stdio.h>
 
 static PRLogModuleInfo *modlog = NULL;
 
@@ -269,6 +270,22 @@ static void print_mechanism(CK_MECHANISM_PTR m)
     PR_LOG(modlog, 4, ("      mechanism = 0x%p", m->mechanism));
 }
 
+#define MAX_UINT32 0xffffffff
+
+static void nssdbg_finish_time(PRInt32 *counter, PRIntervalTime start)
+{
+    PRIntervalTime ival;
+    PRIntervalTime end = PR_IntervalNow();
+
+    if (end >= start) {
+	ival = PR_IntervalToMilliseconds(end-start);
+    } else {
+	/* the interval timer rolled over. presume it only tripped once */
+	ival = PR_IntervalToMilliseconds(MAX_UINT32-start) +
+			PR_IntervalToMilliseconds(end);
+    }
+    PR_AtomicAdd(counter, ival);
+}
 
 static PRInt32 counter_C_Initialize = 0;
 static PRInt32 calls_C_Initialize = 0;
@@ -277,14 +294,13 @@ CK_RV NSSDBGC_Initialize(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Initialize);
     PR_LOG(modlog, 1, ("C_Initialize"));
     PR_LOG(modlog, 3, ("  pInitArgs = 0x%p", pInitArgs));
     start = PR_IntervalNow();
     rv = module_functions->C_Initialize(pInitArgs);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Initialize, ival);
+    nssdbg_finish_time(&counter_C_Initialize,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -296,14 +312,13 @@ CK_RV NSSDBGC_Finalize(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Finalize);
     PR_LOG(modlog, 1, ("C_Finalize"));
     PR_LOG(modlog, 3, ("  pReserved = 0x%p", pReserved));
     start = PR_IntervalNow();
     rv = module_functions->C_Finalize(pReserved);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Finalize, ival);
+    nssdbg_finish_time(&counter_C_Finalize,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -315,14 +330,13 @@ CK_RV NSSDBGC_GetInfo(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetInfo);
     PR_LOG(modlog, 1, ("C_GetInfo"));
     PR_LOG(modlog, 3, ("  pInfo = 0x%p", pInfo));
     start = PR_IntervalNow();
     rv = module_functions->C_GetInfo(pInfo);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetInfo, ival);
+    nssdbg_finish_time(&counter_C_GetInfo,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -334,14 +348,13 @@ CK_RV NSSDBGC_GetFunctionList(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetFunctionList);
     PR_LOG(modlog, 1, ("C_GetFunctionList"));
     PR_LOG(modlog, 3, ("  ppFunctionList = 0x%p", ppFunctionList));
     start = PR_IntervalNow();
     rv = module_functions->C_GetFunctionList(ppFunctionList);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetFunctionList, ival);
+    nssdbg_finish_time(&counter_C_GetFunctionList,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -355,7 +368,7 @@ CK_RV NSSDBGC_GetSlotList(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     CK_ULONG i;
     PR_AtomicIncrement(&calls_C_GetSlotList);
     PR_LOG(modlog, 1, ("C_GetSlotList"));
@@ -366,8 +379,7 @@ CK_RV NSSDBGC_GetSlotList(
     rv = module_functions->C_GetSlotList(tokenPresent,
                                  pSlotList,
                                  pulCount);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetSlotList, ival);
+    nssdbg_finish_time(&counter_C_GetSlotList,start);
     PR_LOG(modlog, 4, ("  *pulCount = 0x%x", *pulCount));
     if (pSlotList) {
 	for (i=0; i<*pulCount; i++) {
@@ -386,7 +398,7 @@ CK_RV NSSDBGC_GetSlotInfo(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetSlotInfo);
     PR_LOG(modlog, 1, ("C_GetSlotInfo"));
     PR_LOG(modlog, 3, ("  slotID = 0x%x", slotID));
@@ -394,8 +406,7 @@ CK_RV NSSDBGC_GetSlotInfo(
     start = PR_IntervalNow();
     rv = module_functions->C_GetSlotInfo(slotID,
                                  pInfo);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetSlotInfo, ival);
+    nssdbg_finish_time(&counter_C_GetSlotInfo,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -408,7 +419,7 @@ CK_RV NSSDBGC_GetTokenInfo(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetTokenInfo);
     PR_LOG(modlog, 1, ("C_GetTokenInfo"));
     PR_LOG(modlog, 3, ("  slotID = 0x%x", slotID));
@@ -416,8 +427,7 @@ CK_RV NSSDBGC_GetTokenInfo(
     start = PR_IntervalNow();
     rv = module_functions->C_GetTokenInfo(slotID,
                                  pInfo);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetTokenInfo, ival);
+    nssdbg_finish_time(&counter_C_GetTokenInfo,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -431,7 +441,7 @@ CK_RV NSSDBGC_GetMechanismList(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetMechanismList);
     PR_LOG(modlog, 1, ("C_GetMechanismList"));
     PR_LOG(modlog, 3, ("  slotID = 0x%x", slotID));
@@ -441,8 +451,7 @@ CK_RV NSSDBGC_GetMechanismList(
     rv = module_functions->C_GetMechanismList(slotID,
                                  pMechanismList,
                                  pulCount);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetMechanismList, ival);
+    nssdbg_finish_time(&counter_C_GetMechanismList,start);
     PR_LOG(modlog, 4, ("  *pulCount = 0x%x", *pulCount));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -457,7 +466,7 @@ CK_RV NSSDBGC_GetMechanismInfo(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetMechanismInfo);
     PR_LOG(modlog, 1, ("C_GetMechanismInfo"));
     PR_LOG(modlog, 3, ("  slotID = 0x%x", slotID));
@@ -467,8 +476,7 @@ CK_RV NSSDBGC_GetMechanismInfo(
     rv = module_functions->C_GetMechanismInfo(slotID,
                                  type,
                                  pInfo);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetMechanismInfo, ival);
+    nssdbg_finish_time(&counter_C_GetMechanismInfo,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -483,7 +491,7 @@ CK_RV NSSDBGC_InitToken(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_InitToken);
     PR_LOG(modlog, 1, ("C_InitToken"));
     PR_LOG(modlog, 3, ("  slotID = 0x%x", slotID));
@@ -495,8 +503,7 @@ CK_RV NSSDBGC_InitToken(
                                  pPin,
                                  ulPinLen,
                                  pLabel);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_InitToken, ival);
+    nssdbg_finish_time(&counter_C_InitToken,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -510,7 +517,7 @@ CK_RV NSSDBGC_InitPIN(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_InitPIN);
     PR_LOG(modlog, 1, ("C_InitPIN"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -520,8 +527,7 @@ CK_RV NSSDBGC_InitPIN(
     rv = module_functions->C_InitPIN(hSession,
                                  pPin,
                                  ulPinLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_InitPIN, ival);
+    nssdbg_finish_time(&counter_C_InitPIN,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -537,7 +543,7 @@ CK_RV NSSDBGC_SetPIN(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SetPIN);
     PR_LOG(modlog, 1, ("C_SetPIN"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -551,8 +557,7 @@ CK_RV NSSDBGC_SetPIN(
                                  ulOldLen,
                                  pNewPin,
                                  ulNewLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SetPIN, ival);
+    nssdbg_finish_time(&counter_C_SetPIN,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -570,7 +575,7 @@ CK_RV NSSDBGC_OpenSession(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_OpenSession);
     PR_AtomicIncrement(&numOpenSessions);
     maxOpenSessions = PR_MAX(numOpenSessions, maxOpenSessions);
@@ -586,8 +591,7 @@ CK_RV NSSDBGC_OpenSession(
                                  pApplication,
                                  Notify,
                                  phSession);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_OpenSession, ival);
+    nssdbg_finish_time(&counter_C_OpenSession,start);
     PR_LOG(modlog, 4, ("  *phSession = 0x%x", *phSession));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -600,15 +604,14 @@ CK_RV NSSDBGC_CloseSession(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_CloseSession);
     PR_AtomicDecrement(&numOpenSessions);
     PR_LOG(modlog, 1, ("C_CloseSession"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     start = PR_IntervalNow();
     rv = module_functions->C_CloseSession(hSession);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_CloseSession, ival);
+    nssdbg_finish_time(&counter_C_CloseSession,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -620,14 +623,13 @@ CK_RV NSSDBGC_CloseAllSessions(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_CloseAllSessions);
     PR_LOG(modlog, 1, ("C_CloseAllSessions"));
     PR_LOG(modlog, 3, ("  slotID = 0x%x", slotID));
     start = PR_IntervalNow();
     rv = module_functions->C_CloseAllSessions(slotID);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_CloseAllSessions, ival);
+    nssdbg_finish_time(&counter_C_CloseAllSessions,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -640,7 +642,7 @@ CK_RV NSSDBGC_GetSessionInfo(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetSessionInfo);
     PR_LOG(modlog, 1, ("C_GetSessionInfo"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -648,8 +650,7 @@ CK_RV NSSDBGC_GetSessionInfo(
     start = PR_IntervalNow();
     rv = module_functions->C_GetSessionInfo(hSession,
                                  pInfo);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetSessionInfo, ival);
+    nssdbg_finish_time(&counter_C_GetSessionInfo,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -663,7 +664,7 @@ CK_RV NSSDBGC_GetOperationState(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetOperationState);
     PR_LOG(modlog, 1, ("C_GetOperationState"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -673,8 +674,7 @@ CK_RV NSSDBGC_GetOperationState(
     rv = module_functions->C_GetOperationState(hSession,
                                  pOperationState,
                                  pulOperationStateLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetOperationState, ival);
+    nssdbg_finish_time(&counter_C_GetOperationState,start);
     PR_LOG(modlog, 4, ("  *pulOperationStateLen = 0x%x", *pulOperationStateLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -691,7 +691,7 @@ CK_RV NSSDBGC_SetOperationState(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SetOperationState);
     PR_LOG(modlog, 1, ("C_SetOperationState"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -705,8 +705,7 @@ CK_RV NSSDBGC_SetOperationState(
                                  ulOperationStateLen,
                                  hEncryptionKey,
                                  hAuthenticationKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SetOperationState, ival);
+    nssdbg_finish_time(&counter_C_SetOperationState,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -721,7 +720,7 @@ CK_RV NSSDBGC_Login(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Login);
     PR_LOG(modlog, 1, ("C_Login"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -733,8 +732,7 @@ CK_RV NSSDBGC_Login(
                                  userType,
                                  pPin,
                                  ulPinLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Login, ival);
+    nssdbg_finish_time(&counter_C_Login,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -746,14 +744,13 @@ CK_RV NSSDBGC_Logout(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Logout);
     PR_LOG(modlog, 1, ("C_Logout"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     start = PR_IntervalNow();
     rv = module_functions->C_Logout(hSession);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Logout, ival);
+    nssdbg_finish_time(&counter_C_Logout,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -768,7 +765,7 @@ CK_RV NSSDBGC_CreateObject(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_CreateObject);
     PR_LOG(modlog, 1, ("C_CreateObject"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -781,8 +778,7 @@ CK_RV NSSDBGC_CreateObject(
                                  pTemplate,
                                  ulCount,
                                  phObject);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_CreateObject, ival);
+    nssdbg_finish_time(&counter_C_CreateObject,start);
     PR_LOG(modlog, 4, ("  *phObject = 0x%x", *phObject));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -799,7 +795,7 @@ CK_RV NSSDBGC_CopyObject(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_CopyObject);
     PR_LOG(modlog, 1, ("C_CopyObject"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -814,8 +810,7 @@ CK_RV NSSDBGC_CopyObject(
                                  pTemplate,
                                  ulCount,
                                  phNewObject);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_CopyObject, ival);
+    nssdbg_finish_time(&counter_C_CopyObject,start);
     PR_LOG(modlog, 4, ("  *phNewObject = 0x%x", *phNewObject));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -829,7 +824,7 @@ CK_RV NSSDBGC_DestroyObject(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DestroyObject);
     PR_LOG(modlog, 1, ("C_DestroyObject"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -837,8 +832,7 @@ CK_RV NSSDBGC_DestroyObject(
     start = PR_IntervalNow();
     rv = module_functions->C_DestroyObject(hSession,
                                  hObject);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DestroyObject, ival);
+    nssdbg_finish_time(&counter_C_DestroyObject,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -852,7 +846,7 @@ CK_RV NSSDBGC_GetObjectSize(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetObjectSize);
     PR_LOG(modlog, 1, ("C_GetObjectSize"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -862,8 +856,7 @@ CK_RV NSSDBGC_GetObjectSize(
     rv = module_functions->C_GetObjectSize(hSession,
                                  hObject,
                                  pulSize);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetObjectSize, ival);
+    nssdbg_finish_time(&counter_C_GetObjectSize,start);
     PR_LOG(modlog, 4, ("  *pulSize = 0x%x", *pulSize));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -879,7 +872,7 @@ CK_RV NSSDBGC_GetAttributeValue(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetAttributeValue);
     PR_LOG(modlog, 1, ("C_GetAttributeValue"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -891,8 +884,7 @@ CK_RV NSSDBGC_GetAttributeValue(
                                  hObject,
                                  pTemplate,
                                  ulCount);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetAttributeValue, ival);
+    nssdbg_finish_time(&counter_C_GetAttributeValue,start);
     print_template(pTemplate, ulCount);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -908,7 +900,7 @@ CK_RV NSSDBGC_SetAttributeValue(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SetAttributeValue);
     PR_LOG(modlog, 1, ("C_SetAttributeValue"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -921,8 +913,7 @@ CK_RV NSSDBGC_SetAttributeValue(
                                  hObject,
                                  pTemplate,
                                  ulCount);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SetAttributeValue, ival);
+    nssdbg_finish_time(&counter_C_SetAttributeValue,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -936,7 +927,7 @@ CK_RV NSSDBGC_FindObjectsInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_FindObjectsInit);
     PR_LOG(modlog, 1, ("C_FindObjectsInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -947,8 +938,7 @@ CK_RV NSSDBGC_FindObjectsInit(
     rv = module_functions->C_FindObjectsInit(hSession,
                                  pTemplate,
                                  ulCount);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_FindObjectsInit, ival);
+    nssdbg_finish_time(&counter_C_FindObjectsInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -964,7 +954,7 @@ CK_RV NSSDBGC_FindObjects(
 {
     CK_RV rv;
     CK_ULONG i;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_FindObjects);
     PR_LOG(modlog, 1, ("C_FindObjects"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -976,8 +966,7 @@ CK_RV NSSDBGC_FindObjects(
                                  phObject,
                                  ulMaxObjectCount,
                                  pulObjectCount);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_FindObjects, ival);
+    nssdbg_finish_time(&counter_C_FindObjects,start);
     PR_LOG(modlog, 4, ("  *pulObjectCount = 0x%x", *pulObjectCount));
     for (i=0; i<*pulObjectCount; i++) {
 	PR_LOG(modlog, 4, ("  phObject[%d] = 0x%x", i, phObject[i]));
@@ -993,14 +982,13 @@ CK_RV NSSDBGC_FindObjectsFinal(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_FindObjectsFinal);
     PR_LOG(modlog, 1, ("C_FindObjectsFinal"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     start = PR_IntervalNow();
     rv = module_functions->C_FindObjectsFinal(hSession);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_FindObjectsFinal, ival);
+    nssdbg_finish_time(&counter_C_FindObjectsFinal,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1014,7 +1002,7 @@ CK_RV NSSDBGC_EncryptInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_EncryptInit);
     PR_LOG(modlog, 1, ("C_EncryptInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1025,8 +1013,7 @@ CK_RV NSSDBGC_EncryptInit(
     rv = module_functions->C_EncryptInit(hSession,
                                  pMechanism,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_EncryptInit, ival);
+    nssdbg_finish_time(&counter_C_EncryptInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1042,7 +1029,7 @@ CK_RV NSSDBGC_Encrypt(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Encrypt);
     PR_LOG(modlog, 1, ("C_Encrypt"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1056,8 +1043,7 @@ CK_RV NSSDBGC_Encrypt(
                                  ulDataLen,
                                  pEncryptedData,
                                  pulEncryptedDataLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Encrypt, ival);
+    nssdbg_finish_time(&counter_C_Encrypt,start);
     PR_LOG(modlog, 4, ("  *pulEncryptedDataLen = 0x%x", *pulEncryptedDataLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1074,7 +1060,7 @@ CK_RV NSSDBGC_EncryptUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_EncryptUpdate);
     PR_LOG(modlog, 1, ("C_EncryptUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1088,8 +1074,7 @@ CK_RV NSSDBGC_EncryptUpdate(
                                  ulPartLen,
                                  pEncryptedPart,
                                  pulEncryptedPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_EncryptUpdate, ival);
+    nssdbg_finish_time(&counter_C_EncryptUpdate,start);
     PR_LOG(modlog, 4, ("  *pulEncryptedPartLen = 0x%x", *pulEncryptedPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1104,7 +1089,7 @@ CK_RV NSSDBGC_EncryptFinal(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_EncryptFinal);
     PR_LOG(modlog, 1, ("C_EncryptFinal"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1114,8 +1099,7 @@ CK_RV NSSDBGC_EncryptFinal(
     rv = module_functions->C_EncryptFinal(hSession,
                                  pLastEncryptedPart,
                                  pulLastEncryptedPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_EncryptFinal, ival);
+    nssdbg_finish_time(&counter_C_EncryptFinal,start);
     PR_LOG(modlog, 4, ("  *pulLastEncryptedPartLen = 0x%x", *pulLastEncryptedPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1130,7 +1114,7 @@ CK_RV NSSDBGC_DecryptInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DecryptInit);
     PR_LOG(modlog, 1, ("C_DecryptInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1141,8 +1125,7 @@ CK_RV NSSDBGC_DecryptInit(
     rv = module_functions->C_DecryptInit(hSession,
                                  pMechanism,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DecryptInit, ival);
+    nssdbg_finish_time(&counter_C_DecryptInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1158,7 +1141,7 @@ CK_RV NSSDBGC_Decrypt(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Decrypt);
     PR_LOG(modlog, 1, ("C_Decrypt"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1172,8 +1155,7 @@ CK_RV NSSDBGC_Decrypt(
                                  ulEncryptedDataLen,
                                  pData,
                                  pulDataLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Decrypt, ival);
+    nssdbg_finish_time(&counter_C_Decrypt,start);
     PR_LOG(modlog, 4, ("  *pulDataLen = 0x%x", *pulDataLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1190,7 +1172,7 @@ CK_RV NSSDBGC_DecryptUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DecryptUpdate);
     PR_LOG(modlog, 1, ("C_DecryptUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1204,8 +1186,7 @@ CK_RV NSSDBGC_DecryptUpdate(
                                  ulEncryptedPartLen,
                                  pPart,
                                  pulPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DecryptUpdate, ival);
+    nssdbg_finish_time(&counter_C_DecryptUpdate,start);
     PR_LOG(modlog, 4, ("  *pulPartLen = 0x%x", *pulPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1220,7 +1201,7 @@ CK_RV NSSDBGC_DecryptFinal(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DecryptFinal);
     PR_LOG(modlog, 1, ("C_DecryptFinal"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1230,8 +1211,7 @@ CK_RV NSSDBGC_DecryptFinal(
     rv = module_functions->C_DecryptFinal(hSession,
                                  pLastPart,
                                  pulLastPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DecryptFinal, ival);
+    nssdbg_finish_time(&counter_C_DecryptFinal,start);
     PR_LOG(modlog, 4, ("  *pulLastPartLen = 0x%x", *pulLastPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1245,7 +1225,7 @@ CK_RV NSSDBGC_DigestInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DigestInit);
     PR_LOG(modlog, 1, ("C_DigestInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1254,8 +1234,7 @@ CK_RV NSSDBGC_DigestInit(
     start = PR_IntervalNow();
     rv = module_functions->C_DigestInit(hSession,
                                  pMechanism);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DigestInit, ival);
+    nssdbg_finish_time(&counter_C_DigestInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1271,7 +1250,7 @@ CK_RV NSSDBGC_Digest(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Digest);
     PR_LOG(modlog, 1, ("C_Digest"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1285,8 +1264,7 @@ CK_RV NSSDBGC_Digest(
                                  ulDataLen,
                                  pDigest,
                                  pulDigestLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Digest, ival);
+    nssdbg_finish_time(&counter_C_Digest,start);
     PR_LOG(modlog, 4, ("  *pulDigestLen = 0x%x", *pulDigestLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1301,7 +1279,7 @@ CK_RV NSSDBGC_DigestUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DigestUpdate);
     PR_LOG(modlog, 1, ("C_DigestUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1311,8 +1289,7 @@ CK_RV NSSDBGC_DigestUpdate(
     rv = module_functions->C_DigestUpdate(hSession,
                                  pPart,
                                  ulPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DigestUpdate, ival);
+    nssdbg_finish_time(&counter_C_DigestUpdate,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1325,7 +1302,7 @@ CK_RV NSSDBGC_DigestKey(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DigestKey);
     PR_LOG(modlog, 1, ("C_DigestKey"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1333,8 +1310,7 @@ CK_RV NSSDBGC_DigestKey(
     start = PR_IntervalNow();
     rv = module_functions->C_DigestKey(hSession,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DigestKey, ival);
+    nssdbg_finish_time(&counter_C_DigestKey,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1348,7 +1324,7 @@ CK_RV NSSDBGC_DigestFinal(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DigestFinal);
     PR_LOG(modlog, 1, ("C_DigestFinal"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1358,8 +1334,7 @@ CK_RV NSSDBGC_DigestFinal(
     rv = module_functions->C_DigestFinal(hSession,
                                  pDigest,
                                  pulDigestLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DigestFinal, ival);
+    nssdbg_finish_time(&counter_C_DigestFinal,start);
     PR_LOG(modlog, 4, ("  *pulDigestLen = 0x%x", *pulDigestLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1374,7 +1349,7 @@ CK_RV NSSDBGC_SignInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SignInit);
     PR_LOG(modlog, 1, ("C_SignInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1385,8 +1360,7 @@ CK_RV NSSDBGC_SignInit(
     rv = module_functions->C_SignInit(hSession,
                                  pMechanism,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SignInit, ival);
+    nssdbg_finish_time(&counter_C_SignInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1402,7 +1376,7 @@ CK_RV NSSDBGC_Sign(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Sign);
     PR_LOG(modlog, 1, ("C_Sign"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1416,8 +1390,7 @@ CK_RV NSSDBGC_Sign(
                                  ulDataLen,
                                  pSignature,
                                  pulSignatureLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Sign, ival);
+    nssdbg_finish_time(&counter_C_Sign,start);
     PR_LOG(modlog, 4, ("  *pulSignatureLen = 0x%x", *pulSignatureLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1432,7 +1405,7 @@ CK_RV NSSDBGC_SignUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SignUpdate);
     PR_LOG(modlog, 1, ("C_SignUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1442,8 +1415,7 @@ CK_RV NSSDBGC_SignUpdate(
     rv = module_functions->C_SignUpdate(hSession,
                                  pPart,
                                  ulPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SignUpdate, ival);
+    nssdbg_finish_time(&counter_C_SignUpdate,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1457,7 +1429,7 @@ CK_RV NSSDBGC_SignFinal(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SignFinal);
     PR_LOG(modlog, 1, ("C_SignFinal"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1467,8 +1439,7 @@ CK_RV NSSDBGC_SignFinal(
     rv = module_functions->C_SignFinal(hSession,
                                  pSignature,
                                  pulSignatureLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SignFinal, ival);
+    nssdbg_finish_time(&counter_C_SignFinal,start);
     PR_LOG(modlog, 4, ("  *pulSignatureLen = 0x%x", *pulSignatureLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1483,7 +1454,7 @@ CK_RV NSSDBGC_SignRecoverInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SignRecoverInit);
     PR_LOG(modlog, 1, ("C_SignRecoverInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1494,8 +1465,7 @@ CK_RV NSSDBGC_SignRecoverInit(
     rv = module_functions->C_SignRecoverInit(hSession,
                                  pMechanism,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SignRecoverInit, ival);
+    nssdbg_finish_time(&counter_C_SignRecoverInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1511,7 +1481,7 @@ CK_RV NSSDBGC_SignRecover(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SignRecover);
     PR_LOG(modlog, 1, ("C_SignRecover"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1525,8 +1495,7 @@ CK_RV NSSDBGC_SignRecover(
                                  ulDataLen,
                                  pSignature,
                                  pulSignatureLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SignRecover, ival);
+    nssdbg_finish_time(&counter_C_SignRecover,start);
     PR_LOG(modlog, 4, ("  *pulSignatureLen = 0x%x", *pulSignatureLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1541,7 +1510,7 @@ CK_RV NSSDBGC_VerifyInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_VerifyInit);
     PR_LOG(modlog, 1, ("C_VerifyInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1552,8 +1521,7 @@ CK_RV NSSDBGC_VerifyInit(
     rv = module_functions->C_VerifyInit(hSession,
                                  pMechanism,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_VerifyInit, ival);
+    nssdbg_finish_time(&counter_C_VerifyInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1569,7 +1537,7 @@ CK_RV NSSDBGC_Verify(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_Verify);
     PR_LOG(modlog, 1, ("C_Verify"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1583,8 +1551,7 @@ CK_RV NSSDBGC_Verify(
                                  ulDataLen,
                                  pSignature,
                                  ulSignatureLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_Verify, ival);
+    nssdbg_finish_time(&counter_C_Verify,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1598,7 +1565,7 @@ CK_RV NSSDBGC_VerifyUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_VerifyUpdate);
     PR_LOG(modlog, 1, ("C_VerifyUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1608,8 +1575,7 @@ CK_RV NSSDBGC_VerifyUpdate(
     rv = module_functions->C_VerifyUpdate(hSession,
                                  pPart,
                                  ulPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_VerifyUpdate, ival);
+    nssdbg_finish_time(&counter_C_VerifyUpdate,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1623,7 +1589,7 @@ CK_RV NSSDBGC_VerifyFinal(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_VerifyFinal);
     PR_LOG(modlog, 1, ("C_VerifyFinal"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1633,8 +1599,7 @@ CK_RV NSSDBGC_VerifyFinal(
     rv = module_functions->C_VerifyFinal(hSession,
                                  pSignature,
                                  ulSignatureLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_VerifyFinal, ival);
+    nssdbg_finish_time(&counter_C_VerifyFinal,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1648,7 +1613,7 @@ CK_RV NSSDBGC_VerifyRecoverInit(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_VerifyRecoverInit);
     PR_LOG(modlog, 1, ("C_VerifyRecoverInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1659,8 +1624,7 @@ CK_RV NSSDBGC_VerifyRecoverInit(
     rv = module_functions->C_VerifyRecoverInit(hSession,
                                  pMechanism,
                                  hKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_VerifyRecoverInit, ival);
+    nssdbg_finish_time(&counter_C_VerifyRecoverInit,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -1676,7 +1640,7 @@ CK_RV NSSDBGC_VerifyRecover(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_VerifyRecover);
     PR_LOG(modlog, 1, ("C_VerifyRecover"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1690,8 +1654,7 @@ CK_RV NSSDBGC_VerifyRecover(
                                  ulSignatureLen,
                                  pData,
                                  pulDataLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_VerifyRecover, ival);
+    nssdbg_finish_time(&counter_C_VerifyRecover,start);
     PR_LOG(modlog, 4, ("  *pulDataLen = 0x%x", *pulDataLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1708,7 +1671,7 @@ CK_RV NSSDBGC_DigestEncryptUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DigestEncryptUpdate);
     PR_LOG(modlog, 1, ("C_DigestEncryptUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1722,8 +1685,7 @@ CK_RV NSSDBGC_DigestEncryptUpdate(
                                  ulPartLen,
                                  pEncryptedPart,
                                  pulEncryptedPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DigestEncryptUpdate, ival);
+    nssdbg_finish_time(&counter_C_DigestEncryptUpdate,start);
     PR_LOG(modlog, 4, ("  *pulEncryptedPartLen = 0x%x", *pulEncryptedPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1740,7 +1702,7 @@ CK_RV NSSDBGC_DecryptDigestUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DecryptDigestUpdate);
     PR_LOG(modlog, 1, ("C_DecryptDigestUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1754,8 +1716,7 @@ CK_RV NSSDBGC_DecryptDigestUpdate(
                                  ulEncryptedPartLen,
                                  pPart,
                                  pulPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DecryptDigestUpdate, ival);
+    nssdbg_finish_time(&counter_C_DecryptDigestUpdate,start);
     PR_LOG(modlog, 4, ("  *pulPartLen = 0x%x", *pulPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1772,7 +1733,7 @@ CK_RV NSSDBGC_SignEncryptUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SignEncryptUpdate);
     PR_LOG(modlog, 1, ("C_SignEncryptUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1786,8 +1747,7 @@ CK_RV NSSDBGC_SignEncryptUpdate(
                                  ulPartLen,
                                  pEncryptedPart,
                                  pulEncryptedPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SignEncryptUpdate, ival);
+    nssdbg_finish_time(&counter_C_SignEncryptUpdate,start);
     PR_LOG(modlog, 4, ("  *pulEncryptedPartLen = 0x%x", *pulEncryptedPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1804,7 +1764,7 @@ CK_RV NSSDBGC_DecryptVerifyUpdate(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DecryptVerifyUpdate);
     PR_LOG(modlog, 1, ("C_DecryptVerifyUpdate"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1818,8 +1778,7 @@ CK_RV NSSDBGC_DecryptVerifyUpdate(
                                  ulEncryptedPartLen,
                                  pPart,
                                  pulPartLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DecryptVerifyUpdate, ival);
+    nssdbg_finish_time(&counter_C_DecryptVerifyUpdate,start);
     PR_LOG(modlog, 4, ("  *pulPartLen = 0x%x", *pulPartLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1836,7 +1795,7 @@ CK_RV NSSDBGC_GenerateKey(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GenerateKey);
     PR_LOG(modlog, 1, ("C_GenerateKey"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1852,8 +1811,7 @@ CK_RV NSSDBGC_GenerateKey(
                                  pTemplate,
                                  ulCount,
                                  phKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GenerateKey, ival);
+    nssdbg_finish_time(&counter_C_GenerateKey,start);
     PR_LOG(modlog, 4, ("  *phKey = 0x%x", *phKey));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1873,7 +1831,7 @@ CK_RV NSSDBGC_GenerateKeyPair(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GenerateKeyPair);
     PR_LOG(modlog, 1, ("C_GenerateKeyPair"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1896,8 +1854,7 @@ CK_RV NSSDBGC_GenerateKeyPair(
                                  ulPrivateKeyAttributeCount,
                                  phPublicKey,
                                  phPrivateKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GenerateKeyPair, ival);
+    nssdbg_finish_time(&counter_C_GenerateKeyPair,start);
     PR_LOG(modlog, 4, ("  *phPublicKey = 0x%x", *phPublicKey));
     PR_LOG(modlog, 4, ("  *phPrivateKey = 0x%x", *phPrivateKey));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
@@ -1916,7 +1873,7 @@ CK_RV NSSDBGC_WrapKey(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_WrapKey);
     PR_LOG(modlog, 1, ("C_WrapKey"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1933,8 +1890,7 @@ CK_RV NSSDBGC_WrapKey(
                                  hKey,
                                  pWrappedKey,
                                  pulWrappedKeyLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_WrapKey, ival);
+    nssdbg_finish_time(&counter_C_WrapKey,start);
     PR_LOG(modlog, 4, ("  *pulWrappedKeyLen = 0x%x", *pulWrappedKeyLen));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1954,7 +1910,7 @@ CK_RV NSSDBGC_UnwrapKey(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_UnwrapKey);
     PR_LOG(modlog, 1, ("C_UnwrapKey"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -1976,8 +1932,7 @@ CK_RV NSSDBGC_UnwrapKey(
                                  pTemplate,
                                  ulAttributeCount,
                                  phKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_UnwrapKey, ival);
+    nssdbg_finish_time(&counter_C_UnwrapKey,start);
     PR_LOG(modlog, 4, ("  *phKey = 0x%x", *phKey));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -1995,7 +1950,7 @@ CK_RV NSSDBGC_DeriveKey(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_DeriveKey);
     PR_LOG(modlog, 1, ("C_DeriveKey"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -2013,8 +1968,7 @@ CK_RV NSSDBGC_DeriveKey(
                                  pTemplate,
                                  ulAttributeCount,
                                  phKey);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_DeriveKey, ival);
+    nssdbg_finish_time(&counter_C_DeriveKey,start);
     PR_LOG(modlog, 4, ("  *phKey = 0x%x", *phKey));
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
@@ -2029,7 +1983,7 @@ CK_RV NSSDBGC_SeedRandom(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_SeedRandom);
     PR_LOG(modlog, 1, ("C_SeedRandom"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -2039,8 +1993,7 @@ CK_RV NSSDBGC_SeedRandom(
     rv = module_functions->C_SeedRandom(hSession,
                                  pSeed,
                                  ulSeedLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_SeedRandom, ival);
+    nssdbg_finish_time(&counter_C_SeedRandom,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -2054,7 +2007,7 @@ CK_RV NSSDBGC_GenerateRandom(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GenerateRandom);
     PR_LOG(modlog, 1, ("C_GenerateRandom"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
@@ -2064,8 +2017,7 @@ CK_RV NSSDBGC_GenerateRandom(
     rv = module_functions->C_GenerateRandom(hSession,
                                  RandomData,
                                  ulRandomLen);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GenerateRandom, ival);
+    nssdbg_finish_time(&counter_C_GenerateRandom,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -2077,14 +2029,13 @@ CK_RV NSSDBGC_GetFunctionStatus(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_GetFunctionStatus);
     PR_LOG(modlog, 1, ("C_GetFunctionStatus"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     start = PR_IntervalNow();
     rv = module_functions->C_GetFunctionStatus(hSession);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_GetFunctionStatus, ival);
+    nssdbg_finish_time(&counter_C_GetFunctionStatus,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -2096,14 +2047,13 @@ CK_RV NSSDBGC_CancelFunction(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_CancelFunction);
     PR_LOG(modlog, 1, ("C_CancelFunction"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     start = PR_IntervalNow();
     rv = module_functions->C_CancelFunction(hSession);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_CancelFunction, ival);
+    nssdbg_finish_time(&counter_C_CancelFunction,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -2117,7 +2067,7 @@ CK_RV NSSDBGC_WaitForSlotEvent(
 )
 {
     CK_RV rv;
-    PRIntervalTime start, ival;
+    PRIntervalTime start;
     PR_AtomicIncrement(&calls_C_WaitForSlotEvent);
     PR_LOG(modlog, 1, ("C_WaitForSlotEvent"));
     PR_LOG(modlog, 3, ("  flags = 0x%x", flags));
@@ -2127,8 +2077,7 @@ CK_RV NSSDBGC_WaitForSlotEvent(
     rv = module_functions->C_WaitForSlotEvent(flags,
                                  pSlot,
                                  pRserved);
-    ival = (PRInt32)(PR_IntervalNow() - start);
-    PR_AtomicAdd(&counter_C_WaitForSlotEvent, ival);
+    nssdbg_finish_time(&counter_C_WaitForSlotEvent,start);
     PR_LOG(modlog, 1, ("  rv = 0x%x\n", rv));
     return rv;
 }
@@ -2214,8 +2163,20 @@ static void print_final_statistics(void)
 {
     int total_calls = 0;
     PRInt32 total_time = 0;
-    printf("%-25s %10s %11s %10s %10s\n", "Function", "# Calls", "Time (ms)", "Avg. (ms)", "% Time");
-    printf("\n");
+    char *fname;
+    FILE *outfile = NULL;
+
+    fname = PR_GetEnv("NSS_OUTPUT_FILE");
+    if (fname) {
+	outfile = fopen(fname,"w+");
+    }
+    if (!outfile) {
+	outfile = stdout;
+    }
+	
+
+    fprintf(outfile,"%-25s %10s %11s %10s %10s\n", "Function", "# Calls", "Time (ms)", "Avg. (ms)", "% Time");
+    fprintf(outfile,"\n");
     total_calls += calls_C_CancelFunction;
     total_time += counter_C_CancelFunction;
     total_calls += calls_C_CloseAllSessions;
@@ -2352,553 +2313,557 @@ static void print_final_statistics(void)
     total_time += counter_C_WaitForSlotEvent;
     total_calls += calls_C_WrapKey;
     total_time += counter_C_WrapKey;
-    printf("%-25s %10d %10d ", "C_CancelFunction", calls_C_CancelFunction, counter_C_CancelFunction);
+    fprintf(outfile,"%-25s %10d %10d ", "C_CancelFunction", calls_C_CancelFunction, counter_C_CancelFunction);
     if (calls_C_CancelFunction > 0) {
-        printf("%10.2f", (float)counter_C_CancelFunction / (float)calls_C_CancelFunction);
+        fprintf(outfile,"%10.2f", (float)counter_C_CancelFunction / (float)calls_C_CancelFunction);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_CancelFunction / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_CloseAllSessions", calls_C_CloseAllSessions, counter_C_CloseAllSessions);
+    fprintf(outfile,"%10.2f", (float)counter_C_CancelFunction / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_CloseAllSessions", calls_C_CloseAllSessions, counter_C_CloseAllSessions);
     if (calls_C_CloseAllSessions > 0) {
-        printf("%10.2f", (float)counter_C_CloseAllSessions / (float)calls_C_CloseAllSessions);
+        fprintf(outfile,"%10.2f", (float)counter_C_CloseAllSessions / (float)calls_C_CloseAllSessions);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_CloseAllSessions / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_CloseSession", calls_C_CloseSession, counter_C_CloseSession);
+    fprintf(outfile,"%10.2f", (float)counter_C_CloseAllSessions / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_CloseSession", calls_C_CloseSession, counter_C_CloseSession);
     if (calls_C_CloseSession > 0) {
-        printf("%10.2f", (float)counter_C_CloseSession / (float)calls_C_CloseSession);
+        fprintf(outfile,"%10.2f", (float)counter_C_CloseSession / (float)calls_C_CloseSession);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_CloseSession / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_CopyObject", calls_C_CopyObject, counter_C_CopyObject);
+    fprintf(outfile,"%10.2f", (float)counter_C_CloseSession / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_CopyObject", calls_C_CopyObject, counter_C_CopyObject);
     if (calls_C_CopyObject > 0) {
-        printf("%10.2f", (float)counter_C_CopyObject / (float)calls_C_CopyObject);
+        fprintf(outfile,"%10.2f", (float)counter_C_CopyObject / (float)calls_C_CopyObject);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_CopyObject / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_CreateObject", calls_C_CreateObject, counter_C_CreateObject);
+    fprintf(outfile,"%10.2f", (float)counter_C_CopyObject / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_CreateObject", calls_C_CreateObject, counter_C_CreateObject);
     if (calls_C_CreateObject > 0) {
-        printf("%10.2f", (float)counter_C_CreateObject / (float)calls_C_CreateObject);
+        fprintf(outfile,"%10.2f", (float)counter_C_CreateObject / (float)calls_C_CreateObject);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_CreateObject / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Decrypt", calls_C_Decrypt, counter_C_Decrypt);
+    fprintf(outfile,"%10.2f", (float)counter_C_CreateObject / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Decrypt", calls_C_Decrypt, counter_C_Decrypt);
     if (calls_C_Decrypt > 0) {
-        printf("%10.2f", (float)counter_C_Decrypt / (float)calls_C_Decrypt);
+        fprintf(outfile,"%10.2f", (float)counter_C_Decrypt / (float)calls_C_Decrypt);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Decrypt / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DecryptDigestUpdate", calls_C_DecryptDigestUpdate, counter_C_DecryptDigestUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_Decrypt / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DecryptDigestUpdate", calls_C_DecryptDigestUpdate, counter_C_DecryptDigestUpdate);
     if (calls_C_DecryptDigestUpdate > 0) {
-        printf("%10.2f", (float)counter_C_DecryptDigestUpdate / (float)calls_C_DecryptDigestUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_DecryptDigestUpdate / (float)calls_C_DecryptDigestUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DecryptDigestUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DecryptFinal", calls_C_DecryptFinal, counter_C_DecryptFinal);
+    fprintf(outfile,"%10.2f", (float)counter_C_DecryptDigestUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DecryptFinal", calls_C_DecryptFinal, counter_C_DecryptFinal);
     if (calls_C_DecryptFinal > 0) {
-        printf("%10.2f", (float)counter_C_DecryptFinal / (float)calls_C_DecryptFinal);
+        fprintf(outfile,"%10.2f", (float)counter_C_DecryptFinal / (float)calls_C_DecryptFinal);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DecryptFinal / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DecryptInit", calls_C_DecryptInit, counter_C_DecryptInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_DecryptFinal / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DecryptInit", calls_C_DecryptInit, counter_C_DecryptInit);
     if (calls_C_DecryptInit > 0) {
-        printf("%10.2f", (float)counter_C_DecryptInit / (float)calls_C_DecryptInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_DecryptInit / (float)calls_C_DecryptInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DecryptInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DecryptUpdate", calls_C_DecryptUpdate, counter_C_DecryptUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_DecryptInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DecryptUpdate", calls_C_DecryptUpdate, counter_C_DecryptUpdate);
     if (calls_C_DecryptUpdate > 0) {
-        printf("%10.2f", (float)counter_C_DecryptUpdate / (float)calls_C_DecryptUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_DecryptUpdate / (float)calls_C_DecryptUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DecryptUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DecryptVerifyUpdate", calls_C_DecryptVerifyUpdate, counter_C_DecryptVerifyUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_DecryptUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DecryptVerifyUpdate", calls_C_DecryptVerifyUpdate, counter_C_DecryptVerifyUpdate);
     if (calls_C_DecryptVerifyUpdate > 0) {
-        printf("%10.2f", (float)counter_C_DecryptVerifyUpdate / (float)calls_C_DecryptVerifyUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_DecryptVerifyUpdate / (float)calls_C_DecryptVerifyUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DecryptVerifyUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DeriveKey", calls_C_DeriveKey, counter_C_DeriveKey);
+    fprintf(outfile,"%10.2f", (float)counter_C_DecryptVerifyUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DeriveKey", calls_C_DeriveKey, counter_C_DeriveKey);
     if (calls_C_DeriveKey > 0) {
-        printf("%10.2f", (float)counter_C_DeriveKey / (float)calls_C_DeriveKey);
+        fprintf(outfile,"%10.2f", (float)counter_C_DeriveKey / (float)calls_C_DeriveKey);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DeriveKey / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DestroyObject", calls_C_DestroyObject, counter_C_DestroyObject);
+    fprintf(outfile,"%10.2f", (float)counter_C_DeriveKey / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DestroyObject", calls_C_DestroyObject, counter_C_DestroyObject);
     if (calls_C_DestroyObject > 0) {
-        printf("%10.2f", (float)counter_C_DestroyObject / (float)calls_C_DestroyObject);
+        fprintf(outfile,"%10.2f", (float)counter_C_DestroyObject / (float)calls_C_DestroyObject);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DestroyObject / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Digest", calls_C_Digest, counter_C_Digest);
+    fprintf(outfile,"%10.2f", (float)counter_C_DestroyObject / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Digest", calls_C_Digest, counter_C_Digest);
     if (calls_C_Digest > 0) {
-        printf("%10.2f", (float)counter_C_Digest / (float)calls_C_Digest);
+        fprintf(outfile,"%10.2f", (float)counter_C_Digest / (float)calls_C_Digest);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Digest / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DigestEncryptUpdate", calls_C_DigestEncryptUpdate, counter_C_DigestEncryptUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_Digest / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DigestEncryptUpdate", calls_C_DigestEncryptUpdate, counter_C_DigestEncryptUpdate);
     if (calls_C_DigestEncryptUpdate > 0) {
-        printf("%10.2f", (float)counter_C_DigestEncryptUpdate / (float)calls_C_DigestEncryptUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_DigestEncryptUpdate / (float)calls_C_DigestEncryptUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DigestEncryptUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DigestFinal", calls_C_DigestFinal, counter_C_DigestFinal);
+    fprintf(outfile,"%10.2f", (float)counter_C_DigestEncryptUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DigestFinal", calls_C_DigestFinal, counter_C_DigestFinal);
     if (calls_C_DigestFinal > 0) {
-        printf("%10.2f", (float)counter_C_DigestFinal / (float)calls_C_DigestFinal);
+        fprintf(outfile,"%10.2f", (float)counter_C_DigestFinal / (float)calls_C_DigestFinal);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DigestFinal / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DigestInit", calls_C_DigestInit, counter_C_DigestInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_DigestFinal / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DigestInit", calls_C_DigestInit, counter_C_DigestInit);
     if (calls_C_DigestInit > 0) {
-        printf("%10.2f", (float)counter_C_DigestInit / (float)calls_C_DigestInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_DigestInit / (float)calls_C_DigestInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DigestInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DigestKey", calls_C_DigestKey, counter_C_DigestKey);
+    fprintf(outfile,"%10.2f", (float)counter_C_DigestInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DigestKey", calls_C_DigestKey, counter_C_DigestKey);
     if (calls_C_DigestKey > 0) {
-        printf("%10.2f", (float)counter_C_DigestKey / (float)calls_C_DigestKey);
+        fprintf(outfile,"%10.2f", (float)counter_C_DigestKey / (float)calls_C_DigestKey);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DigestKey / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_DigestUpdate", calls_C_DigestUpdate, counter_C_DigestUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_DigestKey / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_DigestUpdate", calls_C_DigestUpdate, counter_C_DigestUpdate);
     if (calls_C_DigestUpdate > 0) {
-        printf("%10.2f", (float)counter_C_DigestUpdate / (float)calls_C_DigestUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_DigestUpdate / (float)calls_C_DigestUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_DigestUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Encrypt", calls_C_Encrypt, counter_C_Encrypt);
+    fprintf(outfile,"%10.2f", (float)counter_C_DigestUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Encrypt", calls_C_Encrypt, counter_C_Encrypt);
     if (calls_C_Encrypt > 0) {
-        printf("%10.2f", (float)counter_C_Encrypt / (float)calls_C_Encrypt);
+        fprintf(outfile,"%10.2f", (float)counter_C_Encrypt / (float)calls_C_Encrypt);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Encrypt / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_EncryptFinal", calls_C_EncryptFinal, counter_C_EncryptFinal);
+    fprintf(outfile,"%10.2f", (float)counter_C_Encrypt / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_EncryptFinal", calls_C_EncryptFinal, counter_C_EncryptFinal);
     if (calls_C_EncryptFinal > 0) {
-        printf("%10.2f", (float)counter_C_EncryptFinal / (float)calls_C_EncryptFinal);
+        fprintf(outfile,"%10.2f", (float)counter_C_EncryptFinal / (float)calls_C_EncryptFinal);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_EncryptFinal / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_EncryptInit", calls_C_EncryptInit, counter_C_EncryptInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_EncryptFinal / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_EncryptInit", calls_C_EncryptInit, counter_C_EncryptInit);
     if (calls_C_EncryptInit > 0) {
-        printf("%10.2f", (float)counter_C_EncryptInit / (float)calls_C_EncryptInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_EncryptInit / (float)calls_C_EncryptInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_EncryptInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_EncryptUpdate", calls_C_EncryptUpdate, counter_C_EncryptUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_EncryptInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_EncryptUpdate", calls_C_EncryptUpdate, counter_C_EncryptUpdate);
     if (calls_C_EncryptUpdate > 0) {
-        printf("%10.2f", (float)counter_C_EncryptUpdate / (float)calls_C_EncryptUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_EncryptUpdate / (float)calls_C_EncryptUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_EncryptUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Finalize", calls_C_Finalize, counter_C_Finalize);
+    fprintf(outfile,"%10.2f", (float)counter_C_EncryptUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Finalize", calls_C_Finalize, counter_C_Finalize);
     if (calls_C_Finalize > 0) {
-        printf("%10.2f", (float)counter_C_Finalize / (float)calls_C_Finalize);
+        fprintf(outfile,"%10.2f", (float)counter_C_Finalize / (float)calls_C_Finalize);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Finalize / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_FindObjects", calls_C_FindObjects, counter_C_FindObjects);
+    fprintf(outfile,"%10.2f", (float)counter_C_Finalize / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_FindObjects", calls_C_FindObjects, counter_C_FindObjects);
     if (calls_C_FindObjects > 0) {
-        printf("%10.2f", (float)counter_C_FindObjects / (float)calls_C_FindObjects);
+        fprintf(outfile,"%10.2f", (float)counter_C_FindObjects / (float)calls_C_FindObjects);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_FindObjects / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_FindObjectsFinal", calls_C_FindObjectsFinal, counter_C_FindObjectsFinal);
+    fprintf(outfile,"%10.2f", (float)counter_C_FindObjects / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_FindObjectsFinal", calls_C_FindObjectsFinal, counter_C_FindObjectsFinal);
     if (calls_C_FindObjectsFinal > 0) {
-        printf("%10.2f", (float)counter_C_FindObjectsFinal / (float)calls_C_FindObjectsFinal);
+        fprintf(outfile,"%10.2f", (float)counter_C_FindObjectsFinal / (float)calls_C_FindObjectsFinal);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_FindObjectsFinal / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_FindObjectsInit", calls_C_FindObjectsInit, counter_C_FindObjectsInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_FindObjectsFinal / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_FindObjectsInit", calls_C_FindObjectsInit, counter_C_FindObjectsInit);
     if (calls_C_FindObjectsInit > 0) {
-        printf("%10.2f", (float)counter_C_FindObjectsInit / (float)calls_C_FindObjectsInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_FindObjectsInit / (float)calls_C_FindObjectsInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_FindObjectsInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GenerateKey", calls_C_GenerateKey, counter_C_GenerateKey);
+    fprintf(outfile,"%10.2f", (float)counter_C_FindObjectsInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GenerateKey", calls_C_GenerateKey, counter_C_GenerateKey);
     if (calls_C_GenerateKey > 0) {
-        printf("%10.2f", (float)counter_C_GenerateKey / (float)calls_C_GenerateKey);
+        fprintf(outfile,"%10.2f", (float)counter_C_GenerateKey / (float)calls_C_GenerateKey);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GenerateKey / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GenerateKeyPair", calls_C_GenerateKeyPair, counter_C_GenerateKeyPair);
+    fprintf(outfile,"%10.2f", (float)counter_C_GenerateKey / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GenerateKeyPair", calls_C_GenerateKeyPair, counter_C_GenerateKeyPair);
     if (calls_C_GenerateKeyPair > 0) {
-        printf("%10.2f", (float)counter_C_GenerateKeyPair / (float)calls_C_GenerateKeyPair);
+        fprintf(outfile,"%10.2f", (float)counter_C_GenerateKeyPair / (float)calls_C_GenerateKeyPair);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GenerateKeyPair / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GenerateRandom", calls_C_GenerateRandom, counter_C_GenerateRandom);
+    fprintf(outfile,"%10.2f", (float)counter_C_GenerateKeyPair / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GenerateRandom", calls_C_GenerateRandom, counter_C_GenerateRandom);
     if (calls_C_GenerateRandom > 0) {
-        printf("%10.2f", (float)counter_C_GenerateRandom / (float)calls_C_GenerateRandom);
+        fprintf(outfile,"%10.2f", (float)counter_C_GenerateRandom / (float)calls_C_GenerateRandom);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GenerateRandom / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetAttributeValue", calls_C_GetAttributeValue, counter_C_GetAttributeValue);
+    fprintf(outfile,"%10.2f", (float)counter_C_GenerateRandom / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetAttributeValue", calls_C_GetAttributeValue, counter_C_GetAttributeValue);
     if (calls_C_GetAttributeValue > 0) {
-        printf("%10.2f", (float)counter_C_GetAttributeValue / (float)calls_C_GetAttributeValue);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetAttributeValue / (float)calls_C_GetAttributeValue);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetAttributeValue / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetFunctionList", calls_C_GetFunctionList, counter_C_GetFunctionList);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetAttributeValue / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetFunctionList", calls_C_GetFunctionList, counter_C_GetFunctionList);
     if (calls_C_GetFunctionList > 0) {
-        printf("%10.2f", (float)counter_C_GetFunctionList / (float)calls_C_GetFunctionList);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetFunctionList / (float)calls_C_GetFunctionList);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetFunctionList / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetFunctionStatus", calls_C_GetFunctionStatus, counter_C_GetFunctionStatus);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetFunctionList / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetFunctionStatus", calls_C_GetFunctionStatus, counter_C_GetFunctionStatus);
     if (calls_C_GetFunctionStatus > 0) {
-        printf("%10.2f", (float)counter_C_GetFunctionStatus / (float)calls_C_GetFunctionStatus);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetFunctionStatus / (float)calls_C_GetFunctionStatus);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetFunctionStatus / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetInfo", calls_C_GetInfo, counter_C_GetInfo);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetFunctionStatus / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetInfo", calls_C_GetInfo, counter_C_GetInfo);
     if (calls_C_GetInfo > 0) {
-        printf("%10.2f", (float)counter_C_GetInfo / (float)calls_C_GetInfo);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetInfo / (float)calls_C_GetInfo);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetInfo / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetMechanismInfo", calls_C_GetMechanismInfo, counter_C_GetMechanismInfo);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetInfo / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetMechanismInfo", calls_C_GetMechanismInfo, counter_C_GetMechanismInfo);
     if (calls_C_GetMechanismInfo > 0) {
-        printf("%10.2f", (float)counter_C_GetMechanismInfo / (float)calls_C_GetMechanismInfo);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetMechanismInfo / (float)calls_C_GetMechanismInfo);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetMechanismInfo / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetMechanismList", calls_C_GetMechanismList, counter_C_GetMechanismList);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetMechanismInfo / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetMechanismList", calls_C_GetMechanismList, counter_C_GetMechanismList);
     if (calls_C_GetMechanismList > 0) {
-        printf("%10.2f", (float)counter_C_GetMechanismList / (float)calls_C_GetMechanismList);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetMechanismList / (float)calls_C_GetMechanismList);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetMechanismList / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetObjectSize", calls_C_GetObjectSize, counter_C_GetObjectSize);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetMechanismList / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetObjectSize", calls_C_GetObjectSize, counter_C_GetObjectSize);
     if (calls_C_GetObjectSize > 0) {
-        printf("%10.2f", (float)counter_C_GetObjectSize / (float)calls_C_GetObjectSize);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetObjectSize / (float)calls_C_GetObjectSize);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetObjectSize / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetOperationState", calls_C_GetOperationState, counter_C_GetOperationState);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetObjectSize / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetOperationState", calls_C_GetOperationState, counter_C_GetOperationState);
     if (calls_C_GetOperationState > 0) {
-        printf("%10.2f", (float)counter_C_GetOperationState / (float)calls_C_GetOperationState);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetOperationState / (float)calls_C_GetOperationState);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetOperationState / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetSessionInfo", calls_C_GetSessionInfo, counter_C_GetSessionInfo);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetOperationState / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetSessionInfo", calls_C_GetSessionInfo, counter_C_GetSessionInfo);
     if (calls_C_GetSessionInfo > 0) {
-        printf("%10.2f", (float)counter_C_GetSessionInfo / (float)calls_C_GetSessionInfo);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetSessionInfo / (float)calls_C_GetSessionInfo);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetSessionInfo / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetSlotInfo", calls_C_GetSlotInfo, counter_C_GetSlotInfo);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetSessionInfo / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetSlotInfo", calls_C_GetSlotInfo, counter_C_GetSlotInfo);
     if (calls_C_GetSlotInfo > 0) {
-        printf("%10.2f", (float)counter_C_GetSlotInfo / (float)calls_C_GetSlotInfo);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetSlotInfo / (float)calls_C_GetSlotInfo);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetSlotInfo / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetSlotList", calls_C_GetSlotList, counter_C_GetSlotList);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetSlotInfo / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetSlotList", calls_C_GetSlotList, counter_C_GetSlotList);
     if (calls_C_GetSlotList > 0) {
-        printf("%10.2f", (float)counter_C_GetSlotList / (float)calls_C_GetSlotList);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetSlotList / (float)calls_C_GetSlotList);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetSlotList / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_GetTokenInfo", calls_C_GetTokenInfo, counter_C_GetTokenInfo);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetSlotList / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_GetTokenInfo", calls_C_GetTokenInfo, counter_C_GetTokenInfo);
     if (calls_C_GetTokenInfo > 0) {
-        printf("%10.2f", (float)counter_C_GetTokenInfo / (float)calls_C_GetTokenInfo);
+        fprintf(outfile,"%10.2f", (float)counter_C_GetTokenInfo / (float)calls_C_GetTokenInfo);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_GetTokenInfo / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_InitPIN", calls_C_InitPIN, counter_C_InitPIN);
+    fprintf(outfile,"%10.2f", (float)counter_C_GetTokenInfo / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_InitPIN", calls_C_InitPIN, counter_C_InitPIN);
     if (calls_C_InitPIN > 0) {
-        printf("%10.2f", (float)counter_C_InitPIN / (float)calls_C_InitPIN);
+        fprintf(outfile,"%10.2f", (float)counter_C_InitPIN / (float)calls_C_InitPIN);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_InitPIN / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_InitToken", calls_C_InitToken, counter_C_InitToken);
+    fprintf(outfile,"%10.2f", (float)counter_C_InitPIN / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_InitToken", calls_C_InitToken, counter_C_InitToken);
     if (calls_C_InitToken > 0) {
-        printf("%10.2f", (float)counter_C_InitToken / (float)calls_C_InitToken);
+        fprintf(outfile,"%10.2f", (float)counter_C_InitToken / (float)calls_C_InitToken);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_InitToken / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Initialize", calls_C_Initialize, counter_C_Initialize);
+    fprintf(outfile,"%10.2f", (float)counter_C_InitToken / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Initialize", calls_C_Initialize, counter_C_Initialize);
     if (calls_C_Initialize > 0) {
-        printf("%10.2f", (float)counter_C_Initialize / (float)calls_C_Initialize);
+        fprintf(outfile,"%10.2f", (float)counter_C_Initialize / (float)calls_C_Initialize);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Initialize / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Login", calls_C_Login, counter_C_Login);
+    fprintf(outfile,"%10.2f", (float)counter_C_Initialize / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Login", calls_C_Login, counter_C_Login);
     if (calls_C_Login > 0) {
-        printf("%10.2f", (float)counter_C_Login / (float)calls_C_Login);
+        fprintf(outfile,"%10.2f", (float)counter_C_Login / (float)calls_C_Login);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Login / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Logout", calls_C_Logout, counter_C_Logout);
+    fprintf(outfile,"%10.2f", (float)counter_C_Login / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Logout", calls_C_Logout, counter_C_Logout);
     if (calls_C_Logout > 0) {
-        printf("%10.2f", (float)counter_C_Logout / (float)calls_C_Logout);
+        fprintf(outfile,"%10.2f", (float)counter_C_Logout / (float)calls_C_Logout);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Logout / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_OpenSession", calls_C_OpenSession, counter_C_OpenSession);
+    fprintf(outfile,"%10.2f", (float)counter_C_Logout / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_OpenSession", calls_C_OpenSession, counter_C_OpenSession);
     if (calls_C_OpenSession > 0) {
-        printf("%10.2f", (float)counter_C_OpenSession / (float)calls_C_OpenSession);
+        fprintf(outfile,"%10.2f", (float)counter_C_OpenSession / (float)calls_C_OpenSession);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_OpenSession / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SeedRandom", calls_C_SeedRandom, counter_C_SeedRandom);
+    fprintf(outfile,"%10.2f", (float)counter_C_OpenSession / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SeedRandom", calls_C_SeedRandom, counter_C_SeedRandom);
     if (calls_C_SeedRandom > 0) {
-        printf("%10.2f", (float)counter_C_SeedRandom / (float)calls_C_SeedRandom);
+        fprintf(outfile,"%10.2f", (float)counter_C_SeedRandom / (float)calls_C_SeedRandom);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SeedRandom / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SetAttributeValue", calls_C_SetAttributeValue, counter_C_SetAttributeValue);
+    fprintf(outfile,"%10.2f", (float)counter_C_SeedRandom / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SetAttributeValue", calls_C_SetAttributeValue, counter_C_SetAttributeValue);
     if (calls_C_SetAttributeValue > 0) {
-        printf("%10.2f", (float)counter_C_SetAttributeValue / (float)calls_C_SetAttributeValue);
+        fprintf(outfile,"%10.2f", (float)counter_C_SetAttributeValue / (float)calls_C_SetAttributeValue);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SetAttributeValue / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SetOperationState", calls_C_SetOperationState, counter_C_SetOperationState);
+    fprintf(outfile,"%10.2f", (float)counter_C_SetAttributeValue / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SetOperationState", calls_C_SetOperationState, counter_C_SetOperationState);
     if (calls_C_SetOperationState > 0) {
-        printf("%10.2f", (float)counter_C_SetOperationState / (float)calls_C_SetOperationState);
+        fprintf(outfile,"%10.2f", (float)counter_C_SetOperationState / (float)calls_C_SetOperationState);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SetOperationState / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SetPIN", calls_C_SetPIN, counter_C_SetPIN);
+    fprintf(outfile,"%10.2f", (float)counter_C_SetOperationState / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SetPIN", calls_C_SetPIN, counter_C_SetPIN);
     if (calls_C_SetPIN > 0) {
-        printf("%10.2f", (float)counter_C_SetPIN / (float)calls_C_SetPIN);
+        fprintf(outfile,"%10.2f", (float)counter_C_SetPIN / (float)calls_C_SetPIN);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SetPIN / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Sign", calls_C_Sign, counter_C_Sign);
+    fprintf(outfile,"%10.2f", (float)counter_C_SetPIN / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Sign", calls_C_Sign, counter_C_Sign);
     if (calls_C_Sign > 0) {
-        printf("%10.2f", (float)counter_C_Sign / (float)calls_C_Sign);
+        fprintf(outfile,"%10.2f", (float)counter_C_Sign / (float)calls_C_Sign);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Sign / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SignEncryptUpdate", calls_C_SignEncryptUpdate, counter_C_SignEncryptUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_Sign / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SignEncryptUpdate", calls_C_SignEncryptUpdate, counter_C_SignEncryptUpdate);
     if (calls_C_SignEncryptUpdate > 0) {
-        printf("%10.2f", (float)counter_C_SignEncryptUpdate / (float)calls_C_SignEncryptUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_SignEncryptUpdate / (float)calls_C_SignEncryptUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SignEncryptUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SignFinal", calls_C_SignFinal, counter_C_SignFinal);
+    fprintf(outfile,"%10.2f", (float)counter_C_SignEncryptUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SignFinal", calls_C_SignFinal, counter_C_SignFinal);
     if (calls_C_SignFinal > 0) {
-        printf("%10.2f", (float)counter_C_SignFinal / (float)calls_C_SignFinal);
+        fprintf(outfile,"%10.2f", (float)counter_C_SignFinal / (float)calls_C_SignFinal);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SignFinal / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SignInit", calls_C_SignInit, counter_C_SignInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_SignFinal / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SignInit", calls_C_SignInit, counter_C_SignInit);
     if (calls_C_SignInit > 0) {
-        printf("%10.2f", (float)counter_C_SignInit / (float)calls_C_SignInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_SignInit / (float)calls_C_SignInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SignInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SignRecover", calls_C_SignRecover, counter_C_SignRecover);
+    fprintf(outfile,"%10.2f", (float)counter_C_SignInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SignRecover", calls_C_SignRecover, counter_C_SignRecover);
     if (calls_C_SignRecover > 0) {
-        printf("%10.2f", (float)counter_C_SignRecover / (float)calls_C_SignRecover);
+        fprintf(outfile,"%10.2f", (float)counter_C_SignRecover / (float)calls_C_SignRecover);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SignRecover / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SignRecoverInit", calls_C_SignRecoverInit, counter_C_SignRecoverInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_SignRecover / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SignRecoverInit", calls_C_SignRecoverInit, counter_C_SignRecoverInit);
     if (calls_C_SignRecoverInit > 0) {
-        printf("%10.2f", (float)counter_C_SignRecoverInit / (float)calls_C_SignRecoverInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_SignRecoverInit / (float)calls_C_SignRecoverInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SignRecoverInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_SignUpdate", calls_C_SignUpdate, counter_C_SignUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_SignRecoverInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_SignUpdate", calls_C_SignUpdate, counter_C_SignUpdate);
     if (calls_C_SignUpdate > 0) {
-        printf("%10.2f", (float)counter_C_SignUpdate / (float)calls_C_SignUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_SignUpdate / (float)calls_C_SignUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_SignUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_UnwrapKey", calls_C_UnwrapKey, counter_C_UnwrapKey);
+    fprintf(outfile,"%10.2f", (float)counter_C_SignUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_UnwrapKey", calls_C_UnwrapKey, counter_C_UnwrapKey);
     if (calls_C_UnwrapKey > 0) {
-        printf("%10.2f", (float)counter_C_UnwrapKey / (float)calls_C_UnwrapKey);
+        fprintf(outfile,"%10.2f", (float)counter_C_UnwrapKey / (float)calls_C_UnwrapKey);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_UnwrapKey / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_Verify", calls_C_Verify, counter_C_Verify);
+    fprintf(outfile,"%10.2f", (float)counter_C_UnwrapKey / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_Verify", calls_C_Verify, counter_C_Verify);
     if (calls_C_Verify > 0) {
-        printf("%10.2f", (float)counter_C_Verify / (float)calls_C_Verify);
+        fprintf(outfile,"%10.2f", (float)counter_C_Verify / (float)calls_C_Verify);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_Verify / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_VerifyFinal", calls_C_VerifyFinal, counter_C_VerifyFinal);
+    fprintf(outfile,"%10.2f", (float)counter_C_Verify / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_VerifyFinal", calls_C_VerifyFinal, counter_C_VerifyFinal);
     if (calls_C_VerifyFinal > 0) {
-        printf("%10.2f", (float)counter_C_VerifyFinal / (float)calls_C_VerifyFinal);
+        fprintf(outfile,"%10.2f", (float)counter_C_VerifyFinal / (float)calls_C_VerifyFinal);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_VerifyFinal / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_VerifyInit", calls_C_VerifyInit, counter_C_VerifyInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_VerifyFinal / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_VerifyInit", calls_C_VerifyInit, counter_C_VerifyInit);
     if (calls_C_VerifyInit > 0) {
-        printf("%10.2f", (float)counter_C_VerifyInit / (float)calls_C_VerifyInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_VerifyInit / (float)calls_C_VerifyInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_VerifyInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_VerifyRecover", calls_C_VerifyRecover, counter_C_VerifyRecover);
+    fprintf(outfile,"%10.2f", (float)counter_C_VerifyInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_VerifyRecover", calls_C_VerifyRecover, counter_C_VerifyRecover);
     if (calls_C_VerifyRecover > 0) {
-        printf("%10.2f", (float)counter_C_VerifyRecover / (float)calls_C_VerifyRecover);
+        fprintf(outfile,"%10.2f", (float)counter_C_VerifyRecover / (float)calls_C_VerifyRecover);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_VerifyRecover / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_VerifyRecoverInit", calls_C_VerifyRecoverInit, counter_C_VerifyRecoverInit);
+    fprintf(outfile,"%10.2f", (float)counter_C_VerifyRecover / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_VerifyRecoverInit", calls_C_VerifyRecoverInit, counter_C_VerifyRecoverInit);
     if (calls_C_VerifyRecoverInit > 0) {
-        printf("%10.2f", (float)counter_C_VerifyRecoverInit / (float)calls_C_VerifyRecoverInit);
+        fprintf(outfile,"%10.2f", (float)counter_C_VerifyRecoverInit / (float)calls_C_VerifyRecoverInit);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_VerifyRecoverInit / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_VerifyUpdate", calls_C_VerifyUpdate, counter_C_VerifyUpdate);
+    fprintf(outfile,"%10.2f", (float)counter_C_VerifyRecoverInit / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_VerifyUpdate", calls_C_VerifyUpdate, counter_C_VerifyUpdate);
     if (calls_C_VerifyUpdate > 0) {
-        printf("%10.2f", (float)counter_C_VerifyUpdate / (float)calls_C_VerifyUpdate);
+        fprintf(outfile,"%10.2f", (float)counter_C_VerifyUpdate / (float)calls_C_VerifyUpdate);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_VerifyUpdate / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_WaitForSlotEvent", calls_C_WaitForSlotEvent, counter_C_WaitForSlotEvent);
+    fprintf(outfile,"%10.2f", (float)counter_C_VerifyUpdate / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_WaitForSlotEvent", calls_C_WaitForSlotEvent, counter_C_WaitForSlotEvent);
     if (calls_C_WaitForSlotEvent > 0) {
-        printf("%10.2f", (float)counter_C_WaitForSlotEvent / (float)calls_C_WaitForSlotEvent);
+        fprintf(outfile,"%10.2f", (float)counter_C_WaitForSlotEvent / (float)calls_C_WaitForSlotEvent);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_WaitForSlotEvent / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("%-25s %10d %10d ", "C_WrapKey", calls_C_WrapKey, counter_C_WrapKey);
+    fprintf(outfile,"%10.2f", (float)counter_C_WaitForSlotEvent / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"%-25s %10d %10d ", "C_WrapKey", calls_C_WrapKey, counter_C_WrapKey);
     if (calls_C_WrapKey > 0) {
-        printf("%10.2f", (float)counter_C_WrapKey / (float)calls_C_WrapKey);
+        fprintf(outfile,"%10.2f", (float)counter_C_WrapKey / (float)calls_C_WrapKey);
     } else {
-        printf("%10.2f", 0.0);
+        fprintf(outfile,"%10.2f", 0.0);
     }
-    printf("%10.2f", (float)counter_C_WrapKey / (float)PR_IntervalToMilliseconds(total_time) * 100);
-    printf("\n");
-    printf("\n");
+    fprintf(outfile,"%10.2f", (float)counter_C_WrapKey / (float)total_time * 100);
+    fprintf(outfile,"\n");
+    fprintf(outfile,"\n");
 
-    printf("%25s %10d %10d\n", "Totals", total_calls, total_time);
-    printf("\n\nMaximum number of concurrent open sessions: %d\n\n", maxOpenSessions);
+    fprintf(outfile,"%25s %10d %10d\n", "Totals", total_calls, total_time);
+    fprintf(outfile,"\n\nMaximum number of concurrent open sessions: %d\n\n", maxOpenSessions);
+    fflush (outfile);
+    if (outfile != stdout) {
+	fclose(outfile);
+    }
 }
 
