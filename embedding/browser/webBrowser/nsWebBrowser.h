@@ -40,7 +40,7 @@
 #include "nsITextScroll.h"
 #include "nsIWidget.h"
 #include "nsIWebProgress.h"
-
+#include "nsISecureBrowserUI.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserSetup.h"
@@ -137,6 +137,7 @@ protected:
    nativeWindow               mParentNativeWindow;
    nsIWebBrowserPersistProgress *mProgressListener;
    nsCOMPtr<nsIWebProgress>      mWebProgress;
+   nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
 
    // cached background color
    nscolor                       mBackgroundColor;

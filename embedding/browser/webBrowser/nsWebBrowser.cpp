@@ -59,6 +59,9 @@
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 
+// PSM2 includes
+#include "nsISecureBrowserUI.h"
+
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
@@ -871,8 +874,18 @@ NS_IMETHODIMP nsWebBrowser::Create()
    // Hook up global history. Do not fail if we can't - just assert.
    nsresult rv = EnableGlobalHistory(PR_TRUE);
    NS_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
-      
+
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
+
+   // Hook into the OnSecurirtyChange() notification for lock/unlock icon
+   // updates
+   nsCOMPtr<nsIDOMWindow> domWindow;
+   rv = GetContentDOMWindow(getter_AddRefs(domWindow));
+   if (NS_SUCCEEDED(rv))
+   {
+       mSecurityUI = do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
+       if (NS_SUCCEEDED(rv))mSecurityUI->Init(domWindow, nsnull);
+   }
 
    mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
    mDocShellTreeOwner->AddChromeListeners();
