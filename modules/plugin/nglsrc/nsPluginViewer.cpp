@@ -44,6 +44,11 @@
 #include "nsIDOMDocument.h"
 #include "nsPluginViewer.h"
 
+
+
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -51,7 +56,6 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 // Interface IDs
 static NS_DEFINE_IID(kIContentViewerIID, NS_ICONTENTVIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -76,8 +80,10 @@ public:
   PluginViewerImpl* mViewer;
   nsIStreamListener* mNextStream;
 };
-
-class pluginInstanceOwner : public nsIPluginInstanceOwner
+ 
+  
+class pluginInstanceOwner : public nsIPluginInstanceOwner,
+                            public nsITimerCallback
 {
 public:
   pluginInstanceOwner();
@@ -104,17 +110,34 @@ public:
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
 
   NS_IMETHOD GetDocument(nsIDocument* *aDocument);
+  //nsIEventListener interface
+  nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
 
   //locals
 
   NS_IMETHOD Init(PluginViewerImpl *aViewer, nsIWidget *aWindow);
 
+  // nsITimerCallback interface
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  void CancelTimer();
+
+#ifdef XP_MAC
+  void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent);
+  nsPluginPort* GetPluginPort();
+  void FixUpPluginWindow();
+#endif
+                   
 private:
   nsPluginWindow    mPluginWindow;
   nsIPluginInstance *mInstance;
   nsIWidget         *mWindow;       //we do not addref this...
   PluginViewerImpl  *mViewer;       //we do not addref this...
+  nsCOMPtr<nsITimer> mPluginTimer;
 };
+
+  static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
+                                nsRect& aClipRect);
+
 
 class PluginViewerImpl : public nsIContentViewer,
                          public nsIContentViewerEdit,
@@ -178,6 +201,7 @@ public:
   nsIChannel* mChannel;
   pluginInstanceOwner *mOwner;
   PRBool mEnableRendering;
+
 };
 
 //----------------------------------------------------------------------
@@ -246,6 +270,10 @@ PluginViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 PluginViewerImpl::~PluginViewerImpl()
 {
+#ifdef XP_MAC
+  if (mOwner) mOwner->CancelTimer();
+#endif
+
   NS_IF_RELEASE(mOwner);
   if (nsnull != mWindow) {
     mWindow->Destroy();
@@ -417,14 +445,21 @@ PluginViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   return NS_ERROR_FAILURE;
 }
 
-static nsEventStatus PR_CALLBACK
+nsEventStatus PR_CALLBACK
 HandlePluginEvent(nsGUIEvent *aEvent)
 {
   if( (*aEvent).message == NS_PLUGIN_ACTIVATE) {
     (nsIWidget*)((*aEvent).widget)->SetFocus();
   }
+#ifdef XP_MAC
+  PluginViewerImpl * pluginViewer;
+  (nsIWidget*)((*aEvent).widget)->GetClientData((PluginViewerImpl *)pluginViewer);
+  return pluginViewer->mOwner->ProcessEvent(*aEvent);
+#endif
   return nsEventStatus_eIgnore;
 }
+
+
 nsresult
 PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
                              nsIDeviceContext* aDeviceContext,
@@ -436,7 +471,10 @@ PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
   if (NS_OK != rv) {
     return rv;
   }
-  mWindow->Create(aParent, aBounds, HandlePluginEvent, aDeviceContext);
+  
+ 
+  mWindow->Create(aParent, aBounds,HandlePluginEvent, aDeviceContext);
+  mWindow->SetClientData(this);
   return rv;
 }
 
@@ -752,6 +790,11 @@ pluginInstanceOwner :: pluginInstanceOwner()
 
 pluginInstanceOwner :: ~pluginInstanceOwner()
 {
+  // shut off the timer.
+  if (mPluginTimer != nsnull) {
+    mPluginTimer->Cancel();
+  }
+
   if (nsnull != mInstance)
   {
     PRBool doCache = PR_TRUE;
@@ -777,7 +820,7 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
   mViewer = nsnull;
 }
 
-NS_IMPL_ISUPPORTS(pluginInstanceOwner, kIPluginInstanceOwnerIID);
+NS_IMPL_ISUPPORTS2(pluginInstanceOwner, nsIPluginInstanceOwner,nsITimerCallback);
 
 NS_IMETHODIMP pluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
 {
@@ -811,9 +854,18 @@ NS_IMETHODIMP pluginInstanceOwner :: GetMode(nsPluginMode *aMode)
 NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
 {
   PRBool    windowless;
-
+  nsresult  rv = NS_OK;
+  
   if (nsnull != mInstance)
   {
+#if defined(XP_MAC)
+          // start a periodic timer to provide null events to the plugin instance.
+          mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+          if (rv == NS_OK)
+            rv = mPluginTimer->Init(this, 1000 / 60, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+#endif
+
+
     mInstance->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
 
     if (PR_TRUE == windowless)
@@ -832,7 +884,7 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
   else
     return NS_ERROR_FAILURE;
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
@@ -926,3 +978,236 @@ NS_IMETHODIMP pluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *
 
   return NS_OK;
 }
+
+
+// Here's where we forward events to plugins.
+
+#ifdef XP_MAC
+
+#if TARGET_CARBON
+inline Boolean OSEventAvail(EventMask mask, EventRecord* event) { return EventAvail(mask, event); }
+#endif
+
+void pluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
+{
+       ::OSEventAvail(0, &aMacEvent);
+       switch (anEvent.message) {
+       case NS_GOTFOCUS:
+       case NS_FOCUS_EVENT_START:
+               aMacEvent.what = nsPluginEventType_GetFocusEvent;
+               break;
+       case NS_LOSTFOCUS:
+       case NS_MOUSE_EXIT:
+               aMacEvent.what = nsPluginEventType_LoseFocusEvent;
+               break;
+       case NS_MOUSE_MOVE:
+       case NS_MOUSE_ENTER:
+         mWindow->SetFocus();
+               aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
+               break;
+       case NS_PAINT:
+          aMacEvent.what = updateEvt;
+         break;
+       case NS_KEY_DOWN:
+       case NS_KEY_PRESS:
+         break;
+         
+       default:
+               aMacEvent.what = nullEvent;
+               break;
+       }
+}
+#endif
+
+nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
+{
+  nsEventStatus rv = nsEventStatus_eIgnore;
+  if (!mInstance)   // if mInstance is null, we shouldn't be here
+    return rv;
+
+#ifdef XP_MAC
+    //if (mWidget != NULL) {  // check for null mWidget
+        EventRecord* event = (EventRecord*)anEvent.nativeMsg;
+        if (event == NULL || event->what == nullEvent) {
+            EventRecord macEvent;
+            GUItoMacEvent(anEvent, macEvent);
+            event = &macEvent;
+            if (event->what == updateEvt) {
+              nsPluginPort* pluginPort = GetPluginPort();
+                // Add in child windows absolute position to get make the dirty rect
+                // relative to the top-level window.
+                nscoord absWidgetX = 0;
+                nscoord absWidgetY = 0;
+               nsRect widgetClip(0,0,0,0);
+               GetWidgetPosAndClip(mWindow,absWidgetX,absWidgetY,widgetClip);
+               //mViewer->GetBounds(widgetClip);
+               //absWidgetX = widgetClip.x;
+               //absWidgetY = widgetClip.y;
+               
+                // set the port
+    mPluginWindow.x = absWidgetX;
+    mPluginWindow.y = absWidgetY;
+
+
+    // fix up the clipping region
+    mPluginWindow.clipRect.top = widgetClip.y;
+    mPluginWindow.clipRect.left = widgetClip.x;
+    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
+    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
+
+    EventRecord updateEvent;
+    ::OSEventAvail(0, &updateEvent);
+    updateEvent.what = updateEvt;
+    updateEvent.message = UInt32(pluginPort->port);
+
+    nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+    PRBool eventHandled = PR_FALSE;
+    mInstance->HandleEvent(&pluginEvent, &eventHandled);
+     }
+            
+            return  nsEventStatus_eConsumeNoDefault;
+            
+        }
+        //nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+        nsPluginPort* port = (nsPluginPort*)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+        nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+        if (eventHandled && anEvent.message != NS_MOUSE_LEFT_BUTTON_DOWN)
+            rv = nsEventStatus_eConsumeNoDefault;
+   // }
+#endif
+
+//~~~
+#ifdef XP_WIN
+        nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(pPluginEvent, &eventHandled);
+        if (eventHandled)
+            rv = nsEventStatus_eConsumeNoDefault;
+#endif
+
+  return rv;
+}
+
+
+// Here's how we give idle time to plugins.
+
+NS_IMETHODIMP_(void) pluginInstanceOwner::Notify(nsITimer* /* timer */)
+{
+#ifdef XP_MAC
+    // validate the plugin clipping information by syncing the plugin window info to
+    // reflect the current widget location. This makes sure that everything is updated
+    // correctly in the event of scrolling in the window.
+    FixUpPluginWindow();
+    if (mInstance != NULL) {
+        EventRecord idleEvent;
+        ::OSEventAvail(0, &idleEvent);
+        idleEvent.what = nullEvent;
+        
+        nsPluginPort* pluginPort = GetPluginPort();
+        nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+        
+        PRBool eventHandled = PR_FALSE;
+        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+    }
+
+#ifndef REPEATING_TIMERS
+  // reprime the timer? currently have to create a new timer for each call, which is
+  // kind of wasteful. need to get periodic timers working on all platforms.
+  nsresult rv;
+  mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_SUCCEEDED(rv))
+    mPluginTimer->Init(this, 1000 / 60);
+#endif  // REPEATING_TIMERS
+#endif // XP_MAC
+}
+
+
+void pluginInstanceOwner::CancelTimer()
+{
+    if (mPluginTimer) {
+        mPluginTimer->Cancel();
+    }
+}
+
+
+#ifdef XP_MAC
+nsPluginPort* pluginInstanceOwner::GetPluginPort()
+{
+
+  nsPluginPort* result = NULL;
+    if (mWindow != NULL)
+      result = (nsPluginPort*) mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+    return result;
+}
+
+  // calculate the absolute position and clip for a widget 
+  // and use other windows in calculating the clip
+static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
+                                nsRect& aClipRect) 
+{
+  aWidget->GetBounds(aClipRect); 
+  aAbsX = aClipRect.x; 
+  aAbsY = aClipRect.y; 
+  
+  nscoord ancestorX = -aClipRect.x, ancestorY = -aClipRect.y; 
+  // Calculate clipping relative to the widget passed in 
+  aClipRect.x = 0; 
+  aClipRect.y = 0; 
+
+   // Gather up the absolute position of the widget 
+   // + clip window 
+  nsCOMPtr<nsIWidget> widget = getter_AddRefs(aWidget->GetParent());
+  while (widget != nsnull) { 
+    nsRect wrect; 
+    widget->GetClientBounds(wrect); 
+    nscoord wx, wy; 
+    wx = wrect.x; 
+    wy = wrect.y; 
+    wrect.x = ancestorX; 
+    wrect.y = ancestorY; 
+    aClipRect.IntersectRect(aClipRect, wrect); 
+    aAbsX += wx; 
+    aAbsY += wy; 
+    widget = getter_AddRefs(widget->GetParent());
+    if (widget == nsnull) { 
+      // Don't include the top-level windows offset 
+      // printf("Top level window offset %d %d\n", wx, wy); 
+      aAbsX -= wx; 
+      aAbsY -= wy; 
+    } 
+    ancestorX -=wx; 
+    ancestorY -=wy; 
+  } 
+
+  aClipRect.x += aAbsX; 
+  aClipRect.y += aAbsY; 
+
+  //printf("--------------\n"); 
+  //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
+  //printf("--------------\n"); 
+} 
+
+
+void pluginInstanceOwner::FixUpPluginWindow()
+{
+  if (mWindow) {
+    nscoord absWidgetX = 0;
+    nscoord absWidgetY = 0;
+    nsRect widgetClip(0,0,0,0);
+    GetWidgetPosAndClip(mWindow,absWidgetX,absWidgetY,widgetClip);
+
+    // set the port coordinates
+    mPluginWindow.x = absWidgetX;
+    mPluginWindow.y = absWidgetY;
+
+    // fix up the clipping region
+    mPluginWindow.clipRect.top = widgetClip.y;
+    mPluginWindow.clipRect.left = widgetClip.x;
+    mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
+    mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width; 
+  }
+}
+
+#endif

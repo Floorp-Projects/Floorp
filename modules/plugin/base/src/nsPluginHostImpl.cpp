@@ -120,7 +120,11 @@
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #define PLUGIN_DLL "libgkplugin" MOZ_DLL_SUFFIX
 #elif defined(XP_MAC)
-#define PLUGIN_DLL "PLUGIN_DLL"
+#if defined(NS_DEBUG)
+#define PLUGIN_DLL "pluginDebug.shlb"
+#else
+#define PLUGIN_DLL "plugin.shlb"
+#endif // ifdef NS_DEBUG
 #endif
 
 #define REL_PLUGIN_DLL "rel:" PLUGIN_DLL
