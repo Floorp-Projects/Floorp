@@ -1948,7 +1948,8 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
     /* one-password form is a log-in so remember it */
 
     /* obtain the index of the first input field (that is the username) */
-    for (PRInt32 j=0; j<signonData->Count(); j++) {
+    PRInt32 j;
+    for (j=0; j<signonData->Count(); j++) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
       if (!data->isPassword) {
         break;
