@@ -41,11 +41,20 @@ class nsDST {
 public:
   typedef unsigned long PtrBits;
 
+  // Memory arena pool used for fast allocation and deallocation of DST nodes.
+  // Maintains a free-list of freed objects.
+  // Node arenas can be shared across DST objects (they don't lock when allocating
+  // and freeing memory, so don't share them across threads). The DST object(s)
+  // own the node arena, and you just hold a weak reference.
+  class NodeArena;
+
+  // Create a DST. You specify the node arena to use; this allows the arena to
+  // be shared.
   // By ignoring low-order pointer bits that are always 0, the tree height can
   // be reduced. Because pointer memory should be at least 32-bit aligned, the
   // default is for level 0 of the tree to start with bit 0x04 (i.e., we ignore
   // the two low-order bits)
-  nsDST(PtrBits aLevelZeroBit = 0x04);
+  nsDST(NodeArena* aArena, PtrBits aLevelZeroBit = 0x04);
   ~nsDST();
 
   void* Search(void* aKey) const;
@@ -58,31 +67,18 @@ public:
   void  Dump(FILE*) const;
 #endif
 
+  // Create a memory arena pool. You can specify the size of the underlying arenas
+  static NodeArena*  NewMemoryArena(PRUint32 aArenaSize = 512);
+
 private:
   class LeafNode;
   class TwoNode;
-  struct NodeArena;
   friend class LeafNode;
   friend class TwoNode;
-  friend struct NodeArena;  // needs access to structs LeafNode and TwoNode
-
-  struct NodeArena {
-    PLArenaPool mPool;
-    LeafNode*   mLeafNodeFreeList;
-    TwoNode*    mTwoNodeFreeList;
-
-    NodeArena();
-    ~NodeArena();
-
-    void*   AllocLeafNode();
-    void*   AllocTwoNode();
-    void    FreeNode(LeafNode*);
-    void    FreeNode(TwoNode*);
-    void    FreeArenaPool();
-  };
+  friend class NodeArena;  // needs access to structs LeafNode and TwoNode
 
   LeafNode*   mRoot;  // root node of the tree
-  NodeArena   mArena;
+  NodeArena*  mArena;
   PtrBits     mLevelZeroBit;
 
 private:
@@ -93,6 +89,7 @@ private:
   LeafNode*   ConvertToLeafNode(TwoNode** aTwoNode);
   TwoNode*    ConvertToTwoNode(LeafNode** aLeafNode);
   void        EnumTree(LeafNode* aNode, nsDSTNodeFunctor& aFunctor) const;
+  void        FreeTree(LeafNode* aNode);
 
 #ifdef NS_DEBUG
   // Diagnostic functions

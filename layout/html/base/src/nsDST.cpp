@@ -38,7 +38,37 @@
 // It's an invariant of the tree that a two node can not have both child links
 // NULL. In that case it must be converted back to a leaf node
 
-// Leaf node class
+// Definition of NodeArena class
+class nsDST::NodeArena {
+public:
+  NodeArena(PRUint32 aArenaSize);
+  ~NodeArena();
+
+  // Memory management functions
+  void*     AllocLeafNode();
+  void*     AllocTwoNode();
+  void      FreeNode(LeafNode*);
+  void      FreeNode(TwoNode*);
+  void      FreeArenaPool();
+
+  // Lifetime management functions
+  void      AddRef() {mRefCnt++;}
+  void      Release();
+  PRBool    IsShared() const {return mRefCnt > 1;}
+
+#ifdef NS_DEBUG
+  int       NumArenas() const;
+  PRUint32  ArenaSize() const {return mPool.arenasize;}
+#endif
+
+private:
+  PLArenaPool mPool;
+  LeafNode*   mLeafNodeFreeList;
+  TwoNode*    mTwoNodeFreeList;
+  PRUint32    mRefCnt;
+};
+
+// Definition of LeafNode class
 class nsDST::LeafNode {
 public:
   void* mKey;
@@ -57,7 +87,7 @@ public:
   int     IsLeaf() const {return 0 == (PtrBits(mKey) & 0x1);}
 
   // Overloaded placement operator for allocating from an arena
-  void* operator new(size_t aSize, NodeArena& aArena) {return aArena.AllocLeafNode();}
+  void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocLeafNode();}
 
 private:
   void  operator delete(void*);  // no implementation
@@ -75,7 +105,7 @@ inline nsDST::LeafNode::LeafNode(const LeafNode& aNode)
 {
 }
 
-// Two node class
+// Definition of TwoNode class
 class nsDST::TwoNode : public nsDST::LeafNode {
 public:
   LeafNode* mLeft;   // left subtree
@@ -89,7 +119,7 @@ public:
   }
 
   // Overloaded placement operator for allocating from an arena
-  void* operator new(size_t aSize, NodeArena& aArena) {return aArena.AllocTwoNode();}
+  void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocTwoNode();}
 
 private:
 	TwoNode(const TwoNode&);        // no implementation
@@ -121,16 +151,20 @@ inline nsDST::TwoNode::TwoNode(const LeafNode& aLeafNode)
 // Arena used for fast allocation and deallocation of Node structures.
 // Maintains free-list of freed objects
 
-#define NS_DST_ARENA_BLOCK_SIZE   512
+nsDST::NodeArena*
+nsDST::NewMemoryArena(PRUint32 aArenaSize)
+{
+  return new NodeArena(aArenaSize);
+}
 
 MOZ_DECL_CTOR_COUNTER(NodeArena);
 
 // Constructor
-nsDST::NodeArena::NodeArena()
-  : mLeafNodeFreeList(0), mTwoNodeFreeList(0)
+nsDST::NodeArena::NodeArena(PRUint32 aArenaSize)
+  : mLeafNodeFreeList(0), mTwoNodeFreeList(0), mRefCnt(0)
 {
   MOZ_COUNT_CTOR(NodeArena);
-  PL_INIT_ARENA_POOL(&mPool, "DSTNodeArena", NS_DST_ARENA_BLOCK_SIZE);
+  PL_INIT_ARENA_POOL(&mPool, "DSTNodeArena", aArenaSize);
 }
 
 // Destructor
@@ -140,6 +174,15 @@ nsDST::NodeArena::~NodeArena()
 
   // Free the arena in the pool and finish using it
   PL_FinishArenaPool(&mPool);
+}
+
+void
+nsDST::NodeArena::Release()
+{
+  NS_PRECONDITION(mRefCnt > 0, "unexpected ref count");
+  if (--mRefCnt == 0) {
+    delete this;
+  }
 }
 
 // Called by the nsDST::LeafNode's overloaded placement operator when
@@ -221,29 +264,78 @@ nsDST::NodeArena::FreeArenaPool()
   mTwoNodeFreeList = 0;
 }
 
+#ifdef NS_DEBUG
+int
+nsDST::NodeArena::NumArenas() const
+{
+  // Calculate the number of arenas in use
+  int numArenas = 0;
+  for (PLArena* arena = mPool.first.next; arena; arena = arena->next) {
+    numArenas++;
+  }
+
+  return numArenas;
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // Digital search tree for doing a radix-search of pointer-based keys
 
 MOZ_DECL_CTOR_COUNTER(nsDST);
 
 // Constructor
-nsDST::nsDST(PtrBits aLevelZeroBit)
-  : mRoot(0), mLevelZeroBit(aLevelZeroBit)
+nsDST::nsDST(NodeArena* aArena, PtrBits aLevelZeroBit)
+  : mRoot(0), mArena(aArena), mLevelZeroBit(aLevelZeroBit)
 {
+  NS_PRECONDITION(aArena, "no node arena");
   MOZ_COUNT_CTOR(nsDST);
+
+  // Add a reference to the node arena
+  mArena->AddRef();
 }
 
 // Destructor
 nsDST::~nsDST()
 {
   MOZ_COUNT_DTOR(nsDST);
+
+  // If the node arena is shared, then we'll need to explicitly
+  // free each node in the tree
+  if (mArena->IsShared()) {
+    FreeTree(mRoot);
+  }
+
+  // Release our reference to the node arena
+  mArena->Release();
+}
+
+void
+nsDST::FreeTree(LeafNode* aNode)
+{
+keepLooping:
+  if (!aNode) {
+    return;
+  }
+
+  if (aNode->IsLeaf()) {
+    DestroyNode(aNode);
+
+  } else {
+    LeafNode* left = ((TwoNode*)aNode)->mLeft;
+    LeafNode* right = ((TwoNode*)aNode)->mRight;
+  
+    DestroyNode((TwoNode*)aNode);
+    FreeTree(left);
+    aNode = right;
+    goto keepLooping;    
+  }
 }
 
 // Removes all nodes from the tree
 void
 nsDST::Clear()
 {
-  mArena.FreeArenaPool();
+  mArena->FreeArenaPool();
   mRoot = 0;
 }
 
@@ -278,7 +370,7 @@ inline void
 nsDST::DestroyNode(LeafNode* aLeafNode)
 {
   aLeafNode->~LeafNode();     // call destructor
-  mArena.FreeNode(aLeafNode); // free memory
+  mArena->FreeNode(aLeafNode); // free memory
 }
 
 // Called by Remove() to destroy a node. Explicitly calls the destructor
@@ -287,7 +379,7 @@ inline void
 nsDST::DestroyNode(TwoNode* aTwoNode)
 {
   aTwoNode->~TwoNode();      // call destructor
-  mArena.FreeNode(aTwoNode); // free memory
+  mArena->FreeNode(aTwoNode); // free memory
 }
 
 nsDST::LeafNode*
@@ -546,7 +638,10 @@ nsDST::Remove(void* aKey)
     if (mRoot->Key() == aKey) {
       node = (LeafNode**)&mRoot;
 
-    } else if (!mRoot->IsLeaf()) {
+    } else if (mRoot->IsLeaf()) {
+      return 0;  // no node with a matching key
+
+    } else {
       // Look for a node with a matching key
       node = (LeafNode**)&mRoot;
       while (1) {
@@ -736,12 +831,6 @@ nsDST::Dump(FILE* out) const
     pathLength += height * count;
   }
 
-  // Calculate the number of arenas in use
-  int numArenas = 0;
-  for (PLArena* arena = mArena.mPool.first.next; arena; arena = arena->next) {
-    numArenas++;
-  }
-
   // Output the statistics
   int numTotalNodes = numLeafNodes + numTwoNodes;
 
@@ -753,7 +842,7 @@ nsDST::Dump(FILE* out) const
             float(numLeafNodes * sizeof(LeafNode) + numTwoNodes * sizeof(TwoNode)) /
             float(numTotalNodes));
   }
-  fprintf(out, "  Number of arenas: %d(%d)\n", numArenas, mArena.mPool.arenasize);
+  fprintf(out, "  Number of arenas: %d(%d)\n", mArena->NumArenas(), mArena->ArenaSize());
   fprintf(out, "  Height (maximum node level) of the tree: %d\n", height - 1);
   if (numTotalNodes > 0) {
     fprintf(out, "  Average node level: %.1f\n", float(pathLength) / float(numTotalNodes));

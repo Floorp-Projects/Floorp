@@ -243,7 +243,9 @@ private:
     FMPropertyDtorFunc mDtorFunc;      // property specific value dtor function
     PropertyList*      mNext;
 
-    PropertyList(nsIAtom* aName, FMPropertyDtorFunc aDtorFunc);
+    PropertyList(nsIAtom*           aName,
+                 FMPropertyDtorFunc aDtorFunc,
+                 nsDST::NodeArena*  aDSTNodeArena);
     ~PropertyList();
 
     // Removes the property associated with the given frame, and destroys
@@ -251,8 +253,9 @@ private:
     void  RemovePropertyForFrame(nsIFrame* aFrame);
   };
 
-  nsIPresShell*                   mPresShell;  // weak link, because the pres shell owns us
-  nsIStyleSet*                    mStyleSet;   // weak link. pres shell holds a reference
+  nsIPresShell*                   mPresShell;    // weak link, because the pres shell owns us
+  nsIStyleSet*                    mStyleSet;     // weak link. pres shell holds a reference
+  nsDST::NodeArena*               mDSTNodeArena; // weak link. DST owns
   nsDST*                          mPrimaryFrameMap;
   FrameHashTable*                 mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
@@ -333,6 +336,13 @@ FrameManager::Init(nsIPresShell* aPresShell,
 {
   mPresShell = aPresShell;
   mStyleSet = aStyleSet;
+
+  // Allocate the node arena that's shared by all the DST objects
+  mDSTNodeArena = nsDST::NewMemoryArena();
+  if (!mDSTNodeArena) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return NS_OK;
 }
 
@@ -381,7 +391,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
   } else {
     // Create a new DST if necessary
     if (!mPrimaryFrameMap) {
-      mPrimaryFrameMap = new nsDST;
+      mPrimaryFrameMap = new nsDST(mDSTNodeArena);
       if (!mPrimaryFrameMap) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1569,7 +1579,7 @@ FrameManager::SetFrameProperty(nsIFrame*          aFrame,
     }
 
   } else {
-    propertyList = new PropertyList(aPropertyName, aPropDtorFunc);
+    propertyList = new PropertyList(aPropertyName, aPropDtorFunc, mDSTNodeArena);
     if (!propertyList) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1751,8 +1761,10 @@ UndisplayedMap::Clear(void)
 //----------------------------------------------------------------------
     
 FrameManager::PropertyList::PropertyList(nsIAtom*           aName,
-                                         FMPropertyDtorFunc aDtorFunc)
-  : mName(aName), mFrameValueMap(new nsDST), mDtorFunc(aDtorFunc), mNext(nsnull)
+                                         FMPropertyDtorFunc aDtorFunc,
+                                         nsDST::NodeArena*  aDSTNodeArena)
+  : mName(aName), mFrameValueMap(new nsDST(aDSTNodeArena)),
+    mDtorFunc(aDtorFunc), mNext(nsnull)
 {
 }
 
