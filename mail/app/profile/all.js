@@ -47,7 +47,7 @@ pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.misc", "rv:1.5b");
+pref("general.useragent.misc", "rv:1.6a");
 pref("general.useragent.vendor", "Thunderbird");
 pref("general.useragent.vendorSub", "0.4a");
 
