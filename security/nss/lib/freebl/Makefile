@@ -232,51 +232,24 @@ endif
 	$(NSINSTALL) -R $(BSAFEPATH) $(DIST)/lib
 endif
 
-mp%.h : mpi/mp%.h
-	-$(CPORLN) $< .
+ifdef USE_PURE_32 
+vpath %.c $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
+vpath %.S $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
+vpath %.s $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
+INCLUDES += -I$(FREEBL_PARENT) -I$(FREEBL_PARENT)/mpi
+else
+vpath %.c mpi
+vpath %.S mpi
+vpath %.s mpi
+INCLUDES += -Impi
+endif
 
-mp%.c : mpi/mp%.c
-	-$(CPORLN) $< .
-
-mp%.S : mpi/mp%.S
-	-$(CPORLN) $< .
-
-mp%.s : mpi/mp%.s
-	-$(CPORLN) $< .
-
-mp%.asm : mpi/mp%.asm
-	-$(CPORLN) $< .
-
-logtab.h : mpi/logtab.h
-	-$(CPORLN) $< .
-
-primes.c : mpi/primes.c
-	-$(CPORLN) $< .
-
-vis%.il : mpi/vis%.il
-	-$(CPORLN) $< .
-
-vis%.h : mpi/vis%.h
-	-$(CPORLN) $< .
-
-mont% : mpi/mont%
-	-$(CPORLN) $< .
-
-hp%.s : mpi/hp%.s
-	-$(CPORLN) $< .
-
-.PRECIOUS : $(MPI_SRCS) $(MPI_HDRS) $(ASFILES)
-
-ALL_TRASH += $(MPI_SRCS) $(MPI_HDRS) $(ASFILES) primes.c mont*
 
 DEFINES += -DMP_API_COMPATIBLE
 
-MPI_USERS = dh.c pqg.c dsa.c rsa.c 
 
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
 MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_USERS:.c=$(OBJ_SUFFIX)))
-
-$(MPI_OBJS): $(MPI_HDRS) primes.c
 
 ifeq ($(SYSV_SPARC),1)
 SPARCFIX = $(OBJDIR)/sparcfix
@@ -285,58 +258,46 @@ $(SPARCFIX): sparcfix.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -O sparcfix.c -lelf
 
-#$(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s $(SPARCFIX)
 $(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s 
 	@$(MAKE_OBJDIR)
-	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $*.s
+	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
 #	$(SPARCFIX) $@
 
 $(OBJDIR)/mpv_sparcv9.o $(OBJDIR)/montmulfv9.o : $(OBJDIR)/%.o : %.s
 	@$(MAKE_OBJDIR)
-	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $*.s
+	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
 
-$(OBJDIR)/mpv_sparc.o: vis_64.il vis_proto.h mpv_sparc.c
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $(SOLARIS_FLAGS) -c vis_64.il mpv_sparc.c
-
-$(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
 endif
-
-ifeq ($(OS_ARCH), HP-UX)
-$(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
-endif
-
-$(OBJDIR)/ldvector.o $(OBJDIR)/loader.o : loader.h
 
 ifdef FREEBL_EXTENDED_BUILD
 
-PURE32DIR = $(OS_ARCH)pure32
+PURE32DIR = $(OBJDIR)/$(OS_ARCH)pure32
 ALL_TRASH += $(PURE32DIR)
 
 FILES2LN = \
- $(ALL_HDRS) \
- $(ALL_CSRCS) \
  $(wildcard *.tab) \
  $(wildcard mapfile.*) \
  Makefile manifest.mn config.mk 
 
 LINKEDFILES = $(addprefix $(PURE32DIR)/, $(FILES2LN))
 
+CDDIR=$(shell pwd)
+
 $(PURE32DIR):
 	-mkdir $(PURE32DIR)
-	-ln -s ../mpi $(PURE32DIR)
+	-ln -s $(CDDIR)/mpi $(PURE32DIR)
 
 $(LINKEDFILES) : $(PURE32DIR)/% : % 
-	ln -s ../$* $(PURE32DIR)
+	ln -s $(CDDIR)/$* $(PURE32DIR)
 
 libs:: 
 	$(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_HYBRID=1 libs
 
 libs:: $(PURE32DIR) $(LINKEDFILES)
-	cd $(PURE32DIR) && $(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_PURE_32=1 libs
+	cd $(PURE32DIR) && $(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_PURE_32=1 FREEBL_PARENT=$(CDDIR) CORE_DEPTH=$(CDDIR)/$(CORE_DEPTH) libs
 
 release_md::
 	$(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_HYBRID=1 $@
-	cd $(PURE32DIR) && $(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_PURE_32=1 $@
+	cd $(PURE32DIR) && $(MAKE) FREEBL_RECURSIVE_BUILD=1 USE_PURE_32=1 FREEBL_PARENT=$(CDDIR) CORE_DEPTH=$(CDDIR)/$(CORE_DEPTH) $@
 
 endif
