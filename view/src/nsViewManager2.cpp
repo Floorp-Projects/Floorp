@@ -801,36 +801,37 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
 		
 		if (element->mFlags & VIEW_TRANSLUCENT) {
 			nsIView* view = element->mView;
-			nsRect blendRect(0, 0, element->mDirty.width, element->mDirty.height);
-			
+
 			// paint the view twice, first in the red buffer, then the blue;
 			// the blender will pick up the touched pixels only.
 			mRedCX->SetColor(NS_RGB(255, 0, 0));
-			mRedCX->FillRect(blendRect);
+			mRedCX->FillRect(damageRect);
 			PaintView(view, *mRedCX, 0, 0, damageRect);
 			// DEBUGGING ONLY
 			//aRC.CopyOffScreenBits(gRed, 0, 0, element->mDirty,
             //					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
 
 			mBlueCX->SetColor(NS_RGB(0, 0, 255));
-			mBlueCX->FillRect(blendRect);
+			mBlueCX->FillRect(damageRect);
 			PaintView(view, *mBlueCX, 0, 0, damageRect);
 			// DEBUGGING ONLY
 			//aRC.CopyOffScreenBits(gBlue, 0, 0, element->mDirty,
 			//					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
-			//mOffScreenCX->CopyOffScreenBits(gBlue, 0, 0, nsRect(viewX, viewY, blendRect.width, blendRect.height),
+			//mOffScreenCX->CopyOffScreenBits(gBlue, 0, 0, nsRect(viewX, viewY, damageRect.width, damageRect.height),
 			//					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
 
 			float opacity;
 			view->GetOpacity(opacity);
 
 			// perform the blend itself.
-			blendRect *= mTwipsToPixels;
-			mBlender->Blend(0, 0, blendRect.width, blendRect.height,
-							mRedCX, mOffScreenCX,
-							viewX * mTwipsToPixels, viewY * mTwipsToPixels,
-							opacity, mBlueCX,
-							NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+			damageRect *= mTwipsToPixels;
+			if (damageRect.width > 0 && damageRect.height > 0) {
+    			mBlender->Blend(damageRect.x, damageRect.y, damageRect.width, damageRect.height,
+    							mRedCX, mOffScreenCX,
+    							viewX * mTwipsToPixels, viewY * mTwipsToPixels,
+    							opacity, mBlueCX,
+    							NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+    		}
 			
 			--mTranslucentViewCount;
 		} else {
