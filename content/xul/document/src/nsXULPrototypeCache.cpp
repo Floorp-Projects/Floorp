@@ -159,8 +159,9 @@ nsXULPrototypeCache::PutPrototype(nsIXULPrototypeDocument* aDocument)
     rv = aDocument->GetURI(getter_AddRefs(uri));
 
     nsIURIKey key(uri);
-    nsIXULPrototypeDocument* oldproto = NS_STATIC_CAST(nsIXULPrototypeDocument*, mPrototypeTable.Put(&key, aDocument));
-    NS_IF_RELEASE(oldproto);
+        // Put() w/o  a third parameter with a destination for the
+        // replaced value releases it 
+    mPrototypeTable.Put(&key, aDocument);
 
     return NS_OK;
 }
@@ -191,8 +192,7 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
     rv = aStyleSheet->GetURL(*getter_AddRefs(uri));
 
     nsIURIKey key(uri);
-    nsICSSStyleSheet* oldsheet = NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheetTable.Put(&key, aStyleSheet));
-    NS_IF_RELEASE(oldsheet);
+    mStyleSheetTable.Put(&key, aStyleSheet);
 
     return NS_OK;
 }
@@ -214,8 +214,7 @@ nsXULPrototypeCache::PutXBLDocument(nsIDocument *aDocument)
     uri->GetSpec(&aString);
 
     nsStringKey key(aString);
-    nsIDocument* olddoc = NS_STATIC_CAST(nsIDocument*, mXBLDocTable.Put(&key, aDocument));
-    NS_IF_RELEASE(olddoc);
+    mXBLDocTable.Put(&key, aDocument);
 
     return NS_OK;
 }
@@ -236,8 +235,7 @@ nsXULPrototypeCache::PutXBLDocScriptAccess(nsIDocument *aDocument)
     uri->GetSpec(&aString);
 
     nsStringKey key(aString);
-    nsIDocument* olddoc = NS_STATIC_CAST(nsIDocument*, mScriptAccessTable.Put(&key, aDocument));
-    NS_IF_RELEASE(olddoc);
+    mScriptAccessTable.Put(&key, aDocument);
 
     return NS_OK;
 }

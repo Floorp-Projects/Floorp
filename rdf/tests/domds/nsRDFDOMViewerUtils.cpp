@@ -42,7 +42,7 @@ nsDOMViewerObject::SetTarget(nsIRDFResource *aProperty,
                              nsIRDFNode *aValue)
 {
   nsISupportsKey propKey(aProperty);
-  targets.Put(&propKey, (void *)aValue);
+  targets.Put(&propKey, aValue);
 
   return NS_OK;
 }

@@ -126,8 +126,7 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
 
   nsISupportsKey key(aContent);
   if (aBinding) {
-    nsIXBLBinding* oldBinding = NS_STATIC_CAST(nsIXBLBinding*, mBindingTable->Put(&key, aBinding));
-    NS_IF_RELEASE(oldBinding);
+    mBindingTable->Put (&key, aBinding);
   }
   else
     mBindingTable->Remove(&key);
