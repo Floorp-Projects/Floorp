@@ -4082,12 +4082,6 @@ nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLContainerFormElement::Init()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
@@ -4326,12 +4320,6 @@ nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::Init()
-{
   return NS_OK;
 }
 
@@ -4730,6 +4718,8 @@ nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
   rv = url->GetHost(host);
   if (NS_FAILED(rv))
     return rv;
+
+  CopyASCIItoUCS2(host, aHostname);
 
   aHostname.Assign(NS_ConvertUTF8toUCS2(host));
   return NS_OK;

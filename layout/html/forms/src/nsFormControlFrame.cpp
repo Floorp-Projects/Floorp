@@ -129,8 +129,6 @@ nsFormControlFrame::~nsFormControlFrame()
 {
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
-    // This method only removes from radio lists if we are a radio input
-    mFormFrame->RemoveRadioControlFrame(this);
     mFormFrame = nsnull;
   }
 }
@@ -857,11 +855,11 @@ nsFormControlFrame::GetFont(nsIPresContext* aPresContext,
 
 nsresult
 nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
-{	nsresult res = NS_OK;
-  nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
+{
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  if (inputElement) {
     res = inputElement->GetDefaultChecked(aState);
-    NS_RELEASE(inputElement);
   }
 	return res;
 }
@@ -870,10 +868,9 @@ nsresult
 nsFormControlFrame::SetDefaultCheckState(PRBool aState)
 {
 	nsresult res = NS_OK;
-  nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  if (inputElement) {
     res = inputElement->SetDefaultChecked(aState);
-    NS_RELEASE(inputElement);
   }
 	return res;
 }
@@ -882,10 +879,9 @@ nsresult
 nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
 	nsresult res = NS_OK;
-  nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  if (inputElement) {
     res = inputElement->GetChecked(aState);
-    NS_RELEASE(inputElement);
   }
 	return res;
 }
@@ -894,10 +890,9 @@ nsresult
 nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 {
 	nsresult res = NS_OK;
-  nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  if (inputElement) {
     inputElement->SetChecked(aState); 
-   NS_RELEASE(inputElement);
   }
 	return res;
 }

@@ -72,7 +72,6 @@ CPPSRCS		= \
 		nsLabelFrame.cpp \
 		nsLegendFrame.cpp \
 		nsListControlFrame.cpp \
-		nsRadioControlGroup.cpp \
 		nsIsIndexFrame.cpp \
 		$(NULL)
 

@@ -40,6 +40,9 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsITextControlElement.h"
+#include "nsIRadioControlElement.h"
+#include "nsIRadioVisitor.h"
+
 #include "nsIControllers.h"
 #include "nsIEditorController.h"
 #include "nsIFocusController.h"
@@ -61,6 +64,7 @@
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
 #include "nsIGfxTextControlFrame.h"
+#include "nsIRadioControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
@@ -80,7 +84,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsICheckboxControlFrame.h"
-#include "nsIRadioControlFrame.h"
 #include "nsIFormManager.h"
 #include "nsIImageControlFrame.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
@@ -125,7 +128,8 @@ typedef nsIGfxTextControlFrame2 textControlPlace;
 class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
                            public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
-                           public nsITextControlElement
+                           public nsITextControlElement,
+                           public nsIRadioControlElement
 {
 public:
   nsHTMLInputElement();
@@ -150,6 +154,8 @@ public:
   NS_DECL_NSIDOMNSHTMLINPUTELEMENT
 
   // Overriden nsIFormControl methods
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
+                     PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
@@ -179,21 +185,12 @@ public:
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAReadableString& aValue, PRBool aNotify) {
+    BeforeSetAttr(aNameSpaceID, aName, &aValue, aNotify);
+
     nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
                                                         aValue, aNotify);
-    if (aName == nsHTMLAtoms::value
-        && !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)
-        && (mType == NS_FORM_INPUT_TEXT
-            || mType == NS_FORM_INPUT_PASSWORD
-            || mType == NS_FORM_INPUT_FILE
-            || mType == NS_FORM_INPUT_HIDDEN)) {
-      Reset();
-    }
-    if (aName == nsHTMLAtoms::checked
-        && !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)
-        && (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO)) {
-      Reset();
-    }
+
+    AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
     return rv;
   }
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
@@ -204,23 +201,27 @@ public:
 
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                        PRBool aNotify) {
+    BeforeSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
+
     nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
                                                       aAttribute,
                                                       aNotify);
-    if (aAttribute == nsHTMLAtoms::value
-        && !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
-      Reset();
-    }
-    if (aAttribute == nsHTMLAtoms::checked
-        && !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
-      Reset();
-    }
+
+    AfterSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
     return rv;
   }
 
   // nsITextControlElement
   NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
+
+  // nsIRadioControlElement
+  NS_IMETHOD RadioSetChecked();
+  NS_IMETHOD SetCheckedChanged(PRBool aCheckedChanged);
+  NS_IMETHOD SetCheckedChangedInternal(PRBool aCheckedChanged);
+  NS_IMETHOD GetCheckedChanged(PRBool* aCheckedChanged);
+  NS_IMETHOD AddedToRadioGroup();
+  NS_IMETHOD RemovedFromRadioGroup(nsIForm* aForm, nsAString* aName);
 
 protected:
   // Helper method
@@ -237,6 +238,17 @@ protected:
 			    		                       const nsAReadableString& aEventType);
 #endif
 
+  /**
+   * Called when an attribute is about to be changed
+   */
+  void BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString* aValue, PRBool aNotify);
+  /**
+   * Called when an attribute has just been changed
+   */
+  void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                    const nsAReadableString* aValue, PRBool aNotify);
+
   void SelectAll(nsIPresContext* aPresContext);
   PRBool IsImage() const
   {
@@ -249,6 +261,10 @@ protected:
 
   void FireOnChange();
 
+  nsresult VisitGroup(nsIRadioVisitor* aVisitor);
+
+  nsresult SetCheckedInternal(PRBool aValue);
+
   static nsresult GetContentType(const char* aPathName, char** aContentType);
 
   nsCOMPtr<nsIControllers> mControllers;
@@ -258,6 +274,34 @@ protected:
   PRInt8                   mBitField;
   char*                    mValue;
 };
+
+//
+// Visitor declarations
+//
+
+/**
+ * This visitor sets CheckedChanged on all elements it finds.
+ *
+ * @param aCheckedChanged the value of CheckedChanged to set on all elements
+ * @param aVisitor the visitor (out param)
+ */
+NS_METHOD NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
+                                              nsIRadioVisitor** aVisitor);
+
+/**
+ * This visitor will take the boolean you're pointing at and put
+ * aCheckedChanged into it.  If the visitor is never called, aCheckedChanged
+ * will of course not change.
+ *
+ * @param aCheckedChanged the boolean to put CheckedChanged into
+ * @param aExcludeElement an element to exclude--i.e. don't get checked changed
+ *        on this element
+ * @param aVisitor the visitor (out param)
+ */
+NS_METHOD NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
+                                              nsIFormControl* aExcludeElement,
+                                              nsIRadioVisitor** aVisitor);
+
 
 //
 // construction, destruction
@@ -320,6 +364,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
+  NS_INTERFACE_MAP_ENTRY(nsIRadioControlElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLInputElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -355,6 +400,57 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
+void
+nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  const nsAReadableString* aValue,
+                                  PRBool aNotify)
+{
+  if (aName == nsHTMLAtoms::name &&
+      mType == NS_FORM_INPUT_RADIO) {
+    // XXX Because we are not doing anything that assumes the radio button has
+    // actually had its name changed at this point, we can get away with
+    // calling this before the name has changed (and gain in performance by not
+    // grabbing the old name every time the name is changed).
+    RemovedFromRadioGroup(mForm, nsnull);
+  }
+}
+
+void
+nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAReadableString* aValue,
+                                 PRBool aNotify)
+{
+  //
+  // When name changes, radio moves to a different group
+  // (type changes are handled in the form itself currently)
+  //
+  if (aName == nsHTMLAtoms::name &&
+      mType == NS_FORM_INPUT_RADIO) {
+    AddedToRadioGroup();
+  }
+
+  //
+  // Some elements have to change their value when the value and checked
+  // attributes change (but they only do so when ValueChanged() and
+  // CheckedChanged() are false--i.e. the value has not been changed by the
+  // user or by JS)
+  //
+  if (aName == nsHTMLAtoms::value &&
+      !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
+      (mType == NS_FORM_INPUT_TEXT ||
+       mType == NS_FORM_INPUT_PASSWORD ||
+       mType == NS_FORM_INPUT_FILE ||
+       mType == NS_FORM_INPUT_HIDDEN)) {
+    Reset();
+  }
+  if (aName == nsHTMLAtoms::checked &&
+      !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED) &&
+      (mType == NS_FORM_INPUT_CHECKBOX ||
+       mType == NS_FORM_INPUT_RADIO)) {
+    Reset();
+  }
+}
+
 NS_IMETHODIMP
 nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
@@ -377,7 +473,7 @@ nsHTMLInputElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 {
-  nsHTMLValue val;                                                 
+  nsHTMLValue val;
   nsresult rv;
   rv = GetHTMLAttribute(nsHTMLAtoms::checked, val);       
 
@@ -591,42 +687,7 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aChecked)
 {
-  PRInt32 type;
-  GetType(&type);
-  if (type == NS_FORM_INPUT_RADIO) {
-    nsAutoString value(NS_LITERAL_STRING("0"));
-
-    // No need to flush here, if there's no frame created for this input
-    // yet, we know our own checked state.
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-
-    if (formControlFrame) {
-      formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
-    }
-    else {
-      // Retrieve the presentation state instead.
-      nsCOMPtr<nsIPresState> presState;
-      GetPrimaryPresState(this, getter_AddRefs(presState));
-
-      // Obtain the value property from the presentation state.
-      if (presState) {
-        presState->GetStateProperty(NS_LITERAL_STRING("checked"), value);
-      }
-    }
-
-    if (value.Equals(NS_LITERAL_STRING("1"))) {
-      *aChecked = PR_TRUE;
-    } else {
-      *aChecked = PR_FALSE;
-    }
-  } else {
-    if (!GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
-      GetDefaultChecked(aChecked);
-    } else {
-      *aChecked = GET_BOOLBIT(mBitField, BF_CHECKED);
-    }
-  }
-
+  *aChecked = GET_BOOLBIT(mBitField, BF_CHECKED);
   return NS_OK;
 }
 
@@ -644,15 +705,143 @@ nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent,
   }
 }
 
-NS_IMETHODIMP 
-nsHTMLInputElement::SetChecked(PRBool aValue)
+NS_IMETHODIMP
+nsHTMLInputElement::SetCheckedChanged(PRBool aCheckedChanged)
 {
-  SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, PR_TRUE);
+  if (mType == NS_FORM_INPUT_RADIO) {
+    if (GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED) != aCheckedChanged) {
+      nsCOMPtr<nsIRadioVisitor> visitor;
+      NS_GetRadioSetCheckedChangedVisitor(aCheckedChanged,
+                                          getter_AddRefs(visitor));
+      VisitGroup(visitor);
+    }
+  } else {
+    SetCheckedChangedInternal(aCheckedChanged);
+  }
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsHTMLInputElement::SetCheckedChangedInternal(PRBool aCheckedChanged)
+{
+  SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, aCheckedChanged);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetCheckedChanged(PRBool* aCheckedChanged)
+{
+  *aCheckedChanged = GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetChecked(PRBool aChecked)
+{
+  nsresult rv = NS_OK;
+
+  //
+  // If the user or JS attempts to set checked, whether it actually changes the
+  // value or not, we say the value was changed so that defaultValue don't
+  // affect it no more.
+  //
+  SetCheckedChanged(PR_TRUE);
+
+  //
+  // Don't do anything if we're not changing whether it's checked (it would
+  // screw up state actually, especially when you are setting radio button to
+  // false)
+  //
+  PRBool checked = PR_FALSE;
+  GetChecked(&checked);
+  if (checked == aChecked) {
+    return NS_OK;
+  }
+
+  //
+  // Set checked
+  //
+  PRInt32 type;
+  GetType(&type);
+  if (type == NS_FORM_INPUT_RADIO) {
+    //
+    // For radio button, we need to do some extra fun stuff
+    //
+    if (aChecked) {
+      rv = RadioSetChecked();
+    } else {
+      rv = SetCheckedInternal(PR_FALSE);
+      if (mForm) {
+        nsAutoString name;
+        GetName(name);
+        mForm->SetCurrentRadioButton(name, nsnull);
+      }
+    }
+  } else {
+    rv = SetCheckedInternal(aChecked);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::RadioSetChecked()
+{
+  nsresult rv = NS_OK;
+
+  //
+  // Find the selected radio button so we can deselect it
+  //
+  nsCOMPtr<nsIDOMHTMLInputElement> currentlySelected;
+  nsAutoString name;
+  if (mForm) {
+    // This is only initialized in if (mForm) for use in later if (mForm)s
+    GetName(name);
+    mForm->GetCurrentRadioButton(name, getter_AddRefs(currentlySelected));
+  }
+
+  //
+  // Deselect the currently selected radio button
+  //
+  if (currentlySelected) {
+    rv = NS_STATIC_CAST(nsHTMLInputElement*,
+                        NS_STATIC_CAST(nsIDOMHTMLInputElement*, currentlySelected)
+         )->SetCheckedInternal(PR_FALSE);
+  }
+
+  //
+  // Actually select this one
+  //
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetCheckedInternal(PR_TRUE);
+  }
+
+  //
+  // Let the form know that we are now the One True Radio Button
+  //
+  if (mForm && NS_SUCCEEDED(rv)) {
+    rv = mForm->SetCurrentRadioButton(name, NS_STATIC_CAST(nsIDOMHTMLInputElement*, this));
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetForm(nsIDOMHTMLFormElement* aForm,
+                            PRBool aRemoveFromForm)
+{
+  return nsGenericHTMLLeafFormElement::SetForm(aForm, aRemoveFromForm);
+}
+
+
+nsresult
+nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
+{
   //
   // Set the value
   //
-  SET_BOOLBIT(mBitField, BF_CHECKED, aValue);
+  SET_BOOLBIT(mBitField, BF_CHECKED, aChecked);
 
   //
   // Notify the frame
@@ -660,10 +849,11 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   // No need to flush here since if there's no frame for this input at
   // this point we don't care about creating one, once it's created
   // the frame will do the right thing.
+  //
   PRInt32 type;
   GetType(&type);
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
   if (formControlFrame) {
     nsCOMPtr<nsIPresContext> presContext;
     GetPresContext(this, getter_AddRefs(presContext));
@@ -672,63 +862,21 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
       nsICheckboxControlFrame* checkboxFrame = nsnull;
       CallQueryInterface(formControlFrame, &checkboxFrame);
       if (checkboxFrame) {
-        checkboxFrame->OnChecked(presContext, aValue);
+        checkboxFrame->OnChecked(presContext, aChecked);
       }
+      // These are frames.  You don't refcount frames.  Silly wabbit.
     } else if (type == NS_FORM_INPUT_RADIO) {
-      // the value is being toggled
-      nsAutoString val; val.AssignWithConversion(aValue ? "1" : "0");
-
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, val);
-    }
-  }
-  else if (type == NS_FORM_INPUT_RADIO) {
-    SetPresStateChecked(this, aValue);
-
-    nsAutoString name;
-    GetName(name);
-
-    nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-    if (NS_SUCCEEDED(GetForm(getter_AddRefs(formElement))) && formElement) {
-      nsCOMPtr<nsIDOMHTMLCollection> controls;
-
-      nsresult rv = formElement->GetElements(getter_AddRefs(controls));
-
-      if (controls) {
-        PRUint32 numControls;
-
-        controls->GetLength(&numControls);
-
-        for (PRUint32 i = 0; i < numControls; i++) {
-          nsCOMPtr<nsIDOMNode> elementNode;
-
-          controls->Item(i, getter_AddRefs(elementNode));
-
-          if (elementNode) {
-            nsCOMPtr<nsIDOMHTMLInputElement>
-              inputElement(do_QueryInterface(elementNode));
-
-            if (inputElement && inputElement.get() !=
-              NS_STATIC_CAST(nsIDOMHTMLInputElement *, this)) {
-              nsAutoString childName;
-
-              rv = inputElement->GetName(childName);
-
-              if (NS_SUCCEEDED(rv)) {
-                if (name == childName) {
-                  nsCOMPtr<nsIHTMLContent>
-                    htmlContent(do_QueryInterface(inputElement));
-
-                  SetPresStateChecked(htmlContent, PR_FALSE);
-                }
-              }
-            }
-          }
-        }
+      nsIRadioControlFrame* radioFrame = nsnull;
+      CallQueryInterface(formControlFrame, &radioFrame);
+      if (radioFrame) {
+        radioFrame->OnChecked(presContext, aChecked);
       }
+      // You don't refcount frames.
     }
   }
+  // special attr for XBL form controls
   else if (type == NS_FORM_INPUT_CHECKBOX) {
-    if (GET_BOOLBIT(mBitField, BF_CHECKED))
+    if (aChecked)
       SetAttr(kNameSpaceID_None, nsHTMLAtoms::inputCheckedPseudo,
               NS_LITERAL_STRING(""), PR_TRUE);
     else
@@ -1152,12 +1300,15 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // Start by remember the original value and for radio buttons we
   // must get the currently selected radiobtn. So we go get the
   // content instead of the frame
-  PRBool orginalCheckedValue = PR_FALSE;
+  //
+  PRBool originalCheckedValue = PR_FALSE;
   PRBool checkWasSet         = PR_FALSE;
-  nsCOMPtr<nsIContent> selectedRadiobtn;
+
+  nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
+
   if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK) {
-    GetChecked(&orginalCheckedValue);
+    GetChecked(&originalCheckedValue);
     checkWasSet = PR_TRUE;
     switch(type) {
       case NS_FORM_INPUT_CHECKBOX:
@@ -1168,30 +1319,32 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           FireOnChange();
           // Fire an event to notify accessibility
 #ifdef ACCESSIBILITY
-          FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("CheckboxStateChange"));
+          FireEventForAccessibility(aPresContext,
+                                    NS_LITERAL_STRING("CheckboxStateChange"));
 #endif
         }
         break;
 
       case NS_FORM_INPUT_RADIO:
         {
-          // Get the currently selected button from the radio group
-          // we get access to that via the nsIRadioControlFrame interface
-          // because the current grouping is kept in the frame.
-          if (formControlFrame) {
-            nsIRadioControlFrame * rb = nsnull;
-            CallQueryInterface(formControlFrame, &rb);
-
-            if (rb) {
-              rb->GetRadioGroupSelectedContent(getter_AddRefs(selectedRadiobtn));
-            }
+          if (mForm) {
+            nsAutoString name;
+            GetName(name);
+            mForm->GetCurrentRadioButton(name,
+                                         getter_AddRefs(selectedRadioButton));
           }
-          SetChecked(PR_TRUE);
-          FireOnChange();
+
+          PRBool checked;
+          GetChecked(&checked);
+          if (!checked) {
+            SetChecked(PR_TRUE);
+            FireOnChange();
+          }
           // Fire an event to notify accessibility
 #ifdef ACCESSIBILITY
-          if ( selectedRadiobtn != this ) {
-            FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("RadioStateChange"));
+          if (selectedRadioButton != this) {
+            FireEventForAccessibility(aPresContext,
+                                      NS_LITERAL_STRING("RadioStateChange"));
           }
 #endif
         }
@@ -1228,13 +1381,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     // if it was cancelled and a radio button, then set the old
     // selected btn to TRUE. if it is a checkbox then set it to its
     // original value
-    if (selectedRadiobtn) {
-      nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(selectedRadiobtn));
-      if (inputElement) {
-        inputElement->SetChecked(PR_TRUE);
-      }
-    } else {
-      SetChecked(orginalCheckedValue);
+    if (selectedRadioButton) {
+      selectedRadioButton->SetChecked(PR_TRUE);
+    } else if (type == NS_FORM_INPUT_CHECKBOX) {
+      SetChecked(originalCheckedValue);
     }
   }
 
@@ -1600,12 +1750,9 @@ nsHTMLInputElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
 NS_IMETHODIMP
 nsHTMLInputElement::GetType(PRInt32* aType)
 {
-  if (aType) {
-    *aType = mType;
-    return NS_OK;
-  } else {
-    return NS_FORM_NOTOK;
-  }
+  NS_ASSERTION(aType, "aType must not be null!");
+  *aType = mType;
+  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -1828,7 +1975,7 @@ nsHTMLInputElement::Reset()
       PRBool resetVal;
       GetDefaultChecked(&resetVal);
       rv = SetChecked(resetVal);
-      SET_BOOLBIT(mBitField, BF_CHECKED_CHANGED, PR_FALSE);
+      SetCheckedChanged(PR_FALSE);
       break;
     }
     case NS_FORM_INPUT_HIDDEN:
@@ -2082,26 +2229,47 @@ nsHTMLInputElement::SaveState(nsIPresContext* aPresContext,
   GetType(&type);
   
   switch (type) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+      {
+        PRBool checked = PR_FALSE;
+        GetChecked(&checked);
+        rv = GetPrimaryPresState(this, aState);
+        if (*aState) {
+          if (checked) {
+            rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"),
+                                             NS_LITERAL_STRING("t"));
+          } else {
+            rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"),
+                                             NS_LITERAL_STRING("f"));
+          }
+          NS_ASSERTION(NS_SUCCEEDED(rv), "checked save failed!");
+        }
+        break;
+      }
+
     // Never save passwords in session history
     case NS_FORM_INPUT_PASSWORD:
       break;
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
-      nsresult rv = GetPrimaryPresState(this, aState);
-      if (*aState) {
-        nsString value;
-        GetValue(value);
-        // XXX Should use nsAutoString above but ConvertStringLineBreaks
-        // requires mOwnsBuffer!
-        rv = nsLinebreakConverter::ConvertStringLineBreaks(
-                 value,
-                 nsLinebreakConverter::eLinebreakPlatform,
-                 nsLinebreakConverter::eLinebreakContent);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
-        rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+      {
+        nsresult rv = GetPrimaryPresState(this, aState);
+        if (*aState) {
+          nsString value;
+          GetValue(value);
+          // XXX Should use nsAutoString above but ConvertStringLineBreaks
+          // requires mOwnsBuffer!
+          rv = nsLinebreakConverter::ConvertStringLineBreaks(
+                   value,
+                   nsLinebreakConverter::eLinebreakPlatform,
+                   nsLinebreakConverter::eLinebreakContent);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+          rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), value);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+        }
+        break;
       }
-      break;
   }
 
   return rv;
@@ -2117,17 +2285,271 @@ nsHTMLInputElement::RestoreState(nsIPresContext* aPresContext,
   GetType(&type);
   
   switch (type) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+      {
+        nsAutoString checked;
+        rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
+        // We assume that we are the only ones who saved the state.  Thus we
+        // know the exact value that would have been saved.
+        if (checked.Equals(NS_LITERAL_STRING("t"))) {
+          SetChecked(PR_TRUE);
+        } else {
+          SetChecked(PR_FALSE);
+        }
+
+        break;
+      }
+
     // Never save passwords in session history
     case NS_FORM_INPUT_PASSWORD:
       break;
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_FILE:
-      nsAutoString value;
-      rv = aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
-      SetValue(value);
-      break;
+      {
+        nsAutoString value;
+        rv = aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
+        SetValue(value);
+        break;
+      }
   }
 
   return rv;
+}
+
+
+/*
+ * Radio group stuff
+ */
+
+NS_IMETHODIMP
+nsHTMLInputElement::AddedToRadioGroup()
+{
+  //
+  // Currently the only time radio groups really happen is in forms
+  //
+  if (!mForm) {
+    return NS_OK;
+  }
+
+  //
+  // If the input element is checked, and we add it to the group, it will
+  // deselect whatever is currently selected in that group
+  //
+  PRBool checked;
+  GetChecked(&checked);
+  if (checked) {
+    //
+    // If it is checked, call "RadioSetChecked" to perform the selection/
+    // deselection ritual.  This has the side effect of repainting the
+    // radio button, but as adding a checked radio button into the group
+    // should not be that common an occurrence, I think we can live with
+    // that.
+    //
+    RadioSetChecked();
+  }
+
+  //
+  // For integrity purposes, we have to ensure that "checkedChanged" is
+  // the same for this new element as for all the others in the group
+  //
+  PRBool checkedChanged = PR_FALSE;
+  nsCOMPtr<nsIRadioVisitor> visitor;
+  nsresult rv = NS_GetRadioGetCheckedChangedVisitor(&checkedChanged, this,
+                                           getter_AddRefs(visitor));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString name;
+  GetName(name);
+  rv = mForm->WalkRadioGroup(name, visitor);
+  SetCheckedChangedInternal(checkedChanged);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::RemovedFromRadioGroup(nsIForm* aForm, nsAString* aName)
+{
+  //
+  // Currently radio groups only happen in forms
+  //
+  if (!aForm) {
+    return NS_OK;
+  }
+
+  //
+  // If this button was checked, we need to notify the group that there is no
+  // longer a selected radio button
+  //
+  PRBool checked = PR_FALSE;
+  GetChecked(&checked);
+
+  if (checked) {
+    if (aName) {
+      aForm->SetCurrentRadioButton(*aName, (nsIDOMHTMLInputElement*)nsnull);
+    } else {
+      nsAutoString name;
+      GetName(name);
+      aForm->SetCurrentRadioButton(name, (nsIDOMHTMLInputElement*)nsnull);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor)
+{
+  nsresult rv;
+  if (mForm) {
+    nsAutoString name;
+    GetName(name);
+    rv = mForm->WalkRadioGroup(name, aVisitor);
+  } else {
+    PRBool stop = PR_FALSE;
+    rv = aVisitor->Visit(this, &stop);
+  }
+  return rv;
+}
+
+
+//
+// Visitor classes
+//
+//
+// CLASS nsRadioVisitor
+//
+// (this is the superclass of the others)
+//
+class nsRadioVisitor : public nsIRadioVisitor {
+public:
+  nsRadioVisitor() { NS_INIT_ISUPPORTS(); }
+  virtual ~nsRadioVisitor() { };
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop) = 0;
+};
+
+NS_IMPL_ADDREF(nsRadioVisitor)
+NS_IMPL_RELEASE(nsRadioVisitor)
+
+NS_INTERFACE_MAP_BEGIN(nsRadioVisitor)
+  NS_INTERFACE_MAP_ENTRY(nsIRadioVisitor)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+
+//
+// CLASS nsRadioSetCheckedChangedVisitor
+//
+class nsRadioSetCheckedChangedVisitor : public nsRadioVisitor {
+public:
+  nsRadioSetCheckedChangedVisitor(PRBool aCheckedChanged) :
+    nsRadioVisitor(), mCheckedChanged(aCheckedChanged)
+    { }
+
+  virtual ~nsRadioSetCheckedChangedVisitor() { }
+
+  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
+  {
+    nsCOMPtr<nsIRadioControlElement> radio(do_QueryInterface(aRadio));
+    NS_ASSERTION(radio, "Visit() passed a null button (or non-radio)!");
+    radio->SetCheckedChangedInternal(mCheckedChanged);
+    *aStop = PR_TRUE;
+    return NS_OK;
+  }
+
+protected:
+  PRPackedBool mCheckedChanged;
+};
+
+//
+// CLASS nsRadioGetCheckedChangedVisitor
+//
+class nsRadioGetCheckedChangedVisitor : public nsRadioVisitor {
+public:
+  nsRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
+                                  nsIFormControl* aExcludeElement) :
+    nsRadioVisitor(),
+    mCheckedChanged(aCheckedChanged),
+    mExcludeElement(aExcludeElement)
+    { }
+
+  virtual ~nsRadioGetCheckedChangedVisitor() { }
+
+  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
+  {
+    if (aRadio == mExcludeElement) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIRadioControlElement> radio(do_QueryInterface(aRadio));
+    NS_ASSERTION(radio, "Visit() passed a null button (or non-radio)!");
+    radio->GetCheckedChanged(mCheckedChanged);
+    *aStop = PR_TRUE;
+    return NS_OK;
+  }
+
+protected:
+  PRBool* mCheckedChanged;
+  nsIFormControl* mExcludeElement;
+};
+
+NS_METHOD
+NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
+                                    nsIRadioVisitor** aVisitor)
+{
+  //
+  // These are static so that we don't have to keep creating new visitors for
+  // such an ordinary process all the time.  There are only two possibilities
+  // for this visitor: set to true, and set to false.
+  //
+  static nsIRadioVisitor* visitorTrue = nsnull;
+  static nsIRadioVisitor* visitorFalse = nsnull;
+
+  //
+  // Get the visitor that sets them to true
+  //
+  if (aCheckedChanged) {
+    if (!visitorTrue) {
+      visitorTrue = new nsRadioSetCheckedChangedVisitor(PR_TRUE);
+      if (!visitorTrue) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_ADDREF(visitorTrue);
+    }
+    *aVisitor = visitorTrue;
+  }
+
+  //
+  // Get the visitor that sets them to false
+  //
+  if (!aCheckedChanged) {
+    if (!visitorFalse) {
+      visitorFalse = new nsRadioSetCheckedChangedVisitor(PR_FALSE);
+      if (!visitorFalse) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_ADDREF(visitorFalse);
+    }
+    *aVisitor = visitorFalse;
+  }
+
+  NS_ADDREF(*aVisitor);
+  return NS_OK;
+}
+
+NS_METHOD
+NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
+                                    nsIFormControl* aExcludeElement,
+                                    nsIRadioVisitor** aVisitor)
+{
+  *aVisitor = new nsRadioGetCheckedChangedVisitor(aCheckedChanged,
+                                                  aExcludeElement);
+  if (!*aVisitor) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(*aVisitor);
+
+  return NS_OK;
 }

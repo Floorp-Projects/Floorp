@@ -48,14 +48,12 @@ class  nsIFrame;
 class  nsIPresContext;
 struct nsHTMLReflowState;
 class  nsFormControlFrame;
-class  nsGfxRadioControlFrame;
 class  nsIFormControlFrame;
 class  nsIDOMHTMLFormElement;
 class nsIDocument;
 class nsIPresContext;
 class nsFormFrame;
 class nsIUnicodeEncoder;
-class nsRadioControlGroup;
 
 class nsFormFrame : public nsBlockFrame
 {
@@ -65,24 +63,11 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
-                         nsIFrame*       aOldFrame);
-
   // other methods 
 
-  //--------------------------------------------------------
-  // returns NS_ERROR_FAILURE if the radiobtn doesn't have a group
-  // returns NS_OK is it did have a radio group 
-  //--------------------------------------------------------
-  nsresult OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
-    
   void AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame);
   static void AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aFrame);
   void RemoveFormControlFrame(nsIFormControlFrame& aFrame);
-  void RemoveRadioControlFrame(nsIFormControlFrame * aFrame);
-  nsresult GetRadioInfo(nsIFormControlFrame* aFrame, nsString& aName, nsRadioControlGroup *& aGroup);
 
   // static helper functions for nsIFormControls
   
@@ -96,8 +81,6 @@ public:
                            nsIContent* aContent = 0);
   static void StyleChangeReflow(nsIPresContext* aPresContext,
                                 nsIFrame* aFrame);
-  static nsresult GetRadioGroupSelectedContent(nsGfxRadioControlFrame* aControl,
-                                               nsIContent **           aRadiobtn);
   void SetFlags(PRUint32 aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
     mState |= aFlags;
@@ -109,14 +92,8 @@ public:
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  void RemoveRadioGroups();
-
-  void DoDefaultSelection(nsIPresContext*          aPresContext, 
-                          nsRadioControlGroup *    aGroup,
-                          nsGfxRadioControlFrame * aRadioToIgnore = nsnull);
 
   nsVoidArray          mFormControls;
-  nsVoidArray          mRadioGroups;
 
   static PRBool gInitPasswordManager;
 };

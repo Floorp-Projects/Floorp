@@ -275,127 +275,26 @@ nsGfxCheckboxControlFrame::GetCheckboxState ( )
   return retval;
 }
 
-//------------------------------------------------------------
-void
-nsGfxCheckboxControlFrame::SetCheckboxState (nsIPresContext* aPresContext,
-                                             PRBool aValue )
-{
-  nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
-  elem->SetChecked(aValue);
-}
-
-//------------------------------------------------------------
-void
-nsGfxCheckboxControlFrame::GetCheckboxControlFrameState (
-                               nsAWritableString& aValue )
-{
-  CheckStateToString(GetCheckboxState(), aValue);
-}       
-
-
-//------------------------------------------------------------
-void
-nsGfxCheckboxControlFrame::SetCheckboxControlFrameState (
-                               nsIPresContext* aPresContext,
-                               const nsAReadableString& aValue )
-{
-  PRBool state = StringToCheckState(aValue);
-  SetCheckboxState(aPresContext, state);
-}         
-
-
-//------------------------------------------------------------
-//
-// CheckStateToString
-//
-// Converts from a CheckState to a string
-//
-void
-nsGfxCheckboxControlFrame::CheckStateToString (
-                               PRBool inState,
-                               nsAWritableString& outStateAsString )
-{
-  if (inState) {
-    outStateAsString.Assign(NS_STRING_TRUE);
-  } else {
-    outStateAsString.Assign(NS_STRING_FALSE);
-  }
-} // CheckStateToString
-
-
-//------------------------------------------------------------
-//
-// StringToCheckState
-//
-// Converts from a string to a CheckState enum
-//
-PRBool
-nsGfxCheckboxControlFrame::StringToCheckState ( const nsAReadableString & aStateAsString )
-{
-  return aStateAsString.Equals(NS_STRING_TRUE);
-} // StringToCheckState
-
-
 //----------------------------------------------------------------------
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
                                                 nsIPresState** aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  // Don't save state before we are initialized
-  if (!mDidInit) {
-    return NS_OK;
-  }
-
-  PRBool stateCheck = GetCheckboxState();
-  PRBool defaultStateBool = PR_FALSE;
-  nsresult res = GetDefaultCheckState(&defaultStateBool);
-
-  // Compare to default value, and only save if needed (Bug 62713)
-  if (!(NS_CONTENT_ATTR_HAS_VALUE == res &&
-        ((stateCheck && defaultStateBool) ||
-         (!stateCheck && !defaultStateBool)))) {
-
-    // Get the value string
-    nsAutoString stateString;
-    CheckStateToString(stateCheck, stateString);
-
-    // Construct a pres state and store value in it.
-    res = NS_NewPresState(aState);
-    NS_ENSURE_SUCCESS(res, res);
-    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"), stateString);
-  }
-
-  return res;
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
 }
 
 NS_IMETHODIMP nsGfxCheckboxControlFrame::RestoreState(nsIPresContext* aPresContext,
                                                    nsIPresState* aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  if (!mDidInit) {
-    mPresContext = aPresContext;
-    InitializeControl(aPresContext);
-    mDidInit = PR_TRUE;
-  }
-
-  // Set the value to the stored state.
-  nsAutoString stateString;
-  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("checked"), stateString);
-  NS_ENSURE_SUCCESS(res, res);
-
-  SetCheckboxControlFrameState(aPresContext, stateString);
-  return NS_OK;
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }
 
 //------------------------------------------------------------
 // Extra Debug Methods
 //------------------------------------------------------------
 #ifdef DEBUG_rodsXXX
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState, 

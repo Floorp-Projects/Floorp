@@ -74,7 +74,6 @@ NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsGfxRadioControlFrame::nsGfxRadioControlFrame()
 {
    // Initialize GFX-rendered state
-  mChecked = PR_FALSE;
   mRadioButtonFaceStyle = nsnull;
 }
 
@@ -156,79 +155,6 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
-{
-  if (nsHTMLAtoms::checked == aName) {
-    PRBool state = (aValue.Equals(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
-
-
-    // if there is no form than the radiobtn is an orphan
-    if (mFormFrame) {
-      // if this failed then it didn't have a named radio group
-      if (NS_FAILED(mFormFrame->OnRadioChecked(aPresContext, *this, state))) {
-        // The line below is commented out to duplicate NavQuirks behavior
-        //SetRadioState(aPresContext, state);
-      }
-    } else {
-      SetRadioState(aPresContext, state);
-    }
-  }
-  else {
-    return nsFormControlFrame::SetProperty(aPresContext, aName, aValue);
-  }
-
-  return NS_OK;    
-}
-
-//--------------------------------------------------------------
-NS_IMETHODIMP nsGfxRadioControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
-{
-  // Return the value of the property from the widget it is not null.
-  // If is null, assume the widget is GFX-rendered and return a member variable instead.
-
-  if (nsHTMLAtoms::checked == aName) {
-	  nsFormControlHelper::GetBoolString(GetRadioState(), aValue);
-  } else {
-    return nsFormControlFrame::GetProperty(aName, aValue);
-  }
-
-  return NS_OK;    
-}
-
-//--------------------------------------------------------------
-PRBool
-nsGfxRadioControlFrame::GetChecked() 
-{
-  PRBool checked = PR_FALSE;
-  GetCurrentCheckState(&checked);
-  return(checked);
-}
-
-//--------------------------------------------------------------
-PRBool
-nsGfxRadioControlFrame::GetDefaultChecked() 
-{
-  PRBool checked = PR_FALSE;
-  GetDefaultCheckState(&checked);
-  return(checked);
-}
-
-//--------------------------------------------------------------
-void
-nsGfxRadioControlFrame::SetChecked(nsIPresContext* aPresContext, PRBool aValue, PRBool aSetInitialValue)
-{
-  if (aSetInitialValue) {
-    if (aValue) {
-      mContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_LITERAL_STRING("1"), PR_FALSE); // XXX should be "empty" value
-    } else {
-      mContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, NS_LITERAL_STRING("0"), PR_FALSE);
-    }
-  }
-
-  SetRadioState(aPresContext, aValue);
-}
-
-//--------------------------------------------------------------
 NS_IMETHODIMP
 nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext)
 {
@@ -238,15 +164,6 @@ nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioBu
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxRadioControlFrame::GetRadioGroupSelectedContent(nsIContent ** aRadioBtn)
-{
-  NS_ENSURE_ARG_POINTER(aRadioBtn);
-  nsFormFrame::GetRadioGroupSelectedContent(this, aRadioBtn);
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsGfxRadioControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                           nsGUIEvent* aEvent,
@@ -271,8 +188,8 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
    
   PRBool checked = PR_TRUE;
   GetCurrentCheckState(&checked); // Get check state from the content model
-  if (PR_TRUE == checked) {
-    // Paint the button for the radio button using CSS background rendering code
+  if (checked) {
+   // Paint the button for the radio button using CSS background rendering code
    if (nsnull != mRadioButtonFaceStyle) {
      const nsStyleBackground* myColor = (const nsStyleBackground*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Background);
@@ -332,80 +249,22 @@ nsGfxRadioControlFrame::Paint(nsIPresContext*   aPresContext,
 
 
 //--------------------------------------------------------------
-PRBool nsGfxRadioControlFrame::GetRadioState()
+NS_IMETHODIMP
+nsGfxRadioControlFrame::OnChecked(nsIPresContext* aPresContext,
+                                  PRBool aChecked)
 {
-  return mChecked;
-}
-
-//--------------------------------------------------------------
-void nsGfxRadioControlFrame::SetRadioState(nsIPresContext* aPresContext, PRBool aValue)
-{
-  mChecked = aValue;
   nsFormControlHelper::ForceDrawFrame(aPresContext, this);
-}
-
-void 
-nsGfxRadioControlFrame::InitializeControl(nsIPresContext* aPresContext)
-{
-  nsFormControlFrame::InitializeControl(aPresContext);
-
-  // Only reset on init if this is the primary shell
-  // Temporary workaround until radio state is in content
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  if (!presShell) return;
-
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
-  if (!doc) return;
-
-  nsCOMPtr<nsIPresShell> primaryPresShell;
-  doc->GetShellAt(0, getter_AddRefs(primaryPresShell));
-  if (!primaryPresShell) return;
-
-  if (presShell.get() == primaryPresShell.get()) {
-    // set the widget to the initial state
-    // XXX We can't use reset because radio buttons fire onChange
-    // from content (much to our dismay)
-    PRBool checked = PR_FALSE;
-    nsresult rv = GetDefaultCheckState(&checked);
-    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-      SetRadioState(aPresContext, checked);
-    }
-  }
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext,
+                                  nsIPresState** aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  // Don't save state before we are initialized
-  if (!mDidInit) {
-    return NS_OK;
-  }
-
-  nsresult res = NS_OK;
-  PRBool stateBool = GetRadioState();
-  PRBool defaultStateBool = GetDefaultChecked();
-
-  // Compare to default value, and only save if needed (Bug 62713)
-  if (stateBool != defaultStateBool) {
-
-    // Get the value string
-    nsAutoString stateString;
-    nsFormControlHelper::GetBoolString(stateBool, stateString);
-
-    // Construct a pres state and store value in it.
-    res = NS_NewPresState(aState);
-    NS_ENSURE_SUCCESS(res, res);
-    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"), stateString);
-  }
-
-  return res;
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
 }
         
 
@@ -414,25 +273,7 @@ nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** a
 NS_IMETHODIMP
 nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  if (!mDidInit) {
-    mPresContext = aPresContext;
-    InitializeControl(aPresContext);
-    mDidInit = PR_TRUE;
-  }
-
-  mIsRestored = PR_TRUE;
-  nsAutoString stateString;
-  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("checked"), stateString);
-  NS_ENSURE_SUCCESS(res, res);
-
-  res = SetProperty(aPresContext, nsHTMLAtoms::checked, stateString);
-  NS_ENSURE_SUCCESS(res, res);
-
-  mRestoredChecked = mChecked;
-
-  return NS_OK;
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }
 
 
