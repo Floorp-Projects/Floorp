@@ -52,6 +52,19 @@ Program Folder Path=[COMMON_PROGRAMS]
 
 Uninstall Filename=$UninstallFile$
 
+; The key(s) are used as a fail over key(s).  The url(s) here will be used
+; when the redirect.ini file is not found (ie. failed to download).
+; There can be more than one url listed here.  The naming convention needs to
+; be as follows:
+;
+;   url=
+;   url.0=
+;   url.1=
+;   url.2=
+;
+; and so on...
+url=$ArchiveUrl$
+
 ; Default Setup Type values:
 ;   Setup Type 0 - first radio button (default)
 ;   Setup Type 1 - second radio button
@@ -322,12 +335,6 @@ $InstallSizeArchive$:xpcom.xpi
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component1]
 Description Short=Mozilla Seamonkey
@@ -342,12 +349,6 @@ $InstallSizeArchive$:browser.xpi
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|DISABLED
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component2]
 Description Short=Mail & News
@@ -363,12 +364,6 @@ $InstallSizeArchive$:mail.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED
 Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component3]
 Description Short=$CompanyName$ Uninstaller
@@ -384,12 +379,6 @@ $InstallSizeArchive$:$UninstallFile$
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component4]
 Description Short=Chatzilla
@@ -405,12 +394,6 @@ $InstallSizeArchive$:chatzilla.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED
 Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component5]
 Description Short=US English profile defaults
@@ -426,12 +409,6 @@ $InstallSizeArchive$:deflenus.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE
 Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component6]
 Description Short=English-US language pack
@@ -447,12 +424,6 @@ $InstallSizeArchive$:langenus.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE
 Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 [Component7]
 Description Short=English-German language pack
@@ -468,12 +439,6 @@ $InstallSizeArchive$:langende.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE
 Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-Domain0=$Domain$
-Server Path0=$ServerPath$
 
 
 
@@ -487,9 +452,22 @@ Message=Preparing Install, please wait...
 
 [Redirect]
 Status=Disabled
-url0=$RedirIniUrl$
+; This is used in conjunction with the Site Selector info to build a
+; url to where to download the needed redirect.ini file from.
+; If there's more than one server path, they will be used as fail
+; over paths.
+;
+; The Server Path= keys need to be named in the following convention:
+;
+;   Server Path0=
+;   Server Path1=
+;   Server Path2=
+;
+; and so on...
+Server Path0=
 Description=
 Message=
+
 
 ; The Timing key needs to be one of the following values:
 ;   pre download     - process before any files have been downloaded.
