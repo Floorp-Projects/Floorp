@@ -64,4 +64,8 @@ CPPSRCS		= nsCUPSShim.cpp \
 		  nsPSPrinters.cpp \
 		  $(NULL)
 
+EXTRA_DSO_LDOPTS = \
+		  $(MOZ_COMPONENT_LIBS) \
+		  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
