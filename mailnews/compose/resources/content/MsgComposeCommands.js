@@ -1477,16 +1477,11 @@ function ComposeLoad()
     var wizardcallback = true;
     var state = verifyAccounts(wizardcallback); // this will do migration, or create a new account if we need to.
 
-    if (sOther_headers != "") {
+    if (sOther_headers) {
+      var selectNode = document.getElementById('addressCol1#1');
       var sOther_headers_Array = sOther_headers.split(",");
-      for (i = 0; i < sOther_headers_Array.length; i++) {
-        var selectNode = document.getElementById('addressCol1#1');
-        selectNode = selectNode.childNodes[0];
-        var opt = document.createElement('menuitem');
-        opt.setAttribute("value", "addr_other");
-        opt.setAttribute("label", sOther_headers_Array[i] + ":");
-        selectNode.appendChild(opt);
-      }
+      for (var i = 0; i < sOther_headers_Array.length; i++)
+        selectNode.appendItem(sOther_headers_Array[i] + ":", "addr_other");
     }
     if (state)
       ComposeStartup(false, null);
