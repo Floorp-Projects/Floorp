@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2002/05/01 02:36:26 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/05/01 02:42:11 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -45,6 +45,7 @@
 
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use TreeData;
 use HTMLPopUp;
 use FileStructure;
