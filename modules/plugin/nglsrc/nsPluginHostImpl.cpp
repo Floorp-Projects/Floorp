@@ -41,6 +41,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIPluginStreamListener2.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
@@ -1095,7 +1096,7 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeReq
 
     // XXX needs to be fixed for negative offsets
     nsCString firstbyte; firstbyte.AppendInt(range->offset);
-    nsCString lastbyte; firstbyte.AppendInt(range->offset + range->length - 1);
+    nsCString lastbyte; lastbyte.AppendInt(range->offset + range->length - 1);
 
     PL_strcat(string, firstbyte.get());
     PL_strcat(string, "-");
@@ -1113,7 +1114,6 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeReq
 
   *rangeRequest = string;
   *numRequests  = requestCnt;
-  
   return;
 }
 
@@ -1704,10 +1704,16 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
         mDataForwardToRequest->Put(&key, (void*) (amtForwardToPlugin+aLength));
     }
 
-    rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
+    nsCOMPtr<nsIPluginStreamListener2> PStreamListener2 = do_QueryInterface(mPStreamListener);
+    if (PStreamListener2)
+      rv =  PStreamListener2->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
                                             aIStream, 
                                             absoluteOffset+amtForwardToPlugin, 
                                             aLength);
+    else
+      rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
+                                              aIStream, 
+                                              aLength);
 
     // if a plugin returns an error, the peer must kill the stream
     //   else the stream and PluginStreamListener leak
@@ -1887,6 +1893,11 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     {
       if (0 == PL_strcmp(range.get(), "bytes"))
         bSeekable = PR_TRUE;
+      /* XXX FIX-ME (see Bug 83183)
+         This is a hack to keep byte range request streams open but it casues a leak.
+         A good place to release would probablybe when the instance is stopped.
+      */
+      NS_ADDREF(this);
     }
   }
 

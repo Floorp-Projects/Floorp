@@ -48,6 +48,7 @@ EXPORTS		= \
 		nsIPluginInputStream.h \
 		nsIPluginInputStream2.h \
 		nsIPluginStreamListener.h \
+		nsIPluginStreamListener2.h \
 		nsIPluginStreamInfo.h \
 		nsplugin.h \
 		nsplugindefs.h \
