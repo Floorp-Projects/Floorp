@@ -64,7 +64,6 @@
 
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
-#include "nsISSLStatus.h"
 
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
@@ -164,23 +163,6 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 
    if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
       return NS_OK;
-
-   if(aIID.Equals(NS_GET_IID(nsISSLStatus))) {
-      NS_ENSURE_TRUE(mSecurityUI, NS_ERROR_FAILURE);
-
-      nsresult rv;
-      nsCOMPtr<nsISSLStatusProvider> sslStatusProvider = do_QueryInterface(mSecurityUI, &rv);
-      if(NS_FAILED(rv)) return NS_NOINTERFACE;;
-
-      nsCOMPtr<nsISSLStatus> sslStatus;
-      rv = sslStatusProvider->GetSSLStatus(getter_AddRefs(sslStatus));
-      if(NS_FAILED(rv)) return NS_NOINTERFACE;
-
-      *aSink = sslStatus;
-      NS_ADDREF((nsISupports *) * aSink);
-
-      return NS_OK;
-   }
 
    if(mDocShell)
       return mDocShellAsReq->GetInterface(aIID, aSink);
