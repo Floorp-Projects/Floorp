@@ -176,13 +176,13 @@ fi
 #
 
 if [ $TINDERBOX_OUTPUT ]; then
-    echo -n "TinderboxPrint:Z:"
+    echo -n "__codesize:"
 fi
 ./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV
 
 if [ -e $DIFFFILE ]; then
 if [ $TINDERBOX_OUTPUT ]; then
-    echo -n "TinderboxPrint:Zdiff:"
+    echo -n "__codesizeDiff:"
 fi
     ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE
 fi
