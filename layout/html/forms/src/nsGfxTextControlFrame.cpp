@@ -2337,8 +2337,6 @@ nsEnderFocusListener::Focus(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  printf("Focus %p\n", mFrame);
-
   nsresult result = NS_OK;
 
   if (mFrame && mContent && mView)
@@ -2386,8 +2384,6 @@ nsEnderFocusListener::Blur(nsIDOMEvent* aEvent)
   if (!uiEvent) {
     return NS_OK;
   }
-
-  printf("Blur %p\n", mFrame);
 
   nsresult result = NS_OK;
 
