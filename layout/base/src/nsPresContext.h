@@ -142,6 +142,7 @@ protected:
   nsVoidArray           mImageLoaders;
   nsCOMPtr<nsIEventStateManager> mEventManager;
   nsCompatibility       mCompatibilityMode;
+  PRBool                mCompatibilityLocked;
   nsWidgetRendering     mWidgetRenderingMode;
   nsCOMPtr<nsIURI>      mBaseURL;
   PRBool                mStopped;
