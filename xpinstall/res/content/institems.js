@@ -51,25 +51,29 @@ function addTreeItem(num, modName, url)
 
 function onLoad() 
 {
+    var i = 0;
+	var row = 0;
+	var moduleName;
+	var URL;
+    var numberOfDialogTreeElements;
+
 	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
 	if( !param )
 	{
 		dump( " error getting param block interface\n" );
 		return;
 	}
+    param.SetInt(0, 1 ); /* Set the default return to Cancel */
 
-    var i = 0;
-	var row = 0;
-	var moduleName;
-	var URL;
-	while (moduleName != "")
+	numberOfDialogTreeElements = param.GetInt(1);
+
+    for (i=0; i < numberOfDialogTreeElements; i++)
 	{
-		moduleName = param.GetString(i++);
-		URL = param.GetString(i++);
+        moduleName = param.GetString(i);
+		URL = param.GetString(++i);
         addTreeItem(row++, moduleName, URL);
 	}
 }
-
 
 function onOk() 
 {

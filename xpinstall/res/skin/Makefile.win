@@ -1,3 +1,4 @@
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,25 +18,15 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..
 
-include $(DEPTH)/config/autoconf.mk
 
-DIRS = locale content skin
+include <$(DEPTH)\config\rules.mak>
 
-EXPORT_RESOURCE_XPINSTALL = \
-		$(srcdir)/progress.xul \
-		$(srcdir)/progress.html \
-		$(srcdir)/progress.css \
-		$(NULL)
+install:: $(DLL)
+  $(MAKE_INSTALL) xpinstall.css $(DIST)\bin\chrome\xpinstall\skin\default
 
-include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_XPINSTALL) $(DIST)/bin/res/xpinstall
+clobber::
+  rm -f $(DIST)\bin\chrome\xpinstall\skin\default\xpistall.css
 

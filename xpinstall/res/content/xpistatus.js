@@ -32,26 +32,33 @@ function onLoad()
 	var row = 0;
 	var moduleName;
 	var URL;
+    var numberOfDialogTreeElements;
+
+    dump ("In onLoad handler \n");
 
 	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
 	if ( !param )
     {
 	    dump (" error getting param block interface \n");
 	}
+    numberOfDialogTreeElements = param.GetInt(1);
+    dump(numberOfDialogTreeElements += "\n");
+
 	manager = window.arguments[1];
 	
-	while (moduleName != "")
+	for (i = 0; i < numberOfDialogTreeElements; i++)
 	{
-		moduleName = param.GetString(i++);
+		moduleName = param.GetString(i);
 		URL = param.GetString(i++);
         addTreeItem(row++, moduleName, URL);
 	}
 	manager.DialogOpened(window);
+
 }
 
 function addTreeItem(num, modName, url)
 {
-  dump("Adding element " + num + " : " + name + "\n");
+  dump("Adding Progress element " + num + " : " + name + "\n");
   var body = document.getElementById("theTreeBody");
 
   var newitem = document.createElement('treeitem');
