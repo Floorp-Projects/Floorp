@@ -96,16 +96,6 @@ class nsEditorShell :   public nsIEditorShell,
     NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
   protected:
-    nsIDOMWindow       *mToolbarWindow;				// weak reference
-    nsIDOMWindow       *mContentWindow;				// weak reference
-
-    nsIWebShellWindow  *mWebShellWin;					// weak reference
-    nsIWebShell        *mWebShell;						// weak reference
-
-    // The webshell that contains the document being edited.
-    // Don't assume that webshell directly contains the document being edited;
-    // if we are in a frameset, this assumption is broken.
-    nsIWebShell        *mContentAreaWebShell;	// weak reference
 
   	typedef enum {
   	  eUninitializedEditorType = 0,
@@ -113,72 +103,86 @@ class nsEditorShell :   public nsIEditorShell,
   		eHTMLTextEditorType = 2
   	} EEditorType;
   	
-    nsIPresShell* 	GetPresShellFor(nsIWebShell* aWebShell);
-    NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
-    NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
-    NS_IMETHOD			ScrollSelectionIntoView();
-    NS_IMETHOD      TransferDocumentStateListeners();
-    NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
-    void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-		NS_IMETHOD  	  PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
-		NS_IMETHOD      DoFind(PRBool aFindNext);
+    nsresult   			DoEditorMode(nsIWebShell *aWebShell);
+    nsresult  			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
+		nsresult    	  PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
+    nsresult  			ScrollSelectionIntoView();
+    nsresult        TransferDocumentStateListeners();
+    nsresult  			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
+		nsresult        DoFind(PRBool aFindNext);
 
-    void    Alert(const nsString& aTitle, const nsString& aMsg);
+    void            Alert(const nsString& aTitle, const nsString& aMsg);
     // Bring up a Yes/No dialog WE REALLY NEED A Yes/No/Cancel dialog and would like to set our own caption as well!
-    PRBool  Confirm(const nsString& aTitle, const nsString& aQuestion);
+    PRBool          Confirm(const nsString& aTitle, const nsString& aQuestion);
     // Return value: No=0, Yes=1, Cancel=2
     // aYesString and aNoString are optional:
     // if null, then "Yes" and "No" are used
-    EConfirmResult ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion,
+    EConfirmResult  ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion,
                                      const nsString *aYesString, const nsString *aNoString);
 
 		// this returns an AddReffed nsIScriptContext. You must relase it.
 		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
 
-		EEditorType					mEditorType;
-		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
-    nsCOMPtr<nsIHTMLEditor>	 	mEditor;						// this can be either an HTML or plain text (or other?) editor
-
-    nsCOMPtr<nsISupports>   mSearchContext;		// context used for search and replace. Owned by the appshell.
-    
-    nsInterfaceState*         mStateMaintainer;           // we hold the owning ref to this.
-
-    PRInt32 mWrapColumn;      // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
-
-    nsCOMPtr<nsISpellChecker> mSpellChecker;
-    nsStringArray   mSuggestedWordList;
-    PRInt32         mSuggestedWordIndex;
-    NS_IMETHOD      DeleteSuggestedWordList();
-    nsStringArray   mDictionaryList;
-    PRInt32         mDictionaryIndex;
-
-    PRPackedBool    mCloseWindowWhenLoaded;     // error on load. Close window when loaded
-    
-    // this is a holding pen for doc state listeners. They will be registered with
-    // the editor when that gets created.
-    nsCOMPtr<nsISupportsArray> mDocStateListeners;		// contents are nsISupports
-
     // Get a string from the string bundle file
-    void   GetBundleString(const nsString& name, nsString &outString);
+    void            GetBundleString(const nsString& name, nsString &outString);
     
     // Get the text of the <title> tag
-    NS_IMETHOD GetDocumentTitleString(nsString& title);
+    nsresult        GetDocumentTitleString(nsString& title);
+
+    nsresult        DeleteSuggestedWordList();
 
     // Get the current document title an use it as part of the window title
     // Uses "(Untitled)" for empty title
-    NS_IMETHOD UpdateWindowTitle();
+    nsresult        UpdateWindowTitle();
 
-private:
+    // does the document being loaded contain subframes?
+    nsresult        DocumentContainsFrames(nsIDocumentLoader* aLoader, PRBool& outHasFrames);
+    // is the document being loaded the root of a frameset, or a non-frameset doc?
+    nsresult        DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot);
+    
+    nsCOMPtr<nsIHTMLEditor>	 	  mEditor;						// this can be either an HTML or plain text (or other?) editor
+    nsCOMPtr<nsISupports>       mSearchContext;		    // context used for search and replace. Owned by the appshell.
+    nsCOMPtr<nsISpellChecker>   mSpellChecker;
+
+    // this is a holding pen for doc state listeners. They will be registered with
+    // the editor when that gets created.
+    nsCOMPtr<nsISupportsArray>  mDocStateListeners;		// contents are nsISupports
+
     // Pointer to localized strings used for UI
-    nsCOMPtr<nsIStringBundle> mStringBundle;
+    nsCOMPtr<nsIStringBundle>   mStringBundle;
 
     // Pointer to extra style sheets we load/unload
     //  for various Edit Modes or for Paragraph Marks
-    nsCOMPtr<nsICSSStyleSheet> mEditModeStyleSheet;
-    nsCOMPtr<nsICSSStyleSheet> mAllTagsModeStyleSheet;
-    nsCOMPtr<nsICSSStyleSheet> mParagraphMarksStyleSheet;
+    nsCOMPtr<nsICSSStyleSheet>  mEditModeStyleSheet;
+    nsCOMPtr<nsICSSStyleSheet>  mAllTagsModeStyleSheet;
+    nsCOMPtr<nsICSSStyleSheet>  mParagraphMarksStyleSheet;
     
-    nsEditorParserObserver *mParserObserver;
+    nsEditorParserObserver*     mParserObserver;      // we hold the owning ref to this.
+    nsInterfaceState*           mStateMaintainer;     // we hold the owning ref to this.
+
+    nsIDOMWindow        *mToolbarWindow;				// weak reference
+    nsIDOMWindow        *mContentWindow;				// weak reference
+
+    nsIWebShellWindow   *mWebShellWin;					// weak reference
+    nsIWebShell         *mWebShell;						  // weak reference
+
+    // The webshell that contains the document being edited.
+    // Don't assume that webshell directly contains the document being edited;
+    // if we are in a frameset, this assumption is false.
+    nsIWebShell         *mContentAreaWebShell;	// weak reference
+
+    PRPackedBool        mCloseWindowWhenLoaded; // error on load. Close window when loaded
+
+		EEditorType					mEditorType;
+		nsString						mEditorTypeString;	    // string which describes which editor type will be instantiated (lowercased)
+    PRInt32             mWrapColumn;            // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
+
+    nsStringArray       mSuggestedWordList;
+    PRInt32             mSuggestedWordIndex;
+
+    nsStringArray       mDictionaryList;
+    PRInt32             mDictionaryIndex;
+    
 };
 
 #endif // nsEditorShell_h___
