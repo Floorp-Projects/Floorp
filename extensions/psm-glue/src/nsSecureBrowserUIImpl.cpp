@@ -618,11 +618,10 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         return NS_OK;
 
 
-    PRBool boolpref;    
+    PRBool boolpref = PR_TRUE;    
 
     // posting to a non https URL.
-    if ((mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref) != 0))
-        boolpref = PR_TRUE;
+    mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref);
     
     if (boolpref) {
         NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
