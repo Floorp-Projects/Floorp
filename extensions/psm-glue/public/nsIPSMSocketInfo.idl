@@ -21,7 +21,7 @@
  *   Doug Turner <dougt@netscape.com>
 */
 
-#include "nsIChannelSecurityInfo.idl"
+#include "nsITransportSecurityInfo.idl"
 
 %{C++
 #include "cmtcmn.h"
@@ -33,7 +33,7 @@
 [ptr] native nsFileDescStar(PRFileDesc);
 
 [noscript, uuid(deeb8dfc-fb7a-11d3-ac84-00c04fa0d26b)]
-interface nsIPSMSocketInfo : nsIChannelSecurityInfo {
+interface nsIPSMSocketInfo : nsITransportSecurityInfo {
     
     readonly attribute psmtControlStar  controlPtr;
     readonly attribute cmSocketStar     socketPtr;

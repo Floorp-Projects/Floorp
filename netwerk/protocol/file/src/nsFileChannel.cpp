@@ -230,8 +230,8 @@ nsFileChannel::EnsureTransport()
                               getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
 
-    if (mCallbacks && !(mLoadAttributes & LOAD_BACKGROUND))
-        (void)mFileTransport->SetProgressEventSink(this);
+    mFileTransport->SetNotificationCallbacks(mCallbacks,
+                                             (mLoadAttributes & LOAD_BACKGROUND));
 
     return rv;
 }

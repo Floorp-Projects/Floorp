@@ -55,7 +55,7 @@
 #include "nsIContent.h"
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
-#include "nsIChannelSecurityInfo.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
 #include "nsIPrompt.h"
@@ -204,9 +204,9 @@ static PRInt16 GetSecurityStateFromChannel(nsIChannel* aChannel)
   // qi for the psm information about this channel load.
   nsCOMPtr<nsISupports> info;
   aChannel->GetSecurityInfo(getter_AddRefs(info));
-  nsCOMPtr<nsIChannelSecurityInfo> psmInfo(do_QueryInterface(info));
+  nsCOMPtr<nsITransportSecurityInfo> psmInfo(do_QueryInterface(info));
   if (!psmInfo) {
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - no nsIChannelSecurityInfo for %p\n",
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI: GetSecurityState:%p - no nsITransportSecurityInfo for %p\n",
                                          aChannel, (nsISupports *)info));
     return nsIWebProgressListener::STATE_IS_INSECURE;
   }
@@ -348,7 +348,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
           nsCOMPtr<nsISupports> info;
           channel->GetSecurityInfo(getter_AddRefs(info));
           if (info) {
-            nsCOMPtr<nsIChannelSecurityInfo> secInfo(do_QueryInterface(info));
+            nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
             if (secInfo &&
                 NS_SUCCEEDED(secInfo->GetShortSecurityDescription(&tooltip)) &&
                 tooltip) {

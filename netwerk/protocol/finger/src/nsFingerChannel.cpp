@@ -213,11 +213,8 @@ nsFingerChannel::Open(nsIInputStream **_retval)
             BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
-        if (sink)
-            mTransport->SetProgressEventSink(sink);
-    }
+    mTransport->SetNotificationCallbacks(mCallbacks,
+                                         (mLoadAttributes & LOAD_BACKGROUND));
 
     return mTransport->OpenInputStream(0, -1, 0, _retval);
 }
@@ -234,11 +231,8 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
       BUFFER_MAX_SIZE, getter_AddRefs(mTransport));
     if (NS_FAILED(rv)) return rv;
 
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
-        if (sink)
-            mTransport->SetProgressEventSink(sink);
-    }
+    mTransport->SetNotificationCallbacks(mCallbacks,
+                                         (mLoadAttributes & LOAD_BACKGROUND));
 
     mListener = aListener;
     mResponseContext = ctxt;

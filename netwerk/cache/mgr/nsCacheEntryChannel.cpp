@@ -216,13 +216,20 @@ nsCacheEntryChannel::GetSecurityInfo(nsISupports **aResult)
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::GetProgressEventSink(nsIProgressEventSink **aSink)
+nsCacheEntryChannel::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::SetProgressEventSink(nsIProgressEventSink *aSink)
+nsCacheEntryChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                              PRBool isBackground)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

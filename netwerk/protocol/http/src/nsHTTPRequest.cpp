@@ -733,17 +733,10 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
       nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL;
       req->mConnection->GetLoadAttributes(&loadAttributes);
 
-      if (loadAttributes & nsIChannel::LOAD_BACKGROUND)
-          mTransport->SetProgressEventSink(nsnull);
-      else {
-          //
-          // configure transport with the progress event sink from the first request.
-          //
-          nsCOMPtr<nsIProgressEventSink> sink =
-              do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, req->mConnection));
-          if (sink)
-              mTransport->SetProgressEventSink(sink);
-      }
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      req->mConnection->GetNotificationCallbacks(getter_AddRefs(callbacks));
+      mTransport->SetNotificationCallbacks(callbacks,
+                                           (loadAttributes & nsIChannel::LOAD_BACKGROUND));
     }
 
     mOnStopDone = PR_FALSE;
@@ -1230,12 +1223,13 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest()
         // on some machines, but not on others.  Check for null to avoid
         // topcrash, although we really shouldn't need this.
         NS_ASSERTION(mTransport, "mTransport null in AdvanceToNextRequest");
-        if (mTransport) {
-            nsCOMPtr<nsIProgressEventSink> sink =
-                do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, req->mConnection));
-            if (sink)
-                mTransport->SetProgressEventSink(sink);
-        }
+        nsLoadFlags flags = nsIChannel::LOAD_NORMAL;
+        req->mConnection->GetLoadAttributes(&flags);
+
+        nsCOMPtr<nsIInterfaceRequestor> callbacks;
+        mTransport->GetNotificationCallbacks(getter_AddRefs(callbacks));
+        mTransport->SetNotificationCallbacks(callbacks,
+                                             (flags & nsIChannel::LOAD_BACKGROUND));
         NS_RELEASE(req);
     }
 

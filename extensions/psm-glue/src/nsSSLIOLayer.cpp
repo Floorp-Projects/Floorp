@@ -31,7 +31,7 @@
 #include "nsSSLIOLayer.h"
 #include "nsIWebProgressListener.h"
 #include "nsISSLSocketControl.h"
-#include "nsIChannel.h"
+#include "nsIInterfaceRequestor.h"
 
 static PRDescIdentity  nsSSLIOLayerIdentity;
 static PRIOMethods     nsSSLIOLayerMethods;
@@ -48,7 +48,7 @@ public:
     virtual ~nsPSMSocketInfo();
     
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICHANNELSECURITYINFO
+    NS_DECL_NSITRANSPORTSECURITYINFO
     NS_DECL_NSIPSMSOCKETINFO
     NS_DECL_NSISSLSOCKETCONTROL
 
@@ -70,7 +70,7 @@ protected:
     CMT_CONTROL* mControl;
     CMSocket*    mSocket;
     PRFileDesc*  mFd;
-    nsIChannel*  mChannel;
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     
     nsString     mHostName;
     PRInt32      mHostPort;
@@ -355,7 +355,7 @@ nsPSMSocketInfo::~nsPSMSocketInfo()
     PR_FREEIF(mPickledStatus);    
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsPSMSocketInfo, nsIChannelSecurityInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsPSMSocketInfo, nsITransportSecurityInfo,
                               nsIPSMSocketInfo, nsISSLSocketControl);
 
 // if the connection was via a proxy, we need to have the
@@ -577,17 +577,17 @@ nsPSMSocketInfo::GetSecurityState(PRInt32 *aSecurityState)
 }
 
 NS_IMETHODIMP
-nsPSMSocketInfo::GetChannel(nsIChannel** aChannel)
+nsPSMSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
-    *aChannel = mChannel;
-    NS_IF_ADDREF(*aChannel);
+    *aCallbacks = mCallbacks;
+    NS_IF_ADDREF(*aCallbacks);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPSMSocketInfo::SetChannel(nsIChannel* aChannel)
+nsPSMSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-    mChannel = aChannel;
+    mCallbacks = aCallbacks;
     return NS_OK;
 }
 

@@ -1028,6 +1028,14 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
        
         if (NS_FAILED(rv)) return rv;
 
+        nsLoadFlags flags = nsIChannel::LOAD_NORMAL;
+        i_Channel->GetLoadAttributes(&flags);
+
+        nsCOMPtr<nsIInterfaceRequestor> callbacks;
+        i_Channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+        trans->SetNotificationCallbacks(callbacks,
+                                        (flags & nsIChannel::LOAD_BACKGROUND));
+
         nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(trans, &rv);
         if (NS_SUCCEEDED(rv)) {
             socketTrans->SetSocketTimeout(mRequestTimeout);
@@ -1217,7 +1225,7 @@ nsHTTPHandler::ReleaseTransport (nsITransport* i_pTrans  ,
     // to the transport and the transport which references the HTTPChannel
     // through the event sink...
     //
-    rv = i_pTrans->SetProgressEventSink(nsnull);
+    rv = i_pTrans->SetNotificationCallbacks(nsnull, PR_FALSE);
 
     rv = mTransportList->RemoveElement(i_pTrans);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");

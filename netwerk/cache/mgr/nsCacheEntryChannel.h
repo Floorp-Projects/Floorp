@@ -61,15 +61,16 @@ public:
     NS_IMETHOD GetLoadGroup(nsILoadGroup* *aLoadGroup);
     NS_IMETHOD GetURI(nsIURI * *aURI);
     NS_IMETHOD GetOriginalURI(nsIURI * *aURI);
+    NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*);
 
     // nsITransport methods
     NS_IMETHOD GetSecurityInfo(nsISupports **);
-    NS_IMETHOD GetProgressEventSink(nsIProgressEventSink **);
-    NS_IMETHOD SetProgressEventSink(nsIProgressEventSink *);
     NS_IMETHOD OpenInputStream(PRUint32, PRUint32, PRUint32, nsIInputStream **);
     NS_IMETHOD OpenOutputStream(PRUint32, PRUint32, PRUint32, nsIOutputStream **);
     NS_IMETHOD AsyncRead(nsIStreamListener *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
     NS_IMETHOD AsyncWrite(nsIStreamProvider *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
+    NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor**);
+    NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*, PRBool);
 
 protected:
     nsCacheEntryChannel(nsCachedNetData* aCacheEntry, nsIChannel* aChannel, nsILoadGroup* aLoadGroup);

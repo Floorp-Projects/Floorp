@@ -173,11 +173,8 @@ nsDateTimeChannel::Open(nsIInputStream **_retval)
     rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, 32, 32, getter_AddRefs(transport));
     if (NS_FAILED(rv)) return rv;
 
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
-        if (sink)
-            transport->SetProgressEventSink(sink);
-    }
+    transport->SetNotificationCallbacks(mCallbacks,
+                                        (mLoadAttributes & LOAD_BACKGROUND));
 
     return transport->OpenInputStream(0, -1, 0, _retval);
 }
@@ -194,11 +191,8 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, 32, 32, getter_AddRefs(transport));
     if (NS_FAILED(rv)) return rv;
 
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
-        if (sink)
-            transport->SetProgressEventSink(sink);
-    }
+    transport->SetNotificationCallbacks(mCallbacks,
+                                        (mLoadAttributes & LOAD_BACKGROUND));
 
     mListener = aListener;
     

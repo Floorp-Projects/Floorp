@@ -28,21 +28,21 @@
 #include "prio.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIChannelSecurityInfo.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
 
 class nsIChannel;
 
-class nsNSSSocketInfo : public nsIChannelSecurityInfo,
+class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsISSLSocketControl,
-			public nsIInterfaceRequestor
+                        public nsIInterfaceRequestor
 {
 public:
   nsNSSSocketInfo();
   virtual ~nsNSSSocketInfo();
   
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICHANNELSECURITYINFO
+  NS_DECL_NSITRANSPORTSECURITYINFO
   NS_DECL_NSISSLSOCKETCONTROL
   NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -68,8 +68,7 @@ protected:
   nsString mProxyName;
   PRInt32 mProxyPort;
   
-  nsIChannel* mChannel; // note, don't use an owning reference
-                        // to avoid circular references
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
   PRInt32 mSecurityState;
   nsString mShortDesc;

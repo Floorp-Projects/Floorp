@@ -55,7 +55,7 @@ XPIDLSRCS= \
 	.\nsISOCKSSocketProvider.idl \
 	.\nsISOCKSSocketInfo.idl \
 	.\nsISSLSocketProvider.idl \
-	.\nsIChannelSecurityInfo.idl \
+	.\nsITransportSecurityInfo.idl \
 	.\nsISSLSocketControl.idl \
 	$(NULL)
 

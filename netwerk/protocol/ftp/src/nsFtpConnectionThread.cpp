@@ -1702,12 +1702,9 @@ nsFtpState::R_pasv() {
     if (NS_FAILED(sTrans->SetReuseConnection(PR_FALSE))) return FTP_ERROR;
 
     // hook ourself up as a proxy for progress notifications
-    nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mChannel));
-    if (requestor) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(requestor);
-        if (sink)
-            mDPipe->SetProgressEventSink(sink);
-    }
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    mDPipe->SetNotificationCallbacks(callbacks, PR_FALSE);
 
     // we're connected figure out what type of transfer we're doing (ascii or binary)
     nsXPIDLCString type;
@@ -2050,7 +2047,7 @@ nsFtpState::KillControlConnnection() {
 
     // if the control goes away, the data socket goes away...
     if (mDPipe) {
-        mDPipe->SetProgressEventSink(nsnull);
+        mDPipe->SetNotificationCallbacks(nsnull, PR_FALSE);
         mDPipe = 0;
         mDPipeRequest = 0;
     }
