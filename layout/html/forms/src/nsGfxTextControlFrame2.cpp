@@ -54,7 +54,6 @@
 #include "nsIPresState.h" //for saving state
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 
-#include "..\..\..\xul\content\src\nsXULAtoms.h"//debugging
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
