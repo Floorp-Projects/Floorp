@@ -21,15 +21,5 @@
     Blake Ross (blaker@netscape.com)
 */
 
-#trash-can {
-  margin: 0px;
-  border: 0px;
-  padding: 0px;
-  list-style-image: url('chrome://browser/skin/trash-closed.gif');
-}
-
-#trash-can[dragactive] {
-  list-style-image: url('chrome://browser/skin/trash-open.gif');
-}
 
   

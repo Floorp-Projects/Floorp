@@ -254,13 +254,14 @@ var paletteDNDObserver = {
     if (!item)
       return;
 
+    // XXX Now insertBefore |item| in the right place.
+
     // We're going back in the palette now, so we have to readd the flex
     // and width which we removed when moving the item to the toolbar.
     // (These attributes help space the items properly in the palette.)
     item.setAttribute("flex", "1");
     item.setAttribute("width", "0");
     
-    // XXX Now insertBefore |item| in the right place.
     gToolbarChanged = true;
   },
   _flavourSet: null,
