@@ -55,7 +55,7 @@ extern "C" {
 icaltimetype ConvertFromPrtime( PRTime indate );
 
 /* event enumerator */
-class NS_COM
+class
 oeEventEnumerator : public nsISimpleEnumerator
 {
   public:

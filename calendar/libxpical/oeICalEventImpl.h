@@ -50,7 +50,7 @@ extern "C" {
 
 #define OE_ICALEVENT_CONTRACTID "@mozilla.org/icalevent;1"
 
-class NS_COM
+class
 oeDateEnumerator : public nsISimpleEnumerator
 {
   public:
