@@ -185,6 +185,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   NS_IF_RELEASE(baseURL);
 
   mInitialLoadCompleted = PR_FALSE;
+  mCanSendLoadEvent = PR_TRUE;
   return rv;
 }
 
@@ -237,6 +238,13 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
   // or both failed to load, then notify the PresShell
   if (imageFailedToLoad) {    
     if (presShell) {
+      // Also send error event
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_IMAGE_ERROR;
+      presShell->HandleEventWithTarget(&event,this,mContent,&status);
+
       nsAutoString usemap;
       mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
       // We failed to load the image. Notify the pres shell if we aren't an image map
@@ -252,6 +260,20 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
     else {
       NS_ASSERTION(0, "No parent to pass the reflow request up to.");
     }
+  }
+
+  if (mCanSendLoadEvent &&
+      !imageFailedToLoad && 
+      (NS_IMAGE_LOAD_STATUS_IMAGE_READY & aStatus) &&
+      presShell) {
+    // Send load event
+    mCanSendLoadEvent = PR_FALSE;
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_IMAGE_LOAD;
+    presShell->HandleEventWithTarget(&event,this,mContent,&status);
   }
 
 #if 0 // ifdef'ing out the deleting of the lowsrc image
@@ -1029,6 +1051,8 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       else {        
         // Stop the earlier image load
         mImageLoader.StopLoadImage(aPresContext);
+
+        mCanSendLoadEvent = PR_TRUE;
 
         // Update the URL and start the new image load
         mImageLoader.UpdateURLSpec(aPresContext, newSRC);
