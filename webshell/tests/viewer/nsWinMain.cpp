@@ -22,6 +22,7 @@
 #include "nsITimer.h"
 #include "JSConsole.h"
 #include "plevent.h"
+#include "nsIServiceManager.h"
 
 JSConsole *gConsole;
 HINSTANCE gInstance, gPrevInstance;
@@ -96,13 +97,18 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
+  nsresult rv;
+  nsIServiceManager* servMgr;
+  rv = NS_InitXPCOM(&servMgr);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   nsViewerApp* app = new nsNativeViewerApp();
   NS_ADDREF(app);
   app->Initialize(argc, argv);
-  app->Run();
+  int result = app->Run();
   NS_RELEASE(app);
-
-  return 0;
+  rv = NS_ShutdownXPCOM(servMgr);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  return result;
 }
 
 int PASCAL
@@ -111,9 +117,5 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
 {
   gInstance = instance;
   gPrevInstance = prevInstance;
-  nsViewerApp* app = new nsNativeViewerApp();
-  app->Initialize(0, nsnull);
-  int result = app->Run();
-  delete app;
-  return result;
+  return main(0, nsnull);
 }
