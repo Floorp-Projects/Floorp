@@ -773,8 +773,8 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 NS_IMETHODIMP nsMsgIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff)
 {
   NS_ENSURE_ARG_POINTER(aServerRequiresPasswordForBiff);
-	*aServerRequiresPasswordForBiff = PR_TRUE;
-	return NS_OK;
+  *aServerRequiresPasswordForBiff = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -791,7 +791,34 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
   
   if (m_password.IsEmpty()) 
   {
+    // let's see if we have the password in the password manager and  
+    // can avoid this prompting thing. This makes it easier to get embedders
+    // to get up and running w/o a password prompting UI. We already depend on
+    // nsIPasswordManagerInternal so this doesn't introduce a new dependency.
+    nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+    if(passwordMgrInt) 
+    {
+
+      // Get the current server URI
+      nsXPIDLCString currServerUri;
+      rv = GetServerURI(getter_Copies(currServerUri));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCAutoString hostFound;
+      nsAutoString userNameFound;
+      nsAutoString passwordFound;
+
+      // Get password entry corresponding to the host URI we are passing in.
+      rv = passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
+                                             hostFound, userNameFound, passwordFound);
+      if (NS_SUCCEEDED(rv))
+        CopyUCS2toASCII(passwordFound, m_password);
+    }
+  }
+  if (m_password.IsEmpty())
+  {
     nsCOMPtr<nsIAuthPrompt> dialog;
+
     // aMsgWindow is required if we need to prompt
     if (aMsgWindow)
     {
