@@ -28,7 +28,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIFTPContext.h" // for the context passed between OnDataAvail calls
 #include "nsIStringStream.h"
-#include "nsPipe2.h"
+#include "nsIPipe.h"
+#include "nsIBufferOutputStream.h"
 #include "nsIMIMEService.h"
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
