@@ -109,38 +109,66 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     nsXPIDLCString tmp;
     rv = uri->GetSpec(getter_Copies(tmp));
     if (NS_FAILED(rv)) return rv;
-    
-    nsAutoString baseUri;
-    baseUri.AssignWithConversion(tmp);
-    nsXPIDLCString scheme;
-    rv = uri->GetScheme(getter_Copies(scheme));
-    if (NS_FAILED(rv)) return rv;
-  
+
+    nsCString baseUri(tmp);
+    nsCString parentStr;
+
+    // XXX - should be using the 300: line from the parser.
+    // We can't guarantee that that comes before any entry, so we'd have to
+    // buffer, and do other painful stuff.
+    // I'll deal with this when I make the changes to handle welcome messages
+    // The .. stuff should also come from the lower level protocols, but that
+    // would muck up the XUL display
+    // - bbaetz
+
+    // ftp urls don't always end in a /
+    PRBool isScheme = PR_FALSE;
+    if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
+        if (baseUri.Last() != '/')
+            baseUri.Append('/');
+
+        nsCString::const_iterator start, finish;
+        baseUri.BeginReading(start);
+        baseUri.EndReading(finish);
+        finish.advance(-2); // don't count the last /
+        
+        // No RFindChar
+        while(finish != start && *finish != '/')
+            --finish;
+
+        if (Distance(start, finish) > (sizeof("ftp://") - 1)) {
+            ++finish; // include the end '/'
+            parentStr = Substring(start, finish);
+        }
+
+    } else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
+        nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri);
+        nsCOMPtr<nsIFile> file;
+        rv = fileUrl->GetFile(getter_AddRefs(file));
+        if (NS_FAILED(rv)) return rv;
+        
+        nsXPIDLCString url;
+        rv = file->GetURL(getter_Copies(url));
+        if (NS_FAILED(rv)) return rv;
+        baseUri.Assign(url);
+        
+        nsCOMPtr<nsIFile> parent;
+        rv = file->GetParent(getter_AddRefs(parent));
+        if (NS_FAILED(rv)) return rv;
+        if (parent) {
+            rv = parent->GetURL(getter_Copies(url));
+            if (NS_FAILED(rv)) return rv;
+            parentStr.Assign(url);
+        }
+    }
+
     nsString buffer;
     buffer.AssignWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n");    
     
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
-    const char gopherProt[] = "gopher";
-    if (nsCRT::strncmp(scheme.get(),gopherProt,unsigned(sizeof(gopherProt)-1))) {
-        PRUnichar sep;
-        const char fileProt[] = "file";
-        if (!nsCRT::strncmp(scheme.get(),fileProt,unsigned(sizeof(fileProt)-1))) {
-            // How do I do this in an XP way???
-#ifdef XP_MAC
-            sep = ':';
-#else
-            sep = '/';
-#endif
-        } else {
-            sep = '/';
-        }
-        if (baseUri[baseUri.Length()-1] != sep) {
-            baseUri.Append(sep);
-        }
-    }
 
-    char* spec = nsCRT::strdup(tmp.get());
+    char* spec = nsCRT::strdup(baseUri.get());
     nsUnescape(spec);
     
     buffer.Append(NS_LITERAL_STRING("<html>\n<head><title>"));
@@ -159,12 +187,12 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     buffer.Append(title);
 
     buffer.Append(NS_LITERAL_STRING("</title><base href=\""));
-    buffer.Append(baseUri);
+    buffer.Append(NS_ConvertASCIItoUCS2(baseUri));
     buffer.Append(NS_LITERAL_STRING("\">\n"));
     
     nsXPIDLCString encoding;
     rv = mParser->GetEncoding(getter_Copies(encoding));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && !encoding.IsEmpty()) {
         buffer.Append(NS_LITERAL_STRING("<meta http-equiv=\"Content-Type\" content=\"text/html; charset="));
         buffer.AppendWithConversion(encoding);
         buffer.Append(NS_LITERAL_STRING("\">\n"));
@@ -191,6 +219,19 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     buffer.Append(NS_LITERAL_STRING("<hr><table border=0>\n"));
 
     //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
+
+    if (!parentStr.IsEmpty()) {
+        nsXPIDLString parentText;
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DirGoUp").get(),
+                                        getter_Copies(parentText));
+        if (NS_FAILED(rv)) return rv;
+        
+        buffer.Append(NS_LITERAL_STRING("<tr><td colspan=\"3\"><a href=\"") +
+                      NS_ConvertASCIItoUCS2(parentStr) +
+                      NS_LITERAL_STRING("\">") +
+                      parentText +
+                      NS_LITERAL_STRING("</a></td></tr>\n"));
+    }
 
     // Push buffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().

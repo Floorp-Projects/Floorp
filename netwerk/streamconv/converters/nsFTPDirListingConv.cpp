@@ -1018,6 +1018,8 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         aString.Append("201: ");
         // FILENAME
         aString.Append(thisEntry->mName);
+        if (thisEntry->mType == Dir)
+            aString.Append('/');
         aString.Append(' ');
 
         // CONTENT LENGTH
@@ -1035,7 +1037,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         // viewers of such a format can then reformat this into the
         // current locale (or anything else they choose)
         PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
-                               "%a, %d %b %Y %H:%M:%S GMT", &thisEntry->mMDTM );
+                               "%a, %d %b %Y %H:%M:%S", &thisEntry->mMDTM );
         char *escapedDate = nsEscape(buffer, url_Path);
 
         aString.Append(escapedDate);
