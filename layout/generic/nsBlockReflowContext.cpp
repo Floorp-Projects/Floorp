@@ -27,6 +27,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsIDOMHTMLParagraphElement.h"
+#include "nsCOMPtr.h"
 
 #ifdef NS_DEBUG
 #undef  NOISY_MAX_ELEMENT_SIZE
@@ -53,18 +54,13 @@ PRBool
 nsBlockReflowContext::IsHTMLParagraph(nsIFrame* aFrame)
 {
   PRBool result = PR_FALSE;
-  nsIContent* content;
-  nsresult rv = aFrame->GetContent(&content);
-  if (NS_SUCCEEDED(rv) && (nsnull != content)) {
-    static NS_DEFINE_IID(kIDOMHTMLParagraphElementIID, NS_IDOMHTMLPARAGRAPHELEMENT_IID);
-    nsIDOMHTMLParagraphElement* p;
-    nsresult rv = content->QueryInterface(kIDOMHTMLParagraphElementIID,
-                                          (void**) &p);
-    if (NS_SUCCEEDED(rv) && p) {
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = aFrame->GetContent(getter_AddRefs(content));
+  if (NS_SUCCEEDED(rv) && content) {
+    nsCOMPtr<nsIDOMHTMLParagraphElement> p(do_QueryInterface(content));
+    if (p) {
       result = PR_TRUE;
-      NS_RELEASE(p);
     }
-    NS_RELEASE(content);
   }
   return result;
 }
@@ -417,19 +413,19 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // doesn't use it all of the available width then we need to
       // align it using the text-align property.
       if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
-        nscoord remainder = mSpace.XMost() -
+        nscoord remainingSpace = mSpace.XMost() -
           (x + mMetrics.width + mMargin.right);
-        if (remainder > 0) {
+        if (remainingSpace > 0) {
           // The block frame didn't use all of the available
           // space. Synthesize margins for its horizontal placement.
           if (eStyleUnit_Auto == leftUnit) {
             if (eStyleUnit_Auto == rightUnit) {
               // When both margins are auto, we center the block
-              x += remainder / 2;
+              x += remainingSpace / 2;
             }
             else {
               // When the left margin is auto we right align the block
-              x += remainder;
+              x += remainingSpace;
             }
           }
           else if (eStyleUnit_Auto != rightUnit) {
@@ -445,11 +441,11 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
               // compatability cases.
               switch (styleText->mTextAlign) {
                 case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
-                  x += remainder;
+                  x += remainingSpace;
                   doCSS = PR_FALSE;
                   break;
                 case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
-                  x += remainder / 2;
+                  x += remainingSpace / 2;
                   doCSS = PR_FALSE;
                   break;
               }
@@ -461,7 +457,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
               PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
               if (NS_STYLE_DIRECTION_RTL == direction) {
                 // The left margin becomes auto
-                x += remainder;
+                x += remainingSpace;
               }
               else {
                 // The right margin becomes auto which is a no-op
