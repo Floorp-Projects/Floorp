@@ -163,7 +163,7 @@ sub GenerateSQL {
     if ($M{'bug_id'}) {
         my $type = "anyexact";
         if ($F{'bugidtype'} && $F{'bugidtype'} eq 'exclude') {
-            $type = "noexact";
+            $type = "nowords";
         }
         push(@specialchart, ["bug_id", $type, join(',', @{$M{'bug_id'}})]);
     }
