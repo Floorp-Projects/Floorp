@@ -18,8 +18,27 @@
                                   onget="return this.getAttribute('disabled') == 'true';"/>
       <property name="image"      onset="return this.setAttribute('image',val);"
                                   onget="return this.getAttribute('image');"/>
-      <property name="accessKey"  onset="return this.setAttribute('accesskey',val);"
-                                  onget="return this.getAttribute('accesskey');"/>
+      <property name="accessKey">
+        <getter>
+          <![CDATA[
+            return this.labelElement ? this.labelElement.accessKey : this.getAttribute('accesskey');
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            // If there is a label, store the accesskey on the labelElement
+            if (this.labelElement) {
+              this.labelElement.accessKey = val;
+            }
+            else {
+              this.setAttribute('accesskey', val);
+            }
+            return val;
+          ]]>
+        </setter>
+      </property>
+      
+      <field name="labelElement"/>
     </implementation>      
   </binding>
 
