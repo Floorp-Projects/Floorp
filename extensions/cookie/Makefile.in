@@ -78,6 +78,7 @@ XPIDLSRCS	= \
 		nsIPermissionManager.idl \
 		nsIPermission.idl \
                 nsICookieAcceptDialog.idl \
+		nsICookieManager2.idl \
 		$(NULL)
 
 EXPORTS		= \
