@@ -34,6 +34,9 @@ additional line to procmail :
 
 fixes many problems.
 
+See bugzilla.procmailrc for a sample procmailrc that works for me (SML) and
+also deals with bugzilla_email_append.pl
+
 Customation:
 
 There are some values inside the script which need to be customized for your

@@ -18,6 +18,7 @@
 # Contributor : Seth M. Landsman <seth@dworkin.net>
 
 # 03/15/00 : Initial version by SML
+# 03/15/00 : processmail gets called
 
 # Email subject must be of format :
 # .* Bug ### .*
@@ -26,7 +27,6 @@
 # TODO : 
 # 1. better way to get the body text (I don't know what dump_entity() is 
 #   actually doing
-# 2. response emails
 
 use diagnostics;
 use strict;
@@ -114,6 +114,8 @@ my $Body = "Subject: " . $Subject . "\n" . $Comment;
 # shove it in the table
 my $long_desc_query = "INSERT INTO longdescs SET bug_id=$found_id, who=$userid, bug_when=NOW(), thetext=" . SqlQuote($Body) . ";";
 SendSQL($long_desc_query);
+
+system("cd .. ; ./processmail $found_id '$SenderShort'");
 
 sub DealWithError {
   my ($reason) = @_;
