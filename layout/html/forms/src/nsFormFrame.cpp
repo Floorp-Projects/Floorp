@@ -819,8 +819,17 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
     nsAutoString theScheme; theScheme.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
     // Append the URI encoded variable/value pairs for GET's
-    if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
-      if (!isPost) {
+    if (!isPost) {
+      if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
+
+        // Bug 42616: Trim off named anchor before query string
+        PRInt32 namedAnchorPos = href.FindChar('#', PR_FALSE, 0);
+        nsAutoString namedAnchor;
+        if (kNotFound != namedAnchorPos) {
+          href.Right(namedAnchor, namedAnchorPos);
+          href.Truncate(namedAnchorPos);
+        }
+
         if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
           href.AppendWithConversion('?');
         } else {                              // Adding to existing query string
@@ -829,6 +838,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
           }
         }
         href.Append(data);
+
+        // Bug 42616: Add named anchor to end after query string
+        if (namedAnchor.Length()) {
+          href.Append(namedAnchor);
+        }
       }
     }
     nsAutoString absURLSpec;
