@@ -457,7 +457,6 @@ endif
 
 ifndef USE_AUTOCONF
 ifdef MOZ_LITE
-NO_EDITOR	= 1
 NO_UNIX_LDAP	= 1
 MOZ_NAV_BUILD_PREFIX	= 1
 else
@@ -465,12 +464,7 @@ DEFINES		+= -DMOZ_COMMUNICATOR_IIDS
 MOZ_COMMUNICATOR_IIDS	= 1
 MOZ_COMMUNICATOR_CONFIG_JS	= 1
 MOZ_COPY_ALL_JARS	= 1
-ifndef NO_EDITOR
-DEFINES		+= -DEDITOR 
 MOZ_EDITOR	= 1
-# This should go away as soon as MOZ_EDITOR is adopted everywhere.
-EDITOR		= 1
-endif
 endif
 endif # ! USE_AUTOCONF
 
