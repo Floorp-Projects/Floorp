@@ -39,6 +39,7 @@ JS::Reader::Reader(const String &source, const String &sourceLocation, uint32 in
 	begin = b;
 	p = b;
 	end = b + Reader::source.size();
+	Reader::source.append(uni::null);   // ensure last character is always '\0'
   #ifdef DEBUG
 	recordString = 0;
   #endif
