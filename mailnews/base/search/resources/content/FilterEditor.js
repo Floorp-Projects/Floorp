@@ -138,6 +138,9 @@ function filterEditorOnLoad()
       SetUpFilterActionList(getScopeFromFilterList(gFilterList));
     }
     gFilterNameElement.select();
+    // This call is required on mac and linux.  It has no effect
+    // under win32.  See bug 94800.
+    gFilterNameElement.focus();
     moveToAlertPosition();
 }
 
