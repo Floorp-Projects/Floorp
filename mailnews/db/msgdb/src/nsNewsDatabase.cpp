@@ -37,20 +37,29 @@ nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
   return NS_OK;
 }
 
-/* static */ 
-nsresult nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
   nsNewsDatabase	        *newsDB;
   nsNewsSummarySpec	        summarySpec(newsgroupName);
   nsresult                  err = NS_OK;
 
 #ifdef DEBUG_sspitzer
-    printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
+  printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)newsgroupName, create ? "TRUE":"FALSE",
            pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)newsgroupName);
 #endif
 
+  nsFileSpec dbPath(summarySpec);
+
   *pMessageDB = nsnull;
+
+  newsDB = (nsNewsDatabase *) FindInCache(dbPath);
+  if (newsDB) {
+		*pMessageDB = newsDB;
+		//FindInCache does the AddRef'ing
+		//newsDB->AddRef();
+		return(NS_OK);
+  }
 
   newsDB = new nsNewsDatabase();
   
@@ -69,19 +78,25 @@ nsresult nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDa
 #ifdef DEBUG_sspitzer
     printf("newsDB->OpenMDB succeeded!\n");
 #endif
-    *pMessageDB = newsDB;
+	*pMessageDB = newsDB;
+	if (newsDB) {
+		GetDBCache()->AppendElement(newsDB);
+	}
   }
-#ifdef DEBUG_sspitzer
   else {
+#ifdef DEBUG_sspitzer
     printf("newsDB->OpenMDB failed!\n");
+#endif
     *pMessageDB = nsnull;
-    delete newsDB;
+    if (newsDB) {
+		delete newsDB;
+	}
     newsDB = nsnull;
   }
-#endif
 
   return err;
 }
+
 nsresult nsNewsDatabase::Close(PRBool forceCommit)
 {
   return nsMsgDatabase::Close(forceCommit);
