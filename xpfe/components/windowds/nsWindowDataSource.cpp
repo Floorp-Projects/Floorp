@@ -68,12 +68,14 @@ nsWindowDataSource::Init()
 {
     nsresult rv;
 
-    rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
-    if (NS_FAILED(rv)) return rv;
+    if (gRefCnt++ == 0) {
+        rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
+        if (NS_FAILED(rv)) return rv;
 
-    gRDFService->GetResource(kURINC_WindowRoot, &kNC_WindowRoot);
-    gRDFService->GetResource(kURINC_Name,       &kNC_Name);
-    gRDFService->GetResource(kURINC_KeyIndex,   &kNC_KeyIndex);
+        gRDFService->GetResource(kURINC_WindowRoot, &kNC_WindowRoot);
+        gRDFService->GetResource(kURINC_Name,       &kNC_Name);
+        gRDFService->GetResource(kURINC_KeyIndex,   &kNC_KeyIndex);
+    }
 
     mInner = do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource", &rv);
     if (NS_FAILED(rv)) return rv;
