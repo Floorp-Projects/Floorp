@@ -52,16 +52,6 @@
 //
 //-------------------------------------------------------------------------
 
-/* the connector name that a client can use to remote control this instance of mozilla */
-
-#if defined(MOZ_PHOENIX)
-#define RemoteServerName			"FirebirdRemoteServer"
-#elif defined(MOZ_THUNDERBIRD)
-#define RemoteServerName			"ThunderbirdRemoteServer"
-#else
-#define RemoteServerName			"MozillaRemoteServer"
-#endif
-
 #define MOZ_REMOTE_MSG_TYPE					100
 
 static void const * RemoteMsgHandler( PtConnectionServer_t *connection, void *user_data,
@@ -112,7 +102,11 @@ nsPhXRemoteWidgetHelper::EnableXRemoteCommands( nsIWidget *aWidget, const char *
 {
 	static PRBool ConnectorCreated = PR_FALSE;
 
+/* ATENTIE */ printf( "aProgram=%s aProfile=%s aWidget=%p\n", aProgram?aProgram:"NULL", aProfile?aProfile:"NULL", aWidget );
+
 	if( !ConnectorCreated ) {
+		char RemoteServerName[128];
+		sprintf( RemoteServerName, "%s_RemoteServer", aProgram ? aProgram : "mozilla" );
 		/* create a connector for the xremote control */
 		PtConnectorCreate( RemoteServerName, client_connect, NULL );
 		ConnectorCreated = PR_TRUE;

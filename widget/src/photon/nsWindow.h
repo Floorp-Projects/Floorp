@@ -92,10 +92,11 @@ public:
 		return NS_OK;
 		}
 
-
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
+
+	NS_IMETHOD SetFocus(PRBool aRaise);
 
   inline NS_IMETHOD    GetAttention(PRInt32 aCycleCount)
 		{
