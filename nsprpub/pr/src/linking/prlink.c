@@ -1126,14 +1126,14 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 
                 cookie = 0;
                 while (get_next_image_info(0, &cookie, &info) == B_OK) {
-                    char *endOfSystemName = strrchr(info.name, '/');
-                    char *endOfPassedName = strrchr(name, '/');
+                    const char *endOfSystemName = strrchr(info.name, '/');
+                    const char *endOfPassedName = strrchr(name, '/');
                     if( 0 == endOfSystemName ) 
-                        endOfSystemName=info.name;
+                        endOfSystemName = info.name;
                     else
                         endOfSystemName++;
                     if( 0 == endOfPassedName )
-                        endOfPassedName=name;
+                        endOfPassedName = name;
                     else
                         endOfPassedName++;
                     if (strcmp(endOfSystemName, endOfPassedName) == 0) {
