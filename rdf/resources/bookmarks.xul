@@ -21,11 +21,40 @@
                              window);
     }
   }
+  function OpenURL(event,node)
+  {
+    if (node.getAttribute('type') !=
+        "http://home.netscape.com/NC-rdf#Bookmark") {
+      return false;
+    }
+    url = node.getAttribute('id');
+
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:") {
+      return false;
+    }
+
+    /*window.open(url,'bookmarks');*/
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow(url,window);
+    }
+
+    dump("OpenURL(" + url + ")\n");
+
+    return true;
+  }
   </html:script>
 
   <menubar>
     <menu name="File">
-      <menuitem name="New Window" onClick="BookmarksNewWindow();"/>
+      <menuitem name="New Window" onclick="BookmarksNewWindow();"/>
       <menuitem name="New Bookmarks..."/>
       <menuitem name="New Folder..."/>
       <menuitem name="New Separator"/>
@@ -47,7 +76,7 @@
     </menu>
   </menubar>
 
-<tree datasources="rdf:bookmarks">
+<tree datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treehead>
@@ -57,36 +86,7 @@
     </treeitem>
   </treehead>
 
-  <treebody>
-    <treeitem open="true">
-      <treechildren>
-
-        <treeitem>
-          <treecell>
-            <treeindentation/>Hard-<html:i>coded</html:i> <html:b>Item</html:b>
-          </treecell>
-          <treecell>http://blah.blah.com</treecell>
-
-          <treechildren>
-            <treeitem>
-              <treecell><treeindentation/>
-                 <html:img src="http://www.mozilla.org/images/logo-star.gif"/>
-                 <html:i>Another</html:i> hard-coded <html:font color="green">item</html:font>
-              </treecell>
-              <treecell>http://moreblah.blah.com</treecell>
-            </treeitem>
-          </treechildren>
-
-        </treeitem>
-
-      </treechildren>
-    </treeitem>
-
-    <treeitem id="NC:BookmarksRoot" open="true">
-      <treecell>Bookmarks</treecell>
-      <treecell></treecell>
-    </treeitem>
-
+  <treebody id="NC:BookmarksRoot">
   </treebody>
 </tree>
 
