@@ -842,10 +842,10 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
   CAbacus::eNumFormat  theNumFormat=CAbacus::eDecimal;
 
   for(theIndex=0;theIndex<theCount;theIndex++){
-    const nsAString& theKey=aNode.GetKeyAt(theIndex);
+    nsAutoString theKey(aNode.GetKeyAt(theIndex));
     const nsString& theValue=aNode.GetValueAt(theIndex);
 
-    if(theKey.Equals(NS_LITERAL_STRING("name"), nsCaseInsensitiveStringComparator())){
+    if(!Compare(theKey, NS_LITERAL_STRING("name"), nsCaseInsensitiveStringComparator())){
       theEntity=GetEntity(theValue);
       if(!theEntity) {
         theEntity=RegisterEntity(theValue,theValue);
@@ -853,10 +853,10 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       }
       aTag=eHTMLTag_userdefined;
     }
-    else if(theKey.Equals(NS_LITERAL_STRING("noincr"), nsCaseInsensitiveStringComparator())){
+    else if(!Compare(theKey, NS_LITERAL_STRING("noincr"), nsCaseInsensitiveStringComparator())){
       theIncrValue=0;
     }
-    else if(theKey.Equals(NS_LITERAL_STRING("format"), nsCaseInsensitiveStringComparator())){
+    else if(!Compare(theKey, NS_LITERAL_STRING("format"), nsCaseInsensitiveStringComparator())){
       PRUnichar theChar=theValue.CharAt(0);
       if('"'==theChar)
         theChar=theValue.CharAt(1);
@@ -873,7 +873,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       }
       //determine numbering style
     }
-    else if(theKey.Equals(NS_LITERAL_STRING("value"), nsCaseInsensitiveStringComparator())){
+    else if(!Compare(theKey, NS_LITERAL_STRING("value"), nsCaseInsensitiveStringComparator())){
       PRInt32 err=0;
       theNewValue=theValue.ToInteger(&err);
       if(!err) {

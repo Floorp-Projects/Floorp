@@ -337,9 +337,9 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
     // which doesn't make any sense (since the "!= 0" was inside the
     // parentheses)
     if (searchStrLen < prevSearchStrLen ||
-        !Substring(searchStr,
-                   searchStr+prevSearchStrLen).Equals(nsDependentString(prevSearchString, prevSearchStrLen),
-                                                      nsCaseInsensitiveStringComparator()))
+        Compare(Substring(searchStr, searchStr+prevSearchStrLen),
+                nsDependentString(prevSearchString, prevSearchStrLen),
+                nsCaseInsensitiveStringComparator())!= 0)
         return NS_ERROR_ABORT;
 
     nsCOMPtr<nsISupportsArray> array;
@@ -368,9 +368,9 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
 
 			if (itemValue.IsEmpty())
 				continue;
-            if (nsDependentString(searchStr,
-                                  searchStrLen).Equals(Substring(itemValue, 0, searchStrLen),
-                                                       nsCaseInsensitiveStringComparator()))
+            if (Compare(nsDependentString(searchStr, searchStrLen),
+                        Substring(itemValue, 0, searchStrLen),
+                        nsCaseInsensitiveStringComparator()) == 0)
                 continue;
 
 	    }
@@ -626,8 +626,8 @@ nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteR
             resultItem->GetValue(itemValue);
             // Using nsIURI to do comparisons didn't quite work out.
             // So use nsCRT methods
-            if (itemValue.Equals(nsDependentString(aItem),
-                                 nsCaseInsensitiveStringComparator()))
+            if (Compare(itemValue, nsDependentString(aItem),
+                        nsCaseInsensitiveStringComparator()) == 0)
             {
                 //printf("In CheckItemAvailability. Item already found\n");
                 *aResult = PR_TRUE;

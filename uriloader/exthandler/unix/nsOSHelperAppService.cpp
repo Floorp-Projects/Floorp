@@ -442,8 +442,9 @@ GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
 
           while (start != end) {
             FindCharInReadable(',', iter, end);
-            if (Substring(start, iter).Equals(aFileExtension,
-                                              nsCaseInsensitiveStringComparator())) {
+            if (Compare(Substring(start, iter),
+                        aFileExtension,
+                        nsCaseInsensitiveStringComparator()) == 0) {
               // it's a match.  Assign the type and description and run
               aMajorType.Assign(Substring(majorTypeStart, majorTypeEnd));
               aMinorType.Assign(Substring(minorTypeStart, minorTypeEnd));
@@ -573,12 +574,12 @@ GetExtensionsAndDescriptionFromMimetypesFile(const nsAString& aFilename,
         }
 #endif
         if (NS_SUCCEEDED(rv) &&
-            Substring(majorTypeStart,
-                      majorTypeEnd).Equals(aMajorType,
-                                           nsCaseInsensitiveStringComparator())&&
-            Substring(minorTypeStart,
-                      minorTypeEnd).Equals(aMinorType,
-                                           nsCaseInsensitiveStringComparator())) {
+            Compare(Substring(majorTypeStart, majorTypeEnd),
+                    aMajorType,
+                    nsCaseInsensitiveStringComparator()) == 0 &&
+            Compare(Substring(minorTypeStart, minorTypeEnd),
+                    aMinorType,
+                    nsCaseInsensitiveStringComparator()) == 0) {
           // it's a match
           aFileExtensions.Assign(extensions);
           aDescription.Assign(Substring(descriptionStart, descriptionEnd));
@@ -947,14 +948,13 @@ GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
           rv = ParseMIMEType(start_iter, majorTypeStart, majorTypeEnd,
                              minorTypeStart, minorTypeEnd, semicolon_iter);
           if (NS_SUCCEEDED(rv) &&
-              Substring(majorTypeStart,
-                        majorTypeEnd).Equals(aMajorType,
-                                             nsCaseInsensitiveStringComparator()) &&
-              (Substring(minorTypeStart,
-                         minorTypeEnd).Equals(NS_LITERAL_STRING("*")) ||
-               Substring(minorTypeStart,
-                         minorTypeEnd).Equals(aMinorType,
-                                              nsCaseInsensitiveStringComparator()))) { // we have a match
+              Compare(Substring(majorTypeStart, majorTypeEnd),
+                      aMajorType,
+                      nsCaseInsensitiveStringComparator()) == 0 &&
+              (Substring(minorTypeStart, minorTypeEnd).Equals(NS_LITERAL_STRING("*")) ||
+               Compare(Substring(minorTypeStart, minorTypeEnd),
+                       aMinorType,
+                       nsCaseInsensitiveStringComparator()) == 0)) { // we have a match
             PRBool match = PR_TRUE;
             ++semicolon_iter;             // point at the first char past the semicolon
             start_iter = semicolon_iter;  // handler string starts here

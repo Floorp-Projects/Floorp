@@ -1744,8 +1744,9 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const cha
       while (start != end)
       {
           FindCharInReadable(',', iter, end);
-          if (Substring(start, iter).Equals(extension,
-                                            nsCaseInsensitiveCStringComparator()))
+          if (Compare(Substring(start, iter),
+                      extension,
+                      nsCaseInsensitiveCStringComparator()) == 0)
           {
               // This is the one.  Create MIMEInfo object and set
               // attributes appropriately.

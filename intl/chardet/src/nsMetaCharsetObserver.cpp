@@ -106,8 +106,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* valueArray[])
 {
   
-    if(!nsDependentString(aTag).Equals(NS_LITERAL_STRING("META"),
-                                       nsCaseInsensitiveStringComparator())) 
+    if(0 != Compare(nsDependentString(aTag), NS_LITERAL_STRING("META"), nsCaseInsensitiveStringComparator())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -148,8 +147,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* aTag, 
                      const nsStringArray* keys, const nsStringArray* values)
 {
-    if(!nsDependentString(aTag).Equals(NS_LITERAL_STRING("META"),
-                                       nsCaseInsensitiveStringComparator())) 
+    if(0 != Compare(nsDependentString(aTag), NS_LITERAL_STRING("META"),
+                    nsCaseInsensitiveStringComparator())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aWebShell, aChannel, keys, values);
@@ -216,14 +215,17 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         while(IS_SPACE_CHARS(*keyStr)) 
           keyStr++;
 
-        if(Substring(keyStr, keyStr+10).Equals(NS_LITERAL_STRING("HTTP-EQUIV"),
-                                               nsCaseInsensitiveStringComparator()))
+        if(0 == Compare(Substring(keyStr, keyStr+10),
+                        NS_LITERAL_STRING("HTTP-EQUIV"),
+                        nsCaseInsensitiveStringComparator()))
               httpEquivValue = values->StringAt(i)->get();
-        else if(Substring(keyStr, keyStr+7).Equals(NS_LITERAL_STRING("content"),
-                                                   nsCaseInsensitiveStringComparator()))
+        else if(0 == Compare(Substring(keyStr, keyStr+7),
+                             NS_LITERAL_STRING("content"),
+                             nsCaseInsensitiveStringComparator()))
               contentValue = values->StringAt(i)->get();
-        else if (Substring(keyStr, keyStr+7).Equals(NS_LITERAL_STRING("charset"),
-                                                    nsCaseInsensitiveStringComparator()))
+        else if (0 == Compare(Substring(keyStr, keyStr+7),
+                              NS_LITERAL_STRING("charset"),
+                              nsCaseInsensitiveStringComparator()))
               charsetValue = values->StringAt(i)->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
@@ -239,26 +241,26 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
       if(
           // first try unquoted strings
-         ((Substring(httpEquivValue,
-                     httpEquivValue+contenttype.Length()).Equals(contenttype,
-                                                                 nsCaseInsensitiveStringComparator())) ||
+         ((0==Compare(Substring(httpEquivValue,httpEquivValue+contenttype.Length()),
+                      contenttype,
+                      nsCaseInsensitiveStringComparator())) ||
           // now try "quoted" or 'quoted' strings
           (( (httpEquivValue[0]=='\'') ||
              (httpEquivValue[0]=='\"') ) && 
-           (Substring(httpEquivValue+1,
-                      httpEquivValue+1+contenttype.Length()).Equals(contenttype,
-                                                                    nsCaseInsensitiveStringComparator()))
+           (0==Compare(Substring(httpEquivValue+1, httpEquivValue+1+contenttype.Length()),
+                       contenttype,
+                       nsCaseInsensitiveStringComparator()))
           )) &&
           // first try unquoted strings
-         ((Substring(contentValue,
-                     contentValue+texthtml.Length()).Equals(texthtml,
-                                                            nsCaseInsensitiveStringComparator())) ||
+         ((0==Compare(Substring(contentValue,contentValue+texthtml.Length()),
+                      texthtml,
+                      nsCaseInsensitiveStringComparator())) ||
           // now try "quoted" or 'quoted' strings
           (((contentValue[0]=='\'') ||
             (contentValue[0]=='\"'))&&
-           (Substring(contentValue+1,
-                      contentValue+1+texthtml.Length()).Equals(texthtml,
-                                                               nsCaseInsensitiveStringComparator()))
+           (0==Compare(Substring(contentValue+1, contentValue+1+texthtml.Length()),
+                       texthtml,
+                       nsCaseInsensitiveStringComparator()))
           ))
         )
       {
@@ -350,8 +352,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
     // e.g. <META charset="ISO-8859-1">
     PRInt32 numOfAttributes = keys->Count();
     if ((numOfAttributes >= 3) &&
-        (keys->StringAt(0)->Equals(NS_LITERAL_STRING("charset"),
-                                   nsCaseInsensitiveStringComparator())))
+        (0 == Compare(*keys->StringAt(0), NS_LITERAL_STRING("charset"),
+                      nsCaseInsensitiveStringComparator())))
     {
       nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;
