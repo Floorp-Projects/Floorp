@@ -285,10 +285,6 @@ public:
    */
   NS_IMETHOD GetDefaultColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor) = 0;
-  NS_IMETHOD GetDefaultBackgroundImage(nsString& aImage) = 0;
-  NS_IMETHOD GetDefaultBackgroundImageRepeat(PRUint8* aRepeat) = 0;
-  NS_IMETHOD GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY) = 0;
-  NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat) = 0;
   NS_IMETHOD GetDefaultLinkColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor) = 0;
   NS_IMETHOD GetFocusBackgroundColor(nscolor* aColor) = 0;
@@ -300,10 +296,6 @@ public:
 
   NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;
-  NS_IMETHOD SetDefaultBackgroundImage(const nsString& aImage) = 0;
-  NS_IMETHOD SetDefaultBackgroundImageRepeat(PRUint8 aRepeat) = 0;
-  NS_IMETHOD SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY) = 0;
-  NS_IMETHOD SetDefaultBackgroundImageAttachment(PRUint8 aRepeat) = 0;
   NS_IMETHOD SetDefaultLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor) = 0;
 
