@@ -250,8 +250,12 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
+#if defined(XP_MAC)     
+	  nsAutoString str((nsFilePath)path);	//ducarroz: please don't cast a nsFilePath to char* on Mac
+#else
       const char *chpath = path;
       nsAutoString str(chpath);
+#endif
       str += sep;
       path = str;
     }
@@ -376,8 +380,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
   nsFileSpec path;
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
+#if defined(XP_MAC)
+  nsAutoString tmpPath((nsFilePath)path);	//ducarroz: please don't cast a nsFilePath to char* on Mac
+  const char *pathName = tmpPath.ToNewCString();
+  *url = PR_smprintf("%s%s", urlScheme, pathName);
+  delete [] pathName;
+#else
   const char *pathName = path;
   *url = PR_smprintf("%s%s", urlScheme, pathName);
+#endif
   return NS_OK;
 
 }

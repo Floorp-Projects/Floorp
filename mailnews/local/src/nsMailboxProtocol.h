@@ -39,6 +39,11 @@
 #define MESSAGE_PATH_URL "/C|/temp/tempMessage.eml"
 #endif
 
+#ifdef XP_MAC
+#define MESSAGE_PATH  "tempMessage.eml"
+#define MESSAGE_PATH_URL "tempMessage.eml"
+#endif
+
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)

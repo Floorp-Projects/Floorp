@@ -26,6 +26,9 @@
 #include "nsParseMailbox.h"
 
 #ifdef XP_MAC
+/* ducarroz: we should solve this redefinition problem! */
+#  undef LINEBREAK
+#  undef LINEBREAK_LEN
 #  define LINEBREAK             "\015"
 #  define LINEBREAK_LEN 1
 #else
