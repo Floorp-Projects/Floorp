@@ -47,6 +47,29 @@ REQUIRES	= gtkembedmoz \
 		  xpcom \
 		  string \
 		  dom \
+                  chrome \
+		  locale \
+		  webbrowserpersist \
+		  find \
+		  docshell \
+		  webshell \
+		  widget \
+		  content \
+		  browser \
+		  necko \
+		  pref \
+		  history \
+		  gfx \
+		  webbrowserpersist \
+		  layout \
+		  webbrwsr \
+	          history \
+		  txtsvc \
+		  windowwatcher \
+		  appcomps \
+		  xpcom \
+		  nspr \
+		  xpcom_obsolete \
 		  $(NULL)
 
 ifdef NS_TRACE_MALLOC
@@ -57,11 +80,12 @@ CPPSRCS		= Minimo.cpp
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 
+
 LIBS		+= \
-		-lgtkembedmoz \
-		$(XLDFLAGS) \
-		$(XLIBS) \
-		$(NULL)
+			-lgtkembedmoz \
+			$(XLDFLAGS) \
+			$(XLIBS) \
+			$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
