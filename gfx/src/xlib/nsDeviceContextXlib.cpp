@@ -24,7 +24,9 @@
 #include "nsGfxCIID.h"
 #include "nspr.h"
 #include "xlibrgb.h"
-#include "../ps/nsDeviceContextPS.h"
+
+#include "nsGfxPSCID.h"
+#include "nsIDeviceContextPS.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
@@ -314,11 +316,29 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
-  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetDeviceContextFor()\n"));
-  aContext = new nsDeviceContextPS();
-  ((nsDeviceContextPS *)aContext)->SetSpec(aDevice);
-  NS_ADDREF(aDevice);
-  return((nsDeviceContextPS *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
+  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+  
+  // Create a Postscript device context 
+  nsresult rv;
+  nsIDeviceContextPS *dcps;
+  
+  rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
+                                          nsnull,
+                                          nsIDeviceContextPS::GetIID(),
+                                          (void **)&dcps);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
+  
+  dcps->SetSpec(aDevice);
+  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
+                            (nsIDeviceContext*)this);
+
+  rv = dcps->QueryInterface(nsIDeviceContext::GetIID(),
+                            (void **)&aContext);
+
+  NS_RELEASE(dcps);
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(void)
