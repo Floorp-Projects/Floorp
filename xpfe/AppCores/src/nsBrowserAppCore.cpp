@@ -584,9 +584,23 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadInitialPage(void)
 {
+  static PRBool cmdLineURLUsed = PR_FALSE;
   char * urlstr = nsnull;
   nsresult rv;
   nsICmdLineService * cmdLineArgs;
+
+  // Examine content URL.
+  if ( mContentAreaWebShell ) {
+      const PRUnichar *url = 0;
+      nsresult rv = mContentAreaWebShell->GetURL( 0, &url );
+      if ( NS_SUCCEEDED( rv ) ) {
+          if ( nsString(url) != "about:blank" ) {
+              // Something has already been loaded (probably via window.open),
+              // leave it be.
+              return NS_OK;
+          }
+      }
+  }
 
   rv = nsServiceManager::GetService(kCmdLineServiceCID,
                                     kICmdLineServiceIID,
@@ -600,21 +614,14 @@ nsBrowserAppCore::LoadInitialPage(void)
   rv = cmdLineArgs->GetURLToLoad(&urlstr);
   nsServiceManager::ReleaseService(kCmdLineServiceCID, cmdLineArgs);
 
-  if (urlstr != nsnull) {
+  if ( !cmdLineURLUsed && urlstr != nsnull) {
   // A url was provided. Load it
      if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
      rv = LoadUrl(nsString(urlstr));
+     cmdLineURLUsed = PR_TRUE;
      return rv;
   }
-  else {
-    //Load the BrowserInit Page for now. This s'd be replaced by code
-    //that will look for Prefs and load the default home page
-		// XXX This code breaks window.open. Commenting out for now. - DWH
-    // rv = LoadUrl(nsString("resource:/res/samples/BrowserInitPage.html"));
-    return rv;
-  }
 
-#if 0
   // No URL was provided in the command line. Load the default provided
   // in the navigator.xul;
 
@@ -637,7 +644,6 @@ nsBrowserAppCore::LoadInitialPage(void)
     rv = LoadUrl(value);
     return rv;
     }
-#endif  /* 0 */
 
     if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
     return NS_OK;
