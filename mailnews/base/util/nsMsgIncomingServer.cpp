@@ -445,7 +445,7 @@ nsMsgIncomingServer::SetUnicharValue(const char *prefname,
 
   PRUnichar *defaultVal=nsnull;
   rv = getDefaultUnicharPref(prefname, &defaultVal);
-  if (NS_SUCCEEDED(rv) &&
+  if (defaultVal && NS_SUCCEEDED(rv) &&
       nsCRT::strcmp(defaultVal, val) == 0)
     m_prefs->ClearUserPref(fullPrefName);
   else
