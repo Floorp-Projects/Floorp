@@ -30,11 +30,14 @@
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIProgressEventSink.h"
 #include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIBufferOutputStream.h"
 #include "nsHTTPResponseListener.h"
+#include "nsIStreamListener.h"
 #include "nsIStreamObserver.h"
 
 class nsHTTPRequest;
@@ -48,7 +51,9 @@ class nsHTTPRequest;
 
     -Gagan Saksena 02/25/99
 */
-class nsHTTPChannel : public nsIHTTPChannel
+class nsHTTPChannel : public nsIHTTPChannel,
+                      public nsIInterfaceRequestor,
+                      public nsIProgressEventSink
 {
 
 public:
@@ -65,6 +70,8 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIHTTPCHANNEL
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIPROGRESSEVENTSINK
 
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
@@ -103,9 +110,11 @@ protected:
 
     nsCString                           mVerb;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
+    nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
-    nsIStreamListener*                  mResponseDataListener;
+    nsCOMPtr<nsIStreamListener>         mResponseDataListener;
+    nsCOMPtr<nsIBufferOutputStream>     mBufOutputStream;
 
     PRUint32                            mLoadAttributes;
 

@@ -339,7 +339,7 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     // Write the request to the server.  
     //
     rv = aTransport->AsyncWrite(stream, 0, mRequestBuffer.Length(), 
-                                mConnection, this);
+                                (nsISupports*)(nsIRequest*)mConnection, this);
     return rv;
 }
 
@@ -445,7 +445,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
                ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n",
                 this));
 
-        rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, mConnection, this);
+        rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, (nsISupports*)(nsIRequest*)mConnection, this);
 
         /* the mPostDataStream is released below... */
       }
