@@ -289,13 +289,13 @@ private:
 /**
   @param text (in), col0 (in): see GlyphHit
   @param tagTXT (in): Smily, see also StructPhraseHit
-  @param aTagTxtLen (in): length of tagTXT
-  @param tagHTML (in): see StructPhraseHit
+  @param imageName (in): the basename of the file that contains the image for this smilie
   @param outputHTML (out): new string containing the html for the smily
   @param glyphTextLen (out): see GlyphHit
 */
-  PRBool SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
-         const PRUnichar* tagTXT, PRInt32 aTagTxtLen, const char* tagHTML,
+  PRBool
+         SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
+         const char* tagTXT, const char* imageName,
          nsString& outputHTML, PRInt32& glyphTextLen);
 
 /**
