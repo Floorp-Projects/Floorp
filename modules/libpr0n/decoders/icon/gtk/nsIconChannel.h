@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Mozilla icon channel for gnome.
  *
  * The Initial Developer of the Original Code is
- * Brian Ryner.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Christian Biesinger <cbiesinger@web.de>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Scott MacGregor <mscott@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,48 +34,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIconChannel_h___
-#define nsIconChannel_h___
+#ifndef nsIconChannel_h_
+#define nsIconChannel_h_
 
-#include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIChannel.h"
-#include "nsILoadGroup.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIURI.h"
-#include "nsIInputStreamPump.h"
 #include "nsIStreamListener.h"
+#include "nsIURI.h"
+#include "nsIIconURI.h"
+#include "nsCOMPtr.h"
 
-class nsIFile;
+/**
+ * This class is the gnome implementation of nsIconChannel. It basically asks
+ * gnome for the filename to a given mime type, and creates a new channel for
+ * that file to which all calls will be proxied.
+ */
+class nsIconChannel : public nsIChannel {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_NSIREQUEST(mRealChannel->)
+    NS_FORWARD_NSICHANNEL(mRealChannel->)
 
-class nsIconChannel : public nsIChannel, public nsIStreamListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUEST
-  NS_DECL_NSICHANNEL
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-
-  nsIconChannel();
-  ~nsIconChannel();
-
-  nsresult Init(nsIURI* uri);
-
-protected:
-  nsCOMPtr<nsIURI> mUrl;
-  nsCOMPtr<nsIURI> mOriginalURI;
-  PRInt32          mContentLength;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
-  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-  nsCOMPtr<nsISupports>  mOwner; 
-
-  nsCOMPtr<nsIInputStreamPump> mPump;
-  nsCOMPtr<nsIStreamListener>  mListener;
-
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension);
-  nsresult MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking);
+    /**
+     * Called by nsIconProtocolHandler after it creates this channel.
+     * Must be called before calling any other function on this object.
+     * If this method fails, no other function must be called on this object.
+     */
+    NS_HIDDEN_(nsresult) Init(nsIURI* aURI);
+  private:
+    /**
+     * The channel to the real icon file (e.g. to
+     * /usr/share/icons/gnome/16x16/mimetypes/gnome-mime-application-msword.png).
+     * Will always be non-null after a successful Init.
+     */
+    nsCOMPtr<nsIChannel> mRealChannel;
+    /**
+     * The moz-icon URI we're loading. Always non-null after a successful Init.
+     */
+    nsCOMPtr<nsIMozIconURI> mURI;
 };
 
-#endif /* nsIconChannel_h___ */
+
+
+#endif

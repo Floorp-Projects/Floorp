@@ -93,6 +93,7 @@ MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
 W32API_VERSION=2.4
 GNOMEVFS_VERSION=2.0
+GNOMEUI_VERSION=2.0
 
 dnl Set various checks
 dnl ========================================================
@@ -3511,6 +3512,37 @@ then
 fi
 
 dnl ========================================================
+dnl = libgnomeui support module
+dnl ========================================================
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    MOZ_ENABLE_GNOMEUI=1
+
+    MOZ_ARG_DISABLE_BOOL(gnomeui,
+    [  --disable-gnomeui       Disable libgnomeui support (default: auto, optional at runtime) ],
+        MOZ_ENABLE_GNOMEUI=,
+        MOZ_ENABLE_GNOMEUI=force)
+
+    if test "$MOZ_ENABLE_GNOMEUI"
+    then
+        PKG_CHECK_MODULES(MOZ_GNOMEUI, libgnomeui-2.0 >= $GNOMEUI_VERSION,
+        [MOZ_ENABLE_GNOMEUI=1], [
+            if test "$MOZ_ENABLE_GNOMEUI" == "force"
+            then
+                AC_MSG_ERROR([* * * Could not find libgnomeui-2.0 >= $GNOMEUI_VERSION])
+            fi
+            MOZ_ENABLE_GNOMEUI=
+        ])
+    fi
+
+    AC_SUBST(MOZ_ENABLE_GNOMEUI)
+    AC_SUBST(MOZ_GNOMEUI_CFLAGS)
+    AC_SUBST(MOZ_GNOMEUI_LIBS)
+
+fi
+
+dnl ========================================================
 dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
 dnl = converters in intl/uconv that are used only by X11 gfx 
 dnl = implementations. By default, it's undefined so that 
@@ -3912,6 +3944,11 @@ cygwin*|mingw*|msvc*|mks*|os2*)
 darwin*)
     if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa";
     then
+        MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
+    fi
+    ;;
+*)
+    if test "$MOZ_ENABLE_GNOMEUI"; then
         MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
     fi
     ;;
