@@ -4748,8 +4748,12 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
     return cachedData; // We have a fully specified struct. Just return it.
 
   if (mDependentBits & nsCachedStyleData::GetBitForSID(aSID))
-    return GetParentData(aSID); // We inherit. Just go up the rule tree and return the first
-                                // cached struct we find.
+    return GetParentData(aSID); // We depend on an ancestor for this
+                                // struct since the cached struct it has
+                                // is also appropriate for this rule
+                                // node.  Just go up the rule tree and
+                                // return the first cached struct we
+                                // find.
 
   // Nothing is cached.  We'll have to delve further and examine our rules.
   GetStyleDataFn fn = gGetStyleDataFn[aSID];
