@@ -183,7 +183,8 @@ if test "$GNU_CC"; then
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
     MKCSHLIB='$(CC) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-    DSO_CFLAGS='-fPIC'
+    DSO_CFLAGS=''
+    DSO_PIC_CFLAGS='-fPIC'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -199,7 +200,8 @@ else
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-    DSO_CFLAGS='-KPIC'
+    DSO_CFLAGS=''
+    DSO_PIC_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES)'
 fi
 
@@ -256,7 +258,8 @@ case "$target" in
 *-aix*)
     if test ! "$GNU_CC"; then
 	DSO_LDOPTS='-ldl -bM:SRE -brtl -bso -berok -bexpall -bnoentry'
-	DSO_CFLAGS='-DPIC -qflag=w:w'
+	DSO_CFLAGS='-qflag=w:w'
+	DSO_PIC_CFLAGS='-DPIC'
     fi
     MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok'
     MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok'
@@ -293,7 +296,8 @@ case "$target" in
 *-hpux*)
     DLL_SUFFIX="sl"
     if test ! "$GNU_CC"; then
-	DSO_CFLAGS="+Z"
+	DSO_CFLAGS=""
+	DSO_PIC_CFLAGS="+Z"
     fi
     DSO_LDOPTS='-b -E -L$(DIST)/bin'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -334,7 +338,8 @@ alpha*-*-linux*)
 
 *-netbsd*)
     DLL_SUFFIX="so.1.0"
-    DSO_CFLAGS='-fPIC'
+    DSO_CFLAGS=''
+    DSO_PIC_CFLAGS='-fPIC'
     CFLAGS="$CFLAGS -Dunix"
     CXXFLAGS="$CXXFLAGS -Dunix"
     # At least for 1.3 and up, ld supports this, despite the test failing above.
@@ -357,7 +362,8 @@ alpha*-*-linux*)
 
 *-openbsd*)
     DLL_SUFFIX="so.1.0"
-    DSO_CFLAGS='-fPIC'
+    DSO_CFLAGS=''
+    DSO_PIC_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -2009,6 +2015,7 @@ AC_SUBST(MKCSHLIB)
 AC_SUBST(MKSHLIB_FORCE_ALL)
 AC_SUBST(MKSHLIB_UNFORCE_ALL)
 AC_SUBST(DSO_CFLAGS)
+AC_SUBST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(DLL_SUFFIX)
 AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, ".$DLL_SUFFIX")
