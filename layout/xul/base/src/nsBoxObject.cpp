@@ -174,11 +174,13 @@ nsBoxObject::GetFrame()
 nsresult 
 nsBoxObject::GetOffsetRect(nsRect& aRect)
 {
-  nsresult res = NS_OK;
-
   aRect.x = aRect.y = 0;
   aRect.Empty();
  
+  if (!mContent)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult res = NS_OK;
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   if (doc) {
@@ -273,6 +275,9 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
   aRect.x = aRect.y = 0;
   aRect.Empty();
  
+  if (!mContent)
+    return NS_ERROR_NOT_INITIALIZED;
+
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   if (doc) {
@@ -508,6 +513,10 @@ nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
 NS_IMETHODIMP 
 nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
 {
+  if (!mContent) {
+    *aFirstVisibleChild = nsnull;
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   *aFirstVisibleChild = GetChildByOrdinalAt(0);
   NS_IF_ADDREF(*aFirstVisibleChild);
   return NS_OK;
@@ -516,6 +525,10 @@ nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
 NS_IMETHODIMP
 nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
 {
+  if (!mContent) {
+    *aLastVisibleChild = nsnull;
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   PRInt32 count;
   mContent->ChildCount(count);
   *aLastVisibleChild = GetChildByOrdinalAt(count-1);
