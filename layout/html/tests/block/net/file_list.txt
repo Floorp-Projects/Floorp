@@ -745,16 +745,6 @@ http://www.hixie.ch/tests/adhoc/css/cascade/alternates/002.html
 http://www.hixie.ch/tests/adhoc/css/cascade/alternates/003.html
 http://www.hixie.ch/tests/adhoc/css/cascade/import/001.html
 http://www.hixie.ch/tests/adhoc/css/cascade/import/002.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/003.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/004.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/005.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/006.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/007.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/008.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/009.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/010.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/011.html
-http://www.hixie.ch/tests/adhoc/css/cascade/import/012.html
 http://www.hixie.ch/tests/adhoc/css/cascade/import/dynamic/001.html
 http://www.hixie.ch/tests/adhoc/css/cascade/import/dynamic/001.xml
 http://www.hixie.ch/tests/adhoc/css/cascade/import/dynamic/002.html
@@ -1124,9 +1114,6 @@ http://www.hixie.ch/tests/adhoc/dom/html/attributes/002.xml
 http://www.hixie.ch/tests/adhoc/dom/html/attributes/compatibility/001.html
 http://www.hixie.ch/tests/adhoc/dom/html/events/001.html
 http://www.hixie.ch/tests/adhoc/dom/html/events/002.html
-http://www.hixie.ch/tests/adhoc/dom/html/forms/001.xml
-http://www.hixie.ch/tests/adhoc/dom/html/forms/002.xml
-http://www.hixie.ch/tests/adhoc/dom/html/forms/003.xml
 http://www.hixie.ch/tests/adhoc/dom/level0/001.html
 http://www.hixie.ch/tests/adhoc/dom/level0/002.html
 http://www.hixie.ch/tests/adhoc/dom/level0/003.html
