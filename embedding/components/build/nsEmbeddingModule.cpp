@@ -46,7 +46,7 @@
 #include "nsWebBrowserFind.h"
 #include "nsWebBrowserPersist.h"
 #include "nsCommandManager.h"
-#include "nsControllerCommandManager.h"
+#include "nsControllerCommandTable.h"
 #include "nsCommandParams.h"
 #include "nsCommandGroup.h"
 #include "nsPrintingPromptService.h"
@@ -60,7 +60,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandTable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCommandParams, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandGroup)
@@ -77,8 +77,7 @@ static const nsModuleComponentInfo gComponents[] = {
   { "WebBrowserFind",           NS_WEB_BROWSER_FIND_CID, NS_WEB_BROWSER_FIND_CONTRACTID, nsWebBrowserFindConstructor },
   { NS_APPSTARTUPNOTIFIER_CLASSNAME, NS_APPSTARTUPNOTIFIER_CID, NS_APPSTARTUPNOTIFIER_CONTRACTID, nsAppStartupNotifierConstructor },
   { "WebBrowserPersist Component", NS_WEBBROWSERPERSIST_CID, NS_WEBBROWSERPERSIST_CONTRACTID, nsWebBrowserPersistConstructor },
-  { "Controller Command Manager", NS_CONTROLLERCOMMANDMANAGER_CID, NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, nsControllerCommandManagerConstructor },
-  { "Composers Controller Command Manager", NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CID, NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, nsControllerCommandManagerConstructor },
+  { "Controller Command Table", NS_CONTROLLERCOMMANDTABLE_CID, NS_CONTROLLERCOMMANDTABLE_CONTRACTID, nsControllerCommandTableConstructor },
   { "Command Manager", NS_COMMAND_MANAGER_CID, NS_COMMAND_MANAGER_CONTRACTID, nsCommandManagerConstructor },
   { "Command Params", NS_COMMAND_PARAMS_CID, NS_COMMAND_PARAMS_CONTRACTID, nsCommandParamsConstructor },
   { "Command Group", NS_CONTROLLER_COMMAND_GROUP_CID, NS_CONTROLLER_COMMAND_GROUP_CONTRACTID, nsControllerCommandGroupConstructor },
