@@ -36,12 +36,17 @@
 //TODO turnon the proxy stuff as well. 
 
 #include "nsIHTTPHandler.h"
-#include "nsIProtocolInstance.h"
+#include "nsIProtocolHandler.h"
+#include "nsIProtocolConnection.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
 
 //Forward decl.
-class nsITimer; //TODO check with pnunn if a new version is available, where?
+class nsHashtable;
+class nsITransport;
 
-class nsHTTPHandler : public nsIHTTPHandler//, public nsIProxy 
+class nsHTTPHandler : public nsIHTTPHandler, public nsIProtocolHandler
+		//, public nsIProxy 
 {
 
 public:
@@ -49,24 +54,63 @@ public:
     //Functions from nsISupports
     NS_DECL_ISUPPORTS
 
-    //Functions from nsIHTTPHandler
-    NS_METHOD       GetProtocolInstance(nsICoolURL* i_URL, 
-					  	nsIProtocolInstance* *o_Instance);
+    //Functions from nsIProtocolHandler
+    /*
+        GetDefaultPort returns the default port associated with this 
+        protocol. 
+    */
+    NS_IMETHOD               GetDefaultPort(PRInt32 *result) const 
+    {
+        static const PRInt32 defaultPort = 80;
+        *result = defaultPort;
+        return NS_OK;
+    };    
 
+    /* 
+        The GetScheme function uniquely identifies the scheme this handler 
+		is associated with. 
+    */
+    NS_IMETHOD               GetScheme(const char* *o_Scheme) const
+    {
+        static const char* scheme = "http";
+        *o_Scheme = scheme;
+        return NS_OK;
+    };
+
+    NS_IMETHOD               MakeAbsoluteUrl(const char* i_URL,
+                                nsIURL* i_BaseURL,
+                                char* *o_Result) const;
+
+    NS_IMETHOD               NewConnection(nsIURL* i_URL,
+                                nsISupports* i_eventSink,
+                                nsIEventQueue* i_eventQueue,
+                                nsIProtocolConnection* *o_Result);
+    
+    NS_IMETHOD               NewUrl(const char* i_URL,
+                                nsIURL* i_BaseUrl,
+                                nsIURL* *o_Result) const;
+
+    //Functions from nsIHTTPHandler
+
+#if 0
     //Functions from nsIProxy
     /*
         Get and Set the Proxy Host 
     */
-    NS_METHOD      GetProxyHost(const char* *o_ProxyHost) const {return NS_ERROR_NOT_IMPLEMENTED;};
-    NS_METHOD      SetProxyHost(const char* i_ProxyHost) {return NS_ERROR_NOT_IMPLEMENTED;};
+    NS_IMETHOD      GetProxyHost(const char* *o_ProxyHost) const {return NS_ERROR_NOT_IMPLEMENTED;};
+    NS_IMETHOD      SetProxyHost(const char* i_ProxyHost) {return NS_ERROR_NOT_IMPLEMENTED;};
 
     /*
         Get and Set the Proxy Port 
 		-1 on Set call indicates switch to default port
     */
-    NS_METHOD_(PRInt32)
-                   GetProxyPort(void) const {return NS_ERROR_NOT_IMPLEMENTED;};
-    NS_METHOD      SetProxyPort(PRInt32 i_ProxyPort) {return NS_ERROR_NOT_IMPLEMENTED;}; 
+    NS_IMETHOD_(PRInt32)
+                    GetProxyPort(void) const {return NS_ERROR_NOT_IMPLEMENTED;};
+    NS_IMETHOD      SetProxyPort(PRInt32 i_ProxyPort) {return NS_ERROR_NOT_IMPLEMENTED;}; 
+
+#endif
+    // Follow the redirects automatically. This will trigger OnRedirect call on the sink
+    NS_IMETHOD      FollowRedirects(PRBool bFollow=PR_TRUE);
 
     // Singleton function
     static nsHTTPHandler* GetInstance(void)
@@ -75,13 +119,26 @@ public:
         return pHandler;
     };
 
+    /* 
+        Pull out an existing transport from the hashtable, or if none exists
+        create one. 
+    */
+    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsITransport* *o_pTrans);
+    /*
+        Remove this transport from the hashtable.
+    */
+    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsITransport* i_pTrans);
+
 protected:
+    // None
+private:
     nsHTTPHandler(void);
     ~nsHTTPHandler();
 
-    //This is the timer that polls on the sockets.
-    nsITimer* m_pTimer; 
-
+	// This is the array of connections that the handler thread maintains to 
+    // verify unique requests. 
+	nsCOMPtr<nsISupportsArray> m_pConnections;
+    nsHashtable* m_pTransportTable;
 };
 
 #endif /* _nsHTTPHandler_h_ */

@@ -19,8 +19,11 @@
 #ifndef _nsIHTTPHandler_h_
 #define _nsIHTTPHandler_h_
 
-#include "nsIProtocolHandler.h"
+#include "nsISupports.h"
 
+#ifndef nsIURL
+#define nsIURL nsIUrl // style compatibility hacks... will clean later.
+#endif
 /* 
     The nsIHTTPHandler class is the bare minimum interface expected for 
     an HTTP handler. The set of interfaces this handler is derived from decides
@@ -31,34 +34,12 @@
     -Gagan Saksena 02/25/99
 */
 
-class nsIHTTPHandler : public nsIProtocolHandler//, public nsIProxy 
+class nsIHTTPHandler : public nsISupports//, public nsIProxy 
 // TODO should also have caching interfaces
 // as well as security stuff, etc.
 {
 
 public:
-
-    /*
-        GetDefaultPort returns the default port associated with this 
-        protocol. 
-    */
-    NS_METHOD_(PRInt32)    GetDefaultPort(void) const 
-    {
-        static const PRInt32 defaultPort = 80;
-        return defaultPort;
-    };    
-
-    /* 
-        The GetScheme function uniquely identifies the scheme this handler 
-		is associated with. 
-    */
-    NS_METHOD              GetScheme(const char* *o_Scheme) const
-    {
-        static const char* scheme = "http";
-        *o_Scheme = scheme;
-        return NS_OK;
-    };
-
 
     static const nsIID& GetIID() { 
         // {A3BE3AF0-CD2D-11d2-B013-006097BFC036}

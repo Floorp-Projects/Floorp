@@ -16,32 +16,33 @@
  * Reserved.
  */
 
-#ifndef _nsHTTPRequest_h_
-#define _nsHTTPRequest_h_
+#ifndef _nsHTTPResponse_h_
+#define _nsHTTPResponse_h_
 
 #include "nsIHTTPCommonHeaders.h"
-#include "nsIHTTPRequest.h"
+#include "nsIHTTPResponse.h"
+#include "nsCOMPtr.h"
+#include "nsIHTTPConnection.h"
 
 class nsIUrl;
 class nsVoidArray;
+
 /* 
-    The nsHTTPRequest class is the request object created for each HTTP 
-    request before the connection. A request object may be cloned and 
-    saved for later reuse. 
+    The nsHTTPResponse class is the response object created by the response
+    listener as it reads in data from the input stream.
 
     This class is internal to the protocol handler implementation and 
     should theroetically not be used by the app or the core netlib.
 
     -Gagan Saksena 03/29/99
 */
-class nsHTTPRequest : public nsIHTTPRequest
+class nsHTTPResponse : public nsIHTTPResponse
 {
 
 public:
-
     // Constructor and destructor
-    nsHTTPRequest(nsIUrl* i_URL=0, HTTPMethod i_Method=HM_GET);
-    virtual ~nsHTTPRequest();
+    nsHTTPResponse(nsIHTTPConnection* i_pConnection);
+    virtual ~nsHTTPResponse();
 
     // Methods from nsISupports
     NS_DECL_ISUPPORTS
@@ -81,7 +82,7 @@ public:
 
     NS_IMETHOD          SetContentLength(const char* i_Value);
     NS_IMETHOD          GetContentLength(const char* *o_Value) const;
-
+    
     NS_IMETHOD          SetContentLocation(const char* i_Value);
     NS_IMETHOD          GetContentLocation(const char* *o_Value) const;
 
@@ -109,9 +110,6 @@ public:
     NS_IMETHOD          SetLastModified(const char* i_Value);
     NS_IMETHOD          GetLastModified(const char* *o_Value) const;
 
-    /*
-        To set multiple link headers, call set link again.
-    */
     NS_IMETHOD          SetLink(const char* i_Value);
     NS_IMETHOD          GetLink(const char* *o_Value) const;
     NS_IMETHOD          GetLinkMultiple(
@@ -152,120 +150,30 @@ public:
     NS_IMETHOD          SetTransfer(const char* i_Value);
     NS_IMETHOD          GetTransfer(const char* *o_Value) const;
 
-    // Methods from nsIHTTPRequest
-    NS_IMETHOD          SetAccept(const char* i_Types);
-    NS_IMETHOD          GetAccept(const char* *o_Types) const;
-                    
-    NS_IMETHOD          SetAcceptChar(const char* i_Chartype);
-    NS_IMETHOD          GetAcceptChar(const char* *o_Chartype) const;
-                    
-    NS_IMETHOD          SetAcceptEncoding(const char* i_Encoding);
-    NS_IMETHOD          GetAcceptEncoding(const char* *o_Encoding) const;
-                    
-    NS_IMETHOD          SetAcceptLanguage(const char* i_Lang);
-    NS_IMETHOD          GetAcceptLanguage(const char* *o_Lang) const;
-                    
-    NS_IMETHOD          SetAuthentication(const char* i_Foo);
-    NS_IMETHOD          GetAuthentication(const char* *o_Foo) const;
-                    
-    NS_IMETHOD          SetExpect(const char* i_Expect);
-    NS_IMETHOD          GetExpect(const char** o_Expect) const;
-                    
-    NS_IMETHOD          SetFrom(const char* i_From);
-    NS_IMETHOD          GetFrom(const char** o_From) const;
-
-    /*
-        This is the actual Host for connection. Not necessarily the
-        host in the url (as in the cases of proxy connection)
-    */
-    NS_IMETHOD          SetHost(const char* i_Host);
-    NS_IMETHOD          GetHost(const char** o_Host) const;
-
-    NS_IMETHOD          SetHTTPVersion(HTTPVersion i_Version);
-    NS_IMETHOD          GetHTTPVersion(HTTPVersion *o_Version) const;
-
-    NS_IMETHOD          SetIfModifiedSince(const char* i_Value);
-    NS_IMETHOD          GetIfModifiedSince(const char* *o_Value) const;
-
-    NS_IMETHOD          SetIfMatch(const char* i_Value);
-    NS_IMETHOD          GetIfMatch(const char* *o_Value) const;
-
-    NS_IMETHOD          SetIfMatchAny(const char* i_Value);
-    NS_IMETHOD          GetIfMatchAny(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetIfNoneMatch(const char* i_Value);
-    NS_IMETHOD          GetIfNoneMatch(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetIfNoneMatchAny(const char* i_Value);
-    NS_IMETHOD          GetIfNoneMatchAny(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetIfRange(const char* i_Value);
-    NS_IMETHOD          GetIfRange(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetIfUnmodifiedSince(const char* i_Value);
-    NS_IMETHOD          GetIfUnmodifiedSince(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetMaxForwards(const char* i_Value);
-    NS_IMETHOD          GetMaxForwards(const char* *o_Value) const;
-
-    /* 
-        Range information for byte-range requests 
-    */
-    NS_IMETHOD          SetRange(const char* i_Value);
-    NS_IMETHOD          GetRange(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetReferer(const char* i_Value);
-    NS_IMETHOD          GetReferer(const char* *o_Value) const;
-                        
-    NS_IMETHOD          SetUserAgent(const char* i_Value);
-    NS_IMETHOD          GetUserAgent(const char* *o_Value) const;
+    // Stuff from nsIHTTPResponse
+    NS_IMETHOD          GetContentLength(PRInt32* o_Value) const;
+    NS_IMETHOD          GetStatus(PRInt32* o_Value) const;
+    NS_IMETHOD          GetStatusString(const char* *o_String) const;
+    NS_IMETHOD          GetServer(const char* *o_String) const;
 
     // Finally our own methods...
-    /*
-        Clone the current request for later use. Release it
-        after you are done.
-    */
-    NS_IMETHOD          Clone(const nsHTTPRequest* *o_Copy) const;
-                        
-    NS_IMETHOD          SetMethod(HTTPMethod i_Method);
-    HTTPMethod          GetMethod(void) const;
-                        
-    NS_IMETHOD          SetPriority(); // TODO 
-    NS_IMETHOD          GetPriority(); //TODO
 
+    NS_IMETHOD          SetServerVersion(const char* i_ServerVersion);
 
 protected:
 
-    // Build the actual request string based on the settings. 
-    NS_METHOD           Build(void);
+    NS_IMETHOD          SetHeaderInternal(const char* i_Header, const char* i_Value);
+    NS_IMETHOD          SetStatus(PRInt32 i_Value) { m_Status = i_Value; return NS_OK;};
+    NS_IMETHOD          SetStatusString(const char* i_Value);
 
-    // Use a method string corresponding to the method.
-    const char*         MethodToString(HTTPMethod i_Method=HM_GET)
-    {
-        static const char methods[][TOTAL_NUMBER_OF_METHODS] = 
-        {
-            "DELETE",
-            "GET",
-            "HEAD",
-            "INDEX",
-            "LINK",
-            "OPTIONS",
-            "POST",
-            "PUT",
-            "PATCH",
-            "TRACE",
-            "UNLINK"
-        };
-
-        return methods[i_Method];
-    }
-
-    nsIUrl*                     m_pURI;
-    HTTPVersion                 m_Version;
-    HTTPMethod                  m_Method;
-    // The actual request string! 
-    char*                       m_Request; 
+    char*                       m_Buffer; /* Used for holding header data */
     nsVoidArray*                m_pArray;
+    nsCOMPtr<nsIHTTPConnection> m_pConn;
+    HTTPVersion                 m_ServerVersion;
+    char*                       m_pStatusString;
+    PRUint32                    m_Status;
+
+    friend class nsHTTPResponseListener;
 };
 
-#endif /* _nsHTTPRequest_h_ */
+#endif /* _nsHTTPResponse_h_ */

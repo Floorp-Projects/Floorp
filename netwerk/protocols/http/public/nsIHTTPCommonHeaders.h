@@ -109,9 +109,6 @@ public:
     NS_IMETHOD          GetVersion(const char* *o_Value) const = 0;
 
     // Common Transaction headers
-    NS_IMETHOD          SetCC(const char* i_Value) = 0;
-    NS_IMETHOD          GetCC(const char* *o_Value) const = 0;
-
     NS_IMETHOD          SetConnection(const char* i_Value) = 0;
     NS_IMETHOD          GetConnection(const char* *o_Value) const = 0;
 
@@ -141,6 +138,6 @@ public:
         static const nsIID NS_IHTTP_COMMON_HEADERS_IID = 
             { 0xc81a4600, 0xebc0, 0x11d2, { 0xb0, 0x18, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
         return NS_IHTTP_COMMON_HEADERS_IID ;
-    }
-}
+    };
+};
 #endif // _nsIHTTPCommonHeaders_h_

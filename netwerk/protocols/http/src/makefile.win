@@ -28,6 +28,7 @@
 DEPTH=..\..\..\..
 MODULE=plughttp 
 
+IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
 DLLNAME=plughttp 
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -45,20 +46,25 @@ EXPORTS= 	\
 	$(NULL)
 
 CPP_OBJS=   \
-	.\$(OBJDIR)\nsHTTPHandler.obj			\
-	.\$(OBJDIR)\nsHTTPHandlerFactory.obj	\
-	.\$(OBJDIR)\nsHTTPInstance.obj			\
+	.\$(OBJDIR)\nsHTTPHandler.obj				\
+	.\$(OBJDIR)\nsHTTPHandlerFactory.obj		\
+	.\$(OBJDIR)\nsHTTPConnection.obj			\
+	.\$(OBJDIR)\nsHTTPRequest.obj				\
+	.\$(OBJDIR)\nsHTTPRequestObserver.obj		\
+	.\$(OBJDIR)\nsHTTPResponseListener.obj		\
+	.\$(OBJDIR)\nsHTTPResponse.obj				\
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
 
 INCLUDES = $(LOCAL_INCLUDES)
 
-REQUIRES= nunet 
+REQUIRES= netwerk 
 
 LINCS= \
+    -I..\public \
     -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\nunet \
+    -I$(PUBLIC)\netwerk \
     -I$(PUBLIC)\xpcom \
     $(NULL)
 
