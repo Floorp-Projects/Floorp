@@ -505,8 +505,8 @@ char* EDT_GetEmptyDocumentString(){
     return "<html></html>";
 }
 
-ED_Buffer* EDT_MakeEditBuffer(MWContext *pContext){
-    return new CEditBuffer(pContext);
+ED_Buffer* EDT_MakeEditBuffer(MWContext *pContext, XP_Bool bImportText){
+    return new CEditBuffer(pContext, bImportText);
 }
 
 XP_Bool EDT_HaveEditBuffer(MWContext * pContext){
@@ -972,7 +972,14 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
     }
 
     if( pDocData->edit_buffer == 0 ){
-        pDocData->edit_buffer = EDT_MakeEditBuffer( pDocData->window_id );
+        // HACK ALERT
+        // Libnet does not seem to be able to supply us with a reliable
+        //  "content_type" in the URL_Struct passed around to the front ends,
+        //  so we need to figure out when we are converting a text file into
+        //  HTML here.
+        // Since we just created our edit buffer for the first tag encountered,
+        //  if it is the PLAIN_TEXT type, then we are probably importing a text file
+        pDocData->edit_buffer = EDT_MakeEditBuffer( pDocData->window_id, tag->type == P_PLAIN_TEXT );
         bCreatedEditor = pDocData->edit_buffer != NULL;
     }
 
@@ -1541,9 +1548,19 @@ int EDT_GetFontSize( MWContext *pContext ){
     return pEditBuffer->GetFontSize();
 }
 
+void EDT_DecreaseFontSize( MWContext *pContext ){
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+    // Size is a relative change, signaled by TRUE param
+    pEditBuffer->SetFontSize(-1, TRUE);
+}
+void EDT_IncreaseFontSize( MWContext *pContext ){
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+    // Size is a relative change, signalled by TRUE param
+    pEditBuffer->SetFontSize(1, TRUE);
+}
 void EDT_SetFontSize( MWContext *pContext, int iSize ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
-    pEditBuffer->SetFontSize(iSize);
+    pEditBuffer->SetFontSize(iSize, FALSE);
 }
 
 int EDT_GetFontPointSize( MWContext *pContext ){
@@ -1592,6 +1609,16 @@ void EDT_SetFontColor( MWContext *pContext, LO_Color *pColor){
     else {
         pEditBuffer->SetFontColor(ED_Color::GetUndefined());
     }
+}
+
+ED_ElementType EDT_GetBackgroundColor( MWContext *pContext, LO_Color *pColor ){
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) ED_ELEMENT_NONE;
+    return pEditBuffer->GetBackgroundColor(pColor);
+}
+
+void EDT_SetBackgroundColor( MWContext *pContext, LO_Color *pColor){
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
+    pEditBuffer->SetBackgroundColor(pColor);
 }
 
 void EDT_StartSelection(MWContext *pContext, int32 x, int32 y){
@@ -1692,12 +1719,11 @@ EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText ) {
     if( bEqualCols && iCols > 1 && iRows > 0 )
     {
         char *pMessage = NULL;
-        pMessage = PR_sprintf_append( pMessage, "Text can be pasted as %d rows and %d columns.\n\n", iRows, iCols);
+        pMessage = PR_sprintf_append( pMessage, XP_GetString(XP_EDT_CAN_PASTE_AS_TABLE), iRows, iCols);
         if( pEditBuffer->IsInsertPointInTableCell() )
         {
             // Give message about pasting into an existing table
-            //TODO: MAKE XP STRINGS FOR EDT_PasteText INTO TABLES
-            pMessage = PR_sprintf_append( pMessage, "Replace existing cells?");
+            pMessage = PR_sprintf_append( pMessage,  XP_GetString(XP_EDT_REPLACE_CELLS));
 
             if( FE_Confirm(pEditBuffer->GetContext(), pMessage) )
             {
@@ -1711,7 +1737,7 @@ EDT_ClipboardResult EDT_PasteText( MWContext *pContext, char *pText ) {
             bPasteAsTable = TRUE;
         } else {
             // Give message about pasting as a new table
-            pMessage = PR_sprintf_append( pMessage, "Paste text as a new table?");
+            pMessage = PR_sprintf_append( pMessage,  XP_GetString(XP_EDT_PASTE_AS_TABLE));
             if( FE_Confirm(pEditBuffer->GetContext(), pMessage) )
             {
                 pEditBuffer->PasteTextAsNewTable(pText, iRows, iCols);
@@ -1785,10 +1811,12 @@ char *EDT_GetTabDelimitedTextFromSelectedCells( MWContext *pContext )
     return pEditBuffer->GetTabDelimitedTextFromSelectedCells();
 }
 
+XP_Bool EDT_CanConvertTextToTable(MWContext *pMWContext)
+{
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
+    return pEditBuffer->CanConvertTextToTable();
+}
 
-/* Convert Selected text into a table (put each paragraph in separate cell)
- * Number of rows is automatic - creates as many as needed
-*/
 void EDT_ConvertTextToTable(MWContext *pMWContext, intn iColumns)
 {
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer);

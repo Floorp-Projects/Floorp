@@ -289,6 +289,15 @@ CEditTableElement* CEditElement::GetParentTable()
     return (CEditTableElement*)pElement;
 }
 
+// Get parent table cell of the element
+CEditTableCellElement* CEditElement::GetParentTableCell()
+{
+    CEditElement *pElement = this;
+    do { pElement = pElement->GetParent(); }
+    while( pElement && !pElement->IsTableCell() );
+    return (CEditTableCellElement*)pElement;
+}
+
 // 
 // static function calls the appropriate stream constructor
 //
@@ -648,7 +657,12 @@ void CEditElement::EnsureSelectableSiblings(CEditBuffer* pBuffer)
     {
         // Make sure the previous sibling exists and is a container
         CEditElement* pPrevious = GetPreviousSibling();
+        // EXPERIMENTAL: Don't force another container before inserted table
+#if 0
+        if ( ! pPrevious ) {
+#else
         if ( ! pPrevious || !pPrevious->IsContainer() ) {
+#endif
             pPrevious = CEditContainerElement::NewDefaultContainer( NULL,
                             pParent->GetDefaultAlignment() );
             pPrevious->InsertBefore(this);
@@ -658,7 +672,11 @@ void CEditElement::EnsureSelectableSiblings(CEditBuffer* pBuffer)
     {
         // Make sure the next sibling exists and is container
         CEditElement* pNext = GetNextSibling();
-        if ( ! pNext || pNext->IsEndContainer() || !pNext->IsContainer() ) {
+#if 0
+        if ( ! pNext || pNext->IsEndContainer() ) {
+#else
+        if ( ! pNext || pNext->IsEndContainer() || !pNext->IsContainer()) {
+#endif
             pNext = CEditContainerElement::NewDefaultContainer( NULL,
                             pParent->GetDefaultAlignment() );
             pNext->InsertAfter(this);
@@ -2582,9 +2600,36 @@ void CEditTableElement::FixupColumnsAndRows()
     if( !pFirstCell )
         return;
 
-    CEditTableCellElement *pCell;
-    intn iColumns = m_ColumnLayoutData.Size();
-    intn iRows = m_RowLayoutData.Size();
+    TXP_GrowableArray_int32 X_Array;
+    TXP_GrowableArray_int32 Y_Array;
+    CEditTableCellElement *pCell = pFirstCell;
+
+    while( pCell )
+    {
+        int32 iCellX = pCell->GetX();
+        int32 iCellY = pCell->GetY();
+        XP_Bool bFoundX = FALSE;
+        XP_Bool bFoundY = FALSE;
+
+        // See if cell's X was already found
+        intn iSize = X_Array.Size();
+        for( intn i=0; i < iSize; i++ )
+        {
+            if( iCellX == X_Array[i] )
+            {
+                bFoundX = TRUE;
+                break;
+            }
+        }
+        if( !bFoundX )
+            X_Array.Add(iCellX);
+
+        pCell = GetNextCellInTable();
+    }
+    m_iColumns = X_Array.Size();
+
+    intn iColumns = CountColumns(); //m_ColumnLayoutData.Size();
+    intn iRows = CountRows(); //m_RowLayoutData.Size();
     intn i, iMinSpan, iDecrease;
     // We will find the maximum number of columns in all rows
     m_iColumns = 0;
@@ -2724,6 +2769,8 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, CEditTable
         }
         pCell = GetNextCellInRow();
     }
+    CEditBuffer *pBuffer = GetEditBuffer();
+
     // Now insert the new rows (including iColumns new cells in each)
     for ( intn row = 0; row < number; row++ )
     {
@@ -2734,12 +2781,18 @@ void CEditTableElement::InsertRows(int32 Y, int32 iNewY, intn number, CEditTable
         }
         else {
             pNewRow = new CEditTableRowElement(iColumns);
+            if( !pNewRow )
+                return;
+            pBuffer->SetFillNewCellWithSpace();
         }
         if( Y == iNewY )
             pNewRow->InsertBefore(pRow);
         else 
             pNewRow->InsertAfter(pRow);
+
+        pNewRow->FinishedLoad(pBuffer);
     }
+    pBuffer->ClearFillNewCellWithSpace();
 }
 
 void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number, CEditTableElement* pSource){
@@ -2938,7 +2991,10 @@ void CEditTableElement::FinishedLoad( CEditBuffer* pBuffer ){
     CEditTableRowElement* pRow = NULL;
     CEditElement* pNext = 0;
     
-    // For efficiency, get count rows only
+    // TODO: MAKE THIS WORK BEFORE LAYOUT HAPPENS (no m_ColumnLayoutData yet)
+    //FixupColumnsAndRows();
+    
+    // For efficiency, count rows only
     //  if we haven't layed out table
     if( m_iRows <= 0 )
         m_iRows = CountRows();
@@ -3877,7 +3933,9 @@ void CEditTableRowElement::FinishedLoad( CEditBuffer* pBuffer ){
         pChild->FinishedLoad(pBuffer);
     }
     if ( pCell ){
+//        pBuffer->SetFillNewCellWithSpace();
         pCell->FinishedLoad(pBuffer);
+//        pBuffer->ClearFillNewCellWithSpace();
         pCell = NULL;
     }
 }
@@ -3936,8 +3994,11 @@ static void edt_InsertCells(intn number, XP_Bool bAfter, CEditTableCellElement *
                 // This will add pSource cells from left to right
                 pInsertCell->InsertBefore(pExisting);
             }
-            // Be sure cell has the empty text element in default paragraph container
+            // Be sure cell has the empty text element in default paragraph container,
+            //  but check if text should be a space
+            pBuffer->SetFillNewCellWithSpace();
             pInsertCell->FinishedLoad(pBuffer);
+            pBuffer->ClearFillNewCellWithSpace();
         }
     }
 }
@@ -3978,6 +4039,11 @@ void CEditTableRowElement::InsertCells(int32 X, int32 iNewX, intn number, CEditT
             if( !pInsertCell ) 
             {
                 pInsertCell = new CEditTableCellElement();
+                // Insert space into initial text
+                CEditBuffer *pBuffer = GetEditBuffer();
+                pBuffer->SetFillNewCellWithSpace();
+                pInsertCell->FinishedLoad(pBuffer);
+                pBuffer->ClearFillNewCellWithSpace();
             }
             if( pInsertCell )
             {
@@ -4606,6 +4672,10 @@ CEditTableCellElement::CEditTableCellElement(IStreamIn *pStreamIn, CEditBuffer *
 }
 
 CEditTableCellElement::~CEditTableCellElement(){
+    // Be sure any cell deleted is not selected
+    if( IsSelected() && GetEditBuffer() )
+        GetEditBuffer()->SelectCell(FALSE, NULL, this);
+    
     delete m_pBackgroundImage;
 }
 
@@ -5600,15 +5670,20 @@ void CEditTableCellElement::DeleteContents(XP_Bool bMarkAsDeleted)
         delete pChild;
         pChild = pNext;
     }
+    // Set state for new cell contents according to preference
+    // (we may put a space in the blank cell)
+    GetEditBuffer()->SetFillNewCellWithSpace();
+
     // Create a default paragraph container,
     //  this will set cell as its parent
     CEditContainerElement *pContainer = CEditContainerElement::NewDefaultContainer(this, ED_ALIGN_DEFAULT);
+    
+    // Initialize the cell contents
     if( pContainer )
-    {
-        // Create empty string as only element so we have 
-        //  a leaf element to place caret at
-        CEditTextElement *pText = new CEditTextElement(pContainer,"");
-    }
+        pContainer->FinishedLoad(GetEditBuffer());
+
+    GetEditBuffer()->ClearFillNewCellWithSpace();
+
     // Mark this cell as deleted so CEditBuffer::DeleteSelectedCells()
     //  can skip over this during multiple deletion passes
     if( bMarkAsDeleted )
@@ -6337,37 +6412,81 @@ ElementIndex CEditContainerElement::GetPersistentCount(){
 
 
 
-void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer ){
+void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
+{
+    XP_Bool bFillNewCellWithSpace = FALSE;
+    if ( GetType() != P_PREFORMAT )
     {
-        if ( GetType() != P_PREFORMAT ) {
-            // Don't allow more than one space before non-text elements
-            CEditElement* pNext = 0;
+        // Don't allow more than one space before non-text elements
+        CEditElement* pNext;
+        CEditElement *pChild = GetChild();
+        CEditElement* pParent = GetParent();
+        
+        // Detect the case of a single container with a single
+        //  text element with just a space in a table cell
+        // This is OK and is needed to show cell border in browser
+        XP_Bool bIsTableCellWithOneSpace = FALSE;
+
+        if( pParent && pParent->IsTableCell() && 
+            GetNextSibling() == NULL &&
+            pChild && pChild->IsText() &&
+            (pChild->GetNextSibling() == NULL ||
+             pChild->GetNextSibling()->GetType() == P_UNKNOWN) )
+        {
+            // We have a single container in a table cell with a single text child
+            CEditTextElement* pTextChild = pChild->Text();
+            char* pText = pTextChild->GetText();
+            // If creating a new cell and preference is set,
+            //  the empty cell should have a space,
+            //  so delete this and a new one will be created below
+            bFillNewCellWithSpace = GetEditBuffer() ? GetEditBuffer()->FillNewCellWithSpace() : FALSE;
+
+            if( pTextChild->GetLen() == 0 && bFillNewCellWithSpace )
+            {
+                delete pChild;
+            }
+            else if( pTextChild->GetLen() == 1 && pText[0] == ' ')
+            {
+                // We have a single space, so don't do special trimming below
+                bIsTableCellWithOneSpace = TRUE;
+            }
+        }
+        if( ! bIsTableCellWithOneSpace )
+        {
             for ( CEditElement* pChild = GetChild();
                 pChild;
-                pChild = pNext ) {
+                pChild = pNext )
+            {
                 pNext = pChild->GetNextSibling();
-                if ( pChild->IsText() && ! (pNext && pNext->IsText()) ){
+                if ( pChild->IsText() && ! (pNext && pNext->IsText()) )
+                {
                     CEditTextElement* pTextChild = pChild->Text();
                     char* pText = pTextChild->GetText();
                     int size = pTextChild->GetLen();
                     XP_Bool trimming = FALSE;
                     //do not allow 1 byte of space to be a child
-                    if (size == 1 && GetType() == P_NSDT && pText[0] == ' ') {
+                    if (size == 1 && GetType() == P_NSDT && pText[0] == ' ')
+                    {
                         trimming = TRUE;
                         size--;
                     }
 
-                    while ( size >0 && pText[size-1] == '\n' || (size > 1 && pText[size-1] == ' ' && pText[size-2] == ' ') ) {
+                    while ( size >0 && pText[size-1] == '\n' || 
+                           (size > 1 && pText[size-1] == ' ' && pText[size-2] == ' ') ) 
+                    {
                         // More than one character of white space at the end of
                         // a text element will get laid out as one character.
                         trimming = TRUE;
                         size--;
                     }
-                    if ( trimming ) {
-                        if (size <= 0 ) {
+                    if ( trimming )
+                    {
+                        if (size <= 0 )
+                        {
                             delete pChild;
                         }
-                        else {
+                        else 
+                        {
                             char* pCopy = XP_STRDUP(pText);
                             pCopy[size] = '\0';
                             pTextChild->SetText(pCopy);
@@ -6378,21 +6497,22 @@ void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer ){
             }
         }
     }
-    if ( GetChild() == NULL ){
-        // I need a dummy child.
-        CEditTextElement* pChild = new CEditTextElement(this, 0);
+
+    if ( GetChild() == NULL )
+    {
+        // I need a dummy child -- might be a space for new cell
+        CEditTextElement* pChild = new CEditTextElement(this, bFillNewCellWithSpace ? " " : 0);
         // Creating it automaticly inserts it
 		pChild->FinishedLoad(pBuffer);
     }
-
-
     // 
     // if the last element in a paragraph is a <br>, it is ignored by the browser.  
     //  So we should trim it.
     //  we should do this only once!!!
     CEditElement *pChild;
     CEditElement* pPrev;
-    if( (pChild = GetLastChild())!= 0 && pChild->IsBreak()) {
+    if( (pChild = GetLastChild())!= 0 && pChild->IsBreak())
+    {
         pPrev = pChild->GetPreviousSibling();
         if (! (pPrev && pPrev->IsBreak()) )
             delete pChild;
@@ -7491,15 +7611,79 @@ void CEditTextElement::SetColor( ED_Color iColor ){
     }
 }
 
-void CEditTextElement::SetFontSize( int iSize ){
-    m_iFontSize = iSize; 
-    if( m_iFontSize > 7 ) m_iFontSize = 7;
-    // if( m_iFontSize < 1 ) m_iFontSize = 1;
-    
+// We seem to have problems when point size gets REALLY big,
+//   so limit this for now
+#define ED_MAX_POINT_SIZE 104
+
+// Boost the size changes when increasing or decreasing point sizes
+void static AdjustPointSizeChange( int& iChange, int iPointSize )
+{
+    if( iChange == 1 )
+    {
+        if( iPointSize >= 10 && iPointSize <= 24 )
+            iChange = 2;
+        else if( iPointSize > 24 )
+            iChange = 4;
+    }
+    else if( iChange == -1 )
+    {
+        if( iPointSize >= 10 && iPointSize <= 24 )
+            iChange = -2;
+        else if( iPointSize > 24 )
+            iChange = -4;
+    }
+}
+
+void CEditTextElement::SetFontSize( int iSize, XP_Bool bRelative )
+{
     //Override (use default for) ALL font size requests for Java Script
     if( EDT_IS_SCRIPT(m_tf) ){
         iSize = 0;
+    } 
+    else
+    {
+        // Calculate the new size and keep within allowable range
+        // bRelative = TRUE means that iSize is a change relative
+        //   to current size
+        if( bRelative )
+        {
+            if( m_iPointSize != ED_FONT_POINT_SIZE_DEFAULT )
+            {
+                // We are already using pts, so change that instead of m_iFontSize
+                AdjustPointSizeChange( iSize, m_iPointSize );
+                SetFontPointSize(min(ED_MAX_POINT_SIZE, max(MIN_POINT_SIZE, m_iPointSize+iSize)));
+                return;
+            }
+#ifdef XP_WIN
+            // EXPERIMENTAL:
+            // If we are trying to increase past the highest HTML size (7),
+            //  we change over to POINT size instead so we can
+            //  continue to increase the size.
+            // To do this, we need to get the point size of the "7" font,
+            if( (m_iFontSize + iSize) > MAX_FONT_SIZE )
+            {
+                int16 iPointSize = FE_CalcFontPointSize(GetEditBuffer()->m_pContext, MAX_FONT_SIZE, m_tf & TF_FIXED);
+                if( iPointSize )
+                {
+                    AdjustPointSizeChange( iSize, iPointSize );
+                    SetFontPointSize(min(ED_MAX_POINT_SIZE, iPointSize+iSize));
+                    return;
+                }
+            }
+#endif //XP_WIN
+            // We are using relative scale,
+            //  set new size relative to current
+            iSize = m_iFontSize + iSize;
+        }
     }
+    iSize = min(MAX_FONT_SIZE, max(MIN_FONT_SIZE,(iSize)));
+
+    // No change from current state
+    if( m_iFontSize == iSize )
+        return;
+
+    m_iFontSize = iSize; 
+
     
     // Use 0 (or less) to signify changing to default
     if( iSize <= 0 ){
@@ -7867,8 +8051,12 @@ void CEditTextElement::MaskData( EDT_CharacterData*& pData ){
         pData->mask &= ~TF_HREF;
     }
     if( (pData->mask & pData->values & m_tf & TF_FONT_SIZE)
-                && (pData->iSize != m_iFontSize ) ){
+                && (pData->iSize != m_iFontSize) ){
         pData->mask &= ~TF_FONT_SIZE;
+    }
+    if( (pData->mask & pData->values & m_tf & TF_FONT_POINT_SIZE)
+                && (pData->iPointSize != m_iPointSize) ){
+        pData->mask &= ~TF_FONT_POINT_SIZE;
     }
     if( (pData->mask & pData->values & m_tf & TF_FONT_FACE) ){
         // Both have font face -- see if it is different

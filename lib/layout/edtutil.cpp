@@ -2895,7 +2895,8 @@ CEditTestManager::CEditTestManager(CEditBuffer* pBuffer)
       m_pTempFileURL(0)
 {
 #ifdef XP_WIN32
-    _CrtMemCheckpoint( &m_state ); // In theorey, avoid measuring the data before we were created.
+// 5/28/98 ??? This is crashing -- Why???
+//    _CrtMemCheckpoint( &m_state ); // In theorey, avoid measuring the data before we were created.
 #endif
 
     PowerOnTest();
@@ -5337,116 +5338,8 @@ void CEditDocState::Print(IStreamOut& stream) {
  */
 void EDT_ConvertCurrentDocToNewDoc(MWContext * pMWContext)
 {
-    XP_ASSERT(pMWContext);
-    if( !pMWContext ){
-        return;
-    }
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer);
-
-    char * pUntitled = XP_GetString(XP_EDIT_NEW_DOC_NAME);
-
-    // Traverse all links and images and change URLs to absolute
-    //   since we will be destroying our current base doc URL
-    EDT_ImageData *pImageData;
-    char *pAbsolute = NULL;
-    EDT_PageData *pPageData = pEditBuffer->GetPageData();
-    if( !pPageData){
-        return;
-    }
-    
-    // Should be the same as pEntry->Address???
-    char *pBaseURL = LO_GetBaseURL(pMWContext);
-
-    // Call Java Plugin hook for pages to be closed,
-    //  BUT only if it really was an lockable source
-    int iType = NET_URL_Type(pBaseURL);
-    if( iType == FTP_TYPE_URL ||
-        iType == HTTP_TYPE_URL ||
-        iType == SECURE_HTTP_TYPE_URL ||
-        iType == FILE_TYPE_URL ){
-        EDT_PreClose(pMWContext, pBaseURL, NULL, NULL);
-    }
-
-    // Walk the tree and find all HREFs.
-    CEditElement *pLeaf = pEditBuffer->m_pRoot->FindNextElement( 
-                                  &CEditElement::FindLeafAll,0 );
-    // First sweep, mark all HREFs as not adjusted.
-    while (pLeaf) {
-        pEditBuffer->linkManager.SetAdjusted(pLeaf->Leaf()->GetHREF(),FALSE);
-        pLeaf = pLeaf->FindNextElement(&CEditElement::FindLeafAll,0 );
-    }
-    // Second sweep, actually adjust the HREFs.
-    pLeaf = pEditBuffer->m_pRoot->FindNextElement( 
-            &CEditElement::FindLeafAll,0 );
-    while (pLeaf) {
-        ED_LinkId linkId = pLeaf->Leaf()->GetHREF();
-        if (linkId && !pEditBuffer->linkManager.GetAdjusted(linkId)) {
-            pEditBuffer->linkManager.AdjustLink(linkId, pBaseURL, NULL, NULL);          
-            pEditBuffer->linkManager.SetAdjusted(linkId,TRUE);
-        }
-        pLeaf = pLeaf->FindNextElement(&CEditElement::FindLeafAll,0 );
-    }
-
-    // Regular images.
-    CEditElement *pImage = pEditBuffer->m_pRoot->FindNextElement( 
-                                   &CEditElement::FindImage, 0 );
-    while( pImage ){
-        pImageData = pImage->Image()->GetImageData();
-        if( pImageData ){
-            if( pImageData->pSrc && *pImageData->pSrc ){
-                char * pOld = XP_STRDUP(pImageData->pSrc);
-                pAbsolute = NET_MakeAbsoluteURL( pBaseURL, pImageData->pSrc );
-                if( pAbsolute ){
-                    XP_FREE(pImageData->pSrc);
-                    pImageData->pSrc = pAbsolute;
-                }
-             }
-             if( pImageData->pLowSrc && *pImageData->pLowSrc){
-                pAbsolute = NET_MakeAbsoluteURL( pBaseURL, pImageData->pLowSrc );
-                if( pAbsolute ){
-                    XP_FREE(pImageData->pLowSrc);
-                    pImageData->pLowSrc = pAbsolute;
-                }
-            }    
-            pImage->Image()->SetImageData( pImageData );
-            edt_FreeImageData( pImageData );
-        }
-        pImage = pImage->FindNextElement( &CEditElement::FindImage, 0 );
-    }
-
-    // If there is a background Image, make it absolute also
-    if( pPageData->pBackgroundImage && *pPageData->pBackgroundImage){
-        pAbsolute = NET_MakeAbsoluteURL( pBaseURL, pPageData->pBackgroundImage );
-        if( pAbsolute ){
-            XP_FREE(pPageData->pBackgroundImage);
-            pPageData->pBackgroundImage = pAbsolute;
-        }
-    }
-
-    // Change context's "title" string
-    XP_FREEIF(pMWContext->title);
-    pMWContext->title = NULL;
-    pMWContext->is_new_document = TRUE;
-
-    // Change the history entry data
-    History_entry * pEntry = SHIST_GetCurrent(&(pMWContext->hist));
-	if(pEntry ){
-        XP_FREEIF(pEntry->address);
-        pEntry->address = XP_STRDUP(pUntitled);
-        XP_FREEIF(pEntry->title);
-    }
-    // Layout uses this as the base URL for all links and images
-    LO_SetBaseURL( pMWContext, pUntitled );
-
-    // Cleat the old title in page data
-    XP_FREEIF(pPageData->pTitle); 
-
-    // This will set new background image,
-    //   call FE_SetDocTitle() with new "file://Untitled" string,
-    //   and refresh the layout of entire doc
-    pEditBuffer->SetPageData(pPageData);
-
-    pEditBuffer->FreePageData(pPageData);
+    pEditBuffer->ConvertCurrentDocToNewDoc();
 }
 
 char * EDT_GetFilename(char * pURL, XP_Bool bMustHaveExtension)

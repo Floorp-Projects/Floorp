@@ -86,6 +86,7 @@ CParseState* CEditBuffer::GetParseState() {
 
 XP_Bool CEditBuffer::m_bEdtBufPrefInitialized=FALSE;
 XP_Bool CEditBuffer::m_bMoveCursor; //no initial value should be depended on
+XP_Bool CEditBuffer::m_bNewCellHasSpace = TRUE; //New cells we create have an &nbsp in them so border displays
 //these variables are set by the pref_registercallback function "PrefCallback";
 
 
@@ -105,6 +106,7 @@ void CEditBuffer::InitializePrefs()//static
                                  //them and we need to reset them 
     PREF_RegisterCallback("editor", CEditBuffer::PrefCallback, NULL);//no instance data, only setting statics.  we are all of the same mind here
     PREF_GetBoolPref("editor.page_updown_move_cursor",&m_bMoveCursor);
+    PREF_GetBoolPref("editor.new_cell_has_space",&m_bNewCellHasSpace);
   }
   m_bEdtBufPrefInitialized=TRUE;
 }
@@ -161,7 +163,8 @@ void edt_ExpandTab(char *p, intn n){
 //  length.
 //
 intn CEditBuffer::NormalizePreformatText(pa_DocData *pData, PA_Tag* pTag,
-            intn status ){
+            intn status )
+{
     char *pText;
     intn retVal = OK_CONTINUE;
     m_bInPreformat = TRUE;
@@ -286,7 +289,6 @@ intn CEditBuffer::NormalizePreformatText(pa_DocData *pData, PA_Tag* pTag,
     m_bInPreformat = FALSE;
     return ( retVal == OK_CONTINUE) ? OK_IGNORE : retVal ;
 }
-
 
 static char *anchorHrefParams[] = {
     PARAM_HREF,
@@ -804,6 +806,12 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
                     PA_UNLOCK( pTag->data );
                     return OK_IGNORE;
                 }
+                // New strategy: Format each line of imported text into a <BR> line
+                // (calls EDT_ProcessTag iteratively)
+                else if( m_bImportText && !m_bInPreformat ) {
+                        // calls EDT_ProcessTag iteratively
+                        return NormalizePreformatText( pData, pTag, status );
+                }
                 else if( !BitSet( edt_setFormattedText, m_pCreationCursor->GetType() )
 #ifdef USE_SCRIPT
                         && !(GetParseState()->m_pNextText->m_tf & (TF_SERVER|TF_SCRIPT|TF_STYLE))
@@ -816,6 +824,9 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
                         //
                         // calls EDT_ProcessTag iteratively
                         //
+                        // Note: We hit the "New Strategy" above when parsing
+                        //       imported text, so I don't think we ever hit
+                        //       this, but lets keep it to be safe.
                         return NormalizePreformatText( pData, pTag, status );
                     }
                 }
@@ -1086,6 +1097,15 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
             }
 
         case P_PLAIN_TEXT:
+            if( m_bImportText )
+            {
+                // New strategy for importing text:
+                // We will convert each imported line to a paragraph,
+                //   so we can ignore the initial tag that would have
+                //   resulted in PREFORMAT around all imported text 
+                // (We used to fall through to insert the PREFORMAT tag)
+                break;
+            }
         case P_PLAIN_PIECE:
         case P_LISTING_TEXT:
         case P_PREFORMAT:
@@ -1384,7 +1404,8 @@ void CEditBuffer::ParseLinkFontDef(PA_Tag* pTag, CEditElement*& /*pElement*/, in
 }
 
 
-void CEditBuffer::ParseUnsupportedTag(PA_Tag* pTag, CEditElement*& pElement, intn& retVal){
+void CEditBuffer::ParseUnsupportedTag(PA_Tag* pTag, CEditElement*& pElement, intn& retVal)
+{
     if ( IsDocTypeTag(pTag) ) {
         return; // Ignore document's idea about it's document type.
     }
@@ -1470,7 +1491,7 @@ void CEditBuffer::ParseBodyTag(PA_Tag *pTag){
 }
 
 
-CEditBuffer::CEditBuffer(MWContext *pContext):
+CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_lifeFlag(0xbab3fac3),
         m_pContext(pContext),
         m_pRoot(0),
@@ -1543,7 +1564,9 @@ CEditBuffer::CEditBuffer(MWContext *pContext):
         m_pSelectedTableElement(0),
         m_pPrevExtendSelectionCell(0),
     	m_bEncrypt(PR_FALSE),
-        m_pNonTextSelectedTable(0)
+        m_pNonTextSelectedTable(0),
+        m_bImportText(bImportText),
+        m_bFillNewCellWithSpace(FALSE)
 {
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
     m_originalWinCSID = INTL_GetCSIWinCSID(c);
@@ -1573,6 +1596,7 @@ CEditBuffer::CEditBuffer(MWContext *pContext):
     m_autoSaveTimer.SetPeriod(1);
 #endif
 
+    // This is no longer changable by user
     m_pContext->display_table_borders = TRUE; // On by default.
 }
 
@@ -1752,6 +1776,7 @@ void EDT_FixupTableData(MWContext *pMWContext)
 //  else generated HTML is very misleading!
 void CEditBuffer::FixupTableData()
 {
+//    return;
     for( int i = 0; i < edt_RelayoutTables.Size(); i++ )
     {
         LO_TableStruct *pLoTable = edt_RelayoutTables[i];
@@ -1814,7 +1839,7 @@ void CEditBuffer::FixupTableData()
 
         // This is dependable even if row and cell indexes are not set for cells
         int32 iRows = pEdTable->CountRows();
-        int32 iArraySize = (iRows * sizeof(int32)) * 2;
+        int32 iArraySize = iRows * sizeof(int32);
         // Stores extra columns generated by ROWSPAN > 1 
         int32 *ExtraColumns = (int32*)XP_ALLOC(iArraySize);
         if( !ExtraColumns )
@@ -3150,6 +3175,7 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
             result = InternalReturnKey(TRUE);
             if ( result == EDT_COP_OK ) {
                 if ( ! bAtEndOfMailQuote ) {
+                    StartTyping(TRUE);
                     InternalReturnKey(TRUE);
                     UpDown(FALSE, FALSE); // go back up one line.
                 }
@@ -3157,8 +3183,29 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
             }
         }
         else {
-            // Fix for bug 80092 - force dirty flag on
+            // Fix for bug 80092 - force dirty flag on after Enter key alone is pressed
             StartTyping(TRUE);
+#if 0
+// Activate this when work on SplitBelowAncestor is fully tested
+// This should move an empty new list element to the level above
+// Pressing Enter once creates a new item at current level, on second Enter,
+//   the item is moved to next level above
+            if( m_pCurrent && m_iCurrentOffset == 0 &&
+                m_pCurrent->IsText() && m_pCurrent->GetLen() == 0 &&
+                m_pCurrent->GetNextSibling() == 0 &&
+                m_pCurrent->PreviousLeafInContainer() == 0 )
+            {
+                CEditContainerElement *pContainer = m_pCurrent->FindContainer();
+                if( pContainer && pContainer->GetParent() )
+                {
+                    TagType tagType = pContainer->GetType();
+                    if( tagType == P_LIST_ITEM )
+                        // We are at the begining of an empty element in a list item container,
+                        //   so split back to the root (or just one level up?)
+                        return SplitBelowAncestor(pContainer->GetParent()->GetParent(), TRUE);
+                }
+            }
+#endif
             result = InternalReturnKey(TRUE);
 //          Include this to set the end of current UNDO at the end of a paragraph (return key)
 //            so Undo will only remove the last paragraph typed.
@@ -3168,54 +3215,66 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
         }
     }
     else {
+        StartTyping(TRUE);
         result = InternalReturnKey(TRUE);
 //        DoneTyping();     // Set note above
     }
     return result;
 }
 
-EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped){
-    EDT_ClipboardResult result = EDT_COP_OK;
-
-    if( IsSelected() ){
-        result = DeleteSelection();
-        if ( result != EDT_COP_OK ) return result;
-    }
-
+// Returns the container of the first element after the split
+CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAtBeginning, CEditElement*& pRelayoutStart)
+{
     // ClearSelection();
     ClearPhantomInsertPoint();
     FixupInsertPoint();
 
-    CEditElement *pChangedElement = m_pCurrent;
+    pRelayoutStart = m_pCurrent;
     CEditLeafElement *pNew,*pSplitAfter;
     CEditLeafElement *pCopyFormat;
-    int iChangedOffset = m_iCurrentOffset;
 
     pSplitAfter = m_pCurrent;
     pCopyFormat = m_pCurrent;
 
-    if( m_iCurrentOffset == 0 ){
-        // split at beginning of element
-        if( m_pCurrent->PreviousLeafInContainer() == 0){
-            CEditTextElement *pNew;
-            pNew = m_pCurrent->CopyEmptyText();
-            pNew->InsertBefore( m_pCurrent );
-            pChangedElement = pNew->FindContainer();
-            pSplitAfter = pNew;
-        }
+    if( m_iCurrentOffset == 0 )
+    {
+        // We are at the beginning of the element
 
+        if( m_pCurrent->PreviousLeafInContainer() == 0 )
+        {
+            // There are no elements before - we are at beginning of Container
+
+            if( bSplitAtBeginning )
+            {
+                // Create a new empty text element
+                CEditTextElement *pNew;
+                pNew = m_pCurrent->CopyEmptyText();
+                pNew->InsertBefore( m_pCurrent );
+                pRelayoutStart = pNew->FindContainer();
+                pSplitAfter = pNew;
+            }
+            else
+            {
+                // Don't split - don't create anything
+                pRelayoutStart = m_pCurrent->FindContainer();
+                return pRelayoutStart;
+            }
+        }
     }
-    else {
+    else 
+    {
         pNew = m_pCurrent->Divide( m_iCurrentOffset )->Leaf();
         /* Get rid of space at start of new line if user typed. */
         if( bUserTyped && !pNew->InFormattedText()
                 && pNew->IsA(P_TEXT)
                 && pNew->Text()->GetLen()
-                && pNew->Text()->GetText()[0] == ' ' ){
+                && pNew->Text()->GetText()[0] == ' ' )
+        {
             pNew->Text()->DeleteChar(m_pContext, 0);
             CEditLeafElement *pNext = 0;
             if( pNew->Text()->GetLen() == 0
-                    && (pNext = pNew->TextInContainerAfter()) != 0 ){
+                    && (pNext = pNew->TextInContainerAfter()) != 0 )
+            {
                 pNew->Unlink();
                 // Should we delete pNew?
                 delete pNew;
@@ -3228,13 +3287,16 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped){
     m_pCurrent->GetParent()->Split( pSplitAfter, 0,
                 &CEditElement::SplitContainerTest, 0 );
 
-    if ( bUserTyped && m_pCurrent->GetLen() == 0 && m_pCurrent->TextInContainerAfter() == 0 ){
+
+    CEditContainerElement* pContainer = m_pCurrent->FindContainer();
+    if ( bUserTyped && m_pCurrent->GetLen() == 0 && m_pCurrent->TextInContainerAfter() == 0 )
+    {
         // An empty paragraph. If the style is one of the
         // heading styles, set it back to normal
-        CEditContainerElement* pContainer = m_pCurrent->FindContainer();
         TagType tagType = pContainer->GetType();
         // To do - use one of those fancy bit arrays.
-        if ( tagType >= P_HEADER_1 && tagType <=  P_HEADER_6){
+        if ( tagType >= P_HEADER_1 && tagType <=  P_HEADER_6)
+        {
 #if EDT_DDT
             pContainer->SetType(P_NSDT);
 #else
@@ -3242,30 +3304,126 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped){
 #endif
         }
     }
+    return pContainer;
+}
 
-    if ( bUserTyped ) {
-        Reduce(m_pRoot); // Or maybe just the two containers?
+EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
+{
+    if( IsSelected() )
+    {
+        EDT_ClipboardResult result = DeleteSelection();
+        if ( result != EDT_COP_OK ) return result;
     }
-	
-	// We currently cannot do a reflow here as the new text elements have not been
-	// created to be reflowed...
-    Relayout(pChangedElement, iChangedOffset,
-        (pChangedElement != m_pCurrent ? m_pCurrent : 0 ));
+
+    CEditElement *pChangedElement;
+    // Split at current element to create a new container (TRUE = split at beginning of element as well
+    SplitAtContainer(bUserTyped, TRUE, pChangedElement);
+
+    int iChangedOffset = (pChangedElement == m_pCurrent) ? m_iCurrentOffset : 0;
+    if( pChangedElement )
+    {
+        if ( bUserTyped )
+            Reduce(m_pRoot); // Or maybe just the two containers?
+	    
+	    // We currently cannot do a reflow here as the new text elements have not been
+	    // created to be reflowed...
+        Relayout(pChangedElement, iChangedOffset,
+            (pChangedElement != m_pCurrent ? m_pCurrent : 0 ));
 
 #if 0
-    // The bug is that after a return is pressed, the formatting is wrong
-    //  for the new paragrah.  Presents a problem.  If we insert an empty
-    //  text element here, we get messed up because we may not be able to
-    //  position the caret.  We end up reducing and loosing a pointer to
-    //  the layout element.  It is a hard problem.
+        // There's a bug that after a return is pressed, the formatting is wrong
+        //  for the new paragrah.  Presents a problem.  If we insert an empty
+        //  text element here, we get messed up because we may not be able to
+        //  position the caret.  We end up reducing and loosing a pointer to
+        //  the layout element.  It is a hard problem.
 
-    CEditTextElement *pNewText = pCopyFormat->CopyEmptyText();
-    pNewText->InsertBefore(m_pCurrent);
-    m_pCurrent = pNewText;
-    m_iCurrentOffset = 0;
+        CEditTextElement *pNewText = pCopyFormat->CopyEmptyText();
+        pNewText->InsertBefore(m_pCurrent);
+        m_pCurrent = pNewText;
+        m_iCurrentOffset = 0;
 #endif
+        return EDT_COP_OK;
+    }
 
-    return result;
+    return EDT_COP_CLIPBOARD_BAD;
+}
+
+EDT_ClipboardResult CEditBuffer::SplitBelowAncestor(CEditElement *pAncestor, XP_Bool bUserTyped)
+{
+    if( !pAncestor )
+        pAncestor = m_pRoot;
+
+    if( !pAncestor )
+        return EDT_COP_CLIPBOARD_BAD;
+
+    if( IsSelected() )
+    {
+        EDT_ClipboardResult result = DeleteSelection();
+        if ( result != EDT_COP_OK ) return result;
+    }
+
+    CEditElement *pRelayoutStart;
+    // Split to create a new container, but not
+    //  if we are at beginning of the container
+    CEditElement *pContainerToMove = SplitAtContainer(bUserTyped, FALSE, pRelayoutStart);
+
+    if( pContainerToMove && pRelayoutStart)
+    {
+        // Container of element before the split,
+        //  or this = pContainerToMove if we really didn't split
+        //  because we were at beginning of the container
+        CEditElement *pContainer = pRelayoutStart;
+    
+        // Create a list container at each level until we are just below the common ancestor
+        CEditElement *pParent;
+        while( (pParent = pContainer->GetParent()) != pAncestor )
+        {
+            CEditElement *pPrev = pContainer->GetPreviousSibling();
+            if( pPrev )
+            {
+                // Copy the container at the level we need to duplicate
+                CEditElement *pClone = pContainer->Clone();
+                if( pClone )
+                {
+                    // Unlink the container to be moved
+                    pPrev->SetNextSibling(NULL);
+                    // Set it as the child of the cloned mid-level "container" 
+                    //  (usually a CListElement) and insert it 
+                    pContainerToMove->SetParent(pClone);
+                    pClone->SetChild(pContainerToMove);
+                    pClone->InsertAfter(pContainer);
+                    // If we have to insert another level,
+                    //   then we move what we just created
+                    pContainerToMove = pClone;
+                }
+                pRelayoutStart = pPrev;
+            }
+            else
+            {
+                // There is nothing before us, so we don't need to
+                //   create a new container. Just setup for next level
+                pContainerToMove = pContainer;;
+                pRelayoutStart = pContainer;
+            }
+            pContainer = pParent;
+        }
+
+        if ( bUserTyped )
+            Reduce(m_pRoot); // Or maybe just the two containers?
+
+#ifdef DEBUG
+            m_pRoot->ValidateTree();
+#endif
+	    
+	    // We currently cannot do a reflow here as the new text elements have not been
+	    // created to be reflowed...
+        Relayout(pRelayoutStart, 0, 0);
+//                 (pRelayoutStart != m_pCurrent ? m_pCurrent : 0 ));
+
+        return EDT_COP_OK;
+    }
+
+    return EDT_COP_CLIPBOARD_BAD;
 }
 
 //TODO: Should this be a preference?
@@ -3813,7 +3971,7 @@ void CEditBuffer::MorphContainerSelection( TagType t, CEditSelection& selection 
 {
     CEditLeafElement *pBegin, *pEnd, *pCurrent;
     CEditContainerElement* pContainer = NULL;
-    ElementOffset iBeginPos, iEndPos;
+    ED_BufferOffset/*ElementOffset*/ iBeginPos, iEndPos;
     XP_Bool bFromStart;
 
     // Don't relayout if we got a cell selection passed in
@@ -4124,16 +4282,18 @@ void CEditBuffer::SetFontPointSize( int iPoints )
     }
 }
 
-void CEditBuffer::SetFontSize( int iSize ){
+void CEditBuffer::SetFontSize( int iSize, XP_Bool bRelative )
+{
     VALIDATE_TREE(this);
 
     CEditSelection selection;
     GetSelection(selection);
     if ( selection.IsContainerEnd() )
         return;
-    else if( selection.AnyLeavesSelected() ){
+    else if( selection.AnyLeavesSelected() )
+    {
         BeginBatchChanges(kChangeAttributesCommandID);
-        SetFontSizeSelection( iSize, selection, TRUE );
+        SetFontSizeSelection( iSize, bRelative, selection, TRUE );
         EndBatchChanges();
         return;
     }
@@ -4143,11 +4303,11 @@ void CEditBuffer::SetFontSize( int iSize ){
         {
             BeginBatchChanges(kChangeAttributesCommandID);
             // Format first selected cell
-            SetFontSizeSelection( iSize, selection, FALSE );
+            SetFontSizeSelection( iSize, bRelative, selection, FALSE );
             // Select all other cells and format them
             while( GetNextCellSelection(selection) )
             {
-                SetFontSizeSelection( iSize, selection, FALSE );
+                SetFontSizeSelection( iSize, bRelative, selection, FALSE );
             }
             RelayoutSelectedTable();
             EndBatchChanges();
@@ -4158,25 +4318,27 @@ void CEditBuffer::SetFontSize( int iSize ){
     FixupInsertPoint();
     CEditLeafElement *pRight = m_pCurrent->Divide( m_iCurrentOffset )->Leaf();
     if( pRight->IsA(P_TEXT)
-            && pRight->Text()->GetLen() == 0 ) {
+            && pRight->Text()->GetLen() == 0 )
+    {
     //    && m_pCurrent == pRight
-    // Bug 27891, this term in the conditional test should not be here, e.g.
+    // Bug 27891, above term in the conditional test should not be here, e.g.
     // in CEditBuffer::SetCharacterData() it is not there.
-        pRight->Text()->SetFontSize(iSize);
+        pRight->Text()->SetFontSize(iSize, bRelative);
         m_pCurrent = pRight;
         m_iCurrentOffset = 0;
     }
-    else {
+    else 
+    {
         CEditTextElement *pNew = m_pCurrent->CopyEmptyText();
         pNew->InsertBefore(pRight);
-        pNew->SetFontSize( iSize );
+        pNew->SetFontSize( iSize, bRelative );
         m_pCurrent = pNew;
         m_iCurrentOffset = 0;
     }
     Relayout( m_pCurrent, 0, 0 );
 }
 
-void CEditBuffer::SetFontSizeSelection( int iSize, CEditSelection& selection, XP_Bool bRelayout)
+void CEditBuffer::SetFontSizeSelection( int iSize, XP_Bool bRelative, CEditSelection& selection, XP_Bool bRelayout)
 {
     VALIDATE_TREE(this);
     CEditLeafElement *pCurrent, *pEnd, *pBegin, *pNext;
@@ -4193,11 +4355,14 @@ void CEditBuffer::SetFontSizeSelection( int iSize, CEditSelection& selection, XP
     MakeSelectionEndPoints(selection, pBegin, pEnd );
     pCurrent = pBegin;
 
-    while( pCurrent != pEnd ){
+    while( pCurrent != pEnd )
+    {
         pNext = pCurrent->NextLeafAll();
         if( pCurrent->IsA( P_TEXT ) &&
-            ED_IS_NOT_SCRIPT(pCurrent) ){
-            pCurrent->Text()->SetFontSize(iSize);
+            ED_IS_NOT_SCRIPT(pCurrent) )
+        {
+            // Set new size if its still inside allowable range
+            pCurrent->Text()->SetFontSize(iSize, bRelative);
         }
         pCurrent = pNext;
     }
@@ -4313,6 +4478,139 @@ void CEditBuffer::SetFontColorSelection( ED_Color iColor, CEditSelection& select
     Reduce(pBegin->GetCommonAncestor(pEnd));
 }
 
+ED_ElementType CEditBuffer::GetBackgroundColor(LO_Color *pColor)
+{
+    if( !pColor )
+        return ED_ELEMENT_NONE;
+
+    XP_Bool bDefaultColors = FALSE;
+    ED_ElementType type = ED_ELEMENT_TEXT;
+
+    if( m_pSelectedEdTable )
+    {
+        // A table is selected
+        type = ED_ELEMENT_TABLE;
+
+        EDT_TableData *pData = GetTableData();
+        if( pData && pData->pColorBackground )
+        {
+            pColor->red = pData->pColorBackground->red;
+            pColor->green = pData->pColorBackground->green;
+            pColor->blue = pData->pColorBackground->blue;
+        } else {
+            bDefaultColors = TRUE;
+        }
+    } else if( m_SelectedEdCells.Size() || IsInsertPointInTableCell() )
+    {
+        // Table cell(s) are selected or caret is in a cell
+        type = ED_ELEMENT_CELL;
+
+        EDT_TableCellData *pData = GetTableCellData();
+        if( pData && pData->pColorBackground )
+        {
+            pColor->red = pData->pColorBackground->red;
+            pColor->green = pData->pColorBackground->green;
+            pColor->blue = pData->pColorBackground->blue;
+        } else {
+            bDefaultColors = TRUE;
+        }
+    } else {
+        EDT_PageData *pData = GetPageData();
+        if( pData && pData->pColorBackground )
+        {
+            pColor->red = pData->pColorBackground->red;
+            pColor->green = pData->pColorBackground->green;
+            pColor->blue = pData->pColorBackground->blue;
+        } else {
+            bDefaultColors = TRUE;
+        }
+    }
+
+    if( bDefaultColors )
+    {
+        pColor->red = lo_master_colors[LO_COLOR_BG].red;
+        pColor->green = lo_master_colors[LO_COLOR_BG].green;
+        pColor->blue= lo_master_colors[LO_COLOR_BG].blue;
+    }
+    return type;
+}
+
+void CEditBuffer::SetBackgroundColor(LO_Color *pColor)
+{
+    if( m_pSelectedEdTable )
+    {
+        // A table is selected
+        EDT_TableData *pData = GetTableData();
+        if( pData )
+        {
+            if( pColor )
+            {
+                // Set the color - create struct if not already set
+                if( !pData->pColorBackground )
+                    pData->pColorBackground = XP_NEW( LO_Color );
+
+                if( pData->pColorBackground )
+                {
+                    pData->pColorBackground->red = pColor->red;
+                    pData->pColorBackground->green = pColor->green;
+                    pData->pColorBackground->blue = pColor->blue;
+                }
+            } else {
+                // We are clearing the current color
+                XP_FREEIF(pData->pColorBackground);
+            }
+            SetTableData(pData);
+            EDT_FreeTableData(pData);
+        }
+    } else if( m_SelectedEdCells.Size() || IsInsertPointInTableCell() )
+    {
+        // Table cells are selected or caret is in table
+        EDT_TableCellData *pData = GetTableCellData();
+        if( pData )
+        {
+            // We are only interested in setting the background color
+            pData->mask = CF_BACK_COLOR;
+
+            if( pColor )
+            {
+                if( !pData->pColorBackground )
+                    pData->pColorBackground = XP_NEW( LO_Color );
+
+                if( pData->pColorBackground )
+                {
+                    pData->pColorBackground->red = pColor->red;
+                    pData->pColorBackground->green = pColor->green;
+                    pData->pColorBackground->blue = pColor->blue;
+                }
+            } else {
+                XP_FREEIF(pData->pColorBackground);
+            }
+            SetTableCellData(pData);
+            EDT_FreeTableCellData(pData);
+        }
+    } else {
+        EDT_PageData *pData = GetPageData();
+        if( pData )
+        {
+            if( pColor )
+            {
+                if( !pData->pColorBackground )
+                    pData->pColorBackground = XP_NEW( LO_Color );
+
+                if( pData->pColorBackground )
+                {
+                    pData->pColorBackground->red = pColor->red;
+                    pData->pColorBackground->green = pColor->green;
+                    pData->pColorBackground->blue = pColor->blue;
+                }
+            } else {
+                XP_FREEIF(pData->pColorBackground);
+            }
+            SetPageData(pData);
+            EDT_FreePageData(pData);
+        }
+    }
+}
 
 void CEditBuffer::GetHREFData( EDT_HREFData *pData ){
     //TODO: Rewrite GetHREF to handle the target!
@@ -4880,35 +5178,239 @@ char *CEditBuffer::GetTabDelimitedTextFromSelectedCells()
     return pText;
 }
 
+XP_Bool CEditBuffer::CanConvertTextToTable()
+{
+    if( IsSelected() )
+    {    
+        CEditLeafElement *pEndLeaf, *pBeginLeaf;
+        ED_BufferOffset iBeginPos, iEndPos;
+        XP_Bool bFromStart;
+        // Get current selection
+        CEditSelection selection;
+        GetSelection( selection, pBeginLeaf, iBeginPos, pEndLeaf, iEndPos, bFromStart );
+        if( selection.m_start.m_pElement && selection.m_end.m_pElement )
+        {
+            CEditTableCellElement *pStartCell = selection.m_start.m_pElement->GetParentTableCell();
+            CEditTableCellElement *pEndCell =  selection.m_end.m_pElement->GetParentTableCell();
+            
+            // We can convert if neither element is inside a table
+            //   or both are inside the same cell
+            if( (!pStartCell && !pEndCell) || pStartCell == pEndCell )
+                return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+CEditElement *GetCommonParent(CEditElement *pElement, CEditElement *pCommonAncestor)
+{
+    CEditElement *pParent = pElement;
+    CEditElement *pCommonParent = pElement;
+
+    while( (pParent = pParent->GetParent()) != NULL && pParent != pCommonAncestor )
+        pCommonParent = pParent;
+
+    return pCommonParent;
+}
+
 // Convert Selected text into a table (put each paragraph in separate cell)
 // Number of rows is automatic - creates as many as needed
-// TODO: THIS IS NOT FINISHED!
 void CEditBuffer::ConvertTextToTable(intn iColumns)
 {
-    CEditLeafElement *pBegin, *pEnd, *pCurrent;
-    ElementOffset iBeginPos, iEndPos;
-    XP_Bool bFromStart;
-
-    // Get data from supplied selection or get current selection if empty
-    CEditSelection s;
-    GetSelection(s, pBegin, iBeginPos, pEnd, iEndPos, bFromStart );
-    pCurrent = pBegin;
-    XP_Bool bDone = FALSE;
-    CEditContainerElement* pLastContainer = 0;
-    CEditContainerElement* pContainer = s.m_start.m_pElement->FindContainer();
-    // Insert a new table here first. Ask user how many columns.
-
-    do {
-        if( pContainer != pLastContainer ){
-            // MOVE THIS CONTAINER (PARA) TO A NEW TABLE.
-            pLastContainer = pContainer;
-        }
-        bDone = (pEnd == pCurrent );    // For most cases
-        pCurrent = pCurrent->NextLeafAll();
-        bDone = bDone || (iEndPos == 0 && pEnd == pCurrent ); // Pesky edge conditions!
-    } while( pCurrent && !bDone );
-
+    if( !CanConvertTextToTable() )
+        return;
     
+    // We need at least one column
+    iColumns = max(1, iColumns);
+
+    VALIDATE_TREE(this);
+    CEditLeafElement *pEndLeaf, *pBeginLeaf;
+    ED_BufferOffset iBeginPos, iEndPos;
+    XP_Bool bFromStart;
+    
+    // Get current selection
+    CEditSelection selection;
+    GetSelection( selection, pBeginLeaf, iBeginPos, pEndLeaf, iEndPos, bFromStart );
+
+    // Guarantee that the text blocks of the beginning and end of selection
+    //  are atomic.
+    MakeSelectionEndPoints(selection, pBeginLeaf, pEndLeaf );
+    // Check for end of doc and backup to previous leaf
+    if (selection.m_end.m_pElement && selection.m_end.m_pElement->IsEndOfDocument() )
+    {
+        selection.m_end.m_pElement = selection.m_end.m_pElement->PreviousLeaf();
+        selection.m_end.m_iPos = selection.m_end.m_pElement->GetLen();
+    }
+    
+    if( !selection.m_start.m_pElement || !selection.m_end.m_pElement )
+        return;    
+
+    CEditElement* pCommonAncestor = selection.m_start.m_pElement->GetCommonAncestor(selection.m_end.m_pElement);
+
+    // Create and insert a table with 1 row 
+    EDT_TableData *pData = EDT_NewTableData();
+    if( !pData )
+        return;
+    pData->iColumns = iColumns;
+
+    BeginBatchChanges(kGroupOfChangesCommandID);
+
+    // Suppress relayout until we are all done
+    m_bNoRelayout = TRUE;
+
+    CEditElement *pCurrent, *pEnd, *pBegin, *pNext;
+
+    // Save the start insert point,
+    //  then set insert point to end and break into new containers
+    CEditInsertPoint save_start = selection.m_start;
+    selection.m_start = selection.m_end;
+    SetSelection(selection);
+
+    // TODO: Go to topmost parent, but we need to split at the 
+    //       same level as the "common parent", not at nearest 
+    //       container, as done in InternalReturnKey()
+//    pEnd = GetCommonParent(selection.m_end.m_pElement, pCommonAncestor);
+    // For initial testing, use just containers
+    InternalReturnKey(FALSE);
+    
+    // Get container of this last element
+    pEnd = (CEditElement*)selection.m_end.m_pElement->FindContainer();
+    if( !pEnd )
+        return;    
+
+    // Insert the table at beginning of original selection
+    // This will do necessary splitting of containers
+    //   and set insert point to first cell in table
+    selection.m_end = selection.m_start = save_start;
+    SetSelection(selection);
+    CEditTableElement *pTable = InsertTable(pData);
+    EDT_FreeTableData(pData);
+
+    // Get container after the table just inserted
+    pBegin = pTable->GetNextSibling();
+    if( !pBegin )
+        return;
+    // DONT do this when coalescing containers such as lists
+    pBegin = pBegin->FindContainer();
+    if( !pBegin )
+        return;    
+
+    pCurrent = pBegin;
+
+    // Put each container in a different cell
+    XP_Bool bDone = FALSE;
+    CEditTableCellElement *pFirstCell = NULL;
+    CEditTableCellElement *pCell = NULL;
+    CEditTableElement *pExistingTable = pCurrent->GetParentTable();
+
+    while( !bDone )
+    {
+        // Search down element tree to find the end container,
+        //  since we might be working at a higher level
+        CEditElement *pContainer = pCurrent;
+        if( pContainer )
+            while (pContainer != pEnd && pContainer->GetChild() )
+                pContainer = pContainer->GetChild();
+
+        bDone = (pCurrent == NULL ) || (pContainer == pEnd);
+
+        pNext = (CEditElement*)pCurrent->GetNextSibling();
+        if( !pNext )
+            pNext = (CEditElement*)pCurrent->NextContainer();
+
+        // Move container into table cell,
+        //  inserting it as first container in the cell
+        pCell = m_pCurrent->GetParentTableCell();
+        if( pCell )
+        {
+            // Save first cell to move caret when done
+            if( !pFirstCell )
+                pFirstCell = pCell;
+
+            pCurrent->Unlink();
+
+            // Insert the container and its children as the 1st child of current cell
+            pCurrent->InsertAsFirstChild(pCell);
+
+            // Set insert point inside first leaf element just moved,
+            //   unless it was a table
+            if( !pCurrent->IsTable() )
+            {
+                CEditElement *pFirstChild = pCurrent->GetFirstMostChild();
+                CEditInsertPoint ip(pFirstChild, 0);
+                SetInsertPoint(ip);
+
+                // Delete the default container created with the table
+                //    which contained the caret moved there by InsertTable()
+                CEditElement *pDefaultContainer = pCurrent->GetNextSibling();
+                if( pDefaultContainer )
+                    delete pDefaultContainer;
+            }
+        } else {
+            // Should never be here:
+            XP_ASSERT(TRUE);
+        }
+
+        // Move to the next cell to insert next container, if it exists
+        if( !bDone && !NextTableCell(FALSE, TRUE) )
+        {
+            // We need to create a new row
+            
+            // Get current row
+            CEditElement* pRow = pCell->GetParent();
+            if( !pRow )
+                break;
+
+            CEditTableRowElement* pNewRow = new CEditTableRowElement(iColumns);
+            if( !pNewRow )
+                break;
+
+            // Insert new row after current
+            pNewRow->InsertAfter(pRow);
+            // Initialize cell contents
+            pNewRow->FinishedLoad( this );
+
+            // Now move to the first cell in this new row
+            if( !NextTableCell(FALSE, TRUE) )
+                break;
+        }
+        if( pNext == NULL ) // Should never happen?
+            break;
+
+        // Check if next element is inside a table
+        //   abort if it isn't same as where starting element was
+        CEditTableElement *pTable = pNext->GetParentTable();
+        if( pTable )
+        {
+            // We probably want to put the entire table in next cell...
+            pNext = (CEditElement*)pTable;
+
+            // ..but first walk up nested tables to find appropriate level
+            while( (pTable = pTable->GetParentTable()) != pExistingTable )
+            {
+                if( pTable )
+                    pNext = (CEditElement*)pTable;
+            }
+        }
+        pCurrent = pNext;
+    }
+
+    if( pFirstCell )
+        SetTableInsertPoint(pFirstCell);
+
+    SetFillNewCellWithSpace();
+
+    // Finish initializing the remaining blank cells in the last row
+    while( (pCell = (CEditTableCellElement*)pCell->GetNextSibling()) != NULL )
+        pCell->FinishedLoad(this);
+
+    ClearFillNewCellWithSpace();
+
+    m_bNoRelayout = FALSE;
+
+    Relayout( pBegin, 0, pEnd );
+
+    EndBatchChanges();
 }
 
 // Convert the table into text - unravel existing paragraphs in cells
@@ -5476,11 +5978,24 @@ void CEditBuffer::InsertNonLeaf( CEditElement *pElement){
     VALIDATE_TREE(this);
     FixupInsertPoint();
     XP_ASSERT( ! pElement->IsLeaf());
-//    CEditElement* pStart = m_pCurrent;
-//    int iStartOffset = m_iCurrentOffset;
     CEditInsertPoint start(m_pCurrent, m_iCurrentOffset);
 	CEditLeafElement* pRight = NULL;
+    
+#if 0
+    //TODO: Something like this
+    // Don't do InternalReturnKey if at beginning of empty container?
+    CEditElement* pParent = pElement->GetParent();
+    if( pParent && pParent->IsContainer() && 
+        pElement->IsText() &&
+        pElement->GetNextSibling() == NULL )
+    {
+        char* pText = pElement->Text()->GetText();
+    } else {
+        InternalReturnKey(FALSE);
+    }
+#else
     InternalReturnKey(FALSE);
+#endif
 
     pRight = m_pCurrent;
     CEditLeafElement* pLeft = pRight->PreviousLeaf(); // Will be NULL at start of document
@@ -5723,10 +6238,11 @@ void CEditBuffer::SetTableData(EDT_TableData *pData)
     }
 }
 
-void CEditBuffer::InsertTable(EDT_TableData *pData){
+CEditTableElement* CEditBuffer::InsertTable(EDT_TableData *pData){
     CEditTableElement *pTable = new CEditTableElement(pData->iColumns, pData->iRows);
     if( pTable ){
         pTable->SetData( pData );
+        SetFillNewCellWithSpace();
         pTable->FinishedLoad(this); // Sets default paragraphs for all the cells
         if( IsSelected() ){
             ClearSelection();
@@ -5736,7 +6252,10 @@ void CEditBuffer::InsertTable(EDT_TableData *pData){
         CEditElement *pFirstChild = pTable->GetFirstMostChild();
         CEditInsertPoint ip(pFirstChild, 0);
         SetInsertPoint(ip);
+        ClearFillNewCellWithSpace();
+        return pTable;
     }
+    return NULL;
 }
 
 void CEditBuffer::DeleteTable(){
@@ -5927,7 +6446,7 @@ void CEditBuffer::MergeTableCells()
     EndBatchChanges();
 }
 
-/* Separate paragraphs into sepaparate cells,
+/* Separate paragraphs into separate cells,
  * removing COLSPAN or ROWSPAN
 */
 void CEditBuffer::SplitTableCell()
@@ -6120,7 +6639,9 @@ void CEditBuffer::InsertTableRows(EDT_TableRowData *pData, XP_Bool bAfterCurrent
 // Caller should manage UNDO buffer
 //        BeginBatchChanges(kGroupOfChangesCommandID/*kInsertTableRowCommandID*/);
         ClearTableAndCellSelection();
+        SetFillNewCellWithSpace();
         AdoptAndDo(new CInsertTableRowCommand(this, pData, bAfterCurrentRow, number));
+        ClearFillNewCellWithSpace();
 //        EndBatchChanges();
     }
 }
@@ -6444,14 +6965,7 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
     {
         // This is relatively simple as long as we can trust that the
         //   caret is in the "focus cell" 
-        if( iHitType == ED_HIT_SEL_CELL )
-        {
-            SelectTableElement( pCell, iHitType );
-        } else 
-        {
-            // Keep focus cell the same - just select the row or column it is in
-            SelectTableElement( pCell, iHitType );
-        }
+        SelectTableElement( pCell, iHitType );
     }
 
     CEditTableCellElement *pNextCell = NULL;
@@ -6547,12 +7061,18 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
             DisplaySpecialCellSelection(pCell, pData);
         } else 
         {
-            // Select just one new cell in table
-            SelectTableElement( pCell, ED_HIT_SEL_CELL );
-            // Change cell data to reflect single cell selection
+            // Select just one new cell in table...
+            if( !pCell->IsSelected() )
+            {
+                SelectTableElement( pCell, ED_HIT_SEL_CELL );
+                // ... but retain requested selection type
+                m_TableHitType = iHitType;
+            }
+
+            // Change cell data to reflect single cell selection...
             if( pData )
             {
-                pData->iSelectionType = ED_HIT_SEL_CELL;
+                pData->iSelectionType = iHitType; // ...but use requested type
                 pData->iSelectedCount = 1;
             }
         }
@@ -6741,7 +7261,9 @@ void CEditBuffer::InsertTableColumns(EDT_TableCellData *pData, XP_Bool bAfterCur
         // work, we must wrap its constructor in BeginBatchChanges.
         // Note: Caller must do BeginBatchChanges()
         ClearTableAndCellSelection();
+        SetFillNewCellWithSpace();
         AdoptAndDo(new CInsertTableColumnCommand(this, pData, bAfterCurrentCell, number));
+        ClearFillNewCellWithSpace();
     }
 }
 
@@ -6799,7 +7321,9 @@ void CEditBuffer::InsertTableCells(EDT_TableCellData* /* pData */, XP_Bool bAfte
         // constructor of the command. So in order for save-based undo to
         // work, we must wrap its constructor in BeginBatchChanges.
         BeginBatchChanges(kGroupOfChangesCommandID /*kInsertTableCellCommandID*/);
+        SetFillNewCellWithSpace();
 		AdoptAndDo(new CInsertTableCellCommand(this, bAfterCurrentCell, number));
+        ClearFillNewCellWithSpace();
         EndBatchChanges();
     }
 }
@@ -8382,7 +8906,9 @@ void CEditBuffer::PrintDocumentHead( CPrintState *pPrintState ){
         || bHaveHeadTags;
     
     // Unfortunately, we don't conform to any standard DOCTYPE yet.
-    // "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n"
+    // cmanske: TODO: NEED TO SEE IF WE CAN WRITE THIS NOW - ITS IMPORTANT!
+    // TODO: Put DOCTYPE string in allxpstr.h and .rc???
+    pPrintState->m_pOut->Printf("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n");
 
     pPrintState->m_pOut->Printf("<HTML>\n");
     
@@ -9270,8 +9796,8 @@ PRIVATE void edt_OpenDoneCB(EDT_ImageEncoderStatus /*status*/, void* pArg) {
 }
 
 // Relayout the whole document.
-void CEditBuffer::FinishedLoad2(){
-
+void CEditBuffer::FinishedLoad2()
+{
     // In case this is a reload, restore the state of the wait flag.
     if ( EDT_IsPluginActive(m_pContext) ) {
         m_pContext->waitingMode = 1;
@@ -9389,8 +9915,124 @@ void CEditBuffer::FinishedLoad2(){
         // Make current doc the most-recently-edited in prefs history list
         EDT_SyncEditHistory( m_pContext );
     }
+    // Flag set during buffer creation to tell 
+    //  if we imported a text file
+    if( m_bImportText )
+        ConvertCurrentDocToNewDoc();
 }
 
+void CEditBuffer::ConvertCurrentDocToNewDoc()
+{
+    char * pUntitled = XP_GetString(XP_EDIT_NEW_DOC_NAME);
+
+    // Traverse all links and images and change URLs to absolute
+    //   since we will be destroying our current base doc URL
+    EDT_ImageData *pImageData;
+    char *pAbsolute = NULL;
+    EDT_PageData *pPageData = GetPageData();
+    if( !pPageData){
+        return;
+    }
+    
+    // Should be the same as pEntry->Address???
+    char *pBaseURL = LO_GetBaseURL(m_pContext);
+
+    // Call Java Plugin hook for pages to be closed,
+    //  BUT only if it really was an lockable source
+    int iType = NET_URL_Type(pBaseURL);
+    if( iType == FTP_TYPE_URL ||
+        iType == HTTP_TYPE_URL ||
+        iType == SECURE_HTTP_TYPE_URL ||
+        iType == FILE_TYPE_URL ){
+        EDT_PreClose(m_pContext, pBaseURL, NULL, NULL);
+    }
+
+    // Walk the tree and find all HREFs.
+    CEditElement *pLeaf = m_pRoot->FindNextElement( 
+                                  &CEditElement::FindLeafAll,0 );
+    // First sweep, mark all HREFs as not adjusted.
+    while (pLeaf) {
+        linkManager.SetAdjusted(pLeaf->Leaf()->GetHREF(),FALSE);
+        pLeaf = pLeaf->FindNextElement(&CEditElement::FindLeafAll,0 );
+    }
+    // Second sweep, actually adjust the HREFs.
+    pLeaf = m_pRoot->FindNextElement( 
+            &CEditElement::FindLeafAll,0 );
+    while (pLeaf) {
+        ED_LinkId linkId = pLeaf->Leaf()->GetHREF();
+        if (linkId && !linkManager.GetAdjusted(linkId)) {
+            linkManager.AdjustLink(linkId, pBaseURL, NULL, NULL);          
+            linkManager.SetAdjusted(linkId,TRUE);
+        }
+        pLeaf = pLeaf->FindNextElement(&CEditElement::FindLeafAll,0 );
+    }
+
+    // Regular images.
+    CEditElement *pImage = m_pRoot->FindNextElement( 
+                                   &CEditElement::FindImage, 0 );
+    while( pImage ){
+        pImageData = pImage->Image()->GetImageData();
+        if( pImageData ){
+            if( pImageData->pSrc && *pImageData->pSrc ){
+                char * pOld = XP_STRDUP(pImageData->pSrc);
+                pAbsolute = NET_MakeAbsoluteURL( pBaseURL, pImageData->pSrc );
+                if( pAbsolute ){
+                    XP_FREE(pImageData->pSrc);
+                    pImageData->pSrc = pAbsolute;
+                }
+             }
+             if( pImageData->pLowSrc && *pImageData->pLowSrc){
+                pAbsolute = NET_MakeAbsoluteURL( pBaseURL, pImageData->pLowSrc );
+                if( pAbsolute ){
+                    XP_FREE(pImageData->pLowSrc);
+                    pImageData->pLowSrc = pAbsolute;
+                }
+            }    
+            pImage->Image()->SetImageData( pImageData );
+            edt_FreeImageData( pImageData );
+        }
+        pImage = pImage->FindNextElement( &CEditElement::FindImage, 0 );
+    }
+
+    // If there is a background Image, make it absolute also
+    if( pPageData->pBackgroundImage && *pPageData->pBackgroundImage){
+        pAbsolute = NET_MakeAbsoluteURL( pBaseURL, pPageData->pBackgroundImage );
+        if( pAbsolute ){
+            XP_FREE(pPageData->pBackgroundImage);
+            pPageData->pBackgroundImage = pAbsolute;
+        }
+    }
+
+    // Change context's "title" string
+    XP_FREEIF(m_pContext->title);
+    m_pContext->title = NULL;
+    m_pContext->is_new_document = TRUE;
+
+    // Change the history entry data
+    History_entry * pEntry = SHIST_GetCurrent(&(m_pContext->hist));
+	if(pEntry ){
+        XP_FREEIF(pEntry->address);
+        pEntry->address = XP_STRDUP(pUntitled);
+        XP_FREEIF(pEntry->title);
+    }
+    // Layout uses this as the base URL for all links and images
+    LO_SetBaseURL( m_pContext, pUntitled );
+
+    // Cleat the old title in page data
+    XP_FREEIF(pPageData->pTitle); 
+
+    // This will set new background image,
+    //   call FE_SetDocTitle() with new "file://Untitled" string,
+    //   and refresh the layout of entire doc
+    SetPageData(pPageData);
+
+    FreePageData(pPageData);
+    
+    // This marks the page as "dirty" so we ask user to save
+    //  the page even if they didn't type anything
+    StartTyping(TRUE);
+}
+  
 void CEditBuffer::SetSelectionInNewDocument(){
     VALIDATE_TREE(this);
     if ( ! m_pRoot )
@@ -10768,6 +11410,12 @@ void CEditBuffer::GetSelection( CEditSelection& selection, CEditLeafElement*& pS
     {
         // This version will get existing selection first
         GetSelection( pStartElement, iStartOffset, pEndElement, iEndOffset, bFromStart );
+        // Fill in values for caller's selection object as well
+        selection.m_start.m_pElement = pStartElement;
+        selection.m_start.m_iPos = iStartOffset;
+        selection.m_end.m_pElement = pEndElement;
+        selection.m_end.m_iPos = iEndOffset;
+        selection.m_bFromStart = bFromStart;
     }
     else
     {
@@ -11190,6 +11838,9 @@ void CEditBuffer::DeleteSelectedCells()
                 // Are we deleting entire column(s)?
                 if( pCell->AllCellsInColumnAreSelected() )
                 {
+                    // Move to the first column being deleted
+                    SetTableInsertPoint(pCell, TRUE);
+
                     // For efficiency, find contiguous selected columns
                     //  so we can delete them all at once
                     number = 1;
@@ -11206,6 +11857,7 @@ void CEditBuffer::DeleteSelectedCells()
 
                         pCell = pTable->GetFirstCellInNextColumn(pCell->GetX());
                     }
+
                     // Delete the column(s) -- this will relayout the table
             		AdoptAndDo(new CDeleteTableColumnCommand(this, number));
                     bRelayout = TRUE;
@@ -11217,10 +11869,13 @@ void CEditBuffer::DeleteSelectedCells()
                 // Are we deleting entire rows(s)?
                 else if( pCell->AllCellsInRowAreSelected() )
                 {
+                    // Move to the first row being deleted
+                    SetTableInsertPoint(pCell, TRUE);
+
                     // For efficiency, find contiguous selected rows
                     //  so we can delete them all at once
                     number = 1;
-                    // We don't want to use GetNextCellInRow() because of 
+                    // We don't want to use GetNextCellInColumn() because of 
                     //  ROWSPAN effect. This gets the first cell in the
                     //  next geometric row using the table's layout data
                     pCell = pTable->GetFirstCellInNextRow(pCell->GetX());
@@ -11245,7 +11900,6 @@ void CEditBuffer::DeleteSelectedCells()
                     pCell->DeleteContents(TRUE);
                     // We need to force table relayout if
                     //  this is the last thing we do
-                    // (I.e., deleting column(s) or row(s) is not done lastwe don't do it for column or row deletion
                     bNeedRelayout = TRUE;
 
                     // If we cleared contents of cell containing caret
@@ -11261,7 +11915,6 @@ void CEditBuffer::DeleteSelectedCells()
     while( bRelayout );
 
 
-    // Clear the m_bDeleted flags for all cells in the table
     if( pTable )
     {
         // We need to relayout only if deleting cell contents
@@ -11269,6 +11922,7 @@ void CEditBuffer::DeleteSelectedCells()
         if( bNeedRelayout )
             Relayout(pTable, 0);
 
+        // Clear the m_bDeleted flags for all cells in the table
         CEditTableCellElement *pCell = pTable->GetFirstCell();
         while( pCell )
         {
@@ -13124,9 +13778,13 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
     // Now check where in Table and Cell the cursor is over
     if (pTableElement)
     {
+        XP_Bool bCanDragTable = (!bModifierKeyPressed && (pTableElement->lo_table.ele_attrmask & LO_ELE_SELECTED));
+
         // First check for cell hit regions
         if(pCellElement)
         {
+            XP_Bool bCanDragCells = (!bModifierKeyPressed && (pCellElement->lo_cell.ele_attrmask & LO_ELE_SELECTED));
+
             // Return the cell found, even if result is ED_HIT_NONE
             if(ppElement) *ppElement = pCellElement;
             
@@ -13140,7 +13798,7 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 {
                     // If a selected cell - drag selection,
                     //  except if modifier key is pressed for sizing
-                    if( !bModifierKeyPressed && (pCellElement->lo_cell.ele_attrmask & LO_ELE_SELECTED) )
+                    if( bCanDragCells )
                         return ED_HIT_DRAG_TABLE;
                     
                     // Modifier key pressed an near right edge, excluding corners
@@ -13173,6 +13831,12 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 if( x <= right_limit )
                 {
                     // Near top border of cell, excluding corners
+
+                    // If a selected cell - drag selection,
+                    //  except if modifier key is pressed for sizing
+                    if( bCanDragCells )
+                        return ED_HIT_DRAG_TABLE;
+                
                     return ED_HIT_SEL_CELL;
                 }
                 // Upper right corner - leave for sizing image flush against borders
@@ -13183,7 +13847,7 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
             {
                 // If a selected cell - drag selection,
                 //  except if modifier key is pressed for sizing
-                if( !bModifierKeyPressed && (pCellElement->lo_cell.ele_attrmask & LO_ELE_SELECTED) )
+                if( bCanDragCells )
                     return ED_HIT_DRAG_TABLE;
                 
                 // Size the row
@@ -13207,6 +13871,12 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
             if( y <= top_limit )
             {
                 // Upper left corner
+
+                // If a selected table - drag selection,
+                //  except if modifier key is pressed for sizing
+                if( bCanDragTable )
+                    return ED_HIT_DRAG_TABLE;
+
                 if( bModifierKeyPressed )
                     return ED_HIT_SEL_ALL_CELLS;
 
@@ -13229,17 +13899,32 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 // Lower right corner
                 return ED_HIT_ADD_COLS;
 
+            // If a selected table - drag selection,
+            //  except if modifier key is pressed for sizing
+            if( bCanDragTable )
+                return ED_HIT_DRAG_TABLE;
+
             // Along right edge
             return ED_HIT_SIZE_TABLE_WIDTH;
         }
         else if( y >= bottom_limit )
         {
+            // If a selected table - drag selection,
+            //  except if modifier key is pressed for sizing
+            if( bCanDragTable )
+                return ED_HIT_DRAG_TABLE;
+
             // Below bottom, excluding corners
             return ED_HIT_SIZE_TABLE_HEIGHT;
         }
 
-        if( /*y >= top && */ y <= top_limit )    // CHECK THIS 
+        if( y <= top_limit )
         {
+            // If a selected table - drag selection,
+            //  except if modifier key is pressed for sizing
+            if( bCanDragTable )
+                return ED_HIT_DRAG_TABLE;
+
             // Along top border - select column
             if( ppElement)
             { 

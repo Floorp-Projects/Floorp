@@ -74,6 +74,14 @@
 #define ICON_X_OFFSET 4
 #define ICON_Y_OFFSET 4
 
+/* Moved from laytags.c so Composer can use them */
+#define MIN_FONT_SIZE		1
+#define MAX_FONT_SIZE		7
+
+#define DEFAULT_BASE_POINT_SIZE     12
+#define MIN_POINT_SIZE		1
+#define MAX_POINT_SIZE		1600
+
 #ifdef EDITOR
 extern char* lo_alignStrings[];
 #endif

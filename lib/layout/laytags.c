@@ -59,12 +59,15 @@
 #define	LIST_MARGIN_INC		(FEUNITS_X(40, context))
 #define MQUOTE_MARGIN_INC   (LIST_MARGIN_INC / 3)
 
+#if 0
+/* cmanske: Moved to layout.h so Composer can use them */
 #define MIN_FONT_SIZE		1
 #define MAX_FONT_SIZE		7
 
 #define DEFAULT_BASE_POINT_SIZE     12
 #define MIN_POINT_SIZE		1
 #define MAX_POINT_SIZE		1600
+#endif
 
 #define DEFAULT_BASE_FONT_WEIGHT  	400
 #define MIN_FONT_WEIGHT				100
