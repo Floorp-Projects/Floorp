@@ -160,21 +160,26 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // Cache the ID as an atom.
   mIDAtom = getter_AddRefs(NS_NewAtom(mID));
 
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+
   // Fetch the crop style.
   mCropStyle = 0;
   nsAutoString crop;
   mColElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
   if (crop.EqualsIgnoreCase("center"))
     mCropStyle = 1;
-  else if (crop.EqualsIgnoreCase("left"))
+  else if (crop.EqualsIgnoreCase("left") || crop.EqualsIgnoreCase("start"))
     mCropStyle = 2;
 
-  // Cache our text alignment policy.
-  nsCOMPtr<nsIStyleContext> styleContext;
-  if (!aFrame)
-    return;
-  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+  if (mCropStyle == 0 || mCropStyle == 2) { // Left or Right
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
+      mCropStyle = mCropStyle - 2; // Right becomes left, left becomes right.
+  }
 
+  // Cache our text alignment policy.
   const nsStyleText* textStyle =
         (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
 
@@ -2332,8 +2337,31 @@ nsOutlinerBodyFrame::EnsureColumns()
     PRUint32 count;
     cols->GetLength(&count);
 
+    if (count == 0)
+      return; // Nothing to do.
+
+    // Get a column, and get the parent frame.  We need to use its box direction
+    // to find out the order in which we should iterate the columns.
+    nsCOMPtr<nsIDOMNode> node;
+    cols->Item(0, getter_AddRefs(node));
+    nsCOMPtr<nsIContent> child(do_QueryInterface(node));
+    
+    // Get the frame for this column.
+    nsIFrame* frame;
+    shell->GetPrimaryFrameFor(child, &frame);
+    if (!frame)
+      return; // This is disastrous.
+
+    nsIFrame* colContainer;
+    frame->GetParent(&colContainer);
+      
+    nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
+    PRBool isNormal = PR_TRUE;
+    colContainerBox->GetDirection(isNormal);
+
+    PRInt32 i = isNormal ? 0 : count-1;
     nsOutlinerColumn* currCol = nsnull;
-    for (PRUint32 i = 0; i < count; i++) {
+    for ( ; (isNormal ? (i < ((PRInt32)count)) : (i >= 0)); (isNormal ? i++ : i--)) {
       nsCOMPtr<nsIDOMNode> node;
       cols->Item(i, getter_AddRefs(node));
       nsCOMPtr<nsIContent> child(do_QueryInterface(node));

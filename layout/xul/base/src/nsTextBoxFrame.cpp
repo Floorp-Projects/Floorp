@@ -56,6 +56,8 @@
 #define CROP_LEFT   "left"
 #define CROP_RIGHT  "right"
 #define CROP_CENTER "center"
+#define CROP_START  "start"
+#define CROP_END    "end"
 
 #define NS_STATE_NEED_LAYOUT 0x01000000
 
@@ -175,11 +177,11 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
         mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
         CroppingStyle cropType;
 
-        if (value.EqualsIgnoreCase(CROP_LEFT))
+        if (value.EqualsIgnoreCase(CROP_LEFT) || value.EqualsIgnoreCase(CROP_START))
             cropType = CropLeft;
         else if (value.EqualsIgnoreCase(CROP_CENTER))
             cropType = CropCenter;
-        else if (value.EqualsIgnoreCase(CROP_RIGHT))
+        else if (value.EqualsIgnoreCase(CROP_RIGHT) || value.EqualsIgnoreCase(CROP_END))
             cropType = CropRight;
         else
             cropType = CropNone;
@@ -187,6 +189,17 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
         if (cropType != mCropType) {
             aResize = PR_TRUE;
             mCropType = cropType;
+        }
+
+        if (mCropType == CropLeft || mCropType == CropRight) {
+          const nsStyleVisibility* vis = 
+            (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+          if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
+            if (mCropType == CropLeft)
+              mCropType = CropRight;
+            else
+              mCropType = CropLeft;
+          }
         }
     }
 
