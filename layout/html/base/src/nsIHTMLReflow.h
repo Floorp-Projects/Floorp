@@ -25,6 +25,7 @@
 class nsISpaceManager;
 class nsBlockFrame;
 class nsLineLayout;
+struct nsStylePosition;
 struct nsStyleSpacing;
 
 // IID for the nsIHTMLFrame interface 
@@ -94,24 +95,22 @@ typedef PRUint32  nsCSSFrameType;
 /**
  * Helper macros for telling whether items are replaced
  */
-
 #define NS_FRAME_IS_REPLACED(_ft) \
   (NS_CSS_FRAME_TYPE_REPLACED == ((_ft) & NS_CSS_FRAME_TYPE_REPLACED))
 
 #define NS_FRAME_REPLACED(_ft) \
   (NS_CSS_FRAME_TYPE_REPLACED | (_ft))
 
+/**
+ * A macro to extract the type. Masks off the 'replaced' bit-flag
+ */
+#define NS_FRAME_GET_TYPE(_ft) \
+  ((_ft) & ~NS_CSS_FRAME_TYPE_REPLACED)
+
 //----------------------------------------------------------------------
 
-// XXX I think these should be NS_UNCONSTRAINEDSIZE instead, but that causes
-// problems for test5
-#if 0
 #define NS_INTRINSICSIZE  NS_UNCONSTRAINEDSIZE
 #define NS_AUTOHEIGHT     NS_UNCONSTRAINEDSIZE
-#else
-#define NS_INTRINSICSIZE  0
-#define NS_AUTOHEIGHT     0
-#endif
 
 /**
  * HTML version of the reflow state.
@@ -155,6 +154,10 @@ struct nsHTMLReflowState : nsReflowState {
   // means you use your intrinsic height as the computed height
   nscoord          computedHeight;
   nscoord          computedTopMargin, computedBottomMargin;
+
+  // Computed values for 'left/top/right/bottom' offsets. Only applies to
+  // 'positioned' elements
+  nsMargin         computedOffsets;
 
   // Run-in frame made available for reflow
   nsBlockFrame*    mRunInFrame;
@@ -313,6 +316,11 @@ protected:
   void DetermineFrameType(nsIPresContext& aPresContext);
 
   void InitConstraints(nsIPresContext& aPresContext);
+  void InitAbsoluteConstraints(nsIPresContext& aPresContext,
+                               const nsHTMLReflowState* cbrs,
+                               const nsStylePosition* aPosition,
+                               nscoord containingBlockWidth,
+                               nscoord containingBlockHeight);
 
   void CalculateLeftRightMargin(const nsHTMLReflowState* aContainingBlockRS,
                                 const nsStyleSpacing*    aSpacing,

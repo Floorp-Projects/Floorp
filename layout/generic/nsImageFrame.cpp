@@ -217,17 +217,22 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   nsFrameImageLoaderCB aCallBack,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {
+  // Determine whether the image has fixed content width and height
+  PRBool  fixedContentWidth = aReflowState.HaveFixedContentWidth();
+  PRBool  fixedContentHeight = aReflowState.HaveFixedContentHeight();
+  if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
+    fixedContentHeight = PR_FALSE;
+  }
+  
   // Start the image loading
   PRIntn loadStatus;
   StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                 !(aReflowState.HaveFixedContentWidth() && aReflowState.HaveFixedContentHeight()),
+                 !(fixedContentWidth && fixedContentHeight),
                  loadStatus);
 
   // Choose reflow size
-  if (aReflowState.HaveFixedContentWidth() ||
-      aReflowState.HaveFixedContentHeight()) {
-    if (aReflowState.HaveFixedContentWidth() &&
-        aReflowState.HaveFixedContentHeight()) {
+  if (fixedContentWidth || fixedContentHeight) {
+    if (fixedContentWidth && fixedContentHeight) {
       // The image is fully constrained. Use the constraints directly.
       aDesiredSize.width = aReflowState.computedWidth;
       aDesiredSize.height = aReflowState.computedHeight;
@@ -250,7 +255,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         float imageWidth = imageSize.width * p2t;
         float imageHeight = imageSize.height * p2t;
         if (0.0f != imageHeight) {
-          if (aReflowState.HaveFixedContentWidth()) {
+          if (fixedContentWidth) {
             // We have a width, and an auto height. Compute height
             // from width.
             aDesiredSize.width = aReflowState.computedWidth;
