@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *	Seth Spitzer <sspitzer@netscape.com>
+ *  Seth Spitzer <sspitzer@netscape.com>
  *  Alec Flett <alecf@netscape.com>
  */
 
@@ -371,7 +371,6 @@ static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
 NS_IMPL_ISUPPORTS2(nsMessengerMigrator, nsIMessengerMigrator, nsIObserver)
 
 nsMessengerMigrator::nsMessengerMigrator() :
-  m_prefs(0),
   m_haveShutdown(PR_FALSE),
   m_oldMailType(-1),
   m_alreadySetNntpDefaultLocalPath(PR_FALSE),
@@ -420,7 +419,9 @@ nsresult nsMessengerMigrator::Init()
 nsresult 
 nsMessengerMigrator::Shutdown()
 {
-  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+  if (m_prefs) {
+	m_prefs = null_nsCOMPtr();
+  }
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
@@ -429,18 +430,19 @@ nsMessengerMigrator::Shutdown()
 nsresult
 nsMessengerMigrator::getPrefService()
 {
-
-  // get the prefs service
   nsresult rv = NS_OK;
 
-  if (!m_prefs)
-    rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      NS_GET_IID(nsIPref),
-                                      (nsISupports**)&m_prefs);
+  if (!m_prefs) {
+    m_prefs = do_GetService(kPrefServiceCID, &rv);
+  }
+
   if (NS_FAILED(rv)) return rv;
 
-  /* m_prefs is good now */                                                 return NS_OK;
+  if (!m_prefs) return NS_ERROR_FAILURE;
+
+  return NS_OK;
 } 
+
 NS_IMETHODIMP nsMessengerMigrator::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
   nsAutoString topicString(aTopic);

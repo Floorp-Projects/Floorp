@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *	sspitzer@netscape.com
+ * Seth Spitzer <sspitzer@netscape.com>
  */
 
 #include "nscore.h"
@@ -121,7 +121,7 @@ private:
  
   nsresult getPrefService();
 
-  nsIPref *m_prefs;
+  nsCOMPtr <nsIPref> m_prefs;
   PRBool m_haveShutdown;
   PRInt32 m_oldMailType;
   PRBool m_alreadySetNntpDefaultLocalPath;
