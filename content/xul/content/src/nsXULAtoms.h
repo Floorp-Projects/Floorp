@@ -43,6 +43,7 @@
 #endif
 
 #define NS_XULATOM(__atom) static nsIAtom* __atom
+#define NS_XULATOM2(__atom, __value) static nsIAtom* __atom
 
 class nsXULAtoms {
 protected:
