@@ -308,8 +308,9 @@ fieldset {
 
 /* lists */
 
-:bullet {
+:-moz-list-bullet {
   display: inline;
+  vertical-align: baseline;
   margin-right: 8px;
 }
 
