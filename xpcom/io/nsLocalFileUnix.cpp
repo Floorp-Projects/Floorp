@@ -472,8 +472,10 @@ nsLocalFile::Normalize()
     BEntry be_e((const char *)mPath, true);
     BPath be_p;
     status_t err;
-    if ((err = be_e.GetPath(&be_p)) == B_OK)
+    if ((err = be_e.GetPath(&be_p)) == B_OK) {
         resolved_path_ptr = be_p.Path();
+        PL_strncpyz(resolved_path, resolved_path_ptr, PATH_MAX - 1);
+    }
 #else
     resolved_path_ptr = realpath((const char *)mPath, resolved_path);
 #endif
