@@ -161,7 +161,7 @@ function Startup()
       // We get here if selection is exactly around a link node
       // Check if selection has some text - use that first
       selectedText = GetSelectionAsText();
-      if (selectedText) 
+      if (!selectedText) 
       {
         // No text, look for first image in the selection
         var children = anchorElement.childNodes;
@@ -191,7 +191,7 @@ function Startup()
       if (selectedText) 
       {
         // Use just the first 40 characters and add "..."
-        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(selectedText, 40, true));
+        dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(ReplaceWhitespace(selectedText, " "), 40, true));
       } else {
         dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
       }
