@@ -91,7 +91,8 @@
 #include "nsDocument.h"
 #include "nsToolbarItemFrame.h"
 
-#define IS_GFX
+nsresult
+NS_NewDocumentElementFrame ( nsIFrame** aNewFrame );
 
 nsresult
 NS_NewThumbFrame ( nsIFrame** aNewFrame );
@@ -2152,10 +2153,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
   PRBool isScrollable = IsScrollable(aPresContext, display);
   PRBool isPaginated = PR_FALSE;
   aPresContext->IsPaginated(&isPaginated);
+  nsIFrame* scrollFrame = nsnull;
 
   // build a scrollframe
   if (!isPaginated && isScrollable) {
-    nsIFrame* scrollFrame = nsnull;
     nsIStyleContext* childStyle = nsnull;
     nsIFrame* newScrollFrame = nsnull;
     nsIDocument* document;
@@ -2168,7 +2169,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                               aParentFrame,
                               nsLayoutAtoms::scrolledContentPseudo,
                               document,
-                              aNewFrame,
+                              scrollFrame,
                               styleContext,
                               newScrollFrame);
 
@@ -2190,7 +2191,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
           NS_NewBoxFrame(&contentFrame);
         }
         else {
-          NS_NewAreaFrame(&contentFrame);
+          NS_NewDocumentElementFrame(&contentFrame);
           isBlockFrame = PR_TRUE;
         }
 
@@ -2210,10 +2211,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                           aParentFrame,
                           contentFrame,
                           styleContext);
+
+     aNewFrame = scrollFrame;
+  } else {
+     // if not scrollable the new frame is the content frame.
+     aNewFrame = contentFrame;
   }
 
   mInitialContainingBlock = contentFrame;
-  aNewFrame = contentFrame;
 
   // if it was a table then we don't need to process our children.
   if (!docElemIsTable) {
