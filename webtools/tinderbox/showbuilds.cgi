@@ -85,6 +85,8 @@ sub make_tree_list {
 
 sub show_tree_selector {
 
+  print "Content-type: text/html\n\n";
+
   EmitHtmlHeader("tinderbox");
 
   print "<P><TABLE WIDTH=\"100%\">";
