@@ -1236,18 +1236,15 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
         
-      nsCompatibility mode;
-      aPresContext->GetCompatibilityMode(&mode);
-      if (eCompatibility_Standard == mode) {
-        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *spacing, 0, 0);
-        // paint the column groups and columns
-        nsIFrame* colGroupFrame = mColGroups.FirstChild();
-        while (nsnull != colGroupFrame) {
-          PaintChild(aPresContext, aRenderingContext, aDirtyRect, colGroupFrame, aWhichLayer);
-          colGroupFrame->GetNextSibling(&colGroupFrame);
-        }
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *color, *spacing, 0, 0);
+      // paint the column groups and columns
+      nsIFrame* colGroupFrame = mColGroups.FirstChild();
+      while (nsnull != colGroupFrame) {
+        PaintChild(aPresContext, aRenderingContext, aDirtyRect, colGroupFrame, aWhichLayer);
+        colGroupFrame->GetNextSibling(&colGroupFrame);
       }
+
       PRIntn skipSides = GetSkipSides();
       if (NS_STYLE_BORDER_SEPARATE == GetBorderCollapseStyle())
       {
