@@ -30,6 +30,8 @@ use strict;
 
 use lib qw(.);
 
+use vars qw($template $vars);
+
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
@@ -144,72 +146,42 @@ exit;
 ################################################################################
 
 sub requestChangePassword {
-
     Token::IssuePasswordToken($::FORM{'loginname'});
 
-    # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    $vars->{'title'} = "Request to Change Password";
+    $vars->{'message'} = "A token for changing your password has been 
+                          emailed to you. Follow the instructions in 
+                          that email to change your password.";
 
-    PutHeader("Request to Change Password");
-    print qq|
-        <p>
-        A token for changing your password has been emailed to you.
-        Follow the instructions in that email to change your password.
-        </p>
-    |;
-    PutFooter();
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
 sub confirmChangePassword {
-
-    # Return HTTP response headers.
+    $vars->{'title'} = "Change Password";
+    $vars->{'token'} = $::token;
+    
     print "Content-Type: text/html\n\n";
-
-    PutHeader("Change Password");
-    print qq|
-      <p>
-      To change your password, enter a new password twice:
-      </p>
-      <form method="post" action="token.cgi">
-        <input type="hidden" name="t" value="$::token">
-        <input type="hidden" name="a" value="chgpw">
-        <table>
-          <tr>
-            <th align="right">New Password:</th>
-            <td><input type="password" name="password" size="16" maxlength="16"></td>
-          </tr>
-          <tr>
-            <th align="right">New Password Again:</th>
-            <td><input type="password" name="matchpassword" size="16" maxlength="16"></td>
-          </tr>
-          <tr>
-            <th align="right">&nbsp;</th>
-            <td><input type="submit" value="Submit"></td>
-          </tr>
-        </table>
-      </form>
-    |;
-    PutFooter();
+    $template->process("admin/change-password.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
-sub cancelChangePassword {
-    
+sub cancelChangePassword {    
     Token::Cancel($::token, "user requested cancellation");
 
-    # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    $vars->{'title'} = "Cancel Request to Change Password";
+    $vars->{'message'} = "Your request has been cancelled.";
 
-    PutHeader("Cancel Request to Change Password");
-    print qq|
-      <p>
-      Your request has been cancelled.
-      </p>
-    |;
-    PutFooter();
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
 sub changePassword {
-
     # Quote the password and token for inclusion into SQL statements.
     my $cryptedpassword = Crypt($::FORM{'password'});
     my $quotedpassword = SqlQuote($cryptedpassword);
@@ -229,17 +201,13 @@ sub changePassword {
 
     InvalidateLogins($userid);
 
-    # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    $vars->{'title'} = "Password Changed";
+    $vars->{'message'} = "Your password has been changed.";
 
-    # Let the user know their password has been changed.
-    PutHeader("Password Changed");
-    print qq|
-      <p>
-      Your password has been changed.
-      </p>
-    |;
-    PutFooter();
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
 
 
