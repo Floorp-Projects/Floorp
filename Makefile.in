@@ -128,9 +128,7 @@ ifdef MOZ_JPROF
 DIRS        += tools/jprof
 endif
 
-ifdef MOZ_BUILD_XPFE
 DIRS		+= xpfe
-endif
 
 DIRS		+= xpinstall
 
