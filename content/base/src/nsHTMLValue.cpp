@@ -544,9 +544,7 @@ nsHTMLValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   {
     nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDocument));
     if (doc) {
-      nsCompatibility mode;
-      doc->GetCompatibilityMode(mode);
-      inNavQuirksMode = (mode == eCompatibility_NavQuirks);
+      inNavQuirksMode = (doc->GetCompatibilityMode() == eCompatibility_NavQuirks);
     } else {
       inNavQuirksMode = PR_FALSE;
     }

@@ -2513,9 +2513,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       nsDTDMode mode = eDTDMode_autodetect;
       nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
       if (htmlDoc) {
-        nsCompatibility compatMode;
-        htmlDoc->GetCompatibilityMode(compatMode);
-        switch (compatMode) {
+        switch (htmlDoc->GetCompatibilityMode()) {
           case eCompatibility_NavQuirks:
             mode = eDTDMode_quirks;
             break;

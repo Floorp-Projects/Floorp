@@ -68,7 +68,7 @@ nsLinkableAccessible(aDOMNode, aShell)
     if (htmlDoc && !mapElementName.IsEmpty()) {
       if (mapElementName.CharAt(0) == '#')
         mapElementName.Cut(0,1);
-      htmlDoc->GetImageMap(mapElementName, getter_AddRefs(mMapElement));      
+      mMapElement = htmlDoc->GetImageMap(mapElementName);
     }
   }
 }

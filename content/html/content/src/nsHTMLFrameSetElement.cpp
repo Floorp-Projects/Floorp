@@ -503,7 +503,7 @@ nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec,
       nsCOMPtr<nsIHTMLDocument> htmlDocument =
         do_QueryInterface(nsGenericHTMLContainerElement::GetOwnerDocument());
       if (htmlDocument) {
-        htmlDocument->GetCompatibilityMode(mode);
+        mode = htmlDocument->GetCompatibilityMode();
       }
       
       if (eCompatibility_NavQuirks == mode) {
