@@ -68,7 +68,10 @@ public:
   NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed);
   NS_IMETHOD Collapse(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD UnCollapse(nsBoxLayoutState& aBoxLayoutState);
+
+  // do not redefine this. Either create a new layout manager or redefine DoLayout below.
   NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+
   NS_IMETHOD Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE);
   NS_IMETHOD NeedsRecalc();
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
@@ -119,8 +122,10 @@ protected:
   virtual PRBool GetDefaultFlex(PRInt32& aFlex);
   virtual void GetLayoutFlags(PRUint32& aFlags);
 
-  void EnterLayout(nsBoxLayoutState& aState);
-  void ExitLayout(nsBoxLayoutState& aState);
+  NS_IMETHOD BeginLayout(nsBoxLayoutState& aState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD EndLayout(nsBoxLayoutState& aState);
+
   virtual void GetBoxName(nsAutoString& aName);
 
   enum eMouseThrough {

@@ -161,11 +161,13 @@ public:
 
    nsIScrollableView* GetScrollableView(nsIPresContext* aPresContext);
 
-   void GetScrolledContentSize(nsSize& aSize);
-
   void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
 
   void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
+
+  NS_IMETHOD GetScrolledSize(nsIPresContext* aPresContext, 
+                         nscoord *aWidth, 
+                         nscoord *aHeight) const;
 
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
@@ -898,23 +900,6 @@ nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
   return scrollingView;
 }
 
-void
-nsGfxScrollFrameInner::GetScrolledContentSize(nsSize& aSize)
-{
-    // get the ara frame is the scrollarea
-    nsIBox* child = nsnull;
-    mScrollAreaBox->GetChildBox(&child);
-
-    nsRect rect(0,0,0,0);
-    child->GetBounds(rect);
-
-    aSize.width = rect.width;
-    aSize.height = rect.height;
-    nsBox::AddMargin(child, aSize);
-    nsBox::AddBorderAndPadding(mScrollAreaBox, aSize);
-    nsBox::AddInset(mScrollAreaBox, aSize);
-}
-
 PRBool
 nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop)
 {
@@ -1017,19 +1002,14 @@ nsGfxScrollFrameInner::LayoutBox(nsBoxLayoutState& aState, nsIBox* aBox, const n
 }
 
 NS_IMETHODIMP
-nsGfxScrollFrame::Layout(nsBoxLayoutState& aState)
+nsGfxScrollFrame::DoLayout(nsBoxLayoutState& aState)
 {
-   // mark ourselves as dirty so no child under us 
-   // can post an incremental layout.
-   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
-
-   PropagateDebug(aState);
    PRUint32 flags = 0;
    aState.GetLayoutFlags(flags);
    nsresult rv =  mInner->Layout(aState);
    aState.SetLayoutFlags(flags);
 
-   nsBox::Layout(aState);
+   nsBox::DoLayout(aState);
    return rv;
 }
 
@@ -1108,7 +1088,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (styleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL
       && styleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
       // get the area frame is the scrollarea
-      GetScrolledContentSize(scrolledContentSize);
+      GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
     // There are two cases to consider
       if (scrolledContentSize.height <= scrollAreaRect.height
@@ -1145,7 +1125,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
       && (NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL != styleDisplay->mOverflow))
   {
     // get the area frame is the scrollarea
-    GetScrolledContentSize(scrolledContentSize);
+      GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
     // if the child is wider that the scroll area
     // and we don't have a scrollbar add one.
@@ -1184,7 +1164,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
      needsLayout = PR_FALSE;
   }
     
-  GetScrolledContentSize(scrolledContentSize);
+  GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
   nsIPresContext* presContext = aState.GetPresContext();
   float p2t;
@@ -1327,6 +1307,41 @@ nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize,
   }
 
   return PR_FALSE;
+}
+
+/**
+ * Gets the size of the area that lies inside the scrollbars but clips the scrolled frame
+ */
+NS_IMETHODIMP
+nsGfxScrollFrameInner::GetScrolledSize(nsIPresContext* aPresContext, 
+                              nscoord *aWidth, 
+                              nscoord *aHeight) const
+{
+
+  // our scrolled size is the size of our scrolled view.
+  nsSize size;
+  nsIBox* child = nsnull;
+  mScrollAreaBox->GetChildBox(&child);
+  nsIFrame* frame;
+  child->GetFrame(&frame);
+  nsIView* view;
+  frame->GetView(aPresContext, &view);
+  NS_ASSERTION(view,"Scrolled frame must have a view!!!");
+  
+  nsRect rect(0,0,0,0);
+  view->GetBounds(rect);
+
+  size.width = rect.width;
+  size.height = rect.height;
+
+  nsBox::AddMargin(child, size);
+  nsBox::AddBorderAndPadding(mScrollAreaBox, size);
+  nsBox::AddInset(mScrollAreaBox, size);
+
+  *aWidth = size.width;
+  *aHeight = size.height;
+
+  return NS_OK;
 }
 
 void

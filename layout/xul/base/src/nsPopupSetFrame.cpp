@@ -204,10 +204,10 @@ nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::Layout(nsBoxLayoutState& aState)
+nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
 {
   // lay us out
-  nsresult rv = nsBoxFrame::Layout(aState);
+  nsresult rv = nsBoxFrame::DoLayout(aState);
 
   // layout the popup. First we need to get it.
   nsIFrame* popupChild = GetActiveChild();

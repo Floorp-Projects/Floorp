@@ -326,10 +326,10 @@ nsScrollBoxFrame::GetBorder(nsMargin& aMargin)
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::Layout(nsBoxLayoutState& aState)
+nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  PRUint32 flags = 0;
-  aState.GetLayoutFlags(flags);
+  PRUint32 oldflags = 0;
+  aState.GetLayoutFlags(oldflags);
 
   nsRect clientRect(0,0,0,0);
   GetClientRect(clientRect);
@@ -339,32 +339,50 @@ nsScrollBoxFrame::Layout(nsBoxLayoutState& aState)
   nsMargin margin(0,0,0,0);
   kid->GetMargin(margin);
   childRect.Deflate(margin);
-  nsSize min(0,0);
-  kid->GetMinSize(aState, min);
 
-  /*
-  // if our child is not html then get is min size
-  // and make sure we don't squeeze it smaller than that.
- nsIBoxToBlockAdaptor* adaptor = nsnull;
- if (NS_FAILED(kid->QueryInterface(NS_GET_IID(nsIBoxToBlockAdaptor), (void**)&adaptor))) {
+  nsIPresContext* presContext = aState.GetPresContext();
+
+  // see if our child is html. If it is then
+  // never include the overflow. The child will be the size
+  // given but its view will include the overflow size.
+  nsCOMPtr<nsIBoxToBlockAdaptor> adaptor = do_QueryInterface(kid);
+  if (adaptor)
+    adaptor->SetIncludeOverflow(PR_FALSE);
+
+  PRInt32 flags = NS_FRAME_NO_MOVE_VIEW;
+
+  // do we have an adaptor? No then we can't use
+  // min size the child technically can get as small as it wants
+  // to.
+  if (!adaptor) {
+    nsSize min(0,0);
+    kid->GetMinSize(aState, min);
+
     if (min.height > childRect.height)
        childRect.height = min.height;
- }
- */
 
- if (min.height > childRect.height)
-     childRect.height = min.height;
+    if (min.width > childRect.width)
+       childRect.width = min.width;
+  } else { 
+    // don't size the view if we have an adaptor
+    flags |=  NS_FRAME_NO_SIZE_VIEW;
+  }
 
- if (min.width > childRect.width)
-    childRect.width = min.width;
-
-  aState.SetLayoutFlags(NS_FRAME_NO_MOVE_VIEW);
+  aState.SetLayoutFlags(flags);
   kid->SetBounds(aState, childRect);
   kid->Layout(aState);
 
   kid->GetBounds(childRect);
 
   clientRect.Inflate(margin);
+
+    // now size the view to the size including our overflow.
+  if (adaptor) {
+     nsSize overflow(0,0);
+     adaptor->GetOverflow(overflow);
+     childRect.width = overflow.width;
+     childRect.height = overflow.height;
+  }
 
   if (childRect.width < clientRect.width || childRect.height < clientRect.height)
   {
@@ -379,11 +397,20 @@ nsScrollBoxFrame::Layout(nsBoxLayoutState& aState)
     kid->SetBounds(aState, childRect);
   }
 
-  aState.SetLayoutFlags(flags);
+  aState.SetLayoutFlags(oldflags);
 
   SyncLayout(aState);
 
-  nsIPresContext* presContext = aState.GetPresContext();
+  if (adaptor) {
+     nsIView* view;
+     nsIFrame* frame;
+     kid->GetFrame(&frame);
+     frame->GetView(presContext, &view);
+     nsCOMPtr<nsIViewManager> vm;
+     view->GetViewManager(*getter_AddRefs(vm));
+     vm->ResizeView(view, childRect.width, childRect.height);
+  }
+
   nsIScrollableView* scrollingView;
   nsIView*           view;
   GetView(presContext, &view);

@@ -378,7 +378,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::Layout(nsBoxLayoutState& aState)
+nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 {
   nsIFrame* frame;
   GetFrame(&frame);
@@ -392,7 +392,7 @@ nsSplitterFrame::Layout(nsBoxLayoutState& aState)
     mInner->UpdateState();
   }
 
-  return nsBoxFrame::Layout(aState);
+  return nsBoxFrame::DoLayout(aState);
 }
 
 

@@ -378,9 +378,9 @@ nsImageBoxFrame::GetImageSize(nsIPresContext* aPresContext)
  * Ok return our dimensions
  */
 NS_IMETHODIMP
-nsImageBoxFrame::Layout(nsBoxLayoutState& aState)
+nsImageBoxFrame::DoLayout(nsBoxLayoutState& aState)
 {
-  return nsLeafBoxFrame::Layout(aState);
+  return nsLeafBoxFrame::DoLayout(aState);
 }
 
 /**

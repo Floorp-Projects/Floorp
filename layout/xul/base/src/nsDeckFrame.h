@@ -47,7 +47,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD Layout(nsBoxLayoutState& aState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aState);
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,

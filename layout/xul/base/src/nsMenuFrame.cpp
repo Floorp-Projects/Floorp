@@ -753,13 +753,13 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::Layout(nsBoxLayoutState& aState)
+nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 {
   nsRect contentRect;
   GetContentRect(contentRect);
 
   // lay us out
-  nsresult rv = nsBoxFrame::Layout(aState);
+  nsresult rv = nsBoxFrame::DoLayout(aState);
 
   // layout the popup. First we need to get it.
   nsIFrame* popupChild = mPopupFrames.FirstChild();

@@ -66,7 +66,7 @@ public:
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
   // nsIAnonymousContentCreator
   NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,

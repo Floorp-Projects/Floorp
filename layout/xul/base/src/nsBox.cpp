@@ -141,8 +141,8 @@ nsBox::GetBoxName(nsAutoString& aName)
   aName.AssignWithConversion("Box");
 }
 
-void
-nsBox::EnterLayout(nsBoxLayoutState& aState)
+NS_IMETHODIMP
+nsBox::BeginLayout(nsBoxLayoutState& aState)
 {
   #ifdef DEBUG_LAYOUT 
 
@@ -169,14 +169,25 @@ nsBox::EnterLayout(nsBoxLayoutState& aState)
       printf("\n");
       gIndent++;
   #endif
+
+  return NS_OK;
 }
 
-void
-nsBox::ExitLayout(nsBoxLayoutState& aState)
+NS_IMETHODIMP
+nsBox::DoLayout(nsBoxLayoutState& aState)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBox::EndLayout(nsBoxLayoutState& aState)
+{
+
   #ifdef DEBUG_LAYOUT
       --gIndent;
   #endif
+
+  return SyncLayout(aState);
 }
 
 #ifdef REFLOW_COELESCED
@@ -984,11 +995,11 @@ nsBox::IsCollapsed(nsBoxLayoutState& aState, PRBool& aCollapsed)
 NS_IMETHODIMP
 nsBox::Layout(nsBoxLayoutState& aState)
 {
-  EnterLayout(aState);
+  BeginLayout(aState);
 
-  SyncLayout(aState);
+  DoLayout(aState);
 
-  ExitLayout(aState);
+  EndLayout(aState);
 
   return NS_OK;
 }

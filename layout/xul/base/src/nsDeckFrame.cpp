@@ -366,7 +366,7 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsDeckFrame::Layout(nsBoxLayoutState& aState)
+nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
 {
   // make sure we tweek the state so it does not resize our children. We will do that.
   PRUint32 oldFlags = 0;
@@ -374,7 +374,7 @@ nsDeckFrame::Layout(nsBoxLayoutState& aState)
   aState.SetLayoutFlags(NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
 
   // do a normal layout
-  nsresult rv = nsBoxFrame::Layout(aState);
+  nsresult rv = nsBoxFrame::DoLayout(aState);
 
   // run though each child. Hide all but the selected one
   nsIBox* box = nsnull;

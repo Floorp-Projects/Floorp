@@ -877,16 +877,28 @@ nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
 }
 
 NS_IMETHODIMP
-nsBoxFrame::Layout(nsBoxLayoutState& aState)
+nsBoxFrame::BeginLayout(nsBoxLayoutState& aState)
 {
+
+  nsresult rv = nsContainerBox::BeginLayout(aState);
 
   // mark ourselves as dirty so no child under us 
   // can post an incremental layout.
   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
   PropagateDebug(aState);
-  nsresult rv = nsContainerBox::Layout(aState);
+
 
   return rv;
+}
+
+/**
+ * If subclassing please subclass this method not layout. 
+ * layout will call this method.
+ */
+NS_IMETHODIMP
+nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
+{
+  return nsContainerBox::DoLayout(aState);
 }
 
 nsBoxFrame::Valignment

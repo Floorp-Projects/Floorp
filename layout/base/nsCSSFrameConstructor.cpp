@@ -6191,13 +6191,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewGrippyFrame(aPresShell, &newFrame);
     }
     // End of GRIPPY CONSTRUCTION logic
-#if 0
+#if 1
     else if (aTag != nsHTMLAtoms::html) {
       nsCAutoString str("Invalid XUL tag encountered in file. Perhaps you used the wrong namespace?\n\nThe tag name is ");
       nsAutoString tagName;
       aTag->ToString(tagName);
       str.AppendWithConversion(tagName);
-      NS_ERROR(str);
+      NS_WARNING(str);
     }
 #endif
   }
