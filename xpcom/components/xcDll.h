@@ -41,14 +41,14 @@ class nsDll
 private:
 	char *m_fullpath;		// system format full filename of dll
 	PRTime m_lastModTime;	// last modified time
-	PRUint64 m_size;		// size of the dynamic library
+	PRUint32 m_size;		// size of the dynamic library
 	PRLibrary *m_instance;	// Load instance
 	nsDllStatus m_status;		// holds current status
 
 public:
  
 	nsDll(const char *libFullPath);
-	nsDll(const char *libFullPath, PRTime lastModTime, PRUint64 fileSize);
+	nsDll(const char *libFullPath, PRTime lastModTime, PRUint32 fileSize);
 
 	~nsDll(void);
 
@@ -66,6 +66,6 @@ public:
 	
 	const char *GetFullPath(void) { return (m_fullpath); }
 	PRTime GetLastModifiedTime(void) { return(m_lastModTime); }
-	PRUint64 GetSize(void) { return(m_size); }
+	PRUint32 GetSize(void) { return(m_size); }
 	PRLibrary *GetInstance(void) { return (m_instance); }
 };

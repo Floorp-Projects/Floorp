@@ -25,6 +25,13 @@
 #include <iostream.h>
 #endif
 
+#ifdef	XP_MAC
+#include <Files.h>
+#include <Memory.h>
+#include <Processes.h>
+#include <TextUtils.h>
+#endif
+
 #include "plstr.h"
 #include "prlink.h"
 #include "prsystem.h"
@@ -100,7 +107,7 @@ public:
 	nsIFactory *factory;
 
 	FactoryEntry(const nsCID &aClass, const char *aLibrary,
-		PRTime lastModTime, PRUint64 fileSize);
+		PRTime lastModTime, PRUint32 fileSize);
 	FactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
 	~FactoryEntry();
 	// DO NOT DELETE THIS. Many FactoryEntry(s) could be sharing the same Dll.
@@ -110,7 +117,7 @@ public:
 };
 
 FactoryEntry::FactoryEntry(const nsCID &aClass, const char *aLibrary,
-						   PRTime lastModTime, PRUint64 fileSize)
+						   PRTime lastModTime, PRUint32 fileSize)
 						   : cid(aClass), factory(NULL), dll(NULL)
 {
 	nsDllStore *dllCollection = nsRepository::dllStore;
@@ -980,15 +987,71 @@ nsresult nsRepository::FreeLibraries(void)
 nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 									const char* pathlist)
 {
+#ifdef	XP_MAC
+	CInfoPBRec		catInfo;
+	Handle			pathH;
+	OSErr			err;
+	ProcessSerialNumber	psn;
+	ProcessInfoRec		pInfo;
+	FSSpec			appFSSpec;
+	long			theDirID, oldLen, newLen;
+	Str255			name;
+#endif
+
 	if (pathlist != NULL)
 	{
 		SyncComponentsInPathList(pathlist);
 	}
 	
+#ifdef	XP_MAC
+	// get info for the the current process to determine the directory its located in
+	if (!(err = GetCurrentProcess(&psn)))
+	{
+		if (!(err = GetProcessInformation(&psn, &pInfo)))
+		{
+			appFSSpec = *(pInfo.processAppSpec);
+			if ((pathH = NewHandle(1)) != NULL)
+			{
+				**pathH = '\0';						// initially null terminate the string
+				HNoPurge(pathH);
+				HUnlock(pathH);
+				theDirID = appFSSpec.parID;
+				do
+				{
+					catInfo.dirInfo.ioCompletion = NULL;
+					catInfo.dirInfo.ioNamePtr = (StringPtr)&name;
+					catInfo.dirInfo.ioVRefNum = appFSSpec.vRefNum;
+					catInfo.dirInfo.ioDrDirID = theDirID;
+					catInfo.dirInfo.ioFDirIndex = -1;		// -1 = query dir in ioDrDirID
+					if (!(err = PBGetCatInfoSync(&catInfo)))
+					{
+						// build up a Unix style pathname due to NSPR
+						// XXX Note: this breaks if any of the parent
+						// directories contain a "slash" (blame NSPR)
+
+						Munger(pathH, 0L, NULL, 0L, (const void *)&name[1], (long)name[0]);	// prepend dir name
+						Munger(pathH, 0L, NULL, 0L, "/", 1);					// prepend slash
+
+						// move up to parent directory
+						theDirID = catInfo.dirInfo.ioDrParID;
+					}
+				} while ((!err) && (catInfo.dirInfo.ioDrDirID != 2));	// 2 = root
+				if (!err)
+				{
+					HLock(pathH);
+					SyncComponentsInPathList((const char *)(*pathH));
+					HUnlock(pathH);
+				}
+				DisposeHandle(pathH);
+			}
+		}
+	}
+#else
 	//XXX get default pathlist from registry
 	//XXX Temporary hack. Registering components from current directory
 	const char *defaultPathList = ".";
 	SyncComponentsInPathList(defaultPathList);
+#endif
 	return (NS_OK);
 }
 
@@ -1031,7 +1094,7 @@ nsresult nsRepository::SyncComponentsInDir(const char *dir)
 	unsigned int n = strlen(fullname);
 	if (n+1 < sizeof(fullname))
 	{
-		fullname[n] = PR_GetDirectorySeparator();
+		fullname[n] = '/';		// PR_GetDirectorySeparator();
 		n++;
 	}
 	char *filepart = fullname + n;
@@ -1058,18 +1121,19 @@ nsresult nsRepository::SyncComponentsInFile(const char *fullname)
 		".dso",	/* Unix */
 		".so",	/* Unix */
 		".sl",	/* Unix: HP */
-		"_dll",	/* Mac ? */
+		".shlb",	/* Mac ? */
 		".dlm",	/* new for all platforms */
 		NULL
 	};
 	
 	
-	PRFileInfo64 statbuf;
-	if (PR_GetFileInfo64(fullname, &statbuf) != PR_SUCCESS)
+	PRFileInfo statbuf;
+	if (PR_GetFileInfo(fullname,&statbuf) != PR_SUCCESS)
 	{
 		// Skip files that cannot be stat
 		return (NS_ERROR_FAILURE);
 	}
+
 	if (statbuf.type == PR_FILE_DIRECTORY)
 	{
 		// Cant register a directory
@@ -1129,7 +1193,7 @@ nsresult nsRepository::SyncComponentsInFile(const char *fullname)
 		
 		// We already have seen this dll. Check if this dll changed
 		if (LL_EQ(dll->GetLastModifiedTime(), statbuf.modifyTime) &&
-			LL_EQ(dll->GetSize(), statbuf.size))
+			(dll->GetSize() == statbuf.size))
 		{
 			// Dll hasn't changed. Skip.
 			PR_LOG(logmodule, PR_LOG_ALWAYS, 
