@@ -78,8 +78,9 @@ public:
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
+  nsresult AssertProgressInfo();
   nsresult NotifyDownloadEnded(const char* aTargetPath);
-  PRBool MustUpdateUI() { return mMustUpdateUI; }
+  PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
 
 private:
   nsCOMPtr<nsIRDFDataSource> mInner;
@@ -87,8 +88,6 @@ private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsHashtable* mCurrDownloadItems;
-
-  PRBool mMustUpdateUI;
 
   friend class DownloadItem;
 };

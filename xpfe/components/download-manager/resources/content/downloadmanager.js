@@ -160,9 +160,9 @@ var downloadViewController = {
       // a) Prompt user to confirm end of transfers in progress
       // b) End transfers
       // c) Delete entries from datasource
-
+ 
       for (var i = 0; i < selection.length; ++i)
-        gDownloadManager.cancelDownload(selection.id);
+        gDownloadManager.cancelDownload(selection[i].id);
       deleteItem(selection);
       break;
     case "cmd_selectAll":
