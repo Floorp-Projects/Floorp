@@ -387,6 +387,11 @@ nsHTMLImageElement::GetHeight(PRInt32* aHeight)
     nsSize size;
     frame->GetSize(size);
 
+    nsMargin margin;
+    frame->CalcBorderPadding(margin);
+
+    size.height -= margin.top + margin.bottom;
+
     nsCOMPtr<nsIPresContext> context;
     rv = GetPresContext(this, getter_AddRefs(context));
 
@@ -439,6 +444,11 @@ nsHTMLImageElement::GetWidth(PRInt32* aWidth)
   if (NS_SUCCEEDED(rv) && frame) {
     nsSize size;
     frame->GetSize(size);
+
+    nsMargin margin;
+    frame->CalcBorderPadding(margin);
+
+    size.width -= margin.left + margin.right;
 
     nsCOMPtr<nsIPresContext> context;
     rv = GetPresContext(this, getter_AddRefs(context));
