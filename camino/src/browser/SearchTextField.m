@@ -104,7 +104,7 @@
     [self setStringValue:@""];
   }
 
-  return [super selectText:sender];  
+  [super selectText:sender];  
 }
 
 

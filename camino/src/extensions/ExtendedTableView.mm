@@ -70,7 +70,7 @@
       return;
     }
   }
-  return [super keyDown: aEvent];
+  [super keyDown: aEvent];
 }
 
 -(NSMenu *)menuForEvent:(NSEvent *)theEvent
