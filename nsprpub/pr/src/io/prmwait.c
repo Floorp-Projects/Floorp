@@ -90,7 +90,9 @@ static void TimerManager(void *arg)
     PR_Lock(tm_vars.ml);
     /* tell the primordial thread that we have started */
     tm_vars.manager_started = PR_TRUE;
-    PR_NotifyCondVar(tm_vars.cancel_timer);
+    if (!_native_threads_only) {
+        PR_NotifyCondVar(tm_vars.cancel_timer);
+    }
     while (1)
     {
         if (PR_CLIST_IS_EMPTY(&tm_vars.timer_queue))
@@ -214,11 +216,16 @@ static PRStatus TimerInit(void)
     {
         goto failed;
     }
-    /* wait until the timer manager thread starts */
-    PR_Lock(tm_vars.ml);
-    while (!tm_vars.manager_started)
-        PR_WaitCondVar(tm_vars.cancel_timer, PR_INTERVAL_NO_TIMEOUT);
-    PR_Unlock(tm_vars.ml);
+    /*
+     * Need to wait until the timer manager thread starts
+     * if the timer manager thread is a local thread.
+     */
+    if (!_native_threads_only) {
+        PR_Lock(tm_vars.ml);
+        while (!tm_vars.manager_started)
+            PR_WaitCondVar(tm_vars.cancel_timer, PR_INTERVAL_NO_TIMEOUT);
+        PR_Unlock(tm_vars.ml);
+    }
     return PR_SUCCESS;
 
 failed:
