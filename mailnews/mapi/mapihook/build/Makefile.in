@@ -43,7 +43,9 @@ OS_LIBS		+= rpcrt4.lib
 
 MIDL_GENERATED_FILES = msgMapi.h msgMapi_p.c msgMapi_i.c dlldata.c
 
-GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen $(addprefix $(srcdir)/,$(CSRCS))
+SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
+
+GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen $(CSRCS) $(SRCDIR_CSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -52,12 +54,19 @@ DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE
 $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: msgMapi.idl
+	$(RM) $(SRCDIR_CSRCS)
 	$(MIDL) $(UNICODE_FLAGS) $(srcdir)/msgMapi.idl
 	touch $@
 
-$(addprefix $(srcdir)/,$(CSRCS)): %.c: done_gen
-	@if cmp -s $(@F) $@; then cp $(@F) $@; fi
+copy_csrcs: done_gen
+	@for f in $(CSRCS); do \
+	    if test ! -f $(srcdir)/$$f; then \
+		cp $$f $(srcdir)/$$f; \
+	    fi ; \
+	done
 
-export:: done_gen $(addprefix $(srcdir)/,$(CSRCS))
+$(SRCDIR_CSRCS): copy_csrcs
+
+export:: done_gen copy_csrcs
 
 
