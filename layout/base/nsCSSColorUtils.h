@@ -51,14 +51,6 @@ void NS_GetSpecial3DColors(nscolor aResult[2],
 											   nscolor aBackgroundColor,
 											   nscolor aBorderColor);
 
-// Special method to brighten a Color and have it shift to white when
-// fully saturated.
-nscolor NS_BrightenColor(nscolor inColor);
-
-// Special method to darken a Color and have it shift to black when
-// darkest component underflows
-nscolor NS_DarkenColor(nscolor inColor);
-
 // Determins brightness for a specific color
 int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 
