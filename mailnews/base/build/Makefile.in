@@ -46,10 +46,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NSPR_LIBS)	\
 		-lxpcom			\
 		-lreg			\
-		-lmozjs			\
 		-lmsgbaseutil	\
-		-lappcores		\
-		-ljsdom			\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

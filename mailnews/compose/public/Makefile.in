@@ -21,6 +21,7 @@ VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+MODULE=msgcompose
 
 IDLSRCS = \
 		nsIMsgCompose.idl \

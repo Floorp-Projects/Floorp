@@ -27,10 +27,10 @@ LIBRARY_NAME=mailnewsbase_s
 
 EXPORTS = \
 	nsMessenger.h			\
+	nsMessengerBootstrap.h	\
 	nsMsgKeyArray.h			\
 	nsUrlListenerManager.h 	\
 	nsMsgMailSession.h 		\
-	nsMsgAppCore.h			\
 	nsMsgAccountManager.h	\
 	nsMsgAccount.h			\
 	nsMsgFolderDataSource.h \
@@ -46,12 +46,10 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsMessenger.cpp	\
-	nsMessengerNameSet.cpp \
+	nsMessengerBootstrap.cpp	\
 	nsMsgKeyArray.cpp	\
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	\
-	nsMsgAppCore.cpp	\
-	nsJSMsgAppCore.cpp	\
 	nsMsgMD5.cpp 			\
 	nsMsgAccountManager.cpp	\
 	nsMsgAccount.cpp		\

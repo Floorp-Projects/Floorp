@@ -7,11 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgCompFields.h" /* interface nsIMsgCompFields */
-#include "nsID.h" /* interface nsID */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
+#include "nsrootidl.h" /* interface nsrootidl */
 
 /* starting interface:    nsIMsgCompose */
 
@@ -36,11 +32,6 @@ class nsIMsgCompose : public nsISupports {
 
   /* void Dispose (); */
   NS_IMETHOD Dispose() = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgCompose *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgCompose_h__ */

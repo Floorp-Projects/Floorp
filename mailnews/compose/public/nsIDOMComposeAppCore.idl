@@ -23,7 +23,6 @@
 #include "nsIDOMBaseAppCore.idl"
 #include "nsIDOMWindow.idl"
 #include "nsIDOMEditorAppCore.idl"
-#include "nsIDOMMsgAppCore.idl"
 
 native nsAutoString(nsAutoString&);
 
@@ -37,7 +36,6 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 			in nsAutoString args, 
 			in nsIDOMXULTreeElement tree, 
 			in nsIDOMNodeList node, 
-			in nsIDOMMsgAppCore msgAppCore, 
 			in long messageType);
     void SendMsg(in nsAutoString addrTo, 
 			in nsAutoString addrCc, 

@@ -27,7 +27,6 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMEditorAppCore.h"
-#include "nsIDOMMsgAppCore.h"
 #include "nsIDOMComposeAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -303,8 +302,7 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsAutoString b1;
   nsIDOMXULTreeElement * b2;
   nsIDOMNodeList * b3;
-  nsIDOMMsgAppCore * b4;
-  PRInt32 b5;
+  PRInt32 b4;
   int32 i;
   const nsString typeName;
 
@@ -331,15 +329,10 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                                   cx,
                                   argv[3]);
 
-   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b4, nsIDOMMsgAppCore::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[4]);
+   JS_ValueToInt32(cx, argv[4], &i);
+   b4 = i;
 
-   JS_ValueToInt32(cx, argv[5], &i);
-   b5 = i;
-
-   if (!rBool || NS_OK != nativeThis->NewMessage(b0, b1, b2, b3, b4, b5)) {
+   if (!rBool || NS_OK != nativeThis->NewMessage(b0, b1, b2, b3, b4)) {
       return JS_FALSE;
     }
 

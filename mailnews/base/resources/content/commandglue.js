@@ -1,4 +1,6 @@
-var msgAppCore;
+var messenger = Components.classes['component://netscape/messenger'].createInstance();
+messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+
 var composeAppCore;
 
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
@@ -11,29 +13,22 @@ function GetFolderTree()
 	return folderTree;
 }
 
-function FindMsgAppCore()
+function FindMessenger()
 {
-  msgAppCore = XPAppCoresManager.Find("MsgAppCore");
-  if (msgAppCore == null) {
-    dump("FindMsgAppCore: Creating AppCore\n");
-    msgAppCore = new MsgAppCore();
-    dump("Initializing MsgAppCore and setting Window\n");
-    msgAppCore.Init("MsgAppCore");
-  }
-  return msgAppCore;
+  return messenger;
 }
 
 function OpenURL(url)
 {
   dump("\n\nOpenURL from XUL\n\n\n");
-  var appCore = FindMsgAppCore();
+  var appCore = FindMessenger();
   if (appCore != null) {
     appCore.SetWindow(window);
     appCore.OpenURL(url);
   }
 }
 
-function ComposeMessage(tree, nodeList, msgAppCore, type)
+function ComposeMessage(tree, nodeList, messenger, type)
 {
 	dump("\nComposeMessage from XUL\n");
 
@@ -53,7 +48,7 @@ function ComposeMessage(tree, nodeList, msgAppCore, type)
 			//	name=<name of the appcore>
 			//	editorType=[default | html | text]			; default means use the prefs value send_html
 			var args = "name=" + composeAppCoreName + ",editorType=default";
-			composeAppCore.NewMessage("chrome://messengercompose/content/", args, tree, nodeList, msgAppCore, type);
+			composeAppCore.NewMessage("chrome://messengercompose/content/", args, tree, nodeList, type);
 			dump("Created a compose appcore from Messenger, " + args);
 		}
 	}
@@ -74,7 +69,7 @@ function GetNewMessages()
 	{
 		var selectedFolder = selectedFolderList[0];
 		
-		var appCore = FindMsgAppCore();
+		var appCore = FindMessenger();
 		if (appCore != null) {
 			appCore.SetWindow(window);
 			appCore.GetNewMessages(folderTree.database, selectedFolder);
@@ -87,7 +82,7 @@ function GetNewMessages()
 
 function MsgAccountManager()
 {
-  var appCore = FindMsgAppCore();
+  var appCore = FindMessenger();
   if (appCore != null) {
     dump('Opening account manager..\n');
     appCore.AccountManager(window);
@@ -126,7 +121,7 @@ function ComposeMessageWithType(type)
   if(tree) {
     dump("tree is valid\n");
     var nodeList = tree.getElementsByAttribute("selected", "true");
-    var appCore = FindMsgAppCore();
+    var appCore = FindMessenger();
     dump("message type ");
     dump(type);
     dump("\n");

@@ -4,5 +4,5 @@
 
 nsIUrlListener.idl
 nsIMsgGroupRecord.idl
-nsIDOMMsgAppCore.idl
+nsIMessenger.idl
 #nsIMsgMailNewsUrl.idl

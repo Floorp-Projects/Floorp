@@ -47,7 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsMsgCompPrefs.h"
-#include "nsIDOMMsgAppCore.h"
+#include "nsIMessenger.h"
 #include "nsIMessage.h"
 #include "nsXPIDLString.h"
 
@@ -153,7 +153,6 @@ public:
 							nsAutoString& args,
 							nsIDOMXULTreeElement *tree,
 							nsIDOMNodeList *nodeList,
-							nsIDOMMsgAppCore * msgAppCore,
 							PRInt32 messageType);
 	NS_IMETHOD SendMsg(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
                            nsAutoString& aAddrBcc, 
@@ -718,7 +717,6 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 							               nsAutoString& args,
                              nsIDOMXULTreeElement *tree,
                              nsIDOMNodeList *nodeList,
-                             nsIDOMMsgAppCore * msgAppCore,
                              PRInt32 messageType)
 {
 	nsresult rv;
@@ -755,9 +753,15 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
     PR_Free(default_mail_charset);
   }
 
-	if (tree && nodeList && msgAppCore) {
+	if (tree && nodeList) {
+        nsCOMPtr<nsIMessenger> messenger;
+        rv = nsComponentManager::CreateInstance("component://netscape/messenger",
+                                                nsnull,
+                                                nsIMessenger::GetIID(),
+                                                (void **)getter_AddRefs(messenger));
+        if (NS_FAILED(rv)) goto done;
 		nsCOMPtr<nsISupports> object;
-		rv = msgAppCore->GetRDFResourceForMessage(tree, nodeList,
+		rv = messenger->GetRDFResourceForMessage(tree, nodeList,
                                                    getter_AddRefs(object));
 		if ((NS_SUCCEEDED(rv)) && object) {
 			nsCOMPtr<nsIMessage> message;

@@ -27,10 +27,10 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
+#include "nsMessengerBootstrap.h"
 #include "nsMessenger.h"
 #include "nsMsgGroupRecord.h"
 
-#include "nsMsgAppCore.h"
 
 /* Include all of the interfaces our factory can generate components for */
 
@@ -64,7 +64,7 @@ static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
 
 static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
 
-static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
+static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
 static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
 
 static NS_DEFINE_CID(kMailNewsFolderDataSourceCID, NS_MAILNEWSFOLDERDATASOURCE_CID);
@@ -209,9 +209,9 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
         delete session;
     }
 	}
-	else if (mClassID.Equals(kCMsgAppCoreCID)) 
+	else if (mClassID.Equals(kCMessengerCID)) 
 	{
-		rv = NS_NewMsgAppCore(aIID, aResult);
+		rv = NS_NewMessenger(aIID, aResult);
 	}
 
   else if (mClassID.Equals(kMsgAccountManagerCID))
@@ -366,9 +366,9 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCMsgAppCoreCID,
-                                  "Messenger AppCore",
-                                  "component://netscape/appcores/messenger",
+  rv = compMgr->RegisterComponent(kCMessengerCID,
+                                  "Messenger DOM interaction object",
+                                  "component://netscape/messenger",
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;

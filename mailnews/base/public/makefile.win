@@ -17,6 +17,7 @@
 
 DEPTH=..\..\..
 XPIDLSRCS =                                       \
+		.\nsIMessenger.idl		\
 		.\nsICopyMessageListener.idl	\
 		.\nsIFolder.idl		\
 		.\nsIFolderListener.idl	\
@@ -53,7 +54,6 @@ EXPORTS =                           \
 			nsIFolderListener.h		\
 			nsIMsgMailSession.h		\
 			nsIMsgIdentity.h		\
-			nsIDOMMsgAppCore.h		\
 			nsIMsgGroupRecord.h		\
 			nsICopyMessageListener.h \
 			nsIMessageView.h		\

@@ -16,21 +16,23 @@
  * Reserved.
  */
 
-#ifndef __nsMsgAppCore_h
-#define __nsMsgAppCore_h
 
-#include "nsCom.h"
-#include "nsIDOMMsgAppCore.h"
+#ifndef __nsMessenger_h
+#define __nsMessenger_h
 
-#define NS_MSGAPPCORE_CID \
-{ /* 3f181950-c14d-11d2-b7f2-00805f05ffa5 */      \
-  0x3f181950, 0xc14d, 0x11d2,											\
-    {0xb7, 0xf2, 0x0, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
+#include "nscore.h"
+#include "nsIServiceManager.h"
+#include "nsIAppShellService.h"
+
+#define NS_MESSENGERBOOTSTRAP_CID                 \
+{ /* 4a85a5d0-cddd-11d2-b7f6-00805f05ffa5 */      \
+  0x4a85a5d0, 0xcddd, 0x11d2,                     \
+  {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
+
 
 NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgAppCore(const nsIID &aIID, void **);
+nsresult NS_NewMessengerBootstrap(const nsIID &aIID, void ** inst);
 
 NS_END_EXTERN_C
 

@@ -28,12 +28,10 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=                     \
 	nsMessenger.cpp			 \
-	nsMessengerNameSet.cpp	 \
+	nsMessengerBootstrap.cpp	\
 	nsMsgKeyArray.cpp        \
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	 \
-	nsJSMsgAppCore.cpp		\
-	nsMsgAppCore.cpp		\
 	nsCopyMessageStreamListener.cpp \
 	nsMessageViewDataSource.cpp \
 	nsMsgAccountManager.cpp	\
@@ -53,12 +51,10 @@ CPPSRCS=                     \
 
 CPP_OBJS=                               \
     .\$(OBJDIR)\nsMessenger.obj			\
-	.\$(OBJDIR)\nsMessengerNameSet.obj	\
+    .\$(OBJDIR)\nsMessengerBootstrap.obj	\
 	.\$(OBJDIR)\nsMsgKeyArray.obj       \
 	.\$(OBJDIR)\nsUrlListenerManager.obj \
 	.\$(OBJDIR)\nsMsgMailSession.obj	\
-	.\$(OBJDIR)\nsMsgAppCore.obj		\
-	.\$(OBJDIR)\nsJSMsgAppCore.obj		\
 	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
 	.\$(OBJDIR)\nsMessageViewDataSource.obj \
 	.\$(OBJDIR)\nsMsgAccountManager.obj	\
@@ -77,10 +73,10 @@ CPP_OBJS=                               \
 
 EXPORTS=                \
 	nsMessenger.h		\
+	nsMessengerBootstrap.h	\
 	nsMsgKeyArray.h     \
 	nsUrlListenerManager.h \
 	nsMsgMailSession.h  \
-	nsMsgAppCore.h		\
 	nsMsgFolderDataSource.h \
 	nsMsgMessageDataSource.h \
 	nsMessageViewDataSource.h \

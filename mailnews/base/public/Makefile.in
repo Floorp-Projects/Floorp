@@ -24,7 +24,7 @@ MODULE		= mailnews
 include $(DEPTH)/config/autoconf.mk
 XPIDLSRCS =				  \
 		nsICopyMessageListener.idl	\
-		nsIDOMMsgAppCore.idl	\
+		nsIMessenger.idl	\
 		nsIFolder.idl		\
 		nsIFolderListener.idl	\
 		nsIMessage.idl			\
