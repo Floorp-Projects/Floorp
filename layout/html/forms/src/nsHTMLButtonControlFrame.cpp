@@ -402,7 +402,8 @@ nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDo
 
   // XXX change the border, border-left, border-right, etc are not working. Instead change inset to outset, vice versa
   for (PRInt32 i = 0; i < 4; i++) {
-    spacing->mBorderStyle[i] = (spacing->mBorderStyle[i] == NS_STYLE_BORDER_STYLE_INSET) ? NS_STYLE_BORDER_STYLE_OUTSET : NS_STYLE_BORDER_STYLE_INSET;
+    spacing->SetBorderStyle(i,(spacing->GetBorderStyle(i) == NS_STYLE_BORDER_STYLE_INSET) ? 
+                               NS_STYLE_BORDER_STYLE_OUTSET : NS_STYLE_BORDER_STYLE_INSET);
   }
 
   mStyleContext->RecalcAutomaticData(&aPresContext);
@@ -546,16 +547,16 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
       nsRect inside(outside);
       inside.Deflate(onePixel, onePixel);
 
-      PRUint8 borderStyles[4];
-      nscolor borderColors[4];
-      nscolor black = NS_RGB(0,0,0);
+      PRUint8 borderStyles[4];  
+      nscolor borderColors[4];  
+      nscolor black = NS_RGB(0,0,0);              
       for (PRInt32 i = 0; i < 4; i++) {
-        borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED;
+        borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED; 
         borderColors[i] = black;
       }
-      nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside,
-                                      inside, PR_FALSE, nsnull);
-    }
+      nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside, 
+                                     inside, PR_FALSE, nsnull);
+	}
   }
   return result;
 }
