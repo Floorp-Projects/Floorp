@@ -81,8 +81,8 @@ interface nsIScrollable : nsISupports
 	/*
 	Retrieves of Set the preferences for the scroll bar.
 	*/
-	void setScrollbarPreferences(in long scrollOrientation, in long scrollBarPref);
-	void getScrollbarPreferences(in long scrollOrientation, out long scrollBarPref);
+	void getScrollbarPreferences(in long scrollOrientation, out long scrollbarPref);
+	void setScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
 
 	/*
 	Get information about whether the vertical and horizontal scrollbars are

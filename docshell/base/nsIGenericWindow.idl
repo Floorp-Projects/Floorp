@@ -42,7 +42,7 @@ interface nsIGenericWindow : nsISupports
 {
 	/*
 	Allows a client to initialize an object implementing this interface with
-	the usually required setup information.
+	the usually required window setup information.
 
 	@param parentNativeWindow - This allows a system to pass in the parenting
 		window as a native reference rather than relying on the calling
