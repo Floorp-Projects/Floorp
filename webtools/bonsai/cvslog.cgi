@@ -237,7 +237,7 @@ foreach $revision (@revisions)
     $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
 
-    if ($bgcolor eq '') {
+    if (!defined $bgcolor || $bgcolor eq '') {
         #$bgcolor = ' BGCOLOR="#EEEEEE"';# My browser translates this to white.
         $bgcolor = ' BGCOLOR="#E7E7E7"'; # Pick a grey that shows up on 8-bit.
     } else {
