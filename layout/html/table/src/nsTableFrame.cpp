@@ -1632,6 +1632,50 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize = pass1MaxElementSize;
   }
 
+  // See if we are supposed to compute our maximum width
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    PRBool  isAutoWidth = RequiresPass1Layout() &&
+                          (eStyleUnit_Auto == aReflowState.mStylePosition->mWidth.GetUnit());
+    
+    // See if the pass1 maximum width is no longer valid because one of the
+    // cell maximum widths changed
+    if (isAutoWidth && !IsMaximumWidthValid()) {
+      // Initialize the strategy and have it compute the natural size of
+      // the table
+      mTableLayoutStrategy->Initialize(nsnull, NS_UNCONSTRAINEDSIZE);
+
+      // Now the maximum width is valid
+      mBits.mMaximumWidthValid = PR_TRUE;
+
+      // Initializing the table layout strategy assigns preliminary column
+      // widths. We can't leave the column widths this way, and so we need to
+      // balance the column widths to get them back to what we had previously.
+      // XXX It would be nice to have a cleaner way to calculate the updated
+      // maximum width
+      BalanceColumnWidths(aPresContext, aReflowState,
+                          nsSize(aReflowState.availableWidth, aReflowState.availableHeight), 
+                          aDesiredSize.maxElementSize);
+    }
+
+    if (isAutoWidth) {
+      // Ask the strategy for the natural width of the content area
+      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxContentWidth();
+      
+      // Add in space for border
+      nsMargin border;
+      GetTableBorder (border); // this gets the max border value at every edge
+      aDesiredSize.mMaximumWidth += border.left + border.right;
+
+      // Add in space for padding
+      aDesiredSize.mMaximumWidth += aReflowState.mComputedPadding.left +
+                                    aReflowState.mComputedPadding.right;
+
+    } else {
+      // We're not auto width so the natural width is the same as the desired width
+      aDesiredSize.mMaximumWidth = aDesiredSize.width;
+    }
+  }
+
   if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
   return rv;
 }
@@ -3580,6 +3624,20 @@ void nsTableFrame::InvalidateFirstPassCache()
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
   firstInFlow->mBits.mFirstPassValid=PR_FALSE;
+}
+
+PRBool nsTableFrame::IsMaximumWidthValid() const
+{
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
+  return (PRBool)firstInFlow->mBits.mMaximumWidthValid;
+}
+
+void nsTableFrame::InvalidateMaximumWidth()
+{
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
+  firstInFlow->mBits.mMaximumWidthValid=PR_FALSE;
 }
 
 PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)

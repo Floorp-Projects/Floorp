@@ -629,6 +629,9 @@ protected:
 
   /** returns PR_TRUE if the cached column info is still valid */
   virtual PRBool IsColumnWidthsValid() const;
+  
+  /** returns PR_TRUE if the cached pass1 maximum width is still valid */
+  virtual PRBool IsMaximumWidthValid() const;
 
   nsIFrame* GetFirstBodyRowGroupFrame();
   PRBool MoveOverflowToChildList(nsIPresContext* aPresContext);
@@ -683,6 +686,8 @@ public:
   virtual void InvalidateFirstPassCache();
 
   virtual void InvalidateColumnWidths();
+
+  virtual void InvalidateMaximumWidth();
 
 protected:
 
@@ -829,6 +834,7 @@ protected:
     unsigned mFirstPassValid:1;        // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
     unsigned mIsInvariantWidth:1;      // PR_TRUE if table width cannot change
     unsigned mNonPercentSpansPercent:1;
+    unsigned mMaximumWidthValid:1;
     int : 26;                          // unused
   } mBits;
 
