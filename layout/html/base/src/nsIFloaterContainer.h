@@ -21,7 +21,7 @@
 #include "nsIFrame.h"
 class nsPlaceholderFrame;
 class nsIPresContext;
-struct nsReflowState;
+struct nsHTMLReflowState;
 
 // 5a305ee0-cb55-11d1-8556-00a02468fab6
 #define NS_IFLOATER_CONTAINER_IID \
@@ -42,10 +42,10 @@ public:
    * @param aPlaceholder the placeholder frame associated with the floating
    *          element.
    */
-  virtual PRBool AddFloater(nsIPresContext*      aPresContext,
-                            const nsReflowState& aPlaceholderReflowState,
-                            nsIFrame*            aFloater,
-                            nsPlaceholderFrame*  aPlaceholder) = 0;
+  virtual PRBool AddFloater(nsIPresContext*          aPresContext,
+                            const nsHTMLReflowState& aPlaceholderReflowState,
+                            nsIFrame*                aFloater,
+                            nsPlaceholderFrame*      aPlaceholder) = 0;
 };
 
 #endif /* nsIFloaterContainer_h___ */

@@ -249,7 +249,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
   */
 NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
-                                   const nsReflowState& aReflowState,
+                                   const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus& aStatus)
 {
 #ifdef NS_DEBUG
@@ -325,7 +325,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nsHTMLReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.maxSize.width);
-  nsReflowState kidReflowState(mFirstChild, aReflowState, availSize);
+  nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, availSize);
   nsIHTMLReflow* htmlReflow;
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {

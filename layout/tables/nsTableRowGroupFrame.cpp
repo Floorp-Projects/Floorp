@@ -43,7 +43,7 @@ NS_DEF_PTR(nsIContent);
 
 struct RowGroupReflowState {
   // Our reflow state
-  const nsReflowState& reflowState;
+  const nsHTMLReflowState& reflowState;
 
   // The body's available size (computed from the body's parent)
   nsSize availSize;
@@ -65,8 +65,8 @@ struct RowGroupReflowState {
   // Remember the height of the first row, because it's our maxElementHeight (plus header/footers)
   nscoord firstRowHeight;
 
-  RowGroupReflowState(nsIPresContext*      aPresContext,
-                      const nsReflowState& aReflowState)
+  RowGroupReflowState(nsIPresContext*          aPresContext,
+                      const nsHTMLReflowState& aReflowState)
     : reflowState(aReflowState)
   {
     availSize.width = reflowState.maxSize.width;
@@ -300,8 +300,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
 
     // Reflow the child into the available space
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
-    nsIHTMLReflow* htmlReflow;
+    nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
+    nsIHTMLReflow*    htmlReflow;
 
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(*aPresContext);
@@ -452,9 +452,9 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
       result = PR_FALSE;
       break;
     }
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
-                                 eReflowReason_Resize);
-    nsIHTMLReflow* htmlReflow;
+    nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                     eReflowReason_Resize);
+    nsIHTMLReflow*    htmlReflow;
 
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(*aPresContext);
@@ -744,10 +744,10 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aP
   * Rows are responsible for layout of their children.
   */
 NS_METHOD
-nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
-                             nsHTMLReflowMetrics& aDesiredSize,
-                             const nsReflowState& aReflowState,
-                             nsReflowStatus&      aStatus)
+nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState,
+                             nsReflowStatus&          aStatus)
 {
   if (gsDebug==PR_TRUE)
     printf("nsTableRowGroupFrame::Reflow - aMaxSize = %d, %d\n",
@@ -779,7 +779,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
 
     // Pass along the reflow command
     // XXX Correctly compute the available space...
-    nsReflowState   kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
+    nsHTMLReflowState   kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
     nsHTMLReflowMetrics desiredSize(nsnull);
     nsIHTMLReflow* htmlReflow;
 

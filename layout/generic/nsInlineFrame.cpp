@@ -31,7 +31,7 @@
 
 struct nsInlineReflowState : nsFrameReflowState {
   nsInlineReflowState(nsIPresContext& aPresContext,
-                      const nsReflowState& aReflowState,
+                      const nsHTMLReflowState& aReflowState,
                       const nsHTMLReflowMetrics& aMetrics);
   ~nsInlineReflowState();
 
@@ -40,7 +40,7 @@ struct nsInlineReflowState : nsFrameReflowState {
 };
 
 nsInlineReflowState::nsInlineReflowState(nsIPresContext& aPresContext,
-                                         const nsReflowState& aReflowState,
+                                         const nsHTMLReflowState& aReflowState,
                                          const nsHTMLReflowMetrics& aMetrics)
   : nsFrameReflowState(aPresContext, aReflowState, aMetrics)
 {
@@ -76,7 +76,7 @@ public:
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
                           nsHTMLReflowMetrics& aDesiredSize,
-                          const nsReflowState& aReflowState);
+                          const nsHTMLReflowState& aReflowState);
 
   virtual PRIntn GetSkipSides() const;
 
@@ -311,7 +311,7 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
                             nsHTMLReflowMetrics& aMetrics,
-                            const nsReflowState& aReflowState)
+                            const nsHTMLReflowState& aReflowState)
 {
 //XXX ListTag(stdout); printf(": enter (runningMargin=%d)\n", aMetrics.mCarriedInTopMargin);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,

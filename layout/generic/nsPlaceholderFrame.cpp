@@ -80,9 +80,9 @@ nsPlaceholderFrame::FindTextRuns(nsLineLayout&     aLineLayout,
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::InlineReflow(nsLineLayout&        aLineLayout,
-                                 nsHTMLReflowMetrics& aDesiredSize,
-                                 const nsReflowState& aReflowState)
+nsPlaceholderFrame::InlineReflow(nsLineLayout&            aLineLayout,
+                                 nsHTMLReflowMetrics&     aDesiredSize,
+                                 const nsHTMLReflowState& aReflowState)
 {
   nsIPresContext& presContext = aLineLayout.mPresContext;
 

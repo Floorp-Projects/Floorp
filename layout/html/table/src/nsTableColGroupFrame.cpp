@@ -172,10 +172,10 @@ NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
 // TODO:  incremental reflow
 // today, we just throw away the column frames and start over every time
 // this is dumb, we should be able to maintain column frames and adjust incrementally
-NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
-                                       nsHTMLReflowMetrics& aDesiredSize,
-                                       const nsReflowState& aReflowState,
-                                       nsReflowStatus&      aStatus)
+NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
+                                       nsHTMLReflowMetrics&     aDesiredSize,
+                                       const nsHTMLReflowState& aReflowState,
+                                       nsReflowStatus&          aStatus)
 {
   NS_ASSERTION(nsnull!=mContent, "bad state -- null content for frame");
 
@@ -207,8 +207,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
-    nsReflowState   kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
-    nsIHTMLReflow*  htmlReflow;
+    nsHTMLReflowState kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
+    nsIHTMLReflow*    htmlReflow;
 
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(aPresContext);

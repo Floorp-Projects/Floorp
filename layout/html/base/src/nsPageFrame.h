@@ -27,7 +27,7 @@ public:
 
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
-                     const nsReflowState& aMaxSize,
+                     const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aCX,

@@ -59,7 +59,7 @@ public:
 protected:
   virtual ~nsCheckboxControlFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 };
@@ -101,7 +101,7 @@ nsCheckboxControlFrame::GetCID()
 
 void
 nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                            const nsReflowState& aReflowState,
+                                            const nsHTMLReflowState& aReflowState,
                                             nsHTMLReflowMetrics& aDesiredLayoutSize,
                                             nsSize& aDesiredWidgetSize)
 {

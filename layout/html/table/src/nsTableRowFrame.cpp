@@ -49,7 +49,7 @@ static const PRBool gsDebug = PR_FALSE;
 
 struct RowReflowState {
   // Our reflow state
-  const nsReflowState& reflowState;
+  const nsHTMLReflowState& reflowState;
 
   // The body's available size (computed from the body's parent)
   nsSize availSize;
@@ -64,8 +64,8 @@ struct RowReflowState {
   nsTableFrame *tableFrame;
    
 
-  RowReflowState(const nsReflowState& aReflowState,
-                 nsTableFrame*        aTableFrame)
+  RowReflowState(const nsHTMLReflowState& aReflowState,
+                 nsTableFrame*            aTableFrame)
     : reflowState(aReflowState)
   {
     availSize.width = reflowState.maxSize.width;
@@ -482,8 +482,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
         if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
           htmlReflow->WillReflow(aPresContext);
           kidFrame->MoveTo(aState.x, kidMargin.top);
-          nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                       eReflowReason_Resize);
+          nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                           eReflowReason_Resize);
           if (gsDebug) printf ("%p RR: avail=%d\n", this, availWidth);
           nsReflowStatus status = ReflowChild(kidFrame, &aPresContext, desiredSize,
                                               kidReflowState);
@@ -651,9 +651,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
         kidAvailSize.SizeTo(table->GetColumnWidth(colIndex), NS_UNCONSTRAINEDSIZE); 
       }
 
-      nsReflowState   kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                     eReflowReason_Initial);
-      nsIHTMLReflow*  htmlReflow;
+      nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                       eReflowReason_Initial);
+      nsIHTMLReflow*    htmlReflow;
 
       if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         htmlReflow->WillReflow(aPresContext);
@@ -850,7 +850,7 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
   // Pass along the reflow command
   nsSize          kidMaxElementSize;
   nsHTMLReflowMetrics desiredSize(&kidMaxElementSize);
-  nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
+  nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
   nsIHTMLReflow*  htmlReflow;
 
   if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -947,10 +947,10 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
   * This method stacks cells horizontally according to HTML 4.0 rules.
   */
 NS_METHOD
-nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
-                        nsHTMLReflowMetrics& aDesiredSize,
-                        const nsReflowState& aReflowState,
-                        nsReflowStatus&      aStatus)
+nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
+                        nsHTMLReflowMetrics&     aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&          aStatus)
 {
   if (gsDebug==PR_TRUE)
     printf("nsTableRowFrame::Reflow - aMaxSize = %d, %d\n",

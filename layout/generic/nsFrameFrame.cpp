@@ -112,10 +112,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
   NS_IMETHOD  VerifyTree() const;
   nscoord GetBorderWidth(nsIPresContext& aPresContext);
   PRBool IsInline();
@@ -123,7 +123,7 @@ public:
 protected:
   virtual ~nsHTMLFrameOuterFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
   PRBool *mIsInline;
@@ -150,10 +150,10 @@ public:
   /**
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext&      aCX,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aCX,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
@@ -171,7 +171,7 @@ protected:
   virtual ~nsHTMLFrameInnerFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
   nsIWebShell* mWebShell;
@@ -223,7 +223,7 @@ nsHTMLFrameOuterFrame::GetSkipSides() const
 
 void 
 nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                      const nsReflowState& aReflowState,
+                                      const nsHTMLReflowState& aReflowState,
                                       nsHTMLReflowMetrics& aDesiredSize)
 {
   // <frame> processing does not use this routine, only <iframe>
@@ -285,10 +285,10 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::ListTag(FILE* out) const
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              const nsReflowState& aReflowState,
-                              nsReflowStatus&      aStatus)
+nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
 {
   //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -317,7 +317,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
 
   // Reflow the child and get its desired size
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsReflowState       kidReflowState(mFirstChild, aReflowState, innerSize);
+  nsHTMLReflowState   kidReflowState(mFirstChild, aReflowState, innerSize);
   nsIHTMLReflow*      htmlReflow;
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -691,10 +691,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsHTMLReflowMetrics& aDesiredSize,
-                              const nsReflowState& aReflowState,
-                              nsReflowStatus&      aStatus)
+nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
 {
   //printf("InnerFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -757,7 +757,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
 
 void 
 nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                      const nsReflowState& aReflowState,
+                                      const nsHTMLReflowState& aReflowState,
                                       nsHTMLReflowMetrics& aDesiredSize)
 {
   // it must be defined, but not called

@@ -27,7 +27,7 @@ class  nsIFrame;
 class  nsIPresContext;
 class  nsIRenderingContext;
 struct nsRect;
-struct nsReflowState;
+struct nsHTMLReflowState;
 struct nsSize;
 class  nsIAtom;
 class  nsIWebShell;
@@ -116,16 +116,16 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsFramesetDrag*      aDrag,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsFramesetDrag*          aDrag,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   NS_IMETHOD  VerifyTree() const;
 
@@ -142,7 +142,7 @@ protected:
                        nsFramesetSpec* aSpecs, nscoord* aValues);
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
   PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
@@ -164,13 +164,13 @@ protected:
   PRInt32 ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
                           nsFramesetSpec* aSpecs);
 
-  void ReflowPlaceChild(nsIFrame*              aChild,
-                        nsIPresContext&        aPresContext,
-                        const nsReflowState&   aReflowState,
-                        nsPoint&               aOffset,
-                        nsSize&                aSize,
-                        nsFramesetDrag*        aDrag = 0,
-                        nsPoint*               aCellIndex = 0);
+  void ReflowPlaceChild(nsIFrame*                aChild,
+                        nsIPresContext&          aPresContext,
+                        const nsHTMLReflowState& aReflowState,
+                        nsPoint&                 aOffset,
+                        nsSize&                  aSize,
+                        nsFramesetDrag*          aDrag = 0,
+                        nsPoint*                 aCellIndex = 0);
   
   PRBool CanResize(PRBool aVertical, PRBool aLeft); 
   PRBool CanChildResize(PRBool aVertical, PRBool aLeft, PRInt32 aChildX, PRBool aFrameset); 

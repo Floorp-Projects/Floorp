@@ -170,7 +170,7 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
 }
 
 PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyle,
-                                                     const nsReflowState& aReflowState,
+                                                     const nsHTMLReflowState& aReflowState,
                                                      nscoord aMaxWidth)
 {
 #ifdef NS_DEBUG
@@ -805,7 +805,7 @@ void BasicTableLayoutStrategy::DistributeFixedSpace(nsVoidArray *aColSpanList)
  aMaxWidth is the space the parent gave us (minus border & padding) to fit ourselves into
  aTableIsAutoWidth is true if the table is auto-width, false if it is anything else (percent, fixed, etc)
  */
-PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsReflowState& aReflowState,
+PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsHTMLReflowState& aReflowState,
                                                             nscoord aAvailWidth,
                                                             nscoord aMaxWidth,
                                                             nscoord aTableSpecifiedWidth,
@@ -918,7 +918,7 @@ PRBool BasicTableLayoutStrategy::SetColumnsToMinWidth()
 /* the table fits in the given space.  Set all columns to their desired width,
  * and if we are not an auto-width table add extra space to fluff out the total width
  */
-PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aReflowState,
+PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState& aReflowState,
                                                          nscoord aAvailWidth,
                                                          nscoord aMaxWidth,
                                                          nscoord aTableSpecifiedWidth,
@@ -1641,7 +1641,7 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aAvailWidth,
 
 /* assign columns widths for a table whose max size doesn't fit in the available space
  */
-PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState& aReflowState,
+PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowState& aReflowState,
                                                             nscoord aAvailWidth,
                                                             nscoord aMaxWidth,
                                                             PRBool  aTableIsAutoWidth)

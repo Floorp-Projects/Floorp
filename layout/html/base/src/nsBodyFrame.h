@@ -40,10 +40,10 @@ public:
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
 
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
@@ -85,7 +85,7 @@ protected:
   ~nsBodyFrame();
 
   void ComputeDesiredSize(nsIPresContext& aPresContext,
-                          const nsReflowState& aReflowState,
+                          const nsHTMLReflowState& aReflowState,
                           const nsRect& aDesiredRect,
                           const nsSize& aMaxSize,
                           const nsMargin& aBorderPadding,
@@ -94,17 +94,17 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   void ReflowAbsoluteItems(nsIPresContext*      aPresContext,
-                           const nsReflowState& aReflowState);
+                           const nsHTMLReflowState& aReflowState);
 
   nsIView* CreateAbsoluteView(const nsStylePosition* aPosition,
                               const nsStyleDisplay*  aDisplay) const;
 
   void TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const;
 
-  void ComputeAbsoluteFrameBounds(nsIFrame*              aAnchorFrame,
-                                  const nsReflowState&   aState,
-                                  const nsStylePosition* aPosition,
-                                  nsRect&                aRect) const;
+  void ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFrame,
+                                  const nsHTMLReflowState& aState,
+                                  const nsStylePosition*   aPosition,
+                                  nsRect&                  aRect) const;
 
   void AddFrame(nsIFrame* aFrame);
 

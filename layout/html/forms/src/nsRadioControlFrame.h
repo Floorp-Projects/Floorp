@@ -52,7 +52,7 @@ protected:
   virtual ~nsRadioControlFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
   PRBool *mInitialChecked;

@@ -23,9 +23,9 @@
 #include "nsIHTMLReflow.h"
 
 nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
-                                       const nsReflowState& aReflowState,
+                                       const nsHTMLReflowState& aReflowState,
                                        const nsHTMLReflowMetrics& aMetrics)
-  : nsReflowState(aReflowState),
+  : nsHTMLReflowState(aReflowState),
     mPresContext(aPresContext)
 {
   // While we skip around the reflow state that our parent gave us so

@@ -144,10 +144,10 @@ public:
 
 //  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame *aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -163,7 +163,7 @@ protected:
   virtual ~nsObjectFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
 
@@ -297,7 +297,7 @@ exit:
 
 void
 nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // Determine our size stylistically
@@ -338,10 +338,10 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
-                      nsHTMLReflowMetrics& aMetrics,
-                      const nsReflowState& aReflowState,
-                      nsReflowStatus&      aStatus)
+nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
+                      nsHTMLReflowMetrics&     aMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus&          aStatus)
 {
   // Get our desired size
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);

@@ -52,10 +52,10 @@ nsAbsoluteFrame::~nsAbsoluteFrame()
 {
 }
 
-NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
-                                      nsHTMLReflowMetrics& aDesiredSize,
-                                      const nsReflowState& aReflowState,
-                                      nsReflowStatus&      aStatus)
+NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&          aPresContext,
+                                      nsHTMLReflowMetrics&     aDesiredSize,
+                                      const nsHTMLReflowState& aReflowState,
+                                      nsReflowStatus&          aStatus)
 {
   if (eReflowReason_Initial == aReflowState.reason) {
     // By this point we expect to have been told which absolute frame we're

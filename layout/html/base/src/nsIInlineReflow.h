@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsStyleConsts.h"
-#include "nsIFrameReflow.h"
+#include "nsIHTMLReflow.h"
 class nsLineLayout;
 struct nsHTMLReflowMetrics;
 
@@ -46,7 +46,7 @@ public:
    */
   NS_IMETHOD InlineReflow(nsLineLayout&     aLineLayout,
                           nsHTMLReflowMetrics& aDesiredSize,
-                          const nsReflowState& aReflowState) = 0;
+                          const nsHTMLReflowState& aReflowState) = 0;
 };
 
 /**

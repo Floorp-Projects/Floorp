@@ -19,6 +19,7 @@
 #define nsIHTMLReflow_h___
 
 #include "nsIFrameReflow.h"
+class nsISpaceManager;
 
 // IID for the nsIHTMLFrame interface 
 // a6cf9069-15b3-11d2-932e-00805f8add32
@@ -56,7 +57,7 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
  * structure is ignored and you should use the max size value when reflowing
  * the frame.
  *
- * @see nsReflowState
+ * @see nsHTMLReflowState
  */
 //XXX enum's are prefixed wrong
 enum nsReflowConstraint {
@@ -66,22 +67,104 @@ enum nsReflowConstraint {
   eReflowSize_FixedContent = 3    // size of your content area is fixed
 };
 
-#if 0
-// XXX None of this is currently being used...
 struct nsHTMLReflowState : nsReflowState {
+  nsISpaceManager*    spaceManager;
+
+  // XXX None of this is currently being used...
+#if 0
   nsReflowConstraint   widthConstraint;   // constraint that applies to width dimension
   nsReflowConstraint   heightConstraint;  // constraint that applies to height dimension
   nsSize               minSize;           // the min available space in which to reflow.
                                           // Only used for eReflowSize_Constrained
-};
 #endif
+
+  // Constructs an initial reflow state (no parent reflow state) for a
+  // non-incremental reflow command
+  nsHTMLReflowState(nsIFrame*            aFrame,
+                    nsReflowReason       aReason, 
+                    const nsSize&        aMaxSize,
+                    nsIRenderingContext* aContext,
+                    nsISpaceManager*     aSpaceManager = nsnull);
+
+  // Constructs an initial reflow state (no parent reflow state) for an
+  // incremental reflow command
+  nsHTMLReflowState(nsIFrame*            aFrame,
+                    nsIReflowCommand&    aReflowCommand,
+                    const nsSize&        aMaxSize,
+                    nsIRenderingContext* aContext,
+                    nsISpaceManager*     aSpaceManager = nsnull);
+
+  // Construct a reflow state for the given frame, parent reflow state, and
+  // max size. Uses the reflow reason and reflow command from the parent's
+  // reflow state
+  nsHTMLReflowState(nsIFrame*                aFrame,
+                    const nsHTMLReflowState& aParentReflowState,
+                    const nsSize&            aMaxSize);
+
+  // Constructs a reflow state that overrides the reflow reason of the parent
+  // reflow state. Sets the reflow command to NULL
+  nsHTMLReflowState(nsIFrame*                aFrame,
+                    const nsHTMLReflowState& aParentReflowState,
+                    const nsSize&            aMaxSize,
+                    nsReflowReason           aReflowReason);
+};
 
 /**
  * Generate a reflow interface specific to HTML/CSS frame objects
  */
-class nsIHTMLReflow : public nsIFrameReflow<nsReflowState, nsHTMLReflowMetrics>
+class nsIHTMLReflow : public nsIFrameReflow<nsHTMLReflowState, nsHTMLReflowMetrics>
 {
 };
+
+// Constructs an initial reflow state (no parent reflow state) for a
+// non-incremental reflow command
+inline
+nsHTMLReflowState::nsHTMLReflowState(nsIFrame*            aFrame,
+                                     nsReflowReason       aReason, 
+                                     const nsSize&        aMaxSize,
+                                     nsIRenderingContext* aContext,
+                                     nsISpaceManager*     aSpaceManager)
+  : nsReflowState(aFrame, aReason, aMaxSize, aContext)
+{
+  spaceManager = aSpaceManager;
+}
+
+// Constructs an initial reflow state (no parent reflow state) for an
+// incremental reflow command
+inline
+nsHTMLReflowState::nsHTMLReflowState(nsIFrame*            aFrame,
+                                     nsIReflowCommand&    aReflowCommand,
+                                     const nsSize&        aMaxSize,
+                                     nsIRenderingContext* aContext,
+                                     nsISpaceManager*     aSpaceManager)
+  : nsReflowState(aFrame, aReflowCommand, aMaxSize, aContext)
+{
+  spaceManager = aSpaceManager;
+}
+
+// Construct a reflow state for the given frame, parent reflow state, and
+// max size. Uses the reflow reason and reflow command from the parent's
+// reflow state
+inline
+nsHTMLReflowState::nsHTMLReflowState(nsIFrame*                aFrame,
+                                     const nsHTMLReflowState& aParentReflowState,
+                                     const nsSize&            aMaxSize)
+  : nsReflowState(aFrame, aParentReflowState, aMaxSize)
+{
+  spaceManager = aParentReflowState.spaceManager;
+}
+
+// Constructs a reflow state that overrides the reflow reason of the parent
+// reflow state. Sets the reflow command to NULL
+inline
+nsHTMLReflowState::nsHTMLReflowState(nsIFrame*                aFrame,
+                                     const nsHTMLReflowState& aParentReflowState,
+                                     const nsSize&            aMaxSize,
+                                     nsReflowReason           aReflowReason)
+  : nsReflowState(aFrame, aParentReflowState, aMaxSize, aReflowReason)
+{
+  spaceManager = aParentReflowState.spaceManager;
+}
 
 #endif /* nsIHTMLReflow_h___ */
 

@@ -39,12 +39,13 @@ public:
   nsIFrame*   GetAbsoluteFrame() const {return mFrame;}
   void        SetAbsoluteFrame(nsIFrame* aAbsoluteFrame) {mFrame = aAbsoluteFrame;}
 
-  // nsIFrame overrides
-  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
-                     nsHTMLReflowMetrics& aDesiredSize,
-                     const nsReflowState& aReflowState,
-                     nsReflowStatus&      aStatus);
+  // nsIHTMLReflow overrides
+  NS_IMETHOD  Reflow(nsIPresContext&          aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus);
 
+  // nsIFrame overrides
   NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent);

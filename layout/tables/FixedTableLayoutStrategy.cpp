@@ -45,7 +45,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 }
 
 PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyle,
-                                                     const nsReflowState& aReflowState,
+                                                     const nsHTMLReflowState& aReflowState,
                                                      nscoord aMaxWidth)
 {
 #ifdef NS_DEBUG

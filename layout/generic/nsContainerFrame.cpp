@@ -19,7 +19,6 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIRunaround.h"
 #include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
 #include "nsRect.h"
@@ -293,7 +292,7 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
                                              nsIPresContext*      aPresContext,
                                              nsHTMLReflowMetrics& aDesiredSize,
-                                             const nsReflowState& aReflowState)
+                                             const nsHTMLReflowState& aReflowState)
 {
   nsReflowStatus status;
                                                   

@@ -82,7 +82,7 @@ CellData::~CellData()
 struct InnerTableReflowState {
 
   // Our reflow state
-  const nsReflowState& reflowState;
+  const nsHTMLReflowState& reflowState;
 
   // The body's available size (computed from the body's parent)
   nsSize availSize;
@@ -106,9 +106,9 @@ struct InnerTableReflowState {
   // cache the total height of the footers for placing body rows
   nscoord footerHeight;
 
-  InnerTableReflowState(nsIPresContext*      aPresContext,
-                        const nsReflowState& aReflowState,
-                        const nsMargin&      aBorderPadding)
+  InnerTableReflowState(nsIPresContext*          aPresContext,
+                        const nsHTMLReflowState& aReflowState,
+                        const nsMargin&          aBorderPadding)
     : reflowState(aReflowState)
   {
     prevMaxPosBottomMargin = 0;
@@ -1491,7 +1491,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*         aPresCo
 /* Layout the entire inner table. */
 NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize,
-                               const nsReflowState& aReflowState,
+                               const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
   if (gsDebug==PR_TRUE) 
@@ -1534,8 +1534,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     // Pass along the reflow command
     nsHTMLReflowMetrics desiredSize(nsnull);
     // XXX Correctly compute the available space...
-    nsReflowState  kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
-    nsIHTMLReflow* htmlReflow;
+    nsHTMLReflowState kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
+    nsIHTMLReflow*    htmlReflow;
 
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(aPresContext);
@@ -1590,7 +1590,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     }
 
     // Constrain our reflow width to the computed table width
-    nsReflowState    reflowState(aReflowState);
+    nsHTMLReflowState    reflowState(aReflowState);
     reflowState.maxSize.width = mRect.width;
     aStatus = ResizeReflowPass2(&aPresContext, aDesiredSize, reflowState);
 
@@ -1626,7 +1626,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   */
 nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
-                                               const nsReflowState& aReflowState,
+                                               const nsHTMLReflowState& aReflowState,
                                                nsReflowStatus& aStatus)
 {
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
@@ -1680,7 +1680,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
         continue;
       }
       nsSize maxKidElementSize(0,0);
-      nsReflowState kidReflowState(kidFrame, aReflowState, availSize);
+      nsHTMLReflowState kidReflowState(kidFrame, aReflowState, availSize);
       nsIHTMLReflow* htmlReflow;
 
       if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -1732,7 +1732,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   */
 nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
-                                               const nsReflowState& aReflowState)
+                                               const nsHTMLReflowState& aReflowState)
 {
 	//DumpCellMap();
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
@@ -1819,7 +1819,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
 
 }
 
-nscoord nsTableFrame::ComputeDesiredWidth(const nsReflowState& aReflowState) const
+nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const
 {
   nscoord desiredWidth=aReflowState.maxSize.width;
   // this is the biggest hack in the world.  But there's no other rational way to handle nested percent tables
@@ -1997,8 +1997,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
       }
       
       // Reflow the child into the available space
-      nsReflowState  kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                    reason);
+      nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                        reason);
       nsIHTMLReflow* htmlReflow;
 
       if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -2143,8 +2143,8 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
       result = PR_FALSE;
       break;
     }
-    nsReflowState  kidReflowState(kidFrame, aState.reflowState, aState.availSize,
-                                 eReflowReason_Resize);
+    nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                      eReflowReason_Resize);
     nsIHTMLReflow* htmlReflow;
 
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -2244,7 +2244,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
   */
 // use the cell map to determine which cell is in which column.
 void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext, 
-                                       const nsReflowState& aReflowState,
+                                       const nsHTMLReflowState& aReflowState,
                                        const nsSize& aMaxSize, 
                                        nsSize* aMaxElementSize)
 {
@@ -2487,7 +2487,7 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
  */
 void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
                                      nsHTMLReflowMetrics& aDesiredSize,
-                                     const nsReflowState& aReflowState,
+                                     const nsHTMLReflowState& aReflowState,
                                      nsReflowStatus&      aStatus
                                     )
 {
@@ -2927,7 +2927,7 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aO
 }
 
 /* helper method for determining if this is a nested table or not */
-PRBool nsTableFrame::IsNested(const nsReflowState& aReflowState, nsStylePosition *& aPosition) const
+PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, nsStylePosition *& aPosition) const
 {
   nsresult rv;
   PRBool result = PR_FALSE;
@@ -2980,7 +2980,7 @@ IsPseudoFrame(nsIFrame* aFrame)
 }
 
 /* helper method for getting the width of the table's containing block */
-nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
+nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowState)
 {
   nsresult rv;
   nscoord parentWidth = aReflowState.maxSize.width;
@@ -3196,7 +3196,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
 // aSpecifiedTableWidth is filled if the table witdth is not auto
 PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
                                       nsIStyleContext *aTableStyle, 
-                                      const nsReflowState& aReflowState,
+                                      const nsHTMLReflowState& aReflowState,
                                       nscoord& aSpecifiedTableWidth)
 {
   NS_ASSERTION(nsnull!=aTableStyle, "bad arg - aTableStyle");

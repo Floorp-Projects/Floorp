@@ -24,7 +24,7 @@ class nsIPresContext;
 struct nsSize;
 struct nsStyleFont;
 struct nsStyleText;
-struct nsReflowState;
+struct nsHTMLReflowState;
 
 class nsCSSLayout {
 public:
@@ -54,7 +54,7 @@ public:
    * stylistically.
    */
   static PRIntn GetStyleSize(nsIPresContext* aPresContext,
-                             const nsReflowState& aReflowState,
+                             const nsHTMLReflowState& aReflowState,
                              nsSize& aStyleSize);
 
 // Return value from GetStyleSize

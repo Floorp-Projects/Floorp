@@ -45,7 +45,7 @@ public:
 
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
+                    const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -55,7 +55,7 @@ protected:
   virtual ~HRuleFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsReflowState& aReflowState,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
   PRBool GetNoShade();
@@ -206,10 +206,10 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-HRuleFrame::Reflow(nsIPresContext&      aPresContext,
-                   nsHTMLReflowMetrics& aDesiredSize,
-                   const nsReflowState& aReflowState,
-                   nsReflowStatus&      aStatus)
+HRuleFrame::Reflow(nsIPresContext&          aPresContext,
+                   nsHTMLReflowMetrics&     aDesiredSize,
+                   const nsHTMLReflowState& aReflowState,
+                   nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
@@ -242,7 +242,7 @@ HRuleFrame::Reflow(nsIPresContext&      aPresContext,
 
 void
 HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                           const nsReflowState& aReflowState,
+                           const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
   nsSize size;

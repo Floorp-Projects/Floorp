@@ -25,7 +25,7 @@ class nsIFrame;
 class nsIFrameImageLoader;
 class nsIPresContext;
 class nsISizeOfHandler;
-struct nsReflowState;
+struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
 
@@ -72,7 +72,7 @@ public:
                           PRIntn& aLoadStatus);
 
   void GetDesiredSize(nsIPresContext* aPresContext,
-                      const nsReflowState& aReflowState,
+                      const nsHTMLReflowState& aReflowState,
                       nsIFrame* aTargetFrame,
                       nsFrameImageLoaderCB aCallBack,
                       nsHTMLReflowMetrics& aDesiredSize);

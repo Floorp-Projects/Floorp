@@ -37,14 +37,20 @@ class nsIReflowCommand;
  * @see #GetReflowMetrics()
  */
 struct nsReflowMetrics {
-  nscoord width, height;        // desired width and height
-  nscoord ascent, descent;
+  nscoord width, height;        // [OUT] desired width and height
+  nscoord ascent, descent;      // [OUT] ascent and descent information
 
   // Set this to null if you don't need to compute the max element size
   nsSize* maxElementSize;
 
   nsReflowMetrics(nsSize* aMaxElementSize) {
     maxElementSize = aMaxElementSize;
+
+    // XXX These are OUT parameters and so they shouldn't have to be
+    // initialized, but there are some bad frame classes that aren't
+    // properly setting them when returning from Reflow()...
+    width = height = 0;
+    ascent = descent = 0;
   }
 };
 

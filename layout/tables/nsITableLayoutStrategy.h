@@ -23,7 +23,7 @@
 #include "nsSize.h"
 
 class nsIStyleContext;
-struct nsReflowState;
+struct nsHTMLReflowState;
 
 class nsITableLayoutStrategy
 {
@@ -42,7 +42,7 @@ public:
 
     */
   virtual PRBool BalanceColumnWidths(nsIStyleContext *aTableStyle,
-                                     const nsReflowState& aReflowState,
+                                     const nsHTMLReflowState& aReflowState,
                                      nscoord aMaxWidth)=0;
 
   /** return the computed max "natural" size of the table. 

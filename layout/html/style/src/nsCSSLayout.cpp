@@ -20,7 +20,7 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIFrameReflow.h"
+#include "nsIHTMLReflow.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
 #include "nsRect.h"
@@ -126,7 +126,7 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
 // XXX check against other possible values and update
 static PRBool
 GetStyleDimension(nsIPresContext* aPresContext,
-                  const nsReflowState& aReflowState,
+                  const nsHTMLReflowState& aReflowState,
                   const nsStylePosition* aStylePos,
                   const nsStyleCoord& aCoord,
                   nscoord& aResult)
@@ -185,7 +185,7 @@ GetStyleDimension(nsIPresContext* aPresContext,
 
 PRIntn
 nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
-                          const nsReflowState& aReflowState,
+                          const nsHTMLReflowState& aReflowState,
                           nsSize& aStyleSize)
 {
   // XXX if display == row || rowspan ignore width

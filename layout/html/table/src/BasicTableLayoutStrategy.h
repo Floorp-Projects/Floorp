@@ -92,7 +92,7 @@ public:
 	* @param aMaxWidth - the computed max width for columns to fit into
 	*/
   virtual PRBool BalanceColumnWidths(nsIStyleContext *    aTableStyle,
-                                     const nsReflowState& aReflowState,
+                                     const nsHTMLReflowState& aReflowState,
                                      nscoord              aMaxWidth);
 
   // these accessors are mostly for debugging purposes
@@ -131,7 +131,7 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool BalanceProportionalColumns(const nsReflowState& aReflowState,
+  virtual PRBool BalanceProportionalColumns(const nsHTMLReflowState& aReflowState,
                                             nscoord aAvailWidth,
                                             nscoord aMaxWidth,
                                             nscoord aTableSpecifiedWidth,
@@ -158,7 +158,7 @@ protected:
     * 
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
-  virtual PRBool BalanceColumnsTableFits(const nsReflowState& aReflowState,
+  virtual PRBool BalanceColumnsTableFits(const nsHTMLReflowState& aReflowState,
                                          nscoord aAvailWidth,
                                          nscoord aMaxWidth,
                                          nscoord aTableSpecifiedWidth,
@@ -179,7 +179,7 @@ protected:
     *
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
-  virtual PRBool BalanceColumnsConstrained(const nsReflowState& aReflowState,
+  virtual PRBool BalanceColumnsConstrained(const nsHTMLReflowState& aReflowState,
                                            nscoord aAvailWidth,
                                            nscoord aMaxWidth,
                                            PRBool  aTableIsAutoWidth);
