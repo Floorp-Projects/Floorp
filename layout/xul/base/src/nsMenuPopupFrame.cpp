@@ -277,13 +277,15 @@ nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopu
   if ( targetAsContent ) {
     nsCOMPtr<nsIDocument> targetDocument;
     targetAsContent->GetDocument(*getter_AddRefs(targetDocument));
-    nsCOMPtr<nsIPresShell> shell ( dont_AddRef(targetDocument->GetShellAt(0)) );
-    nsCOMPtr<nsIViewManager> viewManagerTarget;
-    shell->GetViewManager(getter_AddRefs(viewManagerTarget));
-    nsIView* rootViewTarget;
-    viewManagerTarget->GetRootView(rootViewTarget);
-    nscoord unusedX, unusedY;
-    rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+    if (targetDocument) {
+      nsCOMPtr<nsIPresShell> shell ( dont_AddRef(targetDocument->GetShellAt(0)) );
+      nsCOMPtr<nsIViewManager> viewManagerTarget;
+      shell->GetViewManager(getter_AddRefs(viewManagerTarget));
+      nsIView* rootViewTarget;
+      viewManagerTarget->GetRootView(rootViewTarget);
+      nscoord unusedX, unusedY;
+      rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+    }
   }
 
   // the offset we need is the difference between the upper left corner of the two widgets. Use
