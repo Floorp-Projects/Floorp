@@ -261,15 +261,15 @@ protected:
    */
   PRInt32 GetRows();
 
-  void ReflowStandard(nsIPresContext*          aPresContext,
-                      nsSize&                  aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus);
+  nsresult ReflowStandard(nsIPresContext*          aPresContext,
+                          nsSize&                  aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus);
 
-  void CalculateSizeStandard(nsIPresContext*       aPresContext,
-                             nsIRenderingContext*  aRendContext,
-                             nsSize&               aDesiredSize,
-                             nsSize&               aMinSize);
+  nsresult CalculateSizeStandard(nsIPresContext*       aPresContext,
+                                 nsIRenderingContext*  aRendContext,
+                                 nsSize&               aDesiredSize,
+                                 nsSize&               aMinSize);
 
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
