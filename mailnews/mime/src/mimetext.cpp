@@ -29,6 +29,7 @@
 #include "mimebuf.h"
 #include "mimethtm.h"
 
+#include "prlog.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsCRT.h"
