@@ -1057,6 +1057,10 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     }
 
     // Add block child
+    // XXX We need to set lastContentIsComplete here, because AddBlockChild()
+    // calls AdvaneceToNextLine(). We need to restructure the flow of control,
+    // and use a state machine...
+    aState.lastContentIsComplete = PRBool(status == frComplete);
     AddBlockChild(aCX, aState, kidFrame, kidRect, pKidMaxElementSize, kidMol);
   }
 
