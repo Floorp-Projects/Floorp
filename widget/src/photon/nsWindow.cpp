@@ -2746,7 +2746,7 @@ NS_IMETHODIMP nsWindow::SetModal(PRBool aModal)
   {
        if (mParent)
          mParent->Enable(PR_TRUE);
-	PtModalEnd(0);
+	PtModalEnd();
     res = NS_OK;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetModal after call to PtModalEnd\n"));
   }
