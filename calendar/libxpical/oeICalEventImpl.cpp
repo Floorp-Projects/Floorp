@@ -1052,10 +1052,10 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin, bool *isbeg
                 if( icaltime_compare( end , begin ) <= 0 )
                     continue;
 
-                struct icaltimetype nextday = begin;
+                struct icaltimetype nextday = next;
                 nextday.hour = 0; nextday.minute = 0; nextday.second = 0;
                 icaltime_adjust( &nextday, 1, 0, 0, 0 );
-                if( icaltime_compare( nextday, end ) < 0 ) {
+                if( icaltime_compare( nextday , begin ) > 0 && icaltime_compare( nextday, end ) < 0 ) {
                     PRTime nextdayinms = ConvertToPrtime( nextday );
                      if( !IsExcepted( nextdayinms ) ) {
                         nextpropagation = nextday;
