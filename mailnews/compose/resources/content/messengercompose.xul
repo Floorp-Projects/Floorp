@@ -437,7 +437,7 @@
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                observes="cmd_saveDefault"/>
        <spring flex="1"/>
-       <box autostretch="never">
+       <box id="throbber-box" autostretch="never">
          <button id="navigator-throbber" 
                oncommand="goClickThrobber('compose.throbber.url')">
            <observes element="broadcaster_throbber" attribute="busy"/>
