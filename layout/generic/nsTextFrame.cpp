@@ -69,6 +69,9 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 #define XP_TO_UPPER(_ch) ((_ch) & ~32)
 
+#define XP_IS_SPACE(_ch) \
+  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
+
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 class TextFrame;
@@ -137,6 +140,10 @@ public:
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
+  NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
+  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+                                    nsIRenderingContext& aRC,
+                                    nscoord& aDeltaWidth);
 
   // TextFrame methods
   struct SelectionInfo {
@@ -163,6 +170,10 @@ public:
     nscolor mSelectionTextColor;
     nscolor mSelectionBGColor;
     nscoord mSpaceWidth;
+    PRBool mJustifying;
+    PRIntn mNumSpaces;
+    nscoord mExtraSpacePerSpace;
+    nscoord mRemainingExtraSpace;
 
     TextStyle(nsIPresContext& aPresContext,
               nsIRenderingContext& aRenderingContext,
@@ -209,6 +220,9 @@ public:
           mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
         }
       }
+      mNumSpaces = 0;
+      mRemainingExtraSpace = 0;
+      mExtraSpacePerSpace = 0;
     }
 
     ~TextStyle() {
@@ -217,12 +231,12 @@ public:
     }
   };
 
-  void PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
-                          nsTextTransformer& aTransformer,
-                          PRInt32* aIndicies,
-                          PRUnichar* aBuffer,
-                          PRInt32& aTextLen,
-                          nscoord& aNewWidth);
+  PRIntn PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
+                            nsTextTransformer& aTransformer,
+                            PRInt32* aIndicies,
+                            PRUnichar* aBuffer,
+                            PRInt32& aTextLen,
+                            nscoord& aNewWidth);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsIStyleContext* aStyleContext,
@@ -286,6 +300,7 @@ protected:
   PRInt32 mContentLength;
   PRUint32 mFlags;
   PRInt32 mColumn;
+  nscoord mComputedWidth;
 };
 
 // Flag information used by rendering code. This information is
@@ -304,6 +319,8 @@ protected:
 #define TEXT_FIRST_LINE      0x10
 
 #define TEXT_FIRST_LETTER    0x20
+
+#define TEXT_TRIMMED_WS      0x40
 
 //----------------------------------------------------------------------
 
@@ -512,7 +529,8 @@ TextFrame::Paint(nsIPresContext& aPresContext,
   if (disp->mVisible) {
     TextStyle ts(aPresContext, aRenderingContext, sc);
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) ||
-        (NS_STYLE_TEXT_ALIGN_JUSTIFY == ts.mText->mTextAlign)) {
+        ((NS_STYLE_TEXT_ALIGN_JUSTIFY == ts.mText->mTextAlign) &&
+         (mRect.width > mComputedWidth))) {
       PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
     }
     else {
@@ -671,7 +689,7 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
  * then fill in aIndexes's with the mapping from the original input to
  * the prepared output.
  */
-void
+PRIntn
 TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
                               nsTextTransformer& aTX,
                               PRInt32* aIndexes,
@@ -679,6 +697,7 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
                               PRInt32& aTextLen,
                               nscoord& aNewWidth)
 {
+  PRIntn numSpaces = 0;
   PRUnichar* dst = aBuffer;
 
   // Setup transform to operate starting in the content at our content
@@ -727,6 +746,7 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
     }
     inWord = PR_FALSE;
     if (isWhitespace) {
+      numSpaces++;
       if ('\t' == bp[0]) {
         PRInt32 spaces = 8 - (7 & column);
         PRUnichar* tp = bp;
@@ -771,28 +791,19 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
     NS_ASSERTION(n >= 0, "whoops");
   }
 
-  // Now remove trailing whitespace if appropriate. It's appropriate
-  // if this frame is continued. And it's also appropriate if this is
-  // not last (or only) frame in a text-run.
-  // XXX fix this to fully obey the comment!
-  if (nsnull != mNextInFlow) {
-    PRIntn zapped = 0;
-    while (dst > aBuffer) {
-      if (dst[-1] == ' ') {
-        dst--;
+  // Remove trailing whitespace if it was trimmed after reflow
+  if (TEXT_TRIMMED_WS & mFlags) {
+    if (--dst >= aBuffer) {
+      PRUnichar ch = *dst;
+      if (XP_IS_SPACE(ch)) {
         textLength--;
-        zapped++;
       }
-      else
-        break;
     }
-    if (0 != zapped) {
-      nscoord spaceWidth;
-      aRenderingContext.GetWidth(' ', spaceWidth);
-      aNewWidth = aNewWidth - spaceWidth*zapped;
-    }
+    numSpaces--;
   }
+
   aTextLen = textLength;
+  return numSpaces;
 }
 
 // XXX This clearly needs to be done by the container, *somehow*
@@ -836,8 +847,8 @@ TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
     nscolor underColor;
     nscolor strikeColor;
     nsIStyleContext*  context = aStyleContext;
-    PRUint8 decorations = aTextStyle.mText->mTextDecoration;
-    PRUint8 decorMask = decorMask;
+    PRUint8 decorations = aTextStyle.mFont->mFont.decorations;
+    PRUint8 decorMask = decorations;
 
     NS_ADDREF(context);
     do {  // find decoration colors
@@ -1017,7 +1028,7 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   PRUnichar* bp = bp0;
 
   PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
-    (0 != aTextStyle.mWordSpacing);
+    (0 != aTextStyle.mWordSpacing) || (mRect.width > mComputedWidth);
   nscoord spacingMem[TEXT_BUF_SIZE];
   PRIntn* sp0 = spacingMem; 
   if (spacing && (aLength > TEXT_BUF_SIZE)) {
@@ -1065,6 +1076,11 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       nextFont = aTextStyle.mNormalFont;
       nextY = aY;
       glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing;
+      nscoord extra = aTextStyle.mExtraSpacePerSpace;
+      if (--aTextStyle.mNumSpaces == 0) {
+        extra += aTextStyle.mRemainingExtraSpace;
+      }
+      glyphWidth += extra;
     }
     else {
       if (lastFont != aTextStyle.mNormalFont) {
@@ -1088,6 +1104,7 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                                      spacing ? sp0 : nsnull);
         PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                              aX, lastY, width);
+        aWidth -= width;
         aX += width;
         runStart = bp = bp0;
         sp = sp0;
@@ -1107,7 +1124,7 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     aRenderingContext.DrawString(runStart, pendingCount, aX, lastY, width,
                                  spacing ? sp0 : nsnull);
     PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                         aX, lastY, width);
+                         aX, lastY, aWidth);
   }
   aTextStyle.mLastFont = lastFont;
 
@@ -1134,6 +1151,7 @@ TextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
   }
 }
 
+// XXX factor in logic from RenderString into here; gaps, justification, etc.
 void
 TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
                     TextStyle& aTextStyle,
@@ -1214,9 +1232,24 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
 
   // Transform text from content into renderable form
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(aRenderingContext, tx,
-                     displaySelection ? ip : nsnull,
-                     paintBuf, textLength, width);
+  aTextStyle.mNumSpaces = PrepareUnicodeText(aRenderingContext, tx,
+                                             displaySelection ? ip : nsnull,
+                                             paintBuf, textLength, width);
+  if (mRect.width > mComputedWidth) {
+    if (0 != aTextStyle.mNumSpaces) {
+      nscoord extra = mRect.width - mComputedWidth;
+      nscoord adjustPerSpace =
+        aTextStyle.mExtraSpacePerSpace = extra / aTextStyle.mNumSpaces;
+      aTextStyle.mRemainingExtraSpace = extra -
+        (aTextStyle.mExtraSpacePerSpace * aTextStyle.mNumSpaces);
+    }
+    else {
+      // We have no whitespace but were given some extra space. There
+      // are two plausible places to put the extra space: to the left
+      // and to the right. If this is anywhere but the last place on
+      // the line then the correct answer is to the right.
+    }
+  }
 
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
@@ -1807,6 +1840,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
 
   // Setup metrics for caller; store final max-element-size information
   aMetrics.width = x;
+  mComputedWidth = x;
   if (0 == x) {
     aMetrics.height = 0;
     aMetrics.ascent = 0;
@@ -1847,6 +1881,138 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit TextFrame::Reflow: status=%x width=%d",
       aStatus, aMetrics.width));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
+{
+  // Get the text fragments that make up our content
+  nsTextFragment* frag;
+  PRInt32 numFrags;
+  nsITextContent* tc;
+  if (NS_OK == mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
+    tc->GetText(frag, numFrags);
+    NS_RELEASE(tc);
+
+    // Find fragment that contains the end of the mapped content
+    PRInt32 endIndex = mContentOffset + mContentLength;
+    PRInt32 offset = 0;
+    nsTextFragment* lastFrag = frag + numFrags;
+    while (frag < lastFrag) {
+      PRInt32 fragLen = frag->GetLength();
+      if (endIndex <= offset + fragLen) {
+        offset = mContentOffset - offset;
+        if (frag->Is2b()) {
+          const PRUnichar* cp = frag->Get2b() + offset;
+          const PRUnichar* end = cp + mContentLength;
+          while (cp < end) {
+            PRUnichar ch = *cp++;
+            if (XP_IS_SPACE(ch)) {
+              aUsedSpace = aExtraSpace;
+              mRect.width += aExtraSpace;
+              return NS_OK;
+            }
+          }
+        }
+        else {
+          const unsigned char* cp =
+            ((const unsigned char*)frag->Get1b()) + offset;
+          const unsigned char* end = cp + mContentLength;
+          while (cp < end) {
+            PRUnichar ch = PRUnichar(*cp++);
+            if (XP_IS_SPACE(ch)) {
+              aUsedSpace = aExtraSpace;
+              mRect.width += aExtraSpace;
+              return NS_OK;
+            }
+          }
+        }
+        break;
+      }
+      offset += fragLen;
+      frag++;
+    }
+  }
+  aUsedSpace = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+                                  nsIRenderingContext& aRC,
+                                  nscoord& aDeltaWidth)
+{
+  nscoord dw = 0;
+  const nsStyleText* textStyle = (const nsStyleText*)
+    mStyleContext->GetStyleData(eStyleStruct_Text);
+  if (NS_STYLE_WHITESPACE_PRE != textStyle->mWhiteSpace) {
+    // Get font metrics for a space so we can adjust the width by the
+    // right amount.
+    const nsStyleFont* fontStyle = (const nsStyleFont*)
+      mStyleContext->GetStyleData(eStyleStruct_Font);
+    nscoord spaceWidth;
+    aRC.SetFont(fontStyle->mFont);
+    aRC.GetWidth(' ', spaceWidth);
+
+    // Get the text fragments that make up our content
+    nsTextFragment* frag;
+    PRInt32 numFrags;
+    nsITextContent* tc;
+    if (NS_OK == mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
+      tc->GetText(frag, numFrags);
+      NS_RELEASE(tc);
+
+      // Find fragment that contains the end of the mapped content
+      PRInt32 endIndex = mContentOffset + mContentLength;
+      PRInt32 offset = 0;
+      nsTextFragment* lastFrag = frag + numFrags;
+      while (frag < lastFrag) {
+        PRInt32 fragLen = frag->GetLength();
+        if (endIndex <= offset + fragLen) {
+          // Look inside the fragments last few characters and see if they
+          // are whitespace. If so, count how much width was supplied by
+          // them.
+          offset = mContentOffset - offset;
+          if (frag->Is2b()) {
+            // XXX If by chance the last content fragment is *all*
+            // whitespace then this won't back up far enough.
+            const PRUnichar* cp = frag->Get2b() + offset;
+            const PRUnichar* end = cp + mContentLength;
+            if (--end >= cp) {
+              PRUnichar ch = *end;
+              if (XP_IS_SPACE(ch)) {
+                dw = spaceWidth;
+              }
+            }
+          }
+          else {
+            const unsigned char* cp =
+              ((const unsigned char*)frag->Get1b()) + offset;
+            const unsigned char* end = cp + mContentLength;
+            if (--end >= cp) {
+              PRUnichar ch = PRUnichar(*end);
+              if (XP_IS_SPACE(ch)) {
+                dw = spaceWidth;
+              }
+            }
+          }
+          break;
+        }
+        offset += fragLen;
+        frag++;
+      }
+    }
+    mRect.width -= dw;
+    mComputedWidth -= dw;
+  }
+  if (0 != dw) {
+    mFlags |= TEXT_TRIMMED_WS;
+  }
+  else {
+    mFlags &= ~TEXT_TRIMMED_WS;
+  }
+  aDeltaWidth = dw;
   return NS_OK;
 }
 
