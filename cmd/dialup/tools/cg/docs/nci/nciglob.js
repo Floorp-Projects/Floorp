@@ -23,6 +23,7 @@
 
 //THE FOLLOWING FUNCTION IS LOCATION DEPENDANT
 
+
 function refreshConfigFrame(fileName)
 {
 	if (parent.nci)
@@ -325,7 +326,7 @@ function isAlphaNumeric(inLetter)
 	if ((inLetter != null) && (inLetter != ""))
 	{
 
-		if ((!isNaN(parseInt(inLetter))) && (parseInt(inLetter >= 0)) && (parseInt(inLetter <=9)))
+		if ((!isNaN(parseInt(inLetter))) && (parseInt(inLetter) >= 0) && (parseInt(inLetter) <= 9))
 			outValue = true;
 		else
 		{
@@ -398,6 +399,8 @@ function askNCIFileNameAndSave()
 	var sName 	= 	getGlobal("SiteName");
 	var save 	= 	null;
 	
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+
 	//flush data from currenly open tab into globals
 	if (parent.tabs && parent.tabs.tabbody && parent.tabs.tabbody.saveData)
 	{
@@ -434,7 +437,7 @@ function askNCIFileNameAndSave()
 			var fName = prompt("Enter the file name for this configuration (must end with .NCI)", sgName);
 			
 			//if they entered an improper suffix, prompt again, and again
-			while ((fName != null) && (fName.substring(fName.length-4, fName.length)  != ".NCI"))
+			while ((fName != null) && ((fName.substring(fName.length-4, fName.length)  != ".NCI") && (fName.substring(fName.length-4, fName.length)  != ".nci")))
 			{
 				sgName = suggestNCIFileName(fName);
 				fName = prompt("Enter the fileName for this configuration (must end with .NCI)", sgName);
@@ -472,6 +475,8 @@ function askNCIFileNameAndSave()
 		//save the file
 		writeToFile(fName);
 		refreshConfigFrame(fName);
+		top.globals.document.setupPlugin.FlushCache();
+		alert("This file is saved as " + top.globals.getConfigFolder(self) + fName);
 		return fName;
 	}
 	else
@@ -619,6 +624,8 @@ function saveIfDirty()
 // else saves over an old file (no prompting)
 function saveNewOrOldFile()
 {
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+
 	//flush data from currenly open tab into globals
 	if (parent.tabs && parent.tabs.tabbody && parent.tabs.tabbody.saveData)
 	{
@@ -638,6 +645,8 @@ function saveNewOrOldFile()
 	{
 		//debug("Saving: without asking to: " + fileName);
 		writeToFile(fileName);
+		top.globals.document.setupPlugin.FlushCache();
+		// alert("This file is saved as " + top.globals.getConfigFolder(self) + fName);
 	}
 	return fileName;
 }
