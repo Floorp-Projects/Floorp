@@ -50,32 +50,20 @@ export::
 	$(INSTALL) $(DIST)/include/java/jritypes.h ./include
 
 	$(INSTALL) $(DIST)/include/xpcom/nsCom.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsComObsolete.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsComponentManagerUtils.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsCOMPtr.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nscore.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsDebug.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsError.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsIClassInfo.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIComponentManager.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsID.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIFactory.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsIMemory.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsIProgrammingLanguage.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManager.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManagerObsolete.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIServiceManagerUtils.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsISupports.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsISupportsBase.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsISupportsImpl.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsISupportsObsolete.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsISupportsUtils.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsrootidl.h ./include
 	$(INSTALL) $(DIST)/include/xpcom/nsTraceRefcnt.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsXPCOM.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsXPCOMCID.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsIComponentManagerObsolete.h ./include
-	$(INSTALL) $(DIST)/include/xpcom/nsComponentManagerObsolete.h ./include
 
 	$(INSTALL) $(DIST)/include/nspr/pratom.h ./include
 	$(INSTALL) $(DIST)/include/nspr/prcpucfg.h ./include
@@ -83,6 +71,11 @@ export::
 	$(INSTALL) $(DIST)/include/nspr/prlong.h ./include
 	$(INSTALL) $(DIST)/include/nspr/prtime.h ./include
 	$(INSTALL) $(DIST)/include/nspr/prtypes.h ./include
+ifeq ($(OS_ARCH),Mac OS)
+	$(INSTALL) $(DIST)/include/nspr/protypes.h ./include
+else
+	$(INSTALL) $(DIST)/include/nspr/obsolete/protypes.h ./include/obsolete
+endif
 
 	$(INSTALL) $(DIST)/bin/regxpcom$(PROG_SUFFIX) ./bin
 	$(INSTALL) $(DIST)/bin/xpidl$(PROG_SUFFIX) ./bin
