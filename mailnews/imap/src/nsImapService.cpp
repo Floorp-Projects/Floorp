@@ -666,6 +666,8 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
 	nsMsgKey key;
 
   rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
+  if (msgKey.IsEmpty())
+    return NS_MSG_MESSAGE_NOT_FOUND;
 	rv = nsParseImapMessageURI(aMessageURI, folderURI, &key, getter_Copies(mimePart));
 	if (NS_SUCCEEDED(rv))
 	{
