@@ -849,16 +849,47 @@ function BrowserHome()
   loadOneOrMoreURIs(homePage);
 }
 
-function loadOneOrMoreURIs(aURIString)
+function BrowserHomeClick(aEvent)
 {
-  if (aURIString.indexOf("|") != -1) {
-    var urls = aURIString.split("|");
-    loadURI(urls[0], null, null);
+  if (aEvent.button == 2) // right-click: do nothing
+    return;
+
+  var homePage = gHomeButton.getHomePage();
+  var where = whereToOpenLink(aEvent);
+  var urls;
+
+  // openUILinkIn in utilityOverlay.js doesn't handle loading multiple pages
+  switch (where) {
+  case "save":
+    urls = homePage.split("|");
+    saveURL(urls[0], null, null, true);  // only save the first page
+    break;
+  case "current":
+    loadOneOrMoreURIs(homePage);
+    break;
+  case "tabshifted":
+  case "tab":
+    urls = homePage.split("|");
+    var firstTabAdded = gBrowser.addTab(urls[0]);
     for (var i = 1; i < urls.length; ++i)
       gBrowser.addTab(urls[i]);
+    if ((where == "tab") ^ getBoolPref("browser.tabs.loadBookmarksInBackground", false)) {
+      gBrowser.selectedTab = firstTabAdded;
+      _content.focus();
+    }
+    break;
+  case "window":
+    OpenBrowserWindow();
+    break;
   }
-  else
-    loadURI(aURIString, null, null);
+}
+
+function loadOneOrMoreURIs(aURIString)
+{
+  var urls = aURIString.split("|");
+  loadURI(urls[0]);
+  for (var i = 1; i < urls.length; ++i)
+    gBrowser.addTab(urls[i]);
 }
 
 function constructGoMenuItem(goMenu, beforeItem, url, title)
