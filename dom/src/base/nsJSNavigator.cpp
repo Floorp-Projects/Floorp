@@ -56,10 +56,15 @@ enum Navigator_slots {
   NAVIGATOR_LANGUAGE = -4,
   NAVIGATOR_MIMETYPES = -5,
   NAVIGATOR_PLATFORM = -6,
-  NAVIGATOR_PLUGINS = -7,
-  NAVIGATOR_SECURITYPOLICY = -8,
-  NAVIGATOR_USERAGENT = -9,
-  NAVIGATOR_COOKIEENABLED = -10
+  NAVIGATOR_OSCPU = -7,
+  NAVIGATOR_VENDOR = -8,
+  NAVIGATOR_VENDORSUB = -9,
+  NAVIGATOR_PRODUCT = -10,
+  NAVIGATOR_PRODUCTSUB = -11,
+  NAVIGATOR_PLUGINS = -12,
+  NAVIGATOR_SECURITYPOLICY = -13,
+  NAVIGATOR_USERAGENT = -14,
+  NAVIGATOR_COOKIEENABLED = -15
 };
 
 /***********************************************************************/
@@ -149,6 +154,66 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
           rv = a->GetPlatform(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NAVIGATOR_OSCPU:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NAVIGATOR_OSCPU, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetOscpu(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NAVIGATOR_VENDOR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NAVIGATOR_VENDOR, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetVendor(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NAVIGATOR_VENDORSUB:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NAVIGATOR_VENDORSUB, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetVendorSub(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NAVIGATOR_PRODUCT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NAVIGATOR_PRODUCT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetProduct(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NAVIGATOR_PRODUCTSUB:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NAVIGATOR_PRODUCT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetProductSub(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
@@ -421,6 +486,11 @@ static JSPropertySpec NavigatorProperties[] =
   {"language",    NAVIGATOR_LANGUAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"mimeTypes",    NAVIGATOR_MIMETYPES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"platform",    NAVIGATOR_PLATFORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"oscpu",    NAVIGATOR_OSCPU,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"vendor", NAVIGATOR_VENDOR, JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"vendorSub", NAVIGATOR_VENDORSUB, JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"product", NAVIGATOR_PRODUCT, JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"productSub", NAVIGATOR_PRODUCTSUB, JSPROP_ENUMERATE | JSPROP_READONLY},
   {"plugins",    NAVIGATOR_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"securityPolicy",    NAVIGATOR_SECURITYPOLICY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"userAgent",    NAVIGATOR_USERAGENT,    JSPROP_ENUMERATE | JSPROP_READONLY},

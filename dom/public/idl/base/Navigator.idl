@@ -8,6 +8,11 @@ interface Navigator {
 	readonly attribute DOMString		language;
 	readonly attribute MimeTypeArray	mimeTypes;
 	readonly attribute DOMString		platform;
+    readonly attribute DOMString        oscpu;
+    readonly attribute DOMString        vendor;
+    readonly attribute DOMString        vendorSub;
+    readonly attribute DOMString        product;
+    readonly attribute DOMString        productSub;
 	readonly attribute PluginArray		plugins;
 	readonly attribute DOMString		securityPolicy;
 	readonly attribute DOMString		userAgent;
