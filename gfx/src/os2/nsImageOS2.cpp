@@ -31,6 +31,7 @@
 
 #include "nsImageOS2.h"
 #include "nsRenderingContextOS2.h"
+#include "nsDeviceContextOS2.h"
 
 #define MAX_BUFFER_WIDTH        128
 #define MAX_BUFFER_HEIGHT       128
@@ -309,26 +310,110 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    }
    else if( mAlphaDepth == 1)
    {
-      // > The transparent areas of the mask are coloured black (0).
-      // > the transparent areas of the pixmap are coloured black (0).
-      // > Note this does *not* mean that all black pels are transparent!
-      // >
-      // > Thus all we need to do is AND the mask onto the target, taking
-      // > out pels that are not transparent, and then OR the image onto
-      // > the target.
-      // >
-      // > For monochrome bitmaps GPI replaces 1 with IMAGEBUNDLE foreground
-      // > color and 0 with background color. To make this work with ROP_SRCAND
-      // > we set foreground to black and background to white. Thus AND with 
-      // > 1 (opaque) in mask maps to AND with IMAGEBUNDLE foreground (which is 0)
-      // > always gives 0 - clears opaque region to zeros. 
+      PRBool fPrinting = PR_FALSE;
+      nsIDeviceContext*  context;
+      aContext.GetDeviceContext(context);
+      if (((nsDeviceContextOS2 *)context)->mPrintDC) {
+         fPrinting = PR_TRUE;
+      }
+      if (!fPrinting) {
+         // > The transparent areas of the mask are coloured black (0).
+         // > the transparent areas of the pixmap are coloured black (0).
+         // > Note this does *not* mean that all black pels are transparent!
+         // >
+         // > Thus all we need to do is AND the mask onto the target, taking
+         // > out pels that are not transparent, and then OR the image onto
+         // > the target.
+         // >
+         // > For monochrome bitmaps GPI replaces 1 with IMAGEBUNDLE foreground
+         // > color and 0 with background color. To make this work with ROP_SRCAND
+         // > we set foreground to black and background to white. Thus AND with 
+         // > 1 (opaque) in mask maps to AND with IMAGEBUNDLE foreground (which is 0)
+         // > always gives 0 - clears opaque region to zeros. 
+   
+         // Apply mask to target, clear pels we will fill in from the image
+         MONOBITMAPINFO MaskBitmapInfo (mInfo);
+         GFX (::GpiDrawBits (surf->GetPS (), mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND, BBO_IGNORE), GPI_ERROR);
+   
+         // Now combine image with target
+         GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCPAINT, BBO_IGNORE), GPI_ERROR);
+      } else {
+         // Find the compatible device context and create a memory one
+         HDC hdcCompat = GFX (::GpiQueryDevice (surf->GetPS ()), HDC_ERROR);
+   
+         rv = NS_ERROR_FAILURE;
+       
+         // create non-inclusive rect for GpiBitBlt
+         RECTL dest;
+         surf->NS2PM_INEX (trect, dest);
+   
+         DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+         HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
+   
+         if( MemDC != DEV_ERROR )
+         {   
+           // create the PS
+           SIZEL sizel = { 0, 0 };
+           HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+   
+           if( MemPS != GPI_ERROR )
+           {
+             GFX (::GpiCreateLogColorTable (MemPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
+   
+             // now create a bitmap of the right size
+             HBITMAP hMemBmp;
+             BITMAPINFOHEADER2 bihMem = { 0 };
+   
+             bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
+             bihMem.cx = aSWidth;
+             bihMem.cy = aSHeight;
+             bihMem.cPlanes = 1;
+             LONG lBitCount = 0;
+             GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
+             bihMem.cBitCount = (USHORT) lBitCount;
+   
+             hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
+   
+             if( hMemBmp != GPI_ERROR )
+             {
+               GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
 
-      // Apply mask to target, clear pels we will fill in from the image
-      MONOBITMAPINFO MaskBitmapInfo (mInfo);
-      GFX (::GpiDrawBits (surf->GetPS (), mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND, BBO_IGNORE), GPI_ERROR);
-
-      // Now combine image with target
-      GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCPAINT, BBO_IGNORE), GPI_ERROR);
+               GpiErase(MemPS);
+   
+               // Now combine image with target
+               // Set up blit coord array
+               POINTL aptlNew[ 4] = { { 0, 0 },              // TLL
+                                      { bihMem.cx, bihMem.cy },                // TUR
+                                      { aSX, mInfo->cy - (aSY + aSHeight) },   // SLL
+                                      { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
+   
+               // Apply mask to target, clear pels we will fill in from the image
+               MONOBITMAPINFO MaskBitmapInfo (mInfo);                                   
+               GFX (::GpiDrawBits (MemPS, mAlphaBits, MaskBitmapInfo, 4, aptlNew, ROP_SRCAND, BBO_IGNORE), GPI_ERROR);
+          
+               // Now combine image with target
+               GFX (::GpiDrawBits (MemPS, mImageBits, mInfo, 4, aptlNew, ROP_SRCPAINT, BBO_IGNORE), GPI_ERROR);
+   
+                   // Transfer bitmap from memory bitmap back to device
+               POINTL aptlMemToDev [4] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
+                                           dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
+                                           0, 0,                       // SLL - mem bitmap (0, 0)
+                                           bihMem.cx, bihMem.cy};      // SUR - mem bitmap (cx, cy)
+   
+               GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+               
+               rv = NS_OK;
+                                                                   
+               GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+               GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
+             }
+           
+             GFX (::GpiDestroyPS (MemPS), FALSE);
+           }
+       
+           ::DevCloseDC (MemDC);
+         }
+      }
    } else
    {
       // Find the compatible device context and create a memory one
