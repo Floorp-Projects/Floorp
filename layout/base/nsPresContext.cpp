@@ -1499,7 +1499,7 @@ nsPresContext::GetBidiUtils(nsBidiPresUtils** aBidiUtils)
   return rv;
 }
 
-NS_IMETHODIMP   nsPresContext::SetBidi(nsBidiOptions aSource, PRBool aForceReflow)
+NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
 {
   mBidi = aSource;
   if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(mBidi)
@@ -1520,7 +1520,7 @@ NS_IMETHODIMP   nsPresContext::SetBidi(nsBidiOptions aSource, PRBool aForceReflo
   }
   return NS_OK;
 }
-NS_IMETHODIMP   nsPresContext::GetBidi(nsBidiOptions * aDest)
+NS_IMETHODIMP   nsPresContext::GetBidi(PRUint32* aDest)
 {
   if (aDest)
     *aDest = mBidi;
