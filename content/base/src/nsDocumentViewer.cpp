@@ -5024,11 +5024,13 @@ DocumentViewerImpl::ShowDocList(PrintObject* aPO, PRBool aShow)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
 
-  PRBool donePrinting;
-  DoPrint(aPO, PR_FALSE, donePrinting);
+  if (aPO->IsPrintable()) {
+    PRBool donePrinting;
+    DoPrint(aPO, PR_FALSE, donePrinting);
 
-  if (aPO->mWindow != nsnull) {
-    aPO->mWindow->Show(aShow);
+    if (aPO->mWindow != nsnull) {
+      aPO->mWindow->Show(aShow);
+    }
   }
 
   PRInt32 cnt = aPO->mKids.Count();
