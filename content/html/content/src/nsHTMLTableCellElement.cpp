@@ -231,11 +231,16 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   /* ignore these attributes, stored simply as strings
      abbr, axis, ch, headers
    */
-  /* attributes that resolve to integers */
-  if ((aAttribute == nsHTMLAtoms::choff)   ||
-      (aAttribute == nsHTMLAtoms::colspan) ||
-      (aAttribute == nsHTMLAtoms::rowspan)) {
+  /* attributes that resolve to integers with a min of 0 */
+  if (aAttribute == nsHTMLAtoms::choff) {
     nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers with a min of 1 */
+  if ((aAttribute == nsHTMLAtoms::colspan) ||
+      (aAttribute == nsHTMLAtoms::rowspan)) {
+    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
@@ -350,17 +355,20 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
     if (widthValue.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(widthValue.GetPixelValue(), p2t);
+      nscoord width = widthValue.GetPixelValue();
+      nscoord twips = NSIntPixelsToTwips(width, p2t);
       pos->mWidth.SetCoordValue(twips);
     }
     else if (widthValue.GetUnit() == eHTMLUnit_Percent) {
-      pos->mWidth.SetPercentValue(widthValue.GetPercentValue());
+      float widthPercent = widthValue.GetPercentValue();
+      pos->mWidth.SetPercentValue(widthPercent);
     }
 
     // height: pixel
     aAttributes->GetAttribute(nsHTMLAtoms::height, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      nscoord height = value.GetPixelValue();
+      nscoord twips = NSIntPixelsToTwips(height, p2t);
       pos->mHeight.SetCoordValue(twips);
     }
 
