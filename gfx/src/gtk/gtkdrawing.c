@@ -1038,5 +1038,18 @@ moz_gtk_shutdown()
   if (gProtoWindow)
     gtk_widget_destroy(gProtoWindow);
 
+  gButtonWidget = NULL;
+  gProtoWindow = NULL;
+  gCheckboxWidget = NULL;
+  gScrollbarWidget = NULL;
+  gEntryWidget = NULL;
+  gArrowWidget = NULL;
+  gDropdownButtonWidget = NULL;
+  gHandleBoxWidget = NULL;
+  gFrameWidget = NULL;
+  gProgressWidget = NULL;
+  gTabWidget = NULL;
+  gTooltipWidget = NULL;
+
   return MOZ_GTK_SUCCESS;
 }
