@@ -754,6 +754,7 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
                     nsIWebProgressListener::STATE_START |
                     nsIWebProgressListener::STATE_IS_DOCUMENT |
                     nsIWebProgressListener::STATE_IS_REQUEST |
+                    nsIWebProgressListener::STATE_IS_WINDOW |
                     nsIWebProgressListener::STATE_IS_NETWORK,
                     NS_OK);
 }

@@ -95,22 +95,23 @@ interface nsIWebProgressListener : nsISupports
    * event may indicate some combination of these flags).
    *
    * STATE_IS_REQUEST
-   *   This flag indicates that the state transition is for a non-document
-   *   request (e.g., an inline image request).
+   *   This flag indicates that the state transition is for a request, which
+   *   includes but is not limited to document requests (e.g., this includes
+   *   inline image requests and stylesheets).
    *
    * STATE_IS_DOCUMENT
    *   This flag indicates that the state transition is for a document request,
    *   which includes documents in sub-frames.
    *
    * STATE_IS_NETWORK
-   *   This flag indicates that the state transition corresponds to a network
-   *   level event.  A nsIWebProgressListener attached to a nsIWebProgress will
-   *   not see this flag for onStateChange events corresponding to a
-   *   subdocument.
+   *   This flag indicates that the state transition corresponds to a toplevel
+   *   document, and is accompanied by either STATE_START or STATE_STOP.  This
+   *   flag can be used to determine when an entire frameset finishes loading.
    *
    * STATE_IS_WINDOW
-   *   This flag indicates that the state transition corresponds to the DOM
-   *   window associated with the nsIWebProgress instance.
+   *   This flag indicates that the state transition corresponds to a DOM
+   *   window.  (Each nsIWebProgress instance has an associated nsIDOMWindow.)
+   *   This flag is accompanied by either STATE_START or STATE_STOP.
    */
   const unsigned long STATE_IS_REQUEST     = 0x00010000;
   const unsigned long STATE_IS_DOCUMENT    = 0x00020000;
