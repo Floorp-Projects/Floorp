@@ -105,6 +105,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   // Assume that the values are unconstrained
   widthConstraint = eHTMLFrameConstraint_Unconstrained;
   heightConstraint = eHTMLFrameConstraint_Unconstrained;
+  minWidth = 0;
+  minHeight = 0;
 
   // Some frame types are not constrained by width/height style
   // attributes. Return if the frame is one of those types.
@@ -209,12 +211,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 
     if (width > 0) {
       minWidth = width;
-      maxWidth = width;
       widthConstraint = eHTMLFrameConstraint_Constrained;
     }
     if (height > 0) {
       minHeight = height;
-      maxHeight = height;
       heightConstraint = eHTMLFrameConstraint_Constrained;
     }
   }
