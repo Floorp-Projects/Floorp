@@ -30,6 +30,8 @@
 // <mstyle> -- style change
 //
 
+#if 0
+
 #define NS_MATHML_MSTYLE_SCRIPTLEVEL_EXPLICIT  (1)
 #define NS_MATHML_MSTYLE_DISPLAYSTYLE          (1<<1)
 
@@ -39,6 +41,7 @@
 #define NS_MATHML_MSTYLE_HAS_DISPLAYSTYLE(_flags) \
   (NS_MATHML_MSTYLE_DISPLAYSTYLE == ((_flags) & NS_MATHML_MSTYLE_DISPLAYSTYLE))
 
+#endif
 
 class nsMathMLmstyleFrame : public nsMathMLContainerFrame {
 public:
@@ -67,7 +70,7 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(0, mInnerScriptLevelIncrement, mDisplayStyle);
+    UpdatePresentationDataFromChildAt(0, mInnerScriptLevelIncrement, NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags));
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
@@ -79,7 +82,7 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
   PRInt32 mInnerScriptLevelIncrement;
-  PRInt32 mFlags;
+//  PRInt32 mFlags;
 };
 
 #endif /* nsMathMLmstyleFrame_h___ */

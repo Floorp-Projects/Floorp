@@ -20,7 +20,6 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  */
 
-
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
@@ -82,7 +81,6 @@ nsMathMLmiFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
-// if our content is a single character, we turn the font to italic
 // if our content is not a single character, we turn the font to normal
 // XXX TrimWhitespace / CompressWhitespace?
 
@@ -102,7 +100,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
   PRInt32 aLength = 0;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
-  nsAutoString aData;
+  //nsAutoString aData;
   for (PRInt32 kid=0; kid<numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
     mContent->ChildAt(kid, *getter_AddRefs(kidContent));
@@ -112,27 +110,42 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       	PRUint32 kidLength;
         kidText->GetLength(&kidLength);
         aLength += kidLength;        
-      	nsAutoString kidData;
-        kidText->GetData(kidData);
-        aData += kidData;
+      	//nsAutoString kidData;
+        //kidText->GetData(kidData);
+        //aData += kidData;
       }
     }
   }
 
-  // Insert a new pseudo frame between our children and us, i.e., the new frame
-  // becomes our sole child, and our children become children of the new frame.
   nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild) {
-    // Get a pseudo style context for the appropriate style font
-    // XXX how important is the PseudoStyleContext?
-    nsAutoString fontStyle = (1 == aLength) 
-                           ? ":-moz-math-font-style-italic" 
-                           : ":-moz-math-font-style-normal";
+  if (firstChild && 1 < aLength) {
+
+    // we are going to switch the font to normal ...
+
+    // we don't switch if we are in the scope of a mstyle frame with an 
+    // explicit fontstyle="italic" ...
+    nsAutoString fontStyle;
+    nsIFrame* mstyleFrame = mPresentationData.mstyle;
+    if (mstyleFrame) {
+      nsCOMPtr<nsIContent> mstyleContent;
+      mstyleFrame->GetContent(getter_AddRefs(mstyleContent));
+      if (NS_CONTENT_ATTR_HAS_VALUE == mstyleContent->GetAttribute(kNameSpaceID_None, 
+                       nsMathMLAtoms::fontstyle_, fontStyle))
+      {
+        if (fontStyle == "italic")
+          return rv;
+      }
+    }
+
+    // Get a pseudo style context for the appropriate style font 
+    fontStyle = ":-moz-math-font-style-normal";                           
     nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
     nsCOMPtr<nsIStyleContext> newStyleContext;
     aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
                                                PR_FALSE, getter_AddRefs(newStyleContext));          
     
+    // Insert a new pseudo frame between our children and us, i.e., the new frame
+    // becomes our sole child, and our children become children of the new frame.
     if (newStyleContext && newStyleContext.get() != mStyleContext) {
     
       nsCOMPtr<nsIPresShell> shell;

@@ -182,11 +182,13 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   // get sup script shift depending on current script level and display style
   // Rule 18c, App. G, TeXbook
   nscoord aSupScriptShift;
-  if (mScriptLevel == 0 && mDisplayStyle && !mCompressed) {
+  if ( mPresentationData.scriptLevel == 0 && 
+       NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) &&
+      !NS_MATHML_IS_COMPRESSED(mPresentationData.flags)) {
     // Style D in TeXbook
     aSupScriptShift = aSupScriptShift1;
   }
-  else if (mCompressed) {
+  else if (NS_MATHML_IS_COMPRESSED(mPresentationData.flags)) {
     // Style C' in TeXbook = D',T',S',SS'
     aSupScriptShift = aSupScriptShift3;
   }

@@ -69,10 +69,11 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
- private:
+private:
+  nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
+                         // = 0.5pt in plain TeX
   float   mSubScriptShiftFactor, mSupScriptShiftFactor;
   PRBool  mSubUserSetFlag, mSupUserSetFlag;
-
 };
 
 #endif /* nsMathMLmmultiscriptsFrame_h___ */

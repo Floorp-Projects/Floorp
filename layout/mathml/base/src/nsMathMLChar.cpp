@@ -438,7 +438,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     // keep track of the default bounding metrics
     if (index0 == index) bm0 = bm;
     
-    h = bm.ascent - bm.descent;
+    h = bm.ascent + bm.descent;
     w = bm.rightBearing - bm.leftBearing;
  
     // printf("height:%d  width:%d  ascent:%d  descent:%d\n", 
@@ -448,9 +448,9 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     if ((aDirection == NS_STRETCH_DIRECTION_VERTICAL && h > height) || 
         (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL && w > width)) {
       sizeOK = PR_TRUE;
-      descent = -bm.descent; // flip the sign, as expected by Gecko
+      descent = bm.descent;
       ascent = bm.ascent;
-      height = bm.ascent - bm.descent;
+      height = bm.ascent + bm.descent;
       width = bm.rightBearing - bm.leftBearing;
 
       // cache all this information
@@ -480,7 +480,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
         if (w < bm.width) w = bm.width;
         if (i < 3) {
-          h += nscoord(flex[i]*(bm.ascent-bm.descent)); // sum heights of the parts...
+          h += nscoord(flex[i]*(bm.ascent+bm.descent)); // sum heights of the parts...
           // compute and cache our bounding metrics (vertical stacking!)
           if (mBoundingMetrics.leftBearing > bm.leftBearing)
             mBoundingMetrics.leftBearing = bm.leftBearing;
@@ -492,7 +492,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         width = w;
         mBoundingMetrics.width = w;
         mBoundingMetrics.ascent = aContainerSize.ascent;
-        mBoundingMetrics.descent = -aContainerSize.descent;
+        mBoundingMetrics.descent = aContainerSize.descent;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
         mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
         mBoundingMetrics = bm0;
@@ -512,7 +512,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
         if (0 == i) bm0 = bm;
         if (a < bm.ascent) a = bm.ascent;
-        if (d > bm.descent) d = bm.descent;
+        if (d < bm.descent) d = bm.descent;
         if (i < 3) {
           w += nscoord(flex[i]*(bm.rightBearing-bm.leftBearing)); // sum widths of the parts...
           // compute and cache our bounding metrics (horizontal stacking)
@@ -525,7 +525,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       if (w <= aContainerSize.width) { // can nicely fit in the available space...
 //printf("%04X can nicely fit in the available space...\n", ch);
 //        ascent = a;
-//        height = a - d;
+//        height = a + d;
         mBoundingMetrics.width = aContainerSize.width;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
         mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
@@ -663,7 +663,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       //  - bmdata[0].ascent - bmdata[2].descent + bm.ascent + bm.descent)/2;
 
       // coord for exact fit (i.e., no leading)
-      dy = aRect.y + (aRect.height - (bm.ascent - bm.descent))/2
+      dy = aRect.y + (aRect.height - (bm.ascent + bm.descent))/2
                    - (fontAscent - bm.ascent);
     }
     else if (2 == i) { // bottom
@@ -671,7 +671,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       // dy = aRect.y + aRect.height - (fontAscent + fontDescent);
 
       // coord for exact fit (i.e., no leading)
-      dy = aRect.y + aRect.height - (fontAscent - bm.descent);
+      dy = aRect.y + aRect.height - (fontAscent + bm.descent);
     }
     clipRect = nsRect(dx, dy, aRect.width, aRect.height);
     // abcissa that DrawString used
@@ -679,7 +679,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
     // *exact* abcissa where the *top-most* pixel of the glyph is painted
     start[i] = dy + fontAscent - bm.ascent; 
     // *exact* abcissa where the *bottom-most* pixel of the glyph is painted
-    end[i] = dy + fontAscent - bm.descent; // note: end = start + height
+    end[i] = dy + fontAscent + bm.descent; // note: end = start + height
   }
 
   /////////////////////////////////////
@@ -718,9 +718,9 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(clipRect);
 #endif
     bm = bmdata[i];
-    while (dy + fontAscent - bm.descent < start[i+1]) {
+    while (dy + fontAscent + bm.descent < start[i+1]) {
       if (2 > count) {
-        stride = -bm.descent;
+        stride = bm.descent;
         bm = bmdata[3]; // glue
         stride += bm.ascent;
       }

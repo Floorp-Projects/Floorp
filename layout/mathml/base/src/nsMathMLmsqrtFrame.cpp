@@ -156,7 +156,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 
   // overline bar
   renderingContext.GetBoundingMetrics(mBarChar.GetUnicode(), PRUint32(1), bmBar);
-  nscoord thickspace = bmBar.ascent - bmBar.descent; // height of the overline bar
+  nscoord thickspace = bmBar.ascent + bmBar.descent; // height of the overline bar
 
   // Stretch the sqrt symbol to the appropriate height if it is not big enough.
   nsStretchMetrics contSize(aDesiredSize);

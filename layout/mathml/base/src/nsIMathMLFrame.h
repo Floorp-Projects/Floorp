@@ -22,6 +22,7 @@
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
+struct nsPresentationData;
 struct nsEmbellishData;
 struct nsStretchMetrics;
 typedef PRInt32 nsStretchDirection;
@@ -162,7 +163,7 @@ public:
   EmbellishOperator() = 0;
 
  /* GetEmbellishData/SetEmbellishData :
-  * Get/Set the mEmbellish member data.
+  * Get/Set the mEmbellishData member variable.
   */
 
   NS_IMETHOD
@@ -175,12 +176,15 @@ public:
  /* SUPPORT FOR SCRIPTING ELEMENTS: */
  /*====================================================================*/
 
- /* GetPresentationData :
-  * returns the scriptlevel and displaystyle of the frame
+ /* GetPresentationData/SetPresentationData :
+  * Get/Set the mPresentationData member variable.
   */
+
   NS_IMETHOD
-  GetPresentationData(PRInt32* aScriptLevel, 
-                      PRBool*  aDisplayStyle) = 0;
+  GetPresentationData(nsPresentationData& aPresentationData) = 0;
+
+  NS_IMETHOD
+  SetPresentationData(const nsPresentationData& aPresentationData) = 0;
 
  /* UpdatePresentationData :
   * Increments the scriptlevel of the frame, and set its displaystyle. 
@@ -259,6 +263,20 @@ struct nsStretchMetrics {
   }
 };
 
+// struct used by a frame to modulate its presentation
+struct nsPresentationData {
+  PRUint32  flags; // bits for: displaystyle, compressed, etc
+  nsIFrame* mstyle; // up-pointer on the mstyle frame, if any, that defines the scope
+  PRUint32  scriptLevel; // Relevant to nested frames within: msub, msup, msubsup, munder,
+                         // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
+  nsPresentationData()
+  {
+    flags = 0;
+    mstyle = nsnull;
+    scriptLevel = 0;
+  }
+};
+
 // struct used by an embellished container to keep track of its embellished child
 struct nsEmbellishData {
   PRUint32  flags;
@@ -277,28 +295,114 @@ struct nsEmbellishData {
   }
 };
 
+// -------------
+// Bits used for the presentation flags -- these bits are set
+// in their relevant situation as they become available
+
+// This bit is set if the frame is in the *context* of displaystyle=true.
+// Note: This doesn't mean that the frame has displaystyle=true as attribute,
+// <mstyle> is the only tag which allows <mstyle displaystyle="true|false">.
+// The bit merely tells the context of the frame. In the context of 
+// displaystyle="false", it is intended to slightly alter how the
+// rendering is done in inline mode.
+#define NS_MATHML_DISPLAYSTYLE                        0x00000001
+
+// This bit is used to emulate TeX rendering. 
+// Internal use only, cannot be set by the user with an attribute.
+#define NS_MATHML_COMPRESSED                          0x00000002
+
+// This bit is set if the frame is actually an <mstyle> frame *and* that
+// <mstyle> frame has an explicit attribute scriptlevel="value".
+// Note: the flag is not set if the <mstyle> instead has an incremental +/-value.
+#define NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL    0x00000004
+
+// This bit is set if the frame is actually an <mstyle> *and* that
+// <mstyle> has an explicit attribute displaystyle="true" or "false"
+#define NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE            0x00000008
+
+// This bit is set if the frame is an <mover> or <munderover> with
+// an accent frame
+#define NS_MATHML_ACCENTOVER                          0x00000010
+
+// This bit is set if the frame is an <munder> or <munderover> with
+// an accentunder frame
+#define NS_MATHML_ACCENTUNDER                         0x00000020
+
+// This bit is set if the frame is <mover>, <munder> or <munderover>
+// whose base frame is a <mo> frame (or an embellished container with
+// a core <mo>) for which the movablelimits attribute is set to true
+#define NS_MATHML_MOVABLELIMITS                       0x00000040
+
+// Macros that retrieve those bits
+#define NS_MATHML_IS_DISPLAYSTYLE(_flags) \
+  (NS_MATHML_DISPLAYSTYLE == ((_flags) & NS_MATHML_DISPLAYSTYLE))
+
+#define NS_MATHML_IS_COMPRESSED(_flags) \
+  (NS_MATHML_COMPRESSED == ((_flags) & NS_MATHML_COMPRESSED))
+
+#define NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(_flags) \
+  (NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE == ((_flags) & NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE))
+
+#define NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(_flags) \
+  (NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL == ((_flags) & NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL))
+
+#define NS_MATHML_IS_ACCENTOVER(_flags) \
+  (NS_MATHML_ACCENTOVER == ((_flags) & NS_MATHML_ACCENTOVER))
+
+#define NS_MATHML_IS_ACCENTUNDER(_flags) \
+  (NS_MATHML_ACCENTUNDER == ((_flags) & NS_MATHML_ACCENTUNDER))
+
+#define NS_MATHML_IS_MOVABLELIMITS(_flags) \
+  (NS_MATHML_MOVABLELIMITS == ((_flags) & NS_MATHML_MOVABLELIMITS))
+
 // --------------
+// Bits used for the embellish flags -- these bits are set
+// in their relevant situation as they become available
 
-#define NS_MATHML_EMBELLISH_OPERATOR    0x1
+// This bit is set if the frame is an embellished operator. 
+#define NS_MATHML_EMBELLISH_OPERATOR             0x00000001
 
-#define NS_MATHML_STRETCH_FIRST_CHILD   NS_MATHML_EMBELLISH_OPERATOR
-#define NS_MATHML_STRETCH_ALL_CHILDREN  0x2
+// This bit is set if the frame is an embellished container that
+// will fire a stretch command on its first (non-empty) child.
+#define NS_MATHML_STRETCH_FIRST_CHILD            NS_MATHML_EMBELLISH_OPERATOR
 
-#define NS_MATHML_STRETCH_DONE          0x4
+// This bit is set if the frame will fire a stretch command on all
+// its (non-empty) children.
+// Tags like <mrow> (or an inferred mrow), munderover, etc,
+// will fire a stretch command on all their non-empty children
+#define NS_MATHML_STRETCH_ALL_CHILDREN            0x00000002
+
+// This bit is set if the frame is an <mo> frame that should behave
+// like an accent
+#define NS_MATHML_EMBELLISH_ACCENT                0x00000004
+
+// This bit is set if the frame is an <mo> frame with the movablelimits
+// attribute set to true 
+#define NS_MATHML_EMBELLISH_MOVABLELIMITS         0x00000008
+
+// a bit used for debug
+#define NS_MATHML_STRETCH_DONE                    0x80000000
+
+
+// Macros that retrieve those bits
 
 #define NS_MATHML_IS_EMBELLISH_OPERATOR(_flags) \
   (NS_MATHML_EMBELLISH_OPERATOR == ((_flags) & NS_MATHML_EMBELLISH_OPERATOR))
 
-#define NS_MATHML_STRETCH_WAS_DONE(_flags) \
-  (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))
-
-// an embellished container will fire a stretch command to its first (non-empty) child
 #define NS_MATHML_WILL_STRETCH_FIRST_CHILD(_flags) \
   (NS_MATHML_STRETCH_FIRST_CHILD == ((_flags) & NS_MATHML_STRETCH_FIRST_CHILD))
 
-// <mrow> (or an inferred mrow) will fire a stretch command to all its (non-empty) children
 #define NS_MATHML_WILL_STRETCH_ALL_CHILDREN(_flags) \
   (NS_MATHML_STRETCH_ALL_CHILDREN == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN))
+
+#define NS_MATHML_STRETCH_WAS_DONE(_flags) \
+  (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))
+
+#define NS_MATHML_EMBELLISH_IS_ACCENT(_flags) \
+  (NS_MATHML_EMBELLISH_ACCENT == ((_flags) & NS_MATHML_EMBELLISH_ACCENT))
+
+#define NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(_flags) \
+  (NS_MATHML_EMBELLISH_MOVABLELIMITS == ((_flags) & NS_MATHML_EMBELLISH_MOVABLELIMITS))
 
 #endif /* nsIMathMLFrame_h___ */
 

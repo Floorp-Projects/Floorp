@@ -56,17 +56,7 @@ public:
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
-  {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(1, 1, PR_FALSE);
-    // switch the style of the overscript
-    InsertScriptLevelStyleContext(aPresContext);
-    // check whether or not this is an embellished operator
-    EmbellishOperator();
-    return rv;
-  }
+                      nsIFrame*       aChildList);
 
 protected:
   nsMathMLmoverFrame();

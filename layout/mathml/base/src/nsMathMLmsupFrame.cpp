@@ -127,9 +127,7 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
 	baseFrame = aChildFrame;
 	baseSize.descent = aRect.x; baseSize.ascent = aRect.y;
 	baseSize.width = aRect.width; baseSize.height = aRect.height;
-        if (NS_SUCCEEDED(GetBoundingMetricsFor(baseFrame, bmBase))) {
-          bmBase.descent = -bmBase.descent;
-        } else {
+        if (NS_FAILED(GetBoundingMetricsFor(baseFrame, bmBase))) {
           bmBase.descent = baseSize.descent;
           bmBase.ascent = baseSize.ascent;
           bmBase.width = baseSize.width;
@@ -140,9 +138,7 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
 	supScriptFrame = aChildFrame;
 	supScriptSize.descent = aRect.x; supScriptSize.ascent = aRect.y;
 	supScriptSize.width = aRect.width; supScriptSize.height = aRect.height;
-        if (NS_SUCCEEDED(GetBoundingMetricsFor(supScriptFrame, bmSupScript))) {
-          bmSupScript.descent = -bmSupScript.descent;
-        } else {
+        if (NS_FAILED(GetBoundingMetricsFor(supScriptFrame, bmSupScript))) {
           bmSupScript.descent = supScriptSize.descent;
           bmSupScript.ascent = supScriptSize.ascent;
           bmSupScript.width = supScriptSize.width;
@@ -198,11 +194,13 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   // get sup script shift depending on current script level and display style
   // Rule 18c, App. G, TeXbook
   nscoord aSupScriptShift;
-  if (mScriptLevel == 0 && mDisplayStyle && !mCompressed) {
+  if ( mPresentationData.scriptLevel == 0 && 
+       NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) &&
+      !NS_MATHML_IS_COMPRESSED(mPresentationData.flags)) {
     // Style D in TeXbook
     aSupScriptShift = aSupScriptShift1;
   }
-  else if (mCompressed) {
+  else if (NS_MATHML_IS_COMPRESSED(mPresentationData.flags)) {
     // Style C' in TeXbook = D',T',S',SS'
     aSupScriptShift = aSupScriptShift3;
   }
@@ -246,17 +244,19 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
    PR_MAX(bmBase.descent, bmSupScript.descent - actualSupScriptShift);
   // add mScriptSpace between base and supscript
   mBoundingMetrics.width = bmBase.width + mScriptSpace + bmSupScript.width;
+
+#if 0
 printf("bmBase.width:%d + mScriptSpace:%d + bmSupScript.width:%d = mBoundingMetrics.width:%d\n",
 bmBase.width, mScriptSpace, bmSupScript.width, mBoundingMetrics.width);
+#endif
+
   aDesiredSize.ascent =
      PR_MAX(baseSize.ascent,  supScriptSize.ascent + actualSupScriptShift);
   aDesiredSize.descent =
      PR_MAX(baseSize.descent, supScriptSize.descent - actualSupScriptShift);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
-  aDesiredSize.width = mBoundingMetrics.width;
-
-  mBoundingMetrics.descent = -mBoundingMetrics.descent;
+  aDesiredSize.width = baseSize.width + mScriptSpace + supScriptSize.width;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;

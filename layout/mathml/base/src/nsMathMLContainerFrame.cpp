@@ -176,6 +176,41 @@ nsMathMLContainerFrame::SetReference(const nsPoint& aReference)
   return NS_OK;
 }
 
+// helper methods to facilitate getting/setting the bounding metrics
+nsresult
+nsMathMLContainerFrame::GetBoundingMetricsFor(nsIFrame*          aFrame, 
+                                              nsBoundingMetrics& aBoundingMetrics)
+{
+  aBoundingMetrics.Clear();
+  nsIMathMLFrame* aMathMLFrame = nsnull;
+  nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+  if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
+    aMathMLFrame->GetBoundingMetrics(aBoundingMetrics);
+    return NS_OK;
+  }
+  // if we reach here, aFrame is not a MathML frame, let the caller know that
+  printf("GetBoundingMetrics() failed for: "); /* getchar(); */
+  nsFrame::ListTag(stdout, aFrame);
+  printf("\n");
+//  NS_ASSERTION(0, "GetBoundingMetrics() failed!!");
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsMathMLContainerFrame::SetBoundingMetricsFor(nsIFrame*          aFrame, 
+                                              nsBoundingMetrics& aBoundingMetrics)
+{
+  nsIMathMLFrame* aMathMLFrame = nsnull;
+  nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+  if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
+    aMathMLFrame->SetBoundingMetrics(aBoundingMetrics);
+    return NS_OK;
+  }
+  // if we reach here, aFrame is not a MathML frame, let the caller know that
+  printf("SetBoundingMetrics() failed!! ...\n"); /* getchar(); */
+//  NS_ASSERTION(0, "SetBoundingMetrics() failed!!");
+  return NS_ERROR_FAILURE;
+}
 
 /* /////////////
  * nsIMathMLFrame - support methods for stretchy elements
@@ -247,6 +282,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         // the outermost embellished container will take care of it.
 
         if (!IsEmbellishOperator(mParent)) {
+
           nsStyleFont font;
           mStyleContext->GetStyle(eStyleStruct_Font, font);
           nscoord em = NSToCoordRound(float(font.mFont.size));
@@ -429,12 +465,16 @@ nsMathMLContainerFrame::IsEmbellishOperator(nsIFrame* aFrame)
  */
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::GetPresentationData(PRInt32* aScriptLevel, 
-                                            PRBool*  aDisplayStyle)
+nsMathMLContainerFrame::GetPresentationData(nsPresentationData& aPresentationData)
 {
-  NS_PRECONDITION(aScriptLevel && aDisplayStyle, "null arg");
-  *aScriptLevel = mScriptLevel;
-  *aDisplayStyle = mDisplayStyle;
+  aPresentationData = mPresentationData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::SetPresentationData(const nsPresentationData& aPresentationData)
+{
+  mPresentationData = aPresentationData;
   return NS_OK;
 }
 
@@ -442,8 +482,11 @@ NS_IMETHODIMP
 nsMathMLContainerFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
                                                PRBool  aDisplayStyle)
 {
-  mScriptLevel += aScriptLevelIncrement;
-  mDisplayStyle = aDisplayStyle;
+ mPresentationData.scriptLevel += aScriptLevelIncrement;
+ if (aDisplayStyle)
+   mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+ else
+   mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
   return NS_OK;
 }
 
@@ -491,16 +534,15 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
       if (nsnull != aMathMLFrame && NS_SUCCEEDED(rv)) {
 
         // get the scriptlevel of the child
-        PRInt32 childLevel;
-        PRBool childDisplayStyle;
-        aMathMLFrame->GetPresentationData(&childLevel, &childDisplayStyle);
+        nsPresentationData childData;
+        aMathMLFrame->GetPresentationData(childData);
 
         // Iteration to set a style context for the script level font.
         // Wow, here is what is happening: the style system requires that any style context
         // *must* be uniquely associated to a frame. So we insert as many frames as needed
         // to scale-down (or scale-up) the fontsize.
 
-        PRInt32 gap = childLevel - mScriptLevel;
+        PRInt32 gap = childData.scriptLevel - mPresentationData.scriptLevel;
         if (0 != gap) {
           nsCOMPtr<nsIContent> childContent;
           childFrame->GetContent(getter_AddRefs(childContent));
@@ -556,7 +598,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
             aMathMLFrame->GetEmbellishData(embellishData);
             if (0 != embellishData.flags && nsnull != embellishData.firstChild) {
               do { // walk the hierarchy in a bottom-up manner
-                rv= lastFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+                rv = lastFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
                 NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
                 if (NS_FAILED(rv) || !aMathMLFrame) break;
                 embellishData.firstChild = childFrame;
@@ -594,10 +636,9 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   // its scriptlevel and displaystyle. If the parent later wishes to increment
   // with other values, it will do so in its SetInitialChildList() method.
  
-  mScriptLevel = 0;
-  mDisplayStyle = PR_TRUE;
-  mCompressed = PR_FALSE; // for compatibility with TeX rendering
-  mScriptSpace = 0; // = 0.5 pt in plain TeX
+  mPresentationData.flags = NS_MATHML_DISPLAYSTYLE;
+  mPresentationData.scriptLevel = 0;
+  mPresentationData.mstyle = nsnull;
 
   mEmbellishData.flags = 0;
   mEmbellishData.firstChild = nsnull;
@@ -605,10 +646,15 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   nsIMathMLFrame* aMathMLFrame = nsnull;
   nsresult res = aParent->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
   if (NS_SUCCEEDED(res) && nsnull != aMathMLFrame) {
-    PRInt32 aScriptLevel = 0; 
-    PRBool aDisplayStyle = PR_TRUE;
-    aMathMLFrame->GetPresentationData(&aScriptLevel, &aDisplayStyle);
-    UpdatePresentationData(aScriptLevel, aDisplayStyle);
+    nsPresentationData parentData;
+    aMathMLFrame->GetPresentationData(parentData);
+
+    mPresentationData.mstyle = parentData.mstyle;
+    mPresentationData.scriptLevel = parentData.scriptLevel;
+    if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags))
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    else
+      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
   }
   return rv;
 }
