@@ -338,6 +338,13 @@ nsString* ToNewString() const;
 char* ToNewCString() const;
 
 /**
+ * Creates an UTF8 clone of this string
+ * Note that calls to this method should be matched with calls to Recycle().
+ * @return  ptr to new isolatin1 string
+ */
+char* ToNewUTF8String() const;
+
+/**
  * Creates a unicode clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
  * @return  ptr to new unicode string

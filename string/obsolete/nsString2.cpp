@@ -578,6 +578,85 @@ char* nsString::ToNewCString() const {
   
   return result;
 }
+/**
+ * Creates an UTF8 clone of this string
+ * Note that calls to this method should be matched with calls to Recycle().
+ * @update  ftang 09/10/99
+ * @return  ptr to new UTF8 string
+ * http://www.cis.ohio-state.edu/htbin/rfc/rfc2279.html
+ */
+char* nsString::ToNewUTF8String() const {
+  nsCString temp(*this);
+  temp.SetCapacity(8); //ensure that we get an allocated buffer instead of the common empty one.
+
+  // Caculate how many bytes we need
+  PRUnichar* p;
+  PRInt32 utf8len;
+  for(p = this->mUStr, utf8len=0; 0 != (*p);p++)
+  {
+     if(0x0000 == ((*p) & 0x007F))
+        utf8len += 1; // 0000 0000 - 0000 007F
+     else if(0x0000 == ((*p) & 0x07FF))
+        utf8len += 2; // 0000 0080 - 0000 07FF
+     else 
+        utf8len += 3; // 0000 0800 - 0000 FFFF
+     // Note: Surrogate pair need 4 bytes, but in this caculation
+     // we count as 6 bytes. It will wast 2 bytes per surrogate pair
+  }
+
+  if((utf8len+1) > 8)
+     temp.SetCapacity(utf8len+1); 
+
+  char* result=temp.mStr;
+  char* out = result;
+  PRUint32 ucs4=0;
+
+  for(p = this->mUStr, utf8len=0; 0 != (*p);p++)
+  {
+     if(0 == ucs4) {
+       if(0x0000 == ((*p) & 0xFF80)) {
+          *out++ = (char)*p;
+       } else if(0x0000 == ((*p) & 0xF800)) {
+          *out++ = 0xC0 | (char)((*p) >> 6);
+          *out++ = 0x80 | (char)(0x003F & (*p));
+       } else {
+          if( 0xD800 == ( 0xFC00 & (*p))) 
+          { // D800- DBFF - High Surrogate 
+            // N = (H- D800) *400 + 10000 + ...
+            ucs4 = 0x10000 | ((0x03FF & (*p)) << 10);
+          } else if( 0xDC00 == ( 0xFC00 & (*p))) { 
+            // DC00- DFFF - Low Surrogate 
+            // error here. We should hit High Surrogate first
+            // Do not output any thing in this case
+          } else {
+            *out++ = 0xE0 | (char)((*p) >> 12);
+            *out++ = 0x80 | (char)(0x003F & (*p >> 6));
+            *out++ = 0x80 | (char)(0x003F & (*p) );
+          }
+       }
+     } else {
+       if( 0xDC00 == (0xFC00 & (*p))) { 
+         // DC00- DFFF - Low Surrogate 
+         // N += ( L - DC00 )  
+         ucs4 |= (0x03FF & (*p));
+         // 0001 0000-001F FFFF
+         *out++ = 0xF0 | (char)(ucs4 >> 18);
+         *out++ = 0x80 | (char)(0x003F & (ucs4 >> 12));
+         *out++ = 0x80 | (char)(0x003F & (ucs4 >> 6));
+         *out++ = 0x80 | (char)(0x003F & ucs4) ;
+       } else {
+         // Got a High Surrogate but no low surrogate
+         // output nothing.
+       }
+       ucs4 = 0;
+     }
+  }
+  *out = '\0'; // null terminate
+  temp.mStr=0;
+  temp.mOwnsBuffer=PR_FALSE;
+  
+  return result;
+}
 
 /**
  * Creates an ascii clone of this string
