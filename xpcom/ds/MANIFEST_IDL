@@ -6,6 +6,7 @@ nsIObserver.idl
 nsIObserverService.idl
 nsIPersistentProperties2.idl
 nsIProperties.idl
+nsIPropertyBag.idl
 nsISerializable.idl
 nsISimpleEnumerator.idl
 nsIStopwatch.idl
