@@ -989,6 +989,26 @@ NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 
   NPPrint* thePrint = (NPPrint *)platformPrint;
 
+  // to be compatible with the older SDK versions and to match what
+  // 4.x and other browsers do, overwrite |window.type| field with one
+  // more copy of |platformPrint|. See bug 113264
+  if(fCallbacks) {
+    PRUint16 sdkmajorversion = (fCallbacks->version & 0xff00)>>8;
+    PRUint16 sdkminorversion = fCallbacks->version & 0x00ff;
+    if((sdkmajorversion == 0) && (sdkminorversion < 11)) { 
+      // Let's copy platformPrint bytes over to where it was supposed to be 
+      // in older versions -- four bytes towards the beginning of the struct
+      // but we should be careful about possible misalignments
+      if(sizeof(NPWindowType) >= sizeof(void *)) {
+        void* source = thePrint->print.embedPrint.platformPrint; 
+        void** destination = (void **)&(thePrint->print.embedPrint.window.type); 
+        *destination = source;
+      } 
+      else 
+        NS_ASSERTION(PR_FALSE, "Incompatible OS for assignment");
+    }
+  }
+
   NS_TRY_SAFE_CALL_VOID(CallNPP_PrintProc(fCallbacks->print,
                                           &fNPP,
                                           thePrint), fLibrary);
