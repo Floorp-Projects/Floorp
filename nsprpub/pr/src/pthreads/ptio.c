@@ -4299,6 +4299,7 @@ PR_IMPLEMENT(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags)
 
     for (;;)
     {
+        errno = 0;
         dp = readdir(dir->md.d);
         if (NULL == dp)
         {

@@ -90,6 +90,7 @@ void _MD_unix_readdir_error(int err)
 {
 
 	switch (err) {
+		case 0:
 		case ENOENT:
 			PR_SetError(PR_NO_MORE_FILES_ERROR, err);
 			break;

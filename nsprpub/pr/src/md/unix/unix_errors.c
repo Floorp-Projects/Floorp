@@ -283,6 +283,7 @@ void _MD_unix_readdir_error(int err)
     PRErrorCode prError;
 
     switch (err) {
+        case 0:
         case ENOENT:
             prError = PR_NO_MORE_FILES_ERROR;
             break;
