@@ -664,7 +664,7 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
   if (cert == nsnull) return NS_ERROR_FAILURE;
   if (strcmp(col, "certcol") == 0) {
     rv = cert->GetCommonName(_retval);
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv) || _retval.IsEmpty()) {
       // kaie: I didn't invent the idea to cut off anything before 
       //       the first colon. :-)
       nsAutoString nick;
