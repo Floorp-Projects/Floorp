@@ -1056,13 +1056,14 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
 
   // now duplicate our tile into the background
 
+  PRInt32 w, h;
   if (mAlphaDepth == 1) {
     for (PRInt32 y = aY0; y < aY1; y += srcRect.height) {
+      h = PR_MIN(srcRect.height, aY1 - y);
       for (PRInt32  x = aX0; x < aX1; x += srcRect.width) {
-        ::BitBlt(theHDC, x, y, srcRect.width, srcRect.height,
-                 maskDC, 0, 0, SRCAND);
-        ::BitBlt(theHDC, x, y, srcRect.width, srcRect.height,
-                 offDC, 0, 0, SRCPAINT);
+        w = PR_MIN(srcRect.width, aX1 - x);
+        ::BitBlt(theHDC, x, y, w, h, maskDC, 0, 0, SRCAND);
+        ::BitBlt(theHDC, x, y, w, h, offDC, 0, 0, SRCPAINT);
       }
     }
     // Destroy Alpha/Mask GDI Object
@@ -1076,16 +1077,18 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
     blendFunction.SourceConstantAlpha = 255;
     blendFunction.AlphaFormat = 1;
     for (PRInt32 y = aY0; y < aY1; y += srcRect.height) {
+      h = PR_MIN(srcRect.height, aY1 - y);
       for (PRInt32  x = aX0; x < aX1; x += srcRect.width) {
-        gAlphaBlend(theHDC, x, y, srcRect.width, srcRect.height,
-                    offDC, 0, 0, srcRect.width, srcRect.height, blendFunction);
+        w = PR_MIN(srcRect.width, aX1 - x);
+        gAlphaBlend(theHDC, x, y, w, h, offDC, 0, 0, w, h, blendFunction);
       }
     }
   } else {
     for (PRInt32 y = aY0; y < aY1; y += srcRect.height) {
+      h = PR_MIN(srcRect.height, aY1 - y);
       for (PRInt32  x = aX0; x < aX1; x += srcRect.width) {
-        ::BitBlt(theHDC, x, y, srcRect.width, srcRect.height,
-                 offDC, 0, 0, SRCCOPY);
+        w = PR_MIN(srcRect.width, aX1 - x);
+        ::BitBlt(theHDC, x, y, w, h, offDC, 0, 0, SRCCOPY);
       }
     }
   }
