@@ -50,6 +50,10 @@
 
 #include "ProxyJNI.h"
 
+#ifdef DEBUG
+#include "nsDebug.h"
+#endif
+
 // Method Signature Processing.
 
 static jni_type get_jni_type(char sig)
@@ -239,7 +243,7 @@ private:
     static nsHashtable* theIDTable;
     nsISecureEnv* mSecureEnv;
     nsISecurityContext* mContext;
-    jobject mJavaThread;
+    jbool mInProxyFindClass;
 
     static ProxyJNIEnv& GetProxyEnv(JNIEnv* env) { return *(ProxyJNIEnv*)env; }
     static nsISecureEnv* GetSecureEnv(JNIEnv* env) { return ((ProxyJNIEnv*)env)->mSecureEnv; }
@@ -274,13 +278,34 @@ private:
     static jclass JNICALL FindClass(JNIEnv *env, const char *name)
     {
         jclass outClass = NULL;
-        nsISecureEnv* secureEnv = GetSecureEnv(env);
+        ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
+        nsISecureEnv* secureEnv = proxyEnv.mSecureEnv;
         nsresult result;
         result = secureEnv->FindClass(name, &outClass);
-	if (NS_FAILED(result) || !outClass)
+        if ((NS_FAILED(result) || !outClass) && !proxyEnv.mInProxyFindClass) {
+            proxyEnv.mInProxyFindClass = JNI_TRUE;
             outClass = ProxyFindClass(env, name);
+            proxyEnv.mInProxyFindClass = JNI_FALSE;
+        }
         return outClass;
     }
+
+#ifdef JDK1_2
+    static jmethodID JNICALL FromReflectedMethod(JNIEnv *env, jobject method)
+    {
+        return NULL;
+    }
+    
+    static jfieldID JNICALL FromReflectedField(JNIEnv *env, jobject field)
+    {
+        return NULL;
+    }
+
+    static jobject JNICALL ToReflectedMethod(JNIEnv *env, jclass cls, jmethodID methodID, jboolean isStatic)
+    {
+        return NULL;
+    }
+#endif
 
     static jclass JNICALL GetSuperclass(JNIEnv *env, jclass sub)
     {
@@ -299,6 +324,13 @@ private:
         result = secureEnv->IsAssignableFrom(sub, sup, &outIsAssignable);
         return outIsAssignable;
     }
+    
+#ifdef JDK1_2
+    static jobject JNICALL ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic)
+    {
+        return NULL;
+    }
+#endif
     
     static jint JNICALL Throw(JNIEnv *env, jthrowable obj)
     {
@@ -348,6 +380,18 @@ private:
         result = secureEnv->FatalError(msg);
     }
 
+#ifdef JDK1_2
+    static jint JNICALL PushLocalFrame(JNIEnv *env, jint capacity)
+    {
+        return 0;
+    }
+    
+    static jobject JNICALL PopLocalFrame(JNIEnv *env, jobject result)
+    {
+        return NULL;
+    }
+#endif
+
     static jobject JNICALL NewGlobalRef(JNIEnv *env, jobject lobj)
     {
         nsISecureEnv* secureEnv = GetSecureEnv(env);
@@ -379,6 +423,18 @@ private:
         result = secureEnv->IsSameObject(obj1, obj2, &outIsSameObject);
         return outIsSameObject;
     }
+
+#ifdef JDK1_2
+    static jobject JNICALL NewLocalRef(JNIEnv *env, jobject ref)
+    {
+        return NULL;
+    }
+    
+    static jint JNICALL EnsureLocalCapacity(JNIEnv *env, jint capacity)
+    {
+        return -1;
+    }
+#endif
 
     static jobject JNICALL AllocObject(JNIEnv *env, jclass clazz)
     {
@@ -1211,9 +1267,20 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
     // jclass (JNICALL *FindClass) (JNIEnv *env, const char *name);
     &FindClass,
 
+#ifdef JDK1_2
+    // jmethodID (JNICALL *FromReflectedMethod) (JNIEnv *env, jobject method);
+    &FromReflectedMethod,
+    
+    // jfieldID (JNICALL *FromReflectedField) (JNIEnv *env, jobject field);
+    &FromReflectedField,
+
+    // jobject (JNICALL *ToReflectedMethod) (JNIEnv *env, jclass cls, jmethodID methodID, jboolean isStatic);
+    &ToReflectedMethod,
+#else
     NULL,   // void *reserved4;
     NULL,   // void *reserved5;
     NULL,   // void *reserved6;
+#endif
 
     // jclass (JNICALL *GetSuperclass) (JNIEnv *env, jclass sub);
     &GetSuperclass,
@@ -1221,7 +1288,12 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
     // jboolean (JNICALL *IsAssignableFrom) (JNIEnv *env, jclass sub, jclass sup);
     &IsAssignableFrom,
     
+#ifdef JDK1_2
+    // jobject (JNICALL *ToReflectedField) (JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic);
+    &ToReflectedField,
+#else    
     NULL, // void *reserved7;
+#endif
 
     // jint (JNICALL *Throw) (JNIEnv *env, jthrowable obj);
     &Throw,
@@ -1241,8 +1313,16 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
     // void (JNICALL *FatalError) (JNIEnv *env, const char *msg);
     &FatalError,
     
+#ifdef JDK1_2
+    // jint (JNICALL *PushLocalFrame) (JNIEnv *env, jint capacity);
+    &PushLocalFrame,
+    
+    // jobject (JNICALL *PopLocalFrame) (JNIEnv *env, jobject result);
+    &PopLocalFrame,
+#else
     NULL, // void *reserved8;
     NULL, // void *reserved9;
+#endif
 
     // jobject (JNICALL *NewGlobalRef) (JNIEnv *env, jobject lobj);
     &NewGlobalRef,
@@ -1256,8 +1336,16 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
     // jboolean (JNICALL *IsSameObject) (JNIEnv *env, jobject obj1, jobject obj2);
     &IsSameObject,
     
+#ifdef JDK1_2
+    // jobject (JNICALL *NewLocalRef) (JNIEnv *env, jobject ref);
+    &NewLocalRef,
+    
+    // jint (JNICALL *EnsureLocalCapacity) (JNIEnv *env, jint capacity);
+    &EnsureLocalCapacity,
+#else
     NULL, // void *reserved10;
     NULL, // void *reserved11;
+#endif
 
     // jobject (JNICALL *AllocObject) (JNIEnv *env, jclass clazz);
     &AllocObject,
@@ -1575,16 +1663,22 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
 nsHashtable* ProxyJNIEnv::theIDTable = NULL;
 
 ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureEnv* secureEnv)
-    :   mSecureEnv(secureEnv), mContext(NULL), mJavaThread(NULL)
+    :   mSecureEnv(secureEnv), mContext(NULL), mInProxyFindClass(JNI_FALSE)
 {
- nsresult result; 
     this->functions = &theFuncs;
     if (theIDTable == NULL)
         theIDTable = new nsHashtable();
     
     // Ask the JVM for a new nsISecureEnv, if none provided.
-    if (secureEnv == NULL)
-        result = jvmPlugin->CreateSecureEnv(this, &mSecureEnv);
+    if (secureEnv == NULL) {
+        nsresult rv = jvmPlugin->CreateSecureEnv(this, &mSecureEnv);
+#ifdef DEBUG
+        if (NS_FAILED(rv))
+            NS_WARNING("CreateSecureEnv FAILED");
+        else
+            NS_WARNING("CreateSecureEnv OK");
+#endif
+    }
 }
 
 ProxyJNIEnv::~ProxyJNIEnv()
