@@ -458,7 +458,6 @@ var nsPublishCommand =
       var docUrl = GetDocumentUrl();
       return window.editorShell.documentModified || window.gHTMLSourceChanged
              || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
-             
     }
     return false;
   },
@@ -1897,18 +1896,16 @@ var nsPreviewCommand =
 
       // If none found, open a new browser
       if (!browser)
+      {
         browser = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", window._content.location);
-
-      try {
-        if (browser)
-        {
-          // Be sure browser contains real source content, not cached
-          // setTimeout is needed because the "browser" created by openDialog 
-          //    needs time to finish else BrowserReloadSkipCache doesn't exist
-          setTimeout( function(browser) { browser.BrowserReloadSkipCache(); }, 10, browser );
+      }
+      else
+      {
+        try {
+          browser.BrowserReloadSkipCache();
           browser.focus();
-        }
-      } catch (ex) {}
+        } catch (ex) {}
+      }
     }
   }
 };
