@@ -11,12 +11,12 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 # 
-# The Original Code is the Netscape security libraries.
+# The Original Code is this file as it was released on
+# September 12, 2001.
 # 
-# The Initial Developer of the Original Code is Netscape
-# Communications Corporation.  Portions created by Netscape are 
-# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
-# Rights Reserved.
+# The Initial Developer of the Original Code is Michel C. C. Buijsman.
+# Portions created by Michel C. C. Buijsman are Copyright (C) 2001
+# Michel C. C. Buijsman.  All Rights Reserved.
 # 
 # Contributor(s):
 #   Michel Buijsman <michel@rubberchicken.nl> (Original Author)
