@@ -243,6 +243,59 @@ private:
 
   nsresult ProcessWidgetChanges(nsIView* aView);
 
+  // Utilities used to size the offscreen drawing surface
+
+  /**
+	 * Determine the maximum and width and height of all of the
+   * view manager's widgets.
+   *
+   * @param aMaxWidgetBounds the maximum width and height of all view managers
+   * widgets on exit.
+	 */
+  void GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const;
+
+  /**
+	 * Determine if a rect's width and height will fit within a specified width and height
+   * @param aRect rectangle to test
+   * @param aWidth width to determine if the rectangle's width will fit within
+   * @param aHeight height to determine if the rectangles height will fit within
+   * @returns PR_TRUE if the rect width and height fits with aWidth, aHeight, PR_FALSE
+   * otherwise.
+	 */
+  PRBool RectFitsInside(nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const;
+
+  /**
+	 * Determine if two rectangles width and height will fit within a specified width and height
+   * @param aRect1 first rectangle to test
+   * @param aRect1 second rectangle to test
+   * @param aWidth width to determine if both rectangle's width will fit within
+   * @param aHeight height to determine if both rectangles height will fit within
+   * @returns PR_TRUE if the rect1's and rect2's width and height fits with aWidth,
+   * aHeight, PR_FALSE otherwise.
+	 */
+  PRBool BothRectsFitInside(nsRect& aRect1, nsRect& aRect2, PRInt32 aWidth, PRInt32 aHeight, nsRect& aNewSize) const;
+  
+  /**
+	 * Return an offscreen surface size from a set of discrete surface sizes.
+   * The smallest discrete surface size that can enclose both the Maximum widget 
+   * size (@see GetMaxWidgetBounds) and the requested size is returned.
+   *
+   * @param aRequestedSize Requested size for the offscreen.
+   * @param aSurfaceSize contains the surface size if the method returns PR_TRUE. 
+   * It is unmodified if the method returns PR_FALSE;
+   * @returns PR_TRUE if it was able to calculate a discrete surface size, PR_FALSE
+   * otherwise.
+	 */
+  PRBool CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSize) const;
+
+  /**
+	 * Get the size of the offscreen drawing surface..
+   *
+   * @param aRequestedSize Desired size for the offscreen.
+   * @param aSurfaceSize   Offscreen adjusted to a discrete size which encloses aRequestedSize.
+	 */
+  void GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const;
+
 private:
   nsIDeviceContext  *mContext;
   float				mTwipsToPixels;
@@ -277,6 +330,9 @@ private:
   static nsDrawingSurface  gBlue;
   static nsSize            gOffScreenSize;
   static nsSize            gBlendSize;
+
+  //list of view managers
+  static nsVoidArray       *gViewManagers;
 
   //compositor regions
   nsIRegion         *mTransRgn;
