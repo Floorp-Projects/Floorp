@@ -497,12 +497,8 @@ nsHttpConnection::CreateTransport()
     // configure the socket type based on the connection type requested.
     const char* type = nsnull;
 
-    if (mConnectionInfo->UsingSSL()) {
-        if (mConnectionInfo->UsingHttpProxy())
-            type = "tlsstepup";
-        else
-            type = "ssl";
-    }
+    if (mConnectionInfo->UsingSSL())
+        type = "ssl";
 
     nsCOMPtr<nsITransport> transport;
     rv = sts->CreateTransportOfType(type,
