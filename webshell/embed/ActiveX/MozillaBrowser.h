@@ -122,12 +122,13 @@ protected:
 	{
 		CComBSTR szName;
 		CComVariant vValue;
-	};
-	typedef std::vector<Property> PropertyList;
+  };
+#if 0 /* XXX: this breaks the build :-( */
+  typedef std::vector<Property> PropertyList;
 
 	// Property list
 	PropertyList m_PropertyList;
-
+#endif /* 0 */
 	virtual HRESULT CreateWebShell();
 	virtual BOOL IsValid();
 
