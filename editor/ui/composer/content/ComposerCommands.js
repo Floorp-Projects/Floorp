@@ -343,7 +343,7 @@ function noUIStateUpdateNeeded(commandID)
   return false;
 }
 
-function goUpdateCommandState(command)
+function goUpdateCommandState(cmdController, command)
 {
   // this code need to be trimmed down and possibly reworked 
   // when we move to nsICommandGroup for command handling
@@ -368,16 +368,6 @@ function goUpdateCommandState(command)
 
   try
   {
-    var controller = top.document.commandDispatcher.getControllerForCommand(command);
-    if (!controller) return;
-    
-    var cmdController;
-    try
-    {
-      cmdController = controller.QueryInterface(Components.interfaces.nsICommandController);
-    } catch(e) {}
-    if (!cmdController) return;
-
     var params = newCommandParams();
     if (!params) return;
 
@@ -433,17 +423,37 @@ function goUpdateCommandState(command)
   catch (e) { dump("An error occurred updating the "+command+" command: \n"+e+"\n"); }
 }
 
+var gMenuControllers = [{key:null}];
+
 function goUpdateComposerMenuItems(commandset)
 {
   // dump("Updating commands for " + commandset.id + "\n");
-  
-  for (var i = 0; i < commandset.childNodes.length; i++)
-  {
+
+  for (var i = 0; i < commandset.childNodes.length; i++) {
     var commandID = commandset.childNodes[i].id;
-    if (commandID)
-    {
+    if (commandID) {
       goUpdateCommand(commandID);  // enable or disable
-      goUpdateCommandState(commandID);
+      var controller = top.document.commandDispatcher.getControllerForCommand(commandID);
+      if (controller) {
+        /* gMenuControllers contains a single entry buffer to allow for --j */
+        for (var j = gMenuControllers.length;
+             --j && gMenuControllers[j].key != controller;
+            );
+
+        if (!j) {
+          /* obj stores the controller for the command and whether the QI succeeded */
+          var obj = {key:controller, isCommandController:false};
+          try {
+            /* QI modifies the object including the one wrapped in obj.key */
+            controller.QueryInterface(Components.interfaces.nsICommandController);
+            obj.isCommandController = true;
+          } catch(e) {}
+          j = gMenuControllers.length;
+          gMenuControllers[j] = obj;
+        }
+        if (gMenuControllers[j].isCommandController)
+          goUpdateCommandState(controller, commandID);
+      }
     }
   }
 }
