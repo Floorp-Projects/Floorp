@@ -107,8 +107,8 @@ public:
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
-   * The tag should be uppercase and inclue the colon.
-   * ie: NS_NewAtom(":FIRST-LINE");
+   * The tag should be lowercase and inclue the colon.
+   * ie: NS_NewAtom(":first-line");
    */
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
@@ -119,8 +119,8 @@ public:
   /**
    * Probe style for a pseudo frame within the given aParentContent & aParentContext.
    * This will return nsnull id there are no explicit rules for the pseudo element.
-   * The tag should be uppercase and inclue the colon.
-   * ie: NS_NewAtom(":FIRST-LINE");
+   * The tag should be lowercase and inclue the colon.
+   * ie: NS_NewAtom(":first-line");
    */
   virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                                       nsIAtom* aPseudoTag,

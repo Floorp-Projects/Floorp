@@ -3041,7 +3041,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
         nsAutoString  defaultStyle;
         nsIDocument* doc = shell->GetDocument();
         if (nsnull != doc) {
-          nsIAtom* defStyleAtom = NS_NewAtom("DEFAULT-STYLE");
+          nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);
           NS_RELEASE(defStyleAtom);
           NS_RELEASE(doc);
@@ -3080,7 +3080,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
         nsIDocument* doc = shell->GetDocument();
         if (nsnull != doc) {
           nsAutoString  defaultStyle;
-          nsIAtom* defStyleAtom = NS_NewAtom("DEFAULT-STYLE");
+          nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);
           NS_RELEASE(defStyleAtom);
           NS_RELEASE(doc);

@@ -15,98 +15,98 @@
  * Reserved.
  */
 
-HTML {
+html {
   display: block;
 }
 
-BODY {
+body {
   display: block;
   line-height: normal;
   margin: 8px;
 }
 
-FRAMESET {
+frameset {
   overflow: hidden;
 }
 
-/* Blocks */
+/* blocks */
 
-P {
+p {
   display: block;
   margin-bottom: auto;
   margin-top: auto;
 }
-ADDRESS {
+address {
   display: block;
   font-style: italic;
   margin-bottom: 0;
   margin-top: 0;
 }
-BLOCKQUOTE {
+blockquote {
   display: block;
   margin-left: 40px;
   margin-right: 40px;
   margin-top: auto;
   margin-bottom: auto;
 }
-CENTER {
+center {
   display: block;
   text-align: center;
   margin-bottom: 0;
   margin-top: 0;
 }
-DIV {
+div {
   display: block;
   margin-bottom: 0;
   margin-top: 0;
 }
-H1 {
+h1 {
   display: block;
   font-size: xx-large;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
-H2 {
+h2 {
   display: block;
   font-size: x-large;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
-H3 {
+h3 {
   display: block;
   font-size: large;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
-H4 {
+h4 {
   display: block;
   font-size: medium;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
-H5 {
+h5 {
   display: block;
   font-size: small;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
-H6 {
+h6 {
   display: block;
   font-size: x-small;
   font-weight: bold;
   margin-bottom: auto;
   margin-top: auto;
 }
-LAYER {
+layer {
   display: block;
   position: absolute;
 }
-LISTING {
+listing {
   display: block;
   font-family: monospace;
   font-size: medium;
@@ -114,191 +114,191 @@ LISTING {
   margin-bottom: auto;
   margin-top: auto;
 }
-PLAINTEXT, XMP, PRE {
+plaintext, xmp, pre {
   display: block;
   font-family: monospace;
   white-space: pre;
   margin-bottom: auto;
   margin-top: auto;
 }
-MULTICOL {
+multicol {
   display: block;
   margin-bottom: auto;
   margin-top: auto;
 }
 
-/* Tables */
+/* tables */
 
-TABLE {
+table {
   display: table;
 /* border-style: outset; */
-  border-color: #C0C0C0;
+  border-color: #c0c0c0;
   cell-spacing: 2px;
   cell-padding: 2px;
   margin-top: 0;
   margin-bottom: 0;
   background: transparent;
 }
-TD, TH {
+td, th {
   vertical-align: inherit;
   background: inherit;
   text-align: left;
 /* border-style: inset; */
-  border-color: #C0C0C0;
+  border-color: #c0c0c0;
   display: table-cell;
 }
-TH {
+th {
   font-weight: bold;
   text-align: center;
 }
-CAPTION {
+caption {
   text-align: center;
   display: table-caption;
 }
-TR {
+tr {
   display: table-row;
   vertical-align: inherit;
   background: inherit;
 }
-TBODY {
+tbody {
   display: table-row-group;
   vertical-align: middle;
   background: inherit;
 }
-THEAD {
+thead {
   display: table-header-group;
   vertical-align: middle;
   background: inherit;
 }
-TFOOT {
+tfoot {
   display: table-footer-group;
   vertical-align: middle;
   background: inherit;
 }
-COL {
+col {
   display: table-column;
 }
-COLGROUP {
+colgroup {
   display: table-column-group;
 }
 
-/* Spans */
+/* spans */
 
-A:link {
+a:link {
   display: inline;
   color: blue;
   text-decoration: underline;
   cursor: pointer;
 }
-A:visited {
+a:visited {
   display: inline;
   color: purple;
   text-decoration: underline;
   cursor: pointer;
 }
-A:active {
+a:active {
   display: inline;
   color: lime;
   text-decoration: underline;
   cursor: pointer;
 }
-A:out-of-date {
+a:out-of-date {
   display: inline;
   color: red;
   text-decoration: underline;
   cursor: pointer;
 }
-A:link IMG {
+a:link img {
   display: inline;
   border: 2px solid blue;
   font-family: sans-serif;
   font-size: 8.5pt;
   text-decoration: none;
 }
-A:visited IMG {
+a:visited img {
   display: inline;
   border: 2px solid purple;
   font-family: sans-serif;
   font-size: 8.5pt;
   text-decoration: none;
 }
-A:active IMG {
+a:active img {
   display: inline;
   border: 2px solid lime;
   font-family: sans-serif;
   font-size: 8.5pt;
   text-decoration: none;
 }
-A:out-of-date IMG {
+a:out-of-date img {
   display: inline;
   border: 2px solid red;
   font-family: sans-serif;
   font-size: 8.5pt;
   text-decoration: none;
 }
-B, STRONG {
+b, strong {
   display: inline;
   font-weight: bolder;
 }
-I, CITE, EM, VAR {
+i, cite, em, var {
   display: inline;
   font-style: italic;
 }
-TT, CODE, KBD, SAMP {
+tt, code, kbd, samp {
   display: inline;
   font-family: monospace;
 }
-U {
+u {
   display: inline;
   text-decoration: underline;
 }
-S, STRIKE {
+s, strike {
   display: inline;
   text-decoration: line-through;
 }
-BLINK {
+blink {
   display: inline;
   text-decoration: blink;
 }
-BIG {
+big {
   display: inline;
   font-size: larger;
 }
-SMALL {
+small {
   display: inline;
   font-size: smaller;
 }
-ABBR, ACRONYM, DEL, DFN, INS, Q, SPAN {
+abbr, acronym, del, dfn, ins, q, span {
   display: inline;
 }
-INS { text-decoration: underline; }
-DEL { text-decoration: line-through; }
-DFN { font-style: italic; }
-SUB {
+ins { text-decoration: underline; }
+del { text-decoration: line-through; }
+dfn { font-style: italic; }
+sub {
   display: inline;
   vertical-align: sub;
   font-size: smaller;
 }
-SUP {
+sup {
   display: inline;
   vertical-align: super;
   font-size: smaller;
 }
-ILAYER {
+ilayer {
   position: absolute;
   display: inline;
 }
-NOBR {
+nobr {
   display: inline;
   white-space: nowrap;
 }
-LEGEND {
+legend {
   display: inline;
 	padding-left: 2px;
 	padding-right: 2px;
   border: 2px solid black;
 }
-FIELDSET {
+fieldset {
   display: block;
   border: 2px solid black;
 	padding: 4px;
@@ -306,14 +306,14 @@ FIELDSET {
 	margin-right: 2px;
 }
 
-/* Lists */
+/* lists */
 
-:BULLET {
+:bullet {
   display: inline;
   margin-right: 8px;
 }
 
-UL, MENU, DIR {
+ul, menu, dir {
   display: block;
   margin-right: 0;
   margin-bottom: auto;
@@ -322,7 +322,7 @@ UL, MENU, DIR {
   margin-left: 40px;
 }
 
-OL {
+ol {
   display: block;
   margin-right: 0;
   margin-bottom: auto;
@@ -331,111 +331,111 @@ OL {
   margin-left: 40px;
 }
 
-LI {
+li {
   display: list-item;
   list-style-position: inside;
 }
 
-UL LI, OL LI, MENU LI, DIR LI {
+ul li, ol li, menu li, dir li {
   list-style-position: outside;
 }
 
-/* Nested lists have no top/bottom margins */
-UL UL,   UL OL,   UL MENU,   UL DIR,
-MENU UL, MENU OL, MENU MENU, MENU DIR,
-DIR UL,  DIR OL,  DIR MENU,  DIR DIR,
-OL UL,   OL OL,   OL MENU,   OL DIR
+/* nested lists have no top/bottom margins */
+ul ul,   ul ol,   ul menu,   ul dir,
+menu ul, menu ol, menu menu, menu dir,
+dir ul,  dir ol,  dir menu,  dir dir,
+ol ul,   ol ol,   ol menu,   ol dir
 {
   margin-top: 0;
   margin-bottom: 0;
 }
 
 /* 2 deep unordered lists use a circle */
-OL UL,   UL UL,   MENU UL,   DIR UL,
-OL MENU, UL MENU, MENU MENU, DIR MENU,
-OL DIR,  UL DIR,  MENU DIR,  DIR DIR
+ol ul,   ul ul,   menu ul,   dir ul,
+ol menu, ul menu, menu menu, dir menu,
+ol dir,  ul dir,  menu dir,  dir dir
 {
   list-style-type: circle;
 }
 
 /* 3 deep (or more) unordered lists use a square */
-OL OL UL,   OL UL UL,   OL MENU UL,   OL DIR UL,
-OL OL MENU, OL UL MENU, OL MENU MENU, OL DIR MENU,
-OL OL DIR,  OL UL DIR,  OL MENU DIR,  OL DIR DIR,
+ol ol ul,   ol ul ul,   ol menu ul,   ol dir ul,
+ol ol menu, ol ul menu, ol menu menu, ol dir menu,
+ol ol dir,  ol ul dir,  ol menu dir,  ol dir dir,
 
-UL OL UL,   UL UL UL,   UL MENU UL,   UL DIR UL,
-UL OL MENU, UL UL MENU, UL MENU MENU, UL DIR MENU,
-UL OL DIR,  UL UL DIR,  UL MENU DIR,  UL DIR DIR,
+ul ol ul,   ul ul ul,   ul menu ul,   ul dir ul,
+ul ol menu, ul ul menu, ul menu menu, ul dir menu,
+ul ol dir,  ul ul dir,  ul menu dir,  ul dir dir,
 
-MENU OL UL,   MENU UL UL,   MENU MENU UL,   MENU DIR UL,
-MENU OL MENU, MENU UL MENU, MENU MENU MENU, MENU DIR MENU,
-MENU OL DIR,  MENU UL DIR,  MENU MENU DIR,  MENU DIR DIR,
+menu ol ul,   menu ul ul,   menu menu ul,   menu dir ul,
+menu ol menu, menu ul menu, menu menu menu, menu dir menu,
+menu ol dir,  menu ul dir,  menu menu dir,  menu dir dir,
 
-DIR OL UL,   DIR UL UL,   DIR MENU UL,   DIR DIR UL,
-DIR OL MENU, DIR UL MENU, DIR MENU MENU, DIR DIR MENU,
-DIR OL DIR,  DIR UL DIR,  DIR MENU DIR,  DIR DIR DIR
+dir ol ul,   dir ul ul,   dir menu ul,   dir dir ul,
+dir ol menu, dir ul menu, dir menu menu, dir dir menu,
+dir ol dir,  dir ul dir,  dir menu dir,  dir dir dir
 {
   list-style-type: square;
 }
 
-DL {
+dl {
   display: block;
   margin-bottom: auto;
   margin-top: auto;
 }
-DT {
+dt {
   display: block;
 }
-DD {
+dd {
   display: block;
   margin-left: 40px;
 }
 
-/* Leafs */
+/* leafs */
 
-EMBED {
+embed {
   display: inline;
 }
-HR {
+hr {
   display: block;
   margin-top: 0;
   margin-bottom: 0;
   text-align: center;
   border: 1px -moz-bg-inset;
 }
-BR {
+br {
   display: inline;
   color: cyan;
 }
-IMG {
+img {
   display: inline;
   font-family: sans-serif;
   font-size: 8.5pt;
 }
-SPACER {
+spacer {
   display: inline;
 }
-WBR {
+wbr {
   display: inline;
 }
-IFRAME {
+iframe {
   display: inline;
   border: 2px solid black;
 }
-INPUT {
+input {
   vertical-align: bottom;
   border: 2px inset rgb(192, 192, 192);
   background-color: white;
   color: black;
 }
-INPUT[type=radio] {
+input[type=radio] {
   border: 2px inset rgb(192, 192, 192);
   background-color:white;
   color:black;
   width:12px;
   height:12px;
 }
-INPUT[type=checkbox] {
+input[type=checkbox] {
   border: 2px inset rgb(192, 192, 192);
   width:11px;
   height:11px;
@@ -443,80 +443,80 @@ INPUT[type=checkbox] {
   color:black;
 }
 
-INPUT[type=button] {
+input[type=button] {
   border: 2px outset rgb(192, 192, 192);
   color:black;
   background-color: rgb(192, 192, 192);
 }
 
-INPUT[type=submit] {
+input[type=submit] {
   border: 1px outset rgb(156, 154, 156);
   background-color:rgb(206, 207, 206);
   color:black;
 }
 
-INPUT[type=submit].ROLLOVER {
+input[type=submit].rollover {
 }
 
-INPUT[type=submit].PRESSED {
+input[type=submit].pressed {
   border-style : inset;
 }
 
-INPUT[type=submit].DISABLED {
+input[type=submit].disabled {
   border-style : solid;
 }
 
 
-INPUT[type=reset] {
+input[type=reset] {
   border: 1px outset rgb(156, 154, 156);
   background-color:rgb(206, 207, 206);
   color:black;
 }
 
-INPUT[type=reset].ROLLOVER {
+input[type=reset].rollover {
 }
 
-INPUT[type=reset].PRESSED {
+input[type=reset].pressed {
   border-style : inset;
 }
 
-INPUT[type=reset].DISABLED {
+input[type=reset].disabled {
   border-style : solid;
 }
 
-INPUT[type=file] {
+input[type=file] {
   border: 1px outset rgb(156, 154, 156);
   background-color:rgb(206, 207, 206);
   color:black;
 }
 
-INPUT[type=file].ROLLOVER {
+input[type=file].rollover {
 }
 
-INPUT[type=file].PRESSED {
+input[type=file].pressed {
   border-style : inset;
 }
 
-INPUT[type=file].DISABLED {
+input[type=file].disabled {
   border-style : solid;
 }
 
 
-:BUTTON-OUTLINE {
+:button-outline {
   border: 1px solid black;
 }
 
-:BUTTON-FOCUS {
+:button-focus {
   border: 2px solid salmon;
 }
 
-INPUT[type=text] {
+input[type=text] {
   border: 2px inset rgb(192, 192, 192);
   margin-right:10px; 
   background-color: white;
   color: black;
 }
-INPUT[type=password] {
+input[type=password] {
   border: 2px inset rgb(192, 192, 192);
   margin-right:10px; 
   background-color: white;
@@ -524,19 +524,19 @@ INPUT[type=password] {
 }
 
 
-LABEL {
+label {
   display: inline;
   vertical-align: bottom;
   background-color: white; 
 	padding-left: 3px;
 	padding-right: 3px;
 }
-BUTTON {
+button {
   display: inline;
   vertical-align: bottom;
   cursor: default;
 }
-BUTTON {
+button {
   display: inline;
   vertical-align: bottom;
   /*background-color: white; */
@@ -547,117 +547,117 @@ BUTTON {
   padding: 2px;
   cursor: default;
 }
-BUTTON.ROLLOVER {
+button.rollover {
   border: 2px outset rgb(192,192,192);
 }
-BUTTON.DISABLED {
+button.disabled {
   border: 2px solid rgb(192,192,192);
   color: rgb(225,225,225);
 }
-SELECT {
+select {
   vertical-align: bottom;
-  border: 1px inset #C0C0C0;
+  border: 1px inset #c0c0c0;
   background-color: white;
   color:black;
 }
-OPTION {
+option {
 }
-OPTION.SELECTED {
+option.selected {
   border:   1px solid rgb(0,0,128);
   background-color: rgb(0,0,128);
   color: rgb(255,255,255);
 }
-OPTION.SELECTEDFOCUS {
+option.selectedfocus {
   border:   1px dotted white;
   background-color: rgb(0,0,128);
   color: rgb(255,255,255);
 }
-TEXTAREA {
+textarea {
   vertical-align: bottom;
-  border: 2px inset #C0C0C0;
+  border: 2px inset #c0c0c0;
   background-color:white;
 }
 
-/* Misc */
+/* misc */
 
-APPLET {
+applet {
   display: inline;
 }
-AREA {
+area {
   display: none;
 }
-BASE {
+base {
   display: none;
 }
-BASEFONT {
+basefont {
   display: none;
 }
-HEAD {
+head {
   display: none;
 }
-MAP {
+map {
   display: none;
 }
-META {
+meta {
   display: none;
 }
-OBJECT {
+object {
   display: inline;
 }
-SCRIPT {
+script {
   display: none;
 }
-STYLE {
+style {
   display: none;
 }
-TITLE {
+title {
   display: none;
 }
-NOEMBED {
+noembed {
   display: none;
 }
-NOSCRIPT {
+noscript {
   display: none;
 }
-NOFRAMES {
-  display: none;
-}
-
-PARAM {
+noframes {
   display: none;
 }
 
-/* Pseudo-element style */
+param {
+  display: none;
+}
 
-:SCROLLBAR-LOOK {
+/* pseudo-element style */
+
+:scrollbar-look {
   background-color: #c0c0c0;
   /* border-color: inherit; */
   /* border: 2px outset #c0c0c0; */
 }
 
-:SCROLLBAR-ARROW-LOOK {
+:scrollbar-arrow-look {
   background-color: #c0c0c0;
   border-color: inherit;
   border: 2px outset #c0c0c0;
 }
 
-:SCROLLBAR-THUMB-LOOK {
+:scrollbar-thumb-look {
   background-color: #c0c0c0;
   border-color: inherit;
   border: 2px outset #c0c0c0;
 }
 
-:SCROLLED-CONTENT {
+:scrolled-content {
   background: inherit;
   padding: inherit;
   display: inherit;
 }
 
-:WRAPPED-FRAME {
+:wrapped-frame {
   display: inherit;
 }
 
-:PLACEHOLDER-FRAME {
+:placeholder-frame {
   display: inline;
   width: 0;
   height: 0;
@@ -668,12 +668,12 @@ PARAM {
   background-color: inherit;
 }
 
-:ROOT {
+:root {
   display: block;
   background-color: inherit;
 }
 
-:TABLE {
+:table {
   display: table;
   border-style: inherit;
   border-color: inherit;
@@ -684,75 +684,75 @@ PARAM {
   background: inherit;
 }
 
-:TABLE-CELL {
+:table-cell {
 	display: table-cell;
 }
 
-:TABLE-COLUMN {
+:table-column {
 	display: table-column;
 }
 
-:TABLE-COLUMN-GROUP {
+:table-column-group {
 	display: table-column-group;
 }
 
-:TABLE-OUTER {
+:table-outer {
   display: table;
 }
 
-:TABLE-ROW {
+:table-row {
 	display: table-row;
 }
 
-:TABLE-ROW-GROUP {
+:table-row-group {
 	display: table-row-group;
 }
 
-:CELL-CONTENT {
+:cell-content {
   display: block;
 }
 
-:FIELDSET-CONTENT {
+:fieldset-content {
   display: block;
 }
 
-:BUTTON-CONTENT {
+:button-content {
   display: block;
 }
 
-:LABEL-CONTENT {
+:label-content {
   display: block;
 }
 
-:MOZ-COMMENT {
+:moz-comment {
   display: none;
 }
 
-:DROPDOWN-VISIBLE {
+:dropdown-visible {
   visibility: visible;
 }
 
-:DROPDOWN-HIDDEN {
+:dropdown-hidden {
   visibility: hidden;
 }
 
-:COMBOBOX-TEXT {
+:combobox-text {
   color: black;
   padding-left: 2px;
 }
 
-:COMBOBOX-TEXTSELECTED {
+:combobox-textselected {
   background-color: rgb(0,0,128);
   color: white;
   border: 1px solid rgb(0,0,128);
 }
 
-:COMBOBOX-TEXTSELECTEDFOCUS {
+:combobox-textselectedfocus {
   background-color: rgb(0,0,128);
   color: white;
   border: 1px dotted white;
 }
 
-:MOZ-ANONYMOUS-BLOCK {
+:moz-anonymous-block {
   display: block;
 }

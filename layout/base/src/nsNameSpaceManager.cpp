@@ -244,7 +244,7 @@ public:
     PRUnichar ch;
     while ((ch = *string++) != 0) {
       // FYI: hash = hash*37 + ch
-      ch = nsCRT::ToUpper(ch);
+      ch = nsCRT::ToLower(ch);
       hash = ((hash << 5) + (hash << 2) + hash) + ch;
     }
     return hash;
@@ -261,7 +261,7 @@ public:
     const nsString* other = ((const NameSpaceURIKey*)aKey)->mString;
     if (nsnull != mString) {
       if (nsnull != other) {
-        return mString->EqualsIgnoreCase(*other); // XXX case sensative?
+        return mString->EqualsIgnoreCase(*other); // XXX case sensitive?
       }
       return PR_FALSE;
     }

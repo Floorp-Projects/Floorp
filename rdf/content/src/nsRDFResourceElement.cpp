@@ -262,7 +262,7 @@ RDFResourceElementImpl::RDFResourceElementImpl(nsIRDFResource* aResource,
     NS_ADDREF(aTag);
 
     if (nsnull == kIdAtom) {
-        kIdAtom = NS_NewAtom("ID");
+        kIdAtom = NS_NewAtom("id");
 
         nsresult rv;
         nsINameSpaceManager* mgr;

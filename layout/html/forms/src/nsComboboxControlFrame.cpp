@@ -306,7 +306,7 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   
   //nsIFrame* childFrame;
   if (1 == numChildren) {
-    nsIAtom * textBlockContentPseudo = NS_NewAtom(":COMBOBOX-TEXT");
+    nsIAtom * textBlockContentPseudo = NS_NewAtom(":combobox-text");
     aPresContext.ResolvePseudoStyleContextFor(mContent, textBlockContentPseudo,
                                               mStyleContext, &mBlockTextStyle);
     NS_RELEASE(textBlockContentPseudo);
@@ -551,7 +551,7 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
 
       // Scrollbars
       //const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-      //nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
+      //nsIAtom * sbAtom = NS_NewAtom(":scrollbar-arrow-look");
       //nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
       //NS_RELEASE(sbAtom);
 
@@ -704,15 +704,15 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownBtnOut, mBtnOutStyleContext, mContent, mStyleContext);
     RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownBtnPressed, mBtnPressedStyleContext, mContent, mStyleContext);
 
-    nsIAtom * txtBlkContentPseudo = NS_NewAtom(":COMBOBOX-TEXT");
+    nsIAtom * txtBlkContentPseudo = NS_NewAtom(":combobox-text");
     RefreshStyleContext(aPresContext, txtBlkContentPseudo, mBlockTextStyle, mContent, mStyleContext);
     NS_IF_RELEASE(txtBlkContentPseudo);
 
-    nsIAtom * txtBlkSelContentPseudo = NS_NewAtom(":COMBOBOX-TEXTSELECTED");
+    nsIAtom * txtBlkSelContentPseudo = NS_NewAtom(":combobox-textselected");
     RefreshStyleContext(aPresContext, txtBlkSelContentPseudo, mBlockTextSelectedStyle, mContent, mStyleContext);
     NS_IF_RELEASE(txtBlkSelContentPseudo);
 
-    nsIAtom * txtBlkSelFocContentPseudo = NS_NewAtom(":COMBOBOX-TEXTSELECTEDFOCUS");
+    nsIAtom * txtBlkSelFocContentPseudo = NS_NewAtom(":combobox-textselectedfocus");
     RefreshStyleContext(aPresContext, txtBlkSelFocContentPseudo, mBlockTextSelectedFocusStyle, mContent, mStyleContext);
     NS_IF_RELEASE(txtBlkSelFocContentPseudo);
 

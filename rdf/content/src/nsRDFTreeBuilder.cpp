@@ -261,8 +261,8 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
     if (gRefCnt == 0) {
         kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
 
-        kIdAtom              = NS_NewAtom("ID");
-        kOpenAtom            = NS_NewAtom("OPEN");
+        kIdAtom              = NS_NewAtom("id");
+        kOpenAtom            = NS_NewAtom("open");
         kResourceAtom        = NS_NewAtom("resource");
 
         kTreeAtom            = NS_NewAtom("tree");
@@ -465,7 +465,7 @@ RDFTreeBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
         return rv;
 
     // Create the DOCUMENT element
-    if ((tag = dont_AddRef(NS_NewAtom("DOCUMENT"))) == nsnull)
+    if ((tag = dont_AddRef(NS_NewAtom("document"))) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIContent> root;
@@ -478,7 +478,7 @@ RDFTreeBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
 
     // Create the BODY element
     nsCOMPtr<nsIContent> body;
-    if ((tag = dont_AddRef(NS_NewAtom("BODY"))) == nsnull)
+    if ((tag = dont_AddRef(NS_NewAtom("body"))) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(body),

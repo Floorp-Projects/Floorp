@@ -726,7 +726,7 @@ nsProgressMeterFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, ns
   }
 
   if ( old != mStyleContext ) {
-    nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":PROGRESSMETER-STRIPE")) );
+    nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
     RefreshStyleContext(aPresContext, barPseudo, &mBarStyle, mContent, mStyleContext);
   }
   

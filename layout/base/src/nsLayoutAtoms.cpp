@@ -75,7 +75,7 @@ void nsLayoutAtoms::AddrefAtoms()
 
     commentTagName = NS_NewAtom("__moz_comment");
     textTagName = NS_NewAtom("__moz_text");
-    viewportPseudo = NS_NewAtom(":-MOZ-VIEWPORT");  // XXX lower case
+    viewportPseudo = NS_NewAtom(":-moz-viewport");
   }
   ++gRefCnt;
 }

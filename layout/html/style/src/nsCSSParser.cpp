@@ -1121,7 +1121,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         aSelector.SetTag(mToken.mIdent);
       }
       else {
-        mToken.mIdent.ToUpperCase(buffer);
+        mToken.mIdent.ToLowerCase(buffer);
         aSelector.SetTag(buffer);
       }
     }
@@ -1130,7 +1130,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       mToken.mIdent.Left(nameSpace, colon);
       mToken.mIdent.Right(buffer, (mToken.mIdent.Length() - (colon + 1)));
       if (! mCaseSensitive) {
-        buffer.ToUpperCase();
+        buffer.ToLowerCase();
       }
       // XXX lookup namespace, set it
       // deal with * namespace (== unknown)
@@ -1181,7 +1181,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       buffer.Truncate();
       buffer.Append(':');
       buffer.Append(mToken.mIdent);
-      buffer.ToUpperCase();
+      buffer.ToLowerCase();
       nsIAtom* pseudo = NS_NewAtom(buffer);
       if (IsPseudoClass(pseudo)) {
         // XXX parse lang pseudo class
@@ -1225,7 +1225,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       mToken.AppendToString(aSource);
       nsAutoString  attr(mToken.mIdent);
       if (! mCaseSensitive) {
-        attr.ToUpperCase();
+        attr.ToLowerCase();
       }
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
         return PR_FALSE;

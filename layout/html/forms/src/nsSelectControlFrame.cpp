@@ -738,16 +738,16 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
-   * The tag should be uppercase and inclue the colon.
-   * ie: NS_NewAtom(":FIRST-LINE");
+   * The tag should be lowercase and inclue the colon.
+   * ie: NS_NewAtom(":first-line");
    */
-  nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
+  nsIAtom * sbAtom = NS_NewAtom(":scrollbar-look");
   nsIStyleContext* scrollbarStyle;
   aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
                                             &scrollbarStyle);
   NS_RELEASE(sbAtom);
 
-  sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
+  sbAtom = NS_NewAtom(":scrollbar-arrow-look");
   nsIStyleContext* arrowStyle;
   aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
                                             &arrowStyle);

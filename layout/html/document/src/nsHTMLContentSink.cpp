@@ -483,7 +483,7 @@ AddAttributes(const nsIParserNode& aNode,
     const nsString& key = aNode.GetKeyAt(i);
     k.Truncate();
     k.Append(key);
-    k.ToUpperCase();
+    k.ToLowerCase();
 
     nsIAtom*  keyAtom = NS_NewAtom(k);
     nsHTMLValue value;
@@ -774,7 +774,7 @@ CreateContentObject(const nsIParserNode& aNode,
   nsAutoString tmp;
   if (eHTMLTag_userdefined == aNodeType) {
     tmp.Append(aNode.GetText());
-    tmp.ToUpperCase();
+    tmp.ToLowerCase();
   }
   else {
     tmp.Append(NS_EnumToTag(aNodeType));
@@ -867,7 +867,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
 {
   // Find tag in tag table
   nsAutoString tmp(aTag);
-  tmp.ToUpperCase();
+  tmp.ToLowerCase();
   char cbuf[20];
   tmp.ToCString(cbuf, sizeof(cbuf));
   nsHTMLTag id = NS_TagToEnum(cbuf);
@@ -1434,7 +1434,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mDocument->SetRootContent(mRoot);
 
   // Make head part
-  nsIAtom* atom = NS_NewAtom("HEAD");
+  nsIAtom* atom = NS_NewAtom("head");
   if (nsnull == atom) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1617,7 +1617,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
   mHTMLDocument->SetTitle(*mTitle);
 
-  nsIAtom* atom = NS_NewAtom("TITLE");
+  nsIAtom* atom = NS_NewAtom("title");
   nsIHTMLContent* it = nsnull;
   nsresult rv = NS_NewHTMLTitleElement(&it, atom);
   if (NS_OK == rv) {
@@ -1745,7 +1745,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   NS_IF_RELEASE(mCurrentForm);
 
   // set the current form
-  nsAutoString tmp("FORM");
+  nsAutoString tmp("form");
   nsIAtom* atom = NS_NewAtom(tmp);
   nsIHTMLContent* iContent = nsnull;
   nsresult rv = NS_NewHTMLFormElement(&iContent, atom);
@@ -2572,7 +2572,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   if (nsnull != mHead) {
     // Create content object
-    nsAutoString tmp("META");
+    nsAutoString tmp("meta");
     nsIAtom* atom = NS_NewAtom(tmp);
     if (nsnull == atom) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2620,7 +2620,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
             delete value;
           }
 
-          header.ToUpperCase();
+          header.ToLowerCase();
           nsIAtom* fieldAtom = NS_NewAtom(header);
           mDocument->SetHeaderData(fieldAtom, result);
 

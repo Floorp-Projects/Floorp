@@ -33,11 +33,11 @@
 #include "nsINameSpaceManager.h"
 
 void testAttributes(nsIHTMLContent* content) {
-  nsIAtom* sBORDER = NS_NewAtom("BORDER");
-  nsIAtom* sWIDTH = NS_NewAtom("WIDTH");
-  nsIAtom* sHEIGHT = NS_NewAtom("HEIGHT");
-  nsIAtom* sSRC = NS_NewAtom("SRC");
-  nsIAtom* sBAD = NS_NewAtom("BADATTRIBUTE");
+  nsIAtom* sBORDER = NS_NewAtom("border");
+  nsIAtom* sWIDTH = NS_NewAtom("width");
+  nsIAtom* sHEIGHT = NS_NewAtom("height");
+  nsIAtom* sSRC = NS_NewAtom("src");
+  nsIAtom* sBAD = NS_NewAtom("badattribute");
   nsString sempty("");
   nsString sfoo_gif("foo.gif");
 
@@ -252,7 +252,7 @@ int main(int argc, char** argv)
 
   // Create a simple container.
   nsIHTMLContent* container;
-  nsIAtom* li = NS_NewAtom("LI");
+  nsIAtom* li = NS_NewAtom("li");
 
   rv = NS_NewHTMLLIElement(&container,li);
   if (NS_OK != rv) {

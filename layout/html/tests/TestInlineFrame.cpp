@@ -262,7 +262,7 @@ TestReflowUnmapped(nsIPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
-  NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
+  NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
   b->AppendChildTo(new FixedSizeContent(100, 100));
@@ -357,7 +357,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
-  NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
+  NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Add one fixed width element.
   b->AppendChildTo(new FixedSizeContent(100, 100));
@@ -527,7 +527,7 @@ TestOverflow(nsIPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
-  NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
+  NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
   b->AppendChildTo(new FixedSizeContent(100, 100));
@@ -639,7 +639,7 @@ TestPushingPulling(nsIPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
-  NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
+  NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
   b->AppendChildTo(new FixedSizeContent(100, 100));
@@ -1060,7 +1060,7 @@ TestSplittableChildren(nsIPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
-  NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
+  NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements that can split
   b->AppendChildTo(new FixedSizeContent(100, 100, PR_TRUE));
@@ -1419,7 +1419,7 @@ TestMaxElementSize(nsIPresContext* presContext)
 {
   // Create an HTML container
   nsIHTMLContent* b;
-  NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
+  NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
   b->AppendChildTo(new FixedSizeContent(100, 100));

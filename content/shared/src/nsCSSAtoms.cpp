@@ -41,21 +41,21 @@ static nsrefcnt gRefCnt;
 void nsCSSAtoms::AddrefAtoms()
 {
   if (0 == gRefCnt) {
-    activePseudo = NS_NewAtom(":ACTIVE");
+    activePseudo = NS_NewAtom(":active");
 
-    firstChildPseudo = NS_NewAtom(":FIRST-CHILD");
-    focusPseudo = NS_NewAtom(":FOCUS");
+    firstChildPseudo = NS_NewAtom(":first-child");
+    focusPseudo = NS_NewAtom(":focus");
 
-    hoverPseudo = NS_NewAtom(":HOVER");
+    hoverPseudo = NS_NewAtom(":hover");
 
-    langPseudo = NS_NewAtom(":LANG");
-    linkPseudo = NS_NewAtom(":LINK");
+    langPseudo = NS_NewAtom(":lang");
+    linkPseudo = NS_NewAtom(":link");
 
-    outOfDatePseudo = NS_NewAtom(":OUT-OF-DATE");
+    outOfDatePseudo = NS_NewAtom(":out-of-date");
 
     universalSelector = NS_NewAtom("*");
 
-    visitedPseudo = NS_NewAtom(":VISITED");
+    visitedPseudo = NS_NewAtom(":visited");
   }
   ++gRefCnt;
 }
