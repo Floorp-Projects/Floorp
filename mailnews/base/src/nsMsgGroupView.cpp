@@ -422,8 +422,8 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
     if (!groupThread->NumRealChildren())
     {
       thread->RemoveChildAt(0); // get rid of dummy
-      nsMsgDBView::RemoveByIndex(viewIndexOfThread);
-      NoteChange(viewIndexOfThread, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
+      nsMsgDBView::RemoveByIndex(viewIndexOfThread - 1);
+      NoteChange(viewIndexOfThread - 1, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
     }
     else if (rootDeleted)
     {
