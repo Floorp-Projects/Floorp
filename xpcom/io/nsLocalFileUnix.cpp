@@ -594,6 +594,102 @@ nsLocalFile::GetTargetPathName(nsIFile *newParent, const char *newName,
     return NS_OK;
 }
 
+nsresult
+nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
+{
+    nsresult rv;
+    PRBool dirCheck, isSymlink;
+    PRUint32 oldPerms;
+
+    if NS_FAILED((rv = IsDirectory(&dirCheck)))
+        return rv;
+    if (!dirCheck)
+        return CopyTo(newParent, nsnull);
+  
+    if (NS_FAILED(rv = Equals(newParent, &dirCheck)))
+        return rv;
+    if (dirCheck) { 
+        // can't copy dir to itself
+        return NS_ERROR_INVALID_ARG;
+    }
+    
+    if (NS_FAILED(rv = newParent->Exists(&dirCheck))) 
+        return rv;
+    if (!dirCheck) {
+        // get the dirs old permissions
+        if (NS_FAILED(rv = GetPermissions(&oldPerms)))
+            return rv;
+        if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
+            return rv;
+    } else {  // dir exists lets try to use leaf
+        nsXPIDLCString leafName;
+        if (NS_FAILED(rv = GetLeafName(getter_Copies(leafName))))
+            return rv;
+        if (NS_FAILED(rv = newParent->Append(leafName)))
+            return rv;
+        if (NS_FAILED(rv = newParent->Exists(&dirCheck)))
+            return rv;
+        if (dirCheck) 
+            return NS_ERROR_FILE_ALREADY_EXISTS; // dest exists
+        if (NS_FAILED(rv = newParent->Create(DIRECTORY_TYPE, oldPerms)))
+            return rv;
+    }
+
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    if (NS_FAILED(rv = GetDirectoryEntries(getter_AddRefs(dirIterator))))
+        return rv;
+
+    PRBool hasMore = PR_FALSE;
+    while (dirIterator->HasMoreElements(&hasMore), hasMore) {
+        nsCOMPtr<nsIFile> entry;
+        rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(entry));
+        if (NS_FAILED(rv)) 
+            continue;
+        if (NS_FAILED(rv = entry->IsDirectory(&dirCheck)))
+            return rv;
+        if (NS_FAILED(rv = entry->IsSymlink(&isSymlink)))
+            return rv;
+        if (dirCheck && !isSymlink) {
+            nsCOMPtr<nsIFile> destClone;
+            rv = newParent->Clone(getter_AddRefs(destClone));
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsILocalFile> newDir(do_QueryInterface(destClone));
+                nsXPIDLCString leafName;
+                if (NS_FAILED(rv = entry->GetLeafName(getter_Copies(leafName))))
+                    return rv;
+                if (NS_FAILED(rv = newDir->Append(leafName)))
+                    return rv;
+                if (NS_FAILED(rv = entry->CopyTo(newDir, nsnull))) {
+#ifdef DEBUG
+                    nsresult rv2;
+                    nsXPIDLCString pathName;
+                    if (NS_FAILED(rv2 = entry->GetPath(getter_Copies(pathName))))
+                        return rv2;
+                    printf("Operation not supported: %s\n", pathName.get());
+#endif
+                    if (rv == NS_ERROR_OUT_OF_MEMORY) 
+                        return rv;
+                    continue;
+                }
+            }
+        } else {
+            if(NS_FAILED(rv = entry->CopyTo(newParent, nsnull))) {
+#ifdef DEBUG
+                nsresult rv2;
+                nsXPIDLCString pathName;
+                if (NS_FAILED(rv2 = entry->GetPath(getter_Copies(pathName))))
+                    return rv2;
+                printf("Operation not supported: %s\n", pathName.get());
+#endif
+                if (rv == NS_ERROR_OUT_OF_MEMORY) 
+                    return rv;
+                continue;
+            }
+        }
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
 {
@@ -604,13 +700,23 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
 
     // check to see if we are a directory or if we are a file
     PRBool isDirectory;
-    IsDirectory(&isDirectory);
+    if (NS_FAILED(rv = IsDirectory(&isDirectory)))
+        return rv;
 
+    nsXPIDLCString newPathName;
     if (isDirectory) {
-        // XXXbe what's the bugzilla.mozilla.org bug number for this?
-        rv = NS_ERROR_NOT_IMPLEMENTED;
+        if (newName) {
+            if (NS_FAILED(rv = newParent->Append(newName)))
+                return rv;
+        } else {
+            if (NS_FAILED(rv = GetLeafName(getter_Copies(newPathName))))
+                return rv;
+            if (NS_FAILED(rv = newParent->Append(newPathName)))
+                return rv;
+        }
+        if (NS_FAILED(rv = CopyDirectoryTo(newParent)))
+            return rv;
     } else {
-        nsXPIDLCString newPathName;
         rv = GetTargetPathName(newParent, newName, getter_Copies(newPathName));
         if (NS_FAILED(rv))
             return rv;
@@ -704,8 +810,8 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
         NS_RELEASE(newFile);
 
         // check for read (or write) error after cleaning up
-        if (bytesRead < 0)
-            return NSRESULT_FOR_ERRNO();
+        if (bytesRead < 0) 
+            return NS_ERROR_OUT_OF_MEMORY;
     }
 
     return rv;
