@@ -42,9 +42,7 @@ PredicateList::~PredicateList()
 {
     txListIterator iter(&predicates);
     while (iter.hasNext()) {
-        iter.next();
-        Expr* expr = (Expr*)iter.remove();
-        delete expr;
+        delete (Expr*)iter.next();
     }
 } // ~PredicateList
 

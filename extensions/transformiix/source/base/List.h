@@ -67,11 +67,6 @@ public:
     PRInt32 getLength();
 
     /**
-     * Returns a txListIterator for this txList
-    **/
-    txListIterator* iterator();
-
-    /**
      * Adds the given Object to the specified position in the list
     **/
     void insert(int index, void* objPtr);
@@ -122,8 +117,6 @@ private:
 class txListIterator {
 
 public:
-
-
     /**
      * Creates a new txListIterator for the given txList
      * @param list, the txList to create an Iterator for
@@ -133,7 +126,7 @@ public:
     /**
      * Destructor, destroys a given instance of a txListIterator
     **/
-    virtual ~txListIterator();
+    ~txListIterator();
 
     /**
      * Adds the Object pointer to the txList pointed to by this txListIterator.
@@ -141,8 +134,7 @@ public:
      * based on the current position within the txList
      * @param objPtr the Object pointer to add to the list
     **/
-
-    virtual void addAfter(void* objPtr);
+    void addAfter(void* objPtr);
 
     /**
      * Adds the Object pointer to the txList pointed to by this txListIterator.
@@ -150,58 +142,57 @@ public:
      * based on the current position within the txList
      * @param objPtr the Object pointer to add to the list
     **/
-
-    virtual void addBefore(void* objPtr);
+    void addBefore(void* objPtr);
 
     /**
      * Returns true if a sucessful call to the next() method can be made
      * @return MB_TRUE if a sucessful call to the next() method can be made,
      * otherwise MB_FALSE
     **/
-    virtual MBool  hasNext();
+    MBool  hasNext();
 
     /**
      * Returns true if a sucessful call to the previous() method can be made
      * @return MB_TRUE if a sucessful call to the previous() method can be made,
      * otherwise MB_FALSE
     **/
-   virtual MBool  hasPrevious();
+    MBool  hasPrevious();
 
     /**
      * Returns the next Object pointer from the list
     **/
-    virtual void* next();
+    void* next();
 
     /**
      * Returns the previous Object pointer from the list
     **/
-    virtual void* previous();
+    void* previous();
     
     /**
      * Returns the current Object
     **/
-    virtual void* current();
+    void* current();
     
     /**
      * Moves the specified number of steps
     **/
-    virtual void* advance(int i);
+    void* advance(int i);
 
     /**
      * Removes the Object last returned by the next() or previous() methods;
      * @return the removed Object pointer
     **/
-    virtual void* remove();
+    void* remove();
 
     /**
      * Resets the current location within the txList to the beginning of the txList
     **/
-    virtual void reset();
+    void reset();
 
     /**
      * Resets the current location within the txList to the end of the txList
     **/
-    virtual void resetToEnd();
+    void resetToEnd();
 
 private:
 
@@ -216,6 +207,5 @@ private:
 };
 
 typedef txList List;
-typedef txListIterator ListIterator;
 
 #endif

@@ -77,7 +77,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         return new StringResult();
 
     // Get number and format
-    ListIterator iter(&params);
+    txListIterator iter(&params);
 
     double value;
     String formatStr;

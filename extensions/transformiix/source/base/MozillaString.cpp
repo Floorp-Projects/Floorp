@@ -36,9 +36,6 @@
 #include <string.h>
 #include "TxString.h"
 #include "nsUnicharUtils.h"
-#ifdef TX_EXE
-#include <iostream.h>
-#endif
 
 //
 //Default constructor ( nsString() )

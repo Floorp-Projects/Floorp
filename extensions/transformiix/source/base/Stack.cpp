@@ -51,15 +51,6 @@ Stack::~Stack() {
 }
 
 /**
- * Returns an iterator that will iterator over the Stack, from the topmost
- * element to the bottom element.
- * You will need to delete this Iterator when you are done
-**/
-StackIterator* Stack::iterator() {
-    return (StackIterator*)List::iterator();
-} //-- iterator
-
-/**
  * Returns the specified Object from the top of this Stack,
  * without removing it from the stack.
  * @return a pointer to the object that is the top of this Stack
@@ -109,4 +100,3 @@ MBool Stack::empty() {
 int Stack::size() {
     return getLength();
 } //-- size
-

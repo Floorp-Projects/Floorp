@@ -77,7 +77,7 @@ NodeSetFunctionCall::NodeSetFunctionCall(NodeSetFunctions aType)
  * @return the result of the evaluation
  */
 ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
-    ListIterator iter(&params);
+    txListIterator iter(&params);
     switch (mType) {
         case COUNT:
         {
