@@ -44,8 +44,8 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIFrame.h"
 #include "nsIImageMap.h"
+#include "nsIHTMLContent.h"
 
-class nsIContent;
 class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
 class nsIPresContext;
@@ -71,16 +71,16 @@ public:
    */
   PRBool IsInside(nscoord aX, nscoord aY,
                   nsIContent** aContent,
-                  nsString& aAbsURL,
-                  nsString& aTarget,
-                  nsString& aAltText);
+                  nsAString& aAbsURL,
+                  nsAString& aTarget,
+                  nsAString& aAltText) const;
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
    * map. If they are then NS_OK is returned otherwise NS_NOT_INSIDE
    * is returned.
    */
-  PRBool IsInside(nscoord aX, nscoord aY);
+  PRBool IsInside(nscoord aX, nscoord aY) const;
 
   void Draw(nsIPresContext* aCX, nsIRenderingContext& aRC);
   
@@ -129,8 +129,7 @@ protected:
   nsIPresShell* mPresShell; // WEAK - owns the frame that owns us
   nsIFrame* mImageFrame;  // the frame that owns us
   nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document
-  nsIDOMHTMLMapElement* mDomMap;
-  nsIContent* mMap;
+  nsCOMPtr<nsIHTMLContent> mMap;
   nsAutoVoidArray mAreas; // almost always has some entries
   PRBool mContainsBlockContents;
 };
