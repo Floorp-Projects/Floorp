@@ -2199,14 +2199,7 @@ if test ! "$GNU_CXX"; then
 	;;
      esac
 fi
-dnl AC_CHECK_LIB(resolv, res_gethostbyaddr)
 AC_CHECK_LIB(socket, socket)
-dnl AC_CHECK_LIB(util, login)
-dnl AC_CHECK_LIB(nsl, xdr_string)
-dnl AC_CHECK_LIB(elf, elf_rawdata)
-dnl AC_CHECK_LIB(intl, textdomain)
-AC_CHECK_LIB(posix4, shm_open)
-dnl AC_CHECK_LIB(w, iswupper)
 
 dnl ========================================================
 dnl =
