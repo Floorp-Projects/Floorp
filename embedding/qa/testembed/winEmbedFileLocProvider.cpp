@@ -197,7 +197,7 @@ static char * GetGreLocationFromRegistry()
     // Please see http://www.mozilla.org/projects/embedding/MRE.html for
     // more info.
     //
-    strcpy(szKey, "Software\\Mozilla\\GRE\\1.3a");
+    strcpy(szKey, "Software\\Mozilla\\GRE\\" MOZILLA_VERSION);
 
     if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hRegKey) == ERROR_SUCCESS) 
     {
