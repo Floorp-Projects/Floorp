@@ -2780,7 +2780,8 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // XXX This approach doesn't work when floaters are involved in which case
     // we'll either need to recover the floater state that applies to the
     // unconstrained reflow or keep it around in a separate space manager...
-    if (aState.mComputeMaximumWidth && aState.mPrevLine && !aState.mPrevLine->IsLineWrapped()) {
+    PRBool  isBeginningLine = !aState.mPrevLine || !aState.mPrevLine->IsLineWrapped();
+    if (aState.mComputeMaximumWidth && isBeginningLine) {
       nscoord oldY = aState.mY;
       nscoord oldPrevBottomMargin = aState.mPrevBottomMargin;
 
