@@ -505,7 +505,8 @@ op_dcl(TreeState *state)
         state->tree = IDL_LIST(iter).data;
         if (!xpcom_param(state))
             return FALSE;
-        if (IDL_LIST(iter).next || op->op_type_spec || op->f_varargs)
+        if ((IDL_LIST(iter).next ||
+             (!op_notxpcom && op->op_type_spec) || op->f_varargs))
             fputs(", ", state->file);
     }
 
