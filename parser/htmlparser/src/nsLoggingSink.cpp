@@ -66,7 +66,7 @@ ostream& operator<<(ostream& os,const nsString& aString) {
 class nsLoggingSink : public nsILoggingSink {
 public:
   nsLoggingSink();
-  ~nsLoggingSink();
+  virtual ~nsLoggingSink();
 
   // nsISupports
   NS_DECL_ISUPPORTS
