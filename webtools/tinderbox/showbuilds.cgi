@@ -424,20 +424,22 @@ sub print_table_footer {
         "Administrate Tinderbox Trees</a><br>\n";
 }
 
-sub open_showbuilds_href {
+sub open_showbuilds_url {
   my %args = (
         nocrap => "$form{nocrap}",
         @_
   );
 
-  my $href = "<a href=${rel_path}showbuilds.cgi?tree=$form{tree}";
-  $href .= "&hours=$hours" if $hours ne $default_hours;
+  my $url = "${rel_path}showbuilds.cgi?tree=$form{tree}";
+  $url .= "&hours=$hours" if $hours ne $default_hours;
   while (my ($key, $value) = each %args) {
-    $href .= "&$key=$value" if $value ne '';
+    $url .= "&$key=$value" if $value ne '';
   }
-  $href .= ">";
+  return $url;
+}
 
-  return $href;
+sub open_showbuilds_href {
+  return "<a href=".open_showbuilds_url(@_).">";
 }
 
 sub query_ref {
@@ -733,11 +735,19 @@ sub do_panel {
           font-size: 8pt;
         }
       </style>
+      <script>
+       // The content window that we are supposed to be observing. This is
+       // god-awful fragile. The logic goes something like this. Our parent
+       // is the sidebar, whose parent is the content frame, whose frame[1]
+       // is the content area.
+       var ContentWindow = window.parent.parent.frames[1];
+      </script>
     </head>
     <body BGCOLOR="#FFFFFF" TEXT="#000000" 
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
-  print &open_showbuilds_href."$tree";
+  # Hack the panel link for now.
+  print "<a href='$url' onclick='ContentWindow.location=\"http://tinderbox.mozilla.org/seamonkey/\"; return false;'>$tree";
   
   $bonsai_tree = '';
   require "$tree/treedata.pl";
