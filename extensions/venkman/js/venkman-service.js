@@ -36,13 +36,41 @@
 /* components defined in this file */
 const CLINE_SERVICE_CTRID =
     "@mozilla.org/commandlinehandler/general-startup;1?type=venkman";
-const CATMAN_CTRID = "@mozilla.org/categorymanager;1";
 const CLINE_SERVICE_CID =
     Components.ID("{18269616-1dd2-11b2-afa8-b612439bda27}");
+const JSDPROT_HANDLER_CTRID =
+    "@mozilla.org/network/protocol;1?name=x-jsd";
+const JSDPROT_HANDLER_CID =
+    Components.ID("{12ec790d-304e-4525-89a9-3e723d489d14}");
 
-const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
-const nsICategoryManager = Components.interfaces.nsICategoryManager;
-const nsISupports = Components.interfaces.nsISupports;
+/* components used by this file */
+const CATMAN_CTRID = "@mozilla.org/categorymanager;1";
+const STRING_STREAM_CTRID = "@mozilla.org/io/string-input-stream;1";
+const MEDIATOR_CTRID =
+    "@mozilla.org/appshell/window-mediator;1";
+const SIMPLEURI_CTRID = "@mozilla.org/network/simple-uri;1";
+
+const nsIWindowMediator    = Components.interfaces.nsIWindowMediator;
+const nsICmdLineHandler    = Components.interfaces.nsICmdLineHandler;
+const nsICategoryManager   = Components.interfaces.nsICategoryManager;
+const nsIProtocolHandler   = Components.interfaces.nsIProtocolHandler;
+const nsIURI               = Components.interfaces.nsIURI;
+const nsIURL               = Components.interfaces.nsIURL;
+const nsIStringInputStream = Components.interfaces.nsIStringInputStream;
+const nsIChannel           = Components.interfaces.nsIChannel;
+const nsIRequest           = Components.interfaces.nsIRequest;
+const nsIProgressEventSink = Components.interfaces.nsIProgressEventSink;
+const nsISupports          = Components.interfaces.nsISupports;
+
+function findDebuggerWindow ()
+{
+    var windowManager =
+        Components.classes[MEDIATOR_CTRID].getService(nsIWindowMediator);
+
+    var window = windowManager.getMostRecentWindow("mozapp:venkman");
+
+    return window;
+}
 
 /* Command Line handler service */
 function CLineService()
@@ -50,17 +78,17 @@ function CLineService()
 
 CLineService.prototype.commandLineArgument = "-venkman";
 CLineService.prototype.prefNameForStartup = "general.startup.venkman";
-CLineService.prototype.chromeUrlForTask="chrome://venkman/content";
-CLineService.prototype.helpText = "Start with JavaScript debugger";
-CLineService.prototype.handlesArgs=false;
-CLineService.prototype.defaultArgs ="";
-CLineService.prototype.openWindowWithArgs=false;
+CLineService.prototype.chromeUrlForTask = "chrome://venkman/content";
+CLineService.prototype.helpText = "Start with JavaScript Debugger.";
+CLineService.prototype.handlesArgs = false;
+CLineService.prototype.defaultArgs = "";
+CLineService.prototype.openWindowWithArgs = false;
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = new Object();
 
 CLineFactory.createInstance =
-function (outer, iid) {
+function clf_create (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
@@ -70,6 +98,277 @@ function (outer, iid) {
     return new CLineService();
 }
 
+/* x-jsd: protocol handler */
+
+const JSD_DEFAULT_PORT = 2206; /* Dana's apartment number. */
+
+/* protocol handler factory object */
+var JSDProtocolHandlerFactory = new Object();
+
+JSDProtocolHandlerFactory.createInstance =
+function jsdhf_create (outer, iid) {
+    if (outer != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+    if (!iid.equals(nsIProtocolHandler) && !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_INVALID_ARG;
+
+    return new JSDProtocolHandler();
+}
+
+function JSDURI (spec, charset)
+{
+    this.spec = this.prePath = spec;
+    this.charset = this.originCharset = charset;
+}
+
+JSDURI.prototype.QueryInterface =
+function jsdch_qi (iid)
+{
+
+    if (!iid.equals(nsIURI) && !iid.equals(nsIURL) &&
+        !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+
+    return this;
+}
+
+JSDURI.prototype.scheme = "x-jsd";
+
+
+JSDURI.prototype.fileBaseName =
+JSDURI.prototype.fileExtension =
+JSDURI.prototype.filePath  =
+JSDURI.prototype.param     =
+JSDURI.prototype.query     =
+JSDURI.prototype.ref       =
+JSDURI.prototype.directory =
+JSDURI.prototype.fileName  =
+JSDURI.prototype.username  =
+JSDURI.prototype.password  =
+JSDURI.prototype.hostPort  =
+JSDURI.prototype.path      =
+JSDURI.prototype.asciiHost =
+JSDURI.prototype.userPass  = "";
+
+JSDURI.prototype.port = JSD_DEFAULT_PORT;
+
+JSDURI.prototype.schemeIs =
+function jsduri_schemeis (scheme)
+{
+    return scheme.toLowerCase() == "x-jsd";
+}
+
+JSDURI.prototype.getCommonBaseSpec =
+function jsduri_commonbase (uri)
+{
+    return "x-jsd:";
+}
+
+JSDURI.prototype.getRelativeSpec =
+function jsduri_commonbase (uri)
+{
+    return uri;
+}
+
+JSDURI.prototype.equals =
+function jsduri_equals (uri)
+{
+    return uri.spec == this.spec;
+}
+
+JSDURI.prototype.clone =
+function jsduri_clone ()
+{
+    return new JSDURI (this.spec);
+}
+
+JSDURI.prototype.resolve =
+function jsduri_resolve(path)
+{
+    //dump ("resolve " + path + " from " + this.spec + "\n");
+    if (path[0] == "#")
+        return this.spec + path;
+    
+    return path;
+}
+
+function JSDProtocolHandler()
+{
+    /* nothing here */
+}
+
+JSDProtocolHandler.prototype.scheme = "x-jsd";
+JSDProtocolHandler.prototype.defaultPort = JSD_DEFAULT_PORT;
+JSDProtocolHandler.prototype.protocolFlags = nsIProtocolHandler.URI_NORELATIVE;
+
+JSDProtocolHandler.prototype.allowPort =
+function jsdph_allowport (aPort, aScheme)
+{
+    return false;
+}
+
+JSDProtocolHandler.prototype.newURI =
+function jsdph_newuri (spec, charset, baseURI)
+{
+    if (baseURI)
+    {
+        debug ("-*- jsdHandler: aBaseURI passed to newURI, bailing.\n");
+        return null;
+    }
+
+    var clazz = Components.classes[SIMPLEURI_CTRID];
+    var uri = clazz.createInstance(nsIURI);
+    uri.spec = spec;
+    return uri;
+}
+
+JSDProtocolHandler.prototype.newChannel =
+function jsdph_newchannel (uri)
+{
+    return new JSDChannel (uri);
+}
+
+function JSDChannel (uri)
+{
+    this.URI = uri;
+    this.originalURI = uri;
+    this._isPending = true;
+    var clazz = Components.classes[STRING_STREAM_CTRID];
+    this.stringStream = clazz.createInstance(nsIStringInputStream);
+}
+
+JSDChannel.prototype.QueryInterface =
+function jsdch_qi (iid)
+{
+
+    if (!iid.equals(nsIChannel) && !iid.equals(nsIRequest) &&
+        !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+
+    return this;
+}
+
+/* nsIChannel */
+JSDChannel.prototype.loadAttributes = null;
+JSDChannel.prototype.contentType = "text/html";
+JSDChannel.prototype.contentLength = -1;
+JSDChannel.prototype.owner = null;
+JSDChannel.prototype.loadGroup = null;
+JSDChannel.prototype.notificationCallbacks = null;
+JSDChannel.prototype.securityInfo = null;
+
+JSDChannel.prototype.open =
+function jsdch_open()
+{
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+}
+
+JSDChannel.prototype.asyncOpen =
+function jsdch_aopen (streamListener, context)
+{
+    this.streamListener = streamListener;
+    this.context = context;
+    if (this.loadGroup)
+        this.loadGroup.addRequest (this, null);
+
+    var window = findDebuggerWindow();
+    var ary = this.URI.spec.match (/x-jsd:([^:]+)/);
+    var exception;
+    
+    if (window && "console" in window && ary)
+    {
+        try
+        {
+            window.asyncOpenJSDURL (this, streamListener, context);
+            return;
+        }
+        catch (ex)
+        {
+            exception = ex;
+        }
+    }
+    
+    var str =
+        "<html><head><title>Error</title></head><body>Could not load &lt;<b>" +
+        this.URI.spec + "</b>&gt;<br>";
+    
+    if (!ary)
+    {
+        str += "<b>Error parsing uri.</b>";
+    }
+    else if (exception)
+    {
+        str += "<b>Internal error: " + exception + "</b><br><pre>" + 
+            exception.stack;
+    }
+    else
+    {
+        str += "<b>Debugger is not running.</b>";
+    }
+    
+    str += "</body></html>";
+    
+    this.respond (str);
+}
+
+JSDChannel.prototype.respond =
+function jsdch_respond (str)
+{
+    this.streamListener.onStartRequest (this, this.context);
+
+    var len = str.length;
+    this.stringStream.setData (str, len);
+    this.streamListener.onDataAvailable (this, this.context,
+                                         this.stringStream, 0, len);
+    this.streamListener.onStopRequest (this, this.context,
+                                       Components.results.NS_OK);
+    if (this.loadGroup)
+        this.loadGroup.removeRequest (this, null, Components.results.NS_OK);
+    this._isPending = false;    
+}
+
+/* nsIRequest */
+JSDChannel.prototype.isPending =
+function jsdch_ispending ()
+{
+    return this._isPending;
+}
+
+JSDChannel.prototype.status = Components.results.NS_OK;
+
+JSDChannel.prototype.cancel =
+function jsdch_cancel (status)
+{
+    if (this._isPending)
+    {
+        this._isPending = false;
+        this.streamListener.onStopRequest (this, this.context, status);
+        if (this.loadGroup)
+        {
+            try
+            {
+                this.loadGroup.removeRequest (this, null, status);
+            }
+            catch (ex)
+            {
+                debug ("we're not in the load group?\n");
+            }
+        }
+    }
+    
+    this.status = status;
+}
+
+JSDChannel.prototype.suspend =
+JSDChannel.prototype.resume =
+function jsdch_notimpl ()
+{
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/*****************************************************************************/
+
 var Module = new Object();
 
 Module.registerSelf =
@@ -77,7 +376,8 @@ function (compMgr, fileSpec, location, type)
 {
     debug("*** Registering -venkman handler.\n");
     
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    compMgr =
+        compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
     compMgr.registerFactoryLocation(CLINE_SERVICE_CID,
                                     "Venkman CommandLine Service",
@@ -90,7 +390,26 @@ function (compMgr, fileSpec, location, type)
 	catman.addCategoryEntry("command-line-argument-handlers",
                             "venkman command line handler",
                             CLINE_SERVICE_CTRID, true, true);
-    
+
+    debug("*** Registering x-jsd protocol handler.\n");
+    compMgr.registerFactoryLocation(JSDPROT_HANDLER_CID,
+                                    "x-jsd protocol handler",
+                                    JSDPROT_HANDLER_CTRID, 
+                                    fileSpec, 
+                                    location,
+                                    type);
+    try
+    {
+        const JSD_CTRID = "@mozilla.org/js/jsd/debugger-service;1";
+        const jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
+        var jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
+        jsds.initAtStartup = true;
+    }
+    catch (ex)
+    {
+        debug ("*** ERROR initializing debugger service");
+        debug (ex);
+    }
 }
 
 Module.unregisterSelf =
@@ -109,11 +428,8 @@ function (compMgr, cid, iid) {
     if (cid.equals(CLINE_SERVICE_CID))
         return CLineFactory;
 
-    if (cid.equals(IRCCNT_HANDLER_CID))
-        return IRCContentHandlerFactory;
-
-    if (cid.equals(IRCPROT_HANDLER_CID))
-        return IRCProtocolHandlerFactory;
+    if (cid.equals(JSDPROT_HANDLER_CID))
+        return JSDProtocolHandlerFactory;
     
     if (!iid.equals(Components.interfaces.nsIFactory))
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

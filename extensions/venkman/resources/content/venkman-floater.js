@@ -33,18 +33,39 @@
  *
  */
 
-@import url(chrome://venkman/content/venkman-output-base.css);
+var dd       = opener.dd;
+var console  = opener.console;
+var dispatch = console.dispatch;
+var windowId;
 
-.msg-data[msg-type="ERROR"]:before {
-    color: orange;
+function onLoad()
+{
+    var ary = document.location.search.match(/(?:\?|&)id=([^&]+)/);
+    if (!ary)
+    {
+        dd ("No window id in url " + document.location);
+        return;
+    }
+    
+    windowId = ary[1];
+    
+    if ("arguments" in window && 0 in window.arguments &&
+        typeof window.arguments[0] == "function")
+    {
+        window.arguments[0](window);
+    }
+
+    if (console.prefs["menubarInFloaters"])
+        console.createMainMenu (window.document);
 }
 
-.msg-data[msg-type="ERROR"] {
-    background: darkred;
-    color: white;
+function onClose()
+{
+    window.isClosing = true;
+    return true;
 }
 
-.msg-data[msg-type="ERROR"] a.venkman-link {
-    color: white;
-    font-weight: bold;
+function onUnload()
+{
+    console.viewManager.destroyWindow (windowId);
 }

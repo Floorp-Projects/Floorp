@@ -31,7 +31,6 @@
       </treecols>
       <treechildren id="sample-body"/>
     </tree>
-
   <button onclick="document.location.href=document.location.href" label="reload"/>
   <button onclick="toggleBetty()" label="toggle betty"/>
   <button onclick="dt()" label="dump tree"/>

@@ -33,7 +33,7 @@
  *
  */
 
-const JSD_CTRID = "@mozilla.org/js/jsd/debugger-service;1";
+const JSD_CTRID           = "@mozilla.org/js/jsd/debugger-service;1";
 const jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
 const jsdIExecutionHook   = Components.interfaces.jsdIExecutionHook;
 const jsdIErrorHook       = Components.interfaces.jsdIErrorHook;
@@ -42,9 +42,31 @@ const jsdIValue           = Components.interfaces.jsdIValue;
 const jsdIProperty        = Components.interfaces.jsdIProperty;
 const jsdIScript          = Components.interfaces.jsdIScript;
 const jsdIStackFrame      = Components.interfaces.jsdIStackFrame;
-const jsdIFilter          = Components.interfaces.jsdIFilter;
 
-const COLLECT_PROFILE_DATA = jsdIDebuggerService.COLLECT_PROFILE_DATA;
+const TYPE_VOID     = jsdIValue.TYPE_VOID;
+const TYPE_NULL     = jsdIValue.TYPE_NULL;
+const TYPE_BOOLEAN  = jsdIValue.TYPE_BOOLEAN;
+const TYPE_INT      = jsdIValue.TYPE_INT;
+const TYPE_DOUBLE   = jsdIValue.TYPE_DOUBLE;
+const TYPE_STRING   = jsdIValue.TYPE_STRING;
+const TYPE_FUNCTION = jsdIValue.TYPE_FUNCTION;
+const TYPE_OBJECT   = jsdIValue.TYPE_OBJECT;
+
+
+const PROP_ENUMERATE = jsdIProperty.FLAG_ENUMERATE;
+const PROP_READONLY  = jsdIProperty.FLAG_READONLY;
+const PROP_PERMANENT = jsdIProperty.FLAG_PERMANENT;
+const PROP_ALIAS     = jsdIProperty.FLAG_ALIAS;
+const PROP_ARGUMENT  = jsdIProperty.FLAG_ARGUMENT;
+const PROP_VARIABLE  = jsdIProperty.FLAG_VARIABLE;
+const PROP_EXCEPTION = jsdIProperty.FLAG_EXCEPTION;
+const PROP_ERROR     = jsdIProperty.FLAG_ERROR;
+const PROP_HINTED    = jsdIProperty.FLAG_HINTED;
+
+const SCRIPT_NODEBUG   = jsdIScript.FLAG_DEBUG;
+const SCRIPT_NOPROFILE = jsdIScript.FLAG_PROFILE;
+
+const COLLECT_PROFILE_DATA  = jsdIDebuggerService.COLLECT_PROFILE_DATA;
 
 const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
 const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
@@ -53,146 +75,7 @@ const FTYPE_STD     = 0;
 const FTYPE_SUMMARY = 1;
 const FTYPE_ARRAY   = 2;
 
-const FILTER_ENABLED  = jsdIFilter.FLAG_ENABLED;
-const FILTER_DISABLED = ~jsdIFilter.FLAG_ENABLED;
-const FILTER_PASS     = jsdIFilter.FLAG_PASS;
-const FILTER_SYSTEM   = 0x100; /* system filter, do not show in UI */
-
 var $ = new Array(); /* array to store results from evals in debug frames */
-
-console._scriptHook = {
-    onScriptCreated: realizeScript,
-    onScriptDestroyed: unrealizeScript
-};
-
-console._executionHook = {onExecute: vnk_exehook};
-function vnk_exehook (frame, type, rv)
-{
-    var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
-
-    if (!ASSERT(!("frames" in console), "Execution hook called while stopped") ||
-        frame.isNative ||
-        !ASSERT(frame.script, "Execution hook called with no script") ||
-        frame.script.fileName == MSG_VAL_CONSOLE)
-    {
-        return hookReturn;
-    }
-
-    var targetWindow = null;
-    var wasModal = false;
-    var ex;
-    var cx;
-
-    try
-    {
-        cx = frame.executionContext;
-    }
-    catch (ex)
-    {
-        dd ("no context");
-        cx = null;
-    }
-    
-    var targetWasEnabled = true;
-    var debuggerWasEnabled = console.debuggerWindow.enabled;
-    console.debuggerWindow.enabled = true;
-    
-    if (cx)
-    {
-        cx.scriptsEnabled = false;
-        var glob = cx.globalObject;
-        if (glob)
-        {
-            console.targetWindow =
-                getBaseWindowFromWindow(glob.getWrappedValue());
-            targetWasEnabled = console.targetWindow.enabled;
-            console.targetWindow.enabled = false;
-        }
-    }
-
-    try
-    {
-        hookReturn = debugTrap(frame, type, rv);
-    }
-    catch (ex)
-    {
-        display (MSG_ERR_INTERNAL_BPT, MT_ERROR);
-        display (formatException(ex), MT_ERROR);
-    }
-    
-    if (cx)
-    {
-        cx.scriptsEnabled = true;
-        if (0 && targetWindow)
-        {
-            targetWindow.enabled = true;
-            if (wasModal)
-                targetWindow.modalMien = true;
-        }
-    }
-    
-    if (console.targetWindow)
-        console.targetWindow.enabled = targetWasEnabled;
-    console.debuggerWindow.enabled = debuggerWasEnabled;
-    delete console.frames;
-    delete console.targetWindow;
-    if ("__exitAfterContinue__" in console)
-        window.close();
-
-    return hookReturn;
-}
-
-console._callHook = {
-    onCall: function callhook (frame, type) {
-                if (type == jsdICallHook.TYPE_FUNCTION_CALL)
-                {
-                    setStopState(false);
-                    ++console._stepOverLevel;
-                }
-                else if (type == jsdICallHook.TYPE_FUNCTION_RETURN)
-                {
-                    if (--console._stepOverLevel <= 0)
-                    {
-                        setStopState(true);
-                        console.jsds.functionHook = null;
-                    }
-                }
-                dd ("Call Hook: " + frame.functionName + ", type " +
-                    type + " callCount: " + console._stepOverLevel);
-            }
-};
-
-console._errorHook = {
-    onError: function errorhook (message, fileName, line, pos, flags,
-                                 exception) {
-                 try {
-                     var flagstr;
-                     flagstr =
-                         (flags && jsdIErrorHook.REPORT_EXCEPTION) ? "x" : "-";
-                     flagstr +=
-                         (flags && jsdIErrorHook.REPORT_STRICT) ? "s" : "-";
-                     
-                     //dd ("===\n" + message + "\n" + fileName + "@" + 
-                     //    line + ":" + pos + "; " + flagstr);
-                     var msn = (flags & jsdIErrorHook.REPORT_WARNING) ?
-                         MSN_ERPT_WARN : MSN_ERPT_ERROR;
-
-                     if (console.errorMode != EMODE_IGNORE)
-                         display (getMsg(msn, [message, flagstr, fileName,
-                                               line, pos]), MT_ETRACE);
-                     
-                     if (console.errorMode == EMODE_BREAK)
-                         return false;
-
-                     return true;
-                 }
-                 catch (ex)
-                 {
-                     dd ("error in error hook: " + ex);
-                 }
-                 return true;
-             }
-};
 
 function initDebugger()
 {   
@@ -201,66 +84,35 @@ function initDebugger()
     console._continueCodeStack = new Array(); /* top of stack is the default  */
                                               /* return code for the most     */
                                               /* recent debugTrap().          */
-    console.scripts = new Object();
+    console.scriptWrappers = new Object();
+    console.scriptManagers = new Object();
+    console.breaks  = new Object();
+    console.fbreaks = new Object();
+    console.sbreaks = new Object();
     
     /* create the debugger instance */
-    if (!Components.classes[JSD_CTRID])
+    if (!(JSD_CTRID in Components.classes))
         throw new BadMojo (ERR_NO_DEBUGGER);
     
     console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
     console.jsds.on();
-    console.jsds.breakpointHook = console._executionHook;
-    console.jsds.debuggerHook = console._executionHook;
-    console.jsds.debugHook = console._executionHook;
-    console.jsds.errorHook = console._errorHook;
-    console.jsds.scriptHook = console._scriptHook;
-    console.jsds.flags = jsdIDebuggerService.ENABLE_NATIVE_FRAMES;
 
-    console.chromeFilter = {
-        globalObject: null,
-        flags: FILTER_SYSTEM | FILTER_ENABLED,
-        urlPattern: "chrome:*",
-        startLine: 0,
-        endLine: 0
-    };
+    console.executionHook = { onExecute: jsdExecutionHook };
+    console.errorHook     = { onError: jsdErrorHook };
+    console.callHook      = { onCall: jsdCallHook };
     
-    if (console.prefs["enableChromeFilter"])
-    {
-        console.enableChromeFilter = true;
-        console.jsds.appendFilter(console.chromeFilter);
-    }
-    else
-        console.enableChromeFilter = false;
-
-    var venkmanFilter1 = {  /* glob based filter goes first, because it's the */
-        globalObject: this, /* easiest to match.                              */
-        flags: FILTER_SYSTEM | FILTER_ENABLED,
-        urlPattern: null,
-        startLine: 0,
-        endLine: 0
-    };
-    var venkmanFilter2 = {  /* url based filter for XPCOM callbacks that may  */
-        globalObject: null, /* not happen under our glob.                     */
-        flags: FILTER_SYSTEM | FILTER_ENABLED,
-        urlPattern: "chrome://venkman/*",
-        startLine: 0,
-        endLine: 0
-    };
-    console.jsds.appendFilter (venkmanFilter1);
-    console.jsds.appendFilter (venkmanFilter2);
+    console.jsds.breakpointHook = console.executionHook;
+    console.jsds.debuggerHook   = console.executionHook;
+    console.jsds.debugHook      = console.executionHook;
+    console.jsds.errorHook      = console.errorHook;
+    console.jsds.flags          = jsdIDebuggerService.ENABLE_NATIVE_FRAMES;
 
     console.throwMode = TMODE_IGNORE;
     console.errorMode = EMODE_IGNORE;
-
-    var enumer = {
-        enumerateScript: function _es (script) {
-            realizeScript(script);
-        }
-    };
     
-    console.scriptsView.freeze();
+    var enumer = { enumerateScript: console.scriptHook.onScriptCreated };
+    console.jsds.scriptHook = console.scriptHook;
     console.jsds.enumerateScripts(enumer);
-    console.scriptsView.thaw();
 
     dd ("} initDebugger");
 }
@@ -278,116 +130,876 @@ function detachDebugger()
     console.jsds.scriptHook = null;
     console.jsds.interruptHook = null;
     console.jsds.clearAllBreakpoints();
-    console.jsds.clearFilters();
     if (!console.jsds.initAtStartup)
         console.jsds.off();
 }
 
-function isURLFiltered (url)
-{
-    return (!url || url == MSG_VAL_CONSOLE ||
-            (console.enableChromeFilter && url.indexOf ("chrome:") == 0) ||
-            url.indexOf ("x-jsd:internal") == 0);
-}    
+console.scriptHook = new Object();
 
-function realizeScript(script)
+console.scriptHook.onScriptCreated =
+function sh_created (jsdScript)
 {
-    var container;
-    if (script.fileName in console.scripts)
+    try
     {
-        container = console.scripts[script.fileName];
-        if (!("parentRecord" in container))
-        {
-            /* container record exists but is not inserted in the scripts view,
-             * either we are reloading it, or the user added it manually */
-            if (!isURLFiltered(script.fileName))
-                console.scriptsView.childData.appendChild(container);
-        }
+        jsdScriptCreated(jsdScript);
+    }
+    catch (ex)
+    {
+        dd ("caught " + dumpObjectTree(ex) + " while creating script.");
+    }
+}
+
+console.scriptHook.onScriptDestroyed =
+function sh_destroyed (jsdScript)
+{
+    try
+    {
+        jsdScriptDestroyed(jsdScript);
+    }
+    catch (ex)
+    {
+        dd ("caught " + dumpObjectTree(ex) + " while destroying script.");
+    }
+}
+    
+function jsdScriptCreated (jsdScript)
+{
+    var url = jsdScript.fileName;
+    var manager;
+    
+    if (!(url in console.scriptManagers))
+    {
+        manager = console.scriptManagers[url] = new ScriptManager(url);
+        //dispatchCommand (console.coManagerCreated, { scriptManager: manager });
     }
     else
     {
-        container = console.scripts[script.fileName] =
-            new ScriptContainerRecord (script.fileName);
-        container.reserveChildren();
-        if (!isURLFiltered(script.fileName))
-            console.scriptsView.childData.appendChild(container);
-    }    
-
-    var scriptRec = new ScriptRecord (script);
-    if ("dbgRealize" in console && console.dbgRealize)
-    {
-        dd ("new scriptrecord: " + formatScript(script) + "\n" + 
-            script.functionSource);
+        manager = console.scriptManagers[url];
     }
     
-    container.appendScriptRecord (scriptRec);
-    /* check to see if this script contains a breakpoint */
-    for (var i = 0; i < console.breakpoints.childData.length; ++i)
+    manager.onScriptCreated(jsdScript);
+}
+
+function jsdScriptDestroyed (jsdScript)
+{
+    if (!(jsdScript.tag in console.scriptWrappers))
+        return;
+    
+    var scriptWrapper = console.scriptWrappers[jsdScript.tag];
+    scriptWrapper.scriptManager.onScriptInvalidated(scriptWrapper);
+    
+    if (scriptWrapper.scriptManager.instances.length == 0 && 
+        scriptWrapper.scriptManager.transientCount == 0)
     {
-        var bpr = console.breakpoints.childData[i];
-        if (bpr.matchesScriptRecord(scriptRec))
+        delete console.scriptManagers[scriptWrapper.scriptManager.url];
+        //dispatchCommand (console.coManagerDestroyed,
+        //                 { scriptManager: scriptWrapper.scriptManager });
+    }
+}
+
+function jsdExecutionHook (frame, type, rv)
+{
+    var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
+
+    if (!ASSERT(!("frames" in console), "Execution hook called while stopped") ||
+        frame.isNative ||
+        !ASSERT(frame.script, "Execution hook called with no script") ||
+        frame.script.fileName == MSG_VAL_CONSOLE)
+    {
+        return hookReturn;
+    }
+
+    var targetWindow = null;
+    var wasModal = false;
+    var cx;
+
+    try
+    {
+        cx = frame.executionContext;
+    }
+    catch (ex)
+    {
+        dd ("no context");
+        cx = null;
+    }
+    
+    var targetWasEnabled = true;
+    var debuggerWasEnabled = console.baseWindow.enabled;
+    console.baseWindow.enabled = true;
+    
+    if (!ASSERT(cx, "no cx in execution hook"))
+        return hookReturn;
+    
+    var glob = cx.globalObject;
+    if (!ASSERT(glob, "no glob in execution hook"))
+        return hookReturn;
+    
+    console.targetWindow = getBaseWindowFromWindow(glob.getWrappedValue());
+    targetWasEnabled = console.targetWindow.enabled;
+    if (console.targetWindow != console.baseWindow)
+    {
+        cx.scriptsEnabled = false;
+        console.targetWindow.enabled = false;
+    }
+
+    try
+    {
+        //dd ("debug trap " + formatFrame(frame));
+        hookReturn = debugTrap(frame, type, rv);
+        //dd ("debug trap returned " + hookReturn);
+    }
+    catch (ex)
+    {
+        display (MSG_ERR_INTERNAL_BPT, MT_ERROR);
+        display (formatException(ex), MT_ERROR);
+    }
+    
+
+    
+    if (console.targetWindow && console.targetWindow != console.baseWindow)
+    {
+        console.targetWindow.enabled = targetWasEnabled;
+        cx.scriptsEnabled = true;
+    }
+    
+    console.baseWindow.enabled = debuggerWasEnabled;
+    delete console.frames;
+    delete console.targetWindow;
+    if ("__exitAfterContinue__" in console)
+        window.close();
+
+    return hookReturn;
+}
+
+function jsdCallHook (frame, type)
+{
+    if (type == jsdICallHook.TYPE_FUNCTION_CALL)
+    {
+        setStopState(false);
+        ++console._stepOverLevel;
+    }
+    else if (type == jsdICallHook.TYPE_FUNCTION_RETURN)
+    {
+        if (--console._stepOverLevel <= 0)
         {
-            if (bpr.fileName == scriptRec.script.fileName)
+            setStopState(true);
+            console.jsds.functionHook = null;
+        }
+    }
+    //dd ("Call Hook: " + frame.functionName + ", type " +
+    //    type + " callCount: " + console._stepOverLevel);
+}
+
+function jsdErrorHook (message, fileName, line, pos, flags, exception)
+{
+    try
+    {
+        var flagstr;
+        flagstr =
+            (flags && jsdIErrorHook.REPORT_EXCEPTION) ? "x" : "-";
+        flagstr +=
+            (flags && jsdIErrorHook.REPORT_STRICT) ? "s" : "-";
+        
+        //dd ("===\n" + message + "\n" + fileName + "@" + 
+        //    line + ":" + pos + "; " + flagstr);
+        var msn = (flags & jsdIErrorHook.REPORT_WARNING) ?
+            MSN_ERPT_WARN : MSN_ERPT_ERROR;
+
+        if (console.errorMode != EMODE_IGNORE)
+            display (getMsg(msn, [message, flagstr, fileName,
+                                  line, pos]), MT_ETRACE);
+        
+        if (console.errorMode == EMODE_BREAK)
+            return false;
+        
+        return true;
+    }
+    catch (ex)
+    {
+        dd ("error in error hook: " + ex);
+    }
+    return true;
+}
+
+function ScriptManager (url)
+{
+    this.url = url;
+    this.instances = new Array();
+    this.transients = new Object();
+    this.transientCount = 0;
+    this.instanceSequence = 0;
+    this.disableTransients = isURLFiltered(url);
+}
+
+ScriptManager.prototype.onScriptCreated =
+function smgr_created (jsdScript)
+{
+    var instance;
+
+    if (!ASSERT(jsdScript.isValid, "invalid script created!"))
+        return;
+    
+    if (this.instances.length != 0)
+        instance = this.instances[this.instances.length - 1];
+
+    if (!instance || (instance.isSealed && jsdScript.functionName))
+    {
+        //dd ("instance created for " + jsdScript.fileName);
+        instance = new ScriptInstance(this);
+        instance.sequence = this.instanceSequence++;
+        this.instances.push(instance);
+        dispatchCommand (console.coInstanceCreated,
+                         { scriptInstance: instance });
+    }
+
+    if ("_lastScriptWrapper" in console)
+    {
+        if ((console._lastScriptWrapper.scriptManager != this ||
+             console._lastScriptWrapper.scriptInstance != instance) &&
+            console._lastScriptWrapper.scriptInstance.scriptCount &&
+            !console._lastScriptWrapper.scriptInstance.isSealed)
+        {
+            console._lastScriptWrapper.scriptInstance.seal();
+        }
+    }
+            
+    var scriptWrapper = new ScriptWrapper(jsdScript);
+    console._lastScriptWrapper = scriptWrapper;
+    scriptWrapper.scriptManager = this;
+    console.scriptWrappers[jsdScript.tag] = scriptWrapper;
+    scriptWrapper.scriptInstance = instance;
+
+    if (!instance.isSealed)
+    {
+        //dd ("function created " + formatScript(jsdScript));
+        instance.onScriptCreated (scriptWrapper);
+    }
+    else
+    {
+        //dd ("transient created " + formatScript(jsdScript));
+        ++this.transientCount;
+        if (this.disableTransients)
+            jsdScript.flags |= SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
+
+        this.transients[jsdScript.tag] = scriptWrapper;
+        scriptWrapper.functionName = MSG_VAL_EVSCRIPT;
+        //dispatch ("hook-transient-script", { scriptWrapper: scriptWrapper });
+    }    
+}
+
+ScriptManager.prototype.onScriptInvalidated =
+function smgr_invalidated (scriptWrapper)
+{
+    //dd ("script invalidated");
+    
+    delete console.scriptWrappers[scriptWrapper.tag];
+    if (scriptWrapper.tag in this.transients)
+    {
+        //dd ("transient destroyed " + formatScript(scriptWrapper.jsdScript));
+        --this.transientCount;
+        delete this.transients[scriptWrapper.tag];
+        //dispatch ("hook-script-invalidated", { scriptWrapper: scriptWrapper });
+    }
+    else
+    {
+        //dd ("function destroyed " + formatScript(scriptWrapper.jsdScript));
+        scriptWrapper.scriptInstance.onScriptInvalidated(scriptWrapper);
+        //dispatch ("hook-script-invalidated", { scriptWrapper: scriptWrapper });
+
+        if (scriptWrapper.scriptInstance.scriptCount == 0)
+        {
+            var i = arrayIndexOf(this.instances, scriptWrapper.scriptInstance);
+            arrayRemoveAt(this.instances, i);
+            dispatchCommand (console.coInstanceDestroyed,
+                             { scriptInstance: scriptWrapper.scriptInstance });
+        }
+    }
+}    
+
+ScriptManager.prototype.__defineGetter__ ("sourceText", smgr_sourcetext);
+function smgr_sourcetext()
+{
+    return this.instances[this.instances.length - 1].sourceText;
+}
+
+ScriptManager.prototype.__defineGetter__ ("lineMap", smgr_linemap);
+function smgr_linemap()
+{
+    return this.instances[this.instances.length - 1].lineMap;
+}
+
+ScriptManager.prototype.getInstanceBySequence =
+function smgr_bysequence (seq)
+{
+    for (var i = 0; i < this.instances.length; ++i)
+    {
+        if (this.instances[i].sequence == seq)
+            return this.instances[i];
+    }
+    
+    return null;
+}
+
+ScriptManager.prototype.isLineExecutable =
+function smgr_isexe (line)
+{
+    for (var i in this.instances)
+    {
+        if (this.instances[i].isLineExecutable(line))
+            return true;
+    }
+
+    return false;
+}
+
+ScriptManager.prototype.hasBreakpoint =
+function smgr_hasbp (line)
+{
+    for (var i in this.instances)
+    {
+        if (this.instances[i].hasBreakpoint(line))
+            return true;
+    }
+    
+    return false;
+}
+
+ScriptManager.prototype.setBreakpoint =
+function smgr_break (line, parentBP)
+{
+    var found = false;
+    
+    for (var i in this.instances)
+        found |= this.instances[i].setBreakpoint(line, parentBP);
+
+    return found;
+}
+
+ScriptManager.prototype.clearBreakpoint =
+function smgr_break (line)
+{
+    var found = false;
+
+    for (var i in this.instances)
+        found |= this.instances[i].clearBreakpoint(line);
+
+    return found;
+}
+
+ScriptManager.prototype.hasFutureBreakpoint =
+function smgr_hasbp (line)
+{
+    var key = this.url + "#" + line;
+    return (key in console.fbreaks);
+}
+
+ScriptManager.prototype.getFutureBreakpoint =
+function smgr_getfbp (line)
+{
+    return getFutureBreakpoint (this.url, line);
+}
+
+ScriptManager.prototype.noteFutureBreakpoint =
+function smgr_fbreak (line, state)
+{
+    for (var i in this.instances)
+    {
+        if (this.instances[i]._lineMapInited)
+        {
+            if (state)
             {
-                /* if the names match exactly, piggyback the new script record
-                 * on the existing breakpoint record. */
-                bpr.addScriptRecord(scriptRec);
+                arrayOrFlag (this.instances[i]._lineMap, line - 1, LINE_FBREAK);
             }
             else
             {
-                /* otherwise, we only matched a pattern, create a new breakpoint
-                 * record. */
-                setBreakpoint (scriptRec.script.fileName, bpr.line);
+                arrayAndFlag (this.instances[i]._lineMap, line - 1,
+                              ~LINE_FBREAK);
             }
         }
     }
 }
 
-function unrealizeScript(script)
+function ScriptInstance (manager)
 {
-    var container = console.scripts[script.fileName];
-    if (!container)
+    this.scriptManager = manager;
+    this.url = manager.url;
+    this.creationDate = new Date();
+    this.topLevel = null;
+    this.functions = new Object();
+    this.isSealed = false;
+    this.scriptCount = 0;
+    this.breakpointCount = 0;
+    this._lineMap = new Array();
+    this._lineMapInited = false;
+}
+
+ScriptInstance.prototype.seal =
+function si_seal ()
+{
+    this.sealDate = new Date();
+    this.isSealed = true;
+
+    if (isURLFiltered(this.url))
     {
-        dd ("unrealizeScript: unknown file ``" + 
-            script.fileName + "''");
-        return;
+        var nada = SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
+        for (var f in this.functions)
+            this.functions[f].jsdScript.flags |= nada;
     }
 
-    if ("dbgRealize" in console && console.dbgRealize)
-        dd ("remove scriptrecord: " + formatScript(script));
+    dispatch ("hook-script-instance-sealed", { scriptInstance: this });
+}
 
-    var scriptRec = container.locateChildByScript (script);
-    if (!scriptRec)
+ScriptInstance.prototype.onScriptCreated =
+function si_created (scriptWrapper)
+{
+    var tag = scriptWrapper.jsdScript.tag;
+    
+    if (scriptWrapper.functionName)
     {
-        dd ("unrealizeScript: unable to locate script record");
-        return;
+        this.functions[tag] = scriptWrapper;
+    }
+    else
+    {
+        this.topLevel = scriptWrapper;
+        scriptWrapper.functionName = MSG_VAL_TLSCRIPT;
+        scriptWrapper.addToLineMap(this._lineMap);
+        //var dummy = scriptWrapper.sourceText;
+        this.seal();
+    }
+
+    ++this.scriptCount;
+}
+
+ScriptInstance.prototype.onScriptInvalidated =
+function si_invalidated (scriptWrapper)
+{
+    //dd ("script invalidated");
+    scriptWrapper.clearBreakpoints();
+    --this.scriptCount;
+}
+
+ScriptInstance.prototype.__defineGetter__ ("sourceText", si_gettext);
+function si_gettext ()
+{
+    if (!("_sourceText" in this))
+        this._sourceText = new SourceText (this);
+
+    return this._sourceText;
+}
+
+ScriptInstance.prototype.__defineGetter__ ("lineMap", si_linemap);
+function si_linemap()
+{
+    if (!this._lineMapInited)
+    {
+        for (var i in this.functions)
+        {
+            if (this.functions[i].jsdScript.isValid)
+                this.functions[i].addToLineMap(this._lineMap);
+        }
+        
+        for (var fbp in console.fbreaks)
+        {
+            var fbreak = console.fbreaks[fbp];
+            if (fbreak.url == this.url)
+                arrayOrFlag (this._lineMap, fbreak.lineNumber - 1, LINE_FBREAK);
+        }
+        
+        this._lineMapInited = true;
+    }
+
+    return this._lineMap;            
+}
+
+ScriptInstance.prototype.isLineExecutable =
+function si_isexe (line)
+{
+    if (this.topLevel && this.topLevel.jsdScript.isValid &&
+        this.topLevel.jsdScript.isLineExecutable (line, PCMAP_SOURCETEXT))
+    {
+        return true;
     }
     
-    if (console.sourceView.provider == scriptRec)
-        console.sourceView.setCurrentSourceProvider(scriptRec.parentRecord);
-
-    var bplist = console.breakpoints.childData;
-    for (var i = 0; i < bplist.length; ++i)
+    for (var f in this.functions)
     {
-        if (bplist[i].fileName == script.fileName)
+        var jsdScript = this.functions[f].jsdScript;
+        if (line >= jsdScript.baseLineNumber &&
+            line <= jsdScript.baseLineNumber + jsdScript.lineExtent &&
+            jsdScript.isLineExecutable (line, PCMAP_SOURCETEXT))
         {
-            var bpr = bplist[i];
-            for (var j = 0; j < bpr.scriptRecords.length; ++j)
+            return true;
+        }
+    }
+
+    return false;
+}
+
+ScriptInstance.prototype.hasBreakpoint =
+function si_hasbp (line)
+{
+    return Boolean (this.getBreakpoint(line));
+}
+
+ScriptInstance.prototype.getBreakpoint =
+function si_getbp (line)
+{
+    for (var b in console.breaks)
+    {
+        if (console.breaks[b].scriptWrapper.scriptInstance == this)
+        {
+            if (typeof line == "undefined")
+                return true;
+            
+            var jsdScript = console.breaks[b].scriptWrapper.jsdScript;
+            if (jsdScript.pcToLine(console.breaks[b].pc, PCMAP_SOURCETEXT) ==
+                line)
             {
-                if (bpr.scriptRecords[j] == scriptRec)
-                {
-                    arrayRemoveAt(bpr.scriptRecords, j);
-                    --scriptRec.bpcount;
-                    bpr.invalidate();
-                }
+                return console.breaks[b];
             }
         }
     }
-    
-    container.removeChildAtIndex (scriptRec.childIndex);
-    if (container.childData.length == 0 && "parentRecord" in container)
+
+    return false;
+}
+
+ScriptInstance.prototype.setBreakpoint =
+function si_setbp (line, parentBP)
+{
+    function setBP (scriptWrapper)
     {
-        console.scriptsView.childData.removeChildAtIndex(container.childIndex);
+        var jsdScript = scriptWrapper.jsdScript;
+        if (!jsdScript.isValid)
+            return false;
+
+        if (line >= jsdScript.baseLineNumber &&
+            line <= jsdScript.baseLineNumber + jsdScript.lineExtent &&
+            jsdScript.isLineExecutable (line, PCMAP_SOURCETEXT))
+        {
+            scriptWrapper.setBreakpoint(jsdScript.lineToPc(line,
+                                                           PCMAP_SOURCETEXT),
+                                        parentBP);
+            return true;
+        }
+        return false;
+    };
+
+    var found;
+    
+    if (this.topLevel)
+        found = setBP (this.topLevel);
+    for (var f in this.functions)
+        found |= setBP (this.functions[f]);
+
+    if (this._lineMapInited && found)
+        arrayOrFlag(this._lineMap, line - 1, LINE_BREAK);
+
+    return found;
+}
+
+ScriptInstance.prototype.clearBreakpoint =
+function si_setbp (line)
+{
+    var found = false;
+    
+    function clearBP (scriptWrapper)
+    {
+        var jsdScript = scriptWrapper.jsdScript;
+        if (!jsdScript.isValid)
+            return;
+        
+        var pc = jsdScript.lineToPc(line, PCMAP_SOURCETEXT);
+        if (line >= jsdScript.baseLineNumber &&
+            line <= jsdScript.baseLineNumber + jsdScript.lineExtent &&
+            scriptWrapper.hasBreakpoint(pc))
+        {
+            found |= scriptWrapper.clearBreakpoint(pc);
+        }
+    };
+
+    if (this._lineMapInited)
+        arrayAndFlag(this._lineMap, line - 1, ~LINE_BREAK);    
+    
+    if (this.topLevel)
+        clearBP (this.topLevel);
+
+    for (var f in this.functions)
+        clearBP (this.functions[f]);
+
+    return found;
+}
+
+ScriptInstance.prototype.containsScriptTag =
+function si_contains (tag)
+{
+    return ((this.topLevel && this.topLevel.tag == tag) ||
+            (tag in this.functions));
+}
+
+ScriptInstance.prototype.guessFunctionNames =
+function si_guessnames ()
+{
+    var sourceLines = this._sourceText.lines;
+    var context = console.prefs["guessContext"];
+    var pattern = new RegExp (console.prefs["guessPattern"]);
+    var scanText;
+    
+    function getSourceContext (end)
+    {
+        var startLine = end - context;
+        if (startLine < 0)
+            startLine = 0;
+
+        var text = "";
+        
+        for (i = startLine; i <= targetLine; ++i)
+            text += String(sourceLines[i]);
+    
+        var pos = text.lastIndexOf ("function");
+        if (pos != -1)
+            text = text.substring(0, pos);
+
+        return text;
+    };
+        
+    for (var i in this.functions)
+    {
+        var scriptWrapper = this.functions[i];
+        if (scriptWrapper.jsdScript.functionName != "anonymous")
+            continue;
+        
+        var targetLine = scriptWrapper.jsdScript.baseLineNumber;
+        if (targetLine > sourceLines.length)
+        {
+            dd ("not enough source to guess function at line " + targetLine);
+            return;
+        }
+
+        scanText = getSourceContext(targetLine);
+        var ary = scanText.match (pattern);
+        if (ary)
+        {
+            scriptWrapper.functionName = getMsg(MSN_FMT_GUESSEDNAME, ary[1]);
+            this.isGuessedName = true;
+        }
+        else
+        {
+            dd ("unable to guess function name based on text ``" + 
+                scanText + "''");
+        }
+    }
+
+    dispatch ("hook-guess-complete", { scriptInstance: this });
+}
+
+function ScriptWrapper (jsdScript)
+{    
+    this.jsdScript = jsdScript;
+    this.tag = jsdScript.tag;
+    this.functionName = jsdScript.functionName;
+    this.breakpointCount = 0;
+    this._lineMap = null;
+    this.breaks = new Object();
+}
+
+ScriptWrapper.prototype.__defineGetter__ ("sourceText", sw_getsource);
+function sw_getsource ()
+{
+    if (!("_sourceText" in this))
+    {
+        if (!this.jsdScript.isValid)
+            return null;
+        this._sourceText = new PPSourceText(this);
+    }
+    
+    return this._sourceText;
+}
+
+ScriptWrapper.prototype.__defineGetter__ ("lineMap", sw_linemap);
+function sw_linemap ()
+{
+    if (!this._lineMap)
+        this.addToLineMap(this._lineMap);
+    
+    return this._lineMap;
+}
+
+ScriptWrapper.prototype.hasBreakpoint =
+function sw_hasbp (pc)
+{
+    var key = this.jsdScript.tag + ":" + pc;
+    return key in console.breaks;
+}
+
+ScriptWrapper.prototype.setBreakpoint =
+function sw_setbp (pc, parentBP)
+{
+    var key = this.jsdScript.tag + ":" + pc;
+    
+    //dd ("setting breakpoint in " + this.functionName + " " + key);
+    
+    if (key in console.breaks)
+        return false;
+
+    var brk = new BreakInstance (parentBP, this, pc);
+    console.breaks[key] = brk;
+    this.breaks[key] = brk;
+    
+    if (parentBP)
+    {
+        parentBP.childrenBP[key] = brk;
+        brk.lineNumber = parentBP.lineNumber;
+        brk.url = parentBP.url;
+    }
+
+    if ("_sourceText" in this)
+    {
+        var line = this.jsdScript.pcToLine(brk.pc, PCMAP_PRETTYPRINT);
+        arrayOrFlag (this._sourceText.lineMap, line - 1, LINE_BREAK);
+    }
+
+    ++this.scriptInstance.breakpointCount;
+    ++this.breakpointCount;
+    
+    if (this.scriptInstance._lineMapInited)
+    {
+        line = this.jsdScript.pcToLine (pc, PCMAP_SOURCETEXT);
+        arrayOrFlag (this.scriptInstance._lineMap, line - 1, LINE_BREAK);
+    }
+
+    dispatch ("hook-break-set", { breakWrapper: brk });
+    
+    this.jsdScript.setBreakpoint (pc);
+
+    return true;
+}
+
+ScriptWrapper.prototype.clearBreakpoints =
+function sw_clearbps ()
+{
+    var found = false;
+    
+    for (b in this.breaks)
+        found |= this.clearBreakpoint(this.breaks[b].pc);
+
+    return found;
+}
+
+ScriptWrapper.prototype.clearBreakpoint =
+function sw_clearbp (pc)
+{
+    var key = this.jsdScript.tag + ":" + pc;
+    if (!(key in console.breaks))
+        return false;
+
+    var brk = console.breaks[key];
+
+    delete console.breaks[key];
+    delete this.breaks[key];
+
+    if (brk.parentBP)
+        delete brk.parentBP.childrenBP[key];
+
+    var line;
+    
+    if ("_sourceText" in this && this.jsdScript.isValid)
+    {
+        line = this.jsdScript.pcToLine(brk.pc, PCMAP_PRETTYPRINT);
+        this._sourceText.lineMap[line - 1] &= ~LINE_BREAK;
+    }
+    
+    --this.scriptInstance.breakpointCount;
+    --this.breakpointCount;
+
+    if (this.scriptInstance._lineMapInited)
+    {
+        if (this.jsdScript.isValid)
+        {
+            line = this.jsdScript.pcToLine (pc, PCMAP_SOURCETEXT);
+            if (!this.scriptInstance.hasBreakpoint(line))
+                this.scriptInstance._lineMap[line - 1] &= ~LINE_BREAK;
+        }
+        else
+        {
+            /* script is gone, no way to find out where the break actually
+             * was, so we have to redo the whole map. */
+            this.scriptInstance._lineMapInited = false;
+            this.scriptInstance._lineMap.length = 0;
+            var dummy = this.scriptInstance.lineMap;
+        }
+    }
+
+    dispatch ("hook-break-clear", { breakWrapper: brk });
+
+    if (this.jsdScript.isValid)
+        this.jsdScript.clearBreakpoint (pc);
+
+    return true;
+}
+
+ScriptWrapper.prototype.addToLineMap =
+function sw_addmap (lineMap)
+{    
+    var jsdScript = this.jsdScript;
+    var end = jsdScript.baseLineNumber + jsdScript.lineExtent;
+    for (var i = jsdScript.baseLineNumber; i < end; ++i)
+    {
+        if (jsdScript.isLineExecutable(i, PCMAP_SOURCETEXT))
+            arrayOrFlag (lineMap, i - 1, LINE_BREAKABLE);
+    }
+
+    for (i in this.breaks)
+    {
+        var line = jsdScript.pcToLine(this.breaks[i].pc, PCMAP_SOURCETEXT);
+        arrayOrFlag (lineMap, line - 1, LINE_BREAK);
+    }
+}
+
+function getScriptWrapper(jsdScript)
+{
+    if (!ASSERT(jsdScript, "getScriptWrapper: null jsdScript"))
+        return null;
+    
+    var tag = jsdScript.tag;
+    if (tag in console.scriptWrappers)
+        return console.scriptWrappers[tag];
+
+    dd ("Can't find a wrapper for " + formatScript(jsdScript));
+    return null;
+}
+
+function BreakInstance (parentBP, scriptWrapper, pc)
+{
+    this.parentBP = parentBP;
+    this.scriptWrapper = scriptWrapper;
+    this.pc = pc;
+}
+
+function FutureBreakpoint (url, lineNumber)
+{
+    this.url = url;
+    this.lineNumber = lineNumber;
+    this.enabled = true;
+    this.scriptText = null;
+    this.childrenBP = new Object;
+}
+
+FutureBreakpoint.prototype.resetInstances =
+function fb_reset ()
+{
+    for (var url in console.scriptManagers)
+    {
+        if (url.search(this.url) != -1)
+            console.scriptManagers[url].setBreakpoint(this.lineNumber);
+    }
+}
+
+FutureBreakpoint.prototype.clearInstances =
+function fb_clear ()
+{
+    for (var url in console.scriptManagers)
+    {
+        if (url.search(this.url) != -1)
+            console.scriptManagers[url].clearBreakpoint(this.lineNumber);
     }
 }
 
@@ -400,7 +1012,7 @@ const TMODE_TRACE  = 1;
 const TMODE_BREAK  = 2;
 
 function debugTrap (frame, type, rv)
-{
+{    
     var tn = "";
     var retcode = jsdIExecutionHook.RETURN_CONTINUE;
 
@@ -409,35 +1021,46 @@ function debugTrap (frame, type, rv)
     switch (type)
     {
         case jsdIExecutionHook.TYPE_BREAKPOINT:
-            tn = MSG_WORD_BREAKPOINT;
+            tn = MSG_VAL_BREAKPOINT;
             break;
         case jsdIExecutionHook.TYPE_DEBUG_REQUESTED:
-            tn = MSG_WORD_DEBUG;
+            tn = MSG_VAL_DEBUG;
             break;
         case jsdIExecutionHook.TYPE_DEBUGGER_KEYWORD:
-            tn = MSG_WORD_DEBUGGER;
+            tn = MSG_VAL_DEBUGGER;
             break;
         case jsdIExecutionHook.TYPE_THROW:
-            display (getMsg(MSN_EXCP_TRACE, [formatValue(rv.value),
-                                             formatFrame(frame)]), MT_ETRACE);
+            dd (dumpObjectTree(rv));
+            display (getMsg(MSN_EXCEPTION_TRACE,
+                            [rv.value.stringValue, formatFrame(frame)]),
+                     MT_ETRACE);
             if (rv.value.jsClassName == "Error")
                 display (formatProperty(rv.value.getProperty("message")));
 
             if (console.throwMode != TMODE_BREAK)
                 return jsdIExecutionHook.RETURN_CONTINUE_THROW;
 
-            $[0] = rv.value;
+            console.currentException = rv.value;
             retcode = jsdIExecutionHook.RETURN_CONTINUE_THROW;
-            tn = MSG_WORD_THROW;
+            
+            tn = MSG_VAL_THROW;
             break;
         case jsdIExecutionHook.TYPE_INTERRUPTED:
+            if (!frame.script.functionName && 
+                isURLFiltered(frame.script.fileName))
+            {
+                dd ("filtered url: " + frame.script.fileName);
+                frame.script.flags |= SCRIPT_NOPROFILE | SCRIPT_NODEBUG;
+                return retcode;
+            }
+            
             var line;
-            if (console.sourceView.prettyPrint)
+            if (console.prefs["prettyprint"])
                 line = frame.script.pcToLine (frame.pc, PCMAP_PRETTYPRINT);
             else
                 line = frame.line;
             if (console._stepPast == frame.script.fileName + line)
-                return jsdIExecutionHook.RETURN_CONTINUE;
+                return retcode;
             delete console._stepPast;
             setStopState(false);
             break;
@@ -452,41 +1075,35 @@ function debugTrap (frame, type, rv)
 
     if (tn)
         display (getMsg(MSN_STOP, tn), MT_STOP);
-    if (0 in $)
-        display (getMsg(MSN_FMT_TMP_ASSIGN, [0, formatValue ($[0])]),
-                 MT_FEVAL_OUT);
     
     /* build an array of frames */
     console.frames = new Array(frame);
-
-    console.stackView.stack.unHide();
-    console.stackView.stack.open();
-    var frameRec = new FrameRecord(frame);
-    console.stackView.stack.appendChild (frameRec);
     
     while ((frame = frame.callingFrame))
-    {
-        console.stackView.stack.appendChild (new FrameRecord(frame));
         console.frames.push(frame);
-    }
-
+    
     console.trapType = type;
-    window.focus();
-    window.getAttention();
-
-    console.jsds.enterNestedEventLoop({onNest: console.onDebugTrap}); 
-
-    /* execution pauses here until someone calls 
-     * console.dbg.exitNestedEventLoop() 
-     */
+    
+    try
+    {    
+        console.jsds.enterNestedEventLoop({onNest: eventLoopNested}); 
+    }
+    catch (ex)
+    {
+        dd ("caught " + ex + " while nested");
+    }
+    
+    /* execution pauses here until someone calls exitNestedEventLoop() */
 
     clearCurrentFrame();
+    rv.value = ("currentException" in console) ? console.currentException : null;
+
     delete console.frames;
     delete console.trapType;
-    rv.value = (0 in $) ? $[0] : null;
+    delete console.currentException;
     $ = new Array();
     
-    console.onDebugContinue();
+    dispatch ("hook-debug-continue");
 
     if (tn)
         display (getMsg(MSN_CONT, tn), MT_CONT);
@@ -494,9 +1111,20 @@ function debugTrap (frame, type, rv)
     return console._continueCodeStack.pop();
 }
 
+function eventLoopNested ()
+{
+    window.focus();
+    window.getAttention();
+
+    dispatch ("hook-debug-stop");
+}
+
 function getCurrentFrame()
 {
-    return console.frames[console._currentFrameIndex];
+    if ("frames" in console)
+        return console.frames[console._currentFrameIndex];
+
+    return null;
 }
 
 function getCurrentFrameIndex()
@@ -519,8 +1147,6 @@ function setCurrentFrameByIndex (index)
     console.stopFile = (cf.isNative) ? MSG_URL_NATIVE : cf.script.fileName;
     console.stopLine = cf.line;
     delete console._pp_stopLine;
-    console.onFrameChanged (cf, console._currentFrameIndex);
-
     return cf;
 }
 
@@ -533,13 +1159,6 @@ function clearCurrentFrame ()
     delete console._pp_stopLine;
     delete console.stopFile;
     delete console._currentFrameIndex;
-    console.onFrameChanged (null, 0);
-}
-
-function findNextExecutableLine (script, line)
-{
-    var pc = script.lineToPc (line + 1, PCMAP_SOURCETEXT);
-    
 }
 
 function formatArguments (v)
@@ -566,19 +1185,23 @@ function formatFlags (flags)
 {
     var s = "";
     
-    if (flags & jsdIProperty.FLAG_ENUMERATE)
+    if (flags & PROP_ENUMERATE)
         s += MSG_VF_ENUMERABLE;
-    if (flags & jsdIProperty.FLAG_READONLY)
+    if (flags & PROP_READONLY)
         s += MSG_VF_READONLY;        
-    if (flags & jsdIProperty.FLAG_PERMANENT)
+    if (flags & PROP_PERMANENT)
         s += MSG_VF_PERMANENT;
-    if (flags & jsdIProperty.FLAG_ALIAS)
+    if (flags & PROP_ALIAS)
         s += MSG_VF_ALIAS;
-    if (flags & jsdIProperty.FLAG_ARGUMENT)
+    if (flags & PROP_ARGUMENT)
         s += MSG_VF_ARGUMENT;
-    if (flags & jsdIProperty.FLAG_VARIABLE)
+    if (flags & PROP_VARIABLE)
         s += MSG_VF_VARIABLE;
-    if (flags & jsdIProperty.FLAG_HINTED)
+    if (flags & PROP_ERROR)
+        s += MSG_VF_ERROR;
+    if (flags & PROP_EXCEPTION)
+        s += MSG_VF_EXCEPTION;
+    if (flags & PROP_HINTED)
         s += MSG_VF_HINTED;
 
     return s;
@@ -606,7 +1229,12 @@ function formatScript (script)
     if (!script)
         throw new BadMojo (ERR_REQUIRED_PARAM, "script");
 
-    return getMsg (MSN_FMT_SCRIPT, [script.functionName, script.fileName]);
+    var functionName;
+    if (script.tag in console.scriptWrappers)
+        functionName = console.scriptWrappers[script.tag].functionName;
+    else
+        functionName = script.functionName;
+    return getMsg (MSN_FMT_SCRIPT, [functionName, script.fileName]);
 }
 
 function formatFrame (f)
@@ -671,7 +1299,12 @@ function formatValue (v, formatType)
             break;
         case jsdIValue.TYPE_STRING:
             type = MSG_TYPE_STRING;
-            value = v.stringValue.quote();
+            var strval = v.stringValue;
+            if (strval.length > console.prefs["maxStringLength"])
+                strval = getMsg(MSN_FMT_LONGSTR, strval.length);
+            else
+                strval = strval.quote()
+            value = strval;
             break;
         case jsdIValue.TYPE_VOID:
             type = MSG_TYPE_VOID;
@@ -724,25 +1357,16 @@ function displayProperties (v)
     for (var i in p.value) display(formatProperty (p.value[i]));
 }
 
-function displaySource (url, line, contextLines)
+function displaySourceContext (sourceText, line, contextLines)
 {
     function onSourceLoaded (status)
     {
         if (status == Components.results.NS_OK)
-            displaySource (url, line, contextLines);
+            displaySourceContext (sourceText, line, contextLines);
     }
-    
-    var rec = console.scripts[url];
- 
-    if (!rec)
-    {
-        display (getMsg(MSN_ERR_NO_SCRIPT, url), MT_ERROR);
-        return;
-    }
-    
-    var sourceText = rec.sourceText;
     
     if (sourceText.isLoaded)
+    {
         for (var i = line - contextLines; i <= line + contextLines; ++i)
         {
             if (i > 0 && i < sourceText.lines.length)
@@ -752,183 +1376,105 @@ function displaySource (url, line, contextLines)
                          i == line ? MT_STEP : MT_SOURCE);
             }
         }
+    }
     else
     {
         sourceText.loadSource (onSourceLoaded);
     }
 }
     
-function displayFrame (f, idx, showSource)
+function displayFrame (jsdFrame, idx, showHeader, sourceContext)
 {
-    if (!f)
-        throw new BadMojo (ERR_REQUIRED_PARAM, "f");
-
     if (typeof idx == "undefined")
     {
         for (idx = 0; idx < console.frames.length; ++idx)
-            if (f == console.frames[idx])
+            if (jsdFrame == console.frames[idx])
                 break;
     
         if (idx >= console.frames.length)
             idx = MSG_VAL_UNKNOWN;
     }
-    
-    if (typeof idx == "number")
-        idx = "#" + idx;
-    
-    display(idx + ": " + formatFrame (f));
-    if (!f.isNative && f.script.fileName && showSource)
-            displaySource (f.script.fileName, f.line, 2);
-}
 
-function getBreakpoint (fileName, line)
-{
-    return console.breakpoints.locateChildByFileLine (fileName, line);
-}
+    if (typeof showHeader == "undefined")
+        showHeader = true;
 
-function disableBreakpoint (fileName, line)
-{
-    var bpr = console.breakpoints.locateChildByFileLine (fileName, line);
-    if (!bpr)
+    if (typeof sourceContext == "undefined")
+        sourceContext = null;
+
+    display(getMsg(MSN_FMT_FRAME_LINE, [idx, formatFrame(jsdFrame)]));
+
+    if (!jsdFrame.isNative && sourceContext != null)
     {
-        display (getMsg(MSN_ERR_BP_NODICE, [fileName, line]), MT_ERROR);
-        return 0;
-    }
-    
-    return disableBreakpointByNumber (bpr.childIndex);
-}
+        var jsdScript = jsdFrame.script;
+        var scriptWrapper = getScriptWrapper(jsdScript);
 
-function disableBreakpointByNumber (number)
-{
-    var bpr = console.breakpoints.childData[number];
-    if (!bpr)
-    {
-        display (getMsg(MSN_ERR_BP_NOINDEX, number, MT_ERROR));
-        return;
-    }
-
-    bpr.enabled = false;
-    display (getMsg(MSN_BP_DISABLED, [bpr.fileName, bpr.line,
-                                      bpr.scriptMatches]));
-}
-
-function clearBreakpoint (fileName, line)
-{
-    var bpr = console.breakpoints.locateChildByFileLine (fileName, line);
-    if (!bpr)
-    {
-        display (getMsg(MSN_ERR_BP_NODICE, [fileName, line]), MT_ERROR);
-        return 0;
-    }
-    
-    return clearBreakpointByNumber (bpr.childIndex);
-}
-
-function clearBreakpointByNumber (number)
-{
-    var bpr = console.breakpoints.childData[number];
-    if (!bpr)
-    {
-        display (getMsg(MSN_ERR_BP_NOINDEX, number, MT_ERROR));
-        return null;
-    }
-
-    bpr.enabled = false;
-
-    var fileName = bpr.fileName;
-    var line = bpr.line;
-
-    var sourceText;
-    
-    if (fileName in console.scripts)
-        sourceText = console.scripts[fileName].sourceText;
-    else if (fileName in console.files)
-        sourceText = console.files[fileName];
-
-    if (sourceText && sourceText.isLoaded && sourceText.lines[line - 1])
-    {
-        delete sourceText.lines[line - 1].bpRecord;
-        if (console.sourceView.childData.fileName == fileName)
-            console.sourceView.tree.invalidateRow (line - 1);
-    }
-    
-    console.breakpoints.removeChildAtIndex(number);
-    return bpr;
-}
-    
-function setBreakpoint (fileName, line)
-{
-    var scriptRec = console.scripts[fileName];
-    
-    if (!scriptRec)
-    {
-        display (getMsg(MSN_ERR_NOSCRIPT, fileName), MT_ERROR);
-        return null;
-    }
-
-    var bpr = console.breakpoints.locateChildByFileLine (fileName, line);
-    if (bpr)
-    {
-        display (getMsg(MSN_BP_EXISTS, [fileName, line]), MT_INFO);
-        return null;
-    }
-    
-    bpr = new BPRecord (fileName, line);
-    
-    var ary = scriptRec.childData;
-    var found = false;
-    
-    for (var i = 0; i < ary.length; ++i)
-    {
-        if (ary[i].containsLine(line) &&
-            ary[i].script.isLineExecutable(line, PCMAP_SOURCETEXT))
+        if (!ASSERT(scriptWrapper, "Couldn't get a script wrapper"))
+            return;
+        if (console.prefs["prettyprint"] && jsdScript.isValid)
         {
-            found = true;
-            bpr.addScriptRecord(ary[i]);
+            displaySourceContext (scriptWrapper.sourceText,
+                                  jsdScript.pcToLine(jsdFrame.pc,
+                                                     PCMAP_PRETTYPRINT),
+                                  sourceContext);
+        }
+        else
+        {
+            displaySourceContext (scriptWrapper.scriptInstance.sourceText,
+                                  jsdFrame.line, sourceContext);
         }
     }
-
-    var matches = bpr.scriptMatches;
-    if (!matches)
-    {
-        display (getMsg(MSN_ERR_BP_NOLINE, [fileName, line]), MT_ERROR);
-        return null;
-    }
-    
-    if (scriptRec.sourceText.isLoaded &&
-        scriptRec.sourceText.lines[line - 1])
-    {
-        scriptRec.sourceText.lines[line - 1].bpRecord = bpr;
-        if (console.sourceView.childData.fileName == fileName)
-            console.sourceView.tree.invalidateRow (line - 1);
-    }
-    
-    console.breakpoints.appendChild (bpr);
-    return bpr;
 }
 
-function setFutureBreakpoint (filePattern, line)
+function getFutureBreakpoint (urlPattern, lineNumber)
 {
-    var bpr = console.breakpoints.locateChildByFileLine (filePattern, line);
-    if (bpr)
+    var key = urlPattern + "#" + lineNumber;
+    if (key in console.fbreaks)
+        return console.fbreaks[key];
+    
+    return null;
+}
+
+function setFutureBreakpoint (urlPattern, lineNumber)
+{
+    var key = urlPattern + "#" + lineNumber;
+
+    if (key in console.fbreaks)
+        return false;
+    
+    for (var url in console.scriptManagers)
     {
-        display (getMsg(MSN_BP_EXISTS, [filePattern, line]), MT_INFO);
-        return null;
-    }
-    
-    bpr = new BPRecord (filePattern, line);
-    
-    if (filePattern in console.files)
+        if (url == urlPattern)
+            console.scriptManagers[url].noteFutureBreakpoint(lineNumber, true);
+    }    
+
+    var fbreak = new FutureBreakpoint (urlPattern, lineNumber);
+    console.fbreaks[key] = fbreak;
+
+    dispatch ("hook-fbreak-set", { fbreak: fbreak });
+
+    return fbreak;
+}
+
+function clearFutureBreakpoint (urlPattern, lineNumber)
+{
+    var key = urlPattern + "#" + lineNumber;
+    if (!(key in console.fbreaks))
+        return false;
+
+    var i;
+    var fbreak = console.fbreaks[key];
+    delete console.fbreaks[key];
+
+    for (i in fbreak.childrenBP)
+        fbreak.childrenBP[i].parentBP = null;
+
+    for (var url in console.scriptManagers)
     {
-        var sourceText = console.files[filePattern];
-        if (sourceText.isLoaded)
-        {
-            sourceText.lines[line - 1].bpRecord = bpr;
-            if (console.sourceView.childData.fileName == filePattern)
-                console.sourceView.tree.invalidateRow (line - 1);
-        }
-    }
-    
-    console.breakpoints.appendChild (bpr);
-    return bpr;
+        if (url.search(urlPattern) != -1)
+            console.scriptManagers[url].noteFutureBreakpoint(lineNumber, false);
+    }    
+
+    dispatch ("hook-fbreak-clear", { fbreak: fbreak });
+
+    return true;
 }

@@ -70,14 +70,16 @@
     <span class="value">$user-agent</span><br>
     <span class="label">JavaScript Debugger Version:</span>
     <span class="value">$venkman-agent</span><br>
+    <span class="label">Sorted By:</span>
+    <span class="value">$sort-key</span><br>
     <a name="section0"></a>
-<!--@section-start-->
+@-section-start
     <hr>
     <span class="section-box">
       <a name="section$section-number"></a>
       <h2 class="section-title">$section-link</h2>
       <a name="range$section-number:0"></a>
-<!--@range-start-->
+@-range-start
       <span class="range-box">
         <a name="range$section-number:$range-number"></a>
         <h3>$range-min - $range-max ms</h3>
@@ -85,7 +87,7 @@
         <a href="#section$section-number-next">Next File</a> |
         <a href="#range$section-number:$range-number-prev">Previous Range</a> |
         <a href="#range$section-number:$range-number-next">Next Range</a> ]
-<!--@item-start-->
+@-item-start
         <span class="graph-box">
           <span class="graph-title">
             <a name="item$section-number:$range-number-next:$item-number"></a>
@@ -103,12 +105,12 @@
               width="$item-above-pct%">
           </span>
         </span>
-<!--@item-end-->
+@-item-end
       </span>
-<!--@range-end-->
+@-range-end
       <br>
     </span>
-<!--@section-end-->
+@-section-end
     <hr>
     <a href="http://www.mozilla.org/projects/venkman/">No job is too big, no fee is too big.</a>
   </body>

@@ -36,57 +36,58 @@
 
 <!ENTITY MainWindow.title "JavaScript Debugger">
 
-<!-- view menu -->
-<!ENTITY PPrint.label        "Pretty Print">
-<!ENTITY PPrint.aKey         "P">
-<!ENTITY Reload.label        "Reload Source">
-<!ENTITY Reload.aKey         "R">
-
-<!-- debug menu -->
-<!ENTITY Debug.label         "Debug">
-<!ENTITY Debug.aKey          "D">
-<!ENTITY Cont.label          "Continue">
-<!ENTITY Cont.aKey           "C">
-<!ENTITY StepIn.label        "Step Into">
-<!ENTITY StepIn.aKey              "I">
-<!ENTITY StepOver.label      "Step Over">
-<!ENTITY StepOver.aKey            "O">
-<!ENTITY StepOut.label       "Step Out">
-<!ENTITY StepOut.aKey         "t">
-<!ENTITY Stop.label          "Stop">
-<!ENTITY Stop.aKey              "p">
-<!ENTITY TModeIgnore.label   "Ignore Exceptions">
-<!ENTITY TModeIgnore.aKey     "g">
-<!ENTITY TModeTrace.label    "Trace Exceptions">
-<!ENTITY TModeTrace.aKey      "r">
-<!ENTITY TModeBreak.label    "Stop for Exceptions">
-<!ENTITY TModeBreak.aKey              "E">
-<!ENTITY InitAtStartup.label "Initialize at Startup">
-<!ENTITY InitAtStartup.aKey   "n">
+<!-- help menu -->
+<!ENTITY Help.commands     "Command Reference">
+<!ENTITY Help.about        "About Venkman">
 
 <!-- toolips -->
-<!ENTITY Cont.tooltip "Continue debugging">
-<!ENTITY Stop.tooltip "Stop the current operation">
+<!ENTITY Cont.tooltip     "Continue debugging">
+<!ENTITY Stop.tooltip     "Stop the current operation">
 <!ENTITY StepOver.tooltip "Step over statement">
-<!ENTITY StepIn.tooltip "Step into statement">
-<!ENTITY StepOut.tooltip "Step out of statement">
+<!ENTITY StepIn.tooltip   "Step into statement">
+<!ENTITY StepOut.tooltip  "Step out of statement">
 <!ENTITY DebugBar.tooltip "Debugging Toolbar">
-<!ENTITY MenuBar.tooltip "Menu Bar">
+<!ENTITY MenuBar.tooltip  "Menu Bar">
 
-<!-- status bar -->
-<!ENTITY StatusText.label "Welcome to the JavaScript Debugger">
+<!-- breakpoint view -->
+<!ENTITY Break.label        "Breakpoints">
+<!ENTITY BreakCol0.label    "Name">
+<!ENTITY BreakCol1.label    "Line/PC">
 
-<!-- source tree -->
+<!-- locals view -->
+<!ENTITY Locals.label       "Local Variables">
+<!ENTITY LocalsCol0.header  "Name">
+<!ENTITY LocalsCol1.header  "Type">
+<!ENTITY LocalsCol2.header  "Value">
+<!ENTITY LocalsCol3.header  "Flags">
+
+<!-- session view -->
+<!ENTITY Session.label      "Interactive Session">
+
+<!-- script view -->
+<!ENTITY Scripts.label      "Loaded Scripts">
+<!ENTITY ScriptsCol0.header "Name">
+<!ENTITY ScriptsCol1.header "Line">
+<!ENTITY ScriptsCol2.header "Length">
+
+<!-- source view -->
+<!ENTITY Source.label       "Source Code">
+<!ENTITY SourceHeader.tip   "Source Toolbar">
 <!ENTITY SourceCol0.display "Margin">
 <!ENTITY SourceCol1.display "Line Number">
 
-<!-- script tree -->
-<!ENTITY ScriptCol0.header "Name">
-<!ENTITY ScriptCol1.header "Line">
-<!ENTITY ScriptCol2.header "Length">
+<!-- stack view -->
+<!ENTITY Stack.label        "Call Stack">
+<!ENTITY StackCol0.header   "Name">
+<!ENTITY StackCol1.header   "Location">
 
-<!-- stack/expression tree -->
-<!ENTITY StackCol0.header "Name">
-<!ENTITY StackCol1.header "Type">
-<!ENTITY StackCol2.header "Value">
-<!ENTITY StackCol3.header "Flags">
+<!-- watch view -->
+<!ENTITY Watch.label        "Watches">
+<!ENTITY WatchCol0.header   "Name">
+<!ENTITY WatchCol1.header   "Type">
+<!ENTITY WatchCol2.header   "Value">
+<!ENTITY WatchCol3.header   "Flags">
+
+<!-- window view -->
+<!ENTITY Windows.label      "Open Windows">
+<!ENTITY WindowsCol0.label  "File">

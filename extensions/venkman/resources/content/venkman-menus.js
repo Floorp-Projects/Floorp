@@ -34,196 +34,242 @@
  */
 
 function initMenus()
-{
-    var lastMenu;
-    var cm = console.commandManager;
-
-    /*
-     * The C(), M(), m(), and t() functions are defined below.  They are
-     * Venkman specific wrappers around calls the the CommandManager.
-     *
-     * C(id, name)
-     *  Creates a new context menu attached to the object with the id |id|.
-     *  The label will be derived from the string named "mnu." + |name|.
-     *
-     * M(parent, name)
-     *  Creates a new menu dropdown in an existing menu bar with the id |parent|.
-     *  The label will be derived from the string named "mnu." + |name|.
-     *
-     * m(commandName)
-     *  Creates a menuitem for the command named commandName.
-     *
-     * t(parent, commandName)
-     *  Creates a toolbaritem for the command named |commandName| in the toolbar
-     *  with the id |parent|.
-     */
-
-    /* main toolbar */
-    t("maintoolbar", "stop");
-    t("maintoolbar", "-");
-    t("maintoolbar", "cont");
-    t("maintoolbar", "next");
-    t("maintoolbar", "step");
-    t("maintoolbar", "finish");
-    t("maintoolbar", "-");
-    t("maintoolbar", "profile-tb");
-    t("maintoolbar", "pprint");
-
-
-    M("mainmenu", "file");
-     m("open-url");
-     m("find-file");
-     m("-");
-     m("close");
-     m("save-source");
-     m("save-profile");
-     m("-");
-     m("quit");
-    
-    /* View menu */
-    M("mainmenu", "view");
-     m("reload");
-     m("pprint",        {type: "checkbox",
-                         checkedif: "console.sourceView.prettyPrint"});
-     m("-");
-     m("toggle-chrome", {type: "checkbox",
-                         checkedif: "console.enableChromeFilter"});
-     
-    /* Debug menu */
-    M("mainmenu", "debug");
-     m("stop", {type: "checkbox",
-                checkedif: "console.jsds.interruptHook"});
-     m("cont");
-     m("next");
-     m("step");
-     m("finish");
-     m("-");
-     m("em-ignore", {type: "radio", name: "em",
-                     checkedif: "console.errorMode == EMODE_IGNORE"});
-     m("em-trace",  {type: "radio", name: "em",
-                     checkedif: "console.errorMode == EMODE_TRACE"});
-     m("em-break",  {type: "radio", name: "em",
-                     checkedif: "console.errorMode == EMODE_BREAK"});
-     m("-");
-     m("tm-ignore", {type: "radio", name: "tm",
-                     checkedif: "console.throwMode == TMODE_IGNORE"});
-     m("tm-trace",  {type: "radio", name: "tm",
-                     checkedif: "console.throwMode == TMODE_TRACE"});
-     m("tm-break",  {type: "radio", name: "tm",
-                     checkedif: "console.throwMode == TMODE_BREAK"});
-     m("-");
-     m("toggle-ias",
-         {type: "checkbox",
-          checkedif: "console.jsds.initAtStartup"});
-
-    M("mainmenu", "profile");
-     m("toggle-profile", {type: "checkbox",
-                          checkedif:
-                            "console.jsds.flags & COLLECT_PROFILE_DATA"});
-     m("clear-profile");
-     m("save-profile");
-
-    /* Context menu for console view */
-    C("output-iframe", "console");
-     m("stop", {type: "checkbox",
-                checkedif: "console.jsds.interruptHook"});
-     m("cont");
-     m("next");
-     m("step");
-     m("finish");
-     m("-");
-     m("em-ignore", {type: "radio", name: "em",
-                     checkedif: "console.errorMode == EMODE_IGNORE"});
-     m("em-trace",  {type: "radio", name: "em",
-                     checkedif: "console.errorMode == EMODE_TRACE"});
-     m("em-break",  {type: "radio", name: "em",
-                     checkedif: "console.errorMode == EMODE_BREAK"});
-     m("-");
-     m("tm-ignore", {type: "radio", name: "tm",
-                     checkedif: "console.throwMode == TMODE_IGNORE"});
-     m("tm-trace",  {type: "radio", name: "tm",
-                     checkedif: "console.throwMode == TMODE_TRACE"});
-     m("tm-break",  {type: "radio", name: "tm",
-                     checkedif: "console.throwMode == TMODE_BREAK"});
-     
-    /* Context menu for project view */
-    C("project-tree", "project");
-     m("find-url");
-     m("-");
-     m("clear-all", {enabledif:
-                     "cx.target instanceof BPRecord || " +
-                     "(has('breakpointLabel') && cx.target.childData.length)"});
-     m("clear");
-     m("-");
-     m("save-profile", {enabledif: "has('url')"});
-
-    /* Context menu for source view */
-    C("source-tree", "source");
-     m("save-source");
-     m("-");
-     m("break",  {enabledif: "cx.lineIsExecutable && !has('breakpointRec')"});
-     m("fbreak", {enabledif: "!cx.lineIsExecutable && !has('breakpointRec')"});
-     m("clear");
-     m("-");
-     m("cont");
-     m("next");
-     m("step");
-     m("finish");
-     m("-");
-     m("pprint", {type: "checkbox",
-                  checkedif: "console.sourceView.prettyPrint"});
-
-    /* Context menu for script view */
-    C("script-list-tree", "script");
-     m("find-url");
-     m("find-script");
-     m("clear-script", {enabledif: "cx.target.bpcount"});
-     m("-");
-     m("save-profile");
-     m("clear-profile");
-     
-    /* Context menu for stack view */
-    C("stack-tree", "stack");
-     m("frame",        {enabledif: "cx.target instanceof FrameRecord"});
-     m("find-creator", {enabledif: "cx.target instanceof ValueRecord && " +
-                                   "cx.target.jsType == jsdIValue.TYPE_OBJECT"});
-     m("find-ctor",    {enabledif: "cx.target instanceof ValueRecord && " +
-                                   "cx.target.jsType == jsdIValue.TYPE_OBJECT"});
-    
-    function M(parent, id, attribs)
+{    
+    function onMenuCommand (event, window)
     {
-        lastMenu = parent + ":" + id;
-        console.commandManager.appendSubMenu(parent, lastMenu,
-                                             getMsg("mnu." + id));
-    }
-
-    function C(elementId, id)
-    {
-        lastMenu = "popup:" + id;
-        console.commandManager.appendPopupMenu("dynamicPopups", lastMenu,
-                                               getMsg("popup." + id));
-        var elemObject = document.getElementById(elementId);
-        elemObject.setAttribute ("context", lastMenu);
-    }
-        
-    function m(command, attribs)
-    {            
-        if (command != "-")
+        var params;
+        var commandName = event.originalTarget.getAttribute("commandname");
+        if ("cx" in console.menuManager && console.menuManager.cx)
         {
-            if (!(command in cm.commands))
-            {
-                dd("no such command: " + command)
-                    return;
-            }
-            command = cm.commands[command];
+            console.menuManager.cx.sourceWindow = window;
+            params = console.menuManager.cx;
         }
-        console.commandManager.appendMenuItem(lastMenu, command, attribs);
-    }
+        else
+        {
+            params = { sourceWindow: window };
+        }
+            
+        dispatch (commandName, params);
+
+        delete console.menuManager.cx;
+    };
     
-    function t(parent, command, attribs)
+    console.onMenuCommand = onMenuCommand;
+    console.menuSpecs = new Object();
+    var menuManager = 
+        console.menuManager = new MenuManager(console.commandManager,
+                                              console.menuSpecs,
+                                              getCommandContext,
+                                              "console.onMenuCommand(event, " +
+                                              "window);");
+
+    console.menuSpecs["maintoolbar"] = {
+        items:
+        [
+         ["stop"],
+         ["-"],
+         ["cont"],
+         ["next"],
+         ["step"],
+         ["finish"],
+         ["-"],
+         ["profile-tb"],
+         ["toggle-pprint"]
+        ]
+    };
+
+    console.menuSpecs["mainmenu:file"] = {
+        label: MSG_MNU_FILE,
+        items:
+        [
+         ["open-url"],
+         ["find-file"],
+         ["-"],
+         ["close"],
+         ["save-source-tab", { enabledif: "console.views.source2.canSave()" }],
+         ["save-profile"],
+         ["-"],
+         ["quit"]
+        ]
+    };
+
+    console.menuSpecs["mainmenu:view"] = {
+        label: MSG_MNU_VIEW,
+        items:
+        [
+         [">popup:showhide"],
+         ["-"],
+         ["reload-source-tab"],
+         ["toggle-source-coloring",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['services.source.sourceColoring'] " +
+                             "== 'true'"} ],
+         ["toggle-pprint",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['prettyprint']"}],
+         ["-"],
+         [">session:colors"],
+         ["-"],
+         ["save-default-layout"],
+         ["toggle-save-layout",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['saveLayoutOnExit']"}]
+        ]
+    };
+    
+    console.menuSpecs["mainmenu:debug"] = {
+        label: MSG_MNU_DEBUG,
+        items:
+        [
+         ["stop",
+                 {type: "checkbox",
+                  checkedif: "console.jsds.interruptHook"}],
+         ["cont"],
+         ["next"],
+         ["step"],
+         ["finish"],
+         ["-"],
+         [">popup:emode"],
+         [">popup:tmode"],
+         ["-"],
+         ["toggle-chrome",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['enableChromeFilter']"}]
+         /*
+         ["toggle-ias",
+                 {type: "checkbox",
+                  checkedif: "console.jsds.initAtStartup"}]
+         */
+        ]
+    };
+
+    console.menuSpecs["mainmenu:help"] = {
+        label: MSG_MNU_HELP,
+        items:
+        [
+         ["mozilla-help"],
+         ["help"],
+         ["-"],
+         ["version"],
+         ["about-mozilla"]
+        ]
+    };
+    
+    console.menuSpecs["mainmenu:profile"] = {
+        label: MSG_MNU_PROFILE,
+        items:
+        [
+         ["toggle-profile",
+                 {type: "checkbox",
+                  checkedif: "console.jsds.flags & COLLECT_PROFILE_DATA"}],
+         ["clear-profile"],
+         ["save-profile"]
+        ]
+    };
+
+    console.menuSpecs["popup:emode"] = {
+        label: MSG_MNU_EMODE,
+        items:
+        [
+         ["em-ignore",
+                 {type: "radio", name: "em",
+                  checkedif: "console.errorMode == EMODE_IGNORE"}],
+         ["em-trace",
+                 {type: "radio", name: "em",
+                  checkedif: "console.errorMode == EMODE_TRACE"}],
+         ["em-break",
+                 {type: "radio", name: "em",
+                  checkedif: "console.errorMode == EMODE_BREAK"}]
+        ]
+    };
+    
+    console.menuSpecs["popup:tmode"] = {
+        label: MSG_MNU_TMODE,
+        items:
+        [
+         ["tm-ignore",
+                 {type: "radio", name: "tm",
+                  checkedif: "console.throwMode == TMODE_IGNORE"}],
+         ["tm-trace",
+                 {type: "radio", name: "tm",
+                  checkedif: "console.throwMode == TMODE_TRACE"}],
+         ["tm-break",
+                 {type: "radio", name: "tm",
+                  checkedif: "console.throwMode == TMODE_BREAK"}]
+        ]
+    };
+
+    console.menuSpecs["popup:showhide"] = {
+        label: MSG_MNU_SHOWHIDE,
+        items: [ /* filled by initViews() */ ]
+    };
+}
+
+console.createMainMenu = createMainMenu;
+function createMainMenu(document)
+{
+    var mainmenu = document.getElementById("mainmenu");
+    var menuManager = console.menuManager;
+    for (var id in console.menuSpecs)
     {
-        if (command != "-")
-            command = cm.commands[command];
-        console.commandManager.appendToolbarItem(parent, command, attribs);
+        if (id.indexOf("mainmenu:") == 0)
+            menuManager.createMenu (mainmenu, null, id);
     }
+
+    mainmenu.removeAttribute ("collapsed");
+    var toolbox = document.getElementById("main-toolbox");
+    toolbox.removeAttribute ("collapsed");
+}
+
+console.createMainToolbar = createMainToolbar;
+function createMainToolbar(document)
+{
+    var maintoolbar = document.getElementById("maintoolbar");
+    var menuManager = console.menuManager;
+    var spec = console.menuSpecs["maintoolbar"];
+    for (var i in spec.items)
+    {
+        menuManager.appendToolbarItem (maintoolbar, null, spec.items[i]);
+    }
+
+    maintoolbar = document.getElementById("maintoolbar-outer");
+    maintoolbar.removeAttribute ("collapsed");
+    var toolbox = document.getElementById("main-toolbox");
+    toolbox.removeAttribute ("collapsed");
+}
+
+function getCommandContext (id, event)
+{
+    var cx = { originalEvent: event };
+    
+    if (id in console.menuSpecs)
+    {
+        if ("getContext" in console.menuSpecs[id])
+            cx = console.menuSpecs[id].getContext(cx);
+        else if ("cx" in console.menuManager) 
+        {
+            //dd ("using existing context");
+            cx = console.menuManager.cx;
+        }
+        else
+        {
+            //dd ("no context at all");
+        }
+    }
+    else
+    {
+        dd ("getCommandContext: unknown menu id " + id);
+    }
+
+    if (typeof cx == "object")
+    {
+        if (!("menuManager" in cx))
+            cx.menuManager = console.menuManager;
+        if (!("contextSource" in cx))
+            cx.contextSource = id;
+        if ("dbgContexts" in console && console.dbgContexts)
+            dd ("context '" + id + "'\n" + dumpObjectTree(cx));
+    }
+
+    return cx;
 }

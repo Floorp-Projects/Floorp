@@ -33,7 +33,7 @@ function getAccessKey (str)
     return str[i + 1];
 }
 
-function CommandRecord (name, func, usage, help, label, flags)
+function CommandRecord (name, func, usage, help, label, flags, keystr)
 {
     this.name = name;
     this.func = func;
@@ -41,11 +41,13 @@ function CommandRecord (name, func, usage, help, label, flags)
     this.scanUsage();
     this.help = help;
     this.label = label ? label : name;
+    this.labelstr = label.replace ("&", "");
     this.flags = flags;
     this._enabled = true;
-    this.key = null;
-    this.keystr = MSG_VAL_NA;
-    this.uiElements = new Object();
+    this.keyNodes = new Array();
+    this.keystr = keystr;
+    this.uiElements = new Array();
+
 }
 
 CommandRecord.prototype.__defineGetter__ ("enabled", cr_getenable);
@@ -57,7 +59,7 @@ function cr_getenable ()
 CommandRecord.prototype.__defineSetter__ ("enabled", cr_setenable);
 function cr_setenable (state)
 {
-    for (var i in this.uiElements)
+    for (var i = 0; i < this.uiElements.length; ++i)
     {
         if (state)
             this.uiElements[i].removeAttribute ("disabled");
@@ -96,7 +98,7 @@ function cr_scanusage()
     var capNext = false;
     
     this._usage = spec;
-    this.argNames = new Array();    
+    this.argNames = new Array();
 
     for (var i = 0; i < len; ++i)
     {
@@ -141,7 +143,7 @@ function cr_getdocs(flagFormatter)
     var str;
     str  = getMsg(MSN_DOC_COMMANDLABEL,
                   [this.label.replace("&", ""), this.name]) + "\n";
-    str += getMsg(MSN_DOC_KEY, this.keystr) + "\n";
+    str += getMsg(MSN_DOC_KEY, this.keystr ? this.keystr : MSG_VAL_NA) + "\n";
     str += getMsg(MSN_DOC_SYNTAX, [this.name, this.usage]) + "\n";
     str += MSG_DOC_NOTES + "\n";
     str += (flagFormatter ? flagFormatter(this.flags) : this.flags) + "\n\n";
@@ -152,151 +154,137 @@ function cr_getdocs(flagFormatter)
 
 CommandRecord.prototype.argNames = new Array();
 
-function CommandManager ()
+function CommandManager (defaultBundle)
 {
     this.commands = new Object();
+    this.defaultBundle = defaultBundle;
+}
+
+CommandManager.prototype.defineCommands =
+function cmgr_defcmds (cmdary)
+{
+    var len = cmdary.length;
+    var commands = new Object();
+    var bundle =  ("stringBundle" in cmdary ?
+                   cmdary.stringBundle : 
+                   this.defaultBundle);
+    
+    for (var i = 0; i < len; ++i)
+    {
+        var name  = cmdary[i][0];
+        var func  = cmdary[i][1];
+        var flags = cmdary[i][2];
+        var usage = getMsgFrom(bundle, "cmd." + name + ".params", null, "");
+
+        var helpDefault;
+        var labelDefault = name;
+        var aliasFor;
+        if (flags & CMD_NO_HELP)
+            helpDefault = MSG_NO_HELP;
+
+        if (typeof func == "string")
+        {
+            var ary = func.match(/(\S+)/);
+            if (ary)
+                aliasFor = ary[1];
+            helpDefault = getMsg (MSN_DEFAULT_ALIAS_HELP, func); 
+            labelDefault = getMsgFrom (bundle,
+                                       "cmd." + aliasFor + ".label", null, name);
+        }
+
+        var label = getMsgFrom(bundle,
+                               "cmd." + name + ".label", null, labelDefault);
+        var help  = getMsgFrom(bundle,
+                               "cmd." + name + ".help", null, helpDefault);
+        var keystr = getMsgFrom (bundle, "cmd." + name + ".key", null, "");
+        var command = new CommandRecord (name, func, usage, help, label, flags,
+                                         keystr);
+        if (aliasFor)
+            command.aliasFor = aliasFor;
+        this.addCommand(command);
+        commands[name] = command;
+    }
+
+    return commands;
+}
+
+CommandManager.prototype.installKeys =
+function cmgr_instkeys (document, commands)
+{
+    var parentElem = document.getElementById("dynamic-keys");
+    if (!parentElem)
+    {
+        parentElem = document.createElement("keyset");
+        parentElem.setAttribute ("id", "dynamic-keys");
+        document.firstChild.appendChild (parentElem);
+    }
+
+    if (!commands)
+        commands = this.commands;
+    
+    for (var c in commands)
+        this.installKey (parentElem, commands[c]);
 }
 
 /**
- * Internal use only.
+ * Create a <key> node relative to a DOM node.  Usually called once per command,
+ * per document, so that accelerator keys work in all application windows.
  *
- * |showPopup| is called from the "onpopupshowing" event of menus
- * managed by the CommandManager.  If a command is disabled, represents a command
- * that cannot be "satisfied" by the current command context |cx|, or has an
- * "enabledif" attribute that eval()s to false, then the menuitem is disabled.
- * In addition "checkedif" and "visibleif" attributes are eval()d and
- * acted upon accordingly.
+ * @param parentElem  A reference to the DOM node which should contain the new
+ *                    <key> node.
+ * @param command     reference to the CommandRecord to install.
  */
-CommandManager.showPopup =
-function cmgr_showpop (id)
+CommandManager.prototype.installKey =
+function cmgr_instkey (parentElem, command)
 {
-    /* returns true if the command context has the properties required to
-     * execute the command associated with |menuitem|.
-     */
-    function satisfied()
+    if (!command.keystr)
+        return;
+
+    var ary = command.keystr.match (/(.*\s)?([\S]+)$/);
+    if (!ASSERT(ary, "couldn't parse key string ``" + command.keystr +
+                "'' for command ``" + command.name + "''"))
     {
-        if (menuitem.hasAttribute("isSeparator"))
-            return true;
-
-        if (!("commandManager" in cx))
-        {
-            dd ("no commandManager in cx");
-            return false;
-        }
-        
-        var name = menuitem.getAttribute("commandname");
-        if (!ASSERT (name in cx.commandManager.commands,
-                     "menu contains unknown command '" + name + "'"))
-            return false;
-
-        var command = cx.commandManager.commands[name];
-
-        var rv = cx.commandManager.isCommandSatisfied(cx, command);
-        delete cx.parseError;
-        return rv;
+        return;
     }
     
-    /* Convenience function for "enabledif", etc, attributes. */
-    function has (prop)
-    {
-        return (prop in cx);
-    }
+    var key = document.createElement ("key");
+    key.setAttribute ("id", "key:" + command.name);
+    key.setAttribute ("oncommand", "dispatch('" + command.name + "');");
+    key.setAttribute ("modifiers", ary[1]);
+    if (ary[2].indexOf("VK_") == 0)
+        key.setAttribute ("keycode", ary[2]);
+    else
+        key.setAttribute ("key", ary[2]);
     
-    /* evals the attribute named |attr| on the node |node|. */
-    function evalIfAttribute (node, attr)
+    parentElem.appendChild(key);
+    command.keyNodes.push(key);
+}
+
+CommandManager.prototype.uninstallKeys =
+function cmgr_uninstkeys (commands)
+{
+    if (!commands)
+        commands = this.commands;
+    
+    for (var c in commands)
+        this.uninstallKey (commands[c]);
+}
+
+CommandManager.prototype.uninstallKey =
+function cmgr_uninstkey (command)
+{
+    for (var i in command.keyNodes)
     {
-        var ex;
-        var expr = node.getAttribute(attr);
-        if (!expr)
-            return true;
-        
-        expr = expr.replace (/\Wor\W/gi, " || ");
-        expr = expr.replace (/\Wand\W/gi, " && ");
         try
         {
-            return eval("(" + expr + ")");
+            /* document may no longer exist in a useful state. */
+            command.keyNodes[i].parentNode.removeChild(command.keyNodes[i]);
         }
         catch (ex)
         {
-            dd ("caught exception evaling '" + node.getAttribute("id") + "'.'" +
-                attr + "'\n" + ex);
+            dd ("*** caught exception uninstalling key node: " + ex);
         }
-        return true;
     }
-    
-    var cx;
-    
-    /* If the host provided a |contextFunction|, use it now.  Remember the
-     * return result as this.cx for use if something from this menu is actually
-     * dispatched.  this.cx is deleted in |hidePopup|. */
-    if (typeof this.contextFunction == "function")
-        cx = this.cx = this.contextFunction (id);
-    else
-        cx = new Object();
-
-    /* make this a member of cx so the |this| value is useful to attriutes. */
-
-    var popup = document.getElementById (id);
-    var menuitem = popup.firstChild;
-
-    do
-    {
-        /* should it be visible? */
-        if (menuitem.hasAttribute("visibleif"))
-        {
-            if (evalIfAttribute(menuitem, "visibleif"))
-                menuitem.removeAttribute ("hidden");
-            else
-            {
-                menuitem.setAttribute ("hidden", "true");
-                continue;
-            }
-        }
-        
-        /* ok, it's visible, maybe it should be disabled? */
-        if (satisfied())
-        {
-            if (menuitem.hasAttribute("enabledif"))
-            {
-                if (evalIfAttribute(menuitem, "enabledif"))
-                    menuitem.removeAttribute ("disabled");
-                else
-                    menuitem.setAttribute ("disabled", "true");
-            }
-            else
-                menuitem.removeAttribute ("disabled");
-        }
-        else
-        {
-            menuitem.setAttribute ("disabled", "true");
-        }
-        
-        /* should it have a check? */
-        if (menuitem.hasAttribute("checkedif"))
-        {
-            if (evalIfAttribute(menuitem, "checkedif"))
-                menuitem.setAttribute ("checked", "true");
-            else
-                menuitem.removeAttribute ("checked");
-        }
-        
-    } while ((menuitem = menuitem.nextSibling));
-
-    return true;
-}
-
-/**
- * Internal use only.
- *
- * |hidePopup| is called from the "onpopuphiding" event of menus
- * managed by the CommandManager.  Here we just clean up the context, which
- * would have (and may have) become the event object used by any command
- * dispatched while the menu was open.
- */
-CommandManager.hidePopup =
-function cmgr_hidepop (id)
-{
-    delete this.cx;
 }
 
 /**
@@ -308,255 +296,120 @@ function cmgr_add (command)
     this.commands[command.name] = command;
 }
 
-/**
- * Set the accelerator key used to trigger a command.  Multiple keys can be
- * assigned to a command, but only the last one will appear in the documentation
- * entry for the command.
- * @param parent   ID of the keyset to add the <key> to.
- * @param command  reference to the CommandRecord which should be dispatced.
- * @param keystr   String representation of the key, in the format
- *                 <modifiers> (<key>|<keycode>), where the parameter names
- *                 represent attributes on the <key> object.
- */
-CommandManager.prototype.setKey =
-function cmgr_add (parent, command, keystr)
+CommandManager.prototype.removeCommands = 
+function cmgr_removes (commands)
 {
-    var parentElem = document.getElementById(parent);
-    if (!ASSERT(parentElem, "setKey: couldn't get parent '" + parent +
-                "' for " + command.name))
-        return;
+    for (var c in commands)
+        this.removeCommand(commands[c]);
+}
 
-    var ary = keystr.match (/(.*\s)?([\S]+)$/);
-    var key = document.createElement ("key");
-    key.setAttribute ("id", "key:" + command.name);
-    key.setAttribute ("oncommand",
-                      "dispatch('" + command.name + "');");
-    key.setAttribute ("modifiers", ary[1]);
-    if (ary[2].indexOf("VK_") == 0)
-        key.setAttribute ("keycode", ary[2]);
+CommandManager.prototype.removeCommand = 
+function cmgr_remove (command)
+{
+    delete this.commands[command.name];
+}
+
+/**
+ * Register a hook for a particular command name.  |id| is a human readable
+ * identifier for the hook, and can be used to unregister the hook.  If you
+ * re-use a hook id, the previous hook function will be replaced.
+ * If |before| is |true|, the hook will be called *before* the command executes,
+ * if |before| is |false|, or not specified, the hook will be called *after*
+ * the command executes.
+ */
+CommandManager.prototype.addHook =
+function cmgr_hook (commandName, func, id, before)
+{
+    if (!ASSERT(commandName in this.commands,
+                "Unknown command '" + commandName + "'"))
+    {
+        return;
+    }
+    
+    var command = this.commands[commandName];
+    
+    if (before)
+    {
+        if (!("beforeHookNames" in command))
+            command.beforeHookNames = new Array();
+        if (!("beforeHooks" in command))
+            command.beforeHooks = new Object();
+        if (id in command.beforeHooks)
+        {
+            arrayRemoveAt(command.beforeHookNames,
+                          command.beforeHooks[id][id + "_hookIndex"]);
+        }
+        command.beforeHooks[id] = func;
+        command.beforeHookNames.push(id);
+    }
     else
-        key.setAttribute ("key", ary[2]);
-    
-    parentElem.appendChild(key);
-    command.key = key;
-    command.keystr = keystr;
+    {
+        if (!("afterHookNames" in command))
+            command.afterHookNames = new Array();
+        if (!("afterHooks" in command))
+            command.afterHooks = new Object();
+        func[id + "_hookIndex"] = command.afterHookNames.length
+        command.afterHooks[id] = func;
+        command.afterHookNames.push(id);
+    }
 }
 
-/**
- * Internal use only.
- *
- * Registers event handlers on a given menu.
- */
-CommandManager.prototype.hookPopup =
-function cmgr_hookpop (id)
+CommandManager.prototype.addHooks =
+function cmgr_hooks (hooks, prefix)
 {
-    var element = document.getElementById (id);
-    element.setAttribute ("onpopupshowing",
-                          "return CommandManager.showPopup('" + id + "');");
-    element.setAttribute ("onpopuphiding",
-                          "return CommandManager.hidePopup();");
+    if (!prefix)
+        prefix = "";
+    
+    for (var h in hooks)
+    {
+        this.addHook(h, hooks[h], prefix + ":" + h, 
+                     ("before" in hooks[h]) ? hooks[h].before : false);
+    }
 }
 
-/**
- * Appends a sub-menu to an existing menu.
- * @param parent  ID of the parent menu to add this submenu to.
- * @param id      ID of the sub-menu to add.
- * @param label   Text to use for this sub-menu.  The & character can be
- *                used to indicate the accesskey.
- * @param attribs Object containing CSS attributes to set on the element.
- */
-CommandManager.prototype.appendSubMenu =
-function cmgr_addsmenu (parent, id, label, attribs)
+CommandManager.prototype.removeHooks =
+function cmgr_remhooks (hooks, prefix)
 {
-    var menu = document.getElementById (id);
-    if (!menu)
-    {
-        var parentElem = document.getElementById(parent + "-popup");
-        if (!parentElem)
-            parentElem = document.getElementById(parent);
-        
-        if (!ASSERT(parentElem, "addSubMenu: couldn't get parent '" + parent +
-                    "' for " + id))
-            return;
+    if (!prefix)
+        prefix = "";
     
-        menu = document.createElement ("menu");
-        menu.setAttribute ("id", id);
-        parentElem.appendChild(menu);
-    }
-    
-    menu.setAttribute ("accesskey", getAccessKey(label));
-    menu.setAttribute ("label", label.replace("&", ""));
-    menu.setAttribute ("isSeparator", true);
-    var menupopup = document.createElement ("menupopup");
-    menupopup.setAttribute ("id", id + "-popup");
-    if (typeof attribs == "object")
+    for (var h in hooks)
     {
-        for (var p in attribs)
-            menupopup.setAttribute (p, attribs[p]);
+        this.removeHook(h, prefix + ":" + h, 
+                        ("before" in hooks[h]) ? hooks[h].before : false);
     }
-
-    menu.appendChild(menupopup);    
-    this.hookPopup (id + "-popup");
 }
 
-/**
- * Appends a popup to an existing popupset.
- * @param parent  ID of the popupset to add this popup to.
- * @param id      ID of the popup to add.
- * @param label   Text to use for this popup.  Popup menus don't normally have
- *                labels, but we set a "label" attribute anyway, in case
- *                the host wants it for some reason.  Any "&" characters will
- *                be stripped.
- * @param attribs Object containing CSS attributes to set on the element.
- */
-CommandManager.prototype.appendPopupMenu =
-function cmgr_addsmenu (parent, id, label, attribs)
+CommandManager.prototype.removeHook =
+function cmgr_unhook (commandName, id, before)
 {
-    var parentElem = document.getElementById (parent);
-    if (!ASSERT(parentElem, "addPopupMenu: couldn't get parent '" + parent +
-                "' for " + id))
-        return;
+    var command = this.commands[commandName];
 
-    var popup = document.createElement ("popup");
-    popup.setAttribute ("label", label.replace("&", ""));
-    popup.setAttribute ("id", id);
-    if (typeof attribs == "object")
+    if (before)
     {
-        for (var p in attribs)
-            popup.setAttribute (p, attribs[p]);
+        arrayRemoveAt(command.beforeHookNames,
+                      command.beforeHooks[id][id + "_hookIndex"]);
+        delete command.beforeHooks[id][id + "_hookIndex"];
+        delete command.beforeHooks[id];
+        if (keys(command.beforeHooks).length == 0)
+        {
+            delete command.beforeHookNames;
+            delete command.beforeHooks;
+        }
+    }
+    else
+    {
+        arrayRemoveAt(command.afterHookNames,
+                      command.afterHooks[id][id + "_hookIndex"]);
+        delete command.afterHooks[id][id + "_hookIndex"];
+        delete command.afterHooks[id];
+        if (command.afterHookNames.length == 0)
+        {
+            delete command.afterHookNames;
+            delete command.afterHooks;
+        }
     }
 
-    parentElem.appendChild(popup);    
-    this.hookPopup (id);
-}
-
-/**
- * Appends a menuitem to an existing menu or popup.
- * @param parent  ID of the popup to add this menuitem to.
- * @param command A reference to the CommandRecord this menu item will represent.
- * @param attribs Object containing CSS attributes to set on the element.
- */
-CommandManager.prototype.appendMenuItem =
-function cmgr_addmenu (parent, command, attribs)
-{
-    if (command == "-")
-    {
-        this.appendMenuSeparator(parent, attribs);
-        return;
-    }
-    
-    var parentElem = document.getElementById(parent + "-popup");
-    if (!parentElem)
-        parentElem = document.getElementById(parent);
-    
-    if (!ASSERT(parentElem, "appendMenuItem: couldn't get parent '" + parent +
-                "' for " + command.name))
-        return;
-    
-    var menuitem = document.createElement ("menuitem");
-    var id = parent + ":" + command.name;
-    menuitem.setAttribute ("id", id);
-    menuitem.setAttribute ("commandname", command.name);
-    menuitem.setAttribute ("key", "key:" + command.name);
-    menuitem.setAttribute ("accesskey", getAccessKey(command.label));
-    menuitem.setAttribute ("label", command.label.replace("&", ""));
-    menuitem.setAttribute ("oncommand",
-                           "dispatch('" + command.name + "');");
-    if (typeof attribs == "object")
-    {
-        for (var p in attribs)
-            menuitem.setAttribute (p, attribs[p]);
-    }
-    
-    command.uiElements[id] = menuitem;
-    parentElem.appendChild (menuitem);
-}
-
-/**
- * Appends a menuseparator to an existing menu or popup.
- * @param parent  ID of the popup to add this menuitem to.
- */
-CommandManager.prototype.appendMenuSeparator =
-function cmgr_addsep (parent)
-{
-    var parentElem = document.getElementById(parent + "-popup");
-    if (!parentElem)
-        parentElem = document.getElementById(parent);
-    
-    if (!ASSERT(parentElem, "appendMenuSeparator: couldn't get parent '" + 
-                parent + "'"))
-        return;
-    
-    var menuitem = document.createElement ("menuseparator");
-    menuitem.setAttribute ("isSeparator", true);
-    if (typeof attribs == "object")
-    {
-        for (var p in attribs)
-            menuitem.setAttribute (p, attribs[p]);
-    }
-    parentElem.appendChild (menuitem);
-}
-
-/**
- * Appends a toolbaritem to an existing box element.
- * @param parent  ID of the box to add this toolbaritem to.
- * @param command A reference to the CommandRecord this toolbaritem will
- *                represent.
- * @param attribs Object containing CSS attributes to set on the element.
- */
-CommandManager.prototype.appendToolbarItem =
-function cmgr_addtb (parent, command, attribs)
-{
-    if (command == "-")
-    {
-        this.appendToolbarSeparator(parent, attribs);
-        return;
-    }
-
-    var parentElem = document.getElementById(parent);
-    
-    if (!ASSERT(parentElem, "appendToolbarItem: couldn't get parent '" + parent +
-                "' for " + command.name))
-        return;
-    
-    var tbitem = document.createElement ("toolbarbutton");
-    // separate toolbar id's with a "-" character, because : intereferes with css
-    var id = parent + "-" + command.name;
-    tbitem.setAttribute ("id", id);
-    tbitem.setAttribute ("class", "toolbarbutton-1");
-    tbitem.setAttribute ("label", command.label.replace("&", ""));
-    tbitem.setAttribute ("oncommand",
-                         "dispatch('" + command.name + "');");
-    if (typeof attribs == "object")
-    {
-        for (var p in attribs)
-            tbitem.setAttribute (p, attribs[p]);
-    }
-    
-    command.uiElements[id] = tbitem;
-    parentElem.appendChild (tbitem);
-}
-
-/**
- * Appends a toolbarseparator to an existing box.
- * @param parent  ID of the box to add this toolbarseparator to.
- */
-CommandManager.prototype.appendToolbarSeparator =
-function cmgr_addmenu (parent)
-{
-    var parentElem = document.getElementById(parent);    
-    if (!ASSERT(parentElem, "appendToolbarSeparator: couldn't get parent '" + 
-                parent + "'"))
-        return;
-    
-    var tbitem = document.createElement ("toolbarseparator");
-    tbitem.setAttribute ("isSeparator", true);
-    if (typeof attribs == "object")
-    {
-        for (var p in attribs)
-            tbitem.setAttribute (p, attribs[p]);
-    }
-    parentElem.appendChild (tbitem);
 }
 
 /**
@@ -574,8 +427,8 @@ function cmgr_list (partialName, flags)
      * all commands if |partialName| is not specified */
     function compare (a, b)
     {
-        a = a.label.toLowerCase().replace("&", "");
-        b = b.label.toLowerCase().replace("&", "");
+        a = a.labelstr.toLowerCase();
+        b = b.labelstr.toLowerCase();
 
         if (a == b)
             return 0;
@@ -723,7 +576,7 @@ function parse_parseargsraw (e)
         }
     }
         
-    if (e.inputData)
+    if ("inputData" in e && e.inputData)
     {
         /* if data has been provided, parse it */
         e.unparsedData = e.inputData;
@@ -792,7 +645,7 @@ function parse_parseargsraw (e)
  * Returns true if |e| has the properties required to call the command |command|.
  * If |command| is not provided, |e.command| is used instead.
  * @param e        Event object to test against the command.
- * @param command  Command to text.
+ * @param command  Command to test.
  */
 CommandManager.prototype.isCommandSatisfied =
 function cmgr_isok (e, command)
@@ -821,7 +674,7 @@ function cmgr_isok (e, command)
 }
 
 /**
- * Internally use only.
+ * Internal use only.
  * See parseArguments above and the |argTypes| object below.
  *
  * Parses the next argument by calling an appropriate parser function, or the
@@ -868,7 +721,7 @@ function at_alias (list, type)
  * Parses an integer, stores result in |e[name]|.
  */
 CommandManager.prototype.argTypes["int"] =
-function parse_number (e, name)
+function parse_int (e, name)
 {
     var ary = e.unparsedData.match (/(\d+)(?:\s+(.*))?$/);
     if (!ary)
@@ -886,7 +739,7 @@ function parse_number (e, name)
  * Stores result in |e[name]|.
  */
 CommandManager.prototype.argTypes["word"] =
-function parse_number (e, name)
+function parse_word (e, name)
 {
     var ary = e.unparsedData.match (/(\S+)(?:\s+(.*))?$/);
     if (!ary)
@@ -905,13 +758,13 @@ function parse_number (e, name)
  * Stores result in |e[name]|.
  */
 CommandManager.prototype.argTypes["state"] =
-function parse_number (e, name)
+function parse_state (e, name)
 {
     var ary =
         e.unparsedData.match (/(true|on|yes|1|false|off|no|0)(?:\s+(.*))?$/i);
     if (!ary)
         return false;
-    if (ary[1].toLowerCase().search(/true|on|yes|1/i) != -1)
+    if (ary[1].search(/true|on|yes|1/i) != -1)
         e[name] = true;
     else
         e[name] = false;
@@ -929,7 +782,7 @@ function parse_number (e, name)
  * Stores result in |e[name]|.
  */
 CommandManager.prototype.argTypes["toggle"] =
-function parse_number (e, name)
+function parse_toggle (e, name)
 {
     var ary = e.unparsedData.match
         (/(toggle|true|on|yes|1|false|off|no|0)(?:\s+(.*))?$/i);
@@ -954,7 +807,7 @@ function parse_number (e, name)
  * Stores result in |e[name]|.
  */
 CommandManager.prototype.argTypes["rest"] =
-function parse_number (e, name)
+function parse_rest (e, name)
 {
     e[name] = e.unparsedData;
     e.unparsedData = "";

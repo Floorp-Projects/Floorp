@@ -33,18 +33,88 @@
  *
  */
 
-@import url(chrome://venkman/content/venkman-output-base.css);
+a.venkman-link {
+    text-decoration: none;
+}
+
+a.venkman-link:hover {
+    text-decoration: underline;
+}
+
+#output-table {
+    width: 100%;
+}
+
+.msg {                                      /* .msg = a single message in the */
+    width: 100%;                            /* output window                  */
+    font: 11pt lucida, sans-serif;
+    font-family: monospace;
+    white-space: -moz-pre-wrap;
+}
+
+.msg-data[msg-type="USAGE"] {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.msg-data[msg-type="STEP"] {
+    font-weight: bold;
+}
+
+.msg-data:before {
+    margin-right: 5px;
+    content: "-";
+    font-weight: bold;
+}
 
 .msg-data[msg-type="ERROR"]:before {
-    color: orange;
+    content: "!!";
 }
 
-.msg-data[msg-type="ERROR"] {
-    background: darkred;
-    color: white;
+.msg-data[msg-type="STOP"]:before,
+.msg-data[msg-type="CONT"]:before {
+    content: "*";
 }
 
-.msg-data[msg-type="ERROR"] a.venkman-link {
-    color: white;
-    font-weight: bold;
+.msg-data[msg-type="ETRACE"]:before {
+    content: "X";
+}
+
+.msg-data[msg-type="HELP"]:before {
+    content: "Help:";
+}
+
+.msg-data[msg-type="USAGE"]:before {
+    font-style: normal;
+    content: "Usage:";
+}
+
+.msg-data[msg-type="SOURCE"]:before {
+    padding-right: 20px;
+    content: ":";
+}
+
+.msg-data[msg-type="STEP"]:before {
+    padding-right: 20px;
+    content: "|";
+}
+
+.msg-data[msg-type="EVAL-IN"]:before {
+    font-weight: normal;
+    content: "<<";
+}
+
+.msg-data[msg-type="EVAL-OUT"]:before {
+    font-weight: normal;
+    content: ">>";
+}
+
+.msg-data[msg-type="FEVAL-IN"]:before {
+    font-weight: normal;
+    content: ">";
+}
+
+.msg-data[msg-type="FEVAL-IN"]:before {
+    font-weight: normal;
+    content: "<";
 }

@@ -36,31 +36,32 @@
    -
    -->
 
-<!DOCTYPE window SYSTEM "chrome://venkman/locale/venkman.dtd">
+<!DOCTYPE window SYSTEM "chrome://venkman/locale/venkman.dtd" >
 
 <?xml-stylesheet href="chrome://venkman/skin/venkman.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
-<?xul-overlay href="chrome://venkman/content/venkman-menus.xul"?>
-<?xul-overlay href="chrome://venkman/content/venkman-scripts.xul"?>
 <?xul-overlay href="chrome://venkman/content/venkman-views.xul"?>
+<?xul-overlay href="chrome://venkman/content/venkman-menus.xul"?>
 
 <window id="venkman-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="console.onLoad();" onclose="return console.onClose();"
-  onunload="return console.onUnload();"
-  onmouseover="console.onMouseOver(event);"
-  width="800" height="600"
+  onload="onLoad();" onclose="return onClose();"
+  onunload="return onUnload();"
+  width="320" height="200"
   persist="width height screenX screenY" title="&MainWindow.title;"
-  windowtype="mozapp:venkman">
+  windowtype="mozapp:venkman:floater">
 
-  <!-- parents for the command manager-managed objects -->
-  <keyset id="dynamic-keys"/>
+  <script>
+    var DEBUG = true;
+  </script>
+  <script src="chrome://venkman/content/venkman-utils.js"/>
+  <script src="chrome://venkman/content/venkman-floater.js"/>
+
   <popupset id="dynamic-popups"/>
 
-  <overlaytarget id="scripts-overlay-target"/>
   <overlaytarget id="menu-overlay-target"/>
   <overlaytarget id="views-overlay-target"/>
 

@@ -35,8 +35,17 @@
 
 @import url(chrome://venkman/content/venkman-output-base.css);
 
-.msg-data[msg-type="ERROR"]:before {
-    color: orange;
+body {
+    background: black;
+    color: lightgrey;
+}
+
+a.venkman-link {
+    color: #7083ff;
+}
+
+a.venkman-link:visited {
+    color: #4b57aa;
 }
 
 .msg-data[msg-type="ERROR"] {
@@ -44,7 +53,40 @@
     color: white;
 }
 
+.msg-data:before {
+    color: yellow;
+}
+
+.msg-data[msg-type="ERROR"]:before {
+    color: orange;
+}
+
 .msg-data[msg-type="ERROR"] a.venkman-link {
     color: white;
     font-weight: bold;
+}
+
+.msg-data[msg-type="STOP"]:before {
+    color: pink;
+}
+
+.msg-data[msg-type="STOP"] {
+    color: red;
+}
+
+.msg-data[msg-type="CONT"]:before {
+    color: lightgreen;
+}
+
+.msg-data[msg-type="CONT"] {
+    color: green;
+}
+
+.msg-data[msg-type="ETRACE"]:before {
+    color: brown;
+}
+   
+.msg-data[msg-type="FEVAL-IN"]:before,
+.msg-data[msg-type="FEVAL-OUT"]:before {
+    color: orange;
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- tab-width: 4; indent-tabs-mode: nil -*-
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -33,18 +33,87 @@
  *
  */
 
-@import url(chrome://venkman/content/venkman-output-base.css);
-
-.msg-data[msg-type="ERROR"]:before {
-    color: orange;
+body {
+    background: #dddcf4;
 }
 
-.msg-data[msg-type="ERROR"] {
-    background: darkred;
-    color: white;
+body[hasSearched="true"] .newbie-help {
+    display: none;
 }
 
-.msg-data[msg-type="ERROR"] a.venkman-link {
-    color: white;
+.quick-searches,
+.search-input {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+a {
+  font-weight: bold;
+  color: darkslategrey;
+}
+
+a:visited {
+  color: #444444;
+}
+
+#command-list a {
+    text-decoration: none;
+}
+
+#command-list a:hover {
+    text-decoration: underline;
+}
+
+#match-count {
+    color: darkslategrey;
+    width: 100%;
+    display: block;
+    font-size: larger;
     font-weight: bold;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+}
+
+#help-menu {
+    background: lightgrey;
+
+    padding: 5px;
+    border: 2px black solid;
+}
+
+.value[item="description"] {
+    margin-left: 15px;
+    display: block;
+}
+
+.value[item="command-name"],
+.value[item="usage"] {
+    font-family: monospace;
+}
+
+.command {
+    padding: 10px;
+    background: white;
+    display: block;
+    border: 2px silver inset;
+}
+
+.command-name,
+.param {
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.label {
+    font-weight: bold;
+    color: #666666;
+    font-variant: small-caps;
+}
+
+.goto-top {
+    display: block;
+    width: 100%;
+    text-align: right;
 }

@@ -46,13 +46,13 @@ function initHandlers()
 
     console.wwObserver = {observe: wwObserve};
     console.windowWatcher.registerNotification (console.wwObserver);
-    console.windows.hookedWindows = new Array();
+    console.hookedWindows = new Array();
 
     var enumerator = console.windowWatcher.getWindowEnumerator();
     while (enumerator.hasMoreElements())
     {
         var win = enumerator.getNext();
-        if (win.location.href != "chrome://venkman/content/venkman.xul")
+        if (!isWindowFiltered(win))
         {
             console.onWindowOpen(win);
             console.onWindowLoad();
@@ -63,92 +63,72 @@ function initHandlers()
 function destroyHandlers()
 {
     console.windowWatcher.unregisterNotification (console.wwObserver);
-    while (console.windows.hookedWindows.length)
+    while (console.hookedWindows.length)
     {
-        var win = console.windows.hookedWindows.pop();
+        var win = console.hookedWindows.pop();
         win.removeEventListener ("load", console.onWindowLoad, false);
         win.removeEventListener ("unload", console.onWindowUnload, false);
     }
 }
 
-console.onWindowOpen =
+function isWindowFiltered (window)
+{
+    var href = window.location.href;
+    var rv = ((href.search (/^chrome:\/\/venkman\//) != -1 &&
+              href.search (/test/) == -1) ||
+              (console.prefs["enableChromeFilter"] &&
+               href.search (/navigator.xul($|\?)/) == -1));
+    //dd ("isWindowFiltered " + window.location.href + ", returning " + rv);
+    return rv;
+}
+
+console.onWindowOpen = 
 function con_winopen (win)
 {
     if ("ChromeWindow" in win && win instanceof win.ChromeWindow &&
         (win.location.href == "about:blank" || win.location.href == ""))
     {
-        //dd ("not loaded yet?");
-        setTimeout (con_winopen, 100, win);
+        setTimeout (con_winopen, 0, win);
         return;
-    }
+    }   
+
+    if (isWindowFiltered(win))
+        return;
     
-    //dd ("window opened: " + win); // + ", " + getInterfaces(win));
-    console.windows.appendChild (new WindowRecord(win, ""));
-    console.windows.hookedWindows.push(win);
+    //dd ("window opened: " + win + " ``" + win.location + "''");
+    console.hookedWindows.push(win);
+    dispatch ("hook-window-opened", {window: win});
     win.addEventListener ("load", console.onWindowLoad, false);
     win.addEventListener ("unload", console.onWindowUnload, false);
-    console.scriptsView.freeze();
+    //console.scriptsView.freeze();
 }
 
 console.onWindowLoad =
 function con_winload (e)
 {
-    console.scriptsView.thaw();
+    dispatch ("hook-window-loaded", {event: e});
 }
 
 console.onWindowUnload =
 function con_winunload (e)
 {
-    console.scriptsView.thaw();
+    dispatch ("hook-window-unloaded", {event: e});
+    //    dd (dumpObjectTree(e));
 }
 
 console.onWindowClose =
-function con_winunload (win)
+function con_winclose (win)
 {
-    //dd ("window closed: " + win);
-    if (win.location.href != "chrome://venkman/content/venkman.xul")
-    {
-        var winRecord = console.windows.locateChildByWindow(win);
-        if (!ASSERT(winRecord, "onWindowClose: Can't find window record."))
-            return;
-        console.windows.removeChildAtIndex(winRecord.childIndex);
-        var idx = arrayIndexOf(console.windows.hookedWindows, win);
-        if (idx != -1)
-            arrayRemoveAt(console.windows.hookedWindows, idx);
-    }
-    console.scriptsView.freeze();
-}
+    if (isWindowFiltered(win))
+        return;
 
-console.onDebugTrap =
-function con_ondt ()
-{
-    var frame = setCurrentFrameByIndex(0);
-    var type = console.trapType;
-
-    var frameRec = console.stackView.stack.childData[0];
-    console.pushStatus (getMsg(MSN_STATUS_STOPPED, [frameRec.functionName,
-                                                    frameRec.location]));
-    if (type != jsdIExecutionHook.TYPE_INTERRUPTED ||
-        console._lastStackDepth != console.frames.length)
-    {
-        display (formatFrame(frame));
-    }
-
-    displaySource (frame.script.fileName, frame.line, 
-                   (type == jsdIExecutionHook.TYPE_INTERRUPTED) ? 0 : 2);
-    
-    console._lastStackDepth = console.frames.length;
-
-    console.stackView.restoreState();
-    enableDebugCommands()
-
-}
-
-console.onDebugContinue =
-function con_ondc ()
-{
-    console.popStatus();
-    console.sourceView.tree.invalidate();
+    //dd ("window closed: " + win + " ``" + win.location + "''");
+    var i = arrayIndexOf(console.hookedWindows, win);
+    ASSERT (i != console.hookedWindows.length,
+            "WARNING: Can't find hook window for closed window " + i + ".");
+    arrayRemoveAt(console.hookedWindows, i);
+    dispatch ("hook-window-closed", {window: win});
+    //console.scriptsView.freeze();
 }
 
 console.onLoad =
@@ -164,24 +144,25 @@ function con_load (e)
     }
     catch (ex)
     {
-        window.alert (getMsg (MSN_ERR_STARTUP, formatException(ex)));
+        if ("bundleList" in console)
+            window.alert (getMsg (MSN_ERR_STARTUP, formatException(ex)));
+        else
+            window.alert (formatException(ex));
+        console.startupException = ex;
     }
 }
 
 console.onClose =
 function con_onclose (e)
 {
-    if (typeof console == "object" && "frames" in console)
-    {
-        if (confirm(MSG_QUERY_CLOSE))
-        {
-            console.__exitAfterContinue__ = true;
-            dispatch ("cont");
-        }
-        return false;
-    }
-
-    return true;
+    dd ("onclose");
+    
+    if (typeof console != "object" || "startupException" in console)
+        return true;
+    
+    dd ("onclose: dispatching");
+    
+    return dispatch ("hook-venkman-query-exit");
 }
 
 console.onUnload =
@@ -189,375 +170,51 @@ function con_unload (e)
 {
     dd ("Application venkman, 'JavaScript Debugger' unloading.");
 
+    if (typeof console != "object")
+        return;
+
+    dispatch ("hook-venkman-exit");
     destroy();
-    return true;
 }
 
-console.onFrameChanged =
-function con_fchanged (currentFrame, currentFrameIndex)
+console.onMouseOver =
+function con_mouseover (e)
 {
-    var stack = console.stackView.stack;
+    var element = e.originalTarget;
+    if (!("_lastElement" in console))
+        console._lastElement = null;
     
-    if (currentFrame)
+    while (element)
     {
-        if (currentFrame.isNative)
+        if (element == console._lastElement)
             return;
         
-        var frameRecord = stack.childData[currentFrameIndex];
-        var vr = frameRecord.calculateVisualRow();
-        console.stackView.selectedIndex = vr;
-        console.stackView.scrollTo (vr, 0);
-        var containerRec = console.scripts[currentFrame.script.fileName];
-        if (containerRec)
+        if ("getAttribute" in element)
         {
-            dispatch ("find-url-soft", {url: containerRec.fileName,
-                      rangeStart: currentFrame.script.baseLineNumber,
-                      rangeEnd: currentFrame.script.baseLineNumber + 
-                                currentFrame.script.lineExtent - 1,
-                      lineNumber: currentFrame.line});
-        }
-        else
-        {
-            dd ("frame from unknown source");
-        }
-    }
-    else
-    {
-        stack.close();
-        stack.childData = new Array();
-        stack.hide();
-    }
-}
-
-console.onInputCompleteLine =
-function con_icline (e)
-{    
-    if (console.inputHistory.length == 0 || console.inputHistory[0] != e.line)
-        console.inputHistory.unshift (e.line);
-    
-    if (console.inputHistory.length > console.prefs["input.history.max"])
-        console.inputHistory.pop();
-    
-    console.lastHistoryReferenced = -1;
-    console.incompleteLine = "";
-    
-    var ev = {isInteractive: true, initialEvent: e};
-    dispatch (e.line, ev, CMD_CONSOLE);
-}
-
-console.onSingleLineKeypress =
-function con_slkeypress (e)
-{
-    var w;
-    var newOfs;
-    
-    switch (e.keyCode)
-    {
-        case 13:
-            if (!e.target.value)
+            var status = element.getAttribute ("venkmanstatustext");
+            if (status)
+            {
+                console.status = status;
+                console._lastElement = element;
                 return;
-            e.line = e.target.value;
-            console.onInputCompleteLine (e);
-            e.target.value = "";
-            break;
-
-        case 38: /* up */
-            if (console.lastHistoryReferenced == -2)
-            {
-                console.lastHistoryReferenced = -1;
-                e.target.value = console.incompleteLine;
             }
-            else if (console.lastHistoryReferenced <
-                     console.inputHistory.length - 1)
-            {
-                e.target.value =
-                    console.inputHistory[++console.lastHistoryReferenced];
-            }
-            break;
-
-        case 40: /* down */
-            if (console.lastHistoryReferenced > 0)
-                e.target.value =
-                    console.inputHistory[--console.lastHistoryReferenced];
-            else if (console.lastHistoryReferenced == -1)
-            {
-                e.target.value = "";
-                console.lastHistoryReferenced = -2;
-            }
-            else
-            {
-                console.lastHistoryReferenced = -1;
-                e.target.value = console.incompleteLine;
-            }
-            break;
-            
-        case 33: /* pgup */
-            w = window.frames[0];
-            newOfs = w.pageYOffset - (w.innerHeight / 2);
-            if (newOfs > 0)
-                w.scrollTo (w.pageXOffset, newOfs);
-            else
-                w.scrollTo (w.pageXOffset, 0);
-            break;
-            
-        case 34: /* pgdn */
-            w = window.frames[0];
-            newOfs = w.pageYOffset + (w.innerHeight / 2);
-            if (newOfs < (w.innerHeight + w.pageYOffset))
-                w.scrollTo (w.pageXOffset, newOfs);
-            else
-                w.scrollTo (w.pageXOffset, (w.innerHeight + w.pageYOffset));
-            break;
-
-        case 9: /* tab */
-            e.preventDefault();
-            console.onTabCompleteRequest(e);
-            break;       
-
-        default:
-            console.lastHistoryReferenced = -1;
-            console.incompleteLine = e.target.value;
-            break;
-    }
-}
-
-console.onProjectSelect =
-function con_projsel (e)
-{
-    if (console.projectView.selectedIndex == -1)
-        return;
-    
-    console.scriptsView.selectedIndex = -1;
-    console.stackView.selectedIndex   = -1;
-    console.sourceView.selectedIndex  = -1;
-    
-    var rowIndex = console.projectView.selectedIndex;
-    if (rowIndex == -1 || rowIndex > console.projectView.rowCount)
-        return;
-    var row =
-        console.projectView.childData.locateChildByVisualRow(rowIndex);
-    if (!row)
-    {
-        ASSERT (0, "bogus row index " + rowIndex);
-        return;
-    }
-
-    if (row instanceof BPRecord)
-        dispatch ("find-bp", {breakpointRec: row});
-    else if (row instanceof FileRecord || row instanceof WindowRecord)
-        dispatch ("find-url", {url: row.url});
-}
-            
-console.onStackSelect =
-function con_stacksel (e)
-{
-    if (console.stackView.selectedIndex == -1)
-        return;
-
-    console.scriptsView.selectedIndex = -1;
-    console.projectView.selectedIndex = -1;
-    console.sourceView.selectedIndex  = -1;
-
-    var rowIndex = console.stackView.selectedIndex;
-    if (rowIndex == -1 || rowIndex > console.stackView.rowCount)
-        return;
-    var row =
-        console.stackView.childData.locateChildByVisualRow(rowIndex);
-    if (!row)
-    {
-        ASSERT (0, "bogus row index " + rowIndex);
-        return;
-    }
-
-    var source;
-    
-    var sourceView = console.sourceView;
-    if (row instanceof FrameRecord)
-    {
-        dispatch ("frame", {frameIndex: row.childIndex});
-    }
-    else if (row instanceof ValueRecord && row.jsType == jsdIValue.TYPE_OBJECT)
-    {
-        if (row.parentRecord instanceof FrameRecord &&
-            row == row.parentRecord.scopeRec)
+        }
+        
+        if ("localName" in element && element.localName == "floatingview")
+        {
+            console.status = console.viewManager.computeLocation (element);
+            console._lastElement = element;
             return;
-        dispatch ("find-creator", {jsdValue: row.value});
-    }
-}
-
-console.onScriptSelect =
-function con_scptsel (e)
-{
-    if (console.scriptsView.selectedIndex == -1)
-        return;
-
-    console.projectView.selectedIndex = -1;
-    console.stackView.selectedIndex   = -1;
-    console.sourceView.selectedIndex  = -1;
-
-    var rowIndex = console.scriptsView.selectedIndex;
-
-    if (rowIndex == -1 || rowIndex > console.scriptsView.rowCount)
-    {
-        dd ("row out of bounds");
-        return;
-    }
-    
-    var row =
-        console.scriptsView.childData.locateChildByVisualRow(rowIndex);
-    ASSERT (row, "bogus row");
-
-    if (row instanceof ScriptRecord)
-        dispatch ("find-script", {scriptRec: row});
-    else if (row instanceof ScriptContainerRecord)
-        dispatch ("find-url", {url: row.fileName});
-}
-
-console.onScriptClick =
-function con_scptclick (e)
-{
-    if (e.originalTarget.localName == "treecol")
-    {
-        /* resort by column */
-        var rowIndex = new Object();
-        var colID = new Object();
-        var childElt = new Object();
-        
-        var obo = console.scriptsView.tree;
-        obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
-        var prop;
-        switch (colID.value)
-        {
-            case "script-name":
-                prop = "functionName";
-                break;
-            case "script-line-start":
-                prop = "baseLineNumber";
-                break;
-            case "script-line-extent":
-                prop = "lineExtent";
-                break;
         }
 
-        var scriptsRoot = console.scriptsView.childData;
-        var dir = (prop == scriptsRoot._share.sortColumn) ?
-            scriptsRoot._share.sortDirection * -1 : 1;
-        dd ("sort direction is " + dir);
-        scriptsRoot.setSortColumn (prop, dir);
+        element = element.parentNode;
     }
-}
-
-console.onSourceSelect =
-function con_sourcesel (e)
-{
-    if (console.sourceView.selectedIndex == -1)
-        return;
-    
-    console.scriptsView.selectedIndex = -1;
-    console.stackView.selectedIndex   = -1;
-    console.projectView.selectedIndex = -1;
-}
-
-console.onSourceClick =
-function con_sourceclick (e)
-{
-    var target = e.originalTarget;
-    
-    if (target.localName == "treechildren")
-    {
-        var row = new Object();
-        var colID = new Object();
-        var childElt = new Object();
-        
-        var tree = console.sourceView.tree;
-        tree.getCellAt(e.clientX, e.clientY, row, colID, childElt);
-        if (row.value == -1)
-          return;
-        
-        colID = colID.value;
-        row = row.value;
-        
-        if (colID == "breakpoint-col")
-        {
-            if ("onMarginClick" in console.sourceView.childData)
-                console.sourceView.childData.onMarginClick (e, row + 1);
-        }
-    }
-
-}
-
-console.onTabCompleteRequest =
-function con_tabcomplete (e)
-{
-    var selStart = e.target.selectionStart;
-    var selEnd   = e.target.selectionEnd;            
-    var v        = e.target.value;
-    
-    if (selStart != selEnd) 
-    {
-        /* text is highlighted, just move caret to end and exit */
-        e.target.selectionStart = e.target.selectionEnd = v.length;
-        return;
-    }
-
-    var firstSpace = v.indexOf(" ");
-    if (firstSpace == -1)
-        firstSpace = v.length;
-
-    var pfx;
-    var d;
-    
-    if ((selStart <= firstSpace))
-    {
-        /* The cursor is positioned before the first space, so we're completing
-         * a command
-         */
-        var partialCommand = v.substring(0, firstSpace).toLowerCase();
-        var cmds = console.commandManager.listNames(partialCommand, CMD_CONSOLE);
-
-        if (!cmds)
-            /* partial didn't match a thing */
-            display (getMsg(MSN_NO_CMDMATCH, partialCommand), MT_ERROR);
-        else if (cmds.length == 1)
-        {
-            /* partial matched exactly one command */
-            pfx = cmds[0];
-            if (firstSpace == v.length)
-                v =  pfx + " ";
-            else
-                v = pfx + v.substr (firstSpace);
-            
-            e.target.value = v;
-            e.target.selectionStart = e.target.selectionEnd = pfx.length + 1;
-        }
-        else if (cmds.length > 1)
-        {
-            /* partial matched more than one command */
-            d = new Date();
-            if ((d - console._lastTabUp) <= console.prefs["input.dtab.time"])
-                display (getMsg (MSN_CMDMATCH,
-                                 [partialCommand, cmds.join(MSG_COMMASP)]));
-            else
-                console._lastTabUp = d;
-            
-            pfx = getCommonPfx(cmds);
-            if (firstSpace == v.length)
-                v =  pfx;
-            else
-                v = pfx + v.substr (firstSpace);
-            
-            e.target.value = v;
-            e.target.selectionStart = e.target.selectionEnd = pfx.length;
-            
-        }
-                
-    }
-
 }
 
 window.onresize =
 function ()
 {
-    console.scrollDown();
+    dispatch ("hook-window-resized", { window: window });
+    //  console.scrollDown();
 }
 

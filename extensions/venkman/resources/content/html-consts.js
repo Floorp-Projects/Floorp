@@ -92,6 +92,11 @@ function htmlBR(attribs)
     return HTML("html:br", attribs, argumentsAsArray(arguments, 1));
 }
 
+function htmlWBR(attribs)
+{
+    return HTML("html:wbr", attribs, argumentsAsArray(arguments, 1));
+}
+    
 function htmlImg(attribs, src)
 {
     var img = HTML("html:img", attribs, argumentsAsArray(arguments, 2));

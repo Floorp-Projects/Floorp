@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+
+<!--
+   -
+   - The contents of this file are subject to the Mozilla Public License
+   - Version 1.1 (the "License"); you may not use this file except in
+   - compliance with the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/ 
+   - 
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License. 
+   -
+   - The Original Code is The JavaScript Debugger
+   - 
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation
+   - Portions created by Netscape are
+   - Copyright (C) 1998 Netscape Communications Corporation.
+   - All Rights Reserved.
+   -
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU Public License (the "GPL"), in which case the
+   - provisions of the GPL are applicable instead of those above.
+   - If you wish to allow use of your version of this file only
+   - under the terms of the GPL and not to allow others to use your
+   - version of this file under the MPL, indicate your decision by
+   - deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL.  If you do not delete
+   - the provisions above, a recipient may use your version of this
+   - file under either the MPL or the GPL.
+   -
+   - Contributor(s):
+   -  Robert Ginda, <rginda@netscape.com>, original author
+   -
+   -->
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul=
+          "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="floatingview">
+    <content>
+      <xul:vbox id="view-frame-p" flex="1"
+        ondragover="console.dnd.dragOver(event, console.viewProxy);"
+        ondragexit="console.dnd.dragExit(event, console.viewProxy);"
+        ondragdrop="console.dnd.drop(event, console.viewProxy);">
+        <xul:vbox class="view-outer"
+          ondraggesture="console.dnd.startDrag(event, console.viewProxyTitle);">
+          <xul:hbox id="view-title">
+            <xul:image class="view-title-pop"
+              xbl:inherits="parentid=id"
+              onclick="console.dispatch('toggle-float', { viewId: this.getAttribute('parentid')});"/>
+            <xul:hbox class="view-title-grippy" flex="1">
+              <xul:hbox flex="1" class="view-title-margin-left"/>
+              <xul:label id="view-title-text" xbl:inherits="value=title"/>
+              <xul:hbox flex="1" class="view-title-margin-right"/>
+            </xul:hbox>
+            <xul:image class="view-title-close"
+              xbl:inherits="parentid=id"
+              onclick="console.dispatch('toggle-view', { viewId: this.getAttribute('parentid')});"/>
+          </xul:hbox>
+        </xul:vbox>
+        <children/>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <property name="ownerWindow" onget="return window;"/>
+      <property name="proxyIcon" onget="return document.getAnonymousNodes(this)[0].firstChild.firstChild.firstChild;"/>
+    </implementation>
+  </binding>
+
+  <binding id="viewcontainer">
+    <content>
+      <xul:box xbl:inherits="type" class="view-container" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <property name="ownerWindow" onget="return window;"/>
+    </implementation>
+  </binding>
+
+</bindings>

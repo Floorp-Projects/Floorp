@@ -44,12 +44,9 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <overlaytarget id="menu-overlay-target">
-    <!-- parents for the command manager-managed objects -->
-    <keyset id="dynamicKeys"/>
-    <popupset id="dynamicPopups"/>
 
     <!-- Commands -->
-    <commandset id="venkmanCommands">
+    <commandset id="venkman-commands">
 
       <!-- Edit commands -->
       <commandset id="selectEditMenuItems"/>
@@ -88,8 +85,8 @@
     </keyset>
 
     <!-- Main menu bar -->
-    <toolbox flex="1">
-      <menubar id="mainmenu" persist="collapsed"
+    <toolbox flex="1" id="main-toolbox" collapsed="true">
+      <menubar id="mainmenu" persist="collapsed" collapsed="true"
         grippytooltiptext="&MenuBar.tooltip;">
 
         <!-- File menu placeholder, see venkman-menus.js -->
@@ -127,12 +124,18 @@
 
         <!-- Tasks menu -->
         <menu id="windowMenu"/>
+
+        <!-- Help menu -->
+        <menu id="mainmenu:help"/>
       </menubar>  
 
       <!-- Debug toolbar -->
       <toolbar class="toolbar-primary chromeclass-toolbar" id="maintoolbar-outer"
-        grippytooltiptext="&DebugBar.tooltip;">
-        <hbox id="maintoolbar"/>
+        grippytooltiptext="&DebugBar.tooltip;" collapsed="true">
+        <hbox id="maintoolbar">
+        </hbox>
+        <textbox id="paint-hack"
+          style="border: none; background: none; height: 0px; width: 0px"/>
       </toolbar>
 
     </toolbox>  
@@ -143,7 +146,7 @@
   <overlaytarget id="statusbar-overlay-target">
     <statusbar class="chromeclass-status" id="status-bar" flex="1">
       <statusbarpanel id="component-bar"/>
-      <statusbarpanel id="status-text" label="&StatusText.label;" flex="1"
+      <statusbarpanel id="status-text" label="" flex="1"
         crop="right"/>
       <statusbarpanel class="statusbarpanel-iconic" id="offline-status"
         hidden="true" offline="true"/>

@@ -51,7 +51,7 @@ function initDev()
          ["multialias",    "help pref; help props", CMD_CONSOLE | CMD_NO_HELP]];
          
     
-    defineVenkmanCommands (cmdary);
+    console.commandManager.defineCommands (cmdary);
 
     if (!("devState" in console.pluginState))
     {
@@ -156,6 +156,12 @@ function cmdDumpScripts(e)
 
 function cmdReloadUI()
 {
+    if ("frames" in console)
+    {
+        display (MSG_NOTE_NOSTACK, MT_ERROR);
+        return;
+    }
+    
     var bs = Components.classes["@mozilla.org/intl/stringbundle;1"];
     bs = bs.createInstance(Components.interfaces.nsIStringBundleService);
     bs.flushBundles();
@@ -242,17 +248,6 @@ function cmdTestFilters ()
 function cmdTreeTest()
 {
     var w = openDialog("chrome://venkman/content/tests/tree.xul", "", "");
-    var testsFilter = {
-        globalObject: w,
-        flags: jsdIFilter.FLAG_ENABLED | jsdIFilter.FLAG_PASS,
-        urlPattern: null,
-        startLine: 0,
-        endLine: 0
-    };
-    /* make sure this filter goes at the top, so the system
-     * "chrome://venkman/ *" filter doesn't get to it first.
-     */
-    console.jsds.insertFilter (testsFilter, null);
 }
 
 initDev();

@@ -38,175 +38,139 @@ const CMD_NEED_STACK = 0x02; // command only works if we're stopped
 const CMD_NO_STACK   = 0x04; // command only works if we're *not* stopped
 const CMD_NO_HELP    = 0x08; // don't whine if there is no help for this command
 
-function initCommands(commandObject)
+function initCommands()
 {
-    console.commandManager = new CommandManager();
-    
-    CommandManager.contextFunction = getCommandContext;
+    console.commandManager = new CommandManager(console.defaultBundle);
     
     var cmdary =
         [/* "real" commands */
-         ["break",          cmdBreak,              CMD_CONSOLE],
-         ["bp-props",       cmdBPProps,            0],
-         ["chrome-filter",  cmdChromeFilter,       CMD_CONSOLE],
-         ["clear",          cmdClear,              CMD_CONSOLE],
-         ["clear-all",      cmdClearAll,           CMD_CONSOLE],
-         ["clear-profile",  cmdClearProfile,       CMD_CONSOLE],
-         ["clear-script",   cmdClearScript,        0],
-         ["close",          cmdClose,              CMD_CONSOLE],
-         ["commands",       cmdCommands,           CMD_CONSOLE],
+         ["about-mozilla",  cmdAboutMozilla,                                  0],
+         ["break",          cmdBreak,                               CMD_CONSOLE],
+         ["chrome-filter",  cmdChromeFilter,                        CMD_CONSOLE],
+         ["clear",          cmdClear,                               CMD_CONSOLE],
+         ["clear-all",      cmdClearAll,                            CMD_CONSOLE],
+         ["clear-break",    cmdClearBreak,                                    0],
+         ["clear-fbreak",   cmdClearFBreak,                                   0],
+         ["clear-profile",  cmdClearProfile,                        CMD_CONSOLE],
+         ["clear-script",   cmdClearScript,                                   0],
+         ["close",          cmdClose,                               CMD_CONSOLE],
+         ["commands",       cmdCommands,                            CMD_CONSOLE],
          ["cont",           cmdCont,               CMD_CONSOLE | CMD_NEED_STACK],
-         ["emode",          cmdEMode,              CMD_CONSOLE],
+         ["debug-script",   cmdSetScriptFlag,                                 0],
+         ["debug-instance-on", cmdToggleSomething,                            0],
+         ["debug-instance-off", cmdToggleSomething,                           0],
+         ["debug-instance", cmdSetScriptFlag,                                 0],
+         ["debug-transient", cmdSetTransientFlag,                             0],
+         ["emode",          cmdEMode,                               CMD_CONSOLE],
          ["eval",           cmdEval,               CMD_CONSOLE | CMD_NEED_STACK],
-         ["evald",          cmdEvald,              CMD_CONSOLE],
-         ["fbreak",         cmdFBreak,             CMD_CONSOLE],
-         ["find-bp",        cmdFindBp,             0],
-         ["find-creator",   cmdFindCreatorOrCtor,  0],
-         ["find-ctor",      cmdFindCreatorOrCtor,  0],
-         ["find-file",      cmdFindFile,           CMD_CONSOLE],
-         ["find-frame",     cmdFindFrame,          CMD_NEED_STACK],
-         ["find-url",       cmdFindURL,            CMD_CONSOLE],
-         ["find-url-soft",  cmdFindURL,            0],
-         ["find-script",    cmdFindScript,         0],
+         ["evald",          cmdEvald,                               CMD_CONSOLE],
+         ["fbreak",         cmdFBreak,                              CMD_CONSOLE],
+         ["set-fbreak",     cmdFBreak,                                        0],
+         ["fclear",         cmdFClear,                              CMD_CONSOLE],
+         ["fclear-all",     cmdFClearAll,                           CMD_CONSOLE],
+         ["find-bp",        cmdFindBp,                                        0],
+         ["find-creator",   cmdFindCreatorOrCtor,                             0],
+         ["find-ctor",      cmdFindCreatorOrCtor,                             0],
+         ["find-file",      cmdFindFile,                            CMD_CONSOLE],
+         ["find-frame",     cmdFindFrame,                        CMD_NEED_STACK],
+         ["find-sourcetext", cmdFindSourceText,                               0],
+         ["find-sourcetext-soft", cmdFindSourceText,                          0],
+         ["find-script",    cmdFindScript,                                    0],
+         ["find-scriptinstance", cmdFindScriptInstance,                       0],
+         ["find-url",       cmdFindURL,                             CMD_CONSOLE],
+         ["find-url-soft",  cmdFindURL,                                       0],
          ["finish",         cmdFinish,             CMD_CONSOLE | CMD_NEED_STACK],
-         ["focus-input",    cmdFocusInput,         0],
+         ["focus-input",    cmdHook,                                          0],
          ["frame",          cmdFrame,              CMD_CONSOLE | CMD_NEED_STACK],
-         ["help",           cmdHelp,               CMD_CONSOLE],
-         ["loadd",          cmdLoadd,              CMD_CONSOLE],
+         ["help",           cmdHelp,                                CMD_CONSOLE],
+         ["loadd",          cmdLoadd,                               CMD_CONSOLE],
+         ["move-view",      cmdMoveView,                            CMD_CONSOLE],
+         ["mozilla-help",   cmdMozillaHelp,                                   0],
          ["next",           cmdNext,               CMD_CONSOLE | CMD_NEED_STACK],
-         ["open-dialog",    cmdOpenDialog,         CMD_CONSOLE],
-         ["open-url",       cmdOpenURL,            0],
-         ["pprint",         cmdPPrint,             CMD_CONSOLE],
-         ["pref",           cmdPref,               CMD_CONSOLE],
-         ["profile",        cmdProfile,            CMD_CONSOLE],
+         ["open-dialog",    cmdOpenDialog,                          CMD_CONSOLE],
+         ["open-url",       cmdOpenURL,                                       0],
+         ["pprint",         cmdPPrint,                              CMD_CONSOLE],
+         ["pref",           cmdPref,                                CMD_CONSOLE],
+         ["profile",        cmdProfile,                             CMD_CONSOLE],
+         ["profile-script",       cmdSetScriptFlag,                           0],
+         ["profile-instance",     cmdSetScriptFlag,                           0],
+         ["profile-instance-on",  cmdSetScriptFlag,                           0],
+         ["profile-instance-off", cmdSetScriptFlag,                           0],
          ["props",          cmdProps,              CMD_CONSOLE | CMD_NEED_STACK],
-         ["propsd",         cmdPropsd,             CMD_CONSOLE],
-         ["quit",           cmdQuit,               CMD_CONSOLE],
-         ["reload",         cmdReload,             CMD_CONSOLE],
-         ["save-source",    cmdSaveSource,         CMD_CONSOLE],
-         ["save-profile",   cmdSaveProfile,        CMD_CONSOLE],
+         ["propsd",         cmdProps,                               CMD_CONSOLE],
+         ["quit",           cmdQuit,                                CMD_CONSOLE],
+         ["restore-layout", cmdRestoreLayout,                       CMD_CONSOLE],
+         ["release-notes",  cmdReleaseNotes,                                  0],
+         ["save-layout",    cmdSaveLayout,                          CMD_CONSOLE],
+         ["save-profile",   cmdSaveProfile,                         CMD_CONSOLE],
          ["scope",          cmdScope,              CMD_CONSOLE | CMD_NEED_STACK],
-         ["startup-init",   cmdStartupInit,        CMD_CONSOLE],
+         ["toggle-float",   cmdToggleFloat,                         CMD_CONSOLE],
+         ["toggle-save-layout", cmdToggleSaveLayout,                          0],
+         ["toggle-view",    cmdToggleView,                          CMD_CONSOLE],
+         ["startup-init",   cmdStartupInit,                         CMD_CONSOLE],
          ["step",           cmdStep,               CMD_CONSOLE | CMD_NEED_STACK],
-         ["stop",           cmdStop,               CMD_CONSOLE | CMD_NO_STACK],
-         ["tmode",          cmdTMode,              CMD_CONSOLE],
-         ["version",        cmdVersion,            CMD_CONSOLE],
+         ["stop",           cmdStop,                 CMD_CONSOLE | CMD_NO_STACK],
+         ["tmode",          cmdTMode,                               CMD_CONSOLE],
+         ["version",        cmdVersion,                             CMD_CONSOLE],
          ["where",          cmdWhere,              CMD_CONSOLE | CMD_NEED_STACK],
          
-         /* aliases */
-         ["profile-tb",     "profile toggle",       CMD_CONSOLE],
-         ["this",           "props this",           CMD_CONSOLE],
-         ["toggle-chrome",  "chrome-filter toggle", 0],
-         ["toggle-ias",     "startup-init toggle",  0],
-         ["toggle-profile", "profile toggle",       0],
-         ["em-cycle",       "emode cycle",          0],
-         ["em-ignore",      "emode ignore",         0],
-         ["em-trace",       "emode trace",          0],
-         ["em-break",       "emode break",          0],
-         ["tm-cycle",       "tmode cycle",          0],
-         ["tm-ignore",      "tmode ignore",         0],
-         ["tm-trace",       "tmode trace",          0],
-         ["tm-break",       "tmode break",          0]
+         /* aliases */         
+         ["save-default-layout",      "save-layout default",                  0],
+         ["profile-tb",               "profile toggle",                       0],
+         ["this",                     "props this",                 CMD_CONSOLE],
+         ["toggle-chrome",            "chrome-filter toggle",                 0],
+         ["toggle-ias",               "startup-init toggle",                  0],
+         ["toggle-pprint",            "pprint toggle",                        0],
+         ["toggle-profile",           "profile toggle",                       0],
+         ["em-cycle",                 "emode cycle",                          0],
+         ["em-ignore",                "emode ignore",                         0],
+         ["em-trace",                 "emode trace",                          0],
+         ["em-break",                 "emode break",                          0],
+         ["tm-cycle",                 "tmode cycle",                          0],
+         ["tm-ignore",                "tmode ignore",                         0],
+         ["tm-trace",                 "tmode trace",                          0],
+         ["tm-break",                 "tmode break",                          0],
+
+         /* hooks */
+         ["hook-break-set",                                          cmdHook, 0],
+         ["hook-break-clear",                                        cmdHook, 0],
+         ["hook-debug-stop",                                         cmdHook, 0],
+         ["hook-debug-continue",                                     cmdHook, 0],
+         ["hook-display-sourcetext",                                 cmdHook, 0],
+         ["hook-display-sourcetext-soft",                            cmdHook, 0],
+         ["hook-eval-done",                                          cmdHook, 0],
+         ["hook-fbreak-clear",                                       cmdHook, 0],
+         ["hook-fbreak-set",                                         cmdHook, 0],
+         ["hook-guess-complete",                                     cmdHook, 0],
+         ["hook-transient-script",                                   cmdHook, 0],
+         ["hook-script-manager-created",                             cmdHook, 0],
+         ["hook-script-manager-destroyed",                           cmdHook, 0],
+         ["hook-script-instance-created",                            cmdHook, 0],
+         ["hook-script-instance-sealed",                             cmdHook, 0],
+         ["hook-script-instance-destroyed",                          cmdHook, 0],
+         ["hook-session-display",                                    cmdHook, 0],
+         ["hook-source-load-complete",                               cmdHook, 0],
+         ["hook-window-closed",                                      cmdHook, 0],
+         ["hook-window-loaded",                                      cmdHook, 0],
+         ["hook-window-opened",                                      cmdHook, 0],
+         ["hook-window-resized",                                     cmdHook, 0],
+         ["hook-window-unloaded",                                    cmdHook, 0],
+         ["hook-venkman-exit",                                       cmdHook, 0],
+         ["hook-venkman-query-exit",                                 cmdHook, 0],
+         ["hook-venkman-started",                                    cmdHook, 0]
         ];
 
-    defineVenkmanCommands (cmdary);
+    cmdary.stringBundle = console.defaultBundle;
+    console.commandManager.defineCommands (cmdary);
 
     console.commandManager.argTypes.__aliasTypes__ (["index", "breakpointIndex",
                                                      "lineNumber"], "int");
     console.commandManager.argTypes.__aliasTypes__ (["scriptText", "windowFlags",
                                                      "expression", "prefValue"],
-                                                    "rest");
-}
+                                                     "rest");
 
-/**
- * Defines commands stored in |cmdary| on the venkman command manager.  Expects
- * to find "properly named" strings for the commands via getMsg().
- */
-function defineVenkmanCommands (cmdary)
-{
-    var cm = console.commandManager;
-    var len = cmdary.length;
-    for (var i = 0; i < len; ++i)
-    {
-        var name  = cmdary[i][0];
-        var func  = cmdary[i][1];
-        var flags = cmdary[i][2];
-        var usage = getMsg("cmd." + name + ".params", null, "");
-
-        var helpDefault;
-        var labelDefault = name;
-        var aliasFor;
-        if (flags & CMD_NO_HELP)
-            helpDefault = MSG_NO_HELP;
-
-        if (typeof func == "string")
-        {
-            var ary = func.match(/(\S+)/);
-            if (ary)
-                aliasFor = ary[1];
-            helpDefault = getMsg (MSN_DEFAULT_ALIAS_HELP, func); 
-            labelDefault = getMsg ("cmd." + aliasFor + ".label", null, name);
-        }
-
-        var label = getMsg("cmd." + name + ".label", null, labelDefault);
-        var help  = getMsg("cmd." + name + ".help", null, helpDefault);
-        var command = new CommandRecord (name, func, usage, help, label, flags);
-        cm.addCommand(command);
-
-        var key = getMsg ("cmd." + name + ".key", null, "");
-        if (key)
-            cm.setKey("dynamicKeys", command, key);
-    }
-}
-
-/**
- * Used as CommandManager.contextFunction.
- */
-function getCommandContext (id, cx)
-{
-    switch (id)
-    {
-        case "popup:project":
-            cx = console.projectView.getContext(cx);
-            break;
-
-        case "popup:source":
-            cx = console.sourceView.getContext(cx);
-            break;
-            
-        case "popup:script":
-            cx = console.scriptsView.getContext(cx);
-            break;
-            
-        case "popup:stack":
-            cx = console.stackView.getContext(cx);
-            break;
-
-        default:
-            dd ("getCommandContext: unknown id '" + id + "'");
-
-        case "mainmenu:file-popup":
-        case "mainmenu:view-popup":
-        case "mainmenu:debug-popup":            
-        case "mainmenu:profile-popup":
-        case "popup:console":
-            cx = {
-                commandManager: console.commandManager,
-                contextSource: "default"
-            };
-            break;
-    }
-
-    if (typeof cx == "object")
-    {
-        cx.commandManager = console.commandManager;
-        if (!("contextSource" in cx))
-            cx.contextSource = id;
-        if ("dbgContexts" in console && console.dbgContexts)
-            dd ("context '" + id + "'\n" + dumpObjectTree(cx));
-    }
-
-    return cx;
+    console.commandManager.installKeys(console.mainWindow.document,
+                                       console.commandManager.commands);
 }
 
 /**
@@ -226,51 +190,81 @@ function formatCommandFlags (f)
     return ary.length ? ary.join ("\n") : MSG_VAL_NA;
 }
 
+function getToggle (toggle, currentState)
+{
+    if (toggle == "toggle")
+        toggle = !currentState;
+
+    return toggle;
+}
+
 /********************************************************************************
  * Command implementations from here on down...
  *******************************************************************************/
-    
+
+function cmdAboutMozilla ()
+{
+    openTopWin ("about:mozilla");
+}
+
 function cmdBreak (e)
-{    
-    var i;
-    var bpr;
+{
+    if (!("isInteractive" in e))
+        e.isInteractive = false;
     
-    if (!e.fileName)
-    {  /* if no input data, just list the breakpoints */
-        var bplist = console.breakpoints.childData;
-
-        if (bplist.length == 0)
-        {
-            display (MSG_NO_BREAKPOINTS_SET);
-            return true;
-        }
+    if (!e.urlPattern)
+    {
+        /* if no input data, just list the breakpoints */
+        var i = 0;
         
-        display (getMsg(MSN_BP_HEADER, bplist.length));
-        for (i = 0; i < bplist.length; ++i)
+        for (var b in console.breaks)
         {
-            bpr = bplist[i];
-            feedback (e, getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
-                                              bpr.scriptMatches]));
+            var brk = console.breaks[b];
+            display (getMsg(MSN_BP_LINE, [++i, brk.url, brk.lineNumber]));
         }
-        return true;
+
+        if (i == 0)
+            display (MSG_NO_BREAKS_SET);
+
+        return;
     }
 
-    var matchingFiles = matchFileName (e.fileName);
-    if (matchingFiles.length == 0)
-    {
-        feedback (e, getMsg(MSN_ERR_BP_NOSCRIPT, e.fileName), MT_ERROR);
-        return false;
-    }
+    var found;
     
-    for (i in matchingFiles)
+    for (var url in console.scriptManagers)
     {
-        bpr = setBreakpoint (matchingFiles[i], e.lineNumber);
-        if (bpr)
-            feedback (e, getMsg(MSN_BP_CREATED, [bpr.fileName, bpr.line,
-                                                 bpr.scriptMatches]));
+        var manager = console.scriptManagers[url];
+
+        if (url.search(e.urlPattern) != -1 &&
+            manager.isLineExecutable(e.lineNumber))
+        {
+            found = true;
+            if (manager.hasBreakpoint (e.lineNumber))
+            {
+                feedback (e, getMsg(MSN_BP_EXISTS, [url, e.lineNumber]));
+            }
+            else
+            {
+                var fbreak = getFutureBreakpoint(url, e.lineNumber);
+                if (!fbreak)
+                {
+                    dispatch ("fbreak", { isInteractive: e.isInteractive,
+                                          urlPattern: url,
+                                          lineNumber: e.lineNumber });
+                    fbreak = getFutureBreakpoint(url, e.lineNumber);
+                }
+
+                console.scriptManagers[url].setBreakpoint (e.lineNumber, fbreak);
+                feedback (e, getMsg(MSN_BP_CREATED, [url, e.lineNumber]));
+            }
+        }
     }
-    
-    return true;
+
+    if (!found)
+    {
+        feedback (e, getMsg(MSN_ERR_BP_NOLINE, [e.urlPattern, e.lineNumber]),
+                  MT_ERROR);
+    }
 }
 
 function cmdBPProps (e)
@@ -280,59 +274,84 @@ function cmdBPProps (e)
 
 function cmdChromeFilter (e)
 {
-    var currentState = console.prefs["enableChromeFilter"];
+    const FLAGS = SCRIPT_NODEBUG | SCRIPT_NOPROFILE;
     
+    function setFlag (scriptWrapper)
+    {
+        if (!scriptWrapper.jsdScript.isValid)
+            return;
+        
+        if (e.toggle)
+        {
+            scriptWrapper.lastFlags = scriptWrapper.jsdScript.flags;
+            scriptWrapper.jsdScript.flags |= FLAGS;
+        }
+        else
+        {
+            if ("lastFlags" in scriptWrapper)
+            {
+                scriptWrapper.jsdScript.flags = scriptWrapper.lastFlags;
+                delete scriptWrapper.lastFlags;
+            }
+            else if (isURLVenkman(scriptWrapper.jsdScript.fileName))
+            {
+                scriptWrapper.jsdScript.flags |= FLAGS;
+            }
+            else
+            {
+                scriptWrapper.jsdScript.flags &= ~(FLAGS);
+            }
+        }
+    };
+    
+    var currentState = console.prefs["enableChromeFilter"];
+
     if (e.toggle != null)
     {
-        if (e.toggle == "toggle")
-            e.toggle = !currentState;
+        currentState = console.prefs["enableChromeFilter"];
+        e.toggle = getToggle (e.toggle, currentState);
+        console.prefs["enableChromeFilter"] = e.toggle;
+        
 
         if (e.toggle != currentState)
         {
-            if (e.toggle)
-                console.jsds.insertFilter (console.chromeFilter, null);
-            else
-                console.jsds.removeFilter (console.chromeFilter);
-        }
-        
-        console.scriptsView.freeze();
-        for (var container in console.scripts)
-        {
-            if (console.scripts[container].fileName.indexOf("chrome:") == 0)
+            for (var url in console.scriptManagers)
             {
-                var rec = console.scripts[container];
-                var scriptList = console.scriptsView.childData;
+                if (url.search (/^chrome:/) == -1)
+                    continue;
+
+                //dd ("setting chrome filter " + e.toggle + " for " + url);
+                
+                var mgr = console.scriptManagers[url];
                 if (e.toggle)
                 {
-                    /* filter is on, remove chrome file from scripts view */
-                    if ("parentRecord" in rec)
-                    {
-                        //dd ("remove index " + rec.childIndex + ", " +
-                        //    rec.fileName);
-                        scriptList.removeChildAtIndex(rec.childIndex);
-                    }
-                    else
-                        dd ("record already seems to out of the tree");
+                    mgr.lastDisableTransients = mgr.disableTransients;
+                    mgr.disableTransients = true;
                 }
                 else
                 {
-                    /* filter is off, add chrome file to scripts view */
-                    if (!("parentRecord" in rec))
+                    if ("lastDisableTransients" in mgr)
                     {
-                        //dd ("cmdChromeFilter: append " +
-                        //    tov_formatRecord(rec, ""));
-                        scriptList.appendChild(rec);
+                        mgr.disableTransients = mgr.lastDisableTransients;
+                        delete mgr.lastDisableTransients;
                     }
                     else
-                        dd ("record already seems to be in the tree");
+                    {
+                        mgr.disableTransients = false;
+                    }
+                }
+                    
+                for (var i in mgr.instances)
+                {
+                    var instance = mgr.instances[i];
+                    if (instance.topLevel)
+                        setFlag (instance.topLevel);
+                    
+                    for (var f in instance.functions)
+                        setFlag(instance.functions[f]);
                 }
             }
         }
-        console.scriptsView.thaw();
-
-        currentState = 
-            console.enableChromeFilter = 
-            console.prefs["enableChromeFilter"] = e.toggle;
     }
 
     feedback (e, getMsg(MSN_CHROME_FILTER,
@@ -341,33 +360,111 @@ function cmdChromeFilter (e)
 
 function cmdClear (e)
 {
-    if ("breakpointIndexList" in e && e.breakpointIndexList.length > 0)
+    var found = false;
+    
+    for (var b in console.breaks)
     {
-        var ev = new Object();
-        if ("isInteractive" in e)
-            ev.isInteractive = true;
-        e.breakpointIndexList.sort();
-        for (var i = e.breakpointIndexList.length - 1; i >= 0 ; --i)
+        var brk = console.breaks[b];
+        if ((!e.lineNumber || 
+             "lineNumber" in brk && e.lineNumber == brk.lineNumber) &&
+            brk.scriptWrapper.jsdScript.fileName.search(e.urlPattern) != -1)
         {
-            ev.breakpointIndex = e.breakpointIndexList[i];
-            cmdClear(ev);
+            found = true;
+            brk.scriptWrapper.clearBreakpoint(brk.pc);
+            feedback (e, getMsg(MSN_BP_CLEARED,
+                                [brk.scriptWrapper.jsdScript.fileName,
+                                 e.lineNumber]));
         }
-        return;
     }
-            
-    var bpr = clearBreakpointByNumber (e.breakpointIndex);
-    if (bpr)
-        feedback (e, getMsg(MSN_BP_CLEARED, [bpr.fileName, bpr.line,
-                                             bpr.scriptMatches]));
+
+    if (!found)
+    {
+        feedback (e, getMsg(MSN_ERR_BP_NODICE, [e.urlPattern, e.lineNumber]),
+                  MT_ERROR);
+    }
 }
 
-function cmdClearAll(e)
+function cmdClearAll (e)
 {
-    for (var i = console.breakpoints.childData.length - 1; i >= 0; --i)
-        clearBreakpointByNumber (i);
+    if (!("isInteractive" in e))
+        e.isInteractive = false;
+    
+    var breakWrapperList = new Array()
+    for (var i in console.breaks)
+        breakWrapperList.push (console.breaks[i]);
+
+    if (breakWrapperList.length)
+    {
+        dispatch ("clear-break", { isInteractive: e.isInteractive,
+                                   breakWrapper: breakWrapperList[0],
+                                   breakWrapperList: breakWrapperList });
+    }
 }
 
-function cmdClearProfile(e)
+function cmdClearBreak (e)
+{
+    if (!("isInteractive" in e))
+        e.isInteractive = false;
+    
+    function clear (wrapper)
+    {
+        if (wrapper instanceof BreakInstance)
+        {
+            wrapper.scriptWrapper.clearBreakpoint(wrapper.pc);
+        }
+        else if (wrapper instanceof FutureBreakpoint)
+        {
+            for (var b in wrapper.childrenBP)
+                clear (wrapper.childrenBP[b]);
+        }
+    };
+
+    if ("breakWrapperList" in e)
+    {
+        for (i = 0; i < e.breakWrapperList.length; ++i)
+            clear(e.breakWrapperList[i]);
+    }
+    else
+    {
+        clear (e.breakWrapper);
+    }
+}
+
+function cmdClearFBreak (e)
+{
+    if (!("isInteractive" in e))
+        e.isInteractive = false;
+    
+    function clear (wrapper)
+    {
+        if (wrapper instanceof FutureBreakpoint)
+        {
+            var params = {
+                isInteractive: e.isInteractive,
+                urlPattern: wrapper.url,
+                lineNumber: wrapper.lineNumber
+            };
+        
+            dispatch ("fclear", params);
+        }
+        else if (wrapper instanceof BreakInstance && wrapper.parentBP)
+        {
+            clear (wrapper.parentBP);
+        }
+    };
+            
+    if ("breakWrapperList" in e)
+    {
+        for (var i = 0; i < e.breakWrapperList.length; ++i)
+            clear(e.breakWrapperList[i]);
+    }
+    else
+    {
+        clear (e.breakWrapper);
+    }
+}
+    
+function cmdClearProfile (e)
 {
     if ("scriptRecList" in e)
     {
@@ -390,32 +487,30 @@ function cmdClearScript (e)
 {
     var i;
     
-    if ("scriptRecList" in e)
+    if ("scriptWrapperList" in e)
     {
-        for (i = 0; i < e.scriptRecList.length; ++i)
-            cmdClearScript ({scriptRec: e.scriptRecList[i]});
+        for (i = 0; i < e.scriptWrapperList.length; ++i)
+            cmdClearScript ({scriptWrapper: e.scriptWrapperList[i]});
         return true;
     }
 
-    /* walk backwards so as not to disturb the indicies */
-    for (i = console.breakpoints.childData.length - 1; i >= 0; --i)
-    {
-        var bpr = console.breakpoints.childData[i];
-        if (bpr.hasScriptRecord(e.scriptRec))
-            clearBreakpointByNumber (i);
-    }
-
+    e.scriptWrapper.clearBreakpoints();
+    
     return true;
 }
 
-function cmdClose()
+function cmdClose(e)
 {
-    window.close();
+    if ("sourceWindow" in e)
+        e.sourceWindow.close();
+    else
+        window.close();
 }
 
 function cmdCommands (e)
 {
-    display (MSG_TIP_HELP);
+    display (MSG_TIP1_HELP);
+    display (MSG_TIP2_HELP);
     var names = console.commandManager.listNames(e.pattern, CMD_CONSOLE);
     names = names.join(MSG_COMMASP);
     
@@ -429,7 +524,6 @@ function cmdCommands (e)
 function cmdCont (e)
 {
     disableDebugCommands();
-    console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
 }
 
@@ -497,7 +591,6 @@ function cmdEval (e)
     {
         if (rv != null)
         {
-            refreshValues();
             var l = $.length;
             $[l] = rv;
             
@@ -507,6 +600,8 @@ function cmdEval (e)
         else
             dd ("evalInTargetScope returned null");
     }
+
+    dispatch ("hook-eval-done");
     return true;
 }
 
@@ -516,34 +611,41 @@ function cmdEvald (e)
     var rv = evalInDebuggerScope (e.scriptText);
     if (typeof rv != "undefined")
         display (String(rv), MT_EVAL_OUT);
+
+    dispatch ("hook-eval-done");
     return true;
 }
 
 function cmdFBreak(e)
-{
-    if (!e.fileName)
-    {  /* if no input data, just list the breakpoints */
-        var bplist = console.breakpoints.childData;
-
-        if (bplist.length == 0)
-        {
-            display (MSG_NO_FBREAKS_SET);
-            return true;
-        }
+{       
+    if (!e.urlPattern)
+    {
+        /* if no input data, just list the breakpoints */
+        var i = 0;
         
-        display (getMsg(MSN_FBP_HEADER, bplist.length));
-        for (var i = 0; i < bplist.length; ++i)
+        for (var f in console.fbreaks)
         {
-            var bpr = bplist[i];
-            if (bpr.scriptMatches == 0)
-                display (getMsg(MSN_FBP_LINE, [i, bpr.fileName, bpr.line]));
+            var brk = console.fbreaks[f];
+            display (getMsg(MSN_FBP_LINE, [++i, brk.url, brk.lineNumber]));
         }
-        return true;
-    }
 
-    if (setFutureBreakpoint (e.fileName, e.lineNumber))
-        feedback (e, getMsg(MSN_FBP_CREATED, [e.fileName, e.lineNumber]));
-    return true;
+        if (i == 0)
+            display (MSG_NO_FBREAKS_SET);
+
+        return;
+    }
+    else
+    {
+        if (setFutureBreakpoint (e.urlPattern, e.lineNumber))
+        {
+            feedback (e, getMsg(MSN_FBP_CREATED, [e.urlPattern, e.lineNumber]));
+        }
+        else
+        {
+            feedback (e, getMsg(MSN_FBP_EXISTS, [e.urlPattern, e.lineNumber]),
+                      MT_ERROR);
+        }
+    }
 }
 
 function cmdFinish (e)
@@ -553,18 +655,26 @@ function cmdFinish (e)
     
     console._stepOverLevel = 1;
     setStopState(false);
-    console.jsds.functionHook = console._callHook;
+    console.jsds.functionHook = console.callHook;
     disableDebugCommands()
-    console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
     return true;
 }
 
 function cmdFindBp (e)
-{    
-    return dispatch ("find-url", {url: e.breakpointRec.fileName,
-                                  rangeStart: e.breakpointRec.line,
-                                  rangeEnd: e.breakpointRec.line});
+{
+    if ("scriptWrapper" in e.breakpoint)
+    {
+        dispatch ("find-script",
+                  { scriptWrapper: e.breakpoint.scriptWrapper, 
+                    targetPc: e.breakpoint.pc });
+    }
+    else
+    {
+        dispatch ("find-url", {url: e.breakpoint.url,
+                               rangeStart: e.breakpoint.lineNumber,
+                               rangeEnd: e.breakpoint.lineNumber});
+    }
 }
 
 function cmdFindCreatorOrCtor (e)
@@ -591,63 +701,7 @@ function cmdFindCreatorOrCtor (e)
     }
 
     return dispatch ("find-url",
-                     {url: url, rangeStart: line - 1, rangeEnd: line - 1});
-}
-
-function cmdFindURL (e)
-{
-    if (!e.url)
-    {
-        console.sourceView.displaySourceText(null);
-        return null;
-    }
-    
-    var sourceText;
-    
-    if (e.url.indexOf("x-jsd:") == 0)
-    {
-        if (e.url == "x-jsd:help")
-        {
-            dispatch ("help");
-            return e.url;
-        }
-
-        display (getMsg(MSN_ERR_INVALID_PARAM, ["url", e.url]), MT_ERROR);
-        return null;
-    }
-    
-    if (e.url in console.scripts)
-        sourceText = console.scripts[e.url].sourceText;
-    else if (e.url in console.files)
-        sourceText = console.files[e.url];
-    else
-        sourceText = console.files[e.url] = new SourceText (null, e.url);
-
-    console.sourceView.details = null;
-    console.highlightFile = e.url;
-    var line = 1;
-    delete console.highlightStart;
-    delete console.highlightEnd;
-    if ("rangeStart" in e && e.rangeStart != null)
-    {
-        line = e.rangeStart;
-        if (e.rangeEnd != null)
-        {
-            console.highlightStart = e.rangeStart - 1;
-            console.highlightEnd = e.rangeEnd - 1;
-        }
-    }
-    
-    if ("lineNumber" in e && e.lineNumber != null)
-        line = e.lineNumber;
-
-    console.sourceView.displaySourceText(sourceText);
-    console.sourceView.tree.invalidate();
-    if ("command" in e && e.command.name == "find-url-soft")
-        console.sourceView.softScrollTo (line);
-    else
-        console.sourceView.scrollTo (line - 2, -1);
-    return e.url;
+                     {url: url, rangeStart: line, rangeEnd: line});
 }
 
 function cmdFindFile (e)
@@ -665,58 +719,191 @@ function cmdFindFile (e)
 
 function cmdFindFrame (e)
 {
-    var frame = e.frameRec.frame;
+    var jsdFrame = console.frames[e.frameIndex];
 
-    displayFrame (frame, e.frameRec.childIndex, true);
+    displayFrame (jsdFrame, e.frameIndex, true);
 
-    if (frame.isNative)
+    if (jsdFrame.isNative)
         return true;
     
-    var scriptContainer = console.scripts[frame.script.fileName];
-    if (!scriptContainer)
-    {
-        dd ("frame from unknown source");
-        return false;
-    }
-    var scriptRecord =
-        scriptContainer.locateChildByScript (frame.script);
-    if (!scriptRecord)
-    {
-        dd ("frame with unknown script");
-        return false;
-    }
-
-    return cmdFindScript ({scriptRec: scriptRecord});
+    var scriptWrapper = console.scriptWrappers[jsdFrame.script.tag]
+    return dispatch ("find-script",
+                     { scriptWrapper: scriptWrapper, targetPc: jsdFrame.pc });
 }
 
 function cmdFindScript (e)
 {
-    var rv;
+    var jsdScript = e.scriptWrapper.jsdScript;
+    var targetLine = 1;
+    var rv, params;
 
-    if (console.sourceView.prettyPrint)
+    if (console.prefs["prettyprint"] && e.scriptWrapper.sourceText)
     {
-        delete console.highlightFile;
-        delete console.highlightStart;
-        delete console.highlightEnd;
-        console.sourceView.displaySourceText(e.scriptRec.sourceText);
-        rv = e.scriptRec.script.fileName;
+        if (e.targetPc != null && jsdScript.isValid)
+            targetLine = jsdScript.pcToLine(e.targetPc, PCMAP_PRETTYPRINT);
+        
+        console.currentDetails = e.scriptWrapper;
+
+        params = {
+            sourceText: e.scriptWrapper.sourceText,
+            rangeStart: null,
+            rangeEnd:   null,
+            targetLine: targetLine,
+            details: e.scriptWrapper
+        };
+        dispatch ("hook-display-sourcetext-soft", params);
+        rv = jsdScript.fileName;
     }
     else
     {
-        rv = dispatch("find-url", {url: e.scriptRec.parentRecord.fileName,
-                                   rangeStart: e.scriptRec.baseLineNumber,
-                                   rangeEnd: e.scriptRec.baseLineNumber + 
-                                             e.scriptRec.lineExtent - 1});
+        if (e.targetPc != null && jsdScript.isValid)
+            targetLine = jsdScript.pcToLine(e.targetPc, PCMAP_SOURCETEXT);
+        else
+            targetLine = jsdScript.baseLineNumber;
+
+        params = {
+            sourceText: e.scriptWrapper.scriptInstance.sourceText,
+            rangeStart: jsdScript.baseLineNumber,
+            rangeEnd: jsdScript.baseLineNumber + 
+                      jsdScript.lineExtent - 1,
+            targetLine: targetLine,
+            details: e.scriptWrapper
+        };
+        rv = dispatch("find-sourcetext-soft", params);
     }
 
-    console.sourceView.details = e.scriptRec;
-    
     return rv;
 }
 
-function cmdFocusInput (e)
+function cmdFindScriptInstance (e)
 {
-    console.ui["sl-input"].focus();
+    var params = Clone(e);
+    params.sourceText = e.scriptInstance.sourceText;
+    dispatch ("find-sourcetext", params);
+}
+
+function cmdFindSourceText (e)
+{
+    function cb(status)
+    {
+        if (status != Components.results.NS_OK)
+        {
+            display (getMsg (MSN_ERR_SOURCE_LOAD_FAILED,
+                             [e.sourceText.url, status], MT_ERROR));
+            return;
+        }
+        
+        var params = {
+            sourceText: e.sourceText,
+            rangeStart: e.rangeStart,
+            rangeEnd: e.rangeEnd,
+            targetLine: (e.targetLine != null) ? e.targetLine : e.rangeStart,
+            details:    e.details
+        };
+        
+        if (e.command.name.indexOf("soft") != -1)
+            dispatch ("hook-display-sourcetext-soft", params);
+        else
+            dispatch ("hook-display-sourcetext", params);
+    };
+
+    console.currentSourceText = e.sourceText;
+    console.currentDetails = e.details;
+    
+    if (!e.sourceText || e.sourceText.isLoaded)
+        cb(Components.results.NS_OK);
+    else
+        e.sourceText.loadSource(cb);
+}
+
+function cmdFindURL (e)
+{
+    if (!e.url)
+    {
+        dispatch ("find-sourcetext", { sourceText: null });
+        return;
+    }
+
+    var sourceText;
+
+    if (e.url.indexOf("x-jsd:") == 0)
+    {
+        switch (e.url)
+        {
+            case "x-jsd:help":
+                sourceText = console.sourceText;
+                break;
+                
+            default:
+                display (getMsg(MSN_ERR_INVALID_PARAM, ["url", e.url]),
+                         MT_ERROR);
+                return;
+        }
+    }
+    else if (e.url in console.scriptManagers)
+    {
+        sourceText = console.scriptManagers[e.url].sourceText;
+    }
+    else if (e.url in console.files)
+    {
+        sourceText = console.files[e.url];
+    }
+    else
+    {
+        sourceText = console.files[e.url] = new SourceText (e.url);
+    }
+
+    var params = {
+        sourceText: sourceText,
+        rangeStart: e.rangeStart,
+        rangeEnd: e.rangeEnd,
+        targetLine: e.targetLine,
+        details: e.details
+    };
+
+    if (e.command.name.indexOf("soft") == -1)
+        dispatch ("find-sourcetext", params);
+    else
+        dispatch ("find-sourcetext-soft", params);
+}
+
+function cmdFClear (e)
+{
+    var found = false;
+
+    for (var b in console.fbreaks)
+    {
+        var brk = console.fbreaks[b];
+        if (!e.lineNumber || e.lineNumber == brk.lineNumber &&
+            brk.url.search(e.urlPattern) != -1)
+        {
+            found = true;
+            clearFutureBreakpoint (brk.url, e.lineNumber);
+            feedback (e, getMsg(MSN_FBP_CLEARED, [brk.url, e.lineNumber]));
+        }
+    }
+
+    if (!found)
+    {
+        feedback (e, getMsg(MSN_ERR_BP_NODICE, [e.urlPattern, e.lineNumber]),
+                  MT_ERROR);
+    }
+}
+
+function cmdFClearAll (e)
+{
+    if (!("isInteractive" in e))
+        e.isInteractive = false;
+
+    var breakWrapperList = new Array()
+    for (var i in console.breaks)
+        breakWrapperList.push (console.breaks[i]);
+
+    if (breakWrapperList.length)
+    {
+        dispatch ("clear-fbreak", { isInteractive: e.isInteractive,
+                                    breakWrapperList: breakWrapperList});
+    }
 }
 
 function cmdFrame (e)
@@ -726,17 +913,17 @@ function cmdFrame (e)
     else    
         e.frameIndex = getCurrentFrameIndex();
 
-    dispatch ("find-frame",
-              {frameRec: console.stackView.stack.childData[e.frameIndex]});
+    dispatch ("find-frame", { frameIndex: e.frameIndex });
     return true;
 }
-            
+
 function cmdHelp (e)
 {
     var ary;
     if (!e.pattern)
     {
-        console.sourceView.displaySourceText(console.sourceText);
+        openTopWin ("x-jsd:help", "venkman-help");
+        return true;
     }
     else
     {
@@ -756,7 +943,12 @@ function cmdHelp (e)
         }
     }
 
-    return true;    
+    return true;
+}
+
+function cmdHook(e)
+{
+    /* empty function used for "hook" commands. */
 }
 
 function cmdLoadd (e)
@@ -793,12 +985,36 @@ function cmdLoadd (e)
     return null;
 }
 
+function cmdMoveView (e)
+{
+    if (!e.viewId || !(e.viewId in console.views))
+    {
+        display (getMsg(MSN_ERR_INVALID_PARAM, ["viewId", e.viewId]), MT_ERROR);
+        return;    
+    }
+
+    var parsedLocation = console.viewManager.parseLocation (e.locationUrl);
+    if (!parsedLocation)
+    {
+        display (getMsg(MSN_ERR_INVALID_PARAM, ["locationURL", e.locationURL]),
+                 MT_ERROR);
+        return;    
+    }
+    
+    console.viewManager.moveView (parsedLocation, e.viewId);
+}
+
+function cmdMozillaHelp ()
+{
+    toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');
+}
+
 function cmdNext ()
 {
     console._stepOverLevel = 0;
     dispatch ("step");
-    console.jsds.functionHook = console._callHook;
-    return true;
+    console.jsds.functionHook = console.callHook;
+    return;
 }
 
 function cmdOpenDialog (e)
@@ -810,20 +1026,46 @@ function cmdOpenURL (e)
 {
     var url = prompt (MSG_OPEN_URL, "http://");
     if (url)
-        return dispatch ("find-url",{url: url});
+        return dispatch ("find-url", { url: url });
 
     return null;
 }    
 
 function cmdPPrint (e)
 {
-    setPrettyPrintState(!console.sourceView.prettyPrint);
+    var state, params;
+    
+    if (e.toggle != null)
+    {
+        e.toggle = getToggle (e.toggle, console.prefs["prettyprint"]);
+        console.prefs["prettyprint"] = e.toggle;
+        
+        var tb = document.getElementById("maintoolbar:toggle-pprint");
+        if (e.toggle)
+        {
+            tb.setAttribute("state", "true");
+        }
+        else
+        {
+            tb.removeAttribute("state");
+        }
+
+        if ("currentDetails" in console &&
+            console.currentDetails instanceof ScriptWrapper)
+        {
+            dispatch ("find-script", { scriptWrapper: console.currentDetails });
+        }
+    }
+
+    feedback (e, getMsg(MSN_FMT_PPRINT, console.prefs["prettyprint"] ?
+                        MSG_VAL_ON : MSG_VAL_OFF));
+    
     return true;
 }
 
 function cmdPref (e)
 {
-    if (e.prefName)
+    if (e.prefValue)
     {
         if (e.prefName[0] == "-")
         {
@@ -838,20 +1080,14 @@ function cmdPref (e)
             return false;
         }
         
-        if (e.prefValue)
-            console.prefs[e.prefName] = e.prefValue;
-        else
-            e.prefValue = console.prefs[e.prefName];
-
+        console.prefs[e.prefName] = e.prefValue;
         display (getMsg(MSN_FMT_PREFVALUE, [e.prefName, e.prefValue]));
     }
     else
     {
-        for (var i in console.prefs.prefNames)
-        {
-            var name = console.prefs.prefNames[i];
-            display (getMsg(MSN_FMT_PREFVALUE, [name, console.prefs[name]]));
-        }
+        var ary = console.listPrefs(e.prefName);
+        for (var i = 0; i < ary.length; ++i)
+            display (getMsg(MSN_FMT_PREFVALUE, [ary[i], console.prefs[ary[i]]]));
     }
 
     return true;
@@ -859,23 +1095,28 @@ function cmdPref (e)
 
 function cmdProfile(e)
 {
-    if (e.toggle && e.toggle == "toggle")
-        e.toggle = !(console.jsds.flags & COLLECT_PROFILE_DATA);
-    
+    var currentState = console.jsds.flags & COLLECT_PROFILE_DATA;
+
     if (e.toggle != null)
+    {
+        e.toggle = getToggle (e.toggle, currentState);
         setProfileState(e.toggle);
+    }
     else
-        e.toggle = console.jsds.flags & COLLECT_PROFILE_DATA;
+    {
+        e.toggle = currentState;
+    }
     
     feedback (e, getMsg(MSN_PROFILE_STATE,
                         [e.toggle ? MSG_VAL_ON : MSG_VAL_OFF]));
 }
 
-function cmdProps (e, forceDebuggerScope)
+function cmdProps (e)
 {
     var v;
-    
-    if (forceDebuggerScope)
+    var debuggerScope = (e.command.name == "propsd");
+
+    if (debuggerScope)
         v = evalInDebuggerScope (e.scriptText);
     else
         v = evalInTargetScope (e.scriptText);
@@ -883,20 +1124,15 @@ function cmdProps (e, forceDebuggerScope)
     if (!(v instanceof jsdIValue) || v.jsType != jsdIValue.TYPE_OBJECT)
     {
         var str = (v instanceof jsdIValue) ? formatValue(v) : String(v)
-        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, str]),
+        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPRESSION, str]),
                  MT_ERROR);
         return false;
     }
     
-    display (getMsg(forceDebuggerScope ? MSN_PROPSD_HEADER : MSN_PROPS_HEADER,
+    display (getMsg(debuggerScope ? MSN_PROPSD_HEADER : MSN_PROPS_HEADER,
                     e.scriptText));
     displayProperties(v);
     return true;
-}
-
-function cmdPropsd (e)
-{
-    return cmdProps (e, true);
 }
 
 function cmdQuit()
@@ -904,152 +1140,287 @@ function cmdQuit()
     goQuitApplication();
 }
 
-function cmdReload ()
-{
-    if (!("childData" in console.sourceView))
-        return false;
-    
-    console.sourceView.childData.reloadSource();
-    return true;
-}
-
-function cmdSaveSource (e)
-{
-    if (!e.targetFile || e.targetFile == "?")
+function cmdRestoreLayout (e)
+{   
+    if (!e.name)
     {
-        var fileName = console.sourceView.childData.fileName;
-        if (fileName.search(/^\w+:/) < 0)
+        var list = console.listPrefs("layoutState.");
+        for (var i = 0; i < list.length; ++i)
+            list[i] = list[i].substr(12);
+        list.push("factory");
+        display (getMsg(MSN_LAYOUT_LIST, list.sort().join(MSG_COMMASP)));
+        return;
+    }
+    
+    var layout;
+    e.name = e.name.toLowerCase();
+    if (e.name == "factory")
+    {
+        layout = DEFAULT_VURLS;
+    }
+    else
+    {
+        var prefName = "layoutState." + e.name;
+        if (!(prefName in console.prefs))
         {
-            var shortName = getFileFromPath(fileName);
-            if (fileName != shortName)
-                fileName = shortName;
-            else
-                fileName = "";
+            display (getMsg(MSN_ERR_INVALID_PARAM, ["name", e.name]), MT_ERROR);
+            return;
         }
         else
-            fileName = "";
-
-        var rv = pickSaveAs(MSG_SAVE_SOURCE, "$all $text *.js", fileName);
-        if (rv.reason == PICK_CANCEL)
-            return null;
-        e.targetFile = rv.file;
+        {
+            layout = console.prefs[prefName];
+        }
     }
+    
+    console.viewManager.destroyWindows();
+    console.viewManager.reconstituteVURLs (layout.split (/\s*;\s*/));
+}
 
-    var file = fopen (e.targetFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE);
-    var lines = console.sourceView.childData.lines;
-    for (var i = 0; i < lines.length; ++i)
-        file.write(lines[i] + "\n");
-    file.close();
+function cmdReleaseNotes (e)
+{
+    openTopWin(MSG_RELEASE_URL);
+}
 
-    return file.localFile.path;
+function cmdSaveLayout (e)
+{
+    if (!e.name)
+    {
+        var list = console.listPrefs("layoutState.");
+        for (var i = 0; i < list.length; ++i)
+            list[i] = list[i].substr(12);
+        list.push("factory");
+        display (getMsg(MSN_LAYOUT_LIST, list.sort().join(MSG_COMMASP)));
+        return;
+    }
+    
+    e.name = e.name.toLowerCase();
+    if (e.name == "factory")
+    {
+        display (getMsg(MSN_ERR_INVALID_PARAM, ["name", e.name]), MT_ERROR);
+        return;    
+    }
+    
+    var ary = console.viewManager.getLayoutState ();
+    var prefName = "layoutState." + e.name;
+    console.addPref(prefName);
+    console.prefs[prefName] = ary.join ("; ");
 }
 
 function cmdSaveProfile (e)
 {
-    function writeHeaderCSV(file)
+    function onComplete (i)
     {
-        file.write ("# path, file, function, start-line, end-line, " +
-                    "call-count, recurse-depth, total-time, min-time, " +
-                    "max-time, avg-time\n");
-    };
-    
-    function writeSummaryCSV(file, summary)
-    {
-        for (var i = 0; i < summary.length; ++i)
-        {
-            var r = summary[i];
-            file.write (r.path + ", " + r.file + ", " + r.fun + ", " + r.base +
-                        ", " + r.end + ", " + r.ccount + ", " + r.recurse +
-                        ", " + r.total + ", " + r.min + ", " + r.max +
-                        ", " + r.avg +"\n");
-        }
+        var msg = getMsg(MSN_PROFILE_SAVED, getURLSpecFromFile(file.localFile));
+        display (msg);
+        console.status = msg;
+        file.close();
     };
         
-    function writeSummaryText(file, summary, fileName)
-    {
-        file.write ((fileName ? fileName : "** all files **") + "\n");
-        for (var i = 0; i < summary.length; ++i)
-            file.write ("\t" + summary[i].str + "\n");
-    };
+    var templatePfx = "profile.template.";
+    var i;
+    var ext;
     
     if (!e.targetFile || e.targetFile == "?")
     {
-        var rv = pickSaveAs(MSG_SAVE_PROFILE, "$html *.csv $text $all");
+        var list = console.listPrefs(templatePfx);
+        var extList = "";
+        for (i = 0; i < list.length; ++i)
+        {
+            ext = list[i].substr(templatePfx.length);
+            if (list[i].search(/html|htm|xml|txt/i) == -1)
+                extList += "*." + ext + " ";
+        }
+        var rv = pickSaveAs(MSG_SAVE_PROFILE, "$html $xml $text " + 
+                            extList + "$all");
         if (rv.reason == PICK_CANCEL)
             return null;
         e.targetFile = rv.file;
     }
     
     var file = fopen (e.targetFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE);
-    var ary = file.localFile.path.match(/(csv|html?)$/i);
-    var writeHeader = null;
-    var writeSummary = writeSummaryText;
-    var writeFooter = null;
+
+    var templateName;
+    var ary = file.localFile.path.match(/\.([^.]+)$/);
+
     if (ary)
-    {
-        var ext = ary[1].toLowerCase();
-        if (ext == "csv")
-        {
-            writeHeader = writeHeaderCSV;
-            writeSummary = writeSummaryCSV;
-        }
-        else
-        {
-            writeHeader = writeHeaderHTML;
-            writeSummary = writeSummaryHTML;
-            writeFooter = writeFooterHTML;
-        }
-    }
-    
-    if (writeHeader)
-        writeHeader(file);
-
-    var i;
-    
-    if ("urlList" in e && e.urlList.length > 0 ||
-        "url" in e && e.url && (e.urlList = [e.url]))
-    {
-        for (i = 0; i < e.urlList.length; ++i)
-            writeSummary(file, console.getProfileSummary(e.urlList[i]),
-                         e.urlList[i]);
-    }
+        ext = ary[1].toLowerCase();
     else
+        ext = "txt";
+
+    templateName = templatePfx + ext;
+    var templateFile;
+    if (templateName in console.prefs)
+        templateFile = console.prefs[templateName];
+    else
+        templateFile = console.prefs[templatePfx + "txt"];
+    
+    var reportTemplate = console.profiler.loadTemplate(templateFile);
+
+    var scriptInstanceList = new Array();
+    
+    var j;
+
+    if (!("urlList" in e) || e.urlList.length == 0)
     {
-        var scriptURLs = keys(console.scripts).sort();
-        for (i = 0; i < scriptURLs.length; ++i)
-        {
-            var fileName = console.scripts[scriptURLs[i]].fileName;
-            writeSummary(file, console.getProfileSummary(fileName), fileName);
-        }
+        if ("url" in e && e.url)
+            e.urlList = [e.url];
+        else
+            e.urlList = keys(console.scriptManagers);
+    }
+    
+    e.urlList = e.urlList.sort();
+    
+    for (i = 0; i < e.urlList.length; ++i)
+    {
+        var url = e.urlList[i];
+        if (!ASSERT (url in console.scriptManagers, "url not loaded"))
+            continue;
+        var manager = console.scriptManagers[url];
+        for (j in manager.instances)
+            scriptInstanceList.push (manager.instances[j]);
     }
 
-    if (writeFooter)
-        writeFooter(file);
+    var rangeList;
+    if (("profile.ranges." + ext) in console.prefs)
+        rangeList = console.prefs["profile.ranges." + ext].split(",");
+    else
+        rangeList = console.prefs["profile.ranges.default"].split(",");
+    
+    var profileReport = new ProfileReport (reportTemplate, file, rangeList,
+                                           scriptInstanceList);
+    profileReport.onComplete = onComplete;
+    
+    console.profiler.generateReport (profileReport);
 
-    display (getMsg(MSN_PROFILE_SAVED, getURLSpecFromFile(file.localFile)));
-    file.close();
     return file.localFile;
 }
-
 
 function cmdScope ()
 {
     if (getCurrentFrame().scope.propertyCount == 0)
-        display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE));
+        display (getMsg (MSN_NO_PROPERTIES, MSG_VAL_SCOPE));
     else
         displayProperties (getCurrentFrame().scope);
     
     return true;
 }
 
+function cmdToggleSomething (e)
+{
+    var ary = e.command.name.match (/(.*)-(on|off|toggle)$/);
+    if (!ary)
+        return;
+    
+    var newEvent = Clone(e);
+    
+    if (ary[2] == "on")
+        newEvent.toggle = true;
+    else if (ary[2] == "off")
+        newEvent.toggle = false;
+    else
+        newEvent.toggle = "toggle";
+
+    dispatch (ary[1], newEvent);
+}
+
+function cmdSetScriptFlag (e)
+{
+    function setFlag (jsdScript)
+    {
+        if (!jsdScript.isValid)
+            return;
+        
+        if (e.toggle == "toggle")
+        {
+            if (jsdScript.flags & flag)
+                jsdScript.flags &= ~flag;
+            else
+                jsdScript.flags |= flag;
+        }
+        else if (e.toggle)
+        {
+            jsdScript.flags |= flag;
+        }
+        else
+        {
+            jsdScript.flags &= ~flag;
+        }    
+    };
+    
+    function setFlagInstance (scriptInstance)
+    {
+        if (scriptInstance.topLevel)
+            setFlag (scriptInstance.topLevel.jsdScript);
+        
+        for (var f in scriptInstance.functions)
+            setFlag (scriptInstance.functions[f].jsdScript);
+    };
+
+    var flag;
+    var i;
+    
+    if (e.command.name.search(/^profile/) == 0)
+        flag = SCRIPT_NOPROFILE;
+    else
+        flag = SCRIPT_NODEBUG;
+    
+    if (e.command.name.search (/script$/) != -1)
+    {
+        if ("scriptWrapperList" in e)
+        {
+            for (i = 0; i < e.scriptWrapperList.length; ++i)
+                setFlag(e.scriptWrapperList[i].jsdScript);
+        }
+        else
+        {
+            setFlag(e.scriptWrapper.jsdScript);
+        }
+    }
+    else
+    {
+        if ("scriptInstanceList" in e)
+        {
+            for (i = 0; i < e.scriptInstanceList.length; ++i)
+                setFlagInstance(e.scriptInstanceList[i]);
+        }
+        else
+        {
+            setFlagInstance(e.scriptInstance);
+        }
+    }
+}
+
+function cmdSetTransientFlag (e)
+{
+    function setFlag (url)
+    {
+        if (!(url in console.scriptManagers))
+            return;
+
+        var scriptManager = console.scriptManagers[url];
+        if (e.toggle == "toggle")
+            scriptManager.disableTransients = !scriptManager.disableTransients;
+        else
+            scriptManager.disableTransients = e.toggle;
+    };
+    
+    if ("urlList" in e)
+    {
+        for (var i = 0; i < e.urlList.length; ++i)
+            setFlag (e.urlList[i]);
+    }
+    else
+    {
+        setFlag (e.url);
+    }
+}
+
 function cmdStartupInit (e)
 {
     if (e.toggle != null)
     {
-        if (e.toggle == "toggle")
-            console.jsds.initAtStartup = !console.jsds.initAtStartup;
-        else
-            console.jsds.initAtStartup = e.toggle;
+        e.toggle = getToggle (e.toggle, console.jsds.initAtStartup);
+        console.jsds.initAtStartup = e.toggle;
     }
 
     display (getMsg(MSN_IASMODE,
@@ -1062,7 +1433,7 @@ function cmdStep()
     setStopState(true);
     var topFrame = console.frames[0];
     console._stepPast = topFrame.script.fileName;
-    if (console.sourceView.prettyPrint)
+    if (console.prefs["prettyprint"])
     {
         console._stepPast +=
             topFrame.script.pcToLine(topFrame.pc, PCMAP_PRETTYPRINT);
@@ -1072,7 +1443,6 @@ function cmdStep()
         console._stepPast += topFrame.line;
     }
     disableDebugCommands()
-    console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
     return true;
 }
@@ -1114,11 +1484,11 @@ function cmdTMode (e)
                 console.throwMode = TMODE_IGNORE;
                 break;
             case "trace": 
-                console.jsds.throwHook = console._executionHook;
+                console.jsds.throwHook = console.executionHook;
                 console.throwMode = TMODE_TRACE;
                 break;
             case "break":
-                console.jsds.throwHook = console._executionHook;
+                console.jsds.throwHook = console.executionHook;
                 console.throwMode = TMODE_BREAK;
                 break;
             default:
@@ -1144,10 +1514,47 @@ function cmdTMode (e)
     return true;
 }
 
+function cmdToggleFloat (e)
+{
+    if (!e.viewId in console.views || typeof console.views[e.viewId] != "object")
+    {
+        display (getMsg(MSN_ERR_NO_SUCH_VIEW, e.viewId), MT_ERROR);
+        return;
+    }
+
+    dispatch ("move-view", { viewId: e.viewId, locationUrl: VMGR_VURL_NEW });
+}
+
+function cmdToggleSaveLayout (e)
+{
+    var state = !console.prefs["saveLayoutOnExit"];
+    console.prefs["saveLayoutOnExit"] = state;
+    feedback (e, getMsg (MSN_SAVE_LAYOUT, state ? MSG_VAL_ON : MSG_VAL_OFF));
+}
+                     
+function cmdToggleView (e)
+{
+    if (!e.viewId in console.views || typeof console.views[e.viewId] != "object")
+    {
+        display (getMsg(MSN_ERR_NO_SUCH_VIEW, e.viewId), MT_ERROR);
+        return;
+    }
+    
+    var view = console.views[e.viewId];
+    var url;
+    
+    if ("currentContent" in view)
+        url = VMGR_VURL_HIDDEN;
+    else
+        url = VMGR_VURL_NEW;
+    
+    console.viewManager.moveViewURL (url, e.viewId);
+}    
+
 function cmdVersion ()
 {
     display(MSG_HELLO, MT_HELLO);
-    display(getMsg(MSN_VERSION, console.version), MT_HELLO);
+    display(getMsg(MSN_VERSION, __vnk_version + __vnk_versionSuffix), MT_HELLO);
 }
 
 function cmdWhere ()
@@ -1155,4 +1562,3 @@ function cmdWhere ()
     displayCallStack();
     return true;
 }
-

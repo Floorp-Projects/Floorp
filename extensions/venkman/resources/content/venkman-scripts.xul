@@ -57,15 +57,19 @@
     <script src="chrome://communicator/content/contentAreaDD.js"/>
     <script src="chrome://global/content/strres.js"/>
   
+    <script src="chrome://venkman/content/command-manager.js"/>
+    <script src="chrome://venkman/content/menu-manager.js"/>
+    <script src="chrome://venkman/content/view-manager.js"/>
     <script src="chrome://venkman/content/tree-utils.js"/>
     <script src="chrome://venkman/content/file-utils.js"/>
     <script src="chrome://venkman/content/html-consts.js"/>
-    <script src="chrome://venkman/content/command-manager.js"/>
   
     <script src="chrome://venkman/content/venkman-utils.js"/>
     <script src="chrome://venkman/content/venkman-static.js"/>
     <script src="chrome://venkman/content/venkman-handlers.js"/>
     <script src="chrome://venkman/content/venkman-debugger.js"/>
+    <script src="chrome://venkman/content/venkman-profiler.js"/>
+    <script src="chrome://venkman/content/venkman-jsdurl.js"/>
     <script src="chrome://venkman/content/venkman-url-loader.js"/>
     <script src="chrome://venkman/content/venkman-commands.js"/>
     <script src="chrome://venkman/content/venkman-prefs.js"/>
@@ -73,7 +77,8 @@
     <script src="chrome://venkman/content/venkman-menus.js"/>
     <script src="chrome://venkman/content/venkman-msg.js"/>
     <script src="chrome://venkman/content/venkman-munger.js"/>
-    <script src="chrome://venkman/content/venkman-trees.js"/>
+    <script src="chrome://venkman/content/venkman-views.js"/>
+    <script src="chrome://venkman/content/venkman-records.js"/>
   
   </overlaytarget>
 

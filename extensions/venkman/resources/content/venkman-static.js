@@ -33,6 +33,13 @@
  *
  */
 
+const __vnk_version        = "0.9.23";
+const __vnk_requiredLocale = "0.9.x";
+var   __vnk_versionSuffix  = "";
+
+const __vnk_counter_url = 
+"http://www.hacksrus.com/~ginda/venkman/launch-counter/next-sequence.cgi"
+
 /* dd is declared first in venkman-utils.js */
 var warn;
 var ASSERT;
@@ -55,24 +62,23 @@ else
     dd = warn = ASSERT = function (){};
 
 
-var MAX_STR_LEN = 100;  /* max string length to display before changing to
-                         * "n characters" display mode.  as a var so we can
-                         * change it later. */
 const MAX_WORD_LEN = 20; /* number of characters to display before forcing a 
                           * potential word break point (in the console.) */
 
-var console = new Object();
+const LINE_BREAKABLE = 0x01;
+const LINE_BREAK     = 0x02;
+const LINE_FBREAK    = 0x04;
 
-console.version = "0.8.5";
+var console = new Object();
 
 /* |this|less functions */
 
 function setStopState(state)
 {
-    var tb = document.getElementById("maintoolbar-stop");
+    var tb = console.ui["stop-button"];
     if (state)
     {
-        console.jsds.interruptHook = console._executionHook;
+        console.jsds.interruptHook = console.executionHook;
         tb.setAttribute("willStop", "true");
     }
     else
@@ -84,46 +90,17 @@ function setStopState(state)
 
 function setProfileState(state)
 {
-    var tb = document.getElementById("maintoolbar-profile-tb");
+    var tb = console.ui["profile-button"];
     if (state)
     {
-        console.jsds.flags |= COLLECT_PROFILE_DATA;
+        console.profiler.enabled = true;
         tb.setAttribute("profile", "true");
     }
     else
     {
-        console.jsds.flags &= ~COLLECT_PROFILE_DATA;
+        console.profiler.enabled = false;
         tb.removeAttribute("profile");
     }
-}
-
-function setPrettyPrintState(state)
-{
-    var tb = document.getElementById("maintoolbar-pprint");
-    if (state)
-    {
-        console.sourceView.prettyPrint = true;
-        tb.setAttribute("state", "true");
-    }
-    else
-    {
-        console.sourceView.prettyPrint = false;
-        tb.removeAttribute("state");
-    }
-
-    if (console.sourceView.details)
-        dispatch("find-script", {scriptRec: console.sourceView.details});
-
-}
-    
-function enableReloadCommand()
-{
-    console.commandManager.commands["reload"].enabled = true;
-}
-
-function disableReloadCommand()
-{
-    console.commandManager.commands["reload"].enabled = false;
 }
 
 function enableDebugCommands()
@@ -148,22 +125,45 @@ function disableDebugCommands()
         cmds[i].enabled = true;
 }
 
+function isURLVenkman (url)
+{
+    return (url.search (/^chrome:\/\/venkman/) == 0 &&
+            url.search (/test/) == -1);
+}
+
+function isURLFiltered (url)
+{
+    return ((console.prefs["enableChromeFilter"] &&
+            url.search(/^chrome:/) == 0) ||
+            (url.search (/^chrome:\/\/venkman/) == 0 &&
+             url.search (/test/) == -1));
+}
 
 function displayUsageError (e, details)
 {
-    display (details, MT_ERROR);
+    if (!("isInteractive" in e) || !e.isInteractive)
+    {
+        var caller = Components.stack.caller.caller;
+        if (caller.name == "dispatch")
+            caller = caller.caller;
+        var error = new Error (details);
+        error.fileName = caller.filename;
+        error.lineNumber = caller.lineNumber;
+        error.name = caller.name;
+        display (formatException(error), MT_ERROR);
+    }
+    else
+    {
+        display (details, MT_ERROR);
+    }
+    
     display (getMsg(MSN_FMT_USAGE, [e.command.name, e.command.usage]), MT_USAGE);
 }
 
 function dispatch (text, e, flags)
 {
     if (!e)
-    {
-        if (typeof CommandManager.cx == "object")
-            e = CommandManager.cx;
-        else
-            e = new Object();
-    }
+        e = new Object();
 
     if (!("inputData" in e))
         e.inputData = "";
@@ -175,18 +175,18 @@ function dispatch (text, e, flags)
     
     /* list matching commands */
     ary = console.commandManager.list (e.commandText, flags);
+    var rv = null;
     var i;
     
     switch (ary.length)
     {            
         case 0:
             /* no match, try again */
-            display (getMsg(MSN_ERR_NO_COMMAND, e.commandText), MT_ERROR);
+            display (getMsg(MSN_NO_CMDMATCH, e.commandText), MT_ERROR);
             break;
             
         case 1:
             /* one match, good for you */
-            var rv;
             var ex;
             try
             {
@@ -197,6 +197,9 @@ function dispatch (text, e, flags)
                 display (getMsg(MSN_ERR_INTERNAL_DISPATCH, ary[0].name),
                          MT_ERROR);
                 display (formatException(ex), MT_ERROR);
+                dd (formatException(ex), MT_ERROR);
+                if ("stack" in ex)
+                    dd (ex.stack);
             }
             break;
             
@@ -209,19 +212,51 @@ function dispatch (text, e, flags)
                              [e.commandText, ary.length, str]), MT_ERROR);
     }
 
-    return null;
+    return rv;
 }
 
 function dispatchCommand (command, e, flags)
 {
-    if (!e)
+    function callHooks (command, isBefore)
     {
-        if (typeof CommandManager.cx == "object")
-            e = CommandManager.cx;
+        var names, hooks;
+        
+        if (isBefore)
+        {
+            names = command.beforeHookNames;
+            hooks = command.beforeHooks;
+        }
         else
-            e = new Object();
-    }
+        {
+            names = command.afterHookNames;
+            hooks = command.afterHooks;
+        }
 
+        var len = names.length;
+        
+        for (var i = 0; i < len; ++i)
+        {
+            var name = names[i];
+            if ("dbgDispatch" in console && console.dbgDispatch)
+            {
+                dd ("calling " + (isBefore ? "before" : "after") + 
+                    " hook " + name);
+            }
+            try
+            {
+                hooks[name](e);
+            }
+            catch (ex)
+            {
+                display (getMsg(MSN_ERR_INTERNAL_HOOK, name), MT_ERROR);
+                display (formatException(ex), MT_ERROR);
+                dd (formatException(ex), MT_ERROR);
+                if ("stack" in ex)
+                    dd (ex.stack);
+            }
+        }
+    };
+    
     e.command = command;
 
     if ((e.command.flags & CMD_NEED_STACK) &&
@@ -235,10 +270,15 @@ function dispatchCommand (command, e, flags)
     if (!e.command.enabled)
     {
         /* disabled command */
-        display (getMsg(MSG_ERR_DISABLED, e.command.name),
+        display (getMsg(MSN_ERR_DISABLED, e.command.name),
                  MT_ERROR);
         return null;
-    }                
+    }
+    
+    var h, i;
+    
+    if ("beforeHooks" in e.command)
+        callHooks (e.command, true);
     
     if (typeof e.command.func == "function")
     {
@@ -253,9 +293,19 @@ function dispatchCommand (command, e, flags)
         {
             if ("dbgDispatch" in console && console.dbgDispatch)
             {
-                dd ("dispatching command ``" + e.command.name+ "''\n" +
-                    dumpObjectTree(e));
+                var str = "";
+                for (i = 0; i < e.command.argNames.length; ++i)
+                {
+                    var name = e.command.argNames[i];
+                    if (name in e)
+                        str += " " + name + ": " + e[name];
+                    else if (name != ":")
+                        str += " ?" + name;
+                }
+                dd (">>> " + e.command.name + str + " <<<");
                 e.returnValue = e.command.func(e);
+                /* set console.lastEvent *after* dispatching, so the dispatched
+                 * function actually get's a chance to see the last event. */
                 console.lastEvent = e;
             }
             else
@@ -264,29 +314,30 @@ function dispatchCommand (command, e, flags)
             }
 
         }
-        return e;
     }
-    
-    if (typeof e.command.func == "string")
+    else if (typeof e.command.func == "string")
     {
         /* dispatch an alias (semicolon delimited list of subcommands) */
         var commandList = e.command.func.split(";");
-        for (var i = 0; i < commandList.length; ++i)
+        for (i = 0; i < commandList.length; ++i)
         {
+            var newEvent = Clone (e);
+            delete newEvent.command;            
             commandList[i] = stringTrim(commandList[i]);
-            if (i == 1)
-                dispatch (commandList[i] + " " + e.inputData, e, flags);
-            else
-                dispatch (commandList[i], null, flags);
+            dispatch (commandList[i], newEvent, flags);
         }
-        return e;
+    }
+    else
+    {
+        display (getMsg(MSN_ERR_NOTIMPLEMENTED, e.command.name),
+                 MT_ERROR);
+        return null;
     }
 
-    /* by process of elimination... */
-    display (getMsg(MSN_ERR_NOTIMPLEMENTED, e.command.name),
-             MT_ERROR);
+    if ("afterHooks" in e.command)
+        callHooks (e.command, false);
 
-    return null;    
+    return ("returnValue" in e) ? e.returnValue : null;
 }
 
 function feedback(e, message, msgtype)
@@ -298,75 +349,20 @@ function feedback(e, message, msgtype)
 function display(message, msgtype)
 {
     if (typeof message == "undefined")
-        throw new BadMojo(ERR_REQUIRED_PARAM, "message");
+        throw new RequiredParam ("message");
 
     if (typeof message != "string" &&
         !(message instanceof Components.interfaces.nsIDOMHTMLElement))
-        throw new BadMojo(ERR_INVALID_PARAM, ["message", String(message)]);
+        throw new InvalidParam ("message", message);
 
-    if (typeof msgtype == "undefined")
-        msgtype = MT_INFO;
-    
-    function setAttribs (obj, c, attrs)
-    {
-        if (attrs)
-        {
-            for (var a in attrs)
-                obj.setAttribute (a, attrs[a]);
-        }
-        obj.setAttribute("class", c);
-        obj.setAttribute("msg-type", msgtype);
-    }
-
-    var msgRow = htmlTR("msg");
-    setAttribs(msgRow, "msg");
-
-    var msgData = htmlTD();
-    setAttribs(msgData, "msg-data");
-    if (typeof message == "string")
-        msgData.appendChild(stringToDOM(message));
-    else
-        msgData.appendChild(message);
-
-    msgRow.appendChild(msgData);
-
-    console._outputElement.appendChild(msgRow);
-    console.scrollDown();
+    if ("capturedMsgs" in console)
+        console.capturedMsgs.push ([message, msgtype]);
+        
+    dispatchCommand(console.coDisplayHook, 
+                    { message: message, msgtype: msgtype });
 }
 
-function setCurrentSource (url, line)
-{
-    var fileRec = console.scripts[url];
-    ASSERT (fileRec, "Attempt to focus unknown source: " + url);
-
-    var lastFile = console._sourceTreeView.url
-    if (lastFile)
-    {
-        var lastFileRec = console.scripts[lastFile];
-        if (lastFileRec)
-        {
-            lastFileRec.lastLine = 
-                console._sourceTreeView.tree.getFirstVisibleRow();
-        }
-    }
-    
-    console._sourceTreeView.setSourceArray(fileRec.source, url);
-    var hdr = document.getElementById("source-line-text");
-    hdr.setAttribute ("label", url);
-    hdr = document.getElementById("source-line-number");
-    hdr.setAttribute ("label", "");    
-}
-
-function scrollSourceLineTop (url, lineNumber)
-{
-    focusSource(url);
-    if (toTop)
-        console._sourceTreeView.tree.scrollToRow(lineNumber - 1);
-    else
-        console._sourceTreeView.centerLine(lineNumber - 1);
-}
-
-function evalInDebuggerScope (script)
+function evalInDebuggerScope (script, rethrow)
 {
     try
     {
@@ -374,12 +370,15 @@ function evalInDebuggerScope (script)
     }
     catch (ex)
     {
+        if (rethrow)
+            throw ex;
+
         display (formatEvalException(ex), MT_ERROR);
         return null;
     }
 }
 
-function evalInTargetScope (script)
+function evalInTargetScope (script, rethrow)
 {
     if (!console.frames)
     {
@@ -391,6 +390,9 @@ function evalInTargetScope (script)
     
     if (!getCurrentFrame().eval (script, MSG_VAL_CONSOLE, 1, rval))
     {
+        if (rethrow)
+            throw rval.value;
+        
         //dd ("exception: " + dumpObjectTree(rval.value));
         display (formatEvalException (rval.value), MT_ERROR);
         return null;
@@ -408,7 +410,7 @@ function formatException (ex)
 
     if (ex instanceof Error)
         return getMsg (MSN_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName, 
-                                             ex.lineNumber]);    
+                                             ex.lineNumber]);
 
     return String(ex);
 }
@@ -423,193 +425,249 @@ function formatEvalException (ex)
     return getMsg (MSN_EVAL_THREW,  String(ex));
 }
 
-function htmlVA (attribs, href, contents)
-{
-    if (!attribs)
-        attribs = {"class": "venkman-link", target: "_content"};
-    else if (attribs["class"])
-        attribs["class"] += " venkman-link";
-    else
-        attribs["class"] = "venkman-link";
-
-    if (!contents)
-    {
-        contents = htmlSpan();
-        insertHyphenatedWord (href, contents);
-    }
-    
-    return htmlA (attribs, href, contents);
-}
-    
 function init()
-{    
-    var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
-    if (ary)
-    {
-        console.userAgent = "Venkman " + console.version + " [Mozilla " + 
-            ary[1] + "/" + ary[2] + "]";
-    }
-    else
-    {
-        console.userAgent = "Venkman " + console.version + " [" + 
-            navigator.userAgent + "]";
-    }
-
+{
+    dd ("init {");
+    
+    var i;
     const WW_CTRID = "@mozilla.org/embedcomp/window-watcher;1";
     const nsIWindowWatcher = Components.interfaces.nsIWindowWatcher;
+
     console.windowWatcher =
         Components.classes[WW_CTRID].getService(nsIWindowWatcher);
 
-    console.debuggerWindow = getBaseWindowFromWindow(window);
-
-    initPrefs();
-    initCommands();
-    initMenus();
-    initTrees();
-    
-    disableDebugCommands();
+    console.baseWindow = getBaseWindowFromWindow(window);
+    console.mainWindow = window;
+    console.dnd = nsDragAndDrop;
     
     console.files = new Object();
+    console.pluginState = new Object();
 
-    console._outputDocument = 
-        document.getElementById("output-iframe").contentDocument;
-
-    console._outputElement = 
-        console._outputDocument.getElementById("output-tbody");    
-
-    console._slInputElement = 
-        document.getElementById("input-single-line");
-    console._slInputElement.focus();
- 
-    console._munger = new CMunger();
-    console._munger.enabled = true;
-    console._munger.addRule
-        ("link", /((\w+):\/\/[^<>()\'\"\s:]+|www(\.[^.<>()\'\"\s:]+){2,})/,
-         insertLink);
-    console._munger.addRule ("word-hyphenator",
-                             new RegExp ("(\\S{" + MAX_WORD_LEN + ",})"),
-                             insertHyphenatedWord);
-
+    console._statusStack = new Array();
     console._lastStackDepth = -1;
 
-    initDebugger(); /* debugger may need display() to init */
+    initMsgs();
+    initPrefs();
+    initCommands();
+    initJSDURL();
+    
+    /* Some commonly used commands, cached now, for use with dispatchCommand. */
+    var cm = console.commandManager;
+    console.coManagerCreated    = cm.commands["hook-script-manager-created"];
+    console.coManagerDestroyed  = cm.commands["hook-script-manager-destroyed"];
+    console.coInstanceCreated   = cm.commands["hook-script-instance-created"];
+    console.coInstanceSealed    = cm.commands["hook-script-instance-sealed"];
+    console.coInstanceDestroyed = cm.commands["hook-script-instance-destroyed"];
+    console.coDisplayHook       = cm.commands["hook-session-display"];
+    console.coFindScript        = cm.commands["find-script"];
 
-    console.ui = new Object();
-    console.ui["status-text"] = document.getElementById ("status-text");
-    console.ui["sl-input"] = document.getElementById ("input-single-line");
-    console._statusStack = new Array();
-    console.pluginState = new Object();
-    dispatch("version");
+    console.commandManager.addHooks (console.hooks);
 
-    var ary = console.prefs["initialScripts"].split();
-    for (var i = 0; i < ary.length; ++i)
+    initMenus();
+
+    console.capturedMsgs = new Array();
+    var ary = console.prefs["initialScripts"].split(/\s*;\s*/);
+    for (i = 0; i < ary.length; ++i)
     {
         var url = stringTrim(ary[i]);
         if (url)
-            dispatch ("loadd", {url: ary[i]});
+            dispatch ("loadd", { url: ary[i] });
     }
+
+    dispatch ("hook-venkman-started");
+
+    initViews();
+    initRecords();
+    initHandlers(); // handlers may notice windows, which need views and records
+
+    createMainMenu(document);
+    createMainToolbar(document);
+
+    console.ui = {
+        "status-text": document.getElementById ("status-text"),
+        "profile-button": document.getElementById ("maintoolbar:profile-tb"),
+        "stop-button": document.getElementById ("maintoolbar:stop")
+    };    
+
+    disableDebugCommands();
+    
+    initDebugger();
+    initProfiler();
+
+    fetchLaunchCount();
     
     console.sourceText = new HelpText();
 
-    dispatch("commands");
-    dispatch("help");
+    console.pushStatus(MSG_STATUS_DEFAULT);
 
-    initHandlers();
+    dispatch ("restore-layout default");
+
+    var startupMsgs = console.capturedMsgs;
+    delete console.capturedMsgs;
+    
+    dispatch ("version");
+
+    for (i = 0; i < startupMsgs.length; ++i)
+        display (startupMsgs[i][0], startupMsgs[i][1]);
+    
+    display (MSG_TIP1_HELP);
+    display (MSG_TIP2_HELP);
+    //dispatch ("commands");
+    //dispatch ("help");
+
+    dispatch ("pprint", { toggle: console.prefs["prettyprint"] });
+
+    if (MSG_LOCALE_VERSION != __vnk_requiredLocale)
+    {
+        display (getMsg(MSN_BAD_LOCALE,
+                        [__vnk_requiredLocale, MSG_LOCALE_VERSION]),
+                 MT_WARN);
+    }
+
+    console.initialized = true;
+    dispatch ("hook-venkman-started");
+
+    dd ("}");
 }
 
 function destroy ()
 {
-    destroyTrees();
+    if (console.prefs["saveLayoutOnExit"])
+        dispatch ("save-layout default");
+    
+    destroyViews();
     destroyHandlers();
     detachDebugger();
 }
 
-function insertHyphenatedWord (longWord, containerTag)
+function paintHack (i)
 {
-    var wordParts = splitLongWord (longWord, MAX_WORD_LEN);
-    containerTag.appendChild (htmlSpacer());
-    for (var i = 0; i < wordParts.length; ++i)
+    /* when stopping at a timeout, we don't repaint correctly.
+     * by jamming a character into this hidden text box, we can force
+     * a repaint.
+     */
+    for (var w in console.viewManager.windows)
     {
-        containerTag.appendChild (document.createTextNode (wordParts[i]));
-        if (i != wordParts.length)
-            containerTag.appendChild (htmlSpacer());
+        var window = console.viewManager.windows[w];
+        var textbox = window.document.getElementById("paint-hack");
+        if (textbox)
+        {
+            textbox.value = " ";
+            textbox.value = "";
+        }
+    }
+    
+    if (!i)
+        i = 0;
+    
+    if (i < 4)
+        setTimeout (paintHack, 250, i + 1);
+}   
+
+function fetchLaunchCount()
+{
+    ++console.prefs["startupCount"];
+
+    if (!toBool(console.prefs["permitStartupHit"]))
+        return;
+
+    function onLoad ()
+    {
+        var ary = String(r.responseText).match(/(\d+)/);
+        if (ary)
+            display (getMsg(MSN_LAUNCH_COUNT,
+                            [console.prefs["startupCount"], ary[1]]));
+    };
+    
+    var r = new XMLHttpRequest();
+    r.onload = onLoad;
+    r.open ("GET",
+            __vnk_counter_url + "?local=" +  console.prefs["startupCount"] +
+            "&version=" + __vnk_version);
+    r.send (null);
+}
+    
+console.__defineGetter__ ("userAgent", con_ua);
+function con_ua ()
+{
+    var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
+    if (ary)
+    {
+        return ("Venkman " + __vnk_version + __vnk_versionSuffix + 
+                " [Mozilla " + ary[1] + "/" + ary[2] + "]");
+        
+    }
+
+    return ("Venkman " + __vnk_version + __vnk_versionSuffix + " [" + 
+            navigator.userAgent + "]");
+}
+
+console.hooks = new Object();
+
+console.hooks["hook-script-instance-sealed"] =
+function hookScriptSealed (e)
+{
+    for (var fbp in console.fbreaks)
+    {
+        if (e.scriptInstance.url.search(console.fbreaks[fbp].url) != -1)
+        {
+            e.scriptInstance.setBreakpoint(console.fbreaks[fbp].lineNumber,
+                                           console.fbreaks[fbp]);
+        }
     }
 }
 
-function insertLink (matchText, containerTag)
+console.hooks["hook-debug-stop"] =
+function hookDebugStop (e)
 {
-    var href;
-    
-    if (matchText.indexOf ("://") == -1)
-        href = "http://" + matchText;
-    else
-        href = matchText;
-    
-    var anchor = htmlVA (null, href);
-    containerTag.appendChild (anchor);    
+    var jsdFrame = setCurrentFrameByIndex(0);
+    var type = console.trapType;
+
+    //var frameRec = console.stackView.stack.childData[0];
+    //console.pushStatus (getMsg(MSN_STATUS_STOPPED, [frameRec.functionName,
+    //                                                frameRec.location]));
+    var showHeader = (type != jsdIExecutionHook.TYPE_INTERRUPTED ||
+                      console._lastStackDepth != console.frames.length);
+    var sourceContext = (type == jsdIExecutionHook.TYPE_INTERRUPTED) ? 0 : 2
+        
+    displayFrame (jsdFrame, 0, showHeader, sourceContext);    
+
+    var scriptWrapper = getScriptWrapper(jsdFrame.script);
+    if (scriptWrapper)
+    {
+        dispatchCommand (console.coFindScript,
+                         { scriptWrapper: scriptWrapper, targetPc: jsdFrame.pc })
+    }
+
+    console._lastStackDepth = console.frames.length;
+
+    enableDebugCommands();
+
+    //XXX
+    paintHack();
 }
 
-function matchFileName (pattern)
+console.hooks["hook-venkman-query-exit"] =
+function hookQueryExit (e)
 {
-    var rv = new Array();
-    
-    for (var scriptName in console.scripts)
-        if (scriptName.search(pattern) != -1)
-            rv.push (scriptName);
-
-    return rv;
+    if ("frames" in console)
+    {
+        if (confirm(MSG_QUERY_CLOSE))
+        {
+            dispatch ("cont");
+            console.__exitAfterContinue__ = true;
+        }
+        e.returnValue = false;
+    }
 }
 
-function refreshValues()
+console.hooks["eval"] =
+function hookEval()
 {
     for (var i = 0; i < $.length; ++i)
         $[i].refresh();
-    console.stackView.refresh();
 }
-
-function stringToDOM (message)
-{
-    var ary = message.split ("\n");
-    var span = htmlSpan();
     
-    for (var l in ary)
-    {
-        console._munger.munge(ary[l], span);
-        span.appendChild (htmlBR());
-    }
-
-    return span;
-}
-
-/* some of the drag and drop code has an annoying appetite for exceptions.  any
- * exception raised during a dnd operation causes the operation to fail silently.
- * passing the function through one of these adapters lets you use "return
- * false on planned failure" symantics, and dumps any exceptions caught
- * to the console. */
-function Prophylactic (parent, fun)
-{
-    function adapter ()
-    {
-        var ex;
-        var rv = false;
-
-        try
-        {
-            rv = fun.apply (parent, arguments);
-        }
-        catch (ex)
-        {
-            dd ("Prophylactic caught an exception:\n" +
-                dumpObjectTree(ex));
-        }
-
-        if (!rv)
-            throw "goodger";
-    }
-        
-    return adapter;
-}    
-
 /* exceptions */
 
 /* keep this list in sync with exceptionMsgNames in venkman-msg.js */
@@ -627,7 +685,7 @@ function BadMojo (errno, params)
     var msg = getMsg(exceptionMsgNames[errno], params);
     
     dd ("new BadMojo (" + errno + ": " + msg + ") from\n" + getStackTrace());
-    this.message= msg;
+    this.message = msg;
     this.errno = errno;
     this.fileName = Components.stack.caller.filename;
     this.lineNumber = Components.stack.caller.lineNumber;
@@ -640,17 +698,42 @@ function bm_tostring ()
     return formatException (this);
 }
 
+function Failure (reason)
+{
+    if (typeof reason == "undefined")
+        reason = MSG_ERR_DEFAULT_REASON;
+
+    var obj = new BadMojo(ERR_FAILURE, [reason]);
+    obj.fileName = Components.stack.caller.filename;
+    obj.lineNumber = Components.stack.caller.lineNumber;
+    obj.functionName = Components.stack.caller.name;
+    
+    return obj;
+}
+
+function InvalidParam (name, value)
+{
+    var obj = new BadMojo(ERR_INVALID_PARAM, [name, String(value)]);
+    obj.fileName = Components.stack.caller.filename;
+    obj.lineNumber = Components.stack.caller.lineNumber;
+    obj.functionName = Components.stack.caller.name;
+    return obj;
+}
+
+function RequiredParam (name)
+{
+    var obj = new BadMojo(ERR_REQUIRED_PARAM, name);
+    obj.fileName = Components.stack.caller.filename;
+    obj.lineNumber = Components.stack.caller.lineNumber;
+    obj.functionName = Components.stack.caller.name;
+    return obj;
+}
+
 /* console object */
 
-/* input history (up/down arrow) related vars */
-console.inputHistory = new Array();
-console.lastHistoryReferenced = -1;
-console.incompleteLine = "";
-
-/* tab complete */
-console._lastTabUp = new Date();
-
 console.display = display;
+console.dispatch = dispatch;
+console.dispatchCommand = dispatchCommand;
 
 console.__defineGetter__ ("status", con_getstatus);
 function con_getstatus ()
@@ -661,9 +744,27 @@ function con_getstatus ()
 console.__defineSetter__ ("status", con_setstatus);
 function con_setstatus (msg)
 {
-    if (!msg)
-        msg = console._statusStack[console._statusStack.length - 1];
-    
+    var topMsg = console._statusStack[console._statusStack.length - 1];
+
+    if (msg)
+    {        
+        if ("_statusTimeout" in console)
+        {
+            clearTimeout (console._statusTimeout);
+            delete console._statusTimeout;
+        }
+        if (msg != topMsg)
+        {
+            console._statusTimeout = setTimeout (con_setstatus,
+                                                 console.prefs["statusDuration"],
+                                                 null);
+        }
+    }
+    else
+    {
+        msg = topMsg;
+    }
+
     console.ui["status-text"].setAttribute ("label", msg);
 }
 
@@ -681,310 +782,460 @@ function con_getppline ()
     return this._pp_stopLine;
 }
 
-console.getProfileSummary =
-function con_getProfileSummary (fileName, key)
-{
-    if (typeof key == "undefined")
-        key = "max";
-    
-    function compare (a, b)
-    {
-        if (a.key > b.key)
-            return 1;
-        if (a.key < b.key)
-            return -1;
-        return 0;
-    };
-    
-    function addScriptRec(s)
-    {
-        var ex;
-        
-        try
-        {
-            var ccount = s.script.callCount;
-            var tot_ms = roundTo(s.script.totalExecutionTime, 2);
-            var min_ms = roundTo(s.script.minExecutionTime, 2);
-            var max_ms = roundTo(s.script.maxExecutionTime, 2);
-            var avg_ms = roundTo(s.script.totalExecutionTime / ccount, 2);
-            var recurse = s.script.maxRecurseDepth;
-
-            var obj = new Object();
-            obj.total = tot_ms;
-            obj.ccount = ccount;
-            obj.avg = avg_ms;
-            obj.min = min_ms;
-            obj.max = max_ms;
-            obj.recurse = recurse;
-            obj.path = s.script.fileName;
-            obj.file = getFileFromPath(obj.path);
-            obj.base = s.script.baseLineNumber;
-            obj.end = obj.base + s.script.lineExtent;
-            obj.fun = s.functionName;
-            obj.str = obj.fun  + ":" + obj.base + "-" + obj.end +
-                ", calls " + ccount +
-                (obj.recurse ? " (depth " + recurse +")" : "") +
-                ", total " + tot_ms + 
-                "ms, min " + min_ms +
-                "ms, max " + max_ms +
-                "ms, avg " + avg_ms + "ms.";
-            obj.key = obj[key];
-            list.push (obj);
-        }
-        catch (ex)
-        {
-            /* This function is called under duress, and the script representd
-             * by |s| may get collected at any point.  When that happens,
-             * attempting to access to the profile data will throw this
-             * exception.
-             */
-            if (ex == Components.results.NS_ERROR_NOT_AVAILABLE)
-            {
-                display (getMsg(MSG_PROFILE_LOST, formatScript(s)), MT_WARN);
-            }
-            else
-            {
-                throw ex;
-            }
-            
-        }
-        
-    };
-
-    function addScriptContainer (container)
-    {
-        for (var i = 0; i < container.childData.length; ++i)
-        {
-            if (container.childData[i].script.callCount)
-                addScriptRec(container.childData[i]);
-        }
-    };
-    
-    var list = new Array();
-    list.key = key;
-    
-    if (!fileName)
-    {
-        for (var c in console.scripts)
-            addScriptContainer (console.scripts[c]);
-    } else {
-        if (!(fileName in console.scripts))
-            return null;
-        addScriptContainer (console.scripts[fileName]);
-    }
-    
-    list.sort(compare);
-    return list;
-}
-        
-function loadTemplate(url)
-{
-    var lines = loadURLNow(url);
-    if (!lines)
-        return null;
-
-    var obj = new Object();
-    var i;
-
-    var sections = 
-        {"fileHeader"    : /^<!--@section-start-->/m,
-         "sectionHeader" : /^<!--@range-start-->/m,
-         "rangeHeader"   : /^<!--@item-start-->/m,
-         "itemBody"      : /^<!--@item-end-->/m,
-         "rangeFooter"   : /^<!--@range-end-->/m,
-         "sectionFooter" : /^<!--@section-end-->/m,
-         "fileFooter"    : 0
-        };
-
-    for (var s in sections)
-    {
-        if (sections[s])
-        {
-            i = lines.search(sections[s]);
-            if (i == -1)
-                throw "Cant match " + String(sections[s]);
-            obj[s] = lines.substr(0, i - 1);
-            i = lines.indexOf("\n", i);
-            lines = lines.substr(i);
-        }
-        else
-        {
-            obj[s] = lines;
-            lines = "";
-        }
-    }
-
-    return obj;
-}
-    
-function writeHeaderHTML(file, tpl)
-{
-    file.tpl = loadTemplate(console.prefs["profile.template.html"]);
-    file.fileData = {
-        "\\$full-date"    : String(Date()),
-        "\\$user-agent"   : navigator.userAgent,
-        "\\$venkman-agent": console.userAgent
-    };
-    file.write(replaceStrings(file.tpl.fileHeader, file.fileData));
-};
-
-function writeSummaryHTML(file, summary, fileName)
-{
-    function scale(x) { return roundTo(K * x, 2); };
-
-    function writeSummaryEntry()
-    {
-        var entryData = {
-            "\\$item-number-next": summary.length - i + 1,
-            "\\$item-number-prev": summary.length - i - 1,
-            "\\$item-number"     : summary.length - i,
-            "\\$item-name"       : r.path,
-            "\\$item-summary"    : r.str,
-            "\\$item-min-pct"    : scale(r.min),
-            "\\$item-below-pct"  : scale(r.avg - r.min),
-            "\\$item-above-pct"  : scale(r.max - r.avg),
-            "\\$time-max"        : r.max,
-            "\\$time-min"        : r.min,
-            "\\$time-avg"        : r.avg,
-            "\\$time-tot"        : r.total,
-            "\\$call-count"      : r.ccount,
-            "\\$funcion-name"    : r.fun,
-            "\\$file-name"       : r.file,
-            "\\$full-url"        : r.path,
-            "\\$line-start"      : r.base,
-            "\\$line-end"        : r.end,
-            "__proto__": rangeData
-        };
-    
-        file.write(replaceStrings(file.tpl.itemBody, entryData));
-    };
-    
-    if (!summary || summary.length < 1)
-        return;
-
-    if ("sumNo" in file)
-        ++file.sumNo;
-    else
-        file.sumNo = 1;
-
-    var headerData = {
-        "\\$section-number-prev": file.sumNo - 1,
-        "\\$section-number-next": file.sumNo + 1,
-        "\\$section-number"     : file.sumNo,
-        "\\$section-link"       : fileName ? "<a class='section-link' href='" +
-                                  fileName + "'>" + fileName + "</a>" :
-                                  "** All Files **",
-        "__proto__"             : file.fileData
-    };
-
-    file.write(replaceStrings(file.tpl.sectionHeader, headerData));
-
-    const MAX_WIDTH = 90;
-    var ranges = console.prefs["profile.ranges"].split(",");
-    if (!ranges.length)
-        throw "Bad value for pref profile.ranges";
-    for (i = 0; i < ranges.length; ++i)
-        ranges[i] = Number(ranges[i]);
-    ranges.push(0); // push two 0's to the end of the list so the user doesn't
-    ranges.push(0); // have to.
-    var rangeIndex = 1;
-    var lastRangeIndex = 0;
-    var K = 1;
-    var rangeIter = 0;
-    for (var i = summary.length - 1; i >= 0; --i)
-    {
-        var r = summary[i];
-        while (r.key && r.key <= ranges[rangeIndex])
-            ++rangeIndex;
-
-        if (lastRangeIndex != rangeIndex)
-        {
-            ++rangeIter;
-            K = MAX_WIDTH / ranges[rangeIndex - 1];
-            var rangeData = {
-                "\\$range-min"        : ranges[rangeIndex],
-                "\\$range-max"        : ranges[rangeIndex - 1],
-                "\\$range-number-prev": rangeIter - 1,
-                "\\$range-number-next": rangeIter,
-                "\\$range-number"     : rangeIter,
-                "__proto__"           : headerData
-            };
-            if (rangeIndex > 0)
-                file.write(replaceStrings(file.tpl.rangeFooter, rangeData));
-            file.write(replaceStrings(file.tpl.rangeHeader, rangeData));
-            lastRangeIndex = rangeIndex;
-        }
-        writeSummaryEntry();
-    }
-
-    file.write(replaceStrings(file.tpl.rangeFooter, rangeData));
-    file.write(replaceStrings(file.tpl.sectionFooter, headerData));
-}
-
-function writeFooterHTML(file)
-{
-    file.write(replaceStrings(file.tpl.fileFooter, file.fileData));
-}
-
 console.pushStatus =
 function con_pushstatus (msg)
 {
-    console._statusStack.push (console.status);
+    console._statusStack.push (msg);
     console.status = msg;
 }
 
 console.popStatus =
 function con_popstatus ()
 {
-    console.status = console._statusStack.pop();
+    console._statusStack.pop();
+    console.status = console._statusStack[console._statusStack.length - 1];
 }
 
-console.scrollDown =
-function con_scrolldn ()
+function createDOMForSourceText (sourceText, container)
 {
-    window.frames[0].scrollTo(0, window.frames[0].document.height);
+    if (!ASSERT(sourceText.isLoaded, "sourceText is not loaded"))
+        return;
+    
+    var document = container.ownerDocument;
+    if (!ASSERT(document, "container has no owner document, using default"))
+        document = window.document
+
+    var sourceContainer = document.createElement ("source-listing");
+    
+    const COMMENT = 0;
+    const STRING1 = 1;
+    const STRING2 = 2;
+    const WORD    = 3;
+    const NUMBER  = 4;
+    const OTHER   = 5;
+    
+    var keywords = {
+        "abstract": 1, "boolean": 1, "break": 1, "byte": 1, "case": 1,
+        "catch": 1, "char": 1, "class": 1, "const": 1, "continue": 1,
+        "debugger": 1, "default": 1, "delete": 1, "do": 1, "double": 1,
+        "else": 1, "enum": 1, "export": 1, "export": 1, "extends": 1,
+        "false": 1, "final": 1, "finally": 1, "float": 1, "for": 1,
+        "function": 1, "goto": 1, "if": 1, "implements": 1, "import": 1,
+        "in": 1, "instanceof": 1, "int": 1, "interface": 1, "long": 1,
+        "native": 1, "new": 1, "null": 1, "package": 1, "private": 1,
+        "protected": 1, "public": 1, "return": 1, "short": 1, "static": 1,
+        "switch": 1, "synchronized": 1, "this": 1, "throw": 1, "throws": 1,
+        "transient": 1, "true": 1, "try": 1, "typeof": 1, "var": 1, "void": 1,
+        "while": 1, "with": 1
+    };
+
+    function mungeLine (line, parentNode, previousState, previousNode)
+    {
+        if (!previousState)
+            previousState = OTHER;
+        
+        function closePhrase (phrase)
+        {
+            /* put |phrase| into a DOM node, and append that node to
+             * |sourceContainer|.  If |phrase| is the same type as the
+             * |previousNode|, insert it there instead. */
+            if (!phrase)
+            {
+                previousState = OTHER;
+                return;
+            }
+
+            var textNode = document.createTextNode (phrase);
+            var nodeName;
+            
+            switch (previousState)
+            {
+                case COMMENT:
+                    nodeName = "c";
+                    break;            
+                case STRING1:
+                case STRING2:
+                    nodeName = "s";
+                    break;
+                case WORD:
+                    if (phrase in keywords)
+                        nodeName = "k";
+                    else
+                        nodeName = "w";
+                    break;
+                case NUMBER:
+                case OTHER:
+                    parentNode.appendChild (textNode);
+                    previousState = OTHER;
+                    previousNode = null;
+                    return;
+            }
+
+            if (previousNode && previousNode.localName == nodeName)
+            {
+                previousNode.appendChild (textNode);
+            }
+            else
+            {
+                previousNode = document.createElement (nodeName);
+                previousNode.appendChild (textNode);
+                parentNode.appendChild (previousNode);
+            }
+
+            previousState = OTHER;
+            return;
+        };
+    
+        var pos;
+        var ch, ch2;
+        var expr;
+    
+        while (line.length > 0)
+        {
+            /* scan a line of text.  |pos| always one *past* the end of the
+             * phrase we just scanned. */
+
+            switch (previousState)
+            {
+                case COMMENT:
+                    /* look for the end of a slash-star comment,
+                     * slash-slash comments are handled down below, because
+                     * we know for sure that it's the last phrase on this line.
+                     */
+                    pos = line.search (/\*\//);
+                    if (pos != -1)
+                        pos += 2;
+                    break;
+                    
+                case STRING1:
+                case STRING2:
+                    /* look for the end of a single or double quoted string. */
+                    if (previousState == STRING1)
+                    {
+                        ch = "'";
+                        expr = /\'/;
+                    }
+                    else
+                    {
+                        ch = "\"";
+                        expr = /\"/;
+                    }
+
+                    if (line[0] == ch)
+                    {
+                        pos = 1;
+                    }
+                    else
+                    {
+                        pos = line.search (expr);
+                        if (pos > 0 && line[pos - 1] == "\\")
+                        {
+                            /* arg, the quote we found was escaped, fall back
+                             * to scanning a character at a time. */
+                            var done = false;
+                            for (pos = 0; !done && pos < line.length; ++pos)
+                            {
+                                if (line[pos] == "\\")
+                                    ++pos;
+                                else if (line[pos] == ch)
+                                    done = true;
+                            }
+                        }
+                        else
+                        {
+                            /* no slash before the end quote, it *must* be
+                             * the end of the string. */
+                            if (pos != -1)
+                                ++pos;
+                        }
+                    }
+                    break;
+
+                case WORD:
+                    /* look for the end of something that qualifies as
+                     * an identifier. */
+                    var wordPattern = /[^a-zA-Z0-9_\$]/;
+                    pos = line.search(wordPattern);
+                    while (pos > -1 && line[pos] == "\\")
+                    {
+                        /* if we ended with a \ character, then the slash
+                         * and the character after it are part of this word.
+                         * the characters following may also be part of the
+                         * word. */
+                        pos += 2;
+                        var newPos = line.substr(pos).search(wordPattern);
+                        if (newPos > -1)
+                            pos += newPos;
+                    }
+                    break;
+
+                case NUMBER:
+                    /* look for the end of a number */
+                    pos = line.search (/[^0-9\.]/);
+                    break;
+
+                case OTHER:
+                    /* look for the end of anything else, like whitespace
+                     * or operators. */
+                    pos = line.search (/[0-9a-zA-Z_\$\"\']|\\|\/\/|\/\*/);
+                    break;
+            }
+
+            if (pos == -1)
+            {
+                /* couldn't find an end for the current state, close out the 
+                 * rest of the line.
+                 */
+                if (previousState == COMMENT || previousState == STRING1 ||
+                    previousState == STRING2)
+                {
+                    var savedState = previousState;
+                    closePhrase(line);
+                    previousState = savedState;
+                }
+                else
+                {
+                    closePhrase(line);
+                }
+
+                line = "";
+            }
+            else
+            {
+                /* pos has a non -1 value, close out what we found, and move
+                 * along. */
+                if (previousState == STRING1 || previousState == STRING2)
+                {
+                    /* strings are a special case because they actually are
+                     * considered to start *after* the leading quote,
+                     * and they end *before* the trailing quote. */
+                    if (pos == 1)
+                    {
+                        /* empty string */
+                        previousState = OTHER;
+                    }
+                    else
+                    {
+                        /* non-empty string, close out the contents of the
+                         * string. */
+                        closePhrase(line.substr (0, pos - 1));
+                    }
+                    
+                    /* close the trailing quote. */
+                    closePhrase (line[pos - 1]);
+                }
+                else
+                {
+                    /* non-string phrase, close the whole deal. */
+                    closePhrase(line.substr (0, pos));
+                }
+                
+                if (pos)
+                {
+                    /* continue on with the rest of the line */
+                    line = line.substr (pos);
+                }
+            }
+            
+            if (line)
+            {
+                /* figure out what the next token looks like. */
+                ch = line[0];
+                ch2 = (line.length > 1) ? line[1] : "";
+                
+                if (ch == "/" && ch2 == "/")
+                {
+                    /* slash-slash comment, the last thing on this line. */
+                    previousState = COMMENT;
+                    closePhrase(line);
+                    line = "";
+                }
+                else if (ch == "'")
+                {
+                    closePhrase("'");
+                    line = line.substr(1);
+                    previousState = STRING1;
+                }
+                else if (ch == "\"")
+                {
+                    closePhrase("\"");
+                    line = line.substr(1);
+                    previousState = STRING2;
+                }
+                else if (ch == "/" && ch2 == "*")
+                {
+                    previousState = COMMENT;
+                }
+                else if (ch.search (/[a-zA-Z_\\\$]/) == 0)
+                {
+                    previousState = WORD;
+                }
+                else if (ch.search (/[0-9]/) == 0)
+                {
+                    previousState = NUMBER;
+                }
+            }
+        }
+
+        parentNode.appendChild (document.createTextNode ("\n"));
+
+        return { previousState: previousState, previousNode: previousNode };
+    };
+
+    function processMarginChunk (start, callback, margin)
+    {
+        /* build a chunk of the left margin. */
+        dd ("processMarginChunk " + start + " {");
+        const CHUNK_SIZE = 500;
+        const CHUNK_DELAY = 100;
+        
+        if (!margin)
+        {
+            margin = document.createElement ("left-margin");
+            sourceContainer.appendChild (margin);
+        }
+        
+        var stop = Math.min (sourceText.lines.length, start + CHUNK_SIZE);
+        var element;
+        for (var i = start; i < stop; ++i)
+        {
+            element = document.createElement ("num");
+            if ("lineMap" in sourceText && i in sourceText.lineMap &&
+                (sourceText.lineMap[i] & LINE_BREAKABLE))
+            {
+                element.setAttribute ("x", "t");
+            }
+
+            element.appendChild (document.createTextNode(i));
+            margin.appendChild (element);
+        }
+
+        if (i != sourceText.lines.length)
+        {
+            setTimeout (processMarginChunk, CHUNK_DELAY, i, callback, 
+                        margin);
+        }
+        else
+        {
+            callback();
+        }
+        dd ("}");
+    };
+    
+    function processSourceChunk (start, callback, container)
+    {
+        dd ("processSourceChunk " + start + " {");
+        /* build a chunk of the source text */
+        const CHUNK_SIZE = 250;
+        const CHUNK_DELAY = 100;
+
+        if (!container)
+        {
+            container = document.createElement ("source-lines");
+            sourceContainer.appendChild (container);
+        }
+
+        var stop = Math.min (sourceText.lines.length, start + CHUNK_SIZE);
+        var rv = { previousState: null, previousNode: null };
+        for (var i = start; i < stop; ++i)
+        {
+            rv = mungeLine (sourceText.lines[i], container, rv.previousState,
+                            rv.previousNode);
+        }
+
+        if (i != sourceText.lines.length)
+        {
+            setTimeout (processSourceChunk, CHUNK_DELAY, i, callback, 
+                        container);
+        }
+        else
+        {
+            callback();
+        }
+        dd ("}");
+    };
+    
+    function processSourceText ()
+    {
+        processSourceChunk (0, onComplete);
+    };
+    
+    function onComplete()
+    {
+        container.appendChild (sourceContainer);
+        dd ("}");
+    };
+
+    dd ("createDOMForSourceText " + sourceText.lines.length + " lines {");
+    processMarginChunk (0, processSourceText);
 }
 
-function SourceText (scriptContainer, url)
+function st_contentGetter ()
+{
+    if (!("_contentNode" in this))
+    {
+        this._contentNode = htmlSpan();
+        createDOMForSourceText (this, this._contentNode);
+    }
+    
+    return this._contentNode;
+}
+
+function SourceText (scriptInstance)
 {
     this.lines = new Array();
-    this.tabWidth = console.prefs["sourcetext.tab.width"];
-    this.fileName = url;
-    this.scriptContainer = scriptContainer;
-    this.lineMap = new Array();
+    this.tabWidth = console.prefs["tabWidth"];
+    if (scriptInstance instanceof ScriptInstance)
+    {
+        this.scriptInstance = scriptInstance;
+        this.url = scriptInstance.url;
+        this.jsdURL = JSD_URL_SCHEME + "source?location=" + escape(this.url) +
+            "&instance=" + scriptInstance.sequence;
+    }
+    else
+    {
+        /* assume scriptInstance is a string containing the filename */
+        this.url = scriptInstance;
+        this.jsdURL = JSD_URL_SCHEME + "source?location=" + escape(this.url);
+    }
+
+    this.shortName = getFileFromPath (this.url);
 }
 
-SourceText.prototype.invalidate =
-function st_invalidate ()
-{
-    if ("childData" in console.sourceView &&
-        console.sourceView.childData == this)
-    {
-        if (!("lastRowCount" in this) || 
-            this.lastRowCount != this.lines.length)
-        {
-            this.lastRowCount = this.lines.length;
-            console.sourceView.tree.rowCountChanged(0, this.lastRowCount);
-        }    
-        console.sourceView.tree.invalidate();
-    }
-}
+SourceText.prototype.__defineGetter__ ("contentNode", st_contentGetter);
 
 SourceText.prototype.onMarginClick =
 function st_marginclick (e, line)
 {
-    if (getBreakpoint(this.fileName, line))
+    //dd ("onMarginClick");
+    
+    if (!("scriptInstance" in this))
     {
-        clearBreakpoint (this.fileName, line);
+        dispatch ("fbreak", { url: this.url, line: line });
     }
     else
     {
-        if (this.scriptContainer)
-            setBreakpoint (this.fileName, line);
+        var parentBP = getFutureBreakpoint(this.url, line);
+        if (parentBP)
+        {
+            if (this.scriptInstance.hasBreakpoint(line))
+                this.scriptInstance.clearBreakpoint(line);
+            else
+                clearFutureBreakpoint(this.url, line);
+        }
         else
-            setFutureBreakpoint (this.fileName, line);
+        {
+            if (this.scriptInstance.hasBreakpoint(line))
+            {
+                this.scriptInstance.clearBreakpoint(line);
+            }
+            else
+            {
+                parentBP = setFutureBreakpoint(this.url, line);
+                this.scriptInstance.setBreakpoint (line, parentBP);
+            }
+        }
     }
-    console.sourceView.tree.invalidateRow(line - 1);
 }
 
 SourceText.prototype.isLoaded = false;
@@ -992,140 +1243,118 @@ SourceText.prototype.isLoaded = false;
 SourceText.prototype.reloadSource =
 function st_reloadsrc (cb)
 {
-    var sourceRec = this;
-    
     function reloadCB (status)
     {
-        sourceRec.invalidate();
         if (typeof cb == "function")
             cb(status);
     }
 
     this.isLoaded = false;
     this.lines = new Array();
-    this.invalidate();
+    delete this.markup;
     this.loadSource(reloadCB);
 }
 
-SourceText.prototype.markBreakableLines =
-function st_initmap()
+SourceText.prototype.onSourceLoaded =
+function st_oncomplete (data, url, status)
 {
+    dd ("source loaded " + url + ", " + status);
+    
     var sourceText = this;
     
-    function setFlag (line, flag)
+    function callall (status)
     {
-        if (line in sourceText.lineMap)
-            sourceText.lineMap[line] |= flag;
-        else
-            sourceText.lineMap[line] = flag;
-    }
-    
-    console.pushStatus (getMsg(MSN_STATUS_MARKING,
-                               this.scriptContainer.shortName));
-    
-    var scripts = this.scriptContainer.childData;
-    for (var i = 0; i < scripts.length; ++i)
-    {
-        var scriptRec = scripts[i];
-        var end = scriptRec.baseLineNumber + scriptRec.lineExtent;
-        for (var j = scriptRec.baseLineNumber; j < end; ++j)
+        while (sourceText.loadCallbacks.length)
         {
-            var script = scriptRec.script;
-            if (script.isLineExecutable(j + 1, PCMAP_SOURCETEXT)) {
-                setFlag (j, console.sourceView.LINE_BREAKABLE);
-            }
+            var cb = sourceText.loadCallbacks.pop();
+            cb (status);
         }
+        delete sourceText.loadCallbacks;
+    };
+            
+    delete this.isLoading;
+    
+    if (status != Components.results.NS_OK)
+    {
+        dd ("loadSource failed with status " + status + ", " + url);
+        callall (status);
+        return;
     }
 
-    console.popStatus();
+    if (!ASSERT(data, "loadSource succeeded but got no data"))
+        data = "";
+    
+    var ary = data.split(/\r\n|\n|\r/m);
+    for (var i = 0; i < ary.length; ++i)
+    {
+        /*
+         * The replace() strips control characters, we leave the tabs in
+         * so we can expand them to a per-file width before actually
+         * displaying them.
+         */
+        ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
+    }
+
+    this.lines = ary;
+
+    ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
+    if (ary)
+        this.tabWidth = ary[1];
+    
+    if ("scriptInstance" in this)
+    {
+        this.scriptInstance.guessFunctionNames(sourceText);
+        this.lineMap = this.scriptInstance.lineMap;
+    }
+
+    this.isLoaded = true;
+    dispatch ("hook-source-load-complete",
+              { sourceText: sourceText, status: status });
+    callall(status);
 }
+
 
 SourceText.prototype.loadSource =
 function st_loadsrc (cb)
 {
+    var sourceText = this;
+    
+    function onComplete (data, url, status)
+    {
+        sourceText.onSourceLoaded (data, url, status);
+    };
+
     if (this.isLoaded)
     {
         /* if we're loaded, callback right now, and return. */
         cb (Components.results.NS_OK);
         return;
     }
+
     if ("isLoading" in this)
     {
         /* if we're in the process of loading, make a note of the callback, and
          * return. */
-        if (!("extraCallbacks" in this))
-            this.extraCallbacks = new Array();
-        this.extraCallbacks.push (cb);
+        if (typeof cb == "function")
+            this.loadCallbacks.push (cb);
         return;
     }
+    else
+        this.loadCallbacks = new Array();
 
-    var sourceText = this;
+    if (typeof cb == "function")
+        this.loadCallbacks.push (cb);
     this.isLoading = true;    
     
-    var observer = {
-        onComplete: function oncomplete (data, url, status) {
-            function callall (status)
-            {
-                cb (status);
-                if ("extraCallbacks" in sourceText)
-                {
-                    while (sourceText.extraCallbacks)
-                    {
-                        cb = sourceText.extraCallbacks.pop();
-                        cb (status);
-                    }
-                    delete sourceText.extraCallbacks;
-                }
-            }
-            
-            delete sourceText.isLoading;
-            
-            if (status != Components.results.NS_OK)
-            {
-                dd ("loadSource failed with status " + status + ", " + url);
-                callall (status);
-                console.popStatus();                
-                return;
-            }
-            if (!ASSERT(data, "loadSource succeeded but got no data"))
-                data = "";
-                
-            var ary = data.split(/\r\n|\n|\r/m);
-            for (var i = 0; i < ary.length; ++i)
-            {
-                /*
-                 * The replace() strips control characters, we leave the tabs in
-                 * so we can expand them to a per-file width before actually
-                 * displaying them.
-                 */
-                ary[i] = new String(ary[i].replace(/[\x0-\x8]|[\xA-\x1A]/g, ""));
-            }
-            sourceText.lines = ary;
-            ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
-            if (ary)
-                sourceText.tabWidth = ary[1];
-            
-            if (sourceText.scriptContainer)
-            {
-                sourceText.scriptContainer.guessFunctionNames(sourceText);
-                sourceText.markBreakableLines();
-            }
-            sourceText.isLoaded = true;
-            sourceText.invalidate();
-            callall(status);
-            console.popStatus();
-        }
-    };
-
     var ex;
     var src;
-    var url = this.fileName;
-    console.pushStatus (getMsg(MSN_STATUS_LOADING, url));
+    var url = this.url;
     try
     {
-        src = loadURLNow(url);
-        observer.onComplete (src, url, Components.results.NS_OK);
-        this.invalidate();
+        if (url.search (/^javascript:/i) == 0)
+            src = url;
+        else
+            src = loadURLNow(url);
         delete this.isLoading;
     }
     catch (ex)
@@ -1133,82 +1362,103 @@ function st_loadsrc (cb)
         /* if we can't load it now, try to load it later */
         try
         {
-            loadURLAsync (url, observer);
+            dd ("trying async");
+            loadURLAsync (url, { onComplete: onComplete });
+            return;
         }
         catch (ex)
         {
             display (getMsg(MSN_ERR_SOURCE_LOAD_FAILED, [url, ex]), MT_ERROR);
-            observer.onComplete (src, url, Components.results.NS_ERROR_FAILURE);
-        }    
+            onComplete (src, url, Components.results.NS_ERROR_FAILURE);
+            return;
+        }
     }
+
+    onComplete (src, url, Components.results.NS_OK);
 }
 
-function PPSourceText (scriptRecord)
+function PPSourceText (scriptWrapper)
 {
-    this.scriptRecord = scriptRecord;
+    this.scriptWrapper = scriptWrapper;
     this.reloadSource();
+    this.shortName = scriptWrapper.functionName;
+    this.jsdURL = JSD_URL_SCHEME + "pprint?scriptWrapper=" + scriptWrapper.tag;
 }
 
 PPSourceText.prototype.isLoaded = true;
 
+PPSourceText.prototype.__defineGetter__ ("contentNode", st_contentGetter);
+
 PPSourceText.prototype.reloadSource =
-function (cb)
+function pp_reload (cb)
 {
-    var sourceText = this;
-    
-    function setFlag (line, flag)
+    try
     {
-        if (line in sourceText.lineMap)
-            sourceText.lineMap[line] |= flag;
-        else
-            sourceText.lineMap[line] = flag;
-    }
-
-    this.tabWidth = console.prefs["sourcetext.tab.width"];
-    this.fileName = this.scriptRecord.script.fileName;
-    this.lines = String(this.scriptRecord.script.functionSource).split("\n");
-    this.lineMap = new Array();
-    var len = this.lines.length;
-    for (var i = 0; i < len; ++i)
-    {
-        if (this.scriptRecord.script.isLineExecutable(i + 1, PCMAP_PRETTYPRINT))
+        var jsdScript = this.scriptWrapper.jsdScript;
+        this.tabWidth = console.prefs["tabWidth"];
+        this.url = jsdScript.fileName;
+        var lines = String(jsdScript.functionSource).split("\n");
+        var lineMap = new Array();
+        var len = lines.length;
+        for (var i = 0; i < len; ++i)
         {
-            setFlag (i, console.sourceView.LINE_BREAKABLE);
+            if (jsdScript.isLineExecutable(i + 1, PCMAP_PRETTYPRINT))
+                lineMap[i] = LINE_BREAKABLE;
         }
+        
+        for (var b in this.scriptWrapper.breaks)
+        {
+            var line = jsdScript.pcToLine(this.scriptWrapper.breaks[b].pc,
+                                          PCMAP_PRETTYPRINT);
+            arrayOrFlag (lineMap, line - 1, LINE_BREAK);
+        }
+        
+        this.lines = lines;
+        this.lineMap = lineMap;
+        delete this.markup;
+        
+        if (typeof cb == "function")
+            cb (Components.results.NS_OK);
     }
-
-    if (typeof cb == "function")
-        cb (Components.results.NS_OK);
+    catch (ex)
+    {
+        ASSERT(0, "caught exception reloading pretty printed source " + ex);
+        if (typeof cb == "function")
+            cb (Components.results.NS_ERROR_FAILURE);
+        this.lines = [String(MSG_CANT_PPRINT)];
+        this.lineMap = [0];
+    }           
 }
 
-PPSourceText.prototype.invalidate =
-function st_invalidate ()
+PPSourceText.prototype.onMarginClick =
+function st_marginclick (e, line)
 {
-    dd ("invalidate ppsourcetext");
-    
-    if ("childData" in console.sourceView &&
-        console.sourceView.childData == this)
+    try
     {
-        var topRow = console.sourceView.tree.getFirstVisibleRow() + 1;
-        if (!("lastRowCount" in this) || 
-            this.lastRowCount != this.lines.length)
-        {
-            this.lastRowCount = this.lines.length;
-            console.sourceView.tree.rowCountChanged(0, this.lastRowCount);
-        }    
-        console.sourceView.scrollTo(topRow, -1);
-        console.sourceView.tree.invalidate();
+        var jsdScript = this.scriptWrapper.jsdScript;
+        var pc = jsdScript.lineToPc(line, PCMAP_PRETTYPRINT);
+        if (this.scriptWrapper.hasBreakpoint(pc))
+            this.scriptWrapper.clearBreakpoint(pc);
+        else
+            this.scriptWrapper.setBreakpoint(pc);
+    }
+    catch (ex)
+    {
+        ASSERT(0, "onMarginClick caught exception " + ex);
     }
 }
 
 function HelpText ()
 {
-    this.tabWidth = console.prefs["sourcetext.tab.width"];
-    this.fileName = "x-jsd:help";
+    this.tabWidth = console.prefs["tabWidth"];
+    this.jsdURL = this.url = JSD_URL_SCHEME + "help";
+    this.shortName = this.url;
     this.reloadSource();
 }
 
 HelpText.prototype.isLoaded = true;
+
+HelpText.prototype.__defineGetter__ ("contentNode", st_contentGetter);
 
 HelpText.prototype.reloadSource =
 function (cb)
@@ -1222,25 +1472,6 @@ function (cb)
     }
     
     this.lines = str.split("\n");
-    this.invalidate();
     if (typeof cb == "function")
         cb (Components.results.NS_OK);
-}
-        
-HelpText.prototype.invalidate =
-function st_invalidate ()
-{
-    if ("childData" in console.sourceView &&
-        console.sourceView.childData == this)
-    {
-        var topRow = console.sourceView.tree.getFirstVisibleRow() + 1;
-        if (!("lastRowCount" in this) || 
-            this.lastRowCount != this.lines.length)
-        {
-            this.lastRowCount = this.lines.length;
-            console.sourceView.tree.rowCountChanged(0, this.lastRowCount);
-        }    
-        console.sourceView.scrollTo(topRow, -1);
-        console.sourceView.tree.invalidate();
-    }
 }

@@ -58,10 +58,17 @@ if (DEBUG) {
     var _dd_currentIndent = "";
     var _dd_lastDumpWasOpen = false;
     var _dd_timeStack = new Array();
+    var _dd_disableDepth = Number.MAX_VALUE;
+    var _dd_currentDepth = 0;
     dd = function _dd (str) {
              if (typeof str != "string") {
                  dumpln (str);
              } else if (str[str.length - 1] == "{") {
+                 ++_dd_currentDepth;
+                 if (_dd_currentDepth >= _dd_disableDepth)
+                     return;
+                 if (str.indexOf("OFF") == 0)
+                     _dd_disableDepth = _dd_currentDepth;
                  _dd_timeStack.push (new Date());
                  if (_dd_lastDumpWasOpen)
                      dump("\n");
@@ -69,16 +76,21 @@ if (DEBUG) {
                  _dd_currentIndent += _dd_singleIndent;
                  _dd_lastDumpWasOpen = true;
              } else if (str[0] == "}") {
+                 if (--_dd_currentDepth >= _dd_disableDepth)
+                     return;
+                 _dd_disableDepth = Number.MAX_VALUE;
                  var sufx = (new Date() - _dd_timeStack.pop()) / 1000 + " sec";
                  _dd_currentIndent = 
                      _dd_currentIndent.substr (0, _dd_currentIndent.length -
                                                _dd_indentLength);
                  if (_dd_lastDumpWasOpen)
-                     dumpln ("} " + sufx);
+                     dumpln (str + " " + sufx);
                  else
                      dumpln (_dd_pfx + _dd_currentIndent + str + " " + sufx);
                  _dd_lastDumpWasOpen = false;
              } else {
+                 if (_dd_currentDepth >= _dd_disableDepth)
+                     return;
                  if (_dd_lastDumpWasOpen)
                      dump ("\n");
                  dumpln (_dd_pfx + _dd_currentIndent + str);
@@ -134,39 +146,46 @@ function dumpObjectTree (o, recurse, compress, level)
 
     for (i in o)
     {
-        
-        var t = typeof o[i];
-        switch (t)
+        var t;
+        try
         {
-            case "function":
-                var sfunc = String(o[i]).split("\n");
-                if (sfunc[2] == "    [native code]")
-                    sfunc = "[native code]";
-                else
-                    sfunc = sfunc.length + " lines";
-                s += pfx + tee + i + " (function) " + sfunc + "\n";
-                break;
-
-            case "object":
-                s += pfx + tee + i + " (object) " + o[i] + "\n";
-                if (!compress)
-                    s += pfx + "|\n";
-                if ((i != "parent") && (recurse))
-                    s += dumpObjectTree (o[i], recurse - 1,
-                                         compress, level + 1);
-                break;
-
-            case "string":
-                if (o[i].length > 200)
-                    s += pfx + tee + i + " (" + t + ") " + 
-                        o[i].length + " chars\n";
-                else
-                    s += pfx + tee + i + " (" + t + ") '" + o[i] + "'\n";
-                break;
-
-            default:
-                s += pfx + tee + i + " (" + t + ") " + o[i] + "\n";
-                
+            t = typeof o[i];
+        
+            switch (t)
+            {
+                case "function":
+                    var sfunc = String(o[i]).split("\n");
+                    if (sfunc[2] == "    [native code]")
+                        sfunc = "[native code]";
+                    else
+                        sfunc = sfunc.length + " lines";
+                    s += pfx + tee + i + " (function) " + sfunc + "\n";
+                    break;
+                    
+                case "object":
+                    s += pfx + tee + i + " (object) " + o[i] + "\n";
+                    if (!compress)
+                        s += pfx + "|\n";
+                    if ((i != "parent") && (recurse))
+                        s += dumpObjectTree (o[i], recurse - 1,
+                                             compress, level + 1);
+                    break;
+                    
+                case "string":
+                    if (o[i].length > 200)
+                        s += pfx + tee + i + " (" + t + ") " + 
+                            o[i].length + " chars\n";
+                    else
+                        s += pfx + tee + i + " (" + t + ") '" + o[i] + "'\n";
+                    break;
+                    
+                default:
+                    s += pfx + tee + i + " (" + t + ") " + o[i] + "\n";
+            }
+        }
+        catch (ex)
+        {
+            s += pfx + tee + i + " (exception) " + ex + "\n";
         }
 
         if (!compress)
@@ -180,6 +199,29 @@ function dumpObjectTree (o, recurse, compress, level)
     
 }
 
+function getChildById (element, id)
+{
+    var nl = element.getElementsByAttribute("id", id);
+    return nl.item(0);
+}
+
+function openTopWin (url)
+{
+    var window = getWindowByType ("navigator:browser");
+    if (window)
+    {
+        var base = getBaseWindowFromWindow (window);
+        if (base.enabled)
+        {
+            window.focus();
+            window._content.location.href = url;
+            return window;
+        }
+    }
+
+    return openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+}
+    
 function getWindowByType (windowType)
 {
     const MEDIATOR_CONTRACTID =
@@ -190,6 +232,101 @@ function getWindowByType (windowType)
         Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
 
     return windowManager.getMostRecentWindow(windowType);
+}
+
+function htmlVA (attribs, href, contents)
+{
+    if (!attribs)
+        attribs = {"class": "venkman-link", target: "_content"};
+    else if (attribs["class"])
+        attribs["class"] += " venkman-link";
+    else
+        attribs["class"] = "venkman-link";
+
+    if (!contents)
+    {
+        contents = htmlSpan();
+        insertHyphenatedWord (href, contents);
+    }
+    
+    return htmlA (attribs, href, contents);
+}
+
+function insertHyphenatedWord (longWord, containerTag)
+{
+    var wordParts = splitLongWord (longWord, MAX_WORD_LEN);
+    containerTag.appendChild (htmlWBR());
+    for (var i = 0; i < wordParts.length; ++i)
+    {
+        containerTag.appendChild (document.createTextNode (wordParts[i]));
+        if (i != wordParts.length)
+            containerTag.appendChild (htmlWBR());
+    }
+}
+
+function insertLink (matchText, containerTag)
+{
+    var href;
+    
+    if (matchText.indexOf ("://") == -1 && matchText.indexOf("x-jsd") != 0)
+        href = "http://" + matchText;
+    else
+        href = matchText;
+    
+    var anchor = htmlVA (null, href, matchText);
+    containerTag.appendChild (anchor);    
+}
+
+function toBool (val)
+{
+    switch (typeof val)
+    {
+        case "boolean":
+            return val;
+    
+        case "number":
+            return val != 0;
+            
+        default:
+            val = String(val);
+            /* fall through */
+
+        case "string":
+            return (val.search(/true|on|yes|1/i) != -1);
+    }
+
+    return null;
+}
+
+/* some of the drag and drop code has an annoying appetite for exceptions.  any
+ * exception raised during a dnd operation causes the operation to fail silently.
+ * passing the function through one of these adapters lets you use "return
+ * false on planned failure" symantics, and dumps any exceptions caught
+ * to the console. */
+function Prophylactic (parentObj, fun)
+{
+    function adapter ()
+    {
+        var ex;
+        var rv = false;
+        
+        try
+        {
+            rv = fun.apply (parentObj, arguments);
+        }
+        catch (ex)
+        {
+            dd ("Prophylactic caught an exception:\n" +
+                dumpObjectTree(ex));
+        }
+        
+        if (!rv)
+            throw "goodger";
+
+        return rv;
+    };
+    
+    return adapter;
 }
 
 function argumentsAsArray (args, start)
@@ -272,7 +409,8 @@ function Clone (obj)
 
 function getXULWindowFromWindow (win)
 {
-    var ex;
+    var rv;
+    //dd ("getXULWindowFromWindow: before: getInterface is " + win.getInterface);
     try
     {
         var requestor = win.QueryInterface(nsIInterfaceRequestor);
@@ -280,20 +418,23 @@ function getXULWindowFromWindow (win)
         var dsti = nav.QueryInterface(nsIDocShellTreeItem);
         var owner = dsti.treeOwner;
         requestor = owner.QueryInterface(nsIInterfaceRequestor);
-        return requestor.getInterface(nsIXULWindow);
+        rv = requestor.getInterface(nsIXULWindow);
     }
     catch (ex)
     {
+        rv = null;
         //dd ("not a nsIXULWindow: " + formatException(ex));
         /* ignore no-interface exception */
     }
 
-    return null;
+    //dd ("getXULWindowFromWindow: after: getInterface is " + win.getInterface);
+    return rv;
 }
 
 function getBaseWindowFromWindow (win)
 {
-    var ex;
+    var rv;
+    //dd ("getBaseWindowFromWindow: before: getInterface is " + win.getInterface);
     try
     {
         var requestor = win.QueryInterface(nsIInterfaceRequestor);
@@ -301,15 +442,17 @@ function getBaseWindowFromWindow (win)
         var dsti = nav.QueryInterface(nsIDocShellTreeItem);
         var owner = dsti.treeOwner;
         requestor = owner.QueryInterface(nsIInterfaceRequestor);
-        return requestor.getInterface(nsIBaseWindow);
+        rv = requestor.getInterface(nsIBaseWindow);
     }
     catch (ex)
     {
+        rv = null;
         //dd ("not a nsIXULWindow: " + formatException(ex));
         /* ignore no-interface exception */
     }
 
-    return null;
+    //dd ("getBaseWindowFromWindow: after: getInterface is " + win.getInterface);
+    return rv;
 }
 
 function getPathFromURL (url)
@@ -418,6 +561,37 @@ function keys (o)
     
 }
 
+function parseSections (str, sections)
+{
+    var rv = new Object();
+    var currentSection;
+
+    for (var s in sections)
+    {
+        if (!currentSection)
+            currentSection = s;
+        
+        if (sections[s])
+        {
+            var i = str.search(sections[s]);
+            if (i != -1)
+            {
+                rv[currentSection] = str.substr(0, i);
+                currentSection = 0;
+                str = RegExp.rightContext;
+                str = str.replace(/^(\n|\r|\r\n)/, "");
+            }
+        }
+        else
+        {
+            rv[currentSection] = str;
+            str = "";
+            break;
+        }
+    }
+
+    return rv;
+}
 
 function replaceStrings (str, obj)
 {
@@ -434,7 +608,6 @@ function stringTrim (s)
         return "";
     s = s.replace (/^\s+/, "");
     return s.replace (/\s+$/, "");
-    
 }
 
 function formatDateOffset (seconds, format)
@@ -506,6 +679,21 @@ function arraySpeak (ary, single, plural)
     
 }
 
+function arrayOrFlag (ary, i, flag)
+{
+    if (i in ary)
+        ary[i] |= flag;
+    else
+        ary[i] = flag;
+}
+
+function arrayAndFlag (ary, i, flag)
+{
+    if (i in ary)
+        ary[i] &= flag;
+    else
+        ary[i] = 0;
+}
 
 function arrayContains (ary, elem)
 {

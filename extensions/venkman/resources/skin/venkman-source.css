@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- tab-width: 4; indent-tabs-mode: nil -*-
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -33,18 +33,87 @@
  *
  */
 
-@import url(chrome://venkman/content/venkman-output-base.css);
-
-.msg-data[msg-type="ERROR"]:before {
-    color: orange;
+body {
+    margin: 0px;
+    padding: 0px;
 }
 
-.msg-data[msg-type="ERROR"] {
-    background: darkred;
-    color: white;
+source-listing {
+    display: block;
+    width: 100%;
+    font-family: monospace, sans-serif;
 }
 
-.msg-data[msg-type="ERROR"] a.venkman-link {
-    color: white;
+line {
+    width: 100%;
+    white-space: pre;
+    display: block;
+}
+
+line[highlighted] {
+    background: #EEEEEE;
+}
+
+line[highlighted] > num {
+    border-right: 2px #919bd6 solid;
+    background: #d5d5e0;
+}
+
+line[stoppedAt] {
+    background: #ecef34;
+}
+
+line[stoppedAt] > num {
     font-weight: bold;
+    border-right: 2px orange solid;
+    background: #ecef34;
+}
+
+margin {
+    -moz-user-select: none;
+    font-weight: bold;
+    background: #CCCCCC;
+    padding-bottom: 0.5em;
+    white-space: pre;
+    cursor: pointer;
+}
+
+margin[x="t"] {
+    color: #444444;
+}
+
+margin[x="t"]:hover {
+    color: slategrey;
+}
+
+margin[f="t"] {
+    background: orange;
+    color: white;
+}
+
+margin[b="t"] {
+    background: red;
+    color: white;
+}
+
+num {
+    padding-bottom: 0.5em;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-right: 10px;
+    border-left: 1px grey solid;
+    border-right: 2px #CCCCCC solid;
+    background: #EEEEEE;
+}
+
+k {
+    font-weight: bold;
+}
+
+c {
+    color: steelblue;
+}
+
+t {
+    color: darkgreen;
 }
