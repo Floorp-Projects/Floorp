@@ -37,6 +37,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
+#include "nsHTMLReflowMetrics.h"
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
