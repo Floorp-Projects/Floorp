@@ -1689,8 +1689,7 @@ CTreeIcon :: ImageIsReady ( )
 }
 
 void
-CTreeIcon :: DrawStandby ( const Point & inTopLeft, 
-								const IconTransformType inTransform ) const
+CTreeIcon :: DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const
 {
 	Rect where;
 	where.top = inTopLeft.v; where.left = inTopLeft.h;

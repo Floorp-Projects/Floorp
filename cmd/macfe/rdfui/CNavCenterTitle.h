@@ -58,8 +58,7 @@ protected:
 	virtual void ClickSelf ( const SMouseDownEvent & inMouseDown ) ;
 	
 	virtual	void DrawBeveledFill ( ) ;
-	virtual void DrawStandby ( const Point & inTopLeft, 
-								const IconTransformType inTransform ) const;
+	virtual void DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const;
 	virtual void EraseBackground ( HT_Resource inTopNode ) const ;
 	virtual void ImageIsReady ( ) ;
 	

@@ -79,8 +79,7 @@ public:
 protected:
 		
 		// Background image tiling stuff
-	virtual void DrawStandby ( const Point & inTopLeft, 
-								const IconTransformType inTransform ) const;
+	virtual void DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const;
 	virtual void DrawSelf ( ) ;
 	virtual void ImageIsReady ( ) ;
 	virtual void EraseTableBackground ( ) const;
@@ -258,8 +257,7 @@ public:
 	
 private:
 	void ImageIsReady ( ) ;
-	void DrawStandby ( const Point & inTopLeft, 
-								const IconTransformType inTransform ) const;
+	void DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const;
 	
 	const CHyperTreeFlexTable*	mTree;
 	HT_Resource					mNode;

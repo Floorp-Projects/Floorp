@@ -54,7 +54,7 @@ public:
 		// Draw the image. Will begin loading it if the data has not yet arrived and will
 		// draw the standby in its place. Pass zero's for width and height to use image defaults
 		// or the image will be scaled to what you put in.
-	void DrawImage ( const Point & inTopLeft, const IconTransformType inTransform,
+	void DrawImage ( const Point & inTopLeft, IconTransformType inTransform,
 						Uint32 inWidth, Uint32 inHeight ) const;
 	
 protected:
@@ -68,12 +68,11 @@ protected:
 	
 		// Draw a scaled image as an icon. Override to draw differently
 	virtual void DoDrawing ( DrawingState & inState, const Point & inTopLeft,
-								const IconTransformType inTransform, Uint32 inWidth,
+								IconTransformType inTransform, Uint32 inWidth,
 								Uint32 inHeight ) const ;
 	
 		// Draw something when the real image is not yet here.
-	virtual void DrawStandby ( const Point & inTopLeft, 
-								const IconTransformType inTransform ) const = 0;
+	virtual void DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const = 0;
 
 private:
 
@@ -101,7 +100,7 @@ protected:
 		// reinterpreted to mean the width and height of the area the image is being tiled
 		// in.
 	virtual void DoDrawing ( DrawingState & inState, const Point & inTopLeft,
-								const IconTransformType inTransform, Uint32 inWidth,
+								IconTransformType inTransform, Uint32 inWidth,
 								Uint32 inHeight ) const ;
 
 }; // class CTiledImageMixin

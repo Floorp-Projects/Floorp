@@ -73,7 +73,7 @@ CImageIconMixin :: ListenToMessage ( const MessageT inMessage, void* ioData )
 // draw the standby in its place
 //
 void 
-CImageIconMixin :: DrawImage ( const Point & inTopLeft, const IconTransformType inTransform, 
+CImageIconMixin :: DrawImage ( const Point & inTopLeft, IconTransformType inTransform, 
 								Uint32 inWidth, Uint32 inHeight ) const
 {
 	try { 
@@ -110,7 +110,7 @@ CImageIconMixin :: DrawImage ( const Point & inTopLeft, const IconTransformType 
 
 void
 CImageIconMixin :: DoDrawing ( DrawingState & inState, const Point & inTopLeft,
-								const IconTransformType inTransform, Uint32 inWidth, Uint32 inHeight ) const
+								IconTransformType inTransform, Uint32 inWidth, Uint32 inHeight ) const
 {
 	if ( inWidth == 0 && inHeight == 0 ) {
 		inWidth = inState.pixmap->pixmap.bounds.right;
@@ -158,7 +158,7 @@ CTiledImageMixin :: ~CTiledImageMixin ( )
 //
 void
 CTiledImageMixin :: DoDrawing ( DrawingState & inState, const Point & inTopLeft,
-								const IconTransformType inTransform, Uint32 inWidth, Uint32 inHeight ) const
+								IconTransformType inTransform, Uint32 inWidth, Uint32 inHeight ) const
 {
 	DrawTiledImage ( &inState, inTopLeft, 0, 0, inWidth, inHeight );
 

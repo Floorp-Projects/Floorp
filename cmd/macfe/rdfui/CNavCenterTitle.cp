@@ -179,7 +179,7 @@ CNavCenterStrip :: ImageIsReady ( )
 //
 void
 CNavCenterStrip :: DrawStandby ( const Point & /*inTopLeft*/, 
-									const IconTransformType /*inTransform*/ ) const
+									IconTransformType /*inTransform*/ ) const
 {
 	// we're just waiting for the image to come in, who cares if we don't use
 	// HT's color?
