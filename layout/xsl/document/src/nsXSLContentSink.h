@@ -33,7 +33,7 @@ public:
 
   nsresult Init(nsITransformMediator* aTM,
                 nsIDocument* aDoc,
-                nsIURL* aURL,
+                nsIURI* aURL,
                 nsIWebShell* aContainer);
 
   // nsISupports
@@ -69,6 +69,6 @@ nsresult
 NS_NewXSLContentSink(nsIXMLContentSink** aResult,
                      nsITransformMediator* aTM,
                      nsIDocument* aDoc,
-                     nsIURL* aURL,
+                     nsIURI* aURL,
                      nsIWebShell* aWebShell);
 #endif // nsXSLContentSink_h__
