@@ -62,7 +62,7 @@ nsSlidingSubstring::nsSlidingSubstring( const nsSlidingSubstring& aString )
     acquire_ownership_of_buffer_list();
   }
 
-nsSlidingSubstring::nsSlidingSubstring( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+nsSlidingSubstring::nsSlidingSubstring( const nsSlidingSubstring& aString, const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
     : mStart(aStart),
       mEnd(aEnd),
       mBufferList(aString.mBufferList),
@@ -80,7 +80,7 @@ nsSlidingSubstring::nsSlidingSubstring( const nsSlidingString& aString )
     acquire_ownership_of_buffer_list();
   }
 
-nsSlidingSubstring::nsSlidingSubstring( const nsSlidingString& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+nsSlidingSubstring::nsSlidingSubstring( const nsSlidingString& aString, const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
     : mStart(aStart),
       mEnd(aEnd),
       mBufferList(aString.mBufferList),
@@ -122,7 +122,7 @@ AllocateContiguousHandleWithData( Buffer_ptr aDummyHandlePtr, const nsAString& a
         PRUnichar* string_start_ptr = PRUnichar_ptr(NS_STATIC_CAST(unsigned char*, handle_ptr) + handle_size);
         PRUnichar* string_end_ptr   = string_start_ptr + string_length;
 
-        nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+        nsAString::const_iterator fromBegin, fromEnd;
         PRUnichar* toBegin = string_start_ptr;
         copy_string(aDataSource.BeginReading(fromBegin), aDataSource.EndReading(fromEnd), toBegin);
         result = new (handle_ptr) nsSharedBufferList::Buffer(string_start_ptr, string_end_ptr, string_start_ptr, string_end_ptr+1, PR_TRUE);
@@ -151,7 +151,7 @@ nsSlidingSubstring::Rebind( const nsSlidingSubstring& aString )
   }
 
 void
-nsSlidingSubstring::Rebind( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+nsSlidingSubstring::Rebind( const nsSlidingSubstring& aString, const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
   {
     release_ownership_of_buffer_list();
 
@@ -176,7 +176,7 @@ nsSlidingSubstring::Rebind( const nsSlidingString& aString )
   }
 
 void
-nsSlidingSubstring::Rebind( const nsSlidingString& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+nsSlidingSubstring::Rebind( const nsSlidingString& aString, const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
   {
     release_ownership_of_buffer_list();
 
@@ -291,7 +291,7 @@ nsSlidingString::AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PR
   }
 
 void
-nsSlidingString::InsertReadable( const nsAString& aReadable, const nsReadingIterator<PRUnichar>& aInsertPoint )
+nsSlidingString::InsertReadable( const nsAString& aReadable, const nsAString::const_iterator& aInsertPoint )
     /*
      * Warning: this routine manipulates the shared buffer list in an unexpected way.
      *  The original design did not really allow for insertions, but this call promises
@@ -319,7 +319,7 @@ nsSlidingString::InsertReadable( const nsAString& aReadable, const nsReadingIter
   }
 
 void
-nsSlidingString::DiscardPrefix( const nsReadingIterator<PRUnichar>& aIter )
+nsSlidingString::DiscardPrefix( const nsAString::const_iterator& aIter )
   {
     Position old_start(mStart);
     mStart = aIter;

@@ -116,7 +116,7 @@ class NS_COM nsSharedBufferList
 
             // iff |aIter| is a valid iterator into a |nsSharedBufferList|
           explicit
-          Position( const nsReadingIterator<PRUnichar>& aIter )
+          Position( const nsAString::const_iterator& aIter )
               : mBuffer( NS_CONST_CAST(Buffer*, NS_REINTERPRET_CAST(const Buffer*, aIter.fragment().mFragmentIdentifier)) ),
                 mPosInBuffer( NS_CONST_CAST(PRUnichar*, aIter.get()) )
             {
@@ -125,7 +125,7 @@ class NS_COM nsSharedBufferList
 
             // iff |aIter| is a valid iterator into a |nsSharedBufferList|
           Position&
-          operator=( const nsReadingIterator<PRUnichar>& aIter )
+          operator=( const nsAString::const_iterator& aIter )
             {
               mBuffer       = NS_CONST_CAST(Buffer*, NS_REINTERPRET_CAST(const Buffer*, aIter.fragment().mFragmentIdentifier));
               mPosInBuffer  = NS_CONST_CAST(PRUnichar*, aIter.get());

@@ -94,14 +94,14 @@ Distance_Impl( const nsReadingIterator<CharT>& aStart,
 
 NS_COM
 size_t
-Distance( const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+Distance( const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
   {
     return Distance_Impl(aStart, aEnd);
   }
 
 NS_COM
 size_t
-Distance( const nsReadingIterator<char>& aStart, const nsReadingIterator<char>& aEnd )
+Distance( const nsACString::const_iterator& aStart, const nsACString::const_iterator& aEnd )
   {
     return Distance_Impl(aStart, aEnd);
   }
@@ -150,9 +150,9 @@ CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest )
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
 
-    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    nsAString::const_iterator fromBegin, fromEnd;
 
-    nsWritingIterator<char> toBegin;
+    nsACString::iterator toBegin;
     LossyConvertEncoding<PRUnichar, char> converter(aDest.BeginWriting(toBegin).get());
     
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
@@ -165,9 +165,9 @@ CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
 
-    nsReadingIterator<char> fromBegin, fromEnd;
+    nsACString::const_iterator fromBegin, fromEnd;
 
-    nsWritingIterator<PRUnichar> toBegin;
+    nsAString::iterator toBegin;
     LossyConvertEncoding<char, PRUnichar> converter(aDest.BeginWriting(toBegin).get());
 
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
@@ -196,7 +196,7 @@ ToNewCString( const nsAString& aSource )
   {
     char* result = AllocateStringCopy(aSource, (char*)0);
 
-    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    nsAString::const_iterator fromBegin, fromEnd;
     LossyConvertEncoding<PRUnichar, char> converter(result);
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
     return result;
@@ -234,7 +234,7 @@ ToNewCString( const nsACString& aSource )
 
     char* result = AllocateStringCopy(aSource, (char*)0);
 
-    nsReadingIterator<char> fromBegin, fromEnd;
+    nsACString::const_iterator fromBegin, fromEnd;
     char* toBegin = result;
     *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), toBegin) = char(0);
     return result;
@@ -248,7 +248,7 @@ ToNewUnicode( const nsAString& aSource )
 
     PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
 
-    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    nsAString::const_iterator fromBegin, fromEnd;
     PRUnichar* toBegin = result;
     *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), toBegin) = PRUnichar(0);
     return result;
@@ -260,7 +260,7 @@ ToNewUnicode( const nsACString& aSource )
   {
     PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
 
-    nsReadingIterator<char> fromBegin, fromEnd;
+    nsACString::const_iterator fromBegin, fromEnd;
     LossyConvertEncoding<char, PRUnichar> converter(result);
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
     return result;
@@ -270,7 +270,7 @@ NS_COM
 PRUnichar*
 CopyUnicodeTo( const nsAString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, PRUint32 aLength )
   {
-    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    nsAString::const_iterator fromBegin, fromEnd;
     PRUnichar* toBegin = aDest;    
     copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ), aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ), toBegin);
     return aDest;
@@ -278,29 +278,29 @@ CopyUnicodeTo( const nsAString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, 
 
 NS_COM 
 void 
-CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
-               const nsReadingIterator<PRUnichar>& aSrcEnd,
+CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
+               const nsAString::const_iterator& aSrcEnd,
                nsAString& aDest )
   {
-    nsWritingIterator<PRUnichar> writer;
+    nsAString::iterator writer;
     aDest.SetLength(Distance(aSrcStart, aSrcEnd));
     aDest.BeginWriting(writer);
-    nsReadingIterator<PRUnichar> fromBegin(aSrcStart);
+    nsAString::const_iterator fromBegin(aSrcStart);
     
     copy_string(fromBegin, aSrcEnd, writer);
   }
 
 NS_COM 
 void 
-AppendUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
-                 const nsReadingIterator<PRUnichar>& aSrcEnd,
+AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
+                 const nsAString::const_iterator& aSrcEnd,
                  nsAString& aDest )
   {
-    nsWritingIterator<PRUnichar> writer;
+    nsAString::iterator writer;
     PRUint32 oldLength = aDest.Length();
     aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd));
     aDest.BeginWriting(writer).advance(oldLength);
-    nsReadingIterator<PRUnichar> fromBegin(aSrcStart);
+    nsAString::const_iterator fromBegin(aSrcStart);
     
     copy_string(fromBegin, aSrcEnd, writer);
   }
@@ -314,12 +314,12 @@ IsASCII( const nsAString& aString )
 
     // Don't want to use |copy_string| for this task, since we can stop at the first non-ASCII character
 
-    nsReadingIterator<PRUnichar> done_reading;
+    nsAString::const_iterator done_reading;
     aString.EndReading(done_reading);
 
       // for each chunk of |aString|...
     PRUint32 fragmentLength = 0;
-    nsReadingIterator<PRUnichar> iter;
+    nsAString::const_iterator iter;
     for ( aString.BeginReading(iter); iter != done_reading; iter.advance( PRInt32(fragmentLength) ) )
       {
         fragmentLength = PRUint32(iter.size_forward());
@@ -503,28 +503,28 @@ class CaseInsensitiveCharComparator
 
 NS_COM
 PRBool
-FindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+FindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseSensitivePRUnicharComparator());
   }
 
 NS_COM
 PRBool
-FindInReadable( const nsACString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+FindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseSensitiveCharComparator());
   }
 
 NS_COM
 PRBool
-CaseInsensitiveFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitivePRUnicharComparator());
   }
 
 NS_COM
 PRBool
-CaseInsensitiveFindInReadable( const nsACString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
   {
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitiveCharComparator());
   }
@@ -536,12 +536,12 @@ CaseInsensitiveFindInReadable( const nsACString& aPattern, nsReadingIterator<cha
    */
 NS_COM
 PRBool
-RFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
   {
     PRBool found_it = PR_FALSE;
 
-    nsReadingIterator<PRUnichar> savedSearchEnd(aSearchEnd);
-    nsReadingIterator<PRUnichar> searchStart(aSearchStart), searchEnd(aSearchEnd);
+    nsAString::const_iterator savedSearchEnd(aSearchEnd);
+    nsAString::const_iterator searchStart(aSearchStart), searchEnd(aSearchEnd);
 
     while ( searchStart != searchEnd )
       {
@@ -569,12 +569,12 @@ RFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearc
 
 NS_COM
 PRBool
-RFindInReadable( const nsACString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
   {
     PRBool found_it = PR_FALSE;
 
-    nsReadingIterator<char> savedSearchEnd(aSearchEnd);
-    nsReadingIterator<char> searchStart(aSearchStart), searchEnd(aSearchEnd);
+    nsACString::const_iterator savedSearchEnd(aSearchEnd);
+    nsACString::const_iterator searchStart(aSearchStart), searchEnd(aSearchEnd);
 
     while ( searchStart != searchEnd )
       {
@@ -629,10 +629,10 @@ nsSubstituteString::MaxLength() const
 void
 nsSubstituteString::CountMatches() const
   {
-    nsReadingIterator<PRUnichar> textEnd;
-    nsReadingIterator<PRUnichar> searchEnd = mText.EndReading(textEnd);
+    nsAString::const_iterator textEnd;
+    nsAString::const_iterator searchEnd = mText.EndReading(textEnd);
 
-    nsReadingIterator<PRUnichar> searchStart;
+    nsAString::const_iterator searchStart;
     mText.BeginReading(searchStart);
 
     PRInt32 numberOfMatches = 0;
@@ -657,14 +657,14 @@ nsSubstituteString::Length() const
 PRUnichar*
 nsSubstituteString::operator()( PRUnichar* aDestBuffer ) const
   {
-    nsReadingIterator<PRUnichar> replacementEnd;
+    nsAString::const_iterator replacementEnd;
     mReplacement.EndReading(replacementEnd);
 
-    nsReadingIterator<PRUnichar> textEnd;
-    nsReadingIterator<PRUnichar> searchEnd = mText.EndReading(textEnd);
+    nsAString::const_iterator textEnd;
+    nsAString::const_iterator searchEnd = mText.EndReading(textEnd);
 
-    nsReadingIterator<PRUnichar> uncopiedStart;
-    nsReadingIterator<PRUnichar> searchStart = mText.BeginReading(uncopiedStart);
+    nsAString::const_iterator uncopiedStart;
+    nsAString::const_iterator searchStart = mText.BeginReading(uncopiedStart);
 
     while ( FindInReadable(mPattern, searchStart, searchEnd) )
       {
@@ -674,7 +674,7 @@ nsSubstituteString::operator()( PRUnichar* aDestBuffer ) const
         copy_string(uncopiedStart, searchStart, aDestBuffer);  // updates |aDestBuffer|
 
           // copy the replacement
-        nsReadingIterator<PRUnichar> replacementStart;
+        nsAString::const_iterator replacementStart;
         copy_string(mReplacement.BeginReading(replacementStart), replacementEnd, aDestBuffer);
 
           // start searching from where the current match ends
@@ -716,10 +716,10 @@ nsSubstituteCString::MaxLength() const
 void
 nsSubstituteCString::CountMatches() const
   {
-    nsReadingIterator<char> textEnd;
-    nsReadingIterator<char> searchEnd = mText.EndReading(textEnd);
+    nsACString::const_iterator textEnd;
+    nsACString::const_iterator searchEnd = mText.EndReading(textEnd);
 
-    nsReadingIterator<char> searchStart;
+    nsACString::const_iterator searchStart;
     mText.BeginReading(searchStart);
 
     PRInt32 numberOfMatches = 0;
@@ -744,14 +744,14 @@ nsSubstituteCString::Length() const
 char*
 nsSubstituteCString::operator()( char* aDestBuffer ) const
   {
-    nsReadingIterator<char> replacementEnd;
+    nsACString::const_iterator replacementEnd;
     mReplacement.EndReading(replacementEnd);
 
-    nsReadingIterator<char> textEnd;
-    nsReadingIterator<char> searchEnd = mText.EndReading(textEnd);
+    nsACString::const_iterator textEnd;
+    nsACString::const_iterator searchEnd = mText.EndReading(textEnd);
 
-    nsReadingIterator<char> uncopiedStart;
-    nsReadingIterator<char> searchStart = mText.BeginReading(uncopiedStart);
+    nsACString::const_iterator uncopiedStart;
+    nsACString::const_iterator searchStart = mText.BeginReading(uncopiedStart);
 
     while ( FindInReadable(mPattern, searchStart, searchEnd) )
       {
@@ -761,7 +761,7 @@ nsSubstituteCString::operator()( char* aDestBuffer ) const
         copy_string(uncopiedStart, searchStart, aDestBuffer);  // updates |aDestBuffer|
 
           // copy the replacement
-        nsReadingIterator<char> replacementStart;
+        nsACString::const_iterator replacementStart;
         copy_string(mReplacement.BeginReading(replacementStart), replacementEnd, aDestBuffer);
 
           // start searching from where the current match ends
@@ -776,7 +776,7 @@ nsSubstituteCString::operator()( char* aDestBuffer ) const
 
 NS_COM 
 PRBool 
-FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart, const nsReadingIterator<PRUnichar>& aSearchEnd )
+FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd )
   {
     while ( aSearchStart != aSearchEnd )
       {
@@ -800,7 +800,7 @@ FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart,
 
 NS_COM 
 PRBool 
-FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchStart, const nsReadingIterator<char>& aSearchEnd )
+FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd )
   {
     while ( aSearchStart != aSearchEnd )
       {
@@ -828,7 +828,7 @@ CountCharInReadable( const nsAString& aStr,
                      PRUnichar aChar )
 {
   PRUint32 count = 0;
-  nsReadingIterator<PRUnichar> begin, end;
+  nsAString::const_iterator begin, end;
   
   aStr.BeginReading(begin);
   aStr.EndReading(end);
@@ -849,7 +849,7 @@ CountCharInReadable( const nsACString& aStr,
                      char aChar )
 {
   PRUint32 count = 0;
-  nsReadingIterator<char> begin, end;
+  nsACString::const_iterator begin, end;
   
   aStr.BeginReading(begin);
   aStr.EndReading(end);
