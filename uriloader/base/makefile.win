@@ -20,7 +20,23 @@
 MODULE = uriloader
 
 DEPTH = ..\..
-REQUIRES	= xpcom string necko dom exthandler js docshell layout widget caps intl webshell xpconnect raptor content gfx
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  exthandler \
+		  js \
+		  docshell \
+		  layout \
+		  widget \
+		  caps \
+		  intl \
+		  webshell \
+		  xpconnect \
+		  raptor \
+		  content \
+		  gfx \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

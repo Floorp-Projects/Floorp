@@ -23,7 +23,14 @@
 
 DEPTH=..\..\..\..
 MODULE		= imgjpeg
-REQUIRES	= xpcom string necko gfx gfx2 imglib2 jpeg
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  gfx \
+		  gfx2 \
+		  imglib2 \
+		  jpeg \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= imgjpeg

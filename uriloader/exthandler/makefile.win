@@ -20,7 +20,20 @@
 MODULE = exthandler
 
 DEPTH = ..\..
-REQUIRES	= xpcom string mimetype uriloader dom necko rdf webshell helperAppDlg plugin gkplugin pref raptor
+REQUIRES	= xpcom \
+		  string \
+		  mimetype \
+		  uriloader \
+		  dom \
+		  necko \
+		  rdf \
+		  webshell \
+		  helperAppDlg \
+		  plugin \
+		  gkplugin \
+		  pref \
+		  raptor \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

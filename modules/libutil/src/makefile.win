@@ -32,7 +32,8 @@ CPP_OBJS=.\$(OBJDIR)\stopwatch.obj \
 C_OBJS=.\$(OBJDIR)\obs.obj
 
 LINCS=-I$(DEPTH)\include
-REQUIRES=xpcom
+REQUIRES	= xpcom \
+		  $(NULL)
 !include $(DEPTH)\config\rules.mak
 
 install::  $(LIBRARY)

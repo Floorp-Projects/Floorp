@@ -23,7 +23,38 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=contenthtmldoc_s 
 MODULE=content
-REQUIRES	= xpcom string widget dom necko htmlparser locale view js intl webshell docshell cookie caps util timer uconv pref uriloader rdf chardet nkcache appcomps lwbrk gfx2 imglib2 xpconnect unicharutil layout gfx bookmarks
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  dom \
+		  necko \
+		  htmlparser \
+		  locale \
+		  view \
+		  js \
+		  intl \
+		  webshell \
+		  docshell \
+		  cookie \
+		  caps \
+		  util \
+		  timer \
+		  uconv \
+		  pref \
+		  uriloader \
+		  rdf \
+		  chardet \
+		  nkcache \
+		  appcomps \
+		  lwbrk \
+		  gfx2 \
+		  imglib2 \
+		  xpconnect \
+		  unicharutil \
+		  layout \
+		  gfx \
+		  bookmarks \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN 
 !if defined(XP_NEW_SELECTION)

@@ -20,7 +20,12 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-REQUIRES=xpcom string intl necko locale
+REQUIRES	= xpcom \
+		  string \
+		  intl \
+		  necko \
+		  locale \
+		  $(NULL)
 MAKE_OBJ_TYPE	= EXE
 PROG0 = .\$(OBJDIR)\StringBundleTest.exe
 PROGRAMS = $(PROG0)

@@ -19,7 +19,18 @@
 
 DEPTH=..\..\..\..
 MODULE=xmlextras
-REQUIRES	= xpcom string dom js layout widget caps necko webBrowser_core embedcomponents content
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  js \
+		  layout \
+		  widget \
+		  caps \
+		  necko \
+		  webBrowser_core \
+		  embedcomponents \
+		  content \
+		  $(NULL)
 LIBRARY_NAME=xmlextras
 MODULE_NAME=nsXMLExtrasModule
 

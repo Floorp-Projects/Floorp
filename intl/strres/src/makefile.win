@@ -22,7 +22,11 @@
 DEPTH=..\..\..
 
 MODULE=intl
-REQUIRES	= xpcom string necko locale
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  locale \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=strres

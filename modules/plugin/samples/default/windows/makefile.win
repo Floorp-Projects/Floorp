@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..\..\..
 MODULE=npnul32
-REQUIRES=java
+REQUIRES	= java \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 

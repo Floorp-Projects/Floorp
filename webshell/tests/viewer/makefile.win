@@ -21,7 +21,31 @@
 
 DEPTH=..\..\..
 MODULE=viewer
-REQUIRES		= xpcom string webshell widget layout dom webBrowser_core docshell util uriloader locale necko htmlparser view timer pref intl editor cookie xpconnect gfx content wallet js
+REQUIRES	= xpcom \
+		  string \
+		  webshell \
+		  widget \
+		  layout \
+		  dom \
+		  webBrowser_core \
+		  docshell \
+		  util \
+		  uriloader \
+		  locale \
+		  necko \
+		  htmlparser \
+		  view \
+		  timer \
+		  pref \
+		  intl \
+		  editor \
+		  cookie \
+		  xpconnect \
+		  gfx \
+		  content \
+		  wallet \
+		  js \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

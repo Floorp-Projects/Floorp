@@ -22,7 +22,25 @@
 DEPTH=..\..
 MODULE=accessibility
 LIBRARY_NAME=accessibility_s
-REQUIRES  = xpcom string layout content widget dom view locale intl docshell webshell necko htmlparser xuldoc imglib2 gfx gfx2 raptor
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  content \
+		  widget \
+		  dom \
+		  view \
+		  locale \
+		  intl \
+		  docshell \
+		  webshell \
+		  necko \
+		  htmlparser \
+		  xuldoc \
+		  imglib2 \
+		  gfx \
+		  gfx2 \
+		  raptor \
+		  $(NULL)
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsAccessible.obj    \

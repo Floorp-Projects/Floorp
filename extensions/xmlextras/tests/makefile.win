@@ -23,7 +23,15 @@
 
 DEPTH = ..\..\..
 
-REQUIRES=xpcom string xmlextras necko dom content layout widget
+REQUIRES	= xpcom \
+		  string \
+		  xmlextras \
+		  necko \
+		  dom \
+		  content \
+		  layout \
+		  widget \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

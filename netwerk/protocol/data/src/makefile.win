@@ -20,7 +20,9 @@
 MODULE = necko
 
 DEPTH = ..\..\..\..
-REQUIRES	= xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 LIBRARY_NAME=nkdata_s
 

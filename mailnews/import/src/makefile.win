@@ -24,7 +24,19 @@ MODULE          = import
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
 MODULE_NAME  = nsImportServiceModule
-REQUIRES	= xpcom string mailnews addrbook uconv mork msgbase msgbaseutil intl necko rdf msgdb
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  addrbook \
+		  uconv \
+		  mork \
+		  msgbase \
+		  msgbaseutil \
+		  intl \
+		  necko \
+		  rdf \
+		  msgdb \
+		  $(NULL)
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsImportFactory.obj  	\

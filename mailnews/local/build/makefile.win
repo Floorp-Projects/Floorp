@@ -24,7 +24,22 @@ MODULE          = msglocal
 LIBRARY_NAME    = msglocal
 META_COMPONENT  = mail
 MODULE_NAME  = local_mail_services
-REQUIRES	= xpcom string mailnews msgbase msgsearch msgbaseutil msgdb necko txmgr rdf rdfutil mime intl pref nkcache
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  msgbase \
+		  msgsearch \
+		  msgbaseutil \
+		  msgdb \
+		  necko \
+		  txmgr \
+		  rdf \
+		  rdfutil \
+		  mime \
+		  intl \
+		  pref \
+		  nkcache \
+		  $(NULL)
 
 ################################################################################
 ## exports

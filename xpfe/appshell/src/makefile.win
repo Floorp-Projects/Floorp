@@ -21,7 +21,35 @@
 
 DEPTH=..\..\..
 MODULE=appshell
-REQUIRES	= xpcom string widget docshell webshell layout layout_xul dom necko uriloader js locale webBrowser_core rdf pref xpconnect timer intl xul windowwatcher browser appcomps caps profile gfx content_xul mozbrwsr content
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  docshell \
+		  webshell \
+		  layout \
+		  layout_xul \
+		  dom \
+		  necko \
+		  uriloader \
+		  js \
+		  locale \
+		  webBrowser_core \
+		  rdf \
+		  pref \
+		  xpconnect \
+		  timer \
+		  intl \
+		  xul \
+		  windowwatcher \
+		  browser \
+		  appcomps \
+		  caps \
+		  profile \
+		  gfx \
+		  content_xul \
+		  mozbrwsr \
+		  content \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=appshell

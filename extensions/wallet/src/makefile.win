@@ -21,7 +21,23 @@
 
 DEPTH=..\..\..
 MODULE=wallet
-REQUIRES	= xpcom string necko dom layout widget uriloader pref webshell docshell appshell intl windowwatcher gfx content raptor
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  layout \
+		  widget \
+		  uriloader \
+		  pref \
+		  webshell \
+		  docshell \
+		  appshell \
+		  intl \
+		  windowwatcher \
+		  gfx \
+		  content \
+		  raptor \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

@@ -22,7 +22,19 @@
 DEPTH=..\..\..
 
 MODULE=content
-REQUIRES	= xpcom string widget locale dom webshell pref necko htmlparser unicharutil layout gfx
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  locale \
+		  dom \
+		  webshell \
+		  pref \
+		  necko \
+		  htmlparser \
+		  unicharutil \
+		  layout \
+		  gfx \
+		  $(NULL)
 LIBRARY_NAME=contentshared_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)

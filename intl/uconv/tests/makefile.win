@@ -20,7 +20,11 @@
 # Contributor(s): 
 
 DEPTH = ..\..\..
-REQUIRES = xpcom uconv string locale
+REQUIRES	= xpcom \
+		  uconv \
+		  string \
+		  locale \
+		  $(NULL)
 MAKE_OBJ_TYPE = EXE
 
 PROG1 = .\$(OBJDIR)\convperf.exe

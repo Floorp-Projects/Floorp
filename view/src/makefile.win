@@ -24,7 +24,17 @@ DEPTH=..\..
 MODULE		= view
 LIBRARY_NAME	= gkview
 MODULE_NAME	= nsViewModule
-REQUIRES	= xpcom string layout gfx widget dom locale timer pref content
+REQUIRES	= xpcom \
+		  string \
+		  layout \
+		  gfx \
+		  widget \
+		  dom \
+		  locale \
+		  timer \
+		  pref \
+		  content \
+		  $(NULL)
 
 DEFINES =-D_IMPL_NS_VIEW -DWIN32_LEAN_AND_MEAN
 

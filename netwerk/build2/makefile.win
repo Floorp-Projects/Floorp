@@ -24,7 +24,10 @@ DEPTH=..\..
 MODULE		= necko
 LIBRARY_NAME	= necko2
 MODULE_NAME	= necko_secondary_protocols
-REQUIRES	= xpcom string nkcache
+REQUIRES	= xpcom \
+		  string \
+		  nkcache \
+		  $(NULL)
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 

@@ -29,7 +29,15 @@
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
 MODULE		= appcomps
-REQUIRES	= xpcom string necko dom js widget pref intl
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  js \
+		  widget \
+		  pref \
+		  intl \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 #//------------------------------------------------------------------------
 #//

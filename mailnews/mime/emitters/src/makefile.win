@@ -21,7 +21,21 @@
 
 DEPTH=..\..\..\..
 MODULE=mimeemitter
-REQUIRES	= xpcom string mime msgbase msgbaseutil pref necko intl locale mailnews msgdb addrbook mimetype msgnews
+REQUIRES	= xpcom \
+		  string \
+		  mime \
+		  msgbase \
+		  msgbaseutil \
+		  pref \
+		  necko \
+		  intl \
+		  locale \
+		  mailnews \
+		  msgdb \
+		  addrbook \
+		  mimetype \
+		  msgnews \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

@@ -23,7 +23,8 @@ DEPTH=..\..\..
 MODULE          = mork
 LIBRARY_NAME    = mork
 MODULE_NAME  = nsMorkModule
-REQUIRES=xpcom
+REQUIRES	= xpcom \
+		  $(NULL)
 
 ################################################################################
 ## exports

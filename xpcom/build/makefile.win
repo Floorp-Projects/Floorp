@@ -23,7 +23,10 @@
 
 DEPTH=..\..
 MODULE = xpcom 
-REQUIRES	= mozreg unicharutil string
+REQUIRES	= mozreg \
+		  unicharutil \
+		  string \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

@@ -24,7 +24,11 @@ DEPTH = ..\..\..
 MODULE		= nkcache
 LIBRARY_NAME	= nkcache
 MODULE_NAME	= cacheservice
-REQUIRES	= xpcom string necko pref
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  pref \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

@@ -22,7 +22,15 @@
 DEPTH=..\..\..
 
 MODULE=txtsvc
-REQUIRES	= xpcom string editor content layout dom widget gfx
+REQUIRES	= xpcom \
+		  string \
+		  editor \
+		  content \
+		  layout \
+		  dom \
+		  widget \
+		  gfx \
+		  $(NULL)
 LIBRARY_NAME=txtsvc
 MODULE_NAME=nsTextServicesModule
 

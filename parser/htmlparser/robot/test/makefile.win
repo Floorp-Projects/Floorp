@@ -21,7 +21,11 @@
 
 DEPTH=..\..\..
 
-REQUIRES=xpcom string webshell htmlparser
+REQUIRES	= xpcom \
+		  string \
+		  webshell \
+		  htmlparser \
+		  $(NULL)
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\htmlrobot.exe
 

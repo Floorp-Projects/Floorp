@@ -21,7 +21,25 @@
 
 DEPTH=..\..\..
 MODULE= absync
-REQUIRES	= xpcom string necko mime cookie docshell uriloader pref widget msgbase msgbaseutil dom rdf addrbook intl mork mimetype windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  mime \
+		  cookie \
+		  docshell \
+		  uriloader \
+		  pref \
+		  widget \
+		  msgbase \
+		  msgbaseutil \
+		  dom \
+		  rdf \
+		  addrbook \
+		  intl \
+		  mork \
+		  mimetype \
+		  windowwatcher \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

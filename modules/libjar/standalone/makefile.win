@@ -24,7 +24,8 @@
 
 MODULE=jar 
 DEPTH=..\..\..
-REQUIRES=zlib
+REQUIRES	= zlib \
+		  $(NULL)
 USE_NON_MT_LIBS=1
 LIBRARY=$(OBJDIR)\jar_s.lib
 

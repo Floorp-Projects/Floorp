@@ -21,7 +21,13 @@
 
 DEPTH=..\..\..\..
 MODULE = transformiix
-REQUIRES = string xpcom dom layout widget content
+REQUIRES	= string \
+		  xpcom \
+		  dom \
+		  layout \
+		  widget \
+		  content \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 DIRS=dom parser util

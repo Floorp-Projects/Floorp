@@ -21,7 +21,16 @@
 
 DEPTH=..\..\..\..
 MODULE=history
-REQUIRES	= xpcom string rdf mork pref necko intl timer appcomps
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  mork \
+		  pref \
+		  necko \
+		  intl \
+		  timer \
+		  appcomps \
+		  $(NULL)
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsGlobalHistory.obj        \

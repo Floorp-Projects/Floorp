@@ -21,7 +21,17 @@
 
 
 DEPTH	= ..\..\..
-REQUIRES	= xpcom string rdf necko widget view dom uriloader layout gfx
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  necko \
+		  widget \
+		  view \
+		  dom \
+		  uriloader \
+		  layout \
+		  gfx \
+		  $(NULL)
 MODULE=rdfcat
 include <$(DEPTH)/config/config.mak>
 

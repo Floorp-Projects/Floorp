@@ -22,7 +22,24 @@
 DEPTH=..\..\..\..
 
 MODULE          = impOutlk
-REQUIRES = xpcom string import intl necko addrbook mork msgcompo msgbase editor dom uriloader mailnews msgbaseutil msgdb msglocal mimetype
+REQUIRES	= xpcom \
+		  string \
+		  import \
+		  intl \
+		  necko \
+		  addrbook \
+		  mork \
+		  msgcompo \
+		  msgbase \
+		  editor \
+		  dom \
+		  uriloader \
+		  mailnews \
+		  msgbaseutil \
+		  msgdb \
+		  msglocal \
+		  mimetype \
+		  $(NULL)
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
 MODULE_NAME  = nsOutlookImport

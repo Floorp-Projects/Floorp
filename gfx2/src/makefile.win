@@ -24,7 +24,9 @@
 DEPTH=..\..
 
 MODULE=gfx2
-REQUIRES	= xpcom gfx
+REQUIRES	= xpcom \
+		  gfx \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=gfx2

@@ -21,7 +21,45 @@
 
 DEPTH=..\..\..
 MODULE= msgbase
-REQUIRES	= xpcom string necko dom appshell appcomps uconv intl htmlparser widget docshell rdf editor layout mailnews locale msgbaseutil webshell txmgr msgcompo msgdb uriloader pref msglocal msgimap timer mork msgnews addrbook prefmigr chrome mime mimetype windowwatcher gfx content msgsearch layout_xul
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  appshell \
+		  appcomps \
+		  uconv \
+		  intl \
+		  htmlparser \
+		  widget \
+		  docshell \
+		  rdf \
+		  editor \
+		  layout \
+		  mailnews \
+		  locale \
+		  msgbaseutil \
+		  webshell \
+		  txmgr \
+		  msgcompo \
+		  msgdb \
+		  uriloader \
+		  pref \
+		  msglocal \
+		  msgimap \
+		  timer \
+		  mork \
+		  msgnews \
+		  addrbook \
+		  prefmigr \
+		  chrome \
+		  mime \
+		  mimetype \
+		  windowwatcher \
+		  gfx \
+		  content \
+		  msgsearch \
+		  layout_xul \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

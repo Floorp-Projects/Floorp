@@ -21,7 +21,19 @@
 
 DEPTH=..\..\..\..\..
 MODULE=transformiix
-REQUIRES = string xpcom necko dom layout widget js appshell xpconnect caps raptor content
+REQUIRES	= string \
+		  xpcom \
+		  necko \
+		  dom \
+		  layout \
+		  widget \
+		  js \
+		  appshell \
+		  xpconnect \
+		  caps \
+		  raptor \
+		  content \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

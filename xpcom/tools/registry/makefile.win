@@ -21,7 +21,9 @@
 
 DEPTH=..\..\..
 
-REQUIRES=xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\regExport.exe
 PROG2 = .\$(OBJDIR)\regxpcom.exe

@@ -37,7 +37,8 @@ LCFLAGS = $(LCFLAGS) -DDEBUG_GC
 EXPORTS = png.h pngconf.h
 
 MODULE=png
-REQUIRES=zlib
+REQUIRES	= zlib \
+		  $(NULL)
 DEPTH=..\..\.. 
 LOCAL_INCLUDES=-I. 
 LIBRARY_NAME=png 

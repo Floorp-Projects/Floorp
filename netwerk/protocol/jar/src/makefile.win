@@ -21,7 +21,16 @@
 
 DEPTH=..\..\..\..
 MODULE=necko
-REQUIRES	= xpcom string jar exthandler mimetype caps js pref xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  jar \
+		  exthandler \
+		  mimetype \
+		  caps \
+		  js \
+		  pref \
+		  xpconnect \
+		  $(NULL)
 
 LIBRARY_NAME=nkjar_s
 

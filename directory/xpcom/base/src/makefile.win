@@ -18,7 +18,10 @@
 DEPTH=..\..\..\..
 
 MODULE=mozldap
-REQUIRES	= xpcom string necko
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

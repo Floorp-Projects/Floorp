@@ -20,7 +20,11 @@
 # Contributor(s): 
 DEPTH=..\..\..
 MODULE=unicharutil
-REQUIRES	= xpcom string uconv necko
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  necko \
+		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 
 

@@ -20,7 +20,13 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\.. 
-REQUIRES=xpcom string dom accessibility widget gfx
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  accessibility \
+		  widget \
+		  gfx \
+		  $(NULL)
 LIBRARY_NAME=raptornativewidgets_s 
 
 DEFINES=-DWIN32_LEAN_AND_MEAN

@@ -23,7 +23,12 @@
 
 DEPTH=..\..\..\..
 MODULE		= imgppm
-REQUIRES	= xpcom necko gfx2 imglib2 gfx
+REQUIRES	= xpcom \
+		  necko \
+		  gfx2 \
+		  imglib2 \
+		  gfx \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME	= imgppm

@@ -21,7 +21,8 @@
 
 DEPTH=..\..\..\..
 MODULE=xpcom
-REQUIRES=string
+REQUIRES	= string \
+		  $(NULL)
 XPIDL_MODULE=xpcom_eventloop_xp
 
 LIBRARY_NAME= xp_eventloop

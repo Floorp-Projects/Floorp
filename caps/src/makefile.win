@@ -44,7 +44,20 @@ DEPTH= ..\..
 MODULE=caps
 LIBRARY_NAME=caps
 MODULE_NAME=nsSecurityManagerModule
-REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl docshell windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  pref \
+		  js \
+		  dom \
+		  xpconnect \
+		  necko \
+		  jar \
+		  widget \
+		  plugin \
+		  intl \
+		  docshell \
+		  windowwatcher \
+		  $(NULL)
 
 #//------------------------------------------------------------------------
 #// 

@@ -25,7 +25,11 @@ DEPTH=..\..\..
 MODULE = walletviewers
 LIBRARY_NAME = wlltvwrs
 MODULE_NAME = nsWalletViewerModule
-REQUIRES	= xpcom walleteditor signonviewer walletpreview
+REQUIRES	= xpcom \
+		  walleteditor \
+		  signonviewer \
+		  walletpreview \
+		  $(NULL)
 
 LINCS = \
         -I..\editor             \

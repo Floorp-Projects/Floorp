@@ -37,7 +37,9 @@ LCFLAGS = $(LCFLAGS) -DDEBUG_GC
 EXPORTS = libmng.h libmng_conf.h libmng_types.h
 
 MODULE=mng
-REQUIRES=zlib jpeg
+REQUIRES	= zlib \
+		  jpeg \
+		  $(NULL)
 DEPTH=..\..\..
 LOCAL_INCLUDES=-I.
 LIBRARY_NAME=mng

@@ -25,7 +25,15 @@ LCFLAGS=
 
 MODULE=rdf
 LIBRARY_NAME=rdfbase_s
-REQUIRES=xpcom string rdfutil htmlparser content necko js layout
+REQUIRES	= xpcom \
+		  string \
+		  rdfutil \
+		  htmlparser \
+		  content \
+		  necko \
+		  js \
+		  layout \
+		  $(NULL)
 CPP_OBJS=\
         .\$(OBJDIR)\nsCompositeDataSource.obj     \
         .\$(OBJDIR)\nsContainerEnumerator.obj     \

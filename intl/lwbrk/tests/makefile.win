@@ -21,7 +21,10 @@
 DEPTH = ..\..\..
 
 
-REQUIRES	= xpcom string lwbrk
+REQUIRES	= xpcom \
+		  string \
+		  lwbrk \
+		  $(NULL)
 
 
 MAKE_OBJ_TYPE = EXE

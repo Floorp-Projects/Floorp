@@ -23,7 +23,31 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=contentxuldocument_s 
 MODULE=content_xul
-REQUIRES	= xpcom string exthandler mimetype widget dom rdf js xpconnect caps locale view necko uriloader htmlparser lwbrk timer chrome docshell pref layout gfx layout_xul content
+REQUIRES	= xpcom \
+		  string \
+		  exthandler \
+		  mimetype \
+		  widget \
+		  dom \
+		  rdf \
+		  js \
+		  xpconnect \
+		  caps \
+		  locale \
+		  view \
+		  necko \
+		  uriloader \
+		  htmlparser \
+		  lwbrk \
+		  timer \
+		  chrome \
+		  docshell \
+		  pref \
+		  layout \
+		  gfx \
+		  layout_xul \
+		  content \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

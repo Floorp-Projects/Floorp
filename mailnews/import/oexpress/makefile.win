@@ -24,7 +24,20 @@ DEPTH=..\..\..
 DIRS=resources
 
 MODULE          = importOE
-REQUIRES = xpcom string import addrbook mork intl msgbase mailnews necko msgdb msgbaseutil msgcompo msglocal
+REQUIRES	= xpcom \
+		  string \
+		  import \
+		  addrbook \
+		  mork \
+		  intl \
+		  msgbase \
+		  mailnews \
+		  necko \
+		  msgdb \
+		  msgbaseutil \
+		  msgcompo \
+		  msglocal \
+		  $(NULL)
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
 MODULE_NAME  = nsOEImport

@@ -20,7 +20,28 @@
 
 DEPTH=..\..\..
 MODULE= mime
-REQUIRES	= xpcom string msgbase msgbaseutil pref js necko uconv msgcompo editor dom intl msgimap exthandler mailnews msgdb chardet caps mimetype uriloader xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  msgbase \
+		  msgbaseutil \
+		  pref \
+		  js \
+		  necko \
+		  uconv \
+		  msgcompo \
+		  editor \
+		  dom \
+		  intl \
+		  msgimap \
+		  exthandler \
+		  mailnews \
+		  msgdb \
+		  chardet \
+		  caps \
+		  mimetype \
+		  uriloader \
+		  xpconnect \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

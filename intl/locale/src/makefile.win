@@ -27,7 +27,16 @@ DEPTH		= ..\..\..
 DEFINES		= -D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE		= locale
-REQUIRES	= xpcom string uconv unicharutil necko dom windowwatcher uriloader intl
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  unicharutil \
+		  necko \
+		  dom \
+		  windowwatcher \
+		  uriloader \
+		  intl \
+		  $(NULL)
 LIBRARY_NAME	= nslocale_s
 
 DIRS		= windows

@@ -21,7 +21,13 @@
 
 DEPTH=..\..\..\..\..
 MODULE=transformiix
-REQUIRES = xpcom string dom layout widget content
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  layout \
+		  widget \
+		  content \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

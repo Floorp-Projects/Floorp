@@ -20,7 +20,15 @@
 DEPTH = ..\..\..
 
 MODULE = necko
-REQUIRES	= xpcom string mimetype locale util pref exthandler zlib
+REQUIRES	= xpcom \
+		  string \
+		  mimetype \
+		  locale \
+		  util \
+		  pref \
+		  exthandler \
+		  zlib \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=nkcnvts_s

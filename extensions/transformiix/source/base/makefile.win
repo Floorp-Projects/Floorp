@@ -20,7 +20,9 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-REQUIRES = string xpcom
+REQUIRES	= string \
+		  xpcom \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

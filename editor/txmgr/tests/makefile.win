@@ -21,7 +21,9 @@
 
 DEPTH=..\..\..
 
-REQUIRES=xpcom txmgr
+REQUIRES	= xpcom \
+		  txmgr \
+		  $(NULL)
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestTXMgr.exe

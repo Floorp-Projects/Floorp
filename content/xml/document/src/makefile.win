@@ -23,7 +23,28 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=contentxmldoc_s 
 MODULE=content
-REQUIRES	= xpcom string js dom widget caps htmlparser necko view docshell webshell uriloader pref xpconnect uconv chardet lwbrk exthandler mimetype gfx layout
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  dom \
+		  widget \
+		  caps \
+		  htmlparser \
+		  necko \
+		  view \
+		  docshell \
+		  webshell \
+		  uriloader \
+		  pref \
+		  xpconnect \
+		  uconv \
+		  chardet \
+		  lwbrk \
+		  exthandler \
+		  mimetype \
+		  gfx \
+		  layout \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

@@ -30,7 +30,15 @@ MODULE          = mimeemitter
 LIBRARY_NAME    = emitter
 META_COMPONENT  = mail
 MODULE_NAME  = nsMimeEmitterModule
-REQUIRES	= xpcom string mime necko pref intl locale msgbase
+REQUIRES	= xpcom \
+		  string \
+		  mime \
+		  necko \
+		  pref \
+		  intl \
+		  locale \
+		  msgbase \
+		  $(NULL)
 
 ################################################################################
 ## exports

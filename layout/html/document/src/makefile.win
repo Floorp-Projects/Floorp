@@ -23,7 +23,26 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layouthtmldoc_s 
 MODULE=layout
-REQUIRES	= xpcom string widget dom necko locale view js webshell docshell caps pref uriloader shistory xpconnect accessibility gfx content layout_xul
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  dom \
+		  necko \
+		  locale \
+		  view \
+		  js \
+		  webshell \
+		  docshell \
+		  caps \
+		  pref \
+		  uriloader \
+		  shistory \
+		  xpconnect \
+		  accessibility \
+		  gfx \
+		  content \
+		  layout_xul \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN 
 !if defined(XP_NEW_SELECTION)

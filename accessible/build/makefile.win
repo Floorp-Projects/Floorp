@@ -21,7 +21,10 @@
 
 DEPTH=..\..
 MODULE=accessibility
-REQUIRES	= xpcom string dom
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  $(NULL)
 LIBRARY_NAME=accessibility
 MODULE_NAME=nsAccessibilityModule
 

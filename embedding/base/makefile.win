@@ -21,7 +21,23 @@
 
 DEPTH=..\..
 MODULE=embed_base
-REQUIRES	= xpcom string widget view dom necko rdf appshell uriloader layout editor intl chrome embedcomponents timer gfx
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  view \
+		  dom \
+		  necko \
+		  rdf \
+		  appshell \
+		  uriloader \
+		  layout \
+		  editor \
+		  intl \
+		  chrome \
+		  embedcomponents \
+		  timer \
+		  gfx \
+		  $(NULL)
 
 EXPORTS =                  \
         nsEmbedAPI.h       \

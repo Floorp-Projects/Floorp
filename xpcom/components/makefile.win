@@ -24,7 +24,9 @@
 DEPTH=..\..
 MODULE = xpcom
 XPIDL_MODULE = xpcom_components
-REQUIRES	= mozreg string
+REQUIRES	= mozreg \
+		  string \
+		  $(NULL)
 
 ################################################################################
 ## exports

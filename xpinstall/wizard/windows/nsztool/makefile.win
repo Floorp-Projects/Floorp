@@ -25,7 +25,8 @@ MAKE_OBJ_TYPE   = EXE
 USE_NON_MT_LIBS = 1
 
 MODULE          = nsztool
-REQUIRES=zlib
+REQUIRES	= zlib \
+		  $(NULL)
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 
 OBJS =                          \

@@ -21,7 +21,11 @@
 
 DEPTH=..\..\..\..
 MODULE=necko
-REQUIRES	= xpcom string exthandler mimetype
+REQUIRES	= xpcom \
+		  string \
+		  exthandler \
+		  mimetype \
+		  $(NULL)
 
 LIBRARY_NAME=nkres_s
 

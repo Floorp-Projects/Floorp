@@ -21,7 +21,19 @@
 
 DEPTH=..\..\..
 MODULE=jsurl
-REQUIRES	= xpcom string js dom necko caps widget appshell rdf xpconnect jsconsole raptor
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  dom \
+		  necko \
+		  caps \
+		  widget \
+		  appshell \
+		  rdf \
+		  xpconnect \
+		  jsconsole \
+		  raptor \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 MODULE=jsurl

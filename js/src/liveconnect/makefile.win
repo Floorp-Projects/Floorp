@@ -46,7 +46,10 @@
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
 MODULE = java
-REQUIRES=xpcom js xpconnect
+REQUIRES	= xpcom \
+		  js \
+		  xpconnect \
+		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
 !ifdef NSJVM

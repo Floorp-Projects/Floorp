@@ -51,7 +51,9 @@ CPP_OBJS= \
 MODULE=lwbrk
 LIBRARY_NAME=lwbrk
 MODULE_NAME=nsLWBrkModule
-REQUIRES=xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib	\

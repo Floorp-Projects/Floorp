@@ -28,7 +28,9 @@ MODULE         = p3p
 LIBRARY_NAME   = p3p
 MODULE_NAME = nsP3PModule
 
-REQUIRES     = p3p xpcom
+REQUIRES	= p3p \
+		  xpcom \
+		  $(NULL)
 
 EXPORTS      = $(NULL)
 

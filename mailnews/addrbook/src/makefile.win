@@ -21,7 +21,31 @@
 
 DEPTH=..\..\..
 MODULE= addrbook
-REQUIRES	= xpcom string rdf rdfutil appshell dom layout widget mork docshell pref necko locale webshell uconv msgbase msgbaseutil mime msgcompo appcomps raptor gfx content mozldap
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  rdfutil \
+		  appshell \
+		  dom \
+		  layout \
+		  widget \
+		  mork \
+		  docshell \
+		  pref \
+		  necko \
+		  locale \
+		  webshell \
+		  uconv \
+		  msgbase \
+		  msgbaseutil \
+		  mime \
+		  msgcompo \
+		  appcomps \
+		  raptor \
+		  gfx \
+		  content \
+		  mozldap \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

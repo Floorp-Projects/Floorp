@@ -20,7 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-REQUIRES=xpcom layout gfx
+REQUIRES	= xpcom \
+		  layout \
+		  gfx \
+		  $(NULL)
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestSpaceManager.exe
 PROGRAMS = $(PROG1)

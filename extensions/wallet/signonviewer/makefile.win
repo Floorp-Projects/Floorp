@@ -21,7 +21,13 @@
 
 DEPTH=..\..\..
 MODULE=signonviewer
-REQUIRES	= xpcom string wallet dom widget necko
+REQUIRES	= xpcom \
+		  string \
+		  wallet \
+		  dom \
+		  widget \
+		  necko \
+		  $(NULL)
 
 #MAKE_OBJ_TYPE=DLL
 #DLLNAME=$(MODULE)

@@ -23,7 +23,8 @@
 
 DEPTH=..\..
 MODULE = xpcom
-REQUIRES	= string
+REQUIRES	= string \
+		  $(NULL)
 
 ################################################################################
 ## exports

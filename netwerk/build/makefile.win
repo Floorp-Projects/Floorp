@@ -24,7 +24,17 @@ DEPTH=..\..
 MODULE		= necko
 LIBRARY_NAME	= necko
 MODULE_NAME	= necko_core_and_primary_protocols
-REQUIRES	= xpcom string nkcache pref mimetype util jar locale intl zlib
+REQUIRES	= xpcom \
+		  string \
+		  nkcache \
+		  pref \
+		  mimetype \
+		  util \
+		  jar \
+		  locale \
+		  intl \
+		  zlib \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 

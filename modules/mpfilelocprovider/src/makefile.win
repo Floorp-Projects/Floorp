@@ -21,7 +21,9 @@
 
 DEPTH=..\..\..
 MODULE = mpfilelocprovider
-REQUIRES=xpcom string
+REQUIRES	= xpcom \
+		  string \
+		  $(NULL)
 LIBRARY_NAME=mpfilelocprovider_s
 
 

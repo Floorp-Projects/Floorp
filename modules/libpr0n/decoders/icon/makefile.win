@@ -26,7 +26,13 @@ DEPTH=..\..\..\..
 DIRS=win
 
 MODULE		= imgicon
-REQUIRES=xpcom string imglib2 gfx gfx2 necko
+REQUIRES	= xpcom \
+		  string \
+		  imglib2 \
+		  gfx \
+		  gfx2 \
+		  necko \
+		  $(NULL)
 LIBRARY_NAME	= imgicon
 XPIDL_MODULE	= imgicon
 MODULE_NAME	= nsIconDecoderModule

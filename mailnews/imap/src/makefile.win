@@ -21,7 +21,30 @@
 
 DEPTH=..\..\..
 MODULE= msgimap
-REQUIRES	= xpcom string mailnews rdf msgbase msgsearch msgbaseutil rdfutil necko msgdb uconv mime pref intl nkcache timer txmgr dom docshell msglocal msgnews mimetype windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  rdf \
+		  msgbase \
+		  msgsearch \
+		  msgbaseutil \
+		  rdfutil \
+		  necko \
+		  msgdb \
+		  uconv \
+		  mime \
+		  pref \
+		  intl \
+		  nkcache \
+		  timer \
+		  txmgr \
+		  dom \
+		  docshell \
+		  msglocal \
+		  msgnews \
+		  mimetype \
+		  windowwatcher \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

@@ -21,7 +21,26 @@
 
 DEPTH=..\..\..
 MODULE= msglocal
-REQUIRES	= xpcom string msgbase msgsearch msgbaseutil mailnews pref necko msgdb rdf intl mime dom rdfutil txmgr docshell msgimap chrome nkcache
+REQUIRES	= xpcom \
+		  string \
+		  msgbase \
+		  msgsearch \
+		  msgbaseutil \
+		  mailnews \
+		  pref \
+		  necko \
+		  msgdb \
+		  rdf \
+		  intl \
+		  mime \
+		  dom \
+		  rdfutil \
+		  txmgr \
+		  docshell \
+		  msgimap \
+		  chrome \
+		  nkcache \
+		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 

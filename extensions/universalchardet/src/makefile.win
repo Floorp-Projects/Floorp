@@ -23,7 +23,11 @@ DEPTH=..\..\..
 MOZ_DEPTH=$(DEPTH)\..\mozilla\intl\chardet\src
 
 LCFLAGS= $(LCFLAGS) -D__STDC__
-REQUIRES	= xpcom string uconv chardet
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  chardet \
+		  $(NULL)
 
 DEFINES= -DWIN32_LEAN_AND_MEAN 
 LIBRARY_NAME= universalchardet

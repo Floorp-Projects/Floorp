@@ -56,7 +56,14 @@ DEPTH= ..\..\..\..
 MODULE=jsloader
 LIBRARY_NAME=jsloader
 MODULE_NAME=JS_component_loader
-REQUIRES=xpcom string js xpconnect caps dom necko
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  xpconnect \
+		  caps \
+		  dom \
+		  necko \
+		  $(NULL)
 
 #//------------------------------------------------------------------------
 #// 

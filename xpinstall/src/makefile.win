@@ -30,7 +30,29 @@
 
 DEPTH=..\..
 MODULE		= xpinstall
-REQUIRES	= xpcom string jar chrome necko intl locale mozreg js pref appshell widget layout uriloader xpconnect docshell dom appcomps windowwatcher zlib content raptor
+REQUIRES	= xpcom \
+		  string \
+		  jar \
+		  chrome \
+		  necko \
+		  intl \
+		  locale \
+		  mozreg \
+		  js \
+		  pref \
+		  appshell \
+		  widget \
+		  layout \
+		  uriloader \
+		  xpconnect \
+		  docshell \
+		  dom \
+		  appcomps \
+		  windowwatcher \
+		  zlib \
+		  content \
+		  raptor \
+		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
 
