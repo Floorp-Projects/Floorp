@@ -200,6 +200,9 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
     mAltKeyDown = PR_FALSE;
     mMenuBarFrame->ToggleMenuActiveState();
   }
+  
+  if (mMenuBarFrame->IsActive())
+    return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
 }
 
@@ -222,6 +225,9 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     // the menus.
     mMenuBarFrame->KeyboardNavigation(theChar);
   }
+
+  if (mMenuBarFrame->IsActive())
+    return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
 }
 
@@ -236,5 +242,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   // Test Alt attribute
 	PRBool isAlt = PR_FALSE;
 	theEvent->GetAltKey(&isAlt);
+  
+  if (mMenuBarFrame->IsActive())
+    return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event
 }
