@@ -1,0 +1,782 @@
+<!-- vim:sw=2:et:ts=2:tw=72:
+-->
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-US">
+<head>
+  <title>Table Reflow Tech Talk, 2002-08-05</title>
+  <style type="text/css">
+
+  html, body {
+    height: 100%;
+    overflow: visible;
+  }
+
+  body {
+    font-size: 1.4em;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    background: white;
+    color: black;
+  }
+
+  h1, h2, p {
+    margin: 0;
+  }
+
+  h1 {
+    font: inherit;
+    font-size: 1.5em;
+    /* text-align: center; */
+    margin-bottom: 0.8em;
+    border-bottom: 0.1em solid #006;
+	color: #006;
+  }
+
+  h2 {
+    font: inherit;
+    font-size: 1.2em;
+    text-align: left;
+    margin: 0.15em 0;
+  }
+
+  ul {
+    padding: 0 0 0 1.4em;
+    margin: 0;
+  }
+
+  li { margin: 0; 
+       margin-top: 0.5em; 
+	   padding: 0; 
+	   font-size: 1.0em;}
+
+  div.slide {
+    position: relative;
+    min-height: 100%;
+  }
+
+  div.nav {
+    /*
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    */
+    float: right;
+    margin: 4px;
+  }
+
+  div.nav :link, div.nav :visited, div.nav span {
+    text-decoration: none;
+    background: #006;
+    color: white;
+    padding: 0 0.4em 0.2em 0.4em;
+    line-height: 1.4em;
+  }
+
+  div.nav :link:hover, div.nav :visited:hover {
+    background: #00f;
+  }
+
+  table.tree {
+    margin: auto;
+  }
+
+  table.tree td {
+    text-align: center;
+    empty-cells: hide;
+  }
+
+  table.tree tr:not(.arrows) td {
+    font-family: monospace;
+    border: 0.1em solid;
+  }
+
+  </style>
+</head>
+<body>
+
+<div class="slide" id="s0">
+  <div class="nav">
+    <a href="#s1">&gt;</a>
+  </div>
+  <table style="margin: auto"><tr><td>
+  <center>
+    <h1>Table Reflow Internals<br>Tech Talk</h1>
+    <p>Aug 5, 2002</p>
+    <p style="margin-top: 0.5em">Chris Karnaze</a></p>
+  </center>
+  </td></tr></table>
+
+</div>
+
+<div class="slide" id="s1">
+  <div class="nav">
+    <a href="#s0">&lt;</a>
+    <a href="#s2">&gt;</a>
+  </div>
+  <h1>Overview</h1>
+  <ul>
+    <li>Review of reflow</li>
+    <li>Table frames</li>
+    <li>Table reflow</li> 
+    <li>Intro to paganated reflow</li>
+    <li>Table paganated reflow</li>
+    <li>Areas not covered</li>
+  </ul>
+</div>
+
+<div class="slide" id="s2">
+  <div class="nav">
+    <a href="#s1">&lt;</a>
+    <a href="#s3">&gt;</a>
+  </div>
+  <h1>Review of Reflow</h1>
+  <ul>
+    <li>Reflow process starts when
+      <ul>
+        <li>An html document starts loading (the frame tree contains only viewport, scroll(s), canvas, html, body).</li>
+        <li>The initial chunk of an xml doc is loaded.</li> 
+        <li>The initial chunk of an html doc (or a subsequent chunk of an xml doc) is loaded. The container posts a 
+        dirty reflow command with itself as the target. </li>
+        <li>Content is inserted, appended, or deleted through the DOM. The container posts a dirty reflow command 
+        with itself as the target.</li>
+        <li>Style changes through the DOM - javascript, browser change font (CTRL+/-), a preference changes, etc.</li>
+      </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s3">
+  <div class="nav">
+    <a href="#s2">&lt;</a>
+    <a href="#s4">&gt;</a>
+  </div>
+  <h1>Review of Reflow</h1>
+  <ul>
+    <li>Reflow starts with pres shell which reflows the reflow root (usually the view port frame),
+    which reflows it children, etc.</li>
+    <li>Ususally it starts when the pres shell processes its queue of reflow commands.</li>
+    <li>The reflower
+	 <ul>
+      <li>Positions reflowee (if it can) before actually reflowing in case views are involved</li>
+      <li>Reflows reflowee and passes a reflow state (in) and a reflow metrics (in/out)</li> 
+	 </ul>
+	</li>
+    <li>the reflow state
+	 <ul>
+      <li>Is a node in a tree structurally equavalent to the frame tree of reflow paticipants</li>
+      <li>contains reflow type, avail size, various computed values, resolved style structs</li> 
+      <li>possible request for preferred size and more.</li>
+	 </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s4">
+  <div class="nav">
+    <a href="#s3">&lt;</a>
+    <a href="#s5">&gt;</a>
+  </div>
+  <h1>Review of Reflow</h1>
+  <ul>
+    <li>The reflowee sets various sizes in the reflow metrics after (possibly) reflowing some or all of its children 
+    which reflows it children, etc.</li>
+	 <ul class=nested>
+      <li>max element size (if requested) - the minimum size it can be</li> 
+      <li>preferred size (if requested) - the size it would like to be given no size constraints.</li> 
+      <li>desired size - the size it would like to be given the avail size. This
+	  is equavalent to preferred size if the avail size is not constrained.</li>
+	 </ul>
+	</li>
+    <li>The reflowee returns a reflow status which indicates
+	 <ul class=nested>
+      <li>if it is complete, and thus not have to continue (split)</li>
+      <li>breaking status (in the case of some inline frames)</li> 
+      <li>if there is truncation (it can't fit in the space and can't split). This is just a convience mechanism.</li>
+	 </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s5">
+  <div class="nav">
+    <a href="#s4">&lt;</a>
+    <a href="#s6">&gt;</a>
+  </div>
+  <h1>Kinds of reflows</h1>
+  <ul>
+    <li>initial - reflowee's first reflow must be of this type (reflower's responsibility).</li> 
+    <li>resize - reflowee gets a change in available space only. Similar to initial, except it can reoccur.</li> 
+    <li>incremental - has a reflow path (tree) where each node has a command with a target frame, reflow command types are:</li> 
+   	 <ul class=nested>
+      <li>dirty - something changed inside a target (e.g. it gains, loses children)</li>
+      <li>style changed - a target changed stylisticly (recall, size is a style property)</li> 
+      <li>content changed - a target's content changed (e.g. a text run)</li> 
+      <li>user defined - currently only used for fixed positioned frames </li> 
+	 </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s6">
+  <div class="nav">
+    <a href="#s5">&lt;</a>
+    <a href="#s7">&gt;</a>
+  </div>
+  <h1>Kinds of reflows</h1>
+  <ul>
+    <li>incremental reflow
+	 <ul class=nested>
+      <li>reflower not allowed to change available size of reflowee</li>
+      <li>reflow commands get coalesced to streamline processing</li> 
+	 </ul>
+	</li>
+    <li>style change 
+	 <ul class=nested>
+      <li>a target changed stylistic if there is a target, otherwise every frame may need to respond</li>
+      <li>parent of target usually turns it into an incremental reflow with a style changed command type</li> 
+	 </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s7">
+  <div class="nav">
+    <a href="#s6">&lt;</a>
+    <a href="#s8">&gt;</a>
+  </div>
+  <h1>Table Frames</h1>
+</div>
+
+<div class="slide" id="s8">
+  <div class="nav">
+    <a href="#s7">&lt;</a>
+    <a href="#s9">&gt;</a>
+  </div>
+  <h1>Table Reflow</h1>
+  <ul>
+    <li>outer table reflows table and caption (if present)</li>
+	<li>table reflows row groups in multiple passes</li> 
+	 <ul class=nested>
+      <li>Pass 1 - unconstrained width, height and requests max elem width.</li>
+      <li>The table figures out the column widths (balances) given the style width constraints
+	  on the table, row groups, rows, cells the preferred and max element sizes of the cells 
+	  (from the pass 1 reflow), and considers colspans</li> 
+      <li>Pass 2 - cell widths are constrained by the column widths (heights are only 
+	  constrained in paganated mode).</li> 
+      <li>The row group figures out the row heights given the its style height constraints
+	  its rows and cells and the actual heights of its rows and cells from the pass 2 reflow</li> 
+      <li>If the table has a style height, it allocates extra height to its row groups, rows and cells.</li> 
+	 </ul>
+	</li>
+    <li>in each pass, row groups reflow rows which reflow cells which reflow cell blocks</li>
+  </ul>
+</div>
+
+<div class="slide" id="s9">
+  <div class="nav">
+    <a href="#s8">&lt;</a>
+    <a href="#s10">&gt;</a>
+  </div>
+  <h1>Table Reflow</h1>
+</div>
+
+<div class="slide" id="s10">
+  <div class="nav">
+    <a href="#s9">&lt;</a>
+    <a href="#s11">&gt;</a>
+  </div>
+  <h1>Table reflow optimizations</h1>
+  <ul>
+    <li>If the table already balanced, pass 1 constrains the width (like a normal pass 2) based on the current
+	column widths. The pass 2 will get skipped if the table doesn't need to rebalance.</li> 
+    <li>Nested table reflowed with an unconstrained width (i.e. an ancestor is doing a pass 1 reflow)
+	will only do a pass 1 reflow on its children</li>
+    <li>Outer table caches last avail width and avoids reflowing children if resize reflow is the same as previous</li>
+    <li>Table caches max element, preferred widths in case they are requested and it isn't rebalanced</li>
+    <li>Cell caches prior avail width. if this doesn't change, the row may not have to reflow the cell</li>
+  </ul>
+
+</div>
+
+<div class="slide" id="s11">
+  <div class="nav">
+    <a href="#s10">&lt;</a>
+    <a href="#s12">&gt;</a>
+  </div>
+  <h1>Table incremental reflow</h1>
+  <ul>
+    <li>Outer table is a target when a caption is added or removed (dirty) or the table or caption margin 
+  changes (style changed).</li> 
+    <li>Caption is a target when it changes stylistically (style changed).</li>
+    <li>Table, row group, row, col group, col is a target when a child is added or removed (dirty) or it changes
+  stylistically (style changed).</li>
+    <li>In the dirty cases, a target posted the reflow command in AppendFrames, InsertFrames, or DeleteFrame.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s12">
+  <div class="nav">
+    <a href="#s11">&lt;</a>
+    <a href="#s13">&gt;</a>
+  </div>
+  <h1>Table incremental reflow</h1>
+  <ul>
+    <li>In the style change cases where a target is between the table and the cell, the table is told to rebalance.</li>
+    <li>When a target is the cell or below and the cell changes size, the row tells the table so it can decide if 
+  it needs to rebalance</li>
+    <li>When a target is inside the cell's block, the cell
+  requests max element, preferred sizes of its block in case they change</li>
+    <li>After the table reflows the row group(s) containing the targets, if it rebalances, it then does a pass 2 reflow.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s13">
+  <div class="nav">
+    <a href="#s12">&lt;</a>
+    <a href="#s14">&gt;</a>
+  </div>
+  <h1>Special height reflow</h1>
+  <ul>
+    <li>When there is a % height frame inside a cell without a computed height</li>
+	  <ul class=nested>
+	    <li>the frame will never get a chance to size based on the final cell height</li>
+        <li>in paganated mode when there is a height on the table, the table doesn't allocate
+		extra height to rows until after it does a pass 2 reflow and then it is too late</li>
+	  </ul>
+	</li>
+    <li>This can be fixed by doing a special 3rd pass reflow</li>
+  </ul>
+  </div>
+</div>
+
+<div class="slide" id="s14">
+  <div class="nav">
+    <a href="#s13">&lt;</a>
+    <a href="#s15">&gt;</a>
+  </div>
+  <h1>Special height reflow</h1>
+</div>
+
+<div class="slide" id="s15">
+  <div class="nav">
+    <a href="#s14">&lt;</a>
+    <a href="#s16">&gt;</a>
+  </div>
+  <h1>Special height reflow</h1>
+</div>
+
+<div class="slide" id="s16">
+  <div class="nav">
+    <a href="#s15">&lt;</a>
+    <a href="#s17">&gt;</a>
+  </div>
+  <h1>Special height reflow</h1>
+  <ul>
+    <li>The reflow state holds an observer and initiator</li>
+    <li>observer</li>
+	  <ul class=nested>
+	    <li>is the table cell used as the height basis</li>
+        <li>set by frame without computed height in DidReflow</li>
+        <li>gives its block a computed height during 3rd pass</li>
+        <li>doesn't change height during 3rd pass</li>
+	  </ul>
+	</li>
+    <li>initiator</li>
+	  <ul class=nested>
+	    <li>is the table containing the observer</li>
+        <li>starts the 3rd pass reflow and sets a bit in the reflow state</li>
+        <li>gives its block a computed height during 3rd pass</li>
+        <li>could also be inside a cell which is an observer</li>
+	  </ul>
+	</li>
+</div>
+
+<div class="slide" id="s17">
+  <div class="nav">
+    <a href="#s16">&lt;</a>
+    <a href="#s18">&gt;</a>
+  </div>
+  <h1>Special height reflow</h1>
+  <ul>
+    <li>optimizations</li>
+	  <ul class=nested>
+	    <li>only frames needing 3rd pass actually get it</li>
+        <li>frames gettting a 3rd pass only get it once</li>
+	  </ul>
+	</li>
+</div>
+
+<div class="slide" id="s18">
+  <div class="nav">
+    <a href="#s17">&lt;</a>
+    <a href="#s19">&gt;</a>
+  </div>
+  <h1>Intro to paganated reflow</h1>
+  <ul>
+    <li>When a reflowee's available height is constrained, it may not fit and need to either 
+	split/continue on the next page, or start on the next page.</li>
+	  <ul class=nested>
+	    <li>If it can continue, it returns an incomplete status.</li>
+        <li>If it can't continue it returns a complete status.</li>
+	  </ul>
+	</li>
+    <li>A continuation may also need to be continued</li>
+    <li>Continuations are linked together by prevInFlow and nextInFlow pointers </li>
+  </ul>
+</div>
+
+<div class="slide" id="s19">
+  <div class="nav">
+    <a href="#s18">&lt;</a>
+    <a href="#s20">&gt;</a>
+  </div>
+  <h1>Intro to paganated reflow</h1>
+</div>
+
+<div class="slide" id="s20">
+  <div class="nav">
+    <a href="#s19">&lt;</a>
+    <a href="#s21">&gt;</a>
+  </div>
+  <h1>Intro to paganated reflow</h1>
+  <ul>
+    <li>The page sequence starts with one page and reflows it. If the page is incomplete then the page sequence
+        creates a continuation for the page and sets it as the page's next sibling (it is also the page's 
+		nextInFlow).</li>
+    <li>The page was incomplete because the page content was incomplete because the doc root was incomplete</li>
+    <li>The doc root was incomplete because it contained lines that didn't fit (or if it was mapped to a table, 
+	    because the table didn't fit) becacause a line contained something that didn't fit, etc.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s21">
+  <div class="nav">
+    <a href="#s20">&lt;</a>
+    <a href="#s22">&gt;</a>
+  </div>
+  <h1>Intro to paganated reflow</h1>
+  <ul>
+    <li>If the reflowee is incomplete, the reflower has the responsiblity to:
+	  <ul>
+	    <li>Create a continuation for the reflowee</li>
+	    <li>Ensure that the continuation gets put in the frame hierarchy at the right place
+		and gets reflowed at the right time.</li>
+	    <li>Typically, a reflower accomplishes this by putting the continuation (c) on an overflow 
+		list which the reflower owns. When the reflower's continuation gets reflowed, it takes c 
+		and its siblings as children and reflows them.</li>
+	  </ul>
+	</li>
+    <li>If the reflowee is complete, truncated (it didn't fit), not at the top of page, 
+    the reflower should put the reflowee on its overflow list and return an incomplete status.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s22">
+  <div class="nav">
+    <a href="#s21">&lt;</a>
+    <a href="#s23">&gt;</a>
+  </div>
+  <h1>Intro to paganated reflow</h1>
+  <ul>
+    <li>Special assumptions
+	  <ul>
+	    <li>There are only initial and (possibly) resize reflows. Incremental 
+		and style change reflows are not allowed.</li>
+	    <li>Multiple resize reflows may be necessary (e.g. a child is truncated and gets reflowed on a 
+		subsequent page) but they should not change the available width from the last time.</li>
+	    <li>Multiple resize reflows may require special handling if a frame split previously. It may need
+		to "pull up" children from a continuation.</li>
+	  </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s23">
+  <div class="nav">
+    <a href="#s22">&lt;</a>
+    <a href="#s24">&gt;</a>
+  </div>
+  <h1>Table paginated reflow</h1>
+  <ul>
+	<li>The block containing the outer table reflows it. If it is incomplete, the block will
+	  <ul>
+	    <li>create a continuation for the outer table (which also creates a continuation for the table).</li>
+	    <li>put the continuation on a new line and place that line on its overflow lines property.</li>
+	  </ul>
+	</li>
+    <li>The outer table reflows the table and just returns the status of the table.</li>
+    <li>The table does a pass 1 reflow and balances. If it is incomplete,</li>
+	  <ul>
+	    <li>it will become the first-in-flow</li>
+		<li>it will be the only frame among its continuations to ever balance or calc the cell map, and it only
+		does this once</li>
+	  </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s24">
+  <div class="nav">
+    <a href="#s23">&lt;</a>
+    <a href="#s25">&gt;</a>
+  </div>
+  <h1>Table paginated reflow</h1>
+  <ul>
+	<li>The table does a pass 2 reflow constraining both avail heights and widths. If a row group is incomplete, the table
+	  <ul>
+	    <li>creates a continuation for the row group</li>
+	    <li>puts the continuation in its overflow frames property</li>
+	  </ul>
+	</li>
+    <li>What follows only applies during the pass 2 reflow.</li>
+    <li>The row group</li>
+	  <ul>
+	    <li>reflows all of its rows with unconstrained heights and calculates the row heights,</li>
+		<li>figures out which row falls on a page boundary and reflows it with a constrained height. If there
+        will be a pass 3 reflow then this should (bug) happen at that time instead.</li>
+		<li>creates a continuation for incomplete the row (which also creates continuations for all of its cells
+        and all of the cell blocks)</li>
+		<li>puts the continuation in its overflow frames property. If the row was truncated and not top of page,
+		the row is put in the overflow frames property.
+	  </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s25">
+  <div class="nav">
+    <a href="#s24">&lt;</a>
+    <a href="#s26">&gt;</a>
+  </div>
+  <h1>Table paginated reflow</h1>
+  <ul>
+	<li>The row and cells (getting the constrained height reflow) just reflow their children with a constrained height.  
+    They don't need an overflow list for continued children because the continuations were created when the
+    row group created the row's continutation.</li>
+    <li>A cell is incomplete because its block is incomplete. The block uses the overflow lines mechanism 
+    (mentioned above) for its continued children</li>
+	</li>
+	<li>There are two splitting scenarios for a table
+	  <ul>
+	    <li>An incomplete cells block causes the cell, row, row group, table, outer table to
+	    be incomplete</li>
+	    <li>A truncated row or a row that started too far down the page causes the row group, 
+		table, outer table to be incomplete.</li>
+	  </ul>
+	</li>
+  </ul>
+</div>
+
+<div class="slide" id="s26">
+  <div class="nav">
+    <a href="#s25">&lt;</a>
+    <a href="#s27">&gt;</a>
+  </div>
+  <h1>Managing style contexts</h1>
+
+  <ul>
+    <li>Style contexts must (in most cases) be created before frames are
+        constructed, to determine what frame to create.</li>
+    <li>Parent style context determines inheritance; it should
+        always be the content parent. [design flaw in frame/SC
+        relationship]</li>
+    <li>Three functions for creating style contexts on
+        <code>nsIStyleSet</code>, wrapped by similarly named ones on
+        <code>nsIPresContext</code>:
+     <ul>
+       <li><code>ResolveStyleContextFor</code>: For elements.</li>
+       <li><code>ResolvePseudoStyleContextFor</code>: for
+           pseudo-elements (<code>:first-letter</code>,
+           <code>:before</code>, etc.)</li>
+       <li><code>ResolveStyleContextForNonElement</code>: skips rule
+           matching and uses root rule node (text frame optimization)</li>
+     </ul>
+    </li>
+  </ul>
+</div>
+
+<div class="slide" id="s27">
+  <div class="nav">
+    <a href="#s26">&lt;</a>
+    <a href="#s28">&gt;</a>
+  </div>
+  <h1>Managing style contexts</h1>
+
+  <ul>
+    <li>Style context resolving functions will walk the rule processors
+        in <code>StyleSetImpl::FileRules</code>, find the correct rule
+        node, and find a current child of the parent (&ldquo;sibling
+        sharing&rdquo;) or create a new child.</li>
+    <li>Style context doesn't hold pointer to content, just rule
+        node.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s28">
+  <div class="nav">
+    <a href="#s27">&lt;</a>
+    <a href="#s29">&gt;</a>
+  </div>
+  <h1>Dynamic changes to content</h1>
+
+  <ul>
+    <li><code>FrameManager::ReResolveStyleContext</code> destroys and
+        recreates style contexts for existing frames (rule node pointer
+        immutable).</li>
+    <li><code>ReResolveStyleContext</code> is messy because it needs to
+        create and parent style contexts correctly (sibling
+        sharing may not be the same) rather than just changing data.
+        [design flaw, again]</li>
+    <li>Any specially-parented style contexts (not along <em>frame</em>
+        parents, which need not be content parents) are reconstructed
+        using <code>nsIFrame::GetParentStyleContextFrame</code>.</li>
+    <li>Can return same style context due to sibling sharing unless
+        we're destroying the rule tree for a style sheet/rule
+        removal.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s29">
+  <div class="nav">
+    <a href="#s28">&lt;</a>
+    <a href="#s30">&gt;</a>
+  </div>
+  <h1>Dynamic changes to content</h1>
+
+  <ul>
+    <li><code>ReResolveStyleContext</code> calculates differences
+        (repaint, reflow, reframe, etc.) between style old and new style
+        contexts and does appropriate cleanup</li>
+    <li>It uses <code>nsIStyleContext::CalcStyleDifference</code>, which
+        only computes differences for structs that have been
+        requested.  (I'll call this the data-struct-based hint
+        mechanism.)</li>
+    <li>Caller of <code>nsIFrameManager::ComputeStyleChangeFor</code>
+        processes the change list, which has been built to avoid
+        duplication.</li>
+    <li>We also have <code>ReParentStyleContext</code>, used in a few
+        places (usually during frame construction), but it's broken (has
+        many bugs that <code>ReResolveStyleContext</code> <em>used
+        to</em> have).</li>
+    </ul>
+</div>
+
+<div class="slide" id="s30">
+  <div class="nav">
+    <a href="#s29">&lt;</a>
+    <a href="#s31">&gt;</a>
+  </div>
+  <h1>Dynamic changes to content: optimizations</h1>
+
+  <ul>
+    <li>We optimize <em>attribute changes</em> by storing all the
+        attributes that have an effect on which rules match and only
+        doing a <code>ReResolveStyleContext</code> if the attribute has
+        an effect.  <code>nsIStyleSheet::AttributeAffectsStyle</code>
+        (should be on <code>nsIStyleRuleProcessor</code>).</li>
+    <li>We optimize <em>event state changes</em> (<code>:hover</code>,
+        <code>:active</code>, etc.) using
+        <code>nsIStyleRuleProcessor::HasStateDependentStyle</code>,
+        which is much more accurate.  The CSSRuleProcessor
+        implementation does a slightly modified form of selector
+        matching to implement it (includes matching on the middle of
+        selectors to catch <code>p:hover a</code>).</li>
+  </ul>
+</div>
+
+<div class="slide" id="s31">
+  <div class="nav">
+    <a href="#s30">&lt;</a>
+    <a href="#s32">&gt;</a>
+  </div>
+  <h1>Style attribute changes</h1>
+
+  <ul>
+    <li>We handle <code>style</code> attribute (&ldquo;inline
+        style&rdquo;) changes in a different
+        way from other changes to style rules.</li>
+    <li>As for other style changes, we have to &ldquo;walk&rdquo; the
+        rule tree and clear all the style data coming from the old
+        inline style <code>nsIStyleRule</code>, since there could be an
+        <code>!important</code> rule that overrides it, which would
+        allow dynamic changes to put the style attribute in multiple
+        places in the rule tree.  However, we maintain a hashtable just
+        for inline style rules so that we don't have to walk the whole
+        tree to find the nodes.</li>
+    <li><code>nsCSSFrameConstructor::AttributeChanged</code> only
+        reresolves style on the subtree of the element, just like other
+        <em>attribute</em> changes.</li>
+    <li>Different hint mechanism (from rule structs, not data structs)
+        could make <code>AttributeChanged</code> just go straight to a
+        framechange, instead.</li>
+    <li>Bugs due to failure to call
+        <code>nsIFrame::DidSetStyleContext</code>.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s32">
+  <div class="nav">
+    <a href="#s31">&lt;</a>
+    <a href="#s33">&gt;</a>
+  </div>
+  <h1>Style sheet addition and removal</h1>
+
+  <ul>
+    <li>Handled in pres shell.</li>
+    <li><code>PresShell::ReconstructStyleData</code> calls
+        <code>FrameManager::ComputeStyleChangeFor</code>
+        (ReResolve) and then processes the framechange list.</li>
+    <li>Rebuilds rule tree if stylesheet was removed to avoid dangling
+        pointers (and perhaps aliasing that would cause problems).
+        Otherwise we'd have to walk rule tree and compare each rule node
+        to every rule in the sheet (<code>O(rules *
+        rule-nodes)</code>).</li>
+    <li>When rebuilding rule tree, we have to clear cached style
+        contexts from XUL menus and trees.</li>
+  </ul>
+</div>
+
+<div class="slide" id="s33">
+  <div class="nav">
+    <a href="#s32">&lt;</a>
+    <a href="#s34">&gt;</a>
+  </div>
+  <h1>Style rule changes</h1>
+
+  <ul>
+    <li>Handling of style rule changes is done in frame constructor
+        (called from style set, called from pres shell, which is a
+        document observer) and in the pres shell.  Code should be
+        merged.</li>
+    <li>Rule change applies the rule-struct hint as if the rule matched
+        the root element. (inefficient)  It does clearing of style data
+        (through <code>StyleSetImpl::ClearStyleData</code>) by walking
+        the rule tree and then the style context tree.
+        (could be handled by simultaneous clearing and
+        difference calculation of data (somewhat tricky))</li>
+    <li>Rule addition and removal just rebuild the entire world.  We
+        could at least do what we do for sheet addition/removal, or
+        slightly better, by searching the rule tree (only one rule this
+        time) instead of rebuilding it.</li>
+    <li><strong>Lots of room for optimization here.</strong> (but beware
+        <code>DidSetStyleContext</code>)</li>
+  </ul>
+</div>
+
+<div class="slide" id="s34">
+  <div class="nav">
+    <a href="#s33">&lt;</a>
+    <span style="background: white; color: white">&lt;</span>
+  </div>
+  <h1>The style system</h1>
+
+  <center>
+    Style sheets &amp; rules<br>&darr;<br>
+    Rule tree<br>&darr;<br>
+    Style context interface
+  </center>
+</div>
+
+</body>
+</html>
