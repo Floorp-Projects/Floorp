@@ -285,6 +285,7 @@ public:
     NS_IMETHODIMP _class::Finalize(JSContext *cx, JSObject *obj,            \
                         nsIXPConnectWrappedNative* wrapper,                 \
                         nsIXPCScriptable* arbitrary)                        \
+    /* XPConnect does the finalization on the wrapper itself anyway */      \
     {return arbitrary->Finalize(cx, obj, wrapper, NULL);}
 
 /***************************************************************************/
@@ -404,6 +405,7 @@ public:
     NS_IMETHODIMP _class::Finalize(JSContext *cx, JSObject *obj,            \
                         nsIXPConnectWrappedNative* wrapper,                 \
                         nsIXPCScriptable* arbitrary)                        \
+    /* XPConnect does the finalization on the wrapper itself anyway */      \
     {return NS_OK;}
 
 /***************************************************************************/

@@ -30,7 +30,7 @@ nsXPCWrappedNative::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
 
-    if(1 == ++mRefCnt && mRoot && mRoot != this)
+    if(1 == ++mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
     else if(2 == mRefCnt)
         JS_AddRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
@@ -48,16 +48,8 @@ nsXPCWrappedNative::Release(void)
 
     if(0 == --mRefCnt)
     {
-        if(mRoot == this)
-        {
-//            XPC_LOG_DEBUG(("--- Delete of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
-            NS_DELETEXPCOM(this);   // cascaded delete
-        }
-        else
-        {
-//            XPC_LOG_DEBUG(("--- Release of root %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
-            mRoot->Release();
-        }
+//        XPC_LOG_DEBUG(("--- Delete of wrapper %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
+        NS_DELETEXPCOM(this);   // also unlinks us from chain
         return 0;
     }
     if(1 == mRefCnt)
@@ -72,14 +64,17 @@ nsXPCWrappedNative::Release(void)
 }
 
 void
-nsXPCWrappedNative::JSObjectFinalized()
+nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
 {
     NS_PRECONDITION(1 == mRefCnt, "bad JSObject finalization");
 
     nsIXPCScriptable* ds;
     if(NULL != (ds = GetDynamicScriptable()))
-        ds->Finalize(GetClass()->GetXPCContext()->GetJSContext(), GetJSObject(),
-                     this, GetArbitraryScriptable());
+        ds->Finalize(cx, obj, this, GetArbitraryScriptable());
+
+    // pass through to the real JSObject finalization code
+    JS_FinalizeStub(cx, obj);
+    mJSObj = NULL;
     Release();
 }
 
@@ -240,23 +235,45 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
 nsXPCWrappedNative::~nsXPCWrappedNative()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
-    if(mRoot == this && GetClass())
+    NS_ASSERTION(mRoot, "wrapper without root deleted");
+
+    if(mRoot != this)
     {
-        XPCContext* xpcc = GetClass()->GetXPCContext();
-        if(xpcc)
+        // unlink this wrapper
+        nsXPCWrappedNative* cur = mRoot;
+        while(1)
         {
-            Native2WrappedNativeMap* map;
-            map = xpcc->GetWrappedNativeMap();
-            if(map)
-                map->Remove(this);
+            if(cur->mNext == this)
+            {
+                cur->mNext = mNext;
+                break;   
+            }
+            cur = cur->mNext;
+            NS_ASSERTION(cur, "failed to find wrapper in its own chain");
+        }
+        // let the root go
+        NS_RELEASE(mRoot);
+    }
+    else 
+    {
+        // remove this root wrapper from the map
+        NS_ASSERTION(!mNext, "root wrapper with non-empty chain being deleted");
+        nsXPCWrappedNativeClass* clazz;
+        XPCContext* xpcc;
+        Native2WrappedNativeMap* map;
+        if(NULL != (clazz = GetClass()) &&
+           NULL != (xpcc = clazz->GetXPCContext())&&
+           NULL != (map = xpcc->GetWrappedNativeMap()))
+        {
+            map->Remove(this);
         }
     }
     if(mDynamicScriptable)
         NS_RELEASE(mDynamicScriptable);
-    NS_RELEASE(mClass);
-    NS_RELEASE(mObj);
-    if(mNext)
-        NS_DELETEXPCOM(mNext);  // cascaded delete
+    if(mClass)
+        NS_RELEASE(mClass);
+    if(mObj)
+        NS_RELEASE(mObj);
 }
 
 nsXPCWrappedNative*
