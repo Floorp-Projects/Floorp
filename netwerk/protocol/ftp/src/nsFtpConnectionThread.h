@@ -16,16 +16,20 @@
  * Reserved.
  */
 
+#ifndef __nsftpconnectionthread__h_
+#define __nsftpconnectionthread__h_
+
 #include "nsIThread.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
-#include "prlock.h"
+#include "nsAutoLock.h"
 
 #include "nsString2.h"
 #include "nsIEventQueue.h"
+
 
 #include "time.h" // XXX should probably be using PRTime stuff
 
@@ -87,15 +91,14 @@ typedef enum _FTP_STATE {
     FTP_R_MDTM,
     FTP_S_LIST,     // send LIST or NLST (server dependent) to get a dir listing
     FTP_R_LIST,
+    FTP_S_TYPE,      // send TYPE to indicate what type of file will be transfered
+    FTP_R_TYPE,
 
 ///////////////////////
 //// Data channel connection setup states
 ///////////////////////
     FTP_S_PASV,     // send passsive
     FTP_R_PASV
-//    FTP_S_PORT,     // send port
-//    FTP_R_PORT
-
 } FTP_STATE;
 
 // higher level ftp actions
@@ -116,21 +119,56 @@ public:
     
     // nsIRunnable method
     NS_IMETHOD Run();
-#if 0
-    // nsICancelable methods:
-    NS_IMETHOD Cancel(void);
-    NS_IMETHOD Suspend(void);
-    NS_IMETHOD Resume(void);
-#endif
-    nsresult Init(nsIThread* aThread,
-                  nsIURI* aUrl);
+
+    nsresult Init(nsIURI* aUrl);
+    nsresult Process();
 
     // user level setup
     nsresult SetAction(FTP_ACTION aAction);
     nsresult SetUsePasv(PRBool aUsePasv);
 
 private:
-    nsresult Read(void);
+
+    ///////////////////////////////////
+    // STATE METHODS
+    ///////////////////////////////////
+    nsresult        S_user();
+    FTP_STATE       R_user();
+    nsresult        S_pass();
+    FTP_STATE       R_pass();
+    nsresult        S_syst();
+    FTP_STATE       R_syst();
+    nsresult        S_acct();
+    FTP_STATE       R_acct();
+    nsresult        S_macb();
+    FTP_STATE       R_macb();
+    nsresult        S_pwd();
+    FTP_STATE       R_pwd();
+    nsresult        S_mode();
+    FTP_STATE       R_mode();
+    nsresult        S_cwd();
+    FTP_STATE       R_cwd();
+    nsresult        S_size();
+    FTP_STATE       R_size();
+    nsresult        S_mdtm();
+    FTP_STATE       R_mdtm();
+    nsresult        S_list();
+    FTP_STATE       R_list();
+    nsresult        S_retr();
+    FTP_STATE       R_retr();
+
+    nsresult        S_pasv();
+    FTP_STATE       R_pasv();
+    nsresult        S_del_file();
+    FTP_STATE       R_del_file();
+    nsresult        S_del_dir();
+    FTP_STATE       R_del_dir();
+    nsresult        S_mkdir();
+    FTP_STATE       R_mkdir();
+    ///////////////////////////////////
+    // END: STATE METHODS
+    ///////////////////////////////////
+
     void SetSystInternals(void);
     FTP_STATE FindActionState(void);
     FTP_STATE FindGetState(void);
@@ -145,19 +183,26 @@ private:
     FTP_STATE           mNextState;         // the next state
     FTP_ACTION          mAction;            // the higher level action
 
-    nsIInputStream*     mCInStream;         // command channel input
+    nsISocketTransportService *mSTS;        // the socket transport service;
+
+    nsIChannel          *mCPipe;            // the command channel transport
+    nsIChannel          *mDPipe;            // the data channel transport
+
     nsIOutputStream*    mCOutStream;        // command channel output
+    nsIInputStream*     mCInStream;         // command channel input
 
     //nsString2           mDataAddress;       // the host:port combo for the data connection
-    nsIInputStream*     mDInStream;         // data channel input
     nsIOutputStream*    mDOutStream;        // data channel output
+    nsIInputStream*     mDInStream;         // data channel input
+
+    nsIBufferInputStream* mCBufInStream;    // data channel input (async)
 
     PRInt32             mResponseCode;      // the last command response code.
     nsString2           mResponseMsg;       // the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
     nsString2           mFilename;          // url filename (if any)
-    PRInt32             mLength;            // length of the file
+    PRUint32            mLength;            // length of the file
     time_t              mLastModified;      // last modified time for file
 
 // these members should be hung off of a specific transport connection
@@ -169,17 +214,23 @@ private:
     PRBool              mConnected;
     PRBool              mUseDefaultPath;    // use PWD to figure out path
     PRBool              mUsePasv;           // use a passive data connection.
-    PRBool              mAscii;             // transfer mode (ascii or binary)
     PRBool              mDirectory;         // this url is a directory
+    PRBool              mBin;               // transfer mode (ascii or binary)
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
     nsIChannel*         mChannel;
     nsISupports*        mContext;
 
-    PRLock              *mLock;
-    PRThread            *mThread;
+    PRBool              mKeepRunning;       // thread event loop boolean
+
+    nsString2           mContentType;       // the content type of the data we're dealing w/.
 };
 
 #define NS_FTP_THREAD_SEGMENT_SIZE      (4*1024)
 #define NS_FTP_THREAD_BUFFER_SIZE       (16*1024)
+
+#define NS_FTP_BUFFER_READ_SIZE             (4*1024)
+#define NS_FTP_BUFFER_WRITE_SIZE            (4*1024)
+
+#endif //__nsftpconnectionthread__h_

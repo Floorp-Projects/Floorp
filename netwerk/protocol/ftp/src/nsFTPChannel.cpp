@@ -26,7 +26,15 @@
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
+#include "nsIIOService.h"
+#include "nsIBuffer.h"
 #include "nsILoadGroup.h"
+#include "nsIFTPContext.h"
+#include "nsIMIMEService.h"
+
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
 
 #include "prprf.h" // PR_sscanf
 
@@ -42,7 +50,7 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 nsFTPChannel::nsFTPChannel()
     : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull),
-      mLoadAttributes(LOAD_NORMAL), mLoadGroup(nsnull)
+      mLoadAttributes(LOAD_NORMAL), mLoadGroup(nsnull), mContext(nsnull)
 {
 
     nsresult rv;
@@ -62,6 +70,7 @@ nsFTPChannel::~nsFTPChannel() {
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mEventQueue);
     NS_IF_RELEASE(mLoadGroup);
+    NS_IF_RELEASE(mContext);
 }
 
 NS_IMPL_ADDREF(nsFTPChannel);
@@ -95,23 +104,24 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
     if (mConnected)
         return NS_ERROR_FAILURE;
 
-    if (!getter) {
-        return NS_ERROR_FAILURE;
-    }
-
     mUrl = uri;
     NS_ADDREF(mUrl);
 
     mEventQueue = queue;
     NS_ADDREF(mEventQueue);
 
-    nsIProgressEventSink* eventSink;
-    rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIProgressEventSink>::GetIID(), 
-                              (nsISupports**)&eventSink);
-    if (NS_FAILED(rv)) return rv;
+    if (getter) {
+        nsIProgressEventSink* eventSink;
+        rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIProgressEventSink>::GetIID(), 
+                                  (nsISupports**)&eventSink);
+        //if (NS_FAILED(rv)) return rv;
 
-    mEventSink = eventSink;
-    NS_ADDREF(mEventSink);
+        // XXX event sinks are optional in ftp
+        if (eventSink) {
+            mEventSink = eventSink;
+            NS_ADDREF(mEventSink);
+        }
+    }
 
     return NS_OK;
 }
@@ -166,11 +176,54 @@ nsFTPChannel::GetURI(nsIURI * *aURL)
     return NS_OK;
 }
 
+// This class 
+
 NS_IMETHODIMP
 nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
                               nsIInputStream **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // The ftp channel will act as the listener which will receive
+    // events from the ftp connection thread. It then uses a syncstreamlistener
+    // as it's mListener which receives the listener notifications and writes
+    // data down the output stream end of a pipe.
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mEventQueue) {
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = serv->NewSyncStreamListener(_retval /* nsIInputStream **inStream */, 
+                                     &mBufferOutputStream /* nsIBufferOutputStream **outStream */,
+                                     &mListener/* nsIStreamListener **listener */);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX not sure how we should be using these. I suppose we need to use them 
+    // XXX in the nsFTPChannel::OnDataAvailable() method.
+    mSourceOffset = startPosition;
+    mAmount = readCount;
+
+    ////////////////////////////////
+    //// setup the channel thread
+
+    nsIThread* workerThread = nsnull;
+    nsFtpConnectionThread* protocolInterpreter = 
+        new nsFtpConnectionThread(mEventQueue, this, this, nsnull);
+    if (!protocolInterpreter)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    protocolInterpreter->Init(mUrl);
+    protocolInterpreter->SetUsePasv(PR_TRUE);
+
+    rv = NS_NewThread(&workerThread, protocolInterpreter);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -184,7 +237,60 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                         nsISupports *ctxt,
                         nsIStreamListener *listener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+
+    ///////////////////////////
+    //// setup channel state
+
+    if (ctxt) {
+        mContext = ctxt;
+        NS_ADDREF(mContext);
+    }
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mEventQueue) {
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = NS_NewPipe(&mBufferInputStream, &mBufferOutputStream,
+                    NS_FTP_SEGMENT_SIZE,
+                    NS_FTP_BUFFER_SIZE, PR_TRUE, nsnull/*this*/); // XXX need channel to implement
+                                                                // nsIBufferObserver
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mBufferOutputStream->SetNonBlocking(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    mSourceOffset = startPosition;
+    mAmount = readCount;
+
+    ////////////////////////////////
+    //// setup the channel thread
+
+    nsIThread* workerThread = nsnull;
+    nsFtpConnectionThread* protocolInterpreter = 
+        new nsFtpConnectionThread(mEventQueue, this, this, ctxt);
+    NS_ADDREF(protocolInterpreter);
+
+    if (!protocolInterpreter)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    protocolInterpreter->Init(mUrl);
+    protocolInterpreter->SetUsePasv(PR_TRUE);
+
+    rv = NS_NewThread(&workerThread, protocolInterpreter);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -211,12 +317,47 @@ nsFTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
+// FTP does not provide a file typing mechanism. We fallback to file
+// extension mapping.
+
+#define FTP_DUMMY_TYPE  "text/html"
 NS_IMETHODIMP
-nsFTPChannel::GetContentType(char* *contentType) {
-    
-    // XXX for ftp we need to do a file extension-to-type mapping lookup
-    // XXX in some hash table/registry of mime-types
-    return NS_ERROR_NOT_IMPLEMENTED;
+nsFTPChannel::GetContentType(char* *aContentType) {
+    nsresult rv = NS_OK;
+
+    // Parameter validation...
+    if (!aContentType) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aContentType = nsnull;
+
+    if (mContentType.Length()) {
+        *aContentType = mContentType.ToNewCString();
+        if (!*aContentType) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        return rv;
+    }
+
+    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = MIMEService->GetTypeFromURI(mUrl, aContentType);
+        if (NS_SUCCEEDED(rv)) {
+            mContentType = *aContentType;            
+            return rv;
+        }
+    }
+
+    // if all else fails treat it as text/html?
+	if (!*aContentType) 
+		*aContentType = nsCRT::strdup(FTP_DUMMY_TYPE);
+    if (!*aContentType) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        rv = NS_OK;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -241,25 +382,7 @@ nsFTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 
 NS_IMETHODIMP
 nsFTPChannel::Get(void) {
-    nsresult rv;
-    nsIThread* workerThread = nsnull;
-    nsFtpConnectionThread* protocolInterpreter = 
-        new nsFtpConnectionThread(mEventQueue, this, this, nsnull);
-    NS_ASSERTION(protocolInterpreter, "ftp protocol interpreter alloc failed");
-    NS_ADDREF(protocolInterpreter);
-
-    if (!protocolInterpreter)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    protocolInterpreter->Init(workerThread, mUrl);
-    protocolInterpreter->SetUsePasv(PR_TRUE);
-
-    rv = NS_NewThread(&workerThread, protocolInterpreter);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
-    
-    // XXX this release should probably be in the destructor.
-    NS_RELEASE(protocolInterpreter);
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -274,7 +397,7 @@ nsFTPChannel::Put(void) {
     if (!protocolInterpreter)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    protocolInterpreter->Init(workerThread, mUrl);
+    protocolInterpreter->Init(mUrl);
     protocolInterpreter->SetAction(PUT);
     protocolInterpreter->SetUsePasv(PR_TRUE);
 
@@ -298,15 +421,22 @@ nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
 
 NS_IMETHODIMP
 nsFTPChannel::OnStartRequest(nsIChannel* channel, nsISupports* context) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    if (mListener) {
+        rv = mListener->OnStartRequest(channel, context);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg) {
-    // Release the lock so the user get's the data stream
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    if (mListener) {
+        rv = mListener->OnStopRequest(channel, context, aStatus, aMsg);
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,8 +447,24 @@ nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                               nsIInputStream *aIStream, 
                               PRUint32 aSourceOffset,
                               PRUint32 aLength) {
-    // Fill in the buffer w/ the new data.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    nsIFTPContext *ftpCtxt = nsnull;
+    rv = context->QueryInterface(nsCOMTypeInfo<nsIFTPContext>::GetIID(), (void**)&ftpCtxt);
+    if (NS_FAILED(rv)) return rv;
+
+
+    char *type = nsnull;
+    rv = ftpCtxt->GetContentType(&type);
+    if (NS_FAILED(rv)) return rv;
+
+    mContentType = type;
+    nsAllocator::Free(type);
+
+    if (mListener) {
+        rv = mListener->OnDataAvailable(channel, context, aIStream, aSourceOffset, aLength);
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
