@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   IBM Corp.
 #
 
 DEPTH		= ../../..
@@ -31,6 +32,7 @@ MODULE		= timer
 EXPORTS		= \
 		nsITimer.h \
 		nsITimerCallback.h \
+		nsITimerQueue.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
