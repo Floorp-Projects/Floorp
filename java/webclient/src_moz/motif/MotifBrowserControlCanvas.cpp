@@ -57,9 +57,18 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBro
     gtk_set_locale ();
     
     gtk_init (0, NULL);
-
-    gdk_event_handler_set (handle_gdk_event, NULL, NULL);
-
+    /*
+    void * widgetGtkDll = dlopen("libwidget_gtk.so", RTLD_NOW | RTLD_GLOBAL);
+    if (widgetGtkDll)
+        {
+            void (* symbolHandle)(_GdkEvent*,void*);
+            symbolHandle = 
+                (void(*)(_GdkEvent*,void*)) dlsym(widgetGtkDll, 
+                                                  "handle_gdk_event");
+            if (symbolHandle != NULL)
+                gdk_event_handler_set (symbolHandle, NULL, NULL);
+        }
+    */
     gdk_rgb_init();
     
     mShell = gtk_window_new (GTK_WINDOW_POPUP);

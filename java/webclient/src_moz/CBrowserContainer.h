@@ -36,12 +36,12 @@
 #include "nsIWebShell.h"  // We still have to implement nsIWebShellContainer
                           // in order to receveive some DocumentLoaderObserver
                           // events.  edburns
-#include "nsIStreamObserver.h"
 #include "nsIURIContentListener.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+#include "nsIAuthPrompt.h"
 #include "nsCWebBrowser.h"
 #include "nsWeakReference.h"
 
@@ -59,12 +59,12 @@ class CBrowserContainer :
 		public nsIWebBrowserChrome,
 		public nsIWebProgressListener,
 		public nsIWebShellContainer,
-		public nsIStreamObserver,
 		public nsIURIContentListener,
 		public nsIDocumentLoaderObserver,
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
+    public nsIAuthPrompt,
 		public nsIDOMMouseListener,
     public wcIBrowserContainer,
     public nsSupportsWeakReference
@@ -131,7 +131,6 @@ public:
 	NS_DECL_NSIWEBBROWSERCHROME
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER
-	NS_DECL_NSISTREAMOBSERVER
 	NS_DECL_NSIDOCUMENTLOADEROBSERVER
 	NS_DECL_NSIINTERFACEREQUESTOR
 	NS_DECL_NSIWEBPROGRESSLISTENER
@@ -140,6 +139,7 @@ public:
 
 	// "Services" accessed through nsIInterfaceRequestor
 	NS_DECL_NSIPROMPT
+  NS_DECL_NSIAUTHPROMPT
 
 	// nsIDOMMouseListener
   

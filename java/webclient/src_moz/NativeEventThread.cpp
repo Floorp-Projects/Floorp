@@ -55,7 +55,6 @@
 #include "nsRepository.h"
 #include "nsIServiceManager.h" // for do_GetService
 #include "nsISHistory.h" // for sHistory
-#include "nsIPref.h" // for preferences
 #include "nsIThread.h" // for PRThread
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
@@ -85,8 +84,6 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kISHistoryIID, NS_ISHISTORY_IID);
 static NS_DEFINE_CID(kSHistoryCID, NS_SHISTORY_CID);
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
@@ -634,15 +631,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
         }
     }
 
-    // Setup Prefs obj and read default prefs
     if (gFirstTime) {
-        nsCOMPtr<nsIPref> mPrefs(do_GetService(kPrefCID));
-        if (!mPrefs) {
-            initContext->initFailCode = kCreateWebShellError;
-            return NS_ERROR_UNEXPECTED;
-        }
-        rv = mPrefs->StartUp();  
-        rv = mPrefs->ReadUserPrefs();
         gFirstTime = PR_FALSE;
     }
     PRBool allowPlugins = PR_TRUE;

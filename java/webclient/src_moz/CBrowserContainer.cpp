@@ -92,10 +92,10 @@ NS_INTERFACE_MAP_BEGIN(CBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
 	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIAuthPrompt)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 	NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
@@ -113,56 +113,34 @@ NS_IMETHODIMP CBrowserContainer::GetInterface(const nsIID & uuid, void * *result
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
-// nsIPrompt
+// nsIAuthPrompt
 
-/* void alert (in wstring text); */
-NS_IMETHODIMP CBrowserContainer::Alert(const PRUnichar *dialogTitle, 
-                                       const PRUnichar *text)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserContainer::AlertCheck(const PRUnichar *dialogTitle, 
-                                            const PRUnichar *text, 
-                                            const PRUnichar *checkMsg, 
-                                            PRBool *checkValue)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean confirm (in wstring text); */
-NS_IMETHODIMP CBrowserContainer::Confirm(const PRUnichar *dialogTitle,
-                                         const PRUnichar *text, 
-                                         PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
-NS_IMETHODIMP CBrowserContainer::ConfirmCheck(const PRUnichar *dialogTitle,
-                                              const PRUnichar *text, 
-                                              const PRUnichar *checkMsg, 
-                                              PRBool *checkValue, 
-                                              PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
+/* boolean prompt (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, in wstring defaultText, out wstring result); */
 NS_IMETHODIMP CBrowserContainer::Prompt(const PRUnichar *dialogTitle, 
                                         const PRUnichar *text, 
                                         const PRUnichar *passwordRealm, 
                                         PRUint32 savePassword, 
                                         const PRUnichar *defaultText, 
-                                        PRUnichar **result, PRBool *_retval)
+                                        PRUnichar **result, 
+                                        PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
-NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
+/* boolean promptPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptPassword(const PRUnichar *dialogTitle, 
+                                                const PRUnichar *text, 
+                                                const PRUnichar *passwordRealm, 
+                                                PRUint32 savePassword, 
+                                                PRUnichar **pwd, 
+                                                PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptUsernameAndPassword (in wstring dialogTitle, in wstring text, in wstring passwordRealm, in PRUint32 savePassword, out wstring user, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
                                                            const PRUnichar *text, 
                                                            const PRUnichar *passwordRealm, 
                                                            PRUint32 savePassword, 
@@ -231,12 +209,86 @@ NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dial
     return rv;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIPrompt
+
+NS_IMETHODIMP CBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle, 
+                                           const PRUnichar *text,
+                                           PRUint32 button0And1Flags, 
+                                           const PRUnichar *button2Title,
+                                           const PRUnichar *checkMsg, 
+                                           PRBool *checkValue,
+                                           PRInt32 *buttonPressed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/* void alert (in wstring text); */
+NS_IMETHODIMP CBrowserContainer::Alert(const PRUnichar *dialogTitle, 
+                                       const PRUnichar *text)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CBrowserContainer::AlertCheck(const PRUnichar *dialogTitle, 
+                                            const PRUnichar *text, 
+                                            const PRUnichar *checkMsg, 
+                                            PRBool *checkValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirm (in wstring text); */
+NS_IMETHODIMP CBrowserContainer::Confirm(const PRUnichar *dialogTitle,
+                                         const PRUnichar *text, 
+                                         PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP CBrowserContainer::ConfirmCheck(const PRUnichar *dialogTitle,
+                                              const PRUnichar *text, 
+                                              const PRUnichar *checkMsg, 
+                                              PRBool *checkValue, 
+                                              PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean prompt (in wstring text, in wstring defaultText, out wstring result); */
+NS_IMETHODIMP CBrowserContainer::Prompt(const PRUnichar *dialogTitle, 
+                                        const PRUnichar *text, 
+                                        PRUnichar **value, 
+                                        const PRUnichar *checkMsg, 
+                                        PRBool *checkValue, 
+                                        PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
+NS_IMETHODIMP CBrowserContainer::PromptUsernameAndPassword(const PRUnichar *dialogTitle, 
+                                                           const PRUnichar *text, 
+                                                           PRUnichar **username, 
+                                                           PRUnichar **password, 
+                                                           const PRUnichar *checkMsg, 
+                                                           PRBool *checkValue, 
+                                                           PRBool *_retval)
+{
+    // We Implement the PromptUsernameAndPassword as declared in nsIAuthPrompt
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 /* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
 NS_IMETHODIMP CBrowserContainer::PromptPassword(const PRUnichar *dialogTitle, 
                                                 const PRUnichar *text, 
-                                                const PRUnichar *passwordRealm, 
-                                                PRUint32 savePassword, 
-                                                PRUnichar **pwd, 
+                                                PRUnichar **password, 
+                                                const PRUnichar *checkMsg, 
+                                                PRBool *checkValue, 
                                                 PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -248,8 +300,8 @@ NS_IMETHODIMP CBrowserContainer::Select(const PRUnichar *inDialogTitle, const PR
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP 
-CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage, 
+#if 0
+NS_IMETHODIMP CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage, 
                                    const PRUnichar *inDialogTitle, 
                                    const PRUnichar *inMsg, 
                                    const PRUnichar *inCheckboxMsg, 
@@ -268,8 +320,8 @@ CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage,
                                    PRInt32 inEditField1Password, 
                                    PRInt32 *outButtonPressed)
 {
-    printf("debug: edburns: CBrowserContainer::UniversalDialog()\n");
     nsresult rv = NS_ERROR_FAILURE;
+    printf("debug: edburns: CBrowserContainer::UniversalDialog()\n");
     
     // if the user hasn't given us a prompt, oh well
     if	 (!mPrompt) {
@@ -342,9 +394,8 @@ CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage,
     ::util_DeleteJstringsFromUnichars(strings, 10);
 
     return rv;
-
 }
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
@@ -672,7 +723,9 @@ CBrowserContainer::SetFocus(void)
 
 
 NS_IMETHODIMP 
-CBrowserContainer::FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFocus)
+CBrowserContainer::FocusAvailable(nsIBaseWindow *aCurrentFocus, 
+                                  PRBool aForward, 
+                                  PRBool *aTookFocus)
 {
 	return NS_ERROR_FAILURE;
 }
@@ -770,26 +823,6 @@ CBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 {
     return NS_ERROR_FAILURE;
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIStreamObserver implementation
-
-
-NS_IMETHODIMP
-CBrowserContainer::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
-{
-
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CBrowserContainer::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
-{
-	return NS_OK;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocumentLoaderObserver implementation 
@@ -1420,7 +1453,7 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
     jstring jNodeName, jNodeValue;
     PRUint32 depth = 0;
     CBrowserContainer *curThis = nsnull;
-    const PRUint32 depthStrLen = 20;
+    //const PRUint32 depthStrLen = 20;
     //    char depthStr[depthStrLen];
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 

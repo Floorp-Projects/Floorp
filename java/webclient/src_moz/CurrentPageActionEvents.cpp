@@ -226,7 +226,7 @@ wsGetURLEvent::handleEvent ()
             return result;
         }
         
-        nsISHEntry * Entry;
+        nsIHistoryEntry * Entry;
         rv = mHistory->GetEntryAtIndex(currentIndex, PR_FALSE, &Entry);
 
         if (NS_FAILED(rv)) {

@@ -256,7 +256,7 @@ wsGetURLForIndexEvent::handleEvent ()
         rv = mInitContext->webNavigation->GetSessionHistory(&sHistory);
         char *indexURL = nsnull;
         
-        nsISHEntry * Entry;
+        nsIHistoryEntry * Entry;
         rv = sHistory->GetEntryAtIndex(mHistoryIndex, PR_FALSE, &Entry);
         if (NS_FAILED(rv)) {
             return result;

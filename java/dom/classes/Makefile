@@ -33,13 +33,6 @@ JDIRS = org/mozilla/dom 	\
 	$(NULL)
 
 
-include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
-
-JAVAC_PROG = $(JDKHOME)/bin/javac
-JAVAC_FLAGS = -classpath $(CLASSPATH):$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
-JAVAC = $(JAVAC_PROG) $(JAVAC_FLAGS)
-
 rm_java:
 ifeq ($(PACKAGE_BUILD),)
 	rm -Rf $(topsrcdir)/dist/classes/org/mozilla/dom
@@ -47,3 +40,13 @@ endif # PACKAGE_BUILD
 
 
 clobber_all::rm_java
+
+
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+JAVAC_PROG = $(JDKHOME)/bin/javac
+JAVAC_FLAGS = -classpath $(CLASSPATH) -d $(JAVA_DESTPATH)
+JAVAC = $(JAVAC_PROG) $(JAVAC_FLAGS)
+
