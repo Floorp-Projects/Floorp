@@ -458,7 +458,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
               // Set nsMenu Name
               pnsMenu->SetLabel(menuName); 
               // Make nsMenu a child of nsMenuBar
-              //pnsMenuBar->AddMenu(pnsMenu); // XXX adds an additional menu
+              pnsMenuBar->AddMenu(pnsMenu); // XXX adds an additional menu
 
               // Begin menuitem inner loop
               nsCOMPtr<nsIDOMNode> menuitemNode;
@@ -484,7 +484,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                       // Set nsMenuItem Name
                       pnsMenuItem->SetLabel(menuitemName);
                       // Make nsMenuItem a child of nsMenu
-                      //pnsMenu->AddMenuItem(pnsMenuItem); // XXX adds an additional item
+                      pnsMenu->AddMenuItem(pnsMenuItem); // XXX adds an additional item
                       /*
                       ConnectCommandToOneGUINode(menuitemNode);
 
@@ -526,7 +526,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
       } // end while (nsnull != menuNode)
           
       // Give the aParentWindow this nsMenuBar to hold onto.
-      //mWindow->SetMenuBar(pnsMenuBar);
+      mWindow->SetMenuBar(pnsMenuBar);
       
       // HACK: force a paint for now
       pnsMenuBar->Paint();
@@ -648,9 +648,13 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 
   // first get the toolbar child WebShell
   nsCOMPtr<nsIWebShell> childWebShell;
-  mWebShell->FindChildWithName(aWebShellName, *getter_AddRefs(childWebShell));
-  if (!childWebShell)
-    return domDoc;
+  if (aWebShellName.Equals("this")) { // XXX small kludge for code reused
+    childWebShell = mWebShell;
+  } else {
+    mWebShell->FindChildWithName(aWebShellName, *getter_AddRefs(childWebShell));
+    if (!childWebShell)
+      return domDoc;
+  }
   
   nsCOMPtr<nsIContentViewer> cv;
   childWebShell->GetContentViewer(getter_AddRefs(cv));
@@ -708,7 +712,7 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
   ///////////////////////////////
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
   ///////////////////////////////
-  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
+  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
     LoadMenus(menubarDOMDoc, mWindow);
 
