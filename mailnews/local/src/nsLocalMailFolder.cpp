@@ -1508,6 +1508,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
 {
   if (!mCopyState) return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
+  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+
   mCopyState->m_curDstKey = mCopyState->m_fileStream->tell();
 
   // CopyFileMessage() and CopyMessages() from servers other than pop3
@@ -1530,7 +1532,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
     result.Append(CRLF);
 
     // *** jt - hard code status line for now; come back later
-    mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
 
     *(mCopyState->m_fileStream) << result.GetBuffer();
     if (mCopyState->m_parseMsgState)
@@ -1567,6 +1568,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 	if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
 
 	PRUint32 readCount, maxReadCount = FOUR_K -1;
+  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+
   while (aLength > 0)
   {
     if (aLength < (PRInt32) maxReadCount)
@@ -1574,7 +1577,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     
     rv = aIStream->Read(mCopyState->m_dataBuffer, maxReadCount, &readCount);
     mCopyState->m_dataBuffer[readCount] ='\0';
-    mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
     *(mCopyState->m_fileStream) << mCopyState->m_dataBuffer;
 
     // CopyFileMessage() and CopyMessages() from servers other than mailbox
@@ -1608,22 +1610,28 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 	if(copySucceeded && mCopyState->m_message)
 	{ //  CopyMessages() goes here; CopyFileMessage() never gets in here because
     //  the mCopyState->m_message will be always null for file message
-		nsCOMPtr<nsIMsgDBHdr> newHdr;
-		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(mCopyState->m_message,
+
+    nsCOMPtr<nsIMsgDBHdr> newHdr;
+    nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+    nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(mCopyState->m_message,
                                                        &rv));
-
-		rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-
-		if(NS_SUCCEEDED(rv))
-			rv = GetDatabase();
-
-		if(NS_SUCCEEDED(rv))
+    
+    rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+    
+    if(!mCopyState->m_parseMsgState)
     {
-			rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey, msgDBHdr,
-                                             getter_AddRefs(newHdr));
-      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+      if(NS_SUCCEEDED(rv))
+        rv = GetDatabase();
+      
+      if(NS_SUCCEEDED(rv))
+      {
+        rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
+                                               msgDBHdr, 
+                                               getter_AddRefs(newHdr));
+        mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+      }
     }
+
     if (NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
     {
       nsCOMPtr<nsLocalMoveCopyMsgTxn>
@@ -1639,6 +1647,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   {
     mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
     *(mCopyState->m_fileStream) << CRLF;
+    if (mCopyState->m_parseMsgState)
+        mCopyState->m_parseMsgState->ParseAFolderLine(CRLF, 2);
   }
 
   // CopyFileMessage() and CopyMessages() from servers other than mailbox
@@ -1647,6 +1657,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     nsresult result;
     nsCOMPtr<nsIMsgDatabase> msgDb;
     nsCOMPtr<nsIMsgDBHdr> newHdr;
+
+    mCopyState->m_parseMsgState->FinishHeader();
+
     result =
       mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
     if (NS_SUCCEEDED(result) && newHdr)
