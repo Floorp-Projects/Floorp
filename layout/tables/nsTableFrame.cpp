@@ -2308,8 +2308,30 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return NS_OK;
+  return nsFrame::Paint(aPresContext,
+                        aRenderingContext,
+                        aDirtyRect,
+                        aWhichLayer);
 }
+
+
+//null range means the whole thing
+NS_IMETHODIMP
+nsTableFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+{
+  //traverse through children unselect tables
+  if ((aSpread == eSpreadAcross) && aSelected){
+    nsIFrame* kid;
+    nsresult rv = FirstChild(nsnull, &kid);
+    while (nsnull != kid) {
+      kid->SetSelected(nsnull,PR_FALSE,eSpreadDown);
+
+      kid->GetNextSibling(&kid);
+    }
+  }
+  return nsFrame::SetSelected(aRange,aSelected,aSpread);
+}
+
 
 PRIntn
 nsTableFrame::GetSkipSides() const

@@ -157,6 +157,12 @@ enum nsDirection {
   eDirPrevious= 1
 };
 
+enum nsSpread {
+  eSpreadNone   = 0,
+  eSpreadAcross = 1,
+  eSpreadDown   = 2
+};
+
 //----------------------------------------------------------------------
 
 /**
@@ -586,9 +592,9 @@ public:
    *  data in struct may be changed when passed in.
    *  @param aRange is the range that will dictate if the frames need to be redrawn null means the whole content needs to be redrawn
    *  @param aSelected is it selected
-   *  @param aSpread should is spread selection to flow elements around it?
+   *  @param aSpread should is spread selection to flow elements around it? or go down to its children?
    */
-  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread) = 0;
+  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread) = 0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 

@@ -681,7 +681,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
                nsFramePaintLayer    aWhichLayer)
 {
   PRBool drawSelected(PR_FALSE);
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+  //if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 /** GetDocument
 */
     nsCOMPtr<nsIDocument> doc;
@@ -746,7 +746,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
         }
       }
     }
-  }
+  //}
   if (drawSelected)
   {
     nsRect rect;
@@ -1514,19 +1514,29 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
+nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
+  if (eSpreadDown == aSpread){
+    nsIFrame* kid;
+    nsresult rv = FirstChild(nsnull, &kid);
+    while (nsnull != kid) {
+      kid->SetSelected(nsnull,PR_FALSE,aSpread);
+      kid->GetNextSibling(&kid);
+    }
+  }
+  
   nsFrameState  frameState;
   GetFrameState(&frameState);
-  if ( aSelected )
+  if ( aSelected ){
     frameState |=  NS_FRAME_SELECTED_CONTENT;
+  }
   else
     frameState &= ~NS_FRAME_SELECTED_CONTENT;
   SetFrameState(frameState);
   nsRect frameRect;
   GetRect(frameRect);
   nsRect rect(0, 0, frameRect.width, frameRect.height);
-  Invalidate(rect, PR_TRUE);
+  Invalidate(rect, PR_FALSE);
   return NS_OK;
 }
 
