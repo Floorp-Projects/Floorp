@@ -444,7 +444,8 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
                                 getter_AddRefs(mPresShell));
     NS_RELEASE(styleSet);
   if (NS_FAILED(rv)) return rv;
-  
+  mPresShell->BeginObservingDocument();
+
       // Initialize our view manager
       nsRect bounds;
       mWindow->GetBounds(bounds);
@@ -459,7 +460,8 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 
       if (!makeCX) {
         // Make shell an observer for next time
-        mPresShell->BeginObservingDocument();
+        // XXX - we observe the docuement always, see above after preshell is created
+        // mPresShell->BeginObservingDocument();
 
 //XXX I don't think this should be done *here*; and why paint nothing
 //(which turns out to cause black flashes!)???
