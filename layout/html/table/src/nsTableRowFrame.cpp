@@ -1321,7 +1321,10 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
       if (cellKidFrame) {
         cellFrame->ConsiderChildOverflow(aPresContext, cellMet.mOverflowArea, cellKidFrame);
         cellFrame->StoreOverflow(aPresContext, cellMet);
-       }
+        if (cellFrame->HasView()) {
+          nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, cellFrame, cellFrame->GetView(), &cellMet.mOverflowArea, 0);
+        }
+      }
     }
   }
   else
