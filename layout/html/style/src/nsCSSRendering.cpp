@@ -1031,14 +1031,22 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_TOP].Count();
     PRInt32 i;
-    nscoord x=0;
+    nsBorderEdge * leftEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
+    //printf("TOP  leftEdge.max=%d, leftEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.left, leftEdge->mWidth);
+    nscoord x = aBorderEdges->mMaxBorderWidth.left - leftEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(i));
-      nsRect inside(x, aBounds.y, borderEdge->mLength, aBounds.height);
+      nscoord y = aBounds.y + (aBorderEdges->mMaxBorderWidth.top - borderEdge->mWidth);
+      //printf("  topEdge.max=%d, topEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.top, borderEdge->mWidth);
+      nsRect inside(x, y, borderEdge->mLength, aBounds.height);
+      //printf("inside xywh=%d %d %d %d\n", inside.x, inside.y, inside.width, inside.height);
       x += borderEdge->mLength;
       nsRect outside(inside);
-      outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      nsMargin outsideMargin(0, borderEdge->mWidth, 0, 0);
+      outside.Deflate(outsideMargin);
+      //printf("outside xywh=%d %d %d %d\n", outside.x, outside.y, outside.width, outside.height);
       DrawSide(aRenderingContext, NS_SIDE_TOP,
                borderEdge->mStyle,
                borderEdge->mColor,
@@ -1048,14 +1056,18 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
     PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_LEFT].Count();
     PRInt32 i;
-    nscoord y=0;
+    nsBorderEdge * topEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(0));
+    nscoord y = aBorderEdges->mMaxBorderWidth.top - topEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(i));
-      nsRect inside(aBounds.x, y, aBounds.width, borderEdge->mLength);
+      nscoord x = aBounds.x + (aBorderEdges->mMaxBorderWidth.left - borderEdge->mWidth);
+      nsRect inside(x, y, aBounds.width, borderEdge->mLength);
       y += borderEdge->mLength;
       nsRect outside(inside);
-      outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      nsMargin outsideMargin(borderEdge->mWidth, 0, 0, 0);
+      outside.Deflate(outsideMargin);
       DrawSide(aRenderingContext, NS_SIDE_LEFT,
                borderEdge->mStyle,
                borderEdge->mColor,
@@ -1065,14 +1077,23 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
     PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_BOTTOM].Count();
     PRInt32 i;
-    nscoord x=0;
+    nsBorderEdge * leftEdge =  (nsBorderEdge *)
+      (aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(aBorderEdges->mEdges[NS_SIDE_LEFT].Count()-1));
+    //printf("BOTTOM  leftEdge.max=%d, leftEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.left, leftEdge->mWidth);
+    nscoord x = aBorderEdges->mMaxBorderWidth.left - leftEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(i));
-      nsRect inside(x, aBounds.y, borderEdge->mLength, aBounds.height);
+      nscoord y = aBounds.y - (aBorderEdges->mMaxBorderWidth.bottom - borderEdge->mWidth);
+      //printf("  bottomEdge.max=%d, bottomEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.bottom, borderEdge->mWidth);
+      nsRect inside(x, y, borderEdge->mLength, aBounds.height);
+      //printf("inside xywh=%d %d %d %d\n", inside.x, inside.y, inside.width, inside.height);
       x += borderEdge->mLength;
       nsRect outside(inside);
-      outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      nsMargin outsideMargin(0, 0, 0, borderEdge->mWidth);
+      outside.Deflate(outsideMargin);
+      //printf("outside xywh=%d %d %d %d\n", outside.x, outside.y, outside.width, outside.height);
       DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
                borderEdge->mStyle,
                borderEdge->mColor,
@@ -1082,14 +1103,25 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
     PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_RIGHT].Count();
     PRInt32 i;
-    nscoord y=0;
+    nsBorderEdge * topEdge =  (nsBorderEdge *)
+      (aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aBorderEdges->mEdges[NS_SIDE_TOP].Count()-1));
+    printf("RIGHT  topEdge.max=%d, topEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.right, topEdge->mWidth);
+    nscoord y = aBorderEdges->mMaxBorderWidth.top - topEdge->mWidth;
     for (i=0; i<segmentCount; i++)
     {
       nsBorderEdge * borderEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(i));
-      nsRect inside(aBounds.x, y, aBounds.width, borderEdge->mLength);
+      nscoord width = aBounds.width;
+      if (PR_TRUE==aBorderEdges->mOutsideEdge)
+        width -= aBorderEdges->mMaxBorderWidth.left + borderEdge->mWidth;
+      printf("  rightEdge.max=%d, rightEdge.width=%d\n", aBorderEdges->mMaxBorderWidth.right, borderEdge->mWidth);
+      nsRect inside(aBounds.x, y, width, borderEdge->mLength);
+      printf("inside xywh=%d %d %d %d\n", inside.x, inside.y, inside.width, inside.height);
       y += borderEdge->mLength;
       nsRect outside(inside);
-      outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      //outside.Deflate(aBorderEdges->mMaxBorderWidth);
+      nsMargin outsideMargin(0, 0, borderEdge->mWidth, 0);
+      outside.Deflate(outsideMargin);
+      printf("outside xywh=%d %d %d %d\n", outside.x, outside.y, outside.width, outside.height);
       DrawSide(aRenderingContext, NS_SIDE_RIGHT,
                borderEdge->mStyle,
                borderEdge->mColor,
