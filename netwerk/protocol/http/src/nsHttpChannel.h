@@ -216,6 +216,8 @@ private:
 
     nsCString                         mContentTypeHint;
     nsCString                         mContentCharsetHint;
+
+    nsCOMPtr<nsISupports>             mProperties;
     
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;

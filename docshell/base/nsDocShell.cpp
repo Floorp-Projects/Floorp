@@ -257,7 +257,6 @@ nsDocShell::nsDocShell():
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
-    mUseExternalProtocolHandler(PR_FALSE),
     mDisallowPopupWindows(PR_FALSE),
     mValidateOrigin(PR_TRUE), // validate frame origins by default
     mIsExecutingOnLoadHandler(PR_FALSE),
@@ -3092,13 +3091,6 @@ nsDocShell::Create()
 
     PRBool tmpbool;
 
-    // i don't want to read this pref in every time we load a url
-    // so read it in once here and be done with it...
-    rv = mPrefs->GetBoolPref("network.protocols.useSystemDefaults",
-                             &tmpbool);
-    if (NS_SUCCEEDED(rv))
-      mUseExternalProtocolHandler = tmpbool;
-
     rv = mPrefs->GetBoolPref("browser.block.target_new_window", &tmpbool);
     if (NS_SUCCEEDED(rv))
       mDisallowPopupWindows = tmpbool;
@@ -5092,40 +5084,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         nsAutoString name(aWindowTarget);
 
         //
-        // This is a hack for Shrimp :-(
-        //
-        // if the load cmd is a user click....and we are supposed to try using
-        // external default protocol handlers....then try to see if we have one for
-        // this protocol
-        //
-        // See bug #52182
-        //
-        if (mUseExternalProtocolHandler && aLoadType == LOAD_LINK) {
-            // don't do it for javascript urls!
-            // _main is an IE target which should be case-insensitive but isn't
-            // see bug 217886 for details            
-            if (!bIsJavascript &&
-                (name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main") ||
-                 name.LowerCaseEqualsLiteral("_blank"))) 
-            {
-                nsCOMPtr<nsIExternalProtocolService> extProtService;
-                nsCAutoString urlScheme;
-
-                extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
-                if (extProtService) {
-                    PRBool haveHandler = PR_FALSE;
-                    aURI->GetScheme(urlScheme);
-
-                    extProtService->ExternalProtocolHandlerExists(urlScheme.get(),
-                                                                  &haveHandler);
-                    if (haveHandler) {
-                        return extProtService->LoadUrl(aURI);
-                    }
-                }
-            }
-        }
-
-        //
         // This is a hack to prevent top-level windows from ever being
         // created.  It really doesn't belong here, but until there is a
         // way for embeddors to get involved in window targeting, this is
@@ -5524,6 +5482,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
       } else {
         httpChannelInternal->SetDocumentURI(aReferrerURI);
       }
+    }
+
+    nsCOMPtr<nsIProperties> props(do_QueryInterface(channel));
+    if (props)
+    {
+      // save true referrer for those who need it (e.g. xpinstall whitelisting)
+      // Currently only http and ftp channels support this.
+      props->Set("docshell.internalReferrer", aReferrerURI);
     }
 
     //

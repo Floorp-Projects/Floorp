@@ -144,7 +144,8 @@ protected:
     PRPackedBool                    mCanceled;
 
     nsCOMPtr<nsIIOService>          mIOService;
-
+    nsCOMPtr<nsISupports>           mProperties;
+    
     nsCOMPtr<nsICacheSession>         mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIProxyInfo>            mProxyInfo;

@@ -355,13 +355,6 @@ protected:
 
     PRPackedBool               mIsBeingDestroyed;
 
-    // used to keep track of whether user click links should be handle
-    // by us or immediately kicked out to an external
-    // application. mscott: eventually i'm going to try to fold this
-    // up into the uriloader where it belongs but i haven't figured
-    // out how to do that yet.
-    PRPackedBool               mUseExternalProtocolHandler;
-
     // Disallow popping up new windows with target=
     PRPackedBool               mDisallowPopupWindows;
 
