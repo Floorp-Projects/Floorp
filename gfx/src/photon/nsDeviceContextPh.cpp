@@ -242,7 +242,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence\n" ));
 
   nsresult    ret_code = NS_ERROR_FAILURE;
-  static char *fontName = aFontName.ToNewCString();
+  char        *fontName = aFontName.ToNewCString();
 
   if( fontName )
   {
