@@ -366,6 +366,12 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 			printf("Pop Password: %s\n", value ? value : "");
 			msgIdentity->GetSmtpServer(&value);
 			printf("Smtp Server: %s\n", value ? value : "");
+			msgIdentity->GetImapServer(&value);
+			printf("Imap Server: %s\n", value ? value : "");
+			msgIdentity->GetImapName(&value);
+			printf("Imap User: %s\n", value ? value : "");
+			msgIdentity->GetImapPassword(&value);
+			printf("Imap Password: %s\n", value ? value : "");
 
 		}
 		else
