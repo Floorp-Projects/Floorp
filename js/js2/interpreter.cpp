@@ -748,9 +748,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                     if (icm->itsParameters->mRestParameter != ParameterList::HasUnnamedRestParameter) {
                                         // if the name is a numeric literal >= 0, use it as an array index
                                         // otherwise just set the named property.
-                                        const char16 *c = argName->c_str();
+                                        const char16 *c = argName->data();
                                         const char16 *end;
-                                        double d = stringToDouble(c, c + argName->length(), end);
+                                        double d = stringToDouble(c, c + argName->size(), end);
 
                                         if ((d != d) || (d < 0) || (d != (int)d)) { // a non-numeric or negative value                                             
                                             if (icm->itsParameters->mRestParameter == ParameterList::HasRestParameterBeforeBar)
