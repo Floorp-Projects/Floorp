@@ -10,7 +10,6 @@ browser.jar:
         content/browser/nsBrowserStatusHandler.js    (content/nsBrowserStatusHandler.js)
         content/browser/nsBrowserContentListener.js  (content/nsBrowserContentListener.js)
         content/browser/urlbarBindings.xml           (content/urlbarBindings.xml)
-        content/browser/navigator.css                (content/navigator.css)
         content/browser/metadata.xul                 (content/metadata.xul)
         content/browser/metadata.js                  (content/metadata.js)
         content/browser/personalToolbar.js           (content/personalToolbar.js)

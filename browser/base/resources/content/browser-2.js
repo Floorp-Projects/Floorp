@@ -90,6 +90,7 @@ function toggleAffectedChrome(aHide)
   chrome[i++] = document.getElementById("nav-bar");
   chrome[i++] = document.getElementById("LocationToolbar");
   chrome[i++] = document.getElementById("PersonalToolbar");
+  chrome[i++] = document.getElementById("status-bar");
 
   // now that we've figured out which elements we're interested, toggle 'em
   for (i = 0; i < chrome.length; ++i)
