@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/08/30 02:29:36 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/08/30 20:16:46 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -59,6 +59,8 @@
 #       runtime   => The time it took the build to complete (in seconds)
 #
 #       errorparser => The error parser to use when parsing the logfiles
+#       full-log  => The basename of the log file contianing the full log
+#       brief-log => The basename of the log file contianing the brief log
 #       fulllog  => The full URL of the log file contianing the full log
 #       brieflog => The full URL of the log file contianing the brief log
 #      };
@@ -958,7 +960,7 @@ sub status_table_start {
     my ($current_rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
     while ( 
            ( $current_rec->{'starttime'} > $earliest_data ) ||
-           ( $current_rec->{'timenow'}  >  $earliest_data ) 
+           ( $current_rec->{'timenow'}   > $earliest_data ) 
           ) {
       $db_index++;
       $current_rec = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
@@ -991,13 +993,18 @@ sub status_table_row {
 
     # skip this column?
 
-    if ( ( (!($main::NOIGNORE)) && ($IGNORE_BUILDS{$tree}{$buildname}) ) || 
-         ( $NEXT_ROW{$tree}{$buildname} !=  $row_index ) ||
-         ( $current_rec->{'starttime'} > $row_times->[$row_index] ) 
-#||         ( $current_rec->{'timenow'}  <  $row_times->[$row_index] ) 
+    if (
+        ( (!($main::NOIGNORE)) && ($IGNORE_BUILDS{$tree}{$buildname}) ) || 
+        ( $NEXT_ROW{$tree}{$buildname} !=  $row_index )
        ) {
       
-      push @outrow, "\t<!-- skipping: build: $buildname, tree: $tree -->\n";
+      push @outrow, ("\t<!-- skipping: Build: ".
+                     "tree: $tree, ".
+                     "build: $buildname, ".
+                     "additional_skips: ".
+                     ($NEXT_ROW{$tree}{$buildname} -  $row_index).", ".
+                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
+                     " -->\n");
       next;
     }
     
@@ -1018,8 +1025,12 @@ sub status_table_row {
       my ($cell_options) = ("rowspan=$rowspan ".
                             "bgcolor=$cell_color ");
 
-      push @outrow, ("\t<!-- not_running: build: $buildname, ".
-                     "tree: $tree -->\n".
+      push @outrow, ("\t<!-- not_running: Build:".
+                     "tree: $tree, ".
+                     "build: $buildname, ".
+                     "previous_end: ".localtime($current_rec->{'timenow'}).", ".
+                     "-->\n".
+
                      "\t\t<td align=center $cell_options>".
                      "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
       $NEXT_ROW{$tree}{$buildname} =  $row_index + $rowspan;
