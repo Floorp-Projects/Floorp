@@ -54,6 +54,7 @@
 #include "pldhash.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
+#include "nsSize.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a linked list.
@@ -2633,7 +2634,10 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       fullAuto = PR_FALSE;
     }
     if (eCSSUnit_Auto == displayData.mClip.mBottom.GetUnit()) {
-      display->mClip.height = 0;
+      // Setting to NS_MAXSIZE for the 'auto' case ensures that
+      // the clip rect is nonempty. It is important that mClip be
+      // nonempty if the actual clip rect could be nonempty.
+      display->mClip.height = NS_MAXSIZE;
       display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
     } 
     else if (displayData.mClip.mBottom.IsLengthUnit()) {
@@ -2650,7 +2654,10 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       fullAuto = PR_FALSE;
     }
     if (eCSSUnit_Auto == displayData.mClip.mRight.GetUnit()) {
-      display->mClip.width = 0;
+      // Setting to NS_MAXSIZE for the 'auto' case ensures that
+      // the clip rect is nonempty. It is important that mClip be
+      // nonempty if the actual clip rect could be nonempty.
+      display->mClip.width = NS_MAXSIZE;
       display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
     } 
     else if (displayData.mClip.mRight.IsLengthUnit()) {
