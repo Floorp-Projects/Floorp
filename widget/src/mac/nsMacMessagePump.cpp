@@ -430,9 +430,11 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				::SetPortWindowPort(whichWindow);
 				if (IsWindowHilited(whichWindow))
 					DispatchOSEventToRaptor(anEvent, whichWindow);
-				nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
-				if (mw)
-					mw->ComeToFront();
+				else {
+					nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
+					if (mw)
+						mw->ComeToFront();
+				}
 				break;
 			}
 
