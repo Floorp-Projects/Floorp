@@ -29,7 +29,6 @@
 class nsSpaceManager : public nsISpaceManager {
 public:
   nsSpaceManager(nsIFrame* aFrame);
-  ~nsSpaceManager();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -135,6 +134,7 @@ protected:
   PLHashTable*    mFrameInfoMap;
 
 protected:
+  virtual ~nsSpaceManager();
   FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);
   FrameInfo* CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect);
   void       DestroyFrameInfo(FrameInfo*);
