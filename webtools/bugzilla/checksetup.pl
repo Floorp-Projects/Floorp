@@ -1905,7 +1905,10 @@ $dbh->bz_rename_field('bugs_activity', 'when', 'bug_when');
 # a new table format which will allow 32 indices.)
 
 $dbh->bz_drop_field('bugs', 'area');
-$dbh->bz_add_field('bugs',     'votes',        'mediumint not null, add index (votes)');
+if (!$dbh->bz_get_field_def('bugs', 'votes')) {
+    $dbh->bz_add_field('bugs', 'votes', 'mediumint not null');
+    $dbh->do('CREATE INDEX bugs_votes_idx ON bugs(votes)');
+}
 $dbh->bz_add_field('products', 'votesperuser', 'mediumint not null');
 
 
@@ -2114,8 +2117,9 @@ if ($dbh->bz_get_field_def('bugs', 'long_desc')) {
 # now has a pointer into that table instead of recording the name directly.
 
 if ($dbh->bz_get_field_def('bugs_activity', 'field')) {
-    $dbh->bz_add_field('bugs_activity', 'fieldid',
-             'mediumint not null, ADD INDEX (fieldid)');
+    $dbh->bz_add_field('bugs_activity', 'fieldid', 'mediumint not null');
+    $dbh->do('CREATE INDEX bugs_activity_fieldid_idx
+              ON bugs_activity(fieldid)');
     print "Populating new fieldid field ...\n";
 
     $dbh->bz_lock_tables('bugs_activity WRITE', 'fielddefs WRITE');
@@ -2200,8 +2204,9 @@ if ($dbh->bz_get_index_def('profiles', 'login_name')->[1]) {
     }
     print "OK, changing index type to prevent duplicates in the future ...\n";
     
-    $dbh->do("ALTER TABLE profiles DROP INDEX login_name");
-    $dbh->do("ALTER TABLE profiles ADD UNIQUE (login_name)");
+    $dbh->do("ALTER TABLE profiles DROP INDEX profiles_login_name_idx");
+    $dbh->do("CREATE UNIQUE INDEX profiles_login_name_idx"
+             . " ON profiles(login_name)");
 
 }    
 
@@ -2397,8 +2402,8 @@ if ( $dbh->bz_get_index_count('cc') != 3 ) {
     #
     print "Recreating indexes on cc table.\n";
     $dbh->bz_drop_table_indexes('cc');
-    $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
-    $dbh->do("ALTER TABLE cc ADD INDEX (who)");
+    $dbh->do("CREATE UNIQUE INDEX cc_bug_id_idx ON cc(bug_id,who)");
+    $dbh->do("CREATE INDEX cc_who_idx ON cc(who)");
 }    
 
 if ( $dbh->bz_get_index_count('keywords') != 3 ) {
@@ -2407,8 +2412,9 @@ if ( $dbh->bz_get_index_count('keywords') != 3 ) {
     #
     print "Recreating indexes on keywords table.\n";
     $dbh->bz_drop_table_indexes('keywords');
-    $dbh->do("ALTER TABLE keywords ADD INDEX (keywordid)");
-    $dbh->do("ALTER TABLE keywords ADD UNIQUE (bug_id,keywordid)");
+    $dbh->do("CREATE UNIQUE INDEX keywords_bug_id_idx"
+             . " ON keywords(bug_id,keywordid)");
+    $dbh->do("CREATE INDEX keywords_keywordid_idx ON keywords(keywordid)");
 
 }    
 
@@ -2555,7 +2561,7 @@ ENDTEXT
 #   http://bugzilla.mozilla.org/show_bug.cgi?id=57350
 if (!defined $dbh->bz_get_index_def('longdescs','who')) {
     print "Adding index for who column in longdescs table...\n";
-    $dbh->do('ALTER TABLE longdescs ADD INDEX (who)');
+    $dbh->do('CREATE INDEX longdescs_who_idx ON longdescs(who)');
 }
 
 # 2001-06-15 kiko@async.com.br - Change bug:version size to avoid
@@ -2720,7 +2726,7 @@ $dbh->bz_add_field('attachments', 'isprivate', 'tinyint not null default 0');
 # in addition to ID.
 if (!$dbh->bz_get_field_def("bugs", "alias")) {
     $dbh->bz_add_field("bugs", "alias", "VARCHAR(20)");
-    $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
+    $dbh->do("CREATE UNIQUE INDEX bugs_alias_idx ON bugs(alias)");
 }
 
 # 2002-07-15 davef@tetsubo.com - bug 67950
@@ -2818,11 +2824,12 @@ if ($dbh->bz_get_field_def("products", "product")) {
     # Drop any indexes that may exist on the milestones table.
     $dbh->bz_drop_table_indexes('milestones');
 
-    $dbh->do("ALTER TABLE milestones ADD UNIQUE (product_id, value)");
-    $dbh->do("ALTER TABLE bugs DROP INDEX product");
-    $dbh->do("ALTER TABLE bugs ADD INDEX (product_id)");
-    $dbh->do("ALTER TABLE bugs DROP INDEX component");
-    $dbh->do("ALTER TABLE bugs ADD INDEX (component_id)");
+    $dbh->do("CREATE UNIQUE INDEX milestones_product_id_idx"
+             . " ON milestones(product_id, value)");
+    $dbh->do("ALTER TABLE bugs DROP INDEX bugs_product_idx");
+    $dbh->do("CREATE INDEX bugs_product_id_idx ON bugs(product_id)");
+    $dbh->do("ALTER TABLE bugs DROP INDEX bugs_component_idx");
+    $dbh->do("CREATE INDEX bugs_component_id_idx ON bugs(component_id)");
 
     print "Removing, renaming, and retyping old product and component fields.\n";
     $dbh->bz_drop_field("components", "program");
@@ -2837,9 +2844,10 @@ if ($dbh->bz_get_field_def("products", "product")) {
     $dbh->bz_change_field_type("components", "name", "varchar(64) not null");
 
     print "Adding indexes for products and components tables.\n";
-    $dbh->do("ALTER TABLE products ADD UNIQUE (name)");
-    $dbh->do("ALTER TABLE components ADD UNIQUE (product_id, name)");
-    $dbh->do("ALTER TABLE components ADD INDEX (name)");
+    $dbh->do("CREATE UNIQUE INDEX products_name_idx ON products(name)");
+    $dbh->do("CREATE UNIQUE INDEX component_product_id_idx"
+             . " ON components(product_id, name)");
+    $dbh->do("CREATE INDEX components_name_idx ON components(name)");
 }
 
 # 2002-08-14 - bbaetz@student.usyd.edu.au - bug 153578
@@ -2932,11 +2940,13 @@ if ($dbh->bz_get_field_def("profiles", "groupset")) {
     $dbh->bz_add_field('groups', 'last_changed', 'datetime not null');
     # Some mysql versions will promote any unique key to primary key
     # so all unique keys are removed first and then added back in
-    $dbh->do("ALTER TABLE groups DROP INDEX bit") if $dbh->bz_get_index_def("groups","bit");
-    $dbh->do("ALTER TABLE groups DROP INDEX name") if $dbh->bz_get_index_def("groups","name");
+    $dbh->do("ALTER TABLE groups DROP INDEX groups_bit_idx") 
+        if $dbh->bz_get_index_def("groups","bit");
+    $dbh->do("ALTER TABLE groups DROP INDEX groups_name_idx") 
+        if $dbh->bz_get_index_def("groups","name");
     $dbh->do("ALTER TABLE groups DROP PRIMARY KEY"); 
     $dbh->bz_add_field('groups', 'id', 'mediumint not null auto_increment primary key');
-    $dbh->do("ALTER TABLE groups ADD UNIQUE (name)");
+    $dbh->do("CREATE UNIQUE INDEX groups_name_idx ON groups(name)");
     $dbh->bz_add_field('profiles', 'refreshed_when', 'datetime not null');
 
     # Convert all existing groupset records to map entries before removing
@@ -3547,8 +3557,8 @@ if ($dbh->bz_get_field_def("user_group_map", "isderived")) {
               WHERE isbless = 0 AND grant_type != " . GRANT_DIRECT);
     $dbh->bz_drop_field("user_group_map", "isderived");
     $dbh->bz_drop_table_indexes("user_group_map");
-    $dbh->do("ALTER TABLE user_group_map 
-              ADD UNIQUE (user_id, group_id, grant_type, isbless)");
+    $dbh->do("CREATE UNIQUE INDEX user_group_map_user_id_idx
+              ON user_group_map(user_id, group_id, grant_type, isbless)");
     # Evaluate regexp-based group memberships
     my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
                              groups.id, groups.userregexp 
@@ -3582,8 +3592,8 @@ if ($dbh->bz_get_field_def("group_group_map", "isbless")) {
                              GROUP_MEMBERSHIP . ")");
     $dbh->bz_drop_table_indexes("group_group_map");
     $dbh->bz_drop_field("group_group_map", "isbless");
-    $dbh->do("ALTER TABLE group_group_map 
-              ADD UNIQUE (member_id, grantor_id, grant_type)");
+    $dbh->do("CREATE UNIQUE INDEX group_group_map_member_id_idx
+              ON group_group_map(member_id, grantor_id, grant_type)");
 }    
 
 # Allow profiles to optionally be linked to a unique identifier in an outside
@@ -3653,11 +3663,12 @@ if (!$dbh->bz_get_field_def('fielddefs', 'obsolete')) {
 # Add fulltext indexes for bug summaries and descriptions/comments.
 if (!defined $dbh->bz_get_index_def('bugs', 'short_desc')) {
     print "Adding full-text index for short_desc column in bugs table...\n";
-    $dbh->do('ALTER TABLE bugs ADD FULLTEXT (short_desc)');
+    $dbh->do('CREATE FULLTEXT INDEX bugs_short_desc_idx ON bugs(short_desc)');
 }
 if (!defined $dbh->bz_get_index_def('longdescs', 'thetext')) {
     print "Adding full-text index for thetext column in longdescs table...\n";
-    $dbh->do('ALTER TABLE longdescs ADD FULLTEXT (thetext)');
+    $dbh->do('CREATE FULLTEXT INDEX longdescs_thetext_idx
+              ON longdescs(thetext)');
 }
 
 # 2002 November, myk@mozilla.org, bug 178841:
@@ -3775,11 +3786,12 @@ if (($fielddef = $dbh->bz_get_field_def("bugs", "delta_ts")) &&
 # 2005-02-12 bugreport@peshkin.net, bug 281787
 if (!defined $dbh->bz_get_index_def('attachments','submitter_id')) {
     print "Adding index for submitter_id column in attachments table...\n";
-    $dbh->do('ALTER TABLE attachments ADD INDEX (submitter_id)');
+    $dbh->do('CREATE INDEX attachments_submitter_id_idx'
+             . ' ON attachments(submitter_id)');
 }
 if (!defined $dbh->bz_get_index_def('bugs_activity','who')) {
     print "Adding index for who column in bugs_activity table...\n";
-    $dbh->do('ALTER TABLE bugs_activity ADD INDEX (who)');
+    $dbh->do('CREATE INDEX bugs_activity_who_idx ON bugs_activity(who)');
 }
 
 # This lastdiffed change and these default changes are unrelated,

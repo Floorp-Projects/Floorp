@@ -191,7 +191,7 @@ use constant ABSTRACT_SCHEMA => {
             alias               => {TYPE => 'varchar(20)'},
         ],
         INDEXES => [
-            bugs_unique_idx           => {FIELDS => ['alias'],
+            bugs_alias_idx            => {FIELDS => ['alias'],
                                           TYPE => 'UNIQUE'},
             bugs_assigned_to_idx      => ['assigned_to'],
             bugs_creation_ts_idx      => ['creation_ts'],
@@ -224,9 +224,9 @@ use constant ABSTRACT_SCHEMA => {
             removed   => {TYPE => 'TINYTEXT'},
         ],
         INDEXES => [
-            bugs_activity_bugid_idx   => ['bug_id'],
+            bugs_activity_bug_id_idx  => ['bug_id'],
             bugs_activity_who_idx     => ['who'],
-            bugs_activity_bugwhen_idx => ['bug_when'],
+            bugs_activity_bug_when_idx => ['bug_when'],
             bugs_activity_fieldid_idx => ['fieldid'],
         ],
     },
@@ -237,7 +237,7 @@ use constant ABSTRACT_SCHEMA => {
             who    => {TYPE => 'INT3', NOTNULL => 1},
         ],
         INDEXES => [
-            cc_unique_idx => {FIELDS => [qw(bug_id who)],
+            cc_bug_id_idx => {FIELDS => [qw(bug_id who)],
                               TYPE => 'UNIQUE'},
             cc_who_idx    => ['who'],
         ],
@@ -257,9 +257,9 @@ use constant ABSTRACT_SCHEMA => {
                                 DEFAULT => 'FALSE'},
         ],
         INDEXES => [
-            longdescs_bugid_idx   => ['bug_id'],
+            longdescs_bug_id_idx   => ['bug_id'],
             longdescs_who_idx     => ['who'],
-            longdescs_bugwhen_idx => ['bug_when'],
+            longdescs_bug_when_idx => ['bug_when'],
             longdescs_thetext_idx => {FIELDS => ['thetext'],
                                       TYPE => 'FULLTEXT'},
         ],
@@ -308,6 +308,7 @@ use constant ABSTRACT_SCHEMA => {
         INDEXES => [
             attachments_bug_id_idx => ['bug_id'],
             attachments_creation_ts_idx => ['creation_ts'],
+            attachments_submitter_id_idx => ['submitter_id'],
         ],
     },
 
@@ -330,7 +331,7 @@ use constant ABSTRACT_SCHEMA => {
             description => {TYPE => 'MEDIUMTEXT'},
         ],
         INDEXES => [
-            keyworddefs_unique_idx => {FIELDS => ['name'],
+            keyworddefs_name_idx   => {FIELDS => ['name'],
                                        TYPE => 'UNIQUE'},
         ],
     },
@@ -341,7 +342,7 @@ use constant ABSTRACT_SCHEMA => {
             keywordid => {TYPE => 'INT2', NOTNULL => 1},
         ],
         INDEXES => [
-            keywords_unique_idx    => {FIELDS => [qw(bug_id keywordid)],
+            keywords_bug_id_idx    => {FIELDS => [qw(bug_id keywordid)],
                                        TYPE => 'UNIQUE'},
             keywords_keywordid_idx => ['keywordid'],
         ],
@@ -367,7 +368,7 @@ use constant ABSTRACT_SCHEMA => {
                                   DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            flags_bidattid_idx     => [qw(bug_id attach_id)],
+            flags_bug_id_idx       => [qw(bug_id attach_id)],
             flags_setter_id_idx    => ['setter_id'],
             flags_requestee_id_idx => ['requestee_id'],
         ],
@@ -408,7 +409,7 @@ use constant ABSTRACT_SCHEMA => {
             component_id => {TYPE => 'INT2'},
         ],
         INDEXES => [
-            flaginclusions_tpcid_idx =>
+            flaginclusions_type_id_idx =>
                 [qw(type_id product_id component_id)],
         ],
     },
@@ -420,7 +421,7 @@ use constant ABSTRACT_SCHEMA => {
             component_id => {TYPE => 'INT2'},
         ],
         INDEXES => [
-            flagexclusions_tpc_id_idx =>
+            flagexclusions_type_id_idx =>
                 [qw(type_id product_id component_id)],
         ],
     },
@@ -441,7 +442,7 @@ use constant ABSTRACT_SCHEMA => {
                             DEFAULT => 'FALSE'},
         ],
         INDEXES => [
-            fielddefs_unique_idx  => {FIELDS => ['name'],
+            fielddefs_name_idx    => {FIELDS => ['name'],
                                       TYPE => 'UNIQUE'},
             fielddefs_sortkey_idx => ['sortkey'],
         ],
@@ -464,8 +465,8 @@ use constant ABSTRACT_SCHEMA => {
             sortkey    => {TYPE => 'INT2', NOTNULL => 1},
         ],
         INDEXES => [
-            milestones_unique_idx => {FIELDS => [qw(product_id value)],
-                                      TYPE => 'UNIQUE'},
+            milestones_product_id_idx => {FIELDS => [qw(product_id value)],
+                                          TYPE => 'UNIQUE'},
         ],
     },
 
@@ -482,7 +483,7 @@ use constant ABSTRACT_SCHEMA => {
                          DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            bug_status_unique_idx  => {FIELDS => ['value'],
+            bug_status_value_idx  => {FIELDS => ['value'],
                                        TYPE => 'UNIQUE'},
             bug_status_sortkey_idx => ['sortkey', 'value'],
         ],
@@ -498,7 +499,7 @@ use constant ABSTRACT_SCHEMA => {
                          DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            resolution_unique_idx  => {FIELDS => ['value'],
+            resolution_value_idx   => {FIELDS => ['value'],
                                        TYPE => 'UNIQUE'},
             resolution_sortkey_idx => ['sortkey', 'value'],
         ],
@@ -514,7 +515,7 @@ use constant ABSTRACT_SCHEMA => {
                          DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            bug_severity_unique_idx  => {FIELDS => ['value'],
+            bug_severity_value_idx   => {FIELDS => ['value'],
                                          TYPE => 'UNIQUE'},
             bug_severity_sortkey_idx => ['sortkey', 'value'],
         ],
@@ -530,7 +531,7 @@ use constant ABSTRACT_SCHEMA => {
                          DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            priority_unique_idx  => {FIELDS => ['value'],
+            priority_value_idx   => {FIELDS => ['value'],
                                      TYPE => 'UNIQUE'},
             priority_sortkey_idx => ['sortkey', 'value'],
         ],
@@ -546,7 +547,7 @@ use constant ABSTRACT_SCHEMA => {
                          DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            rep_platform_unique_idx  => {FIELDS => ['value'],
+            rep_platform_value_idx   => {FIELDS => ['value'],
                                          TYPE => 'UNIQUE'},
             rep_platform_sortkey_idx => ['sortkey', 'value'],
         ],
@@ -562,7 +563,7 @@ use constant ABSTRACT_SCHEMA => {
                          DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            op_sys_unique_idx  => {FIELDS => ['value'],
+            op_sys_value_idx   => {FIELDS => ['value'],
                                    TYPE => 'UNIQUE'},
             op_sys_sortkey_idx => ['sortkey', 'value'],
         ],
@@ -588,8 +589,8 @@ use constant ABSTRACT_SCHEMA => {
             extern_id      => {TYPE => 'varchar(64)'},
         ],
         INDEXES => [
-            profiles_unique_idx => {FIELDS => ['login_name'],
-                                    TYPE => 'UNIQUE'},
+            profiles_login_name_idx => {FIELDS => ['login_name'],
+                                        TYPE => 'UNIQUE'},
         ],
     },
 
@@ -604,7 +605,7 @@ use constant ABSTRACT_SCHEMA => {
         ],
         INDEXES => [
             profiles_activity_userid_idx  => ['userid'],
-            profiles_activity_when_idx    => ['profiles_when'],
+            profiles_activity_profiles_when_idx => ['profiles_when'],
             profiles_activity_fieldid_idx => ['fieldid'],
         ],
     },
@@ -616,8 +617,7 @@ use constant ABSTRACT_SCHEMA => {
             event        => {TYPE => 'INT1', NOTNULL => 1},
         ],
         INDEXES => [
-            email_settings_user_id_idx => ['user_id'],
-            email_settings_unique_idx  =>
+            email_setting_user_id_idx  =>
                                     {FIELDS => [qw(user_id relationship event)],
                                      TYPE => 'UNIQUE'},
         ],
@@ -629,7 +629,7 @@ use constant ABSTRACT_SCHEMA => {
             watched => {TYPE => 'INT3', NOTNULL => 1},
         ],
         INDEXES => [
-            watch_unique_idx  => {FIELDS => [qw(watcher watched)],
+            watch_watcher_idx => {FIELDS => [qw(watcher watched)],
                                   TYPE => 'UNIQUE'},
             watch_watched_idx => ['watched'],
         ],
@@ -643,7 +643,7 @@ use constant ABSTRACT_SCHEMA => {
             query        => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
         ],
         INDEXES => [
-            namedqueries_unique_idx => {FIELDS => [qw(userid name)],
+            namedqueries_userid_idx => {FIELDS => [qw(userid name)],
                                         TYPE => 'UNIQUE'},
         ],
     },
@@ -697,7 +697,7 @@ use constant ABSTRACT_SCHEMA => {
                              DEFAULT => 'TRUE'},
         ],
         INDEXES => [
-            groups_unique_idx => {FIELDS => ['name'], TYPE => 'UNIQUE'},
+            groups_name_idx => {FIELDS => ['name'], TYPE => 'UNIQUE'},
         ],
     },
 
@@ -711,9 +711,9 @@ use constant ABSTRACT_SCHEMA => {
             canedit       => {TYPE => 'BOOLEAN', NOTNULL => 1},
         ],
         INDEXES => [
-            group_control_map_unique_idx =>
+            group_control_map_product_id_idx =>
             {FIELDS => [qw(product_id group_id)], TYPE => 'UNIQUE'},
-            group_control_map_gid_idx    => ['group_id'],
+            group_control_map_group_id_idx    => ['group_id'],
         ],
     },
 
@@ -734,7 +734,7 @@ use constant ABSTRACT_SCHEMA => {
                            DEFAULT => '0'},
         ],
         INDEXES => [
-            user_group_map_unique_idx =>
+            user_group_map_user_id_idx =>
                 {FIELDS => [qw(user_id group_id grant_type isbless)],
                  TYPE => 'UNIQUE'},
         ],
@@ -755,7 +755,7 @@ use constant ABSTRACT_SCHEMA => {
                            DEFAULT => '0'},
         ],
         INDEXES => [
-            group_group_map_unique_idx =>
+            group_group_map_member_id_idx =>
                 {FIELDS => [qw(member_id grantor_id grant_type)],
                  TYPE => 'UNIQUE'},
         ],
@@ -769,7 +769,7 @@ use constant ABSTRACT_SCHEMA => {
             group_id => {TYPE => 'INT3', NOTNULL => 1},
         ],
         INDEXES => [
-            bug_group_map_unique_idx   =>
+            bug_group_map_bug_id_idx   =>
                 {FIELDS => [qw(bug_id group_id)], TYPE => 'UNIQUE'},
             bug_group_map_group_id_idx => ['group_id'],
         ],
@@ -781,7 +781,7 @@ use constant ABSTRACT_SCHEMA => {
             group_id    => {TYPE => 'INT3', NOTNULL => 1},
         ],
         INDEXES => [
-            category_group_map_unique_idx =>
+            category_group_map_category_id_idx =>
                 {FIELDS => [qw(category_id group_id)], TYPE => 'UNIQUE'},
         ],
     },
@@ -798,7 +798,7 @@ use constant ABSTRACT_SCHEMA => {
             description => {TYPE => 'MEDIUMTEXT'},
         ],
         INDEXES => [
-            classifications_unique_idx => {FIELDS => ['name'],
+            classifications_name_idx => {FIELDS => ['name'],
                                            TYPE => 'UNIQUE'},
         ],
     },
@@ -821,7 +821,7 @@ use constant ABSTRACT_SCHEMA => {
                                   NOTNULL => 1, DEFAULT => "'---'"},
         ],
         INDEXES => [
-            products_unique_idx => {FIELDS => ['name'],
+            products_name_idx   => {FIELDS => ['name'],
                                     TYPE => 'UNIQUE'},
         ],
     },
@@ -837,8 +837,8 @@ use constant ABSTRACT_SCHEMA => {
             description      => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
         ],
         INDEXES => [
-            components_unique_idx => {FIELDS => [qw(product_id name)],
-                                      TYPE => 'UNIQUE'},
+            components_product_id_idx => {FIELDS => [qw(product_id name)],
+                                          TYPE => 'UNIQUE'},
             components_name_idx   => ['name'],
         ],
     },
@@ -861,10 +861,9 @@ use constant ABSTRACT_SCHEMA => {
                             DEFAULT => 'FALSE'},
         ],
         INDEXES => [
-            series_unique_idx  =>
+            series_creator_idx  =>
                 {FIELDS => [qw(creator category subcategory name)],
                  TYPE => 'UNIQUE'},
-            series_creator_idx => ['creator'],
         ],
     },
 
@@ -875,7 +874,7 @@ use constant ABSTRACT_SCHEMA => {
             series_value => {TYPE => 'INT3', NOTNULL => 1},
         ],
         INDEXES => [
-            series_data_unique_idx =>
+            series_data_series_id_idx =>
                 {FIELDS => [qw(series_id series_date)],
                  TYPE => 'UNIQUE'},
         ],
@@ -888,8 +887,8 @@ use constant ABSTRACT_SCHEMA => {
             name => {TYPE => 'varchar(64)', NOTNULL => 1},
         ],
         INDEXES => [
-            series_cats_unique_idx => {FIELDS => ['name'],
-                                       TYPE => 'UNIQUE'},
+            series_categories_name_idx => {FIELDS => ['name'],
+                                           TYPE => 'UNIQUE'},
         ],
     },
 

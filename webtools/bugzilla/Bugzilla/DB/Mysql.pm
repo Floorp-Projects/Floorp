@@ -230,7 +230,226 @@ sub bz_setup_database {
         print "\nISAM->MyISAM table conversion done.\n\n";
     }
 
+    # Versions of Bugzilla before the existence of Bugzilla::DB::Schema did 
+    # not provide explicit names for the table indexes. This means
+    # that our upgrades will not be reliable, because we look for the name
+    # of the index, not what fields it is on, when doing upgrades.
+    # (using the name is much better for cross-database compatibility 
+    # and general reliability). It's also very important that our
+    # Schema object be consistent with what is on the disk.
+    #
+    # While we're at it, we also fix some inconsistent index naming
+    # from the original checkin of Bugzilla::DB::Schema.
+
+    # We check for the existence of a particular "short name" index that
+    # has existed at least since Bugzilla 2.8, and probably earlier.
+    # For fixing the inconsistent naming of Schema indexes,
+    # we also check for one of those inconsistently-named indexes.
+    my @tables = $self->bz_table_list_real();
+    if ( scalar(@tables) && 
+         ($self->bz_index_info_real('bugs', 'assigned_to') ||
+          $self->bz_index_info_real('flags', 'flags_bidattid_idx')) )
+    {
+        my $bug_count = $self->selectrow_array("SELECT COUNT(*) FROM bugs");
+        # We estimate one minute for each 3000 bugs, plus 3 minutes just
+        # to handle basic MySQL stuff.
+        my $rename_time = int($bug_count / 3000) + 3;
+        # If we're going to take longer than 5 minutes, we let the user know
+        # and allow them to abort.
+        if ($rename_time > 5) {
+            print "\nWe are about to rename old indexes.\n"
+                  . "The estimated time to complete renaming is "
+                  . "$rename_time minutes.\n"
+                  . "You cannot interrupt this action once it has begun.\n"
+                  . "If you would like to cancel, press Ctrl-C now..."
+                  . " (Waiting 45 seconds...)\n\n";
+            # Wait 45 seconds for them to respond.
+            sleep(45);
+        }
+        print "Renaming indexes...\n";
+
+        # We can't be interrupted, because of how the "if"
+        # works above.
+        local $SIG{INT}  = 'IGNORE';
+        local $SIG{TERM} = 'IGNORE';
+        local $SIG{PIPE} = 'IGNORE';
+
+        # Certain indexes had names in Schema that did not easily conform
+        # to a standard. We store those names here, so that they
+        # can be properly renamed.
+        my $bad_names = {
+            bugs_activity => ('bugs_activity_bugid_idx',
+                'bugs_activity_bugwhen_idx'),
+            longdescs => ('longdescs_bugid_idx',
+               'longdescs_bugwhen_idx'),
+            flags => ('flags_bidattid_idx'),
+            flaginclusions => ('flaginclusions_tpcid_idx'),
+            flagexclusions => ('flagexclusions_tpc_id_idx'),
+            profiles_activity => ('profiles_activity_when_idx'),
+            group_control_map => ('group_control_map_gid_idx')
+            # series_categories is dealt with below, not here.
+        };
+
+        # The series table is broken and needs to have one index
+        # dropped before we begin the renaming, because it had a
+        # useless index on it that would cause a naming conflict here.
+        if (grep($_ eq 'series', @tables)) {
+            my $dropname;
+            # This is what the bad index was called before Schema.
+            if ($self->bz_index_info_real('series', 'creator_2')) {
+                $dropname = 'creator_2';
+            }
+            # This is what the bad index is called in Schema.
+            elsif ($self->bz_index_info_real('series', 'series_creator_idx')) {
+                    $dropname = 'series_creator_idx';
+            }
+
+            if ($dropname) {
+                print "Removing the useless index $dropname on the"
+                      . " series table...\n";
+                my @drop = $self->_bz_schema->get_drop_index_ddl(
+                    'series', $dropname);
+                foreach my $sql (@drop) {
+                    $self->do($sql);
+                }
+            }
+        }
+
+        # The email_setting table also had the same problem.
+        if( grep($_ eq 'email_setting', @tables) 
+            && $self->bz_index_info_real('email_setting', 
+                                         'email_settings_user_id_idx') ) 
+        {
+            print "Removing the useless index email_settings_user_id_idx\n"
+                  . "  on the email_setting table...\n";
+            my @drop = $self->_bz_schema->get_drop_index_ddl('email_setting',
+                'email_settings_user_id_idx');
+            $self->do($_) foreach (@drop);
+        }
+
+        # Go through all the tables.
+        foreach my $table (@tables) {
+            # And go through all the columns on each table.
+            my @columns = $self->bz_table_columns_real($table);
+
+            # We also want to fix the silly naming of unique indexes
+            # that happened when we first checked-in Bugzilla::DB::Schema.
+            if ($table eq 'series_categories') {
+                # The series_categories index had a nonstandard name.
+                push(@columns, 'series_cats_unique_idx');
+            } 
+            elsif ($table eq 'email_setting') { 
+                # The email_setting table had a similar problem.
+                push(@columns, 'email_settings_unique_idx');
+            }
+            else {
+                push(@columns, "${table}_unique_idx");
+            }
+            # And this is how we fix the other inconsistent Schema naming.
+            push(@columns, $bad_names->{$table})
+                if (exists $bad_names->{$table});
+            foreach my $column (@columns) {
+                # If we have an index named after this column, it's an 
+                # old-style-name index.
+                # This will miss PRIMARY KEY indexes, but that's OK 
+                # because we aren't renaming them.
+                if (my $index = $self->bz_index_info_real($table, $column)) {
+                    # Fix the name to fit in with the new naming scheme.
+                    my $new_name = $table . "_" .
+                                   $index->{FIELDS}->[0] . "_idx";
+                    print "Renaming index $column to to $new_name...\n";
+                    # Unfortunately, MySQL has no way to rename an index. :-(
+                    # So we have to drop and recreate the indexes.
+                    my @drop = $self->_bz_schema->get_drop_index_ddl(
+                        $table, $column);
+                    my @add = $self->_bz_schema->get_add_index_ddl(
+                        $table, $new_name, $index);
+                    $self->do($_) foreach (@drop);
+                    $self->do($_) foreach (@add);
+                } # if
+            } # foreach column
+        } # foreach table
+    } # if old-name indexes
+
     $self->SUPER::bz_setup_database();
 }
 
+
+#####################################################################
+# MySQL-specific Database-Reading Methods
+#####################################################################
+
+=begin private
+
+=head 1 MYSQL-SPECIFIC DATABASE-READING METHODS
+
+These methods read information about the database from the disk,
+instead of from a Schema object. They are only reliable for MySQL 
+(see bug 285111 for the reasons why not all DBs use/have functions
+like this), but that's OK because we only need them for 
+backwards-compatibility anyway, for versions of Bugzilla before 2.20.
+
+=over 4
+
+=item C<bz_index_info_real($table, $index)>
+
+ Description: Returns information about an index on a table in the database.
+ Params:      $table = name of table containing the index
+              $index = name of an index
+ Returns:     An abstract index definition, always in hashref format.
+              If the index does not exist, the function returns undef.
+=cut
+sub bz_index_info_real {
+    my ($self, $table, $index) = @_;
+
+    my $sth = $self->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    my @fields;
+    my $index_type;
+    # $raw_def will be an arrayref containing the following information:
+    # 0 = name of the table that the index is on
+    # 1 = 0 if unique, 1 if not unique
+    # 2 = name of the index
+    # 3 = seq_in_index (The order of the current field in the index).
+    # 4 = Name of ONE column that the index is on
+    # 5 = 'Collation' of the index. Usually 'A'.
+    # 6 = Cardinality. Either a number or undef.
+    # 7 = sub_part. Usually undef. Sometimes 1.
+    # 8 = "packed". Usually undef.
+    # MySQL 3
+    # -------
+    # 9 = comments. Usually an empty string. Sometimes 'FULLTEXT'.
+    # MySQL 4
+    # -------
+    # 9 = Null. Sometimes undef, sometimes 'YES'.
+    # 10 = Index_type. The type of the index. Usually either 'BTREE' or 'FULLTEXT'
+    # 11 = 'Comment.' Usually undef.
+    my $is_mysql3 = ($self->bz_server_version() =~ /^3/);
+    my $index_type_loc = $is_mysql3 ? 9 : 10;
+    while (my $raw_def = $sth->fetchrow_arrayref) {
+        if ($raw_def->[2] eq $index) {
+            push(@fields, $raw_def->[4]);
+            # No index can be both UNIQUE and FULLTEXT, that's why
+            # this is written this way.
+            $index_type = $raw_def->[1] ? '' : 'UNIQUE';
+            $index_type = $raw_def->[$index_type_loc] eq 'FULLTEXT'
+                ? 'FULLTEXT' : $index_type;
+        }
+    }
+
+    my $retval;
+    if (scalar(@fields)) {
+        $retval = {FIELDS => \@fields, TYPE => $index_type};
+    }
+    return $retval;
+}
+
 1;
+
+__END__
+
+=back
+
+=end private
+

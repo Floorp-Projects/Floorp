@@ -305,10 +305,7 @@ sub bz_setup_database {
     my ($self) = @_;
 
     # Get a list of the existing tables (if any) in the database
-    my $table_sth = $self->table_info(undef, undef, undef, "TABLE");
-    my @current_tables =
-        @{$self->selectcol_arrayref($table_sth, { Columns => [3] })};
-
+    my @current_tables = $self->bz_table_list_real();
     my @desired_tables = $self->_bz_schema->get_table_list();
 
     foreach my $table_name (@desired_tables) {
@@ -647,6 +644,39 @@ sub bz_table_exists ($) {
       }
    }
    return $exists;
+}
+
+#####################################################################
+# Protected "Real Database" Schema Information Methods
+#####################################################################
+
+# Only Bugzilla::DB and subclasses should use these methods.
+# If you need a method that does the same thing as one of these
+# methods, use the version without _real on the end.
+
+# bz_table_columns_real($table)
+#
+# Description: Returns a list of columns on a given table
+#              as the table actually is, on the disk.
+# Params:      $table - Name of the table.
+# Returns:     An array of column names.
+#
+sub bz_table_columns_real {
+    my ($self, $table) = @_;
+    my $sth = $self->column_info(undef, undef, $table, '%');
+    return @{ $self->selectcol_arrayref($sth, {Columns => [4]}) };
+}
+
+# bz_table_list_real()
+#
+# Description: Gets a list of tables in the current
+#              database, directly from the disk.
+# Params:      none
+# Returns:     An array containing table names.
+sub bz_table_list_real {
+    my ($self) = @_;
+    my $table_sth = $self->table_info(undef, undef, undef, "TABLE");
+    return @{$self->selectcol_arrayref($table_sth, { Columns => [3] })};
 }
 
 #####################################################################
