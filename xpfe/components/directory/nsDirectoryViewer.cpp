@@ -742,7 +742,7 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsI
   	{
   		if (aValue[len - 1] == '/')
   		{
-  			aValue.SetLength(len - 1);
+//  			aValue.SetLength(len - 1);
   		}
   	}
   }
