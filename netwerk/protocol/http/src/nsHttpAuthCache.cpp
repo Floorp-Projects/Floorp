@@ -288,7 +288,7 @@ nsHttpAuthNode::GetAuthEntryForPath(const char *path,
                 break;
             }
         }
-        else if (!nsCRT::strncmp(path, entry->Path(), strlen(entry->Path()))) {
+        else if (!nsCRT::strncmp(path, entry->Path(), nsCRT::strlen(entry->Path()))) {
             *result = entry;
             break;
         }
