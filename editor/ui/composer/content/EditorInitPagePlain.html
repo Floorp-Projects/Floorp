@@ -24,32 +24,38 @@
 <head>
 <title>Ender Plain Text Test Page</title>
 
+<!-- 
 <style type="text/css">
 /* This style sheet should be in a seperate file */
 
 BODY {
-   whitespace: -moz-pre-wrap; width: 40ch;
-   /* font-family: monospace; */
-   background-color: #FFFFFF;
+   white-space: -moz-pre-wrap; width: 72ch;
+   font-family: -moz-fixed;
+   background-color: rgb(255, 255, 255);
    margin: 4px 4px 4px 4px;
  }
 
 </style>
+ -->
 
 
 </head>
 
 <body>
 
-<pre cols="72">
 80 char width (for reference only)
 ---------|---------|---------|---------|---------|---------|---------|---------|
 
 Welcome to the Gecko Plaintext Editor.
 
-This entire body is in a &lt;PRE&gt; tag, wrapped to 72 columns.  Eventually we want to do this through a style sheet (see bug 4696).
+This message has the wrapping set to 72 columns using a style sheet.
 
-Typed text will wrap to the current wrap setting.  You can increase or decrease the wrap setting by typing alt-] or alt-[; you can see the current wrap column setting by typing alt-C.
+Typed text will wrap to the current wrap setting.  You can view or set the wrap settings by typing various characters, as such:
+-  alt-C:  print the current wrap column setting.
+-  alt-]:  increase the wrap setting by 5
+-  alt-[:  decrease the wrap setting by 5
+- ctrl-\:  wrap to window width (wrapcolumn = -1)
+-  alt-\:  turn off wrapping (wrapcolumn = 0)
 
 </pre>
 </body>

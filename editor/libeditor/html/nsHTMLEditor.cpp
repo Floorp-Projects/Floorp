@@ -110,11 +110,11 @@ static const PRBool gNoisy = PR_FALSE;
 // Some utilities to handle stupid overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
 static char linkText[] = "link";
-static char anchorText[] = "anchor";
+static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
 #define IsLink(s) (s.EqualsIgnoreCase(hrefText) || s.EqualsIgnoreCase(linkText))
-#define IsNamedAnchor(s) (s.EqualsIgnoreCase(anchorText) || s.EqualsIgnoreCase(namedanchorText))
+#define IsNamedAnchor(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
 
 static PRBool IsLinkNode(nsIDOMNode *aNode)
 {
@@ -2593,41 +2593,6 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 
   *aWrapColumn = -1;        // default: no wrap
 
-#define PRE_NODE_IN_BODY 1
-#ifdef PRE_NODE_IN_BODY
-  nsCOMPtr<nsIDOMElement> preElement = FindPreElement();
-  if (!preElement)
-    return NS_ERROR_UNEXPECTED;
-  nsString colsStr ("cols");
-  nsString numCols;
-  PRBool isSet;
-  res = GetAttributeValue(preElement, colsStr, numCols, isSet);
-  if (!NS_SUCCEEDED(res))
-    return NS_ERROR_UNEXPECTED;
-
-  if (isSet)
-  {
-    PRInt32 errCode;
-    *aWrapColumn = numCols.ToInteger(&errCode);
-    if (errCode)
-      return NS_ERROR_FAILURE;
-    return NS_OK;
-  }
-
-  // if we get here, cols isn't set, so check whether wrap is set:
-  nsString wrapStr ("wrap");
-  res = GetAttributeValue(preElement, colsStr, numCols, isSet);
-  if (!NS_SUCCEEDED(res))
-    return NS_ERROR_UNEXPECTED;
-
-  if (isSet)
-    *aWrapColumn = 0;   // wrap to window width
-  else
-    *aWrapColumn = -1;  // no wrap
-
-  return NS_OK;
-
-#else /* PRE_NODE_IN_BODY */
   nsCOMPtr<nsIStyleContext> styleContext;
   res = GetBodyStyleContext(getter_AddRefs(styleContext));
   if (NS_FAILED(res)) return res;
@@ -2655,7 +2620,6 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
   else
     *aWrapColumn = -1;
   return NS_OK;
-#endif /* PRE_NODE_IN_BODY */
 }
 
 //
@@ -2666,44 +2630,73 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 // 
 NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
+  printf("SetBodyWrapWidth(%d)\n", aWrapColumn);
   nsresult res;
 
-#ifdef PRE_NODE_IN_BODY
-  nsCOMPtr<nsIDOMElement> preElement = FindPreElement();
-  if (!preElement)
-    return NS_ERROR_UNEXPECTED;
+  // Ought to set a style sheet here ...
+  // Probably should keep around an mPlaintextStyleSheet for this purpose.
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  res = GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(res)) return res;
+  if (!bodyElement) return NS_ERROR_NULL_POINTER;
 
-  nsString wrapStr ("wrap");
-  nsString colsStr ("cols");
+  // Get the current style for this body element:
+  nsAutoString styleName ("style");
+  nsString styleValue;
+  res = bodyElement->GetAttribute(styleName, styleValue);
+  if (NS_FAILED(res)) return res;
 
-  // If wrap col is nonpositive, then we need to remove any existing "cols":
-  if (aWrapColumn <= 0)
+  // Find the current wrapping type:
+  PRInt32 whitespaceStart=-1, whitespaceEnd=-1, widthStart=-1, widthEnd=-1;
+  whitespaceStart = styleValue.Find("white-space", PR_TRUE);
+  if (whitespaceStart >= 0)
+    whitespaceEnd = styleValue.Find(";", PR_FALSE, whitespaceStart);
+  if (whitespaceStart > 0)
   {
-    (void)RemoveAttribute(preElement, colsStr);
-
-    if (aWrapColumn == 0)        // Wrap to window width
-    {
-      nsString oneStr ("1");
-      res = SetAttribute(preElement, wrapStr, oneStr);
-    }
-    else res = NS_OK;
-    return res;
+    if (whitespaceEnd > whitespaceStart)
+      styleValue.Cut(whitespaceStart, whitespaceEnd - whitespaceStart);
+    else
+      styleValue.Cut(whitespaceStart, styleValue.Length() - whitespaceStart);
+  }
+  widthStart = styleValue.Find("width", PR_TRUE);
+  if (widthStart >= 0)
+    widthEnd = styleValue.Find(";", PR_FALSE, widthStart);
+  if (widthStart > 0)
+  {
+    if (widthEnd > widthStart)
+      styleValue.Cut(widthStart, widthEnd - widthStart);
+    else
+      styleValue.Cut(widthStart, styleValue.Length() - widthStart);
   }
 
-  // Otherwise we're setting cols, want to remove wrap
-  (void)RemoveAttribute(preElement, wrapStr);
-  nsString numCols;
-  numCols.Append(aWrapColumn, 10);
-  res = SetAttribute(preElement, colsStr, numCols);
-  return res;
+  // If we have other style left, trim off any existing semicolons
+  // or whitespace, then add a known semicolon-space:
+  if (styleValue.Length() > 0)
+  {
+    styleValue.Trim("; \t", PR_FALSE, PR_TRUE);
+    styleValue.Append("; ");
+  }
 
-#else /* PRE_NODE_IN_BODY */
-  // Need to set a style sheet here ...
-  // Probably need to keep around an mPlaintextStyleSheet for this purpose.
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif /* PRE_NODE_IN_BODY */
-}  
+  // and now we're ready to set the new whitespace/wrapping style.
+  if (aWrapColumn > 0)        // Wrap to a fixed column
+  {
+    styleValue.Append("white-space: -moz-pre-wrap; width: ");
+    styleValue.Append(aWrapColumn);
+    styleValue.Append("ch;");
+  }
+  else if (aWrapColumn == 0)
+    styleValue.Append("white-space: pre wrap"); // XXX does this work?
+  else
+    styleValue.Append("white-space: pre");
 
+#ifdef DEBUG_akkana
+  char* curstyle = styleValue.ToNewCString();
+  printf("Setting style: [%s]\n", curstyle);
+  delete[] curstyle;
+#endif /* DEBUG_akkana */
+
+  return bodyElement->SetAttribute(styleName, styleValue);
+}
 
 // 
 // HTML PasteAsQuotation: Paste in a blockquote type=cite
@@ -4535,6 +4528,7 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
 #pragma mark -
 #endif
 
+#ifdef PRE_NODE_IN_BODY
 nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 {
   nsCOMPtr<nsIDOMDocument> domdoc;
@@ -4562,7 +4556,7 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 
   return do_QueryInterface(preNode);
 }
-
+#endif /* PRE_NODE_IN_BODY */
 
 void nsHTMLEditor::HandleEventListenerError()
 {

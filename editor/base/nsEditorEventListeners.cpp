@@ -338,7 +338,6 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         else if (PR_TRUE==altKey)
         {
-          printf("alt X\n");
           aProcessed=PR_TRUE;
           nsString output;
           nsresult res = NS_ERROR_FAILURE;
@@ -433,6 +432,31 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 	        }
         }
         break;
+
+      // Hard coded "No wrap" or "wrap to window size"
+      case nsIDOMUIEvent::VK_BACK_SLASH:
+      {
+        if (PR_TRUE==ctrlKey)
+        {
+          nsCOMPtr<nsIEditorMailSupport> mailEditor =
+            do_QueryInterface(mEditor);
+          if (mailEditor)
+          {
+            aProcessed=PR_TRUE;
+            mailEditor->SetBodyWrapWidth(0);
+          }
+        }
+        else if (PR_TRUE==altKey)
+        {
+          nsCOMPtr<nsIEditorMailSupport> mailEditor =
+            do_QueryInterface(mEditor);
+          if (mailEditor)
+          {
+            aProcessed=PR_TRUE;
+            mailEditor->SetBodyWrapWidth(-1);
+          }
+        }
+      }
 
       // XXX: hard-coded paste
       case nsIDOMUIEvent::VK_V:

@@ -415,9 +415,6 @@ protected:
   NS_IMETHOD PasteAsPlaintextQuotation();
   NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText);
 
-  // I hate seeing nsCOMPtr return types.
-  nsCOMPtr<nsIDOMElement> FindPreElement();
-
   TypeInState *GetTypeInState(); 
 
   /** simple utility to handle any error with event listener allocation or registration */

@@ -87,6 +87,11 @@ nsTextEditRules::GetFlags(PRUint32 *aFlags)
   return NS_OK;
 }
 
+// Initial style for plaintext
+static char* PlaintextInitalStyle = "white-space: -moz-pre-wrap; width: 72ch; \
+                                     font-family: -moz-fixed; \
+                                     background-color: rgb(255, 255, 255)";
+
 NS_IMETHODIMP
 nsTextEditRules::SetFlags(PRUint32 aFlags)
 {
@@ -107,7 +112,9 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
 			if (NS_FAILED(res)) return res;
 			if (!bodyElement) return NS_ERROR_NULL_POINTER;
       // not going through the editor to do this.
-	    bodyElement->SetAttribute("style", "white-space: pre");
+      // XXX This is not the right way to do this; we need an editor style
+      // system so that we can add & replace style attrs.
+	    bodyElement->SetAttribute("style", PlaintextInitalStyle);
     }
   }
   mFlags = aFlags;
