@@ -721,7 +721,7 @@ nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
   // put it in the cache. Not vital that this succeeds.
   // for the data size we just use the string data, since the movie simply wraps this
   // (we have to keep the handle around until the movies are done playing)
-  nsresult rv = macSound->PutSoundInCache(channel, stringLen, NS_STATIC_CAST(nsIStreamLoaderObserver*, this));
+  nsresult rv = macSound->PutSoundInCache(channel, stringLen, NS_STATIC_CAST(nsITimerCallback*, this));
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to put sound in cache");
   
   return PlaySound();
