@@ -48,10 +48,10 @@ nsEditor::~nsEditor()
   if (NS_SUCCEEDED( t_result )) 
   {
     erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
-    erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+    //erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
   }
   else
-    assert(0);
+    NS_NOTREACHED("!nsEditor");
 }
 
 
@@ -99,14 +99,14 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   nsresult t_result = NS_NewEditorKeyListener(func_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
   {
-    assert(0);
+    NS_NOTREACHED("Init Failed");
     return t_result;
   }
   t_result = NS_NewEditorMouseListener(func_AddRefs(mMouseListenerP), this);
   if (NS_OK != t_result)
   {
     mKeyListenerP = 0; //dont keep the key listener if the mouse listener fails.
-    assert(0);
+    NS_NOTREACHED("Mouse Listener");
     return t_result;
   }
   COM_auto_ptr<nsIDOMEventReceiver> erP;
@@ -115,11 +115,11 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   {
     mKeyListenerP = 0;
     mMouseListenerP = 0; //dont need these if we cant register them
-    assert(0);
+    NS_NOTREACHED("query interface");
     return t_result;
   }
   erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
-  erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+  //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
   return NS_OK;
 }
 
@@ -180,6 +180,8 @@ nsEditor::AppendText(nsString *aStr)
 nsresult
 nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
 {
+  if (!aNode)
+    return NS_ERROR_NULL_POINTER;
   /* If no node set, get first text node */
   COM_auto_ptr<nsIDOMElement> docNode;
 
@@ -195,7 +197,11 @@ nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
 nsresult
 nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 {
-  assert(aRetNode != 0); // they better give me a place to put the answer
+  if (!aNode || !aRetNode)
+  {
+    NS_NOTREACHED("GetFirstTextNode Failed");
+    return NS_ERROR_NULL_POINTER;
+  }
 
   PRUint16 mType;
   PRBool mCNodes;
@@ -207,16 +213,18 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
   if (nsIDOMNode::ELEMENT_NODE == mType) {
     if (NS_SUCCEEDED(aNode->HasChildNodes(&mCNodes)) && PR_TRUE == mCNodes) 
     {
-      COM_auto_ptr<nsIDOMNode> mNode;
+      COM_auto_ptr<nsIDOMNode> node1;
+      COM_auto_ptr<nsIDOMNode> node2;
 
-      if (!NS_SUCCEEDED(aNode->GetFirstChild(func_AddRefs(mNode))))
+      if (!NS_SUCCEEDED(aNode->GetFirstChild(func_AddRefs(node1))))
       {
-        assert(0);
+        NS_NOTREACHED("GetFirstTextNode Failed");
       }
-      while(!answer) 
+      while(!answer && node1) 
       {
-        GetFirstTextNode(mNode, func_AddRefs(answer));
-        mNode->GetNextSibling(func_AddRefs(mNode));
+        GetFirstTextNode(node1, func_AddRefs(answer));
+        node1->GetNextSibling(func_AddRefs(node2));
+        node1 = node2;
       }
     }
   }
@@ -245,6 +253,8 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 nsresult 
 NS_InitEditor(nsIEditor ** aInstancePtrResult, nsIDOMDocument *aDomDoc)
 {
+  if (!aInstancePtrResult || !aDomDoc)
+    return NS_ERROR_NULL_POINTER;
   nsEditor* editor = new nsEditor();
   if (NULL == editor) {
     return NS_ERROR_OUT_OF_MEMORY;
