@@ -27,6 +27,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
+#include "nsPlaceholderFrame.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -842,11 +843,20 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   aFrame->GetFrameType(&frameType);
   if (frameType) {
     if (frameType == nsLayoutAtoms::placeholderFrame) {
-      if (eReflowReason_Incremental == reason) {
-        InitFloater((nsPlaceholderFrame*)aFrame);
-      }
-      else {
-        AddFloater((nsPlaceholderFrame*)aFrame);
+      nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
+      if (outOfFlowFrame) {
+        const nsStylePosition*  position;
+
+        // Make sure it's floated and not absolutely positioned
+        outOfFlowFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+        if (!position->IsAbsolutelyPositioned()) {
+          if (eReflowReason_Incremental == reason) {
+            InitFloater((nsPlaceholderFrame*)aFrame);
+          }
+          else {
+            AddFloater((nsPlaceholderFrame*)aFrame);
+          }
+        }
       }
     }
     NS_RELEASE(frameType);
