@@ -97,7 +97,7 @@ PRLogModuleInfo* gWalletLog = nsnull;
 /* The following data and procedures are for preference */
 /********************************************************/
 
-typedef int (*PrefChangedFunc) (const char *, void *);
+typedef int (*PR_CALLBACK PrefChangedFunc) (const char *, void *);
 
 extern void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
@@ -1524,7 +1524,7 @@ Wallet_RandomName(char* suffix)
 
   /* take 8 least-significant digits + three-digit suffix as the file name */
   char name[13];
-  PR_snprintf(name, 13, "%lu.%s", (curTime%100000000), suffix);
+  PR_snprintf(name, 13, "%lu.%s", ((int)curTime%100000000), suffix);
   return PL_strdup(name);
 }
 

@@ -351,7 +351,7 @@ si_unlock_signon_list(void) {
  * Preference Utility Functions *
  ********************************/
 
-typedef int (*PrefChangedFunc) (const char *, void *);
+typedef int (*PR_CALLBACK PrefChangedFunc) (const char *, void *);
 
 PUBLIC void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
