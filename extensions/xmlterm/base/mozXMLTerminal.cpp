@@ -592,7 +592,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
                           NS_FONT_WEIGHT_NORMAL,
                           NS_FONT_DECORATION_NONE, 16);
 
-  result = presContext->GetDefaultFixedFont(defaultFixedFont);
+  result = presContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID, defaultFixedFont);
   if (NS_FAILED(result))
     return result;
 
