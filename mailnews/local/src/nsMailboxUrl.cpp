@@ -36,6 +36,7 @@
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
@@ -62,12 +63,18 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 
 	m_runningUrl = PR_FALSE;
 
+	m_urlListeners = nsnull;
+	nsServiceManager::GetService(kUrlListenerManagerCID, nsIUrlListenerManager::IID(),
+								 (nsISupports **)&m_urlListeners);
+
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
 }
  
 nsMailboxUrl::~nsMailboxUrl()
 {
+	NS_IF_RELEASE(m_urlListeners);
+
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
 
@@ -91,26 +98,35 @@ NS_IMPL_THREADSAFE_RELEASE(nsMailboxUrl);
 
 nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 {
-    if (NULL == aInstancePtr) {
+    if (NULL == aInstancePtr) 
+	{
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsIMailboxUrl::IID()) ||
-        aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(nsIMailboxUrl::IID()) || aIID.Equals(kISupportsIID)) 
+	{
         *aInstancePtr = (void*) ((nsIMailboxUrl*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIURL::IID())) {
+    if (aIID.Equals(nsIURL::IID())) 
+	{
         *aInstancePtr = (void*) ((nsIURL*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsINetlibURL::IID())) {
+    if (aIID.Equals(nsINetlibURL::IID())) 
+	{
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
+	if (aIID.Equals(nsIMsgMailNewsUrl::IID()))
+	{
+		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl *) this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
 
 #if defined(NS_DEBUG)
     /*
@@ -198,6 +214,45 @@ nsresult nsMailboxUrl::GetErrorMessage (char ** errorMessage) const
     return NS_OK;
 }
 
+// url listener registration details...
+	
+nsresult nsMailboxUrl::RegisterListener (nsIUrlListener * aUrlListener)
+{
+	nsresult rv = NS_OK;
+	if (m_urlListeners)
+		rv = m_urlListeners->RegisterListener(aUrlListener);
+	return rv;
+}
+	
+nsresult nsMailboxUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
+{
+	nsresult rv = NS_OK;
+	if (m_urlListeners)
+		rv = m_urlListeners->UnRegisterListener(aUrlListener);
+	return rv;
+}
+
+nsresult nsMailboxUrl::GetUrlState(PRBool * aRunningUrl)
+{
+	if (aRunningUrl)
+		*aRunningUrl = m_runningUrl;
+
+	return NS_OK;
+}
+
+nsresult nsMailboxUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
+{
+	m_runningUrl = aRunningUrl;
+	if (m_urlListeners)
+	{
+		if (m_runningUrl)
+			m_urlListeners->OnStartRunningUrl(this);
+		else
+			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+	}
+
+	return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMailboxUrl specific support
@@ -213,7 +268,12 @@ NS_METHOD nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
   
     /* Hook us up with the world. */
     m_URL_s = URL_s;
-//    NET_HoldURLStruct(URL_s);
+	if (m_mailboxAction == nsMailboxActionDisplayMessage)
+	{
+		// set the byte field range for the url struct...
+
+	}
+
     return result;
 }
   

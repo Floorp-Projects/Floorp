@@ -20,6 +20,7 @@
 #define nsMailboxUrl_h__
 
 #include "nsIMailboxUrl.h"
+#include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsFileSpec.h"
 
@@ -71,11 +72,14 @@ public:
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 
 	// from nsIMsgMailNewsUrl:
-	NS_IMPL_CLASS_GETSET(RunningUrlFlag, PRBool, m_runningUrl);
+	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
+	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
 
 	NS_IMETHOD SetErrorMessage (char * errorMessage);
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
+	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
+	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
 
     // nsMailboxUrl
 
@@ -91,6 +95,9 @@ protected:
 
 	// mailboxurl specific state
 	nsIStreamListener *m_mailboxParser;
+
+	// manager of all of current url listeners....
+	nsIUrlListenerManager * m_urlListeners;
 
     /* Here's our link to the old netlib world.... */
     URL_Struct *m_URL_s;
