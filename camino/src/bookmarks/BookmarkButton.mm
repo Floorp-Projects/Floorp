@@ -251,9 +251,16 @@
   [self showFolderPopup:[NSApp currentEvent]];
 }
 
+//
+// -showFolderPopup:
+//
+// For bookmarks that are folders, display their children in a menu. Uses a transient
+// NSPopUpButtonCell to handle the menu tracking. Even though the toolbar is drawn
+// at 11pt, use the normal font size for these submenus. Not only do context menus use
+// this size, it's easier on the eyes.
+//
 - (void)showFolderPopup:(NSEvent*)event
 {
-
   NSMenu* popupMenu = [[NSMenu alloc] init];
   // dummy first item
   [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
@@ -262,7 +269,6 @@
   // use a temporary NSPopUpButtonCell to display the menu.
   NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
   [popupCell setMenu: popupMenu];
-  [popupCell setFont:[NSFont labelFontOfSize: 11.0]];
   [popupCell trackMouse:event inRect:[self bounds] ofView:self untilMouseUp:YES];
   [popupCell release];
   [bmMenu release];
