@@ -25,9 +25,9 @@ MODULE=docshell_base
 XPIDLSRCS=						\
 		.\nsCDocShell.idl			\
 		.\nsIDocShell.idl			\
-		.\nsIDocShellContainer.idl			\
 		.\nsIDocShellTreeItem.idl			\
 		.\nsIDocShellTreeNode.idl			\
+		.\nsIDocShellTreeOwner.idl			\
 #		.\nsIContentViewerEdit.idl	\
 #		.\nsIContentViewerFile.idl	\
 		.\nsIMarkupDocumentViewer.idl	\
