@@ -16,7 +16,7 @@ class nsSupportsWeakReference : public nsISupportsWeakReference
 
 			inline ~nsSupportsWeakReference();
 
-			virtual nsresult GetWeakReference( nsIWeakReference** );
+			NS_IMETHOD GetWeakReference( nsIWeakReference** );
 
 		private:
 			friend class nsWeakReference;
@@ -35,12 +35,12 @@ class nsWeakReference : public nsIWeakReference
 	{
 		public:
 		// nsISupports...
-			virtual nsrefcnt AddRef();
-			virtual nsrefcnt Release();
-			virtual nsresult QueryInterface( const nsIID&, void** );
+			NS_IMETHOD_(nsrefcnt) AddRef();
+			NS_IMETHOD_(nsrefcnt) Release();
+			NS_IMETHOD QueryInterface( const nsIID&, void** );
 
 		// nsIWeakReference...
-			virtual nsresult QueryReference( const nsIID&, void** );
+			NS_IMETHOD QueryReference( const nsIID&, void** );
 
 
 		private:
