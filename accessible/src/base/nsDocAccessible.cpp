@@ -491,7 +491,6 @@ nsresult nsDocAccessible::AddEventListeners()
   PRBool isLoading = isContent;
 
   if (isContent) {
-    AddScrollListener(presShell);
     CheckForEditor();
   
     if (!mEditor) {
@@ -572,10 +571,7 @@ nsresult nsDocAccessible::RemoveEventListeners()
   }
 
   // Remove scroll position listener
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-  if (presShell) {
-    RemoveScrollListener(presShell);
-  }
+  RemoveScrollListener();
 
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
   NS_ASSERTION(target, "No dom event target for document");
@@ -627,6 +623,7 @@ void nsDocAccessible::FireDocLoadFinished()
     mIsNewDocument = PR_FALSE;
 
     if (mBusy != eBusyStateDone) {
+      AddScrollListener();
 #ifndef MOZ_ACCESSIBILITY_ATK
       mBusy = eBusyStateDone; // before event callback so STATE_BUSY is not reported
       FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
@@ -668,11 +665,13 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
   }
 }
 
-void nsDocAccessible::AddScrollListener(nsIPresShell *aPresShell)
+void nsDocAccessible::AddScrollListener()
 {
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+
   nsIViewManager* vm = nsnull;
-  if (aPresShell)
-    vm = aPresShell->GetViewManager();
+  if (presShell)
+    vm = presShell->GetViewManager();
 
   nsIScrollableView* scrollableView = nsnull;
   if (vm)
@@ -682,11 +681,13 @@ void nsDocAccessible::AddScrollListener(nsIPresShell *aPresShell)
     scrollableView->AddScrollPositionListener(this);
 }
 
-void nsDocAccessible::RemoveScrollListener(nsIPresShell *aPresShell)
+void nsDocAccessible::RemoveScrollListener()
 {
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+
   nsIViewManager* vm = nsnull;
-  if (aPresShell)
-    vm = aPresShell->GetViewManager();
+  if (presShell)
+    vm = presShell->GetViewManager();
 
   nsIScrollableView* scrollableView = nsnull;
   if (vm)
@@ -753,7 +754,7 @@ NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
   PRBool isLoadingDocument;
   aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
   if (!isLoadingDocument) {
-    return NS_OK;  // Staying on the same page, perhaps jumping to a named anchor
+    return NS_OK;  // Staying on the same page, jumping to a named anchor
   }
 
   // Load has been verified, it will occur, about to commence
