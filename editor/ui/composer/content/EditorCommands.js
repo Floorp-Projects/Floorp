@@ -22,6 +22,30 @@ var toolbar;
 var documentModified;
 var EditorDisplayStyle = true;
 
+var gTagToFormat = {
+    "P"          : "Normal",	// these should really be entities. Not sure how to do that from JS
+    "H1"         : "Heading 1",
+    "H2"         : "Header 2",
+    "H3"         : "Header 3",
+    "H4"         : "Header 4",
+    "H5"         : "Header 5",
+    "H6"         : "Header 6",
+    "BLOCKQUOTE" : "Blockquote",
+    "ADDRESS"    : "Address",
+    "PRE"        : "Preformatted",
+    "LI"         : "List Item",
+    "DT"         : "Definition Term",
+    "DD"         : "Definition Description"
+  };
+
+
+var gStyleTags = {
+    "bold"       : "b",
+    "italic"     : "i",
+    "underline"  : "u"
+  };
+  
+  
 function EditorStartup(editorType)
 {
   dump("Doing Startup...\n");
@@ -299,17 +323,39 @@ function EditorSetBackgroundColor(color)
   contentWindow.focus();
 }
 
-function EditorApplyStyle(styleName)
+function EditorApplyStyle(tagName)
 {
   dump("applying style\n");
-  editorShell.SetTextProperty(styleName, "", "");
+  editorShell.SetTextProperty(tagName, "", "");
   contentWindow.focus();
 }
 
-function EditorRemoveStyle(styleName)
+function EditorRemoveStyle(tagName)
 {
-  editorShell.RemoveTextProperty(styleName, "");
+  editorShell.RemoveTextProperty(tagName, "");
   contentWindow.focus();
+}
+
+function EditorToggleStyle(styleName)
+{
+  // see if the style is already set by looking at the observer node,
+  // which is the appropriate button
+  var theButton = document.getElementById(styleName + "Button");
+  
+  if (theButton)
+  {
+    var isOn = theButton.getAttribute(styleName);
+    if (isOn == "true")
+      editorShell.RemoveTextProperty(gStyleTags[styleName], "", "");
+    else
+      editorShell.SetTextProperty(gStyleTags[styleName], "", "");
+
+    contentWindow.focus();
+  }
+  else
+  {
+    dump("No button found for the " + styleName + " style");
+  }
 }
 
 function EditorRemoveLinks()
@@ -591,7 +637,7 @@ function EditorDocumentLoaded()
 
 function UpdateSaveButton(modified)
 {
-  var saveButton = document.getElementById("saveButton");
+  var saveButton = document.getElementById("SaveButton");
    if (saveButton)
   {
     if (modified) {
@@ -632,10 +678,6 @@ function EditorReflectDocState()
   dump("Updating save state " + stateString + "\n");
   
   return true;
-}
-
-function EditorDocStateChanged()
-{
 }
 
 function EditorGetNodeFromOffsets(offsets)
@@ -774,18 +816,42 @@ function OpenFile(url)
 }
 
 // --------------------------- Status calls ---------------------------
-function onBoldChange()
+function onStyleChange(theStyle)
 {
-  var boldButton = document.getElementByID("BoldButton");
-  if (boldButton)
+  var theButton = document.getElementById(theStyle + "Button");
+  if (theButton)
   {
-	bold = boldButton.getAttribute("bold");
-    if ( bold == "true" ) {
-      boldButton.setAttribute( "disabled", false );
-	} else {
-	  boldButton.setAttribute( "disabled", true );
-	}
+	var isOn = theButton.getAttribute(theStyle);
+	if (isOn == "true") {
+      theButton.setAttribute("toggled", 1);
+    } else {
+      theButton.setAttribute("toggled", 0);
+    }
   }
-	dump("  Bold state changed\n");
 }
 
+function onDirtyChange()
+{
+  // this should happen through style, but that doesn't seem to work.
+  var theButton = document.getElementById("SaveButton");
+   if (theButton)
+  {
+	var isDirty = theButton.getAttribute("dirty");
+    if (isDirty == "true") {
+      theButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveMod.gif");
+    } else {
+      theButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveFile.gif");
+    }
+  }
+}
+
+function onParagraphFormatChange()
+{
+  var theButton = document.getElementById("ParagraphPopup");
+   if (theButton)
+  {
+	var theFormat = theButton.getAttribute("format");
+    theButton.setAttribute("value", gTagToFormat[theFormat]);
+    dump("Setting value\n");
+  }
+}
