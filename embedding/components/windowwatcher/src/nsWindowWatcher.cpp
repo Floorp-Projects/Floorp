@@ -1863,13 +1863,7 @@ nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
 JSObject *
 nsWindowWatcher::GetWindowScriptObject(nsIDOMWindow *inWindow)
 {
-  JSObject *object = 0;
-
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(inWindow));
-  if (!scriptGlobal) {
-      return nsnull;
-  }
-
-  return scriptGlobal->GetGlobalJSObject();
+  return scriptGlobal ? scriptGlobal->GetGlobalJSObject() : 0;
 }
 
