@@ -85,7 +85,7 @@
 <!ENTITY pref.numberofweeks.6      "6 Weeks" >
 <!ENTITY pref.numberofpreviousweeks.label     "Number of Previous Weeks:" >
 
-<!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
+<!ENTITY pref.hour.help.description    "Overridden if events are outside these times" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >
