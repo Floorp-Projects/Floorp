@@ -7,17 +7,22 @@ var mapping_Win = 1;     // Emulate using Windows Symbol font
 var mapping_Mac = 2;     // Emulate using Mac Symbol font
 
 // CSS class names to use depending on the mapping
-var cssClassNames = ["unicode", "symbol", "symbol"];
+var cssClassNames = ["", "symbol", "symbol"];
 
 
-var mapping = mapping_Win;
-if (navigator.platform.indexOf("Mac") != -1)
-  mapping = mapping_Mac;
-else if (navigator.platform.indexOf("Win") != -1 && navigator.appVersion >= 5)
+var mapping;
+if (parseFloat(navigator.appVersion) >= 5)
   mapping = mapping_Unicode;
+else if (navigator.platform.indexOf("Mac") != -1)
+  mapping = mapping_Mac;
+else
+  mapping = mapping_Win;
 
 function defMap(unicode, win, mac) {
-  return '<SPAN class="' + cssClassNames[mapping] + '">&#' + arguments[mapping] + ';</SPAN>';
+  if (cssClassNames[mapping] == "")
+    return '&#' + arguments[mapping] + ';';
+  else
+    return '<SPAN class="' + cssClassNames[mapping] + '">&#' + arguments[mapping] + ';</SPAN>';
 }
 
 
