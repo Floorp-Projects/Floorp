@@ -32,8 +32,6 @@
 #include "stopwatch.h"
 #ifdef RAPTOR_PERF_METRICS
 #include "nsITimeRecorder.h"
-
-#define NS_TIMER_STYLE_RESOLUTION 1
 #endif
 
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
@@ -1097,3 +1095,4 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
 }
 
 #endif
+
