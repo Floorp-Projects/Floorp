@@ -1728,7 +1728,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
   PRInt16       attrCount=aToken->GetAttributeCount();
   eHTMLTags     theParent=mBodyContext->Last();
-  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(*theNode,theChildTag,attrCount);
+  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(theNode,theChildTag,attrCount,PR_FALSE);
 
   if(NS_OK==result) {
     result=WillHandleStartTag(aToken,theChildTag,*theNode);
@@ -1975,6 +1975,10 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
+
+  //Begin by dumping any attributes (bug 143512)
+  PRInt16     attrCount=aToken->GetAttributeCount();
+  CollectAttributes(nsnull,theChildTag,attrCount,PR_TRUE);
 
   switch(theChildTag) {
 
@@ -2387,7 +2391,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
-nsresult CNavDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount){
+nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 aCount,PRBool aDiscardAttributes){
   int attr=0;
 
   nsresult result=NS_OK;
@@ -2409,14 +2413,18 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 
           mTokenizer->PushTokenFront(theToken);
           break;
         }
-        // Sanitize the key for it might contain some non-alpha-non-digit characters
-        // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
-        // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
-        // a legitimate "SELECTED" key.
-        ((CAttributeToken*)theToken)->SanitizeKey();
+
         mLineNumber += theToken->GetNewlineCount();
 
-        aNode.AddAttribute(theToken);
+        if(!aDiscardAttributes) {
+          // Sanitize the key for it might contain some non-alpha-non-digit characters
+          // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
+          // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
+          // a legitimate "SELECTED" key.
+          ((CAttributeToken*)theToken)->SanitizeKey();
+          
+          aNode->AddAttribute(theToken);
+        }
       }
     }
   }
