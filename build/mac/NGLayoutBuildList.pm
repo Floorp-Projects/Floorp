@@ -317,9 +317,9 @@ sub BuildCommonProjects()
 
 # clean projects
 
+	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"Stubs");
-	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
 	Moz::BuildProjectClean(":mozilla:cmd:macfe:projects:client:Navigator.mcp",    				"Stub Library");
 
 # shared
