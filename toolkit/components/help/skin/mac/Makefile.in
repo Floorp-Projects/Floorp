@@ -11,7 +11,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the Mozilla Browser code.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
@@ -19,7 +19,6 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  R.J. Keller <rlk@trfenv.com>
 #  Jeff Walden <Jswalden86@netzero.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -36,22 +35,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS += helpOnHelp
-
 include $(DEPTH)/config/autoconf.mk
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# Use Pinstripe on MacOS X
-DIRS	+= skin/mac
-else
-# Use Qute on Windows and Linux
-DIRS    += skin 
-endif
 
 include $(topsrcdir)/config/rules.mk
 

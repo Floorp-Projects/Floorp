@@ -1,80 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Application Suite.
+#
+# The Initial Developer of the Original Code is
+# Ian Oeschger.
+# Portions created by the Initial Developer are Copyright (C) 2003
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#     brantgurganus2001@cherokeescouting.org
+#     rlk@trfenv.com
+#     Jswalden86@netzero.net
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
 
-<!-- ***** BEGIN LICENSE BLOCK *****
-   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
-   -
-   - The contents of this file are subject to the Mozilla Public License Version
-   - 1.1 (the "License"); you may not use this file except in compliance with
-   - the License. You may obtain a copy of the License at
-   - http://www.mozilla.org/MPL/
-   -
-   - Software distributed under the License is distributed on an "AS IS" basis,
-   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-   - for the specific language governing rights and limitations under the
-   - License.
-   -
-   - The Original Code is Mozilla Application Suite.
-   -
-   - The Initial Developer of the Original Code is
-   - Ian Oeschger.
-   - Portions created by the Initial Developer are Copyright (C) 2003
-   - the Initial Developer. All Rights Reserved.
-   -
-   - Contributor(s):
-   -     brantgurganus2001@cherokeescouting.org
-   -     rlk@trfenv.com
-   -
-   - Alternatively, the contents of this file may be used under the terms of
-   - either the GNU General Public License Version 2 or later (the "GPL"), or
-   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-   - in which case the provisions of the GPL or the LGPL are applicable instead
-   - of those above. If you wish to allow use of your version of this file only
-   - under the terms of either the GPL or the LGPL, and not to allow others to
-   - use your version of this file under the terms of the MPL, indicate your
-   - decision by deleting the provisions above and replace them with the notice
-   - and other provisions required by the LGPL or the GPL. If you do not delete
-   - the provisions above, a recipient may use your version of this file under
-   - the terms of any one of the MPL, the GPL or the LGPL.
-   -
-   - ***** END LICENSE BLOCK ***** -->
+<!DOCTYPE RDF:RDF [
+    <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+    %brandDTD;
+]>
 
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
-    <!-- Packages -->
+# Packages
     <RDF:Seq RDF:about="urn:mozilla:package:root">
         <RDF:li RDF:resource="urn:mozilla:package:help"/>
     </RDF:Seq>
 
-    <!-- Package Description -->
+# Package Description
     <RDF:Description RDF:about="urn:mozilla:package:help"
-        chrome:displayName="Mozilla Firebird Help"
+        chrome:displayName="&brandFullName; Help"
         chrome:author="mozilla.org"
         chrome:name="help"
         chrome:localeVersion="0.6"
         chrome:authorURL="http://www.mozilla.org/"
         chrome:skinVersion="1.5"
-        chrome:description="Online Help Documentation for the Mozilla Firebird browser"
+        chrome:description="Help Documentation for &brandFullName;"
         chrome:extension="false"/>
 
-    <!-- Overlays Points -->
+# Overlays Points
     <RDF:Seq RDF:about="urn:mozilla:overlays">
-        <RDF:li RDF:resource="chrome://browser/content/browser.xul"/>
+#ifdef MOZ_THUNDERBIRD
         <RDF:li RDF:resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+#elifdef MOZ_PHOENIX
+        <RDF:li RDF:resource="chrome://browser/content/browser.xul"/>
+#endif
     </RDF:Seq>
 
-    <!-- Overlays -->
+# Overlays
+#ifdef MOZ_THUNDERBIRD
+    <RDF:Seq RDF:about="chrome://messenger/content/mailWindowOverlay.xul">
+        <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
+    </RDF:Seq>
+#elifdef MOZ_PHOENIX
     <RDF:Seq RDF:about="chrome://browser/content/browser.xul">
         <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
     </RDF:Seq>
-
-    <RDF:Seq RDF:about="chrome://messenger/content/mailWindowOverlay.xul">
-      <RDF:li>chrome://help/content/helpTbhOverlay.xul</RDF:li>
-    </RDF:Seq>
-
-  <!-- Version Information.  State that we work only with major version 1 of this
-       package. -->
-  <RDF:Description about="urn:mozilla:skin:classic/1.0:help"
-    chrome:skinVersion="1.5"/>
+#endif
+# Version Information.  State that we work only with major version 1 of this
+# package.
+    <RDF:Description about="urn:mozilla:skin:classic/1.0:help"
+        chrome:skinVersion="1.5"/>
 
 </RDF:RDF>

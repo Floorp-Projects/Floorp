@@ -4,18 +4,21 @@
     %brandDTD;
 ]
 >
+#
+#Contributors:
+#  David Tenser <tenser@comhem.se> (original author)
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>&brandShortName; Preferences</title>
+	<title>&brandFullName; Options</title>
 	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
 </head>
 
 <body>
 
-<h1>&brandShortName; Preferences</h1>
-<div>This document explains all of the options available in the Preferences
-  window of &brandShortName;.</div>
+<h1>&brandFullName; Options</h1>
+<div>This document explains all of the options available in the Options
+  window of &brandFullName;.</div>
 
 <div class="contentsBox">In this section:
   <ul>
@@ -36,7 +39,7 @@
 
 <h2 id="general_options">General Options</h2>
 
-	<p><img width="425" height="310" alt="Preferences Window" src="images/opt_general.png"/></p>
+	<p><img width="425" height="353" alt="General Options Dialog" src="images/opt_general.png"/></p>
 	<h3 id="home_page">Home Page</h3>
 	<p>Specify the page or tab group that &brandShortName; will display after it is opened
 	  or when the Home button is clicked. Enter the address in the Location field.</p>
@@ -102,8 +105,7 @@
     <h3 id="default_browser">Default Browser</h3>
     <p>On Windows you can set &brandShortName; as the default browser by clicking <em>Set
       Default Browser</em>. This will ensure &brandShortName; is used whenever an application
-      tries to display a Web site or when you open an HTML file. Note that this feature also
-      registers some common image formats, including GIF and JPG. This feature has no effect
+      tries to display a Web site or when you open an HTML file. This feature has no effect
       on Linux or Macintosh.</p>
 
     <h3 id="connection_settings">Connection Settings</h3>
@@ -130,9 +132,9 @@
         for its URL and enter it here. Click <em>Reload</em> to load the settings.</dd>
     </dl>
 
-  <h2 id="privacy_options">Privacy Options</h2>
+<h2 id="privacy_options">Privacy Options</h2>
 
-  <p><img width="425" height="310" alt="Preferences Window" src="images/opt_privacy.png"/></p>
+  <p><img width="425" height="353" alt="Privacy Options Dialog" src="images/opt_privacy.png"/></p>
 
   <p>The Privacy panel contains options related to your privacy. As you browse the web &brandShortName;
     stores information on where you have been, what pages you have visited, and other browsing statistics.
@@ -158,9 +160,9 @@
     alltogether, uncheck this option.</p>
 
   <h3 id="download_manager_history">Download Manager History</h3>
-  <p>The Download Sidebar (accessible from the View menu or by pressing <kbd>Ctrl</kbd>+<kbd>E</kbd>)
-    stores shortcuts to your recent downloads. There are no options here other than the <em>Clear</em>
-    button. The Download options are available in the <strong>Downloads panel</strong>.</p>
+  <p>The Download Manager (accessible from <span class="menuPath">Tools</span> or by pressing
+    <kbd>Ctrl</kbd>+<kbd>E</kbd>) stores shortcuts to your recent downloads. The Download options
+    are available in the <strong>Downloads panel</strong>.</p>
 
   <h3 id="cookies">Cookies</h3>
   <p>A cookie is a file created by a Web site that stores information on your computer, such as
@@ -197,9 +199,9 @@
     time you visit the same page. You can specify the amount of disk space the cache can use
     here.</p>
 
-  <h2 id="web_features_options">Web Features Options</h2>
+<h2 id="web_features_options">Web Features Options</h2>
 
-  <p><img width="425" height="310" alt="Preferences Window" src="images/opt_webfeatures.png"/></p>
+  <p><img width="425" height="350" alt="Web Features Options Dialog" src="images/opt_webfeatures.png"/></p>
 
   <p><em>Block Popup Windows</em><br/>By default, &brandShortName; blocks annoying popup windows
     on Web sites. Unchecking this option will disable popup blocking.</p>
@@ -259,7 +261,9 @@
     that server from the Image Manager and click <em>Remove Site</em>. To unblock all sites
     so all images are shown, click <em>Remove All Sites</em>.</p>
 
-  <h2 id="downloads_options">Downloads Options</h2>
+<h2 id="downloads_options">Downloads Options</h2>
+
+  <p><img src="images/opt_downloads.png" width="425" height="353" alt="Downloads Options Dialog"/></p>
 
   <p>This panel controls how &brandShortName; handles different file types such as applications,
     compressed files, and multimedia files.</p>
@@ -306,19 +310,20 @@
     you can disable the plug-in here. This will block any Flash ads and animations until you enable
     the plug-in again.</p>
 
-  <h2 id="themes_options">Themes Options</h2>
+<h2 id="themes_options">Themes Options</h2>
 
-  <p><img width="425" height="310" alt="Preferences Window" src="images/opt_themes.png"/></p>
+  <p><img width="425" height="350" alt="Themes Options Window" src="images/opt_themes.png"/></p>
 
   <p>Switch themes and uninstall existing themes in this panel. Select a theme from the
     list and click <em>OK</em> to switch to that theme.</p>
   <p>To download more themes, click on the <em>Get New Themes</em> link.</p>
-  <p>To uninstall a theme, select it and click <em>Uninstall Theme</em>. Note that you can't uninstall
-    the theme that is currently loaded or the built-in themes Modern and &brandShortName;.</p>
+  <p>To uninstall a theme, select it and click <em>Uninstall Theme</em>. (Note that you can't uninstall
+    the currently loaded theme or the built-in default theme.  You also can't uninstall Modern if it
+    exists in the themes list.)</p>
 
-  <h2 id="extensions_options">Extensions Options</h2>
+<h2 id="extensions_options">Extensions Options</h2>
 
-  <p><img width="425" height="310" alt="Preferences Window" src="images/opt_extensions.png"/></p>
+  <p><img width="425" height="350" alt="Extensions Options Window" src="images/opt_extensions.png"/></p>
 
   <p>You can enable, disable, or change settings for installed extensions in this panel. To install
     extensions, click on the <em>Get New Extensions</em> link.</p>
@@ -330,7 +335,10 @@
   <p>To disable an extension, select it and click <em>Disable Extension</em>. You can't uninstall an
     extension yet. This is planned in a future release of &brandShortName;.</p>
 
-  <h2 id="advanced_options">Advanced Options</h2>
+<h2 id="advanced_options">Advanced Options</h2>
+
+  <p><img src="images/opt_advanced.png" width="425" height="353" alt="Advanced Options window"/></p>
+
   <p>The advanced panel contains many options that are less likely to be used by most people but are still
     useful and sometimes critical options for some.</p>
 
@@ -394,14 +402,12 @@
   <h3 id="certificates">Certificates</h3>
 
   <p>The Certificates section is provisional and will be changed or removed in future releases.
-  It is not covered in this document. Please consult the Mozilla help system for more
-  information about the various options available here.</p>
+  It is not covered in this document.</p>
 
   <h3 id="validation">Validation</h3>
 
   <p>The Validation section is provisional and will be changed or removed in future releases.
-  It is not covered in this document. Please consult the Mozilla help system for more
-  information about the various options available here.</p>
+  It is not covered in this document.</p>
 
 <div class="contentsBox"><em>20 September 2003</em></div>
 <p>Copyright &copy; 2003 Contributors to the Firebird Help Project.</p>

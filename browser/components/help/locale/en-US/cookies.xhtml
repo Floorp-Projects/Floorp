@@ -4,6 +4,9 @@
     %brandDTD;
 ]
 >
+#
+#Contributors:
+#  David Tenser <david.tenser@comhem.se> (original author)
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -16,14 +19,15 @@
 
 <p>This document explains what cookies are, how they are used, and how you can gain
   control over the cookies stored on your computer by using the Cookie Manager in
-  &brandShortName;.</p>
+  &brandFullName;.</p>
 
 <div class="contentsBox">In this section:
   <ul>
     <li><a href="#what_is_a_cookie">What is a Cookie?</a></li>
     <li><a href="#setting_up_cookie_rules">Setting Up Cookie Rules</a></li>
     <li><a href="#accepting_and_blocking_cookies">Accepting and Blocking Cookies</a></li>
-    <li><a href="#the_cookie_manager">The Cookie Manager</a></li>
+<!--XXXid-->
+    <li><a href="#the_cookie_manager">Managing Cookies</a></li>
   </ul>
 </div>
 
@@ -42,12 +46,12 @@
   information is information that can be used to identify or contact you, such as
   your name, e-mail address, home or work address, or telephone number. However, a
   Web site only has access to the personal information that you provide. For
-  example, a Web site cannot determine your e-mail name unless you provide it. Also,
+  example, a Web site cannot determine your e-mail address unless you provide it. Also,
   a Web site cannot gain access to other information on your computer.</p>
 
 <p>When you use the default cookie settings, this activity is invisible to you,
   and you won't know when a Web site is setting a cookie or when &brandShortName;
-  is sending a Web site their cookie. However, you can set your preferences so that
+  is sending a Web site its cookie. However, you can set your cookies options so that
   you will be asked before a cookie is set.</p>
 
 <h2 id="setting_up_cookie_rules">Setting Up Cookie Rules</h2>
@@ -56,9 +60,9 @@
 By default &brandShortName; accepts all cookies. If you want to gain more control over
 what cookies are stored, follow these instructions:
 <ol>
-  <li>Select Tools &gt; Options... from the menu to show the Options window.</li>
+  <li>Select <span class="menuPath">Tools &gt; Options</span>.</li>
   <li>Click the Privacy panel and then click on the Cookies label.</li>
-  <li>Check the but ask before accepting checkbox.</li>
+  <li>Check the <em>Ask for each cookie</em> checkbox.</li>
 </ol>
 </div>
 
@@ -68,9 +72,8 @@ After this is done, you may decide exactly which cookies should and should not b
 
 <h3 id="other_settings">Other Settings</h3>
 
-<div>There are also other options that affects how cookies are managed by Mozilla
-  Firebird. They are not needed for the cookie rules to work but are explained
-  anyway:
+<div>There are also other options that affect how cookies are managed by &brandShortName;.
+  They are not needed for the cookie rules to work but are explained anyway:
 <ul>
   <li><strong>Enable Cookies</strong><br/>If you don't want any sites to store
     cookies on your computer, uncheck this option. Note that some sites may not work
@@ -119,16 +122,18 @@ whenever a site tries to save a cookie on your computer:<br/>
 </ul>
 </div>
 
-<h2 id="the_cookie_manager">The Cookie Manager</h2>
+<!--XXXid-->
+<h2 id="the_cookie_manager">Managing Cookies</h2>
 
-<p>The Cookie Manager is where you can view and remove cookies as well as managing the
-list of sites that are allowed or not allowed to store cookies on your computer.</p>
+<p>Use the Cookie Manager to view and remove cookies and manage per-site cookie options.
+It is accessible through the Cookies section in the Privacy tab of Options.</p>
 
 <h3 id="the_cookie_list">The Cookie List</h3>
 <p>
 <img src="images/cookie_manager.png" alt="" width="384" height="358"/><br/>
-The <em>Stored Cookies</em> tab lists all cookies currently stored on your computer.
-You can select them to display more information about them.</p>
+The <em>Stored Cookies</em> dialog lists all cookies currently stored on your computer.
+You can select them to display more information about them.  Use the <em>Stored Cookies</em>
+button in cookies options to access this window.</p>
 
 <p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>. To
 remove all cookies, click <em>Remove All Cookies</em>. (This is the same as clicking
@@ -146,13 +151,14 @@ or the sites will not be added to the list of blocked sites.</p>
 
 <p><img src="images/cookie_list.png" width="384" height="265" alt=""/><br/>
   This is the list of sites that are either allowed or not allowed to store cookies on
-  your computer. In the Status column, you can see if a site is blocked or allowed.</p>
+  your computer. In the Status column, you can see if a site is blocked or allowed.
+  Use the <em>Exceptions</em> button in cookies options to access this window.</p>
 
 <p>To remove a site from this list, select it and click <em>Remove Site</em>. To clear
   the list completely, click <em>Remove All Sites</em>. This will reset the cookie
   rules and you will see dialogs for each cookie again.</p>
 
-<div class="contentsBox"><em>19 August 2003</em></div>
+<div class="contentsBox"><em>21 March 2004</em></div>
 <p>Copyright &copy; 2003 Contributors to the Firebird Help Project.</p>
 </body>
 </html>

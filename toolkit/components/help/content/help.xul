@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- ***** BEGIN LICENSE BLOCK *****
-   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
-   -
-   - The contents of this file are subject to the Mozilla Public License Version
-   - 1.1 (the "License"); you may not use this file except in compliance with
-   - the License. You may obtain a copy of the License at
-   - http://www.mozilla.org/MPL/
-   -
-   - Software distributed under the License is distributed on an "AS IS" basis,
-   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-   - for the specific language governing rights and limitations under the
-   - License.
-   -
-   - The Original Code is __________________________________________.
-   -
-   - The Initial Developer of the Original Code is
-   - ____________________________________________.
-   - Portions created by the Initial Developer are Copyright (C) 2___
-   - the Initial Developer. All Rights Reserved.
-   -
-   - Contributor(s):
-   -
-   - Alternatively, the contents of this file may be used under the terms of
-   - either the GNU General Public License Version 2 or later (the "GPL"), or
-   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-   - in which case the provisions of the GPL or the LGPL are applicable instead
-   - of those above. If you wish to allow use of your version of this file only
-   - under the terms of either the GPL or the LGPL, and not to allow others to
-   - use your version of this file under the terms of the MPL, indicate your
-   - decision by deleting the provisions above and replace them with the notice
-   - and other provisions required by the LGPL or the GPL. If you do not delete
-   - the provisions above, a recipient may use your version of this file under
-   - the terms of any one of the MPL, the GPL or the LGPL.
-   -
-   - ***** END LICENSE BLOCK ***** -->
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Firebird Help Source Code.
+#
+# The Initial Developer of the Original Code is
+# Ian Oeschger.
+# Portions created by the Initial Developer are Copyright (C) 2003-2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   R.J. Keller <rlk@trfenv.com>
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://help/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://help/skin/sidebar.css" type="text/css"?>
@@ -125,43 +125,47 @@
             
             <toolbarpalette id="HelpToolbarPalette">
             
-                <toolbarbutton id="sidebar-button"
+                <toolbarbutton id="help-sidebar-button"
                 	class="toolbarbutton-1"
                 	customizeable="true" label="&sidebarBtn.label;"
                 	command="Help:ToggleSidebar"/>
-                <toolbarbutton id="back-button" type="menu-button"
-                        class="toolbarbutton-1" label="&backCmd.label;"
+                <toolbarbutton id="help-back-button" type="menu-button"
+                        class="toolbarbutton-1" label="&backButton.label;"
                         oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
                         observes="canGoBack" context="backMenu"
                         tooltiptext="&backButton.tooltip;">
                     <menupopup context=""
                         onpopupshowing="createBackMenu(event);"/>
                 </toolbarbutton>
-                <toolbarbutton id="forward-button" type="menu-button"
+                <toolbarbutton id="help-forward-button" type="menu-button"
                         class="toolbarbutton-1"
-                        label="&forwardCmd.label;"
+                        label="&forwardButton.label;"
                         oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
                         tooltiptext="&forwardButton.tooltip;"
                         observes="canGoForward">
                     <menupopup context=""
                         onpopupshowing="createForwardMenu(event);"/>
                 </toolbarbutton>
-                <toolbarbutton id="home-button"
+                <toolbarbutton id="help-home-button"
                     class="toolbarbutton-1" label="&homeButton.label;"
                     command="Help:Home"/>
-                <toolbarbutton id="find-button"
+                <toolbarbutton id="help-find-button"
                     class="toolbarbutton-1" label="&findBtn.label;"
                     command="Help:Find"/>
-                <toolbarbutton id="zoom-small-button"
+                <toolbarbutton id="help-zoom-small-button"
                     class="toolbarbutton-1" label="&textZoomReduceBtn.label;"
                     command="cmd_textZoomReduce"/>
-                <toolbarbutton id="zoom-large-button"
+                <toolbarbutton id="help-zoom-large-button"
                     class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
                     command="cmd_textZoomEnlarge"/>    
-                <toolbarbutton id="print-button" class="toolbarbutton-1"
+                <toolbarbutton id="help-print-button" class="toolbarbutton-1"
                     label="&printButton.label;"
                     oncommand="print();"
-                    tooltiptext="&printButton.tooltip;"/>                   
+                    tooltiptext="&printButton.tooltip;"/>
+                <toolbarbutton id="help-toolbar-customization" class="toolbarbutton-1"
+                    label="&cmd_CustomizeToolbars.label;"
+                    command="cmd_CustomizeToolbars"
+                    tooltiptext="&customizeButton.tooltip;"/>
                 
                 <toolbaritem id="throbber-box" title="&throbberItem.title;"
                     align="center" pack="center">
@@ -172,7 +176,7 @@
             <toolbar id="helpToolbar" toolbarname="Help Toolbar" class="toolbar-primary
                     chromeclass-toolbar" mode="icons" iconsize="small"
                     customizable="true"
-                    defaultset="sidebar-button,spacer,separator,spacer,back-button,forward-button,home-button,spacer,separator,spacer,print-button,spring,throbber-box"
+                    defaultset="help-sidebar-button,spacer,separator,spacer,help-back-button,help-forward-button,help-home-button,spacer,separator,spacer,help-print-button,spacer,separator,spacer,help-toolbar-customization,spring,throbber-box"
                     context="toolbar-context-menu"/>
 	    <toolbarset id="customToolbars"/>
         </toolbox>

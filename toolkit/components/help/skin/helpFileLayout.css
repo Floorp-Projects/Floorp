@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Jeff Walden <Jswalden86@netzero.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,7 @@ body {
 
 :link:hover { color: red; }
 
-a[href^="http://"]:after { content: url('Weblink.png'); }
+a[href^="http://"]:after { content: url('chrome://help/skin/Weblink.png'); }
 
 h1 { font-size: 2em; }
 h2 { border-top: 1px solid black; font-size: 1.75em; }
@@ -80,6 +81,13 @@ li {
 	margin-left: 25px;
 }
 
+.menuPath {
+  background: #c4d0f4; /* bluish color */
+  color: inherit;
+  padding-left:  1px; /* else bgcolor ends at last char - no space */
+  padding-right: 1px;
+}
+
 table {
 	background-color: #eeeeee;    /* really light grey */
 }
@@ -89,7 +97,14 @@ td {
 	vertical-align: top;
 }
 
-.headingCell {
+th {
 	background-color: #99ccff;    /* light aqua */
 	font-weight: bold;
+}
+
+.noTableBorder,
+.noTableBorder td,
+.noTableBorder th {
+	background-color: transparent;
+	border: 0px solid transparent;
 }
