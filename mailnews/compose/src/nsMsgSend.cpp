@@ -1618,7 +1618,6 @@ static char * mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_
 
 	if (addr_p) {
 		nsIMsgRFC822Parser * pRfc822;
-		nsRepository::RegisterFactory(kMsgRFC822ParserCID, "mailnews.dll", PR_FALSE, PR_FALSE); //JFD - I should be able to remose this line soon...
 		nsresult rv = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
                                                nsIMsgRFC822Parser::IID(), 
