@@ -103,15 +103,15 @@ popup[type="autocomplete"],
   padding: 0 !important;
 }
 
-.autocomplete-treebody:-moz-tree-cell-text {
+.autocomplete-treebody::-moz-tree-cell-text {
   padding-left: 8px;
 }
 
-treechildren.autocomplete-treebody:-moz-tree-row(selected) {
+treechildren.autocomplete-treebody::-moz-tree-row(selected) {
  background-color: Highlight;
 }
 
-treechildren.autocomplete-treebody:-moz-tree-cell-text(selected) {
+treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: HighlightText !important;
 }
 
