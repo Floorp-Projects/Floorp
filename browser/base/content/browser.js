@@ -409,6 +409,11 @@ function delayedStartup()
                               .getService(Components.interfaces.nsIPrefService);
   gPrefService = gPrefService.getBranch(null);
 
+  if (document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
+    gURLBar.setAttribute("readonly", "true"); 
+    gURLBar.setAttribute("enablehistory", "false");
+  }
+    
   BrowserOffline.init();
   
   if (gIsLoadingBlank)
@@ -566,8 +571,19 @@ function delayedStartup()
   }
 #endif
 
-  var updatePanel = document.getElementById("statusbar-updates");
-  updatePanel.init();
+  var updatePanel = document.getElementById("updates");
+  try {
+    updatePanel.init();
+  }
+  catch (e) { }
+
+  // BiDi UI
+  if (isBidiEnabled()) {
+    document.getElementById("documentDirection-separator").hidden = false;
+    document.getElementById("documentDirection-swap").hidden = false;
+    document.getElementById("textfieldDirection-separator").hidden = false;
+    document.getElementById("textfieldDirection-swap").hidden = false;
+  }
 }
 
 function Shutdown()

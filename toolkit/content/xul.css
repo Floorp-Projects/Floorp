@@ -38,11 +38,11 @@ window[chromehidden~="directories"] .chromeclass-directories,
 window[chromehidden~="status"] .chromeclass-status,
 window[chromehidden~="extrachrome"] .chromeclass-extrachrome,
 window[chromehidden~="location"] .chromeclass-location,
-window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar
+window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
+window[chromehidden~="toolbar"] .chromeclass-toolbar-additional
 {
   display: none;
 }
-
 
 /****** elements that have no visual representation ******/
 
