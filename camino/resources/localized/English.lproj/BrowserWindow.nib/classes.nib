@@ -75,6 +75,7 @@
                 mSidebarSourceTabView = id; 
                 mSidebarTabView = id; 
                 mStatus = NSTextField; 
+                mStatusBar = NSView; 
                 mTabBrowser = id; 
                 mURLBar = NSTextField; 
             }; 
