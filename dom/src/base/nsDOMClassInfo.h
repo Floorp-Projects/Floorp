@@ -627,6 +627,11 @@ public:
                          JSObject *obj, jsval id, jsval *vp,
                          PRBool *_retval);
 
+  NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper,
+                          JSContext *cx, JSObject *obj,
+                          PRUint32 enum_op, jsval *statep,
+                          jsid *idp, PRBool *_retval);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsHTMLFormElementSH(aData);
