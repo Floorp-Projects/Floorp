@@ -124,12 +124,18 @@ protected:
     nsAutoLockBase(void* addr, nsAutoLockType type);
     ~nsAutoLockBase();
 
+    void            Show();
+    void            Hide();
+
     void*           mAddr;
     nsAutoLockBase* mDown;
     nsAutoLockType  mType;
 #else
     nsAutoLockBase(void* addr, nsAutoLockType type) {}
     ~nsAutoLockBase() {}
+
+    void            Show() {}
+    void            Hide() {}
 #endif
 };
 
@@ -188,6 +194,7 @@ public:
      * note that attempting to aquire a locked lock will hang or crash.
      **/  
     void lock() {
+        Show();
         PR_ASSERT(!mLocked);
         PR_Lock(mLock);
         mLocked = PR_TRUE;
@@ -203,6 +210,7 @@ public:
         PR_ASSERT(mLocked);
         PR_Unlock(mLock);
         mLocked = PR_FALSE;
+        Hide();
     }
 };
 

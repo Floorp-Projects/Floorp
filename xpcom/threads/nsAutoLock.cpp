@@ -46,6 +46,11 @@
 #include "nsDebug.h"
 #include "nsVoidArray.h"
 
+#ifdef NS_TRACE_MALLOC_XXX
+# include <stdio.h>
+# include "nsTraceMalloc.h"
+#endif
+
 static PRUintn      LockStackTPI = (PRUintn)-1;
 static PLHashTable* OrderTable = 0;
 static PRLock*      OrderTableLock = 0;
@@ -54,6 +59,12 @@ static const char* const LockTypeNames[] = {"Lock", "Monitor", "CMonitor"};
 
 struct nsNamedVector : public nsVoidArray {
     const char* mName;
+
+#ifdef NS_TRACE_MALLOC_XXX
+    // Callsites for the inner locks/monitors stored in our base nsVoidArray.
+    // This array parallels our base nsVoidArray.
+    nsVoidArray mInnerSites;
+#endif
 
     nsNamedVector(const char* name = 0, PRUint32 initialSize = 0)
         : nsVoidArray(initialSize),
@@ -180,7 +191,7 @@ static nsNamedVector* GetVector(PLHashTable* table, const void* key)
     return vec;
 }
 
-// We maintain an acyclic graph in order table, so recursion can't diverge
+// We maintain an acyclic graph in OrderTable, so recursion can't diverge.
 static PRBool Reachable(PLHashTable* table, const void* goal, const void* start)
 {
     PR_ASSERT(goal);
@@ -195,6 +206,7 @@ static PRBool Reachable(PLHashTable* table, const void* goal, const void* start)
 }
 
 static PRBool WellOrdered(const void* addr1, const void* addr2,
+                          const void *callsite2, PRUint32* index2p,
                           nsNamedVector** vec1p, nsNamedVector** vec2p)
 {
     PRBool rv = PR_TRUE;
@@ -202,11 +214,11 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
     if (!table) return rv;
     PR_Lock(OrderTableLock);
 
-    PRUint32 i, n;
-
     // Check whether we've already asserted (addr1 < addr2).
     nsNamedVector* vec1 = GetVector(table, addr1);
     if (vec1) {
+        PRUint32 i, n;
+
         for (i = 0, n = vec1->Count(); i < n; i++)
             if (vec1->ElementAt(i) == addr2)
                 break;
@@ -219,6 +231,7 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
                     void* addri = vec2->ElementAt(i);
                     PR_ASSERT(addri);
                     if (addri == addr1 || Reachable(table, addr1, addri)) {
+                        *index2p = i;
                         *vec1p = vec1;
                         *vec2p = vec2;
                         rv = PR_FALSE;
@@ -230,6 +243,9 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
                     // Assert (addr1 < addr2) into the order table.
                     // XXX fix plvector/nsVector to use const void*
                     vec1->AppendElement((void*) addr2);
+#ifdef NS_TRACE_MALLOC_XXX
+                    vec1->mInnerSites.AppendElement((void*) callsite2);
+#endif
                 }
             }
         }
@@ -243,6 +259,7 @@ nsAutoLockBase::nsAutoLockBase(void* addr, nsAutoLockType type)
 {
     if (LockStackTPI == PRUintn(-1))
         InitAutoLockStatics();
+
     nsAutoLockBase* stackTop =
         (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
     if (stackTop) {
@@ -250,22 +267,40 @@ nsAutoLockBase::nsAutoLockBase(void* addr, nsAutoLockType type)
             // Ignore reentry: it's legal for monitors, and NSPR will assert
             // if you reenter a PRLock.
         } else {
+            const void* node =
+#ifdef NS_TRACE_MALLOC_XXX
+                NS_GetStackTrace(1)
+#else
+                nsnull
+#endif
+                ;
             nsNamedVector* vec1;
             nsNamedVector* vec2;
-            if (!WellOrdered(stackTop->mAddr, addr, &vec1, &vec2)) {
+            PRUint32 i2;
+
+            if (!WellOrdered(stackTop->mAddr, addr, node, &i2, &vec1, &vec2)) {
                 char buf[128];
                 PR_snprintf(buf, sizeof buf,
-                            "potential deadlock between %s%s@%p and %s%s@%p",
+                            "Potential deadlock between %s%s@%p and %s%s@%p",
                             vec1->mName ? vec1->mName : "",
                             LockTypeNames[stackTop->mType],
                             stackTop->mAddr,
                             vec2->mName ? vec2->mName : "",
                             LockTypeNames[type],
                             addr);
+#ifdef NS_TRACE_MALLOC_XXX
+                fprintf(stderr, "\n*** %s\n\nCurrent stack:\n", buf);
+                NS_DumpStackTrace(node, stderr);
+
+                fputs("\nPrevious stack:\n", stderr);
+                NS_DumpStackTrace(vec2->mInnerSites.ElementAt(i2), stderr);
+                putc('\n', stderr);
+#endif
                 NS_ERROR(buf);
             }
         }
     }
+
     mAddr = addr;
     mDown = stackTop;
     mType = type;
@@ -275,6 +310,34 @@ nsAutoLockBase::nsAutoLockBase(void* addr, nsAutoLockType type)
 nsAutoLockBase::~nsAutoLockBase()
 {
     (void) PR_SetThreadPrivate(LockStackTPI, mDown);
+}
+
+void nsAutoLockBase::Show()
+{
+    nsAutoLockBase* curr = (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
+    nsAutoLockBase* prev = nsnull;
+    while (curr != mDown) {
+        prev = curr;
+        curr = prev->mDown;
+    }
+    if (!prev)
+        PR_SetThreadPrivate(LockStackTPI, this);
+    else
+        prev->mDown = this;
+}
+
+void nsAutoLockBase::Hide()
+{
+    nsAutoLockBase* curr = (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
+    nsAutoLockBase* prev = nsnull;
+    while (curr != this) {
+        prev = curr;
+        curr = prev->mDown;
+    }
+    if (!prev)
+        PR_SetThreadPrivate(LockStackTPI, mDown);
+    else
+        prev->mDown = mDown;
 }
 
 #endif /* DEBUG */
