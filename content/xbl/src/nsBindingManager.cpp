@@ -1049,7 +1049,8 @@ PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
 NS_IMETHODIMP
 nsBindingManager::FlushSkinBindings()
 {
-  mBindingTable->Enumerate(MarkForDeath);
+  if (mBindingTable)
+    mBindingTable->Enumerate(MarkForDeath);
   return NS_OK;
 }
 
