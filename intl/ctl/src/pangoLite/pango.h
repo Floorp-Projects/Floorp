@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * Pango
+ * Pangolite
  * pango.h:
  *
  * The contents of this file are subject to the Mozilla Public	
@@ -39,9 +39,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <pangolite/pango-engine.h>
-#include <pangolite/pango-glyph.h>
-#include <pangolite/pango-types.h>
+#include <pango-engine.h>
+#include <pango-glyph.h>
+#include <pango-types.h>
 
 #ifdef __cplusplus
 }

@@ -41,26 +41,19 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct _PangoliteGlyphVisAttr PangoliteGlyphVisAttr;
 typedef struct _PangoliteGlyphInfo PangoliteGlyphInfo;
 typedef struct _PangoliteGlyphString PangoliteGlyphString;
 
 /* 1000ths of a device unit */
 typedef gint32 PangoliteGlyphUnit;
 
-/* Visual attributes of a glyph
- */
-struct _PangoliteGlyphVisAttr
-{
-  guint is_cluster_start : 1;
-};
 
 /* A single glyph 
  */
 struct _PangoliteGlyphInfo
 {
-  PangoliteGlyph        glyph;
-  PangoliteGlyphVisAttr attr;
+  PangoliteGlyph glyph;
+  gint           is_cluster_start;
 };
 
 /* A string of glyphs with positional information and visual attributes -
@@ -86,28 +79,13 @@ PangoliteGlyphString *pangolite_glyph_string_new(void);
 void pangolite_glyph_string_set_size(PangoliteGlyphString *string, gint new_len);
 void pangolite_glyph_string_free(PangoliteGlyphString *string);
 
-void pangolite_glyph_string_index_to_x(PangoliteGlyphString *glyphs,
-                                   char             *text,
-                                   int              length,
-                                   PangoliteAnalysis    *analysis,
-                                   int              index,
-                                   gboolean         trailing,
-                                   int              *x_pos);
-void pangolite_glyph_string_x_to_index(PangoliteGlyphString *glyphs,
-                                   char             *text,
-                                   int              length,
-                                   PangoliteAnalysis    *analysis,
-                                   int              x_pos,
-                                   int              *index,
-                                   int              *trailing);
+
 
 /* Turn a string of characters into a string of glyphs */
 void pangolite_shape(const gunichar2  *text,
                  gint             length,
                  PangoliteAnalysis    *analysis,
                  PangoliteGlyphString *glyphs);
-
-GList *pangolite_reorder_items(GList *logical_items);
 
 #ifdef __cplusplus
 }

@@ -18,118 +18,47 @@
  * 
  * Contributor(s):
  *   Prabhat Hegde (prabhat.hegde@sun.com)
+ *   Jungshik Shin (jshin@mailmaps.org)
  */
-
 #include "nsCOMPtr.h"
 #include "nsCtlCIID.h"
 #include "nsILE.h"
 #include "nsULE.h"
 #include "nsUnicodeToSunIndic.h"
 
-NS_IMPL_ADDREF(nsUnicodeToSunIndic)
-NS_IMPL_RELEASE(nsUnicodeToSunIndic)
+NS_IMPL_ISUPPORTS2(nsUnicodeToSunIndic, nsIUnicodeEncoder, nsICharRepresentable)
 
-PRInt32
-nsUnicodeToSunIndic::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList) 
+NS_IMETHODIMP
+nsUnicodeToSunIndic::SetOutputErrorBehavior(PRInt32           aBehavior,
+                                            nsIUnicharEncoder *aEncoder,
+                                            PRUnichar         aChar)
 {
-  int            ct = 0, start = 0;
-  PRBool         isHindi = PR_FALSE;
-  struct textRun *tmpChunk;
+  if (aBehavior == kOnError_CallBack && aEncoder == nsnull)
+     return NS_ERROR_NULL_POINTER;
+  NS_IF_RELEASE(aEncoder);
+  mErrEncoder = aEncoder;
+  NS_IF_ADDREF(aEncoder);
 
-  // Handle Simple Case Now : Multiple Ranges later
-  PRUnichar hindiBeg = 2305; // U+0x0901;
-  PRUnichar hindiEnd = 2416; // U+0x097f;
-
-  for (ct = 0; ct < aSrcLen;) {
-    tmpChunk = new textRun;
-    if (!tmpChunk)
-      break;
-
-    if (aRunList->numRuns == 0)
-      aRunList->head = tmpChunk;
-    else
-      aRunList->cur->next = tmpChunk;
-    aRunList->cur = tmpChunk;
-    aRunList->numRuns++;
-    
-    tmpChunk->start = &aSrcBuf[ct];
-    start = ct;
-    isHindi = (aSrcBuf[ct] >= hindiBeg && aSrcBuf[ct] <= hindiEnd);
-
-    if (isHindi) {
-      while (isHindi && ct < aSrcLen) {
-        isHindi = (aSrcBuf[ct] >= hindiBeg && aSrcBuf[ct] <= hindiEnd);
-        if (isHindi)
-          ct++;
-      }
-      tmpChunk->isOther = PR_FALSE;
-    }
-    else {
-      while (!isHindi && ct < aSrcLen) {
-        isHindi = (aSrcBuf[ct] >= hindiBeg && aSrcBuf[ct] <= hindiEnd);
-        if (!isHindi)
-          ct++;
-      }
-      tmpChunk->isOther = PR_TRUE;
-    }
-    
-    tmpChunk->length = ct - start;
-  }
-  return (PRInt32)aRunList->numRuns;
-}
-
-nsresult nsUnicodeToSunIndic::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  *aInstancePtr = NULL;
-  
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(NS_GET_IID(nsIUnicodeEncoder))) {
-    *aInstancePtr = (void*) ((nsIUnicodeEncoder*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsICharRepresentable))) {
-    *aInstancePtr = (void*) ((nsICharRepresentable*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)((nsIUnicodeEncoder*)this));
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP nsUnicodeToSunIndic::SetOutputErrorBehavior(PRInt32 aBehavior,
-                                                          nsIUnicharEncoder * aEncoder, 
-                                                          PRUnichar aChar)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mErrBehavior = aBehavior;
+  mErrChar = aChar;
+  return NS_OK;
 }
 
 // constructor and destructor
-
 nsUnicodeToSunIndic::nsUnicodeToSunIndic()
 {
   static   NS_DEFINE_CID(kLECID, NS_ULE_CID);
   nsresult rv;
 
+  NS_INIT_ISUPPORTS();
+
   mCtlObj = do_CreateInstance(kLECID, &rv);
   if (NS_FAILED(rv)) {
 
-#ifdef DEBUG_prabhat
-    // No other error handling needed here since we 
+#ifdef DEBUG_prabhath
+    // No other error handling needed here since we
     // handle absence of mCtlObj in Convert
-    printf("ERROR: Cannot create instance of component " NS_ULE_PROGID " [%x].\n", 
-           rv);
+    printf("ERROR: Cannot create instance of component " NS_ULE_PROGID " [%x].\n", rv);
 #endif
 
     NS_WARNING("Indian Text Shaping Will Not Be Supported\n");
@@ -140,7 +69,7 @@ nsUnicodeToSunIndic::nsUnicodeToSunIndic()
 nsUnicodeToSunIndic::~nsUnicodeToSunIndic()
 {
   // Maybe convert nsILE to a service
-  // No NS_IF_RELEASE(mCtlObj) of nsCOMPtr;
+  //NS_IF_RELEASE(mCtlObj);
 }
 
 /*
@@ -153,58 +82,23 @@ NS_IMETHODIMP nsUnicodeToSunIndic::Convert(const PRUnichar* input,
                                            char*            output,
                                            PRInt32*         aDestLength)
 {
-  textRunList txtRuns;
-  textRun     *aPtr, *aTmpPtr;
-  int i;  
-  
-  if (mCtlObj == nsnull) {
-    nsresult res;
+  PRSize outLen;
 
+  if (mCtlObj == nsnull) {
 #ifdef DEBUG_prabhath
   printf("Debug/Test Case of No Hindi pango shaper Object\n");
   // Comment out mCtlObj == nsnull for test purposes
   printf("ERROR: No Hindi Text Layout Implementation");
 #endif
 
-    NS_WARNING("cannot get default converter for Hindi");    
+    NS_WARNING("cannot get default converter for Hindi");
     return NS_ERROR_FAILURE;
   }
 
   mCharOff = mByteOff = 0;
-
-  txtRuns.numRuns = 0;
-  Itemize(input, *aSrcLength, &txtRuns);
-
-  aPtr = txtRuns.head;
-  for (i = 0; i < txtRuns.numRuns; i++) {
-    PRInt32 tmpSrcLen = aPtr->length;
-    
-    if (aPtr->isOther) {
-      // PangoHindiShaper does not handle ASCII + Hindi in same shaper
-      for (int j = 0; j < tmpSrcLen; j++)
-        output[j + mByteOff] = (char)(*(aPtr->start + j));
-      mByteOff += tmpSrcLen;
-    }
-    else {
-      PRSize outLen = *aDestLength - mByteOff;
-      // At the moment only generate presentation forms for
-      // sun.unicode.india are supported.
-      mCtlObj->GetPresentationForm(aPtr->start, tmpSrcLen, "sun.unicode.india-0",
-                                   &output[mByteOff], &outLen);
-      mByteOff += outLen;
-    }
-    aPtr = aPtr->next;
-  }
-  
-  // Cleanup Run Info;
-  aPtr = txtRuns.head;
-  for (i = 0; i < txtRuns.numRuns; i++) {
-    aTmpPtr = aPtr;
-    aPtr = aPtr->next;
-    delete aTmpPtr;
-  }
-
-  *aDestLength = mByteOff;
+  mCtlObj->GetPresentationForm(input, *aSrcLength, "sun.unicode.india-0",
+                               &output[mByteOff], &outLen, PR_TRUE);
+  *aDestLength = outLen;
   return NS_OK;
 }
 
@@ -224,7 +118,7 @@ NS_IMETHODIMP nsUnicodeToSunIndic::Reset()
 }
 
 //================================================================
-NS_IMETHODIMP nsUnicodeToSunIndic::GetMaxLength(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToSunIndic::GetMaxLength(const PRUnichar * aSrc,
                                                 PRInt32 aSrcLength,
                                                 PRInt32 * aDestLength)
 {
@@ -232,8 +126,8 @@ NS_IMETHODIMP nsUnicodeToSunIndic::GetMaxLength(const PRUnichar * aSrc,
                                         // atmost two presentation forms
   return NS_OK;
 }
-//================================================================
 
+//================================================================
 NS_IMETHODIMP nsUnicodeToSunIndic::FillInfo(PRUint32* aInfo)
 {
   PRUint16 i;
@@ -256,9 +150,8 @@ NS_IMETHODIMP nsUnicodeToSunIndic::FillInfo(PRUint32* aInfo)
     SET_REPRESENTABLE(aInfo, i);
 
   for (i = 0x0958; i <= 0x0970; i++)
-    SET_REPRESENTABLE(aInfo, i); 
+    SET_REPRESENTABLE(aInfo, i);
  
   // ZWJ and ZWNJ support & coverage need to be added.
   return NS_OK;
 }
-

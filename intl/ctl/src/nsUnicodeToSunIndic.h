@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * ucvth : nsUnicodeToSunIndic.h
+ * ucvhi : nsUnicodeToSunIndic.h
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +19,6 @@
  * Contributor(s):
  *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
-
 #ifndef nsUnicodeToSunIndic_h___
 #define nsUnicodeToSunIndic_h___
 
@@ -34,20 +33,14 @@
 
 #include "nsILE.h"
 
-struct textRunList;
-
 //----------------------------------------------------------------------
 // Class nsUnicodeToSunIndic [declaration]
 
 class nsUnicodeToSunIndic : public nsIUnicodeEncoder, public nsICharRepresentable
 {
-
 NS_DECL_ISUPPORTS
 
 public:
-  /**
-   * Class constructor.
-   */
   nsUnicodeToSunIndic();
   virtual ~nsUnicodeToSunIndic();
 
@@ -62,7 +55,7 @@ public:
   NS_IMETHOD Reset();
 
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior,
-                                    nsIUnicharEncoder * aEncoder, 
+                                    nsIUnicharEncoder * aEncoder,
                                     PRUnichar aChar);
 
   NS_IMETHOD FillInfo(PRUint32* aInfo);
@@ -74,9 +67,8 @@ private:
 
   nsCOMPtr<nsILE> mCtlObj;
 
-  // beg and end denote ranges and may need to be expanded in the future to
-  // handle discontinous ranges
-  PRInt32 Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList);
+  PRInt32 mErrBehavior;
+  PRUnichar mErrChar;
+  nsIUnicharEncoder* mErrEncoder;
 };
 #endif /* !nsUnicodeToSunIndic_h___ */
-

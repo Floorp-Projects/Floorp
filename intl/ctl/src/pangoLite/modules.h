@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * Pango
+ * Pangolite
  * modules.h:
  *
  * The contents of this file are subject to the Mozilla Public	
@@ -32,8 +32,8 @@
  * LGPL.
 */
 
-#include <pangolite/pango-engine.h>
-#include <pangolite/pango-modules.h>
+#include <pango-engine.h>
+#include <pango-modules.h>
 
 #ifndef __MODULES_H__
 #define __MODULES_H__
