@@ -43,9 +43,7 @@ NS_DECLARE_ID(kIUnicodeDecoderIID,
 /**
  * Interface for a Converter from a Charset into Unicode.
  *
- * XXX Rethink, rewrite and redoc the error handling.
- * XXX Swap the params order to be: Source, Destination.
- * XXX Rename error value macros
+ * XXX Rename error value macros; unify with the Encoder ones
  *
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
@@ -78,6 +76,20 @@ public:
    * worry about managing incomplete input data by mergeing it with the next 
    * buffer.
    *
+   * Error conditions. If the readed value does not belong to this character 
+   * set, one should replace it with the Unicode special 0xFFFD. When an actual
+   * input error is encountered, like a format error, there are two possible 
+   * behaviours: "recover & continue" (default) and "return error code". 
+   * Actually, most of the converters will just signal error, as the recovery 
+   * code can get very complicated and error prone. So, all converters are 
+   * required to support the second mode. The first one is up to you. But if 
+   * you support it, you have to make it default!If someone wants strict 
+   * checking all the time, a setter method is available for the input error
+   * behavior.
+   *
+   * XXX Change this method's signature to:
+   * Convert(aSrc, aSrcLen, aDest, aDestLen)
+   *
    * @param aDest       [OUT] the destination data buffer
    * @param aDestOffset [IN] the offset in the destination data buffer
    * @param aDestLength [IN/OUT] the length of the destination data buffer;
@@ -102,6 +114,10 @@ public:
    * Finishes the conversion. The converter has the possibility to write some 
    * extra data and flush its final state.
    *
+   * XXX Change this method's signature to:
+   * Finish(aDest, aDestLen)
+   * XXX Delete this method: it is useless.
+   *
    * @param aDest       [OUT] the destination data buffer
    * @param aDestOffset [IN] the offset in the destination data buffer
    * @param aDestLength [IN/OUT] the length of destination data buffer; after
@@ -115,15 +131,18 @@ public:
 
   /**
    * Returns a quick estimation of the size of the buffer needed to hold the
-   * converted data. Remember: this is an estimation and not necessarily 
-   * correct. Its purpose is to help the caller allocate the destination 
-   * buffer.
+   * converted data. Remember: this estimation is >= with the actual size of 
+   * the buffer needed. It will be computed for the "worst case"
+   *
+   * XXX Change this method's signature to:
+   * GetMaxLength(aSrc, aSrcLen, aDestLen)
    *
    * @param aSrc        [IN] the source data buffer
    * @param aSrcOffset  [IN] the offset in the source data buffer
    * @param aSrcLength  [IN] the length of source data buffer
    * @param aDestLength [OUT] the needed size of the destination buffer
    * @return            NS_EXACT_LENGTH if an exact length was computed
+   *                    NS_OK is all we have is an approximation
    */
   NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
       PRInt32 aSrcLength, PRInt32 * aDestLength) = 0;
