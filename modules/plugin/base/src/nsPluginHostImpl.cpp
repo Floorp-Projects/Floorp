@@ -3223,6 +3223,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   nsCOMPtr<nsIPluginTagInfo2> pti2;
   nsPluginTagType tagType;
   PRBool isJavaEnabled = PR_TRUE;
+  PRBool isJava = PR_FALSE;
   
   rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
   
@@ -3239,7 +3240,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     return rv;
   }
 
-  if (tagType == nsPluginTagType_Applet) {
+  if (tagType == nsPluginTagType_Applet || 
+      PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
+      PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0) {
+    isJava = PR_TRUE;
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
     // see if java is enabled
     if (prefs) {
@@ -3266,7 +3270,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     ("nsPluginHostImpl::InstatiateEmbededPlugin FoundStopped mime=%s\n", aMimeType));
 
     aOwner->GetInstance(instance);
-    if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
+    if(!aMimeType || !isJava)
       rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
     // notify Java DOM component 
@@ -3352,9 +3356,6 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
     // create an initial stream with data 
     // don't make the stream if it's a java applet or we don't have SRC or DATA attribute
-    PRBool applet = (PL_strcasecmp(aMimeType, "application/x-java-vm") == 0 || 
-                     PL_strcasecmp(aMimeType, "application/x-java-applet") == 0);
-
     PRBool havedata = PR_FALSE;
 
     nsCOMPtr<nsIPluginTagInfo> pti(do_QueryInterface(aOwner, &rv));
@@ -3367,7 +3368,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
         havedata = NS_SUCCEEDED(pti->GetAttribute("DATA", &value));
     }
 
-    if(havedata && !applet)
+    if(havedata && !isJava)
       rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
     // notify Java DOM component 
