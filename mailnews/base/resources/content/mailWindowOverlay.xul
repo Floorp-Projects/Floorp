@@ -44,6 +44,7 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script src="chrome://messenger/content/commandglue.js"/>
+<script src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
 
