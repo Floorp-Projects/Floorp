@@ -40,7 +40,7 @@ $err = 0;
 if (open(FILE, "<$installedChromeFile")) {
     while (<FILE>) {
         chomp;
-        if ($_ =~ $line) {
+        if ($_ eq $line) {
             # line already appears in installed-chrome.txt file
             # just update the mod date
             close(FILE) or $err = 1; 

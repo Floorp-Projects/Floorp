@@ -63,7 +63,7 @@
   <data id="strings.unknownTime">&unknownTime;</data>
   <data id="strings.pausedMsg">&pausedMsg;</data>
 
-  <commands id="commands">
+  <commandset id="commands">
     <commandset id="commandUpdate_Downloads"
                 commandupdater="true"
                 events="focus,tree-select"
@@ -89,7 +89,9 @@
     <command id="cmd_close" oncommand="close()"/>
     <command id="cmd_quit"/>
 
-  </commands>
+  </commandset>
+  
+  <broadcasterset id="navBroadcasters"/>
 
   <keyset id="tasksKeys">
     <!-- File Menu -->
@@ -107,7 +109,7 @@
          command="cmd_properties" modifiers="accel"/>
   </keyset>
 
-  <toolbox>
+  <toolbox id="toolbox">
     <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed">
       <toolbarbutton label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
                      command="cmd_properties"/>
