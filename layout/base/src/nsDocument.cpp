@@ -1463,6 +1463,42 @@ PRBool nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
     return (mObservers.IndexOf(aObserver) != -1);
 }
 
+NS_IMETHODIMP 
+nsDocument::BeginUpdate()
+{
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
+    nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+    observer->BeginUpdate(this);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocument::EndUpdate()
+{
+  PRInt32 i;
+  // Get new value of count for every iteration in case
+  // observers remove themselves during the loop.
+  for (i = 0; i < mObservers.Count(); i++) {
+    nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+    observer->EndUpdate(this);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocument::BeginLoad()
 {
@@ -1651,11 +1687,15 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->BeginUpdate(this);
     observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
+    }
+    else {
+      observer->EndUpdate(this);
     }
   }
   return NS_OK;
@@ -1669,11 +1709,15 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->BeginUpdate(this);
     observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
+    }
+    else {
+      observer->EndUpdate(this);
     }
   }
   return NS_OK;
@@ -1687,11 +1731,15 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->BeginUpdate(this);
     observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {
       i--;
+    }
+    else {
+      observer->EndUpdate(this);
     }
   }
   return NS_OK;

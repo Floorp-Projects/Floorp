@@ -2085,6 +2085,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     nsIDocument *document;  // this presumes content can't get/lose state if not connected to doc
     notifyContent[0]->GetDocument(document);
     if (document) {
+      document->BeginUpdate();
       document->ContentStatesChanged(notifyContent[0], notifyContent[1]);
       if (notifyContent[2]) {  // more that two notifications are needed (should be rare)
         // XXX a further optimization here would be to group the notification pairs
@@ -2095,6 +2096,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
           document->ContentStatesChanged(notifyContent[4], nsnull);
         }
       }
+      document->EndUpdate();
       NS_RELEASE(document);
     }
 

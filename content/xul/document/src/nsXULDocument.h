@@ -191,6 +191,10 @@ public:
 
     virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver);
 
+    NS_IMETHOD BeginUpdate();
+
+    NS_IMETHOD EndUpdate();
+
     NS_IMETHOD BeginLoad();
 
     NS_IMETHOD EndLoad();
