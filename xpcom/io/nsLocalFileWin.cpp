@@ -2424,12 +2424,13 @@ nsLocalFile::GetTarget(nsAString &_retval)
 nsresult 
 NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {
-    nsCAutoString tmp;
-    nsresult rv = NS_CopyUnicodeToNative(path, tmp);
-    if (NS_SUCCEEDED(rv))
-        return NS_NewNativeLocalFile(tmp, followLinks, result);
-
-    return NS_OK;
+    nsCAutoString buf;
+    nsresult rv = NS_CopyUnicodeToNative(path, buf);
+    if (NS_FAILED(rv)) {
+        *result = nsnull;
+        return rv;
+    }
+    return NS_NewNativeLocalFile(buf, followLinks, result);
 }
 
 //-----------------------------------------------------------------------------
