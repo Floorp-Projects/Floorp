@@ -1530,6 +1530,13 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 	  aOwner->GetInstance(instance);
     if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
 	    rv = NewEmbededPluginStream(aURL, nsnull, instance);
+
+    // notify Java DOM component 
+    nsresult res;
+    NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "component://netscape/blackwood/java-dom", &res);
+    if (NS_SUCCEEDED(res) && javaDOM)
+      javaDOM->SetInstance(instance);
+
     NS_IF_RELEASE(instance);
     return NS_OK;
   }
@@ -1580,6 +1587,12 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
          (PL_strcasecmp(aMimeType, "application/x-java-vm") != 0 && 
           PL_strcasecmp(aMimeType, "application/x-java-applet") != 0))
         rv = NewEmbededPluginStream(aURL, nsnull, instance);
+
+      // notify Java DOM component 
+      nsresult res;
+      NS_WITH_SERVICE(nsIPluginInstanceOwner, javaDOM, "component://netscape/blackwood/java-dom", &res);
+      if (NS_SUCCEEDED(res) && javaDOM)
+        javaDOM->SetInstance(instance);
 
       NS_RELEASE(instance);
     }
