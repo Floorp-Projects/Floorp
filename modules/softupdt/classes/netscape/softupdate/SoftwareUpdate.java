@@ -40,137 +40,101 @@ import netscape.javascript.JSObject;
 final public class SoftwareUpdate {
 
 /* Security strategy
- * Only two main targets, limited and full install
- * Limited install is Java folders only, full install everything else
  * Each routine that does something unsafe checks the permissions there
  */
-    static String targetNames[] = {
-    "LimitedInstall",       // Install Java classes into a single directory
-    "SoftwareInstall",      // Any other install actions
-    "SilentInstall"         // Install without any UI
-    };
+    // leave the numeric constants for backward compatibility!
     public static final int LIMITED_INSTALL= 0;
     public static final int FULL_INSTALL = 1;
     public static final int SILENT_INSTALL = 2;
 
     protected static final String IMPERSONATOR = "Impersonator";
+    public static final String INSTALL_PRIV = "SoftwareInstall";
+    public static final String SILENT_PRIV = "SilentInstall";
+	public static final String FOLDER_FILE_URL = "File URL";
 
     /* Errors -200 to -300 */
-    static final int BAD_PACKAGE_NAME = -200;
-    static final int UNEXPECTED_ERROR = -201;
-    static final int ACCESS_DENIED = -202;
-    static final int TOO_MANY_CERTIFICATES = -203;  // Installer file must have 1 certificate
-    static final int NO_INSTALLER_CERTIFICATE = -204; // Installer file must have a certificate
-    static final int NO_CERTIFICATE =  -205; // Extracted file is not signed
-    static final int NO_MATCHING_CERTIFICATE = -206; // Extracted file does not match installer certificate
-    static final int UNKNOWN_JAR_FILE = -207;   // JAR file has not been opened
-    static final int INVALID_ARGUMENTS = -208;  // Bad arguments to a function
-    static final int ILLEGAL_RELATIVE_PATH = -209;  // Illegal relative path
-    static final int USER_CANCELLED = -210;     // User cancelled
-    static final int INSTALL_NOT_STARTED = -211;
-    static final int SILENT_MODE_DENIED = -212;
-    static final int NO_SUCH_COMPONENT = -213;  // no such component in the registry.
+    public static final int BAD_PACKAGE_NAME = -200;
+    public static final int UNEXPECTED_ERROR = -201;
+    public static final int ACCESS_DENIED = -202;
+    public static final int TOO_MANY_CERTIFICATES = -203;  // Installer file must have 1 certificate
+    public static final int NO_INSTALLER_CERTIFICATE = -204; // Installer file must have a certificate
+    public static final int NO_CERTIFICATE =  -205; // Extracted file is not signed
+    public static final int NO_MATCHING_CERTIFICATE = -206; // Extracted file does not match installer certificate
+    public static final int UNKNOWN_JAR_FILE = -207;   // JAR file has not been opened
+    public static final int INVALID_ARGUMENTS = -208;  // Bad arguments to a function
+    public static final int ILLEGAL_RELATIVE_PATH = -209;  // Illegal relative path
+    public static final int USER_CANCELLED = -210;     // User cancelled
+    public static final int INSTALL_NOT_STARTED = -211;
+    public static final int SILENT_MODE_DENIED = -212;
+    public static final int NO_SUCH_COMPONENT = -213;  // no such component in the registry.
+	public static final int FILE_DOES_NOT_EXIST = -214; //File cannot be deleted as it does not exist
+	public static final int FILE_READ_ONLY = -215;	// File cannot be deleted as it is read only.
+	public static final int FILE_IS_DIRECTORY = -216;	// File cannot be deleted as it is a directory
+	public static final int NOT_IN_REGISTRY = -217;	// Component not found in registry
+    public static final int APPLE_SINGLE_ERR = -218;   // error in AppleSingle unpacking
 
-    static final int SUCCESS = 0;
-    static final int REBOOT_NEEDED = 999;
+    public static final int SUCCESS = 0;
+    public static final int REBOOT_NEEDED = 999;
 
-    static {
-        /* Create security targets */
-        netscape.security.UserTarget t1, t2, t3;
-        netscape.security.Principal sysPrin = PrivilegeManager.getSystemPrincipal();
-        // t1 = new netscape.security.Target(targetNames[EXTRACT_JAR_FILE], sysPrin).registerTarget();
-        t1 = new netscape.security.UserTarget(targetNames[LIMITED_INSTALL], sysPrin,
-                     UserDialogHelper.targetRiskMedium(),
-                     UserDialogHelper.targetRiskColorMedium(),
-                     Strings.targetDesc_LimitedInstall(),
-                     Strings.getString("s37"),
-                     Strings.targetUrl_LimitedInstall()
-                     );
-        t1 = (UserTarget)t1.registerTarget();
-
-        Target[] tarray;
-        tarray = new Target[1];
-        tarray[0] = t1;
-        t2 = new netscape.security.UserTarget(targetNames[FULL_INSTALL], sysPrin,
-                     UserDialogHelper.targetRiskHigh(),
-                     UserDialogHelper.targetRiskColorHigh(),
-                     Strings.targetDesc_FullInstall(),
-                     Strings.getString("s38"),
-                     Strings.targetUrl_FullInstall(),
-                     tarray);
-        t2 = (UserTarget)t2.registerTarget();
-        tarray[0] = t2;
-        t3 = new netscape.security.UserTarget(targetNames[SILENT_INSTALL], sysPrin,
-                     UserDialogHelper.targetRiskHigh(),
-                     UserDialogHelper.targetRiskColorHigh(),
-                     Strings.targetDesc_SilentInstall(),
-                     Strings.getString("s39"),
-                     Strings.targetUrl_SilentInstall(),
-                     tarray);
-        t3 = (UserTarget)t3.registerTarget();
-    };
-
-    protected String packageName;       // Name of the package we are installing
-    protected String userPackageName;   // User-readable package name
-    protected Vector installedFiles;    // List of files/processes to be installed
+	protected String packageName;	// Name	of the package we are installing
+	protected String userPackageName;	// User-readable package name
+	protected Vector installedFiles;	// List	of files/processes to be installed
     protected Hashtable patchList;      // files that have been patched (orig name is key)
-    protected VersionInfo versionInfo;  // Component version info
-
+	protected VersionInfo versionInfo;	// Component version info
     private FolderSpec packageFolder;   // default folder for package
-    private ProgressMediator progress;  // Progress feedback
+	private ProgressMediator progress;  // Progress feedback
     private int userChoice;             // User feedback: -1 unknown, 0 is cancel, 1 is OK
-    private boolean silent;             // Silent upgrade?
+    private boolean silent;        // Silent upgrade?
     private boolean force;              // Force install?
     private int lastError;              // the most recent non-zero error
+    
 
-    /**
-     * @param env   JavaScript environment (this inside the installer). Contains installer directives
-     * @param inUserPackageName Name of tha package installed. This name is displayed to the user
-     */
-    public
-    SoftwareUpdate( JSObject env, String inUserPackageName)
-    {
-        userPackageName = inUserPackageName;
-        installPrincipal = null;
-        packageName = null;
-        packageFolder = null;
-        progress = null;
-        patchList = new java.util.Hashtable();
-        zigPtr = 0;
-        userChoice = -1;
+	/**
+	 * @param env   JavaScript environment (this inside the installer). Contains installer directives
+	 * @param inUserPackageName Name of tha package installed. This name is displayed to the user
+	 */
+	public
+	SoftwareUpdate( JSObject env, String inUserPackageName)
+	{
+		userPackageName	= inUserPackageName;
+		installPrincipal	= null;
+		packageName	= null;
+		packageFolder = null;
+		progress = null;
+		patchList = new java.util.Hashtable();
+		zigPtr = 0;
+		userChoice = -1;
         lastError = 0;
-        /* Need to verify that this is a SoftUpdate JavaScript object */
-        VerifyJSObject(env);
-        jarName = (String) env.getMember("src");
+		/* Need to verify that this is a SoftUpdate JavaScript object */
+		VerifyJSObject(env);
+		jarName = (String) env.getMember("src");
+ 		try
+		{
+    		silent = ((Boolean) env.getMember("silent")).booleanValue();
+			force  = ((Boolean) env.getMember("force")).booleanValue();
+	    }
+	    catch (Throwable t)
+	    {
+    	    System.out.println("Unexpected throw getting silent/force" );
+	        silent = false;
+			force = false;
+	    }
+	}
 
-        try 
-        {
-            silent = ((Boolean) env.getMember("silent")).booleanValue();
-            force  = ((Boolean) env.getMember("force")).booleanValue();
-        }
-        catch (Throwable t) 
-        {
-            System.out.println("Unexpected throw getting silent/force" );
-            silent = false;
-            force = false;
-        }
-    }
+	protected void
+	finalize() throws Throwable
+	{
+		CleanUp();
+		super.finalize();
+	}
 
-    protected void
-    finalize() throws Throwable
-    {
-        CleanUp();
-        super.finalize();
-    }
-
-    /* VerifyJSObject
-     * Make sure that JSObject is of type SoftUpdate.
-     * Since SoftUpdate JSObject can only be created by C code
-     * we cannot be spoofed
-     */
-    private native void
-    VerifyJSObject(JSObject obj);
-
+	/* VerifyJSObject
+	 * Make sure that JSObject is of type SoftUpdate.
+	 * Since SoftUpdate JSObject can only be created by C code
+	 * we cannot be spoofed
+	 */
+	private	native void
+	VerifyJSObject(JSObject obj);
     /*
      * Reads in the installer certificate, and creates its principal
      */
@@ -181,8 +145,8 @@ final public class SoftwareUpdate {
 
         certArray = getCertificates( zigPtr, installerJarName );
 
-        if ( certArray == null || certArray.length == 0 )
-            throw new SoftUpdateException( Strings.error_NoCertificate(), NO_INSTALLER_CERTIFICATE) ;
+		if ( certArray == null || certArray.length == 0 )
+			throw new SoftUpdateException( Strings.error_NoCertificate(), NO_INSTALLER_CERTIFICATE) ;
 
         if ( certArray.length > 1 )
             throw new SoftUpdateException( Strings.error_TooManyCertificates(), TOO_MANY_CERTIFICATES);
@@ -210,10 +174,9 @@ final public class SoftwareUpdate {
             privMgr.enablePrivilege( impersonation );
 
             /* check the security permissions */
-            target = Target.findTarget( targetNames[SILENT_INSTALL] );
+            target = Target.findTarget( SILENT_PRIV );
 
-            /* XXX: we need a way to indicate that a dialog box should appear.*/
-            privMgr.enablePrivilege( target, GetPrincipal() );
+            privMgr.checkPrivilegeGranted( target, GetPrincipal(), null );
         }
         catch(Throwable t)
         {
@@ -226,12 +189,8 @@ final public class SoftwareUpdate {
      * pop up
      */
     private void
-    RequestSecurityPrivileges(int securityLevel)
+    RequestSecurityPrivileges()
     {
-        if ((securityLevel != LIMITED_INSTALL) &&
-            (securityLevel != FULL_INSTALL))
-            securityLevel = FULL_INSTALL;
-
         netscape.security.PrivilegeManager privMgr;
         Target impersonation, target;
 
@@ -240,10 +199,8 @@ final public class SoftwareUpdate {
         privMgr.enablePrivilege( impersonation );
 
         /* check the security permissions */
-        target = Target.findTarget( SoftwareUpdate.targetNames[securityLevel] );
-//        System.out.println("Asking for privileges ");
+        target = Target.findTarget( INSTALL_PRIV );
         privMgr.enablePrivilege( target, GetPrincipal() );
-//       System.out.println("Got privileges ");
     }
 
     protected final netscape.security.Principal 
@@ -256,6 +213,11 @@ final public class SoftwareUpdate {
         return userPackageName;
     }
     
+    protected final String
+    GetRegPackageName()    {
+         return packageName;
+    }
+
     protected final boolean
     GetSilent() {
         return silent;
@@ -272,7 +234,6 @@ final public class SoftwareUpdate {
             return null;
     }
 
-    
     /**
      * @return  the most recent non-zero error code
      * @see ResetError
@@ -303,40 +264,38 @@ final public class SoftwareUpdate {
 
 
 
+	/**
+	 * @return the folder object suitable to be passed into AddSubcomponent
+	 * @param folderID One of the predefined folder names
+	 * @see AddSubcomponent
+	 */
+	public FolderSpec
+	GetFolder(String folderID)
+	{
+		FolderSpec spec	= null;
+		try
+		{
+			int	errCode	= 0;
 
-
-    /**
-     * @return the folder object suitable to be passed into AddSubcomponent
-     * @param folderID One of the predefined folder names
-     * @see AddSubcomponent
-     */
-    public FolderSpec
-    GetFolder(String folderID)
-    {
-        FolderSpec spec = null;
-        try
-        {
-            int errCode = 0;
-
-            if (folderID.compareTo("Installed") != 0)
-            {
-                spec = new FolderSpec(folderID, packageName, userPackageName);
-                if (folderID == "User Pick")     // Force the prompt
-                {
-                    String ignore = spec.GetDirectoryPath();
-                }
-            }
-        }
-        catch (Throwable e)
-        {
-            return null;
-        }
-        return spec;
-    }
+			if ((folderID.compareTo("Installed") != 0) && (folderID.compareTo(FOLDER_FILE_URL) != 0))
+			{
+				spec = new FolderSpec(folderID,	packageName, userPackageName);
+				if (folderID ==	"User Pick")	 //	Force the prompt
+				{
+					String ignore =	spec.GetDirectoryPath();
+				}
+			}
+		}
+		catch (Throwable e)
+		{
+			return null;
+		}
+		return spec;
+	}
 
 
 	/**
-	 * @return the full path to a component as it is known to the
+  	 * @return the full path to a component as it is known to the
 	 *          Version Registry
 	 * @param  component Version Registry component name
 	 */
@@ -484,7 +443,7 @@ final public class SoftwareUpdate {
         Target target;
         PrivilegeManager privMgr;
         privMgr = AppletSecurity.getPrivilegeManager();
-        target = Target.findTarget( targetNames[LIMITED_INSTALL] );
+        target = Target.findTarget( INSTALL_PRIV );
 
         privMgr.checkPrivilegeEnabled(target);
 
@@ -546,33 +505,44 @@ final public class SoftwareUpdate {
     StartInstall(String vrPackageName,
                  VersionInfo inVInfo,
                  int securityLevel)
+	{
+        // ignore securityLevel
+        return StartInstall( vrPackageName, inVInfo );
+    }
+
+
+    /**
+     * An new form that doesn't require the security level
+     */
+    public int
+    StartInstall(String vrPackageName, VersionInfo inVInfo )
     {
         int errcode = SUCCESS;
         ResetError();
 
-        try
-        {
-            if ( (vrPackageName == null) )
-                throw new SoftUpdateException( Strings.error_BadPackageName() , INVALID_ARGUMENTS );
+		try
+		{
+			if ( (vrPackageName	== null) )
+				throw new SoftUpdateException( Strings.error_BadPackageName() ,	INVALID_ARGUMENTS );
 
-            packageName = vrPackageName;
-            while ( packageName.endsWith("/")) // Make sure that package name does not end with '/'
-            {
-                char c[] = new char[packageName.length() - 1];
-                packageName.getChars(0, packageName.length() -1, c, 0);
-                packageName = new String( c );
-                // System.out.println("Truncated package name is "  + packageName);
+			packageName	= vrPackageName;
+			while ( packageName.endsWith("/")) // Make sure that package name does not end with '/'
+			{
+				char c[] = new char[packageName.length() - 1];
+				packageName.getChars(0,	packageName.length() -1, c,	0);
+				packageName	= new String( c	);
+                // System.out.println("Truncated package name is " + packageName);
 
-            }
-            versionInfo = inVInfo;
-            installedFiles = new java.util.Vector();
+			}
+			versionInfo	= inVInfo;
+			installedFiles = new java.util.Vector();
 
-            /* JAR initalization */
-            /* open the file, create a principal out of installer file certificate */
-            OpenJARFile();
+			/* JAR initalization */
+			/* open	the	file, create a principal out of	installer file certificate */
+			OpenJARFile();
             InitializeInstallerCertificate();
             CheckSilentPrivileges();
-            RequestSecurityPrivileges(securityLevel);
+            RequestSecurityPrivileges();
             progress = new ProgressMediator(this);
             progress.StartInstall();
 
@@ -583,29 +553,35 @@ final public class SoftwareUpdate {
                 packageFolder = new FolderSpec("Installed", path, userPackageName);
             }
         }
-
-        catch(SoftUpdateException e)
+		catch(SoftUpdateException e)
+		{
+			errcode = e.GetError();
+		}
+        catch(ForbiddenTargetException e)
         {
-            errcode = e.GetError();
+            errcode = ACCESS_DENIED;
         }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            errcode = UNEXPECTED_ERROR;
-        }
+		catch(Exception	e)
+		{
+			e.printStackTrace();
+			errcode = UNEXPECTED_ERROR;
+		}
 
         saveError( errcode );
         return errcode;
-    }
+	}
 
     /**
-     * An alternate form that doesn't require the security level
+     * another StartInstall() simplification -- version as string
      */
     public int
-    StartInstall(String vrPackageName, VersionInfo inVInfo )
+    StartInstall(String vrPackageName, String inVer )
     {
-        return StartInstall( vrPackageName, inVInfo, FULL_INSTALL );
+        return StartInstall( vrPackageName, new VersionInfo( inVer ) );
     }
+
+
+
 
     /*
      * UI feedback
@@ -632,11 +608,10 @@ final public class SoftwareUpdate {
     FinalizeInstall()
     {
         boolean rebootNeeded = false;
-        int result = SUCCESS;
-        try
-        {
-
-            if (packageName == null) // didn't call StartInstall()
+		int result = SUCCESS;
+		try
+		{
+			if (packageName == null) //	probably didn't	call StartInstall()
             {
                 throw new SoftUpdateException(
                     Strings.error_WinProfileMustCallStart(), 
@@ -669,6 +644,7 @@ final public class SoftwareUpdate {
             
             try     // Main loop
             {
+                VersionRegistry.uninstallCreate(packageName, userPackageName);
                 while ( ve.hasMoreElements() )
                 {
                     ie = (InstallObject)ve.nextElement();
@@ -676,7 +652,7 @@ final public class SoftwareUpdate {
                         ie.Complete();
                     } 
                     catch (SoftUpdateException e) {
-                        if (e.GetError() == REBOOT_NEEDED)
+				        if (e.GetError() == REBOOT_NEEDED)
                             rebootNeeded = true;
                         else
                             throw e;
@@ -684,23 +660,23 @@ final public class SoftwareUpdate {
                 }
             }
             catch (Throwable e)
-            {
-                if (ie != null)
+            {   
+			    if (ie != null)
                     ie.Abort();
  
                 while (ve.hasMoreElements())
-                {
-                    try 
-                    {
-                        ie = (InstallObject)ve.nextElement();
-                        ie.Abort();
-                    }
-                    catch(Throwable t)
-                    {
-                        // t.printStackTrace();
-                    }
+    			{
+    			    try 
+   				    {
+   				        ie = (InstallObject)ve.nextElement();
+   				        ie.Abort();
+    				}
+    				catch(Throwable t)
+    				{
+    				    // t.printStackTrace();
+					}
                 }
-                throw(e);   // Rethrow out of main loop
+			    throw(e);   // Rethrow out of main loop
             }
             
             // add overall version for package
@@ -709,24 +685,24 @@ final public class SoftwareUpdate {
                 result = VersionRegistry.installComponent(
                                     packageName, null, versionInfo );
             }
-        }
-        catch (SoftUpdateException e)
-        {
-            result = e.GetError();
-        }
-        catch (netscape.security.AppletSecurityException e)
-        {
-            result = ACCESS_DENIED;
-        }
-        catch (Throwable e)
-        {
-            e.printStackTrace();
-            System.out.println( Strings.error_Unexpected() + " FinalizeInstall");
-            result = UNEXPECTED_ERROR;
-        }
-        finally
-        {
-            if ( installedFiles != null )
+		}
+		catch (SoftUpdateException e)
+		{
+			result = e.GetError();
+		}
+		catch (ForbiddenTargetException e)
+		{
+			result = ACCESS_DENIED;
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace();
+			System.out.println( Strings.error_Unexpected() + " FinalizeInstall");
+			result = UNEXPECTED_ERROR;
+		}
+		finally
+		{
+		    if ( installedFiles != null )
                 installedFiles.removeAllElements();
             CleanUp();
         }
@@ -736,59 +712,58 @@ final public class SoftwareUpdate {
 
         saveError( result );
         return result;
-    }
+}
 
-    /**
-     * Aborts the install :), cleans up all the installed files
-     */
-    public synchronized void AbortInstall()
-    {
-        try
-        {
-            if (installedFiles != null)
-            {
-                java.util.Enumeration   ve = GetInstallQueue();
-                while ( ve.hasMoreElements() )
-                {
-                    InstallObject   ie;
-                    ie = (InstallObject)ve.nextElement();
-                    try // We just want to loop through all of them if possible
-                    {
-                        ie.Abort();
-                    }
-                    catch (Throwable t)
-                    {
-                    }
-                }       
-                installedFiles.removeAllElements();
-                installedFiles = null;
-            }
-            CloseJARFile();
-        }
-        catch (Throwable e)
-        {
-            System.out.println( Strings.error_Unexpected() + " AbortInstall");
-            e.printStackTrace();
-        }
-        finally
-        {
-            try {
-                CleanUp();
-            }
-            catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	/**
+	 * Aborts the install :), cleans up all the installed files
+	 */
+	public synchronized void AbortInstall()
+	{
+		try
+		{
+			if (installedFiles != null)
+			{
+	   			java.util.Enumeration	ve = GetInstallQueue();
+    			while (	ve.hasMoreElements() )
+    			{
+    		    	InstallObject	ie;
+    				ie = (InstallObject)ve.nextElement();
+    				try // We just want to loop through all of them if possible
+    				{
+						ie.Abort();
+    			    }
+    			    catch (Throwable t)
+    			    {
+				    }
+    			}	    
+				installedFiles.removeAllElements();
+				installedFiles = null;
+			}
+			CloseJARFile();
+    	}
+		catch (Throwable e)
+		{
+			System.out.println( Strings.error_Unexpected() + " AbortInstall");
+		    e.printStackTrace();
+		}
+		finally
+		{
+		    try {
+	    	    CleanUp();
+	        }
+	        catch (Throwable e) {
+	            e.printStackTrace();
+	        }
+		}
+	}
 
-    /*
-     * CleanUp
-     * call it when done with the install
-     *
-     */
-    private synchronized void CleanUp()
-    {
-
+	/*
+	 * CleanUp
+	 * call	it when	done with the install
+	 *
+	 */
+	private	synchronized void CleanUp()
+	{
         if (progress != null)
             progress.Complete();
         
@@ -818,11 +793,20 @@ final public class SoftwareUpdate {
      * Do not call installedFiles.addElement directly, because this routine also handles
      * progress messages
      */
-    protected void ScheduleForInstall(InstallObject ob)
+    protected void ScheduleForInstall(InstallObject ob) throws SoftUpdateException
     {
+        // flash current item
+        if (progress != null)
+            progress.SetStatus( ob );
+
+        // do any unpacking or other set-up
+        ob.Prepare();
+
+
+        // Add to installation list if we haven't thrown out
+        installedFiles.addElement( ob );
         if (progress != null)
             progress.ScheduleForInstall( ob );
-        installedFiles.addElement( ob );
     }
 
     /**
@@ -846,8 +830,6 @@ final public class SoftwareUpdate {
         return name;
     }
 
-
-
     /**
      * Extract  a file from JAR archive to the disk, and update the
      * version registry. Actually, keep a record of elements to be installed. FinalizeInstall()
@@ -868,30 +850,23 @@ final public class SoftwareUpdate {
      * @param relativePath  where the file should be copied to on the local disk.
      *                      Relative to folder
      *                      if null, use the path to the JAR source.
-     * @param forceInstall  if true, file is always replaced
-     * XXX Subdirectory stuff NOT IMPLEMENED YET
-     *     jarSource and localDestionation can also point to directories.  In this case,
-     *     directory will be recursively copied from jarSource to localDestination, with
-     *     version of each file specified in VersionInfo agument. If
-     *     one points to a file, and another to a directory, that is an error.
-     *     If jarSource points to a directory and localDestination doesn't exist it
-     *     is created as a directory.
-     */
-     public int AddSubcomponent(String name,
-                    VersionInfo version,
-                    String jarSource,
-                    FolderSpec folderSpec,
-                    String relativePath,
-                    boolean forceInstall)
-     {
-        InstallFile ie;
-        int   result = SUCCESS;
-        try
-        {
+	 * @param forceInstall  if true, file is always replaced
+	 */
+	public int AddSubcomponent(String name,
+					VersionInfo	version,
+					String jarSource,
+					FolderSpec	folderSpec,
+					String relativePath,
+					boolean forceInstall)
+	{
+		InstallFile	ie;
+		int	  result = SUCCESS;
+		try
+		{
             if ( jarSource == null || jarSource.length() == 0 || folderSpec == null )
                 throw (new SoftUpdateException( "", INVALID_ARGUMENTS ));
 
-            if (packageName == null) {
+			if (packageName == null) {
                 // probably didn't call StartInstall()
                 throw new SoftUpdateException( Strings.error_BadPackageNameAS(),
                                                BAD_PACKAGE_NAME);
@@ -904,51 +879,50 @@ final public class SoftwareUpdate {
             else
                 name = GetQualifiedRegName( name );
 
-            if ( (relativePath == null) || (relativePath.length() == 0))
-                relativePath = jarSource;
+			if ( (relativePath == null)	|| (relativePath.length() == 0))
+				relativePath = jarSource;
 
-            /* Check for existence of the newer version */
+		/* Check for existence of the newer	version	*/
 
-            boolean versionNewer = false;
-            if ( (forceInstall == false ) &&
-                 (version !=  null) &&
-                 ( VersionRegistry.validateComponent( name ) == 0 ) )
-            {
-                VersionInfo oldVersion = VersionRegistry.componentVersion(name);
-                if ( version.compareTo( oldVersion ) > 0 )
-                    versionNewer = true;
-            }
-            else
-                versionNewer = true;
+			boolean	versionNewer = false;
+			if ( (forceInstall == false ) &&
+			     (version !=  null)	&&
+			     ( VersionRegistry.validateComponent( name ) == 0 ) )
+			{
+				VersionInfo	oldVersion = VersionRegistry.componentVersion(name);
+				if ( version.compareTo( oldVersion ) > 0 )
+					versionNewer = true;
+			}
+			else
+				versionNewer = true;
 
-            if (versionNewer)
-            {
-                ie = new InstallFile( this, name, version, jarSource,
+		   if (versionNewer)
+		   {
+			    ie = new InstallFile( this, name, version, jarSource,
                         folderSpec, relativePath, forceInstall );
-                ie.ExtractFile();
-                ScheduleForInstall( ie );
-            }
-        }
-        catch (SoftUpdateException e)
-        {
-            result = e.GetError();
-        }
-        catch (netscape.security.AppletSecurityException e)
-        {
-            result = ACCESS_DENIED;
-        }
-        catch (Throwable e)
-        {
-            System.out.println(Strings.error_Unexpected() + "AddSubcomponent");
-            e.printStackTrace();
-            result = UNEXPECTED_ERROR;
-        }
+				ScheduleForInstall( ie );
+			}
+		}
+		catch (SoftUpdateException e)
+		{
+			result = e.GetError();
+		}
+		catch (ForbiddenTargetException e)
+		{
+			result = ACCESS_DENIED;
+		}
+		catch (Throwable e)
+		{
+			System.out.println(Strings.error_Unexpected() + "AddSubcomponent");
+			e.printStackTrace();
+			result = UNEXPECTED_ERROR;
+		}
 
         saveError( result );
-        return result;
-    }
+		return result;
+	}
 
-
+	
     /** 
      * Various alternate flavors of AddSubcomponent()
      */
@@ -1005,8 +979,7 @@ final public class SoftwareUpdate {
         return AddSubcomponent( regname, version, jarSource, folderSpec, relativePath, force );
     }
 
-
-    /**
+	/**
      * executes the file
      * @param jarSource     name of the file to execute inside JAR archive
      * @param args          command-line argument string (Win/Unix only)
@@ -1017,37 +990,34 @@ final public class SoftwareUpdate {
         return Execute( jarSource, null );
     }
 
-    public int
-    Execute(String jarSource, String args)
-    {
+    	public int
+	Execute(String jarSource, String args)
+	{
         int errcode = SUCCESS;
 
-        try
-        {
-            InstallExecute ie = new InstallExecute( this, jarSource, args );
-            ie.ExtractFile();
-            ScheduleForInstall( ie );
-        }
-        catch (SoftUpdateException e)
-        {
-            errcode = e.GetError();
-        }
-        catch (netscape.security.AppletSecurityException e)
-        {
-            errcode = ACCESS_DENIED;
-        }
-        catch (Throwable e)
-        {
-            e.printStackTrace();
-            System.out.println(Strings.error_Unexpected() + "Execute");
-            errcode = UNEXPECTED_ERROR;
-        }
+		try
+		{
+			InstallExecute ie =	new	InstallExecute(	this, jarSource, args);
+			ScheduleForInstall( ie );
+		}
+		catch (SoftUpdateException e)
+		{
+			errcode = e.GetError();
+		}
+		catch (ForbiddenTargetException e)
+		{
+			errcode = ACCESS_DENIED;
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace();
+			System.out.println(Strings.error_Unexpected() + "Execute");
+			errcode = UNEXPECTED_ERROR;
+		}
 
         saveError( errcode );
-        return errcode;
-    }
-
-
+		return errcode;
+	}
 
    /**
      * Mac-only, simulates Mac toolbox Gestalt function
@@ -1077,7 +1047,7 @@ final public class SoftwareUpdate {
         return a;
     }
     
-    private native int
+	private native int
     NativeGestalt(String selector) throws SoftUpdateException;
 
 
@@ -1098,7 +1068,6 @@ final public class SoftwareUpdate {
 
         try {
             InstallPatch ip = new InstallPatch(this, rname, version, patchname);
-            ip.ApplyPatch();
             ScheduleForInstall( ip );
         }
         catch (SoftUpdateException e) {
@@ -1133,7 +1102,6 @@ final public class SoftwareUpdate {
 
             InstallPatch ip = new InstallPatch( this, rname, version,
                                                 patchname, folder, filename );
-            ip.ApplyPatch();
             ScheduleForInstall( ip );
         }
         catch (SoftUpdateException e) {
@@ -1154,60 +1122,114 @@ final public class SoftwareUpdate {
         return Patch( regName, versionInfo, patchname, folder, file );
     }
     
-    private native int NativeDeleteFile(String path);
-    private native int NativeVerifyDiskspace (String path, int bytesRequired);
-    private native int NativeMakeDirectory (String path);
-    private native String[] ExtractDirEntries(String Dir);
+	private native int NativeMakeDirectory (String path);
 
-    public int DeleteFile( FolderSpec folder, String relativeFileName )
+	/**
+	 * This method deletes the specified file from the disk. It does not look
+	 * for the file in the registry and is guaranteed to muddle any uninstall 
+	 * reference counting.  Its main purpose is to delete files installed or 
+	 * created outside of SmartUpdate.
+     */
+	public int DeleteFile(FolderSpec folder, String relativeFileName)
+	{
+        int errcode = SUCCESS;
+
+		try
+		{
+			InstallDelete id =	new	InstallDelete(	this, folder, relativeFileName	);
+			ScheduleForInstall( id );
+		}
+		catch (SoftUpdateException e)
+		{
+			errcode = e.GetError();
+			if (errcode == FILE_DOES_NOT_EXIST) {
+				errcode = SUCCESS;
+			}
+		}
+		catch (netscape.security.AppletSecurityException e)
+		{
+			errcode = ACCESS_DENIED;
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace();
+			errcode = UNEXPECTED_ERROR;
+		}
+
+        saveError( errcode );
+		return errcode;
+	}
+
+
+	/**
+	 * This method finds named registry component and deletes both the file and the 
+	 * entry in the Client VR. registryName is the name of the component in the registry.
+     * Returns usual errors codes + code to indicate item doesn't exist in registry, registry 
+     * item wasn't a file item, or the related file doesn't exist. If the file is in use we will
+     * store the name and to try to delete it on subsequent start-ups until we're successful.
+     */
+	public int DeleteComponent(String registryName)
     {
-        // deletes specified file from disk w/o looking in the registry. folder object obtained 
-        // using GetFolder() representing directory containing file. relative path and file name
-        // Returns usual error codes + an error indicating file does not exist.
-    
-        String path;
-        int status = -1; 
-    
-        try 
-        {
-            path = ((FolderSpec)folder).MakeFullPath(relativeFileName);
-            status = NativeDeleteFile(path);
-        }
-        catch ( Exception e )
-        {
-            path = null;
-        }
-        return status; 
+		int errcode = SUCCESS;
+
+		try
+		{
+			InstallDelete id =	new	InstallDelete(	this, registryName	);
+			ScheduleForInstall( id );
+		}
+		catch (SoftUpdateException e)
+		{
+			errcode = e.GetError();
+			if (errcode == FILE_DOES_NOT_EXIST) {
+				errcode = SUCCESS;
+			}
+		}
+		catch (netscape.security.AppletSecurityException e)
+		{
+			errcode = ACCESS_DENIED;
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace();
+			errcode = UNEXPECTED_ERROR;
+		}
+		if (errcode == FILE_DOES_NOT_EXIST)
+		{
+			errcode = SUCCESS;
+		}
+        saveError( errcode );
+		return errcode;
     }
     
-    
-    public int DeleteComponent(String registryName)
-    {
-        // Finds named registry component and deletes both the file and the entry in the Client 
-        // VR. registryNameThe name of the component in the registry.
-        // Returns usual errors codes + code to indicate item doesn't exist in registry, registry 
-        // item wasn't a file item, or the related file doesn't exist. If the file is in use we will
-        // store the name and to try to delete it on subsequent start-ups until we're successful.
-    
-        int status = -1; 
-    
-        FolderSpec spec = (FolderSpec)GetComponentFolder(registryName, null);
-        
-        if (spec != null)
-        {
-            status = VersionRegistry.deleteComponent(registryName);
-            if ( status == 0 )
-                status = DeleteFile(spec, ""); /*XXX*/
-        }    
-        return status; 
-    }
-    
-    
+	    
     public FolderSpec GetFolder( String targetFolder, String subdirectory )
     {
-        return GetFolder( GetFolder(targetFolder), subdirectory );
+		if (targetFolder.compareTo(FOLDER_FILE_URL) == 0)
+		{
+			String newPath;
+		    String path = NativeFileURLToNative("/"+subdirectory );
+            if ( path != null )
+			{
+				if (path.endsWith(System.getProperty("file.separator")))
+				{
+					return new FolderSpec("Installed", path, userPackageName);
+				} 
+				else
+				{
+					newPath = path + System.getProperty("file.separator");
+					return new FolderSpec("Installed", newPath, userPackageName);
+				}
+			}
+            else 
+                return null;
+        }
+        else 
+            return GetFolder( GetFolder(targetFolder), subdirectory );
     }
     
+	private native long NativeDiskSpaceAvailable (String path);
+	private native String NativeFileURLToNative (String path);
+    private native String[] ExtractDirEntries(String Dir);
 
     public FolderSpec GetFolder( FolderSpec folder, String subdir )
     {
@@ -1230,32 +1252,34 @@ final public class SoftwareUpdate {
 
             if (path != null)
             {
-                newPath = path + System.getProperty("file.separator");
-                spec = new FolderSpec("Installed", newPath, userPackageName);
-                if (spec != null)
-                {
-                    if (NativeMakeDirectory(path) != 0)
-                        spec = null;
-                }
+				if (path.endsWith(System.getProperty("file.separator")))
+				{
+					spec = new FolderSpec("Installed", path, userPackageName);
+				}
+				else
+				{
+					newPath = path + System.getProperty("file.separator");
+					spec = new FolderSpec("Installed", newPath, userPackageName);
+				}
             }
         }
         return spec;
     }
 
-        
-    
-   // Returns true if there is enough free diskspace, false if there isn't.
-   // The drive containg the folder is checked for # of free bytes.
-    
-    public boolean VerifyDiskspace( FolderSpec folder, int bytesRequired )
+   
+	
+    /**
+	 * This method returns true if there is enough free diskspace, false if there isn't.
+     * The drive containg the folder is checked for # of free bytes.
+     */
+	public long DiskSpaceAvailable( FolderSpec folder )
     {
         String path = folder.toString();
 
         if (path == null)
-            return false;
+			return 0;
 
-        return ( (NativeVerifyDiskspace (path, bytesRequired)) != 0);
-
+		return NativeDiskSpaceAvailable (path);
     }
 
 
@@ -1340,7 +1364,7 @@ final public class SoftwareUpdate {
                                 (FolderSpec) folderSpec, 
                                 subdir + matchingFiles[i], 
                                 forceInstall );
-                    ie.ExtractFile();
+
                     ScheduleForInstall( ie );
                 }
              }        
@@ -1414,4 +1438,15 @@ final public class SoftwareUpdate {
         return AddDirectory( regName, version, jarSource, folder, subdir, force );
     }
 
+
+    // Uninstall
+
+    public int Uninstall(String packageName)
+    {
+        return NativeUninstall(packageName);
+    }
+
+    private native int NativeUninstall (String packageName);
+
 }
+

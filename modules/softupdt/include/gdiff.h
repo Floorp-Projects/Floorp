@@ -37,6 +37,9 @@
 #define GDIFF_CS_NONE       0
 #define GDIFF_CS_MD5        1
 #define GDIFF_CS_SHA        2
+#define GDIFF_CS_CRC32      32
+
+#define CRC32_LEN           4
 
 /*--------------------------------------
  *  GDIFF opcodes
@@ -53,6 +56,7 @@
 #define COPY32LONG  254
 #define COPY64      255
 
+/* instruction sizes */
 #define ADD16SIZE           2
 #define ADD32SIZE           4
 #define COPY16BYTESIZE      3
@@ -67,20 +71,50 @@
 /*--------------------------------------
  *  error codes
  *------------------------------------*/
-#define ERR_OK          0
-#define ERR_ARGS        1
-#define ERR_ACCESS      2
-#define ERR_MEM         3
-#define ERR_HEADER      4
-#define ERR_BADDIFF     5
-#define ERR_OPCODE      6
-#define ERR_OLDFILE     7
-#define ERR_CHKSUMTYPE  8
-#define ERR_CHECKSUM    9
+#define GDIFF_OK                0
+#define GDIFF_ERR_UNKNOWN       -1
+#define GDIFF_ERR_ARGS          -2
+#define GDIFF_ERR_ACCESS        -3
+#define GDIFF_ERR_MEM           -4
+#define GDIFF_ERR_HEADER        -5
+#define GDIFF_ERR_BADDIFF       -6
+#define GDIFF_ERR_OPCODE        -7
+#define GDIFF_ERR_OLDFILE       -8
+#define GDIFF_ERR_CHKSUMTYPE    -9
+#define GDIFF_ERR_CHECKSUM      -10
+
+
+/*--------------------------------------
+ *  types
+ *------------------------------------*/
+#ifndef AIX
+typedef unsigned char uchar;
+#endif
+
+typedef struct _diffdata {
+    XP_File     fSrc;
+    XP_File     fOut;
+    XP_File     fDiff;
+    uint8       checksumType;
+    uint8       checksumLength;
+    uchar*      oldChecksum;
+    uchar*      newChecksum;
+    XP_Bool     bMacAppleSingle;
+    XP_Bool     bWin32BoundImage;
+    uchar*      databuf;
+    uint32      bufsize;
+} DIFFDATA;
+
+typedef DIFFDATA* pDIFFDATA;
+
 
 /*--------------------------------------
  *  miscellaneous
  *------------------------------------*/
+
+#define APPFLAG_W32BOUND        "autoinstall:Win32PE"
+#define APPFLAG_APPLESINGLE     "autoinstall:AppleSingle"
+
 #ifndef TRUE
   #define TRUE  1
 #endif

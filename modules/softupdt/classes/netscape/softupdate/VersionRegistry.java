@@ -78,6 +78,17 @@ final class VersionRegistry implements RegistryErrors {
    protected static native int installComponent( String name, String path,
       VersionInfo version );
 
+   protected static int installComponent( String name, String path,
+      VersionInfo version, int refCount )
+   {    
+       int  err = installComponent( name, path, version );
+
+       if ( err == REGERR_OK )
+           err = setRefCount( name, refCount );
+       return err;
+   }
+
+
    /**
     * Delete component.
     * @param   component  Registry path of the item to delete
@@ -118,6 +129,102 @@ final class VersionRegistry implements RegistryErrors {
    protected static Enumeration elements() {
       return new VerRegEnumerator();
    }
+
+   /**
+    * Set the refcount of a named component.
+    * @param   component  Registry path of the item to check
+    * @param   refcount  value to be set
+    * @return  Error code
+    */
+   protected static native int setRefCount( String component, int refcount );
+
+   /**
+    * Return the refcount of a named component.
+    * @param   component  Registry path of the item to check
+    * @return  the value of refCount
+    */
+   protected static native Integer getRefCount( String component );
+
+   /**
+    * Creates a node for the item in the Uninstall list.
+    * @param   regPackageName  Registry name of the package we are installing
+    * @return  userPackagename User-readable package name
+    * @return  Error code
+    */
+   protected static int uninstallCreate( String regPackageName, String userPackageName )
+   {
+       String temp = convertPackageName(regPackageName);
+       regPackageName = temp;
+       return uninstallCreateNode(regPackageName, userPackageName);
+   }
+
+   protected static native int uninstallCreateNode( String regPackageName, String userPackageName );
+
+   /**
+    * Replaces all '/' with '_',in the given string.If an '_' already exists in the
+    * given string, it is escaped by adding another '_' to it.
+    * @param   regPackageName  Registry name of the package we are installing
+    * @return  modified String
+    */
+   private static String convertPackageName( String regPackageName )
+   {
+       String tempStr = regPackageName;
+       String convertedPackageName;
+       boolean bSharedUninstall = false;
+        
+       if (regPackageName.startsWith("/"))
+           bSharedUninstall = true;
+
+       int index = tempStr.indexOf('_');
+       while (index != -1)
+       {
+           StringBuffer temp = new StringBuffer(tempStr);
+           temp.insert(index + 1, '_');
+           tempStr = temp.toString();
+           index = tempStr.indexOf('_', index + 2);
+       }
+
+       convertedPackageName = tempStr.replace('/', '_');  
+       if (bSharedUninstall)
+       {
+           StringBuffer temp = new StringBuffer(convertedPackageName);
+           temp.setCharAt(0, '/');
+           convertedPackageName = temp.toString();
+       }
+       return convertedPackageName;
+   }
+
+   
+   /**
+    * Adds the file as a property of the Shared Files node under the appropriate 
+    * packageName node in the Uninstall list.
+    * @param   regPackageName  Registry name of the package installed
+    * @param   vrName  registry name of the shared file
+    * @return  Error code
+    */
+   protected static int uninstallAddFile( String regPackageName, String vrName )
+   {
+       String temp = convertPackageName(regPackageName);
+       regPackageName = temp;
+       return uninstallAddFileToList(regPackageName, vrName);
+   }
+
+   protected static native int uninstallAddFileToList( String regPackageName, String vrName );
+
+   /**
+    * Checks if the shared file exists in the uninstall list of the package
+    * @param   regPackageName  Registry name of the package installed
+    * @param   vrName  registry name of the shared file
+    * @return true or false 
+    */
+   protected static int uninstallFileExists( String regPackageName, String vrName )
+   {
+       String temp = convertPackageName(regPackageName);
+       regPackageName = temp;
+       return uninstallFileExistsInList(regPackageName, vrName);
+   }
+
+   protected static native int uninstallFileExistsInList( String regPackageName, String vrName );
 }
 
 

@@ -64,8 +64,7 @@ final class WinReg {
         principal = suObj.GetPrincipal();
         privMgr = PrivilegeManager.getPrivilegeManager();
         impersonation = Target.findTarget( SoftwareUpdate.IMPERSONATOR );
-        target = (UserTarget)Target.findTarget( 
-            SoftwareUpdate.targetNames[ SoftwareUpdate.FULL_INSTALL ] );
+        target = (UserTarget)Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
     }
 
 

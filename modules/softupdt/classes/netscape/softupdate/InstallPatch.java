@@ -96,8 +96,7 @@ final class InstallPatch extends InstallObject {
         Target impersonation = 
             Target.findTarget( SoftwareUpdate.IMPERSONATOR );
 
-        Target priv = Target.findTarget( 
-            SoftwareUpdate.targetNames[ SoftwareUpdate.FULL_INSTALL ] );
+        Target priv = Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
 
         privMgr.enablePrivilege( impersonation );
         privMgr.enablePrivilege( priv, softUpdate.GetPrincipal() );
@@ -105,12 +104,18 @@ final class InstallPatch extends InstallObject {
 
 
 
-    protected void ApplyPatch() throws SoftUpdateException
+    protected void Prepare() throws SoftUpdateException
     {
+        int     err;
         String srcname;
         boolean deleteOldSrc;
 
-        checkPrivileges();
+        PrivilegeManager privMgr = AppletSecurity.getPrivilegeManager();
+        Target impersonation = 
+            Target.findTarget( SoftwareUpdate.IMPERSONATOR );
+        Target priv = Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
+        privMgr.enablePrivilege( impersonation );
+        privMgr.enablePrivilege( priv, softUpdate.GetPrincipal() );
 
         patchURL = softUpdate.ExtractJARFile( jarLocation, targetfile );
 
@@ -178,13 +183,16 @@ final class InstallPatch extends InstallObject {
         else 
         {
             // nothing -- old intermediate patched file was
-            // deleted by superceding patch
+            // deleted by a superceding patch
         }
     }
 
     
     protected void Abort()
     {
+        // clean up patched file unless it has been already
+        // deleted by a superceding patch
+
         String tmp = (String)softUpdate.patchList.get( targetfile );
         if ( tmp.compareTo( patchedfile ) == 0 )
             NativeDeleteFile( patchedfile );

@@ -53,23 +53,23 @@ class InstallExecute extends InstallObject {
 		privMgr.enablePrivilege( impersonation );
 
 	    /* check the security permissions */
-		target = Target.findTarget( SoftwareUpdate.targetNames[SoftwareUpdate.FULL_INSTALL] );
+		target = Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
 
 	   /* XXX: we need a way to indicate that a dialog box should appear.*/
 		privMgr.enablePrivilege( target, softUpdate.GetPrincipal() );
     }
 
-	/* ExtractFile
+	/* Prepare
 	 * Extracts	file out of	the	JAR	archive	into the temp directory
 	 */
-	protected void	ExtractFile() throws SoftUpdateException
+	protected void Prepare() throws SoftUpdateException
 	{
 	    netscape.security.PrivilegeManager privMgr;
 	    Target impersonation;
 	    Target execTarget;
 		privMgr = AppletSecurity.getPrivilegeManager();
 		impersonation = Target.findTarget( SoftwareUpdate.IMPERSONATOR );
-	    execTarget = Target.findTarget( SoftwareUpdate.targetNames[SoftwareUpdate.FULL_INSTALL] );
+	    execTarget = Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
 	    privMgr.enablePrivilege( impersonation );
     	privMgr.enablePrivilege( execTarget, softUpdate.GetPrincipal() );
         tempFile = softUpdate.ExtractJARFile( jarLocation, null );
@@ -94,7 +94,7 @@ class InstallExecute extends InstallObject {
 		privMgr = AppletSecurity.getPrivilegeManager();
 		impersonation = Target.findTarget( SoftwareUpdate.IMPERSONATOR );
 	    privMgr.enablePrivilege( impersonation );
-		execTarget = Target.findTarget( SoftwareUpdate.targetNames[SoftwareUpdate.FULL_INSTALL] );
+		execTarget = Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
 		privMgr.enablePrivilege( execTarget, softUpdate.GetPrincipal() );
 		NativeComplete();
 		privMgr.revertPrivilege( execTarget );

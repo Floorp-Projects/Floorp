@@ -74,6 +74,14 @@ public class SoftUpdateResourceBundle extends ListResourceBundle {
         {"s37", "Installing Java class files in the \"Java Download\" directory. This form of access allows new files to be added to this single directory on your computer's main hard disk, potentially replacing other files that have previously been installed in the directory. "},
         {"s38", "Installing software on your computer's main hard disk, potentially deleting other files on the hard disk. Each time a program that has this form of access attempts to install software, it must display a dialog box that lets you choose whether to go ahead with the installation. If you go ahead, the installation program can execute any software on your computer. This potentially dangerous form of access is typically requested by an installation program after you have downloaded new software or a new version of software that you have previously installed. You should not grant this form of access unless you are installing or updating software from a reliable source."},
         {"s39", "Installing software on your computer's main hard disk without giving you any warning, potentially deleting other files on the hard disk. Any software on the hard disk may be executed in the process. This is an extremely dangerous form of access. It should be granted by system administrators only."},
+		{"s40", "Failure while deleting file. File does not exist. "},
+		{"s41", "Failure while deleting file. File is read only. "},
+		{"s42", "Failure while deleting file. File is a directory. "},
+		{"s43", "Delete file "},
+		{"s44", "Failure while deleting component. Component not found in registry. "},
+		{"s45", "Delete component "},
+        {"s46", "Replace file "},
+        {"s47", "Install file "},
         // stop localizing
     };
 }

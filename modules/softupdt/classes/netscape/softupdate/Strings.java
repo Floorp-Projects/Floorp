@@ -159,6 +159,22 @@ class Strings {
     return getString("s16");
     }
 
+	static String details_DeleteFile() {
+    return getString("s43");
+    }
+	
+	static String details_DeleteComponent() {
+    return getString("s45");
+    }
+
+    static String details_ReplaceFile() {
+    return getString("s46");
+    }
+
+    static String details_InstallFile() {
+    return getString("s47");
+    }
+
     // ERROR STRINGS
 
     static String error_Prefix()
@@ -227,6 +243,22 @@ class Strings {
 
 	static String error_ExtractFailed() {
     return error_Prefix() + getString("s32");
+	}
+
+	static String error_FileDoesNotExist() {
+    return error_Prefix() + getString("s40");
+	}
+
+	static String error_FileReadOnly() {
+    return error_Prefix() + getString("s41");
+	}
+
+	static String error_FileIsDirectory() {
+    return error_Prefix() + getString("s42");
+	}
+
+	static String error_NotInRegistry() {
+    return error_Prefix() + getString("s44");
 	}
 
 }

@@ -32,6 +32,19 @@ final class WinProfile {
     private Target impersonation;
 
     private UserTarget target;
+//    static final String INI_TARGET = "WindowsIniFile";
+
+//    /* create the target */
+//    static	{
+//        target = new ParameterizedTarget(
+//                    INI_TARGET,
+//                    PrivilegeManager.getSystemPrincipal(),
+//                    UserDialogHelper.targetRiskMedium(),
+//                    UserDialogHelper.targetRiskColorMedium(),
+//                    Strings.targetDesc_WinIni(),
+//                    Strings.targetUrl_WinIni() );
+//        target = (ParameterizedTarget)target.registerTarget();
+//    };
 
     WinProfile( SoftwareUpdate suObj, FolderSpec folder, String file )
         throws SoftUpdateException
@@ -41,8 +54,7 @@ final class WinProfile {
         principal = suObj.GetPrincipal();
         privMgr = PrivilegeManager.getPrivilegeManager();
         impersonation = Target.findTarget( SoftwareUpdate.IMPERSONATOR );
-        target = (UserTarget)Target.findTarget( 
-            SoftwareUpdate.targetNames[SoftwareUpdate.FULL_INSTALL] );
+        target = (UserTarget)Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
     }
 
     /**

@@ -20,6 +20,7 @@ DEPTH		= ../../../../..
 PACKAGE		= netscape/softupdate
 
 JSRCS		= FolderSpec.java \
+          InstallDelete.java \
 		  InstallExecute.java \
 		  InstallFile.java \
 		  InstallPatch.java \

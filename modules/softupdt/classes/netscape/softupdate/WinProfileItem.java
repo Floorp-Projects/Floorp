@@ -68,4 +68,7 @@ final class WinProfileItem extends InstallObject {
 
     // no need for special clean-up
     protected void Abort()  {}
+
+    // no need for set-up
+    protected void Prepare() throws SoftUpdateException {}
 }

@@ -48,6 +48,7 @@ public class SymProgressDetails extends Frame {
 		add(label1);
 		detailArea = new java.awt.TextArea();
 		detailArea.reshape(insets().left + 12,insets().top + 60,536,216);
+		detailArea.setFont(new Font("Dialog", Font.PLAIN, 10));
 		add(detailArea);
 		btnCancel = new java.awt.Button("xxxCxxx");
 		btnCancel.reshape(insets().left + 464,insets().top + 288,84,26);

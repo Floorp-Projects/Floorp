@@ -19,7 +19,6 @@
  * ProgressMediator.java    4/16/97
  * @author atotic
  */
-
 package	netscape.softupdate;
 
 /**
@@ -162,13 +161,19 @@ class ProgressMediator    {
             UserApproved();
     }
 
+    /* flash item on visible progress window */
+    protected void
+    SetStatus(InstallObject install)
+    {
+        if (progress != null)
+            progress.progress.setText( install.toString() );
+    }
+
     /* Add it to the details list if showing */
     protected void
     ScheduleForInstall(InstallObject install)
     {
         String s = install.toString();
-        if (progress != null)   // Display text in progress area
-    	    progress.progress.setText(s);
         if (details != null)
             details.detailArea.appendText(s + "\n");
     }

@@ -18,7 +18,6 @@
 /*
     A basic extension of the java.awt.Window class
  */
-
 package netscape.softupdate;
 
 import java.awt.*;
@@ -47,7 +46,7 @@ public class SymProgressWindow extends Frame {
 		add(status);
 		progress = new java.awt.Label("xxxxxxxxxxx");
 		progress.reshape(insets().left + 12,insets().top + 48,472,40);
-		progress.setFont(new Font("Courier", Font.PLAIN, 14));
+		progress.setFont(new Font("Dialog", Font.PLAIN, 10));
 		add(progress);
 		install = new java.awt.Button("xxxxxIxxx");
 		install.reshape(insets().left + 12,insets().top + 96,108,32);

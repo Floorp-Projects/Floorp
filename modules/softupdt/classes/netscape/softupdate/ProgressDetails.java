@@ -19,7 +19,6 @@
  * ProgressWindow
  *
  */
-
 package	netscape.softupdate	;
 
 import java.awt.* ;
@@ -56,4 +55,8 @@ class ProgressDetails extends SymProgressDetails
 	    	pm  = null;
 	    }
 	}
+	//{{DECLARE_CONTROLS
+	//}}
+	//{{DECLARE_MENUS
+	//}}
 }

@@ -27,6 +27,7 @@ import java.lang.*;
  * encapsulates a single action
  * The way your subclass is used:
  * Constructor should collect all the data needed to perform the action
+ * Prepare() does any lengthy set-up action (uncompressing, patching, etc.)
  * Complete() is called to complete the action
  * Abort() is called when update is aborted
  * You are guaranteed to be called with Complete() or Abort() before finalize
@@ -42,7 +43,10 @@ abstract class InstallObject {
 	    softUpdate = (SoftwareUpdate) inSoftUpdate;
 	}
 
-    /* Override with your action */
+    /* Override with your set-up action */
+    abstract protected void Prepare() throws SoftUpdateException;
+
+    /* Override with your Completion action */
 	abstract protected void Complete() throws SoftUpdateException;
 
     /* Override with an explanatory string for the progress dialog */

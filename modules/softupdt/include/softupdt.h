@@ -27,6 +27,12 @@ XP_BEGIN_PROTOS
 #define FORCE_INSTALL 1
 #define SILENT_INSTALL 2
 
+/* Initialize Software Update */
+extern int SU_Startup(void);
+
+/* Cleanup Software Update */
+extern int SU_Shutdown(void);
+
 /* StartSoftwareUpdate
  * performs the update, and calls the callback function with the 
  */
@@ -43,9 +49,13 @@ extern XP_Bool SU_StartSoftwareUpdate(MWContext * context,
 NET_StreamClass * SU_NewStream (int format_out, void * registration,
 								URL_Struct * request, MWContext *context);
 
-int PR_CALLBACK JavaGetBoolPref(char *pref_name);
-int PR_CALLBACK IsJavaSecurityEnabled();
-int PR_CALLBACK IsJavaSecurityDefaultTo30Enabled();
+int32 SU_PatchFile( char* srcfile, XP_FileType srctype,
+                    char* patchfile, XP_FileType patchtype,
+                    char* targfile, XP_FileType targtype );
+
+int32 SU_Uninstall(char *regPackageName);
+int32 SU_EnumUninstall(void** context, char* packageName,
+                     int32 len1, char*regPackageName, int32 len2);
 
 #define AUTOUPDATE_ENABLE_PREF "autoupdate.enabled"
 #define CONTENT_ENCODING_HEADER "Content-encoding"

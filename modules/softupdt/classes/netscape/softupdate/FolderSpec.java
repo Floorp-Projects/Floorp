@@ -96,10 +96,6 @@ final class FolderSpec	{
 	 */
 	String MakeFullPath(String relativePath) throws SoftUpdateException
     {
-        // Security check. Make sure that we do not have '.. in the name
-        if ( (GetSecurityTargetID() == SoftwareUpdate.LIMITED_INSTALL) &&
-                ( relativePath.regionMatches(0, "..", 0, 2)))
-            throw new SoftUpdateException(Strings.error_IllegalPath(), SoftwareUpdate.ILLEGAL_RELATIVE_PATH );
         String fullPath = GetDirectoryPath() + GetNativePath ( relativePath );
         return fullPath;
     }
@@ -140,20 +136,6 @@ final class FolderSpec	{
 	 */
 	private native String
 	NativePickDefaultDirectory() throws SoftUpdateException;
-
-   /*
-	* GetSecurityTarget
-	* returns security object associated with the directory
-	*/
-   netscape.security.Target
-   GetSecurityTarget()
-   {
-        int secID = GetSecurityTargetID();
-        return netscape.security.Target.findTarget( SoftwareUpdate.targetNames[secID] );
-   }
-
-   private native int
-   GetSecurityTargetID();
 
    public String toString()
    {

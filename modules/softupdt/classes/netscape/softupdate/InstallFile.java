@@ -36,8 +36,13 @@ final class	InstallFile	extends	InstallObject {
 	private	String jarLocation;	// Location	in the JAR
 	private	String tempFile;		// temporary file location
 	private	String finalFile;		// final file destination
-	private netscape.security.Target	target;	// security	target
+    private String regPackageName;	// Name	of the package we are installing
+	private String userPackageName;	// User-readable package name
+	private Target target;          // security	target
     private boolean force;      // whether install is forced
+    private boolean replace = false;      // whether file exists
+    private boolean bChild = false;      // whether file is a child
+    private boolean bUpgrade = false;    // whether file is an upgrade
 
 	/*	Constructor
 		inSoftUpdate	- softUpdate object	we belong to
@@ -55,8 +60,8 @@ final class	InstallFile	extends	InstallObject {
 				String inPartialPath,
                 boolean forceInstall) throws SoftUpdateException
 	{
-		super(inSoftUpdate);
-		tempFile = null;
+       	super(inSoftUpdate);
+	    tempFile = null;
 		vrName = inVRName;
 		versionInfo	= inVInfo;
 		jarLocation	= inJarLocation;
@@ -72,16 +77,32 @@ final class	InstallFile	extends	InstallObject {
 		privMgr.enablePrivilege( impersonation );
 
 	    /* check the security permissions */
-		target = folderSpec.GetSecurityTarget();
+		target = Target.findTarget( SoftwareUpdate.INSTALL_PRIV );
 
 	   /* XXX: we need a way to indicate that a dialog box should appear. */
 		privMgr.enablePrivilege( target, softUpdate.GetPrincipal() );
+        
+        userPackageName = inSoftUpdate.GetUserPackageName();
+        regPackageName = inSoftUpdate.GetRegPackageName();
+
+        // determine Child status
+        if ( regPackageName.length() == 0 ) {
+            // in the "current communicator package" absolute pathnames (start
+            // with slash) indicate shared files -- all others are children
+            bChild = ( vrName.charAt(0) != '/' );
+        }
+        else {
+            bChild = vrName.startsWith(regPackageName);
+        }
+
+        replace = NativeDoesFileExist();
+
 	}
 
-	/* ExtractFile
+	/* Prepare
 	 * Extracts	file out of	the	JAR	archive	into the temp directory
 	 */
-	protected void	ExtractFile() throws SoftUpdateException
+	protected void Prepare() throws SoftUpdateException
 	{
 		netscape.security.PrivilegeManager privMgr;
 		Target impersonation;
@@ -101,6 +122,8 @@ final class	InstallFile	extends	InstallObject {
 	protected void	Complete() throws SoftUpdateException
 	{
 		int	err;
+        Integer refCount;
+        int rc;
 
 		/* Check the security for our target */
 		netscape.security.PrivilegeManager privMgr;
@@ -115,15 +138,67 @@ final class	InstallFile	extends	InstallObject {
 
 		if ( 0 == err || SoftwareUpdate.REBOOT_NEEDED == err )
 		{
-			VersionRegistry.installComponent(vrName, finalFile, versionInfo);
-            if ( err != 0 )
-                throw( new SoftUpdateException(finalFile, err));    	
-        }
-		else
-			throw( new SoftUpdateException(Strings.error_InstallFileUnexpected()  +  finalFile, err));
+            // we ignore all registry errors because they're not
+            // important enough to abort an otherwise OK install.
+            if (!bChild)
+            {
+                int found;
+                found = VersionRegistry.uninstallFileExists(regPackageName, vrName);
+                if (found != VersionRegistry.REGERR_OK)
+		            bUpgrade = false;
+                else
+                    bUpgrade = true;
+            }
+            else if ( VersionRegistry.REGERR_OK == VersionRegistry.inRegistry(vrName))
+            {
+                bUpgrade = true;
+            }
+            else
+            {
+                bUpgrade = false;
+            }
+            
+            refCount = VersionRegistry.getRefCount(vrName);
+            if (!bUpgrade)
+            {
+		        if (refCount != null) 
+                {
+                    rc = 1 + refCount.intValue();
+                    VersionRegistry.installComponent(vrName, finalFile, versionInfo, rc );
+                
+                }
+                else
+                {
+                    if (replace)
+                        VersionRegistry.installComponent(vrName, finalFile, versionInfo, 2);
+                    else
+                        VersionRegistry.installComponent(vrName, finalFile, versionInfo, 1);
+                }
+            }
+            else if (bUpgrade)
+            {
+                if (refCount == null)
+                {
+                    VersionRegistry.installComponent(vrName, finalFile, versionInfo, 1);
+                }
+                else 
+                {
+                    VersionRegistry.installComponent(vrName, finalFile, versionInfo );
+                }
+            }
 
-		// Eventually, put extracted files into	proper locations
-		// System.out.println("File installed:	" +	finalFile);
+            if ( !bChild && !bUpgrade ) {
+                VersionRegistry.uninstallAddFile(regPackageName, vrName);
+            }
+        }
+
+        if ( err == SoftwareUpdate.REBOOT_NEEDED ) {
+            throw( new SoftUpdateException(finalFile, err));    
+        }
+		else if ( err != 0 ) {
+			throw( new SoftUpdateException(Strings.error_InstallFileUnexpected()  +  finalFile, err));
+        }
+
 	}
 	
 	protected void Abort()
@@ -133,9 +208,13 @@ final class	InstallFile	extends	InstallObject {
     
     private native void NativeAbort();
 	private	native int NativeComplete();
+    private	native boolean NativeDoesFileExist();
 
 	public String toString()
 	{
-	    return "Copy file to " + finalFile;
+        if ( replace )
+            return Strings.details_ReplaceFile() + finalFile;
+        else
+            return Strings.details_InstallFile() + finalFile;
 	}
 }
