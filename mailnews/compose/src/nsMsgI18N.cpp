@@ -63,24 +63,37 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     // get an unicode converter
     res = ccm->GetUnicodeEncoder(&convCharset, &encoder);
     if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-      const PRUnichar *unichars = inString.GetUnicode();
+      PRUnichar *unichars = (PRUnichar *) inString.GetUnicode();
       PRInt32 unicharLength = inString.Length();
       PRInt32 dstLength;
       res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
       // allocale an output buffer
       *outCString = (char *) PR_Malloc(dstLength + 1);
-      if (*outCString != nsnull) {
-        PRInt32 originalLength = unicharLength;
-        // convert from unicode
-        res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-        // estimation of GetMaxLength was incorrect
-        if (unicharLength < originalLength) {
-          PR_Free(*outCString);
-          res = NS_ERROR_FAILURE;
+      if (nsnull != *outCString) {
+        PRInt32 oldUnicharLength = unicharLength;
+        char *tempCString = *outCString;
+        PRInt32 totalCLength = 0;
+        while (1) {
+          res = encoder->Convert(unichars, &unicharLength, tempCString, &dstLength);
+
+          // increment for destination
+          tempCString += dstLength;
+          totalCLength += dstLength;
+
+          // break: this is usually the case
+          // source length <= zero and no error or unrecoverable error
+          if (0 >= unicharLength || NS_ERROR_UENC_NOMAPPING != res) {
+            break;
+          }
+          // could not map unicode to the destination charset, skip one unichar and continue
+          // increment for source unicode, skip one unichar
+          unichars += unicharLength + 1;
+          oldUnicharLength -= (unicharLength + 1);
+          unicharLength = oldUnicharLength;
+          // estimate target length again
+          (void) encoder->GetMaxLength(unichars, unicharLength, &dstLength);
         }
-        else {
-          (*outCString)[dstLength] = '\0';
-        }
+        (*outCString)[totalCLength] = '\0';
       }
       else {
         res = NS_ERROR_OUT_OF_MEMORY;
