@@ -208,7 +208,7 @@ export BC_RELEASE
 EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to 
                     #create it
 
-UX_D0=/share/builds/mccrel/nss
+UX_D0=/share/builds/mccrel3/nss
 
 ################################### glob_init ##########################
 # global shell function, main initialisation function
@@ -568,7 +568,7 @@ init_dirs()
     set_daily_build_dirs
 
     if [ -z "${BCDIST}" ] ; then
-        #BCDIST=/share/builds/mccrel/nss/${BC_MASTER}/mozilla/dist
+        #BCDIST=/share/builds/mccrel3/nss/${BC_MASTER}/mozilla/dist
         BCDIST=${NSS_VER_DIR}/../${BC_MASTER}/mozilla/dist
         if [ ! -d $BCDIST ] ; then
             ask "Backward compatibility directory $BCDIST does not exist, continue" "y" "n" || Exit
