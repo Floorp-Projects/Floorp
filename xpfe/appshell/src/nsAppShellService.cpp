@@ -493,9 +493,12 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
   } else {
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
+    nsWidgetInitData widgetInitData;
+    widgetInitData.mBorderStyle = eBorderStyle_window;
+
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
-                            aInitialWidth, aInitialHeight);
+                            aInitialWidth, aInitialHeight, widgetInitData);
     if (NS_SUCCEEDED(rv))
     {
       // this does the AddRef of the return value
@@ -541,9 +544,12 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
   } else {
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
+    nsWidgetInitData widgetInitData;
+    widgetInitData.mBorderStyle = eBorderStyle_window;
+
     rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl,
                             anObserver, aCallbacks,
-                            aInitialWidth, aInitialHeight);
+                            aInitialWidth, aInitialHeight, widgetInitData);
     if (NS_SUCCEEDED(rv)) {
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
       RegisterTopLevelWindow(window);
