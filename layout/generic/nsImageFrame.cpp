@@ -662,15 +662,12 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
           }
         }
 
-        if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
-          //inner.height = lowSrcLinesLoaded;
+        if (image != nsnull && imgSrcLinesLoaded > 0) {
+          aRenderingContext.DrawImage(image, inner);
+        } else if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
           aRenderingContext.DrawImage(lowImage, inner);
         }
 
-        if (image != nsnull && imgSrcLinesLoaded > 0) {
-          //inner.height = imgSrcLinesLoaded;
-          aRenderingContext.DrawImage(image, inner);
-        }
       }
 
       nsImageMap* map = GetImageMap();
