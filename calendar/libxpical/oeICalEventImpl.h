@@ -67,7 +67,7 @@ oeDateEnumerator : public nsISimpleEnumerator
 
   private:
     PRUint32 mCurrentIndex;
-    vector<PRTime> mIdVector;
+    std::vector<PRTime> mIdVector;
 };
 
 /* oeIcalEvent Header file */
@@ -108,7 +108,7 @@ private:
     oeDateTimeImpl *m_end;
     oeDateTimeImpl *m_recurend;
     icaltimetype m_lastalarmack;
-    vector<PRTime> m_exceptiondates;
+    std::vector<PRTime> m_exceptiondates;
     icaltimetype GetNextRecurrence( icaltimetype begin );
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );

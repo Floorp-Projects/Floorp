@@ -35,7 +35,9 @@
  * 
 */
 
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #include "oeDateTimeImpl.h"
 #include "nsMemory.h"
@@ -143,7 +145,7 @@ NS_IMETHODIMP oeDateTimeImpl::SetMinute(PRInt16 newval)
 
 NS_IMETHODIMP oeDateTimeImpl::GetTime(PRTime *retval)
 {
-    unsigned long long result = icaltime_as_timet( m_datetime );
+    PRTime result = icaltime_as_timet( m_datetime );
     *retval = result*1000;
     return NS_OK;
 }
@@ -156,7 +158,7 @@ NS_IMETHODIMP oeDateTimeImpl::ToString(char **retval)
     return NS_OK;
 }
 
-NS_IMETHODIMP oeDateTimeImpl::SetTime( PRUint64 ms )
+NS_IMETHODIMP oeDateTimeImpl::SetTime( PRTime ms )
 {
 	m_datetime = ConvertFromPrtime( ms );
     return NS_OK;

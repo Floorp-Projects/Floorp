@@ -57,6 +57,7 @@ OBJS            = \
                   .\$(OBJDIR)\oeICalEventImpl.obj \
                   .\$(OBJDIR)\oeICalFactory.obj \
                   .\$(OBJDIR)\oeICalImpl.obj \
+		  .\$(OBJDIR)\oeDateTimeImpl.obj \
                   .\$(OBJDIR)\oeICalStartupHandler.obj \
                   $(NULL)
 

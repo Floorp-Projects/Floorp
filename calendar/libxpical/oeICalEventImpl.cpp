@@ -668,7 +668,7 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
                 printf( "Wrong day in month\n" );
                 continue;
             }
-            unsigned long long nextinms = icaltime_as_timet( next );
+            PRTime nextinms = icaltime_as_timet( next );
             nextinms *= 1000;
             if( (nextinms > begin) && !IsExcepted( nextinms ) ) {
 //                printf( "Result: %d-%d-%d %d:%d\n" , next.year, next.month, next.day, next.hour, next.minute );

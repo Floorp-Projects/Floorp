@@ -140,7 +140,7 @@ class oeICalImpl : public oeIICal
         NS_DECL_OEIICAL
         void SetupAlarmManager();
 private:
-    vector<oeIICalObserver*> m_observerlist;
+    std::vector<oeIICalObserver*> m_observerlist;
     bool m_batchMode;
     EventList m_eventlist;
     nsITimer *m_alarmtimer;

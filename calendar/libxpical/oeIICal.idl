@@ -59,7 +59,7 @@ interface oeIDateTime : nsISupports
     attribute short hour;
     attribute short minute;
     PRTime getTime();
-    void setTime( in unsigned long long ms );
+    void setTime( in PRTime ms );
     string toString();
 };
 

@@ -73,7 +73,7 @@ oeEventEnumerator : public nsISimpleEnumerator
 
   private:
     PRUint32 mCurrentIndex;
-    vector<PRInt32> mIdVector;
+    std::vector<PRInt32> mIdVector;
     nsCOMPtr<oeIICal> mICal;
 };
 
