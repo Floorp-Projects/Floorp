@@ -89,11 +89,7 @@ outlinercol {
 }
 
 outlinerbody:-moz-outliner-line {
-  border: 1px dotted #808080;
-}
-
-outlinerbody:-moz-outliner-line(selected) {
-  border: 1px dotted #000000;
+  visibility: hidden; /* Turned off in modern. */
 }
 
 /* ..... internal box ..... */
@@ -155,3 +151,13 @@ outlinercol:hover:active > .outlinercol-image-box {
 .outliner-colpicker-icon {
   list-style-image       : url("chrome://global/skin/tree/columnpicker.gif");
 }
+
+/* twisty rules */
+outlinerbody:-moz-outliner-twisty {
+  padding-right: 2px;
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+}
+
+outlinerbody:-moz-outliner-twisty(open) {
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");

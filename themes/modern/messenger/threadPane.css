@@ -94,6 +94,13 @@ outlinercol.threadColumnHeader[sortDirection="descending"] {
 
 /* message row icons */
 
+outlinerbody:-moz-outliner-image(threadCol, container) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
+}
+
+outlinerbody:-moz-outliner-image(threadCol, container, open) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
+}
 
 /* ..... read column ..... */
 
@@ -104,7 +111,13 @@ outlinercol.readColumnHeader {
 
 /* message row icons */
 
+outlinerbody:-moz-outliner-image(unreadButtonColHeader) {
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+}
 
+outlinerbody:-moz-outliner-image(unreadButtonColHeader, unread) {
+  list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
+}
 
 /* ..... flag column ..... */
 
@@ -113,3 +126,11 @@ outlinercol.flagColumnHeader {
 }
 
 /* message row icons */
+
+outlinerbody:-moz-outliner-image(flaggedCol) {
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+}
+
+outlinerbody:-moz-outliner-image(flaggedCol, flagged) {
+  list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
+}
