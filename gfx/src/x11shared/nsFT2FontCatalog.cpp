@@ -720,6 +720,8 @@ nsFT2FontCatalog::GetFontNames(const nsACString & aFamilyName,
                                nsFontCatalog*     aFC)
 {
   int i;
+  PRUint16 min_weight = PR_MAX(0, aWeight-125);
+  PRUint16 max_weight = PR_MIN(999, aWeight+125);
   nsCAutoString familyName, language;
   FONT_CATALOG_PRINTF(("looking for FreeType font matching"));
 
@@ -761,28 +763,18 @@ nsFT2FontCatalog::GetFontNames(const nsACString & aFamilyName,
   }
   
   /* column headers for the debug output*/
-  FONT_CATALOG_PRINTF(("%s\t%-20s\t%-8s\t%-8s\t%-8s%-8s%-8s\t%-8s\t%-8s",
+  FONT_CATALOG_PRINTF(("%s\t%-20s\t%-8s\t%-8s\t%-8s%-8s%-8s\t%-8s\t",
                         "mFlags",
                         "mFamilyName",
-                        "CodePageRange1",
+                        "mCodePageRange1",
                         "mCodePageRange2",
                         "mWeight",
                         "mWidth",
                         "mStyleFlags",
-                        "fce->mFaceFlags",
-                        "Ismatched"));
+                        "fce->mFaceFlags"));
 
   for (i=0; i<mFontCatalog->numFonts; i++) {
     nsFontCatalogEntry *fce = mFontCatalog->fonts[i];
-    FONT_CATALOG_PRINTF(("%0x\t%-20s\t%08lx\t%08lx\t%i\t%i\t%08lx\t%08lx\t",
-                        fce->mFlags,
-                        fce->mFamilyName,
-                        fce->mCodePageRange1,
-                        fce->mCodePageRange2,
-                        fce->mWeight,
-                        fce->mWidth,
-                        fce->mStyleFlags,
-                        fce->mFaceFlags));
     // not all "fce" are valid
     if (!fce->mFlags&FCE_FLAGS_ISVALID)
       continue;
@@ -793,23 +785,33 @@ nsFT2FontCatalog::GetFontNames(const nsACString & aFamilyName,
     if (!language.IsEmpty() &&
         !((fce->mCodePageRange1 & bit1) || (fce->mCodePageRange2 & bit2)))
       continue;
-    // weight
-    if (aWeight && (aWeight != fce->mWeight))
+    // weight (the meaning is not well defined so allow some variance)
+    if ((aWeight != kFCWeightAny)
+         && ((fce->mWeight < min_weight) || (fce->mWeight > max_weight)))
       continue;
     // width
-    if (aWidth && (aWidth != fce->mWidth))
+    if ((aWidth != kFCWidthAny) && (aWidth != fce->mWidth))
       continue;
     // slant
-    if (aSlant && !((fce->mStyleFlags & FT_STYLE_FLAG_ITALIC) == italicBit))
+    if ((aSlant != kFCSlantAny)
+         && !((fce->mStyleFlags & FT_STYLE_FLAG_ITALIC) == italicBit))
       continue;
     // spacing
-    if (aSpacing && !((fce->mFaceFlags & FT_FACE_FLAG_FIXED_WIDTH) == monoBit))
+    if ((aSpacing != kFCSpacingAny)
+         && !((fce->mFaceFlags & FT_FACE_FLAG_FIXED_WIDTH) == monoBit))
       continue;
     // match all patterns
-    FONT_CATALOG_PRINTF(("%s", "matching"));
+    FONT_CATALOG_PRINTF(("%0x\t%-20s\t%08lx\t%08lx\t%i\t%i\t%08lx\t%08lx",
+                        fce->mFlags,
+                        fce->mFamilyName,
+                        fce->mCodePageRange1,
+                        fce->mCodePageRange2,
+                        fce->mWeight,
+                        fce->mWidth,
+                        fce->mStyleFlags,
+                        fce->mFaceFlags));
     AddFont(aFC, fce);
   }
-  FONT_CATALOG_PRINTF(("\n"));
   return;
 }
 
