@@ -1551,6 +1551,8 @@ nsMsgNewsFolder::SetCachedNewsrcLine(const char *newsrcLine)
 {
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 
+    nsCRT::free(mCachedNewsrcLine);
+
     mCachedNewsrcLine = nsCRT::strdup(newsrcLine);
     
     if (!mCachedNewsrcLine) return NS_ERROR_OUT_OF_MEMORY;
