@@ -182,7 +182,7 @@ the script that handles the email.  This is what a sample .forward
 file looks like, please note that the script takes one argument which
 is the directory where all of your bonsai data resides:
 
-"|/home/httpd/html/webtools/bonsai/handleCheckinMail.tcl /home/httpd/html/webtools/bonsai"
+"|/home/httpd/html/webtools/bonsai/handleCheckinMail.pl /home/httpd/html/webtools/bonsai"
 
 o You need to set up an alias for "bonsai-checkin-daemon" to the
 account that will process the email.  This is where the mail will be
