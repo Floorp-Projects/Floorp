@@ -529,6 +529,7 @@ nsHTTPResponse::SetStatusString(const char* i_Status)
     NS_ASSERTION(!m_pStatusString, "Overwriting status string!");
     int len = PL_strlen(i_Status);
     m_pStatusString = new char[len+1];
+    //move to strncpy TODO
     if (m_pStatusString) {
       PL_strcpy(m_pStatusString, i_Status);
     } else {

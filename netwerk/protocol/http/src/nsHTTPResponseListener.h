@@ -67,7 +67,7 @@ public:
 
 protected:
     // nsHTTPResponseListener methods...
-    nsresult FireOnHeadersAvailable(nsISupports* aContext);
+    nsresult FireOnHeadersAvailable();
 
 
 protected:
@@ -77,6 +77,8 @@ protected:
     nsIHTTPChannel*     m_pConnection;
     nsIStreamListener*  m_pConsumer;
     PRUint32            m_ReadLength; // Already read
+    char*               m_PartHeader; // used between calls of OnDataAvailable
+    PRUint32            m_PartHeaderLen;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

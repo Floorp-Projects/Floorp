@@ -35,6 +35,13 @@
 #include "nsIBuffer.h"
 
 static const int kMAX_FIRST_LINE_SIZE= 256;
+static const int kMAX_BUFFER_SIZE = 1024;
+
+#define Skipln(p,max)   \
+    PR_BEGIN_MACRO      \
+    while ((*p != LF) && (max > p)) \
+        ++p;    \
+    PR_END_MACRO
 
 nsHTTPResponseListener::nsHTTPResponseListener(): 
     m_pConnection(nsnull),
@@ -42,6 +49,8 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_pResponse(nsnull),
     m_pConsumer(nsnull),
     m_ReadLength(0),
+    m_PartHeader(nsnull),
+    m_PartHeaderLen(0),
     m_bHeadersDone(PR_FALSE)
 {
     NS_INIT_REFCNT();
@@ -52,6 +61,11 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
     NS_IF_RELEASE(m_pConnection);
     NS_IF_RELEASE(m_pResponse);
     NS_IF_RELEASE(m_pConsumer);
+    if (m_PartHeader)
+    {
+        delete m_PartHeader;
+        m_PartHeader = 0;
+    }
 }
 
 NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsIStreamListener::GetIID());
@@ -67,13 +81,10 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                                         PRUint32 i_Length)
 {
     nsresult rv = NS_OK;
+    NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
 
-    NS_ASSERTION(i_pStream, "Fake stream!");
-///    NS_ASSERTION(i_SourceOffset == 0, "Source shifted already?!");
-    // Set up the response
     if (!m_pResponse)
     {
- 
         // why do I need the connection in the constructor... get rid.. TODO
         m_pResponse = new nsHTTPResponse (m_pConnection, i_pStream);
         if (!m_pResponse)
@@ -85,117 +96,124 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         nsHTTPChannel* pTestCon = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
         pTestCon->SetResponse(m_pResponse);
     }
- 
-    char partHeader[kMAX_FIRST_LINE_SIZE];
-    int partHeaderLen = 0;
-
-    while (!m_bHeadersDone)
-    {
-        //TODO optimize this further!
-        char buffer[kMAX_FIRST_LINE_SIZE];  
-        PRUint32 length;
-
-        nsCOMPtr<nsIBuffer> pBuffer;
-        rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
-        if (NS_FAILED(rv)) return rv;
     
-        const char* headerTerminationStr;
-        PRBool bFoundEnd = PR_FALSE;
-        PRUint32 offsetSearchedTo = 260;
-
-        headerTerminationStr = "\r\n\r\n";
-        rv = pBuffer->Search(headerTerminationStr, PR_FALSE, &bFoundEnd, &offsetSearchedTo);
-        if (NS_FAILED(rv)) return rv;
-        if (!bFoundEnd)
-        {
-            headerTerminationStr = "\n\n";
-            rv = pBuffer->Search("\n\n", PR_FALSE, &bFoundEnd, &offsetSearchedTo);
-            if (NS_FAILED(rv)) return rv;
-        }
-        //
-        // If the end of the headers was found then adjust the offset to include
-        // the termination characters...
-        //
-        if (bFoundEnd) {
-            offsetSearchedTo += PL_strlen(headerTerminationStr);
-        }
-
-        //if (bFoundEnd) // how does this matter if offset is all we care about anyway?
-        //{
-            rv = pBuffer->Read(buffer, offsetSearchedTo, &length);
-            length = offsetSearchedTo;
-            char* p = buffer;
-            while (buffer+length > p)
-            {
-                char* lineStart = p;
-                if (*lineStart == '\0' || *lineStart == CR)
-                {
-                    m_bHeadersDone = PR_TRUE;
-
-                    //TODO process headers here. 
-
-                    FireOnHeadersAvailable(context);
-
-                    break; // break off this buffer while
-                }
-                while ((*p != LF) && (buffer+length > p))
-                    ++p;
-                if (!m_bFirstLineParsed)
-                {
-                    char server_version[8]; // HTTP/1.1 
-                    PRUint32 stat = 0;
-                    char stat_str[kMAX_FIRST_LINE_SIZE];
-                    *p = '\0';
-                    sscanf(lineStart, "%8s %d %s", server_version, &stat, stat_str);
-                    m_pResponse->SetServerVersion(server_version);
-                    m_pResponse->SetStatus(stat);
-                    m_pResponse->SetStatusString(stat_str);
-                    p++;
-                    m_bFirstLineParsed = PR_TRUE;
-                }
-                else
-                {
-                    char* header = lineStart;
-                    char* value = PL_strchr(lineStart, ':');
-                    *p = '\0';
-                    if(value)
-                    {
-                        *value = '\0';
-                        value++;
-                        if (partHeaderLen == 0)
-                            m_pResponse->SetHeaderInternal(header, value);
-                        else
-                        {
-                            //append the header to the partheader
-                            header = PL_strcat(partHeader, header);
-                            m_pResponse->SetHeaderInternal(header, value);
-                            //Reset partHeader now
-                            partHeader[0]='\0';
-                            partHeaderLen = 0;
-                        }
-
-                    }
-                    else // this is just a part of the header so save it for later use...
-                    {
-                        partHeaderLen = p-header;
-                        PL_strncpy(partHeader, lineStart, partHeaderLen);
-                    }
-                    p++;
-                }
-            }
-        //}
-    }
+    //Rick- can the i_Length ever be zero? 
+    if (0==i_Length)
+        return NS_OK; // Wait for next cycle. 
 
     if (m_bHeadersDone)
     {
         // Pass the notification out to the consumer...
         NS_ASSERTION(m_pConsumer, "No Stream Listener!");
         if (m_pConsumer) {
-            // XXX: This is the wrong context being passed out to the consumer
-            rv = m_pConsumer->OnDataAvailable(context, i_pStream, 0, i_Length);
+            rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length);
         }
+        return rv;
+    }
+    //Search for the end of the headers mark
+    //Rick- Is this max correct? or should it be the same as transport's max? 
+    char buffer[kMAX_BUFFER_SIZE];
+
+    nsCOMPtr<nsIBuffer> pBuffer;
+    rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
+    if (NS_FAILED(rv)) return rv;
+
+    const char* headerTerminationStr = "\r\n\r\n";
+    PRBool bFoundEnd = PR_FALSE;
+    PRUint32 offsetSearchedTo = i_Length;
+
+    rv = pBuffer->Search(headerTerminationStr, PR_FALSE, &bFoundEnd, &offsetSearchedTo);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!bFoundEnd)
+    {
+        headerTerminationStr = "\n\n";
+        rv = pBuffer->Search(headerTerminationStr, PR_FALSE, &bFoundEnd, &offsetSearchedTo);
+        if (NS_FAILED(rv)) return rv;
     }
 
+    // If the end of the headers was found then adjust the offset to include
+    // the termination characters...
+    if (bFoundEnd)
+    {
+        offsetSearchedTo += PL_strlen(headerTerminationStr);
+    }
+
+    // Now read the buffer upto the offsetSearchedTo
+    PRUint32 lengthRead = 0;
+    rv = pBuffer->Read(buffer, offsetSearchedTo, &lengthRead);
+    if (NS_FAILED(rv)) return rv;
+    buffer[lengthRead] = '\0';
+    char* p = buffer;
+    //parse this buffer-
+    while (buffer+lengthRead > p)
+    {
+        char* lineStart = p;
+        if (*lineStart == '\0' || *lineStart == CR || *lineStart == LF)
+        {
+            m_bHeadersDone = PR_TRUE;
+            // TODO process headers here. 
+            // Based on the process headers we may or may not want to 
+            // fire the headers available
+            FireOnHeadersAvailable();
+            // Fire the partial length onDataAvailable
+            if (i_Length > lengthRead)
+            {
+                NS_ASSERTION(m_pConsumer, "No Stream Listner!");
+                if (m_pConsumer)
+                    rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length-lengthRead);
+            }
+            break; // break off this buffer while
+        }
+        // Skip to end of line;
+        Skipln(p, buffer+lengthRead);
+
+        if (!m_bFirstLineParsed)
+        {
+            char server_version[9]; // HTTP/1.1 
+            PRUint32 stat = 0;
+            char stat_str[kMAX_FIRST_LINE_SIZE];
+            sscanf(lineStart, "%8s %d %s", server_version, &stat, stat_str);
+            m_pResponse->SetServerVersion(server_version);
+            m_pResponse->SetStatus(stat);
+            m_pResponse->SetStatusString(stat_str);
+            m_bFirstLineParsed = PR_TRUE;
+        }
+        else 
+        {
+            char* header = lineStart;
+            char* value = PL_strchr(lineStart, ':');
+            if(value)
+            {
+                //mark the end of header
+                *value = '\0';
+                value++;
+                //mark the end of value
+                *p = '\0';
+                if (m_PartHeaderLen == 0)
+                    m_pResponse->SetHeaderInternal(header, value);
+                else
+                {
+                    //append the header to the partheader
+                    header = PL_strcat(m_PartHeader, header);
+                    m_pResponse->SetHeaderInternal(header, value);
+                    //Reset partHeader now
+                    delete m_PartHeader;
+                    m_PartHeader = 0;
+                    m_PartHeaderLen = 0;
+                }
+            }
+            else // this is just a part of the header so save it for later use...
+            {
+                NS_ASSERTION(m_PartHeaderLen == 0, "Overwriting partial header!");
+                m_PartHeaderLen = p-header;
+                m_PartHeader = new char(m_PartHeaderLen+1);
+                PL_strncpy(m_PartHeader, lineStart, m_PartHeaderLen);
+                m_PartHeader[m_PartHeaderLen] = '\0';
+            }
+        }
+        p++;
+    }
     return rv;
 }
 
@@ -270,10 +288,9 @@ nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
 }
 
 
-nsresult nsHTTPResponseListener::FireOnHeadersAvailable(nsISupports* aContext)
+nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
 {
     nsresult rv;
-
     NS_ASSERTION(m_bHeadersDone, "Headers have not been received!");
 
     if (m_bHeadersDone) {
@@ -282,7 +299,7 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable(nsISupports* aContext)
         nsIHTTPEventSink* pSink= nsnull;
         m_pConnection->GetEventSink(&pSink);
         if (pSink) {
-            pSink->OnHeadersAvailable(aContext);
+            pSink->OnHeadersAvailable(m_pConnection);
         }
 
         // Check for any modules that want to receive headers once they've arrived.

@@ -457,6 +457,11 @@ nsHTTPChannel::Open(void)
         PRUint32 count;
         rv = stream->GetLength(&count);
         rv = temp->AsyncWrite(stream, 0, count, this , m_pEventQ, m_pRequest);
+        if (NS_FAILED(rv)) 
+        {
+            NS_RELEASE(temp);
+            return rv;
+        }
 
         m_State = HS_WAITING_FOR_RESPONSE;
         m_bConnected = PR_TRUE;
