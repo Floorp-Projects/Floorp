@@ -303,6 +303,16 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword_text, NS_STYLE_CURSOR_TEXT,
   eCSSKeyword_wait, NS_STYLE_CURSOR_WAIT,
   eCSSKeyword_help, NS_STYLE_CURSOR_HELP,
+  eCSSKeyword_copy, NS_STYLE_CURSOR_COPY, // CSS3
+  eCSSKeyword_alias, NS_STYLE_CURSOR_ALIAS,
+  eCSSKeyword_context_menu, NS_STYLE_CURSOR_CONTEXT_MENU,
+  eCSSKeyword_cell, NS_STYLE_CURSOR_CELL,
+  eCSSKeyword_grab, NS_STYLE_CURSOR_GRAB,
+  eCSSKeyword_grabbing, NS_STYLE_CURSOR_GRABBING,
+  eCSSKeyword_spinning, NS_STYLE_CURSOR_SPINNING,
+  eCSSKeyword_count_up, NS_STYLE_CURSOR_COUNT_UP,
+  eCSSKeyword_count_down, NS_STYLE_CURSOR_COUNT_DOWN,
+  eCSSKeyword_count_up_down, NS_STYLE_CURSOR_COUNT_UP_DOWN,
   -1,-1
 };
 

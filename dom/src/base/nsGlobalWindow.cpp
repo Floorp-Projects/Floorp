@@ -1539,6 +1539,16 @@ NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsString& aCursor)
   else if (aCursor.EqualsWithConversion("nw-resize")) cursor = NS_STYLE_CURSOR_NW_RESIZE;
   else if (aCursor.EqualsWithConversion("se-resize")) cursor = NS_STYLE_CURSOR_SE_RESIZE;
   else if (aCursor.EqualsWithConversion("sw-resize")) cursor = NS_STYLE_CURSOR_SW_RESIZE;
+  else if (aCursor.EqualsWithConversion("copy")) cursor = NS_STYLE_CURSOR_COPY; // CSS3
+  else if (aCursor.EqualsWithConversion("alias")) cursor = NS_STYLE_CURSOR_ALIAS;
+  else if (aCursor.EqualsWithConversion("context-menu")) cursor = NS_STYLE_CURSOR_CONTEXT_MENU;
+  else if (aCursor.EqualsWithConversion("cell")) cursor = NS_STYLE_CURSOR_CELL;
+  else if (aCursor.EqualsWithConversion("grab")) cursor = NS_STYLE_CURSOR_GRAB;
+  else if (aCursor.EqualsWithConversion("grabbing")) cursor = NS_STYLE_CURSOR_GRABBING;
+  else if (aCursor.EqualsWithConversion("spinning")) cursor = NS_STYLE_CURSOR_SPINNING;
+  else if (aCursor.EqualsWithConversion("count-up")) cursor = NS_STYLE_CURSOR_COUNT_UP;
+  else if (aCursor.EqualsWithConversion("count-down")) cursor = NS_STYLE_CURSOR_COUNT_DOWN;
+  else if (aCursor.EqualsWithConversion("count-up-down")) cursor = NS_STYLE_CURSOR_COUNT_UP_DOWN;
   else return NS_OK;
 
   nsCOMPtr<nsIPresContext> presContext;

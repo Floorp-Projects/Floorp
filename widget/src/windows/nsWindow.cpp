@@ -1675,6 +1675,36 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_HELP);
       break;
 
+    case eCursor_copy: // CSS3
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_COPY));
+      break;
+
+    case eCursor_alias:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ALIAS));
+      break;
+
+    case eCursor_cell:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_CELL));
+      break;
+
+    case eCursor_grab:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_GRAB));
+      break;
+
+    case eCursor_grabbing:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_GRABBING));
+      break;
+
+    case eCursor_spinning:
+      newCursor = ::LoadCursor(NULL, IDC_APPSTARTING);
+      break;
+
+    case eCursor_context_menu:
+    case eCursor_count_up:
+    case eCursor_count_down:
+    case eCursor_count_up_down:
+      break;
+
     default:
       NS_ASSERTION(0, "Invalid cursor type");
       break;

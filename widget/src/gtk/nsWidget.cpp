@@ -864,6 +864,19 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
         newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
         break;
 
+      case eCursor_copy: // CSS3
+      case eCursor_alias:
+      case eCursor_cell:
+      case eCursor_grab:
+      case eCursor_grabbing:
+      case eCursor_spinning:
+      case eCursor_context_menu:
+      case eCursor_count_up:
+      case eCursor_count_down:
+      case eCursor_count_up_down:
+        // XXX: these CSS3 cursors need to be implemented
+        break;
+
       default:
         NS_ASSERTION(PR_FALSE, "Invalid cursor type");
         break;
