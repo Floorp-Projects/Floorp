@@ -65,9 +65,11 @@ public:
     rv = dm->AddDownload(aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aPersist, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
     
-    char* persistentDescriptor;
-    aTarget->GetPersistentDescriptor(&persistentDescriptor);
-    return dm->OpenProgressDialogFor(persistentDescriptor, nsnull);
+    char* path;
+    rv = aTarget->GetPath(&path);
+    if (NS_FAILED(rv)) return rv;
+
+    return dm->OpenProgressDialogFor(path, nsnull);
   }
 
  
