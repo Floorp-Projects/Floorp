@@ -267,17 +267,13 @@ protected:
     * Pass 2 is executed every time the table needs to resize.  An optimization is included
     * so that if the table doesn't need to actually be resized, no work is done (see NeedsReflow).
     * 
-    * @param aMinCaptionWidth - the max of all the minimum caption widths.  0 if no captions.
-    * @param aMaxCaptionWidth - the max of all the desired caption widths.  0 if no captions.
     *
     * @see Reflow
     * @see NeedsReflow
     */
-  virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
-                                           nsReflowMetrics& aDesiredSize,
-                                           const nsReflowState& aReflowState,
-                                           PRInt32 aMinCaptionWidth,
-                                           PRInt32 mMaxCaptionWidth);
+  virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*      aPresContext,
+                                           nsReflowMetrics&     aDesiredSize,
+                                           const nsReflowState& aReflowState);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
                                      InnerTableReflowState& aState,
@@ -475,6 +471,9 @@ public: /* ----- Cell Map public methods ----- */
 	  */
 	PRBool ColHasSpanningCells(PRInt32 aColIndex);
 
+  /** return the minimum width of the table caption.  Return 0 if there is no caption. */
+  nscoord GetMinCaptionWidth();
+
 private:
   void DebugPrintCount() const; // Debugging routine
 
@@ -494,5 +493,6 @@ private:
   PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
 };
+
 
 #endif
