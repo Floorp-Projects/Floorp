@@ -383,7 +383,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 	nsresult rv = NS_OK;
 
   m_identity = identity;
-  
+
 	if (aWindow)
 	{
 		m_window = aWindow;
@@ -809,10 +809,12 @@ nsresult nsMsgCompose::CloseWindow()
 
         nsIBaseWindow * aWindow = m_baseWindow;
         m_baseWindow = nsnull;
-        rv = aWindow->Destroy();
+        rv = aWindow->Destroy();              
     }
 
-	return rv;
+    // Need to relelase the mComposeObj...
+    mMsgSend = nsnull;
+  	return rv;
 }
 
 nsresult nsMsgCompose::ShowWindow(PRBool show)
@@ -1424,7 +1426,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
       mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, compHTML);
     }
   }
-  
+
   mComposeObj = null_nsCOMPtr();	//We are done with it, therefore release it.
   return rv;
 }
@@ -1694,6 +1696,9 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #endif
 			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
+
+      // Need to relelase the mComposeObj...
+      mComposeObj->mMsgSend = nsnull;
 		}
 	}
 
@@ -1748,6 +1753,9 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #endif
 			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
+
+      // Need to relelase the mComposeObj...
+      mComposeObj->mMsgSend = nsnull;
 		}
 	}
 
