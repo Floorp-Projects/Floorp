@@ -5640,13 +5640,8 @@ PresShell::BidiStyleChangeReflow()
 
 //nsIViewObserver
 
-// If the element is absolutely positioned and has a specified clip rect
-// then it pushes the current rendering context and sets the clip rect.
-// Returns PR_TRUE if the clip rect is set and PR_FALSE otherwise
-static PRBool
-SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
-{
-  PRBool clipState;
+// Return TRUE if any clipping is to be done.
+static PRBool ComputeClipRect(nsIFrame* aFrame, nsRect& aResult) {
   const nsStyleDisplay* display;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
   
@@ -5676,13 +5671,44 @@ SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
       }
     }
 
+    aResult = clipRect;
+
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+// If the element is absolutely positioned and has a specified clip rect
+// then it pushes the current rendering context and sets the clip rect.
+// Returns PR_TRUE if the clip rect is set and PR_FALSE otherwise
+static PRBool
+SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
+{
+  nsRect clipRect;
+
+  if (ComputeClipRect(aFrame, clipRect)) {
     // Set updated clip-rect into the rendering context
+    PRBool clipState;
+
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
     return PR_TRUE;
   }
 
   return PR_FALSE;
+}
+
+static PRBool
+InClipRect(nsIFrame* aFrame, nsPoint& aEventPoint)
+{
+  nsRect clipRect;
+
+  if (ComputeClipRect(aFrame, clipRect)) {
+    return clipRect.Contains(aEventPoint);
+  } else {
+    return PR_TRUE;
+  }
 }
 
 NS_IMETHODIMP
@@ -5884,7 +5910,19 @@ PresShell::HandleEvent(nsIView         *aView,
           */
         }
       }
-      else {
+      else if (!InClipRect(frame, aEvent->point)) {
+        // we only check for the clip rect on this frame ... all frames with clip have views so any
+        // viewless children of this frame cannot have clip. Furthermore if the event is not in the clip
+        // for this frame, then none of the children can get it either.
+        if (aForceHandle) {
+          mCurrentEventFrame = frame;
+        }
+        else {
+          mCurrentEventFrame = nsnull;
+        }
+        aHandled = PR_FALSE;
+        rv = NS_OK;
+      } else {
         // aEvent->point is relative to aView's upper left corner. We need
         // a point that is in the same coordinate system as frame's rect
         // so that the frame->mRect.Contains(aPoint) calls in 
