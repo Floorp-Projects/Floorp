@@ -146,14 +146,6 @@ public:
 
   /**
    *  Determine whether or not the characters in this
-   *  string are in sorted order.
-   *  
-   *  @return  TRUE if ordered.
-   */
-  PRBool IsOrdered(void) const;
-
-  /**
-   *  Determine whether or not the characters in this
    *  string are in store as 1 or 2 byte (unicode) strings.
    *  
    *  @return  TRUE if ordered.
@@ -566,16 +558,6 @@ public:
     Searching methods...                
    *********************************************************************/
  
-  /**
-   *  Search for given character within this string.
-   *  This method does so by using a binary search,
-   *  so your string HAD BETTER BE ORDERED!
-   *  
-   *  @param   aChar is the unicode char to be found
-   *  @return  offset in string, or -1 (kNotFound)
-   */
-  PRInt32 BinarySearch(PRUnichar aChar) const;
-
   /**
    *  Search for given substring within this string
    *  

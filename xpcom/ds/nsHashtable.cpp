@@ -258,8 +258,11 @@ nsStringKey::nsStringKey(const PRUnichar* str)
 	mStr.Assign(str);
 }
 
-nsStringKey::nsStringKey(const nsStr& str)
-{
+nsStringKey::nsStringKey(const nsString& str) {
+	mStr.Assign(str);
+}
+
+nsStringKey::nsStringKey(const nsCString& str) {
 	mStr.Assign(str);
 }
 

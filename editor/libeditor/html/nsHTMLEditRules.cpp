@@ -3823,7 +3823,7 @@ nsHTMLEditRules::DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aS
   PRInt32 runStart = -1, runEnd = -1;
   do {
     PRUnichar c = tempString[j];
-    PRBool isSpace = nsString::IsSpace(c);
+    PRBool isSpace = nsCRT::IsAsciiSpace(c);
     if (isSpace || c==nbsp)
     {
       if (runStart<0) runStart = j;

@@ -203,7 +203,8 @@ protected:
 public:
   nsStringKey(const char* str);
   nsStringKey(const PRUnichar* str);
-  nsStringKey(const nsStr& str);
+  nsStringKey(const nsString& str);
+  nsStringKey(const nsCString& str);
 
   ~nsStringKey(void);
 

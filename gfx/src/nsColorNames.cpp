@@ -132,18 +132,9 @@ nsColorNames::LookupName(const nsCString& aColorName)
 }
 
 nsColorName 
-nsColorNames::LookupName(const nsString& aColorName)
-{
-  NS_ASSERTION(gColorTree, "no lookup table, needs addref");
-  if (gColorTree) {
-    ColorNode node(aColorName, eColorName_UNKNOWN);
-    ColorNode*  found = (ColorNode*)gColorTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aColorName), "bad tree");
-      return found->mEnum;
-    }
-  }
-  return eColorName_UNKNOWN;
+nsColorNames::LookupName(const nsString& aColorName) {
+  nsCAutoString theName(aColorName);
+  return LookupName(theName);
 }
 
 
