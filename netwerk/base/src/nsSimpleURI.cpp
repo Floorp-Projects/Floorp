@@ -139,11 +139,16 @@ NS_IMETHODIMP
 nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
     nsCAutoString spec;
+    if (aSpec.Length() == 0) {
+        mScheme.Truncate();
+        mPath.Truncate();
+        return NS_OK;
+    }
 
     // nsSimpleURI currently restricts the charset to US-ASCII
     NS_EscapeURL(PromiseFlatCString(aSpec), esc_OnlyNonASCII|esc_AlwaysCopy, spec);
 
-    PRInt32 pos = spec.Find(":");
+    PRInt32 pos = spec.FindChar(':');
     if (pos == -1)
         return NS_ERROR_FAILURE;
 
