@@ -60,6 +60,7 @@ CPPSRCS=				\
 	nsSplittableFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsTextTransformer.cpp		\
+	nsViewportFrame.cpp			\
 	nsWBRFrame.cpp			\
 	$(NULL)
 
