@@ -182,7 +182,7 @@ nsIRDFResource  *nsWindowMediator::kNC_Name = NULL;
 nsIRDFResource  *nsWindowMediator::kNC_URL = NULL;
 nsIRDFResource  *nsWindowMediator::kNC_KeyIndex = NULL;
 
-PRInt32   nsWindowMediator::gRefCnt;
+PRInt32   nsWindowMediator::gRefCnt = 0;
 nsIRDFContainer  *nsWindowMediator::mContainer = NULL;
 nsIRDFDataSource *nsWindowMediator::mInner = NULL;
 
@@ -842,8 +842,33 @@ nsWindowMediator::ConvertISupportsToDOMWindow( nsISupports* inInterface,
 
 // COM
 NS_IMPL_ADDREF( nsWindowMediator );
-NS_IMPL_RELEASE( nsWindowMediator );
 NS_IMPL_QUERY_INTERFACE3(nsWindowMediator, nsIWindowMediator, nsIRDFDataSource, nsIRDFObserver);
+
+
+
+NS_IMETHODIMP_(nsrefcnt)
+nsWindowMediator::Release()
+{
+	// We need a special implementation of Release() because our mInner
+	// holds a Circular References back to us.
+	NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
+	--gRefCnt;
+	NS_LOG_RELEASE(this, mRefCnt, "nsWindowMediator");
+
+	if (mInner && mRefCnt == 1)
+	{
+		nsIRDFDataSource* tmp = mInner;
+		mInner = nsnull;
+		NS_IF_RELEASE(tmp);
+		return(0);
+	}
+	else if (mRefCnt == 0)
+	{
+		delete this;
+		return(0);
+	}
+	return(mRefCnt);
+}
 
 
 
@@ -938,6 +963,11 @@ nsWindowMediator::GetTarget(nsIRDFResource* source,
                             PRBool tv,
                             nsIRDFNode** target)
 {
+  NS_PRECONDITION(target != nsnull, "null ptr");
+  if (! target)
+    return(NS_ERROR_NULL_POINTER);
+  *target = nsnull;
+
   if (property == kNC_KeyIndex)
   {
     PRInt32  theIndex = 0;
