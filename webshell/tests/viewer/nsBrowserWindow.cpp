@@ -195,6 +195,9 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
       }
     }
   }
+  if (nsnull != result) {
+    NS_ADDREF(result);
+  }
   return result;
 }
 
@@ -202,107 +205,127 @@ void
 nsBrowserWindow::AddBrowser(nsBrowserWindow* aBrowser)
 {
   gBrowsers.AppendElement(aBrowser);
+  NS_ADDREF(aBrowser);
 }
 
 void
 nsBrowserWindow::RemoveBrowser(nsBrowserWindow* aBrowser)
 {
+  nsViewerApp* app = aBrowser->mApp;
   gBrowsers.RemoveElement(aBrowser);
-  if (0 == gBrowsers.Count()) {
-    aBrowser->mApp->Exit();
+  NS_RELEASE(aBrowser);
+}
+
+void
+nsBrowserWindow::CloseAllWindows()
+{
+  while (0 != gBrowsers.Count()) {
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(0);
+    NS_ADDREF(bw);
+    bw->Close();
+    NS_RELEASE(bw);
   }
+  gBrowsers.Clear();
 }
 
 static nsEventStatus PR_CALLBACK
 HandleBrowserEvent(nsGUIEvent *aEvent)
 { 
+  nsEventStatus result = nsEventStatus_eIgnore;
   nsBrowserWindow* bw =
     nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_WINDOW);
-  if (nsnull == bw) {
-    return nsEventStatus_eIgnore;
-  }
+  if (nsnull != bw) {
+    nsSizeEvent* sizeEvent;
+    switch(aEvent->message) {
+    case NS_SIZE:
+      sizeEvent = (nsSizeEvent*)aEvent;  
+      bw->Layout(sizeEvent->windowSize->width,
+                 sizeEvent->windowSize->height);
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
 
-  nsSizeEvent* sizeEvent;
-  nsEventStatus result = nsEventStatus_eIgnore;
-  switch(aEvent->message) {
-  case NS_SIZE:
-    sizeEvent = (nsSizeEvent*)aEvent;  
-    bw->Layout(sizeEvent->windowSize->width,
-               sizeEvent->windowSize->height);
-    return nsEventStatus_eConsumeNoDefault;
+    case NS_DESTROY:
+      {
+        nsViewerApp* app = bw->mApp;
+        result = nsEventStatus_eConsumeDoDefault;
+        bw->Close();
+        NS_RELEASE(bw);
 
-  case NS_DESTROY:
-    bw->Destroy();
+        // XXX Really shouldn't just exit, we should just notify somebody...
+        if (0 == nsBrowserWindow::gBrowsers.Count()) {
+          app->Exit();
+        }
+      }
+      return result;
+
+    case NS_MENU_SELECTED:
+      result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->menuItem);
+      break;
+
+    default:
+      break;
+    }
     NS_RELEASE(bw);
-    return nsEventStatus_eConsumeDoDefault;
-
-  case NS_MENU_SELECTED:
-    return bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->menuItem);
-
-  default:
-    break;
   }
-  return nsEventStatus_eIgnore;
+  return result;
 }
 
 static nsEventStatus PR_CALLBACK
 HandleBackEvent(nsGUIEvent *aEvent)
 {
+  nsEventStatus result = nsEventStatus_eIgnore;
   nsBrowserWindow* bw =
     nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_BACK);
-  if (nsnull == bw) {
-    return nsEventStatus_eIgnore;
+  if (nsnull != bw) {
+    switch(aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      bw->Back();
+      break;
+    }
+    NS_RELEASE(bw);
   }
-
-  switch(aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_UP:
-    bw->Back();
-    break;
-  }
-  return nsEventStatus_eIgnore;
+  return result;
 }
 
 static nsEventStatus PR_CALLBACK
 HandleForwardEvent(nsGUIEvent *aEvent)
 {
+  nsEventStatus result = nsEventStatus_eIgnore;
   nsBrowserWindow* bw =
     nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_FORWARD);
-  if (nsnull == bw) {
-    return nsEventStatus_eIgnore;
+  if (nsnull != bw) {
+    switch(aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      bw->Forward();
+      break;
+    }
+    NS_RELEASE(bw);
   }
-
-  switch(aEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_UP:
-    bw->Forward();
-    break;
-  }
-  return nsEventStatus_eIgnore;
+  return result;
 }
 
 static nsEventStatus PR_CALLBACK
 HandleLocationEvent(nsGUIEvent *aEvent)
 {
+  nsEventStatus result = nsEventStatus_eIgnore;
   nsBrowserWindow* bw =
     nsBrowserWindow::FindBrowserFor(aEvent->widget, FIND_LOCATION);
-  if (nsnull == bw) {
-    return nsEventStatus_eIgnore;
-  }
-
-  switch (aEvent->message) {
-  case NS_KEY_UP:
-    if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
-      nsAutoString text;
-      PRUint32 size;
-      bw->mLocation->GetText(text, 1000,size);
-      bw->GoTo(text);
+  if (nsnull != bw) {
+    switch (aEvent->message) {
+    case NS_KEY_UP:
+      if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
+        nsAutoString text;
+        PRUint32 size;
+        bw->mLocation->GetText(text, 1000, size);
+        bw->GoTo(text);
+      }
+      break;
+    default:
+      break;
     }
-    break;
-  default:
-    break;
-
+    NS_RELEASE(bw);
   }
-
-  return nsEventStatus_eIgnore;
+  return result;
 }
 
 nsEventStatus
@@ -368,23 +391,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   }
 
   return nsEventStatus_eIgnore;
-}
-
-void
-nsBrowserWindow::Destroy()
-{
-  RemoveBrowser(this);
-  if (nsnull != mWebShell) {
-    mWebShell->Destroy();
-    NS_RELEASE(mWebShell);
-  }
-
-  NS_IF_RELEASE(mWindow);
-  NS_IF_RELEASE(mBack);
-  NS_IF_RELEASE(mForward);
-  NS_IF_RELEASE(mLocation);
-  NS_IF_RELEASE(mThrobber);
-  NS_IF_RELEASE(mStatus);
 }
 
 void
@@ -825,27 +831,27 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 
   if (aIID.Equals(kIBrowserWindowIID)) {
     *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIWebShellContainerIID)) {
     *aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -1151,7 +1157,25 @@ nsBrowserWindow::Hide()
 NS_IMETHODIMP
 nsBrowserWindow::Close()
 {
-  Destroy();
+  RemoveBrowser(this);
+
+  if (nsnull != mWebShell) {
+    mWebShell->Destroy();
+    NS_RELEASE(mWebShell);
+  }
+
+//  NS_IF_RELEASE(mWindow);
+  if (nsnull != mWindow) {
+    nsIWidget* w = mWindow;
+    NS_RELEASE(w);
+  }
+
+  NS_IF_RELEASE(mBack);
+  NS_IF_RELEASE(mForward);
+  NS_IF_RELEASE(mLocation);
+  NS_IF_RELEASE(mThrobber);
+  NS_IF_RELEASE(mStatus);
+
   return NS_OK;
 }
 
@@ -1259,30 +1283,33 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
 
 
 NS_IMETHODIMP
-nsBrowserWindow::NewWebShell(nsIWebShell *&aNewWebShell)
+nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
 {
-  nsNativeBrowserWindow *browser = (nsNativeBrowserWindow *)new nsNativeBrowserWindow();
-  nsresult        rv = NS_OK;
+  nsresult rv = NS_OK;
+
+  // Create new window. By default, the refcnt will be 1 because of
+  // the registration of the browser window in gBrowsers.
+  nsNativeBrowserWindow* browser;
+  NS_NEWXPCOM(browser, nsNativeBrowserWindow);
 
   if (nsnull != browser)
   {
     nsRect  bounds;
-
     GetBounds(bounds);
 
     browser->SetApp(mApp);
     rv = browser->Init(mAppShell, mPrefs, bounds, mChromeMask, mAllowPlugins);
-
     if (NS_OK == rv)
     {
-      NS_ADDREF(browser);
       browser->Show();
       nsIWebShell *shell;
       rv = browser->GetWebShell(shell);
       aNewWebShell = shell;
     }
     else
-      browser->Destroy();
+    {
+      browser->Close();
+    }
   }
   else
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -2206,7 +2233,7 @@ nsBrowserWindowFactory::QueryInterface(const nsIID &aIID, void **aResult)
     return NS_NOINTERFACE;
   }
 
-  AddRef(); // Increase reference count for caller
+  NS_ADDREF_THIS(); // Increase reference count for caller
   return NS_OK;
 }
 
@@ -2243,7 +2270,7 @@ nsBrowserWindowFactory::CreateInstance(nsISupports *aOuter,
     goto done;
   }
 
-  inst = new nsNativeBrowserWindow();
+  NS_NEWXPCOM(inst, nsNativeBrowserWindow);
   if (inst == NULL) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto done;
@@ -2268,7 +2295,8 @@ nsresult
 NS_NewBrowserWindowFactory(nsIFactory** aFactory)
 {
   nsresult rv = NS_OK;
-  nsIFactory* inst = new nsBrowserWindowFactory();
+  nsBrowserWindowFactory* inst;
+  NS_NEWXPCOM(inst, nsBrowserWindowFactory);
   if (nsnull == inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
