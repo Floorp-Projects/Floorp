@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 @import url("chrome://communicator/skin/");
-@import url("chrome://communicator/skin/bookmarks/bookmarksToolbar.css");
+
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -176,7 +176,7 @@ toolbarbutton, menubutton {
 .toolbarbutton-1 {
   min-width: 0px;
   padding: 2px !important;
-  margin: 0px 2px !important;
+  margin: 0px 1px !important;
   border: 0px !important;
   -moz-appearance: none !important;
 }
