@@ -80,9 +80,6 @@ protected:
   nsString      mPrintCommand;
   PRBool        mPrintToFile;
   nsString      mToFileName;
-
-  PpPrintContext_t *pc;
-
 };
 
 
