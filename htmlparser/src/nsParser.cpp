@@ -21,7 +21,7 @@
 #include "nsParser.h"
 #include "nsIContentSink.h" 
 #include "nsString.h"
-#include "nsCRT.h"
+#include "nsCRT.h" 
 #include "nsScanner.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "plstr.h"
@@ -32,7 +32,7 @@
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
 
-#define rickgdebug
+#undef rickgdebug
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
 #endif
@@ -863,7 +863,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
     theStartPos+=theNumRead;
   }//while
 
-  return ResumeParse();
+  return ResumeParse(); 
 }
 
 /**
