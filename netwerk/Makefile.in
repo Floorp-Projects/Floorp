@@ -31,9 +31,17 @@ DIRS=            \
 	build    \
 	protocol \
 	util     \
-    mime     \
-    streamconv \
+	mime     \
+	streamconv \
 	$(NULL)
+
+include $(DEPTH)/config/config.mk
+
+ifdef NET_SOCKET_PROVIDER_BUILD
+DIRS +=		 \
+	socket   \
+	$(NULL)
+endif
 
 ifdef ENABLE_TESTS
 DIRS += test
