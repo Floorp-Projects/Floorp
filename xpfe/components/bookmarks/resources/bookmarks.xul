@@ -55,7 +55,7 @@
       <menuitem value="&menuitem.cut.label;" oncommand="return doCut()" />
       <menuitem value="&menuitem.copy.label;" oncommand="return doCopy()" />
       <menuitem value="&menuitem.paste.label;" oncommand="return doPaste()" />
-      <menuitem value="&menuitem.delete.label;" oncommand="return doDelete()" />
+      <menuitem value="&menuitem.delete.label;" oncommand="return doDelete(true)" />
       <menuitem value="&menuitem.selectAll.label;" oncommand="return doSelectAll()" />
       <menuseparator/>
       <menuitem value="&menuitem.find.label;" oncommand="return OpenSearch('find');"/>

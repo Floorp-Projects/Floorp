@@ -31,6 +31,16 @@ function copySelectionToClipboard()
 	if (select_list.length < 1)    return(false);
 	dump("# of Nodes selected: " + select_list.length + "\n\n");
 
+	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!RDF)	return(false);
+
+	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+	if (!Bookmarks)	return(false);
+
+	var nameRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+	if (!nameRes)	return(false);
+
 	// build a url that encodes all the select nodes as well as their parent nodes
 	var url="";
 
@@ -40,13 +50,20 @@ function copySelectionToClipboard()
 		if (!node)    continue;
 		var ID = node.getAttribute("id");
 		if (!ID)    continue;
-		var parentID = node.parentNode.parentNode.getAttribute("id");
-		if (!parentID)	continue;
+		
+		var IDRes = RDF.GetResource(ID);
+		if (!IDRes)	continue;
+		var nameNode = Bookmarks.GetTarget(IDRes, nameRes, true);
+		var theName = "";
+		if (nameNode) nameNode = nameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (nameNode)	theName = nameNode.Value;
 
-		dump("Node " + nodeIndex + ": " + ID + "    parent: " + parentID + "\n");
+		dump("Node " + nodeIndex + ": " + ID + "    name: " + theName + "\n");
 		url += "ID:{" + ID + "};";
-		url += "parentID:{" + parentID + "};";
+		url += "NAME:{" + theName + "};";
 	}
+	if (url == "")	return(false);
+	dump("Copy URL: " + url + "\n\n");
 
 	// get some useful components
 	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
@@ -76,7 +93,7 @@ function doCut()
 {
 	if (copySelectionToClipboard() == true)
 	{
-		// XXX remove the selected nodes
+		doDelete(false);
 	}
 	return(true);
 }
@@ -93,16 +110,25 @@ function doCopy()
 
 function doPaste()
 {
+	var treeNode = document.getElementById("bookmarksTree");
+	if (!treeNode)    return(false);
+	var select_list = treeNode.selectedItems;
+	if (!select_list)	return(false);
+	if (select_list.length != 1)    return(false);
+	
+	var pasteNodeID = select_list[0].getAttribute("id");
+	dump("Paste onto " + pasteNodeID + "\n");
+	var isContainerFlag = select_list[0].getAttribute("container") == "true" ? true:false;
+	dump("Container status: " + ((isContainerFlag) ? "true" : "false") + "\n\n");
+
 	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
 	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
 	if (!clip)	return(false);
-dump("Got clipboard.\n");
 
 	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )	return(false);
 	trans.addDataFlavor("text/unicode");
-dump("Got trans\n");
 
 	clip.getData(trans);
 	var data = new Object();
@@ -112,14 +138,96 @@ dump("Got trans\n");
 	var url=null;
 	if (data)	url = data.data.substring(0, dataLen.value / 2);	// double byte data
 	if (!url)	return(false);
-dump("ID: " + url + "\n\n"); 
+
+	var strings = url.split(";");
+	if (!strings)	return(false);
+
+	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!RDF)	return(false);
+	var RDFC = Components.classes["component://netscape/rdf/container"].getService();
+	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+	if (!RDFC)	return(false);
+	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+	if (!Bookmarks)	return(false);
+
+	var nameRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+	if (!nameRes)	return(false);
+
+	pasteNodeRes = RDF.GetResource(pasteNodeID);
+	if (!pasteNodeRes)	return(false);
+	var pasteContainerRes = null;
+	var pasteNodeIndex = -1;
+	if (isContainerFlag == true)
+	{
+		pasteContainerRes = pasteNodeRes;
+	}
+	else
+	{
+		var parID = select_list[0].parentNode.parentNode.getAttribute("id");
+		if (!parID)	return(false);
+		pasteContainerRes = RDF.GetResource(parID);
+		if (!pasteContainerRes)	return(false);
+	}
+	RDFC.Init(Bookmarks, pasteContainerRes);
+dump("Inited RDFC\n");
+
+	if (isContainerFlag == false)
+	{
+		pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
+		if (pasteNodeIndex < 0)	return(false);			// how did that happen?
+	}
+
+dump("Loop over strings\n");
+
+	for (var x=0; x<strings.length; x=x+2)
+	{
+		var theID = strings[x];
+		var theName = strings[x+1];
+		if ((theID.indexOf("ID:{") == 0) && (theName.indexOf("NAME:{") == 0))
+		{
+			theID = theID.substr(4, theID.length-5);
+			theName = theName.substr(6, theName.length-7);
+			dump("Paste  ID: " + theID + "    NAME: " + theName + "\n");
+
+			var IDRes = RDF.GetResource(theID);
+			if (!IDRes)	continue;
+
+			if (theName != "")
+			{
+				var NameLiteral = RDF.GetLiteral(theName);
+				if (NameLiteral)
+				{
+					Bookmarks.Assert(IDRes, nameRes, NameLiteral, true);
+				}
+			}
+
+			if (isContainerFlag == true)
+			{
+				RDFC.AppendElement(IDRes);
+				dump("Appended node onto end of container\n");
+			}
+			else
+			{
+				RDFC.InsertElementAt(IDRes, pasteNodeIndex++, false);	// XXX should probably be true
+				dump("Pasted at index # " + pasteNodeIndex + "\n");
+			}
+		}
+	}
+
+	var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+	if (remote)
+	{
+		remote.Flush();
+		dump("Wrote out bookmark changes.\n");
+	}
 
 	return(true);
 }
 
 
 
-function doDelete()
+function doDelete(promptFlag)
 {
 	var treeNode = document.getElementById("bookmarksTree");
 	if (!treeNode)    return(false);
@@ -129,8 +237,11 @@ function doDelete()
 
 	dump("# of Nodes selected: " + select_list.length + "\n\n");
 
-	var ok = confirm("Delete the selected bookmark(s)?");
-	if (!ok)	return(false);
+	if (promptFlag == true)
+	{
+		var ok = confirm("Delete the selected bookmark(s)?");
+		if (!ok)	return(false);
+	}
 
 	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
