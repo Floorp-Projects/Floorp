@@ -41,16 +41,12 @@
 // What to load in a new tab: 0 = blank, 1 = homepage, 2 = last page
 pref("browser.tabs.startPage", 0);
 
-pref("print.use_global_printsettings", true);
-
 // Pick some reasonable OS X default fonts
 pref("font.name.serif.x-western", "Lucida Grande");
 pref("font.name.sans-serif.x-western", "Lucida Grande");
 pref("font.size.variable.x-western", 15);
 pref("font.size.fixed.x-western", 12);
 pref("font.size.minimum-size.x-western", 10);
-
-pref("nglayout.initialpaint.delay", 250);
 
 // turn on universal character detection
 pref("intl.charset.detector", "universal_charset_detector");
@@ -65,7 +61,6 @@ pref("chimera.log_js_to_console", true);
 pref("general.useragent.vendor", "Camino");
 pref("general.useragent.vendorSub", "0.7+");
 
-pref("network.dir.generate_html", true);
 pref("browser.chrome.favicons", true);
 
 // Default to auto download enabled but auto helper dispatch disabled
@@ -73,3 +68,6 @@ pref("browser.download.autoDownload", true);
 pref("browser.download.autoDispatch", false);
 
 pref("chimera.enable_rendezvous", true);
+
+// set typeahead find to search all text by default
+pref("accessibility.typeaheadfind.linksonly", false);
