@@ -1,8 +1,0 @@
-#!/bin/sh
-dirs="/usr/share/fonts /usr/X11R6/lib/X11/fonts"
-for d in $dirs; do
-    find $d \( -name '*.[Tt][Tt][Ff]' -o -name '*.[Pp][Ff][BbAa]' \) -print
-done | while read f; do
-	dir=`dirname $f`
-	echo $dir
-done | sort -u | sed 's/^/	<dir>/' | sed 's;$;</dir>;'
