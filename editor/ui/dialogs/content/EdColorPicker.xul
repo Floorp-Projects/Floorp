@@ -45,7 +45,7 @@
   <keyset id="dialogKeys"/>
   <hbox id="TableOrCellGroup" align="center" collapsed="true">
     <label value="&background.label;"/>
-    <radiogroup id="1" orient="horizontal">
+    <radiogroup id="CellOrTableGroup" orient="horizontal">
       <radio id="TableRadio" label="&table.label;"/>
       <radio id="CellRadio"  label="&cell.label;"/>
   </radiogroup>

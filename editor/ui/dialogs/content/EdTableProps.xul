@@ -55,7 +55,7 @@
 
       <!-- TABLE PANEL -->
       <vbox id="TablePanel">
-        <groupbox><caption label="&size.label;"/>
+        <groupbox orient="horizontal"><caption label="&size.label;"/>
           <grid>
             <columns><column/><column/></columns>
             <rows>
@@ -79,6 +79,7 @@
                 <menulist id="TableWidthUnits"/>
               </row>
             </rows>
+            <!-- KEEP GRID LAYOUT here since we will be adding back support for table HEIGHT via CSS -->
           </grid>
         </groupbox>
         <groupbox><caption label="&tableBorderSpacing.label;"/>
@@ -143,7 +144,7 @@
 
       <!-- CELL PANEL -->
       <vbox id="CellPanel">
-        <groupbox align="center">
+        <groupbox orient="horizontal" align="center">
           <caption label="&cellSelection.label;"/>
           <vbox>
             <menulist id="SelectionList" oncommand="ChangeSelection(event.target.value)" flex="1">

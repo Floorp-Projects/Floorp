@@ -35,7 +35,7 @@
         onload = "Startup()"
         onfocus = "onFocus()"
         ondialogaccept = "return onAccept();"
-        ondialogcancel = "return Unload();">
+        ondialogcancel = "return onClose();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>

@@ -27,7 +27,7 @@
 <!ENTITY ListType.label "List Type">
 <!ENTITY bulletStyle.label "Bullet Style:">
 <!ENTITY startingNumber.label "Start at:">
-<!ENTITY startingHelp.label "E.g.: use &quot;2&quot; to start at<html:br/>2, II, ii, B, or b">
+<!ENTITY startingHelp.label "E.g.: use &quot;2&quot; to start at 2, II, ii, B, or b">
 <!ENTITY none.value "None">
 <!ENTITY bulletList.value "Bullet (Unnumbered) List">
 <!ENTITY numberList.value "Numbered List">

@@ -23,8 +23,8 @@
 
 <!-- Window title -->
 <!ENTITY windowTitle.label "Convert To Table">
-<!--LOCALIZATION NOTE Don't translate <html:br/>  Place where needed to control linebreaks in message -->
-<!ENTITY instructions.label    "Composer creates a new table row<html:br/>for each paragraph in the selection.<html:br/><html:br/>Choose the character used<html:br/>to separate the selection into columns:">
+<!ENTITY instructions1.label   "Composer creates a new table row for each paragraph in the selection.">
+<!ENTITY instructions2.label   "Choose the character used to separate the selection into columns:">
 <!ENTITY commaRadio.label      "Comma">
 <!ENTITY spaceRadio.label      "Space">
 <!ENTITY otherRadio.label      "Other Character:">

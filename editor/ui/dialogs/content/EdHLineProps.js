@@ -46,6 +46,7 @@ function Startup()
   gDialog.leftAlign = document.getElementById("leftAlign");
   gDialog.centerAlign = document.getElementById("centerAlign");
   gDialog.rightAlign = document.getElementById("rightAlign");
+  gDialog.alignGroup = gDialog.rightAlign.radioGroup;
   gDialog.shading = document.getElementById("3dShading");
   gDialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
 
@@ -83,12 +84,24 @@ function InitDialog()
   gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
 
   align = globalElement.getAttribute("align");
-  if (align)
-    align = align.toLowerCase();
+  if (!align)
+    align = "";
+  align = align.toLowerCase();
 
-  gDialog.centerAlign.checked = (align == "center" || !align);
-  gDialog.rightAlign.checked  = (align == "right");
-  gDialog.leftAlign.checked   = (align == "left");
+  var selectedRadio = gDialog.centerAlign;
+  var radioGroup = gDialog.centerAlign.radioGroup
+  switch (align)
+  {
+    case "left":
+      gDialog.alignGroup.selectedItem = gDialog.leftAlign;
+      break;
+    case "right":
+      gDialog.alignGroup.selectedItem = gDialog.rightAlign;
+      break;
+    default:
+      gDialog.alignGroup.selectedItem = gDialog.centerAlign;
+      break;
+  }
 
   // This is tricky! Since the "noshade" attribute doesn't always have a value,
   //  we can't use getAttribute to figure out if it's set!
@@ -170,10 +183,10 @@ function ValidateData()
     return false;
 
   align = "left";
-  if (gDialog.centerAlign.checked) {
+  if (gDialog.centerAlign.selected) {
     // Don't write out default attribute
     align = "";
-  } else if (gDialog.rightAlign.checked) {
+  } else if (gDialog.rightAlign.selected) {
     align = "right";
   }
   if (align)

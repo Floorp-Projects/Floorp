@@ -62,7 +62,7 @@ function BuildHTMLAttributeNameList()
         var popup = gDialog.AddHTMLAttributeNameInput.firstChild;
         if (popup)
         {
-          var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
+          var sep = document.createElementNS(XUL_NS, "menuseparator");
           if (sep)
             popup.appendChild(sep);
         }        
@@ -246,7 +246,7 @@ function onInputHTMLAttributeName()
             var popup = gDialog.AddHTMLAttributeValueInput.firstChild;
             if (popup)
             {
-              var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
+              var sep = document.createElementNS(XUL_NS, "menuseparator");
               if (sep)
                 popup.appendChild(sep);
             }        

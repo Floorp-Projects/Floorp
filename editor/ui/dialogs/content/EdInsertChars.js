@@ -71,11 +71,10 @@ function onAccept()
   CategoryGroup.setAttribute("category", category);
   CategoryGroup.setAttribute("letter_index", indexL);
   CategoryGroup.setAttribute("char_index", indexM);
-  return true;
+  
+  // Don't close the dialog
+  return false;
 }
-
-  // Return true only for modal window
-  //return true;
 
 // Don't allow inserting in HTML Source Mode
 function onFocus()
@@ -87,10 +86,11 @@ function onFocus()
   SetElementEnabledById("ok", enable);
 }
 
-function Unload()
+function onClose()
 {
   window.opener.InsertCharWindow = null;
   SaveWindowLocation();
+  return true;
 }
 
 //------------------------------------------------------------------
@@ -141,24 +141,24 @@ function StartupLatin()
   switch (category)
   {
     case "AccentUpper": // Uppercase Diacritical
-      AccentUpper.checked = true;
+      CategoryGroup.selectedItem = AccentUpper;
       indexM_AU = indexM;
       break;
     case "AccentLower": // Lowercase Diacritical
-      AccentLower.checked = true;
+      CategoryGroup.selectedItem = AccentLower;
       indexM_AL = indexM;
       break;
     case "Upper": // Uppercase w/o Diacritical
-      Upper.checked = true;
+      CategoryGroup.selectedItem = Upper;
       indexM_U = indexM;
       break;
     case "Lower": // Lowercase w/o Diacritical
-      Lower.checked = true;
+      CategoryGroup.selectedItem = Lower;
       indexM_L = indexM;
       break;
     default:
       category = "Symbol";
-      Symbol.checked = true;
+      CategoryGroup.selectedItem = Symbol;
       indexM_S = indexM;
       break;
   }

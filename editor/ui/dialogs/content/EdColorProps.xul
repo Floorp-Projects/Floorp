@@ -47,7 +47,7 @@
 
   <groupbox align="start">
     <caption label="&pageColors.label;"/>
-    <radiogroup id="pageColorGroup">
+    <radiogroup id="PageColorGroup">
       <radio id="DefaultColorsRadio" label="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
         tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />
       <radio id="CustomColorsRadio" label="&customColorsRadio.label;" oncommand="UseCustomColors()"
