@@ -106,6 +106,10 @@ function ValidateNumberString(value, minValue, maxValue)
     message = ((message.replace(/%n%/,number)).replace(/%min%/,minValue)).replace(/%max%/,maxValue);
     ShowInputErrorMessage(message);
   }
+  else
+  {
+    dump("ValidateNumberString ERROR -- No string supplied: value = "+value+"\n");
+  }
   // Return an empty string to indicate error
   return "";
 }
@@ -560,14 +564,6 @@ function GetTreelistValueAt(tree, index)
   return "";
 }
 
-
-// USE onkeyup!
-// forceInteger by petejc (pete@postpagan.com)
-
-// No one likes the beep!
-//var sysBeep = Components.classes["@mozilla.org/sound;1"].createInstance();
-//sysBeep     = sysBeep.QueryInterface(Components.interfaces.nsISound);
-
 function forceInteger(elementID)
 {
   var editField = document.getElementById( elementID );
@@ -981,6 +977,8 @@ function GetDefaultBrowserColors()
   var prefs = GetPrefs();
   var colors = new Object();
   var useWinColors = false;
+  colors.TextColor = 0;
+  colors.BackgroundColor = 0;
   if (navigator.appVersion.indexOf("Win") != -1)
   {
     // In Windows only, there's a pref to use system colors instead of pref colors
