@@ -416,23 +416,35 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 
     if(NS_FAILED(rv))
       return rv;
-    
-    // Check if docshell is currently loading a document.
-    // If so, this request from JS is probably part of a onload 
-    // handler or a simple script tag with a 
-    // location.href="new location" for redirection. 
-    // In such a case, request a replace load, so that
-    // the new url will replace the existing url in SH. 
-    // NOTE: this will not be the case if a event handler had a
-    // location.href  in it or a JS timer went off well after
-    // the current document is loaded. In such cases, we will 
-    // append the new url to SH.
-    // This solution is tricky. Hopefully it isn't going to bite
-    // anywhere else. This is part of solution for bug # 39938
-    PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-    mDocShell->GetBusyFlags(&busyFlags);
+     
+    /* Check with the scriptContext if it is currently processing a script tag.
+     * If so, this must be a <script> tag with a location.href in it.
+     * we want to do a replace load, in such a situation. 
+     * In other cases, for example if a event handler or a JS timer
+     * had a location.href in it, we want to do a normal load,
+     * so that the new url will be appended to Session History.
+     * This solution is tricky. Hopefully it isn't going to bite
+     * anywhere else. This is part of solution for bug # 39938, 72197
+     * 
+     */
+    PRBool inScriptTag=PR_FALSE;
+    // Get JSContext from stack.
+    nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
 
-    if (aReplace || (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)) {
+    if (stack) {
+      JSContext *cx;
+
+      result = stack->Peek(&cx);
+      if (cx) {
+        nsIScriptContext* scriptCX = (nsIScriptContext*)JS_GetContextPrivate(cx);
+       
+        if (scriptCX) {
+          scriptCX->GetProcessingScriptTag(&inScriptTag);
+        }  
+      } //cx
+    }  // stack
+
+    if (aReplace ||  inScriptTag) {
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
     }
 
@@ -732,14 +744,13 @@ LocationImpl::Replace(const nsAReadableString& aUrl)
 
   // Get JSContext from stack.
   nsCOMPtr<nsIJSContextStack>
-    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
+  stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
 
   if (stack) {
     JSContext *cx;
 
     rv = stack->Peek(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
-
     if (cx) {
       return SetHrefWithContext(cx, aUrl, PR_TRUE);
     }

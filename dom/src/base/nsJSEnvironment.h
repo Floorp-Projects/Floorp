@@ -104,6 +104,9 @@ public:
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled);
   NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
 
+  NS_IMETHOD GetProcessingScriptTag(PRBool * aResult);
+  NS_IMETHOD SetProcessingScriptTag(PRBool  aResult);
+
 protected:
   nsresult InitClasses();
   nsresult InitializeExternalClasses();
@@ -124,6 +127,7 @@ private:
 
   PRUint32 mBranchCallbackCount;
   PRUint32 mDefaultJSOptions;
+  PRBool mProcessingScriptTag;
 
   static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
 
