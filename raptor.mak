@@ -128,6 +128,8 @@ pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_raptor
 
 pull_lizard:
 	@cd $(MOZ_SRC)\.
+	$(CVSCO_LIZARD) ns/LICENSE
+	$(CVSCO_LIZARD) ns/LEGAL
 	$(CVSCO_LIZARD) ns/config
 	$(CVSCO_LIZARD) ns/lib/liblayer
 	$(CVSCO_LIZARD) ns/modules/zlib
@@ -137,7 +139,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) ns/nav-java
 	$(CVSCO_LIZARD) ns/js
 	$(CVSCO_LIZARD) ns/modules/security/freenav
-	$(CVSCO_LIZARD) ns/modules/libpref
+	$(CVSCO_XPCOM) ns/modules/libpref
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
