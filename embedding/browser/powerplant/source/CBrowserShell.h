@@ -179,14 +179,14 @@ protected:
     virtual void            LeaveDropArea( DragReference inDragRef );
     virtual void            DoDragReceive( DragReference inDragRef );
 
-    NS_METHOD               OnShowContextMenu(PRUint32 aContextFlags,
+    NS_IMETHOD              OnShowContextMenu(PRUint32 aContextFlags,
                                               nsIDOMEvent *aEvent,
                                               nsIDOMNode *aNode);
                                               
-    NS_METHOD               OnShowTooltip(PRInt32 aXCoords,
+    NS_IMETHOD              OnShowTooltip(PRInt32 aXCoords,
                                           PRInt32 aYCoords,
                                           const PRUnichar *aTipText);
-    NS_METHOD               OnHideTooltip();
+    NS_IMETHOD              OnHideTooltip();
                                               
                                               
    NS_METHOD                CommonConstruct();
