@@ -326,7 +326,12 @@ public:
                                  PRUint32  aVFlags,
                                  PRInt32   aHOffsetPercent, 
                                  PRUint32  aHFlags) const;
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+  NS_IMETHOD DoCopy();
+#else
   NS_IMETHOD DoCopy(nsISelectionMgr* aSelectionMgr);
+#endif
 
   //nsIViewObserver interface
 
@@ -1542,6 +1547,83 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   return rv;
 }
 
+
+
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+// New way
+NS_IMETHODIMP
+PresShell::DoCopy()
+{
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(getter_AddRefs(doc));
+  if (doc) {
+    nsString buffer;
+    
+    nsIDOMSelection* sel = nsnull;
+    GetSelection(&sel);
+      
+    if (sel != nsnull)
+      doc->CreateXIF(buffer,sel);
+    NS_IF_RELEASE(sel);
+
+    // Get the Clipboard
+    nsIClipboard* clipboard;
+    nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                               kIClipboardIID,
+                                               (nsISupports **)&clipboard);
+
+    if (NS_OK == rv) {
+
+      // Create a data flavor to tell the transferable 
+      // that it is about to receive XIF
+      nsIDataFlavor * flavor;
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, 
+                                              nsnull, 
+                                              kIDataFlavorIID, (void**) &flavor);
+      if (NS_OK == rv) {
+        // Initialize data flavor to XIF
+        flavor->Init(kXIFMime, "XIF");
+
+        // Create a transferable for putting data on the Clipboard
+        nsITransferable * trans;
+        rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                                kITransferableIID, (void**) &trans);
+        if (NS_OK == rv) {
+          // The data on the clipboard will be in "XIF" format
+          // so give the clipboard transferable a "XIFConverter" for 
+          // converting from XIF to other formats
+          nsIFormatConverter * xifConverter;
+          rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
+                                                  kIFormatConverterIID, (void**) &xifConverter);
+          if (NS_OK == rv) {
+            // Add the XIF DataFlavor to the transferable
+            // this tells the transferable that it can handle receiving the XIF format
+            trans->AddDataFlavor(flavor);
+
+            // Add the converter for going from XIF to other formats
+            trans->SetConverter(xifConverter);
+
+            // Now add the XIF data to the transferable
+            trans->SetTransferData(flavor, buffer.ToNewCString(), buffer.Length());
+
+            // put the transferable on the clipboard
+            clipboard->SetData(trans, nsnull);
+
+            NS_IF_RELEASE(xifConverter);
+          }
+          NS_IF_RELEASE(trans);
+        }
+        NS_IF_RELEASE(flavor);
+      }
+      NS_IF_RELEASE(clipboard);
+    }
+  }
+  return NS_OK;
+}
+#else
+
+// Old SelectionMgr implementation.
 NS_IMETHODIMP
 PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
 {
@@ -1557,8 +1639,6 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       doc->CreateXIF(buffer,sel);
     NS_IF_RELEASE(sel);
 
-////////////////////////// Old Way
-#ifndef NEW_CLIPBOARD_SUPPORT 
     nsIParser* parser;
 
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -1605,60 +1685,12 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
     NS_IF_RELEASE(sink);
     NS_RELEASE(parser);
 
-#else  /////////////////////////// New Way
-    // Put XIF into transferable
-
-    // Get the Clipboard
-    nsIClipboard* clipboard;
-    nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                               kIClipboardIID,
-                                               (nsISupports **)&clipboard);
-
-    if (NS_OK == rv) {
-
-      // Create a data flavor to tell the transferable 
-      // that it is about to receive XIF
-      nsIDataFlavor * flavor;
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
-      if (NS_OK == rv) {
-        // Initialize data flavor to XIF
-        flavor->Init(kXIFMime, "XIF");
-
-        // Create a transferable for putting data on the Clipboard
-        nsITransferable * trans;
-        rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
-        if (NS_OK == rv) {
-          // The data on the clipboard will be in "XIF" format
-          // so give the clipboard transferable a "XIFConverter" for 
-          // converting from XIF to other formats
-          nsIFormatConverter * xifConverter;
-          rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, kIFormatConverterIID, (void**) &xifConverter);
-          if (NS_OK == rv) {
-            // Add the XIF DataFlavor to the transferable
-            // this tells the transferable that it can handle receiving the XIF format
-            trans->AddDataFlavor(flavor);
-
-            // Add the converter for going from XIF to other formats
-            trans->SetConverter(xifConverter);
-
-            // Now add the XIF data to the transferable
-            trans->SetTransferData(flavor, buffer.ToNewCString(), buffer.Length());
-
-            // put the transferable on the clipboard
-            clipboard->SetData(trans, nsnull);
-
-            NS_IF_RELEASE(xifConverter);
-          }
-          NS_IF_RELEASE(trans);
-        }
-        NS_IF_RELEASE(flavor);
-      }
-      NS_IF_RELEASE(clipboard);
-    }
-#endif
   }
   return NS_OK;
 }
+
+#endif  // NEW_CLIPBOARD_SUPPORT
+
 
 NS_IMETHODIMP
 PresShell::ContentChanged(nsIDocument *aDocument,

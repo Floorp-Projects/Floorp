@@ -929,7 +929,7 @@ nsBrowserAppCore::Copy()
 #ifdef NEW_CLIPBOARD_SUPPORT
   nsIPresShell * presShell = GetPresShellFor(mContentAreaWebShell);
   if (nsnull != presShell) {
-    presShell->DoCopy(nsnull);
+    presShell->DoCopy();
   }
 #endif
 

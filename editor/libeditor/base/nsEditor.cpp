@@ -40,7 +40,9 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsICaret.h"
+#ifndef NEW_CLIPBOARD_SUPPORT
 #include "nsISelectionMgr.h"
+#endif
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -70,8 +72,6 @@
 #include "nsIView.h"
 // END
 #endif
-
-//#define NEW_CLIPBOARD_SUPPORT
 
 #ifdef NEW_CLIPBOARD_SUPPORT
 
@@ -836,12 +836,15 @@ NS_IMETHODIMP nsEditor::Cut()
   return res;
 }
 
+#ifndef NEW_CLIPBOARD_SUPPORT
 extern "C" NS_EXPORT nsISelectionMgr* GetSelectionMgr();
+#endif
 
 NS_IMETHODIMP nsEditor::Copy()
 {
   //printf("nsEditor::Copy\n");
 
+#ifndef NEW_CLIPBOARD_SUPPORT
   // Get the nsSelectionMgr:
   // XXX BWEEP BWEEP TEMPORARY!
   // The selection mgr needs to be a service.
@@ -857,6 +860,10 @@ NS_IMETHODIMP nsEditor::Copy()
 
   //NS_ADD_REF(theSelectionMgr);
   return mPresShell->DoCopy(selectionMgr);
+#else
+  return mPresShell->DoCopy();
+#endif
+
 }
 
 NS_IMETHODIMP nsEditor::Paste()
