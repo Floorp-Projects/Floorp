@@ -87,16 +87,6 @@ jclass JavaSession::getClass(const char* className)
 	JNIEnv* env = getEnv();
 	jclass result = env->FindClass(className);
 	if (result == NULL) throw OSStatusException(fnfErr);
-/*	if (result == NULL) {
-		Str255 pClassName;
-		c2p(className, pClassName);
-		Handle classHandle = ::GetNamedResource(ClassResType, pClassName);
-		if (classHandle != NULL) {
-			::HLock(classHandle);
-			result = env->DefineClass(className, NULL, (signed char*)*classHandle, ::GetHandleSize(classHandle));
-			::ReleaseResource(classHandle);
-		}
-	} */
 	return result;
 }
 
