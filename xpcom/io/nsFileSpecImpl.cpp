@@ -378,7 +378,7 @@ NS_IMETHODIMP nsFileSpecImpl::Touch()
 {
 	// create an empty file, like the UNIX touch command.
 	nsresult rv;
-	rv = OpenStreamForReadingAndWriting();
+	rv = OpenStreamForWriting();
 	if (NS_FAILED(rv)) return rv;
 	rv = CloseStream();
 	return rv;
