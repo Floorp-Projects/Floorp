@@ -99,5 +99,38 @@
       <xul:image class="tree-header-sortdirection"/>
     </content>
   </binding>
+
+  <binding id="listbox" extends="xul:tree">
+    <content>
+      <xul:cols>
+        <xul:col flex="1"/>
+      </xul:cols>
+      <xul:treerows>
+        <xul:treerows>
+          <children includes="listhead"/>
+          <xul:treechildren>
+            <children/>
+          </xul:treechildren>
+        </xul:treerows>
+      </xul:treerows> 
+    </content>    
+  </binding>
+
+  <binding id="listhead" extends="xul:treehead">
+    <content>
+      <xul:treerow>
+        <xul:treecell inherits="value" class="listcell-header"/>
+      </xul:treerow>
+    </content>
+  </binding>
+
+  <binding id="listitem" extends="xul:treeitem">
+    <content>
+      <xul:treerow>
+        <xul:treecell inherits="value" class="listcell-text"/>
+      </xul:treerow>
+    </content>
+  </binding>
+
 </bindings>
 
