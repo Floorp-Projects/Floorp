@@ -27,7 +27,7 @@
 #       Otherwise, use $TOPSRCDIR/.mozconfig
 #       Otherwise, use $HOME/.mozconfig
 #
-topsrcdir=`cd \`dirname $0\`/../..; pwd`
+topsrcdir=$1
 
 for _config in $MOZCONFIG \
                $MOZ_MYCONFIG \

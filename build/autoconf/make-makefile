@@ -22,7 +22,7 @@
 # make-makefiles - Quickly create Makefiles for subdirectories.
 #      Also, creates any needed subdirectories.
 #
-# usage: make-makefiles [ -d <depth> ] [ <subdir> | <subdir>/Makefile ] ...
+# usage: make-makefiles [ -t <topsrcdir> -d <depth> ] [ <subdir> | <subdir>/Makefile ] ...
 
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
@@ -30,7 +30,7 @@
 
 # Determine various tree path variables
 #
-($depth, @makefiles) = parse_arguments(@ARGV);
+($topsrcdir, $depth, @makefiles) = parse_arguments(@ARGV);
 
 $object_fullpath = `pwd`;
 chdir $depth;
@@ -57,7 +57,7 @@ create_directories(@makefiles);
 # Find the path to the source directory based on how 'make-makefile'
 #  was invoked. The path is either relative to the object directory
 #  or an absolute path.
-$given_srcdir = find_srcdir($0, $depth);
+$given_srcdir = find_srcdir($topsrcdir, $depth);
 
 if ($debug) {
   warn "object_fullpath = $object_fullpath\n";
@@ -94,13 +94,28 @@ sub find_depth {
 sub parse_arguments {
   my @args = @_;
   my $depth = '';
+  my $topsrcdir = '';
   my @makefiles = ();
 
-  if ($args[0] eq '-d') {
-    $depth = $args[1];
-    shift @args; 
-    shift @args; 
-  } else {
+  while (1) {
+    if ($args[0] eq '-d') {
+      $depth = $args[1];
+      shift @args; 
+      shift @args; 
+    } elsif ($args[0] eq '-t') {
+      $topsrcdir = $args[1];
+      shift @args; 
+      shift @args; 
+    } else {
+      last;
+    }
+  }
+
+  if ($topsrcdir eq '') {
+    $topsrcdir = $0; # Figure out topsrcdir based on program name.
+    $topsrcdir =~ s|/?build/autoconf/.*$||;
+  }
+  if ($depth eq '') {
     # Use $(DEPTH) in the Makefile or Makefile.in to determine the depth
     if (-e "Makefile.in") {
       $depth = find_depth("Makefile.in");
@@ -127,7 +142,7 @@ sub parse_arguments {
   }
   @makefiles = "Makefile" unless @args;
 
-  return ($depth, @makefiles);
+  return ($topsrcdir, $depth, @makefiles);
 }
 
 
@@ -147,10 +162,7 @@ sub create_directories {
 # Find the top of the source directory
 # (Assuming that the executable is in $top_srcdir/build/autoconf)
 sub find_srcdir {
-  my ($program_name, $depth) = @_;
-
-  my $ac_given_srcdir = $program_name;
-  $ac_given_srcdir =~ s|/?build/autoconf/.*$||;
+  my ($ac_given_srcdir, $depth) = @_;
 
   if ($debug) {
     print "ac_given_srcdir = $ac_given_srcdir\n";
