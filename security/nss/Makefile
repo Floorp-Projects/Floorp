@@ -167,5 +167,7 @@ nss_RelEng_bld: build_coreconf import all
 ifeq ($(OS_ARCH),SunOS)
 solarispkg:
 	@echo Making Solaris packages.
-	$(MAKE) -C pkg/solaris publish
+	rm -rf pkg/$(OBJDIR)
+	cp -r pkg/solaris pkg/$(OBJDIR)
+	$(MAKE) -C pkg/$(OBJDIR) publish
 endif
