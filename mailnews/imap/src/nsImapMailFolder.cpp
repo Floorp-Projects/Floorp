@@ -2919,6 +2919,7 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
 			}
 		}
 	}
+	PR_FREEIF(progressMsg);
 
     return NS_OK;
 }
