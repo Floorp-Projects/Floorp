@@ -730,7 +730,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     nsRect drawrect(1, 1, rect.width, rect.height);
     aRenderingContext.DrawRect(drawrect );
     SelectionDetails *deletingDetails = details;
-    while((deletingDetails = details->mNext)){
+    while((deletingDetails = details->mNext) != nsnull) { 
       delete details;
       details = deletingDetails;
     }
