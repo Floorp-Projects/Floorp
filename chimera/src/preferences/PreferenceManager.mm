@@ -72,11 +72,11 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     if ((self = [super init])) {
         if ([self initInternetConfig] == NO) {
             // XXXw. throw here
-            NSLog (@"Failed to initialize Internet Config.\n");
+            NSLog (@"Failed to initialize Internet Config");
         }
         if ([self initMozillaPrefs] == NO) {
             // XXXw. throw here too
-            NSLog (@"Failed to initialize mozilla prefs.\n");
+            NSLog (@"Failed to initialize mozilla prefs");
         }
         
         mDefaults = [NSUserDefaults standardUserDefaults];
@@ -100,7 +100,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     error = ICStart (&mInternetConfig, 'CHIM');
     if (error != noErr) {
         // XXX throw here?
-        NSLog(@"Error initializing IC.\n");
+        NSLog(@"Error initializing IC");
         return NO;
     }
     return YES;
@@ -143,7 +143,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     NS_ASSERTION(provider, "Failed to create AppDirServiceProvider");
     rv = NS_InitEmbedding(binDir, provider);
     if (NS_FAILED(rv)) {
-      printf("Embedding init failed.\n");
+      NSLog(@"Embedding init failed.");
       return NO;
     }
     
@@ -353,19 +353,19 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
     do {
         if ((buf = malloc ((unsigned int)size)) == NULL) {
-            NSLog (@"malloc failed in [PreferenceManager getICStringPref].");
+            NSLog (@"malloc failed in [PreferenceManager getICStringPref]");
             return nil;
         }
         error = ICGetPref (mInternetConfig, prefKey, &dummy, buf, &size);
         if (error != noErr && error != icTruncatedErr) {
             free (buf);
-            NSLog (@"[IC error %d in [PreferenceManager getICStringPref].\n", (int) error);
+            NSLog (@"[IC error %d in [PreferenceManager getICStringPref]", (int) error);
             return nil;
         }
         size *= 2;
     } while (error == icTruncatedErr);
     if (*buf == 0) {
-        NSLog (@"ICGetPref returned empty string.");
+        NSLog (@"ICGetPref returned empty string");
         free (buf);
         return nil;
     }
