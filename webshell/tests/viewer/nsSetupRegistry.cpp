@@ -49,6 +49,8 @@
 
 #include "nsISound.h"
 #include "nsIFileSpecWithUI.h"
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
 
 #if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
 #include "nsIUnixToolkitService.h"
@@ -67,6 +69,7 @@
     #define PLUGIN_DLL "gkplugin.dll"
     #define CAPS_DLL   "caps.dll"
     #define LIVECONNECT_DLL    "jsj3250.dll"
+    #define APPSHELL_DLL       "appshell.dll"
     #define OJI_DLL    "oji.dll"
 #elif defined(XP_MAC)
     #define WIDGET_DLL    "WIDGET_DLL"
@@ -75,6 +78,7 @@
     #define WEB_DLL            "WEB_DLL"
     #define DOM_DLL        "DOM_DLL"
     #define PLUGIN_DLL    "PLUGIN_DLL"
+    #define APPSHELL_DLL  "APPSHELL_DLL"
     #define CAPS_DLL    "CAPS_DLL"
     #define LIVECONNECT_DLL "LIVECONNECT_DLL"
     #define OJI_DLL        "OJI_DLL"
@@ -93,6 +97,7 @@
     #define WEB_DLL    "libraptorwebwidget"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
     #define PLUGIN_DLL "libraptorplugin"MOZ_DLL_SUFFIX
+    #define APPSHELL_DLL "libnsappshell"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
     #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
     #define OJI_DLL    "liboji"MOZ_DLL_SUFFIX
@@ -164,6 +169,7 @@ static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 // PLUGIN
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 // OJI
 #ifdef OJI
@@ -354,6 +360,12 @@ NS_SetupRegistry()
   // PLUGIN
   nsComponentManager::RegisterComponentLib(kCPluginHostCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+
+  // prefs requires nsFileLocator... which is implemented in appshell.
+  // xpfe's nsSetupRegistry registers nsFileLocator, and includes
+  // *this* nsSetupRegistry, so the component will be registered
+  // twice.
+  nsComponentManager::RegisterComponentLib(kFileLocatorCID,      NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 #ifdef OJI
   nsComponentManager::RegisterComponentLib(kCLiveconnectCID, "LiveConnect", "component://netscape/javascript/liveconnect", LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
