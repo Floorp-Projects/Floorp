@@ -34,6 +34,13 @@
 
 #include "mcom_db.h"
 
+#define CHECK_INIT  \
+    if (!m_pDB)     \
+    {               \
+        nsDiskModule* pThis = (nsDiskModule*) this; \
+        PR_ASSERT(pThis->InitDB());    \
+    }
+
 //
 // Constructor: nsDiskModule
 //
@@ -89,12 +96,8 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
 
 PRBool nsDiskModule::Contains(nsCacheObject* io_pObject) const
 {
-    if (!m_pDB)
-    {
-        nsDiskModule* pThis = (nsDiskModule*) this;
-        pThis->InitDB();
-    }
 
+    CHECK_INIT;
     if (!m_pDB || !io_pObject)
         return PR_FALSE;
 
@@ -109,11 +112,8 @@ PRBool nsDiskModule::Contains(nsCacheObject* io_pObject) const
 
 PRBool nsDiskModule::Contains(const char* i_url) const
 {
-    if (!m_pDB)
-    {
-        nsDiskModule* pThis = (nsDiskModule*) this;
-        pThis->InitDB();
-    }
+
+    CHECK_INIT;
 
     if (!m_pDB || !i_url || !*i_url)
         return PR_FALSE;
@@ -136,11 +136,7 @@ void nsDiskModule::GarbageCollect(void)
 
 nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
 {
-    if (!m_pDB)
-    {
-        nsDiskModule* pThis = (nsDiskModule*) this;
-        pThis->InitDB();
-    }
+    CHECK_INIT;
 
     if (!m_pDB)
         return 0;
@@ -150,11 +146,7 @@ nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
 
 nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
 {
-    if (!m_pDB)
-    {
-        nsDiskModule* pThis = (nsDiskModule*) this;
-        pThis->InitDB();
-    }
+    CHECK_INIT;
 
     if (!m_pDB || !i_url || !*i_url)
         return 0;
@@ -206,6 +198,8 @@ PRBool nsDiskModule::InitDB(void)
     {
         while(!(status = (*m_pDB->seq) (m_pDB, &key, &data, R_NEXT)))
         {
+            /* Also validate the corresponding file here */
+            //TODO
             m_Entries++;
         }
     }
@@ -218,16 +212,24 @@ PRBool nsDiskModule::InitDB(void)
 
 PRBool nsDiskModule::Remove(const char* i_url)
 {
+    CHECK_INIT;
+    //TODO
+    // Also remove the file corresponding to this item. 
     return PR_FALSE;
 }
 
 PRBool nsDiskModule::Remove(const PRUint32 i_index)
 {
+    CHECK_INIT;
+    //TODO
+    // Also remove the file corresponding to this item. 
     return PR_FALSE;
 }
 
 PRBool nsDiskModule::Revalidate(void)
 {
+    CHECK_INIT;
+    //TODO - This will add a dependency on HTTP lib
     return PR_FALSE;
 }
 

@@ -21,7 +21,7 @@
 
 #include "nsCacheModule.h"
 #include "nsCacheTrace.h"
-
+#include "nsCacheIterator.h"
 
 /* 
  * nsCacheModule
@@ -38,6 +38,7 @@ nsCacheModule::nsCacheModule(const PRUint32 i_size=DEFAULT_SIZE):
     m_pNext(0),
     m_Entries(0)
 {
+    m_pIterator = new nsCacheIterator(this);
 }
 
 nsCacheModule::~nsCacheModule()
@@ -47,10 +48,30 @@ nsCacheModule::~nsCacheModule()
         delete m_pNext;
         m_pNext = 0;
     }
+    if (m_pIterator)
+    {
+        delete m_pIterator;
+        m_pIterator = 0;
+    }
+    if (m_pEnumeration)
+    {
+        delete m_pEnumeration;
+        m_pEnumeration = 0;
+    }
 }
 
 void nsCacheModule::GarbageCollect(void) 
 {
+}
+
+PRBool nsCacheModule::RemoveAll(void)
+{
+    PRBool status = PR_TRUE;
+    while (m_Entries > 0)
+    {
+        status &= Remove(--m_Entries);
+    }
+    return status;
 }
 
 const char* nsCacheModule::Trace() const

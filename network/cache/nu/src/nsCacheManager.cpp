@@ -166,7 +166,9 @@ nsCacheManager::Init()
 
     m_pFirstModule = new nsMemModule(nsCachePref::MemCacheSize());
     PR_ASSERT(m_pFirstModule);
-     //  m_pFirstModule->Next((new nsDiskModule(nsCachePref::DiskCacheSize()));
+    nsDiskModule* pTemp = new nsDiskModule(nsCachePref::DiskCacheSize());
+    PR_ASSERT(pTemp);
+    m_pFirstModule->Next(pTemp);
     m_pBkgThd = new nsCacheBkgThd(PR_SecondsToInterval(nsCachePref::BkgSleepTime()));
     PR_ASSERT(m_pBkgThd);
 }

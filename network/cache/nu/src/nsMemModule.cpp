@@ -150,11 +150,13 @@ nsMemCacheObject* nsMemModule::LastObject(void) const
 
 PRBool nsMemModule::Remove(const char* i_url)
 {
+    //TODO
     return PR_FALSE;
 }
 
 PRBool nsMemModule::Remove(const PRUint32 i_index)
 {
+    //TODO
     return PR_FALSE;
 }
 
@@ -162,17 +164,18 @@ void nsMemModule::GarbageCollect(void)
 {
     if (m_Entries > 0)
     {
+        nsEnumeration* pEnum = Enumeration();
         PRUint32 index = 0;
-        while (index < m_Entries)
+        while (pEnum->HasMoreElements())
         {
-            //TODO change the iteration 
-            nsCacheObject* pObj = GetObject(index);
+            nsCacheObject* pObj = (nsCacheObject*) pEnum->NextElement();
+            PR_ASSERT(pObj);
             if (pObj->IsExpired())
             {
                 PRBool status = Remove(index);
                 PR_ASSERT(status == PR_TRUE);
             }
-            --index;
+            ++index;
         }
     }
 }

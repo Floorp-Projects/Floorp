@@ -396,6 +396,7 @@ DEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prlog.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prthread.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
@@ -407,6 +408,7 @@ DEP_CPP_CBVIE=\
 	
 NODEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\mcom_db.h"\
+	"..\..\..\..\..\dist\public\cache\nsISupports.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\protypes.h"\
 	
 
@@ -428,9 +430,8 @@ DEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\nsMemModule.h"\
 	"..\..\..\..\..\dist\public\dbm\cdefs.h"\
 	"..\..\..\..\..\dist\public\dbm\mcom_db.h"\
-	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
-	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prlog.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prthread.h"\
 	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
@@ -446,7 +447,6 @@ NODEP_CPP_CBVIE=\
 	"..\..\..\..\..\dist\public\cache\nsISupports.h"\
 	"..\..\..\..\..\dist\public\dbm\prmacos.h"\
 	"..\..\..\..\..\dist\public\dbm\xp_mcom.h"\
-	"..\..\..\..\..\dist\win32_d.obj\include\protypes.h"\
 	
 
 "$(INTDIR)\cbView.obj" : $(SOURCE) $(DEP_CPP_CBVIE) "$(INTDIR)"\

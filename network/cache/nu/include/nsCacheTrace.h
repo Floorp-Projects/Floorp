@@ -28,25 +28,40 @@
 #	define CRLF "\r\n"
 #endif
 
-#include <xp_core.h>
-#include <xp_str.h>
+#include "prtypes.h"
+#include "prlog.h"
 
 class nsCacheTrace 
 {
 
 public:
-
+    static void Enable(PRBool bEnable);
+    static PRBool IsEnabled(void);
 	static void	Trace(const char* msg);
 	static void	Traceln(const char* msg);
 	static void Use(char* buffer);
 	static char* m_TraceBuffer;
 private:
 	nsCacheTrace();
+    static PRBool m_bEnabled;
 };
+
+inline
+void nsCacheTrace::Enable(PRBool bEnable)
+{
+    m_bEnabled = bEnable;
+}
+
+inline
+PRBool nsCacheTrace::IsEnabled(void)
+{
+    return m_bEnabled;
+}
 
 inline void nsCacheTrace::Trace(const char* msg) 
 {
-	printf(msg);
+	PR_ASSERT(msg);
+    //Do log stuff here TODO
 }
 
 inline void nsCacheTrace::Traceln(const char* msg)

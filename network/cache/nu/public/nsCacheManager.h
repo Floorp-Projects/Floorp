@@ -20,7 +20,7 @@
 #define _CacheManager_H_
 /* 
  * nsCacheManager
- * Designed and original implementation 
+ * Design and original implementation 
  * by Gagan Saksena 02/02/98
  * 
  */
