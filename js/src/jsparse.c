@@ -419,7 +419,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	return NULL;
 
 #if JS_HAS_LEXICAL_CLOSURE
-    if (!funAtom || cx->fp->scopeChain != parent || InWithStatement(tc)) {
+    if (!funAtom || InWithStatement(tc)) {
 	/* Don't name the function if enclosed by a with statement or equiv. */
 	fun = js_NewFunction(cx, NULL, NULL, 0, 0, cx->fp->scopeChain,
 			     funAtom);
@@ -2208,6 +2208,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSTokenType tt;
     JSParseNode *pn, *pn2, *pn3;
+    char *badWord;
 
 #if JS_HAS_SHARP_VARS
     JSParseNode *defsharp;
@@ -2437,11 +2438,11 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_IMPORT:
 #endif
       case TOK_RESERVED:
-	js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, JSMSG_RESERVED_ID,
-				    js_DeflateString(cx, ts->token.ptr,
-						     ts->token.pos.end.index -
-						     ts->token.pos.begin.index)
-				    );
+        badWord = js_DeflateString(cx, ts->token.ptr, 
+                    ts->token.pos.end.index - ts->token.pos.begin.index);
+	js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, 
+                                        JSMSG_RESERVED_ID, badWord);
+        JS_free(cx, badWord);
 	return NULL;
 
       case TOK_ERROR:
