@@ -199,7 +199,7 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
 #ifdef NS_DEBUG
-  printf("***  Libjar is being registered\n");
+  printf("*** Register libjar\n");
 #endif
 
   nsresult rv;
@@ -226,7 +226,7 @@ extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
 #ifdef NS_DEBUG
-  printf("*** Libjar is being unregistered\n");
+  printf("*** Unregister libjar\n");
 #endif
 
   nsresult rv;
