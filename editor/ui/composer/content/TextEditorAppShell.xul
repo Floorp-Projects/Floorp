@@ -343,16 +343,16 @@
   </menubar>
   
       <toolbar>
-		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="right" popup="ParagraphMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="right" popup="FontFaceMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="right" popup="FontSizeMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="left" popup="FontSizeMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
         <titledbutton id="BoldButton" value="&formatToolbar.boldChar;" onclick="EditorApplyStyle('b')">
 		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
         </titledbutton>
-	      <titledbutton id="ItalicButton" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
-	      <titledbutton id="UnderlineButton" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
+	      <titledbutton id="&styleItalicCmd.label;" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
+	      <titledbutton id="&styleUnderlineCmd.label;" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
 	      <titledbutton src="&bulletListIcon.url;" onclick="EditorInsertList('ul')"/>
 	      <titledbutton src="&numberListIcon.url;" onclick="EditorInsertList('ol')"/>
 	      <titledbutton src="&outdentIcon.url;" onclick="EditorIndent('outdent')"/>
@@ -375,7 +375,7 @@
 		    </progressmeter>
 		    <spring flex="100%"/>
   	  </box>
-      <titledbutton id="statusText" align="right" flex="100%" value="&tempDoneLoading.label;" style="font-family:sans-serif;font-size:2.5mm">
+      <titledbutton id="statusText" align="left" flex="100%" value="&tempDoneLoading.label;" style="font-family:sans-serif;font-size:2.5mm">
 	    </titledbutton>
     </box>
 
