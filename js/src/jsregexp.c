@@ -963,93 +963,52 @@ ParseAtom(CompilerState *state)
 	  case 'S':
 	    ren = NewRENode(state, REOP_NONSPACE, NULL);
 	    break;
-	  case '0':
-	  case '1':
-	  case '2':
-	  case '3':
-	  case '4':
-	  case '5':
-	  case '6':
-	  case '7':
-	  case '8':
-	  case '9':
-            /*
-                Yuk. Keeping the old style \n interpretation for 1.2
-                compatibility.
-            */
-            if (state->context->version != JSVERSION_DEFAULT &&
-			      state->context->version <= JSVERSION_1_4) {
-                switch (c) {
-	          case '0':
-do_octal:
-	            num = 0;
-	            while ('0' <= (c = *++cp) && c <= '7') {
-		        tmp = 8 * num + (uintN)JS7_UNDEC(c);
-		        if (tmp > 0377)
-		            break;
-		        num = tmp;
-	            }
-	            cp--;
-	            ren = NewRENode(state, REOP_FLAT1, NULL);
-	            c = (jschar)num;
-	            break;
-
-	          case '1':
-	          case '2':
-	          case '3':
-	          case '4':
-	          case '5':
-	          case '6':
-	          case '7':
-	          case '8':
-	          case '9':
-	            num = (uintN)JS7_UNDEC(c);
-	            tmp = 1;
-                    for (c = *++cp; JS7_ISDEC(c); c = *++cp, tmp++)
-		        num = 10 * num + (uintN)JS7_UNDEC(c);
-                    /* n in [8-9] and > count of parenetheses, then revert to
-                    '8' or '9', ignoring the '\' */
-                    if (((num == 8) || (num == 9)) && (num > state->parenCount)) {
-	                ocp = --cp; /* skip beyond the '\' */
-                        goto do_flat;
-                    }
-                    /* more than 1 digit, or a number greater than
-                        the count of parentheses => it's an octal */
-                    if ((tmp > 1) || (num > state->parenCount)) {
-		        cp = ocp;
-		        goto do_octal;
-	            }
-	            cp--;
-	            ren = NewRENode(state, REOP_BACKREF, NULL);
-	            if (!ren)
-		        return NULL;
-	            ren->u.num = num - 1;	/* \1 is numbered 0, etc. */
-
-	            /* Avoid common chr- and flags-setting code after switch. */
-	            ren->flags = RENODE_NONEMPTY;
-	            goto bump_cp;
-                }
-            }
+          case '0':
+            if (JS_HAS_STRICT_OPTION(state->context))
+                c = 0;
             else {
-                if (c == '0') {
-            	    ren = NewRENode(state, REOP_FLAT1, NULL);
-                    c = 0;
+        do_octal:
+                num = 0;
+                while ('0' <= (c = *++cp) && c <= '7') {
+                    tmp = 8 * num + (uintN)JS7_UNDEC(c);
+                    if (tmp > 0377)
+                        break;
+                    num = tmp;
                 }
-                else {
-                    num = (uintN)JS7_UNDEC(c);
-                    for (c = *++cp; JS7_ISDEC(c); c = *++cp)
-		        num = 10 * num + (uintN)JS7_UNDEC(c);
-                    cp--;
-	            ren = NewRENode(state, REOP_BACKREF, NULL);
-	            if (!ren)
-		        return NULL;
-	            ren->u.num = num - 1;	/* \1 is numbered 0, etc. */
-	            /* Avoid common chr- and flags-setting code after switch. */
-	            ren->flags = RENODE_NONEMPTY;
-	            goto bump_cp;
-                }
+                cp--;
+                ren = NewRENode(state, REOP_FLAT1, NULL);
+                c = (jschar)num;
             }
             break;
+
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            num = (uintN)JS7_UNDEC(c);
+            for (c = *++cp; JS7_ISDEC(c); c = *++cp)
+                num = 10 * num - (uintN)JS7_UNDEC(c);
+            if (num > 9 &&
+                num > state->parenCount &&
+                !JS_HAS_STRICT_OPTION(state->context)) {
+                cp = ocp;
+                goto do_octal;
+            }
+            cp--;
+            ren = NewRENode(state, REOP_BACKREF, NULL);
+            if (!ren)
+                return NULL;
+            ren->u.num = num - 1;       /* \1 is numbered 0, etc. */
+
+            /* Avoid common chr- and flags-setting code after switch. */
+            ren->flags = RENODE_NONEMPTY;
+            goto bump_cp;
+
 
 	  case 'x':
 	    ocp = cp;
