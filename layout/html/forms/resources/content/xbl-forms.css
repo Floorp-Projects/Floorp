@@ -92,6 +92,32 @@ input[type="checkbox"] {
   -moz-box-sizing: border-box;
 }
 
+button {
+  -moz-binding: url("chrome://forms/content/button.xml#button");
+  -moz-box-sizing: border-box;
+}
+
+input[type="button"],input[type="submit"],input[type="reset"] {
+  cursor: default;
+  -moz-box-sizing: border-box;
+}
+
+input[type="button"] {
+  -moz-binding: url("chrome://forms/content/button.xml#inputButton");
+}
+
+input[type="submit"] {
+  -moz-binding: url("chrome://forms/content/button.xml#submitButton");
+}
+
+input[type="reset"] {
+  -moz-binding: url("chrome://forms/content/button.xml#resetButton");
+}
+
+input[type="file"] > input[type="button"] {
+  -moz-binding: url("chrome://forms/content/button.xml#fileButton");
+}
+
 /*
  * The following rules are copied from forms.css, for widgets that aren't yet
  * defined in XBL.
@@ -265,68 +291,6 @@ input[type="radio"]:hover:active {
   left: 6px;
   top: 6px;
   -moz-border-radius: 3px;
-}
-
-/* buttons */
-button, 
-input[type="reset"],
-input[type="button"],
-input[type="submit"] { 
-  border: 2px outset ButtonFace;
-  background-color: ButtonFace;
-  color: ButtonText; 
-  padding: 2px 0 2px 0;
-  font: button;
-  cursor: default;
-  white-space: pre;
-  -moz-box-sizing: border-box;
-  -moz-user-select: none;
-  -moz-user-focus: normal;
-  -moz-binding: none;
-}
-
-*|*:button-content {
-  display: block;
-  text-align: center;
-}
-
-button:active:hover,
-input[type="reset"]:active:hover,
-input[type="button"]:active:hover,
-input[type="submit"]:active:hover {
-  border-style: inset;
-  padding: 3px 0 1px 0;
-}
-
-button:-moz-focus-inner,
-input[type="reset"]:-moz-focus-inner,
-input[type="button"]:-moz-focus-inner,
-input[type="submit"]:-moz-focus-inner {
-  padding: 1px 2px 1px 2px;
-  border: 1px dotted transparent;
-}
-
-button:focus:-moz-focus-inner,
-input[type="reset"]:focus:-moz-focus-inner,
-input[type="button"]:focus:-moz-focus-inner,
-input[type="submit"]:focus:-moz-focus-inner {
-  border-color: ButtonText;
-}
-
-button[disabled]:active, button[disabled],
-input[type="reset"][disabled]:active,
-input[type="reset"][disabled],
-input[type="button"][disabled]:active,
-input[type="button"][disabled],
-input[type="file"][disabled] > input[type="button"],
-input[type="file"][disabled] > input[type="button"]:active,
-select[disabled] > input[type="button"],
-select[disabled] > input[type="button"]:active,
-input[type="submit"][disabled]:active,
-input[type="submit"][disabled] {
-  border: 1px outset ButtonShadow;
-  padding: 3px 1px 3px 1px;
-  color: GrayText;
 }
 
 @media print {

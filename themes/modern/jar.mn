@@ -393,3 +393,4 @@ modern.jar:
   skin/modern/forms/select.css                                     (forms/select.css)
   skin/modern/forms/select-dropdown.css                            (forms/select-dropdown.css)
   skin/modern/forms/checkbox.css                                   (forms/checkbox.css)
+  skin/modern/forms/button.css                                     (forms/button.css)

@@ -3,3 +3,8 @@ forms.jar:
     content/forms/xbl-forms.css               (content/xbl-forms.css)
     content/forms/select.xml                  (content/select.xml)
     content/forms/checkbox.xml                (content/checkbox.xml)
+    content/forms/button.xml                  (content/button.xml)
+
+en-US.jar:
+    locale/en-US/forms/contents.rdf           (locale/en-US/contents.rdf)
+    locale/en-US/forms/htmlforms.dtd          (locale/en-US/htmlforms.dtd)

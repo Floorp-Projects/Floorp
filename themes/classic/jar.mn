@@ -281,3 +281,4 @@ classic.jar:
   skin/classic/forms/select.css                                         (forms/select.css)
   skin/classic/forms/select-dropdown.css                                (forms/select-dropdown.css)
   skin/classic/forms/checkbox.css                                       (forms/checkbox.css)
+  skin/classic/forms/button.css                                         (forms/button.css)
