@@ -84,7 +84,7 @@ function loadResultsTree( aSearchURL )
 {
   var resultsTree = document.getElementById( "internetresultstree" );
   if (!resultsTree) return false;
-  resultsTree.setAttribute("ref", aSearchURL);
+  resultsTree.setAttribute("ref", unescape(aSearchURL));
   return true;
 }
 
