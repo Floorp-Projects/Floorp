@@ -182,7 +182,7 @@ public:
                         const nsXPTMethodInfo* info,
                         nsXPCMiniVariant* params);
 
-    ~nsXPCWrappedJSClass();
+    virtual ~nsXPCWrappedJSClass();
 private:
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
@@ -387,7 +387,7 @@ public:
                            JSIterateOp enum_op,
                            jsval *statep, jsid *idp);
 
-    ~nsXPCWrappedNativeClass();
+    virtual ~nsXPCWrappedNativeClass();
 private:
     nsXPCWrappedNativeClass();   // not implemented
     nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,

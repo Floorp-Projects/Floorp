@@ -276,16 +276,16 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     nsIAllocator* al = NULL;
     JSBool InConversionsDone = JS_FALSE;
 
+    // XXX ASSUMES that retval is last arg.
+    paramCount = info->GetParamCount();
+    argc = paramCount -
+            (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
+
     if(!(al = nsXPConnect::GetAllocator()))
         goto pre_call_clean_up;
 
     if(!IsReflectable(methodIndex))
         goto pre_call_clean_up;
-
-    // XXX ASSUMES that retval is last arg.
-    paramCount = info->GetParamCount();
-    argc = paramCount -
-            (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
 
     // setup argv
     if(argc > ARGS_BUFFER_COUNT)
