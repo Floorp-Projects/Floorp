@@ -275,6 +275,19 @@ var BookmarksMenu = {
   {
     if (this.isBTBookmark(aEvent.target.id))
       BookmarksUtils.loadBookmarkBrowser(aEvent, aDS);
+  },
+
+  loadBookmarkMiddleClick: function (aEvent, aDS)
+  {
+    if (aEvent.type != "click" || aEvent.button != 1)
+      return;
+    // unlike for command events, we have to close the menus manually
+    for (var node = aEvent.target; node != aEvent.currentTarget;
+         node = node.parentNode) {
+      if (node.nodeType == node.ELEMENT_NODE && node.tagName == "menupopup")
+        node.hidePopup();
+    }
+    this.loadBookmark(aEvent, aDS);
   }
 }
 
