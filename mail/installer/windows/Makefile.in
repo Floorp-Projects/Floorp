@@ -47,8 +47,12 @@ export MOZ_SRC
 
 CONFIG_DIR=$(shell cygpath -wa $(srcdir))
 
+ifeq (,$(INSTALLER_URL))
+INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/thunderbird/nightly/latest-trunk/windows-xpi"
+endif
+
 installer:
-	cd $(topsrcdir)/toolkit/mozapps/installer/windows && perl build_static.pl -config "$(CONFIG_DIR)"
+	cd $(topsrcdir)/toolkit/mozapps/installer/windows && perl build_static.pl -config "$(CONFIG_DIR)" -aurl $(INSTALLER_URL) 
 
 include $(topsrcdir)/config/rules.mk
 
