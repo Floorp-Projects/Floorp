@@ -39,8 +39,10 @@
 use diagnostics;
 use strict;
 
-use GD;
+eval "use GD";
+my $use_gd = @ ? 0 : 1;
 eval "use Chart::Lines";
+$use_gd = 0 if $@;
 
 require "CGI.pl";
 use vars qw(%FORM); # globals from CGI.pl
@@ -157,9 +159,7 @@ PutFooter() if $FORM{banner};
 
 sub choose_product {
     my $product_popup = make_options (\@myproducts, $myproducts[0]);
-    my $charts = defined $Chart::Lines::VERSION && -d $dir ? "<option value=\"show_chart\">Bug Charts" : "";
-    # get rid of warning:
-    $Chart::Lines::VERSION = $Chart::Lines::VERSION;
+	my $charts = $use_gd && -d $dir ? "<option value=\"show_chart\">Bug Charts" : "";
 
     print <<FIN;
 <center>
@@ -486,6 +486,10 @@ sub daily_stats_filename {
 }
 
 sub show_chart {
+	# if we don't have the graphic mouldes don't even try to go
+	# here. Should probably return some decent error message.
+	return unless $use_gd;
+
     if (! is_legal_product ($FORM{'product'})) {
         &die_politely ("Unknown product: $FORM{'product'}");
     }
@@ -517,7 +521,9 @@ FIN
 sub chart_image_type {
     # what chart type should we be generating?
     my $testimg = Chart::Lines->new(2,2);
+	eval '$testimg->gif()';
     my $type = $testimg->can('gif') ? "gif" : "png";
+
     undef $testimg;
     return $type;
 }
