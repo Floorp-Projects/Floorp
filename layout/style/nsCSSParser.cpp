@@ -2912,7 +2912,7 @@ PRBool CSSParserImpl::ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
     }
     nsCSSValue  values[4];
     for (index = 0; index < 4; index++) {
-      if (! ParsePositiveVariant(aErrorCode, values[index], VARIANT_AL, nsnull)) {
+      if (! ParseVariant(aErrorCode, values[index], VARIANT_AL, nsnull)) {
         return PR_FALSE;
       }
       if (3 != index) {
