@@ -65,7 +65,7 @@ interface nsIWebBrowser : nsISupports
 				NS_ERROR_INVALID_ARG - The listener passed in was either nsnull, 
 						or was already registered with this listener interface.
 	 */
-	void addListener(in nsIInterfaceRequestor listener, out long cookie);
+	void addWebBrowserListener(in nsIInterfaceRequestor listener, out long cookie);
 
 	/* 
 	Removes a previously registered webBrowserListener.
@@ -81,7 +81,7 @@ interface nsIWebBrowser : nsISupports
 				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
 					to a previously registered listener.
 	*/
-	void removeListener(in nsIInterfaceRequestor listener, in long cookie);
+	void removeWebBrowserListener(in nsIInterfaceRequestor listener, in long cookie);
 
 	/*
 		The current docShell that is loaded at the root.  This will change as 

@@ -52,6 +52,7 @@ protected:
 
 protected:
    nsCOMPtr<nsISupportsArray> m_ListenerList;
+   nsCOMPtr<nsIDocShell> m_DocShell;
    PRBool   m_Created;
 };
 
