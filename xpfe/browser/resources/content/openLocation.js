@@ -38,7 +38,8 @@ function onLoad() {
 	//	window.close();
     //    return;
 	}
-
+	
+	moveToAlertPosition();
 	/* Give input field the focus. */
 	dialog.input.focus();
 }
