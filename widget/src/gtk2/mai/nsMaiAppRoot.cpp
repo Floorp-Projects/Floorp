@@ -217,6 +217,17 @@ MaiAppRoot::GetDescription(void)
     return atkObject->description;
 }
 
+PRUint32
+MaiAppRoot::GetRole(void)
+{
+    AtkObject *atkObject = (AtkObject*)mMaiAtkObject;
+
+    if (!atkObject->role)
+        atk_object_set_role(atkObject, ATK_ROLE_APPLICATION);
+
+    return atkObject->role;
+}
+
 MaiObject *
 MaiAppRoot::GetParent(void)
 {

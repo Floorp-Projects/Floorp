@@ -70,7 +70,6 @@ void finalizeCB(GObject *aObj);
 
 /* more callbacks for atkobject */
 static AtkStateSet*        refStateSetCB(AtkObject *aObj);
-static AtkRole             getRoleCB(AtkObject *aObj);
 
 G_END_DECLS
 
@@ -514,15 +513,6 @@ MaiWidget::RefStateSet()
     return (NS_FAILED(rv)) ? 0 : accState;
 }
 
-PRUint32
-MaiWidget::GetRole()
-{
-    g_return_val_if_fail(mAccessible != NULL, 0);
-    PRUint32 accRole;
-    nsresult rv = mAccessible->GetAccRole(&accRole);
-    return (NS_FAILED(rv)) ? 0 : accRole;
-}
-
 /* static functions */
 
 gchar *
@@ -571,7 +561,6 @@ classInitCB(AtkObjectClass *aClass)
     parent_class = g_type_class_peek_parent(aClass);
 
     aClass->ref_state_set = refStateSetCB;
-    aClass->get_role = getRoleCB;
 
     // aClass->initialize = initializeCB;
 
@@ -638,17 +627,3 @@ refStateSetCB(AtkObject *aObj)
     return state_set;
 }
 
-AtkRole
-getRoleCB(AtkObject *aObj)
-{
-    MAI_ATK_WIDGET_RETURN_VAL_IF_FAIL(aObj, ATK_ROLE_INVALID);
-
-    if (aObj->role != ATK_ROLE_INVALID)
-        return aObj->role;
-    MaiWidget *maiWidget = NS_STATIC_CAST(MaiWidget*,
-                                          MAI_ATK_OBJECT(aObj)->maiObject);
-
-    AtkRole atkRole = NS_STATIC_CAST(AtkRole, maiWidget->GetRole());
-    aObj->role = atkRole;
-    return atkRole;
-}
