@@ -1224,6 +1224,13 @@ public:
                              void*           aPropertyValue) = 0;
 #endif // IBMBIDI
 
+  /**
+   * Return PR_TRUE if and only if this frame obeys visibility:hidden.
+   * if it does not, then nsContainerFrame will hide its view even though
+   * this means children can't be made visible again.
+   */
+  virtual PRBool SupportsVisibilityHidden() { return PR_TRUE; }
+
 protected:
   // Members
   nsRect           mRect;

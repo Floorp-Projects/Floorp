@@ -779,24 +779,12 @@ nsContainerFrame::SyncFrameViewProperties(nsIPresContext*  aPresContext,
       viewIsVisible = PR_FALSE;
     }
     else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
-      // If it has a widget, hide the view because the widget can't deal with it
-      nsCOMPtr<nsIWidget> widget;
-      aView->GetWidget(*getter_AddRefs(widget));
-      if (widget) {
+      // If it's a scrollable frame that can't hide its scrollbars,
+      // hide the view. This means that child elements can't override
+      // their parent's visibility, but it's not practical to leave it
+      // visible in all cases because the scrollbars will be showing
+      if (!aFrame->SupportsVisibilityHidden()) {
         viewIsVisible = PR_FALSE;
-      }
-      else {
-        // If it's a scroll frame or a list control frame which is derived from the scrollframe, 
-        // then hide the view. This means that
-        // child elements can't override their parent's visibility, but
-        // it's not practical to leave it visible in all cases because
-        // the scrollbars will be showing
-        nsCOMPtr<nsIAtom> frameType;
-        aFrame->GetFrameType(getter_AddRefs(frameType));
-
-        if (frameType == nsLayoutAtoms::scrollFrame || frameType == nsLayoutAtoms::listControlFrame) {
-          viewIsVisible = PR_FALSE;
-        }
       }
     } else {
       // if the view is for a popup, don't show the view if the popup is closed
