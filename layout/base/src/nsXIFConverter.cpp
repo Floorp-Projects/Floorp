@@ -328,9 +328,7 @@ void nsXIFConverter::AddContentComment(const nsString& aContent)
 {
   nsString tag(mComment);
   AddStartTag(tag, PR_FALSE);
-  nsAutoString content;
-  aContent.Mid(content, 4, aContent.Length() - 7);
-  AddContent(content);
+  AddContent(aContent);
   AddEndTag(tag, PR_FALSE);
 }
 
