@@ -1023,7 +1023,12 @@ void TextFrame::CalcActualPosition(PRUint32         &aMsgType,
 
   if (aMsgType == NS_MOUSE_LEFT_BUTTON_UP || aMsgType == NS_MOUSE_MOVE) {
     aOffset = PRUint32(aCP - aCPStart);
-    aWidth  = aFM->GetWidth(aCPStart, aOffset-1);
+    if (0 == aOffset) {
+      aWidth = 0;
+    }
+    else {
+      aWidth  = aFM->GetWidth(aCPStart, aOffset-1);
+    }
   } else if (aMsgType == NS_MOUSE_LEFT_BUTTON_DOWN) {
     aOffset = PRUint32(aCP - aCPStart)-1;
     if (aOffset == 0) {
