@@ -43,7 +43,9 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script src="chrome://messenger/content/commandglue.js"/>
 
-<stringbundleset id="stringbundleset"/>
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+</stringbundleset>
 
 <commandset id="mailFileMenuItems"
      				commandupdater="true"

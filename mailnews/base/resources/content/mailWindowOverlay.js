@@ -623,8 +623,10 @@ function MsgSubscribe()
 
 function ConfirmUnsubscribe(folder)
 {
-    var sBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties"); 
-    var titleMsg = gMessengerBundle.GetStringFromName("confirmUnsubscribeTitle");
+    if (!gMessengerBundle)
+        gMessengerBundle = document.getElementById("bundle_messenger");
+
+    var titleMsg = gMessengerBundle.getString("confirmUnsubscribeTitle");
     var dialogMsg = gMessengerBundle.getFormattedString("confirmUnsubscribeText",
                                         [folder.name], 1);
 
@@ -682,7 +684,6 @@ function MsgOpenSelectedMessages()
 {
   var dbView = GetDBView();
 
-  dump("XXX dbView " + dbView + "\n");
   var indices = GetSelectedIndices(dbView);
   var numMessages = indices.length;
 
