@@ -360,7 +360,9 @@ static Components gComponents[] = {
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
   { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_PROGID },
   { "XIF Converter", NS_XIFCONVERTER_CID, nsnull },
-  { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_PROGID }
+  { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_PROGID },
+  { "DOM CSS Computed Style Declaration", NS_COMPUTEDDOMSTYLE_CID,
+    "component://netscape/DOM/Level2/CSS/computedStyleDeclaration" }
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

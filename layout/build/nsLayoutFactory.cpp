@@ -63,6 +63,7 @@
 #include "nsIXIFConverter.h"
 
 #include "nsINodeInfo.h"
+#include "nsIComputedDOMStyle.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -109,6 +110,7 @@ static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
 static NS_DEFINE_CID(kContentPolicyCID, NS_CONTENTPOLICY_CID);
 static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
+static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
@@ -436,6 +438,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewContentPolicy((nsIContentPolicy**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewContentPolicy", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kComputedDOMStyleCID)) {
+    res = NS_NewComputedDOMStyle((nsIComputedDOMStyle**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewComputedDOMStyle", res);
       return res;
     }
   }
