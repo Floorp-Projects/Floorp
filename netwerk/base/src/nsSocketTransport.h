@@ -84,20 +84,21 @@ public:
                 PRInt32 aPort);
   nsresult Process(PRInt16 aSelectFlags);
 
+  nsresult CloseConnection(void);
+
+  // Access methods used by the socket transport service...
+  PRFileDesc* GetSocket(void)      { return mSocketFD;    }
+  PRInt16     GetSelectFlags(void) { return mSelectFlags; }
+  PRCList*    GetListNode(void)    { return &mListLink;   }
+
+  static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
+
+protected:
   nsresult doConnection(PRInt16 aSelectFlags);
   nsresult doResolveHost(void);
   nsresult doRead(PRInt16 aSelectFlags);
   nsresult doWrite(PRInt16 aSelectFlags);
 
-  nsresult CloseConnection(void);
-
-  PRFileDesc* GetSocket(void)      { return mSocketFD;    }
-  PRInt16     GetSelectFlags(void) { return mSelectFlags; }
-
-  PRCList*    GetListNode(void) { return &mListLink; }
-  static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
-
-protected:
   // Inline helpers...
   void Lock  (void) { NS_ASSERTION(mLock, "Lock null."); PR_Lock(mLock);   }
   void Unlock(void) { NS_ASSERTION(mLock, "Lock null."); PR_Unlock(mLock); }
