@@ -52,22 +52,12 @@
   <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
-    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress", "systemPrefCheck"];
-    
+    var _elementIDs = ["advancedJavaAllow", "systemPrefCheck"];
+
     function Startup() {
-      ftpCheck(false);
       turboCheck();
       sysPrefCheck();
       initJVMConfigList();
-    }   
-    
-    function ftpCheck(setFocus) {
-      var checked = document.getElementById("advancedMailFTP").checked;
-      var field = document.getElementById("advancedMailFTPAddress");
-      field.disabled = !checked;
-
-      if (!field.disabled && setFocus)
-        field.focus();
     }
 
     /* 
@@ -179,18 +169,6 @@
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                 prefstring="security.enable_java"
                 oncommand="javaCheck(true)"/>
-    </vbox>
-    <vbox>
-    <vbox align="start">
-      <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
-                prefstring="advanced.mailftp"
-                oncommand="ftpCheck(true);"/>
-    </vbox>
-    <hbox class="indent">
-      <textbox id="advancedMailFTPAddress"
-               preftype="string" prefstring="network.ftp.anonymous_password" class="uri-element"
-               flex="2"/>
-    </hbox>
     </vbox>
     <separator/>
   </groupbox>
