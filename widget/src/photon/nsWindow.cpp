@@ -80,12 +80,21 @@ nsWindow::nsWindow()
 
 ChildWindow::ChildWindow()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("ChildWindow::ChildWindow (%p)\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("ChildWindow::ChildWindow this=(%p)\n", this ));
   mBorderStyle     = eBorderStyle_none;
   mWindowType      = eWindowType_child;
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  border=%X, window=%X\n", mBorderStyle, mWindowType ));
 }
+#if 0
+ChildWindow::~ChildWindow()
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("ChildWindow::~ChildWindow this=(%p)\n", this ));
+}
+
+
+#endif
+
 
 //-------------------------------------------------------------------------
 //
@@ -124,6 +133,7 @@ NS_METHOD nsWindow::Destroy(void)
   //if (mIsDestroyingWindow == PR_TRUE)
   {
     nsBaseWidget::Destroy();
+    mEventCallback = nsnull;			/* adding this if close window */
     if (PR_FALSE == mOnDestroyCalled)
 	{
         nsWidget::OnDestroy();
@@ -671,7 +681,12 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 
   if (title)
     nsCRT::free(title);
-	
+
+  if (res != NS_OK)
+  {
+	NS_ASSERTION(0,"nsWindow::SetTitle Error Setting page Title\n");
+  }
+  	
   return res;
 }
 
@@ -750,12 +765,14 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
   if( mWidget )
   {
+#if 0
     /* This breaks the dialog size for Viewer */
     if (mWindowType == eWindowType_dialog)
     {
       dim.w -= mFrameLeft + mFrameRight;
       dim.h -= mFrameTop + mFrameBottom;
     }
+#endif
 
     EnableDamage( mWidget, PR_FALSE );
 
@@ -824,6 +841,8 @@ int nsWindow::WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo
 
   nsWindow * pWin = (nsWindow*) data;
 
+/* this isn't compltet yet! :) */
+
 #if 1
   /* I had to add this check for to not do this for pop-up but I wonder */
   /* is this is valid at all!   I really don't think so from looking some more... */  
@@ -831,7 +850,12 @@ int nsWindow::WindowCloseHandler( PtWidget_t *widget, void *data, PtCallbackInfo
   if ( pWin->mWindowType != eWindowType_popup )
   {
     if ( pWin )
+	{
+      NS_ADDREF(pWin);
+      pWin->SetIsDestroying ( PR_TRUE );
       pWin->Destroy();
+      NS_RELEASE(pWin);
+    }
   }
 #endif
   
@@ -915,14 +939,21 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsresult   result;
   
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for mWidget=<%p> this=<%p> this->mContext=<%p>\n", pWidget, pWin, pWin->mContext));
-  //printf("nsWindow::RawDrawFunc for %p mWidget=<%p>\n", pWidget,pWin);
   
   if ( !pWin )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted because instance is NULL!\n"));
+    NS_ASSERTION(pWin, "nsWindow::RawDrawFunc  aborted because instance is NULL!");
     return;
   }
 
+  if ( !pWin->mContext )
+  {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted because pWin->mContext is NULL!\n"));
+    NS_ASSERTION(pWin->mContext, "nsWindow::RawDrawFunc  aborted because pWin->mContext is NULL!");
+    return;
+  }
+  
 #if 1
   // This prevents redraws while any window is resizing, ie there are
   //   windows in the resize queue
@@ -1554,6 +1585,8 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
   aRect.width = mBounds.width;
   aRect.height = mBounds.height;
 
+/* kirkj took this out to fix sizing errors on pref. dialog. */
+#if 0
   if  ( (mWindowType == eWindowType_toplevel) ||
         (mWindowType == eWindowType_dialog) )
   {
@@ -1566,6 +1599,7 @@ NS_METHOD nsWindow::GetClientBounds( nsRect &aRect )
     aRect.width -= (mFrameRight + mFrameLeft);
     aRect.height -= (h + mFrameTop + mFrameBottom);
   }
+#endif
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  bounds = %ld,%ld,%ld,%ld\n", aRect.x, aRect.y, aRect.width, aRect.height ));
 
