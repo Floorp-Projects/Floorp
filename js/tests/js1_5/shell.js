@@ -40,8 +40,8 @@ function reportFailure (msg)
     var funcName = currentFunc();
     var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
     
-    for (l in lines)
-        print (FAILED + prefix + lines[l]);
+    for (var i=0; i<lines.length; i++)
+        print (FAILED + prefix + lines[i]);
 
 }
 
@@ -53,8 +53,8 @@ function printStatus (msg)
     var lines = msg.split ("\n");
     var l;
 
-    for (l in lines)
-        print (STATUS + lines[l]);
+    for (var i=0; i<lines.length; i++)
+        print (STATUS + lines[i]);
 
 }
 
