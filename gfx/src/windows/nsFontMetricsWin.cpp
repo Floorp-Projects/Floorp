@@ -2716,6 +2716,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
   if (aGeneric) {
     metrics->mGeneric = metrics->mFonts.StringAt(metrics->mFonts.Count() - 1);
+    metrics->mGeneric->ToLowerCase();
     return PR_FALSE; // stop
   }
 
