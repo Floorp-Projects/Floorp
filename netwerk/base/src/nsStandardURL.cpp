@@ -1501,7 +1501,9 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     // filter out unexpected chars "\r\n\t" if necessary
     nsCAutoString buf;
     relpath = FilterString(relpath, buf);
-
+    // Calculate the new relpath length if FilterString modified it
+    const PRInt32 relpathLen = buf.Length() != 0 ? 
+                               buf.Length() : flat.Length();
     // XXX hack hack hack
     char *p = nsnull;
     char **result = &p;
@@ -1529,7 +1531,8 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     // relative urls should never contain a host, so we always want to use
     // the noauth url parser.
     // use it to extract a possible scheme
-    rv = mParser->ParseURL(relpath, flat.Length(),
+    rv = mParser->ParseURL(relpath, 
+                           relpathLen,
                            &scheme.mPos, &scheme.mLen,
                            nsnull, nsnull,
                            nsnull, nsnull);
