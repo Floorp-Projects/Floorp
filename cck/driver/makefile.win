@@ -25,6 +25,10 @@ MODULE = WizardMachine
 # Get CFLAGS, OBJDIR and such defined before using them in this makefile...
 !include "$(DEPTH)\config\config.mak"
 
+!ifdef WIZARDMACHINE_TIMEBOMB
+CFLAGS=$(CFLAGS) -DTIMEBOMB
+!endif
+
 #################################################################
 
 CFLAGS = \
