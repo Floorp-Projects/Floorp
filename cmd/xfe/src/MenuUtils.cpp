@@ -46,6 +46,11 @@
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
 
+#include <Xm/RowColumn.h>
+
+#define CASCADE_WC(fancy) \
+( (fancy) ? xfeBmCascadeWidgetClass : xmCascadeButtonWidgetClass )
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Menu items
@@ -87,6 +92,87 @@ XFE_MenuUtils::createPushButton(Widget				parent,
 									 client_data,
 									 av,
 									 ac);
+}
+//////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+// More button
+//
+//////////////////////////////////////////////////////////////////////////
+/* static */ Widget	
+XFE_MenuUtils::createMoreButton(Widget			menu,
+								const String	name,
+								const String	paneName,
+								Boolean			fancy)
+{
+	XP_ASSERT( XfeIsAlive(menu) );
+    XP_ASSERT( XmIsRowColumn(menu) );
+	XP_ASSERT( name != NULL );
+	XP_ASSERT( paneName != NULL );
+
+    Widget   cascade = NULL;
+    Widget   pulldown = NULL;
+
+    // Create a pulldown pane (cascade + pulldown)
+    XfeMenuCreatePulldownPane(menu,
+                              menu,
+                              name,
+                              paneName,
+                              CASCADE_WC(fancy),
+                              False,
+                              NULL,
+                              0,
+                              &cascade,
+                              &pulldown);
+
+#if 0
+	// Cant use a NULL entry...hmmm...
+
+    // Configure the more button
+	XFE_RDFUtils::configureMenuCascadeButton(cascade,NULL);
+#endif
+
+    return cascade;
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ Widget	
+XFE_MenuUtils::getLastMoreMenu(Widget			menu,
+							   const String		name,
+							   const String		paneName,
+							   Boolean			fancy)
+{
+    XP_ASSERT( XfeIsAlive(menu) );
+    XP_ASSERT( XmIsRowColumn(menu) );
+
+    // Find the last more... menu
+    Widget last_more_menu = XfeMenuFindLastMoreMenu(menu,name);
+
+    XP_ASSERT( XfeIsAlive(last_more_menu) );
+
+    // Check if the last menu is full
+    if (XfeMenuIsFull(last_more_menu))
+    {
+        // Look for the More... button for the last menu
+        Widget more_button = XfeMenuGetMoreButton(last_more_menu,name);
+
+        // If no more button, create one plus a submenu
+        if (!more_button)
+        {
+            more_button = XFE_MenuUtils::createMoreButton(last_more_menu,
+														  name,
+														  paneName,
+														  fancy);
+
+            XtManageChild(more_button);
+        }
+
+        // Set the last more menu to the submenu of the new more button
+        last_more_menu = XfeCascadeGetSubMenu(more_button);
+    }
+
+    return last_more_menu;
 }
 //////////////////////////////////////////////////////////////////////////
 

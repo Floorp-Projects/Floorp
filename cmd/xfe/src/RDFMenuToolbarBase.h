@@ -125,7 +125,6 @@ protected:
                                        XP_Bool ignore_children);
     Widget    createPushButton        (Widget menu, HT_Resource entry);
     Widget    createSeparator         (Widget menu);
-    Widget    createMoreButton        (Widget menu);
 
     HT_Resource getAddFolder          ();
     HT_Resource getMenuFolder         ();
@@ -153,8 +152,6 @@ private:
     time_t             _dropLastAccess;       // 
 
     void             createPixmaps      ();
-
-    Widget           getLastMoreMenu    (Widget menu);
 };
 
 

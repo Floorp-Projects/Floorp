@@ -31,7 +31,9 @@
 #include "IconGroup.h"
 #include "View.h"
 #include "ToolbarDrop.h"
+
 #include "RDFUtils.h"
+#include "MenuUtils.h"
 
 #include "felocale.h"
 #include "intl_csi.h"
@@ -57,7 +59,6 @@
 #define D(x)
 #endif
 
-extern "C" RDF_NCVocab  gNavCenter;
 #define CASCADE_WC(fancy) \
 ( (fancy) ? xfeBmCascadeWidgetClass : xmCascadeButtonWidgetClass )
 
@@ -551,7 +552,10 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
 
     ItemCallbackStruct *    data = NULL;
 
-    non_full_menu = getLastMoreMenu(menu);
+    non_full_menu = XFE_MenuUtils::getLastMoreMenu(menu,
+												   MORE_BUTTON_NAME,
+												   MORE_PULLDOWN_NAME,
+												   _fancyItems);
 
     XP_ASSERT( XfeIsAlive(non_full_menu) );
 
@@ -616,34 +620,6 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
 }
 //////////////////////////////////////////////////////////////////////////
 Widget 
-XFE_RDFMenuToolbarBase::createMoreButton(Widget menu)
-{
-    Widget   cascade = NULL;
-    Widget   pulldown = NULL;
-
-    // Create a pulldown pane (cascade + pulldown)
-    XfeMenuCreatePulldownPane(menu,
-                              menu,
-                              MORE_BUTTON_NAME,
-                              MORE_PULLDOWN_NAME,
-                              CASCADE_WC(_fancyItems),
-                              False,
-                              NULL,
-                              0,
-                              &cascade,
-                              &pulldown);
-
-#if 0
-	// Cant use a NULL entry...hmmm...
-
-    // Configure the more button
-	XFE_RDFUtils::configureMenuCascadeButton(cascade,NULL);
-#endif
-
-    return cascade;
-}
-//////////////////////////////////////////////////////////////////////////
-Widget 
 XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
 {
     XP_ASSERT( XfeIsAlive(menu) );
@@ -655,7 +631,10 @@ XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
     Widget                        button;
     ItemCallbackStruct *    data = NULL;
 
-    non_full_menu = getLastMoreMenu(menu);
+    non_full_menu = XFE_MenuUtils::getLastMoreMenu(menu,
+												   MORE_BUTTON_NAME,
+												   MORE_PULLDOWN_NAME,
+												   _fancyItems);
 
     XP_ASSERT( XfeIsAlive(non_full_menu) );
 
@@ -705,40 +684,6 @@ XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
 }
 //////////////////////////////////////////////////////////////////////////
 Widget 
-XFE_RDFMenuToolbarBase::getLastMoreMenu(Widget menu)
-{
-    XP_ASSERT( XfeIsAlive(menu) );
-    XP_ASSERT( XmIsRowColumn(menu) );
-
-    // Find the last more... menu
-    Widget last_more_menu = XfeMenuFindLastMoreMenu(menu,MORE_BUTTON_NAME);
-
-    XP_ASSERT( XfeIsAlive(last_more_menu) );
-
-    // Check if the last menu is full
-    if (XfeMenuIsFull(last_more_menu))
-    {
-        // Look for the More... button for the last menu
-        Widget more_button = XfeMenuGetMoreButton(last_more_menu,
-                                                  MORE_BUTTON_NAME);
-
-        // If no more button, create one plus a submenu
-        if (!more_button)
-        {
-            more_button = createMoreButton(last_more_menu);
-
-            XtManageChild(more_button);
-
-        }
-
-        // Set the last more menu to the submenu of the new more button
-        last_more_menu = XfeCascadeGetSubMenu(more_button);
-    }
-
-    return last_more_menu;
-}
-//////////////////////////////////////////////////////////////////////////
-Widget 
 XFE_RDFMenuToolbarBase::createSeparator(Widget menu)
 {
     XP_ASSERT( XfeIsAlive(menu) );
@@ -749,7 +694,10 @@ XFE_RDFMenuToolbarBase::createSeparator(Widget menu)
 
     if (XmIsRowColumn(menu))
     {
-        parent = getLastMoreMenu(menu);
+        parent = XFE_MenuUtils::getLastMoreMenu(menu,
+												MORE_BUTTON_NAME,
+												MORE_PULLDOWN_NAME,
+												_fancyItems);
 
         name = MENU_PANE_SEPARATOR_NAME;
     }

@@ -54,6 +54,25 @@ public:
 											 XtPointer			client_data,
 											 ArgList			av,
 											 Cardinal			ac);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// More button                                                      //
+	//                                                                  //
+	// The "More..." button appears at the end of a long menu pane.  It //
+	// allows the user to cascade in order to find items on a long pane.//
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static Widget	createMoreButton		(Widget				menu,
+											 const String		name,
+											 const String		paneName,
+											 Boolean			fancy);
+
+	static Widget	getLastMoreMenu			(Widget				menu,
+											 const String		name,
+											 const String		paneName,
+											 Boolean			fancy);
+
 private:
 
 	//////////////////////////////////////////////////////////////////////
