@@ -40,7 +40,6 @@ LLIBS=											\
 			$(DIST)\lib\msgcompose_s.lib		\
 			$(DIST)\lib\appcores.lib			\
 			$(DIST)\lib\msgbsutl.lib			\
-			$(DIST)\lib\raptorhtmlpars.lib			\
 			$(LIBNSPR)							\
 			$(NULL)
 
