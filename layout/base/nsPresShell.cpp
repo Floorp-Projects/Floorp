@@ -2204,8 +2204,10 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
     return NS_ERROR_FAILURE;
   nsIFrame *frame;
   nsresult result = GetPrimaryFrameFor(content,&frame);
-  if (NS_FAILED(result) || !frame) //failure is taken as a no.
-    return result?result:NS_ERROR_FAILURE;
+  if (NS_FAILED(result)) //failure is taken as a no.
+    return result;
+  if (!frame) //no frame to look at so it must not be visible
+    return NS_OK;  
   //start process now to go through all frames to find startOffset. then check chars after that to see 
   //if anything until EndOffset is visible.
   PRBool finished = PR_FALSE;
