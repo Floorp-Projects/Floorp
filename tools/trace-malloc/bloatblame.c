@@ -56,7 +56,6 @@ extern int  optind;
 
 static char   *program;
 static int    sort_by_direct = 0;
-static uint32 state_at_event = 0;
 static int    js_mode = 0;
 static int    do_tree_dump = 0;
 static int    unified_output = 0;
@@ -76,8 +75,7 @@ static void compute_callsite_totals(tmcallsite *site)
     }
 }
 
-static void walk_callsite_tree(tmcallsite *site, int level, int kidnum,
-                               FILE *fp)
+static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp)
 {
     tmcallsite *parent;
     tmgraphnode *meth, *pmeth, *comp, *pcomp, *lib, *plib;
@@ -589,13 +587,10 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    while ((c = getopt(argc, argv, "de:jtuf:m:")) != EOF) {
+    while ((c = getopt(argc, argv, "djtuf:m:")) != EOF) {
         switch (c) {
           case 'd':
             sort_by_direct = 1;
-            break;
-          case 'e':
-            state_at_event = atoi(optarg);
             break;
           case 'j':
             js_mode = 1;
@@ -614,8 +609,7 @@ int main(int argc, char **argv)
             break;
           default:
             fprintf(stderr,
-                    "usage: %s [-dtu] [-e event-num] "
-                      "[-f function-dump-filename] [-m min] [output.html]\n",
+        "usage: %s [-dtu] [-f function-dump-filename] [-m min] [output.html]\n",
                     program);
             exit(2);
         }
