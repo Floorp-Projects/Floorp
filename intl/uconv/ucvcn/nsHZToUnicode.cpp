@@ -87,6 +87,7 @@ NS_IMETHODIMP nsHZToUnicode::ConvertNoBuff(
   PRInt32 iDestlen = 0;
   PRUint8 ch1, ch2;
   nsresult res = NS_OK;
+  *aSrcLength=0;
   for (i=0;i<iSrcLength;i++)
   {
     if ( iDestlen >= (*aDestLength) )

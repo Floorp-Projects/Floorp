@@ -156,6 +156,7 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
   PRInt32 iSrcLength = (*aSrcLength);
   PRInt32 iDestlen = 0;
   nsresult rv=NS_OK;
+  *aSrcLength = 0;
   
   for (i=0;i<iSrcLength;i++)
   {

@@ -164,14 +164,18 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
   while ((srcLen > 0) && (dest < destEnd)) 
   {
     PRBool done= PR_FALSE;
+    PRBool passRangeCheck = PR_FALSE;
+    PRBool passScan = PR_FALSE;
     for (i=0; (!done) && (i<aTableCount); i++)  
     {
       if ((aRangeArray[i].min <= *src) && (*src <= aRangeArray[i].max)) 
       {
+        passRangeCheck = PR_TRUE;
         if (uScan(aShiftTable[i], NULL, src, 
                    NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
                    (PRUint32 *)&bcr)) 
         {
+          passScan = PR_TRUE;
           done = uMapCode((uTable*) aMappingTable[i], 
                           NS_STATIC_CAST(PRUint16, med), 
                           NS_REINTERPRET_CAST(PRUint16*, dest)); 
@@ -179,12 +183,20 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
       } // if Range
     } // for loop
 
+    if(passRangeCheck && (! passScan))
+    {
+      res = NS_OK_UDEC_MOREINPUT;
+      break;
+    }
     if(! done)
     {
       bcr = 1;
-      if (med < 0x20) {
+      if ((PRUint8)*src < 0x20) {
         // somehow some table miss the 0x00 - 0x20 part
-        *dest = med;
+        *dest = *src;
+      } else if(*src == (PRUint8) 0xa0) {
+        // handle nbsp
+        *dest = 0x00a0;
       } else {
         // we need to decide how many byte we skip. We can use uScan to do this
         for (i=0; i<aTableCount; i++)  
