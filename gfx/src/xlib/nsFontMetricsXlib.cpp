@@ -517,16 +517,17 @@ FreeStretch(nsFontStretch* aStretch)
 static void
 FreeWeights(nsFontWeight* aWeight)
 {
+  nsFontStretch* stretches=aWeight->mStretches;
   for (int i=0; i < 9; i++)
   {
-    if (aWeight->mStretches[i])
+    if (stretches[i])
     {
       for (int j=i+1; j < 9; j++)
       {
-        if (aWeight->mStretches[j] == aWeight->mStretches[i])
-          aWeight->mStretches[j] = nsnull;
+        if (stretches[j] == stretches[i])
+          stretches[j] = nsnull;
       }
-      FreeStretch(aWeight->mStretches[i]);
+      FreeStretch(stretches[i]);
     }
   }
   delete aWeight;
@@ -535,16 +536,17 @@ FreeWeights(nsFontWeight* aWeight)
 static void
 FreeStyle(nsFontStyle* aStyle)
 {
+  nsFontWeight* weights=aStyle->mWeights;
   for (int i=0; i < 9; i++)
   {
-    if (aStyle->mWeights[i])
+    if (weights[i])
     {
       for (int j = i+1; j < 9; j++)
       {
-        if (aStyle->mWeights[j] == aStyle->mWeights[i])
-          aStyle->mWeights[j] = nsnull;
+        if (weights[j] == weights[i])
+          weights[j] = nsnull;
       }
-      FreeWeights(aStyle->mWeights[i]);
+      FreeWeights(weights[i]);
     }
   }
   delete aStyle;
