@@ -351,7 +351,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineStopTimer(const char *timerName)
     return NS_OK;
 }
 
-PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName)
+PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *str)
 {
     if (timers == NULL) {
         return NS_ERROR_FAILURE;
@@ -369,8 +369,12 @@ PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName)
     char buf[500];
     PRInt32 sec, msec;
     ParseTime(accum, sec, msec);
-    PR_snprintf(buf, sizeof buf, "%s total: %d.%03d",
-                timerName, sec, msec);
+    if (!str)
+        PR_snprintf(buf, sizeof buf, "%s total: %d.%03d",
+                    timerName, sec, msec);
+    else
+        PR_snprintf(buf, sizeof buf, "%s total: %d.%03d (%s)",
+                    timerName, sec, msec, str);
     NS_TimelineMark(buf);
 
     return NS_OK;
