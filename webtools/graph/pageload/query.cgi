@@ -1,9 +1,7 @@
 #!/usr/bin/perl
 use CGI::Carp qw(fatalsToBrowser);
 use CGI::Request;
-#use POSIX qw(strftime);
 use Date::Calc qw(Add_Delta_Days);  # http://www.engelschall.com/u/sb/download/Date-Calc/
-
 
 my $req = new CGI::Request;
 
@@ -94,17 +92,6 @@ sub show_graph {
 	$yscale = "set yrange [ 1300 : 1400 ]";
   }
 
-# Trying Date::Calc module, jrgm & I started two implementations
-# at the same time... -mcafee
-#
-#  use constant DAY => 60*60*24;
-#  my $rightNow = time();
-#  my $endOfDay = $rightNow + 2 * DAY - $rightNow % DAY;
-#  my $upperDay = strftime "%Y/%m/%d/%H/%M/%S", gmtime($endOfDay);
-#  my $lowerDay = strftime "%Y/%m/%d/%H/%M/%S", gmtime($endOfDay - 7*DAY);
-#  #set xrange [ $lowerDay : $upperDay ]
-#                               set timefmt "%Y/%m/%d/%H/%M/%S"
-#                                set xrange [ $lowerDay : $upperDay ]
   # interpolate params into gnuplot command
   my $cmds = qq{
 				reset
