@@ -68,9 +68,7 @@
 
     <vbox align="center" flex="1">
       <image src="chrome://messenger/content/about-thunderbird.png"/>
-      <!--
-      <separator class="thin"/>
-      -->
+
       <hbox>
         <vbox>
           <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
