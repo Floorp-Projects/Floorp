@@ -129,30 +129,32 @@ nsHTMLHR::CloneNode(nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLHR::GetAlign(nsString& aAlign) {
-  mInner.GetAttribute(nsHTMLAtoms::align, aAlign);
+nsHTMLHR::GetAlign(nsString& aValue)
+{
+  mInner.GetAttribute(nsHTMLAtoms::align, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLHR::SetAlign(const nsString& aAlign) {
-  return mInner.SetAttr(nsHTMLAtoms::align, aAlign, eSetAttrNotify_Reflow);
+nsHTMLHR::SetAlign(const nsString& aValue)
+{
+  return mInner.SetAttr(nsHTMLAtoms::align, aValue, eSetAttrNotify_Reflow);
 }
 
 NS_IMETHODIMP
-nsHTMLHR::GetNoShade(PRBool* aNoShade)
+nsHTMLHR::GetNoShade(PRBool* aValue)
 {
   nsHTMLValue val;
-  *aNoShade =
-   NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(nsHTMLAtoms::noshade, val);
+  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::noshade, val);
+  *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLHR::SetNoShade(PRBool aNoShade)
+nsHTMLHR::SetNoShade(PRBool aValue)
 {
   nsAutoString empty;
-  if (aNoShade) {
+  if (aValue) {
     return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
   }
   else {
@@ -162,29 +164,29 @@ nsHTMLHR::SetNoShade(PRBool aNoShade)
 }
 
 NS_IMETHODIMP
-nsHTMLHR::GetSize(nsString& aSize)
+nsHTMLHR::GetSize(nsString& aValue)
 {
-  mInner.GetAttribute(nsHTMLAtoms::size, aSize);
+  mInner.GetAttribute(nsHTMLAtoms::size, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLHR::SetSize(const nsString& aSize)
+nsHTMLHR::SetSize(const nsString& aValue)
 {
-  return mInner.SetAttr(nsHTMLAtoms::size, aSize, eSetAttrNotify_Reflow);
+  return mInner.SetAttr(nsHTMLAtoms::size, aValue, eSetAttrNotify_Reflow);
 }
 
 NS_IMETHODIMP
-nsHTMLHR::GetWidth(nsString& aWidth)
+nsHTMLHR::GetWidth(nsString& aValue)
 {
-  mInner.GetAttribute(nsHTMLAtoms::width, aWidth);
+  mInner.GetAttribute(nsHTMLAtoms::width, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLHR::SetWidth(const nsString& aWidth)
+nsHTMLHR::SetWidth(const nsString& aValue)
 {
-  return mInner.SetAttr(nsHTMLAtoms::width, aWidth, eSetAttrNotify_Reflow);
+  return mInner.SetAttr(nsHTMLAtoms::width, aValue, eSetAttrNotify_Reflow);
 }
 
 static nsHTMLGenericContent::EnumTable kAlignTable[] = {
