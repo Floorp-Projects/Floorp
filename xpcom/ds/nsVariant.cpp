@@ -836,9 +836,6 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
 nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
                             nsAString & _retval)
 {
-    nsCAutoString tempCString;
-    nsresult rv;
-
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ASTRING:
@@ -849,13 +846,10 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
         CopyASCIItoUCS2(*data.u.mCStringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
-        // XXX This is an extra copy that should be avoided
-        // once Jag lands support for UTF8String and associated
-        // conversion methods.
-        _retval.Assign(NS_ConvertUTF8toUCS2(*data.u.mUTF8StringValue));
+        CopyUTF8toUTF16(*data.u.mUTF8StringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
-        CopyASCIItoUCS2(nsDependentCString(data.u.str.mStringValue), _retval);
+        CopyASCIItoUTF16(data.u.str.mStringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
         _retval.Assign(data.u.wstr.mWStringValue);
@@ -872,11 +866,14 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
         _retval.Assign(data.u.mWCharValue);
         return NS_OK;
     default:
-        rv = ToString(data, tempCString);
+    {
+        nsCAutoString tempCString;
+        nsresult rv = ToString(data, tempCString);
         if(NS_FAILED(rv))
             return rv;
-        CopyASCIItoUCS2(tempCString, _retval);
+        CopyASCIItoUTF16(tempCString, _retval);
         return NS_OK;
+    }
     }
 }
 
@@ -884,8 +881,6 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data,
 nsVariant::ConvertToACString(const nsDiscriminatedUnion& data,
                              nsACString & _retval)
 {
-    nsresult rv;
-
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ASTRING:
@@ -923,10 +918,7 @@ nsVariant::ConvertToACString(const nsDiscriminatedUnion& data,
         return NS_OK;
     }
     default:
-        rv = ToString(data, _retval);
-        if(NS_FAILED(rv))
-            return rv;
-        return NS_OK;
+        return ToString(data, _retval);
     }
 }
 
@@ -934,67 +926,59 @@ nsVariant::ConvertToACString(const nsDiscriminatedUnion& data,
 nsVariant::ConvertToAUTF8String(const nsDiscriminatedUnion& data,
                                 nsAUTF8String & _retval)
 {
-    nsCAutoString tempCString;
-    nsresult rv;
-
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-        // XXX Extra copy.  Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(*data.u.mAStringValue));
+        CopyUTF16toUTF8(*data.u.mAStringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
-        // XXX Extra copy and conversion.
-        // Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(
-                       NS_ConvertASCIItoUCS2(*data.u.mCStringValue)));
+        // XXX Extra copy, can be removed if we're sure CSTRING can
+        //     only contain ASCII.
+        CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(*data.u.mCStringValue),
+                        _retval);
         return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
         _retval.Assign(*data.u.mUTF8StringValue);
         return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
-        // XXX Extra copy and conversion.
-        // Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(
-                       NS_ConvertASCIItoUCS2(
-                       nsDependentCString(data.u.str.mStringValue))));
+        // XXX Extra copy, can be removed if we're sure CHAR_STR can
+        //     only contain ASCII.
+        CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(data.u.str.mStringValue),
+                        _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-        // XXX Extra copy.  Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(
-                       nsDependentString(data.u.wstr.mWStringValue)));
+        CopyUTF16toUTF8(data.u.wstr.mWStringValue, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-        // XXX Extra copy and conversion.
-        // Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(
-                       NS_ConvertASCIItoUCS2(
-                       nsDependentCString(data.u.str.mStringValue,
-                                          data.u.str.mStringLength))));
+        // XXX Extra copy, can be removed if we're sure CHAR_STR can
+        //     only contain ASCII.
+        CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(
+            nsDependentCString(data.u.str.mStringValue,
+                               data.u.str.mStringLength)), _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-        // XXX Extra copy.  Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(
-                       nsDependentString(data.u.wstr.mWStringValue,
-                                         data.u.wstr.mWStringLength)));
+        CopyUTF16toUTF8(nsDependentString(data.u.wstr.mWStringValue,
+                                          data.u.wstr.mWStringLength),
+                        _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR:
     {
-        // XXX Extra copies.  Jag will fix when he lands UTF8String
-        nsAutoString tempString(data.u.mWCharValue);
-        _retval.Assign(NS_ConvertUCS2toUTF8(tempString));
+        const PRUnichar* str = &data.u.mWCharValue;
+        CopyUTF16toUTF8(Substring(str, str), _retval);
         return NS_OK;
     }
     default:
-        rv = ToString(data, tempCString);
+    {
+        nsCAutoString tempCString;
+        nsresult rv = ToString(data, tempCString);
         if(NS_FAILED(rv))
             return rv;
-        // XXX Extra copy and conversion.
-        // Jag will fix when he lands UTF8String
-        _retval.Assign(NS_ConvertUCS2toUTF8(
-                       NS_ConvertASCIItoUCS2(tempCString)));
+        // XXX Extra copy, can be removed if we're sure tempCString can
+        //     only contain ASCII.
+        CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(tempCString), _retval);
         return NS_OK;
+    }
     }
 }
 

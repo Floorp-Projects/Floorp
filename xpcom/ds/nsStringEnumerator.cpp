@@ -159,7 +159,7 @@ nsStringEnumerator::GetNext(nsAString& aResult)
     if (mIsUnicode)
         aResult = *mArray->StringAt(mIndex++);
     else
-        aResult = NS_ConvertUTF8toUCS2(*mCArray->CStringAt(mIndex++));
+        CopyUTF8toUTF16(*mCArray->CStringAt(mIndex++), aResult);
     
     return NS_OK;
 }

@@ -515,7 +515,7 @@ NS_IMETHODIMP nsLocalFile::GetLeafName(nsAString& aLeafName)
   nsresult rv = GetNativeLeafName(nativeString);
   if (NS_FAILED(rv))
     return rv;
-  aLeafName.Assign(NS_ConvertUTF8toUCS2(nativeString));
+  CopyUTF8toUTF16(nativeString, aLeafName);
   return NS_OK;
 }
 
@@ -814,7 +814,7 @@ NS_IMETHODIMP nsLocalFile::GetPath(nsAString& aPath)
   nsresult rv = GetNativePath(nativeString);
   if (NS_FAILED(rv))
     return rv;
-  aPath.Assign(NS_ConvertUTF8toUCS2(nativeString));
+  CopyUTF8toUTF16(nativeString, aPath);
   return NS_OK;
 }
 
