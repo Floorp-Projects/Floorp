@@ -22,10 +22,6 @@ LCFLAGS=-DXPIDL_JS_STUBS
 MODULE=rdf
 LIBRARY_NAME=rdfbase_s
 
-C_OBJS=\
-        .\$(OBJDIR)\rdf_qsort.obj             \
-	$(NULL)
-
 CPP_OBJS=\
         .\$(OBJDIR)\nsCompositeDataSource.obj     \
         .\$(OBJDIR)\nsContainerCursor.obj         \

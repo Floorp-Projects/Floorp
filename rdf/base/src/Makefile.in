@@ -26,10 +26,6 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = rdfbase_s
 
-CSRCS =				\
-        rdf_qsort.c             \
-	$(NULL)
-
 CPPSRCS =				\
 	nsCompositeDataSource.cpp       \
 	nsContainerCursor.cpp		\

@@ -35,7 +35,6 @@ EXPORTS=\
         nsIRDFXMLDataSource.h           \
         nsIRDFXMLSource.h               \
         nsRDFInterfaces.h               \
-        rdf_qsort.h                     \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
