@@ -45,6 +45,15 @@ public:
      */
 	NS_IMETHOD
 	GetJSWindow(JSObject* *outJSWindow) = 0;
+	
+	/**
+	 * Get the JavaScript execution thread corresponding to this plugin instance.
+	 *
+	 * @param outThreadID - the resulting JavaScript thread
+	 * @result - NS_OK if this operation was successful
+	 */
+	NS_IMETHOD
+	GetJSThread(PRUint32 *outThreadID) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
