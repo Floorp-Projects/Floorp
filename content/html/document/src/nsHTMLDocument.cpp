@@ -57,12 +57,6 @@
 #endif
 
 // Find/Serach Includes
-#if XP_NEW_SELECTION
-#else
-#include "nsISelection.h"
-#include "nsSelectionRange.h"
-#include "nsSelectionPoint.h"
-#endif
 const PRInt32 kForward  = 0;
 const PRInt32 kBackward = 1;
 
@@ -1446,6 +1440,8 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
     }
   }
 
+#if 0
+//DEBUG MJUDGE
   if (str) {
     PRInt32 inx = str - contentStr;
 
@@ -1474,7 +1470,7 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
 
     found = PR_TRUE;
   }
-
+#endif //0
   delete[] searchStr;
   delete[] contentStr;
 
@@ -1838,7 +1834,8 @@ nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
  */
 NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
-
+#if 0
+//DEBUG MJUDGE
   aIsFound         = PR_FALSE;
   mShouldMatchCase = aMatchCase;
 
@@ -2121,6 +2118,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     NS_RELEASE(startContent);
     NS_RELEASE(endContent);
   }
+#endif //0
   return NS_OK;
 }
 

@@ -36,7 +36,6 @@
 #include "nsISizeOfHandler.h"
 
 #include "nsIDOMText.h"
-#include "nsSelectionRange.h"
 #include "nsDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
@@ -66,29 +65,12 @@ PRInt32      fTrackerAddListMax = 0;
 nsIDocument      *gDoc = nsnull;
 
 // [HACK] Foward Declarations
-void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 void ForceDrawFrame(nsFrame * aFrame);
-void resetContentTrackers();
-void RefreshFromContentTrackers(nsIPresContext& aPresContext);
-void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndContent, PRUint32 aType);
+void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 
-
-
-
-// Initialize Global Selection Data
-nsIFrame *  nsFrame::mCurrentFrame   = nsnull;
 PRBool      nsFrame::mDoingSelection = PR_FALSE;
 PRBool      nsFrame::mDidDrag        = PR_FALSE;
-PRInt32     nsFrame::mStartPos       = 0;
 
-// Selection data is valid only from the Mouse Press to the Mouse Release
-#if XP_NEW_SELECTION
-#else
-nsSelectionRange * nsFrame::mSelectionRange      = nsnull;
-nsISelection     * nsFrame::mSelection           = nsnull;
-nsSelectionPoint * nsFrame::mStartSelectionPoint = nsnull;
-nsSelectionPoint * nsFrame::mEndSelectionPoint   = nsnull;
-#endif
 
 //----------------------------------------------------------------------
 
@@ -248,14 +230,6 @@ nsFrame::~nsFrame()
     mView = nsnull;
   }
 
-  if (mStartSelectionPoint != nsnull) {
-    delete mStartSelectionPoint;
-    mStartSelectionPoint = nsnull;
-  }
-  if (mEndSelectionPoint != nsnull) {
-    delete mEndSelectionPoint;
-    mEndSelectionPoint = nsnull;
-  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -602,23 +576,7 @@ NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
 
   nsIPresShell       * shell     = aPresContext.GetShell();
   nsIDocument        * doc       = shell->GetDocument();
-  if (mSelectionRange == nsnull) { // Get Selection Object
-#if XP_NEW_SELECTION
-#else
-    nsISelection     * selection;
-#endif
-    doc->GetSelection(selection);
-
-    mSelectionRange = selection->GetRange(); 
-
-    clearAfterPaint = PR_TRUE;
-    NS_RELEASE(selection);
-  }
-
-  nsIContent * selStartContent = mSelectionRange->GetStartContent(); // ref counted
-  nsIContent * selEndContent   = mSelectionRange->GetEndContent();   // ref counted
-
-  if (doc->IsInRange(selStartContent, selEndContent, content)) {
+  if (content && doc && doc->IsInSelection(content)) {
     nsRect rect;
     GetRect(rect);
     rect.width--;
@@ -629,14 +587,9 @@ NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
     aRenderingContext.DrawLine(rect.x, rect.y+rect.height, rect.x+rect.width, rect.y);
   }
 
-  if (clearAfterPaint) {
-    mSelectionRange = nsnull;
-  }
-  NS_IF_RELEASE(selStartContent);
-  NS_IF_RELEASE(selEndContent);
-  NS_RELEASE(content);
-  NS_RELEASE(doc);
-  NS_RELEASE(shell);
+  NS_IF_RELEASE(content);
+  NS_IF_RELEASE(doc);
+  NS_IF_RELEASE(shell);
 
   return NS_OK;
 }
@@ -676,8 +629,7 @@ NS_IMETHODIMP nsFrame::HandleEvent(nsIPresContext& aPresContext,
     } else if (aEvent->message == NS_MOUSE_MOVE) {
       mDidDrag = PR_TRUE;
       HandleDrag(aPresContext, aEvent, aEventStatus);
-    if (SELECTION_DEBUG) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
-
+//DEBUG MJUDGE DEBUG MESSAGE FOR DRAGGING FROM SELECTION
     } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
       HandlePress(aPresContext, aEvent, aEventStatus);
     }
@@ -699,6 +651,8 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
+#if 0
+//DEBUG MJUDGE
   nsFrame             * currentFrame   = this;
   nsIPresShell        * shell          = aPresContext.GetShell();
   nsMouseEvent        * mouseEvent     = (nsMouseEvent *)aEvent;
@@ -706,10 +660,7 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
   
   gDoc = shell->GetDocument();
 
-#if XP_NEW_SELECTION
-#else
   nsISelection     * selection;
-#endif
   gDoc->GetSelection(selection);
 
   shell->CreateRenderingContext(this, acx);
@@ -874,6 +825,7 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
   NS_RELEASE(selection);
 
   aEventStatus = nsEventStatus_eIgnore;
+#endif //0
   return NS_OK;
 
 }
@@ -882,6 +834,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsGUIEvent*     aEvent,
                               nsEventStatus&  aEventStatus)
 {
+#if 0
+//DEBUG MJUDGE
   if (DisplaySelection(aPresContext) == PR_FALSE)
   {
     aEventStatus = nsEventStatus_eIgnore;
@@ -999,6 +953,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   RefreshFromContentTrackers(aPresContext);
 
   aEventStatus = nsEventStatus_eIgnore;
+#endif //0
   return NS_OK;
 }
 
@@ -1046,6 +1001,8 @@ void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
 
   // Get new Cursor Poition in the new content
   PRInt32 newPos;
+#if 0
+//DEBUG MJUDGE
 
   GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
 
@@ -1086,6 +1043,7 @@ void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
     if (SELECTION_DEBUG) printf("--\n--\n--\n--\n--\n--\n--\n Should be here. #102\n");
     //return;
   }
+#endif //0
 }
 
 /********************************************************
@@ -1094,6 +1052,7 @@ void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
 void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
                                         nsIRenderingContext * aRendContext,
                                         nsGUIEvent    * aEvent) {
+#if 0
   PRUint32 actualOffset = 0;
 
   // Get new Cursor Poition in the same content
@@ -1141,6 +1100,7 @@ void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
 
     if (SELECTION_DEBUG) printf("Start %s  End %s\n", mStartSelectionPoint->ToString(), mEndSelectionPoint->ToString());
   //}
+#endif //0
 }
 
 NS_IMETHODIMP
@@ -1747,6 +1707,8 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
                                  nsIContent * aCurrentContent,
                                  nsIFrame   * aNewFrame)
 {
+#if 0
+//DEBUG MJUDGE
   if (SELECTION_DEBUG) printf("New Frame, New content is before.\n");
   // Dragging mouse to the left or backward in content
   //
@@ -1814,6 +1776,7 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
   NS_RELEASE(selEndContent);
   NS_RELEASE(doc);
   NS_RELEASE(shell);
+#endif //0
 }
 
  /********************************************************
@@ -1883,6 +1846,9 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
                                 nsIContent * aCurrentContent,
                                 nsIFrame   * aNewFrame)
 {
+#if 0
+//DEBUG MJUDGE
+
   if (SELECTION_DEBUG) printf("New Frame, New content is after.\n");
 
 
@@ -2000,6 +1966,7 @@ void nsFrame::NewContentIsAfter(nsIPresContext& aPresContext,
   NS_RELEASE(selEndContent);
   NS_RELEASE(doc);
   NS_RELEASE(shell);
+#endif //0
 }
 
 /**
