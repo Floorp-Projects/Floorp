@@ -311,7 +311,7 @@ function awDeleteHit(inputElement)
   if (nextRow) {
     awSetFocus(row+index, nextRow)
     if (row)
-      awRemoveRow(row);
+      awCleanupRows(row);
   }
   else
     inputElement.value = "";
