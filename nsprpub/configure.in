@@ -1157,14 +1157,8 @@ case "$target" in
         PR_MD_ASFILES=os_Linux_ia64.s
         ;;
     m68k)
-        CFLAGS="$CFLAGS -m68020-40"
-        CXXFLAGS="$CXXFLAGS -m68020-40"
-        #
-        # gcc on Linux/m68k either has a bug or triggers a code-sequence
-        # bug in the 68060 which causes gcc to crash.  The simplest way to
-        # avoid this is to enable a minimum level of optimization.
-        #
-        _DEBUG_FLAGS="$_DEBUG_FLAGS -O"
+        CFLAGS="$CFLAGS -m68020-60"
+        CXXFLAGS="$CXXFLAGS -m68020-60"
         ;;
     esac    
     ;;
