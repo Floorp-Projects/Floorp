@@ -58,7 +58,7 @@ nsOS2Locale::~nsOS2Locale(void)
 
 /* Workaround for GCC problem */
 #ifndef LOCI_sName
-#define LOCI_sName 100
+#define LOCI_sName ((LocaleItem)100)
 #endif
 
 NS_IMETHODIMP 
