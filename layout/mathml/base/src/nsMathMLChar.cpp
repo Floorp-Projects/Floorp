@@ -51,8 +51,9 @@
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
 
+#include "nsIDOMWindow.h"
+#include "nsIDialogParamBlock.h"
 #include "nsIWindowWatcher.h"
-#include "nsIPrompt.h"
 
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
@@ -133,24 +134,46 @@ CheckFontExistence(nsIPresContext* aPresContext, const nsString& aFontName)
 }
 
 // alert the user if some of the needed MathML fonts are not installed.
+// it is non-modal (i.e., it doesn't wait for input from the user)
 static void
 AlertMissingFonts(nsString& aMissingFonts)
 {
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (wwatch) {
-    nsCOMPtr<nsIPrompt> prompter;
-    wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-    if (prompter) {
-      nsAutoString message;
-      message.AssignWithConversion(
-"This page contains MathML. Mozilla has detected that some "
-"of the fonts needed for quality rendering of MathML are missing "
-"from your system. Without these fonts, Mozilla cannot render "
-"the page properly. To get a rendering of professional quality "
-"you should install the following fonts: ");
-      message.Append(aMissingFonts);
-      prompter->Alert(0, message.get());
-    }
+    nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+    if (!paramBlock) return;
+
+    // copied from nsICommonDialogs.idl which curiously isn't part of the build
+    // (mozilla/xpfe/appshell/public/nsICommonDialogs.idl)
+    enum {eMsg=0, eCheckboxMsg=1, eIconClass=2, eTitleMessage=3, eEditfield1Msg=4,
+          eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7, eButton0Text=8,
+          eButton1Text=9, eButton2Text=10, eButton3Text=11,eDialogTitle=12};
+    enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2, eNumberEditfields=3,
+          eEditField1Password=4};
+
+    nsAutoString icon;
+    icon.Assign(NS_LITERAL_STRING("alert-icon"));
+
+    nsAutoString title;
+    title.Assign(NS_LITERAL_STRING("Missing MathML Fonts"));
+
+    nsAutoString message;
+    message.Assign(NS_LITERAL_STRING("To properly display the MathML on this page you need to install the following fonts:\n"));
+    message.Append(aMissingFonts);
+    message.Append(NS_LITERAL_STRING(".\n\n\n For further information see:\n http://www.mozilla.org/projects/mathml/fonts"));
+
+    paramBlock->SetInt(eNumberButtons, 1);
+    paramBlock->SetString(eDialogTitle, title.get());
+    paramBlock->SetString(eMsg, message.get());
+    paramBlock->SetString(eIconClass, icon.get());
+
+    nsCOMPtr<nsIDOMWindow> parent;
+    wwatch->GetActiveWindow(getter_AddRefs(parent));
+
+    nsCOMPtr<nsIDOMWindow> dialog;
+    wwatch->OpenWindow(parent, "chrome://global/content/commonDialog.xul", "_blank",
+                       "dependent,centerscreen,chrome,titlebar", paramBlock,
+                       getter_AddRefs(dialog));
   }
 }
 
@@ -2020,21 +2043,21 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
   // draw top, middle, bottom
   for (i = 0; i < 3; i++) {
     ch = chdata[i];
-#ifdef SHOW_BORDERS
-    // bounding box of the part
-    aRenderingContext.SetColor(NS_RGB(0,0,0));
-    aRenderingContext.DrawRect(nsRect(dx,start[i],width+30*(i+1),end[i]-start[i]));
-#endif
     // glue can be null, and other parts could have been set to glue
     if (ch) {
+#ifdef SHOW_BORDERS
+      // bounding box of the part
+      aRenderingContext.SetColor(NS_RGB(0,0,0));
+      aRenderingContext.DrawRect(nsRect(dx,start[i],width+30*(i+1),end[i]-start[i]));
+#endif
       dy = offset[i];
-      if (0 == i) {
+      if (0 == i) { // top
         clipRect.SetRect(dx, aRect.y, width, aRect.height);
       }
-      else if (1 == i) {
+      else if (1 == i) { // middle
         clipRect.SetRect(dx, end[0], width, start[2]-end[0]);
       }
-      else {
+      else { // bottom
         clipRect.SetRect(dx, start[2], width, end[2]-start[2]);
       }
       if (!clipRect.IsEmpty()) {
@@ -2078,10 +2101,10 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
         return NS_ERROR_UNEXPECTED;
       }
       // paint the rule between the parts
-      aRenderingContext.FillRect(aRect.x + lbearing,
-                                 end[first] - onePixel,
-                                 rbearing - lbearing,
-                                 start[last] - end[first] + 2*onePixel);
+      nsRect rule(aRect.x + lbearing, end[first] - onePixel,
+                  rbearing - lbearing, start[last] - end[first] + 2*onePixel);
+      if (!rule.IsEmpty())
+        aRenderingContext.FillRect(rule);
       first = last;
       last++;
     }
@@ -2207,13 +2230,13 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
                                  end[i] - start[i], bmdata[i].ascent + bmdata[i].descent));
 #endif
       dx = offset[i];
-      if (0 == i) {
+      if (0 == i) { // left
         clipRect.SetRect(dx, aRect.y, aRect.width, aRect.height);
       }
-      else if (1 == i) {
+      else if (1 == i) { // middle
         clipRect.SetRect(end[0], aRect.y, start[2]-end[0], aRect.height);
       }
-      else {
+      else { // right
         clipRect.SetRect(start[2], aRect.y, end[2]-start[2], aRect.height);
       }
       if (!clipRect.IsEmpty()) {
@@ -2256,10 +2279,10 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         return NS_ERROR_UNEXPECTED;
       }
       // paint the rule between the parts
-      aRenderingContext.FillRect(end[first] - onePixel,
-                                 dy - ascent,
-                                 start[last] - end[first] + 2*onePixel,
-                                 ascent + descent);
+      nsRect rule(end[first] - onePixel, dy - ascent,
+                  start[last] - end[first] + 2*onePixel, ascent + descent);
+      if (!rule.IsEmpty())
+        aRenderingContext.FillRect(rule);
       first = last;
       last++;
     }
