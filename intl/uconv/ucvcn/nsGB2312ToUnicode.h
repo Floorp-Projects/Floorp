@@ -31,7 +31,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsGB2312ToUnicode : public nsTableDecoderSupport
+class nsGB2312ToUnicode : public nsTablesDecoderSupport
 {
 public:
 

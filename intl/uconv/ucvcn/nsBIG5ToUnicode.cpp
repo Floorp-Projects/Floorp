@@ -25,19 +25,43 @@
 static PRUint16 g_BIG5MappingTable[] = {
 #include "big5.ut"
 };
+static PRUint16 g_ASCIIMappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
 
 static PRInt16 g_BIG5ShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+  0, u2BytesCharset,  
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+static PRInt16 g_ASCIIShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+static PRInt16 *g_BIG5ShiftTableSet [] = {
+  g_ASCIIShiftTable,
+  g_BIG5ShiftTable
+};
+
+static PRUint16 *g_BIG5MappingTableSet [] ={
+  g_ASCIIMappingTable,
+  g_BIG5MappingTable
+};
+
+static uRange g_BIG5Ranges[] = {
+  { 0x00, 0x7E },
+  { 0x81, 0xFC }
 };
 
 //----------------------------------------------------------------------
 // Class nsBIG5ToUnicode [implementation]
 
 nsBIG5ToUnicode::nsBIG5ToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_BIG5ShiftTable, 
-                        (uMappingTable*) &g_BIG5MappingTable)
+: nsTablesDecoderSupport(2, 
+                        (uRange* ) &g_BIG5Ranges,
+                        (uShiftTable**) &g_BIG5ShiftTableSet, 
+                        (uMappingTable**) &g_BIG5MappingTableSet)
 {
 }
 
@@ -48,7 +72,7 @@ nsresult nsBIG5ToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
+// Subclassing of nsTablesDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsBIG5ToUnicode::GetMaxLength(const char * aSrc, 
                                               PRInt32 aSrcLength, 

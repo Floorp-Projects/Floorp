@@ -19,25 +19,53 @@
 
 #include "nsGB2312ToUnicode.h"
 
+
+
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
+static PRUint16 g_ASCIIMappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
 static PRUint16 g_GB2312MappingTable[] = {
 #include "gb2312.ut"
 };
 
-static PRInt16 g_GB2312ShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+
+static PRInt16 g_ASCIIShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
 };
+
+static PRInt16 g_GB2312ShiftTable[] =  {
+  0, u2BytesGRCharset,  
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+static PRInt16 *g_GB2312ShiftTableSet [] = {
+  g_ASCIIShiftTable,
+  g_GB2312ShiftTable
+};
+
+static PRUint16 *g_GB2312MappingTableSet [] ={
+  g_ASCIIMappingTable,
+  g_GB2312MappingTable
+};
+
+static uRange g_GB2312Ranges[] = {
+  { 0x00, 0x7E },
+  { 0xA1, 0xFE }
+};
+
 
 //----------------------------------------------------------------------
 // Class nsGB2312ToUnicode [implementation]
 
 nsGB2312ToUnicode::nsGB2312ToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_GB2312ShiftTable, 
-                        (uMappingTable*) &g_GB2312MappingTable)
+: nsTablesDecoderSupport(2, 
+                        (uRange *) &g_GB2312Ranges,
+                        (uShiftTable**) &g_GB2312ShiftTableSet, 
+                        (uMappingTable**) &g_GB2312MappingTableSet)
 {
 }
 
@@ -48,7 +76,7 @@ nsresult nsGB2312ToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
+// Subclassing of nsTablesDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsGB2312ToUnicode::GetMaxLength(const char * aSrc, 
                                               PRInt32 aSrcLength, 

@@ -31,7 +31,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsEUCTWToUnicode : public nsTableDecoderSupport
+class nsEUCTWToUnicode : public nsTablesDecoderSupport
 {
 public:
 
