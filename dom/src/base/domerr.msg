@@ -36,6 +36,14 @@ DOM_MSG_DEF(NS_ERROR_DOM_NOT_FOUND_ERR, "Node was not found")
 DOM_MSG_DEF(NS_ERROR_DOM_NOT_SUPPORTED_ERR, "Object cannot be created in this context")
 DOM_MSG_DEF(NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR, "Attribute already in use")
 
+/* DOM error codes from http://www.w3.org/TR/DOM-Level-2/ */
+
+DOM_MSG_DEF(NS_ERROR_DOM_INVALID_ACCESS_ERR, "A parameter or an operation is not supported by the underlying object")
+DOM_MSG_DEF(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, "An attempt was made to modify the type of the underlying objec")
+DOM_MSG_DEF(NS_ERROR_DOM_INVALID_STATE_ERR, "An attempt was made to use an object that is not, or is no longer, usable")
+DOM_MSG_DEF(NS_ERROR_DOM_NAMESPACE_ERR, "An attempt was made to create or change an object in a way which is incorrect with regard to namespaces")
+DOM_MSG_DEF(NS_ERROR_DOM_SYNTAX_ERR, "An invalid or illegal string was specified")
+
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */

@@ -76,7 +76,10 @@ extern nsresult
 NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
                       const nsString& aName,
                       nsIDOMNamedNodeMap *aEntities,
-                      nsIDOMNamedNodeMap *aNotations);
+                      nsIDOMNamedNodeMap *aNotations,
+                      const nsString& aPublicId,
+                      const nsString& aSystemId,
+                      const nsString& aInternalSubset);
 
 extern nsresult
 NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,

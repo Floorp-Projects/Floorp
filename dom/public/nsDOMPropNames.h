@@ -219,12 +219,17 @@
     "documenttype.entities", \
     "documenttype.name", \
     "documenttype.notations", \
+    "documenttype.publicid", \
+    "documenttype.systemid", \
+    "documenttype.internalsubset", \
     "domexception.code", \
     "domexception.message", \
     "domexception.name", \
     "domexception.result", \
     "domexception.tostring", \
     "domimplementation.hasfeature", \
+    "domimplementation.createdocumenttype", \
+    "domimplementation.createdocument", \
     "element.getattribute", \
     "element.getattributenode", \
     "element.getelementsbytagname", \
@@ -651,11 +656,11 @@
     "navigator.language", \
     "navigator.mimetypes", \
     "navigator.platform", \
-    "navigator.oscpu", \
     "navigator.vendor", \
-    "navigator.vendorSub", \
+    "navigator.vendorsub", \
     "navigator.product", \
-    "navigator.productSub", \
+    "navigator.productsub", \
+    "navigator.oscpu", \
     "navigator.plugins", \
     "navigator.preference", \
     "navigator.securitypolicy", \

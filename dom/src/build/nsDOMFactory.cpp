@@ -369,6 +369,9 @@ nsDOMScriptObjectFactory::NewScriptCharacterData(PRUint16 aNodeType,
   else if (aNodeType == nsIDOMNode::COMMENT_NODE) {
     return NS_NewScriptComment(aContext, aData, aParent, aReturn);
   }
+  else if (aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    return NS_NewScriptDocumentType(aContext, aData, aParent, aReturn);
+  }
   else {
     return NS_NewScriptText(aContext, aData, aParent, aReturn);
   }

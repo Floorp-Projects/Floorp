@@ -41,9 +41,13 @@ class nsXMLDocumentType : public nsIDOMDocumentType,
                           public nsIContent
 {
 public:
-  nsXMLDocumentType(const nsString& aTarget,
+  nsXMLDocumentType(const nsString& aName,
                     nsIDOMNamedNodeMap *aEntities,
-                    nsIDOMNamedNodeMap *aNotations);
+                    nsIDOMNamedNodeMap *aNotations,
+                    const nsString& aPublicId,
+                    const nsString& aSystemId,
+                    const nsString& aInternalSubset);
+
   virtual ~nsXMLDocumentType();
 
   // nsISupports
@@ -53,9 +57,7 @@ public:
   NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMDocumentType
-  NS_IMETHOD    GetName(nsString& aName);
-  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities);
-  NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations);
+  NS_DECL_IDOMDOCUMENTTYPE
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -75,6 +77,9 @@ protected:
   nsString mName;
   nsIDOMNamedNodeMap* mEntities;
   nsIDOMNamedNodeMap* mNotations;
+  nsString mPublicId;
+  nsString mSystemId;
+  nsString mInternalSubset;
   void* mScriptObject;
 };
 
@@ -82,13 +87,18 @@ nsresult
 NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
                       const nsString& aName,
                       nsIDOMNamedNodeMap *aEntities,
-                      nsIDOMNamedNodeMap *aNotations)
+                      nsIDOMNamedNodeMap *aNotations,
+                      const nsString& aPublicId,
+                      const nsString& aSystemId,
+                      const nsString& aInternalSubset)
+
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIContent* it = new nsXMLDocumentType(aName, aEntities, aNotations);
+  nsIContent* it = new nsXMLDocumentType(aName, aEntities, aNotations,
+                                         aPublicId, aSystemId, aInternalSubset);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -97,8 +107,14 @@ NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
 
 nsXMLDocumentType::nsXMLDocumentType(const nsString& aName,
                                      nsIDOMNamedNodeMap *aEntities,
-                                     nsIDOMNamedNodeMap *aNotations) :
-  mName(aName)
+                                     nsIDOMNamedNodeMap *aNotations,
+                                     const nsString& aPublicId,
+                                     const nsString& aSystemId,
+                                     const nsString& aInternalSubset) :
+  mName(aName),
+  mPublicId(aPublicId),
+  mSystemId(aSystemId),
+  mInternalSubset(aInternalSubset)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
@@ -201,6 +217,30 @@ nsXMLDocumentType::GetNotations(nsIDOMNamedNodeMap** aNotations)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXMLDocumentType::GetPublicId(nsString& aPublicId)
+{
+  aPublicId = mPublicId;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLDocumentType::GetSystemId(nsString& aSystemId)
+{
+  aSystemId = mSystemId;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLDocumentType::GetInternalSubset(nsString& aInternalSubset)
+{
+  aInternalSubset = mInternalSubset;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsXMLDocumentType::GetScriptObject(nsIScriptContext* aContext, 
                                             void** aScriptObject)
@@ -266,7 +306,10 @@ nsXMLDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   nsXMLDocumentType* it = new nsXMLDocumentType(mName,
                                                 mEntities,
-                                                mNotations);
+                                                mNotations,
+                                                mPublicId,
+                                                mSystemId,
+                                                mInternalSubset);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

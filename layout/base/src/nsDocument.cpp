@@ -69,6 +69,7 @@
 #include "nsRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
+#include "nsDOMDocumentType.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
@@ -402,6 +403,15 @@ public:
   NS_IMETHOD    HasFeature(const nsString& aFeature, 
                            const nsString& aVersion, 
                            PRBool* aReturn);
+  NS_IMETHOD    CreateDocumentType(const nsString& aQualifiedName,
+                                   const nsString& aPublicId,
+                                   const nsString& aSystemId,
+                                   nsIDOMDocumentType** aReturn);
+
+  NS_IMETHOD    CreateDocument(const nsString& aNamespaceURI,
+                               const nsString& aQualifiedName,
+                               nsIDOMDocumentType* aDoctype,
+                               nsIDOMDocument** aReturn);
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
@@ -472,6 +482,31 @@ nsDOMImplementation::HasFeature(const nsString& aFeature,
   else {
     *aReturn = PR_FALSE;
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMImplementation::CreateDocumentType(const nsString& aQualifiedName,
+                                        const nsString& aPublicId, 
+                                        const nsString& aSystemId, 
+                                        nsIDOMDocumentType** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  return NS_NewDOMDocumentType(aReturn, aQualifiedName, nsnull, nsnull,
+                               aPublicId, aSystemId, nsAutoString(""));
+}
+
+NS_IMETHODIMP
+nsDOMImplementation::CreateDocument(const nsString& aNamespaceURI, 
+                                    const nsString& aQualifiedName, 
+                                    nsIDOMDocumentType* aDoctype, 
+                                    nsIDOMDocument** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  *aReturn = nsnull;
 
   return NS_OK;
 }
@@ -1842,8 +1877,35 @@ nsresult nsDocument::SetScriptObject(void *aScriptObject)
 NS_IMETHODIMP    
 nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aDoctype);
+
+  *aDoctype = nsnull;
+
+  if (mProlog) {
+    PRInt32 i, count = mProlog->Count();
+
+    for (i = 0; i < count; i++) {
+      nsIContent* content = (nsIContent *)mProlog->ElementAt(0);
+
+      if (!content)
+        continue;
+
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+
+      if (node) {
+        PRUint16 nodeType;
+
+        node->GetNodeType(&nodeType);
+
+        if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+          return node->QueryInterface(NS_GET_IID(nsIDOMDocumentType),
+                                      (void **)aDoctype);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -2270,7 +2332,9 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
   }
 
   aNewChild->GetNodeType(&nodeType);
-  if ((COMMENT_NODE != nodeType) && (PROCESSING_INSTRUCTION_NODE != nodeType)) {
+  if ((COMMENT_NODE != nodeType) &&
+      (PROCESSING_INSTRUCTION_NODE != nodeType) &&
+      (DOCUMENT_TYPE_NODE != nodeType)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2280,7 +2344,13 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
   }
 
   if (nsnull == aRefChild) {
-    AppendToEpilog(content);
+    if ((!mProlog || (mProlog && mProlog->Count())) && mRootContent) {
+      AppendToEpilog(content);
+    } else if (nodeType != ELEMENT_NODE) {
+      AppendToProlog(content);
+    } else {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
   }
   else {
     result = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);

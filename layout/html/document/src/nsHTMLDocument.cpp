@@ -43,6 +43,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h" 
+#include "nsIDOMDOMImplementation.h"
+#include "nsIDOMDocumentType.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIStreamListener.h"
@@ -1078,6 +1080,78 @@ nsHTMLDocument::AddDocTypeDecl(const nsString& aDocTypeString, nsDTDMode aMode)
       mDocTypeStr->Append(aDocTypeString);
     }
   }
+
+  PRInt32 pos = aDocTypeString.Find("public", PR_TRUE);
+  nsAutoString publicId;
+
+  if (pos >= 0) {
+    aDocTypeString.Mid(publicId, pos + 6, aDocTypeString.Length() - pos);
+
+    publicId.CompressWhitespace();
+
+    PRUnichar ch = publicId.First();
+
+    if (ch == '"' || ch == '\'') {
+      publicId.Cut(0, 1);
+
+      pos = publicId.FindChar(ch);
+
+      if (pos >= 0) {
+        publicId.Truncate(pos);
+      } else {
+        publicId.Truncate();
+      }
+    }
+  }
+
+  if (publicId.Length()) {
+    nsCOMPtr<nsIDOMDocumentType> oldDocType;
+    nsCOMPtr<nsIDOMDocumentType> docType;
+
+    GetDoctype(getter_AddRefs(oldDocType));
+
+    nsCOMPtr<nsIDOMDOMImplementation> domImpl;
+
+    result = GetImplementation(getter_AddRefs(domImpl));
+
+    if (NS_FAILED(result) || !domImpl) {
+      return result;
+    }
+
+    result = domImpl->CreateDocumentType(nsAutoString("html"), publicId,
+                                         nsAutoString(""),
+                                         getter_AddRefs(docType));
+
+    if (NS_FAILED(result) || !docType) {
+      return result;
+    }
+
+    nsCOMPtr<nsIDOMNode> tmpNode;
+
+    if (oldDocType) {
+      /*
+       * If we already have a doctype we replace the old one.
+       */
+      result = ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
+    } else {
+      /*
+       * If we don't already have one we insert it as the first child,
+       * this might not be 100% correct but since this is called from
+       * the content sink we assume that this is what we want.
+       */
+      nsCOMPtr<nsIDOMNode> firstChild;
+
+      GetFirstChild(getter_AddRefs(firstChild));
+
+      /*
+       * If the above fails it must be because we don't have any child
+       * nodes, then firstChild will be 0 and InsertBefore() will append
+       */
+
+      result = InsertBefore(docType, firstChild, getter_AddRefs(tmpNode));
+    }
+  }
+
   return result;
 }
 
@@ -1254,9 +1328,7 @@ nsHTMLDocument::CreateEntityReference(const nsString& aName,
 NS_IMETHODIMP    
 nsHTMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 {
-  // There's no document type for a HTML document
-  *aDocumentType = nsnull;
-  return NS_OK;
+  return nsDocument::GetDoctype(aDocumentType); 
 }
 
 NS_IMETHODIMP    

@@ -40,6 +40,7 @@ CPPSRCS		= \
 		nsDocumentViewer.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
+		nsDOMDocumentType.cpp \
 		nsFrameImageLoader.cpp \
 		nsFrameList.cpp \
 		nsFrameTraversal.cpp \

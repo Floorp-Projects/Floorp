@@ -34,13 +34,17 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMDocumentType.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
+static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 
 
 /***********************************************************************/
@@ -186,6 +190,104 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 }
 
 
+//
+// Native method CreateDocumentType
+//
+PR_STATIC_CALLBACK(JSBool)
+DOMImplementationCreateDocumentType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDOMImplementation *nativeThis = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMDocumentType* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  nsAutoString b2;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMIMPLEMENTATION_CREATEDOCUMENTTYPE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 3) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
+
+    result = nativeThis->CreateDocumentType(b0, b1, b2, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CreateDocument
+//
+PR_STATIC_CALLBACK(JSBool)
+DOMImplementationCreateDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDOMImplementation *nativeThis = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMDocument* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  nsCOMPtr<nsIDOMDocumentType> b2;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMIMPLEMENTATION_CREATEDOCUMENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 3) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b2),
+                                           kIDocumentTypeIID,
+                                           "DocumentType",
+                                           cx,
+                                           argv[2])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->CreateDocument(b0, b1, b2, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for DOMImplementation
@@ -221,6 +323,8 @@ static JSPropertySpec DOMImplementationProperties[] =
 static JSFunctionSpec DOMImplementationMethods[] = 
 {
   {"hasFeature",          DOMImplementationHasFeature,     2},
+  {"createDocumentType",          DOMImplementationCreateDocumentType,     3},
+  {"createDocument",          DOMImplementationCreateDocument,     3},
   {0}
 };
 
