@@ -692,7 +692,7 @@ if ($action eq 'edit') {
         SendSQL("SELECT userregexp
                  FROM groups
                  WHERE name=" . SqlQuote($product));
-        $userregexp = FetchOneColumn();
+        $userregexp = FetchOneColumn() || "";
     }
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
