@@ -25,7 +25,7 @@
 
 #include <vector>
 #include <stack>
-#include <algorithm>
+#include <iostream>
 
 namespace JavaScript {
 
@@ -205,7 +205,7 @@ namespace JavaScript {
         
         InstructionStream *complete();
 
-        ostream &print(ostream &s);
+        std::ostream &print(std::ostream &s);
 
         Register op(ICodeOp op, Register source);
         Register op(ICodeOp op, Register source1, Register source2);
@@ -289,8 +289,8 @@ namespace JavaScript {
 
     };
 
-    ostream &operator<<(ostream &s, ICodeGenerator &i);
-    ostream &operator<<(ostream &s, StringAtom &str);
+    std::ostream &operator<<(std::ostream &s, ICodeGenerator &i);
+    std::ostream &operator<<(std::ostream &s, StringAtom &str);
 
     class WhileCodeState : public ICodeState {
     public:

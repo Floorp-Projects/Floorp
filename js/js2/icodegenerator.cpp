@@ -22,15 +22,13 @@
 #include "utilities.h"
 #include "icodegenerator.h"
 
-#include <iostream>
 #include <iomanip>
 #include <stdexcept>
 
-using std::ostream;
 
 namespace JavaScript {
 
-    ostream & operator<<(ostream &s, ICodeGenerator &i)
+    std::ostream & operator<<(std::ostream &s, ICodeGenerator &i)
     {
         return i.print(s);
     }
@@ -565,14 +563,14 @@ namespace JavaScript {
             "return"
     };
 
-    ostream &operator<<(ostream &s, StringAtom &str)
+    std::ostream &operator<<(std::ostream &s, StringAtom &str)
     {
         for (String::iterator i = str.begin(); i != str.end(); i++)
             s << (char)*i;
         return s;
     }
 
-    ostream &ICodeGenerator::print(ostream &s)
+    std::ostream &ICodeGenerator::print(std::ostream &s)
     {
         s << "ICG! " << iCode->size() << "\n";
         for (InstructionIterator i = iCode->begin(); i != iCode->end(); i++) {
