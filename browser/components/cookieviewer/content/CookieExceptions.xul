@@ -1,4 +1,5 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil -*- -->
+<?xml version="1.0"?>
+# -*- Mode: SGML; indent-tabs-mode: nil -*-
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -59,11 +60,11 @@
        onkeypress="HandlePermissionKeyPress(event)"
        onselect="PermissionSelected();">
    <treecols>
-     <treecol id="siteCol" label="&treehead.sitename.label;" flex="5"
-                  onclick="PermissionColumnSort('rawHost', true);"/>
+     <treecol id="siteCol" label="&treehead.sitename.label;" flex="3"
+                  onclick="PermissionColumnSort('rawHost', true);" persist="width"/>
      <splitter class="tree-splitter"/>
-     <treecol id="statusCol" label="&treehead.status.label;" flex="5"
-                  onclick="PermissionColumnSort('capability', true);"/>
+     <treecol id="statusCol" label="&treehead.status.label;" flex="1"
+                  onclick="PermissionColumnSort('capability', true);" persist="width"/>
    </treecols>
    <treechildren/>
  </tree>
