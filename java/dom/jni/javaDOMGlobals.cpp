@@ -1,0 +1,352 @@
+/* 
+The contents of this file are subject to the Mozilla Public License
+Version 1.0 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License at
+http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+the License for the specific language governing rights and limitations
+under the License.
+
+The Initial Developer of the Original Code is Sun Microsystems,
+Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
+Inc. All Rights Reserved. 
+*/
+
+#include "prlog.h"
+#include "prmon.h"
+#include "nsAutoLock.h"
+#include "nsIDOMNode.h"
+#include "javaDOMGlobals.h"
+
+jclass JavaDOMGlobals::attrClass = NULL;
+jclass JavaDOMGlobals::cDataSectionClass = NULL;
+jclass JavaDOMGlobals::commentClass = NULL;
+jclass JavaDOMGlobals::documentClass = NULL;
+jclass JavaDOMGlobals::documentFragmentClass = NULL;
+jclass JavaDOMGlobals::documentTypeClass = NULL;
+jclass JavaDOMGlobals::domImplementationClass = NULL;
+jclass JavaDOMGlobals::elementClass = NULL;
+jclass JavaDOMGlobals::entityClass = NULL;
+jclass JavaDOMGlobals::entityReferenceClass = NULL;
+jclass JavaDOMGlobals::namedNodeMapClass = NULL;
+jclass JavaDOMGlobals::nodeClass = NULL;
+jclass JavaDOMGlobals::nodeListClass = NULL;
+jclass JavaDOMGlobals::notationClass = NULL;
+jclass JavaDOMGlobals::processingInstructionClass = NULL;
+jclass JavaDOMGlobals::textClass = NULL;
+
+jfieldID JavaDOMGlobals::nodePtrFID = NULL;
+jfieldID JavaDOMGlobals::nodeListPtrFID = NULL;
+jfieldID JavaDOMGlobals::domImplementationPtrFID = NULL;
+
+jfieldID JavaDOMGlobals::nodeTypeAttributeFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeCDataSectionFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeCommentFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeDocumentFragmentFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeDocumentFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeDocumentTypeFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeElementFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeEntityFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeEntityReferenceFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeNotationFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeProcessingInstructionFID = NULL;
+jfieldID JavaDOMGlobals::nodeTypeTextFID = NULL;
+
+PRLogModuleInfo* JavaDOMGlobals::log = NULL;
+
+PRCList JavaDOMGlobals::garbage = PR_INIT_STATIC_CLIST(&garbage);
+PRLock* JavaDOMGlobals::garbageLock = NULL;
+
+class jniDOMGarbage : public PRCList {
+public:
+  jniDOMGarbage(nsISupports* p) { domObject = p; }
+  nsISupports* domObject;
+};
+
+void JavaDOMGlobals::Initialize(JNIEnv *env) 
+{
+  garbageLock = PR_NewLock();
+  log = PR_NewLogModule("javadom");
+  PR_INIT_CLIST(&garbage);
+
+  /* Node is loaded first because it is the base class of a lot of the
+     others */
+  nodeClass = env->FindClass("org/mozilla/dom/NodeImpl");
+  if (!nodeClass) return;
+  nodeClass = (jclass) env->NewGlobalRef(nodeClass);
+  if (!nodeClass) return;
+  nodePtrFID = 
+    env->GetFieldID(nodeClass, "p_nsIDOMNode", "J");
+  if (!nodePtrFID) return;
+
+  attrClass = env->FindClass("org/mozilla/dom/AttrImpl");
+  if (!attrClass) return;
+  attrClass = (jclass) env->NewGlobalRef(attrClass);
+  if (!attrClass) return;
+
+  documentClass = env->FindClass("org/mozilla/dom/DocumentImpl");
+  if (!documentClass) return;
+  documentClass = (jclass) env->NewGlobalRef(documentClass);
+  if (!documentClass) return;
+
+  documentTypeClass = env->FindClass("org/mozilla/dom/DocumentTypeImpl");
+  if (!documentTypeClass) return;
+  documentTypeClass = (jclass) env->NewGlobalRef(documentTypeClass);
+  if (!documentTypeClass) return;
+
+  domImplementationClass = env->FindClass("org/mozilla/dom/DOMImplementationImpl");
+  if (!domImplementationClass) return;
+  domImplementationClass = (jclass) env->NewGlobalRef(domImplementationClass);
+  if (!domImplementationClass) return;
+  domImplementationPtrFID = 
+    env->GetFieldID(domImplementationClass, "p_nsIDOMDOMImplementation", "J");
+  if (!domImplementationPtrFID) return;
+
+  elementClass = env->FindClass("org/mozilla/dom/ElementImpl");
+  if (!elementClass) return;
+  elementClass = (jclass) env->NewGlobalRef(elementClass);
+  if (!elementClass) return;
+
+  namedNodeMapClass = env->FindClass("org/mozilla/dom/NamedNodeMapImpl");
+  if (!namedNodeMapClass) return;
+  namedNodeMapClass = (jclass) env->NewGlobalRef(namedNodeMapClass);
+  if (!namedNodeMapClass) return;
+
+  nodeListClass = env->FindClass("org/mozilla/dom/NodeListImpl");
+  if (!nodeListClass) return;
+  nodeListClass = (jclass) env->NewGlobalRef(nodeListClass);
+  if (!nodeListClass) return;
+  nodeListPtrFID = 
+    env->GetFieldID(nodeListClass, "p_nsIDOMNodeList", "J");
+  if (!nodeListPtrFID) return;
+
+  nodeTypeAttributeFID = 
+    env->GetStaticFieldID(nodeClass, "ATTRIBUTE_NODE", "S");
+  if (!nodeTypeAttributeFID) return;
+  nodeTypeCDataSectionFID = 
+    env->GetStaticFieldID(nodeClass, "CDATA_SECTION_NODE", "S");
+  if (!nodeTypeCDataSectionFID) return;
+  nodeTypeCommentFID = 
+    env->GetStaticFieldID(nodeClass, "COMMENT_NODE", "S");
+  if (!nodeTypeCommentFID) return;
+  nodeTypeDocumentFragmentFID = 
+    env->GetStaticFieldID(nodeClass, "DOCUMENT_FRAGMENT_NODE", "S");
+  if (!nodeTypeDocumentFragmentFID) return;
+  nodeTypeDocumentFID = 
+    env->GetStaticFieldID(nodeClass, "DOCUMENT_NODE", "S");
+  if (!nodeTypeDocumentFID) return;
+  nodeTypeDocumentTypeFID = 
+    env->GetStaticFieldID(nodeClass, "DOCUMENT_TYPE_NODE", "S");
+  if (!nodeTypeDocumentTypeFID) return;
+  nodeTypeElementFID = 
+    env->GetStaticFieldID(nodeClass, "ELEMENT_NODE", "S");
+  if (!nodeTypeElementFID) return;
+  nodeTypeEntityFID = 
+    env->GetStaticFieldID(nodeClass, "ENTITY_NODE", "S");
+  if (!nodeTypeEntityFID) return;
+  nodeTypeEntityReferenceFID = 
+    env->GetStaticFieldID(nodeClass, "ENTITY_REFERENCE_NODE", "S");
+  if (!nodeTypeEntityReferenceFID) return;
+  nodeTypeNotationFID = 
+    env->GetStaticFieldID(nodeClass, "NOTATION_NODE", "S");
+  if (!nodeTypeNotationFID) return;
+  nodeTypeProcessingInstructionFID = 
+    env->GetStaticFieldID(nodeClass, "PROCESSING_INSTRUCTION_NODE", "S");
+  if (!nodeTypeProcessingInstructionFID) return;
+  nodeTypeTextFID = 
+    env->GetStaticFieldID(nodeClass, "TEXT_NODE", "S");
+  if (!nodeTypeTextFID) return;
+}
+
+void JavaDOMGlobals::Destroy(JNIEnv *env) 
+{
+  env->DeleteGlobalRef(attrClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Attr global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  attrClass = NULL;
+
+  env->DeleteGlobalRef(documentClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Document global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  documentClass = NULL;
+
+  env->DeleteGlobalRef(documentTypeClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete DocumentType global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  documentTypeClass = NULL;
+
+  env->DeleteGlobalRef(domImplementationClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete DOMImplementation global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  domImplementationClass = NULL;
+
+  env->DeleteGlobalRef(elementClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Element global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  elementClass = NULL;
+
+  env->DeleteGlobalRef(namedNodeMapClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete NamedNodeMap global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  namedNodeMapClass = NULL;
+
+  env->DeleteGlobalRef(nodeListClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete NodeList global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  nodeListClass = NULL;
+
+  env->DeleteGlobalRef(nodeClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Node global ref %x\n", 
+	    attrClass));
+    return;
+  }
+  nodeClass = NULL;
+
+  TakeOutGarbage();
+  PR_DestroyLock(garbageLock);
+}
+
+jobject JavaDOMGlobals::CreateNodeSubtype(JNIEnv *env, 
+					  nsIDOMNode *node) 
+{
+  PRUint16 nodeType = 0;
+  (void) node->GetNodeType(&nodeType);
+
+  jclass clazz = nodeClass;
+  switch (nodeType) {
+  case nsIDOMNode::ATTRIBUTE_NODE:
+    clazz = attrClass;
+    break;
+
+  case nsIDOMNode::CDATA_SECTION_NODE:
+    clazz = cDataSectionClass;
+    break;
+
+  case nsIDOMNode::COMMENT_NODE:
+    clazz = commentClass;
+    break;
+
+  case nsIDOMNode::DOCUMENT_NODE:
+    clazz = documentClass;
+    break;
+
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    clazz = documentFragmentClass;
+    break;
+
+  case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    clazz = documentTypeClass;
+    break;
+
+  case nsIDOMNode::ENTITY_NODE:
+    clazz = entityClass;
+    break;
+
+  case nsIDOMNode::ENTITY_REFERENCE_NODE:
+    clazz = entityReferenceClass;
+    break;
+
+  case nsIDOMNode::NOTATION_NODE:
+    clazz = notationClass;
+    break;
+
+  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    clazz = processingInstructionClass;
+    break;
+
+  case nsIDOMNode::TEXT_NODE:
+    clazz = textClass;
+    break;
+  }
+
+  jobject jnode = env->AllocObject(clazz);
+  if (!jnode) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::CreateNodeSubtype: failed to allocate Node of type %d\n", 
+	    nodeType));
+    return NULL;
+  }
+
+  env->SetLongField(jnode, nodePtrFID, (jlong) node);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::CreateNodeSubtype: failed to set native ptr %x\n", 
+	    (jlong) node));
+    return NULL;
+  }
+  node->AddRef();
+
+  return jnode;
+}
+
+void JavaDOMGlobals::AddToGarbage(nsISupports* domObject)
+{
+  nsAutoLock lock(garbageLock);
+  jniDOMGarbage* elem = new jniDOMGarbage(domObject);
+  PR_INSERT_BEFORE(elem, &garbage);
+  PR_LOG(log, PR_LOG_DEBUG, 
+	 ("JavaDOMGlobals::AddToGarbage: Scheduling %x\n", domObject));
+}
+
+void JavaDOMGlobals::TakeOutGarbage()
+{
+  nsAutoLock lock(garbageLock);
+
+  PRUint32 count = 0;
+  nsISupports* domo = NULL;
+
+  PRCList* chain = NULL;
+  PRCList* elem = NULL;
+  for (chain = garbage.next;
+       chain != &garbage; 
+       chain = PR_NEXT_LINK(chain)) {
+    elem = chain;
+
+    domo = ((jniDOMGarbage*) elem)->domObject;
+    PR_LOG(log, PR_LOG_DEBUG, 
+	   ("JavaDOMGlobals::TakeOutGarbage: Releasing %x\n", domo));
+    domo->Release();
+    domo = NULL;
+
+    delete elem;
+    count++;
+  }
+  PR_INIT_CLIST(&garbage);
+
+  if (count)
+    PR_LOG(log, PR_LOG_DEBUG, 
+	   ("JavaDOMGlobals::TakeOutGarbage: Released %d objects\n", count));
+}
+

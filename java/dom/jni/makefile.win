@@ -1,0 +1,89 @@
+#!nmake
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+# the License for the specific language governing rights and limitations
+# under the License.
+# 
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
+# Inc. All Rights Reserved. 
+
+DEPTH=..\..\..
+IGNORE_MANIFEST=1
+
+DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
+MODULE=javadomjni
+
+CPPSRCS= \
+	javaDOMGlobals.cpp \
+	org_mozilla_dom_DOMAccessorImpl.cpp \
+	org_mozilla_dom_DOMGarbageCollector.cpp \
+	org_mozilla_dom_AttrImpl.cpp \
+	org_mozilla_dom_CharacterDataImpl.cpp \
+	org_mozilla_dom_DocumentImpl.cpp \
+	org_mozilla_dom_DocumentTypeImpl.cpp \
+	org_mozilla_dom_DOMImplementationImpl.cpp \
+	org_mozilla_dom_ElementImpl.cpp \
+	org_mozilla_dom_NamedNodeMapImpl.cpp \
+	org_mozilla_dom_NodeImpl.cpp \
+	org_mozilla_dom_NodeListImpl.cpp \
+	org_mozilla_dom_ProcessingInstructionImpl.cpp \
+	org_mozilla_dom_TextImpl.cpp \
+ $(NULL)
+
+CPP_OBJS= \
+	.\$(OBJDIR)\javaDOMGlobals.obj \
+	.\$(OBJDIR)\org_mozilla_dom_DOMAccessorImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_DOMGarbageCollector.obj \
+	.\$(OBJDIR)\org_mozilla_dom_AttrImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_CharacterDataImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_DocumentImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_DocumentTypeImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_DOMImplementationImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_ElementImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_NamedNodeMapImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_NodeImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_NodeListImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_ProcessingInstructionImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_TextImpl.obj \
+ $(NULL)
+
+LINCS=
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME = javadomjni
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=javadomimpl
+
+LCFLAGS = \
+	$(LCFLAGS) \
+	$(DEFINES) \
+ $(NULL)
+
+# These are the libraries we need to link with to create the dll
+LLIBS= \
+ $(DIST)\lib\xpcom.lib \
+ $(DIST)\lib\raptorgfxwin.lib \
+ $(DIST)\lib\img32$(VERSION_NUMBER).lib \
+ $(DIST)\lib\util.lib \
+ $(DIST)\lib\plc3.lib \
+ $(DIST)\lib\jsdom.lib \
+ $(LIBNSPR)
+
+include <$(DEPTH)\config\config.mak>
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib

@@ -1,0 +1,105 @@
+Using the Java DOM API
+----------------------
+
+A Java component obtains a org.w3c.dom.Document by registering for
+Document load notifications. The Document is passed in along with the
+notifications. The preferred way for a Java component to register for
+Document load notifications is to register via the DOMAccessor
+class. However, currently this does not work and one has to apply a
+patch to webshell/src/nsWebShell.cpp. See the section on Building for
+instructions on how to apply the patch.
+
+The nsJavaDOM component by means of this patch registers itself as a
+DocumentLoadObserver with the DocumentLoader service. It then loads a
+class called DOMFactory, asks it for a Java DocumentLoadListener and
+starts sending all document load notifications that it recieves to the
+Java listener.
+
+So the first place to start hacking would be DOMFactory.java.
+
+
+Makefiles
+---------
+
+You may have to set DEPTH to point to the mozilla CVS workspace root
+in Makefile and jni/Makefile. SInce this stuff is not part of the
+regular SeaMonkeyBuild, Makefiles are not generated from Makefile.in,
+so just go ahead and hack the Makefile.
+
+That is also why I have a separate Makefile.linux for Linux. (Does not
+work with Linux... last time I checked, the Blackdown JDK had a
+problem creating the JVM in
+nsJavaDOMImpl.cpp::Initialize:CreateJavaVM).
+
+
+Building
+--------
+
+After having done a configure at the top level of SeaMonkey, do a make
+in the dom and the dom/jni directories. This will copy over a few
+header files that are needed by the patch to nsWebShell. You can then
+apply the patch to nsWebShell.cpp by executing 
+
+`patch nsWebShell.cpp <nsWebShell.cpp.patch` 
+
+Edit Makefile.in to add -DJAVA_DOM to the list of defines. Then do a
+g/make in this directory.
+
+Currently, you will have to make the Java class files yourself, which
+is pretty straight-forward. Just do a javac -d
+$MOZILLA_FIVE_HOME/classes *.java in the java/dom/jni directory. I
+chose to put my class files in $MOZILLA_FIVE_HOME/classes, you can put
+them elsewhere, just make sure it is in the CLASSPATH. 
+
+You will also need to get the w3c DOM interfaces from
+http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/java-binding.zip
+and put the class files in your CLASSPATH.
+
+
+NSPR Logging
+------------
+
+The NSPR Log module name is javadom. For instructions on how to enable
+logging, see dist/include/prlog.h
+
+
+Debug output
+------------
+
+The debug build of the Java DOM API creates the JVM with the verbose
+and the verboseGC options turned on, to help in debugging. It also
+creates two files in the current working directory, dom-java.txt and
+dom-cpp.txt, which are simple dumps of the DOM, as printed from C++
+and from Java. The two should be identical. The code to write these
+files is, essentially, my regression test. Feel free to add to it.
+
+
+JVM Crash on Exit
+-----------------
+
+The JVM dies when apprunner is exiting. Don't know why. WIll need to
+build a debug version of the JDK to investigate. This will be a
+non-issue once we start to use OJI to get to the JVM.
+
+
+OJI
+---
+
+Currently the nsJavaDOM component instantiates its own JVM. When an
+OJI-compatible JVM is available, we will move over to using it.
+
+
+Dependencies
+------------
+
+Currently tested on Solaris 7 only with Java 2 SDK 1.2.1. egcs-2.91.66
+and Sun Workshop 4.2 have been know to compile this code
+fine. gcc-2.8.1 does *not* work. I have not used anything
+Java2-specific, and it works with JDK1.1.x too (I have been using JDK
+1.1.6 too).
+
+
+References
+----------
+
+I highly recommend reading Sheng Liang's new JNI book.
