@@ -192,11 +192,11 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
 {
   nsresult rv = NS_OK;
 
-  nsString type("popup");
+  nsAutoString type("popup");
   if (eXULPopupType_context == popupType)
     type = "context";
 
-  nsString identifier;
+  nsAutoString identifier;
   element->GetAttribute(type, identifier);
 
   if (identifier == "")
@@ -241,10 +241,10 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
       if (domWindow != nsnull) {
         // Find out if we're anchored.
-        nsString anchorAlignment("none");
+        nsAutoString anchorAlignment("none");
         element->GetAttribute("popupanchor", anchorAlignment);
 
-        nsString popupAlignment("topleft");
+        nsAutoString popupAlignment("topleft");
         element->GetAttribute("popupalign", popupAlignment);
 
 		    // Set the popup in the document for the duration of this call.

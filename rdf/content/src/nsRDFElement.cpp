@@ -133,7 +133,7 @@ static NS_DEFINE_IID(kIDOMPaintListenerIID, NS_IDOMPAINTLISTENER_IID);
 
 struct XULBroadcastListener
 {
-	nsString mAttribute;
+	nsAutoString mAttribute;
 	nsCOMPtr<nsIDOMElement> mListener;
 
 	XULBroadcastListener(const nsString& attr, nsIDOMElement* listen)
@@ -1907,7 +1907,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         
 
     // Check for event handlers
-    nsString attributeName;
+    nsAutoString attributeName;
     aName->ToString(attributeName);
 
     if (attributeName.EqualsIgnoreCase("onclick") ||
@@ -1946,15 +1946,15 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         count = mBroadcastListeners->Count();
         for (i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
-            nsString aString;
-            aName->ToString(aString);
-            if (xulListener->mAttribute == aString) {
+            nsAutoString str;
+            aName->ToString(str);
+            if (xulListener->mAttribute == str) {
                 nsCOMPtr<nsIDOMElement> element;
                 element = do_QueryInterface(xulListener->mListener);
                 if (element) {
                     // First we set the attribute in the observer.
-                    element->SetAttribute(aString, aValue);
-                    ExecuteOnChangeHandler(element, aString);
+                    element->SetAttribute(str, aValue);
+                    ExecuteOnChangeHandler(element, str);
                 }
             }
         }
@@ -2125,14 +2125,14 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         for (PRInt32 i = 0; i < count; i++)
         {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
-            nsString aString;
-            aName->ToString(aString);
-            if (xulListener->mAttribute == aString) {
+            nsAutoString str;
+            aName->ToString(str);
+            if (xulListener->mAttribute == str) {
                 // Unset the attribute in the broadcast listener.
                 nsCOMPtr<nsIDOMElement> element;
                 element = do_QueryInterface(xulListener->mListener);
                 if (element)
-                  element->RemoveAttribute(aString);
+                  element->RemoveAttribute(str);
             }
         }
       }
@@ -2304,7 +2304,7 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
         // In order for the event to have a proper target for menus (which have no corresponding
         // frame target in the visual model), we have to explicitly set the target of the
         // event to prevent it from trying to retrieve the target from a frame.
-        nsString tagName;
+        nsAutoString tagName;
         GetTagName(tagName);
         if (tagName == "menu" || tagName == "menuitem" ||
             tagName == "menubar" || tagName == "key" || tagName == "keyset") {
@@ -2430,7 +2430,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
   nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
 
   // Find out if the attribute is even present at all.
-  nsString attrValue;
+  nsAutoString attrValue;
   nsIAtom* kAtom = NS_NewAtom(attr);
 	nsresult result = GetAttribute(kNameSpaceID_None, kAtom, attrValue);
 	PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
@@ -2820,7 +2820,7 @@ RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
 NS_IMETHODIMP
 RDFElementImpl::GetID(nsIAtom*& aResult) const
 {
-  nsString value;
+  nsAutoString value;
   GetAttribute(kNameSpaceID_None, kIdAtom, value);
 
   aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
