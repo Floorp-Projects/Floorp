@@ -356,11 +356,11 @@ menu.push[disabled="true"]:hover:active {
 /* ::::: Mail Filter dialog :::::: */
 
 .enabledcol {
-  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
 .enabledcol[Enabled="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
 searchattribute {
