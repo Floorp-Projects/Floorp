@@ -29,6 +29,8 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Config;
 
+require "globals.pl";
+
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
