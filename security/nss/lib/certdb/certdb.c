@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.26 2002/04/09 23:46:57 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.27 2002/04/12 19:05:04 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2043,6 +2043,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	}
 
 	if ( keepCerts ) {
+	    PK11SlotInfo *intSlot = PK11_GetInternalKeySlot();
 	    for ( i = 0; i < fcerts; i++ ) {
 		SECKEY_UpdateCertPQG(certs[i]);
 		if(CERT_IsCACert(certs[i], NULL) && (fcerts > 1)) {
@@ -2051,10 +2052,10 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 		     * otherwise if there are more than one cert, we don't
 		     * know which cert it belongs to.
 		     */
-		    rv = PK11_ImportCert(PK11_GetInternalKeySlot(),certs[i],
+		    rv = PK11_ImportCert(intSlot,certs[i],
 				CK_INVALID_HANDLE,NULL,PR_TRUE);
 		} else {
-		    rv = PK11_ImportCert(PK11_GetInternalKeySlot(),certs[i],
+		    rv = PK11_ImportCert(intSlot,certs[i],
 				CK_INVALID_HANDLE,nickname,PR_TRUE);
 		}
 		if (rv == SECSuccess) {
@@ -2062,6 +2063,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 		}
 		/* don't care if it fails - keep going */
 	    }
+	    PK11_FreeSlot(intSlot);
 	}
     }
 

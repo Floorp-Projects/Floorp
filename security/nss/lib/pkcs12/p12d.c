@@ -1093,7 +1093,7 @@ p12u_DigestRead(void *arg, unsigned char *buf, unsigned long len)
 	return -1;
     }
 
-    if (!p12cxt->buffer || ((p12cxt->filesize-p12cxt->currentpos)<len) ) {
+    if (!p12cxt->buffer || ((p12cxt->filesize-p12cxt->currentpos)<(long)len) ) {
         /* trying to read past the end of the buffer */
         toread = p12cxt->filesize-p12cxt->currentpos;
     }
@@ -1111,7 +1111,7 @@ p12u_DigestWrite(void *arg, unsigned char *buf, unsigned long len)
         return -1;
     }
 
-    if (p12cxt->currentpos+len > p12cxt->filesize) {
+    if (p12cxt->currentpos+(long)len > p12cxt->filesize) {
         p12cxt->filesize = p12cxt->currentpos + len;
     }
     else {
@@ -1191,7 +1191,8 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
 
     p12dcx->arena = arena;
     p12dcx->pwitem = pwitem;
-    p12dcx->slot = (slot ? slot : PK11_GetInternalKeySlot());
+    p12dcx->slot = (slot ? PK11_ReferenceSlot(slot) 
+						: PK11_GetInternalKeySlot());
     p12dcx->wincx = wincx;
 #ifdef IS_LITTLE_ENDIAN
     p12dcx->swapUnicodeBytes = PR_TRUE;
@@ -1279,14 +1280,15 @@ static SECStatus
 sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 {
     SECStatus rv = SECFailure;
+    SECStatus lrv;
     SECItem hmacRes;
     unsigned char buf[IN_BUF_LEN];
     unsigned int bufLen;
     int iteration;
     PK11Context *pk11cx = NULL;
+    PK11SymKey *symKey = NULL;
+    SECItem *params = NULL;
     SECItem ignore = {0};
-    PK11SymKey *symKey;
-    SECItem *params;
     SECOidTag algtag;
     CK_MECHANISM_TYPE integrityMech;
     
@@ -1318,15 +1320,18 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 
     symKey = PK11_KeyGen(NULL, integrityMech, params, 20, NULL);
     PK11_DestroyPBEParams(params);
+    params = NULL;
     if (!symKey) goto loser;
     /* init hmac */
     pk11cx = PK11_CreateContextBySymKey(sec_pkcs12_algtag_to_mech(algtag),
                                         CKA_SIGN, symKey, &ignore);
     if(!pk11cx) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	return SECFailure;
+	goto loser;
     }
-    rv = PK11_DigestBegin(pk11cx);
+    lrv = PK11_DigestBegin(pk11cx);
+    if (lrv == SECFailure ) {
+	goto loser;
+    }
 
     /* try to open the data for readback */
     if(p12dcx->dOpen && ((*p12dcx->dOpen)(p12dcx->dArg, PR_TRUE) 
@@ -1346,14 +1351,20 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
 	    goto loser;
 	}
 
-	rv = PK11_DigestOp(pk11cx, buf, bytesRead);
+	lrv = PK11_DigestOp(pk11cx, buf, bytesRead);
+	if (lrv == SECFailure) {
+	    goto loser;
+	}
 	if(bytesRead < IN_BUF_LEN) {
 	    break;
 	}
     }
 
     /* finish the hmac context */
-    rv = PK11_DigestFinal(pk11cx, buf, &bufLen, IN_BUF_LEN);
+    lrv = PK11_DigestFinal(pk11cx, buf, &bufLen, IN_BUF_LEN);
+    if (lrv == SECFailure ) {
+	goto loser;
+    }
 
     hmacRes.data = buf;
     hmacRes.len = bufLen;
@@ -1374,6 +1385,12 @@ loser:
 
     if(pk11cx) {
 	PK11_DestroyContext(pk11cx, PR_TRUE);
+    }
+    if (params) {
+	PK11_DestroyPBEParams(params);
+    }
+    if (symKey) {
+	PK11_FreeSymKey(symKey);
     }
 
     return rv;
@@ -1459,6 +1476,11 @@ SEC_PKCS12DecoderFinish(SEC_PKCS12DecoderContext *p12dcx)
 	SEC_ASN1DecoderFinish(p12dcx->hmacDcx);
 	p12dcx->hmacDcx = NULL;
     }
+
+    if(p12dcx->slot) {
+	PK11_FreeSlot(p12dcx->slot);
+	p12dcx->slot = NULL;
+     }
 
     if(p12dcx->arena) {
 	PORT_FreeArena(p12dcx->arena, PR_TRUE);
@@ -3312,7 +3334,7 @@ sec_PKCS12ConvertOldSafeToNew(PRArenaPool *arena, PK11SlotInfo *slot,
     }
 
     p12dcx->arena = arena;
-    p12dcx->slot = slot;
+    p12dcx->slot = PK11_ReferenceSlot(slot);
     p12dcx->wincx = wincx;
     p12dcx->error = PR_FALSE;
     p12dcx->swapUnicodeBytes = swapUnicode; 

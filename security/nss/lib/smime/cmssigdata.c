@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.14 2002/01/25 19:08:19 relyea%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.15 2002/04/12 19:05:19 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -540,7 +540,7 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
     count = NSS_CMSArray_Count((void**)sigd->rawCerts);
     for (i=0; i < count; i++) {
 	if (sigd->certs && sigd->certs[i]) {
-	    cert = sigd->certs[i];
+	    cert = CERT_DupCertificate(sigd->certs[i]);
 	} else {
 	    cert = CERT_FindCertByDERCert(certdb, sigd->rawCerts[i]);
 	    if (!cert) {
@@ -550,6 +550,7 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
 	}
 	rv |= CERT_VerifyCert(certdb, cert, PR_TRUE, usage, PR_Now(), 
                               NULL, NULL);
+	CERT_DestroyCertificate(cert);
     }
 
     return rv;

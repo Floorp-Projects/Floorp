@@ -476,7 +476,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 
     PR_Close(p12cxt->file);
     p12cxt->file = NULL;
-    PK11_FreeSlot(slot);
+    /* PK11_FreeSlot(slot); */
 
     rv = SECSuccess;
 
@@ -832,6 +832,7 @@ main(int argc, char **argv)
     }
 
 done:
+    if (slot) PK11_FreeSlot(slot);
     NSS_Shutdown();
     exit(pk12uErrno);
 }

@@ -145,6 +145,8 @@ SECMOD_CreateModule(char *library, char *moduleName, char *parameters, char *nss
     pk11_argSetNewCipherFlags(&mod->ssl[0],ciphers);
     if (ciphers) PORT_Free(ciphers);
 
+    secmod_PrivateModuleCount++;
+
     return mod;
 }
 
@@ -262,15 +264,16 @@ SECMOD_DeletePermDB(SECMODModule *module)
 }
 
 SECStatus
-SECMOD_FreeModuleSpecList(SECMODModule *parent, char **moduleSpecList)
+SECMOD_FreeModuleSpecList(SECMODModule *module, char **moduleSpecList)
 {
-    char ** index;
-
-    for(index = moduleSpecList; *index; index++) {
-	PORT_Free(*index);
+    SECMODModuleDBFunc func = (SECMODModuleDBFunc) module->moduleDBFunc;
+    char **retString;
+    if (func) {
+	retString = (*func)(SECMOD_MODULE_DB_FUNCTION_RELEASE,
+		module->libraryParams,moduleSpecList);
+	if (retString != NULL) return SECSuccess;
     }
-    PORT_Free(moduleSpecList);
-    return SECSuccess;
+    return SECFailure;
 }
 
 /*

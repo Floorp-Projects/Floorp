@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.29 2002/03/15 06:04:30 wtc%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.30 2002/04/12 19:04:57 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -390,7 +390,7 @@ signed_data(struct signOptionsStr *signOptions)
     NSSCMSContentInfo *cinfo;
     NSSCMSSignedData *sigd;
     NSSCMSSignerInfo *signerinfo;
-    CERTCertificate *cert, *ekpcert;
+    CERTCertificate *cert= NULL, *ekpcert = NULL;
 
     if (cms_verbose) {
 	fprintf(stderr, "Input to signed_data:\n");
@@ -563,8 +563,20 @@ signed_data(struct signOptionsStr *signOptions)
     if (cms_verbose) {
 	fprintf(stderr, "created signed-date message\n");
     }
+    if (ekpcert) {
+	CERT_DestroyCertificate(ekpcert);
+    }
+    if (cert) {
+	CERT_DestroyCertificate(cert);
+    }
     return cmsg;
 loser:
+    if (ekpcert) {
+	CERT_DestroyCertificate(ekpcert);
+    }
+    if (cert) {
+	CERT_DestroyCertificate(cert);
+    }
     NSS_CMSMessage_Destroy(cmsg);
     return NULL;
 }
@@ -576,11 +588,11 @@ enveloped_data(struct envelopeOptionsStr *envelopeOptions)
     NSSCMSContentInfo *cinfo;
     NSSCMSEnvelopedData *envd;
     NSSCMSRecipientInfo *recipientinfo;
-    CERTCertificate **recipientcerts;
+    CERTCertificate **recipientcerts = NULL;
     CERTCertDBHandle *dbhandle;
     PLArenaPool *tmppoolp = NULL;
     SECOidTag bulkalgtag;
-    int keysize, i;
+    int keysize, i = 0;
     int cnt;
     dbhandle = envelopeOptions->options->certHandle;
     /* count the recipients */
@@ -607,10 +619,12 @@ enveloped_data(struct envelopeOptionsStr *envelopeOptions)
 	        == NULL) {
 	    SECU_PrintError(progName, "cannot find certificate for \"%s\"", 
 	                    envelopeOptions->recipients[i]);
+	    i=0;
 	    goto loser;
 	}
     }
     recipientcerts[i] = NULL;
+    i=0;
     /* find a nice bulk algorithm */
     if (NSS_SMIMEUtil_FindBulkAlgForRecipients(recipientcerts, &bulkalgtag, 
                                                &keysize) != SECSuccess) {
@@ -661,11 +675,17 @@ enveloped_data(struct envelopeOptionsStr *envelopeOptions)
 	    fprintf(stderr, "ERROR: cannot add CMS recipientInfo object.\n");
 	    goto loser;
 	}
+	CERT_DestroyCertificate(recipientcerts[i]);
     }
     if (tmppoolp)
 	PORT_FreeArena(tmppoolp, PR_FALSE);
     return cmsg;
 loser:
+    if (recipientcerts) {
+	for (; recipientcerts[i] != NULL; i++) {
+	    CERT_DestroyCertificate(recipientcerts[i]);
+	}
+    }
     if (cmsg)
 	NSS_CMSMessage_Destroy(cmsg);
     if (tmppoolp)
@@ -829,10 +849,10 @@ signed_data_certsonly(struct certsonlyOptionsStr *certsonlyOptions)
     NSSCMSMessage *cmsg = NULL;
     NSSCMSContentInfo *cinfo;
     NSSCMSSignedData *sigd;
-    CERTCertificate **certs;
+    CERTCertificate **certs = NULL;
     CERTCertDBHandle *dbhandle;
     PLArenaPool *tmppoolp = NULL;
-    int i, cnt;
+    int i = 0, cnt;
     dbhandle = certsonlyOptions->options->certHandle;
     if ((cnt = nss_CMSArray_Count((void**)certsonlyOptions->recipients)) == 0) {
 	fprintf(stderr, 
@@ -857,10 +877,12 @@ signed_data_certsonly(struct certsonlyOptionsStr *certsonlyOptions)
 	        == NULL) {
 	    SECU_PrintError(progName, "cannot find certificate for \"%s\"", 
 	                    certsonlyOptions->recipients[i]);
+	    i=0;
 	    goto loser;
 	}
     }
     certs[i] = NULL;
+    i=0;
     /*
      * create the message object
      */
@@ -877,12 +899,14 @@ signed_data_certsonly(struct certsonlyOptionsStr *certsonlyOptions)
 	fprintf(stderr, "ERROR: cannot create CMS signedData object.\n");
 	goto loser;
     }
+    CERT_DestroyCertificate(certs[0]);
     for (i=1; i<cnt; i++) {
 	if (NSS_CMSSignedData_AddCertChain(sigd, certs[i])) {
 	    fprintf(stderr, "ERROR: cannot add cert chain for \"%s\".\n",
 	            certsonlyOptions->recipients[i]);
 	    goto loser;
 	}
+	CERT_DestroyCertificate(certs[i]);
     }
     cinfo = NSS_CMSMessage_GetContentInfo(cmsg);
     if (NSS_CMSContentInfo_SetContent_SignedData(cmsg, cinfo, sigd) 
@@ -900,6 +924,11 @@ signed_data_certsonly(struct certsonlyOptionsStr *certsonlyOptions)
 	PORT_FreeArena(tmppoolp, PR_FALSE);
     return cmsg;
 loser:
+    if (certs) {
+	for (; i<cnt; i++) {
+	    CERT_DestroyCertificate(certs[i]);
+	}
+    }
     if (cmsg)
 	NSS_CMSMessage_Destroy(cmsg);
     if (tmppoolp)
@@ -924,7 +953,7 @@ int
 main(int argc, char **argv)
 {
     FILE *outFile;
-    NSSCMSMessage *cmsg;
+    NSSCMSMessage *cmsg = NULL;
     PRFileDesc *inFile;
     PLOptState *optstate;
     PLOptStatus status;
@@ -1299,6 +1328,10 @@ main(int argc, char **argv)
 	    SECU_PrintError(progName, "problem encrypting");
 	    exitstatus = 1;
 	}
+	if (encryptOptions.bulkkey) {
+	    PK11_FreeSymKey(encryptOptions.bulkkey);
+	    encryptOptions.bulkkey = NULL;
+	}
 	break;
     case ENVELOPE:
 	envelopeOptions.options = &options;
@@ -1392,5 +1425,6 @@ main(int argc, char **argv)
 
     if (decodeOptions.contentFile)
 	PR_Close(decodeOptions.contentFile);
+    NSS_Shutdown();
     exit(exitstatus);
 }

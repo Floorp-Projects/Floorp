@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.6 2001/08/24 18:20:07 relyea%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.7 2002/04/12 19:04:50 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -233,7 +233,10 @@ file_loser:
                                     PK11_GetSlotName(slot));
             return SECFailure;
         }
+      }
+      if (slot) {
 	PK11_FreeSlot(slot);
+	slot == NULL;
       }
 
       rv = PK11SDR_Encrypt(&keyid, &data, &result, 0);

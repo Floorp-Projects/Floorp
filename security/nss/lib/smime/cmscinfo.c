@@ -34,7 +34,7 @@
 /*
  * CMS contentInfo methods.
  *
- * $Id: cmscinfo.c,v 1.2 2000/06/13 21:56:27 chrisk%netscape.com Exp $
+ * $Id: cmscinfo.c,v 1.3 2002/04/12 19:05:18 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -78,6 +78,11 @@ NSS_CMSContentInfo_Destroy(NSSCMSContentInfo *cinfo)
     }
     if (cinfo->bulkkey)
 	PK11_FreeSymKey(cinfo->bulkkey);
+
+    if (cinfo->ciphcx) {
+	NSS_CMSCipherContext_Destroy(cinfo->ciphcx);
+	cinfo->ciphcx = NULL;
+    }
     
     /* we live in a pool, so no need to worry about storage */
 }

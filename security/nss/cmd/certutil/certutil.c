@@ -308,38 +308,6 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 	    GEN_BREAK(SECFailure);
 	}
 
-#ifdef notdef
-	/* CERT_ImportCert only collects certificates and returns the
-	* first certficate.  It does not insert these certificates into
-	* the dbase.  For now, just call CERT_NewTempCertificate.
-	* This will result in decoding the der twice.  This have to
-	* be handle properly.
-	*/
-
-	tempCert = CERT_NewTempCertificate(handle, &cert->derCert, NULL,
-	                                   PR_FALSE, PR_TRUE);
-
-	if (!PK11_IsInternal(slot)) {
-	    tempCert->trust = trust;
-
-	    rv = PK11_ImportCertForKeyToSlot(slot, tempCert, name,
-	                                     PR_FALSE, NULL);
-	}
-
-	if (tempCert == NULL) {
-	    SECU_PrintError(progName,"unable to add cert to the temp database");
-	    GEN_BREAK(SECFailure);
-	}
-
-	rv = CERT_AddTempCertToPerm(tempCert, name, trust);
-	if (rv) {
-	    SECU_PrintError(progName, "could not add certificate to database");
-	    GEN_BREAK(SECFailure);
-	}
-
-	if ( emailcert )
-	    CERT_SaveSMimeProfile(tempCert, NULL, NULL);
-#else
 	if (!PK11_IsFriendly(slot)) {
 	    rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
 	    if (rv != SECSuccess) {
@@ -364,12 +332,8 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 	    CERT_SaveSMimeProfile(cert, NULL, pwdata);
 	}
 
-#endif
     } while (0);
 
-#ifdef notdef
-    CERT_DestroyCertificate (tempCert);
-#endif
     CERT_DestroyCertificate (cert);
     PORT_Free(trust);
     PORT_Free(certDER.data);
@@ -532,6 +496,7 @@ ChangeTrustAttributes(CERTCertDBHandle *handle, char *name, char *trusts)
 	SECU_PrintError(progName, "unable to modify trust attributes");
 	return SECFailure;
     }
+    CERT_DestroyCertificate(cert);
 
     return SECSuccess;
 }
@@ -579,6 +544,7 @@ dumpChain(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	return SECFailure;
     }
     chain = CERT_CertChainFromCert(the_cert, 0, PR_TRUE);
+    CERT_DestroyCertificate(the_cert);
     if (!chain) {
 	SECU_PrintError(progName, "Could not obtain chain for: %s\n", name);
 	return SECFailure;
@@ -588,7 +554,9 @@ dumpChain(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	c = CERT_FindCertByDERCert(handle, &chain->certs[i]);
 	for (j=i; j<chain->len-1; j++) printf("  ");
 	printf("\"%s\" [%s]\n\n", c->nickname, c->subjectName);
+	CERT_DestroyCertificate(c);
     }
+    CERT_DestroyCertificateList(chain);
     return SECSuccess;
 }
 
@@ -627,6 +595,7 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	} else {
 	    rv = printCertCB(the_cert, the_cert->trust);
 	}
+	CERT_DestroyCertificate(the_cert);
     } else {
 	CERTCertList *certs;
 	CERTCertListNode *node;
@@ -710,6 +679,7 @@ DeleteCert(CERTCertDBHandle *handle, char *name)
     }
 
     rv = SEC_DeletePermCertificate(cert);
+    CERT_DestroyCertificate(cert);
     if (rv) {
 	SECU_PrintError(progName, "unable to delete certificate");
 	return SECFailure;
@@ -723,7 +693,7 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
 	     char *certUsage, PRBool checkSig, PRBool logit, secuPWData *pwdata)
 {
     SECStatus rv;
-    CERTCertificate *cert;
+    CERTCertificate *cert = NULL;
     int64 timeBoundary;
     SECCertUsage usage;
     CERTVerifyLog reallog;
@@ -812,84 +782,13 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
 	}
     } while (0);
 
+    if (cert) {
+        CERT_DestroyCertificate(cert);
+    }
+
     return (rv);
 }
 
-#ifdef notdef
-static SECStatus
-DumpPublicKey(int dbindex, char *nickname, FILE *out)
-{
-    SECKEYLowPrivateKey *privKey;
-    SECKEYLowPublicKey *publicKey;
-
-    if (dbindex) {
-	/*privKey = secu_GetPrivKeyFromIndex(dbindex);*/
-    } else {
-	privKey = GetPrivKeyFromNickname(nickname);
-    }
-    publicKey = SECKEY_LowConvertToPublicKey(privKey);
-
-    /* Output public key (in the clear) */
-    switch(publicKey->keyType) {
-      case rsaKey:
-	fprintf(out, "RSA Public-Key:\n");
-	SECU_PrintInteger(out, &publicKey->u.rsa.modulus, "modulus", 1);
-	SECU_PrintInteger(out, &publicKey->u.rsa.publicExponent,
-			  "publicExponent", 1);
-	break;
-      case dsaKey:
-	fprintf(out, "DSA Public-Key:\n");
-	SECU_PrintInteger(out, &publicKey->u.dsa.params.prime, "prime", 1);
-	SECU_PrintInteger(out, &publicKey->u.dsa.params.subPrime,
-			  "subPrime", 1);
-	SECU_PrintInteger(out, &publicKey->u.dsa.params.base, "base", 1);
-	SECU_PrintInteger(out, &publicKey->u.dsa.publicValue, "publicValue", 1);
-	break;
-      default:
-	fprintf(out, "unknown key type\n");
-	break;
-    }
-    return SECSuccess;
-}
-
-static SECStatus
-DumpPrivateKey(int dbindex, char *nickname, FILE *out)
-{
-    SECKEYLowPrivateKey *key;
-    if (dbindex) {
-	/*key = secu_GetPrivKeyFromIndex(dbindex);*/
-    } else {
-	key = GetPrivKeyFromNickname(nickname);
-    }
-
-    switch(key->keyType) {
-      case rsaKey:
-	fprintf(out, "RSA Private-Key:\n");
-	SECU_PrintInteger(out, &key->u.rsa.modulus, "modulus", 1);
-	SECU_PrintInteger(out, &key->u.rsa.publicExponent, "publicExponent", 1);
-	SECU_PrintInteger(out, &key->u.rsa.privateExponent,
-			  "privateExponent", 1);
-	SECU_PrintInteger(out, &key->u.rsa.prime1, "prime1", 1);
-	SECU_PrintInteger(out, &key->u.rsa.prime2, "prime2", 1);
-	SECU_PrintInteger(out, &key->u.rsa.exponent1, "exponent2", 1);
-	SECU_PrintInteger(out, &key->u.rsa.exponent2, "exponent2", 1);
-	SECU_PrintInteger(out, &key->u.rsa.coefficient, "coefficient", 1);
-	break;
-      case dsaKey:
-	fprintf(out, "DSA Private-Key:\n");
-	SECU_PrintInteger(out, &key->u.dsa.params.prime, "prime", 1);
-	SECU_PrintInteger(out, &key->u.dsa.params.subPrime, "subPrime", 1);
-	SECU_PrintInteger(out, &key->u.dsa.params.base, "base", 1);
-	SECU_PrintInteger(out, &key->u.dsa.publicValue, "publicValue", 1);
-	SECU_PrintInteger(out, &key->u.dsa.privateValue, "privateValue", 1);
-	break;
-      default:
-	fprintf(out, "unknown key type\n");
-	break;
-    }
-    return SECSuccess;
-}
-#endif
 
 static SECStatus
 printKeyCB(SECKEYPublicKey *key, SECItem *data, void *arg)
@@ -980,11 +879,16 @@ DeleteKey(char *nickname, secuPWData *pwdata)
     if (PK11_NeedLogin(slot))
 	PK11_Authenticate(slot, PR_TRUE, pwdata);
     cert = PK11_FindCertFromNickname(nickname, pwdata);
-    if (!cert) return SECFailure;
+    if (!cert) {
+	PK11_FreeSlot(slot);
+	return SECFailure;
+    }
     rv = PK11_DeleteTokenCertAndKey(cert, pwdata);
     if (rv != SECSuccess) {
 	SECU_PrintError("problem deleting private key \"%s\"\n", nickname);
     }
+    CERT_DestroyCertificate(cert);
+    PK11_FreeSlot(slot);
     return rv;
 }
 
@@ -1754,7 +1658,7 @@ AddBasicConstraint(void *extHandle)
 static SECItem *
 SignCert(CERTCertDBHandle *handle, 
 CERTCertificate *cert, PRBool selfsign, 
-SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
+SECKEYPrivateKey *privKey, char *issuerNickName, void *pwarg)
 {
     SECItem der;
     SECItem *result = NULL;
@@ -1764,10 +1668,7 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
     SECOidTag algID;
     void *dummy;
 
-    if( selfsign ) {
-      caPrivateKey = selfsignprivkey;
-    } else {
-      /*CERTCertificate *issuer = CERT_FindCertByNickname(handle, issuerNickName);*/
+    if( !selfsign ) {
       CERTCertificate *issuer = PK11_FindCertFromNickname(issuerNickName, pwarg);
       if( (CERTCertificate *)NULL == issuer ) {
         SECU_PrintError(progName, "unable to find issuer with nickname %s", 
@@ -1775,7 +1676,8 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
         return (SECItem *)NULL;
       }
 
-      caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
+      privKey = caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
+      CERT_DestroyCertificate(issuer);
       if (caPrivateKey == NULL) {
 	SECU_PrintError(progName, "unable to retrieve key %s", issuerNickName);
 	return NULL;
@@ -1784,7 +1686,7 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
 	
     arena = cert->arena;
 
-    switch(caPrivateKey->keyType) {
+    switch(privKey->keyType) {
       case rsaKey:
 	algID = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
 	break;
@@ -1822,7 +1724,7 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
 	goto done;
     }
 
-    rv = SEC_DerSignData (arena, result, der.data, der.len, caPrivateKey,
+    rv = SEC_DerSignData (arena, result, der.data, der.len, privKey,
 			  algID);
     if (rv != SECSuccess) {
 	fprintf (stderr, "Could not sign encoded certificate data.\n");
@@ -1832,7 +1734,9 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
     }
     cert->derCert = *result;
 done:
-    SECKEY_DestroyPrivateKey(caPrivateKey);
+    if (caPrivateKey) {
+	SECKEY_DestroyPrivateKey(caPrivateKey);
+    }
     return result;
 }
 
@@ -2277,7 +2181,7 @@ main(int argc, char **argv)
     secuPWData  pwdata          = { PW_NONE, 0 };
     PRBool 	readOnly	= PR_FALSE;
 
-    SECKEYPrivateKey *privkey;
+    SECKEYPrivateKey *privkey = NULL;
     SECKEYPublicKey *pubkey = NULL;
 
     int i;
@@ -2819,15 +2723,16 @@ main(int argc, char **argv)
     }
 
 shutdown:
-    if (slot)
+    if (slot) {
 	PK11_FreeSlot(slot);
-#ifdef notdef
-    if ( certHandle ) {
-	CERT_ClosePermCertDB(certHandle);
     }
-#else
+    if (privkey) {
+	SECKEY_DestroyPrivateKey(privkey);
+    }
+    if (pubkey) {
+	SECKEY_DestroyPublicKey(pubkey);
+    }
     NSS_Shutdown();
-#endif
 
     if (rv == SECSuccess) {
 	return 0;

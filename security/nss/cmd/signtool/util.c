@@ -286,7 +286,7 @@ VerifyCertDir(char *dir, char *keyName)
   char fn [FNSIZE];
 
   /* don't try verifying if we don't have a local directory */
-  if (strncmp(dir,"remote:",sizeof("remote:")-1) == 0) {
+  if (strncmp(dir,"multiaccess:",sizeof("multiaccess:")-1) == 0) {
      return;
   }
 
