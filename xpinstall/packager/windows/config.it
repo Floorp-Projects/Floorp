@@ -89,7 +89,7 @@ Default Setup Type=Setup Type 1
 ; Possible values:
 ;   FALSE
 ;   TRUE
-Refresh Icons=TRUE
+Refresh Icons=FALSE
 
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
