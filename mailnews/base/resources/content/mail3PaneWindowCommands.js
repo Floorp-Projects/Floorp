@@ -645,20 +645,27 @@ var DefaultController =
 
 function MailAreaHasFocus()
 {
-	//Input and TextAreas should get access to the keys that cause these commands.
-	//Currently if we don't do this then we will steal the key away and you can't type them
-	//in these controls. This is a bug that should be fixed and when it is we can get rid of
-	//this.
-	var focusedElement = top.document.commandDispatcher.focusedElement;
-	if (focusedElement)
-	{
-		var name = focusedElement.localName.toLowerCase();
-		return ((name != "input") && (name != "textarea"));
-	}
+  //Input and TextAreas should get access to the keys that cause these commands.
+  //Currently if we don't do this then we will steal the key away and you can't type them
+  //in these controls. This is a bug that should be fixed and when it is we can get rid of
+  //this.
+  var focusedElement = top.document.commandDispatcher.focusedElement;
+  if (focusedElement) 
+  {
+    var name = focusedElement.localName.toLowerCase();
+    return ((name != "input") && (name != "textarea"));
+  }
+
+  // check if the message pane has focus 
+  // see bug #129988
+  if (GetMessagePane() == WhichPaneHasFocus())
+    return true;
+
   // if there is no focusedElement,
+  // and the message pane doesn't have focus
   // then a mail area can't be focused
   // see bug #128101
-	return false;
+  return false;
 }
 
 function GetNumSelectedMessages()
