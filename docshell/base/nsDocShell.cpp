@@ -40,6 +40,7 @@
 #include "nsXPIDLString.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMWindow.h"
+#include "nsIWebBrowserChrome.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
@@ -533,7 +534,10 @@ NS_IMETHODIMP nsDocShell::GetItemType(PRInt32* aItemType)
 NS_IMETHODIMP nsDocShell::SetItemType(PRInt32 aItemType)
 {
    NS_ENSURE_ARG((aItemType == typeChrome) || (typeContent == aItemType));
+   NS_ENSURE_STATE(!mParent);
+
    mItemType = aItemType;
+
    return NS_OK;
 }
 
@@ -1143,8 +1147,8 @@ NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus,
    // docshell tree owner.
    nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
    if(!nextCallWin)
-      {//XXX Enable this when docShellTreeOwner is added
-      //nextCallWin = do_QueryInterface(mDocShellTreeOwner);
+      {
+      nextCallWin = do_QueryInterface(mTreeOwner);
       }
 
    //If the current focus is us, offer it to the next owner.
@@ -1721,9 +1725,7 @@ NS_IMETHODIMP nsDocShell::GetTarget(const PRUnichar* aName, nsIDocShellTreeItem*
 NS_IMETHODIMP nsDocShell::CreateTargetLocation(const PRUnichar* aName, 
    nsIDocShellTreeItem** aShell)
 {
-   // XXX Implement
-   NS_ERROR("Not Yet IMplemented");
-   return NS_ERROR_FAILURE;
+   return mTreeOwner->GetNewWindow(nsIWebBrowserChrome::allChrome, aShell);
 }
 
 void nsDocShell::SetCurrentURI(nsIURI* aUri)
