@@ -28,8 +28,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.2 $
-# $Date: 2001/10/05 22:05:10 $
+# $Revision: 1.3 $
+# $Date: 2001/10/05 22:10:14 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -73,7 +73,8 @@ A simple script to check delete old files which accumulate in a set of
 directories.  The files are sorted by date and kept according to this
 rule: The most recent min-archive-files are kept and ene file each day
 is kept for the previous max-archive-days. All other files are
-deleted.
+deleted.  An index.html file is automatiaclly generated for each
+directory traversed.
 
 
 EOF
@@ -258,20 +259,25 @@ sub print_dirs_index {
     foreach $dir (@dir_list) {
 
 	my $index_file = "$dir/index.html";
-	open (INDEX, ">>$index_file") ||
+	open (INDEX, ">$index_file") ||
 	    die("Could not open indexfile: $index_file\n");
 
 	print INDEX "<html>\n";
 	print INDEX "<pre>\n";
+	print INDEX "\n";
+
 	my @file_set = time_sorted_dir_files($dir);
 	
 	foreach $file_name (@file_set) {
 	    my $basename = basename($file_name);
 	    my $href = "<A  HREF=\"./$basename\" >$basename</A>";	
 	    print INDEX "$href ".localtime(get_mtime($file_name))."\n";
-	    
+	    print INDEX "<br>\n";
+	    print INDEX "\n";
+		    
 	} # foreach $file_name
 	
+	print INDEX "\n";
 	print INDEX "</pre>\n";
 	print INDEX "</html>\n";
 	close(INDEX) ||
