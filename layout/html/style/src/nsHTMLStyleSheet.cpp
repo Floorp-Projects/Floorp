@@ -1617,8 +1617,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
     nsIHTMLContent *htmlContent;
 
     // Ignore the tag if it's not HTML content
-    rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent))) {
       // See if the element is absolutely positioned
       const nsStylePosition* position = (const nsStylePosition*)
         aStyleContext->GetStyleData(eStyleStruct_Position);
