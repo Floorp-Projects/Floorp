@@ -42,8 +42,13 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
-  
-<toolbox id="cloned-bar-container"/>
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+
+<toolbox id="cloned-bar-container"
+         ondragover="nsDragAndDrop.dragOver(event, dropObserver)"
+         ondragdrop="nsDragAndDrop.drop(event, dropObserver);"
+         ondragexit="gCurrentDragOverItem.removeAttribute('dragactive');"/>
 
 <separator class="groove"/>
 

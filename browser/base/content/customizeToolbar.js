@@ -22,6 +22,8 @@
 
 */
 
+var gCurrentDragOverItem;
+
 function buildDialog()
 {
   var toolbar = window.opener.document.getElementById("nav-bar");
@@ -97,7 +99,8 @@ function buildDialog()
     enclosure.setAttribute("width", "0");
     enclosure.setAttribute("minheight", "0");
     enclosure.setAttribute("minwidth", "0");
-    
+    enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+ 
     enclosure.appendChild(paletteItem);
     currentRow.appendChild(enclosure);
 
@@ -118,3 +121,58 @@ function buildDialog()
   }
 
 }
+
+var dragObserver = {
+  onDragStart: function (aEvent, aXferData, aDragAction) {
+    aXferData.data = new TransferDataSet();
+    var data = new TransferData();
+    data.addDataForFlavour("text/unicode", aEvent.target.firstChild.id);
+    aXferData.data.push(data);
+  }
+}
+
+var dropObserver = {
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+  {
+    if (gCurrentDragOverItem)
+      gCurrentDragOverItem.removeAttribute("dragactive");
+
+    var dropTargetWidth = aEvent.target.boxObject.width;
+    var dropTargetX = aEvent.target.boxObject.x;
+    if (aEvent.clientX > (dropTargetX + (dropTargetWidth / 2)))
+      gCurrentDragOverItem = aEvent.target.nextSibling;
+    else
+      gCurrentDragOverItem = aEvent.target;
+
+    gCurrentDragOverItem.setAttribute("dragactive", "true");
+
+    aDragSession.canDrop = true;
+  },
+  onDrop: function (aEvent, aXferData, aDragSession)
+  {
+    var newButtonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    var palette = window.opener.document.getElementById("nav-bar").palette;
+    var paletteItem = palette.firstChild;
+    while (paletteItem) {
+      if (paletteItem.id == newButtonId)
+        break;
+      paletteItem = paletteItem.nextSibling;
+    }
+    if (!paletteItem)
+      return;
+
+    paletteItem = paletteItem.cloneNode(paletteItem);
+    var toolbar = document.getElementById("nav-bar");
+    toolbar.insertBefore(paletteItem, gCurrentDragOverItem);
+  },
+  _flavourSet: null,
+  getSupportedFlavours: function ()
+  {
+    if (!this._flavourSet) {
+      this._flavourSet = new FlavourSet();
+      this._flavourSet.appendFlavour("text/unicode");
+    }
+    return this._flavourSet;
+  }
+}
+
