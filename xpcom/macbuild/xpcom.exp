@@ -1,25 +1,25 @@
 #ToString__4nsIDCFv		# nsID::ToString() const
 Parse__4nsIDFPc		# nsID::Parse(char*)
 #__vt__5IDKey		# IDKey::__vt
-#monitor__12nsRepository		# nsRepository::monitor
-#factories__12nsRepository		# nsRepository::factories
+#monitor__18nsComponentManager		# nsComponentManager::monitor
+#factories__18nsComponentManager		# nsComponentManager::factories
 #HashValue__5IDKeyCFv		# IDKey::HashValue() const
 #Equals__5IDKeyCFPC9nsHashKey		# IDKey::Equals(const nsHashKey*) const
 #Clone__5IDKeyCFv		# IDKey::Clone() const
-FreeLibraries__12nsRepositoryFv		# nsRepository::FreeLibraries()
-ProgIDToCLSID__12nsRepositoryFPCcP4nsID		# nsRepository::ProgIDToCLSID(const char*,nsID*)
-RegisterComponent__12nsRepositoryFRC4nsIDPCcPCcPCcii		# nsRepository::RegisterComponent(const nsID&,const char*,const char*,const char*,int,int)
-UnregisterComponent__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterComponent(const nsID&,const char*)
-UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
-UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
-RegisterFactory__12nsRepositoryFRC4nsIDPCcPCcP10nsIFactoryi		# nsRepository::RegisterFactory(const nsID&,const char*,const char*,nsIFactory*,int)
-#CreateInstance2__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# nsRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
-CreateInstance__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPPv		# nsRepository::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
-CreateInstance__12nsRepositoryFPCcP11nsISupportsRC4nsIDPPv		# nsRepository::CreateInstance(const char*,nsISupports*,const nsID&,void**)
-#Initialize__12nsRepositoryFv		# nsRepository::Initialize()
-#checkInitialized__12nsRepositoryFv		# nsRepository::checkInitialized()
+FreeLibraries__18nsComponentManagerFv		# nsComponentManager::FreeLibraries()
+ProgIDToCLSID__18nsComponentManagerFPCcP4nsID		# nsComponentManager::ProgIDToCLSID(const char*,nsID*)
+RegisterComponent__18nsComponentManagerFRC4nsIDPCcPCcPCcii		# nsComponentManager::RegisterComponent(const nsID&,const char*,const char*,const char*,int,int)
+UnregisterComponent__18nsComponentManagerFRC4nsIDPCc		# nsComponentManager::UnregisterComponent(const nsID&,const char*)
+UnregisterFactory__18nsComponentManagerFRC4nsIDPCc		# nsComponentManager::UnregisterFactory(const nsID&,const char*)
+UnregisterFactory__18nsComponentManagerFRC4nsIDP10nsIFactory		# nsComponentManager::UnregisterFactory(const nsID&,nsIFactory*)
+RegisterFactory__18nsComponentManagerFRC4nsIDPCcPCcP10nsIFactoryi		# nsComponentManager::RegisterFactory(const nsID&,const char*,const char*,nsIFactory*,int)
+#CreateInstance2__18nsComponentManagerFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# nsComponentManager::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
+CreateInstance__18nsComponentManagerFRC4nsIDP11nsISupportsRC4nsIDPPv		# nsComponentManager::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
+CreateInstance__18nsComponentManagerFPCcP11nsISupportsRC4nsIDPPv		# nsComponentManager::CreateInstance(const char*,nsISupports*,const nsID&,void**)
+#Initialize__18nsComponentManagerFv		# nsComponentManager::Initialize()
+#checkInitialized__18nsComponentManagerFv		# nsComponentManager::checkInitialized()
 #__dt__5IDKeyFv		# IDKey::~IDKey()
-FindFactory__12nsRepositoryFRC4nsIDPP10nsIFactory		# nsRepository::FindFactory(const nsID&,nsIFactory**)
+FindFactory__18nsComponentManagerFRC4nsIDPP10nsIFactory		# nsComponentManager::FindFactory(const nsID&,nsIFactory**)
 #__vt__9nsHashKey		# nsHashKey::__vt
 Enumerate__11nsHashtableFPFP9nsHashKeyPvPv_iPv  # nsHashtable::Enumerate(int (*)(nsHashKey*, void*))
 Clone__11nsHashtableFv		# nsHashtable::Clone()
