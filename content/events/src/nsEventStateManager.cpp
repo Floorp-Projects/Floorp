@@ -4859,7 +4859,7 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
       nsCOMPtr<nsIFrameSelection> frameSelection;
       shell->GetFrameSelection(getter_AddRefs(frameSelection));
 
-      if (frameSelection && rangeDoc) {
+      if (currentFocusNode && frameSelection && rangeDoc) {
         nsCOMPtr<nsISelection> domSelection;
         frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, 
           getter_AddRefs(domSelection));
@@ -4870,9 +4870,18 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
           if (currentFocusNode) {
             nsresult rv = rangeDoc->CreateRange(getter_AddRefs(newRange));
             if (NS_SUCCEEDED(rv)) {
-              // If we could create a new range, then set it to the current focus node
-              // And then collapse the selection
+              // Set the range to the start of the currently focused node
+              // Make sure it's collapsed
               newRange->SelectNodeContents(currentFocusNode);
+              nsCOMPtr<nsIDOMNode> firstChild;
+              currentFocusNode->GetFirstChild(getter_AddRefs(firstChild));
+              if (!firstChild ) {
+                // If current focus node is a leaf, set range to before the
+                // node by using the parent as a container.
+                // This prevents it from appearing as selected.
+                newRange->SetStartBefore(currentFocusNode);
+                newRange->SetEndBefore(currentFocusNode);
+              }
               domSelection->AddRange(newRange);
               domSelection->CollapseToStart();
             }
