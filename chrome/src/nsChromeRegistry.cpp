@@ -714,43 +714,25 @@ nsChromeRegistry::GetBaseURL(const nsACString& aPackage,
     resource = do_QueryInterface(selectedProvider);
 
     if (resource) {
-      // We found a selected provider, but now we need to verify that the version
-      // specified by the package and the version specified by the provider are
-      // one and the same.  If they aren't, then we cannot use this provider.
-      nsCOMPtr<nsIRDFResource> versionArc;
-      if (arc == mSelectedSkin)
-        versionArc = mSkinVersion;
-      else // Locale arc
-        versionArc = mLocaleVersion;
-
-      nsCAutoString packageVersion;
-      nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion, packageResource, versionArc);
-      if (!packageVersion.IsEmpty()) {
-        // The package only wants providers (skins) that say they can work with it.  Let's find out
-        // if our provider (skin) can work with it.
-        nsCAutoString providerVersion;
-        nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion, resource, versionArc);
-        if (!providerVersion.Equals(packageVersion))
-          selectedProvider = nsnull;
-      }
-      
-      if (selectedProvider) {
-        // Ensure that the provider actually exists.
-        // XXX This will have to change if we handle remote chrome.
-        rv =  FollowArc(mChromeDataSource, aBaseURL, resource, mBaseURL);
-        if (NS_FAILED(rv))
+      PRBool providerOK;
+      rv = VerifyCompatibleProvider(packageResource, resource, arc, &providerOK);
+      if (NS_FAILED(rv)) return rv;
+      if (!providerOK) {
+        // We had a selection but it was incompatible or not present.
+        // That selection may have come from the profile, so check only
+        // the part of the datasource in the install.  (If this succeeds,
+        // we won't remember the choice, either, in case the user
+        // switches back to a build where this theme does work.)
+        if (NS_FAILED(rv = mInstallDirChromeDataSource->GetTarget(packageResource, arc, PR_TRUE, getter_AddRefs(selectedProvider)))) {
+          NS_ERROR("Unable to obtain the provider.");
           return rv;
-        nsCOMPtr<nsIFile> baseURLFile;
-        rv = GetBaseURLFile(aBaseURL, getter_AddRefs(baseURLFile));
-        if (NS_SUCCEEDED(rv)) {
-          PRBool exists;
-          rv = baseURLFile->Exists(&exists);
-          if (NS_SUCCEEDED(rv) && exists)
-            return NS_OK;
-#if DEBUG
-          printf("BaseURL %s cannot be found.\n", PromiseFlatCString(aBaseURL).get());
-#endif
-          selectedProvider = nsnull;
+        }
+        resource = do_QueryInterface(selectedProvider);
+        if (resource) {
+          rv = VerifyCompatibleProvider(packageResource, resource, arc, &providerOK);
+          if (NS_FAILED(rv)) return rv;
+          if (!providerOK) 
+            selectedProvider = nsnull;
         }
       }
     }
@@ -888,6 +870,56 @@ nsChromeRegistry::InitOverrideJAR()
   return NS_OK;
 }
 
+nsresult
+nsChromeRegistry::VerifyCompatibleProvider(nsIRDFResource* aPackageResource,
+                                           nsIRDFResource* aProviderResource,
+                                           nsIRDFResource* aArc,
+                                           PRBool *aAcceptable)
+{
+  // We found a selected provider, but now we need to verify that the version
+  // specified by the package and the version specified by the provider are
+  // one and the same.  If they aren't, then we cannot use this provider.
+  nsCOMPtr<nsIRDFResource> versionArc;
+  if (aArc == mSelectedSkin)
+    versionArc = mSkinVersion;
+  else // Locale arc
+    versionArc = mLocaleVersion;
+
+  nsCAutoString packageVersion;
+  nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion,
+                              aPackageResource, versionArc);
+  if (!packageVersion.IsEmpty()) {
+    // The package only wants providers (skins) that say they can work
+    // with it.  Let's find out if our provider (skin) can work with it.
+    nsCAutoString providerVersion;
+    nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion,
+                                aProviderResource, versionArc);
+    if (!providerVersion.Equals(packageVersion)) {
+      *aAcceptable = PR_FALSE;
+      return NS_OK;
+    }
+  }
+  
+  // Ensure that the provider actually exists.
+  // XXX This will have to change if we handle remote chrome.
+  nsCAutoString providerBaseURL;
+  nsresult rv = FollowArc(mChromeDataSource, providerBaseURL,
+                          aProviderResource, mBaseURL);
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIFile> baseURLFile;
+  rv = GetBaseURLFile(providerBaseURL, getter_AddRefs(baseURLFile));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = baseURLFile->Exists(aAcceptable);
+#if DEBUG
+  if (NS_FAILED(rv) || !*aAcceptable)
+    printf("BaseURL %s cannot be found.\n",
+           PromiseFlatCString(providerBaseURL).get());
+#endif
+  return rv;
+}
+
 // locate
 nsresult
 nsChromeRegistry::FindProvider(const nsACString& aPackage,
@@ -927,6 +959,7 @@ nsChromeRegistry::FindProvider(const nsACString& aPackage,
   rv = container->GetElements(getter_AddRefs(arcs));
   if (NS_FAILED(rv)) return rv;
 
+  // XXX This needs to be something other than random.  See bug 191957.
   PRBool moreElements;
   rv = arcs->HasMoreElements(&moreElements);
   if (NS_FAILED(rv)) return rv;
@@ -1023,6 +1056,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
 
       if (packageName.Equals(aPackage)) {
         PRBool useProfile = !mProfileRoot.IsEmpty();
+        // XXXldb Do we really want to do this?  We risk crossing skins.
         if (packageName.Equals("global") || packageName.Equals("communicator"))
           useProfile = PR_FALSE; // Always force the auto-selection to be in the
                                  // install dir for the packages required to bring up the profile UI.
@@ -2143,44 +2177,13 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
 
   // Version-check before selecting.  If this skin isn't a compatible version, then
   // don't allow the selection.
-  // We found a selected provider, but now we need to verify that the version
-  // specified by the package and the version specified by the provider are
-  // one and the same.  If they aren't, then we cannot use this provider.
-  nsCOMPtr<nsIRDFResource> versionArc;
-  if (aSelectionArc == mSelectedSkin)
-    versionArc = mSkinVersion;
-  else // Locale arc
-    versionArc = mLocaleVersion;
-
-  nsCAutoString packageVersion;
-  nsChromeRegistry::FollowArc(mChromeDataSource, packageVersion, packageResource, versionArc);
-  if (!packageVersion.IsEmpty()) {
-    // The package only wants providers (skins) that say they can work with it.  Let's find out
-    // if our provider (skin) can work with it.
-    nsCAutoString providerVersion;
-    nsChromeRegistry::FollowArc(mChromeDataSource, providerVersion, providerResource, versionArc);
-    if (!providerVersion.Equals(packageVersion))
-      return NS_ERROR_FAILURE;
-  }
-  
-  // Ensure that the provider actually exists.
-  // XXX This will have to change if we handle remote chrome.
-  nsCAutoString providerBaseURL;
-  rv =  FollowArc(mChromeDataSource, providerBaseURL, providerResource, mBaseURL);
+  PRBool acceptable;
+  rv = VerifyCompatibleProvider(packageResource, providerResource,
+                                aSelectionArc, &acceptable);
   if (NS_FAILED(rv))
     return rv;
-  nsCOMPtr<nsIFile> baseURLFile;
-  rv = GetBaseURLFile(providerBaseURL, getter_AddRefs(baseURLFile));
-  if (NS_FAILED(rv))
-    return rv;
-  PRBool exists;
-  rv = baseURLFile->Exists(&exists);
-  if (NS_FAILED(rv) || !exists) {
-#if DEBUG
-    printf("BaseURL %s cannot be found.\n", PromiseFlatCString(providerBaseURL).get());
-#endif
+  if (!acceptable)
     return NS_ERROR_FAILURE;
-  }
 
   return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc,
                                aUseProfile, nsnull, aIsAdding);
@@ -3068,9 +3071,8 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   }
 
   // Always load the install dir datasources
-  nsCOMPtr<nsIRDFDataSource> dataSource;
-  LoadDataSource(kChromeFileName, getter_AddRefs(dataSource), PR_FALSE, nsnull);
-  mChromeDataSource->AddDataSource(dataSource);
+  LoadDataSource(kChromeFileName, getter_AddRefs(mInstallDirChromeDataSource), PR_FALSE, nsnull);
+  mChromeDataSource->AddDataSource(mInstallDirChromeDataSource);
   
   return NS_OK;
 }
@@ -3353,6 +3355,9 @@ nsChromeRegistry::CheckForNewChrome()
   if (NS_FAILED(rv)) return rv;
   rv = chromeFile->AppendNative(kChromeFileName);
   if (NS_FAILED(rv)) return rv;
+  // XXXldb For the case where the file is nonexistent, we're depending
+  // on the fact that the nsInt64 constructor initializes to 0 and
+  // |GetLastModifiedTime| doesn't touch the out parameter.
   nsInt64 chromeDate;
   (void)chromeFile->GetLastModifiedTime(&chromeDate.mValue);
 
