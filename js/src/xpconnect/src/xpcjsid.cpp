@@ -181,7 +181,7 @@ nsJSID::InitWithName(const nsID& id, const char *nameString)
     Reset();
     mID = id;
     return SetName(nameString);
-}        
+}
 
 // try to use the name, if no name, then use the number
 NS_IMETHODIMP
@@ -255,8 +255,8 @@ XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsJSIID)
 // XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsJSIID)
 XPC_IMPLEMENT_FORWARD_FINALIZE(nsJSIID)
 
-nsJSIID::nsJSIID() 
-    :   mCacheFilled(JS_FALSE) 
+nsJSIID::nsJSIID()
+    :   mCacheFilled(JS_FALSE)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -350,14 +350,14 @@ nsJSIID::NewID(const char* str)
     return idObj;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJSIID::HasInstance(JSContext *cx, JSObject *obj,
                      jsval v, JSBool *bp,
                      nsIXPConnectWrappedNative* wrapper,
                      nsIXPCScriptable* arbitrary,
                      JSBool* retval)
 {
-    *bp = JS_FALSE; 
+    *bp = JS_FALSE;
     *retval = JS_TRUE;
     nsresult rv = NS_OK;
 
@@ -402,7 +402,7 @@ nsJSIID::HasInstance(JSContext *cx, JSObject *obj,
                     if(found)
                     {
                         *bp = JS_TRUE;
-                        break;            
+                        break;
                     }
                 }
                 else
@@ -594,15 +594,11 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
                         nsIXPCScriptable* arbitrary,
                         JSBool* retval)
 {
-    CIDCreateInstance* self;
     nsJSCID* cidObj;
     nsCID*  cid;
     PRBool valid;
 
-    if(NS_FAILED(wrapper->GetNative((nsISupports**)&self)))
-        return NS_ERROR_FAILURE;
-
-    if(!(cidObj = self->GetCID()) ||
+    if(!(cidObj = GetCID()) ||
        NS_FAILED(cidObj->GetValid(&valid)) ||
        !valid ||
        NS_FAILED(cidObj->GetId(&cid)) ||
@@ -794,15 +790,11 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
                     nsIXPCScriptable* arbitrary,
                     JSBool* retval)
 {
-    CIDGetService* self;
     nsJSCID* cidObj;
     nsCID*  cid;
     PRBool valid;
 
-    if(NS_FAILED(wrapper->GetNative((nsISupports**)&self)))
-        return NS_ERROR_FAILURE;
-
-    if(!(cidObj = self->GetCID()) ||
+    if(!(cidObj = GetCID()) ||
        NS_FAILED(cidObj->GetValid(&valid)) ||
        !valid ||
        NS_FAILED(cidObj->GetId(&cid)) ||
@@ -909,7 +901,25 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 /***************************************************************************/
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsJSCID, nsIJSID, nsIJSCID)
+NS_IMPL_ISUPPORTS3(nsJSCID, nsIJSID, nsIJSCID, nsIXPCScriptable)
+
+
+XPC_IMPLEMENT_FORWARD_CREATE(nsJSCID)
+XPC_IMPLEMENT_IGNORE_GETFLAGS(nsJSCID)
+XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(nsJSCID)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsJSCID)
+XPC_IMPLEMENT_IGNORE_GETPROPERTY(nsJSCID)
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsJSCID)
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsJSCID)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsJSCID)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsJSCID)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(nsJSCID)
+XPC_IMPLEMENT_FORWARD_ENUMERATE(nsJSCID)
+XPC_IMPLEMENT_IGNORE_CHECKACCESS(nsJSCID)
+XPC_IMPLEMENT_IGNORE_CALL(nsJSCID)
+// XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsJSCID)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsJSCID)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsJSCID)
 
 nsJSCID::nsJSCID()  {NS_INIT_ISUPPORTS();}
 nsJSCID::~nsJSCID() {}
@@ -1002,6 +1012,29 @@ nsJSCID::GetGetService(nsISupports * *aGetService)
     if(*aGetService)
         NS_ADDREF(*aGetService);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSCID::Construct(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv,
+                   jsval *rval,
+                   nsIXPConnectWrappedNative* wrapper,
+                   nsIXPCScriptable* arbitrary,
+                   JSBool* retval)
+{
+    nsIXPCScriptable *ci;
+    CIDCreateInstance *p;
+    if(nsnull == (p = new CIDCreateInstance(this)) ||
+       NS_FAILED(p->QueryInterface(NS_GET_IID(nsIXPCScriptable),(void**)&ci)))
+    {
+        ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
+        *retval = JS_FALSE;
+        return NS_OK;
+    }
+    nsresult rv = ci->Call(cx, obj, argc, argv, rval, 
+                           wrapper, arbitrary, retval);
+    NS_RELEASE(ci);
+    return rv;
 }
 
 /***************************************************************************/
