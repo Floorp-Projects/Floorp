@@ -23,6 +23,7 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
+#include "nsIIOService.h"
 
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
@@ -46,19 +47,21 @@ typedef struct _findServerByHostnameEntry {
 } findServerByHostnameEntry;
 
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
+static NS_DEFINE_CID(kCMailtoUrlCID, NS_MAILTOURL_CID);
+static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 
 
 // foward declarations...
-
 nsresult
-NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
-                     const char* aSmtpHostName, 
-		     const char* aSmtpUserName, 
-                     const char* aRecipients, 
-		     nsIMsgIdentity * aSenderIdentity,
-		     nsIUrlListener * aUrlListener,
-                     nsIURI ** aUrl);
+NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
+                   const char* aSmtpHostName, 
+		               const char* aSmtpUserName, 
+                   const char* aRecipients, 
+		               nsIMsgIdentity * aSenderIdentity,
+		               nsIUrlListener * aUrlListener,
+                   nsIURI ** aUrl);
 
-nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer);
+nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer);
 
 nsSmtpService::nsSmtpService()
 {
@@ -72,36 +75,14 @@ nsSmtpService::~nsSmtpService()
 
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsSmtpService);
-NS_IMPL_THREADSAFE_RELEASE(nsSmtpService);
+NS_IMPL_ISUPPORTS2(nsSmtpService, nsISmtpService, nsIProtocolHandler);
 
-nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(NS_GET_IID(nsISmtpService)) || aIID.Equals(NS_GET_IID(nsISupports)))
-	{
-        *aInstancePtr = (void*) ((nsISmtpService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
-	{
-		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-    return NS_NOINTERFACE;
-}
-
-
-static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
 
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         const char * aRecipients, 
-					nsIMsgIdentity * aSenderIdentity,
-					nsIUrlListener * aUrlListener, 
-					nsISmtpServer * aServer,
+					                              nsIMsgIdentity * aSenderIdentity,
+					                              nsIUrlListener * aUrlListener, 
+					                              nsISmtpServer * aServer,
                                         nsIURI ** aURL)
 {
 	nsIURI * urlToRun = nsnull;
@@ -115,23 +96,23 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 
 		if (NS_SUCCEEDED(rv) && smtpServer)
 		{
-            nsXPIDLCString smtpHostName;
-            nsXPIDLCString smtpUserName;
+      nsXPIDLCString smtpHostName;
+      nsXPIDLCString smtpUserName;
 
 			smtpServer->GetHostname(getter_Copies(smtpHostName));
 			smtpServer->GetUsername(getter_Copies(smtpUserName));
 
-            if ((const char*)smtpHostName) 
+      if ((const char*)smtpHostName) 
 			{
-                rv = NS_MsgBuildMailtoUrl(aFilePath, smtpHostName, smtpUserName,  aRecipients, aSenderIdentity, aUrlListener, &urlToRun); // this ref counts urlToRun
-                if (NS_SUCCEEDED(rv) && urlToRun)	
-					rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
+        rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,  aRecipients, aSenderIdentity, aUrlListener, &urlToRun); // this ref counts urlToRun
+        if (NS_SUCCEEDED(rv) && urlToRun)	
+				rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
 
-                if (aURL) // does the caller want a handle on the url?
-                    *aURL = urlToRun; // transfer our ref count to the caller....
-                else
-                    NS_IF_RELEASE(urlToRun);
-            }
+        if (aURL) // does the caller want a handle on the url?
+          *aURL = urlToRun; // transfer our ref count to the caller....
+        else
+          NS_IF_RELEASE(urlToRun);
+      }
 		}
 	} // if we had a mail session
 
@@ -142,7 +123,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 // The following are two convience functions I'm using to help expedite building and running a mail to url...
 
 // short cut function for creating a mailto url...
-nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
+nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 				const char* aSmtpHostName, 
 				const char* aSmtpUserName, 
 				const char * aRecipients, 
@@ -162,7 +143,7 @@ nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
 		// this is complicated because the smtp username can be null
-		char * urlSpec= PR_smprintf("mailto://%s%s%s:%d/%s",
+		char * urlSpec= PR_smprintf("smtp://%s%s%s:%d/%s",
 					((const char*)aSmtpUserName)?(const char*)aSmtpUserName:"",
 					((const char*)aSmtpUserName)?"@":"",
                                     	(const char*)aSmtpHostName, 
@@ -183,7 +164,7 @@ nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
 	 return rv;
 }
 
-nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer)
+nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer)
 {
 	// mscott: this function is pretty clumsy right now...eventually all of the dispatching
 	// and transport creation code will live in netlib..this whole function is just a hack
@@ -232,10 +213,175 @@ NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 	return rv; 	
 }
 
+//////////////////////////////////////////////////////////////////////////
+// This is just a little stub channel class for mailto urls. Mailto urls
+// don't really have any data for the stream calls in nsIChannel to make much sense.
+// But we need to have a channel to return for nsSmtpService::NewChannel
+// that can simulate a real channel such that the uri loader can then get the
+// content type for the channel.
+class nsMailtoChannel : nsIChannel
+{
+public:
+
+	  NS_DECL_ISUPPORTS
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSIREQUEST
+	
+    nsMailtoChannel(nsIURI * aURI);
+	  virtual ~nsMailtoChannel();
+
+protected:
+  nsCOMPtr<nsIURI> m_url;
+};
+
+nsMailtoChannel::nsMailtoChannel(nsIURI * aURI)
+{
+  m_url = aURI;
+  NS_INIT_ISUPPORTS();
+}
+
+nsMailtoChannel::~nsMailtoChannel()
+{}
+
+NS_IMPL_ISUPPORTS2(nsMailtoChannel, nsIChannel, nsIRequest);
+
+NS_IMETHODIMP nsMailtoChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    *aLoadGroup = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
+{
+	return NS_OK;       // don't fail when trying to set this
+}
+
+
+NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    *aURI = nsnull;
+    return NS_OK; 
+}
+ 
+NS_IMETHODIMP nsMailtoChannel::GetURI(nsIURI * *aURI)
+{
+    *aURI = m_url;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK; 
+}
+ 
+NS_IMETHODIMP nsMailtoChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+  // we already know the content type...
+  observer->OnStartRequest(this, ctxt);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
+{
+  return listener->OnStartRequest(this, ctxt);
+}
+
+NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::GetContentType(char * *aContentType)
+{
+	*aContentType = nsCRT::strdup("x-application-mailto");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::GetContentLength(PRInt32 * aContentLength)
+{
+  *aContentLength = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::GetOwner(nsISupports * *aPrincipal)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::SetOwner(nsISupports * aPrincipal)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// From nsIRequest
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsMailtoChannel::IsPending(PRBool *result)
+{
+    *result = PR_TRUE;
+    return NS_OK; 
+}
+
+NS_IMETHODIMP nsMailtoChannel::Cancel()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMailtoChannel::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+// the smtp service is also the protocol handler for mailto urls....
+
 NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-	// i just haven't implemented this yet...I will be though....
-	return NS_ERROR_NOT_IMPLEMENTED;
+  // get a new smtp url 
+
+  nsresult rv = NS_OK;
+	nsCOMPtr <nsIURI> mailtoUrl;
+
+	rv = nsComponentManager::CreateInstance(kCMailtoUrlCID, NULL, NS_GET_IID(nsIURI), getter_AddRefs(mailtoUrl));
+
+	if (NS_SUCCEEDED(rv))
+	{
+    mailtoUrl->SetSpec(aSpec);
+		rv = mailtoUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+	}
+  return rv;
 }
 
 NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, 
@@ -246,11 +392,17 @@ NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb,
                                         nsIURI* originalURI,
                                         nsIChannel **_retval)
 {
-	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
-	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
-	// the necko team in more detail later on.
-	return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+  nsMailtoChannel * aMailtoChannel = new nsMailtoChannel(aURI);
+  if (aMailtoChannel)
+  {
+      rv = aMailtoChannel->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+  }
+  else
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  return rv;
 }
+
 
 NS_IMETHODIMP
 nsSmtpService::GetSmtpServers(nsISupportsArray ** aResult)
