@@ -629,7 +629,7 @@ static NSArray* sToolbarDefaults = nil;
   [mBookmarkViewController ensureBookmarks];
 
   if ([[[mSidebarTabView selectedTabViewItem] identifier] isEqual:@"historySidebarCHIconTabViewItem"]) {
-    [mHistoryDataSource ensureDataSourceLoaded];
+    [mHistoryDataSource loadLazily];
     [mHistoryDataSource enableObserver];
   }
 

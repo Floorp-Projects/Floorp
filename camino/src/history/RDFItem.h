@@ -42,37 +42,34 @@
 class nsIRDFDataSource;
 class nsIRDFContainer;
 class nsIRDFContainerUtils;
+class nsIRDFResource;
 class nsIRDFService;
 
-@class ExtendedOutlineView;
-@class RDFItem;
 
-@interface RDFOutlineViewDataSource : NSObject
+// RDFItems make up rows of an RDF outline view
+@interface RDFItem : NSObject
 {
-  RDFItem * mRootRDFItem;
-  IBOutlet ExtendedOutlineView* mOutlineView; 
+  NSMutableArray* mChildNodes;      // array of RDFItem
+  RDFItem* mParent;
+  NSMutableDictionary * mPropertyCache;
 
+  nsIRDFResource*         mRDFResource;
   nsIRDFDataSource*       mRDFDataSource;
   nsIRDFContainer*        mRDFContainer;
   nsIRDFContainerUtils*   mRDFContainerUtils;
   nsIRDFService*          mRDFService;
 }
 
-- (RDFItem *)rootRDFItem;
-- (void)setRootRDFItem:(RDFItem*)item;
+- (id)initWithRDFResource:(nsIRDFResource*)aRDFResource RDFDataSource:(nsIRDFDataSource*)aRDFDataSource parent:(RDFItem*)newparent;
+- (NSString*)getStringForRDFPropertyURI:(NSString*)aPropertyURI;
+- (BOOL)isExpandable;
+- (RDFItem*)childAtIndex:(int)index;
+- (int)numChildren;
+- (RDFItem*)parent;
 
-// Initialization Methods
-- (void) loadLazily;
-- (void) cleanupDataSource;
+- (void)deleteChildFromCache:(RDFItem*)child;
 
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
-- (void)invalidateCachedItems;
-
-  // Outline View Data Source methods
-- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;
-- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item;
-- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
+- (void)buildChildCache;
+- (void)invalidateCache;
 
 @end

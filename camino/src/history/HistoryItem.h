@@ -39,40 +39,34 @@
 
 #import <Appkit/Appkit.h>
 
-class nsIRDFDataSource;
-class nsIRDFContainer;
-class nsIRDFContainerUtils;
-class nsIRDFService;
+#import "RDFItem.h"
 
-@class ExtendedOutlineView;
-@class RDFItem;
+// YES if you want to have history flattened
+// eliminates the per-site folders that nsGlobalHistory returns
+// and also sorts the resulting flat list by date
+const bool kFlattenHistory = YES;
 
-@interface RDFOutlineViewDataSource : NSObject
+// URIs for RDF properties
+#define NC_NAME_KEY @"http://home.netscape.com/NC-rdf#Name"
+#define NC_URL_KEY @"http://home.netscape.com/NC-rdf#URL"
+#define NC_DATE_KEY @"http://home.netscape.com/NC-rdf#Date"
+  
+// HistoryItem's are the rows of the history outline view
+// extends RDFItem to support flattened history list
+@interface HistoryItem : RDFItem
 {
-  RDFItem * mRootRDFItem;
-  IBOutlet ExtendedOutlineView* mOutlineView; 
-
-  nsIRDFDataSource*       mRDFDataSource;
-  nsIRDFContainer*        mRDFContainer;
-  nsIRDFContainerUtils*   mRDFContainerUtils;
-  nsIRDFService*          mRDFService;
+  NSArray * mGrandChildNodes;
 }
 
-- (RDFItem *)rootRDFItem;
-- (void)setRootRDFItem:(RDFItem*)item;
+- (void)deleteFromGecko;
 
-// Initialization Methods
-- (void) loadLazily;
-- (void) cleanupDataSource;
+- (void)buildGrandChildCache;
 
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
-- (void)invalidateCachedItems;
+- (HistoryItem*)childAtIndex:(int)index;
 
-  // Outline View Data Source methods
-- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;
-- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item;
-- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
+// RDF properties
+- (NSString*)name;
+- (NSString*)url;
+- (NSString*)date;
 
 @end

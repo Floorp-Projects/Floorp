@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author)
+ *   Simon Woodside <sbwoodside@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,23 +40,24 @@
 #import "RDFOutlineViewDataSource.h"
 
 class nsAString;
-class HistoryDataSourceObserver;
+class HistoryRDFObserver;
 
 @class BrowserWindowController;
+@class HistoryItem;
 
 @interface HistoryDataSource : RDFOutlineViewDataSource
 {
-  HistoryDataSourceObserver* mObserver;					// STRONG ref, should be nsCOMPtr but can't
+  HistoryRDFObserver* mObserver;   // STRONG ref, should be nsCOMPtr but can't
   IBOutlet BrowserWindowController* mBrowserWindowController;
-  BOOL                       mUpdatesEnabled;
-  BOOL                       mNeedsRefresh;
+  BOOL mUpdatesEnabled;
+  BOOL mNeedsRefresh;
+  bool mLoaded;
+
+  HistoryItem * mRootHistoryItem;
 }
 
-// overridden to create a attributed string with icon
-- (id)createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem;
-
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)inItem;
-- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item;
+- (HistoryItem *)rootRDFItem;
+- (void)setRootRDFItem:(HistoryItem *)item;
 
 - (void)enableObserver;
 - (void)disableObserver;
@@ -68,6 +70,12 @@ class HistoryDataSourceObserver;
 - (IBAction)deleteHistoryItems: (id)aSender;
 - (IBAction)openHistoryItemInNewWindow:(id)aSender;
 - (IBAction)openHistoryItemInNewTab:(id)aSender;
+
+  // NSOutlineViewDataSource protocol
+- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard;
+- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
+- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item;
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
 
 
 @end

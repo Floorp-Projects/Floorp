@@ -716,7 +716,7 @@ const long kMinSearchPaneHeight = 80;
   if ( inRowIndex == kHistoryContainerIndex ) {
     [mItemPane setDataSource:mHistorySource];
     [mItemPane setDelegate:mHistorySource];
-    [mHistorySource ensureDataSourceLoaded];
+    [mHistorySource loadLazily];
     [self setCanEditSelectedContainerContents:NO];
     [mItemPane setTarget:mHistorySource];
     [mItemPane setDoubleAction: @selector(openHistoryItem:)];

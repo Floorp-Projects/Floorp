@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Simon Woodside <sbwoodside@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,6 +44,7 @@
 #import "CHBrowserView.h"
 #import "ExtendedOutlineView.h"
 #import "PreferenceManager.h"
+#import "HistoryItem.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -56,21 +58,19 @@
 #include "nsComponentManagerUtils.h"
 
 //
-// class HistoryDataSourceObserver
-//
-// An observer, enabled whenver the history panel in the drawer is selected. Tracks
-// changes to the RDF data source and pokes the history outline view
+// Uses the Gecko RDF data source for history,
+// and presents a Cocoa API through the NSOutlineViewDataSource protocol
 //
 
-class HistoryDataSourceObserver : public nsIRDFObserver
+class HistoryRDFObserver : public nsIRDFObserver
 {
 public:
-  HistoryDataSourceObserver(HistoryDataSource* dataSource)
+  HistoryRDFObserver(HistoryDataSource* dataSource)
   : mHistoryDataSource(dataSource)
   { 
     NS_INIT_ISUPPORTS();
   }
-  virtual ~HistoryDataSourceObserver() { }
+  virtual ~HistoryRDFObserver() { }
   
   NS_DECL_ISUPPORTS
 
@@ -90,7 +90,7 @@ private:
   HistoryDataSource* mHistoryDataSource;
 };
 
-NS_IMPL_ISUPPORTS1(HistoryDataSourceObserver, nsIRDFObserver)
+NS_IMPL_ISUPPORTS1(HistoryRDFObserver, nsIRDFObserver)
 
 
 //
@@ -100,8 +100,8 @@ NS_IMPL_ISUPPORTS1(HistoryDataSourceObserver, nsIRDFObserver)
 // open.
 //
 NS_IMETHODIMP
-HistoryDataSourceObserver::OnAssert(nsIRDFDataSource*, nsIRDFResource*, 
-                                      nsIRDFResource* aProperty, nsIRDFNode*)
+HistoryRDFObserver::OnAssert(nsIRDFDataSource*, nsIRDFResource*,
+                             nsIRDFResource* aProperty, nsIRDFNode*)
 {
   const char* p;
   aProperty->GetValueConst(&p);
@@ -117,8 +117,8 @@ HistoryDataSourceObserver::OnAssert(nsIRDFDataSource*, nsIRDFResource*,
 // This gets called on redirects, when nsGlobalHistory::RemovePage is called.
 //
 NS_IMETHODIMP
-HistoryDataSourceObserver::OnUnassert(nsIRDFDataSource*, nsIRDFResource*, 
-                                      nsIRDFResource* aProperty, nsIRDFNode*)
+HistoryRDFObserver::OnUnassert(nsIRDFDataSource*, nsIRDFResource*,
+                               nsIRDFResource* aProperty, nsIRDFNode*)
 {
   const char* p;
   aProperty->GetValueConst(&p);
@@ -135,26 +135,32 @@ HistoryDataSourceObserver::OnUnassert(nsIRDFDataSource*, nsIRDFResource*,
 // visiting them and they change date
 //
 NS_IMETHODIMP
-HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*, 
+HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*, 
                                       nsIRDFResource* aProperty, nsIRDFNode*, nsIRDFNode*)
 {
   const char* p;
   aProperty->GetValueConst(&p);
-
   if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
     [mHistoryDataSource setNeedsRefresh:YES];
 
   return NS_OK;
 }
 
+
+
+
+
 #pragma mark -
 
 @interface HistoryDataSource(Private)
 
 - (void)cleanupHistory;
-- (void)removeItemFromHistory:(id)inItem withService:(nsIBrowserHistory*)inHistService;
+- (void)cleanupDataSource;
+- (void)removeItemFromGeckoHistory:(id)anItem withService:(nsIBrowserHistory*)inHistService;
 
 @end
+
+#pragma mark -
 
 @implementation HistoryDataSource
 
@@ -167,49 +173,69 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 // "non-virtual" cleanup method -- safe to call from dealloc.
 - (void)cleanupHistory
 {
-  if (mDataSource && mObserver)
-  {
-    mDataSource->RemoveObserver(mObserver);
+  if (mRDFDataSource && mObserver) {
+    mRDFDataSource->RemoveObserver(mObserver);
     NS_RELEASE(mObserver);		// nulls it
   }
 }
 
 // "virtual" method; called from superclass
-- (void)cleanupDataSource
+- (void)cleanupDataSource;
 {
- 	[self cleanupHistory];
+  [self cleanupHistory];
   [super cleanupDataSource];
 }
 
+-(bool) loaded;
+{
+  return mLoaded;
+}
+
+- (HistoryItem *)rootRDFItem;
+{
+  return mRootHistoryItem;
+}
+
+- (void)setRootRDFItem:(HistoryItem *)item;
+{
+  [mRootHistoryItem autorelease];
+  mRootHistoryItem = [item retain];
+}
+
 //
-// ensureDataSourceLoaded
+// loadLazily
 //
 // Called when the history panel is selected or brought into view. Inits all
 // the RDF-fu to make history go. We defer loading everything because it's 
 // sorta slow and we don't want to take the hit when the user creates new windows
 // or just opens the bookmarks panel.
 //
-- (void) ensureDataSourceLoaded
+// in addition currently we don't get any gecko updates after we load so this
+// will make sure it's up-to-date
+//
+- (void) loadLazily;
 {
-  [super ensureDataSourceLoaded];
+  [super loadLazily];
   
   NS_ASSERTION(mRDFService, "Uh oh, RDF service not loaded in parent class");
   
-  if ( !mDataSource )
-  {
+  if( !mRDFDataSource ) {
     // Get the Global History DataSource
-    mRDFService->GetDataSource("rdf:history", &mDataSource);
+    mRDFService->GetDataSource("rdf:history", &mRDFDataSource);
     // Get the Date Folder Root
-    mRDFService->GetResource(nsDependentCString("NC:HistoryByDate"), &mRootResource);
+    nsIRDFResource* aRDFRootResource;
+    mRDFService->GetResource(nsDependentCString("NC:HistoryByDate"), &aRDFRootResource);
+    HistoryItem * newRoot = [HistoryItem alloc];
+    [newRoot initWithRDFResource:aRDFRootResource RDFDataSource:mRDFDataSource parent:nil];
+    [self setRootRDFItem:newRoot];
+
+
+    // identifiers: title url description keyword
   
-    [mOutlineView setTarget: self];
-    [mOutlineView setDoubleAction: @selector(openHistoryItem:)];
-    [mOutlineView setDeleteAction: @selector(deleteHistoryItems:)];
-  
-    mObserver = new HistoryDataSourceObserver(self);
+    mObserver = new HistoryRDFObserver(self);
     if ( mObserver ) {
       NS_ADDREF(mObserver);
-      mDataSource->AddObserver(mObserver);
+      mRDFDataSource->AddObserver(mObserver);
     }
     [mOutlineView reloadData];
   }
@@ -220,7 +246,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     [mOutlineView reloadData];
   }
   
-  NS_ASSERTION(mDataSource, "Uh oh, History RDF Data source not created");
+  NS_ASSERTION(mRDFDataSource, "Uh oh, History RDF Data source not created");
 }
 
 - (void)enableObserver
@@ -250,82 +276,14 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     [self invalidateCachedItems];
     if (mUpdatesEnabled)
     {
-      // this can be very slow! See bug 180109.
-      //NSLog(@"history reload started");
       [self reloadDataForItem:nil reloadChildren:NO];
-      //NSLog(@"history reload done");
     }
     mNeedsRefresh = NO; 
   }
 }
 
-//
-// createCellContents:withColumn:byItem
-//
-// override to look up the URL if the name is empty. We'll obviously always have a
-// name.
-//
--(id) createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
-{
-  NSString *fragment = [[NSURL URLWithString:inColumn] fragment];
-  if (([inValue length] == 0) && [fragment isEqualToString:@"Name"])
-    inValue = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
-  return inValue;
-}
-
-
-//
-// filterDragItems:
-//
-// Walk the list of items, filtering out any folder. Returns a new list
-// that has been autoreleased.
-//
-- (NSArray*)filterDragItems:(NSArray*)inItems
-{
-  NSMutableArray* outItems = [[[NSMutableArray alloc] init] autorelease];
-  
-  NSEnumerator *enumerator = [inItems objectEnumerator];
-  id obj;
-  while ( (obj = [enumerator nextObject]) ) {
-    if ( ! [mOutlineView isExpandable: obj] )    // if it's not a folder, we can drag it
-      [outItems addObject:obj];
-  }
-  
-  return outItems;
-}
-
-- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard 
-{
-  //Need to filter out folders from the list, only allow the urls to be dragged
-  NSArray *toDrag = [self filterDragItems:items];
-
-  int count = [toDrag count];
-  if (count > 0) {    
-    if (count == 1) {
-      id item = [toDrag objectAtIndex: 0];
-      
-      // if we have just one item, we add some more flavours
-      NSString* url   = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL"  forItem:item];
-      NSString* title = [self getPropertyString:@"http://home.netscape.com/NC-rdf#Name" forItem:item];
-      NSString *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
-
-      [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
-      [pboard setDataForURL:url title:cleanedTitle];
-    }
-    else {
-      // not sure what to do here. canceling the drag for now.
-      return NO;
-    }
-
-    return YES;
-  }
-
-  return NO;
-}
-
-//
-// this better be coming from a context menu
-//
+// this should only come from a context menu
+// ... because we use [aSender representedObject] apparently...
 -(IBAction)openHistoryItemInNewTab:(id)aSender
 {
   NSString *url = [aSender representedObject];
@@ -335,10 +293,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   }
 }
 
-//
-// this better be coming from a context menu
-//
-
+// this should only come from a context menu
+// ... because we use [aSender representedObject] apparently...
 -(IBAction)openHistoryItemInNewWindow:(id)aSender
 {
   NSString *url = [aSender representedObject];
@@ -348,150 +304,150 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   }
 }
 
-
--(IBAction)openHistoryItem: (id)aSender
+- (IBAction)openHistoryItem:(id)aSender
 {
-    int index = [mOutlineView selectedRow];
-    if (index == -1)
-      return;
-
-    id item = [mOutlineView itemAtRow: index];
-    if (!item)
-      return;
-    
-    // expand if collapsed and double click
-    if ([mOutlineView isExpandable: item]) {
-      if ([mOutlineView isItemExpanded: item])
-        [mOutlineView collapseItem: item];
-      else
-        [mOutlineView expandItem: item];
-        
-      return;
-    }
-    
-    // get uri
-    NSString* url = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item];
-    [[mBrowserWindowController getBrowserWrapper] loadURI: url referrer: nil flags: NSLoadFlagsNone activate:YES];
+  int index = [mOutlineView selectedRow];
+  if (index == -1)
+    return;
+  id item = [mOutlineView itemAtRow: index];
+  if (!item)
+    return;
+  if ([mOutlineView isExpandable: item]) { //TODO [item class]
+    if ([mOutlineView isItemExpanded: item])
+      [mOutlineView collapseItem: item];
+    else
+      [mOutlineView expandItem: item];
+  } else {
+    [[mBrowserWindowController getBrowserWrapper] loadURI:[item url] referrer:nil flags:NSLoadFlagsNone activate:YES];
+  }
 }
 
-
-//
-// deleteHistoryItems:
-//
-// Called when user hits backspace with the history view selected. Walks the selection
-// removing the selected items from the global history in batch-mode, then reloads
-// the outline.
-//
--(IBAction)deleteHistoryItems: (id)aSender
+// Walks the selection removing the selected items from the global history
+// in batch-mode, then reload the outline.
+- (IBAction)deleteHistoryItems:(id)aSender
 {
   int index = [mOutlineView selectedRow];
   if (index == -1)
     return;
 
-  // if the user selected a bunch of rows, we want to clear the selection since when
-  // those rows are deleted, the tree will try to keep the same # of rows selected and
-  // it will look really odd. If just 1 row was selected, we keep it around so the user
-  // can keep quickly deleting one row at a time.
-  BOOL clearSelectionWhenDone = [mOutlineView numberOfSelectedRows] > 1;
+  // If just 1 row was selected, keep it so the user can delete again immediately
+  BOOL clearSelectionWhenDone = ([mOutlineView numberOfSelectedRows] > 1);
   
-  nsCOMPtr<nsIBrowserHistory> history = do_GetService("@mozilla.org/browser/global-history;1");
-  if ( history ) {
-    // Even though it looks like relying on row numbers as we delete will get us in trouble 
-    // and out of sync, until we actually invalidate the table, the rows keep their prior values.
-    // If children are selected as well as the parent, we'll just end up trying to remove the
-    // host string from history which will silently fail. It's extra work, but harmless.
-    nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(history);
-    ds->BeginUpdateBatch();
-    NSEnumerator* rowEnum = [mOutlineView selectedRowEnumerator];
-    for ( NSNumber* currIndex = [rowEnum nextObject]; currIndex; currIndex = [rowEnum nextObject]) {
-      index = [currIndex intValue];
-      RDFOutlineViewItem* item = [mOutlineView itemAtRow: index];
-      if ([mOutlineView isExpandable: item]) {
-        // delete a folder by iterating over each of its children and deleting them. There
-        // should be a better way, but the history api's don't really support them. Expand
-        // the folder before we delete it otherwise we don't get any child nodes to delete. 
-        [mOutlineView expandItem:item];
-        NSEnumerator* childEnum = [item->mChildNodes objectEnumerator];
-        RDFOutlineViewItem* currChild = nil;
-        while ( (currChild = [childEnum nextObject]) )
-          [self removeItemFromHistory:currChild withService:history];
-      }
-      else
-        [self removeItemFromHistory:item withService:history];
+  // row numbers will stay in sync until table is invalidated
+  // removing children of removed items will fail silently (harmless)
+  NSEnumerator* rowEnum = [mOutlineView selectedRowEnumerator];
+  int currentRow;
+  while( (currentRow = [[rowEnum nextObject] intValue]) ) {
+    HistoryItem * item = [mOutlineView itemAtRow:currentRow];
+    if( [item isKindOfClass:[RDFItem class]] ) {
+      [(HistoryItem*)item deleteFromGecko];
+      [[item parent] deleteChildFromCache:item];
     }
-    ds->EndUpdateBatch();
-    if ( clearSelectionWhenDone )
-      [mOutlineView deselectAll:self];
-
-    [self invalidateCachedItems];
-    [mOutlineView reloadData];     // necessary or the outline is really horked
   }
-}
-
--(void)removeItemFromHistory:(id)inItem withService:(nsIBrowserHistory*)inHistService;
-{
-  NSString* urlString = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
-  inHistService->RemovePage([urlString UTF8String]);
+  if ( clearSelectionWhenDone )
+    [mOutlineView deselectAll:self];
+  [mOutlineView reloadData];     // tell outline view the data source has changed
 }
 
 
-//
-// outlineView:tooltipForString
-//
-// Only show a tooltip if we're not a folder. For urls, use title\nurl as the format.
-// We can re-use the base-class impl to get the title of the page and then just add on
-// to that.
-//
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)inItem
+#pragma mark -
+
+// Implementation of NSOutlineViewDataSource protocol
+
+// identifiers: title url description keyword
+- (id)outlineView:(NSOutlineView*)aOutlineView objectValueForTableColumn:(NSTableColumn*)aTableColumn byItem:(id)aItem
 {
-  if ( ! [mOutlineView isExpandable: inItem] ) {
-    // use baseclass to get title of page
-    NSString* pageTitle = [super outlineView:outlineView tooltipStringForItem:inItem];
+  if (!mRDFDataSource || !aItem)
+    return nil;
+  // use the table column identifier as a key
+  if( [[aTableColumn identifier] isEqualToString:@"title"] )
+    return [aItem name];
+  else if( [[aTableColumn identifier] isEqualToString:@"url"] )
+    return [aItem url];
+//  else if( [[aTableColumn identifier] isEqualToString:@"description"] )
+//    return [aItem date];
+  return nil;
+// TODO truncate string
+//  - (void)truncateToWidth:(float)maxWidth at:kTruncateAtMiddle withAttributes:(NSDictionary *)attributes
+}
+
+- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard;
+{
+  //Need to filter out folders from the list, only allow the urls to be dragged
+  NSMutableArray* toDrag = [[[NSMutableArray alloc] init] autorelease];
+  NSEnumerator *enumerator = [items objectEnumerator];
+  id obj;
+  while( (obj = [enumerator nextObject]) ) {
+    if( ![obj isExpandable] )
+      [toDrag addObject:obj];
+  }
   
-    // append url
-    NSString* url = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
+  int count = [toDrag count];
+  if (count == 1) {
+    id item = [toDrag objectAtIndex: 0];
+    // if we have just one item, we add some more flavours
+    NSString* title = [item name];
+    NSString *cleanedTitle
+      = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
+    [pboard setDataForURL:[item url] title:cleanedTitle];
+    return YES;
+  }
+  if( count > 1 ) {
+    // not sure what to do for multiple drag. just cancel for now.
+    return NO;
+  }
+  return NO;
+}
+
+// Only show a tooltip if we're not a folder. For items, use name\nurl as the format.
+- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
+{
+  if( ![anItem isExpandable] ) {
+    NSString* pageTitle = [anItem name];
+    NSString* url = [anItem url];
     return [NSString stringWithFormat:@"%@\n%@", pageTitle, [url stringByTruncatingTo:80 at:kTruncateAtEnd]];
   }
   return nil;
 }
 
-- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
+// TODO site icons
+- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item;
 {
   // set the image on the name column. the url column doesn't have an image.
- if ([[tableColumn identifier] isEqualToString: @"title"]) {
-    if ( [outlineView isExpandable: item] )
+ if ([[tableColumn identifier] isEqualToString:@"title"]) {
+    if ( [outlineView isExpandable:item] )
       [inCell setImage:[NSImage imageNamed:@"folder"]];
     else
       [inCell setImage:[NSImage imageNamed:@"smallbookmark"]];
   }
 }
 
-- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
 {
   if (nil == item || [mOutlineView isExpandable: item])
     return nil;
 
   // get item's URL, prep context menu
-  NSString* url = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item];
   NSString *nulString = [NSString string];
   NSMenu *contextMenu = [[[NSMenu alloc] initWithTitle:@"snookums"] autorelease];
 
   // open in new window
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Window",@"Open in New Window") action:@selector(openHistoryItemInNewWindow:) keyEquivalent:nulString];
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Window",@"") action:@selector(openHistoryItemInNewWindow:) keyEquivalent:nulString];
   [menuItem setTarget:self];
-  [menuItem setRepresentedObject:url];
+  [menuItem setRepresentedObject:[item url]];
   [contextMenu addItem:menuItem];
   [menuItem release];
 
   // open in new tab
-  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Tab",@"Open in New Tab") action:@selector(openHistoryItemInNewTab:) keyEquivalent:nulString];
+  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Tab",@"") action:@selector(openHistoryItemInNewTab:) keyEquivalent:nulString];
   [menuItem setTarget:self];
-  [menuItem setRepresentedObject:url];
+  [menuItem setRepresentedObject:[item url]];
   [contextMenu addItem:menuItem];
   [menuItem release];
 
   // delete
-  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"Delete") action:@selector(deleteHistoryItems:) keyEquivalent:nulString];
+  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"") action:@selector(deleteHistoryItems:) keyEquivalent:nulString];
   [menuItem setTarget:self];
   [contextMenu addItem:menuItem];
   [menuItem release];
