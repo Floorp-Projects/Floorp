@@ -3045,7 +3045,7 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 #endif // IBMBIDI
 // XXX: It looks like the LayoutState gets restored again in Embed()
 //      right after the call to SetupNewViewer(...)
-   SetTitle(nsnull);  // clear window title
+
    mContentViewer->Show();
 
    // Now that we have switched documents, forget all of our children
