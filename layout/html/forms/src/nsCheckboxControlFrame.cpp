@@ -183,9 +183,9 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& 
   nsresult result = GetDefaultCheckState(&checked);
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     if (PR_TRUE == checked)
-      SetProperty(nsHTMLAtoms::checked, "1");
+      SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
     else
-      SetProperty(nsHTMLAtoms::checked, "0");
+      SetProperty(nsHTMLAtoms::checked, NS_STRING_FALSE);
   }
 
   if (mWidget != nsnull) {
@@ -374,19 +374,13 @@ void nsCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
     if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox)) {
       PRBool state = PR_FALSE;
       checkBox->GetState(state);
-      if (PR_TRUE == state)
-        aValue = "1";
-      else
-        aValue = "0";
+      nsFormControlHelper::GetBoolString(state, aValue);
       NS_RELEASE(checkBox);
     }
   }
   else {   
       // Get the state for GFX-rendered widgets
-    if (PR_TRUE == mChecked)
-      aValue = "1";
-    else
-      aValue = "0";
+    nsFormControlHelper::GetBoolString(mChecked, aValue);
   }
 }       
 
@@ -396,22 +390,14 @@ void nsCheckboxControlFrame::SetCheckboxControlFrameState(const nsString& aValue
   if (nsnull != mWidget) {
     nsICheckButton* checkBox = nsnull;
     if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox)) {
-      PRBool state = PR_FALSE;
-      if (aValue == "1")
-        checkBox->SetState(PR_TRUE);
-      else
-        checkBox->SetState(PR_FALSE);
-
+      PRBool state = nsFormControlHelper::GetBool(aValue);
+      checkBox->SetState(state);
       NS_RELEASE(checkBox);
     }
   }
   else {
       // Set the state for GFX-rendered widgets
-    if (aValue == "1")
-      mChecked = PR_TRUE;
-    else
-      mChecked = PR_FALSE;
-
+    mChecked = nsFormControlHelper::GetBool(aValue);
     nsFormControlHelper::ForceDrawFrame(this);
   }
 }         

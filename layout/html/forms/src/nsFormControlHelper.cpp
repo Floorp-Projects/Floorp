@@ -92,6 +92,22 @@ void nsFormControlHelper::ForceDrawFrame(nsIFrame * aFrame)
   }
 }
 
+PRBool nsFormControlHelper::GetBool(const nsString& aValue)
+{
+  if (aValue == NS_STRING_TRUE)
+    return(PR_TRUE);
+  else
+    return (PR_FALSE);
+}
+
+void nsFormControlHelper::GetBoolString(const PRBool aValue, nsString& aResult)
+{
+  if (PR_TRUE == aValue)
+    aResult = NS_STRING_TRUE;
+  else
+    aResult = NS_STRING_FALSE;
+}
+
 
 nsCompatibility
 nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2) 
@@ -617,27 +633,33 @@ void
 nsFormControlHelper::PaintScaledCheckMark(nsIRenderingContext& aRenderingContext,
                          float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
 {
-  const int checkpoints = 7;
-  const float checksize = 8.0f;
+  const PRUint32 checkpoints = 7;
+  const PRUint32 checksize   = 9; //This is value is determined by added 2 units to the end
+                                //of the 7X& pixel rectangle below to provide some white space
+                                //around the checkmark when it is rendered.
 
     // Points come from the coordinates on a 7X7 pixels 
     // box with 0,0 at the lower left. 
   nscoord checkedPolygonDef[] = {0,2, 2,4, 6,0 , 6,2, 2,6, 0,4, 0,2 };
-
+    // Location of the center point of the checkmark
+  const PRUint32 centerx = 3;
+  const PRUint32 centery = 3;
+  
   nsPoint checkedPolygon[checkpoints];
   PRUint32 defIndex = 0;
   PRUint32 polyIndex = 0;
 
      // Scale the checkmark based on the smallest dimension
-  float size = aWidth / checksize;
+  PRUint32 size = aWidth / checksize;
   if (aHeight < aWidth) {
    size = aHeight / checksize;
   }
   
+    // Center and offset each point in the polygon definition.
   for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
-    checkedPolygon[polyIndex].x = nscoord(((float(checkedPolygonDef[defIndex]) - 3.0) * (size)) + (aWidth / 2.0));
+    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aWidth / 2));
     defIndex++;
-    checkedPolygon[polyIndex].y = nscoord(((float(checkedPolygonDef[defIndex]) - 3.0) * (size)) + (aHeight / 2.0));
+    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aHeight / 2));
     polyIndex++;
   }
   
