@@ -777,7 +777,7 @@ SSMSecurityAdvisorContext_DoNewDefMailReponse(SSMPKCS12Context *p12Cxt,
     if (rv != SSM_SUCCESS || defEmailCert == NULL) {
         goto loser;
     }
-    content = PR_smprintf(fmt, defEmailCert);
+    content = PR_smprintf(fmt, defEmailCert, req->target->m_id);
     if (content == NULL) {
         goto loser;
     }

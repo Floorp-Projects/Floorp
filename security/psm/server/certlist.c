@@ -861,15 +861,16 @@ SSM_CertListKeywordHandler(SSMTextGenContext *cx)
     }
 
     /* initialize a hash if haven't already */
-    if ((*state.hash == NULL) || 
-        (SSM_IsAKindOf(target, SSM_RESTYPE_SECADVISOR_CONTEXT)) &&
-         ((((SSMSecurityAdvisorContext *)target)->m_certsIncluded & 
-          certType[state.usage]) 
-        == 0)) {
-        ((SSMSecurityAdvisorContext *)target)->m_certsIncluded |= certType[state.usage];
-        rv = ssm_populate_key_hash(&state);
-        if (rv != SSM_SUCCESS)
-            goto user_loser;
+    if (SSM_IsAKindOf(target, SSM_RESTYPE_SECADVISOR_CONTEXT)) {
+        SSMSecurityAdvisorContext *sctx = (SSMSecurityAdvisorContext *)target;
+
+        if ( *state.hash == NULL || 
+             (sctx->m_certsIncluded & certType[state.usage]) == 0) {
+            sctx->m_certsIncluded |= certType[state.usage];
+            rv = ssm_populate_key_hash(&state);
+            if (rv != SSM_SUCCESS)
+                goto user_loser;
+        }
     }
         
     /* Already have all certs info, output in a list in state.result */
