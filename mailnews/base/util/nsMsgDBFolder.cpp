@@ -1833,6 +1833,13 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
   PRInt32 spamLevel = 0;
   nsXPIDLCString whiteListAbURI;
 
+  nsresult rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  
+  nsXPIDLCString serverType; 
+  server->GetType(getter_Copies(serverType));
+  
+
   // if this is the junk folder, or the trash folder
   // don't analyze for spam, because we don't care
   //
@@ -1843,15 +1850,15 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
   // if it's a public imap folder, or another users
   // imap folder, don't analyze for spam, because
   // it's not ours to analyze
-  if (mFlags & (MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_TRASH |
+  if ( !(nsCRT::strcmp(serverType.get(), "rss")) || 
+       (mFlags & (MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_TRASH |
                MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_QUEUE |
                MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_TEMPLATES |
                MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER)
-       && !(mFlags & MSG_FOLDER_FLAG_INBOX))
+       && !(mFlags & MSG_FOLDER_FLAG_INBOX)) )
     return NS_OK;
 
-  nsresult rv = GetServer(getter_AddRefs(server));
-  NS_ENSURE_SUCCESS(rv, rv); 
+
   rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
   nsCOMPtr <nsIMsgFilterPlugin> filterPlugin;
   server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
