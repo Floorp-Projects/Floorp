@@ -41,6 +41,7 @@ nsImageUnix :: nsImageUnix()
   mOriginalDepth = 0;
   mColorMap = nsnull;
   mAlphaBits = nsnull;
+  mStaticImage = PR_FALSE;
 }
 
 //------------------------------------------------------------
@@ -186,7 +187,11 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurf
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
- 
+
+  if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
+    BuildImage(aSurface);
+  } 
+
   if (nsnull == mImage)
     return PR_FALSE;
 
@@ -206,11 +211,14 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext,
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 
-    mImage = nsnull;
-    Optimize(aSurface);
+   // Build Image each time if it's not static.
+  if ((PR_FALSE==mStaticImage) || (nsnull == mImage)) {
+    BuildImage(aSurface);
+  } 
  
   if (nsnull == mImage)
     return PR_FALSE;
+
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
                     0,0,aX,aY,aWidth,aHeight);  
   return PR_TRUE;
@@ -329,17 +337,23 @@ PRUint16                red,green,blue,*cur16;
 
 }
 
+nsresult nsImageUnix::BuildImage(nsDrawingSurface aDrawingSurface)
+{
+  if (nsnull != mImage) {
+//  XDestroyImage(mImage);
+    mImage = nsnull;
+  }
+
+  ConvertImage(aDrawingSurface);
+  CreateImage(aDrawingSurface);
+}
+
 //------------------------------------------------------------
 
 nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 {
-PRInt16 i;
-
-  if (nsnull == mImage)
-    {
-    ConvertImage(aDrawingSurface);
-    CreateImage(aDrawingSurface);
-    }
+  mStaticImage = PR_TRUE;
+  BuildImage(aDrawingSurface);
   return NS_OK;
 }
 
@@ -381,7 +395,6 @@ void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
     mImage->bits_per_pixel   = unixdrawing->depth;
     mImage->bitmap_bit_order = BitmapBitOrder(unixdrawing->display);
     mImage->bitmap_unit      = 32;
-
   }	
   return ;
 }
