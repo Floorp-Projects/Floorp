@@ -50,10 +50,11 @@
         <menuitem label="&helpContents.label;"
             position="1"
             accesskey="&helpContents.accesskey;"
-            oncommand="openHelp('chrome://help/locale/firebirdhelp.rdf','using-firebird');"/>
+            oncommand="openHelp('using-firebird');"/>
         <menuitem label="&helpForIEUsers.label;"
             position="3"
             accesskey="&helpForIEUsers.accesskey;"
-            oncommand="openHelp('chrome://help/locale/firebirdhelp.rdf','ieusers');"/>
+            oncommand="openHelp('ieusers');"/>
     </menupopup>
 </overlay>
+

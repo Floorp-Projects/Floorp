@@ -35,26 +35,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Call this function to display a help topic.
-function openHelp(contentPack, topic) {
-    // Try to find previously opened help for content pack.
-    var window = locateHelpWindow(contentPack);
-    
-    if (window) {
-        // Open topic in existing window.
-        window.focus();
-        window.displayTopic(topic);
-    } else {
-        // Open topic in new window.
-        const params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
-            .createInstance(Components.interfaces.nsIDialogParamBlock);
-        params.SetNumberStrings(2);
-        params.SetString(0, contentPack);
-        params.SetString(1, topic);
-        const ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-            .getService(Components.interfaces.nsIWindowWatcher);
-        ww.openWindow(null, "chrome://help/content/help.xul", "_blank", "chrome,all,dialog=no", params);
-    }
+const MOZILLA_CONTENT_PACK = "chrome://help/locale/firebirdhelp.rdf";
+// Set the default content pack to the Mozilla content pack. Use the
+// setHelpFileURI function to set this value.
+var helpFileURI = MOZILLA_CONTENT_PACK;
+
+// openHelp - Opens up the Mozilla Help Viewer with the specified
+//    topic and content pack.
+// see http://www.mozilla.org/projects/help-viewer/content_packs.html
+function openHelp(topic, contentPack)
+{
+  //cp is the content pack to use in this function. If the contentPack
+  //parameter was set, we will use that content pack. If not, we will
+  //use the default content pack set by setHelpFileURI().
+  var cp = contentPack || helpFileURI;
+
+  // Try to find previously opened help.
+  var topWindow = locateHelpWindow(cp);
+
+  if ( topWindow ) {
+    // Open topic in existing window.
+    topWindow.focus();
+    topWindow.displayTopic(topic);
+  } else {
+    // Open topic in new window.
+    const params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
+                             .createInstance(Components.interfaces.nsIDialogParamBlock);
+    params.SetNumberStrings(2);
+    params.SetString(0, cp);
+    params.SetString(1, topic);
+    const ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+    ww.openWindow(null, "chrome://help/content/help.xul", "_blank", "chrome,all,alwaysRaised,dialog=no", params);
+  }
+}
+
+// setHelpFileURI - Sets the default content pack to use in the Help Viewer
+function setHelpFileURI(rdfURI)
+{
+  helpFileURI = rdfURI;
 }
 
 // Locate existing help window for this content pack.
@@ -65,7 +84,7 @@ function locateHelpWindow(contentPack) {
     const iterator = windowManagerInterface.getEnumerator("mozilla:help");
     var topWindow = null;
     var aWindow;
-    
+
     // Loop through help windows looking for one with selected content
     // pack.
     while (iterator.hasMoreElements()) {
