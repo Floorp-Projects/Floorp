@@ -144,6 +144,11 @@ nsURIChecker::AsyncCheckURI(const nsACString &aURI,
 NS_IMETHODIMP
 nsURIChecker::GetBaseRequest(nsIRequest** aRequest)
 {
+    if (!mChannel) {
+        NS_ASSERTION(aRequest, "null out param!");
+        *aRequest = 0;
+        return NS_ERROR_NOT_INITIALIZED;
+    }
     return CallQueryInterface(mChannel, aRequest);
 }
 
@@ -153,6 +158,9 @@ nsURIChecker::GetBaseRequest(nsIRequest** aRequest)
 NS_IMETHODIMP
 nsURIChecker::GetName(nsACString &aName)
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->GetName(aName);
 }
 
@@ -173,36 +181,59 @@ nsURIChecker::GetStatus(nsresult* aStatusRet)
 
 NS_IMETHODIMP nsURIChecker::Cancel(nsresult status)
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->Cancel(status);
 }
 
 NS_IMETHODIMP nsURIChecker::Suspend()
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->Suspend();
 }
 
 NS_IMETHODIMP nsURIChecker::Resume()
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->Resume();
 }
 
 NS_IMETHODIMP nsURIChecker::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
+    if (!mChannel) {
+        NS_ASSERTION(aLoadGroup, "null out param!");
+        *aLoadGroup = 0;
+        return NS_ERROR_NOT_INITIALIZED;
+    }
     return mChannel->GetLoadGroup(aLoadGroup);
 }
 
 NS_IMETHODIMP nsURIChecker::SetLoadGroup(nsILoadGroup *aLoadGroup)
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->SetLoadGroup(aLoadGroup);
 }
 
 NS_IMETHODIMP nsURIChecker::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->GetLoadFlags(aLoadFlags);
 }
 
 NS_IMETHODIMP nsURIChecker::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     return mChannel->SetLoadFlags(aLoadFlags);
 }
 
@@ -212,6 +243,11 @@ NS_IMETHODIMP nsURIChecker::SetLoadFlags(nsLoadFlags aLoadFlags)
 NS_IMETHODIMP
 nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
 {
+    if (!aRequest)
+        return NS_ERROR_INVALID_ARG;
+    if (!mChannel)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult status;
     nsresult rv = aRequest->GetStatus(&status);
     // DNS errors and other obvious problems will return failure status
