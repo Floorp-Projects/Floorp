@@ -36,13 +36,14 @@ interface nsIDOMNode;
 [uuid(3478b6b0-3875-11d4-94ef-0020183bf181)]
 interface nsIContextMenuListener : nsISupports
 {
-    const short CONTEXT_NONE     = 0;
-    const short CONTEXT_DEFAULT  = 1;
-    const short CONTEXT_LINK     = 2;
-    const short CONTEXT_IMAGE    = 4;
-    const short CONTEXT_DOCUMENT = 8;
-    const short CONTEXT_TEXT     = 16;
-    const short CONTEXT_UNKNOWN  = 32;
+    const unsigned long CONTEXT_NONE     = 0;
+    const unsigned long CONTEXT_DEFAULT  = 1;
+    const unsigned long CONTEXT_LINK     = 2;
+    const unsigned long CONTEXT_IMAGE    = 4;
+    const unsigned long CONTEXT_DOCUMENT = 8;
+    const unsigned long CONTEXT_TEXT     = 16;
+    const unsigned long CONTEXT_OTHER    = 32;
+    const unsigned long CONTEXT_INPUT    = 64;
 
     /**
 	 * Called when the user attempts to display a context menu, e.g. by
@@ -50,6 +51,6 @@ interface nsIContextMenuListener : nsISupports
 	 * clicked on, the DOM event and node objects allow the client to interrogate
 	 * for more information if they like.
 	 */
-    void OnShowContextMenu(in long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode);
+    void OnShowContextMenu(in unsigned long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode);
 };
 
