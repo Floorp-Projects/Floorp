@@ -68,7 +68,7 @@ enum {
 const UInt32 kWindowLiveResizeAttribute = (1L << 28);
 #endif
 
-static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
+static const char sScreenManagerContractID[] = "@mozilla.org/gfx/screenmanager;1";
 
 // from MacHeaders.c
 #ifndef topLeft
