@@ -237,56 +237,6 @@ nsCloseCommand::DoCommand(const nsAReadableString & aCommandName, const nsAReada
 }
 */
 
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-#if 0
-NS_IMETHODIMP
-nsPrintingCommands::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  *outCmdEnabled = PR_FALSE;
-  if (!editorShell) return NS_OK;
-
-  nsAutoString cmdString(aCommandName);
-  if (cmdString.EqualsWithConversion("cmd_print"))
-    *outCmdEnabled = PR_TRUE;
-  else if (cmdString.EqualsWithConversion("cmd_printSetup"))
-    *outCmdEnabled = PR_FALSE;        // not implemented yet
-  else if (cmdString.EqualsWithConversion("cmd_printPreview"))
-    *outCmdEnabled = PR_FALSE;        // not implemented yet
-  else if (cmdString.EqualsWithConversion("cmd_print_button"))
-    *outCmdEnabled = PR_TRUE;
-  else if (cmdString.EqualsWithConversion("cmd_printSetup"))
-    *outCmdEnabled = PR_FALSE;        // not implemented yet
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsPrintingCommands::DoCommand(const nsAReadableString & aCommandName, nsISupports *refCon)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  if (!editorShell) return NS_ERROR_NULL_POINTER;
-  nsresult rv = NS_OK;
-  
-  editorShell->FinishHTMLSource();
-
-  nsAutoString cmdString(aCommandName);
-  if (cmdString.EqualsWithConversion("cmd_print"))
-    rv = editorShell->Print();
-  else if (cmdString.EqualsWithConversion("cmd_printSetup"))
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-  else if (cmdString.EqualsWithConversion("cmd_printPreview"))
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-
-  return rv;  
-}
-#endif
-
 #ifdef XP_MAC
 #pragma mark -
 #endif

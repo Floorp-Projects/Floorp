@@ -5238,67 +5238,65 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
 
   SetChromeAttribute( mDocShell, "Editor:Throbber", NS_LITERAL_STRING("busy"), NS_LITERAL_STRING("false") );
 
-  // Is this a MIME type we can handle?
-  if (aChannel)
+  if (aStatus == NS_ERROR_FILE_NOT_FOUND)
   {
-    // if we didn't get the content-type at the start of the load, get it now
-    if (!mContentTypeKnown)
-    {
-      nsXPIDLCString  contentType;
-      aChannel->GetContentType(getter_Copies(contentType));
-
-      if (contentType.get())
-        mContentMIMEType.Assign(contentType);
-    }
-  }    
-    
-  if ( !mContentMIMEType.Equals("text/html") && !IsSupportedTextType(mContentMIMEType.get()) )
-  {
-      mCloseWindowWhenLoaded = PR_TRUE;
-      mCantEditReason = eCantEditMimeType;
-  }
-
-  nsAutoString doneText;
-  GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
-  SetChromeAttribute(mDocShell, "statusText", NS_LITERAL_STRING("label"), doneText);
-
-  if (!mCloseWindowWhenLoaded && NS_FAILED(aStatus))
-  {
-    mCloseWindowWhenLoaded = PR_TRUE;
-    if (aStatus == NS_ERROR_FILE_NOT_FOUND)
-      mCantEditReason = eCantEditFileNotFound;
-  }
-
-  // Display an Alert dialog if the page cannot be edited...
-  if (mCloseWindowWhenLoaded)
-  {
-    nsAutoString alertLabel, alertMessage;
-    GetBundleString(NS_LITERAL_STRING("Alert"), alertLabel);
-    
-    nsAutoString  stringID;
-    switch (mCantEditReason)
-    {
-      case eCantEditFramesets:
-        stringID.AssignWithConversion("CantEditFramesetMsg");
-        break;        
-      case eCantEditMimeType:
-        stringID.AssignWithConversion("CantEditMimeTypeMsg");
-        break;
-      case eCantEditOther:
-      default:
-        stringID.AssignWithConversion("CantEditDocumentMsg");
-        break;
-    }
-    // Network code pops up an alert dialog if file wasn't found,
+    // For this case, network code popped up an alert dialog,
     //  so we don't need to
-    //TODO: Would it be possible to simply change channel URL to "about:blank"
-    //      so we leave window up with empty page instead of closing it?
-    if (mCantEditReason != eCantEditFileNotFound)
+    mCloseWindowWhenLoaded = PR_TRUE;
+    mCantEditReason = eCantEditFileNotFound;
+  }
+  else
+  {
+    // Is this a MIME type we can handle?
+    if (aChannel)
     {
+      // if we didn't get the content-type at the start of the load, get it now
+      if (!mContentTypeKnown)
+      {
+        nsXPIDLCString  contentType;
+        aChannel->GetContentType(getter_Copies(contentType));
+
+        if (contentType.get())
+          mContentMIMEType.Assign(contentType);
+      }
+    }    
+    
+    if ( !mContentMIMEType.Equals("text/html") && !IsSupportedTextType(mContentMIMEType.get()) )
+    {
+        mCloseWindowWhenLoaded = PR_TRUE;
+        mCantEditReason = eCantEditMimeType;
+    }
+
+    // Display an Alert dialog if the page cannot be edited...
+    if (mCloseWindowWhenLoaded)
+    {
+      nsAutoString alertLabel, alertMessage;
+      GetBundleString(NS_LITERAL_STRING("Alert"), alertLabel);
+    
+      nsAutoString  stringID;
+      switch (mCantEditReason)
+      {
+        case eCantEditFramesets:
+          stringID.AssignWithConversion("CantEditFramesetMsg");
+          break;        
+        case eCantEditMimeType:
+          stringID.AssignWithConversion("CantEditMimeTypeMsg");
+          break;
+        case eCantEditOther:
+        default:
+          stringID.AssignWithConversion("CantEditDocumentMsg");
+          break;
+      }
       GetBundleString(stringID, alertMessage);
       Alert(alertLabel, alertMessage);
     }
+  }
 
+  // If we had any errors, close the window
+  if (mCloseWindowWhenLoaded)
+  {
+    //TODO: Would it be possible to simply change channel URL to "about:blank"
+    //      so we leave window up with empty page instead of closing it?
     nsCOMPtr<nsIBaseWindow> baseWindow;
     GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
     NS_ENSURE_TRUE(baseWindow, NS_ERROR_ABORT);
@@ -5306,6 +5304,11 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
 
     return NS_ERROR_ABORT;
   }
+
+  nsAutoString doneText;
+  GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
+  SetChromeAttribute(mDocShell, "statusText", NS_LITERAL_STRING("label"), doneText);
+
   //
   // By this time, we know that the page did not contain any frames
   // (since mCloseWindowWhenLoaded was PR_FALSE)...  So, make an
