@@ -22,6 +22,11 @@
 
 
 
+var NC_NS  = "http://home.netscape.com/NC-rdf#";
+var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+
+
 function TopLevelDrag ( event )
 {
   dump("TOP LEVEL bookmarks window got a drag");
@@ -92,7 +97,7 @@ function BeginDragTree ( event )
 
   // make sure its a bookmark, bookmark separator, or bookmark folder
   var src = rdf.GetResource(id, true);
-  var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
+  var prop = rdf.GetResource(RDF_NS + "type", true);
   var target = database.GetTarget(src, prop, true);
 
   if (target) target = target.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -100,9 +105,9 @@ function BeginDragTree ( event )
   if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
   dump("    Type: '" + target + "'");
 
-  if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
-    (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
-    (target != "http://home.netscape.com/NC-rdf#Folder")) return(false);
+  if ((target != NC_NS + "BookmarkSeparator") &&
+    (target != NC_NS + "Bookmark") &&
+    (target != NC_NS + "Folder")) return(false);
 
 dump("genData is " + genData.data + " len is " + genData.data.length + "\n");
   trans.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
@@ -272,6 +277,11 @@ function DropOnTree ( event )
   trans.addDataFlavor("moz/rdfitem");
   trans.addDataFlavor("text/unicode");
 
+    var typeRes = RDF.GetResource(RDF_NS + "type");
+    if (!typeRes) return false;
+    var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
+    if (!bmTypeRes) return false;
+
   var dirty = false;
 
   for ( var i = 0; i < dragSession.numDropItems; ++i )
@@ -330,6 +340,15 @@ function DropOnTree ( event )
 
     RDFC.Init(Bookmarks, containerNode);
 
+    // make sure appropriate bookmark type is set
+    var bmTypeNode = Bookmarks.GetTarget( sourceNode, typeRes, true );
+    if (!bmTypeNode)
+    {
+        // set default bookmark type
+        Bookmarks.Assert(sourceNode, typeRes, bmTypeRes, true);
+        dump("Setting default bookmark type\n");
+    }
+
     if ((dropAction == "before") || (dropAction == "after"))
     {
       // drop before or after
@@ -378,7 +397,7 @@ function DropOnTree ( event )
 	// XXX for the moment, if its a text/unicode drop
 	// we may need to synthesize a name (just use the URL)
 	var srcArc = RDF.GetResource(sourceID, true);
-	var propArc = RDF.GetResource("http://home.netscape.com/NC-rdf#Name", true);
+	var propArc = RDF.GetResource(NC_NS + "Name", true);
 	if (srcArc && propArc && treeDatabase)
 	{
 		var targetArc = treeDatabase.GetTarget(srcArc, propArc, true);

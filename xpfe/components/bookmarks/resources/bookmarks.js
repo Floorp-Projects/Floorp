@@ -20,7 +20,12 @@
  * Contributor(s): 
  */
 
-var NC = "http://home.netscape.com/NC-rdf#";
+
+
+var NC_NS  = "http://home.netscape.com/NC-rdf#";
+var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+
 
 function debug(msg)
 {
@@ -149,7 +154,7 @@ function copySelectionToClipboard()
     var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
     if (!Bookmarks) return false;
 
-    var nameRes = RDF.GetResource(NC + "Name");
+    var nameRes = RDF.GetResource(NC_NS + "Name");
     if (!nameRes) return false;
 
     // Build a url that encodes all the select nodes 
@@ -182,7 +187,7 @@ function copySelectionToClipboard()
         if (node.getAttribute("container") == "true")
         {
             var type = node.getAttribute("type");
-            if (type == NC + "BookmarkSeparator")
+            if (type == NC_NS + "BookmarkSeparator")
             {
                 // Note: can't encode separators in text, just html
                 html += "<hr><p>";
@@ -328,7 +333,7 @@ function doPaste()
     var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
     if (!Bookmarks) return false;
 
-    var nameRes = RDF.GetResource(NC + "Name");
+    var nameRes = RDF.GetResource(NC_NS + "Name");
     if (!nameRes) return false;
 
     pasteNodeRes = RDF.GetResource(pasteNodeID);
@@ -358,6 +363,11 @@ function doPaste()
         pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
         if (pasteNodeIndex < 0) return false; // how did that happen?
     }
+
+    var typeRes = RDF.GetResource(RDF_NS + "type");
+    if (!typeRes) return false;
+    var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
+    if (!bmTypeRes) return false;
 
     debug("Loop over strings");
 
@@ -401,6 +411,15 @@ function doPaste()
                 debug("Pasted at index # " + pasteNodeIndex);
             }
             dirty = true;
+
+            // make sure appropriate bookmark type is set
+            var bmTypeNode = Bookmarks.GetTarget( IDRes, typeRes, true );
+            if (!bmTypeNode)
+            {
+                // set default bookmark type
+                Bookmarks.Assert(IDRes, typeRes, bmTypeRes, true);
+                debug("Setting default bookmark type\n");
+            }
         }
     }
     if (dirty == true)
@@ -530,7 +549,7 @@ function BookmarkProperties()
     if (select_list.length >= 1) {
         // don't bother showing properties on bookmark separators
         var type = select_list[0].getAttribute('type');
-        if (type != NC + "BookmarkSeparator") {
+        if (type != NC_NS + "BookmarkSeparator") {
             window.openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
                               "_blank", "centerscreen,chrome,menubar",
                               select_list[0].getAttribute("id"));
@@ -575,7 +594,7 @@ function getAbsoluteID(root, node)
         if (rdf && ds)
         {
             var src = rdf.GetResource(url, true);
-            var prop = rdf.GetResource(NC + "URL",
+            var prop = rdf.GetResource(NC_NS + "URL",
                                        true);
             var target = ds.GetTarget(src, prop, true);
             if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -839,7 +858,7 @@ function fillContextMenu(name)
     debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n");
 
     var separatorResource =
-        rdf.GetResource(NC + "BookmarkSeparator");
+        rdf.GetResource(NC_NS + "BookmarkSeparator");
     if (!separatorResource) return false;
 
     // perform intersection of commands over selected nodes
@@ -913,7 +932,7 @@ function fillContextMenu(name)
     }
 
     // need a resource to ask RDF for each command's name
-    var rdfNameResource = rdf.GetResource(NC + "Name");
+    var rdfNameResource = rdf.GetResource(NC_NS + "Name");
     if (!rdfNameResource) return false;
 
 /*
@@ -983,8 +1002,8 @@ function fillContextMenu(name)
         // and its a bookmark or a bookmark folder (there can be other types,
         // not just separators, so check explicitly for what we allow)
         var type = select_list[0].getAttribute("type");
-        if ((type == NC + "Bookmark") ||
-            (type == NC + "Folder"))
+        if ((type == NC_NS + "Bookmark") ||
+            (type == NC_NS + "Folder"))
         {
             // then add a menu separator (if necessary)
             if (popupNode.childNodes.length > 0)
@@ -1024,7 +1043,7 @@ function doContextCmd(cmdName)
     var nameVal = "";
     var urlVal = "";
 
-    if (cmdName == NC + "command?cmd=newbookmark")
+    if (cmdName == NC_NS + "command?cmd=newbookmark")
     {
         while (true)
         {
@@ -1042,21 +1061,21 @@ function doContextCmd(cmdName)
         nameVal = prompt(promptStr, "");
         if (!nameVal || nameVal=="") return false;
     }
-    else if (cmdName == NC + "command?cmd=newfolder")
+    else if (cmdName == NC_NS + "command?cmd=newfolder")
     {
         var promptStr = get_localized_string("NewFolderNamePrompt");
         nameVal = prompt(promptStr, "");
         if (!nameVal || nameVal=="") return false;
     }
-    else if ((cmdName == NC + "command?cmd=deletebookmark") ||
-         (cmdName == NC + "command?cmd=deletebookmarkfolder") ||
-         (cmdName == NC + "command?cmd=deletebookmarkseparator"))
+    else if ((cmdName == NC_NS + "command?cmd=deletebookmark") ||
+         (cmdName == NC_NS + "command?cmd=deletebookmarkfolder") ||
+         (cmdName == NC_NS + "command?cmd=deletebookmarkseparator"))
     {
         return doDelete(true);
         //var promptStr = get_localized_string("DeleteItems");
         //if (!confirm(promptStr)) return false;
     }
-    else if (cmdName == NC + "command?cmd=import")
+    else if (cmdName == NC_NS + "command?cmd=import")
     {
         try
         {
@@ -1079,7 +1098,7 @@ function doContextCmd(cmdName)
             return false;
         }
     }
-    else if (cmdName == NC + "command?cmd=export")
+    else if (cmdName == NC_NS + "command?cmd=export")
     {
         try
         {
@@ -1137,11 +1156,11 @@ function doContextCmd(cmdName)
     var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
     // get various arguments (parent, name)
-    var parentArc = rdf.GetResource(NC + "parent");
+    var parentArc = rdf.GetResource(NC_NS + "parent");
     if (!parentArc) return false;
-    var nameArc = rdf.GetResource(NC + "Name");
+    var nameArc = rdf.GetResource(NC_NS + "Name");
     if (!nameArc) return false;
-    var urlArc = rdf.GetResource(NC + "URL");
+    var urlArc = rdf.GetResource(NC_NS + "URL");
     if (!urlArc) return false;
 
     var select_list = treeNode.selectedItems;

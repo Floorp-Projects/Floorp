@@ -4901,6 +4901,7 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 			 (aProperty == kWEB_LastVisitDate) ||
 			 (aProperty == kNC_BookmarkAddDate) ||
 			 (aProperty == kRDF_nextVal) ||
+			 (aProperty == kRDF_type) ||
 			 (aProperty == kWEB_Schedule))
 		{
 			canAcceptFlag = PR_TRUE;
