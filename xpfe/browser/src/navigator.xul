@@ -688,16 +688,26 @@
 
   <toolbox>
 	  <toolbar id="taskbar" chromeclass="status">
+		  <popup id="samplePopup">
+		    <menu><menuitem name="Sample Item One"/><menuitem name="Sample Item Two"/></menu>
+		  </popup>
 	  	  <box align="horizontal">
-  	 	     <titledbutton align="left" class="popup"  value="&webButton.label;" />
-  	 	     <titledbutton align="left" class="popup"  value="&mailButton.label;" />
-  	 	     <titledbutton align="left" class="popup"  value="&chatButton.label;" />
+  	 	     <titledbutton align="left" class="popup" popup="samplePopup" 
+			   popupanchor="topleft" popupalign="bottomleft" value="&webButton.label;" />
+  	 	     <titledbutton align="left" class="popup" popup="samplePopup" 
+			   popupanchor="topleft" popupalign="bottomleft" value="&mailButton.label;" />
+  	 	     <titledbutton align="left" class="popup" popup="samplePopup" 
+			   popupanchor="topleft" popupalign="bottomleft" value="&chatButton.label;" />
 		  </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup"  value="&dayplannerButton.label;" />
-  	 		<titledbutton align="left"  class="popup"  value="&shoppingButton.label;" />
-  	 		<titledbutton align="left"  class="popup"  value="&myDeskButton.label;" />
+  	 		<titledbutton align="left"  class="popup" popup="samplePopup" 
+			   popupanchor="topleft" popupalign="bottomleft" value="&dayplannerButton.label;" />
+  	 		<titledbutton align="left"  class="popup" popup="samplePopup"
+			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
+  	 		<titledbutton align="left"  class="popup" popup="samplePopup" 
+			   popupanchor="topleft" popupalign="bottomleft" 
+			   value="&myDeskButton.label;" />
           </box>
 		  <spring flex="100%"/>
 	   	  <box align="horizontal">
