@@ -731,7 +731,9 @@ nsresult nsHTTPChannel::SetContentLength(PRInt32 aContentLength)
 
 nsresult nsHTTPChannel::SetContentType(const char* aContentType)
 {
-    mContentType = aContentType;
+    nsCAutoString cType(aContentType);
+    cType.ToLowerCase();
+    mContentType = cType.GetBuffer();
     return NS_OK;
 }
 

@@ -497,7 +497,9 @@ nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
     rv = ftpCtxt->GetContentType(&type);
     if (NS_FAILED(rv)) return rv;
 
-    mContentType = type;
+    nsCAutoString cType(type);
+    cType.ToLowerCase();
+    mContentType = cType.GetBuffer();
     nsAllocator::Free(type);
 
     if (mListener) {
