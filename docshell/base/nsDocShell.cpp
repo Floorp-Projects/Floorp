@@ -3985,9 +3985,10 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
                                                nsIScriptSecurityManager::
                                                DISALLOW_FROM_MAIL);
             if (NS_SUCCEEDED(rv)) {
-                // since we can't travel back in time yet, just pretend it was meant figuratively
+                // Since we can't travel back in time yet, just pretend
+                // negative numbers do nothing at all.
                 if (seconds < 0)
-                    seconds = 0;
+                    return NS_ERROR_FAILURE;
 
                 rv = RefreshURI(uri, seconds * 1000, PR_FALSE, PR_TRUE);
             }
