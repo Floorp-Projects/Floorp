@@ -76,6 +76,7 @@ bin/components/dom_stylesheets.xpt
 bin/components/dom_traversal.xpt
 bin/components/dom_views.xpt
 bin/components/dom_xbl.xpt
+bin/components/dom_xpath.xpt
 bin/components/dom_xul.xpt
 bin/components/editor.xpt
 bin/components/find.xpt
