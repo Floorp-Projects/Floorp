@@ -242,6 +242,11 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
   if (NumOfBytes == 0) return;
   nsPrimitiveHelpers::CreateDataFromPrimitive( aFlavor, genericDataWrapper, &pMozData, NumOfBytes );
 
+  /* If creating the data failed, just return */
+  if (!pMozData) {
+    return;
+  }
+
   ULONG ulFormatID = GetFormatID( aFlavor );
 
   if (strstr( aFlavor, "text/" ))  // All text/.. flavors are null-terminated
