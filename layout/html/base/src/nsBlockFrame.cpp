@@ -2088,16 +2088,31 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;
 
-  // XXX this needs reworking I suppose
+  // XXX this needs ALOT OF REWORKING
   if (aState.mComputeMaxElementSize) {
-    *aMetrics.maxElementSize = aState.mMaxElementSize;
+    nscoord maxWidth, maxHeight;
 
-    // Add in our border and padding to the max-element-size so that
-    // we don't shrink too far.
-    aMetrics.maxElementSize->width += aState.mBorderPadding.left +
-      aState.mBorderPadding.right;
-    aMetrics.maxElementSize->height += aState.mBorderPadding.top +
-      aState.mBorderPadding.bottom;
+    if (aState.mNoWrap) {
+      maxWidth = 0;
+      maxHeight = 0;
+      LineData* line = mLines;
+      while (nsnull != line) {
+        nscoord xm = line->mBounds.XMost();
+        if (xm > maxWidth) {
+          maxWidth = xm;
+        }
+        line = line->mNext;
+      }
+      // XXX winging it!
+      maxHeight = aState.mMaxElementSize.height +
+        aState.mBorderPadding.top + aState.mBorderPadding.bottom;
+    }
+    else {
+      maxWidth = aState.mMaxElementSize.width +
+        aState.mBorderPadding.left + aState.mBorderPadding.right;
+      maxHeight = aState.mMaxElementSize.height +
+        aState.mBorderPadding.top + aState.mBorderPadding.bottom;
+    }
 
     // Factor in any left and right floaters as well
     LineData* line = mLines;
@@ -2136,13 +2151,23 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
       }
       line = line->mNext;
     }
-    // XXX what to do???
-    if (maxLeft > aMetrics.maxElementSize->width) {
-      aMetrics.maxElementSize->width = maxLeft;
+
+    // XXX this part is an approximation
+    if (aState.mNoWrap) {
+      maxWidth += maxLeft + maxRight;
     }
-    if (maxRight > aMetrics.maxElementSize->width) {
-      aMetrics.maxElementSize->width = maxRight;
+    else {
+      if (maxLeft > maxWidth) {
+        maxWidth = maxLeft;
+      }
+      if (maxRight > maxWidth) {
+        maxWidth = maxRight;
+      }
     }
+
+    // Store away the final value
+    aMetrics.maxElementSize->width = maxWidth;
+    aMetrics.maxElementSize->height = maxHeight;
   }
 
   // Compute the combined area of our children
