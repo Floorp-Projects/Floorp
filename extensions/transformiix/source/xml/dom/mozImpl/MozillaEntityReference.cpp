@@ -33,7 +33,7 @@
 //Construct a text object with the specified document owner and data
 //
 EntityReference::EntityReference(nsIDOMEntityReference* entityReference,
-				 Document* owner) : Node(entityReference, owner)
+                 Document* owner) : Node(entityReference, owner)
 {
   nsEntityReference = entityReference;
 }

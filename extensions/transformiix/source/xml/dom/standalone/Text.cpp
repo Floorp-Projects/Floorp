@@ -33,7 +33,7 @@
 //
 //Construct a text object with the specified document owner and data
 //
-Text::Text(const DOMString& theData, Document* owner) :
+Text::Text(const String& theData, Document* owner) :
       CharacterData(Node::TEXT_NODE, "#text", theData, owner)
 {
 }
@@ -41,7 +41,7 @@ Text::Text(const DOMString& theData, Document* owner) :
 //
 //Protected constructor for children of the Text Class.  Currently only
 //CDATASection needs to use this function.
-Text::Text(NodeType type, const DOMString& name, const DOMString& value,
+Text::Text(NodeType type, const String& name, const String& value,
          Document* owner) :
       CharacterData(type, name, value, owner)
 {
@@ -55,7 +55,7 @@ Text::Text(NodeType type, const DOMString& name, const DOMString& value,
 Text* Text::splitText(Int32 offset)
 {
   Text* newTextSibling = NULL;
-  DOMString newData;
+  String newData;
 
   if ((offset >= 0) && (offset < nodeValue.length()))
     {

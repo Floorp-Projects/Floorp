@@ -20,12 +20,12 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.cpp,v 1.1 2000/04/12 10:50:03 kvisco%ziplink.net Exp $
+ * $Id: Map.cpp,v 1.2 2000/06/11 12:21:13 Peter.VanderBeken%pandora.be Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.1 $ $Date: 2000/04/12 10:50:03 $
+ * @version $Revision: 1.2 $ $Date: 2000/06/11 12:21:13 $
  */
 
 
@@ -150,7 +150,7 @@ List* Map::keys() {
     for (int i = 0; i < numberOfBuckets; i++) {
         BucketItem* item = elements[i];
         while (item) {
-	        list->add(item->key);
+            list->add(item->key);
             item = item->next;
         }
     }

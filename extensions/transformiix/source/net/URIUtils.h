@@ -31,7 +31,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.h,v 1.5 2000/05/25 22:52:27 Peter.VanderBeken%pandora.be Exp $
+ * $Id: URIUtils.h,v 1.6 2000/06/11 12:28:05 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "TxString.h"
@@ -52,7 +52,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/05/25 22:52:27 $
+ * @version $Revision: 1.6 $ $Date: 2000/06/11 12:28:05 $
  *
 **/
 
@@ -88,13 +88,13 @@ public:
     static istream* getInputStream
         (String& href, String& documentBase, String& errMsg);
 
-	/**
-	 * Returns the document base of the href argument
+    /**
+     * Returns the document base of the href argument
      * The document base will be appended to the given dest String
     **/
     static void getDocumentBase(String& href, String& dest);
 
-	/**
+    /**
      * Resolves the given href argument, using the given documentBase
      * if necessary.
      * The new resolved href will be appended to the given dest String

@@ -22,11 +22,11 @@
 // 
 //  Implementation of the Element wrapper class 
 // 
-//  NOTE:  Return values that are references to DOMStrings are all hashed 
+//  NOTE:  Return values that are references to Strings are all hashed 
 //         and maintained in the owning document's wrapper hash table. 
 //         They will not necessarly be used by more than one caller, but 
 //         at least their memory management is taken care of.  This can be done 
-//         because all MozillaStrings clean up their nsString object upon 
+//         because all Strings clean up their nsString object upon 
 //         deletion. 
 // 
 // Modification History: 
@@ -89,10 +89,10 @@ void Element::setNSObj(nsIDOMElement* element)
  
 // 
 //Call nsIDOMElement::GetTagName to retrieve the tag name for this element. 
-//If the call complests successfully get a new DOMString wrapper from the 
+//If the call complests successfully get a new String wrapper from the 
 //owner document. 
 // 
-const DOMString& Element::getTagName() 
+const String& Element::getTagName() 
 { 
   nsString* tagName = new nsString(); 
  
@@ -108,9 +108,9 @@ const DOMString& Element::getTagName()
  
 // 
 //Call nsIDOMElement::GetAttribute to retrieve value for the specified  
-//attribute.  Defer to the owner document to request a new DOMString 
+//attribute.  Defer to the owner document to request a new String 
 //wrapper. 
-const DOMString& Element::getAttribute(const DOMString& name) 
+const String& Element::getAttribute(const String& name) 
 { 
   nsString* attrValue = new nsString(); 
    
@@ -127,7 +127,7 @@ const DOMString& Element::getAttribute(const DOMString& name)
 // 
 //Call nsIDOMElement::SetAttribute to create a new attribute. 
 // 
-void Element::setAttribute(const DOMString& name, const DOMString& value) 
+void Element::setAttribute(const String& name, const String& value) 
 { 
   nsElement->SetAttribute(name.getConstNSString(), value.getConstNSString()); 
 } 
@@ -137,7 +137,7 @@ void Element::setAttribute(const DOMString& name, const DOMString& value)
 //to make sure we remove the attribute wrapper from the document  
 //wrapperHashTable. 
 // 
-void Element::removeAttribute(const DOMString& name) 
+void Element::removeAttribute(const String& name) 
 { 
   nsIDOMAttr* attr = NULL; 
   Attr*  attrWrapper = NULL; 
@@ -160,7 +160,7 @@ void Element::removeAttribute(const DOMString& name)
 //Call nsIDOMElement::GetAttributeNode.  If successful, refer to the owner  
 //document for an attribute wrapper class. 
 // 
-Attr* Element::getAttributeNode(const DOMString& name) 
+Attr* Element::getAttributeNode(const String& name) 
 { 
   nsIDOMAttr* attr = NULL; 
  
@@ -200,9 +200,9 @@ Attr* Element::removeAttributeNode(Attr* oldAttr)
     { 
       attrWrapper = (Attr*)ownerDocument->removeWrapper((Int32)removedAttr); 
       if (!attrWrapper) 
-	attrWrapper =  new Attr(removedAttr, ownerDocument); 
+    attrWrapper =  new Attr(removedAttr, ownerDocument); 
  
-	return attrWrapper; 
+    return attrWrapper; 
     } 
   else 
     return NULL; 
@@ -211,7 +211,7 @@ Attr* Element::removeAttributeNode(Attr* oldAttr)
 // 
 //Call nsIDOMElement::GetElementsByTagName.  If successful, defer to the owning 
 //documet to produce a wrapper for this object. 
-NodeList* Element::getElementsByTagName(const DOMString& name) 
+NodeList* Element::getElementsByTagName(const String& name) 
 { 
   nsIDOMNodeList* list = NULL; 
  

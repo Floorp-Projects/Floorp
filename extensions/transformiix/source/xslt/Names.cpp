@@ -28,20 +28,20 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
  *
- * $Id: Names.cpp,v 1.6 2000/05/24 03:45:40 kvisco%ziplink.net Exp $
+ * $Id: Names.cpp,v 1.7 2000/06/11 12:22:40 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/05/24 03:45:40 $
+ * @version $Revision: 1.7 $ $Date: 2000/06/11 12:22:40 $
 **/
 #include "Names.h"
 
 //-- Global Strings
 const String HTML              = "html";
-const String HTML_NS           = "http://www.w3.org/TR/REC-html";
+const String HTML_NS           = "http://www.w3.org/TR/REC-html40";
 const String STYLESHEET_PI     = "xml-stylesheet";
 const String STYLESHEET_PI_OLD = "xml:stylesheet";
 const String XML_SPACE         = "xml:space";

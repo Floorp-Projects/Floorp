@@ -58,7 +58,7 @@ void CharacterData::setNSObj(nsIDOMCharacterData* charData)
 //
 //Retrieve the data from the Mozilla object, and wrap it appropriately
 //
-const DOMString& CharacterData::getData() const
+const String& CharacterData::getData() const
 {
   nsString* data = new nsString();
 
@@ -75,7 +75,7 @@ const DOMString& CharacterData::getData() const
 //
 //Set the data stored by this object to the string represented by "source".
 //
-void CharacterData::setData(const DOMString& source)
+void CharacterData::setData(const String& source)
 {
   nsCharacterData->SetData(source.getConstNSString());
 }
@@ -97,8 +97,8 @@ Int32 CharacterData::getLength() const
 //the provided Mozilla String wrapper.
 //    NOTE:  An empty string will be returned in the event of an error.
 //
-DOMString& CharacterData::substringData(Int32 offset, Int32 count, 
-					DOMString& dest)
+String& CharacterData::substringData(Int32 offset, Int32 count, 
+                    String& dest)
 {
   if (nsCharacterData->SubstringData(offset, count, dest.getNSString()) == NS_OK)
     return dest;
@@ -109,12 +109,12 @@ DOMString& CharacterData::substringData(Int32 offset, Int32 count,
     }
 }
 
-void CharacterData::appendData(const DOMString& arg)
+void CharacterData::appendData(const String& arg)
 {
   nsCharacterData->AppendData(arg.getConstNSString());
 }
 
-void CharacterData::insertData(Int32 offset, const DOMString& arg)
+void CharacterData::insertData(Int32 offset, const String& arg)
 {
   nsCharacterData->InsertData(offset, arg.getConstNSString());
 }
@@ -124,7 +124,7 @@ void CharacterData::deleteData(Int32 offset, Int32 count)
   nsCharacterData->DeleteData(offset, count);
 }
 
-void CharacterData::replaceData(Int32 offset, Int32 count, const DOMString& arg)
+void CharacterData::replaceData(Int32 offset, Int32 count, const String& arg)
 {
   nsCharacterData->ReplaceData(offset, count, arg.getConstNSString());
 }

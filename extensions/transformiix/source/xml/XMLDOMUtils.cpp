@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.2 1999/11/15 07:12:49 nisheeth%netscape.com Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.3 2000/06/11 12:28:10 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:49 $
+ * @version $Revision: 1.3 $ $Date: 2000/06/11 12:28:10 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -120,7 +120,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner) {
     return newNode;
 } //-- copyNode
 
-void XMLDOMUtils::getNodeValue(Node* node, DOMString* target) {
+void XMLDOMUtils::getNodeValue(Node* node, String* target) {
 
     if (!node) return;
 

@@ -38,7 +38,7 @@ NamedNodeMap::~NamedNodeMap()
 {
 }
 
-Node* NamedNodeMap::getNamedItem(const DOMString& name)
+Node* NamedNodeMap::getNamedItem(const String& name)
 {
   ListItem* pSearchItem = findListItemByName(name);
 
@@ -61,7 +61,7 @@ Node* NamedNodeMap::setNamedItem(Node* arg)
   return pReplacedNode;
 }
 
-Node* NamedNodeMap::removeNamedItem(const DOMString& name)
+Node* NamedNodeMap::removeNamedItem(const String& name)
 {
   NodeListDefinition::ListItem* pSearchItem;
   Node* returnNode;
@@ -95,7 +95,7 @@ Node* NamedNodeMap::removeNamedItem(const DOMString& name)
 }
 
 NodeListDefinition::ListItem*
-  NamedNodeMap::findListItemByName(const DOMString& name)
+  NamedNodeMap::findListItemByName(const String& name)
 {
   NodeListDefinition::ListItem* pSearchItem = firstItem;
 

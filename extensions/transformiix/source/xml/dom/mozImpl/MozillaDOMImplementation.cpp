@@ -30,7 +30,7 @@
 #include "mozilladom.h"
 
 DOMImplementation::DOMImplementation(nsIDOMDOMImplementation* domImpl,
-				     Document* owner)
+                     Document* owner)
 {
   nsDOMImpl = domImpl;
   ownerDocument = owner;
@@ -44,13 +44,13 @@ DOMImplementation::~DOMImplementation()
 //Query the mozilla object for the requested feature, and return the 
 //result to the caller.
 //
-MBool DOMImplementation::hasFeature(const DOMString& feature,
-                                    const DOMString& version) const
+MBool DOMImplementation::hasFeature(const String& feature,
+                                    const String& version) const
 {
   MBool bHasFeature = MB_FALSE;
 
   nsDOMImpl->HasFeature(feature.getConstNSString(), version.getConstNSString(),
-			&bHasFeature);
+            &bHasFeature);
 
   return bHasFeature;
 }

@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: XMLPrinter.cpp,v 1.3 1999/11/25 03:03:05 kvisco%ziplink.net Exp $
+ * $Id: XMLPrinter.cpp,v 1.4 2000/06/11 12:28:28 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "printers.h"
@@ -36,7 +36,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:05 $
+ * @version $Revision: 1.4 $ $Date: 2000/06/11 12:28:28 $
 **/
 
 /**
@@ -74,8 +74,8 @@ const char   XMLPrinter::AMPERSAND        = '&';
 const char   XMLPrinter::GT               = '>';
 const char   XMLPrinter::LT               = '<';
 const char   XMLPrinter::DASH             = '-';
-const char   XMLPrinter::CR               = '\r';
-const char   XMLPrinter::LF               = '\n';
+const char   XMLPrinter::TX_CR            = '\r';
+const char   XMLPrinter::TX_LF            = '\n';
 
 
   //---------------/
@@ -218,7 +218,7 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
             Attr* attr = (Attr*)node;
             //out << attr->getName();
             out << attr->getNodeName();
-            const DOMString& data = attr->getNodeValue();
+            const String& data = attr->getNodeValue();
             if (&data != &NULL_STRING) {
                 out << EQUALS << DOUBLE_QUOTE;
                 out << data;
@@ -239,8 +239,7 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
                 Attr* att;
                 for (int i = 0; i < attList->getLength(); i++) {
                     att = (Attr*)attList->item(i);
-                    //const DOMString& data = att->getValue();
-                    const DOMString& data = att->getNodeValue(); //-- remove
+                    const String& data = att->getValue();
                     //out << SPACE << * (att->getName());
                     out << SPACE << att->getNodeName();
                     if (&data != &NULL_STRING) {
@@ -315,7 +314,7 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
         }
         case Node::TEXT_NODE:
         {
-            const DOMString& data = ((Text*)node)->getData();
+            const String& data = ((Text*)node)->getData();
             printWithXMLEntities(data);
             break;
         }
@@ -323,7 +322,7 @@ MBool XMLPrinter::print(Node* node, String& currentIndent) {
             if (unescapeCDATA)
                 printWithXMLEntities( ((Text*)node)->getData() );
             else {
-                const DOMString& data = ((Text*)node)->getData();
+                const String& data = ((Text*)node)->getData();
                 out << CDATA_START;
                 printUTF8Chars(data);
                 out << CDATA_END;
@@ -385,7 +384,7 @@ void XMLPrinter::printUTF8Char(DOM_CHAR ch) const {
  * Print the proper UTF8 characters
  * based on code submitted by Majkel Kretschmar
 **/
-void XMLPrinter::printUTF8Chars(const DOMString& data) {
+void XMLPrinter::printUTF8Chars(const String& data) {
     int i = 0;
     while(i < data.length()) printUTF8Char(data.charAt(i++));
 } //-- printUTF8Chars
@@ -395,7 +394,7 @@ void XMLPrinter::printUTF8Chars(const DOMString& data) {
 //-------------------/
 
 
-void XMLPrinter::printWithXMLEntities(const DOMString& data) {
+void XMLPrinter::printWithXMLEntities(const String& data) {
     DOM_CHAR currChar;
 
     if (&data == &NULL_STRING) return;
@@ -424,7 +423,7 @@ void XMLPrinter::printWithXMLEntities(const DOMString& data) {
  * Replaces any occurances of -- inside comment data with - -
  * @param data the comment data (does not include start and end tags)
 **/
-void XMLPrinter::printComment(const DOMString& data) {
+void XMLPrinter::printComment(const String& data) {
     DOM_CHAR prevChar;
     DOM_CHAR currChar;
 

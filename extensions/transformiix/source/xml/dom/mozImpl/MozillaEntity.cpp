@@ -57,7 +57,7 @@ void Entity::setNSObj(nsIDOMEntity* entity)
 //Retrieve the public id from the mozilla object, and then retrieve the 
 //appropriate wrapper from the document.
 //
-const DOMString& Entity::getPublicId() const
+const String& Entity::getPublicId() const
 {
   nsString* publicId = new nsString();
 
@@ -73,7 +73,7 @@ const DOMString& Entity::getPublicId() const
 //
 //Retrieve the system id from the Mozilla object, and then wrap it appropriately
 //
-const DOMString& Entity::getSystemId() const
+const String& Entity::getSystemId() const
 {
   nsString* systemId = new nsString();
 
@@ -90,7 +90,7 @@ const DOMString& Entity::getSystemId() const
 //Retrieve the notation name from the Mozilla object, and then wrap it
 //appropriately
 //
-const DOMString& Entity::getNotationName() const
+const String& Entity::getNotationName() const
 {
   nsString* notationName = new nsString();
 

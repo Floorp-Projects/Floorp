@@ -56,7 +56,7 @@
 #include "HashTable.h" 
  
 //A bunch of Mozilla DOM headers 
-#include "nsIDocument.h" 
+#include "nsIDocument.h"
 
 #include "nsIDOMNode.h" 
 #include "nsIDOMDocument.h" 
@@ -80,8 +80,6 @@
 typedef 0 NULL; 
 #endif 
  
- 
-typedef String DOMString; 
 typedef UNICODE_CHAR DOM_CHAR; 
  
 class NodeList; 
@@ -110,7 +108,7 @@ class DOMImplementation : public MITREObject
  
     void setNSObj(nsIDOMDOMImplementation* domImpl); 
  
-    virtual MBool hasFeature(const DOMString& feature, const DOMString& version) const; 
+    virtual MBool hasFeature(const String& feature, const String& version) const; 
  
   private: 
     nsIDOMDOMImplementation* nsDOMImpl; 
@@ -152,8 +150,8 @@ class Node : public MITREObject
     nsIDOMNode* getNSObj(); 
  
     //Read functions 
-    virtual const DOMString& getNodeName(); 
-    virtual const DOMString& getNodeValue(); 
+    virtual const String& getNodeName(); 
+    virtual const String& getNodeValue(); 
     virtual unsigned short getNodeType() const; 
     virtual Node* getParentNode(); 
     virtual NodeList* getChildNodes(); 
@@ -165,7 +163,7 @@ class Node : public MITREObject
     virtual Document* getOwnerDocument(); 
  
     //Write functions 
-    virtual void setNodeValue(const DOMString& nodeValue); 
+    virtual void setNodeValue(const String& nodeValue); 
  
     //Node manipulation functions 
     virtual Node* insertBefore(Node* newChild, Node* refChild); 
@@ -184,9 +182,9 @@ class Node : public MITREObject
   private: 
     nsIDOMNode* nsNode; 
  
-    //Maintain a few DOMString objects to ensure proper handling of references 
-    DOMString nodeName; 
-    DOMString nodeValue; 
+    //Maintain a few String objects to ensure proper handling of references 
+    String nodeName; 
+    String nodeValue; 
 }; 
  
 // 
@@ -218,9 +216,9 @@ class NamedNodeMap : public MITREObject
     NamedNodeMap(nsIDOMNamedNodeMap* namedNodeMap, Document* owner); 
     ~NamedNodeMap(); 
  
-    Node* getNamedItem(const DOMString& name); 
+    Node* getNamedItem(const String& name); 
     Node* setNamedItem(Node* arg); 
-    Node* removeNamedItem(const DOMString& name); 
+    Node* removeNamedItem(const String& name); 
     Node* item(UInt32 index); 
     UInt32 getLength(); 
  
@@ -286,33 +284,34 @@ class Document : public Node
     DocumentFragment* createDocumentFragment(); 
     DocumentFragment* createDocumentFragment(nsIDOMDocumentFragment* fragment); 
      
-    Element* createElement(const DOMString& tagName); 
+    Element* createElement(const String& tagName); 
+    Element* createElementNS(const String& namespaceURI, const String& tagName); 
     Element* createElement(nsIDOMElement* element); 
      
-    Attr* createAttribute(const DOMString& name); 
+    Attr* createAttribute(const String& name); 
     Attr* createAttribute(nsIDOMAttr* attr); 
  
-    Text* createTextNode(const DOMString& theData); 
+    Text* createTextNode(const String& theData); 
     Text* createTextNode(nsIDOMText* text); 
  
-    Comment* createComment(const DOMString& theData); 
+    Comment* createComment(const String& theData); 
     Comment* createComment(nsIDOMComment* comment); 
  
-    CDATASection* createCDATASection(const DOMString& theData); 
+    CDATASection* createCDATASection(const String& theData); 
     CDATASection* createCDATASection(nsIDOMCDATASection* cdata); 
  
-    ProcessingInstruction* createProcessingInstruction(const DOMString& target, 
-                                                       const DOMString& data); 
+    ProcessingInstruction* createProcessingInstruction(const String& target, 
+                                                       const String& data); 
     ProcessingInstruction* createProcessingInstruction( 
-    			      nsIDOMProcessingInstruction* pi); 
+                      nsIDOMProcessingInstruction* pi); 
  
-    EntityReference* createEntityReference(const DOMString& name); 
+    EntityReference* createEntityReference(const String& name); 
     EntityReference* createEntityReference(nsIDOMEntityReference* entiyRef); 
  
     Entity* createEntity(nsIDOMEntity* entity); 
  
     Node* createNode(nsIDOMNode* node); 
-    DOMString* createDOMString(nsString* str); 
+    String* createDOMString(nsString* str); 
     Notation* createNotation(nsIDOMNotation* notation); 
     DOMImplementation* createDOMImplementation(nsIDOMDOMImplementation* impl); 
     DocumentType* createDocumentType(nsIDOMDocumentType* doctype); 
@@ -334,7 +333,7 @@ class Document : public Node
     //Node* removeChild(Node* oldChild); 
  
   private: 
-    nsIDOMDocument* nsDocument; 
+    nsIDOMDocument* nsDocument;
  
     //Hash tables to maintain wrapper objects.   
     //NOTE:  Should we maintain separate hash table for NamedNodeMaps and 
@@ -361,14 +360,14 @@ class Element : public Node
     //children 
     //Node* insertBefore(Node* newChild, Node* refChild); 
  
-    const DOMString& getTagName(); 
-    const DOMString& getAttribute(const DOMString& name); 
-    void setAttribute(const DOMString& name, const DOMString& value); 
-    void removeAttribute(const DOMString& name); 
-    Attr* getAttributeNode(const DOMString& name); 
+    const String& getTagName(); 
+    const String& getAttribute(const String& name); 
+    void setAttribute(const String& name, const String& value); 
+    void removeAttribute(const String& name); 
+    Attr* getAttributeNode(const String& name); 
     Attr* setAttributeNode(Attr* newAttr); 
     Attr* removeAttributeNode(Attr* oldAttr); 
-    NodeList* getElementsByTagName(const DOMString& name); 
+    NodeList* getElementsByTagName(const String& name); 
     void normalize(); 
  
   private: 
@@ -388,16 +387,16 @@ class Attr : public Node
     nsIDOMAttr* getNSAttr(); 
     virtual void setNSObj(nsIDOMAttr* attr); 
  
-    const DOMString& getName(); 
+    const String& getName(); 
     MBool getSpecified() const; 
-    const DOMString& getValue(); 
-    void setValue(const DOMString& newValue); 
+    const String& getValue(); 
+    void setValue(const String& newValue); 
  
     //TK - Simply deffer to Node Implementation 
     //Override the set and get member functions for a node's value to create a 
     //new TEXT node when set, and to interpret its children when read. 
-    //void setNodeValue(const DOMString& nodeValue); 
-    //const DOMString& getNodeValue(); 
+    //void setNodeValue(const String& nodeValue); 
+    //const String& getNodeValue(); 
  
     //Override insertBefore to limit Attr to having only certain nodes as 
     //children 
@@ -405,15 +404,15 @@ class Attr : public Node
  
   private: 
     // 
-    //I don't think we need these since the MozillaString objects will 
+    //I don't think we need these since the String objects will 
     //delete their nsString objects when they are destroyed. 
     // 
     //We don't want to make any assumptions about the implementation of 
     //the NS attribute object, so keep these around to store the name and 
     //value of the attribute when requested by the user. 
     //We don't want to make any assumptions about the implementation of 
-    //DOMString attrName; 
-    //DOMString attrValue; 
+    //String attrName; 
+    //String attrValue; 
  
     nsIDOMAttr* nsAttr; 
 }; 
@@ -429,15 +428,15 @@ class CharacterData : public Node
  
     virtual void setNSObj(nsIDOMCharacterData* charData); 
  
-    const DOMString& getData() const; 
-    void setData(const DOMString& source); 
+    const String& getData() const; 
+    void setData(const String& source); 
     Int32 getLength() const; 
  
-    DOMString& substringData(Int32 offset, Int32 count, DOMString& dest); 
-    void appendData(const DOMString& arg); 
-    void insertData(Int32 offset, const DOMString& arg); 
+    String& substringData(Int32 offset, Int32 count, String& dest); 
+    void appendData(const String& arg); 
+    void insertData(Int32 offset, const String& arg); 
     void deleteData(Int32 offset, Int32 count); 
-    void replaceData(Int32 offset, Int32 count, const DOMString& arg); 
+    void replaceData(Int32 offset, Int32 count, const String& arg); 
  
   protected: 
     CharacterData(nsIDOMCharacterData* charData, Document* owner); 
@@ -528,15 +527,15 @@ class ProcessingInstruction : public Node
 { 
   public: 
     ProcessingInstruction(nsIDOMProcessingInstruction* procInstr,  
-			  Document* owner); 
+              Document* owner); 
     ~ProcessingInstruction(); 
  
     virtual void setNSObj(nsIDOMProcessingInstruction* procInstr); 
  
-    const DOMString& getTarget() const; 
-    const DOMString& getData() const; 
+    const String& getTarget() const; 
+    const String& getData() const; 
  
-    void setData(const DOMString& theData); 
+    void setData(const String& theData); 
  
     //TK - Defer to Node Implementation 
     //Override "child manipulation" function since ProcessingInstruction Nodes 
@@ -562,8 +561,8 @@ class Notation : public Node
  
     virtual void setNSObj(nsIDOMNotation* notation); 
  
-    const DOMString& getPublicId() const; 
-    const DOMString& getSystemId() const; 
+    const String& getPublicId() const; 
+    const String& getSystemId() const; 
  
     //TK - Simply Defer to Node Implemntation 
     //Override "child manipulation" function since Notation Nodes 
@@ -589,9 +588,9 @@ class Entity : public Node
  
     virtual void setNSObj(nsIDOMEntity* entity); 
  
-    const DOMString& getPublicId() const; 
-    const DOMString& getSystemId() const; 
-    const DOMString& getNotationName() const; 
+    const String& getPublicId() const; 
+    const String& getSystemId() const; 
+    const String& getNotationName() const; 
  
     //TK - Defer to Node Implementation 
     //Override insertBefore to limit Entity to having only certain nodes as 
@@ -636,7 +635,7 @@ class DocumentType : public Node
  
     void setNSObj(nsIDOMDocumentType* documentType); 
  
-    const DOMString& getName() const; 
+    const String& getName() const; 
     NamedNodeMap* getEntities(); 
     NamedNodeMap* getNotations(); 
  
@@ -654,6 +653,6 @@ class DocumentType : public Node
  
 //NULL string for use by Element::getAttribute() for when the attribute 
 //spcified by "name" does not exist, and therefore shoud be "NULL". 
-const DOMString NULL_STRING; 
+const String NULL_STRING; 
  
 #endif 

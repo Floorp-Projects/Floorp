@@ -63,7 +63,7 @@ void Attr::setNSObj(nsIDOMAttr* attr)
 } 
  
 // 
-//Retrieve the name of the attribute storing it in a MozillaString wrapper 
+//Retrieve the name of the attribute storing it in a String wrapper 
 //class.  The wrapper is retrieved from the Document so it can be hashed.  At 
 //this time no one else will use this hased object since it has been  
 //specifically created for the caller of this function, but at lease its  
@@ -71,10 +71,10 @@ void Attr::setNSObj(nsIDOMAttr* attr)
 //implementation can be created based on the characters stored in the string 
 //or something.   
 //   NOTE:  We don't need to worry about memory management here since the 
-//          MozillaString object will delete its nsString object automatically 
+//          String object will delete its nsString object automatically 
 // ( nsIDOMAttr::GetName(nsString&) ) 
 // 
-const DOMString& Attr::getName() 
+const String& Attr::getName() 
 { 
   nsString* name = new nsString(); 
  
@@ -103,7 +103,7 @@ MBool Attr::getSpecified() const
 // 
 //Retrieve the value of the attribute. See getName above for hashing info 
 // 
-const DOMString& Attr::getValue() 
+const String& Attr::getValue() 
 { 
   nsString* value = new nsString(); 
  
@@ -120,7 +120,7 @@ const DOMString& Attr::getValue()
 // 
 //Foward call to nsIDOMAttr::SetValue. 
 // 
-void Attr::setValue(const DOMString& newValue) 
+void Attr::setValue(const String& newValue) 
 { 
   nsAttr->SetValue(newValue.getConstNSString()); 
 } 
@@ -128,21 +128,21 @@ void Attr::setValue(const DOMString& newValue)
  
 // 
 //Override the set node value member function to create a new TEXT node with 
-//the DOMString and to add it as the Attribute's child. 
+//the String and to add it as the Attribute's child. 
 //    NOTE:  Not currently impemented, just execute the default setNodeValue 
 // 
-//void Attr::setNodeValue(const DOMString& nodeValue) 
+//void Attr::setNodeValue(const String& nodeValue) 
 //{ 
 //  setValue(nodeValue); 
 //} 
  
 // 
-//Return a DOMString represening the value of this node.  If the value is an 
+//Return a String represening the value of this node.  If the value is an 
 //Entity Reference then return the value of the reference.  Otherwise, it is a 
 //simple conversion of the text value. 
 //    NOTE: Not currently implemented, just execute the default getNodeValue 
 // 
-//const DOMString& Attr::getNodeValue() 
+//const String& Attr::getNodeValue() 
 //{ 
 //  return getValue(); 
 //} 

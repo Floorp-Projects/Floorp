@@ -21,7 +21,7 @@
  *
  * Michel Casabianca, casa@sdv.fr
  *    -- added additional empty elements to the HTML tag list
- * $Id: HTMLPrinter.cpp,v 1.3 1999/11/18 04:39:54 kvisco%ziplink.net Exp $
+ * $Id: HTMLPrinter.cpp,v 1.4 2000/06/11 12:21:04 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "printers.h"
@@ -34,7 +34,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:54 $
+ * @version $Revision: 1.4 $ $Date: 2000/06/11 12:21:04 $
 **/
   //---------------/
  //- Contructors -/
@@ -158,7 +158,7 @@ MBool HTMLPrinter::print(Node* node, String& currentIndent) {
                     att = (Attr*) attList->item(i);
                     out << SPACE;
                     out << att->getName();
-                    const DOMString& data = att->getValue();
+                    const String& data = att->getValue();
                     if (&data != &NULL_STRING) {
                         out << EQUALS << DOUBLE_QUOTE;
                         out << data;
@@ -220,7 +220,7 @@ MBool HTMLPrinter::print(Node* node, String& currentIndent) {
                     att = (Attr*) attList->item(i);
                     out << SPACE;
                     out << att->getName();
-                    const DOMString& data = att->getValue();
+                    const String& data = att->getValue();
                     if (&data != &NULL_STRING) {
                         out << EQUALS << DOUBLE_QUOTE;
                         out << data;
