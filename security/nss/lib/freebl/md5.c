@@ -476,7 +476,7 @@ MD5_Update(MD5Context *cx, const unsigned char *input, unsigned int inputLen)
 #else
 		if ((ptrdiff_t)input & 0x3) {
 			/* buffer not aligned, copy it to force alignment */
-			memcpy(cx->inBuf, buf, MD5_BUFFER_SIZE);
+			memcpy(cx->inBuf, input, MD5_BUFFER_SIZE);
 			wBuf = cx->u.w;
 		} else {
 			/* buffer is aligned */
