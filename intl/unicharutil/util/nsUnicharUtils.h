@@ -85,5 +85,12 @@ inline PRBool IsLowerCase(PRUnichar c) {
 #define SURROGATE_TO_UCS4(h, l)  ((((PRUint32)(h)-(PRUint32)0xd800) << 10) +  \
                                     (PRUint32)(l) - (PRUint32)(0xdc00) + 0x10000)
 
+/* (0x3131u <= (u) && (u) <= 0x318eu) => Hangul Compatibility Jamo */
+/* (0xac00u <= (u) && (u) <= 0xd7a3u) => Hangul Syllables          */
+#define IS_CJ_CHAR(u) \
+         ((0x2e80u <= (u) && (u) <= 0x312fu) || \
+          (0x3190u <= (u) && (u) <= 0xabffu) || \
+          (0xf900u <= (u) && (u) <= 0xfaffu) || \
+          (0xff00u <= (u) && (u) <= 0xffffu) )
 
 #endif  /* nsUnicharUtils_h__ */

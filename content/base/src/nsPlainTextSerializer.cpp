@@ -1627,7 +1627,16 @@ nsPlainTextSerializer::Write(const nsAString& aString)
     } 
     else {
       // There's still whitespace left in the string
-
+      if (nextpos != 0 && (nextpos + 1) < totLen) {
+        offsetIntoBuffer = str.get() + nextpos;
+        // skip '\n' if it is between CJ chars
+        if (offsetIntoBuffer[0] == '\n' && IS_CJ_CHAR(offsetIntoBuffer[-1]) && IS_CJ_CHAR(offsetIntoBuffer[1])) {
+          offsetIntoBuffer = str.get() + bol;
+          AddToLine(offsetIntoBuffer, nextpos-bol);
+          bol = nextpos + 1;
+          continue;
+        }
+      }
       // If we're already in whitespace and not preformatted, just skip it:
       if (mInWhitespace && (nextpos == bol) && !mPreFormatted &&
           !(mFlags & nsIDocumentEncoder::OutputPreformatted)) {
