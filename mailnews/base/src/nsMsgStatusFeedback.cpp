@@ -160,7 +160,6 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 NS_IMETHODIMP
 nsMsgStatusFeedback::StartMeteors()
 {
-  nsresult rv;
 
   // cancel outstanding starts
   if (mQueuedMeteorStarts>0) {
@@ -183,15 +182,6 @@ nsMsgStatusFeedback::StartMeteors()
   if(!m_meteorsSpinning)
   {
     NotifyStartMeteors(nsnull);
-#if 0
-	  rv = NS_NewTimer(getter_AddRefs(mStartTimer));
-	  if (NS_FAILED(rv)) return rv;
-
-	  rv = mStartTimer->Init(notifyStartMeteors, (void *)this,
-							 MSGFEEDBACK_TIMER_INTERVAL);
-	  if (NS_FAILED(rv)) return rv;
-	  m_meteorsSpinning = PR_TRUE;
-#endif
   }
   return NS_OK;
 }
@@ -200,7 +190,6 @@ nsMsgStatusFeedback::StartMeteors()
 NS_IMETHODIMP
 nsMsgStatusFeedback::StopMeteors()
 {
-  nsresult rv;
 
   // cancel outstanding stops
   if (mQueuedMeteorStops>0) {
@@ -224,14 +213,6 @@ nsMsgStatusFeedback::StopMeteors()
   if(m_meteorsSpinning)
   {
     NotifyStopMeteors(nsnull);
-#if 0
-	  rv = NS_NewTimer(getter_AddRefs(mStopTimer));
-	  if (NS_FAILED(rv)) return rv;
-
-	  rv = mStopTimer->Init(notifyStopMeteors, (void *)this,
-							MSGFEEDBACK_TIMER_INTERVAL);
-	  if (NS_FAILED(rv)) return rv;
-#endif
 	  mQueuedMeteorStops++;
   }
   return NS_OK;
