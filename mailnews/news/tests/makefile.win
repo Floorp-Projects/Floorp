@@ -1,3 +1,5 @@
+#!nmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,81 +15,46 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-NODEPEND=1
-IGNORE_MANIFEST = 1
-
-#//------------------------------------------------------------------------
-#//
-# New build system where zip dll is build indepenant of java stubs.
-#//
-#//------------------------------------------------------------------------
-MODULE =testNews         \
-#EXPORTS =               \
-#        $(NULL)
+DEPTH=..\..\..
+IGNORE_MANIFEST=1
 
 
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
-DEPTH= ..\..\..
+MAKE_OBJ_TYPE   = EXE
+PROGRAM = .\$(OBJDIR)\nntpTest.exe
 
-MAKE_OBJ_TYPE=EXE
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
-#//
-#//------------------------------------------------------------------------
-EXENAME=TestNews
-PDBFILE=TestNews.pdb
-MAPFILE=TestNews.map
+OBJS =                          \
+	.\$(OBJDIR)\nntpTest.obj    \
+	.\$(OBJDIR)\nsNNTPNewsgroupStub.obj \
+	.\$(OBJDIR)\nsNNTPCategoryContainerStub.obj \
+	.\$(OBJDIR)\nsNNTPHostStub.obj		\
+	.\$(OBJDIR)\nsNNTPNewsgroupListStub.obj \
+	$(NULL)
 
-#//------------------------------------------------------------------------
-#// 
-#// Define the files necessary to build the target (ie. OBJS)
-#//
-#//------------------------------------------------------------------------
-OBJS=        \
-        $(NULL)
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
-#// (these must be defined before the common makefiles are included)
-#//
-#//------------------------------------------------------------------------
+LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\mailnews -I$(PUBLIC)\security -I$(PUBLIC)\pref -I$(PUBLIC)\rdf
 
-PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
+MYLIBS=							\
+ $(DIST)\lib\xpcom32.lib		\
+ $(LIBNSPR)						\
+ $(DIST)\lib\raptorbase.lib		\
+ $(DIST)\lib\raptorgfxwin.lib	\
+ $(DIST)\lib\raptorwidget.lib	\
+ $(DIST)\lib\netlib.lib			\
+ $(DIST)\lib\libplc21.lib		\
+ $(DIST)\lib\nntp.lib    		\
+ $(DIST)\lib\msgcore.lib		\
+ $(DIST)\lib\xplib.lib			\
+ $(DIST)\lib\mime.lib			\
+ $(NULL)
 
+LLIBS= $(MYLIBS)				\
+ -SUBSYSTEM:CONSOLE 
 
-#//------------------------------------------------------------------------
-#//
-#// Define any local options for the make tools 
-#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
-#//
-#//------------------------------------------------------------------------
-LCFLAGS=-DNETSCAPE
-LLIBS=	 $(LLIBS) ole32.lib	\
-	 $(DIST)\lib\xpcom32.lib
-	
-
-LINCS=$(LINCS)  -I. \
-		-I$(PUBLIC)\mailnews   \
-                -I$(PUBLIC)\xpcom
-
-# clobber and clobber_all will remove the following garbage:
-GARBAGE	= $(GARBAGE) _gen
-
-#//------------------------------------------------------------------------
-#//
-#// Include the common makefile rules
-#//
-#//------------------------------------------------------------------------
-include <$(DEPTH)/config/rules.mak>
+include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
-    $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin\
+	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(EXENAME).exe
+	rm -f $(DIST)\bin\Mailer.exe
+
+$(PROGRAM):: $(OBJS) $(MYLIBS)
