@@ -385,7 +385,8 @@ nsresult        rv;
     return NS_ERROR_FAILURE;
   }
 
-  rv = fm->Init(aFont, this);
+  // XXX need to pass real lang group
+  rv = fm->Init(aFont, nsnull, this);
 
   if (NS_OK != rv) {
     aMetrics = nsnull;

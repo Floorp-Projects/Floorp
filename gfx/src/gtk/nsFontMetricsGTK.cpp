@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharRepresentable.h"
+#include "nsIPref.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsLocaleCID.h"
@@ -41,6 +42,8 @@
 
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
@@ -68,6 +71,8 @@ nsFontMetricsGTK::nsFontMetricsGTK()
 
 nsFontMetricsGTK::~nsFontMetricsGTK()
 {
+  // do not free mGeneric here since it's a pointer into the mFonts list
+
   if (nsnull != mFont) {
     delete mFont;
     mFont = nsnull;
@@ -133,13 +138,15 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 
 #endif /* FONT_SWITCHING */
 
-NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aContext)
+NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
+  nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
 #ifdef FONT_SWITCHING
 
   mFont = new nsFont(aFont);
+  mLangGroup = aLangGroup;
 
   mDeviceContext = aContext;
 
@@ -616,6 +623,18 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFont(const nsFont*& aFont)
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsGTK::GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
 {
   aHandle = (nsFontHandle)mFontHandle;
@@ -856,6 +875,7 @@ typedef struct nsFontCharSetMap
 
 static int gGotAllFontNames = 0;
 
+// XXX many of these statics need to be freed at shutdown time
 static PLHashTable* gFamilies = nsnull;
 
 static PLHashTable* gFamilyNames = nsnull;
@@ -872,12 +892,12 @@ static nsFontFamilyName gFamilyNameTable[] =
   { "courier new",     "courier" },
   { "times new roman", "times" },
 
-  { "serif",           "times" },
-  { "sans-serif",      "helvetica" },
-  { "fantasy",         "courier" },
-  { "cursive",         "courier" },
-  { "monospace",       "courier" },
-  { "-moz-fixed",      "courier" },
+  { "serif",           nsnull },
+  { "sans-serif",      nsnull },
+  { "fantasy",         nsnull },
+  { "cursive",         nsnull },
+  { "monospace",       nsnull },
+  { "-moz-fixed",      nsnull },
 
   { nsnull, nsnull }
 };
@@ -2274,6 +2294,135 @@ GetFontNames(char* aPattern)
   return family;
 }
 
+static void
+FindFamily(nsFontSearch* aSearch, nsString* aName)
+{
+  aSearch->mFont = nsnull;
+  nsFontFamily* family =
+    (nsFontFamily*) PL_HashTableLookup(gFamilies, aName);
+  if (!family) {
+    char name[128];
+    aName->ToCString(name, sizeof(name));
+    char buf[256];
+    PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
+    family = GetFontNames(buf);
+    if (!family) {
+      family = new nsFontFamily; // dummy entry to avoid calling X again
+      if (family) {
+        nsString* copy = new nsString(*aName);
+        if (copy) {
+          PL_HashTableAdd(gFamilies, copy, family);
+        }
+        else {
+          delete family;
+          return;
+        }
+      }
+      else {
+        return;
+      }
+    }
+  }
+  TryFamily(aSearch, family);
+}
+
+static nsIPref* gPref = nsnull;
+
+static void
+PrefEnumCallback(const char* aName, void* aClosure)
+{
+  nsFontSearch* search = (nsFontSearch*) aClosure;
+  if (!search->mFont) {
+    char* value = nsnull;
+    gPref->CopyCharPref(aName, &value);
+    nsAutoString name;
+    if (value) {
+      name = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+      FindFamily(search, &name);
+    }
+    if (!search->mFont) {
+      gPref->CopyDefaultCharPref(aName, &value);
+      if (value) {
+        name = value;
+        nsAllocator::Free(value);
+        value = nsnull;
+        FindFamily(search, &name);
+      }
+    }
+  }
+}
+
+void
+nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
+{
+  aSearch->mFont = nsnull;
+  if (!gPref) {
+    nsServiceManager::GetService(kPrefCID,
+      nsCOMTypeInfo<nsIPref>::GetIID(), (nsISupports**) &gPref);
+    if (!gPref) {
+      return;
+    }
+  }
+  if (mTriedAllGenerics) {
+    return;
+  }
+  nsAutoString prefix("font.name.");
+  char* value = nsnull;
+  if (mGeneric) {
+    prefix.Append(*mGeneric);
+  }
+  else {
+    gPref->CopyCharPref("font.default", &value);
+    if (value) {
+      prefix.Append(value);
+      nsAllocator::Free(value);
+      value = nsnull;
+    }
+    else {
+      prefix.Append("serif");
+    }
+  }
+  char name[128];
+  if (mLangGroup) {
+    nsAutoString pref = prefix;
+    pref.Append('.');
+    const PRUnichar* langGroup = nsnull;
+    mLangGroup->GetUnicode(&langGroup);
+    pref.Append(langGroup);
+    pref.ToCString(name, sizeof(name));
+    gPref->CopyCharPref(name, &value);
+    nsAutoString str;
+    if (value) {
+      str = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+      FindFamily(aSearch, &str);
+      if (aSearch->mFont) {
+        return;
+      }
+    }
+    value = nsnull;
+    gPref->CopyDefaultCharPref(name, &value);
+    if (value) {
+      str = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+      FindFamily(aSearch, &str);
+      if (aSearch->mFont) {
+        return;
+      }
+    }
+  }
+  prefix.ToCString(name, sizeof(name));
+  gPref->EnumerateChildren(name, PrefEnumCallback, aSearch);
+  if (aSearch->mFont) {
+    return;
+  }
+  mTriedAllGenerics = 1;
+}
+
 /*
  * XListFonts(*) is expensive. Delay this till the last possible moment.
  * XListFontsWithInfo is expensive. Use XLoadQueryFont instead.
@@ -2281,15 +2430,26 @@ GetFontNames(char* aPattern)
 nsFontGTK*
 nsFontMetricsGTK::FindFont(PRUnichar aChar)
 {
+  static nsString* gGeneric = nsnull;
   static int gInitialized = 0;
   if (!gInitialized) {
     gInitialized = 1;
     gFamilies = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
     gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+    gGeneric = new nsAutoString();
+    if (!gGeneric) {
+      return nsnull;
+    }
     nsFontFamilyName* f = gFamilyNameTable;
     while (f->mName) {
       nsString* name = new nsString(f->mName);
-      nsString* xName = new nsString(f->mXName);
+      nsString* xName;
+      if (f->mXName) {
+        xName = new nsString(f->mXName);
+      }
+      else {
+        xName = gGeneric;
+      }
       if (name && xName) {
         PL_HashTableAdd(gFamilyNames, name, (void*) xName);
       }
@@ -2331,38 +2491,33 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
 
   nsFontSearch search = { this, aChar, nsnull };
 
+  /*
+   * First try the fonts in this nsFont (font-family).
+   */
+  nsString* familyName = nsnull;
+  nsString* xName = nsnull;
   while (mFontsIndex < mFontsCount) {
-    nsString* familyName = &mFonts[mFontsIndex++];
-    nsString* xName = (nsString*) PL_HashTableLookup(gFamilyNames, familyName);
-    if (!xName) {
+    familyName = &mFonts[mFontsIndex++];
+    xName = (nsString*) PL_HashTableLookup(gFamilyNames, familyName);
+    if (xName == gGeneric) {
+      mGeneric = familyName;
+      break;
+    }
+    else if (!xName) {
       xName = familyName;
     }
-    nsFontFamily* family =
-      (nsFontFamily*) PL_HashTableLookup(gFamilies, xName);
-    if (!family) {
-      char name[128];
-      xName->ToCString(name, sizeof(name));
-      char buf[256];
-      PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
-      family = GetFontNames(buf);
-      if (!family) {
-        family = new nsFontFamily; // dummy entry to avoid calling X again
-        if (family) {
-          nsString* copy = new nsString(*xName);
-          if (copy) {
-            PL_HashTableAdd(gFamilies, copy, family);
-          }
-          else {
-            delete family;
-          }
-        }
-        continue;
-      }
-    }
-    TryFamily(&search, family);
+    FindFamily(&search, xName);
     if (search.mFont) {
       return search.mFont;
     }
+  }
+
+  /*
+   * Now try the generic font encountered above, or serif.
+   */
+  FindGenericFont(&search);
+  if (search.mFont) {
+    return search.mFont;
   }
 
   // XXX If we get to this point, that means that we have exhausted all the
@@ -2370,6 +2525,9 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
   // specific to the vendor of the X server here. Because XListFonts for the
   // whole list is very expensive on some Unixes.
 
+  /*
+   * Finally, try all the fonts on the system.
+   */
   if (!gGotAllFontNames) {
     gGotAllFontNames = 1;
     GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
