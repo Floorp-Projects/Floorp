@@ -200,7 +200,7 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     nsCOMPtr<nsIContent> toolbarParent;
     toolbarParent = dont_QueryInterface(aElement);
-    if (!IsWidgetElement(aElement) && !IsWidgetInsertionRootElement(aElement))
+    if (!IsItemOrFolder(aElement) && !IsWidgetInsertionRootElement(aElement))
     {
         NS_ERROR("Can't add something here!");
         return NS_ERROR_UNEXPECTED;
