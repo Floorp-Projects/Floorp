@@ -37,9 +37,8 @@ int main() {
     PRInt64 i64;
     char buf[BUF_SIZE];
     char answer[BUF_SIZE];
-    int i;
+    int i, rv = 0;
 
-    PR_STDIO_INIT();
     i16 = -1;
     n = -1;
     i32 = -1;
@@ -48,16 +47,17 @@ int main() {
     PR_snprintf(buf, BUF_SIZE, "%hx %x %lx %llx", i16, n, i32, i64);
     strcpy(answer, "ffff ");
     for (i = PR_BYTES_PER_INT * 2; i; i--) {
-	strcat(answer, "f");
+		strcat(answer, "f");
     }
     strcat(answer, " ffffffff ffffffffffffffff");
 
     if (!strcmp(buf, answer)) {
-	printf("PR_snprintf test 1 passed\n");
+		printf("PR_snprintf test 1 passed\n");
     } else {
-	printf("PR_snprintf test 1 failed\n");
-	printf("Converted string is %s\n", buf);
-	printf("Should be %s\n", answer);
+		printf("PR_snprintf test 1 failed\n");
+		printf("Converted string is %s\n", buf);
+		printf("Should be %s\n", answer);
+		rv = 1;
     }
 
     i16 = -32;
@@ -66,12 +66,13 @@ int main() {
     LL_I2L(i64, 333);
     PR_snprintf(buf, BUF_SIZE, "%d %hd %lld %ld", n, i16, i64, i32);
     if (!strcmp(buf, "30 -32 333 64")) {
-	printf("PR_snprintf test 2 passed\n");
+		printf("PR_snprintf test 2 passed\n");
     } else {
-	printf("PR_snprintf test 2 failed\n");
-	printf("Converted string is %s\n", buf);
-	printf("Should be 30 -32 333 64\n");
+		printf("PR_snprintf test 2 failed\n");
+		printf("Converted string is %s\n", buf);
+		printf("Should be 30 -32 333 64\n");
+		rv = 1;
     }
 
-    return 0;
+    return rv;
 }

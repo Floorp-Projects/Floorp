@@ -34,7 +34,6 @@
 ***********************************************************************/
 /* Used to get the command line option */
 #include "plgetopt.h"
-#include "prttools.h"
 
 #include <stdio.h>
 #include "nspr.h"
@@ -57,6 +56,9 @@ typedef struct threadInfo {
     PRInt32   *alive;
 } threadInfo;
 
+PRIntn failed_already = 0;
+PRIntn debug_mode = 0;
+
 void 
 thread_main(void *_info)
 {
@@ -67,11 +69,14 @@ thread_main(void *_info)
     PRFileDesc *clientSock;
     PRStatus rv;
  
-    printf("thread %d is alive\n", info->id);
+	if (debug_mode)
+    	printf("thread %d is alive\n", info->id);
 
     listenSock = PR_NewTCPSocket();
     if (!listenSock) {
-        printf("unable to create listen socket\n");
+		if (debug_mode)
+        	printf("unable to create listen socket\n");
+		failed_already=1;
         goto dead;
     }
   
@@ -80,41 +85,57 @@ thread_main(void *_info)
     listenAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
     rv = PR_Bind(listenSock, &listenAddr);
     if (rv == PR_FAILURE) {
-        printf("unable to bind\n");
+		if (debug_mode)
+        	printf("unable to bind\n");
+		failed_already=1;
         goto dead;
     }
 
     rv = PR_Listen(listenSock, 4);
     if (rv == PR_FAILURE) {
-        printf("unable to listen\n");
+		if (debug_mode)
+        	printf("unable to listen\n");
+		failed_already=1;
         goto dead;
     }
 
-    printf("thread %d going into accept for %d seconds\n", 
-        info->id, info->accept_timeout + info->id);
+	if (debug_mode)
+    	printf("thread %d going into accept for %d seconds\n", 
+        	info->id, info->accept_timeout + info->id);
 
     clientSock = PR_Accept(listenSock, &clientAddr, PR_SecondsToInterval(info->accept_timeout +info->id));
 
     if (clientSock == NULL) {
-        if (PR_GetError() == PR_IO_TIMEOUT_ERROR)
-            printf("PR_Accept() timeout worked!\n");
-        else
-            printf("TEST FAILED! PR_Accept() returned error %d\n", PR_GetError());
+        if (PR_GetError() == PR_IO_TIMEOUT_ERROR) {
+			if (debug_mode) {	
+            	printf("PR_Accept() timeout worked!\n"); 
+				printf("TEST PASSED! PR_Accept() returned error %d\n",
+							PR_IO_TIMEOUT_ERROR);
+			}
+    	} else {
+			if (debug_mode)
+            	printf("TEST FAILED! PR_Accept() returned error %d\n",
+														PR_GetError());
+			failed_already=1;
+		}
     } else {
-        printf ("TEST FAILED! PR_Accept() succeeded?\n");
-	PR_Close(clientSock);
+		if (debug_mode)
+        	printf ("TEST FAILED! PR_Accept() succeeded?\n");
+		failed_already=1;
+		PR_Close(clientSock);
     }
 
 dead:
     if (listenSock) {
-	PR_Close(listenSock);
+		PR_Close(listenSock);
     }
     PR_Lock(info->dead_lock);
     (*info->alive)--;
     PR_NotifyCondVar(info->dead_cv);
     PR_Unlock(info->dead_lock);
 
-    printf("thread %d is dead\n", info->id);
+	if (debug_mode)
+    	printf("thread %d is dead\n", info->id);
 }
 
 void
@@ -126,7 +147,8 @@ thread_test(PRThreadScope scope, PRInt32 num_threads)
     PRCondVar *dead_cv;
     PRInt32 alive;
 
-    printf("IO Timeout test started with %d threads\n", num_threads);
+	if (debug_mode)
+    	printf("IO Timeout test started with %d threads\n", num_threads);
 
     dead_lock = PR_NewLock();
     dead_cv = PR_NewCondVar(dead_lock);
@@ -158,7 +180,8 @@ thread_test(PRThreadScope scope, PRInt32 num_threads)
 
     PR_Lock(dead_lock);
     while(alive) {
-        printf("main loop awake; alive = %d\n", alive);
+		if (debug_mode)
+        	printf("main loop awake; alive = %d\n", alive);
         PR_WaitCondVar(dead_cv, PR_INTERVAL_NO_TIMEOUT);
     }
     PR_Unlock(dead_lock);
@@ -206,12 +229,19 @@ int main(int argc, char **argv)
 	debug_mode = 1;
 #endif
 
-    printf("user level test\n");
+    printf("test with local thread\n");
     thread_test(PR_LOCAL_THREAD, num_threads);
 
-    printf("kernel level test\n");
+    printf("test with global thread\n");
     thread_test(PR_GLOBAL_THREAD, num_threads);
 
+    printf("test with global bound thread\n");
+    thread_test(PR_GLOBAL_BOUND_THREAD, num_threads);
+
     PR_Cleanup();
-    return 0;
+
+	if (failed_already)
+		return 1;
+	else
+    	return 0;
 }
