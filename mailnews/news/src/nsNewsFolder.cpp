@@ -48,6 +48,7 @@
 #include "nsINntpIncomingServer.h"
 #include "nsINewsDatabase.h"
 #include "nsMsgBaseCID.h"
+#include "nsFileStream.h"
 
 #ifdef DEBUG_seth
 #define DEBUG_NEWS 1
@@ -153,11 +154,10 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
                                 getter_AddRefs(nntpServer));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsIFileSpec> newsrcFilePath;
-    rv = nntpServer->GetNewsrcFilePath(getter_AddRefs(newsrcFilePath));
+    rv = nntpServer->GetNewsrcFilePath(getter_AddRefs(mNewsrcFilePath));
     if (NS_FAILED(rv)) return rv;
       
-    rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFilePath);
+    rv = LoadNewsrcFileAndCreateNewsgroups();
   }
   else {
 #ifdef DEBUG_NEWS
@@ -453,9 +453,8 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 	// do we need to hash newsgroup name if it is too big?
 	path += newsgroupname;
 	
-#ifdef DEBUG_NEWS
-	printf("echo %s: to the newsrc file\n", newsgroupname);
-#endif
+	rv = AddNewsgroupToNewsrcFile(newsgroupname);
+	if (NS_FAILED(rv)) return rv;
 
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
@@ -989,10 +988,33 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	return rv;
 }
 
-nsresult 
-nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsIFileSpec * newsrcFile)
+nsresult
+nsMsgNewsFolder::AddNewsgroupToNewsrcFile(const char *newsgroupname)
 {
-  nsInputFileStream newsrcStream(newsrcFile); 
+	nsresult rv;
+	if (!mNewsrcFilePath) return NS_ERROR_FAILURE; 
+	nsFileSpec newsrcFile;
+	rv = mNewsrcFilePath->GetFileSpec(&newsrcFile);
+	if (NS_FAILED(rv)) return rv;
+
+	nsOutputFileStream newsrcStream(newsrcFile, (PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
+	if (!newsrcStream.is_open()) {
+		return NS_ERROR_FAILURE;
+	}
+	newsrcStream << newsgroupname;
+	newsrcStream << ":";
+	newsrcStream << nsEndl;
+
+	newsrcStream.close();
+	return NS_OK;
+}
+
+nsresult 
+nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
+{
+  if (!mNewsrcFilePath) return NS_ERROR_FAILURE;
+
+  nsInputFileStream newsrcStream(mNewsrcFilePath); 
   nsresult rv = NS_OK;
   PRInt32 numread = 0;
 

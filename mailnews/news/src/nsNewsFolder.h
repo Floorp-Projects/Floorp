@@ -32,6 +32,7 @@
 #include "nsNewsUtils.h"
 #include "nsMsgLineBuffer.h"
 #include "nsMsgKeySet.h"
+#include "nsCOMPtr.h"
 
 class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder, public nsMsgLineBuffer
 {
@@ -94,7 +95,8 @@ public:
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 
 protected:
-  nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
+	nsresult AddNewsgroupToNewsrcFile(const char *newsgroupname);
+	nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
@@ -104,7 +106,7 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr);
 
-  nsresult LoadNewsrcFileAndCreateNewsgroups(nsIFileSpec * newsrcFile);
+  nsresult LoadNewsrcFileAndCreateNewsgroups();
   PRInt32 RememberLine(char *line);
   nsresult ForgetLine(void);
 
@@ -119,8 +121,9 @@ protected:
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-  char      *mOptionLines;
-  char      *mHostname;
+	char      *mOptionLines;
+	char      *mHostname;
+	nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
 };
 
 #endif // nsMsgNewsFolder_h__
