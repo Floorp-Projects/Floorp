@@ -463,6 +463,22 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 		if (!migrating) {
 			DIR_SavePrefsForOneServer(server); 
 		}
+    else if (!server->prefName)
+    {
+      // Need to return pref names here so the caller will be able to get the
+      // right directory properties. For migration, pref names were already
+      // created so no need to get unique ones via DIR_CreateServerPrefName().
+      if (!strcmp(server->fileName, kPersonalAddressbook))
+        server->prefName = nsCRT::strdup("ldap_2.servers.pab");
+      else if (!strcmp(server->fileName, kCollectedAddressbook))
+        server->prefName = nsCRT::strdup("ldap_2.servers.history");
+      else
+      {
+        char * leafName = dir_ConvertDescriptionToPrefName (server);
+        if (leafName)
+          server->prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s", leafName);
+      }
+    }
 #ifdef DEBUG_sspitzer
 		else {
 			printf("don't set the prefs, they are already set since this ab was migrated\n");

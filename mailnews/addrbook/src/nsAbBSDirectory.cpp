@@ -340,6 +340,9 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *aDisplayNam
   rv = properties->SetPrefName(server->prefName);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  rv = properties->SetDirType(server->dirType);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   rv = CreateDirectoriesFromFactory(properties, server, PR_TRUE /* notify */);
   NS_ENSURE_SUCCESS(rv,rv);
 	return rv;
