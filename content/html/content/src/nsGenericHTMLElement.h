@@ -331,10 +331,9 @@ public:
                              nsIURI** aResult);
 
   // Form Helper Routines
-  static nsIContent* FindFormParentContent(nsIContent* aParent);
+  nsresult FindForm(nsIDOMHTMLFormElement **aForm);
 
-  static nsresult FindAndSetFormParent(nsIContent* aParent,
-                                       nsIFormControl* aControl);
+  nsresult FindAndSetForm(nsIFormControl *aFormControl);
 
   // See if the content object is in a document that has nav-quirks
   // mode enabled.
