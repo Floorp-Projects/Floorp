@@ -54,7 +54,7 @@ class TimerImpl : public nsITimer
 
 	 	NS_DECL_ISUPPORTS
 
-		UInt32 GetFireTime() { return mFireTime; }
+		UInt32 GetFireTime() const { return mFireTime; }
 
 		void Fire();
 
