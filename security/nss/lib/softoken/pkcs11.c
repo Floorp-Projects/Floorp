@@ -2449,7 +2449,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     rv = RNG_RNGInit();         /* initialize random number generator */
     if (rv != SECSuccess) {
 	crv = CKR_DEVICE_ERROR;
-	goto loser;
+	return crv;
     }
     RNG_SystemInfoForRNG();
 
