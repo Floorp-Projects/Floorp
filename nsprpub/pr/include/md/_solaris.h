@@ -81,8 +81,12 @@
 /*
  * We have assembly language implementation of atomic
  * stacks for the 32-bit sparc and x86 architectures only.
+ *
+ * Note: We ran into thread starvation problem with the
+ * 32-bit sparc assembly language implementation of atomic
+ * stacks, so we do not use it now. (Bugzilla bug 113740)
  */
-#if !defined(sparc) || !defined(IS_64)
+#if !defined(sparc)
 #define _PR_HAVE_ATOMIC_CAS
 #endif
 #endif
