@@ -97,6 +97,24 @@ nsContainerFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   return rv;
 }
 
+NS_METHOD
+nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
+                            nsDidReflowStatus aStatus)
+{
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    mState &= ~NS_FRAME_IN_REFLOW;
+    nsFrameState state;
+    nsIFrame* kid = mFirstChild;
+    while (nsnull != kid) {
+      kid->GetFrameState(state);
+      if (0 != (state & NS_FRAME_IN_REFLOW)) {
+        kid->DidReflow(aPresContext, aStatus);
+      }
+      kid->GetNextSibling(kid);
+    }
+  }
+  return NS_OK;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
@@ -1064,10 +1082,14 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   ListTag(out);
 
   // Output the first/last content offset
-  fprintf(out, "[%d,%d,%c] pif=%p nif=%p",
-          mFirstContentOffset, mLastContentOffset,
-          (mLastContentIsComplete ? 'T' : 'F'),
-          mPrevInFlow, mNextInFlow);
+  fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
+          (mLastContentIsComplete ? 'T' : 'F'));
+  if (nsnull != mPrevInFlow) {
+    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+  }
+  if (nsnull != mNextInFlow) {
+    fprintf(out, "next-in-flow=%p ", mNextInFlow);
+  }
 
   // Output the rect
   out << mRect;
@@ -1075,9 +1097,11 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the children
   if (mChildCount > 0) {
     if (!mLastContentIsComplete) {
-      fputs(", complete=>false ", out);
+      fputs(", !complete", out);
     }
-
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
     fputs("<\n", out);
     for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
       child->List(out, aIndent + 1);
@@ -1085,6 +1109,9 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
     for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">\n", out);
   } else {
+    if (0 != mState) {
+      fprintf(out, " [state=%08x]", mState);
+    }
     fputs("<>\n", out);
   }
 
