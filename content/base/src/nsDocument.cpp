@@ -2891,37 +2891,6 @@ nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
   return nsnull;
 }
 
-PRBool nsDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const
-{
-  PRBool  result;
-
-  if (aStartContent == aEndContent) 
-  {
-    return PRBool(aContent == aStartContent);
-  }
-  else if (aStartContent == aContent || aEndContent == aContent)
-  {
-    result = PR_TRUE;
-  }
-  else
-  {
-    result = IsBefore(aStartContent,aContent);
-    if (result == PR_TRUE)
-    {
-      result = IsBefore(aContent,aEndContent);
-      if (!result)
-      {
-        // If aContent is a parent of aEndContent, then
-        // IsBefore returned false but IsInRange should be true.
-        if (FindContent(aContent, aEndContent, 0) == aEndContent)
-          result = PR_TRUE;
-      }
-    }
-  }
-  return result;
-
-}
-
 
 /**
  *  Determines if the content is found within the selection
@@ -2935,60 +2904,23 @@ PRBool nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* 
 {
   PRBool          result = PR_FALSE;
   
-  
   if (aSelection != nsnull) {
     //traverses through an iterator to see if the acontent is in the ranges
     nsIEnumerator *enumerator;
-    if (NS_SUCCEEDED(aSelection->QueryInterface(kIEnumeratorIID, (void **)&enumerator))) 
+    if (NS_SUCCEEDED(aSelection->QueryInterface(kIEnumeratorIID, (void **)&enumerator))
+        && enumerator)
     {
       for (enumerator->First();NS_OK != enumerator->IsDone() ; enumerator->Next()) {
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range)))
         {
-          nsIDOMNode* startNode = nsnull;
-          nsIDOMNode* endNode = nsnull;
-
-          range->GetStartParent(&startNode); 
-          range->GetEndParent(&endNode);
-          
-          if (startNode && endNode)
-          {
-            nsIContent* start;
-            nsIContent* end;
-
-            if (NS_SUCCEEDED(startNode->QueryInterface(kIContentIID, (void **)&start)) &&
-                NS_SUCCEEDED(endNode->QueryInterface(kIContentIID, (void **)&end)) )
-            {
-              result = IsInRange(start,end,aContent);
-            }
-            NS_IF_RELEASE(start);
-            NS_IF_RELEASE(end);
-          }
-          NS_IF_RELEASE(startNode);
-          NS_IF_RELEASE(endNode);
+          return IsNodeIntersectsRange(aContent, range);
           NS_RELEASE(range);
         }
         if (result) break;
       }
       NS_IF_RELEASE(enumerator);
     }
-  }
-  return result;
-}
-
-
-
-PRBool nsDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const
-{
-
-  PRBool result = PR_FALSE;
-
-  if (nsnull != aNewContent && nsnull != aCurrentContent && aNewContent != aCurrentContent)
-  {
-    nsIContent* test = FindContent(mRootContent,aNewContent,aCurrentContent);
-    if (test == aNewContent)
-      result = PR_TRUE;
-    NS_RELEASE(test);
   }
   return result;
 }

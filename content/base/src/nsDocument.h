@@ -382,9 +382,7 @@ public:
                             nsEventStatus& aEventStatus);
 
 
-  virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
-  virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
   virtual void SetDisplaySelection(PRBool aToggle);
