@@ -206,6 +206,12 @@ To use the wonders of bugzilla, you can use the following:
 
 E-mail address: %s
       Password: %s
+
+To change your password, go to:
+http://cvs-mirror.mozilla.org/webtools/bugzilla/changepassword.cgi
+
+(Your bugzilla and CVS password, if any, are not currently synchronized.
+Top hackers are working around the clock to fix this, as you read this.)
 "
             set msg [format $template $FORM(Bugzilla_login) \
                          $FORM(Bugzilla_login) $realpwd]
