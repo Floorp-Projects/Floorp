@@ -1146,9 +1146,9 @@ function MsgFilters(emailAddress)
       if ("refresh" in args && args.refresh)
       {
          args = { folder: preselectedFolder };
-    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
+         window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
                         "chrome,modal,resizable,centerscreen,dialog=yes", args);
-}
+      }
     }
     else  //just launch filterList dialog
     {
