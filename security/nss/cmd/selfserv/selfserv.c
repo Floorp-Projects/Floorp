@@ -46,6 +46,26 @@
 #include <unistd.h>
 #endif
 
+#if defined(IRIX) && !defined(environ)
+/* This is supposed to be in unistd.h, but isn't. */
+extern char **_environ;
+#define environ     _environ
+#endif
+
+#if defined(SOLARIS)
+extern char ** environ;
+#endif
+
+#if defined(LINUX) && !defined(__USE_GNU)
+#define environ __environ
+#endif
+
+#ifdef _WIN32
+#define ENVP_ARG NULL
+#else
+#define ENVP_ARG environ
+#endif
+
 #if defined(_WINDOWS)
 #include <process.h>	/* for getpid() */
 #endif
@@ -78,7 +98,10 @@
 #define PORT_Malloc PR_Malloc
 #endif
 
-int cipherSuites[] = {
+static const char envVarName[] = { SSL_ENV_VAR_NAME };
+static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
+
+const int cipherSuites[] = {
     SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,
     SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,
     SSL_RSA_WITH_RC4_128_MD5,
@@ -91,7 +114,7 @@ int cipherSuites[] = {
     0
 };
 
-int ssl2CipherSuites[] = {
+const int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
     SSL_EN_RC4_128_EXPORT40_WITH_MD5,		/* B */
     SSL_EN_RC2_128_CBC_WITH_MD5,		/* C */
@@ -101,7 +124,7 @@ int ssl2CipherSuites[] = {
     0
 };
 
-int ssl3CipherSuites[] = {
+const int ssl3CipherSuites[] = {
     SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,	/* a */
     SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,		/* b */
     SSL_RSA_WITH_RC4_128_MD5,			/* c */
@@ -156,6 +179,7 @@ Usage(const char *progName)
 
 "Usage: %s -n rsa_nickname -p port [-3RTmrvx] [-w password] [-t threads]\n"
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
+"         [-M maxProcs] \n"
 "-3 means disable SSL v3\n"
 "-T means disable TLS\n"
 "-R means disable detection of rollback from TLS to SSL3\n"
@@ -168,6 +192,7 @@ Usage(const char *progName)
 "-t threads -- specify the number of threads to use for connections.\n"
 "-v means verbose output\n"
 "-x means use export policy.\n"
+"-M maxProcs tells how many processes to run in a multi-process server\n"
 "-i pid_file file to write the process id of selfserve\n"
 "-c ciphers   Letter(s) chosen from the following list\n"
 "A    SSL2 RC4 128 WITH MD5\n"
@@ -359,7 +384,7 @@ launch_thread(
 
             /* create new thread */
             if (( slot->state == rs_idle ) || ( slot->state == rs_zombie ))  {
-                slot->state = 1;
+                slot->state = rs_running;
                 workToDo = 0;
                 slot->a = a;
                 slot->b = b;
@@ -869,31 +894,18 @@ do_accepts(
     return SECSuccess;
 }
 
-void
-server_main(
-    unsigned short      port, 
-    int                 requestCert, 
-    SECKEYPrivateKey ** privKey,
-    CERTCertificate **  cert)
+PRFileDesc *
+getBoundListenSocket(unsigned short port)
 {
-    PRFileDesc *listen_sock;
-    PRFileDesc *model_sock	= NULL;
-    int         rv;
-    SSLKEAType  kea;
-    PRNetAddr   addr;
-    SECStatus	secStatus;
+    PRFileDesc *       listen_sock;
+    int                listenQueueDepth = 5 + (2 * maxThreads);
+    PRStatus	       prStatus;
+    PRNetAddr          addr;
     PRSocketOptionData opt;
-    int         listenQueueDepth = 5 + (2 * maxThreads);
-
-    /* create the thread management serialization structs */
-    threadLock = PZ_NewLock(nssILockSelfServ);
-    threadQ   = PZ_NewCondVar(threadLock);
 
     addr.inet.family = PR_AF_INET;
     addr.inet.ip     = PR_INADDR_ANY;
     addr.inet.port   = PR_htons(port);
-
-    /* all suites except RSA_NULL_MD5 are enabled by default */
 
     listen_sock = PR_NewTCPSocket();
     if (listen_sock == NULL) {
@@ -902,11 +914,45 @@ server_main(
 
     opt.option = PR_SockOpt_Nonblocking;
     opt.value.non_blocking = PR_FALSE;
-    PR_SetSocketOption(listen_sock, &opt);
+    prStatus = PR_SetSocketOption(listen_sock, &opt);
+    if (prStatus < 0) {
+	errExit("PR_SetSocketOption(PR_SockOpt_Nonblocking)");
+    }
 
     opt.option=PR_SockOpt_Reuseaddr;
     opt.value.reuse_addr = PR_TRUE;
-    PR_SetSocketOption(listen_sock, &opt);
+    prStatus = PR_SetSocketOption(listen_sock, &opt);
+    if (prStatus < 0) {
+	errExit("PR_SetSocketOption(PR_SockOpt_Reuseaddr)");
+    }
+
+    prStatus = PR_Bind(listen_sock, &addr);
+    if (prStatus < 0) {
+	errExit("PR_Bind");
+    }
+
+    prStatus = PR_Listen(listen_sock, listenQueueDepth);
+    if (prStatus < 0) {
+	errExit("PR_Listen");
+    }
+    return listen_sock;
+}
+
+void
+server_main(
+    PRFileDesc *        listen_sock,
+    int                 requestCert, 
+    SECKEYPrivateKey ** privKey,
+    CERTCertificate **  cert)
+{
+    PRFileDesc *model_sock	= NULL;
+    int         rv;
+    SSLKEAType  kea;
+    SECStatus	secStatus;
+
+    /* create the thread management serialization structs */
+    threadLock = PZ_NewLock(nssILockSelfServ);
+    threadQ   = PZ_NewCondVar(threadLock);
 
     if (useModelSocket) {
     	model_sock = PR_NewTCPSocket();
@@ -925,6 +971,7 @@ server_main(
     }
 
     /* do SSL configuration. */
+    /* all suites except RSA_NULL_MD5 are enabled by default */
 
 #if 0
     /* This is supposed to be true by default.
@@ -996,23 +1043,13 @@ server_main(
     /* end of ssl configuration. */
 
 
-    rv = PR_Bind(listen_sock, &addr);
-    if (rv < 0) {
-	errExit("PR_Bind");
-    }
-
-    rv = PR_Listen(listen_sock, listenQueueDepth);
-    if (rv < 0) {
-	errExit("PR_Listen");
-    }
-
     rv = launch_thread(do_accepts, listen_sock, model_sock, requestCert);
     if (rv != SECSuccess) {
     	PR_Close(listen_sock);
     } else {
         VLOG(("selfserv: server_thead: waiting on stopping"));
         PZ_Lock( threadLock );
-        while ( !stopping && threadCount > 0 ) {
+        while ( threadCount > 0 ) {
             PZ_WaitCondVar(threadQ, PR_INTERVAL_NO_TIMEOUT);
         }
         PZ_Unlock( threadLock );
@@ -1065,23 +1102,85 @@ done:
     return rv;
 }
 
+int          numChildren;
+PRProcess *  child[25];
+
+PRProcess *
+haveAChild(int argc, char **argv, PRProcessAttr * attr)
+{
+    PRProcess *  newProcess;
+
+    newProcess = PR_CreateProcess(argv[0], argv, ENVP_ARG, attr);
+    if (!newProcess) {
+	errWarn("Can't create new process.");
+    } else {
+	child[numChildren++] = newProcess;
+    }
+    return newProcess;
+}
+
+void
+beAGoodParent(int argc, char **argv, int maxProcs, PRFileDesc * listen_sock)
+{
+    PRProcess *     newProcess;
+    PRProcessAttr * attr;
+    int             i;
+    PRInt32         exitCode;
+    PRStatus        rv;
+
+    rv = PR_SetFDInheritable(listen_sock, PR_TRUE);
+    if (rv != PR_SUCCESS)
+	errExit("PR_SetFDInheritable");
+
+    attr = PR_NewProcessAttr();
+    if (!attr)
+	errExit("PR_NewProcessAttr");
+
+    rv = PR_ProcessAttrSetInheritableFD(attr, listen_sock, inheritableSockName);
+    if (rv != PR_SUCCESS)
+	errExit("PR_ProcessAttrSetInheritableFD");
+
+    for (i = 0; i < maxProcs; ++i) {
+	newProcess = haveAChild(argc, argv, attr);
+	if (!newProcess) 
+	    break;
+    }
+
+    rv = PR_SetFDInheritable(listen_sock, PR_FALSE);
+    if (rv != PR_SUCCESS)
+	errExit("PR_SetFDInheritable");
+
+    while (numChildren > 0) {
+	newProcess = child[numChildren - 1];
+	PR_WaitProcess(newProcess, &exitCode);
+	fprintf(stderr, "Child %d exited with exit code %x\n", 
+		numChildren, exitCode);
+	numChildren--;
+    }
+    exit(0);
+}
+
 int
 main(int argc, char **argv)
 {
     char *               progName    = NULL;
     char *               nickName    = NULL;
     char *               fNickName   = NULL;
-    char *               fileName    = NULL;
+    const char *         fileName    = NULL;
     char *               cipherString= NULL;
-    char *               dir         = ".";
+    const char *         dir         = ".";
     char *               passwd      = NULL;
-    char *		 pidFile    = NULL;
+    const char *         pidFile     = NULL;
     char *               tmp;
+    char *               envString;
+    PRFileDesc *         listen_sock;
     CERTCertificate *    cert   [kt_kea_size] = { NULL };
     SECKEYPrivateKey *   privKey[kt_kea_size] = { NULL };
     int                  optionsFound = 0;
+    int                  maxProcs     = 1;
     unsigned short       port        = 0;
     SECStatus            rv;
+    PRStatus             prStatus;
     PRBool               useExportPolicy = PR_FALSE;
     PLOptState		*optstate;
     PLOptStatus          status;
@@ -1092,13 +1191,17 @@ main(int argc, char **argv)
     progName = strrchr(tmp, '\\');
     progName = progName ? progName + 1 : tmp;
 
-    optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:hi:f:rt:vw:x");
-    while (status = PL_GetNextOpt(optstate) == PL_OPT_OK) {
+    PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+
+    optstate = PL_CreateOptState(argc, argv, "2:3M:RTc:d:p:mn:hi:f:rt:vw:x");
+    while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
 	case '2': fileName = optstate->value; break;
 
 	case '3': disableSSL3 = PR_TRUE; break;
+
+	case 'M': maxProcs = PORT_Atoi(optstate->value); break;
 
 	case 'R': disableRollBack = PR_TRUE; break;
 
@@ -1108,13 +1211,13 @@ main(int argc, char **argv)
 
 	case 'd': dir = optstate->value; break;
 
-	case 'f': fNickName = optstate->value; break;
+	case 'f': fNickName = strdup(optstate->value); break;
 
 	case 'h': Usage(progName); exit(0); break;
 
 	case 'm': useModelSocket = PR_TRUE; break;
 
-	case 'n': nickName = optstate->value; break;
+	case 'n': nickName = strdup(optstate->value); break;
 
 	case 'i': pidFile = optstate->value; break;
 
@@ -1130,7 +1233,7 @@ main(int argc, char **argv)
 
 	case 'v': verbose++; break;
 
-	case 'w': passwd = optstate->value; break;
+	case 'w': passwd = strdup(optstate->value); break;
 
 	case 'x': useExportPolicy = PR_TRUE; break;
 
@@ -1142,6 +1245,7 @@ main(int argc, char **argv)
 	    break;
 	}
     }
+    PL_DestroyOptState(optstate);
     if (status == PL_OPT_BAD) {
 	fprintf(stderr, "Unrecognized or bad option specified.\n");
 	fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
@@ -1151,13 +1255,6 @@ main(int argc, char **argv)
 	Usage(progName);
 	exit(51);
     } 
-
-    /* allocate the array of thread slots */
-    threads = PR_Calloc(maxThreads, sizeof(perThread));
-    if ( NULL == threads )  {
-        fprintf(stderr, "Oh Drat! Can't allocate the perThread array\n");
-        goto mainExit;
-    }
 
     if ((nickName == NULL) && (fNickName == NULL)) {
 	fprintf(stderr, "Required arg '-n' (rsa nickname) not supplied.\n");
@@ -1179,9 +1276,36 @@ main(int argc, char **argv)
 	}
     }
 
-
-    /* Call the NSPR initialization routines */
-    PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+    envString = getenv(envVarName);
+    if (envString) {
+	/* we're one of the children in a multi-process server. */
+	listen_sock = PR_GetInheritedFD(inheritableSockName);
+	if (!listen_sock)
+	    errExit("PR_GetInheritedFD");
+	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
+	if (prStatus != PR_SUCCESS)
+	    errExit("PR_SetFDInheritable");
+	rv = SSL_InheritMPServerSIDCache(envString);
+	if (rv != SECSuccess)
+	    errExit("SSL_InheritMPServerSIDCache");
+    } else if (maxProcs > 1) {
+	/* we're going to be the parent in a multi-process server.  */
+	listen_sock = getBoundListenSocket(port);
+	rv = SSL_ConfigMPServerSIDCache(32 * 1024, 0, 0, NULL);
+	if (rv != SECSuccess)
+	    errExit("SSL_ConfigMPServerSIDCache");
+	beAGoodParent(argc, argv, maxProcs, listen_sock);
+	exit(99); /* should never get here */
+    } else {
+	/* we're an ordinary single process server. */
+	listen_sock = getBoundListenSocket(port);
+	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
+	if (prStatus != PR_SUCCESS)
+	    errExit("PR_SetFDInheritable");
+	rv = SSL_ConfigServerSessionIDCache(32 * 1024, 0, 0, NULL);
+	if (rv != SECSuccess)
+	    errExit("SSL_ConfigServerSessionIDCache");
+    }
 
     lm = PR_NewLogModule("TestCase");
 
@@ -1219,7 +1343,7 @@ main(int argc, char **argv)
 	disableAllSSLCiphers();
 
 	while (0 != (ndx = *cipherString++)) {
-	    int *cptr;
+	    const int *cptr;
 	    int  cipher;
 
 	    if (! isalpha(ndx)) {
@@ -1264,12 +1388,7 @@ main(int argc, char **argv)
 	privKey[kt_fortezza] = PK11_FindKeyByAnyCert(cert[kt_fortezza], NULL);
     }
 
-    rv = SSL_ConfigMPServerSIDCache(256, 0, 0, NULL);
-    if (rv != SECSuccess) {
-        errExit("SSL_ConfigMPServerSIDCache");
-    }
-
-    server_main(port, requestCert, privKey, cert);
+    server_main(listen_sock, requestCert, privKey, cert);
 
 mainExit:
     NSS_Shutdown();
