@@ -224,6 +224,7 @@ nsWebShell::ReleaseChildren()
 NS_IMPL_ADDREF(nsWebShell)
 NS_IMPL_RELEASE(nsWebShell)
 
+//XXX missing nsIWebShellContainer!!!
 nsresult
 nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
