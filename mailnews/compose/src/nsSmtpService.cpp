@@ -169,22 +169,27 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
-		// this is complicated because the smtp username can be null
-		char * urlSpec= PR_smprintf("smtp://%s%s%s:%d",
-					((const char*)aSmtpUserName)?(const char*)aSmtpUserName:"",
-					((const char*)aSmtpUserName)?"@":"",
-                                    	(const char*)aSmtpHostName, 
-					                            SMTP_PORT);
-		if (urlSpec)
+		nsCAutoString urlSpec("smtp://");
+		if ((const char *)aSmtpUserName) {
+			nsXPIDLCString escapedUsername;
+			*((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)aSmtpUserName, url_XAlphas);
+			urlSpec += (const char *)escapedUsername;
+			urlSpec += '@';
+		}
+
+		urlSpec += (const char*)aSmtpHostName;
+		urlSpec += ':';
+		urlSpec.AppendInt(SMTP_PORT);
+
+		if ((const char *)urlSpec)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
-			url->SetSpec(urlSpec);
+			url->SetSpec((const char *)urlSpec);
             smtpUrl->SetRecipients(aRecipients);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
             smtpUrl->SetPrompt(aNetPrompt);
 			url->RegisterListener(aUrlListener);
-			PR_Free(urlSpec);
 		}
 		rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
 	 }
