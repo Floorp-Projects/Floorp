@@ -417,7 +417,7 @@ nsDocLoaderImpl::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(m_LoadingDocsList));
     if (NS_FAILED(rv)) return rv;
 #ifdef NECKO
-    rv = NS_NewLoadGroup(nsnull, getter_AddRefs(mLoadGroup));
+    rv = NS_NewLoadGroup(nsnull, nsnull, getter_AddRefs(mLoadGroup));
     if (NS_FAILED(rv)) return rv;
 #else
     rv = NS_NewLoadAttribs(getter_AddRefs(m_LoadAttrib));
