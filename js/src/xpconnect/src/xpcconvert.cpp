@@ -90,7 +90,7 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR             */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID              */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID               */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_DOMSTRING         */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_DOMSTRING         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR          */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
@@ -347,35 +347,9 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             }
 
         case nsXPTType::T_DOMSTRING:
-            {
-                const nsAReadableString* p = *((const nsAReadableString**)s);
-                if(!p)
-                    break;
-                
-                PRUint32 length = p->Length();
-                
-                jschar* chars = (jschar *) 
-                    JS_malloc(cx, (length + 1) * sizeof(jschar));
-                if(!chars)
-                    return JS_FALSE;        
-
-                if(length && !CopyUnicodeTo(*p, 0, (PRUnichar*)chars, length))
-                {
-                    JS_free(cx, chars);
-                    return JS_FALSE;        
-                }
-                
-                chars[length] = 0;
-                
-                JSString* str;
-                if(!(str = JS_NewUCString(cx, chars, length)))
-                {
-                    JS_free(cx, chars);
-                    return JS_FALSE;        
-                }
-                *d = STRING_TO_JSVAL(str);
-                break;
-            }
+            // XXX implement DOMSTRING
+            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : DOMSTRING params not supported"));
+            return JS_FALSE;
 
         case nsXPTType::T_CHAR_STR:
             {
@@ -612,42 +586,6 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         }
 
         case nsXPTType::T_DOMSTRING:
-        {
-            const PRUnichar* chars = nsnull;
-            PRUint32 length;
-            JSString* str;
-
-            if(!JSVAL_IS_VOID(s) && !JSVAL_IS_NULL(s) &&
-               nsnull != (str = JS_ValueToString(cx, s)))
-            {
-               chars = (const PRUnichar*) JS_GetStringChars(str);
-               length = (PRUint32) JS_GetStringLength(str);
-            }
-
-            // XXX We don't yet have a way to represent a null nsAXXXString
-            // (as opposed to one containing an empty string). This comes later.
-
-            const static PRUnichar* emptyString = NS_LITERAL_STRING("");
-            if(!chars)
-            {
-                chars = emptyString;
-                length = 0;
-            }
-            
-            if(useAllocator)
-            {
-                nsAReadableString* rs = new nsLiteralString(chars, length);
-                if(!rs)
-                    return JS_FALSE;
-                *((nsAReadableString**)d) = rs;
-            }
-            else
-            {
-                nsAWritableString* ws = *((nsAWritableString**)d);
-                ws->Assign(chars);
-            }
-            return JS_TRUE;
-        }
             // XXX implement DOMSTRING
             XPC_LOG_ERROR(("XPCConvert::JSData2Native : DOMSTRING params not supported"));
             return JS_FALSE;
