@@ -198,10 +198,17 @@ nsHTMLAnchorElement::Focus()
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
 {
-  nsIEventStateManager* esm;
-  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-    NS_RELEASE(esm);
+
+  // don't make the link grab the focus if there is no link handler
+  nsILinkHandler* handler;
+  nsresult rv = aPresContext->GetLinkHandler(&handler);
+  if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
+    nsIEventStateManager *stateManager;
+    if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+      stateManager->SetContentState(this, NS_EVENT_STATE_FOCUS);
+      NS_RELEASE(stateManager);
+    }
+    NS_RELEASE(handler);
   }
 
   // XXX write me
