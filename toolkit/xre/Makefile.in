@@ -108,7 +108,11 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 CPPSRCS += nsNativeAppSupportMac.cpp
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += nsNativeAppSupportOS2.cpp
+else
 CPPSRCS += nsNativeAppSupportDefault.cpp
+endif
 endif
 endif
 
