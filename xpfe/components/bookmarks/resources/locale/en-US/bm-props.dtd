@@ -22,6 +22,11 @@
 
 <!ENTITY bookmarks.windowtitle.label  "Properties">
 
+<!ENTITY generalInfo.label            "General Information">
+<!ENTITY generalInfo.accesskey        "g">
+<!ENTITY schedule.label               "Schedule">
+<!ENTITY schedule.accesskey           "s">
+
 <!ENTITY bookmarks.information.label  "Information:">
 <!ENTITY bookmarks.name.label         "Name:">
 <!ENTITY bookmarks.location.label     "Location:">

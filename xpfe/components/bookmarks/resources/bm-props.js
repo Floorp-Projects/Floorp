@@ -54,7 +54,7 @@ function Init()
   bookmark_url = window.arguments[0];
 
   // set up action buttons
-  doSetOKCancel(Commit, Cancel);
+  doSetOKCancel(Commit);
 
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
@@ -414,18 +414,3 @@ function updateAttribute(prop, oldvalue, newvalue)
   return(changed);
 }
 
-
-
-function Cancel()
-{
-  // Ignore any changes.
-  window.close();
-}
-
-
-
-function switchTab( aPageIndex )
-{
-	var deck = document.getElementById( "Deck" );
-	if (deck)	deck.setAttribute( "index", aPageIndex );
-}

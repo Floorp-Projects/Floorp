@@ -33,48 +33,48 @@
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&bookmarks.windowtitle.label;"
-	onload="Init()"
-	class="dialog" align="vertical">
+	onload="Init()" style="width: 25em;"
+	class="dialog" orient="vertical">
  
-	<html:script language="Javascript" src="chrome://global/content/globalOverlay.js"/>  
-	<html:script language="JavaScript" src="chrome://global/content/strres.js" />
-	<html:script language="JavaScript" src="chrome://communicator/content/bookmarks/bm-props.js" />
+	<script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>
+	<script language="JavaScript" src="chrome://global/content/strres.js"></script>
+	<script language="JavaScript" src="chrome://communicator/content/bookmarks/bm-props.js"></script>
 
-<box id="Tabs" align="horizontal">
-	<titledbutton class="push" value="General Information" onclick="return switchTab(0)" />
-	<titledbutton id="ScheduleTab" class="push" value="Schedule" onclick="return switchTab(1)" />
-</box>
+<keyset id="keyset"/>  
+  
+<tabcontrol orient="vertical">
+  <tabbox>
+    <tab value="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
+    <tab value="&schedule.label;" accesskey="&schedule.accesskey;"/>
+  </tabbox>
+  <tabpanel>
+  	<box orient="vertical">
+  		<box id="nameBox" orient="vertical">
+  			<text class="label" value="&bookmarks.name.label;" />
+  			<textfield id="name" />
+  		</box>
+  
+  		<box id="locationBox" orient="vertical">
+  			<text class="label" value="&bookmarks.location.label;" />
+  			<textfield id="url" />
+  		</box>
+  
+  		<box id="shortcutBox" orient="vertical">
+  			<text class="label" value="&bookmarks.shortcut.label;" />
+  			<textfield id="shortcut" />
+  		</box>
+  
+  		<box id="descriptionBox" orient="vertical" flex="1">
+  			<text class="label" value="&bookmarks.description.label;" />
+  			<textfield multiline="true" id="description" flex="1"/>
+  		</box>
+  	</box>
 
-<deck id="Deck">
-	<titledbox orient="vertical" class="deckouterbox">
-		<title><text value="&bookmarks.information.label;" /></title>
-
-		<box id="nameBox" align="vertical">
-			<text value="&bookmarks.name.label;" />
-			<textfield id="name" />
-		</box>
-
-		<box id="locationBox" align="vertical">
-			<text value="&bookmarks.location.label;" />
-			<textfield id="url" />
-		</box>
-
-		<box id="shortcutBox" align="vertical">
-			<text value="&bookmarks.shortcut.label;" />
-			<textfield id="shortcut" />
-		</box>
-
-		<box id="descriptionBox" align="vertical">
-			<text value="&bookmarks.description.label;" />
-			<textfield multiline="true" id="description" />
-		</box>
-	</titledbox>
-
-	<titledbox orient="vertical" class="deckouterbox">
+	<titledbox orient="vertical">
 		<title><text value="&checkforupdates.legend.label;" /></title>
 
-		<box align="horizontal">
-			<text value="&when.label;" />
+		<box autostretch="never">
+			<text class="label" value="&when.label;" />
 			<menulist id="dayRange">
 				<menupopup>
 					<menuitem data="" value="&checknever.label;"/>
@@ -92,7 +92,7 @@
 				</menupopup>
 			</menulist>
 			<spring align="horizontal" flex="1" />
-			<text value="&from.label;" />
+			<text class="label" value="&from.label;" />
 			<menulist id="startHourRange">
 				<menupopup>
 					<menuitem data="0" value="&midnight.label;"/>
@@ -154,11 +154,11 @@
 				</menupopup>
 			</menulist>
 		</box>
-		<box align="horizontal">
+		<box autostretch="never">
 			<spring align="horizontal" flex="1" />
-			<text value="&every.label;" />
+			<text class="label" value="&every.label;" />
 			<textfield id="duration" style="width:4em;" value="60" />
-			<text value="&minutes.label;" />
+			<text class="label" value="&minutes.label;" />
 		</box>
 
 		<titledbox orient="vertical">
@@ -170,11 +170,9 @@
 			<checkbox id="playSound" value="&notification.sound.label;" />
 		</titledbox>
 	</titledbox>
-</deck>
-
-<box autostretch="never">
-	<spring flex="1"/>
-	<box id="okCancelButtons"/>
-</box>
+  </tabpanel>
+</tabcontrol>
+  
+<box id="okCancelButtonsRight"/>
 
 </window>
