@@ -84,6 +84,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
     PRBool* aAbortProcess)
 {
     NS_ENSURE_ARG_POINTER(aContentHandler);
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
     if(aAbortProcess)
         *aAbortProcess = PR_FALSE;
 
@@ -91,7 +92,8 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
     nsLoadFlags loadFlags = 0;
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
-    aOpenedChannel->GetLoadFlags(&loadFlags);
+    if (aOpenedChannel)
+      aOpenedChannel->GetLoadFlags(&loadFlags);
 
     PRUint32 loadType = mDocShell->ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType) aCommand);
     mDocShell->SetLoadType(loadType);
