@@ -383,7 +383,7 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 {
 	Str255			inFolderMsg, onDiskMsg, volName;
 	char			*cstr;
-	Rect			viewRect, dlb, iconRect;
+	Rect			viewRect, dlb;
 	TEHandle		pathInfo;
 	short			bCmp, outVRefNum;
 	OSErr			err = noErr;
@@ -392,12 +392,26 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	SInt16			label;
 	unsigned long   free, total;
 	
+#define ICON_DIM 32
+
+    dlb = (*gControls->stw->destLocBox)->contrlRect;
+    SetRect(&viewRect, dlb.left+10, dlb.top+15, dlb.left+10+ICON_DIM, dlb.top+15+ICON_DIM);
+   
+	/* draw folder/volume icon */
+	FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &fsTarget);
+	err = GetIconRefFromFile(&fsTarget, &icon, &label);
+	if (err==noErr)
+	{
+		PlotIconRef(&viewRect, kAlignNone, kTransformNone, kIconServicesNormalUsageFlag, icon);
+	}
+	ReleaseIconRef(icon);	
+	
+	/* set up rect for disk and folder strings */
+    SetRect(&viewRect, dlb.left+10+ICON_DIM+12, dlb.top+15, dlb.left+220, dlb.bottom-5);
+    
 	/* get vol and folder name */
 	if ((err = HGetVInfo(vRefNum, volName, &outVRefNum, &free, &total)) == noErr)
-	{				
-		dlb = (*gControls->stw->destLocBox)->contrlRect;
-		SetRect(&viewRect, dlb.left+10, dlb.top+15, dlb.left+220, dlb.bottom-5);
-		
+	{	
 		/* format and draw vol and disk name strings */
 		TextFace(normal);
 		TextSize(9);
@@ -407,7 +421,6 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	
 		if ( (bCmp = pstrcmp(folder, volName)) == 0)
 		{
-				cstr = "\t\t\0"; 	TEInsert(cstr, strlen(cstr), pathInfo);
 			GetIndString( inFolderMsg, rStringList, sInFolder);
 			cstr = PascalToC(inFolderMsg);
 			TEInsert(cstr, strlen(cstr), pathInfo); 
@@ -420,7 +433,6 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 				cstr = "\"\r\0"; 	TEInsert(cstr, strlen(cstr), pathInfo);
 		}
 		
-			cstr = "\t\t\0"; 	TEInsert(cstr, strlen(cstr), pathInfo);
 		GetIndString( onDiskMsg,   rStringList, sOnDisk);
 		cstr = PascalToC(onDiskMsg);
 		TEInsert(cstr, strlen(cstr), pathInfo);
@@ -437,17 +449,6 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 		TextFont(systemFont);
 		TextSize(12);
 	}
-	
-	/* draw folder/volume icon */
-	FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &fsTarget);
-	err = GetIconRefFromFile(&fsTarget, &icon, &label);
-	if (err==noErr)
-	{
-#define ICON_DIM 32
-		SetRect(&iconRect, viewRect.left+100, viewRect.top+10, viewRect.left+100+ICON_DIM, viewRect.top+10+ICON_DIM);
-		PlotIconRef(&iconRect, kAlignNone, kTransformNone, kIconServicesNormalUsageFlag, icon);
-	}
-	ReleaseIconRef(icon);
 	
 	/* free mem blocks */
 	TEDispose(pathInfo);
@@ -1044,12 +1045,18 @@ VerifyDiskSpace(void)
 void
 EnableSetupTypeWin(void)
 {
-	EnableNavButtons();
-
-	if (gControls->stw->instType)
-		HiliteControl(gControls->stw->instType, kEnableControl);
-	if (gControls->stw->destLoc)
-		HiliteControl(gControls->stw->destLoc, kEnableControl);
+    EnableNavButtons();
+	
+    /* ensure 'Go Back' button is visbily disabled 
+     * (since functionality is disconnected) 
+     */
+    if (gControls->backB)
+        HiliteControl(gControls->backB, kDisableControl);
+        
+    if (gControls->stw->instType)
+        HiliteControl(gControls->stw->instType, kEnableControl);
+    if (gControls->stw->destLoc)
+        HiliteControl(gControls->stw->destLoc, kEnableControl);
 }
 
 void
