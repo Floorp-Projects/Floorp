@@ -34,7 +34,7 @@
 
 <dialog id="bmPropsWindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&bookmarks.windowtitle.label;"
-        onload="Init()" style="width: 30em;"
+        onload="Init()" style="width: 40em;"
         ondialogaccept="return Commit();">
  
   <stringbundleset>
@@ -47,197 +47,144 @@
  
   <keyset id="keyset"/>  
     
-  <tabbox>
-    <tabs>
-      <tab label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
-      <tab id="ScheduleTab" label="&schedule.label;" accesskey="&schedule.accesskey;"/>
-      <tab id="NotifyTab" label="&notification.label;" accesskey="&notification.accesskey;"/>
-    </tabs>
-    <tabpanels>
-      <vbox>
-        <separator class="thin"/>
-        <hbox align="start">
-          <image class="message-icon"/>
-          <separator class="thin" orient="vertical"/>
-          <description id="bookmarkDescription" flex="1"/>
-        </hbox>
-   
-        <separator class="thin"/>
-        
-        <vbox class="box-padded">    
-          <grid>
-            <columns>
-              <column />
-              <column flex="1"/>
-            </columns>
-            <rows>
-              <row align="center">
-                <label value="&bookmarks.name.label;" control="name"/>
-                <textbox id="name"/>
-              </row>
-              <row id="locationrow" align="center">
-                <label value="&bookmarks.location.label;" control="url"/>
-          			<textbox id="url" class="uri-element" />
-              </row>
-              <row id="shortcutrow" align="center">
-                <label value="&bookmarks.shortcut.label;" control="shortcut"/>
-    		      	<textbox id="shortcut" />
-              </row>
-              <row id="descriptionrow">
-                <label value="&bookmarks.description.label;" control="description"/>
-                <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
-              </row>
-            </rows>
-          </grid>
-          <separator/>
-        </vbox>
+  <groupbox>
+    <caption label="&generalInfo.label;" />
+    <grid>
+      <columns>
+        <column />
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="&bookmarks.name.label;" control="name"/>
+          <textbox id="name"/>
+        </row>
+        <row id="locationrow" align="center">
+          <label value="&bookmarks.location.label;" control="url"/>
+          <textbox id="url" class="uri-element" />
+        </row>
+        <row id="shortcutrow" align="center">
+          <label value="&bookmarks.shortcut.label;" control="shortcut"/>
+          <textbox id="shortcut" />
+        </row>
+        <row id="descriptionrow">
+          <label value="&bookmarks.description.label;" control="description"/>
+          <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+  <hbox id="scheduling">
+    <groupbox>
+      <caption label="&checkforupdates.legend.label;"/>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <label value="&when.label;" control="dayRange"/>
+            <hbox>
+              <menulist id="dayRange" oncommand="dayRangeChange(this);">
+                <menupopup>
+                  <menuitem value="" label="&checknever.label;"/>
+                  <menuseparator />
+                  <menuitem value="0123456" label="&checkeveryday.label;"/>
+                  <menuitem value="12345" label="&checkweekdays.label;"/>
+                  <menuitem value="06" label="&checkweekends.label;"/>
+                  <menuitem value="1" label="&checkmondays.label;"/>
+                  <menuitem value="2" label="&checktuesdays.label;"/>
+                  <menuitem value="3" label="&checkwednesdays.label;"/>
+                  <menuitem value="4" label="&checkthursdays.label;"/>
+                  <menuitem value="5" label="&checkfridays.label;"/>
+                  <menuitem value="6" label="&checksaturdays.label;"/>
+                  <menuitem value="0" label="&checksundays.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </row>
+          <row align="center">
+            <label id="startHourRangeLabel" value="&from.label;" control="startHourRange"/>
+            <hbox align="center">
+              <menulist id="startHourRange" oncommand="setEndHourRange()" disabled="true">
+                <menupopup>
+                  <menuitem value="0" label="&midnight.label;"/>
+                  <menuitem value="1" label="&AMone.label;"/>
+                  <menuitem value="2" label="&AMtwo.label;"/>
+                  <menuitem value="3" label="&AMthree.label;"/>
+                  <menuitem value="4" label="&AMfour.label;"/>
+                  <menuitem value="5" label="&AMfive.label;"/>
+                  <menuitem value="6" label="&AMsix.label;"/>
+                  <menuitem value="7" label="&AMseven.label;"/>
+                  <menuitem value="8" label="&AMeight.label;"/>
+                  <menuitem value="9" label="&AMnine.label;"/>
+                  <menuitem value="10" label="&AMten.label;"/>
+                  <menuitem value="11" label="&AMeleven.label;"/>
+                  <menuitem value="12" label="&noon.label;"/>
+                  <menuitem value="13" label="&PMone.label;"/>
+                  <menuitem value="14" label="&PMtwo.label;"/>
+                  <menuitem value="15" label="&PMthree.label;"/>
+                  <menuitem value="16" label="&PMfour.label;"/>
+                  <menuitem value="17" label="&PMfive.label;"/>
+                  <menuitem value="18" label="&PMsix.label;"/>
+                  <menuitem value="19" label="&PMseven.label;"/>
+                  <menuitem value="20" label="&PMeight.label;"/>
+                  <menuitem value="21" label="&PMnine.label;"/>
+                  <menuitem value="22" label="&PMten.label;"/>
+                  <menuitem value="23" label="&PMeleven.label;"/>
+                </menupopup>
+              </menulist>
+              <label id="endHourRangeLabel" 
+                    value="&to.label;" control="endHourRange"/>
+              <menulist id="endHourRange" disabled="true">
+                <menupopup onpopupshowing="setEndHourRange()">
+                  <menuitem value="1" label="&AMone.label;"/>
+                  <menuitem value="2" label="&AMtwo.label;"/>
+                  <menuitem value="3" label="&AMthree.label;"/>
+                  <menuitem value="4" label="&AMfour.label;"/>
+                  <menuitem value="5" label="&AMfive.label;"/>
+                  <menuitem value="6" label="&AMsix.label;"/>
+                  <menuitem value="7" label="&AMseven.label;"/>
+                  <menuitem value="8" label="&AMeight.label;"/>
+                  <menuitem value="9" label="&AMnine.label;"/>
+                  <menuitem value="10" label="&AMten.label;"/>
+                  <menuitem value="11" label="&AMeleven.label;"/>
+                  <menuitem value="12" label="&noon.label;"/>
+                  <menuitem value="13" label="&PMone.label;"/>
+                  <menuitem value="14" label="&PMtwo.label;"/>
+                  <menuitem value="15" label="&PMthree.label;"/>
+                  <menuitem value="16" label="&PMfour.label;"/>
+                  <menuitem value="17" label="&PMfive.label;"/>
+                  <menuitem value="18" label="&PMsix.label;"/>
+                  <menuitem value="19" label="&PMseven.label;"/>
+                  <menuitem value="20" label="&PMeight.label;"/>
+                  <menuitem value="21" label="&PMnine.label;"/>
+                  <menuitem value="22" label="&PMten.label;"/>
+                  <menuitem value="23" label="&PMeleven.label;"/>
+                  <menuitem value="24" label="&midnight.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </row>
+          <row align="center">
+            <label id="durationLabel" value="&every.label;" control="duration"/>
+            <hbox align="center">
+              <textbox id="duration" size="4" value="60" disabled="true" />
+              <label id="durationSubLabel" value="&minutes.label;" />
+            </hbox>
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
+    <groupbox>
+      <caption label="&notifications.legend.label;" />
+      <vbox align="start">
+        <checkbox id="bookmarkIcon" label="&notification.icon.label;" disabled="true" />
+        <checkbox id="showAlert" label="&notification.alert.label;" disabled="true" />
+        <checkbox id="openWindow" label="&notification.window.label;" disabled="true" />
+        <checkbox id="playSound" label="&notification.sound.label;" disabled="true" />
       </vbox>
-      
-      <vbox>
-        <separator class="thin"/>
-        <hbox align="center">
-          <image id="schedule-icon"/>
-          <separator class="thin" orient="vertical"/>
-          <description flex="1">&schedule.description;</description>
-        </hbox>
-        <separator class="thin"/>
-        <hbox class="box-padded">
-          <spacer flex="1"/>
-          <groupbox>
-            <caption label="&checkforupdates.legend.label;"/>
-            <grid flex="1">
-              <columns>
-                <column/>
-                <column flex="1"/>
-              </columns>
-              <rows>
-                <row align="center">
-                  <label value="&when.label;" control="dayRange"/>
-                  <hbox>
-                    <menulist id="dayRange" oncommand="dayRangeChange(this);">
-                      <menupopup>
-                        <menuitem value="" label="&checknever.label;"/>
-                        <menuseparator />
-                        <menuitem value="0123456" label="&checkeveryday.label;"/>
-                        <menuitem value="12345" label="&checkweekdays.label;"/>
-                        <menuitem value="06" label="&checkweekends.label;"/>
-                        <menuitem value="1" label="&checkmondays.label;"/>
-                        <menuitem value="2" label="&checktuesdays.label;"/>
-                        <menuitem value="3" label="&checkwednesdays.label;"/>
-                        <menuitem value="4" label="&checkthursdays.label;"/>
-                        <menuitem value="5" label="&checkfridays.label;"/>
-                        <menuitem value="6" label="&checksaturdays.label;"/>
-                        <menuitem value="0" label="&checksundays.label;"/>
-                      </menupopup>
-                    </menulist>
-                  </hbox>
-                </row>
-                <row align="center">
-                  <label id="startHourRangeLabel" 
-                        value="&from.label;" control="startHourRange"/>
-                  <hbox align="center">
-                    <menulist id="startHourRange" oncommand="setEndHourRange()">
-                      <menupopup>
-                        <menuitem value="0" label="&midnight.label;"/>
-                        <menuitem value="1" label="&AMone.label;"/>
-                        <menuitem value="2" label="&AMtwo.label;"/>
-                        <menuitem value="3" label="&AMthree.label;"/>
-                        <menuitem value="4" label="&AMfour.label;"/>
-                        <menuitem value="5" label="&AMfive.label;"/>
-                        <menuitem value="6" label="&AMsix.label;"/>
-                        <menuitem value="7" label="&AMseven.label;"/>
-                        <menuitem value="8" label="&AMeight.label;"/>
-                        <menuitem value="9" label="&AMnine.label;"/>
-                        <menuitem value="10" label="&AMten.label;"/>
-                        <menuitem value="11" label="&AMeleven.label;"/>
-                        <menuitem value="12" label="&noon.label;"/>
-                        <menuitem value="13" label="&PMone.label;"/>
-                        <menuitem value="14" label="&PMtwo.label;"/>
-                        <menuitem value="15" label="&PMthree.label;"/>
-                        <menuitem value="16" label="&PMfour.label;"/>
-                        <menuitem value="17" label="&PMfive.label;"/>
-                        <menuitem value="18" label="&PMsix.label;"/>
-                        <menuitem value="19" label="&PMseven.label;"/>
-                        <menuitem value="20" label="&PMeight.label;"/>
-                        <menuitem value="21" label="&PMnine.label;"/>
-                        <menuitem value="22" label="&PMten.label;"/>
-                        <menuitem value="23" label="&PMeleven.label;"/>
-                      </menupopup>
-                    </menulist>
-                    <label id="endHourRangeLabel" 
-                          value="&to.label;" control="endHourRange"/>
-                    <menulist id="endHourRange">
-                      <menupopup onpopupshowing="setEndHourRange()">
-                        <menuitem value="1" label="&AMone.label;"/>
-                        <menuitem value="2" label="&AMtwo.label;"/>
-                        <menuitem value="3" label="&AMthree.label;"/>
-                        <menuitem value="4" label="&AMfour.label;"/>
-                        <menuitem value="5" label="&AMfive.label;"/>
-                        <menuitem value="6" label="&AMsix.label;"/>
-                        <menuitem value="7" label="&AMseven.label;"/>
-                        <menuitem value="8" label="&AMeight.label;"/>
-                        <menuitem value="9" label="&AMnine.label;"/>
-                        <menuitem value="10" label="&AMten.label;"/>
-                        <menuitem value="11" label="&AMeleven.label;"/>
-                        <menuitem value="12" label="&noon.label;"/>
-                        <menuitem value="13" label="&PMone.label;"/>
-                        <menuitem value="14" label="&PMtwo.label;"/>
-                        <menuitem value="15" label="&PMthree.label;"/>
-                        <menuitem value="16" label="&PMfour.label;"/>
-                        <menuitem value="17" label="&PMfive.label;"/>
-                        <menuitem value="18" label="&PMsix.label;"/>
-                        <menuitem value="19" label="&PMseven.label;"/>
-                        <menuitem value="20" label="&PMeight.label;"/>
-                        <menuitem value="21" label="&PMnine.label;"/>
-                        <menuitem value="22" label="&PMten.label;"/>
-                        <menuitem value="23" label="&PMeleven.label;"/>
-                        <menuitem value="24" label="&midnight.label;"/>
-                      </menupopup>
-                    </menulist>
-                  </hbox>
-                </row>
-                <row align="center">
-                  <label id="durationLabel" 
-                        value="&every.label;" control="duration"/>
-                  <hbox align="center">
-              	    <textbox id="duration" size="4" value="60" />
-                    <label id="durationSubLabel" value="&minutes.label;" />
-                  </hbox>
-                </row>
-              </rows>
-            </grid>
-            <separator class="thin"/>
-          </groupbox>
-          <spacer flex="1"/>
-        </hbox>
-      </vbox>
-          
-      <vbox>
-        <separator class="thin"/>
-        <hbox align="start">
-          <image id="notification-icon"/>
-          <separator class="thin" orient="vertical"/>
-          <description flex="1">&notification.description;</description>
-        </hbox>
-        <separator class="thin"/>
-        <hbox class="box-padded">
-          <spacer flex="1"/>
-          <groupbox>
-            <caption label="&notifications.legend.label;" />
-            <vbox align="start">
-              <checkbox id="bookmarkIcon" label="&notification.icon.label;" />
-              <checkbox id="showAlert" label="&notification.alert.label;" />
-              <checkbox id="openWindow" label="&notification.window.label;" />
-              <checkbox id="playSound" label="&notification.sound.label;" />
-            </vbox>
-          </groupbox>
-          <spacer flex="1"/>
-        </hbox>
-      </vbox>
-    </tabpanels>
-  </tabbox> 
-  <!-- By calling this inline, we guarantee the description text node 
-       will have its bindings before Init() is called, and the
-       dialog will be intrinsically sized correctly. -->
-  <script type="application/x-javascript">showDescription();</script>
+    </groupbox>
+  </hbox>
 </dialog>
