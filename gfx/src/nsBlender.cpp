@@ -173,7 +173,7 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
   PRInt32 srcSpan, destSpan, secondSrcSpan;
   PRInt32 srcRowBytes, destRowBytes, secondSrcRowBytes;
 
-  result = aSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcRowBytes, &srcSpan, NS_LOCK_SURFACE_READ_ONLY);
+  result = aSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&srcBytes, &srcSpan, &srcRowBytes, NS_LOCK_SURFACE_READ_ONLY);
   if (NS_SUCCEEDED(result)) {
 
     // Compute depth like this to make sure it's consistent with the memory layout.
@@ -181,20 +181,20 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
     // See bug 228399 for more information.
     PRUint32 depth = (srcRowBytes / aWidth) * 8;
 
-    result = aDst->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destRowBytes, &destSpan, 0);
+    result = aDst->Lock(aDX, aDY, aWidth, aHeight, (void**)&destBytes, &destSpan, &destRowBytes, 0);
     if (NS_SUCCEEDED(result)) {
-      NS_ASSERTION(srcSpan == destSpan, "Mismatched bitmap formats (src/dest) in Blender");
-      if (srcSpan == destSpan) {
+      NS_ASSERTION(srcRowBytes == destRowBytes, "Mismatched lock-bitmap sizes (src/dest) in Blender");
+      if (srcRowBytes == destRowBytes) {
         if (aSecondSrc) {
-          result = aSecondSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcRowBytes, &secondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
+          result = aSecondSrc->Lock(aSX, aSY, aWidth, aHeight, (void**)&secondSrcBytes, &secondSrcSpan, &secondSrcRowBytes, NS_LOCK_SURFACE_READ_ONLY);
           if (NS_SUCCEEDED(result)) {
             NS_ASSERTION(srcSpan == secondSrcSpan && srcRowBytes == secondSrcRowBytes,
                          "Mismatched bitmap formats (src/secondSrc) in Blender");                         
             if (srcSpan == secondSrcSpan && srcRowBytes == secondSrcRowBytes) {
-              result = Blend(srcBytes, srcRowBytes,
-                             destBytes, destRowBytes,
+              result = Blend(srcBytes, srcSpan,
+                             destBytes, destSpan,
                              secondSrcBytes,
-                             srcSpan, aHeight, aSrcOpacity, depth);
+                             srcRowBytes, aHeight, aSrcOpacity, depth);
             }
             
             aSecondSrc->Unlock();
@@ -202,10 +202,10 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
         }
         else
         {
-          result = Blend(srcBytes, srcRowBytes,
-                         destBytes, destRowBytes,
+          result = Blend(srcBytes, srcSpan,
+                         destBytes, destSpan,
                          secondSrcBytes,
-                         srcSpan, aHeight, aSrcOpacity, depth);
+                         srcRowBytes, aHeight, aSrcOpacity, depth);
         }
       }
 
