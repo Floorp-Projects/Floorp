@@ -195,6 +195,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 // resource
 #include "nsResProtocolHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsResURL)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -926,6 +927,11 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_RESPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "resource",
       nsResProtocolHandlerConstructor
+    },
+    { NS_RESURL_CLASSNAME, // needed only for fastload
+      NS_RESURL_CID,
+      nsnull,
+      nsResURLConstructor
     },
 #endif
 

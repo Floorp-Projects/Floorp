@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is nsIChromeURL.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
- *   Benjamin Smedberg <bsmedberg@covad.net>
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,44 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsResProtocolHandler_h___
-#define nsResProtocolHandler_h___
+#include "nsIURI.idl"
+#include "nsIURL.idl"
 
-#include "nsIResProtocolHandler.h"
-#include "nsInterfaceHashtable.h"
-#include "nsISupportsArray.h"
-#include "nsIIOService.h"
-#include "nsWeakReference.h"
-#include "nsStandardURL.h"
+[scriptable, uuid(90f4030e-a6b1-4e58-8ac4-059a76918e96)]
+interface nsIChromeURL : nsIURL {
+    /*
+     * The URI, in some other protocol, that this chrome: URL resolves to.
+     */
+    readonly attribute nsIURI convertedURI;
 
-// nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
-class nsResURL : public nsStandardURL
-{
-public:
-    nsResURL() : nsStandardURL(PR_TRUE) {}
-    NS_IMETHOD GetFile(nsIFile **);
-    virtual nsStandardURL* StartClone();
-    NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
+    /*
+     * create a new chrome URL, based on the current one, but that does not
+     * remember the URI to which this one was resolved.
+     */
+    nsIChromeURL reConvert();
 };
-
-class nsResProtocolHandler : public nsIResProtocolHandler, public nsSupportsWeakReference
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
-    NS_DECL_NSIRESPROTOCOLHANDLER
-
-    nsResProtocolHandler();
-    virtual ~nsResProtocolHandler();
-
-    nsresult Init();
-
-private:
-    nsresult AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution);
-    nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
-    nsCOMPtr<nsIIOService> mIOService;
-
-    friend class nsResURL;
-};
-
-#endif /* nsResProtocolHandler_h___ */

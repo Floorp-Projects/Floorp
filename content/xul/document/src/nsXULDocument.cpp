@@ -116,6 +116,7 @@
 #include "nsContentUtils.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIChromeURL.h"
 #include "nsIScriptError.h"
 
 //----------------------------------------------------------------------
@@ -3504,24 +3505,12 @@ nsXULDocument::AddPrototypeSheets()
     PRUint32 count;
     sheets->Count(&count);
     for (PRUint32 i = 0; i < count; ++i) {
-        nsISupports* isupports = sheets->ElementAt(i);
-        nsCOMPtr<nsIURI> uri = do_QueryInterface(isupports);
-        NS_IF_RELEASE(isupports);
-
-        NS_ASSERTION(uri, "not a URI!!!");
-        if (! uri)
-            return NS_ERROR_UNEXPECTED;
-
-        nsCAutoString spec;
-        uri->GetAsciiSpec(spec);
-
-        if (!IsChromeURI(uri)) {
+        nsCOMPtr<nsIChromeURL> uri = do_QueryElementAt(sheets, i);
+        if (!uri) {
             // These don't get to be in the prototype cache anyway...
             // and we can't load non-chrome sheets synchronously
             continue;
         }
-
-        nsCOMPtr<nsICSSStyleSheet> sheet;
 
         // If the sheet is a chrome URL, then we can refetch the sheet
         // synchronously, since we know the sheet is local.  It's not
@@ -3535,7 +3524,13 @@ nsXULDocument::AddPrototypeSheets()
         //XXXbz we hit this code from fastload all the time.  Bug 183505.
         nsICSSLoader* loader = GetCSSLoader();
         NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
-        rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+
+        nsCOMPtr<nsIChromeURL> newURL;
+        rv = uri->ReConvert(getter_AddRefs(newURL));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        rv = loader->LoadAgentSheet(newURL, getter_AddRefs(sheet));
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure
         // from LoadAgentSheet (and thus exit the loop).
