@@ -72,9 +72,9 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     // get border padding values
     //XXX: also check style for rule on rendering empty cells
     nsMargin borderPadding;
-    const nsStyleSpacing* cellSpacing;
-    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacing));
-    cellSpacing->CalcBorderPaddingFor(this, borderPadding);
+    const nsStyleSpacing* cellSpacingStyle;
+    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacingStyle));
+    cellSpacingStyle->CalcBorderPaddingFor(this, borderPadding);
     nscoord contentWidth = mPass1DesiredSize.width - (borderPadding.left+borderPadding.right);
     nscoord contentHeight = mPass1DesiredSize.height - (borderPadding.top+borderPadding.bottom);
     // empty cells do not render their border
@@ -554,7 +554,8 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     return;
 
   nscoord   padding = tableFrame->GetCellPadding();
-  nscoord   spacing = tableFrame->GetCellSpacing();
+  nscoord   spacingX = tableFrame->GetCellSpacingX();
+  nscoord   spacingY = tableFrame->GetCellSpacingY();
   nscoord   border  = 1;
 
 
@@ -565,10 +566,10 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   tableFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)tableSpacingStyle);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
-  spacingData->mMargin.SetTop(spacing);
-  spacingData->mMargin.SetLeft(spacing);
-  spacingData->mMargin.SetBottom(spacing);
-  spacingData->mMargin.SetRight(spacing);
+  spacingData->mMargin.SetTop(spacingY);
+  spacingData->mMargin.SetLeft(spacingX);
+  spacingData->mMargin.SetBottom(spacingY);
+  spacingData->mMargin.SetRight(spacingX);
   spacingData->mPadding.SetTop(padding);
   spacingData->mPadding.SetLeft(padding);
   spacingData->mPadding.SetBottom(padding);

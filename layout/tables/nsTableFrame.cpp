@@ -285,7 +285,8 @@ nsTableFrame::nsTableFrame()
   nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
   mCellMap = new nsCellMap(0, 0);
   mColGroups=nsnull;
-  mDefaultCellSpacing=0;
+  mDefaultCellSpacingX=0;
+  mDefaultCellSpacingY=0;
   mDefaultCellPadding=0;
 }
 
@@ -296,7 +297,8 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
                    nsIStyleContext* aContext)
 {
   float p2t = aPresContext.GetPixelsToTwips();
-  mDefaultCellSpacing = NSIntPixelsToTwips(2, p2t);
+  mDefaultCellSpacingX = NSIntPixelsToTwips(2, p2t);
+  mDefaultCellSpacingY = NSIntPixelsToTwips(2, p2t);
   mDefaultCellPadding = NSIntPixelsToTwips(1, p2t);
 
   return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext);
@@ -2396,7 +2398,7 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
     const nsStyleSpacing* tableSpacing;
     GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     tableSpacing->CalcBorderPaddingFor(this, borderPadding);
-    nscoord cellSpacing = GetCellSpacing();
+    nscoord cellSpacing = GetCellSpacingX();
     nscoord kidWidth = aKidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
     aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
     aMaxElementSize->height += aKidMaxElementSize.height;
@@ -2783,7 +2785,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
 
-  nscoord cellSpacing = GetCellSpacing();
+  nscoord cellSpacing = GetCellSpacingX();
   if (gsDebug==PR_TRUE) 
     printf ("SetTableWidth with cellSpacing = %d ", cellSpacing);
   PRInt32 tableWidth = cellSpacing;
@@ -3595,26 +3597,56 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
   return result;
 }
 
-// XXX: could cache this.  But be sure to check style changes if you do!
-nscoord nsTableFrame::GetCellSpacing()
+PRUint8 nsTableFrame::GetBorderCollapseStyle()
 {
-  nsTableFrame* tableFrame = this;
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  return tableStyle->mBorderCollapse;
+}
+
+
+// XXX: could cache this.  But be sure to check style changes if you do!
+nscoord nsTableFrame::GetCellSpacingX()
+{
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   nscoord cellSpacing = 0;
-  if (tableStyle->mCellSpacing.GetUnit() == eStyleUnit_Coord) {
-    cellSpacing = tableStyle->mCellSpacing.GetCoordValue();
-  }
-  else {
-    cellSpacing = mDefaultCellSpacing;
+  PRUint8 borderCollapseStyle = GetBorderCollapseStyle();
+  if (NS_STYLE_TABLE_BORDER_COLLAPSE_COLLAPSE!=borderCollapseStyle)
+  {
+    if (tableStyle->mBorderSpacingX.GetUnit() == eStyleUnit_Coord) {
+      cellSpacing = tableStyle->mBorderSpacingX.GetCoordValue();
+    }
+    else {
+      cellSpacing = mDefaultCellSpacingX;
+    }
   }
   return cellSpacing;
 }
 
 // XXX: could cache this.  But be sure to check style changes if you do!
+nscoord nsTableFrame::GetCellSpacingY()
+{
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  nscoord cellSpacing = 0;
+  PRUint8 borderCollapseStyle = GetBorderCollapseStyle();
+  if (NS_STYLE_TABLE_BORDER_COLLAPSE_COLLAPSE!=borderCollapseStyle)
+  {
+    if (tableStyle->mBorderSpacingY.GetUnit() == eStyleUnit_Coord) {
+      cellSpacing = tableStyle->mBorderSpacingY.GetCoordValue();
+    }
+    else {
+      cellSpacing = mDefaultCellSpacingY;
+    }
+  }
+  return cellSpacing;
+}
+
+
+// XXX: could cache this.  But be sure to check style changes if you do!
 nscoord nsTableFrame::GetCellPadding()
 {
-  nsTableFrame* tableFrame = this;
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   nscoord cellPadding = 0;

@@ -461,7 +461,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     if (effectiveMinColumnWidth>specifiedFixedColWidth)
       specifiedFixedColWidth=effectiveMinColumnWidth;
     // do all the global bookkeeping, factoring in margins
-    nscoord colInset = mTableFrame->GetCellSpacing();
+    nscoord colInset = mTableFrame->GetCellSpacingX();
     // keep a running total of the amount of space taken up by all fixed-width columns
     if ((PR_TRUE==haveColWidth) && (nsTableColFrame::eWIDTH_SOURCE_CELL==colFrame->GetWidthSource()))
     {
@@ -715,7 +715,7 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableWidths()
   if (gsDebug) printf("SetMinAndMaxTableWidths\n");
   PRInt32 colIndex, rowIndex;
   PRInt32 numRows = mTableFrame->GetRowCount();
-  nscoord colInset = mTableFrame->GetCellSpacing();
+  nscoord colInset = mTableFrame->GetCellSpacingX();
   for (rowIndex = 0; rowIndex<numRows; rowIndex++)
   {
     if (gsDebug) printf("  row %d\n", rowIndex);
@@ -960,7 +960,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState
   nsVoidArray *proportionalColumnsList=nsnull; // a list of the columns that are proportional-width
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   PRInt32 numRows = mTableFrame->GetRowCount();
-  nscoord colInset = mTableFrame->GetCellSpacing();
+  nscoord colInset = mTableFrame->GetCellSpacingX();
   PRInt32 colIndex;
 
   for (colIndex = 0; colIndex<mNumCols; colIndex++)
@@ -1695,7 +1695,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
   PRBool atLeastOneAutoWidthColumn = PR_FALSE;  // true if at least one column is auto-width, requiring us to post-process
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   PRInt32 numRows = mTableFrame->GetRowCount();
-  nscoord colInset = mTableFrame->GetCellSpacing();
+  nscoord colInset = mTableFrame->GetCellSpacingX();
 
   for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
   { 
