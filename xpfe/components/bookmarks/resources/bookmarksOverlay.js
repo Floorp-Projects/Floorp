@@ -199,7 +199,7 @@ BookmarksUIElement.prototype = {
   // an enumeration of applicable commands for that URI. 
   getAllCmds: function (aNodeID)
   {
-    var type = this.resolveType(aNodeID);
+    var type = BookmarksUtils.resolveType(aNodeID);
     if (!type) {
       if (aNodeID == "NC:PersonalToolbarFolder" || aNodeID == "NC:BookmarksRoot")
         type = "http://home.netscape.com/NC-rdf#Folder";
@@ -276,7 +276,7 @@ BookmarksUIElement.prototype = {
       //       string bundle for this command name. Otherwise, <xul:stringbundle/>
       //       will throw, we'll catch & stifle the error, and look up the command
       //       name in the datasource. 
-      return this.getLocaleString ("cmd_" + cmdName);
+      return BookmarksUtils.getLocaleString ("cmd_" + cmdName);
     }
     catch (e) {
     }   
@@ -312,7 +312,7 @@ BookmarksUIElement.prototype = {
       this.commands.openFolder(selectedItem);
       break;
     case "bm_openinnewwindow":
-      if (this.resolveType(selectedItem.id) == NC_NS + "Folder")
+      if (BookmarksUtils.resolveType(selectedItem.id) == NC_NS + "Folder")
         this.openFolderInNewWindow(selectedItem);
       else
         this.open(null, selectedItem, true);
@@ -397,7 +397,7 @@ BookmarksUIElement.prototype = {
         const kFilePickerIID = Components.interfaces.nsIFilePicker;
         const kFilePicker = Components.classes[kFilePickerContractID].createInstance(kFilePickerIID);
         
-        const kTitle = this.getLocaleString(isImport ? "SelectImport": "EnterExport");
+        const kTitle = BookmarksUtils.getLocaleString(isImport ? "SelectImport": "EnterExport");
         kFilePicker.init(window, kTitle, kFilePickerIID[isImport ? "modeOpen" : "modeSave"]);
         kFilePicker.appendFilters(kFilePickerIID.filterHTML | kFilePickerIID.filterAll);
         if (!isImport) kFilePicker.defaultString = "bookmarks.html";
@@ -695,37 +695,11 @@ BookmarksUIElement.prototype = {
                "centerscreen,resizable=no,chrome,dependent");
   },
 
-  getLocaleString: function (aStringKey)
-  {
-    var bundle = document.getElementById("bookmarksbundle");
-    return bundle.getString (aStringKey);
-  },
-  
   flushDataSource: function ()
   {
     const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
     var remoteDS = kBMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     remoteDS.Flush();
-  },
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // Determine the rdf:type property for the given resource.
-  resolveType: function (aID)
-  {
-    const krType = this.RDF.GetResource(RDF_NS + "type");
-    const krElement = this.RDF.GetResource(aID);
-    const type = gBookmarksShell.db.GetTarget(krElement, krType, true);
-    try {
-      return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
-    }
-    catch (e) {
-      try { 
-        return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-      }
-      catch (e) {
-        return null;
-      }
-    }    
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -763,6 +737,7 @@ CommandArrayEnumerator.prototype = {
 };
 
 var BookmarksUtils = {
+
   _rdf: null,
   get RDF ()
   {
@@ -772,6 +747,57 @@ var BookmarksUtils = {
       this._rdf = Components.classes[kRDFContractID].getService(kRDFIID);
     }
     return this._rdf;
+  },
+
+  _bmds: null,
+  get BMDS ()
+  {
+    if (!this._bmds) {
+      this._bmds = this.RDF.GetDataSource("rdf:bookmarks");
+    }
+    return this._bmds;
+  },
+
+  _bundle        : null,
+  _brandShortName: null,
+
+  /////////////////////////////////////////////////////////////////////////////////////
+  // returns a property from chrome://communicator/locale/bookmarks/bookmark.properties
+  getLocaleString: function (aStringKey)
+  {
+    if (!this._bundle) {
+      this._bundle         = document.getElementById("bundle_bookmarks");
+      this._brandShortName = document.getElementById("bundle_brand")
+                                     .getString("brandShortName");
+    }
+    bundle = this._bundle.getString(aStringKey)
+                 .replace(/%brandShortName%/, this._brandShortName);
+    return bundle;
+  },
+    
+  /////////////////////////////////////////////////////////////////////////////
+  // Determine the rdf:type property for the given resource.
+  resolveType: function (aResource)
+  {
+    var rElement;
+    if (typeof(aResource) == "string")
+      rElement = this.RDF.GetResource(aResource);
+    else
+      rElement = aResource;
+
+    const typeArc = this.RDF.GetResource(RDF_NS + "type");
+    const type    = this.BMDS.GetTarget(rElement, typeArc, true);
+    try {
+      return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+    }
+    catch (e) {
+      try { 
+        return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      }
+      catch (e) {
+        return null;
+      }
+    }    
   },
 
   ///////////////////////////////////////////////////////////////////////////
@@ -860,7 +886,6 @@ var BookmarksUtils = {
     return BMSvc.createFolderWithDetails(aTitle, aParentFolder, ix);
   },
 
-
   addBookmarkForTabBrowser: function( aTabBrowser, aSelect )
   {
     var tabsInfo = [];
@@ -931,8 +956,31 @@ var BookmarksUtils = {
       const kBMSvc = Components.classes[kBMSvcContractID].getService(kBMSvcIID);
       kBMSvc.addBookmarkImmediately(aURL, aTitle, kBMSvcIID.BOOKMARK_DEFAULT_TYPE, aCharset);
     }
+  },
+
+  getSpecialFolder: function (aID)
+  {
+    var sources = this.BMDS.GetSources(this.RDF.GetResource("http://home.netscape.com/NC-rdf#FolderType"),
+                                       this.RDF.GetResource(aID), true);
+    var folder = null;
+    if (sources.hasMoreElements())
+      folder = sources.getNext();
+    else 
+      folder = this.RDF.GetResource("NC:BookmarksRoot");
+    return folder;
+  },
+
+  getNewBookmarkFolder: function()
+  {
+    return this.getSpecialFolder("NC:NewBookmarkFolder");
+  },
+
+  getNewSearchFolder: function()
+  {
+    return this.getSpecialFolder("NC:NewSearchFolder");
   }
-};
+
+}
 
 var ContentUtils = {
   childByLocalName: function (aSelectedItem, aLocalName)

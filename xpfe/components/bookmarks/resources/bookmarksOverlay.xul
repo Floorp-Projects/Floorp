@@ -30,8 +30,8 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bookmarksbundle"
-                  src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   </stringbundleset>
          
   <popupset id="bookmarksPopupset">
