@@ -19,7 +19,7 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
   
-[% IF bug_list.size > 0 %]
+[% IF bug_list && bug_list.size > 0 %]
   [% this_bug_idx = lsearch(bug_list, bug.bug_id) %]
   <b>Bug List:</b>
   [% IF this_bug_idx != -1 %]
