@@ -119,6 +119,50 @@ interface nsIChannel : nsIRequest
                                                    * nsIProgressEventSink, or keep this load from
                                                    * completing the nsILoadGroup it may belong to */
 
+    //
+    // The following flags control caching behavior.  Not all protocols pay
+    // attention to all these flags, but they are applicable to more than one
+    // protocol, so they are defined here.
+    //
+
+    // Don't store data in the disk cache.  This can be used to preserve
+    // privacy, e.g. so that no https transactions are recorded, or to avoid
+    // caching a stream to disk that is already stored in a local file,
+    // e.g. the mailbox: protocol.
+    const unsigned long INHIBIT_PERSISTENT_CACHING = 1 <<  8;
+
+    // Force an end-to-end download of content data from the origin server (and
+    // any intervening proxies that sit between it and the client), e.g. this
+    // flag is used for a shift-reload.
+    const unsigned long FORCE_RELOAD               = 1 <<  9;
+
+    // Force revalidation with server (or proxy) to verify that cached content
+    // is up-to-date, e.g. by comparing last-modified date on server with that
+    // of the cached version.  For example, this flag is used when the reload
+    // button is pressed.
+    const unsigned long FORCE_VALIDATION           = 1 << 10;
+
+    // If the CACHE_AS_FILE flag is set, any stream content is stored in the
+    // cache as a single disk file.  Content will not be cached in the memory
+    // cache nor will it be stored in any other type of cache, e.g. a flat-file
+    // cache database.  This is used to implement the jar protocol handler and
+    // to provide the stream-as-file semantics required by the classic browser
+    // plugin API.
+    const unsigned long CACHE_AS_FILE              = 1 << 11;
+
+    // When cache data is potentially out of date, it can be revalidated with
+    // the origin server to see if the content needs to be reloaded.  The
+    // following four flags control how often this validation occurs.
+    // These flags are commonly used for "normal" loading.  Note that
+    // the VALIDATE_HEURISTICALLY and VALIDATE_ONCE_PER_SESSION flags can be
+    // combined to validate heuristically but no more than once per session.
+    //
+    const unsigned long VALIDATE_NEVER             = 1 << 12;
+    const unsigned long VALIDATE_ALWAYS            = 1 << 13;
+    const unsigned long VALIDATE_ONCE_PER_SESSION  = 1 << 14;
+    const unsigned long VALIDATE_HEURISTICALLY     = 1 << 15;
+    
+
     /**
      * Accesses the load attributes for the channel. E.g. setting the load 
      * attributes with the LOAD_QUIET bit set causes the loading process to
