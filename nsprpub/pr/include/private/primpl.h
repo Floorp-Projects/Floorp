@@ -1462,6 +1462,15 @@ struct PRFilePrivate {
     PRInt32 state;
     PRBool nonblocking;
     PRBool inheritable;
+#if defined(_PR_PTHREADS)
+    PRInt16 eventMask;  /* A bitmask in which a 0 means
+                         * the event should be ignored in
+                         * the revents returned by poll.
+                         * The eventMask field is only
+                         * accessed by the i/o continuation
+                         * thread.
+                         */
+#endif
     PRFileDesc *next;
     PRIntn lockCount;
     _MDFileDesc md;

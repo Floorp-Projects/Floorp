@@ -223,6 +223,7 @@ struct pt_Continuation
     /* These objects are linked in ascending timeout order */
     pt_Continuation *next, *prev;           /* self linked list of these things */
 
+    PRFileDesc *fd;
     /* The building of the continuation operation */
     ContinuationFn function;                /* what function to continue */
     union { PRIntn osfd; } arg1;            /* #1 - the op's fd */
@@ -651,6 +652,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                     break;
                 }
                 PR_ASSERT((pt_Continuation*)-1 == pollingOps[pollingSlotsAllocated]);
+                op->fd->secret->eventMask = 0xffff;
                 pollingOps[pollingListUsed] = op;
                 pollingList[pollingListUsed].revents = 0;
                 pollingList[pollingListUsed].fd = op->arg1.osfd;
@@ -733,21 +735,42 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
                     if (op == my_op) goto recycle;
                     PR_Unlock(pt_tq.ml);
                 }
-                else if ((0 != revents)
-                && (pt_continuation_pending == op->status)
-                && (op->function(op, revents)))
+                else if ((0 != (revents & op->fd->secret->eventMask))
+                && (pt_continuation_pending == op->status))
                 {
                 /*
                  * Only good?(?) revents left. Operations not pending
                  * will be pruned next time we build a list. This operation
-                 * will be pruned if the continueation indicates it is
+                 * will be pruned if the continuation indicates it is
                  * finished.
                  */
 
-                    PR_Lock(pt_tq.ml);
-                    (void)pt_FinishTimedInternal(op);
-                    if (op == my_op) goto recycle;
-                    PR_Unlock(pt_tq.ml);
+                    if (op->function(op, revents))
+                    {
+                        PR_Lock(pt_tq.ml);
+                        (void)pt_FinishTimedInternal(op);
+                        if (op == my_op) goto recycle;
+                        PR_Unlock(pt_tq.ml);
+                    }
+                    else
+                    {
+                        /*
+                         * If the continuation function returns
+                         * PR_FALSE, it means available data have
+                         * been read, output buffer space has been
+                         * filled, or pending connections have been
+                         * accepted by prior calls.  If the 
+                         * continuation function is immediately
+                         * invoked again, it will most likely
+                         * return PR_FALSE.  So turn off these
+                         * events in the event mask for this fd so
+                         * that if this fd is encountered again in
+                         * the polling list with these events on,
+                         * we won't invoke the continuation
+                         * function again.
+                         */
+                        op->fd->secret->eventMask &= ~revents;
+                    }
                 }
             }
         }
@@ -1299,6 +1322,7 @@ static PRInt32 pt_Read(PRFileDesc *fd, void *buf, PRInt32 amount)
         && (!fd->secret->nonblocking))
     {
         pt_Continuation op;
+        op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
         op.arg2.buffer = buf;
         op.arg3.amount = amount;
@@ -1339,6 +1363,7 @@ static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
     if (fNeedContinue == PR_TRUE)
     {
         pt_Continuation op;
+        op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
         op.arg2.buffer = (void*)buf;
         op.arg3.amount = amount;
@@ -1431,6 +1456,7 @@ static PRInt32 pt_Writev(
         /* so advance the description */
         osiov->iov_base = (char*)osiov->iov_base + bytes;
 
+        op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
         op.arg2.buffer = (void*)osiov;
         op.arg3.amount = osiov_len;
@@ -1571,6 +1597,7 @@ static PRStatus pt_Connect(
         else
         {
             pt_Continuation op;
+            op.fd = fd;
             op.arg1.osfd = fd->secret->md.osfd;
 #ifdef _PR_HAVE_SOCKADDR_LEN
             op.arg2.buffer = (void*)&addrCopy;
@@ -1645,6 +1672,7 @@ static PRFileDesc* pt_Accept(
             else
             {
                 pt_Continuation op;
+                op.fd = fd;
                 op.arg1.osfd = fd->secret->md.osfd;
                 op.arg2.buffer = addr;
                 op.arg3.addr_len = &addr_len;
@@ -1787,6 +1815,7 @@ static PRInt32 pt_Recv(
         else
         {
             pt_Continuation op;
+            op.fd = fd;
             op.arg1.osfd = fd->secret->md.osfd;
             op.arg2.buffer = buf;
             op.arg3.amount = amount;
@@ -1866,6 +1895,7 @@ static PRInt32 pt_Send(
     if (fNeedContinue == PR_TRUE)
     {
         pt_Continuation op;
+        op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
         op.arg2.buffer = (void*)buf;
         op.arg3.amount = amount;
@@ -1920,6 +1950,7 @@ static PRInt32 pt_SendTo(
     if (fNeedContinue == PR_TRUE)
     {
         pt_Continuation op;
+        op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
         op.arg2.buffer = (void*)buf;
         op.arg3.amount = amount;
@@ -1965,6 +1996,7 @@ static PRInt32 pt_RecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
     if (fNeedContinue == PR_TRUE)
     {
         pt_Continuation op;
+        op.fd = fd;
         op.arg1.osfd = fd->secret->md.osfd;
         op.arg2.buffer = buf;
         op.arg3.amount = amount;
@@ -2075,6 +2107,7 @@ static PRInt32 pt_AIXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
     if ((rv == 1) || ((rv == -1) && (count == 0))) {
         pt_Continuation op;
 
+        op.fd = sd;
         op.arg1.osfd = sd->secret->md.osfd;
         op.arg2.buffer = &sf_struct;
         op.arg4.flags = send_flags;
@@ -2164,6 +2197,7 @@ static PRInt32 pt_HPUXTransmitFile(PRFileDesc *sd, PRFileDesc *fd,
             op.arg3.offset = count - hlen;
         }
 
+        op.fd = sd;
         op.arg1.osfd = sd->secret->md.osfd;
         op.filedesc = fd->secret->md.osfd;
         op.arg2.buffer = hdtrl;
