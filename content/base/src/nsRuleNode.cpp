@@ -2196,9 +2196,9 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   // line-height: normal, number, length, percent, inherit
   if (eCSSUnit_Percent == textData.mLineHeight.GetUnit()) {
     aInherited = PR_TRUE;
-    const nsStyleFont* parentFont = NS_STATIC_CAST(const nsStyleFont*,
-                               parentContext->GetStyleData(eStyleStruct_Font));
-    text->mLineHeight.SetCoordValue((nscoord)((float)(parentFont->mSize) *
+    const nsStyleFont* font = NS_STATIC_CAST(const nsStyleFont*,
+                                    aContext->GetStyleData(eStyleStruct_Font));
+    text->mLineHeight.SetCoordValue((nscoord)((float)(font->mSize) *
                                      textData.mLineHeight.GetPercentValue()));
   } else
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
