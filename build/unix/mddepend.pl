@@ -48,7 +48,7 @@ while ($line = <STDIN>) {
   }
   $deps = [ $obj, split /\s+/, $rest ];
 
-  while ($hasSlash and $line = <>) {
+  while ($hasSlash and $line = <STDIN>) {
     chomp $line;
     if ($line =~ /\\$/) {
       chop $line;
