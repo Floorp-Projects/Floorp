@@ -33,4 +33,5 @@ install::
 	$(INSTALL) $(srcdir)/html40Latin1.properties $(DIST)/bin/res/entityTables
 	$(INSTALL) $(srcdir)/html40Symbols.properties $(DIST)/bin/res/entityTables
 	$(INSTALL) $(srcdir)/html40Special.properties $(DIST)/bin/res/entityTables 
+	$(INSTALL) $(srcdir)/transliterate.properties $(DIST)/bin/res/entityTables 
 
