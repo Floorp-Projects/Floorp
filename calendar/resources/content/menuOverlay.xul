@@ -92,7 +92,9 @@
   
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
-   <menu id="menu_File">
+   <menu id="menu_File"
+    label="&fileMenu.label;"
+     accesskey="&fileMenu.accesskey;">
       <menupopup id="menu_FilePopup">
          <menuitem id="calendar-new-event-menu"
                    key="new_event_key"
@@ -132,7 +134,9 @@
       </menupopup>
    </menu>
 
-   <menu id="menu_Edit">
+   <menu id="menu_Edit"
+    label="&editMenu.label;"
+     accesskey="&editMenu.accesskey;">
       <menupopup id="mppEdit">
          <menuitem id="calendar-cut-menu"
                    key="key_cut"
@@ -172,7 +176,9 @@
       </menupopup>
    </menu>
    
-   <menu id="menu_View">
+   <menu id="menu_View"
+    label="&viewMenu.label;"
+     accesskey="&viewMenu.accesskey;">
       <menupopup id="mppView">
          <menuitem id="calendar-view-menu-day"
                    key="view_day_key"
@@ -307,6 +313,7 @@
 
 
    <menu id="menu_Help"
+         label="&helpMenu.label;"
          accesskey="&helpMenu.accesskey;">
       <menupopup id="menu_HelpPopup">
          <menuitem id="calendar-about-menu-item"
