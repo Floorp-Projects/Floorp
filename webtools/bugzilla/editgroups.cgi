@@ -73,7 +73,7 @@ sub ShowError ($)
 
 sub PutTrailer (@)
 {
-    my (@links) = ("<a href=\"./\">Back to the Main Bugs Page</a>", @_);
+    my (@links) = ("Back to the <a href=\"./\">index</a>", @_);
 
     my $count = $#links;
     my $num = 0;
@@ -271,7 +271,7 @@ if ($action eq 'changeform') {
 
 
 
-    PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
+    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
     exit;
 }
 
@@ -326,7 +326,7 @@ probably want it to be usable for bugs, in which case you should leave this chec
     print "products\" option will prevent this and make the group become ";
     print "visible only when its controls have been added to a product.<P>\n";
 
-    PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
+    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
     exit;
 }
 
@@ -409,8 +409,8 @@ if ($action eq 'new') {
                 "FROM products");
     }
     print "OK, done.<p>\n";
-    PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
-               "<a href=\"editgroups.cgi\">Back to the group list</a>");
+    PutTrailer("<a href=\"editgroups.cgi?action=add\">add</a> another group",
+               "back to the <a href=\"editgroups.cgi\">group list</a>");
     exit;
 }
 
@@ -558,9 +558,9 @@ if ($action eq 'delete') {
           "records in the database which refer to it.  All such records " .
           "must be removed or altered to remove the reference to this " .
           "group before the group can be deleted.");
-      print "<A HREF=\"editgroups.cgi?action=del&group=$gid\">" .
-            "View the list of which records are affected</A><BR>";
-      PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
+      print "<a href=\"editgroups.cgi?action=del&group=$gid\">" .
+            "View</a> the list of which records are affected.<br>";
+      PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
       exit;
     }
 
@@ -572,7 +572,7 @@ if ($action eq 'delete') {
     print "<B>Group $gid has been deleted.</B><BR>";
 
 
-    PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
+    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
     exit;
 }
 
@@ -666,7 +666,7 @@ if ($action eq 'postchanges') {
         SendSQL("UPDATE groups SET last_changed = NOW() WHERE id = $gid");
         print "Done.<p>\n";
     }
-    PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
+    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
     exit;
 }
 

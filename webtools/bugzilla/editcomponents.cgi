@@ -151,6 +151,10 @@ sub EmitFormElements ($$$$$)
 
 #
 # Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
+# 
+# XXX This implementation of PutTrailer outputs a default link back to the
+# query page instead of the index, which is inconsistent with other
+# PutTrailer() implementations.
 #
 
 sub PutTrailer (@)
@@ -475,9 +479,14 @@ if ($action eq 'new') {
 
     print "OK, done.<p>\n";
     if ($product) {
-        PutTrailer("<A HREF=\"editcomponents.cgi?product=" . url_quote($product) . "\">edit</A> more components or <A HREF=\"editcomponents.cgi?product=". url_quote($product) . "&action=add\">Add</A> another component");
+        PutTrailer("<a href=\"editcomponents.cgi?product=" .
+            url_quote($product) . "\">edit</a> more components",
+            "<a href=\"editcomponents.cgi?product=". url_quote($product) .
+            "&action=add\">add</a> another component");
     } else {
-        PutTrailer("<A HREF=\"editcomponents.cgi\">edit</A> more components or <A HREF=\"editcomponents.cgi?action=add\">Add</A> another component");
+        PutTrailer("<a href=\"editcomponents.cgi\">edit</a> more components",
+            "<a href=\"editcomponents.cgi?action=add\">add</a>" .
+            "another component");
     }
     exit;
 }

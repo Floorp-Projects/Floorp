@@ -207,9 +207,10 @@ sub EmitFormElements ($$$$)
 
 sub PutTrailer (@)
 {
-    my (@links) = ("Back to the <A HREF=\"./\">index</A>");
+    my (@links) = ("Back to the <a href=\"./\">index</a>");
     if($editall && Bugzilla::Auth->can_edit) {
-          push(@links, "<A HREF=\"editusers.cgi?action=add\">Add a new user</A>");
+          push(@links,
+              "<a href=\"editusers.cgi?action=add\">add</a> a new user");
     }
     push(@links, @_);
 
@@ -489,10 +490,11 @@ if ($action eq 'new') {
     SendSQL("SELECT last_insert_id()");
     my ($newuserid) = FetchSQLData();
 
-    print "To change ${user}'s permissions, go back and <a href=\"editusers.cgi?action=edit&user=" . url_quote($user)."\">edit this user</A>";
+    print "To change ${user}'s permissions, go back and " .
+        "<a href=\"editusers.cgi?action=edit&user=" . url_quote($user) .
+        "\">edit</a> this user.";
     print "<p>\n";
-    PutTrailer($localtrailer,
-        "<a href=\"editusers.cgi?action=add\">add</a> another user.");
+    PutTrailer($localtrailer);
     exit;
 
 }

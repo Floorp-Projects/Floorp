@@ -30,6 +30,10 @@ my $localtrailer = "<A HREF=\"editkeywords.cgi\">edit</A> more keywords";
 
 #
 # Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
+# 
+# XXX This implementation of PutTrailer outputs a default link back to
+# the query page instead of the index, which is inconsistent with other
+# PutTrailer() implementations.
 #
 
 sub PutTrailer (@)
@@ -242,7 +246,8 @@ if ($action eq 'new') {
     unlink "data/versioncache";
 
     print "OK, done.<p>\n";
-    PutTrailer("<A HREF=\"editkeywords.cgi\">edit</A> more keywords or <A HREF=\"editkeywords.cgi?action=add\">add</a> another keyword");
+    PutTrailer("<a href=\"editkeywords.cgi\">edit</a> more keywords",
+        "<a href=\"editkeywords.cgi?action=add\">add</a> another keyword");
     exit;
 }
 

@@ -433,7 +433,9 @@ if ($action eq 'new') {
     unlink "data/versioncache";
 
     print "OK, done.<p>\n";
-    PutTrailer($localtrailer, "<a href=\"editcomponents.cgi?action=add&product=" . url_quote($product) . "\">add</a> components to this new product.");
+    PutTrailer($localtrailer,
+        "<a href=\"editcomponents.cgi?action=add&product=" .
+        url_quote($product) . "\">add</a> components to this new product");
     exit;
 }
 
