@@ -1518,7 +1518,6 @@
 			children = (
 				F5247C3C0228B990013DD99A,
 				F5247C3D0228B990013DD99A,
-				F5247C3E0228B990013DD99A,
 				F5247C4C0228BBB2013DD99A,
 				F5247C4D0228BBB2013DD99A,
 				F5247C4E0228BBB2013DD99A,
@@ -1567,12 +1566,6 @@
 			isa = PBXFileReference;
 			name = libpipnss.dylib;
 			path = ../dist/Embed/components/libpipnss.dylib;
-			refType = 2;
-		};
-		F5247C3E0228B990013DD99A = {
-			isa = PBXFileReference;
-			name = libpippki.dylib;
-			path = ../dist/Embed/components/libpippki.dylib;
 			refType = 2;
 		};
 		F5247C420228B9D7013DD99A = {
@@ -1629,7 +1622,6 @@
 				F5247C540228BBB3013DD99A,
 				F5247C490228BA0B013DD99A,
 				F5247C4A0228BA0B013DD99A,
-				F5247C4B0228BA0B013DD99A,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
@@ -1642,12 +1634,6 @@
 		};
 		F5247C4A0228BA0B013DD99A = {
 			fileRef = F5247C3D0228B990013DD99A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5247C4B0228BA0B013DD99A = {
-			fileRef = F5247C3E0228B990013DD99A;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3063,7 +3049,6 @@
 				F56F248C02AC729901A967F3,
 				F56F248F02AC729901A967F3,
 				F56F249002AC729901A967F3,
-				F56F249102AC729901A967F3,
 				F56F249302AC729901A967F3,
 				F56F249402AC729901A967F3,
 				F506477602AD7E2701A967F3,
@@ -3548,12 +3533,6 @@
 			path = ../security/manager/ssl/src/libpipnss.a;
 			refType = 2;
 		};
-		F56F249102AC729901A967F3 = {
-			isa = PBXFileReference;
-			name = libpippki.a;
-			path = ../security/manager/pki/src/libpippki.a;
-			refType = 2;
-		};
 		F56F249302AC729901A967F3 = {
 			isa = PBXFileReference;
 			name = libshistory.a;
@@ -3586,12 +3565,6 @@
 		};
 		F56F249A02AC729901A967F3 = {
 			fileRef = F56F249002AC729901A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F249B02AC729901A967F3 = {
-			fileRef = F56F249102AC729901A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5165,7 +5138,6 @@
 				F56F249602AC729901A967F3,
 				F56F249902AC729901A967F3,
 				F56F249A02AC729901A967F3,
-				F56F249B02AC729901A967F3,
 				F56F249D02AC729901A967F3,
 				F56F249E02AC729901A967F3,
 				F506477702AD7E2801A967F3,
