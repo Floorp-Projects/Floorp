@@ -135,7 +135,8 @@ sub show_user {
     # special error handling should go away.
     $who || ThrowUserError("invalid_username", {name => $name});
     
-    my $canedit = 1 if ($name eq Bugzilla->user->login);
+    my $canedit = 1 if (Bugzilla->user &&
+                        $name eq Bugzilla->user->login);
     
     SendSQL("LOCK TABLES bugs READ, products READ, votes WRITE,
              cc READ, bug_group_map READ, user_group_map READ,
@@ -200,6 +201,10 @@ sub show_user {
                            opened => IsOpenedState($status) });
         }
         
+        # In case we didn't populate this earlier (i.e. an error, or
+        # a not logged in user viewing a users votes)
+        $maxvotesperbug{$product} ||= 0;
+
         $onevoteonly = 1 if (min($::prodmaxvotes{$product},
                                  $maxvotesperbug{$product}) == 1);
         
