@@ -95,7 +95,7 @@ if (@objs) {
 
   # Only write out the dependencies if they are different.
   if ($new_output ne $old_output) {
-    open(OUT, ">$outfile") and print OUT "$new_output";
+    open(OUT, ">$outfile") and binmode(OUT) and print OUT "$new_output";
     print "Updating dependencies file, $outfile\n";
     if ($debug) {
       print "new: $new_output\n";
