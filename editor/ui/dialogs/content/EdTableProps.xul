@@ -128,20 +128,21 @@
             </menupopup>
           </menulist>
         </box>
-        <separator class="groove-thin tb-margin"/>
+        <separator class="groove"/>
         <box valign="middle" autostretch="never">
           <text class="label" value="&backgroundColor.label;"/>
           <stack>
-    	      <box autostretch="never" valign="middle">
+            <button class="dialog color-button" onclick="GetColorAndUpdate('tableBackgroundCW')" flex="1"/>
+    	      <box autostretch="never" valign="middle" mousethrough="always">
+              <spring class="smallspacer"/>
               <spring id="tableBackgroundCW" class="color-well"/>
               <image class="popup-trigger"/>
             </box>
-            <button class="dialog color-button" onclick="GetColorAndUpdate('tableBackgroundCW')" flex="1"/>
           </stack>
           <spring class="spacer"/>
           <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
         </box>
-        <separator class="groove-thin tb-margin"/>
+        <separator class="groove"/>
         <box flex="1" autostretch="never">
           <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
@@ -152,7 +153,7 @@
 
       <!-- CELL PANEL -->
     	<box id="CellPanel" orient="vertical">
-        <titledbox autostretch="never" valign="middle">
+        <titledbox autostretch="never" valign="top">
           <title value="&cellSelection.label;"/>
           <box orient="vertical">
             <menulist id="SelectionList" oncommand="ChangeSelection(event.target.data)" flex="1">
@@ -170,9 +171,10 @@
           </box>
           <spring class="bigspacer"/>
           <box orient="vertical" flex="1">
-            <text value="&cellChangeSelectionMsg.label;"/>
-            <checkbox value="&cellApplyBeforeMove.label;" id="ApplyBeforeMove" checked="true" persist="checked"/>
+            <checkbox class="wrap" style="width: 1em" value="&cellApplyBeforeMove.label;" id="ApplyBeforeMove" checked="true" persist="checked"/>
+<!--
             <checkbox value="&cellKeepCurrentData.label;" id="KeepCurrentData" persist="checked"/>
+-->
           </box>
         </titledbox>
         <!-- cell size titledbox -->
@@ -241,23 +243,25 @@
           <spring class="spacer"/>
           <checkbox id="HeaderCheck" value="&cellHeader.label;"/>
           <spring class="bigspacer"/>
+          <spring class="bigspacer"/>
           <checkbox id="NoWrapCheck"  value="&cellNoWrap.label;"/>
         </box>
 
-        <separator class="groove-thin tb-margin"/>
+        <separator class="groove"/>
         <box valign="middle" autostretch="never">
           <text class="label" value="&backgroundColor.label;"/>
           <stack>
-    	      <box autostretch="never" valign="middle">
+            <button class="dialog color-button" onclick="GetColorAndUpdate('cellBackgroundCW')" flex="1"/>
+    	      <box autostretch="never" valign="middle" mousethrough="always">
+              <spring class="smallspacer"/>
               <spring id="cellBackgroundCW" class="color-well"/>
               <image class="popup-trigger"/>
             </box>
-            <button class="dialog color-button" onclick="GetColorAndUpdate('cellBackgroundCW')" flex="1"/>
           </stack>
           <spring class="spacer"/>
           <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
         </box>
-        <separator class="groove-thin tb-margin"/>
+        <separator class="groove"/>
         <box autostretch="never">
           <!-- From EdDialogOvlerlay.xul -->
           <spring flex="1"/>

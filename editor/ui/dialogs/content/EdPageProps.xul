@@ -72,6 +72,6 @@
   </grid>
   <spring class="bigspacer"/>
   <html class="wrap" flex="1">&EditHEADSource.label;</html>
-  <separator class="groove-thin tb-margin"/>
+  <separator class="groove"/>
   <box id="okCancelButtons"/> 
 </window>

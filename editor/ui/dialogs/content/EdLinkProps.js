@@ -33,6 +33,7 @@ var haveNamedAnchors = false;
 var haveHeadings = false;
 var canChangeHeadingSelected = true;
 var canChangeAnchorSelected = true;
+var dialog;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -247,6 +248,7 @@ function FillListboxes()
 {
   var NamedAnchorNodeList = editorShell.editorDocument.anchors;
   var NamedAnchorCount = NamedAnchorNodeList.length;
+  var item;
   if (NamedAnchorCount > 0)
   {
     for (var i = 0; i < NamedAnchorCount; i++)
@@ -257,7 +259,7 @@ function FillListboxes()
   else 
   {
     // Message to tell user there are none
-    var item = AppendStringToTreelistById(dialog.NamedAnchorList, "NoNamedAnchors");
+    item = AppendStringToTreelistById(dialog.NamedAnchorList, "NoNamedAnchors");
     if (item) item.setAttribute("disabled", "true");
   }
   var firstHeading = true;
@@ -303,7 +305,7 @@ function FillListboxes()
     haveHeadings = true;
   } else {
     // Message to tell user there are none
-    var item = AppendStringToTreelistById(dialog.HeadingsList, "NoHeadings");
+    item = AppendStringToTreelistById(dialog.HeadingsList, "NoHeadings");
     if (item) item.setAttribute("disabled", "true");
   }
 }

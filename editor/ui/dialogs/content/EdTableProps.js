@@ -114,7 +114,9 @@ function Startup()
   dialog.PreviousButton = document.getElementById("PreviousButton");
   dialog.NextButton = document.getElementById("NextButton");
   dialog.ApplyBeforeMove =  document.getElementById("ApplyBeforeMove");
-  dialog.KeepCurrentData = document.getElementById("KeepCurrentData");
+  // Currently, we always load attributes when changing selection
+  // (Let's keep this for possible future use)
+  //dialog.KeepCurrentData = document.getElementById("KeepCurrentData");
 
   dialog.CellHeightInput = document.getElementById("CellHeightInput");
   dialog.CellHeightUnits = document.getElementById("CellHeightUnits");
@@ -628,7 +630,6 @@ function MoveSelection(forward)
 
   if (CellDataChanged && dialog.ApplyBeforeMove.checked)
   {
-dump("Moving selection -- apply attributes...\n");
     if (!ValidateCellData())
       return;
 
@@ -640,12 +641,9 @@ dump("Moving selection -- apply attributes...\n");
     SetCloseButton();
   }
 
-  // Reinitialize using new cell only if checkbox is not checked
-  if (!dialog.KeepCurrentData.checked)
-  {
-dump("InitCellPanel should be called...\n");
-    InitCellPanel();
-  }
+  // Reinitialize dialog using new cell
+//  if (!dialog.KeepCurrentData.checked)
+  InitCellPanel();
 
   // Change the selection
   DoCellSelection();

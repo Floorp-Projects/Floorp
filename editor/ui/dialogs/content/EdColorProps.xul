@@ -61,59 +61,64 @@
           <grid>
             <columns><column/><column/></columns>
             <rows>
-              <row>
+              <row valign="middle" autostretch="never">
                 <text class="label" id="Text" value="&normalText.label;&colon.character;" />
                 <stack>
-    	            <box autostretch="never" valign="middle">
+                  <button id="TextButton" class="dialog color-button" onclick="GetColorAndUpdate('textCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
                     <spring id="textCW" class="color-well"/>
                     <image class="popup-trigger"/>
-                    <spring flex="1"/>
                   </box>
-                  <button id="TextButton" class="dialog color-button" onclick="GetColorAndUpdate('textCW')" flex="1"/>
                 </stack>
               </row>
-              <row>
+              <row valign="middle" autostretch="never">
                 <text class="label" id="Link" value="&linkText.label;&colon.character;" />
                 <stack>
-    	            <box autostretch="never" valign="middle">
+                  <button id="LinkButton" class="dialog color-button" onclick="GetColorAndUpdate('linkCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
                     <spring id="linkCW" class="color-well"/>
                     <image class="popup-trigger"/>
                   </box>
-                  <button id="LinkButton" class="dialog color-button" onclick="GetColorAndUpdate('linkCW')" flex="1"/>
                 </stack>
               </row>
-              <row>
+              <row valign="middle" autostretch="never">
                 <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
                 <stack>
-    	            <box autostretch="never" valign="middle">
+                  <button id="ActiveLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('activeCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
                     <spring id="activeCW" class="color-well"/>
                     <image class="popup-trigger"/>
                   </box>
-                  <button id="ActiveLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('activeCW')" flex="1"/>
                 </stack>
               </row>
-              <row>
+              <row valign="middle" autostretch="never">
                 <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
                 <stack>
-    	            <box autostretch="never" valign="middle">
+                  <button id="VisitedLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('visitedCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
                     <spring id="visitedCW" class="color-well"/>
                     <image class="popup-trigger"/>
                   </box>
-                  <button id="VisitedLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('visitedCW')" flex="1"/>
                 </stack>
               </row>
-              <row>
+              <row valign="middle" autostretch="never">
                 <text class="label" id="Background" value="&background.label;" />
                 <stack>
-    	            <box autostretch="never" valign="middle">
+                  <button id="BackgroundButton" class="dialog color-button" onclick="GetColorAndUpdate('backgroundCW')"/>
+    	            <box autostretch="never" valign="middle" mousethrough="always">
+                    <spring class="smallspacer"/>
                     <spring id="backgroundCW" class="color-well"/>
                     <image class="popup-trigger"/>
                   </box>
-                  <button id="BackgroundButton" class="dialog color-button" onclick="GetColorAndUpdate('backgroundCW')" flex="1"/>
                 </stack>
               </row>
             </rows>
           </grid>
+          <spring flex="1"/>
         </box>
       </box>
       <box orient="vertical" id="ColorPreview" flex="1">
@@ -149,6 +154,6 @@
       </row>
     </rows>
   </grid>
-  <separator class="groove-thin tb-margin"/>
+  <separator class="groove"/>
   <box id="okCancelButtons"/> 
 </window>

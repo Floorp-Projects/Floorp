@@ -26,9 +26,11 @@
 var insertNew     = true;
 var insertNewIMap = true;
 var wasEnableAll  = false;
-var oldSourceInt  = 0;
-var startingWidth  = 0;
-var startingHeight = 0;
+var constrainOn = false;
+// Note used in current version, but these are set correctly
+//  and could be used to reset width and height used for constrain ratio
+var constrainWidth  = 0;
+var constrainHeight = 0;
 var imageElement;
 var imageMap = 0;
 var canRemoveImageMap = false;
@@ -158,6 +160,11 @@ function Startup()
   }
   InitDialog();
 
+  // By default turn constrain on, but both width and height must be in pixels
+  dialog.constrainCheckbox.checked =
+    dialog.widthUnitsMenulist.selectedIndex == 0 &&
+    dialog.heightUnitsMenulist.selectedIndex == 0;    
+
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"' 
   //   attribute on the MoreFewerButton button
@@ -207,8 +214,8 @@ function InitDialog()
   if (!dialog.actualSizeRadio.checked)
     dialog.customSizeRadio.checked = true;
   
-  dialog.widthInput.value  = startingWidth  = width ? width : (actualWidth ? actualWidth : "");
-  dialog.heightInput.value = startingHeight = height ? height : (actualHeight ? actualHeight : "");
+  dialog.widthInput.value  = constrainWidth = width ? width : (actualWidth ? actualWidth : "");
+  dialog.heightInput.value = constrainHeight = height ? height : (actualHeight ? actualHeight : "");
 
   // set spacing editfields
   dialog.imagelrInput.value = globalElement.getAttribute("hspace");
@@ -337,11 +344,8 @@ function GetActualSize()
     {
       // Image loading has completed -- we can get actual width
       CancelTimer();
-      actualWidth  = startingWidth = previewImage.naturalWidth;
-      actualHeight = startingHeight = previewImage.naturalHeight;
-//dump("*** Setting previewImage to: "+previewImage.src+"\n");
-//dump("actualWidth="+actualWidth+", actualHeight"+actualHeight+"\n");
-
+      actualWidth  = previewImage.naturalWidth;
+      actualHeight = previewImage.naturalHeight;
       if (actualWidth && actualHeight)
       {
         // Use actual size or scale to fit preview if either dimension is too large
@@ -369,6 +373,8 @@ function GetActualSize()
 
         dialog.PreviewSize.setAttribute("collapsed", "false");
         dialog.ImageHolder.setAttribute("collapsed", "false");
+
+        // Use values as start for constrain proportions
       }
 
       if (dialog.actualSizeRadio.checked)
@@ -479,42 +485,51 @@ function doOverallEnabling()
   SetElementEnabledById( "removeImageMap", canRemoveImageMap);
 }
 
-// constrainProportions contribution by pete@postpagan.com
+function ToggleConstrain()
+{
+  // If just turned on, save the current width and height as basis for constrian ratio
+  // Thus clicking on/off lets user say "Use these values as aspect ration"
+  if (dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled)
+  {
+    constrainWidth = Number(dialog.widthInput.value.trimString());
+    constrainHeight = Number(dialog.heightInput.value.trimString());
+  }
+  document.getElementById('widthInput').focus()
+
+}
+
 function constrainProportions( srcID, destID )
 {
-  var srcElement = document.getElementById ( srcID );
-  if ( !srcElement )
+  // Return if we don't have proper data or checkbox isn't checked and enabled
+//  if (!constrainWidth || !constrainHeight ||
+  if (!actualWidth || !actualHeight ||
+      !(dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled))
     return;
   
-  forceInteger( srcID );
-  
-  // now find out if we should be constraining or not
-
-  var constrainChecked = (dialog.constrainCheckbox.checked);
-  constrainChecked = constrainChecked && !dialog.constrainCheckbox.disabled;
-  if ( !constrainChecked )
+  var srcElement = document.getElementById ( srcID );
+  if ( !srcElement )
     return;
   
   var destElement = document.getElementById( destID );
   if ( !destElement )
     return;
-  
-  // set new value in the other edit field
-  // src / dest ratio mantained
-  // newDest = (newSrc * oldDest / oldSrc)
 
-  if ( !oldSourceInt && startingWidth && startingHeight )
-  {
-    // Initialize with starting value
-    oldSourceInt = (srcID == "widthInput") ? startingWidth : startingHeight;
-  }
+  forceInteger( srcID );
 
-  if ( !oldSourceInt )
-    destElement.value = srcElement.value;
+  // This always uses the actual width and height ratios
+  if (srcID == "widthInput")
+    destElement.value = Math.round( srcElement.value * actualHeight / actualWidth );
   else
-    destElement.value = Math.round( srcElement.value * destElement.value / oldSourceInt );
-  
-  oldSourceInt = srcElement.value;
+    destElement.value = Math.round( srcElement.value * actualWidth / actualHeight );
+
+/*  
+  // With this strategy, the width and height ratio 
+  //   can be reset to whatever the user entered.
+  if (srcID == "widthInput")
+    destElement.value = Math.round( srcElement.value * constrainHeight / constrainWidth );
+  else
+    destElement.value = Math.round( srcElement.value * constrainWidth / constrainHeight );
+*/
 }
 
 function editImageMap()

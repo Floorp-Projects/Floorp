@@ -64,23 +64,25 @@
   <spring class="spacer"/>
   <box orient="vertical" flex="1">
     <stack valign="middle" autostretch="never">
-      <box style="margin-left: 5px" allowevents="true">
+      <button id="LastPickedButton" class="dialog" value="&lastPickedColor.label;" 
+        style="margin-left:0px; margin-right: 0px;"
+        onclick="SelectLastPickedColor()"/>
+      <box style="margin-left: 5px"  mousethrough="always">
         <box orient="vertical" autostretch="never">
           <spring flex="1"/>
-          <spring id="LastPickedColor" onclick="SelectLastPickedColor()"
+          <spring id="LastPickedColor"
                       LastTextColor="" LastBackgroundColor=""
                       persist="LastTextColor LastBackgroundColor"/>
           <spring flex="1"/>
         </box>
-        <spring flex="1" allowevents="true"/>
+        <spring flex="1"/>
       </box>
-      <button id="LastPickedButton" class="dialog" value="&lastPickedColor.label;" 
-        style="min-height: 15px; margin-left:0px; margin-right: 0px; background: transparent"
-        onclick="SelectLastPickedColor()"/>
     </stack>
-    <html  class="wrap" flex="1" style="width: 1em">&setColor.label;</html>
+    <text class="label" value="&setColor1.label;"/>
+    <text class="label" value="&setColor2.label;"/>
+    <text class="label" value="&setColorExample.label;"/>
     <box valign="middle" autostretch="never" flex="1=">
-      <textfield id="ColorInput" style="width: 10em" onkeyup="SetColorSwatch()"/>
+      <textfield id="ColorInput" style="width: 8em" onkeyup="SetColorSwatch()"/>
       <spring flex="1"/>
       <spring id="ColorPickerSwatch"/>
       <spring flex="1"/>
@@ -88,7 +90,7 @@
         style="margin-right:0px;" oncommand="RemoveColor()"/>
     </box>
   </box>
-  <separator class="groove-thin tb-margin"/>
+  <separator class="groove"/>
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/> 
 </window>
