@@ -96,7 +96,7 @@ function onLoad() {
 
   var selectedServer;
   var selectPage = null;
-  if (window.arguments && window.arguments[0]) {
+  if ("arguments" in window && window.arguments[0]) {
     selectedServer = window.arguments[0].server;
     selectPage = window.arguments[0].selectPage;
   }
