@@ -1721,7 +1721,7 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
             default:
               token.SetTypeID(theTag);  //open the html container...
               result=OpenContainer(theNode,PR_FALSE);
-              mLeafBits.InsertElementAt((void*)PR_TRUE,mContextStackPos-1);
+              mLeafBits.ReplaceElementAt((void*)PR_TRUE,mContextStackPos-1);
           } //switch
         }
         if(kNoError!=result)
@@ -1751,7 +1751,7 @@ PRInt32 CNavDTD::CloseTransientStyles(eHTMLTags aTag){
     if(0==strchr(gWhitespaceTags,aTag)){
 
       result=CloseContainersTo((eHTMLTags)(int)mStyleStack[0],PR_FALSE);
-      mLeafBits.InsertElementAt((void*)PR_FALSE,mContextStackPos);
+      mLeafBits.ReplaceElementAt((void*)PR_FALSE,mContextStackPos-1);
 
     }//if
   }//if
@@ -1787,7 +1787,7 @@ PRInt32 CNavDTD::OpenHTML(const nsIParserNode& aNode){
 PRInt32 CNavDTD::CloseHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseHTML(aNode); 
-  mContextStack.InsertElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1816,7 +1816,7 @@ PRInt32 CNavDTD::OpenHead(const nsIParserNode& aNode){
  */
 PRInt32 CNavDTD::CloseHead(const nsIParserNode& aNode){
   PRInt32 result=mSink->CloseHead(aNode); 
-  mContextStack.InsertElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1877,7 +1877,7 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
 PRInt32 CNavDTD::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseBody(aNode); 
-  mContextStack.InsertElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1983,7 +1983,7 @@ PRInt32 CNavDTD::OpenFrameset(const nsIParserNode& aNode){
 PRInt32 CNavDTD::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseFrameset(aNode); 
-  mContextStack.InsertElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -2071,7 +2071,7 @@ PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool
     case eHTMLTag_title:
     default:
       result=mSink->CloseContainer(aNode); 
-      mContextStack.InsertElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+      mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
       break;
   }
 
@@ -2354,7 +2354,7 @@ PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTa
       case eHTMLTag_u:
       case eHTMLTag_var:
         if(aTag==anActualTag)
-          mStyleStack.InsertElementAt((void*)eHTMLTag_unknown,--mStyleStackPos);
+          mStyleStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mStyleStackPos);
         break;
 
       case eHTMLTag_h1: case eHTMLTag_h2:

@@ -237,9 +237,6 @@ COtherDTD::COtherDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   mParser=0;
   mFilename=0;
   mDTDDebug=0;
-  nsCRT::zero(mLeafBits,sizeof(mLeafBits));
-  nsCRT::zero(mContextStack,sizeof(mContextStack));
-  nsCRT::zero(mStyleStack,sizeof(mStyleStack));
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mContextStackPos=0;
   mStyleStackPos=0;
@@ -343,8 +340,8 @@ PRInt32 COtherDTD::HandleToken(CToken* aToken){
 
     if(aHandler) {
       result=(*aHandler)(theToken,this);
-//      if (mDTDDebug)
-//         mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
+      if (mDTDDebug)
+         mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
     }
 
   }//if
@@ -389,13 +386,13 @@ PRInt32 COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,ns
   }
 
   if(IsContainer(aChildTag)){
-    if(PR_TRUE==mLeafBits[mContextStackPos-1]) {
+    if(PR_TRUE==(PRBool)mLeafBits[mContextStackPos-1]) {
       CloseTransientStyles(aChildTag);
     }
     result=OpenContainer(aNode,PR_TRUE);
   }
   else {
-    if(PR_FALSE==mLeafBits[mContextStackPos-1]) {
+    if(PR_FALSE==(PRBool)mLeafBits[mContextStackPos-1]) {
       OpenTransientStyles(aChildTag);
     }
     result=AddLeaf(aNode);
@@ -1630,7 +1627,7 @@ PRBool COtherDTD::HasOpenContainer(eHTMLTags aContainer) const {
  */
 eHTMLTags COtherDTD::GetTopNode() const {
   if(mContextStackPos) 
-    return mContextStack[mContextStackPos-1];
+    return (eHTMLTags)(int)mContextStack[mContextStackPos-1];
   return eHTMLTag_unknown;
 }
 
@@ -1646,7 +1643,7 @@ eHTMLTags COtherDTD::GetTopNode() const {
 PRInt32 COtherDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
   int i=0;
   for(i=mContextStackPos-1;i>=0;i--){
-    if(mContextStack[i]==aTag)
+    if((eHTMLTags)(int)mContextStack[i]==aTag)
       return i;
   }
   return kNotFound;
@@ -1676,7 +1673,7 @@ PRInt32 COtherDTD::OpenTransientStyles(eHTMLTags aTag){
     PRInt32 pos=0;
     for(pos=0;pos<mStyleStackPos;pos++) {
 
-      eHTMLTags theTag=mStyleStack[pos]; 
+      eHTMLTags theTag=(eHTMLTags)(int)mStyleStack[pos]; 
       if(PR_FALSE==HasOpenContainer(theTag)) {
 
         CStartToken   token(GetTagName(theTag));
@@ -1690,7 +1687,7 @@ PRInt32 COtherDTD::OpenTransientStyles(eHTMLTags aTag){
           default:
             token.SetTypeID(theTag);  //open the html container...
             result=OpenContainer(theNode,PR_FALSE);
-            mLeafBits[mContextStackPos-1]=PR_TRUE;
+            mLeafBits.ReplaceElementAt((void*)PR_TRUE,mContextStackPos-1);
         } //switch
       }
       if(kNoError!=result)
@@ -1718,8 +1715,8 @@ PRInt32 COtherDTD::CloseTransientStyles(eHTMLTags aTag){
   if((mStyleStackPos>0) && (mLeafBits[mContextStackPos-1])) {
     if(0==strchr(gWhitespaceTags,aTag)){
 
-      result=CloseContainersTo(mStyleStack[0],PR_FALSE);
-      mLeafBits[mContextStackPos-1]=PR_FALSE;
+      result=CloseContainersTo((eHTMLTags)(int)mStyleStack[0],PR_FALSE);
+      mLeafBits.ReplaceElementAt((void*)PR_FALSE,mContextStackPos-1);
 
     }//if
   }//if
@@ -1739,7 +1736,7 @@ PRInt32 COtherDTD::OpenHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
 
   PRInt32 result=mSink->OpenHTML(aNode); 
-  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  mContextStack.InsertElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
   return result;
 }
 
@@ -1755,7 +1752,7 @@ PRInt32 COtherDTD::OpenHTML(const nsIParserNode& aNode){
 PRInt32 COtherDTD::CloseHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseHTML(aNode); 
-  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1769,7 +1766,7 @@ PRInt32 COtherDTD::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 COtherDTD::OpenHead(const nsIParserNode& aNode){
-  mContextStack[mContextStackPos++]=eHTMLTag_head;
+  mContextStack.InsertElementAt((void*)eHTMLTag_head,++mContextStackPos);
   PRInt32 result=mSink->OpenHead(aNode); 
   return result;
 }
@@ -1784,7 +1781,7 @@ PRInt32 COtherDTD::OpenHead(const nsIParserNode& aNode){
  */
 PRInt32 COtherDTD::CloseHead(const nsIParserNode& aNode){
   PRInt32 result=mSink->CloseHead(aNode); 
-  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1829,7 +1826,7 @@ PRInt32 COtherDTD::OpenBody(const nsIParserNode& aNode){
 
   if(kNoError==result) {
     result=mSink->OpenBody(aNode); 
-    mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
+    mContextStack.InsertElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
   }
   return result;
 }
@@ -1845,7 +1842,7 @@ PRInt32 COtherDTD::OpenBody(const nsIParserNode& aNode){
 PRInt32 COtherDTD::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseBody(aNode); 
-  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1936,7 +1933,7 @@ PRInt32 COtherDTD::CloseMap(const nsIParserNode& aNode){
 PRInt32 COtherDTD::OpenFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
   PRInt32 result=mSink->OpenFrameset(aNode); 
-  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  mContextStack.InsertElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
   return result;
 }
 
@@ -1951,7 +1948,7 @@ PRInt32 COtherDTD::OpenFrameset(const nsIParserNode& aNode){
 PRInt32 COtherDTD::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseFrameset(aNode); 
-  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
   return result;
 }
 
@@ -1991,7 +1988,7 @@ PRInt32 COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleS
 
     default:
       result=mSink->OpenContainer(aNode); 
-      mContextStack[mContextStackPos++]=nodeType;
+      mContextStack.InsertElementAt((void*)nodeType,mContextStackPos++);
       break;
   }
 
@@ -2039,11 +2036,11 @@ PRInt32 COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBo
     case eHTMLTag_title:
     default:
       result=mSink->CloseContainer(aNode); 
-      mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+      mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
       break;
   }
 
-  mLeafBits[mContextStackPos]=PR_FALSE;
+  mLeafBits.InsertElementAt((void*)PR_FALSE, mContextStackPos);
   if((kNoError==result) && (PR_TRUE==aUpdateStyles)){
     UpdateStyleStackForCloseTag(nodeType,aTag);
   }
@@ -2068,7 +2065,7 @@ PRInt32 COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpda
 
   if((anIndex<mContextStackPos) && (anIndex>=0)) {
     while(mContextStackPos>anIndex) {
-      eHTMLTags theTag=mContextStack[mContextStackPos-1];
+      eHTMLTags theTag=(eHTMLTags)(int)mContextStack[mContextStackPos-1];
       aToken.SetTypeID(theTag);
       result=CloseContainer(theNode,aTag,aUpdateStyles);
     }
@@ -2129,7 +2126,7 @@ PRInt32 COtherDTD::CloseTopmostContainer(){
   NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
 
   CEndToken aToken(gEmpty);
-  eHTMLTags theTag=(eHTMLTags)mContextStack[mContextStackPos-1];
+  eHTMLTags theTag=(eHTMLTags)(int)mContextStack[mContextStackPos-1];
   aToken.SetTypeID(theTag);
   nsCParserNode theNode(&aToken);
   return CloseContainer(theNode,theTag,PR_TRUE);
@@ -2171,7 +2168,7 @@ PRInt32 COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
     //add code here to build up context stack based on forward propagated context vector...
     pos=0;
     cnt=theVector.Length()-1;
-    if(mContextStack[mContextStackPos-1]==theVector[cnt])
+    if(mContextStack[mContextStackPos-1]==(void*)theVector[cnt])
       result=kNoError;
     else result=kContextMismatch;
   }
@@ -2191,7 +2188,7 @@ PRInt32 COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
       cnt=theVector.Length();
       result=kNoError;
       while(pos<mContextStackPos) {
-        if(mContextStack[pos]==theVector[cnt-1-pos]) {
+        if(mContextStack[pos]==(void*)theVector[cnt-1-pos]) {
           pos++;
         }
         else {
@@ -2274,7 +2271,7 @@ PRInt32 COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualT
     case eHTMLTag_tt:
     case eHTMLTag_u:
     case eHTMLTag_var:
-      mStyleStack[mStyleStackPos++]=aTag;
+      mStyleStack.InsertElementAt((void*)aTag,mStyleStackPos++);
       break;
 
     case eHTMLTag_h1: case eHTMLTag_h2:
@@ -2322,7 +2319,7 @@ PRInt32 COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActual
       case eHTMLTag_u:
       case eHTMLTag_var:
         if(aTag==anActualTag)
-          mStyleStack[--mStyleStackPos]=eHTMLTag_unknown;
+          mStyleStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mStyleStackPos);
         break;
 
       case eHTMLTag_h1: case eHTMLTag_h2:

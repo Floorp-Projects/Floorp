@@ -32,6 +32,7 @@
 #include "nsParserNode.h"
 #include "nsTokenHandler.h"
 #include "nsDeque.h"
+#include "nsVoidArray.h"
 
 
 #define NS_IOtherHTML_DTD_IID      \
@@ -677,11 +678,11 @@ protected:
 
     CTokenHandler*      mTokenHandlers[eToken_last];
 
-    PRBool              mLeafBits[50];
-    eHTMLTags           mContextStack[50];
+    nsVoidArray         mLeafBits;
+    nsVoidArray         mContextStack;
     PRInt32             mContextStackPos;
 
-    eHTMLTags           mStyleStack[50];
+    nsVoidArray         mStyleStack;
     PRInt32             mStyleStackPos;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
