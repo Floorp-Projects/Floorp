@@ -194,11 +194,7 @@ function Startup()
   // Set Initial Size
   var win = document.documentElement;
   if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
-#ifdef MOZ_THUNDERBIRD
     win.setAttribute("width", isExtensions ? 460 : 560);
-#else
-    win.setAttribute("width", isExtensions ? 400 : 500);
-#endif
     win.setAttribute("height", isExtensions ? 300 : 380);
   }
 
@@ -221,7 +217,7 @@ function Startup()
   // Set the tooltips
   if (!isExtensions) {
     var extensionsStrings = document.getElementById("extensionsStrings");
-#ifdef MOZ_THUNDERBIRD
+#ifndef MOZ_PHOENIX
     document.getElementById("installButton").setAttribute("tooltiptext", extensionsStrings.getString("cmdInstallTooltipTheme"));
 #endif
     document.getElementById("uninstallButton").setAttribute("tooltiptext", extensionsStrings.getString("cmdUninstallTooltipTheme"));
@@ -704,7 +700,7 @@ var gExtensionsViewController = {
     case "cmd_movedn":
       var children = gExtensionsView.children;
       return selectedItem && (children[children.length-1] != selectedItem);
-#ifdef MOZ_THUNDERBIRD
+#ifndef MOZ_PHOENIX
     case "cmd_install":
       return true;   
 #endif
@@ -865,7 +861,10 @@ var gExtensionsViewController = {
     
     cmd_disable: function (aSelectedItem)
     {
-      gExtensionManager.disableExtension(stripPrefix(aSelectedItem.id, gItemType));
+      if (gWindowState == "extensions")
+        gExtensionManager.disableExtension(stripPrefix(aSelectedItem.id, gItemType));
+      else
+        gExtensionManager.disableTheme(stripPrefix(aSelectedItem.id, gItemType));
     },
     
     cmd_enable: function (aSelectedItem)
@@ -874,23 +873,26 @@ var gExtensionsViewController = {
         gExtensionManager.enableExtension(stripPrefix(aSelectedItem.id, gItemType));
       else
         gExtensionManager.enableTheme(stripPrefix(aSelectedItem.id, gItemType));
+#ifdef MOZ_PHOENIX
+    }
+  }
+};
+#else
     },
-#ifdef MOZ_THUNDERBIRD
+
     cmd_install: function(aSelectedItem)
     {
       if (gWindowState == "extensions") 
         installExtension();
       else
         installSkin();
-    },
-#endif
+    }
   }
 };
 
-#ifdef MOZ_THUNDERBIRD
-///////////////////////////////////////////////////////////////
-// functions to support installing of themes in thunderbird
-///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// functions to support installing of themes in apps other than firefox //
+//////////////////////////////////////////////////////////////////////////
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const nsIIOService = Components.interfaces.nsIIOService;
 const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
