@@ -13,7 +13,7 @@ if [ ${3} = "YES" ]; then
     fi
     export PATH
 else
-    LIBPATH=${1}/lib
+    LIBPATH=`(cd ${1}/lib; pwd)`
     export LIBPATH
     SHLIB_PATH=${1}/lib
     export SHLIB_PATH
