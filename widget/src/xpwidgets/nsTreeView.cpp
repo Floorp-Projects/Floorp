@@ -71,11 +71,6 @@ nsTreeView::nsTreeView() : nsITreeView(), nsDataModelWidget()
 {
   NS_INIT_REFCNT();
   mDataModel = nsnull;
-  mColumnBarRect.SetRect(0,0,0,0);
-  mTitleBarRect.SetRect(0,0,0,0);
-  mControlStripRect.SetRect(0,0,0,0);
-  mTreeRect.SetRect(0,0,0,0);
-  mCachedMoveRect.SetRect(0,0,0,0);
   mMouseDown = PR_FALSE;
   mMouseDragging = PR_FALSE;
   mDraggingColumnHeader = PR_FALSE;
@@ -155,7 +150,7 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
 		PaintColumnBar(ctx, r);
 
 		// Paint the tree.
-		PaintTreeLines(ctx, r);
+		PaintTreeRows(ctx, r);
 	}
 	ctx->CopyOffScreenBits(ds, 0, 0, rect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
     ctx->DestroyDrawingSurface(ds);
@@ -601,7 +596,7 @@ void nsTreeView::PaintPusherArrow(nsIRenderingContext* drawCtx,
 	}
 }
 					
-void nsTreeView::PaintTreeLines(nsIRenderingContext* drawCtx, 
+void nsTreeView::PaintTreeRows(nsIRenderingContext* drawCtx, 
 								nsRect& rect)
 {
 	// The fun part. Painting of the individual lines of the tree.
@@ -619,7 +614,7 @@ void nsTreeView::PaintTreeLines(nsIRenderingContext* drawCtx,
 
 	while (pItem && yPosition < rect.y + rect.height)
 	{
-		PaintTreeLine(drawCtx, pItem, yPosition); 
+		PaintTreeRow(drawCtx, pItem, yPosition); 
 		n++;
 		pItem = (nsTreeItem*)mDataModel->GetNthItem(n);
 	}
@@ -634,7 +629,7 @@ void nsTreeView::PaintTreeLines(nsIRenderingContext* drawCtx,
 	}
 }
 
-void nsTreeView::PaintTreeLine(nsIRenderingContext* drawCtx, nsTreeItem* pItem, int& yPosition)
+void nsTreeView::PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, int& yPosition)
 {
 	// Determine the height of this tree line.  It is going to be the max of
 	// three objects: the trigger image, the icon, and the font height.
