@@ -155,11 +155,7 @@ NS_IMETHODIMP nsImage::SetBits(const PRUint8 *data, PRUint32 length, PRInt32 off
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
 
-  PRUint32 i;
-  PRInt32 off;
-  // XXX i could unroll this loop a bit :-)
-  for (i=0, off = offset; i <= length; ++i, ++offset) {
-    mBits[off] = data[i];
-  }
+  memcpy(mBits + offset, data, length);
+
   return NS_OK;
 }
