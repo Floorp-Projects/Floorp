@@ -855,84 +855,121 @@ txStylesheetCompilerState::resolveNamespacePrefix(nsIAtom* aPrefix,
     return (aID != kNameSpaceID_Unknown) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+/**
+ * Error Function to be used for unknown extension functions.
+ *
+ */
+class txErrorFunctionCall : public FunctionCall
+{
+public:
+    txErrorFunctionCall(nsIAtom* aName, const PRInt32 aID)
+        : mName(aName),
+          mID(aID)
+    {
+    }
+
+    TX_DECL_FUNCTION;
+
+private:
+    nsCOMPtr<nsIAtom> mName;
+    PRInt32 mID;
+};
+
+nsresult
+txErrorFunctionCall::evaluate(txIEvalContext* aContext,
+                              txAExprResult** aResult)
+{
+    *aResult = nsnull;
+
+    return NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION;
+}
+
+#ifdef TX_TO_STRING
+nsresult
+txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
+{
+    NS_IF_ADDREF(*aAtom = mName);
+
+    return NS_OK;
+}
+#endif
+
 nsresult
 txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                                FunctionCall*& aFunction)
 {
-   aFunction = nsnull;
+    aFunction = nsnull;
 
-   if (aID != kNameSpaceID_None) {
-       return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
-   }
-   if (aName == txXSLTAtoms::document) {
-       aFunction = new DocumentFunctionCall(mElementContext->mBaseURI);
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    if (aID == kNameSpaceID_None) {
+        if (aName == txXSLTAtoms::document) {
+            aFunction = new DocumentFunctionCall(mElementContext->mBaseURI);
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::key) {
+            aFunction = new txKeyFunctionCall(mElementContext->mMappings);
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::formatNumber) {
+            aFunction = new txFormatNumberFunctionCall(mStylesheet,
+                                                       mElementContext->mMappings);
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::current) {
+            aFunction = new CurrentFunctionCall();
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::unparsedEntityUri) {
+    
+            return NS_ERROR_NOT_IMPLEMENTED;
+        }
+        if (aName == txXSLTAtoms::generateId) {
+            aFunction = new GenerateIdFunctionCall();
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::systemProperty) {
+            aFunction = new SystemPropertyFunctionCall(mElementContext->mMappings);
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::elementAvailable) {
+            aFunction =
+                new ElementAvailableFunctionCall(mElementContext->mMappings);
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (aName == txXSLTAtoms::functionAvailable) {
+            aFunction =
+                new FunctionAvailableFunctionCall(mElementContext->mMappings);
+            NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    
+            return NS_OK;
+        }
+        if (!fcp()) {
+            return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
+        }
+    }
 
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::key) {
-       aFunction = new txKeyFunctionCall(mElementContext->mMappings);
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
+    aFunction = new txErrorFunctionCall(aName, aID);
 
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::formatNumber) {
-       aFunction = new txFormatNumberFunctionCall(mStylesheet,
-                                                  mElementContext->mMappings);
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
-
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::current) {
-       aFunction = new CurrentFunctionCall();
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
-
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::unparsedEntityUri) {
-
-       return NS_ERROR_NOT_IMPLEMENTED;
-   }
-   if (aName == txXSLTAtoms::generateId) {
-       aFunction = new GenerateIdFunctionCall();
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
-
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::systemProperty) {
-       aFunction = new SystemPropertyFunctionCall(mElementContext->mMappings);
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
-
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::elementAvailable) {
-       aFunction =
-          new ElementAvailableFunctionCall(mElementContext->mMappings);
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
-
-       return NS_OK;
-   }
-   if (aName == txXSLTAtoms::functionAvailable) {
-       aFunction =
-          new FunctionAvailableFunctionCall(mElementContext->mMappings);
-       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
-
-       return NS_OK;
-   }
-
-   return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
+    return aFunction ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 PRBool
 txStylesheetCompilerState::caseInsensitiveNameTests()
 {
     return PR_FALSE;
-}
-
-PRBool
-txStylesheetCompilerState::fcp()
-{
-    return mElementContext->mForwardsCompatibleParsing;
 }
 
 void

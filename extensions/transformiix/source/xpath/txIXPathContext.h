@@ -80,11 +80,6 @@ public:
      */
     virtual PRBool caseInsensitiveNameTests() = 0;
 
-    /**
-     * Should the expression be parsed in forwards compatible parsing mode
-     */
-    virtual PRBool fcp() = 0;
-
     /*
      * Callback to be used by the Parser if errors are detected.
      */

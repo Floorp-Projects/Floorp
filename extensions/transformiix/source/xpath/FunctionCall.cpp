@@ -198,29 +198,3 @@ FunctionCall::toString(nsAString& aDest)
     aDest.Append(PRUnichar(')'));
 }
 #endif
-
-/**
- * Implementation of txErrorFunctionCall
- *
- * Used for fcp and unknown extension functions.
- */
-
-nsresult
-txErrorFunctionCall::evaluate(txIEvalContext* aContext,
-                              txAExprResult** aResult)
-{
-    *aResult = nsnull;
-
-    return NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION;
-}
-
-#ifdef TX_TO_STRING
-nsresult
-txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
-{
-    *aAtom = mLName;
-    NS_IF_ADDREF(*aAtom);
-
-    return NS_OK;
-}
-#endif

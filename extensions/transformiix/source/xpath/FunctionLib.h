@@ -90,28 +90,6 @@ private:
     BooleanFunctions mType;
 }; //-- BooleanFunctionCall
 
-/**
- * Error Function to be used for unknown extension functions and
- * forwards-compatible-processing (not implemented, bug XXX)
- *
- * txErrorFunctionCall returns NS_ERROR_XPATH_UNKNOWN_FUNCTION
- * (see FunctionCall.cpp)
- */
-class txErrorFunctionCall : public FunctionCall
-{
-public:
-    txErrorFunctionCall(nsIAtom* aLName, const PRInt32 aID)
-        : mLName(aLName),
-          mID(aID)
-    {}
-
-    TX_DECL_FUNCTION;
-
-private:
-    nsCOMPtr<nsIAtom> mLName;
-    PRInt32 mID;
-};
-
 /*
  * A representation of the XPath NodeSet funtions
  */
