@@ -433,10 +433,6 @@ PRBool nsTablePart::AppendChild (nsIContent * aContent)
       contentHandled = PR_TRUE; // whether we succeeded or not, we've "handled" this request
     }
 
-    // Remember to set the table variable -- gpk
-    if (tableContentInterface)
-      tableContentInterface->SetTable(this);
-
     /* if aContent is not a known content type, make a capion out of it */
     // SEC the logic here is very suspicious!!!!
     if (PR_FALSE==contentHandled)

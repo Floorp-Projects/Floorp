@@ -535,7 +535,7 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
 
   if (0==aTableFixedWidth)
   {
-    if (NS_UNCONSTRAINEDSIZE==aMaxWidth)
+    if (NS_UNCONSTRAINEDSIZE==aMaxWidth  ||  NS_UNCONSTRAINEDSIZE==aMinTableWidth)
     { // the max width of the table fits comfortably in the available space
       if (gsDebug) printf ("  * table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
       result = BalanceColumnsTableFits(aPresContext, aAvailWidth, aMaxWidth, aTableFixedWidth);
@@ -559,7 +559,12 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
   }
   else
   { // tables with fixed-width have their own rules
-    if (aTableFixedWidth<aMinTableWidth)
+    if (NS_UNCONSTRAINEDSIZE==aMinTableWidth)
+    { // the table has empty content, and needs to be streched to the specified width
+      if (gsDebug) printf ("  * specified width table > maxTableWidth, calling BalanceColumnsTableFits\n");
+      result = BalanceColumnsTableFits(aPresContext, aAvailWidth, aMaxWidth, aTableFixedWidth);
+    }
+    else if (aTableFixedWidth<aMinTableWidth)
     { // the table's specified width doesn't fit in the available space
       if (gsDebug) printf ("  * specified width table with width<minTableWidth, calling SetColumnsToMinWidth\n");
       result = SetColumnsToMinWidth(aPresContext);

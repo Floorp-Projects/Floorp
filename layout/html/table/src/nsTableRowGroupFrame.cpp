@@ -273,6 +273,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     if (0>=kidAvailSize.height)
       kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
     nsReflowMetrics desiredSize(pKidMaxElementSize);
+    desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
     nsReflowStatus  status;
 
     // Get top margin for this kid
@@ -501,6 +502,7 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
   while (nsnull != nextInFlow) {
     nsReflowMetrics kidSize(pKidMaxElementSize);
+    kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
     nsReflowStatus    status;
 
     // Get the next child
@@ -766,6 +768,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize(pKidMaxElementSize);
+    kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                    eReflowReason_Initial);
     kidFrame->WillReflow(*aPresContext);

@@ -27,6 +27,9 @@
 #include "nsTableCell.h"
 #include "nsCellLayoutData.h"
 #include "nsIView.h"
+#include "nsIPtr.h"
+
+NS_DEF_PTR(nsIStyleContext);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;
@@ -234,6 +237,9 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
   // Place and size the child
   aKidFrame->SetRect(aKidRect);
 
+  // update the running total for the row width
+  aState.x += aKidRect.width;
+
   // Update the maximum element size
   PRInt32 rowSpan = ((nsTableCellFrame*)aKidFrame)->GetRowSpan();
   if (nsnull != aMaxElementSize) 
@@ -322,6 +328,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
 
     nsReflowMetrics         desiredSize(pKidMaxElementSize);
+    desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
     nsReflowStatus          status;
 
     nsMargin       kidMargin(0,0,0,0);
@@ -370,20 +377,17 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     }
-    if (nsnull!=pKidMaxElementSize)
+    if (gsDebug1)
     {
-      if (gsDebug1)
-      {
-        if (nsnull!=pKidMaxElementSize)
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height, 
-                  pKidMaxElementSize->width, pKidMaxElementSize->height);
-        else
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height);
-      }
+      if (nsnull!=pKidMaxElementSize)
+        printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
+                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                desiredSize.width, desiredSize.height, 
+                pKidMaxElementSize->width, pKidMaxElementSize->height);
+      else
+        printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
+                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                desiredSize.width, desiredSize.height);
     }
     NS_RELEASE(content);                                                          // cell: REFCNT--
     cell = nsnull;
@@ -413,8 +417,29 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
     for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
           aState.x += aState.tableFrame->GetColumnWidth(colIndex);
-    // Place the child after taking into account it's margin
-    nsRect kidRect (aState.x, kidMargin.top, desiredSize.width, desiredSize.height);
+    // Place the child after taking into account it's margin and attributes
+    nscoord specifiedHeight = 0;
+    nscoord cellHeight = desiredSize.height;
+    nsIStyleContextPtr kidSC;
+    kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
+    nsStylePosition* kidPosition = (nsStylePosition*)
+      kidSC->GetData(eStyleStruct_Position);
+    switch (kidPosition->mHeight.GetUnit()) {
+    case eStyleUnit_Coord:
+      specifiedHeight = kidPosition->mHeight.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+    case eStyleUnit_Proportional:
+      // XXX for now these fall through
+
+    default:
+    case eStyleUnit_Auto:
+    case eStyleUnit_Inherit:
+      break;
+    }
+    if (specifiedHeight>cellHeight)
+      cellHeight = specifiedHeight;
+    nsRect kidRect (aState.x, kidMargin.top, desiredSize.width, cellHeight);
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
                kidMaxElementSize);
     if (kidMargin.bottom < 0) 
@@ -589,6 +614,7 @@ PRBool nsTableRowFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
   while (nsnull != nextInFlow) {
     nsReflowMetrics desiredSize(pKidMaxElementSize);
+    desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
     nsReflowStatus  status;
 
     // Get the next child
@@ -613,7 +639,7 @@ PRBool nsTableRowFrame::PullUpChildren(nsIPresContext*      aPresContext,
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
-    nsSize            kidFrameSize;
+    nsSize            kidFrameSize(0,0);
     nsSplittableType  kidIsSplittable;
 
     kidFrame->GetSize(kidFrameSize);
@@ -841,7 +867,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
 	mLastContentIsComplete = PR_TRUE;
 
   // Place our children, one at a time, until we are out of children
-  nsSize    kidMaxElementSize;
+  nsSize    kidMaxElementSize(0,0);
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   nsSize    kidAvailSize(aState.availSize);
   PRInt32   kidIndex = NextChildOffset();
@@ -901,6 +927,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics desiredSize(pKidMaxElementSize);
+    desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
     nsReflowStatus status;
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
     {
@@ -1079,7 +1106,7 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   }
 
   // Return our desired rect
-  aDesiredSize.width = aReflowState.maxSize.width;
+  aDesiredSize.width = state.x;
   aDesiredSize.height = state.maxCellVertSpace;   
 
 #ifdef NS_DEBUG

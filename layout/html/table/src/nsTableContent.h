@@ -29,7 +29,7 @@
  * within a table.
  *
  * @author  sclark
- * @version $Revision: 3.3 $
+ * @version $Revision: 3.4 $
  * @see
  */
 class nsTableContent : public nsHTMLContainer, public nsITableContent
@@ -59,6 +59,8 @@ public:
     *                   this caption.
     */
   nsTableContent (nsIAtom* aTag, PRBool aImplicit);
+
+  virtual ~nsTableContent();
 
   /** supports implementation */
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtrResult);

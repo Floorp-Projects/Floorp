@@ -189,9 +189,6 @@ PRBool nsTableColGroup::AppendChild (nsIContent *aContent)
     result = nsTableContent::AppendChild (aContent);
   if (result)
   {
-    /* Set the table pointer */
-    ((nsTableContent*)aContent)->SetTable(mTable);
-    
     ((nsTableCol *)aContent)->SetColGroup (this);
     ResetColumns ();
   }
