@@ -86,6 +86,7 @@ extern int winfeInProcessNet;
 #define STARTUP_CONFERENCE      0x8000
 #define STARTUP_CLIENT_MAPI     0x10000  // rhp - DOES THIS WORK - will it break other startups???  
 #define STARTUP_CLIENT_ABAPI    0x20000  // rhp - for use with Address Book API
+#define STARTUP_PREFS           0x40000
 
 // max list of things in the menu
 #define MAX_HISTORY_ITEMS   (LAST_HISTORY_MENU_ID-FIRST_HISTORY_MENU_ID)
@@ -603,6 +604,9 @@ public:
 	BOOL m_bReverseSenseOfHtmlCompose;
 #endif /*MOZ_MAIL_NEWS */
 
+    // Desktop integration preferences stuff.
+    BOOL m_bShowPrefsOnStartup;
+
 	inline BOOL showSplashScreen(const CString &csPrintCommand); 
 
     //{{AFX_MSG(CNetscapeApp)
@@ -619,9 +623,9 @@ public:
 BOOL CNetscapeApp::showSplashScreen(const CString &csPrintCommand)
 {
 #ifdef MOZ_MAIL_NEWS
-	return (!(m_bEmbedded || m_bAutomated || m_bCreateInboxMAPI || m_bCreateNABWin) && csPrintCommand.IsEmpty());
+	return (!(m_bEmbedded || m_bAutomated || m_bCreateInboxMAPI || m_bCreateNABWin || m_bShowPrefsOnStartup) && csPrintCommand.IsEmpty());
 #else
-	return (!(m_bEmbedded || m_bAutomated) && csPrintCommand.IsEmpty());
+	return (!(m_bEmbedded || m_bAutomated || m_bShowPrefsOnStartup) && csPrintCommand.IsEmpty());
 #endif
 }
 
