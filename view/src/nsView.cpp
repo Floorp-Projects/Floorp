@@ -152,8 +152,13 @@ nsView :: ~nsView()
     mParent->RemoveChild(this);
   }
 
-  // Destroy and release the widget
+  if (nsnull != mZParent)
+  {
+    mZParent->RemoveChild(this);
+    mZParent->Destroy();
+  }
 
+  // Destroy and release the widget
   if (nsnull != mWindow)
   {
     mWindow->SetClientData(nsnull);
@@ -1093,6 +1098,18 @@ NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
 NS_IMETHODIMP nsView :: GetVisibility(nsViewVisibility &aVisibility) const
 {
   aVisibility = mVis;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: SetZParent(nsIView *aZParent)
+{
+  mZParent = aZParent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: GetZParent(nsIView *&aZParent) const
+{
+  aZParent = mZParent;
   return NS_OK;
 }
 

@@ -1090,6 +1090,12 @@ NS_IMETHODIMP nsViewManager2::Composite()
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager2::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
+{
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
 {
 	// Mark the entire view as damaged
@@ -1557,6 +1563,12 @@ NS_IMETHODIMP nsViewManager2::InsertChild(nsIView *parent, nsIView *child, PRInt
 				UpdateView(child, NS_VMREFRESH_NO_SYNC);
 		}
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager2::InsertZPlaceholder(nsIView *aParent, nsIView *aZChild,
+                                                 PRInt32 aZIndex)
+{
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::RemoveChild(nsIView *parent, nsIView *child)

@@ -1869,6 +1869,11 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager :: InsertZPlaceholder(nsIView *parent, nsIView *child, PRInt32 zindex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zindex)
 {
   NS_PRECONDITION(nsnull != parent, "null ptr");
@@ -2994,6 +2999,12 @@ nsViewManager::IsCachingWidgetChanges(PRBool* aCaching)
 NS_IMETHODIMP
 nsViewManager::CacheWidgetChanges(PRBool aCache)
 {  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
+{
   return NS_OK;
 }
 
