@@ -434,7 +434,12 @@ nsGenericDOMDataNode::GetData(nsAString& aData)
     // terminated strings.
 
     const char *data = mText.Get1b();
-    CopyASCIItoUCS2(Substring(data, data + mText.GetLength()), aData);
+
+    if (data) {
+      CopyASCIItoUCS2(Substring(data, data + mText.GetLength()), aData);
+    } else {
+      aData.Truncate();
+    }
   }
 
   return NS_OK;
