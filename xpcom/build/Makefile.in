@@ -82,7 +82,8 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 SDK_HEADERS =  \
-		nsXPCOM.h    \
+		nsXPCOM.h       \
+		nsXPCOMCID.h    \
 		$(NULL)
 
 SDK_BINARY = $(IMPORT_LIBRARY) $(SHARED_LIBRARY)
