@@ -529,6 +529,13 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   nsCOMPtr<nsIRDFResource> downloadRes;
   gRDFService->GetUnicodeResource(path, getter_AddRefs(downloadRes));
 
+  // Save state of existing downloads NOW... because inserting the new 
+  // download resource into the container will cause the FE to rebuild and all 
+  // the active downloads will have their progress reset (since progress is held
+  // mostly by the FE and not the datasource) until they get another progress
+  // notification (which could be a while for slow downloads).
+  SaveState();
+
   // if the resource is in the container already (the user has already
   // downloaded this file), remove it
   PRInt32 itemIndex;

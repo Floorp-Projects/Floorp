@@ -407,6 +407,7 @@ function onUpdateProgress()
   var numActiveDownloads = gActiveDownloads.length;
   if (numActiveDownloads == 0) {
     window.title = document.documentElement.getAttribute("statictitle");
+    gLastComputedMean = 0;
     return;
   }
     
@@ -419,6 +420,15 @@ function onUpdateProgress()
   }
 
   mean = Math.round(mean / numActiveDownloads);
+  
+  // At the end of a download, progress is set from 100% to 0% for 
+  // some reason. We can identify this case because at this point the
+  // mean progress will be zero but the last computed mean will be
+  // greater than zero. 
+  if (mean == 0 && gLastComputedMean > 0) {
+    window.title = document.documentElement.getAttribute("statictitle");
+    return;
+  }
   if (mean != gLastComputedMean) {
     gLastComputedMean = mean;
     var strings = document.getElementById("downloadStrings");
