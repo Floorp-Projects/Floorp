@@ -103,10 +103,11 @@ Signaller::~Signaller()
 
 const char* getTypeName(void* ptr)
 {
+#if 0
     // sanity check the vtable pointer, before trying to use RTTI on the object.
     void** vt = *(void***)ptr;
     if (vt && !(unsigned(vt) & 3)) {
-	Signaller signaller(SIGSEGV);
+	Signaller s1(SIGSEGV), s2(SIGILL);
 	if (attempt() == 0) {
 	    IUnknown* u = static_cast<IUnknown*>(ptr);
 	    const char* type = typeid(*u).name();
@@ -118,6 +119,7 @@ const char* getTypeName(void* ptr)
 	    }
 	} 
     }
+#endif
     return "void*";
 }
 
