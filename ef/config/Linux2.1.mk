@@ -13,3 +13,9 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+
+#
+# Config stuff for Linux 2.0 (ELF)
+#
+
+include $(DEPTH)/config/Linux.mk
