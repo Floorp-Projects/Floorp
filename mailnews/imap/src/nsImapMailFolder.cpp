@@ -428,7 +428,7 @@ nsresult nsImapMailFolder::GetDatabase()
 			else
 			{
 				//Otherwise we have a valid database so lets extract necessary info.
-				UpdateSummaryTotals(PR_FALSE);
+				UpdateSummaryTotals(PR_TRUE);
 			}
 		}
 		else
