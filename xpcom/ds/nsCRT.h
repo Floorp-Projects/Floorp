@@ -193,4 +193,35 @@ public:
   static PRBool IsLower(PRUnichar aChar);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nsHashtable.h"
+
+class nsUnicharKey : public nsHashKey {
+private:
+  PRUnichar* mStr;
+
+public:
+  nsUnicharKey(const PRUnichar* str) {
+    mStr = nsCRT::strdup(str);
+    NS_ASSERTION(mStr, "out of memory");
+  }
+
+  virtual ~nsUnicharKey(void) {
+    delete[] mStr;
+  }
+
+  virtual PRUint32 HashValue(void) const {
+    return nsCRT::HashValue(mStr);
+  }
+
+  virtual PRBool Equals(const nsHashKey* aKey) const {
+    return nsCRT::strcmp(NS_STATIC_CAST(const nsUnicharKey*, aKey)->mStr, mStr) == 0;
+  }
+
+  virtual nsHashKey* Clone() const {
+    return new nsUnicharKey(mStr);
+  }
+};
+
 #endif /* nsCRT_h___ */
