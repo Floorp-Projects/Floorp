@@ -82,14 +82,6 @@ nsFilePicker::~nsFilePicker()
   NS_IF_RELEASE(mUnicodeDecoder);
 }
 
-// we used to use MAX_PATH
-// which works great for one file
-// but for multiple files, the format is
-// dirpath\0\file1\0file2\0...filen\0\0
-// and that can quickly be more than MAX_PATH (260)
-// see bug #172001 for more details
-#define FILE_BUFFER_SIZE 4096 
-
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
