@@ -135,6 +135,101 @@ void nsCSSSelector::Set(const nsString& aTag, const nsString& aID,
   }
 }
 
+// -- CSSImportantRule -------------------------------
+
+static nscoord CalcLength(const nsCSSValue& aValue, const nsStyleFont* aFont, 
+                          nsIPresContext* aPresContext);
+static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                       PRInt32 aMask, const nsStyleFont* aFont, 
+                       nsIPresContext* aPresContext);
+
+static void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
+                               nsIStyleContext* aContext, nsIPresContext* aPresContext);
+
+
+class CSSImportantRule : public nsIStyleRule {
+public:
+  CSSImportantRule(nsICSSDeclaration* aDeclaration);
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+
+  // Strength is an out-of-band weighting, useful for mapping CSS ! important
+  NS_IMETHOD GetStrength(PRInt32& aStrength);
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+protected:
+  ~CSSImportantRule(void);
+
+  nsICSSDeclaration*  mDeclaration;
+};
+
+CSSImportantRule::CSSImportantRule(nsICSSDeclaration* aDeclaration)
+  : mDeclaration(aDeclaration)
+{
+  NS_IF_ADDREF(mDeclaration);
+}
+
+CSSImportantRule::~CSSImportantRule(void)
+{
+  NS_IF_RELEASE(mDeclaration);
+}
+
+NS_IMPL_ISUPPORTS(CSSImportantRule, kIStyleRuleIID);
+
+NS_IMETHODIMP
+CSSImportantRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+{
+  aResult = PRBool(aRule == this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportantRule::HashValue(PRUint32& aValue) const
+{
+  aValue = PRUint32(mDeclaration);
+  return NS_OK;
+}
+
+// Strength is an out-of-band weighting, useful for mapping CSS ! important
+NS_IMETHODIMP
+CSSImportantRule::GetStrength(PRInt32& aStrength)
+{
+  aStrength = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportantRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  MapDeclarationInto(mDeclaration, aContext, aPresContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
+{
+  // Indent
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  fputs("! Important rule ", out);
+  if (nsnull != mDeclaration) {
+    mDeclaration->List(out);
+  }
+  else {
+    fputs("{ null declaration }", out);
+  }
+  fputs("\n", out);
+
+  return NS_OK;
+}
+
+
 // -- nsCSSStyleRule -------------------------------
 
 class CSSStyleRuleImpl : public nsICSSStyleRule {
@@ -151,6 +246,8 @@ public:
 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
   NS_IMETHOD HashValue(PRUint32& aValue) const;
+  // Strength is an out-of-band weighting, useful for mapping CSS ! important
+  NS_IMETHOD GetStrength(PRInt32& aStrength);
 
   virtual nsCSSSelector* FirstSelector(void);
   virtual void AddSelector(const nsCSSSelector& aSelector);
@@ -162,11 +259,7 @@ public:
   virtual PRInt32 GetWeight(void) const;
   virtual void SetWeight(PRInt32 aWeight);
 
-  virtual nscoord CalcLength(const nsCSSValue& aValue, const nsStyleFont* aFont, 
-                             nsIPresContext* aPresContext);
-  virtual PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                          PRInt32 aMask, const nsStyleFont* aFont, 
-                          nsIPresContext* aPresContext);
+  virtual nsIStyleRule* GetImportantRule(void);
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
@@ -184,9 +277,10 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsCSSSelector   mSelector;
-  nsICSSDeclaration* mDeclaration;
-  PRInt32         mWeight;
+  nsCSSSelector       mSelector;
+  nsICSSDeclaration*  mDeclaration;
+  PRInt32             mWeight;
+  CSSImportantRule*   mImportantRule;
 #ifdef DEBUG_REFS
   PRInt32 mInstance;
 #endif
@@ -234,7 +328,8 @@ static const PRInt32 kInstrument = 1075;
 #endif
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
-  : mSelector(aSelector), mDeclaration(nsnull), mWeight(0)
+  : mSelector(aSelector), mDeclaration(nsnull), 
+    mWeight(0), mImportantRule(nsnull)
 {
   NS_INIT_REFCNT();
 #ifdef DEBUG_REFS
@@ -253,6 +348,7 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl()
     delete selector;
   }
   NS_IF_RELEASE(mDeclaration);
+  NS_IF_RELEASE(mImportantRule);
 #ifdef DEBUG_REFS
   --gInstanceCount;
   fprintf(stdout, "%d of %d - CSSStyleRule\n", mInstance, gInstanceCount);
@@ -355,6 +451,14 @@ CSSStyleRuleImpl::HashValue(PRUint32& aValue) const
   return NS_OK;
 }
 
+// Strength is an out-of-band weighting, useful for mapping CSS ! important
+NS_IMETHODIMP
+CSSStyleRuleImpl::GetStrength(PRInt32& aStrength)
+{
+  aStrength = 0;
+  return NS_OK;
+}
+
 nsCSSSelector* CSSStyleRuleImpl::FirstSelector(void)
 {
   return &mSelector;
@@ -406,6 +510,7 @@ nsICSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 
 void CSSStyleRuleImpl::SetDeclaration(nsICSSDeclaration* aDeclaration)
 {
+  NS_IF_RELEASE(mImportantRule); 
   NS_IF_RELEASE(mDeclaration);
   mDeclaration = aDeclaration;
   NS_IF_ADDREF(mDeclaration);
@@ -421,9 +526,24 @@ void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
   mWeight = aWeight;
 }
 
-nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
-                                     const nsStyleFont* aFont, 
-                                     nsIPresContext* aPresContext)
+nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
+{
+  if ((nsnull == mImportantRule) && (nsnull != mDeclaration)) {
+    nsICSSDeclaration*  important;
+    mDeclaration->GetImportantValues(important);
+    if (nsnull != important) {
+      mImportantRule = new CSSImportantRule(important);
+      NS_ADDREF(mImportantRule);
+      NS_RELEASE(important);
+    }
+  }
+  NS_IF_ADDREF(mImportantRule);
+  return mImportantRule;
+}
+
+nscoord CalcLength(const nsCSSValue& aValue,
+                   const nsStyleFont* aFont, 
+                   nsIPresContext* aPresContext)
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
   if (aValue.IsFixedLengthUnit()) {
@@ -467,9 +587,9 @@ nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
 #define SETCOORD_IAH    (SETCOORD_INTEGER | SETCOORD_AH)
 
-PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                                  PRInt32 aMask, const nsStyleFont* aFont, 
-                                  nsIPresContext* aPresContext)
+PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                PRInt32 aMask, const nsStyleFont* aFont, 
+                nsIPresContext* aPresContext)
 {
   PRBool  result = PR_TRUE;
   if (aValue.GetUnit() == eCSSUnit_Null) {
@@ -516,11 +636,18 @@ PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord
 NS_IMETHODIMP
 CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  if (nsnull != mDeclaration) {
+  MapDeclarationInto(mDeclaration, aContext, aPresContext);
+  return NS_OK;
+}
+
+void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
+                        nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  if (nsnull != aDeclaration) {
     nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
 
     nsCSSFont*  ourFont;
-    if (NS_OK == mDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) {
+    if (NS_OK == aDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) {
       if (nsnull != ourFont) {
         const nsStyleFont* parentFont = font;
         nsIStyleContext* parentContext = aContext->GetParent();
@@ -629,7 +756,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
     }
 
     nsCSSText*  ourText;
-    if (NS_OK == mDeclaration->GetData(kCSSTextSID, (nsCSSStruct**)&ourText)) {
+    if (NS_OK == aDeclaration->GetData(kCSSTextSID, (nsCSSStruct**)&ourText)) {
       if (nsnull != ourText) {
         // Get our text style and our parent's text style
         nsStyleText* text = (nsStyleText*) aContext->GetMutableStyleData(eStyleStruct_Text);
@@ -679,7 +806,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
     }
 
     nsCSSDisplay*  ourDisplay;
-    if (NS_OK == mDeclaration->GetData(kCSSDisplaySID, (nsCSSStruct**)&ourDisplay)) {
+    if (NS_OK == aDeclaration->GetData(kCSSDisplaySID, (nsCSSStruct**)&ourDisplay)) {
       if (nsnull != ourDisplay) {
         // Get our style and our parent's style
         nsStyleDisplay* display = (nsStyleDisplay*)
@@ -778,7 +905,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
 
 
     nsCSSColor*  ourColor;
-    if (NS_OK == mDeclaration->GetData(kCSSColorSID, (nsCSSStruct**)&ourColor)) {
+    if (NS_OK == aDeclaration->GetData(kCSSColorSID, (nsCSSStruct**)&ourColor)) {
       if (nsnull != ourColor) {
         nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
 
@@ -879,7 +1006,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
     }
 
     nsCSSMargin*  ourMargin;
-    if (NS_OK == mDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
+    if (NS_OK == aDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
       if (nsnull != ourMargin) {
         nsStyleSpacing* spacing = (nsStyleSpacing*)
           aContext->GetMutableStyleData(eStyleStruct_Spacing);
@@ -972,7 +1099,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
     }
 
     nsCSSPosition*  ourPosition;
-    if (NS_OK == mDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
+    if (NS_OK == aDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
       if (nsnull != ourPosition) {
         nsStylePosition* position = (nsStylePosition*)aContext->GetMutableStyleData(eStyleStruct_Position);
 
@@ -1004,7 +1131,7 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
     }
 
     nsCSSList* ourList;
-    if (NS_OK == mDeclaration->GetData(kCSSListSID, (nsCSSStruct**)&ourList)) {
+    if (NS_OK == aDeclaration->GetData(kCSSListSID, (nsCSSStruct**)&ourList)) {
       if (nsnull != ourList) {
         nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
 
@@ -1029,7 +1156,6 @@ CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresC
       }
     }
   }
-  return NS_OK;
 }
 
 
