@@ -168,6 +168,14 @@ void CToken::SetStringValue(const char* name){
 }
 
 /**
+ * Setter method for the string value of this token
+ */
+void CToken::SetStringValue(nsString& aStr)
+{
+  mTextValue = aStr;
+}
+
+/**
  *  This method retrieves the value of this internal string. 
  *  
  *  @update gess 3/25/98

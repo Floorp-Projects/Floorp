@@ -94,7 +94,9 @@ protected:
   void SetupExpatParser(void);
 
   // Propagate XML errors to the content sink
-  void PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
+  nsresult PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
+  nsresult AddErrorMessageTokens(nsParserError* aError);
+
 	void GetLine(const char* aSourceBuffer, PRUint32 aLength, 
     PRUint32 aByteIndex, nsString& aLine);
 

@@ -158,8 +158,6 @@ protected:
   void StartLayoutProcess();
 
   nsresult AddText(const nsString& aString);
-  nsresult CreateErrorText(const nsParserError* aError, nsString& aErrorString);
-  nsresult CreateSourceText(const nsParserError* aError, nsString& aSourceString);
 
   static void
   GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
