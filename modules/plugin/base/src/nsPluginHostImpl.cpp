@@ -2127,6 +2127,25 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       mWeakPtrChannelLoadGroup = getter_AddRefs(NS_GetWeakReference(loadGroup));
   }
 
+  PRInt32 length;
+  rv = channel->GetContentLength(&length);
+
+  // it's possible for the server to not send a Content-Length.
+  // we should still work in this case.
+  if (NS_FAILED(rv) || length == -1) {
+    // check out if this is file channel 
+    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel);
+    if (fileChannel) {
+      // file does not exist
+      mRequestFailed = PR_TRUE;
+      return NS_ERROR_FAILURE;
+    }
+    mPluginStreamInfo->SetLength(PRUint32(0));
+  }
+  else {
+    mPluginStreamInfo->SetLength(length);
+  }
+
   nsCAutoString aContentType;
   rv = channel->GetContentType(aContentType);
   if (NS_FAILED(rv)) 
@@ -2198,20 +2217,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   //
   // Set up the stream listener...
   //
-  PRInt32 length;
-
-  rv = channel->GetContentLength(&length);
-
-  // it's possible for the server to not send a Content-Length.  We should
-  // still work in this case.
-  if (NS_FAILED(rv) || length == -1) {
-    mPluginStreamInfo->SetLength(PRUint32(0));
-  }
-  else {
-    mPluginStreamInfo->SetLength(length);
-  }
-
-
   rv = SetUpStreamListener(request, aURL);
   if (NS_FAILED(rv)) return rv;
 
@@ -5556,8 +5561,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   if (aURL.Length() <= 0)
     return NS_OK;
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-
   // get the full URL of the document that the plugin is embedded
   //   in to create an absolute url in case aURL is relative
   nsCOMPtr<nsIDocument> doc;
@@ -5575,7 +5578,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       {
         nsCOMPtr<nsIURI> docURL;
         doc->GetBaseURL(*getter_AddRefs(docURL));
-        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
  
         // Create an absolute URL
         rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);
@@ -5618,8 +5620,11 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
       nsCOMPtr<nsIChannel> channel;
 
-      rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, loadGroup, callbacks,
-        /* prevents throbber from becoming active */ nsIRequest::LOAD_BACKGROUND);
+      rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull,
+        nsnull, /* do not add this internal plugin's channel
+                on the load group otherwise this channel could be canceled
+                form |nsWebShell::OnLinkClickSync| bug 166613 */
+        callbacks);
       if (NS_FAILED(rv)) 
         return rv;
 
@@ -5821,7 +5826,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
     nsCOMPtr<nsIChannel> channel;
 
     rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, loadGroup, nsnull,
-      /* prevents throbber from becoming active */ nsIRequest::LOAD_BACKGROUND);
+       nsIChannel::LOAD_DOCUMENT_URI /* to handle onload for this url */);
     if (NS_SUCCEEDED(rv)) {
       // if this is http channel, set referrer, some servers are configured
       // to reject requests without referrer set, see bug 157796
