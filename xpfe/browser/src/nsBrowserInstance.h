@@ -38,6 +38,10 @@
 #include "nsISessionHistory.h"
 #include "nsIURIContentListener.h"
 
+#ifdef DEBUG_radha
+#include "nsISHistory.h"
+#endif  
+
 class nsIBrowserWindow;
 class nsIWebShell;
 class nsIScriptContext;
@@ -116,6 +120,9 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
+#ifdef DEBUG_radha
+	nsISHistory *       mNewSHistory;
+#endif  /* DEBUG_radha */
 	PRBool              mIsLoadingHistory;
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
