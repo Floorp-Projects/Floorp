@@ -391,6 +391,8 @@ public:
     NS_IMETHOD ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent);
 
+    NS_IMETHOD ContentStateChanged(nsIContent* aContent);
+
     NS_IMETHOD AttributeChanged(nsIContent* aChild,
                                 nsIAtom* aAttribute,
                                 PRInt32 aHint); // See nsStyleConsts fot hint values
@@ -1319,6 +1321,17 @@ XULDocumentImpl::ContentChanged(nsIContent* aContent,
     for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentChanged(this, aContent, aSubContent);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+XULDocumentImpl::ContentStateChanged(nsIContent* aContent)
+{
+    PRInt32 count = mObservers.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+        observer->ContentStateChanged(this, aContent);
     }
     return NS_OK;
 }

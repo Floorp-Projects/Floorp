@@ -120,6 +120,8 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext*  aPresContext,
                             nsIContent* aContent,
                             nsISupports* aSubContent) = 0;
+  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
+                                 nsIContent* aContent) = 0;
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,

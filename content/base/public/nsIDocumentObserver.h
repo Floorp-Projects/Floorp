@@ -92,6 +92,25 @@ public:
                             nsISupports* aSubContent) = 0;
 
   /**
+   * Notification that the state of a content node has changed. 
+   * (ie: gained or lost focus, became active or hovered over)
+   * This method is called automatically by content objects 
+   * when their state is changed (therefore there is normally 
+   * no need to invoke this method directly).  The notification 
+   * is passed to any IDocumentObservers. The notification is 
+   * passed on to all of the document observers. <p>
+   *
+   * This notification is not sent when a piece of content is
+   * added/removed from the document or the content itself changed 
+   * (the other notifications are used for that).
+   *
+   * @param aDocument The document being observed
+   * @param aContent the piece of content that changed
+   */
+  NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
+                                 nsIContent* aContent) = 0;
+
+  /**
    * Notification that the content model has changed. This method is called
    * automatically by content objects when an attribute's value has changed
    * (therefore there is normally no need to invoke this method directly). The

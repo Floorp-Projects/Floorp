@@ -123,6 +123,8 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
 			                      nsIContent* aContent,
                             nsISupports* aSubContent) { return NS_OK; }
+  NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
+                                 nsIContent* aContent) { return NS_OK; }
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               nsIAtom*     aAttribute,
@@ -1196,6 +1198,24 @@ nsDocument::ContentChanged(nsIContent* aContent,
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocument::ContentStateChanged(nsIContent* aContent)
+{
+  PRInt32 count = mObservers.Count();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+    observer->ContentStateChanged(this, aContent);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsDocument::ContentAppended(nsIContent* aContainer,
