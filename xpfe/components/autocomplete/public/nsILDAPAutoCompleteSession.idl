@@ -52,7 +52,7 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      * @exception NS_ERROR_NULL_POINTER     NULL pointer passed to getter
      * @exception NS_ERROR_OUT_OF_MEMORY    Getter couldn't allocate string
      */
-    attribute wstring filterTemplate;
+    attribute AUTF8String filterTemplate;
 
     /**
      * At most this many nsIAutoCompleteItems will be returned.  This
