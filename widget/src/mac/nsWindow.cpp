@@ -650,7 +650,6 @@ NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
 
 NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
 {
-printf("\nsetting bounds to x y w h %ld %ld %ld %ld\n\n", aRect.x, aRect.y, aRect.width, aRect.height );
   nsresult rv = Inherited::SetBounds(aRect);
   if ( NS_SUCCEEDED(rv) )
     CalcWindowRegions();
