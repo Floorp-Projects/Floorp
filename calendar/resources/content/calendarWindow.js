@@ -148,14 +148,33 @@ function CalendarWindow( )
 
     var savedThis = this;
     var calendarObserver = {
-        onStartBatch: function() { },
-        onEndBatch: function() { },
-        onLoad: function() { },
-        onAddItem: function(aItem) { calendarWindow.currentView.refreshEvents(); },
-        onModifyItem: function(aNewItem, aOldItem) { calendarWindow.currentView.refreshEvents(); },
-        onDeleteItem: function(aDeletedItem) { calendarWindow.currentView.refreshEvents(); },
+        mInBatch: false,
+
+        onStartBatch: function() {
+            this.mInBatch = true;
+        },
+        onEndBatch: function() {
+            this.mInBatch = false;
+            calendarWindow.currentView.refreshEvents();
+        },
+        onLoad: function() {
+            if (!this.mInBatch)
+                refreshEventTree();
+        },
+        onAddItem: function(aItem) {
+            if (!this.mInBatch)
+                calendarWindow.currentView.refreshEvents();
+        },
+        onModifyItem: function(aNewItem, aOldItem) {
+            if (!this.mInBatch)
+                calendarWindow.currentView.refreshEvents();
+        },
+        onDeleteItem: function(aDeletedItem) {
+            if (!this.mInBatch)
+                calendarWindow.currentView.refreshEvents();
+        },
         onAlarm: function(aAlarmItem) {},
-        onError: function(aErrNo, aMessage) { }
+        onError: function(aMessage) {}
     }
     var calendar = getCalendar();
     calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);

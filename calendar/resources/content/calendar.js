@@ -727,6 +727,22 @@ function getCalendar()
    }
 }
 
+var gDisplayComposite;
+
+function getDisplayComposite()
+{
+    if (!gDisplayComposite) {
+       gDisplayComposite = Components.classes["@mozilla.org/calendar/calendar;1?type=composite"]
+                                     .createInstance(Components.interfaces.calICompositeCalendar);
+       var calMgr = getCalendarManager();
+       var calList = calMgr.getCalendars({});
+       for (i in calList) {
+           gDisplayComposite.addCalendar(calList[i]);
+       }
+    }
+    return gDisplayComposite;
+}
+
 function isEvent(aObject)
 {
    return aObject instanceof Components.interfaces.calIEvent;

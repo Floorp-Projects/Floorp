@@ -241,7 +241,7 @@ MonthView.prototype.refreshEvents = function()
         }
     };
 
-    var ccalendar = getCalendar(); // XXX Should get the composite calendar here
+    var ccalendar = getDisplayComposite();
 
     dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
 
@@ -251,6 +251,10 @@ MonthView.prototype.refreshEvents = function()
 
 MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, endDate)
 {
+    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(startDate.jsDate)];
+    if (!dayBoxItem)
+        return;
+
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
  
     // Make a box item to hold the event
@@ -301,7 +305,6 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     eventBox.appendChild(eventBoxText);        
 
     // XXX need to look at the number of children here and determine what we're supposed to do
-    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(startDate.jsDate)];
     dayBoxItem.appendChild(eventBox);
 
 /*
@@ -572,7 +575,7 @@ MonthView.prototype.refreshDisplay = function()
    var lastDateCol = (firstDateCol + lastDayOfMonth - 1) % 7;
 
    this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDateCol, 0, 0, 0 );
-   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDateCol, 23, 59, 59 );
+   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDateCol, 0, 0, 0 );
    
   // hide or unhide columns for days off
   for(var day = 0; day < 7; day++) {

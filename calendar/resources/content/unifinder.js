@@ -133,10 +133,6 @@ function selectSelectedEventsInTree( EventsToSelect )
 *   display up to date when the calendar event data is changed
 */
 
-/*function unifinderObserver() {
-}*/
-
-
 var unifinderObserver = {
     mInBatch: false,
 
@@ -187,8 +183,8 @@ function prepareCalendarUnifinder( )
    
    // set up our calendar event observer
    
-   var ccalendar=getCalendar();
-   ccalendar.addObserver(unifinderObserver,ccalendar.ITEM_FILTER_TYPE_EVENT);
+   var ccalendar = getDisplayComposite();
+   ccalendar.addObserver(unifinderObserver, ccalendar.ITEM_FILTER_TYPE_EVENT);
    refreshEventTree(); //Display something upon first load. onLoad doesn't work properly for observers
 }
 

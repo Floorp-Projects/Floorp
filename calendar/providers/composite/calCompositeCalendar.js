@@ -74,32 +74,24 @@ calCompositeCalendar.prototype = {
     mCalendars: Array(),
     mDefaultCalendar: null,
 
-    addCalendar: function (aServer, aType) {
+    addCalendar: function (aCalendar) {
         // check if the calendar already exists
         for (cal in this.mCalendars) {
-            if (cal.uri == aServer) {
+            if (cal.uri == aCalendar.uri) {
                 // throw exception if calendar already exists?
                 return;
             }
         }
 
-        // construct a new calendar
-        var cid = "@mozilla.org/calendar/calendar;1?type=" + aType;
-        var cal = Components.classes[cid].createInstance(Components.interfaces.calICalendar);
+        this.mCalendars.push(aCalendar);
 
-        cal.uri = aServer;
-
-        this.mCalendars.push(cal);
-
-        this.observeCalendarAdded(cal);
+        this.observeCalendarAdded(aCalendar);
 
         // if we have no default calendar, we need one here
         if (this.mDefaultCalendar == null) {
-            this.mDefaultCalendar = cal;
-            this.observeDefaultCalendarChanged(cal);
+            this.mDefaultCalendar = aCalendar;
+            this.observeDefaultCalendarChanged(aCalendar);
         }
-
-        return cal;
     },
 
     removeCalendar: function (aServer) {
@@ -234,7 +226,7 @@ calCompositeCalendar.prototype = {
     getItems: function (aItemFilter, aCount, aRangeStart, aRangeEnd, aListener) {
         var cmpListener = new calCompositeGetListenerHelper(this.mCalendars.length, aListener, aCount);
         for (cal in this.mCalendars) {
-            cal.getItems (aItemFilter, aCount, aRangeEnd, aRangeEnd, aListener);
+            this.mCalendars[cal].getItems (aItemFilter, aCount, aRangeStart, aRangeEnd, cmpListener);
         }
     },
 
@@ -254,7 +246,7 @@ calCompositeCalendar.prototype = {
     observeDefaultCalendarChanged: function (aCalendar) {
         for (obs in this.mCompositeObservers)
             obs.onDefaultCalendarChanged (aCalendar);
-    },
+    }
 };
 
 // composite listener helper
@@ -328,9 +320,9 @@ calCompositeGetListenerHelper.prototype = {
         }
 
         // send GetResults to the real listener
-        this.mRealListener (aCalendar, aStatus, aItemType, aDetail, aCount, aItems);
+        this.mRealListener.onGetResult (aCalendar, aStatus, aItemType, aDetail, aCount, aItems);
         this.mItemsReceived += aCount;
-    },
+    }
 
 };
 

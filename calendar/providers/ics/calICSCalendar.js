@@ -125,6 +125,7 @@ calICSCalendar.prototype = {
     {
         // XXX ?? Is this ok?
         this.mItems = new Array();
+        this.observeOnStartBatch();
 
         var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                                          .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
@@ -176,6 +177,9 @@ calICSCalendar.prototype = {
             }
             
         //} catch(e) { dump(e+"\n");}
+
+        this.observeOnEndBatch();
+
         this.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
         this.observeOnLoad();
     },
@@ -267,6 +271,16 @@ calICSCalendar.prototype = {
     observeOnError: function (aErrNo, aMessage) {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].observer.onError (aErrNo, aMessage);
+    },
+
+    observeOnStartBatch: function () {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onStartBatch ();
+    },
+
+    observeOnEndBatch: function () {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onEndBatch ();
     },
 
     // nsIInterfaceRequestor impl
