@@ -193,7 +193,7 @@ nsresult nsXPTCStubBase::Stub##n() \
                               \
     __asm__ __volatile__      \
     (                         \
-        "l     %0,0(15)\n\t"  \
+        "lr    %0,15\n\t"     \
         "ahi   %0,96\n\t"     \
         "stm   3,6,0(%3)\n\t" \
         "std   0,%1\n\t"      \

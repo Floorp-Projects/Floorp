@@ -193,7 +193,7 @@ nsresult nsXPTCStubBase::Stub##n() \
                               \
     __asm__ __volatile__      \
     (                         \
-        "lg     %0,0(15)\n\t" \
+        "lgr    %0,15\n\t"    \
         "aghi   %0,160\n\t"   \
         "stmg   3,6,0(%5)\n\t"\
         "std    0,%1\n\t"     \
