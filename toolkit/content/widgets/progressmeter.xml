@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<bindings id="progressmeterBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="progressmeter">
+    <resources>
+      <stylesheet src="chrome://global/skin/progressmeter.css"/>
+    </resources>
+
+    <content>
+      <xul:spacer class="progress-bar" xbl:inherits="mode"/>
+      <xul:spacer class="progress-remainder" xbl:inherits="mode"/>
+    </content>
+    
+    <implementation implements="nsIAccessibleProvider">     
+      <property name="label" onset="if (this.label != val) this.setAttribute('label',val); return val;"
+                                      onget="return this.getAttribute('label');"/>
+
+      <property name="mode" onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
+                            onget="return this.getAttribute('mode');"/>
+
+      <property name="value" onget="return this.getAttribute('value');">
+        <setter><![CDATA[
+          var p = Math.round(val);
+          var c = this.value; 
+          if (p != c) {
+            var delta = p - c;
+            if (delta < 0)
+              delta = -delta;
+            if (delta > 3 || p == 0 || p == 100)
+              this.setAttribute("value", p);
+          }
+          
+          return p;
+        ]]></setter>
+      </property>
+
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULProgressMeterAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+</bindings>
