@@ -111,7 +111,7 @@
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
-static PRBool gBookmarkCharset = PR_TRUE;
+//static PRBool gBookmarkCharset = PR_TRUE;
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -2960,7 +2960,6 @@ static PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_strong:
     case  eHTMLTag_sub:
     case  eHTMLTag_sup:
-    case  eHTMLTag_td:
     case  eHTMLTag_textarea:
     case  eHTMLTag_tt:
     case  eHTMLTag_u:
