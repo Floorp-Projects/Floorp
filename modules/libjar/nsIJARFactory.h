@@ -37,7 +37,7 @@ class nsJARFactory : public nsIFactory
   public:
         
     nsJARFactory();
-    ~nsJARFactory();
+    virtual ~nsJARFactory();
         
     NS_DECL_ISUPPORTS
     

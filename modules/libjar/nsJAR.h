@@ -47,7 +47,7 @@ class nsJAR : public nsIJAR
   public:
 
     nsJAR();
-    ~nsJAR();
+    virtual ~nsJAR();
     
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_JAR_CID );
   
