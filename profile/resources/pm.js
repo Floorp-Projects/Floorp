@@ -80,17 +80,10 @@ function StartCommunicator()
 
 function ExitApp()
 {
-	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-	if (!toolkitCore) {
-		toolkitCore = new ToolkitCore();
-		
-		if (toolkitCore) {
-			toolkitCore.Init("toolkitCore");
-		}
-	}
-	if (toolkitCore) {
-		toolkitCore.CloseWindow(parent);
-	}
+	// Need to call this to stop the event loop
+        var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+        appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
+        appShell.Quit();
 }
 
 function showSelection(node)

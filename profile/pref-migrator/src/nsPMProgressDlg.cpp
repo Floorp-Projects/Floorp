@@ -169,12 +169,12 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
     if ( NS_SUCCEEDED( rv ) ) 
     {
         // Open "progress" dialog.
-        nsIURI *url;
+        nsCOMPtr <nsIURI> url;
         const char *urlSpec = "resource:/res/profile/progress_undetermined.xul";
 #ifndef NECKO
-        rv = NS_NewURL( &url,  urlSpec);
+        rv = NS_NewURL(getter_AddRefs(url),  urlSpec);
 #else
-        rv = NS_NewURI(&url, urlSpec);
+        rv = NS_NewURI(getter_AddRefs(url), urlSpec);
 #endif // NECKO
         if ( NS_SUCCEEDED(rv) ) 
         {
@@ -200,7 +200,6 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
             {
                 DEBUG_PRINTF( PR_STDOUT, "Error creating progress dialog, rv=0x%X\n", (int)rv );
             }
-            NS_RELEASE( url );
         }
         
         nsServiceManager::ReleaseService( kAppShellServiceCID, appShell );
