@@ -25,6 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
@@ -37,7 +38,7 @@ Rights Reserved.
 
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
-
+  <script src="chrome://messenger/content/mailWindow.js"/>
   <text value="This dialog is a work in progress! Please don't file any bugs against it."/>
   <box>
     <text class="label" value="&searchHeading.label;"/>
@@ -50,8 +51,8 @@ Rights Reserved.
   <box>
     <titledbox id="searchTermListBox" flex="1"/>
     <box orient="vertical">
-      <button value="&searchButton.label;" onclick="onSearch(event)"/>
-      <button value="&resetButton.label;" onclick="onReset(event)"/>
+      <button value="&searchButton.label;" oncommand="onSearch(event)"/>
+      <button value="&resetButton.label;" oncommand="onReset(event)"/>
     </box>
   </box>
 
@@ -60,4 +61,5 @@ Rights Reserved.
     <spring flex="100%"/>
     <button value="&closeButton.label;" onclick="window.close()"/>
   </box>
+  <box id="status-bar"/>
 </window>

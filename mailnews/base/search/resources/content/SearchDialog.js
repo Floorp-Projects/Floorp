@@ -27,7 +27,7 @@ var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 
 var gFolderPicker;
-
+var gStatusFeedback = new nsMsgStatusFeedback;
 var RDF;
 
 function searchOnLoad()
@@ -37,12 +37,26 @@ function searchOnLoad()
 
     setupDatasource();
     onMore(null);
+
+    
 }
 
 function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
     gResultsTree = document.getElementById("threadTree");
+
+    msgWindow = Components.classes[msgWindowProgID].createInstance(Components.interfaces.nsIMsgWindow);
+    msgWindow.statusFeedback = gStatusFeedback;
+}
+
+
+function onSearchStop() {
+
+}
+
+function onReset() {
+
 }
 
 function onChooseFolder(event) {
@@ -68,7 +82,7 @@ function onSearch(event)
     
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
 
-    gSearchSession.search(null);
+    gSearchSession.search(msgWindow);
 }
 
 
@@ -105,11 +119,28 @@ function setupDatasource() {
 }
 
 
-// stub functions for thread pane
-function ChangeThreadView() {
-    dump("Not supported, column should be hidden!\n");
+// this is test stuff only, ignore for now
+function onTesting(event)
+{
+    var testattr;
+    
+    DumpDOM(document.getElementById("searchTermTree"));
+    testattr = document.getElementById("searchAttr");
+    testelement(testattr);
+
+    testattr = document.getElementById("searchAttr0");
+    testelement(testattr);
+    
+    testattr = document.getElementById("searchAttr99");
+    testelement(testattr);
+
 }
 
-function MsgSortBySubject() {
-    dump("Sort by subject..\n");
+function testelement(element)
+{
+    dump(element.id + " = " + element + "\n");
+    dump(element.id + ".searchScope = " + element.searchScope + "\n");
+    element.searchScope = 0;
+    dump(element.id + ".searchScope = " + element.searchScope + "\n");
+
 }
