@@ -58,6 +58,12 @@
 #define BUFFER_SIZE 256
 
 static const PRUnichar CSS_ESCAPE = PRUnichar('\\');
+const PRUint8 nsCSSScanner::IS_DIGIT = 0x01;
+const PRUint8 nsCSSScanner::IS_HEX_DIGIT = 0x02;
+const PRUint8 nsCSSScanner::IS_ALPHA = 0x04;
+const PRUint8 nsCSSScanner::START_IDENT = 0x08;
+const PRUint8 nsCSSScanner::IS_IDENT = 0x10;
+const PRUint8 nsCSSScanner::IS_WHITESPACE = 0x20;
 
 static PRBool gLexTableSetup = PR_FALSE;
 PRUint8 nsCSSScanner::gLexTable[256];

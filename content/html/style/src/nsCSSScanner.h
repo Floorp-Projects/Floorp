@@ -205,12 +205,12 @@ protected:
   nsString mError;
 #endif
 
-  static const PRUint8 IS_DIGIT = 0x01;
-  static const PRUint8 IS_HEX_DIGIT = 0x02;
-  static const PRUint8 IS_ALPHA = 0x04;
-  static const PRUint8 START_IDENT = 0x08;
-  static const PRUint8 IS_IDENT = 0x10;
-  static const PRUint8 IS_WHITESPACE = 0x20;
+  static const PRUint8 IS_DIGIT;
+  static const PRUint8 IS_HEX_DIGIT;
+  static const PRUint8 IS_ALPHA;
+  static const PRUint8 START_IDENT;
+  static const PRUint8 IS_IDENT;
+  static const PRUint8 IS_WHITESPACE;
 
   static PRUint8 gLexTable[256];
   static void BuildLexTable();
