@@ -8,7 +8,9 @@ file:///s|/mozilla/layout/html/tests/table/printing/bug59280-1.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug59280-2.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug61663.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug66804.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug82401.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug85738.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug92215.html
 file:///s|/mozilla/layout/html/tests/table/printing/split2Rows.html
 file:///s|/mozilla/layout/html/tests/table/printing/split3Rows.html
 file:///s|/mozilla/layout/html/tests/table/printing/splitCell-1.html
