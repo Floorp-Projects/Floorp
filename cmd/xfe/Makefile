@@ -592,7 +592,7 @@ else
 
 MOTIFLIB	=\
 			$(MOTIFPATCH_LIB) \
-			/usr/X11R6/lib/libXm.a \
+			-L/usr/X11R6/lib -lXm \
 			$(NS_MOTIF2_XP_LD_FLAGS)
 
 endif
