@@ -94,7 +94,9 @@ enum nsWindowType {
   // used for combo boxes, etc
   eWindowType_popup,
   // child windows (contained inside a window on the desktop (has no border))
-  eWindowType_child
+  eWindowType_child,
+  // windows that are invisible or offscreen
+  eWindowType_invisible
 };
 
 
