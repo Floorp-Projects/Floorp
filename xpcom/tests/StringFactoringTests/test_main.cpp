@@ -1,4 +1,5 @@
 #include <iostream.h>
+#include "nsStringIO.h"
 
 //#define TEST_STD_STRING
 
@@ -15,22 +16,6 @@ typedef nsCString nsStdCString;
 #endif
 
 // #define NS_USE_WCHAR_T
-
-#if 0
-static
-ostream&
-print_string( const nsAReadableString& s )
-  {
-    struct PRUnichar_to_char
-      {
-        char operator()( PRUnichar c ) { return char(c); }
-      };
-
-    transform(s.BeginReading(), s.EndReading(), ostream_iterator<char>(cout), PRUnichar_to_char());
-    return cout;
-  }
-#endif
-
 
 template <class CharT>
 basic_nsLiteralString<CharT>
@@ -338,6 +323,24 @@ main()
 
 
     {
+      nsLiteralCString s0("Patrick Beard made me write this: \"This is just a test\"\n");
+      print_string(s0);
+
+      const char* raw_string = "He also made me write this.\n";
+      copy_string(raw_string, raw_string+nsCharTraits<char>::length(raw_string), nsFileCharSink<char>(stdout));
+
+
+      nsLiteralCString s1("This ", 5), s2("is ", 3), s3("a ", 2), s4("test\n", 5);
+      print_string(s1+s2+s3+s4);
+
+      nsLiteralCString s5 = "This is " "a " "test";
+      print_string(s5+NS_LITERAL_CSTRING("\n"));
+
+      print_string(nsLiteralCString("The value of the string |x| is \"") + Substring(s0, 0, s0.Length()-1) + NS_LITERAL_CSTRING("\".  Hope you liked it."));
+    }
+
+
+    {
 #ifdef NS_USE_WCHAR_T
       nsLiteralString s0(L"Hello");
 #else
@@ -416,6 +419,19 @@ main()
       
     }
 
+    {
+      nsLiteralCString s13("He");
+      nsCAutoString    s14("l");
+      nsLiteralCString s15("lo");
+
+      s14.Assign(s13 + s14 + s15);
+
+      if ( int failures = test_readable_hello(s14) )
+        {
+          tests_failed += failures;
+          cout << "FAILED to keep a promise." << endl;
+        }
+    }
 
     {
       nsLiteralCString str1("Hello");
