@@ -3777,36 +3777,31 @@ nsEditorShell::InitSpellChecker()
 
     // Tell the spellchecker what dictionary to use:
 
-    PRUnichar *dictName = nsnull;
+    nsXPIDLString dictName;
 
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
 
     if (NS_SUCCEEDED(result) && prefs)
-      result = prefs->CopyUnicharPref("spellchecker.dictionary", &dictName);
+      result = prefs->CopyUnicharPref("spellchecker.dictionary",
+                                      getter_Copies(dictName));
 
-    if (! dictName || ! *dictName)
+    if (NS_FAILED(result) || dictName.IsEmpty())
     {
       // Prefs didn't give us a dictionary name, so just get the current
       // locale and use that as the default dictionary name!
 
-      if (dictName)
-      {
-        nsMemory::Free(dictName);
-        dictName = nsnull;
-      }
-
       nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
         do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &result);
 
-      if (NS_SUCCEEDED(result) && packageRegistry)
-        result = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator").get(), &dictName);
+      if (NS_SUCCEEDED(result) && packageRegistry) {
+        nsCAutoString utf8DictName;
+        result = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("navigator"), utf8DictName);
+        dictName = NS_ConvertUTF8toUCS2(utf8DictName);
+      }
     }
 
-    if (NS_SUCCEEDED(result) && dictName && *dictName)
-      result = SetCurrentDictionary(dictName);
-
-    if (dictName)
-      nsMemory::Free(dictName);
+    if (NS_SUCCEEDED(result) && !dictName.IsEmpty())
+      result = SetCurrentDictionary(dictName.get());
 
     // If an error was thrown while checking the dictionary pref, just
     // fail silently so that the spellchecker dialog is allowed to come
