@@ -1348,6 +1348,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   // Using RDF will also allow for role extensibility.
   // XXX Should we store attribute names in this table as atoms instead of strings?
   // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
+  {"alert", ROLE_ALERT, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"button", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"checkbox", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"checkbox-tristate", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},

@@ -76,6 +76,7 @@
 #include "nsPIAccessNode.h"
 
 #ifdef MOZ_XUL
+#include "nsXULAlertAccessible.h"
 #include "nsXULColorPickerAccessible.h"
 #include "nsXULFormControlAccessible.h"
 #include "nsXULMenuAccessible.h"
@@ -418,34 +419,29 @@ nsAccessibilityService::CreateHTMLButtonAccessibleXBL(nsIDOMNode *aNode, nsIAcce
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame, 
+nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
+                                                     nsIWeakReference *aWeakShell,
+                                                     nsIDOMNode *aNode,
                                                      nsIAccessible **aAccessible)
 {
-  // Frame type was generic, we'll use the DOM to decide 
+  // aFrame type was generic, we'll use the DOM to decide 
   // if and what kind of accessible object is needed.
   // This method assumes we're in an HTML namespace.
   *aAccessible = nsnull;
-  nsIFrame* frame;
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> weakShell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsIContent *content = frame->GetContent();
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   nsIAtom *tag = content->Tag();
   if (tag == nsAccessibilityAtoms::option) {
-    *aAccessible = new nsHTMLSelectOptionAccessible(node, weakShell);
+    *aAccessible = new nsHTMLSelectOptionAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::optgroup) {
-    *aAccessible = new nsHTMLSelectOptGroupAccessible(node, weakShell);
+    *aAccessible = new nsHTMLSelectOptGroupAccessible(aNode, aWeakShell);
   }
 #ifndef MOZ_ACCESSIBILITY_ATK
   else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol) {
-    *aAccessible = new nsHTMLListAccessible(node, weakShell);
+    *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::a) {
-    *aAccessible = new nsHTMLLinkAccessible(node, weakShell, frame);
+    *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell, NS_STATIC_CAST(nsIFrame*, aFrame));
   }
 #endif
   else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
@@ -463,7 +459,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::q
 #endif
            ) {
-    *aAccessible = new nsAccessibleWrap(node, weakShell);
+    *aAccessible = new nsAccessibleWrap(aNode, aWeakShell);
   }
   NS_IF_ADDREF(*aAccessible);
   return NS_OK;
@@ -1231,6 +1227,24 @@ nsAccessibilityService::CreateXULMenuSeparatorAccessible(nsIDOMNode *aNode, nsIA
 }
 
 NS_IMETHODIMP
+nsAccessibilityService::CreateXULAlertAccessible(nsIDOMNode *aNode, nsIAccessible **aAccessible)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *aAccessible = new nsXULAlertAccessible(aNode, weakShell);
+  if (! *aAccessible)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aAccessible);
+#else
+  *_retval = nsnull;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAccessibilityService::CreateXULProgressMeterAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
 #ifdef MOZ_XUL
@@ -1793,7 +1807,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     if (!newAcc) {
       // Use markup (mostly tag name, perhaps attributes) to
       // decide if and what kind of accessible to create.
-      CreateHTMLAccessibleByMarkup(frame, getter_AddRefs(newAcc));
+      CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, getter_AddRefs(newAcc));
     }
   }
 

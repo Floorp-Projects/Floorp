@@ -65,6 +65,7 @@ REQUIRES += editor
 endif
 
 CPPSRCS = \
+  nsXULAlertAccessible.cpp \
   nsXULColorPickerAccessible.cpp \
   nsXULFormControlAccessible.cpp \
   nsXULMenuAccessible.cpp \
