@@ -34,6 +34,7 @@
 #include "interpreter.h"
 #include "jsclasses.h"
 #include "world.h"
+#include "parser.h"
 #include "jsmath.h"
 
 #include <assert.h>
@@ -129,13 +130,26 @@ public:
     ~autosaver() { mRef = mOld; }
 };
 
-ICodeModule* Context::compile(const String &source)
+ICodeModule* Context::compileFunction(const String &source)
 {
     Arena a;
     String filename = widenCString("Some source source");
     Parser p(getWorld(), a, source, filename);
-    StmtNode *parsedStatements = p.parseProgram();
-    return genCode(parsedStatements, filename);
+    ExprNode* e = p.parseExpression(false);
+    ICodeGenerator icg(&getWorld(), getGlobalObject());
+    ASSERT(e->getKind() == ExprNode::functionLiteral);
+    FunctionExprNode* f = static_cast<FunctionExprNode*>(e);
+    icg.allocateParameter(getWorld().identifiers["this"]);   // always parameter #0
+    VariableBinding* v = f->function.parameters;
+    while (v) {
+        if (v->name && (v->name->getKind() == ExprNode::identifier))
+            icg.allocateParameter((static_cast<IdentifierExprNode*>(v->name))->name);
+        v = v->next;
+    }
+    icg.genStmt(f->function.body);
+    ICodeModule* result = icg.complete();
+    result->setFileName(filename);
+    return result;
 }
 
 JSValue Context::readEvalFile(FILE* in, const String& fileName)
@@ -516,8 +530,13 @@ void Context::initContext()
 
     
     // 'Object', 'Date', 'RegExp', 'Array' etc are all (constructor) properties of the global object
+    // Some of these overlap with the predefined types above. The way we handle this is to set a 
+    // 'constructor' function for types. When new <typename> is encountered, the type is queried for
+    // a 'constructor' function to be invoked.
     JSObject::initObjectObject(mGlobal);
+    
     JSFunction::initFunctionObject(mGlobal);
+    JSBoolean::initBooleanObject(mGlobal);
     
     // the 'Math' object just has some useful properties 
     JSMath::initMathObject(mGlobal);
@@ -634,8 +653,18 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
-                    ASSERT((*registers)[op2(call).first].isFunction()); // XXX runtime error
-                    JSFunction *target = (*registers)[op2(call).first].function;
+                    JSValue v = (*registers)[op2(call).first];
+                    JSFunction *target = NULL;
+                    if (v.isFunction())
+                        target = v.function;
+                    else
+                        if (v.isObject()) {
+                            JSType *t = dynamic_cast<JSType*>(v.object);
+                            if (t)
+                                target = t->getInvokor();
+                        }
+                    if (!target)
+                        throw new JSException("Call to non callable object");
                     if (target->isNative()) {
                         RegisterList &params = op4(call);
                         JSValues argv(params.size() + 1);
@@ -654,6 +683,34 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         mLinkage = new Linkage(mLinkage, ++mPC,
                                                mActivation, mGlobal, op1(call));
                         mActivation = new Activation(target->getICode(), mActivation, (*registers)[op3(call).first], op4(call));
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
+                        continue;
+                    }
+                }
+
+            case DIRECT_CALL:
+                {
+                    DirectCall* call = static_cast<DirectCall*>(instruction);
+                    JSFunction *target = op2(call);
+                    if (target->isNative()) {
+                        RegisterList &params = op3(call);
+                        JSValues argv(params.size() + 1);
+                        JSValues::size_type i = 1;
+                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                                        src != end; ++src, ++i) {
+                            argv[i] = (*registers)[src->first];
+                        }
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
+                        if (op1(call).first != NotARegister)
+                            (*registers)[op1(call).first] = result;
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, mGlobal, op1(call));
+                        mActivation = new Activation(target->getICode(), mActivation, kNullValue, op3(call));
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
@@ -766,16 +823,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& value = (*registers)[src1(gp).first];
                     if (value.isObject()) {
                         if (value.isType()) {
-                            // I don't think this is necessary anymore - any get property
-                            // on a class name should have been turned into a GET_STATIC
-                            // by the codegen.
-                            ASSERT(false);      
                             // REVISIT: should signal error if slot doesn't exist.
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
                             if (thisClass && thisClass->hasStatic(*src2(gp))) {
                                 const JSSlot& slot = thisClass->getStatic(*src2(gp));
                                 (*registers)[dst(gp).first] = (*thisClass)[slot.mIndex];
                             }
+                            else
+                                (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
                         } else {
                             (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
                         }
@@ -789,16 +844,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue& value = (*registers)[dst(sp).first];
                     if (value.isObject()) {
                         if (value.isType()) {
-                            // I don't think this is necessary anymore - any set property
-                            // on a class name should have been turned into a SET_STATIC
-                            // by the codegen.
-                            ASSERT(false);      
                             // REVISIT: should signal error if slot doesn't exist.
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.object);
                             if (thisClass && thisClass->hasStatic(*src1(sp))) {
                                 const JSSlot& slot = thisClass->getStatic(*src1(sp));
                                 (*thisClass)[slot.mIndex] = (*registers)[src2(sp).first];
                             }
+                            else
+                                value.object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                         } else {
                             value.object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                         }

@@ -58,14 +58,11 @@ static JSValue object_toString(Context *, const JSValues& argv)
     return kUndefinedValue;
 }
 
-static JSValue objectConstructor(Context *, const JSValues& argv)
+static JSValue object_constructor(Context *cx, const JSValues& argv)
 {
-    ASSERT(argv.size() > 0);
-    JSValue theThis = argv[0];
+    // argv[0] will be NULL
     
-    // the prototype and class have been established already
-
-    return theThis;
+    return new JSObject();
 }
 
 struct ObjectFunctionEntry {
@@ -92,15 +89,13 @@ JSObject *JSObject::initJSObject()
     return result;
 }
 
-// Install the 'Object' constructor into the scope, mostly irrelevant since making 
-// a new JSObject does all the work of setting the prototype and [[class]] values.
 void JSObject::initObjectObject(JSScope *g)
 {
-    JSNativeFunction *objCon = new JSNativeFunction(objectConstructor);
-
-    objCon->setProperty(widenCString("prototype"), JSValue(ObjectPrototypeObject));
+    // The ObjectPrototypeObject has already been constructed by static initialization.
     
-    g->setProperty(*ObjectString, JSValue(objCon));
+//    JSNativeFunction *objCon = new JSNativeFunction(objectConstructor);
+//    objCon->setProperty(widenCString("prototype"), JSValue(ObjectPrototypeObject));    
+//    g->setProperty(*ObjectString, JSValue(objCon));
 }
 
 
@@ -116,17 +111,29 @@ static JSValue functionPrototypeFunction(Context *, const JSValues &)
 
 static JSValue function_constructor(Context *cx, const JSValues& argv)
 {
-    // build a function from the arguments into the this.
-    ASSERT(argv.size() > 0);
-    JSValue theThis = argv[0];
-    ASSERT(theThis.isObject());
+    // build a function from the arguments
+    // argv[0] will be NULL
 
-    if (argv.size() == 2) {        
-        JSValue s = JSValue::valueToString(argv[1]);
-        theThis = new JSFunction(cx->compile((String)(*s.string)));
+    if (argv.size() >= 2) {        
+        int32 parameterCount = argv.size() - 2;
+        JSString source("function (");
+        for (int32 i = 0; i < parameterCount; i++) {
+            source.append((JSValue::valueToString(argv[i + 1]).string));
+            if (i < (parameterCount - 1)) source.append(",");
+        }
+        source.append(") {");
+        source.append(JSValue::valueToString(argv[argv.size() - 1]).string);
+        source.append("}");
+        
+        JSFunction *f = new JSFunction(cx->compileFunction(source));
+        f->setProperty(widenCString("length"), JSValue(parameterCount));
+        JSObject *obj = new JSObject();
+        f->setProperty(widenCString("prototype"), JSValue(obj)); 
+        f->setProperty(widenCString("constructor"), JSValue(obj)); 
+        return JSValue(f);
     }
 
-    return theThis;
+    return kUndefinedValue;
 }
 
 static JSValue function_toString(Context *, const JSValues &)
@@ -143,7 +150,6 @@ static JSValue function_call(Context *, const JSValues &)
     // XXX
     return kUndefinedValue;
 }
-
 
 
 JSString* JSFunction::FunctionString = new JSString("Function");
@@ -166,18 +172,86 @@ void JSFunction::initFunctionObject(JSScope *g)
     for (int i = 0; i < sizeof(FunctionFunctions) / sizeof(FunctionFunctionEntry); i++)
         FunctionPrototypeObject->setProperty(widenCString(FunctionFunctions[i].name), JSValue(new JSNativeFunction(FunctionFunctions[i].fn) ) );
 
-    // now the Function Constructor Object
-    JSNativeFunction *functionConstructorObject = new JSNativeFunction(function_constructor);
-    functionConstructorObject->setPrototype(FunctionPrototypeObject);
-    functionConstructorObject->setProperty(widenCString("length"), JSValue((int32)1));
-    functionConstructorObject->setProperty(widenCString("prototype"), JSValue(FunctionPrototypeObject));
-
-    // This is interesting - had to use defineVariable here to specify a type because
-    // when left as Any_Type (via setProperty), the Function predefined type interacted
-    // badly with this value. (I think setProperty perhaps should have reset the entry
-    // in mTypes) (?)
-    g->defineVariable(*FunctionString, &Function_Type, JSValue(functionConstructorObject));
+    ASSERT(g->getProperty(*FunctionString).isObject());
+    JSObject *functionVariable = g->getProperty(*FunctionString).object;
+    // there is actually no connection between the 'prototype' property of the function object
+    // and the prototype set for each new function - the constructor has implicit access to
+    // the 'original Function prototype object'
+    functionVariable->setProperty(widenCString("prototype"), JSValue(FunctionPrototypeObject));   // should be DontEnum, DontDelete, ReadOnly
 }
+
+/********** Boolean Object Stuff **************************/
+
+JSString* JSBoolean::BooleanString = new JSString("Boolean");
+
+JSValue boolean_constructor(Context *cx, const JSValues& argv)
+{
+    // argv[0] will be NULL
+    if (argv.size() > 1)
+        return JSValue(new JSBoolean(JSValue::valueToBoolean(argv[1]).boolean));
+    else
+        return JSValue(new JSBoolean(false));
+}
+
+JSValue boolean_toString(Context *cx, const JSValues& argv)
+{
+    if (argv.size() > 0) {
+        JSValue theThis = argv[0];
+        if (theThis.isObject()) {
+            JSBoolean *b = dynamic_cast<JSBoolean *>(theThis.object);
+            if (b)
+                return JSValue(new JSString(b->getValue() ? "true" : "false"));
+            else
+                throw new JSException("TypeError : Boolean::toString called on non boolean object");
+        }
+        else
+            throw new JSException("TypeError : Boolean::toString called on non object");
+    }
+    return kUndefinedValue;
+}
+
+JSValue boolean_valueOf(Context *cx, const JSValues& argv)
+{
+    return kUndefinedValue;
+}
+
+JSObject *JSBoolean::BooleanPrototypeObject = NULL;
+
+struct BooleanFunctionEntry {
+    char *name;
+    JSNativeFunction::JSCode fn;
+} BooleanFunctions[] = {
+    { "constructor",    boolean_constructor },
+    { "toString",       boolean_toString },
+    { "valueOf",        boolean_valueOf },
+};
+
+void JSBoolean::initBooleanObject(JSScope *g)
+{
+    BooleanPrototypeObject = new JSObject();
+    BooleanPrototypeObject->setClass(new JSString(BooleanString));
+
+    for (int i = 0; i < sizeof(BooleanFunctions) / sizeof(BooleanFunctionEntry); i++)
+        BooleanPrototypeObject->setProperty(widenCString(BooleanFunctions[i].name), JSValue(new JSNativeFunction(BooleanFunctions[i].fn) ) );
+
+    ASSERT(g->getProperty(*BooleanString).isObject());
+    JSObject *booleanVariable = g->getProperty(*BooleanString).object;
+    booleanVariable->setProperty(widenCString("prototype"), JSValue(BooleanPrototypeObject));   // should be DontEnum, DontDelete, ReadOnly
+}
+
+/********** Date Object Stuff **************************/
+
+JSValue date_constructor(Context *cx, const JSValues& argv)
+{
+    // return JSValue(new JSDate());
+    return JSValue(new JSObject());
+}
+
+JSValue date_invokor(Context *cx, const JSValues& argv)
+{
+    return JSValue(new JSString("now"));
+}
+
 
 /**************************************************************************************/
 
@@ -186,13 +260,17 @@ JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
 JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
 JSType Character_Type = JSType(widenCString("Character"), &Any_Type);
 JSType String_Type = JSType(widenCString("String"), &Character_Type);
-JSType Function_Type = JSType(widenCString("Function"), &Any_Type);
+JSType Function_Type = JSType(widenCString("Function"), &Any_Type, new JSNativeFunction(function_constructor), new JSNativeFunction(function_constructor));
 JSType Array_Type = JSType(widenCString("Array"), &Any_Type);
 JSType Type_Type = JSType(widenCString("Type"), &Any_Type);
-JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type);
+JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type, new JSNativeFunction(boolean_constructor), new JSNativeFunction(boolean_constructor));
 JSType Null_Type = JSType(widenCString("Null"), &Any_Type);
 JSType Void_Type = JSType(widenCString("void"), &Any_Type);
 JSType None_Type = JSType(widenCString("none"), &Any_Type);
+
+
+JSType Object_Type = JSType(widenCString("Object"), NULL, new JSNativeFunction(object_constructor));
+JSType Date_Type = JSType(widenCString("Date"), NULL, new JSNativeFunction(date_constructor), new JSNativeFunction(date_invokor));
 
 
 #ifdef IS_LITTLE_ENDIAN

@@ -243,6 +243,7 @@ namespace ICG {
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister call(TypedRegister base, TypedRegister target, RegisterList *args);
+        TypedRegister directCall(JSFunction *target, RegisterList *args);
         TypedRegister getMethod(TypedRegister thisArg, uint32 slotIndex);
 
         void move(TypedRegister destination, TypedRegister source);

@@ -9,7 +9,7 @@
         BRANCH, /* target label */
         BRANCH_FALSE, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
-        CALL, /* result, base, target, args */
+        CALL, /* result, target, this, args */
         CAST, /* dest, rvalue, toType */
         COMPARE_EQ, /* dest, source1, source2 */
         COMPARE_GE, /* dest, source1, source2 */
@@ -20,6 +20,7 @@
         COMPARE_NE, /* dest, source1, source2 */
         DEBUGGER, /* drop to the debugger */
         DELETE_PROP, /* dest, object, prop name */
+        DIRECT_CALL, /* result, target, args */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         GENERIC_BINARY_OP, /* dest, op, source1, source2 */
@@ -144,7 +145,7 @@
 
     class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList> {
     public:
-        /* result, base, target, args */
+        /* result, target, this, args */
         Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, RegisterList aOp4) :
             Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList>
             (CALL, aOp1, aOp2, aOp3, aOp4) {};
@@ -264,6 +265,22 @@
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             f << mOp1.first << ", " << mOp2.first;
+            return f;
+        }
+    };
+
+    class DirectCall : public Instruction_3<TypedRegister, JSFunction *, RegisterList> {
+    public:
+        /* result, target, args */
+        DirectCall (TypedRegister aOp1, JSFunction * aOp2, RegisterList aOp3) :
+            Instruction_3<TypedRegister, JSFunction *, RegisterList>
+            (DIRECT_CALL, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[DIRECT_CALL] << "\t" << mOp1 << ", " << "JSFunction" << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << mOp1.first << ", " << ArgList(mOp3, registers);
             return f;
         }
     };
@@ -1045,6 +1062,7 @@
         "COMPARE_NE       ",
         "DEBUGGER         ",
         "DELETE_PROP      ",
+        "DIRECT_CALL      ",
         "DIVIDE           ",
         "ELEM_XCR         ",
         "GENERIC_BINARY_OP",
