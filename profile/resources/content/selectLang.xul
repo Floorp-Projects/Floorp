@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/selectLang.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/profile/selectLang.dtd">
 
 <dialog title="&langSelBox.title.label;"
         style="width: 22em;"
