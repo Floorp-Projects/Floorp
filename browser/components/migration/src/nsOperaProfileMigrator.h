@@ -184,14 +184,14 @@ private:
     PRBool isSecure;
   } COOKIE;
 
-  COOKIE mCurrCookie;
-  PRUint8 mCurrHandlingInfo;
-
   PRUint32 mAppVersion;
   PRUint32 mFileVersion;
   PRUint16 mTagTypeLength;
   PRUint16 mPayloadTypeLength;
   PRBool   mCookieOpen;
+  COOKIE   mCurrCookie;
+  PRUint8  mCurrHandlingInfo;
+
 };
 
 #endif
