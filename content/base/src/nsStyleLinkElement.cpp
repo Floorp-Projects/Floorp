@@ -192,13 +192,26 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
 
   nsCOMPtr<nsIDOMStyleSheet> styleSheet(do_QueryInterface(mStyleSheet));
 
-  if (styleSheet) {
+  if (mStyleSheet && url.IsEmpty()) {
+    // Inline stylesheets have the document's URL as their URL internally
+    nsCOMPtr<nsIURI> docURL, styleSheetURL;
+    mStyleSheet->GetURL(*getter_AddRefs(styleSheetURL));
+    doc->GetBaseURL(*getter_AddRefs(docURL));
+    if (docURL && styleSheetURL) {
+      PRBool inlineStyle;
+      docURL->Equals(styleSheetURL, &inlineStyle);
+      if (inlineStyle) {
+        return NS_OK;
+      }
+    }
+  }
+  else if (styleSheet) {
     nsAutoString oldHref;
 
     styleSheet->GetHref(oldHref);
-
-    if (oldHref.Equals(url))
+    if (oldHref.Equals(url)) {
       return NS_OK;
+    }
   }
 
   if (mStyleSheet) {
