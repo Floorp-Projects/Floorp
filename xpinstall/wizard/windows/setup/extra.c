@@ -6174,6 +6174,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   char szValue[MAX_BUF];
   char szWRMSCurrentVersion[] = "Software\\Microsoft\\Windows\\CurrentVersion";
   char szWRMSShellFolders[]   = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+  char szWRMSMapGroup[]       = "Software\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroup";
 
 
   /* zero out the memory allocations */
@@ -6269,6 +6270,14 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     {
       GetWinReg(HKEY_LOCAL_MACHINE, szWRMSShellFolders, "Common Desktop", szVariable, dwVariableSize);
     }
+  }
+  else if(lstrcmpi(szVariable, "QUICK_LAUNCH") == 0)
+  {
+    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Application Data\Microsoft\Internet Explorer\Quick Launch" directory */
+    GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "AppData", szBuf, sizeof(szBuf));
+    wsprintf(szVariable, "%s\\Microsoft\\Internet Explorer\\Quick Launch", szBuf);
+    if(!FileExists(szVariable))
+      GetWinReg(HKEY_CURRENT_USER, szWRMSMapGroup, "Quick Launch", szVariable, dwVariableSize);
   }
   else if(lstrcmpi(szVariable, "PERSONAL_STARTUP") == 0)
   {

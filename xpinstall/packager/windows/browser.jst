@@ -37,6 +37,7 @@ function createShortcuts()
   var szFolderDesktop;
   var szFolderQuickLaunch;
   var szFolderSendTo;
+  var szFolderAppData;
   var szStartupFolder;
   var winreg;
   var fWindows;
@@ -50,8 +51,10 @@ function createShortcuts()
   var fFolderDesktop;
   var fFolderPath;
   var fFolderPathStr;
+  var fFolderQuickLaunch;
   var is_winnt;
   var szCurrentVersion;
+  var folderQuickLaunchExists;
 
   winreg               = getWinRegistry();
   fWindows             = getFolder("Windows");
@@ -112,9 +115,24 @@ function createShortcuts()
     valname             = "SendTo";
     szFolderSendTo      = winreg.getValueString(subkey, valname);
 
-    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
-    valname             = "Quick Launch";
-    szFolderQuickLaunch = winreg.getValueString(subkey, valname);
+    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+    valname             = "AppData";
+    szFolderAppData     = winreg.getValueString(subkey, valname);
+
+    // locate the Quick Launch folder
+    szFolderQuickLaunch     = szFolderAppData + "\\Microsoft\\Internet Explorer\\Quick Launch";
+    fFolderQuickLaunch      = getFolder("file:///", szFolderQuickLaunch);
+    folderQuickLaunchExists = File.exists(fFolderQuickLaunch);
+    if(!folderQuickLaunchExists)
+    {
+      subkey                  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
+      valname                 = "Quick Launch";
+      szFolderQuickLaunch     = winreg.getValueString(subkey, valname);
+      folderQuickLaunchExists = File.exists(fFolderPath);
+      if(folderQuickLaunchExists)
+        fFolderQuickLaunch = getFolder("file:///", szFolderQuickLaunch);
+    }
+    logComment("folderQuickLaunchExists: " + folderQuickLaunchExists);
 
     subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     valname             = "Program Folder Path";
@@ -151,6 +169,10 @@ function createShortcuts()
     File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
+
+    // create shortcut in the Quick Launch folder
+    if(folderQuickLaunchExists)
+      File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
 
     if(!restrictedAccess)
     {
