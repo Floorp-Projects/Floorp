@@ -36,6 +36,7 @@ CPPSRCS		= \
         nsComponent.cpp \
         nsSetupType.cpp \
         nsComponentList.cpp \
+        nsLegacyCheck.cpp \
         nsLicenseDlg.cpp \
         nsWelcomeDlg.cpp \
         nsSetupTypeDlg.cpp \
