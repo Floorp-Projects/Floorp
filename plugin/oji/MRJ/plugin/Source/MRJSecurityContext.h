@@ -38,7 +38,6 @@
 
 #include "nsISecurityContext.h"
 
-class nsIURI;
 class nsILiveconnect;
 
 class MRJSecurityContext : public nsISecurityContext {
@@ -55,6 +54,6 @@ public:
     nsILiveconnect* getConnection() { return mConnection; }
 
 private:
-    nsIURI* mLocation;
+    char* mLocation;
     nsILiveconnect* mConnection;
 };

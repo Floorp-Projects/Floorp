@@ -42,17 +42,12 @@
 
 #include "LiveConnectNativeMethods.h"
 
-#include "nsIComponentManager.h"
+#include "nsIComponentManagerObsolete.h"
 #include "nsIServiceManager.h"
 #include "nsIPluginManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveconnect.h"
 #include "nsIPluginInstancePeer2.h"
-#include "nsIIOService.h"
-#include "nsIURI.h"
-#include "nsNetCID.h"
-#include "nsString.h"
-#include "nsDependentString.h"
 
 #include "MRJPlugin.h"
 #include "MRJContext.h"
@@ -72,7 +67,7 @@ extern nsIServiceManager* theServiceManager;    // needs to be in badaptor.cpp.
 
 static MRJPlugin* theJVMPlugin = NULL;
 static nsILiveconnect* theLiveConnectManager = NULL;
-static nsIComponentManager* theComponentManager = NULL;
+static nsIComponentManagerObsolete* theComponentManager = NULL;
 
 static jclass netscape_javascript_JSObject = NULL;
 static jmethodID netscape_javascript_JSObject_JSObject;
@@ -87,9 +82,9 @@ static jmethodID netscape_oji_JNIUtils_GetObjectClassLoader = NULL;
 static NS_DEFINE_IID(kLiveConnectCID, NS_CLIVECONNECT_CID);
 static NS_DEFINE_IID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-static nsresult getGlobalComponentManager(nsIComponentManager* *result)
+static nsresult getGlobalComponentManager(nsIComponentManagerObsolete* *result)
 {
-    return theServiceManager->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager),
+    return theServiceManager->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManagerObsolete),
                                          (void**)result);
 }
 
@@ -157,7 +152,6 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
 nsresult ShutdownLiveConnectSupport()
 {
     NS_IF_RELEASE(theLiveConnectManager);
-
     NS_IF_RELEASE(theComponentManager);
     
     if (theJVMPlugin != NULL) {
@@ -206,28 +200,22 @@ static jobject GetCurrentThread(JNIEnv* env)
  * Security Considerations.
  */
 
-static nsresult
-NS_NewURI(nsIURI* *result, 
-          const char* spec, 
-          nsIURI* baseURI = nsnull)     // pass in nsIIOService to optimize callers
-{
-    nsIIOService* ioService;
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    nsresult rv = theServiceManager->GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (void**)&ioService);
-#ifdef NOT_BROKEN_BY_DARIN
-    if (rv == NS_OK)
-        rv = ioService->NewURI(nsDependentCString(spec), nsnull, baseURI, result);
-#endif
-    NS_RELEASE(ioService);
-    return rv;
-}
-
 MRJSecurityContext::MRJSecurityContext(const char* location)
     :   mLocation(nsnull), mConnection(nsnull)
 {
     NS_INIT_REFCNT();
     
-    NS_NewURI(&mLocation, location, nsnull);
+    mLocation = ::strdup(location);
+    if (mLocation) {
+        // find the 3rd slash of the URL, hopefully it's in canonical form.
+        char* colon = ::strchr(mLocation, ':');
+        if (colon) {
+            if (colon[1] == '/' && colon[2] == '/') {
+                char* slash = ::strchr(colon + 3, '/');
+                if (slash) *slash = '\0';
+            }
+        }
+    }
 
     if (theComponentManager) {
         theComponentManager->CreateInstance(kLiveConnectCID, nsnull, NS_GET_IID(nsILiveconnect),
@@ -240,7 +228,7 @@ MRJSecurityContext::MRJSecurityContext(const char* location)
 
 MRJSecurityContext::~MRJSecurityContext()
 {
-    NS_IF_RELEASE(mLocation);
+    delete[] mLocation;
     NS_IF_RELEASE(mConnection);
 }
 
@@ -256,13 +244,10 @@ NS_METHOD MRJSecurityContext::Implies(const char* target, const char* action, PR
 NS_METHOD 
 MRJSecurityContext::GetOrigin(char* buf, int len)
 {
-#ifdef NOT_BROKEN_BY_DARIN
-    nsCAutoString origin;
-    if (mLocation && NS_SUCCEEDED(mLocation->GetPrePath(origin))) {
-        ::strncpy(buf, origin.get(), len);
+    if (mLocation) {
+        ::strncpy(buf, mLocation, len);
         return NS_OK;
     }
-#endif
     return NS_ERROR_FAILURE;
 }
 
@@ -270,7 +255,6 @@ NS_METHOD
 MRJSecurityContext::GetCertificateID(char* buf, int len)
 {
     // ACTION: Implement me.
-
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
