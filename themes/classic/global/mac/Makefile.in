@@ -24,5 +24,15 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+GARBAGE += scrollbars.css
+
+# use native scrollbars over xul scrollbars for mac classic skin. This
+# requires copying "nativescrollbars.css" to "scrollbars.css", which
+# will then get picked up by the jar packaging.
+_DEP_CSS = nativescrollbars.css
+
+export:: $(_DEP_CSS)
+	cp $^ scrollbars.css
+  
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
