@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  unicharutil \
+		  chardet \
 		  $(NULL)
 
 CSRCS		= \

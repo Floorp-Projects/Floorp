@@ -26,6 +26,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  unicharutil \
+		  chardet \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

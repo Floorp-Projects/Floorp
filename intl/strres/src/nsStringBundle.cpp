@@ -42,6 +42,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsPrimitives.h"
 #include "nscore.h"
 #include "nsMemory.h"
 #include "plstr.h"
@@ -60,14 +61,15 @@
 #include "prlog.h"              // for PR_ASSERT
 #include "prmem.h"
 #include "nsIModule.h"
-#include "nsIRegistry.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"
 #include "nsITimelineService.h"
+#include "nsICategoryManager.h"
 
+#include "nsPrintfCString.h"
 // for async loading
 #ifdef ASYNC_LOADING
 #include "nsIBinaryInputStream.h"
@@ -452,7 +454,7 @@ class nsExtensibleStringBundle : public nsIStringBundle
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLE
 
-  nsresult Init(const char * aRegistryKey);
+  nsresult Init(const char * aCategory, nsIStringBundleService *);
 private:
   
   nsISupportsArray * mBundle;
@@ -477,80 +479,48 @@ nsExtensibleStringBundle::nsExtensibleStringBundle()
 }
 
 nsresult
-nsExtensibleStringBundle::Init(const char * aRegistryKey) 
+nsExtensibleStringBundle::Init(const char * aCategory,
+                               nsIStringBundleService* aBundleService) 
 {
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIEnumerator> components;
-  nsRegistryKey uconvKey, key;
-  PRBool regOpen = PR_FALSE;
 
-  // get the Bundle Service
-  nsCOMPtr<nsIStringBundleService> sbServ(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res));
-  if (NS_FAILED(res)) return res;
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  // get the registry
-  nsCOMPtr<nsIRegistry> registry(do_GetService(NS_REGISTRY_CONTRACTID, &res));
-  if (NS_FAILED(res)) return res;
-
-  // open registry if necessary
-  registry->IsOpen(&regOpen);
-  if (!regOpen) {
-    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    if (NS_FAILED(res)) return res;
-  }
-
-  // get subtree
-  res = registry->GetSubtree(nsIRegistry::Common,  
-    aRegistryKey, &uconvKey);
-  if (NS_FAILED(res)) return res;
-
-  // enumerate subtrees
-  res = registry->EnumerateSubtrees(uconvKey, getter_AddRefs(components));
-  if (NS_FAILED(res)) return res;
-  res = components->First();
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = catman->EnumerateCategory(aCategory, getter_AddRefs(enumerator));
+  if (NS_FAILED(rv)) return rv;
 
   // create the bundles array
-  res = NS_NewISupportsArray(&mBundle);
-  if (NS_FAILED(res)) return res;
+  rv = NS_NewISupportsArray(&mBundle);
+  if (NS_FAILED(rv)) return rv;
 
-  while (NS_OK != components->IsDone()) {
-    nsCOMPtr<nsISupports> base;
-    nsCOMPtr<nsIRegistryNode> node;
+  PRBool hasMore;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    rv = enumerator->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv))
+      continue;
+
+    nsCOMPtr<nsISupportsString> supStr = do_QueryInterface(supports, &rv);
+    if (NS_FAILED(rv))
+      continue;
+
     nsXPIDLCString name;
+    rv = supStr->GetData(getter_Copies(name));
+    if (NS_FAILED(rv))
+      continue;
+
     nsCOMPtr<nsIStringBundle> bundle;
-
-    res = components->CurrentItem(getter_AddRefs(base));
-    if (NS_FAILED(res)) return res;
-
-    node = do_QueryInterface(base, &res);
-    if (NS_FAILED(res)) {
-      res = components->Next();
-      if (NS_FAILED(res)) return res;
+    rv = aBundleService->CreateBundle(name, getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
       continue;
-    }
 
-    res = node->GetKey(&key);
-    if (NS_FAILED(res)) return res;
-
-    res = registry->GetStringUTF8(key, "name", getter_Copies(name));
-    if (NS_FAILED(res)) return res;
-
-    res = sbServ->CreateBundle(name, getter_AddRefs(bundle));
-    if (NS_FAILED(res)) {
-      res = components->Next();
-      if (NS_FAILED(res)) return res;
-      continue;
-    }
-
-    res = mBundle->AppendElement(bundle);
-    if (NS_FAILED(res)) return res;
-
-    res = components->Next();
-    if (NS_FAILED(res)) return res;
+    mBundle->AppendElement(bundle);
   }
 
-  return res;
+  return rv;
 }
 
 nsExtensibleStringBundle::~nsExtensibleStringBundle() 
@@ -818,6 +788,12 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
     // remove it from the hash table and linked list
     NS_ASSERTION(mBundleMap.Exists(cacheEntry->mHashKey),
                  "Element will not be removed!");
+#ifdef DEBUG_alecf
+    NS_WARNING(nsPrintfCString(300,
+                               "Booting %s to make room for %s\n",
+                               cacheEntry->mHashKey->GetString(),
+                               aHashKey->GetString()).get());
+#endif
     mBundleMap.Remove(cacheEntry->mHashKey);
     PR_REMOVE_LINK((PRCList*)cacheEntry);
 
@@ -868,7 +844,7 @@ nsStringBundleService::CreateAsyncBundle(const char* aURLSpec, nsIStringBundle**
 }
 
 NS_IMETHODIMP
-nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey, 
+nsStringBundleService::CreateExtensibleBundle(const char* aCategory, 
                                               nsIStringBundle** aResult)
 {
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
@@ -878,7 +854,7 @@ nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey,
   nsExtensibleStringBundle * bundle = new nsExtensibleStringBundle();
   if (!bundle) return NS_ERROR_OUT_OF_MEMORY;
 
-  res = bundle->Init(aRegistryKey);
+  res = bundle->Init(aCategory, this);
   if (NS_FAILED(res)) {
     delete bundle;
     return res;

@@ -45,7 +45,6 @@
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsISupports.h"
-#include "nsIRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
@@ -122,23 +121,40 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(ns2ndBlkDbgDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLastBlkDbgDetector);
 #endif /* INCLUDE_DBGDETECTOR */
 
+static NS_METHOD AddCategoryEntry(const char* category,
+                                  const char* key,
+                                  const char* value)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  return categoryManager->AddCategoryEntry(category, key, value, 
+                                           PR_TRUE, PR_TRUE,
+                                           nsnull);
+}
+
+static NS_METHOD DeleteCategoryEntry(const char* category,
+                                      const char* key)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  return categoryManager->DeleteCategoryEntry(category, key, PR_TRUE);
+}
+
 static NS_METHOD nsMetaCharsetObserverRegistrationProc(nsIComponentManager *aCompMgr,
                                           nsIFile *aPath,
                                           const char *registryLocation,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> 
-    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = categoryManager->AddCategoryEntry("parser-service-category", 
-                                           "Meta Charset Service",
-                                            NS_META_CHARSET_CONTRACTID,
-                                            PR_TRUE, PR_TRUE,
-                                            nsnull);
-  }
-  return rv;
+  return AddCategoryEntry("parser-service-category", 
+                          "Meta Charset Service",
+                          NS_META_CHARSET_CONTRACTID);
 }
 
 static NS_METHOD nsMetaCharsetObserverUnegistrationProc(nsIComponentManager *aCompMgr,
@@ -146,15 +162,8 @@ static NS_METHOD nsMetaCharsetObserverUnegistrationProc(nsIComponentManager *aCo
                                                         const char *registryLocation,
                                                         const nsModuleComponentInfo *info)
 {
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> 
-    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = categoryManager->DeleteCategoryEntry("parser-service-category", 
-                                              NS_META_CHARSET_CONTRACTID,
-                                              PR_TRUE);
-  }
-  return rv;
+  return DeleteCategoryEntry("parser-service-category",
+                             "Meta Charset Service");
 }
 
 static NS_METHOD nsDetectionAdaptorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -163,28 +172,7 @@ static NS_METHOD nsDetectionAdaptorRegistrationProc(nsIComponentManager *aCompMg
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = registry -> AddSubtree(nsIRegistry::Common, 
-                              NS_CHARSET_DETECTOR_REG_BASE "off" ,&key);
-  if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "off");
-    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Off");
-  }
-
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY, "off", "off");
 }
 
 static NS_METHOD nsJAPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -193,27 +181,9 @@ static NS_METHOD nsJAPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = registry -> AddSubtree(nsIRegistry::Common, 
-                              NS_CHARSET_DETECTOR_REG_BASE "ja_parallel_state_machine" ,&key);
-  if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "ja_parallel_state_machine");
-    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Japanese");
-  }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "ja_parallel_state_machine",
+                          info->mContractID);
 }
 
 static NS_METHOD nsKOPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -222,27 +192,9 @@ static NS_METHOD nsKOPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = registry -> AddSubtree(nsIRegistry::Common, 
-                              NS_CHARSET_DETECTOR_REG_BASE "ko_parallel_state_machine" ,&key);
-  if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "ko_parallel_state_machine");
-    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Korean");
-  }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "ko_parallel_state_machine",
+                          info->mContractID);
 }
 
 static NS_METHOD nsZHTWPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -251,27 +203,9 @@ static NS_METHOD nsZHTWPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                            NS_CHARSET_DETECTOR_REG_BASE "zhtw_parallel_state_machine" ,&key);
-   if (NS_SUCCEEDED(rv)) {
-     rv = registry-> SetStringUTF8(key, "type", "zhtw_parallel_state_machine");
-     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Traditional Chinese");
-   }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "zhtw_parallel_state_machine",
+                          info->mContractID);
 }
 
 static NS_METHOD nsZHCNPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -280,27 +214,9 @@ static NS_METHOD nsZHCNPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                            NS_CHARSET_DETECTOR_REG_BASE "zhcn_parallel_state_machine" ,&key);
-   if (NS_SUCCEEDED(rv)) {
-     rv = registry-> SetStringUTF8(key, "type", "zhtw_parallel_state_machine");
-     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Simplified Chinese");
-   }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "zhcn_parallel_state_machine",
+                          info->mContractID);
 }
 
 static NS_METHOD nsZHPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -309,27 +225,9 @@ static NS_METHOD nsZHPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                            NS_CHARSET_DETECTOR_REG_BASE "zh_parallel_state_machine" ,&key);
-   if (NS_SUCCEEDED(rv)) {
-     rv = registry-> SetStringUTF8(key, "type", "zh_parallel_state_machine");
-     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Chinese");
-   }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "zh_parallel_state_machine",
+                          info->mContractID);
 }
 
 static NS_METHOD nsCJKPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -338,27 +236,9 @@ static NS_METHOD nsCJKPSMDetectorRegistrationProc(nsIComponentManager *aCompMgr,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                            NS_CHARSET_DETECTOR_REG_BASE "cjk_parallel_state_machine" ,&key);
-   if (NS_SUCCEEDED(rv)) {
-     rv = registry-> SetStringUTF8(key, "type", "cjk_parallel_state_machine");
-     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "East Asian");
-   }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "cjk_parallel_state_machine",
+                          info->mContractID);
 }
 
 static NS_METHOD nsRUProbDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -367,27 +247,9 @@ static NS_METHOD nsRUProbDetectorRegistrationProc(nsIComponentManager *aCompMgr,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = registry -> AddSubtree(nsIRegistry::Common, 
-                           NS_CHARSET_DETECTOR_REG_BASE "ruprob" ,&key);
-  if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "ruprob");
-    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Russian");
-  }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "ruprob",
+                          info->mContractID);
 }
 
 static NS_METHOD nsUKProbDetectorRegistrationProc(nsIComponentManager *aCompMgr,
@@ -396,27 +258,9 @@ static NS_METHOD nsUKProbDetectorRegistrationProc(nsIComponentManager *aCompMgr,
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = registry -> AddSubtree(nsIRegistry::Common, 
-                           NS_CHARSET_DETECTOR_REG_BASE "ukprob" ,&key);
-  if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "ukprob");
-    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Ukrainian");
-  }
-  return rv;
+  return AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                          "ukprob",
+                          info->mContractID);
 }
 
 // Component Table
