@@ -1021,7 +1021,7 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
     nsACString::const_iterator p, end;
     aURI.BeginReading(p);
     aURI.EndReading(end);
-    while (IsLegalSchemeCharacter(*p) && p != end)
+    while (p != end && IsLegalSchemeCharacter(*p))
         ++p;
 
     nsresult rv;
