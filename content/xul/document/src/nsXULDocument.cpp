@@ -68,6 +68,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
+#include "nsIStreamLoadableDocument.h"
 #include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
@@ -96,6 +97,8 @@
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsLWBrkCIID.h"
+
+#include "nsIInputStream.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -331,6 +334,7 @@ public:
 
 class XULDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
+                        public nsIStreamLoadableDocument,
                         public nsIDOMXULDocument,
                         public nsIJSScriptObject,
                         public nsIScriptObjectOwner,
@@ -354,6 +358,10 @@ public:
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener **aDocListener,
                                  const char* aCommand);
+
+		NS_IMETHOD LoadFromStream( nsIInputStream& xulStream,
+															 nsIContentViewerContainer* aContainer,
+															 const char* aCommand );
 
     virtual const nsString* GetDocumentTitle() const;
 
@@ -612,6 +620,12 @@ public:
 
     nsresult
     MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIRDFResource** aResult);
+
+protected:
+		nsresult PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
+		                        nsIContentViewerContainer* aContainer,
+		                        const char* aCommand,
+														nsIURL* aOptionalURL = 0 );
 
 protected:
     // pseudo constants
@@ -875,6 +889,9 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
         *result = NS_STATIC_CAST(nsIDOMElementObserver*, this);
     }
+    else if (iid.Equals(nsIStreamLoadableDocument::GetIID())) {
+    		*result = NS_STATIC_CAST(nsIStreamLoadableDocument*, this);
+    }
     else {
         *result = nsnull;
         return NS_NOINTERFACE;
@@ -896,18 +913,55 @@ XULDocumentImpl::GetArena()
     return mArena;
 }
 
-NS_IMETHODIMP 
-XULDocumentImpl::StartDocumentLoad(nsIURL *aURL, 
-                                   nsIContentViewerContainer* aContainer,
-                                   nsIStreamListener **aDocListener,
-                                   const char* aCommand)
-{
+static
+nsresult
+generate_RDF_seed( nsString* result, nsIURL* aOptionalURL )
+	{
+		nsresult status = NS_OK;
+
+		if ( aOptionalURL )
+			{
+				const char* s = 0;
+				if ( NS_SUCCEEDED(status = aOptionalURL->GetSpec(&s)) )
+					(*result) = s;
+			}
+		else
+			{
+				static int unique_per_session_index = 0;
+
+				result->Append("x-anonymous-xul://");
+				result->Append(PRInt32(++unique_per_session_index), /*base*/ 10);
+			}
+
+		return status;
+	}
+
+nsresult
+XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
+                                nsIContentViewerContainer* aContainer,
+                                const char* aCommand,
+                                nsIURL* aOptionalURL )
+	{
+		nsCOMPtr<nsIURL> syntheticURL;
+		if ( aOptionalURL )
+			syntheticURL = dont_QueryInterface(aOptionalURL);
+		else
+			{
+				nsString seedString;
+				generate_RDF_seed(&seedString, 0);
+				NS_NewURL(getter_AddRefs(syntheticURL), seedString);
+			}
+
+#if 0
     NS_ASSERTION(aURL != nsnull, "null ptr");
     if (! aURL)
         return NS_ERROR_NULL_POINTER;
+#endif
 
     if (aContainer && aContainer != mContentViewerContainer)
     {
+    	NS_IF_RELEASE(mContentViewerContainer);
+
       // AddRef and hold the container
       NS_ADDREF(aContainer);
       mContentViewerContainer = aContainer;
@@ -918,11 +972,12 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     mDocumentTitle.Truncate();
 
     NS_IF_RELEASE(mDocumentURL);
-    mDocumentURL = aURL;
-    NS_ADDREF(aURL);
-
     NS_IF_RELEASE(mDocumentURLGroup);
-    (void)aURL->GetURLGroup(&mDocumentURLGroup);
+
+		mDocumentURL = syntheticURL;
+		NS_ADDREF(mDocumentURL);
+    syntheticURL->GetURLGroup(&mDocumentURLGroup);
+
 
     // Delete references to style sheets - this should be done in superclass...
     PRInt32 index = mStyleSheets.Count();
@@ -939,7 +994,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
                                                        nsnull,
                                                        kIHTMLStyleSheetIID,
                                                        (void**) &sheet))) {
-        if (NS_SUCCEEDED(rv = sheet->Init(aURL, this))) {
+        if (NS_SUCCEEDED(rv = sheet->Init(syntheticURL, this))) {
             mAttrStyleSheet = sheet;
             NS_ADDREF(mAttrStyleSheet);
 
@@ -960,7 +1015,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
                                                        nsnull,
                                                        kIHTMLCSSStyleSheetIID,
                                                        (void**) &inlineSheet))) {
-        if (NS_SUCCEEDED(rv = inlineSheet->Init(aURL, this))) {
+        if (NS_SUCCEEDED(rv = inlineSheet->Init(syntheticURL, this))) {
             mInlineStyleSheet = inlineSheet;
             NS_ADDREF(mInlineStyleSheet);
 
@@ -1031,6 +1086,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
             return rv;
         }
 
+#if 0
         // Now load the actual RDF/XML document data source. First, we'll
         // see if the data source has been loaded and is registered with
         // the RDF service. If so, do some monkey business to "pretend" to
@@ -1039,6 +1095,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         const char* uri;
         if (NS_FAILED(rv = aURL->GetSpec(&uri)))
             return rv;
+#endif
 
         // We need to construct a new stream and load it. The stream will
         // automagically register itself as a named data source, so if
@@ -1059,7 +1116,9 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
             return rv;
         }
 
-        if (NS_FAILED(rv = mDocumentDataSource->Init(uri))) {
+				const char* seedCString = 0;
+				syntheticURL->GetSpec(&seedCString);
+        if (NS_FAILED(rv = mDocumentDataSource->Init(seedCString))) {
             NS_ERROR("unable to initialize XUL data source");
             return rv;
         }
@@ -1090,11 +1149,6 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         return rv;
     }
 
-    if (NS_FAILED(rv = parser->QueryInterface(kIStreamListenerIID, (void**) aDocListener))) {
-        NS_ERROR("parser doesn't support nsIStreamListener");
-        return rv;
-    }
-
     nsCOMPtr<nsIDTD> dtd;
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
                                                     nsnull,
@@ -1109,10 +1163,57 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     parser->RegisterDTD(dtd);
     parser->SetCommand(aCommand);
     parser->SetContentSink(sink); // grabs a reference to the parser
-    parser->Parse(aURL);
+
+		*created_parser = parser;
+
+		return rv;
+	}
+
+NS_IMETHODIMP 
+XULDocumentImpl::StartDocumentLoad(nsIURL *aURL, 
+                                   nsIContentViewerContainer* aContainer,
+                                   nsIStreamListener **aDocListener,
+                                   const char* aCommand)
+{
+		nsresult status;
+		nsCOMPtr<nsIParser> parser;
+
+		do
+			{
+				if ( NS_FAILED(status = PrepareToLoad(&parser, aContainer, aCommand, aURL)) )
+					break;
+
+				{
+					nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &status);
+					if ( NS_FAILED(status) )
+						{
+		        	NS_ERROR("parser doesn't support nsIStreamListener");
+							break;
+						}
+
+					*aDocListener = listener;
+					NS_IF_ADDREF(*aDocListener);
+				}
+
+				parser->Parse(aURL);
+			}
+		while(false);
    
-    return NS_OK;
+    return status;
 }
+
+nsresult
+XULDocumentImpl::LoadFromStream( nsIInputStream& xulStream,
+																 nsIContentViewerContainer* aContainer,
+																 const char* aCommand )
+	{
+		nsresult status;
+		nsCOMPtr<nsIParser> parser;
+		if ( NS_SUCCEEDED(status = PrepareToLoad(&parser, aContainer, aCommand)) )
+			parser->Parse(xulStream);
+
+		return status;
+	}
 
 const nsString*
 XULDocumentImpl::GetDocumentTitle() const
