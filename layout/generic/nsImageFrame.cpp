@@ -155,7 +155,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
 #else
     src.Append(BROKEN_IMAGE_URL);
 #endif
-  } else {
+  } else if (nsnull == mImageLoader) {
     nsAutoString baseURL;
     if (nsnull != mBaseHREF) {
       baseURL = *mBaseHREF;
@@ -410,16 +410,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, this, mStyleContext, PR_TRUE);
 #endif
 
-    // Setup url before starting the image load
-    nsAutoString src, base;
-    if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) &&
-        (src.Length() > 0)) {
-      mImageLoader.SetURL(src);
-      if (NS_CONTENT_ATTR_HAS_VALUE ==
-          mContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
-        mImageLoader.SetBaseHREF(base);
-      }
-    }
+    // Ask the image loader for the desired size
     mImageLoader.GetDesiredSize(aPresContext, aReflowState,
                                 this, UpdateImageFrame,
                                 aDesiredSize);
@@ -449,6 +440,20 @@ nsImageFrame::Reflow(nsIPresContext&          aPresContext,
                   aReflowState.maxSize.width, aReflowState.maxSize.height));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+
+  // If this is the initial reflow then set the image loader's
+  // source URL and base URL
+  if (eReflowReason_Initial == aReflowState.reason) {
+    nsAutoString src, base;
+    if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) &&
+        (src.Length() > 0)) {
+      mImageLoader.SetURL(src);
+      if (NS_CONTENT_ATTR_HAS_VALUE ==
+          mContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
+        mImageLoader.SetBaseHREF(base);
+      }
+    }
+  }
 
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
   AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, mBorderPadding);
