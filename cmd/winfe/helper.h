@@ -26,7 +26,6 @@ private:
 	friend class COwnedAndLostList;
 	friend class COwnedLostItem;
 
-    static CPtrList m_cplHelpers;
     POSITION m_rIndex;
 public:
     CHelperApp()    {
@@ -47,6 +46,8 @@ public:
 	CString	strFileClass;  // Windows registry file type class
 
 	CString csMimePrefPrefix; //Prefix of the mime type - if this helper is associated with a MIME type specd. thru' prefs...CRN_MIME
+
+	static CPtrList m_cplHelpers;
 };
 
 

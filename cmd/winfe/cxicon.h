@@ -24,8 +24,18 @@ class CXIcon;
 
 class CCustomImageObject
 {
+private:
+	CPtrList loadingImagesList; // A list of images that this window is still waiting for.
+
 public:
 	virtual void LoadComplete(HT_Resource r) = 0;
+
+	virtual NSNavCenterImage* LookupImage(const char* url, HT_Resource r);
+
+	virtual ~CCustomImageObject();
+
+	virtual void AddLoadingImage(NSNavCenterImage* pImage);
+	virtual void RemoveLoadingImage(NSNavCenterImage* pImage);
 };
 
 struct CIconCallbackInfo
@@ -56,14 +66,19 @@ public:
 	CPtrList resourceList;
 	HT_Resource m_HTResource;
 	
-	NSNavCenterImage(char * pUrl, CIconCallbackInfo* iconCallbackInfo);
+	int m_nRefCount;
+
+	NSNavCenterImage(const char * pUrl);
 	virtual ~NSNavCenterImage();
 	
 	void ProcessIcon();
 	void CompleteCallback();
 	BOOL CompletelyLoaded();
+	BOOL SuccessfullyLoaded();
 	void DestroyContext();
 
+	void RemoveListener(CCustomImageObject* pObject);
+	void AddListener(CCustomImageObject* pObject, HT_Resource r);
 };
 
 class CXIcon : public CDCCX {
@@ -92,5 +107,6 @@ public:
 	virtual void ImageComplete(NI_Pixmap* image);
 	//	Don't display partial images.
 	virtual void AllConnectionsComplete(MWContext *pContext);
+	void NiceDestruction();
 };
 #endif

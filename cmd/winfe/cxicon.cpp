@@ -20,22 +20,22 @@
 #include "cxicon.h"
 #include "feimage.h"
 #include "winproto.h"
+#include "helper.h"
 
 HBITMAP NSNavCenterImage::m_hBadImageBitmap = NULL;
 int NSNavCenterImage::refCount = 0;
 
-NSNavCenterImage::NSNavCenterImage(char * url, CIconCallbackInfo* iconCallbackInfo)
+NSNavCenterImage::NSNavCenterImage(const char * url)
 {
+	m_nRefCount = 0;
 	pUrl = _strdup( url);
 	bmpInfo = NULL;
 	m_bCompletelyLoaded = FALSE;
 	bits = 0;
 	maskbits = 0;
 	m_BadImage = FALSE;
-	resourceList.AddHead(iconCallbackInfo);  // list to store all the resources waiting on this image
 	NSNavCenterImage::refCount++;
 	iconContext = NULL;
-	ProcessIcon();
 }
 
 NSNavCenterImage::~NSNavCenterImage()
@@ -53,23 +53,70 @@ NSNavCenterImage::~NSNavCenterImage()
 	}
 }
 
+void NSNavCenterImage::AddListener(CCustomImageObject* pObject, HT_Resource r)
+{
+	// We only want to have one copy of the same image in this list.
+	for (POSITION pos = resourceList.GetHeadPosition();
+		 pos != NULL; )
+	{
+		// Enumerate over the list and call remove listener on each image.
+		CIconCallbackInfo* pInfo = (CIconCallbackInfo*)resourceList.GetNext(pos);
+		if (pInfo->pObject == pObject &&
+			pInfo->pResource == r)
+			return; // We're already listening for this resource.
+	}
+	
+	// Add a listener.
+	CIconCallbackInfo* iconCallbackInfo = new CIconCallbackInfo(pObject, r);
+	resourceList.AddHead(iconCallbackInfo);  
+	pObject->AddLoadingImage(this);
+	m_nRefCount++;
+	if (iconContext == NULL)
+	{
+		// Kick off the load.
+		ProcessIcon();
+	}
+}
+
+void NSNavCenterImage::RemoveListener(CCustomImageObject *pObject)
+{
+	// Listener has been destroyed.  Need to get all references to it out of the list.
+	// Just do this by NULLing out the pObject field of the iconcallbackinfo structs.
+	for (POSITION pos = resourceList.GetHeadPosition();
+		 pos != NULL; )
+	{
+		CIconCallbackInfo* pInfo = (CIconCallbackInfo*)resourceList.GetNext(pos);
+		if (pInfo->pObject == pObject)
+		{	
+			pInfo->pObject = NULL;
+			m_nRefCount--;
+			if (m_nRefCount == 0 && iconContext)
+			{
+				iconContext->Interrupt();
+				DestroyContext();
+				return;
+			}
+		}
+	}
+}
+
 void NSNavCenterImage::DestroyContext()
 {
 	iconContext->DeleteContextDC();
-	iconContext->DestroyContext(); // now destroy self.
+	iconContext->NiceDestruction();
 	iconContext = NULL;
+
+	resourceList.RemoveAll();
 }
 
 BOOL NSNavCenterImage::CompletelyLoaded()
 {
-	if (m_bCompletelyLoaded)
-	{
-		if (iconContext)
-			DestroyContext();
-		return TRUE;
-	}
+	return (m_bCompletelyLoaded);
+}
 
-	return FALSE;
+BOOL NSNavCenterImage::SuccessfullyLoaded()
+{
+	return (m_bCompletelyLoaded && bits);
 }
 
 void Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
@@ -94,13 +141,9 @@ void Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 	}
 }
 
-static BOOL ValidNSBitmapFormat(char* extension)
+static BOOL IsImageMimeType(const CString& theFormat)
 {
 	BOOL val = FALSE;
-	CString theFormat = "image/";
-	if(!extension)
-		return val;
-	theFormat += &extension[1];
 	if (theFormat.CompareNoCase(IMAGE_GIF) == 0)
 		val = TRUE;
 	else if (theFormat.CompareNoCase(IMAGE_JPG) == 0)
@@ -118,6 +161,31 @@ static BOOL ValidNSBitmapFormat(char* extension)
 	else if (theFormat.CompareNoCase(IMAGE_XBM3) == 0)
 		val = TRUE;
 	return val;
+}
+
+static BOOL ValidNSBitmapFormat(char* extension)
+{
+	CPtrList* allHelpers = &(CHelperApp::m_cplHelpers);
+
+	for (POSITION pos = allHelpers->GetHeadPosition(); pos != NULL;)
+	{
+		CHelperApp* app = (CHelperApp*)allHelpers->GetNext(pos);
+		CString helperMime(app->cd_item->ci.type);
+
+		if (IsImageMimeType(helperMime))
+		{
+			if (app->cd_item->num_exts > 0)
+			{
+				for (int i = 0; i < app->cd_item->num_exts; i++)	
+				{
+					CString extString(app->cd_item->exts[i]);
+					if (extString == &extension[1])
+						return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
 }
 
 void NSNavCenterImage::ProcessIcon() 
@@ -162,9 +230,15 @@ void NSNavCenterImage::CompleteCallback()
 	while (!resourceList.IsEmpty())
 	{
 		CIconCallbackInfo* callback = (CIconCallbackInfo*)(resourceList.RemoveHead());
-		callback->pObject->LoadComplete(callback->pResource);
+		if (callback->pObject)
+		{
+			callback->pObject->LoadComplete(callback->pResource);
+			callback->pObject->RemoveLoadingImage(this);
+		}
 		delete callback;
 	}
+	
+	DestroyContext();
 }
 
 CXIcon::CXIcon(NSNavCenterImage* theImage)
@@ -246,4 +320,77 @@ void CXIcon::ImageComplete(NI_Pixmap* image)
 void CXIcon::AllConnectionsComplete(MWContext *pContext)
 {
 	CDCCX::AllConnectionsComplete(pContext);
+}
+
+void CXIcon::NiceDestruction()
+{
+	m_bIdleDestroy = TRUE;
+    FEU_RequestIdleProcessing(GetContext());
+}
+
+// ========================= CCustomImageObject Helpers =============================
+
+NSNavCenterImage* CCustomImageObject::LookupImage(const char* url, HT_Resource r)
+{
+	// Find the image.
+	void* pData;
+	NSNavCenterImage* pImage = NULL;
+	if (CHTFEData::m_CustomURLCache.Lookup(url, pData))
+	{
+		pImage = (NSNavCenterImage*)pData;
+
+		// Add ourselves to the callback list if the image hasn't completely loaded.
+		if (!pImage->CompletelyLoaded())
+		{
+			// The image is currently loading.  Register ourselves with the image so that we will get called
+			// when the image finishes loading.
+			pImage->AddListener(this, r);
+		}
+	}
+	else
+	{
+		// Create a new NavCenter image.
+		pImage = new NSNavCenterImage(url);
+		pImage->AddListener(this, r);
+		CHTFEData::m_CustomURLCache.SetAt(url, pImage);
+	}
+
+	return pImage;
+}
+
+CCustomImageObject::~CCustomImageObject()
+{
+	// The displayer of the image is being destroyed.  It should be removed as a listener from all 
+	// images.
+	for (POSITION pos = loadingImagesList.GetHeadPosition();
+		 pos != NULL; )
+	{
+		// Enumerate over the list and call remove listener on each image.
+		NSNavCenterImage* pImage = (NSNavCenterImage*)loadingImagesList.GetNext(pos);
+		pImage->RemoveListener(this);
+	}
+}
+
+void CCustomImageObject::AddLoadingImage(NSNavCenterImage* pImage)
+{
+	// We only want to have one copy of the same image in this list.
+	for (POSITION pos = loadingImagesList.GetHeadPosition();
+		 pos != NULL; )
+	{
+		// Enumerate over the list and call remove listener on each image.
+		NSNavCenterImage* pNavImage = (NSNavCenterImage*)loadingImagesList.GetNext(pos);
+		if (pNavImage == pImage)
+			return;
+	}
+	
+	// Add the image to the list.
+	loadingImagesList.AddHead(pImage);
+}
+
+void CCustomImageObject::RemoveLoadingImage(NSNavCenterImage* pImage)
+{
+	// Should only occur once in our list.  Find and remove.
+	POSITION pos = loadingImagesList.Find(pImage);
+	if (pos)
+		loadingImagesList.RemoveAt(pos);
 }
