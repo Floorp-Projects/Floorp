@@ -499,7 +499,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // create the server
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                                            mLocalFoldersHostname,
+                                            (const char *)mLocalFoldersHostname,
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
@@ -561,7 +561,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 	// the 4.x "Local Mail" (when using imap) got copied.
 	// it would be great to use the server key, but we don't know it
 	// when we are copying of the mail.
-	rv = mailDir->AppendRelativeUnixPath(mLocalFoldersHostname);
+	rv = mailDir->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
 	if (NS_FAILED(rv)) return rv; 
 	rv = server->SetLocalPath(mailDir);
 	if (NS_FAILED(rv)) return rv;
@@ -761,9 +761,9 @@ nsMessengerMigrator::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
   }
 
   if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
-	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, mLocalFoldersHostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, (const char *)mLocalFoldersHostname, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, (const char *)mLocalFoldersHostname, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
+	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, (const char *)mLocalFoldersHostname, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
   }
   else if (m_oldMailType == POP_4X_MAIL_TYPE) {
     nsXPIDLCString pop_username;
@@ -976,7 +976,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     usernameAtHostname = PR_smprintf("%s@%s",(const char *)escaped_pop_username, (const char *)pop_hostname);
   }
   else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
-    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,mLocalFoldersHostname);
+    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,(const char *)mLocalFoldersHostname);
   }
 #ifdef HAVE_MOVEMAIL
   else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
@@ -1062,7 +1062,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // "none" is the type we use for migrating 4.x "Local Mail"
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                            mLocalFoldersHostname,
+                            (const char *)mLocalFoldersHostname,
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
@@ -1118,7 +1118,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // the 4.x "Local Mail" (when using imap) got copied.
   // it would be great to use the server key, but we don't know it
   // when we are copying of the mail.
-  rv = mailDir->AppendRelativeUnixPath(mLocalFoldersHostname);
+  rv = mailDir->AppendRelativeUnixPath((const char *)mLocalFoldersHostname);
   if (NS_FAILED(rv)) return rv; 
   rv = server->SetLocalPath(mailDir);
   if (NS_FAILED(rv)) return rv;
