@@ -360,7 +360,7 @@ nsXBLContentSink::CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID
     
     AddAttributesToXULPrototype(aNode, prototype);
 
-    nsresult rv = nsXULElement::Create(prototype, mDocument, PR_TRUE, aResult);
+    nsresult rv = nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
     if (NS_FAILED(rv)) return rv;
     return NS_OK;
   }
