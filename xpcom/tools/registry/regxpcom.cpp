@@ -115,6 +115,8 @@ int main(int argc, char *argv[])
 {
     int ret = 0;
 
+    NS_InitXPCOM(NULL, NULL, NULL);
+
     /* With no arguments, RegFactory will autoregister */
     if (argc <= 1)
     {
@@ -126,5 +128,6 @@ int main(int argc, char *argv[])
     else
       ret = ProcessArgs(argc, argv);
 
+    NS_ShutdownXPCOM(NULL);
     return ret;
 }
