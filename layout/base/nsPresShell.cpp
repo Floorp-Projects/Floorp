@@ -318,7 +318,7 @@ public:
                                  PRUint32  aHFlags) const;
 
   NS_IMETHOD DoCopy();
-
+ 
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,

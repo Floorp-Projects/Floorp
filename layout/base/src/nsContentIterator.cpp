@@ -780,7 +780,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(endParent))) || !endParent)
     return NS_ERROR_FAILURE;
   cEndP = do_QueryInterface(endParent);
-  aRange->GetStartOffset(&endIndx);
+  aRange->GetEndOffset(&endIndx);
   
   // short circuit when start node == end node
   if (startParent == endParent)

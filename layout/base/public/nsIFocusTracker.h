@@ -20,6 +20,9 @@
 
 #include "nsISupports.h"
 #include "nsIFrame.h"
+
+
+class nsICaret;
    
 
 // IID for the nsIFocusTracker interface
@@ -53,6 +56,12 @@ public:
    */
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const = 0;
+
+  /**
+   * GetCaret will return the nsICaret Interface from this FocusTracker
+   * usefull for getting screen coordinates of current selection
+   */
+  NS_IMETHOD GetCaret(nsICaret **aCaret) = 0;
 };
 
 
