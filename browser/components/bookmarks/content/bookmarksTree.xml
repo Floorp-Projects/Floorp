@@ -733,7 +733,9 @@ dump("ONSELECTION CHANGED\n")
       <!-- XXXben need focus event handler for cmd update -->
       <!-- context menu -->
       <menupopup onpopupshowing="this.parentNode.createTreeContextMenu(event);"
-                 onpopuphidden="if (content) content.focus()"/>
+                 onpopuphidden="if (content) content.focus()"
+                 onclick="event.preventBubble();"
+                 onkeypress="event.preventBubble();"/>
       <vbox flex="1">
         <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
                   datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
@@ -845,7 +847,9 @@ dump("ONSELECTION CHANGED\n")
       <!-- context menu -->
       <menupopup xbl:inherits="onpopupshowing"
                  onpopupshowing="this.parentNode.createTreeContextMenu(event);"
-                 onpopuphidden ="if (content) content.focus()"/>
+                 onpopuphidden="if (content) content.focus()"
+                 onclick="event.preventBubble();"
+                 onkeypress="event.preventBubble();"/>
       <tree anonid="bookmarks-tree" flex="1" class="plain" hidecolumnpicker="true"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
