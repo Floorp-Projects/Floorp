@@ -27,11 +27,11 @@ CSRCS = db.c	   \
 
 LIBRARY_NAME = mozdbm
 
+LOCAL_INCLUDES = -I$(srcdir)/../include
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DMEMMOVE -D__DBINTERFACE_PRIVATE $(SECURITY_FLAG)
-
-INCLUDES += -I$(srcdir)/../include
 
 ifeq ($(OS_ARCH),AIX)
 	OS_LIBS += -lc_r
