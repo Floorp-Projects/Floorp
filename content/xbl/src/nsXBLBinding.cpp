@@ -662,7 +662,7 @@ nsXBLBinding::GenerateAnonymousContent()
       return mNextBinding->GenerateAnonymousContent();
     else return NS_OK;
   }
-
+     
   // Find out if we're really building kids or if we're just
   // using the attribute-setting shorthand hack.
   PRInt32 contentCount;
@@ -673,161 +673,168 @@ nsXBLBinding::GenerateAnonymousContent()
   PRBool hasInsertionPoints;
   mPrototypeBinding->HasInsertionPoints(&hasInsertionPoints);
 
-  if (hasContent && !hasInsertionPoints) {
-    // See if there's an includes attribute.
-    nsAutoString includes;
-    content->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
-    
 #ifdef DEBUG
-    if (!includes.IsEmpty()) {
-      nsCAutoString id;
-      mPrototypeBinding->GetID(id);
-      nsCAutoString message("An XBL Binding with an id of ");
-      message += id;
-      message += " and found in the file ";
-      nsCAutoString uri;
-      mPrototypeBinding->GetDocURI(uri);
-      message += uri;
-      message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
-      NS_WARNING(message);
-    }
+  // See if there's an includes attribute.
+  nsAutoString includes;
+  content->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
+  if (!includes.IsEmpty()) {
+    nsCAutoString id;
+    mPrototypeBinding->GetID(id);
+    nsCAutoString message("An XBL Binding with an id of ");
+    message += id;
+    message += " and found in the file ";
+    nsCAutoString uri;
+    mPrototypeBinding->GetDocURI(uri);
+    message += uri;
+    message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
+    NS_WARNING(message);
+  }
 #endif
 
-    if (includes != NS_LITERAL_STRING("*")) {
-      PRInt32 childCount;
-      mBoundElement->ChildCount(childCount);
-      if (childCount > 0) {
-        // We'll only build content if all the explicit children are 
-        // in the includes list.
-        // Walk the children and ensure that all of them
-        // are in the includes array.
-        for (PRInt32 i = 0; i < childCount; i++) {
-          nsCOMPtr<nsIContent> child;
-          mBoundElement->ChildAt(i, *getter_AddRefs(child));
-          nsCOMPtr<nsIAtom> tag;
-          child->GetTag(*getter_AddRefs(tag));
-          if (!IsInExcludesList(tag, includes)) {
-            // XXX HACK! Ignore <template> and <observes>
-            if (tag.get() != kXULTemplateAtom &&
-              tag.get() != kXULObservesAtom) {
-              return NS_OK;
-            }
-          }
+  if (hasContent || hasInsertionPoints) {
+    nsCOMPtr<nsIDocument> doc;
+    mBoundElement->GetDocument(*getter_AddRefs(doc));
+    
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    doc->GetBindingManager(getter_AddRefs(bindingManager));
+
+    nsCOMPtr<nsIDOMNodeList> children;
+    bindingManager->GetContentListFor(mBoundElement, getter_AddRefs(children));
+ 
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> childContent;
+    PRUint32 length;
+    children->GetLength(&length);
+    if (length > 0 && !hasInsertionPoints) {
+      // There are children being placed underneath us, but we have no specified
+      // insertion points, and therefore no place to put the kids.  Don't generate
+      // anonymous content.
+      // Special case template and observes.
+      for (PRUint32 i = 0; i < length; i++) {
+        children->Item(i, getter_AddRefs(node));
+        childContent = do_QueryInterface(node);
+        nsCOMPtr<nsIAtom> tag;
+        childContent->GetTag(*getter_AddRefs(tag));
+        if (tag.get() != kXULObservesAtom && tag.get() != kXULTemplateAtom) {
+          hasContent = PR_FALSE;
+          break;
         }
       }
     }
-  }
- 
-  if (hasContent) {
-    nsCOMPtr<nsIContent> clonedContent;
-    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
 
-    nsCOMPtr<nsIDOMNode> clonedNode;
-    domElement->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+    if (hasContent || hasInsertionPoints) {
+      nsCOMPtr<nsIContent> clonedContent;
+      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
+
+      nsCOMPtr<nsIDOMNode> clonedNode;
+      domElement->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
   
-    clonedContent = do_QueryInterface(clonedNode);
-    SetAnonymousContent(clonedContent);
+      clonedContent = do_QueryInterface(clonedNode);
+      SetAnonymousContent(clonedContent);
 
-    mPrototypeBinding->SetInitialAttributes(mBoundElement, mContent);
+      mPrototypeBinding->SetInitialAttributes(mBoundElement, mContent);
 
-    if (hasInsertionPoints) {
-      // Now check and see if we have a single insertion point 
-      // or multiple insertion points.
-      nsCOMPtr<nsIDocument> doc;
-      mBoundElement->GetDocument(*getter_AddRefs(doc));
-        
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
-
-      nsCOMPtr<nsIDOMNodeList> children;
-      bindingManager->GetContentListFor(mBoundElement, getter_AddRefs(children));
+      if (hasInsertionPoints) {
+        // Now check and see if we have a single insertion point 
+        // or multiple insertion points.
       
-      // Enumerate the prototype binding's insertion table to build
-      // our table of instantiated insertion points.
-      mPrototypeBinding->InstantiateInsertionPoints(this);
+        // Enumerate the prototype binding's insertion table to build
+        // our table of instantiated insertion points.
+        mPrototypeBinding->InstantiateInsertionPoints(this);
 
-      // We now have our insertion point table constructed.  We
-      // enumerate this table.  For each array of insertion points
-      // bundled under the same content node, we generate a content
-      // list.  In the case of the bound element, we generate a new
-      // anonymous node list that will be used in place of the binding's
-      // cached anonymous node list.
-      ContentListData data(this, bindingManager);
-      mInsertionPointTable->Enumerate(BuildContentLists, &data);
+        // We now have our insertion point table constructed.  We
+        // enumerate this table.  For each array of insertion points
+        // bundled under the same content node, we generate a content
+        // list.  In the case of the bound element, we generate a new
+        // anonymous node list that will be used in place of the binding's
+        // cached anonymous node list.
+        ContentListData data(this, bindingManager);
+        mInsertionPointTable->Enumerate(BuildContentLists, &data);
       
-      // We need to place the children
-      // at their respective insertion points.
-      nsCOMPtr<nsIContent> singlePoint;
-      PRUint32 index = 0;
-      PRBool multiplePoints = PR_FALSE;
-      nsCOMPtr<nsIContent> singleDefaultContent;
-      GetSingleInsertionPoint(getter_AddRefs(singlePoint), &index, 
-                              &multiplePoints, getter_AddRefs(singleDefaultContent));
+        // We need to place the children
+        // at their respective insertion points.
+        nsCOMPtr<nsIContent> singlePoint;
+        PRUint32 index = 0;
+        PRBool multiplePoints = PR_FALSE;
+        nsCOMPtr<nsIContent> singleDefaultContent;
+        GetSingleInsertionPoint(getter_AddRefs(singlePoint), &index, 
+                                &multiplePoints, getter_AddRefs(singleDefaultContent));
       
-      if (children) {
-        if (multiplePoints) {
-          // We must walk the entire content list in order to determine where
-          // each child belongs.
-          nsCOMPtr<nsIDOMNode> node;
-          nsCOMPtr<nsIContent> content;
-          PRUint32 length;
-          children->GetLength(&length);
-          for (PRUint32 i = 0; i < length; i++) {
-            children->Item(i, getter_AddRefs(node));
-            content = do_QueryInterface(node);
+        if (children) {
+          if (multiplePoints) {
+            // We must walk the entire content list in order to determine where
+            // each child belongs.
+            children->GetLength(&length);
+            for (PRUint32 i = 0; i < length; i++) {
+              children->Item(i, getter_AddRefs(node));
+              childContent = do_QueryInterface(node);
 
-            // Now determine the insertion point in the prototype table.
-            nsCOMPtr<nsIContent> point;
-            PRUint32 index;
-            nsCOMPtr<nsIContent> defContent;
-            GetInsertionPoint(content, getter_AddRefs(point), &index, getter_AddRefs(defContent));
-            bindingManager->SetInsertionParent(content, point);
+              // Now determine the insertion point in the prototype table.
+              nsCOMPtr<nsIContent> point;
+              PRUint32 index;
+              nsCOMPtr<nsIContent> defContent;
+              GetInsertionPoint(childContent, getter_AddRefs(point), &index, getter_AddRefs(defContent));
+              bindingManager->SetInsertionParent(childContent, point);
 
-            // Find the correct nsIXBLInsertion point in our table.
-            nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
+              // Find the correct nsIXBLInsertion point in our table.
+              nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
+              nsCOMPtr<nsISupportsArray> arr;
+              GetInsertionPointsFor(point, getter_AddRefs(arr));
+              PRUint32 arrCount;
+              arr->Count(&arrCount);
+              for (PRUint32 j = 0; j < arrCount; j++) {
+                insertionPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
+                PRBool matches;
+                insertionPoint->Matches(point, index, &matches);
+                if (matches)
+                  break;
+                insertionPoint = nsnull;
+              }
+
+              if (insertionPoint) 
+                insertionPoint->AddChild(childContent);
+              else {
+                // We were unable to place this child.  All anonymous content
+                // should be thrown out.  Special-case template and observes.
+                nsCOMPtr<nsIAtom> tag;
+                childContent->GetTag(*getter_AddRefs(tag));
+                if (tag.get() != kXULObservesAtom && tag.get() != kXULTemplateAtom) {
+                  // Kill all anonymous content.
+                  mContent = nsnull;
+                  bindingManager->SetContentListFor(mBoundElement, nsnull);
+                  bindingManager->SetAnonymousNodesFor(mBoundElement, nsnull);
+                  return NS_OK;
+                }
+              }
+            }
+          }
+          else {
+            // All of our children are shunted to this single insertion point.
             nsCOMPtr<nsISupportsArray> arr;
-            GetInsertionPointsFor(point, getter_AddRefs(arr));
+            GetInsertionPointsFor(singlePoint, getter_AddRefs(arr));
             PRUint32 arrCount;
             arr->Count(&arrCount);
-            for (PRUint32 j = 0; j < arrCount; j++) {
-              insertionPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
-              PRBool matches;
-              insertionPoint->Matches(point, index, &matches);
-              if (matches)
-                break;
-              insertionPoint = nsnull;
-            }
-
-            if (insertionPoint) 
-              insertionPoint->AddChild(content);
-          }
-        }
-        else {
-          // All of our children are shunted to this single insertion point.
-          nsCOMPtr<nsISupportsArray> arr;
-          GetInsertionPointsFor(singlePoint, getter_AddRefs(arr));
-          PRUint32 arrCount;
-          arr->Count(&arrCount);
-          nsCOMPtr<nsIXBLInsertionPoint> insertionPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(0));
+            nsCOMPtr<nsIXBLInsertionPoint> insertionPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(0));
         
-          nsCOMPtr<nsIDOMNode> node;
-          nsCOMPtr<nsIContent> content;
-          PRUint32 length;
-          children->GetLength(&length);
+            nsCOMPtr<nsIDOMNode> node;
+            nsCOMPtr<nsIContent> content;
+            PRUint32 length;
+            children->GetLength(&length);
           
-          for (PRUint32 i = 0; i < length; i++) {
-            children->Item(i, getter_AddRefs(node));
-            content = do_QueryInterface(node);
-            bindingManager->SetInsertionParent(content, singlePoint);
-            insertionPoint->AddChild(content);
+            for (PRUint32 i = 0; i < length; i++) {
+              children->Item(i, getter_AddRefs(node));
+              content = do_QueryInterface(node);
+              bindingManager->SetInsertionParent(content, singlePoint);
+              insertionPoint->AddChild(content);
+            }
           }
         }
-      }
 
-      // Now that all of our children have been added, we need to walk all of our
-      // nsIXBLInsertion points to see if any of them have default content that
-      // needs to be built.
-      mInsertionPointTable->Enumerate(RealizeDefaultContent, &data);
+        // Now that all of our children have been added, we need to walk all of our
+        // nsIXBLInsertion points to see if any of them have default content that
+        // needs to be built.
+        mInsertionPointTable->Enumerate(RealizeDefaultContent, &data);
+      }
     }
   }
 
