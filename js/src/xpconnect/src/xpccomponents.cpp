@@ -1825,6 +1825,14 @@ NS_IMETHODIMP nsXPCComponents::LookupMethod()
     if(!JSVAL_IS_STRING(argv[1]))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
+    // Make sure the name (argv[1]) that we use for looking up the
+    // method/property is atomized.
+
+    jsid name_id;
+    if(!JS_ValueToId(cx, argv[1], &name_id) ||
+       !JS_IdToValue(cx, name_id, &argv[1]))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
     // this will do verification and the method lookup for us
     XPCCallContext inner_cc(JS_CALLER, cx, obj, nsnull, argv[1]);
 
