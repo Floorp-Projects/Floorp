@@ -45,8 +45,8 @@ PRCList _pr_cpuQ = PR_INIT_STATIC_CLIST(&_pr_cpuQ);
 
 PRUint32 _pr_utid;
 
-PRUintn _pr_userActive;
-PRUintn _pr_systemActive;
+PRInt32 _pr_userActive;
+PRInt32 _pr_systemActive;
 PRUintn _pr_maxPTDs;
 
 #ifdef _PR_LOCAL_THREADS_ONLY
@@ -66,29 +66,27 @@ PRLock *_pr_terminationCVLock;
 PRLock *_pr_sleeplock;  /* used in PR_Sleep(), classic and pthreads */
 
 static void _PR_InitCallOnce(void);
-static void _PR_InitStuff(void);
 
-/************************************************************************/
-/**************************IDENTITY AND VERSIONING***********************/
-/************************************************************************/
+PRBool _pr_initialized = PR_FALSE;
+
+
 PR_IMPLEMENT(PRBool) PR_VersionCheck(const char *importedVersion)
 {
     /*
     ** This is the secret handshake algorithm. Right now it requires
-    ** an exact match. Later it should get more tricky.
+    ** an exact match. Later it should get more clever.
     */
+    if (!_pr_initialized) _PR_ImplicitInitialization();
     return ((0 == strcmp(importedVersion, PR_VERSION)) ? PR_TRUE : PR_FALSE);
 }  /* PR_VersionCheck */
 
-
-PRBool _pr_initialized = PR_FALSE;
 
 PR_IMPLEMENT(PRBool) PR_Initialized(void)
 {
     return _pr_initialized;
 }
 
-static void _PR_InitStuff()
+static void _PR_InitStuff(void)
 {
     if (_pr_initialized) return;
     _pr_initialized = PR_TRUE;
@@ -108,13 +106,14 @@ static void _PR_InitStuff()
     /* NOTE: These init's cannot depend on _PR_MD_CURRENT_THREAD() */ 
     _PR_MD_EARLY_INIT();
 
-    _PR_InitAtomic();
     _PR_InitLocks();
+    _PR_InitAtomic();
     _PR_InitSegs();
     _PR_InitStacks();
 	_PR_InitTPD();
     _PR_InitEnv();
     _PR_InitLayerCache();
+    _PR_InitClock();
 
     _pr_sleeplock = PR_NewLock();
     PR_ASSERT(NULL != _pr_sleeplock);
@@ -143,13 +142,13 @@ static void _PR_InitStuff()
     _PR_InitCMon();
     _PR_InitIO();
     _PR_InitNet();
-    _PR_InitClock();
 #ifdef PR_LOGGING
     _PR_InitLog();
 #endif
     _PR_InitLinker();
     _PR_InitCallOnce();
     _PR_InitDtoa();
+    _PR_InitMW();
 
     _PR_MD_FINAL_INIT();
 }
@@ -173,6 +172,16 @@ PR_IMPLEMENT(void) PR_DisableClockInterrupts(void)
 	} else {
     	_PR_MD_DISABLE_CLOCK_INTERRUPTS();
 	}
+#endif
+}
+
+PR_IMPLEMENT(void) PR_EnableClockInterrupts(void)
+{
+#if !defined(_PR_PTHREADS)
+	if (!_pr_initialized) {
+		_PR_InitStuff();
+	}
+    _PR_MD_ENABLE_CLOCK_INTERRUPTS();
 #endif
 }
 
@@ -285,7 +294,6 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
     PR_ASSERT((NULL != me) && (me->flags & _PR_PRIMORDIAL));
     if ((NULL != me) && (me->flags & _PR_PRIMORDIAL))
     {
-
         PR_LOG(_pr_thread_lm, PR_LOG_MIN, ("PR_Cleanup: shutting down NSPR"));
 
         /*
@@ -303,6 +311,14 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         }
         PR_Unlock(_pr_activeLock);
 
+#ifdef IRIX
+		_PR_MD_PRE_CLEANUP(me);
+		/*
+		 * The primordial thread must now be running on the primordial cpu
+		 */
+    	PR_ASSERT((_PR_IS_NATIVE_THREAD(me)) || (me->cpu->id == 0));
+#endif
+
 #if defined(WIN16)
 		_PR_ShutdownLinker();
 #endif
@@ -316,6 +332,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
 	#ifdef PR_LOGGING
 	    _PR_LogCleanup();
 	#endif
+        _PR_CleanupFdCache();
 
         /*
          * This part should look like the end of _PR_NativeRunThread

@@ -40,6 +40,7 @@
 #include "plgetopt.h"
 
 #include "nspr.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -259,6 +260,7 @@ char   *argv[]
 )
 {
     pid_t pid;
+	int rv;
 
     /* main test program */
 
@@ -275,9 +277,18 @@ char   *argv[]
 
         printf("Fork succeeded.  Parent process continues.\n");
         DoIO();
-        if (waitpid(pid, &childStatus, 0) != pid) {
-            fprintf(stderr, "waitpid failed: %d\n", errno);
-            failed_already = 1;
+        if ((rv = waitpid(pid, &childStatus, 0)) != pid) {
+#if defined(IRIX) && !defined(_PR_PTHREADS)
+			/*
+			 * nspr may handle SIGCLD signal
+			 */
+			if ((rv < 0) && (errno == ECHILD)) {
+			} else 
+#endif
+			{
+				fprintf(stderr, "waitpid failed: %d\n", errno);
+				failed_already = 1;
+			}
         } else if (!WIFEXITED(childStatus)
                 || WEXITSTATUS(childStatus) != 0) {
             failed_already = 1;
@@ -290,6 +301,10 @@ char   *argv[]
         }
         return failed_already;
     } else {
+#if defined(IRIX) && !defined(_PR_PTHREADS)
+		extern void _PR_IRIX_CHILD_PROCESS(void);
+		_PR_IRIX_CHILD_PROCESS();
+#endif
         printf("Fork succeeded.  Child process continues.\n");
         DoIO();
         printf("Child process exits.\n");

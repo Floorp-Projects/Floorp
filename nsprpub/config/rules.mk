@@ -47,12 +47,9 @@
 #			($OBJDIR automatically prepended to it)
 #
 ################################################################################
-ifndef topsrcdir
-topsrcdir = $(MOD_DEPTH)
-endif
 
 ifndef NSPR_CONFIG_MK
-include $(topsrcdir)/config/config.mk
+include $(MOD_DEPTH)/config/config.mk
 endif
 
 #
@@ -90,7 +87,9 @@ LIBRARY		= $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION).$(LIB_SUFFIX)
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 SHARED_LIBRARY	= $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)_shr.a
 else
+ifdef MKSHLIB
 SHARED_LIBRARY	= $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
+endif
 endif
 ifdef HAVE_PURIFY
 ifdef DSO_BACKEND
@@ -151,10 +150,6 @@ ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
 			  so_locations
 
-ifdef USE_AUTOCONF
-ALL_TRASH		:= $(filter-out $(OBJDIR), $(ALL_TRASH))
-endif
-
 ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
@@ -187,11 +182,7 @@ clean::
 	+$(LOOP_OVER_DIRS)
 
 clobber::
-ifdef USE_AUTOCONF
-	rm -rf $(OBJS) $(TARGETS) $(GARBAGE) so_locations $(NOSUCHFILE)
-else
 	rm -rf $(OBJS) $(TARGETS) $(OBJDIR) $(GARBAGE) so_locations $(NOSUCHFILE)
-endif
 	+$(LOOP_OVER_DIRS)
 
 realclean clobber_all::
@@ -326,9 +317,9 @@ endif
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
 else
-	$(CCC) -o $@ -c $(CFLAGS) $< 
+	$(CCC) -o $@ -c $(CCCFLAGS) $< 
 endif
 
 WCCFLAGS1 = $(subst /,\\,$(CFLAGS))
@@ -346,18 +337,18 @@ else
 	$(CC) -Fo$@ -c $(CFLAGS) $*.c
 endif
 else
-	$(CC) -o $@ -c $(CFLAGS) $<
+	$(CC) -o $@ -c $(CFLAGS) $*.c
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $<
+	$(AS) -o $@ $(ASFLAGS) -c $*.s
 
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 
 %: %.pl
-	rm -f $@; cp $< $@; chmod +x $@
+	rm -f $@; cp $*.pl $@; chmod +x $@
 
 ################################################################################
 # Special gmake rules.
@@ -375,3 +366,12 @@ $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 # name already exists.
 #
 .PHONY: all alltags clean export install libs realclean release
+
+#
+# List the target pattern of an implicit rule as a dependency of the
+# special target .PRECIOUS to preserve intermediate files made by
+# implicit rules whose target patterns match that file's name.
+# (See GNU Make documentation, Edition 0.51, May 1996, Sec. 10.4,
+# p. 107.)
+#
+.PRECIOUS: $(OBJDIR)/%.$(OBJ_SUFFIX)

@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEFAULT_DURATION 20
+#define DEFAULT_DURATION 5
 
 static PRBool failed = PR_FALSE;
 static PRIntervalTime oneSecond;
@@ -131,7 +131,7 @@ static void RudimentaryTests(void)
 
 }  /* RudimentataryTests */
 
-static void CreateThreads(PRInt32 *lowCount, PRInt32 *highCount)
+static void CreateThreads(PRUint32 *lowCount, PRUint32 *highCount)
 {
     (void)PR_CreateThread(
         PR_USER_THREAD, Low, lowCount, PR_PRIORITY_LOW,

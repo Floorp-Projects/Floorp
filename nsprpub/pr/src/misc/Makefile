@@ -28,9 +28,10 @@ OPTIMIZER =
 endif
 endif
 
-CSRCS =            \
+CSRCS = \
 	pralarm.c  \
 	pratom.c   \
+	prcountr.c \
 	prdtoa.c   \
 	prenv.c    \
 	prerror.c  \
@@ -39,9 +40,11 @@ CSRCS =            \
 	prlog2.c   \
 	prlong.c   \
 	prnetdb.c  \
+	prolock.c  \
 	prsystem.c \
 	prtime.c   \
 	prthinfo.c \
+	prtrace.c  \
 	$(NULL)
 
 TARGETS	= $(OBJS)

@@ -26,6 +26,8 @@
 #include "prinrval.h"
 #include "prlock.h"
 #include "prprf.h"
+#include "prmem.h"
+#include "prlog.h"
 
 #include "plgetopt.h"
 
@@ -37,7 +39,7 @@
 
 #include <stdlib.h>
 
-#define DEFAULT_RANGE 20
+#define DEFAULT_RANGE 10
 #define DEFAULT_LOOPS 100
 
 static PRThreadScope thread_scope = PR_LOCAL_THREAD;
@@ -71,8 +73,11 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
 {
     PRUintn cpus;
 	PLOptStatus os;
+	PRThread **threads;
     PRBool debug = PR_FALSE;
     PRUintn range = DEFAULT_RANGE;
+	PRStatus rc;
+    PRUintn cnt;
     PRUintn loops = DEFAULT_LOOPS;
 	PRIntervalTime hundredMills = PR_MillisecondsToInterval(100);
 	PLOptState *opt = PL_CreateOptState(argc, argv, "Gdl:r:");
@@ -109,16 +114,17 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
         PR_fprintf(
             PR_STDERR, "Testing with %d CPUs and %d interations\n", range, loops);
 
+	threads = (PRThread**) PR_CALLOC(sizeof(PRThread*) * range);
     while (--loops > 0)
     {
-        for (cpus = 1; cpus < range; ++cpus)
+        for (cpus = 1; cpus <= range; ++cpus)
         {
             PR_SetConcurrency(cpus);
             context.want = cpus;
 
-            (void)PR_CreateThread(
+            threads[cpus - 1] = PR_CreateThread(
                 PR_USER_THREAD, Dull, &context, PR_PRIORITY_NORMAL,
-				      thread_scope, PR_UNJOINABLE_THREAD, 0);
+				      thread_scope, PR_JOINABLE_THREAD, 0);
         }
 
         PR_Sleep(hundredMills);
@@ -132,6 +138,10 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
             PR_NotifyCondVar(context.cv);
             PR_Unlock(context.ml);
         }
+		for(cnt = 0; cnt < range; cnt++) {
+			rc = PR_JoinThread(threads[cnt]);
+			PR_ASSERT(rc == PR_SUCCESS);
+		}
     }
 
     

@@ -24,13 +24,14 @@ include $(MOD_DEPTH)/config/UNIX.mk
 DLL_SUFFIX	= sl
 
 ifdef NS_USE_GCC
-CC			= gcc
-CCC			= g++
-OS_CFLAGS		=
+	CC			        = gcc
+	CCC			        = g++
+	OS_CFLAGS		    =
+	COMPILER_TAG        = _gcc
 else
-CC			= cc -Ae
-CCC			= CC
-OS_CFLAGS		= +ESlit
+	CC			        = cc -Ae
+	CCC			        = CC -ext
+	OS_CFLAGS           = +ESlit
 endif
 
 RANLIB			= echo
@@ -50,6 +51,14 @@ OS_CFLAGS		+= -D_PR_NEED_H_ERRNO
 endif
 ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
 OS_CFLAGS		+= -D_PR_NEED_H_ERRNO
+endif
+
+# Do we have localtime_r()?  Does it return 'int' or 'struct tm *'?
+ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
+OS_CFLAGS		+= -DHAVE_INT_LOCALTIME_R
+endif
+ifeq (,$(filter-out B.10.30 B.11.00,$(OS_RELEASE)))
+OS_CFLAGS		+= -DHAVE_POINTER_LOCALTIME_R
 endif
 
 #
@@ -72,12 +81,12 @@ endif
 #
 ifeq ($(basename $(OS_RELEASE)),A.09)
 OS_CFLAGS		+= -DHPUX9
-DEFAULT_IMPL_STRATEGY = _CLASSIC
+DEFAULT_IMPL_STRATEGY = _EMU
 endif
 
 ifeq ($(OS_RELEASE),B.10.01)
 OS_CFLAGS		+= -DHPUX10
-DEFAULT_IMPL_STRATEGY = _CLASSIC
+DEFAULT_IMPL_STRATEGY = _EMU
 endif
 
 ifeq ($(OS_RELEASE),B.10.10)
@@ -87,6 +96,9 @@ endif
 
 ifeq ($(OS_RELEASE),B.10.20)
 OS_CFLAGS		+= -DHPUX10 -DHPUX10_20
+ifndef NS_USE_GCC
+OS_CFLAGS		+= +DAportable +DS1.1
+endif
 DEFAULT_IMPL_STRATEGY = _PTH
 endif
 
@@ -96,7 +108,7 @@ endif
 
 ifeq ($(OS_RELEASE),B.10.30)
 ifndef NS_USE_GCC
-CCC			= /opt/aCC/bin/aCC
+CCC			= /opt/aCC/bin/aCC -ext
 OS_CFLAGS		+= +DAportable +DS1.1
 endif
 OS_CFLAGS		+= -DHPUX10 -DHPUX10_30
@@ -105,23 +117,30 @@ endif
 
 # 11.00 is similar to 10.30.
 ifeq ($(OS_RELEASE),B.11.00)
-ifndef NS_USE_GCC
-CCC			= /opt/aCC/bin/aCC
-OS_CFLAGS		+= +DAportable +DS1.1
-endif
-OS_CFLAGS		+= -DHPUX10 -DHPUX11
+	ifndef NS_USE_GCC
+		CCC			        = /opt/aCC/bin/aCC -ext
+		ifeq ($(USE_64), 1)
+			OS_CFLAGS       += +DA2.0W +DChpux
+			COMPILER_TAG    = _64
+		else
+			OS_CFLAGS       += +DAportable +DS1.1
+			COMPILER_TAG    = _32
+		endif
+	endif
+OS_CFLAGS		+= -DHPUX10 -DHPUX11 -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T
 DEFAULT_IMPL_STRATEGY = _PTH
 endif
 
-ifeq ($(DEFAULT_IMPL_STRATEGY),_CLASSIC)
+ifeq ($(DEFAULT_IMPL_STRATEGY),_EMU)
 CLASSIC_NSPR = 1
 endif
 
 ifeq ($(DEFAULT_IMPL_STRATEGY),_PTH)
 USE_PTHREADS = 1
+IMPL_STRATEGY = _PTH
 ifeq ($(CLASSIC_NSPR),1)
 USE_PTHREADS =
-IMPL_STRATEGY = _CLASSIC
+IMPL_STRATEGY = _EMU
 endif
 ifeq ($(PTHREADS_USER),1)
 USE_PTHREADS =
@@ -129,16 +148,12 @@ IMPL_STRATEGY = _PTH_USER
 endif
 endif
 
-#
-# XXX
-# Temporary define for the Client; to be removed when binary release is used
-#
-ifdef MOZILLA_CLIENT
-IMPL_STRATEGY =
-endif
-
 ifeq ($(CLASSIC_NSPR),1)
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
+endif
+
+ifeq (,$(filter-out A.09 B.10,$(basename $(OS_RELEASE))))
+DEFINES			+= -D_PR_NO_LARGE_FILES
 endif
 
 #
@@ -173,7 +188,3 @@ DSO_CFLAGS		= +Z
 endif
 
 HAVE_PURIFY		= 1
-
-ifdef USE_AUTOCONF
-OS_CFLAGS		=
-endif

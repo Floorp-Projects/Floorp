@@ -20,7 +20,7 @@
 # 4 and 5 are vastly different, so we use 2 different files.
 #
 ifeq ($(basename $(OS_RELEASE)),4.1)
-include $(topsrcdir)/config/SunOS4.mk
+include $(MOD_DEPTH)/config/SunOS4.mk
 else
-include $(topsrcdir)/config/SunOS5.mk
+include $(MOD_DEPTH)/config/SunOS5.mk
 endif

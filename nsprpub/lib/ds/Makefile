@@ -106,7 +106,9 @@ include $(MOD_DEPTH)/config/rules.mk
 export:: $(TARGETS)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+ifdef SHARED_LIBRARY
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+endif
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(HEADERS) $(MOZ_INCL)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib

@@ -31,6 +31,8 @@
 #include "prtypes.h"
 #include "prinrval.h"
 
+PR_BEGIN_EXTERN_C
+
 #define _PR_NAKED_CV_LOCK (PRLock*)0xdce1dce1
 
 /*
@@ -91,5 +93,7 @@ PR_EXTERN(PRStatus) PRP_NakedNotify(PRCondVar *cvar);
 ** NB: The CV ('cvar') must be one created using PR_NewNakedCondVar.
 */
 PR_EXTERN(PRStatus) PRP_NakedBroadcast(PRCondVar *cvar);
+
+PR_END_EXTERN_C
 
 #endif /* PRPDCE_H */

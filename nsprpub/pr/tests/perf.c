@@ -67,6 +67,26 @@ static void DLLProcedureCall(void)
     }
 }
 
+static void Now(void)
+{
+    PRInt32 i;
+    PRTime time;
+
+    for (i = 0; i < count; i++) {
+        time = PR_Now();
+    }
+}
+
+static void Interval(void)
+{
+    PRInt32 i;
+    PRIntervalTime time;
+
+    for (i = 0; i < count; i++) {
+        time = PR_IntervalNow();
+    }
+}
+
 static void IdleLock(void)
 {
     PRInt32 i;
@@ -399,6 +419,8 @@ int main(int argc, char **argv)
 
     Measure(LocalProcedureCall, "local procedure call overhead");
     Measure(DLLProcedureCall, "DLL procedure call overhead");
+    Measure(Now, "current calendar time");
+    Measure(Interval, "interval time");
     Measure(IdleLock, "idle lock lock/unlock pair");
     Measure(IdleMonitor, "idle monitor entry/exit pair");
     Measure(IdleCMonitor, "idle cache monitor entry/exit pair");
@@ -420,6 +442,8 @@ int main(int argc, char **argv)
 
     Measure(LocalProcedureCall, "local procedure call overhead");
     Measure(DLLProcedureCall, "DLL procedure call overhead");
+    Measure(Now, "current calendar time");
+    Measure(Interval, "interval time");
     Measure(IdleLock, "idle lock lock/unlock pair");
     Measure(IdleMonitor, "idle monitor entry/exit pair");
     Measure(IdleCMonitor, "idle cache monitor entry/exit pair");

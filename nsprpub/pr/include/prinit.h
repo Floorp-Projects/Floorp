@@ -44,7 +44,11 @@ PR_BEGIN_EXTERN_C
 ** The format of the version string is
 **     "<major version>.<minor version> <build date>"
 */
-#define PR_VERSION  "2.1 yyyymmdd"
+#define PR_VERSION  "3.0 yyyymmdd"
+#define PR_VMAJOR   3
+#define PR_VMINOR   0
+#define PR_VPATCH   0
+#define PR_BETA     PR_TRUE
 
 /*
 ** PRVersionCheck
@@ -81,8 +85,7 @@ PR_EXTERN(PRBool) PR_VersionCheck(const char *importedVersion);
 
 /*
 ** Initialize the runtime. Attach a thread object to the currently
-** executing native thread of type "type" (as if PR_AttachThread were
-** called).
+** executing native thread of type "type".
 **
 ** The specificaiton of 'maxPTDs' is ignored.
 */
@@ -142,6 +145,12 @@ PR_EXTERN(PRStatus) PR_Cleanup(void);
 PR_EXTERN(void) PR_DisableClockInterrupts(void);
 
 /*
+** Enables Interrupts
+**		Enables timer signals used for pre-emptive scheduling.
+*/
+PR_EXTERN(void) PR_EnableClockInterrupts(void);
+
+/*
 ** Block Interrupts
 **		Blocks the timer signal used for pre-emptive scheduling
 */
@@ -157,6 +166,13 @@ PR_EXTERN(void) PR_UnblockClockInterrupts(void);
 ** Create extra virtual processor threads. Generally used with MP systems.
 */
 PR_EXTERN(void) PR_SetConcurrency(PRUintn numCPUs);
+
+/*
+** Control the method and size of the file descriptor (PRFileDesc*)
+** cache used by the runtime. Setting 'high' to zero is for performance,
+** any other value probably for debugging (see memo on FD caching).
+*/
+PR_EXTERN(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high);
 
 /*
  * Cause an immediate, nongraceful, forced termination of the process.

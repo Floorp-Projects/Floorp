@@ -21,16 +21,49 @@ MOD_DEPTH	= ..
 
 include $(MOD_DEPTH)/config/config.mk
 
-CSRCS	= nsinstall.c pathsub.c
+CSRCS	= nsinstall.c now.c
 
 PLSRCS	= nfspwd.pl
 
-ifneq ($(OS_ARCH),WINNT)
-PROGRAM	= $(OBJDIR)/nsinstall
-TARGETS = $(PROGRAM) $(PLSRCS:.pl=)
+ifeq ($(OS_ARCH), WINNT)
+PROG_SUFFIX = .exe
+else
+PROG_SUFFIX =
+endif
+
+ifeq ($(OS_ARCH), IRIX)
+    ifeq ($(basename $(OS_RELEASE)),6)
+	    ifeq ($(USE_N32),1)
+		    XLDOPTS += -n32 -Wl,-woff,85
+		    ifeq ($(OS_RELEASE), 6_2)
+			    XLDOPTS += -Wl,-woff,85
+		    endif
+	    else
+		    ifeq ($(USE_64),1)
+			    XLDOPTS += -64
+		    else
+			    XLDOPTS += -32
+		    endif
+	    endif
+    endif
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+    ifeq ($(USE_64),1)
+        XLDOPTS += +DD64
+    endif
 endif
 
 include $(MOD_DEPTH)/config/rules.mk
+
+PROGS	= $(OBJDIR)/now$(PROG_SUFFIX)
+
+ifeq ($(OS_ARCH),WINNT)
+TARGETS = $(PROGS)
+else
+PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)
+TARGETS = $(PROGS) $(PLSRCS:.pl=)
+endif
 
 # Redefine MAKE_OBJDIR for just this directory
 define MAKE_OBJDIR
@@ -38,3 +71,8 @@ if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
 endef
 
 export:: $(TARGETS)
+
+$(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
+	@$(MAKE_OBJDIR)
+	$(CC) $(XCFLAGS) $< $(XLDOPTS) -o $@
+

@@ -49,9 +49,11 @@ CSRCS =          \
 	w95sock.c \
 	win32_errors.c \
     w32poll.c \
+    w95dllmain.c \
     $(NULL)
 else
 CSRCS =          \
+    ntdllmn.c \
     ntmisc.c \
     ntsem.c   \
     ntinrval.c \

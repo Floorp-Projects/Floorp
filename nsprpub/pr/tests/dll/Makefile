@@ -58,7 +58,9 @@ else
 TARGETS		= $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 endif
 else
+ifdef MKSHLIB
 SHARED_LIBRARY	= $(OBJDIR)/libmy.$(DLL_SUFFIX)
+endif
 TARGETS		= $(SHARED_LIBRARY)
 endif
 
@@ -81,6 +83,7 @@ OS_DLL_OPTION = NOCASEEXACT
 OS_LIB_FLAGS = -irn
 endif
 
+ifdef SHARED_LIBRARY
 export:: $(TARGETS)
 	$(NSINSTALL) $(TARGETS) ../$(OBJDIR)/dll
 
@@ -88,3 +91,4 @@ install:: export
 
 clean::
 	rm -rf $(TARGETS)
+endif

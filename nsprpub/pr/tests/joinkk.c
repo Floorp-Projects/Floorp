@@ -154,12 +154,12 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 	if(failed_already)	
 	{
         printf("FAIL\n");
-		return 0;
+		return 1;
 	}
 	else
 	{
         printf("PASS\n");
-		return 1;
+		return 0;
 	}
 
 }

@@ -38,24 +38,23 @@
 #define _MD_MMAP_FLAGS          MAP_PRIVATE
 
 #undef  HAVE_STACK_GROWING_UP
-#define HAVE_WEAK_MALLOC_SYMBOLS
-/* do this until I figure out the rhapsody dll stuff. */
 #define HAVE_DLL
-#define USE_RLD
-#define _PR_HAVE_SOCKADDR_LEN
+#define _PR_HAVE_SOCKADDR_LEN  
+#define _PR_STAT_HAS_ST_ATIMESPEC
+#define _PR_TIMESPEC_HAS_TS_SEC
+#define _PR_NO_LARGE_FILES
 
 #define USE_SETJMP
 
-#ifndef _PR_PTHREADS
+#if !defined(_PR_PTHREADS)
 
 #include <setjmp.h>
 
 #define PR_CONTEXT_TYPE	jmp_buf
 
-#define CONTEXT(_th) ((_th)->md.context)
-
-#define _MD_GET_SP(_th)    (_th)->md.context[0]
-#define PR_NUM_GCREGS	_JBLEN
+#define CONTEXT(_th)       ((_th)->md.context)
+#define _MD_GET_SP(_th)    (((struct sigcontext *) (_th)->md.context)->sc_onstack)
+#define PR_NUM_GCREGS	    _JBLEN
 
 /*
 ** Initialize a thread context to run "_main()" when started
@@ -66,7 +65,7 @@
     if (setjmp(CONTEXT(_thread))) {  \
         _main();  \
     }  \
-    _MD_GET_SP(_thread) = (int) ((_sp) - 64); \
+    _MD_GET_SP(_thread) = (unsigned char*) ((_sp) - 64); \
 }
 
 #define _MD_SWITCH_CONTEXT(_thread)  \
@@ -113,6 +112,42 @@ struct _MDSegment {
     PRInt8 notused;
 };
 
+/*
+ * md-specific cpu structure field
+ */
+#define _PR_MD_MAX_OSFD FD_SETSIZE
+
+struct _MDCPU_Unix {
+    PRCList ioQ;
+    PRUint32 ioq_timeout;
+    PRInt32 ioq_max_osfd;
+    PRInt32 ioq_osfd_cnt;
+#ifndef _PR_USE_POLL
+    fd_set fd_read_set, fd_write_set, fd_exception_set;
+    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
+				fd_exception_cnt[_PR_MD_MAX_OSFD];
+#else
+	struct pollfd *ioq_pollfds;
+	int ioq_pollfds_size;
+#endif	/* _PR_USE_POLL */
+};
+
+#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
+#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
+
 struct _MDCPU {
 	struct _MDCPU_Unix md_unix;
 };
@@ -149,14 +184,14 @@ extern void _MD_YIELD(void);
 
 #endif /* ! _PR_PTHREADS */
 
-extern void _MD_EarlyInit(void);
-extern PRIntervalTime _PR_UNIX_GetInterval(void);
-extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
-
-#define _MD_EARLY_INIT                  _MD_EarlyInit
+#define _MD_EARLY_INIT          _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
-#define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
-#define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+#define _MD_GET_INTERVAL        _PR_UNIX_GetInterval
+#define _MD_INTERVAL_PER_SEC    _PR_UNIX_TicksPerSecond
+
+extern void             _MD_EarlyInit(void);
+extern PRIntervalTime   _PR_UNIX_GetInterval(void);
+extern PRIntervalTime   _PR_UNIX_TicksPerSecond(void);
 
 /*
  * We wrapped the select() call.  _MD_SELECT refers to the built-in,

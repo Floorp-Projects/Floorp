@@ -126,13 +126,10 @@ PR_ThreadScanStackPointers(PRThread* t,
 
     /*
     ** Mark all of the per-thread-data items attached to this thread
+    **
+    ** The execution environment better be accounted for otherwise it
+    ** will be collected
     */
-
-#if defined(_PR_PTHREADS)
-/*    PR_ASSERT(!"I can't do this!"); */
-#else /* defined(_PR_PTHREADS) */
-	
-    /* the execution environment better be accounted for otherwise it will be collected */
     status = scanFun(t, (void**)&t->environment, 1, scanClosure);
     if (status != PR_SUCCESS)
         return status;
@@ -143,8 +140,7 @@ PR_ThreadScanStackPointers(PRThread* t,
         if (status != PR_SUCCESS)
             return status;
     }
-#endif /* defined(_PR_PTHREADS) */
-
+    
     return PR_SUCCESS;
 }
 
@@ -173,7 +169,7 @@ PR_ScanStackPointers(PRScanStackFun scanFun, void* scanClosure)
     return PR_EnumerateThreads(pr_ScanStack, &data);
 }
 
-PR_PUBLIC_API(PRUword)
+PR_IMPLEMENT(PRUword)
 PR_GetStackSpaceLeft(PRThread* t)
 {
     PRThread *current = PR_CurrentThread();

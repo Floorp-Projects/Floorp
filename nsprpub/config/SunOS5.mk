@@ -26,48 +26,36 @@ include $(MOD_DEPTH)/config/UNIX.mk
 # Temporary define for the Client; to be removed when binary release is used
 #
 ifdef MOZILLA_CLIENT
+ifneq ($(USE_PTHREADS),1)
 LOCAL_THREADS_ONLY = 1
+endif
 ifndef NS_USE_NATIVE
 NS_USE_GCC = 1
 endif
 endif
 
 #
-# The default implementation strategy on Solaris is global threads only.
-# Local threads only and pthreads are also available.
+# The default implementation strategy on Solaris is pthreads.
+# Global threads only and local threads only are also available.
 #
-ifeq ($(USE_PTHREADS),1)
-  IMPL_STRATEGY = _PTH
+ifeq ($(GLOBAL_THREADS_ONLY),1)
+  IMPL_STRATEGY = _NATIVE
+  DEFINES += -D_PR_GLOBAL_THREADS_ONLY
 else
   ifeq ($(LOCAL_THREADS_ONLY),1)
-    IMPL_STRATEGY = _LOCAL
+    IMPL_STRATEGY = _EMU
     DEFINES += -D_PR_LOCAL_THREADS_ONLY
   else
-    DEFINES += -D_PR_GLOBAL_THREADS_ONLY
+    USE_PTHREADS = 1
+    IMPL_STRATEGY = _PTH
   endif
-endif
-
-#
-# XXX
-# Temporary define for the Client; to be removed when binary release is used
-#
-ifdef MOZILLA_CLIENT
-IMPL_STRATEGY =
 endif
 
 ifdef NS_USE_GCC
 CC			= gcc -Wall
 CCC			= g++ -Wall
-#
-# XXX
-# Temporary define for the Client; to be removed when binary release is used
-#
-ifdef MOZILLA_CLIENT
-#COMPILER_TAG		= _gcc
-else
 COMPILER_TAG		= _gcc
-endif
-#ASFLAGS			+= -x assembler-with-cpp
+ASFLAGS			+= -x assembler-with-cpp
 ifdef NO_MDUPDATE
 OS_CFLAGS		= $(NOMD_OS_CFLAGS)
 else
@@ -97,7 +85,6 @@ OS_DEFINES		= -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS
 
 ifeq ($(OS_TEST),i86pc)
 CPU_ARCH		= x86
-CPU_ARCH_TAG		= _i86pc
 OS_DEFINES		+= -Di386
 # The default debug format, DWARF (-g), is not supported by gcc
 # on i386-ANY-sysv4/solaris, but the stabs format is.  It is
@@ -111,21 +98,20 @@ endif
 else
 CPU_ARCH		= sparc
 endif
+CPU_ARCH_TAG		= _$(CPU_ARCH)
 
 ifeq (5.5,$(findstring 5.5,$(OS_RELEASE)))
 OS_DEFINES		+= -DSOLARIS2_5
+else
+OS_DEFINES		+= -D_PR_HAVE_OFF64_T
 endif
 
 ifneq ($(LOCAL_THREADS_ONLY),1)
-OS_DEFINES		+= -D_REENTRANT
+OS_DEFINES		+= -D_REENTRANT -DHAVE_POINTER_LOCALTIME_R
 endif
 
 # Purify doesn't like -MDupdate
-ifdef USE_AUTOCONF
-NOMD_OS_CFLAGS		= $(DSO_CFLAGS) #-DSOLARIS
-else
 NOMD_OS_CFLAGS		= $(DSO_CFLAGS) $(OS_DEFINES) $(SOL_CFLAGS)
-endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 

@@ -26,6 +26,7 @@
 #if !defined(PROTYPES_H)
 #define PROTYPES_H
 
+
 /* SVR4 typedef of uint is commonly found on UNIX machines. */
 #ifdef XP_UNIX
 #include <sys/types.h>

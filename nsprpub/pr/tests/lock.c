@@ -48,9 +48,11 @@
 /* Used to get the command line option */
 #include "plgetopt.h"
 
+#include "prio.h"
 #include "prcmon.h"
 #include "prinit.h"
 #include "prinrval.h"
+#include "prprf.h"
 #include "prlock.h"
 #include "prlog.h"
 #include "prmon.h"
@@ -60,7 +62,6 @@
 
 #include "plstr.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #if defined(XP_UNIX)
@@ -72,21 +73,28 @@
 #define printf PR_LogPrint
 extern void SetupMacPrintfLog(char *logFile);
 #endif
-PRIntn failed_already=0;
-PRIntn debug_mode;
+
+static PRIntn failed_already=0;
+static PRFileDesc *std_err = NULL;
+static PRBool verbosity = PR_FALSE;
+static PRBool debug_mode = PR_FALSE;
 
 const static PRIntervalTime contention_interval = 50;
 
 typedef struct LockContentious_s {
     PRLock *ml;
-    PRUint32 loops;
+    PRInt32 loops;
+    PRUint32 contender;
+    PRUint32 contentious;
     PRIntervalTime overhead;
     PRIntervalTime interval;
 } LockContentious_t;
 
 typedef struct MonitorContentious_s {
     PRMonitor *ml;
-    PRUint32 loops;
+    PRInt32 loops;
+    PRUint32 contender;
+    PRUint32 contentious;
     PRIntervalTime overhead;
     PRIntervalTime interval;
 } MonitorContentious_t;
@@ -137,6 +145,7 @@ static void PR_CALLBACK LockContender(void *arg)
     while (contention->loops-- > 0)
     {
         PR_Lock(contention->ml);
+        contention->contender+= 1;
         contention->overhead += contention->interval;
         PR_Sleep(contention->interval);
         PR_Unlock(contention->ml);
@@ -150,7 +159,7 @@ static PRIntervalTime ContentiousLock(PRUint32 loops)
     LockContentious_t * contention;
     PRIntervalTime rv, overhead, timein = PR_IntervalNow();
 
-    contention = (LockContentious_t *) PR_Calloc( 1, sizeof(LockContentious_t));
+    contention = PR_NEWZAP(LockContentious_t);
     contention->loops = loops;
     contention->overhead = 0;
     contention->ml = PR_NewLock();
@@ -162,9 +171,10 @@ static PRIntervalTime ContentiousLock(PRUint32 loops)
 
     overhead = PR_IntervalNow() - timein;
 
-    while (contention->loops > 0)
+    while (contention->loops-- > 0)
     {
         PR_Lock(contention->ml);
+        contention->contentious+= 1;
         contention->overhead += contention->interval;
         PR_Sleep(contention->interval);
         PR_Unlock(contention->ml);
@@ -175,6 +185,10 @@ static PRIntervalTime ContentiousLock(PRUint32 loops)
     PR_DestroyLock(contention->ml);
     overhead += (PR_IntervalNow() - timein);
     rv = overhead + contention->overhead;
+    if (verbosity)
+        PR_fprintf(
+            std_err, "Access ratio: %u to %u\n",
+            contention->contentious, contention->contender);
     PR_Free(contention);
     return rv;
 }  /* ContentiousLock */
@@ -210,23 +224,23 @@ static PRIntervalTime NonContentiousMonitor(PRUint32 loops)
 static void PR_CALLBACK TryEntry(void *arg)
 {
     PRMonitor *ml = (PRMonitor*)arg;
-    if (debug_mode) printf("Reentrant thread created\n");
+    if (debug_mode) PR_fprintf(std_err, "Reentrant thread created\n");
     PR_EnterMonitor(ml);
-    if (debug_mode) printf("Reentrant thread acquired monitor\n");
+    if (debug_mode) PR_fprintf(std_err, "Reentrant thread acquired monitor\n");
     PR_ExitMonitor(ml);
-    if (debug_mode) printf("Reentrant thread released monitor\n");
+    if (debug_mode) PR_fprintf(std_err, "Reentrant thread released monitor\n");
 }  /* TryEntry */
 
 static PRIntervalTime ReentrantMonitor(PRUint32 loops)
 {
-     PRStatus status;
+    PRStatus status;
     PRThread *thread;
     PRMonitor *ml = PR_NewMonitor();
-    if (debug_mode) printf("\nMonitor created for reentrant test\n");
+    if (debug_mode) PR_fprintf(std_err, "\nMonitor created for reentrant test\n");
 
     PR_EnterMonitor(ml);
     PR_EnterMonitor(ml);
-    if (debug_mode) printf("Monitor acquired twice\n");
+    if (debug_mode) PR_fprintf(std_err, "Monitor acquired twice\n");
 
     thread = PR_CreateThread(
         PR_USER_THREAD, TryEntry, ml,
@@ -235,13 +249,13 @@ static PRIntervalTime ReentrantMonitor(PRUint32 loops)
     PR_Sleep(PR_SecondsToInterval(1));
 
     PR_ExitMonitor(ml);
-    if (debug_mode) printf("Monitor released first time\n");
+    if (debug_mode) PR_fprintf(std_err, "Monitor released first time\n");
 
     PR_ExitMonitor(ml);
-    if (debug_mode) printf("Monitor released second time\n");
+    if (debug_mode) PR_fprintf(std_err, "Monitor released second time\n");
 
     status = PR_JoinThread(thread);
-    if (debug_mode) printf(
+    if (debug_mode) PR_fprintf(std_err, 
         "Reentrant thread joined %s\n",
         (status == PR_SUCCESS) ? "successfully" : "in error");
 
@@ -255,6 +269,7 @@ static void PR_CALLBACK MonitorContender(void *arg)
     while (contention->loops-- > 0)
     {
         PR_EnterMonitor(contention->ml);
+        contention->contender+= 1;
         contention->overhead += contention->interval;
         PR_Sleep(contention->interval);
         PR_ExitMonitor(contention->ml);
@@ -268,7 +283,7 @@ static PRUint32 ContentiousMonitor(PRUint32 loops)
     MonitorContentious_t * contention;
     PRIntervalTime rv, overhead, timein = PR_IntervalNow();
 
-    contention = (MonitorContentious_t *) PR_Calloc(1, sizeof(MonitorContentious_t));
+    contention = PR_NEWZAP(MonitorContentious_t);
     contention->loops = loops;
     contention->overhead = 0;
     contention->ml = PR_NewMonitor();
@@ -280,9 +295,10 @@ static PRUint32 ContentiousMonitor(PRUint32 loops)
 
     overhead = PR_IntervalNow() - timein;
 
-    while (contention->loops > 0)
+    while (contention->loops-- > 0)
     {
         PR_EnterMonitor(contention->ml);
+        contention->contentious+= 1;
         contention->overhead += contention->interval;
         PR_Sleep(contention->interval);
         PR_ExitMonitor(contention->ml);
@@ -293,6 +309,10 @@ static PRUint32 ContentiousMonitor(PRUint32 loops)
     PR_DestroyMonitor(contention->ml);
     overhead += (PR_IntervalNow() - timein);
     rv = overhead + contention->overhead;
+    if (verbosity)
+        PR_fprintf(
+            std_err, "Access ratio: %u to %u\n",
+            contention->contentious, contention->contender);
     PR_Free(contention);
     return rv;
 }  /* ContentiousMonitor */
@@ -317,6 +337,7 @@ static void PR_CALLBACK Contender(void *arg)
     while (contention->loops-- > 0)
     {
         PR_CEnterMonitor(contention);
+        contention->contender+= 1;
         contention->overhead += contention->interval;
         PR_Sleep(contention->interval);
         PR_CExitMonitor(contention);
@@ -330,9 +351,8 @@ static PRIntervalTime ContentiousCMonitor(PRUint32 loops)
     MonitorContentious_t * contention;
     PRIntervalTime overhead, timein = PR_IntervalNow();
 
-    contention = (MonitorContentious_t *) PR_Calloc(1, sizeof(MonitorContentious_t));
+    contention = PR_NEWZAP(MonitorContentious_t);
     contention->ml = NULL;
-    contention->overhead = 0;
     contention->loops = loops;
     contention->interval = contention_interval;
     thread = PR_CreateThread(
@@ -342,9 +362,10 @@ static PRIntervalTime ContentiousCMonitor(PRUint32 loops)
 
     overhead = PR_IntervalNow() - timein;
 
-    while (contention->loops > 0)
+    while (contention->loops-- > 0)
     {
         PR_CEnterMonitor(contention);
+        contention->contentious+= 1;
         contention->overhead += contention->interval;
         PR_Sleep(contention->interval);
         PR_CExitMonitor(contention);
@@ -353,7 +374,13 @@ static PRIntervalTime ContentiousCMonitor(PRUint32 loops)
     timein = PR_IntervalNow();
     status = PR_JoinThread(thread);
     overhead += (PR_IntervalNow() - timein);
-    return overhead + contention->overhead;
+    overhead += overhead + contention->overhead;
+    if (verbosity)
+        PR_fprintf(
+            std_err, "Access ratio: %u to %u\n",
+            contention->contentious, contention->contender);
+    PR_Free(contention);
+    return overhead;
 }  /* ContentiousCMonitor */
 
 static PRIntervalTime Test(
@@ -381,12 +408,12 @@ static PRIntervalTime Test(
         accountable = duration - predicted;
         accountable -= overhead;
         elapsed = (PRFloat64)PR_IntervalToMicroseconds(accountable);
-        printf("%s:", msg);
-        while (spaces++ < 50) printf(" ");
+        PR_fprintf(PR_STDOUT, "%s:", msg);
+        while (spaces++ < 50) PR_fprintf(PR_STDOUT, " ");
         if ((PRInt32)accountable < 0)
-            printf("*****.** usecs/iteration\n");
+            PR_fprintf(PR_STDOUT, "*****.** usecs/iteration\n");
         else
-            printf("%8.2f usecs/iteration\n", elapsed/loops);
+            PR_fprintf(PR_STDOUT, "%8.2f usecs/iteration\n", elapsed/loops);
     }
     return duration;
 }  /* Test */
@@ -410,14 +437,17 @@ int main(int argc,  char **argv)
         Usage: lock [-d] [-l <num>] [-c <num>]
     	*/
     	PLOptStatus os;
-    	PLOptState *opt = PL_CreateOptState(argc, argv, "dl:c:");
+    	PLOptState *opt = PL_CreateOptState(argc, argv, "dvl:c:");
     	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
         {
     		if (PL_OPT_BAD == os) continue;
             switch (opt->option)
             {
             case 'd':  /* debug mode */
-    			debug_mode = 1;
+    			debug_mode = PR_TRUE;
+                break;
+            case 'v':  /* debug mode */
+    			verbosity = PR_TRUE;
                 break;
             case 'l':  /* number of loops */
                 loops = atoi(opt->value);
@@ -441,16 +471,20 @@ int main(int argc,  char **argv)
 #endif
 
     if (loops == 0) loops = 100;
-    if (debug_mode) printf("Lock: Using %d loops\n", loops);
+    if (debug_mode)
+    {
+        std_err = PR_STDERR;
+        PR_fprintf(std_err, "Lock: Using %d loops\n", loops);
+    }
 
     if (cpus == 0) cpus = 2;
-    if (debug_mode) printf("Lock: Using %d cpu(s)\n", cpus);
+    if (debug_mode) PR_fprintf(std_err, "Lock: Using %d cpu(s)\n", cpus);
 
     (void)Sleeper(10);  /* try filling in the caches */
 
     for (cpu = 1; cpu <= cpus; ++cpu)
     {
-        if (debug_mode) printf("\nLock: Using %d CPU(s)\n", cpu);
+        if (debug_mode) PR_fprintf(std_err, "\nLock: Using %d CPU(s)\n", cpu);
         PR_SetConcurrency(cpu);
 
         duration = Test("Overhead of PR_Sleep", Sleeper, loops, 0);
@@ -469,7 +503,10 @@ int main(int argc,  char **argv)
         (void)ReentrantMonitor(loops);
     }
 
-    if (debug_mode) printf("%s: test %s\n", "Lock(mutex) test", ((rv) ? "passed" : "failed"));
+    if (debug_mode)
+        PR_fprintf(
+            std_err, "%s: test %s\n", "Lock(mutex) test",
+            ((rv) ? "passed" : "failed"));
 	else {
 		 if (!rv)
 			 failed_already=1;
@@ -477,12 +514,12 @@ int main(int argc,  char **argv)
 
 	if(failed_already)	
 	{
-	    printf("FAIL\n"); 
+	    PR_fprintf(PR_STDOUT, "FAIL\n"); 
 		return 1;
     } 
 	else
     {
-	    printf("PASS\n"); 
+	    PR_fprintf(PR_STDOUT, "PASS\n"); 
 		return 0;
     }
 

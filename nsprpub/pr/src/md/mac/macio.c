@@ -55,12 +55,12 @@ static void AsyncIOCompletion (ExtendedParamBlock *pbAsyncPtr)
         thread->md.notifyPending = PR_TRUE;
 		return;
     }
-    _PR_SET_INTSOFF(1);
+    _PR_MD_SET_INTSOFF(1);
 
 	thread->md.osErrCode = noErr;
 	DoneWaitingOnThisThread(thread);
 
-    _PR_SET_INTSOFF(0);
+    _PR_MD_SET_INTSOFF(0);
 
 }
 
@@ -393,7 +393,7 @@ ErrorExit:
 
 /* _MD_CLOSE_FILE, _MD_READ, _MD_WRITE, _MD_GET_FILE_ERROR are defined in _macos.h */
 
-PRInt32 _MD_LSeek(PRFileDesc *fd, PRInt32 offset, int how)
+PRInt32 _MD_LSeek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence how)
 {
 	PRInt32 refNum = fd->secret->md.osfd;
 	OSErr 	err = noErr;

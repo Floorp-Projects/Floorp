@@ -23,7 +23,7 @@ export NSPR20=1
 
 include $(MOD_DEPTH)/config/config.mk
 
-DIRS = ds libc msgc
+DIRS = ds libc
 
 include $(MOD_DEPTH)/config/rules.mk
 

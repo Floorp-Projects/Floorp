@@ -145,6 +145,8 @@ static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
             PR_DELETE(cpu);
             return NULL;
         } 
+        cpu->idle_thread->cpu = cpu;
+
         cpu->idle_thread->no_sched = 0;
 
         cpu->thread = thread;
@@ -206,7 +208,7 @@ static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
     cpu->idle_thread = me;
     if (_MD_LAST_THREAD())
         _MD_LAST_THREAD()->no_sched = 0;
-    if (!_PR_IS_NATIVE_THREAD(me)) _PR_SET_INTSOFF(0);
+    if (!_PR_IS_NATIVE_THREAD(me)) _PR_MD_SET_INTSOFF(0);
     while(1) {
         PRInt32 is;
         PRIntervalTime timeout;

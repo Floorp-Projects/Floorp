@@ -32,11 +32,7 @@ OS_CFLAGS	= -DBSDI -DHAVE_STRERROR -D__386BSD__ -DNEED_BSDREGEX -Di386
 OS_LIBS		= -lcompat -ldl
 
 ifeq ($(OS_RELEASE),2.1)
-OS_CFLAGS	+= -DBSDI_2
-endif
-
-ifdef USE_AUTOCONF
-OS_CFLAGS	=
+OS_CFLAGS	+= -DBSDI_2 -D_PR_TIMESPEC_HAS_TS_SEC
 endif
 
 G++INCLUDES	= -I/usr/include/g++

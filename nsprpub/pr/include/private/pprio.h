@@ -28,8 +28,19 @@
 #include "prtypes.h"
 #include "prio.h"
 
-NSPR_BEGIN_EXTERN_C
+PR_BEGIN_EXTERN_C
 
+/*
+** File descriptors of the NSPR layer can be in one of the
+** following states (stored in the 'state' field of struct
+** PRFilePrivate):
+** - _PR_FILEDESC_OPEN: The OS fd is open.
+** - _PR_FILEDESC_CLOSED: The OS fd is closed.  The PRFileDesc
+**   is still open but is unusable.  The only operation allowed
+**   on the PRFileDesc is PR_Close().
+** - _PR_FILEDESC_FREED: The OS fd is closed and the PRFileDesc
+**   structure is freed.
+*/
 
 #define _PR_FILEDESC_OPEN       0xaaaaaaaa    /* 1010101... */
 #define _PR_FILEDESC_CLOSED     0x55555555    /* 0101010... */
@@ -186,6 +197,6 @@ PR_EXTERN(void) PR_NT_UseNonblock();
 
 #endif /* WIN32 */
 
-NSPR_END_EXTERN_C
+PR_END_EXTERN_C
 
 #endif /* pprio_h___ */

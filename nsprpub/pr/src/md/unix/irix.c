@@ -36,12 +36,20 @@
 #include <sys/resource.h>
 #include <sys/procfs.h>
 #include <task.h>
+#include <dlfcn.h>
 
-static void _MD_IntervalInit(void);
+static void _MD_IrixIntervalInit(void);
 
 #if defined(_PR_PTHREADS)
+/*
+ * for compatibility with classic nspr
+ */
+void _PR_IRIX_CHILD_PROCESS()
+{
+}
 #else  /* defined(_PR_PTHREADS) */
 
+static void irix_detach_sproc(void);
 char *_nspr_sproc_private;    /* ptr. to private region in every sproc */
 
 extern PRUintn    _pr_numCPU;
@@ -61,6 +69,27 @@ ulock_t arena_list_lock;
 nspr_arena first_arena;
 int	_nspr_irix_arena_cnt = 1;
 
+PRCList sproc_list = PR_INIT_STATIC_CLIST(&sproc_list);
+ulock_t sproc_list_lock;
+
+typedef struct sproc_data {
+	void (*entry) (void *, size_t);
+	unsigned inh;
+	void *arg;
+	caddr_t sp;
+	size_t len;
+	int *pid;
+	int creator_pid;
+} sproc_data;
+
+typedef struct sproc_params {
+	PRCList links;
+	sproc_data sd;
+} sproc_params;
+
+#define SPROC_PARAMS_PTR(qp) \
+	((sproc_params *) ((char*) (qp) - offsetof(sproc_params , links)))
+
 long	_nspr_irix_lock_cnt = 0;
 long	_nspr_irix_sem_cnt = 0;
 long	_nspr_irix_pollsem_cnt = 0;
@@ -70,7 +99,12 @@ ulock_t _pr_heapLock;
 
 usema_t *_pr_irix_exit_sem;
 PRInt32 _pr_irix_exit_now = 0;
+PRInt32 _pr_irix_process_exit_code = 0;	/* exit code for PR_ProcessExit */
+PRInt32 _pr_irix_process_exit = 0; /* process exiting due to call to
+										   PR_ProcessExit */
 
+int _pr_irix_primoridal_cpu_fd[2] = { -1, -1 };
+static void (*libc_exit)(int) = NULL;
 
 #define _NSPR_DEF_INITUSERS		100	/* default value of CONF_INITUSERS */
 #define _NSPR_DEF_INITSIZE		(4 * 1024 * 1024)	/* 4 MB */
@@ -118,7 +152,7 @@ usema_t *sem = NULL;
 PRCList *qp;
 nspr_arena *arena;
 usptr_t *irix_arena;
-PRThread *me = _PR_MD_CURRENT_THREAD();
+PRThread *me = _MD_GET_ATTACHED_THREAD();	
 
 	if (me && !_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(_is); 
@@ -171,7 +205,7 @@ PRThread *me = _PR_MD_CURRENT_THREAD();
 static void free_poll_sem(struct _MDThread *mdthr)
 {
 PRIntn _is;
-PRThread *me = _PR_MD_CURRENT_THREAD();
+PRThread *me = _MD_GET_ATTACHED_THREAD();	
 
 	if (me && !_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(_is); 
@@ -189,7 +223,7 @@ ulock_t lock = NULL;
 PRCList *qp;
 nspr_arena *arena;
 usptr_t *irix_arena;
-PRThread *me = _PR_MD_CURRENT_THREAD();
+PRThread *me = _MD_GET_ATTACHED_THREAD();	
 
 	if (me && !_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(_is); 
@@ -242,7 +276,7 @@ PRThread *me = _PR_MD_CURRENT_THREAD();
 static void free_lock(struct _MDLock *lockp)
 {
 PRIntn _is;
-PRThread *me = _PR_MD_CURRENT_THREAD();
+PRThread *me = _MD_GET_ATTACHED_THREAD();	
 
 	if (me && !_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(_is); 
@@ -255,7 +289,7 @@ PRThread *me = _PR_MD_CURRENT_THREAD();
 void _MD_FREE_LOCK(struct _MDLock *lockp)
 {
 	PRIntn _is;
-	PRThread *me = _PR_MD_CURRENT_THREAD();
+	PRThread *me = _MD_GET_ATTACHED_THREAD();	
 
 	if (me && !_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(_is); 
@@ -274,17 +308,51 @@ void _MD_FREE_LOCK(struct _MDLock *lockp)
  */
 PRThread *_MD_get_attached_thread(void)
 {
-	if (_MD_GET_SPROC_PID() == getpid())
-		return _PR_MD_CURRENT_THREAD();
+
+	if (_MD_GET_SPROC_PID() == get_pid())
+		return _MD_THIS_THREAD();
 	else
 		return 0;
 }
+
+/*
+ * _MD_get_current_thread
+ *		Return the thread pointer of the current thread (attaching it if
+ *		necessary)
+ */
+PRThread *_MD_get_current_thread(void)
+{
+PRThread *me;
+
+	me = _MD_GET_ATTACHED_THREAD();
+    if (NULL == me) {
+        me = _PRI_AttachThread(
+            PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL, 0);
+    }
+    PR_ASSERT(me != NULL);
+	return(me);
+}
+
+/*
+ * irix_detach_sproc
+ *		auto-detach a sproc when it exits
+ */
+void irix_detach_sproc(void)
+{
+PRThread *me;
+
+	me = _MD_GET_ATTACHED_THREAD();
+	if ((me != NULL) && (me->flags & _PR_ATTACHED)) {
+		_PRI_DetachThread();
+	}
+}
+
 
 PRStatus _MD_NEW_LOCK(struct _MDLock *lockp)
 {
     PRStatus rv;
     PRIntn is;
-    PRThread *me = _PR_MD_CURRENT_THREAD();	
+    PRThread *me = _MD_GET_ATTACHED_THREAD();	
 
 	if (me && !_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(is);
@@ -311,7 +379,7 @@ sigchld_handler(int sig)
             (WTERMSIG(status) == SIGILL))) {
 
 				prctl(PR_SETEXITSIG, SIGKILL);
-				exit(status);
+				_exit(status);
 			}
     }
 }
@@ -412,9 +480,13 @@ void _MD_InitLocks()
         exit(-1);
     }
     _pr_heapLock = usnewlock(_pr_usArena);
+	_nspr_irix_lock_cnt++;
 
     arena_list_lock = usnewlock(_pr_usArena);
-	_nspr_irix_lock_cnt = 3;
+	_nspr_irix_lock_cnt++;
+
+    sproc_list_lock = usnewlock(_pr_usArena);
+	_nspr_irix_lock_cnt++;
 
 	_pr_irix_exit_sem = usnewsema(_pr_usArena, 0);
 	_nspr_irix_sem_cnt = 1;
@@ -427,13 +499,16 @@ void _MD_InitLocks()
 /* _PR_IRIX_CHILD_PROCESS is a private API for Server group */
 void _PR_IRIX_CHILD_PROCESS()
 {
+extern PRUint32 _pr_global_threads;
+
     PR_ASSERT(_PR_MD_CURRENT_CPU() == _pr_primordialCPU);
     PR_ASSERT(_pr_numCPU == 1);
-    PR_ASSERT((_pr_userActive + _pr_systemActive) == 2);
+    PR_ASSERT(_pr_global_threads == 0);
     /*
      * save the new pid
      */
     _pr_primordialCPU->md.id = getpid();
+	_MD_SET_SPROC_PID(getpid());	
 }
 
 static PRStatus pr_cvar_wait_sem(PRThread *thread, PRIntervalTime timeout)
@@ -544,7 +619,6 @@ PRStatus _MD_wait(PRThread *thread, PRIntervalTime ticks)
 PRStatus _MD_WakeupWaiter(PRThread *thread)
 {
     PRThread *me = _PR_MD_CURRENT_THREAD();
-    PRInt32 pid, rv;
     PRIntn is;
 
 	PR_ASSERT(_pr_md_idle_cpus >= 0);
@@ -565,6 +639,80 @@ PRStatus _MD_WakeupWaiter(PRThread *thread)
     return PR_SUCCESS;
 }
 
+void create_sproc (void (*entry) (void *, size_t), unsigned inh,
+					void *arg, caddr_t sp, size_t len, int *pid)
+{
+sproc_params sparams;
+char data;
+int rv;
+PRThread *me = _PR_MD_CURRENT_THREAD();
+
+	if (!_PR_IS_NATIVE_THREAD(me) && (_PR_MD_CURRENT_CPU()->id == 0)) {
+		*pid = sprocsp(entry,		/* startup func		*/
+						inh,        /* attribute flags	*/
+						arg,     	/* thread param		*/
+						sp,         /* stack address	*/
+						len);       /* stack size		*/
+	} else {
+		sparams.sd.entry = entry;
+		sparams.sd.inh = inh;
+		sparams.sd.arg = arg;
+		sparams.sd.sp = sp;
+		sparams.sd.len = len;
+		sparams.sd.pid = pid;
+		sparams.sd.creator_pid = getpid();
+		_PR_LOCK(sproc_list_lock);
+		PR_APPEND_LINK(&sparams.links, &sproc_list);
+		rv = write(_pr_irix_primoridal_cpu_fd[1], &data, 1);
+		PR_ASSERT(rv == 1);
+		_PR_UNLOCK(sproc_list_lock);
+		blockproc(getpid());
+	}
+}
+
+/*
+ * _PR_MD_WAKEUP_PRIMORDIAL_CPU
+ *
+ *		wakeup cpu 0
+ */
+
+void _PR_MD_WAKEUP_PRIMORDIAL_CPU()
+{
+char data = '0';
+int rv;
+
+	rv = write(_pr_irix_primoridal_cpu_fd[1], &data, 1);
+	PR_ASSERT(rv == 1);
+}
+
+/*
+ * _PR_MD_primordial_cpu
+ *
+ *		process events that need to executed by the primordial cpu on each
+ *		iteration through the idle loop
+ */
+
+void _PR_MD_primordial_cpu()
+{
+PRCList *qp;
+sproc_params *sp;
+int pid;
+
+	_PR_LOCK(sproc_list_lock);
+	while ((qp = sproc_list.next) != &sproc_list) {
+		sp = SPROC_PARAMS_PTR(qp);
+		PR_REMOVE_LINK(&sp->links);
+		pid = sp->sd.creator_pid;
+		(*(sp->sd.pid)) = sprocsp(sp->sd.entry,		/* startup func    */
+							sp->sd.inh,            	/* attribute flags     */
+							sp->sd.arg,     		/* thread param     */
+							sp->sd.sp,             	/* stack address    */
+							sp->sd.len);         	/* stack size     */
+		unblockproc(pid);
+	}
+	_PR_UNLOCK(sproc_list_lock);
+}
+
 PRStatus _MD_CreateThread(PRThread *thread, 
 void (*start)(void *), 
 PRThreadPriority priority, 
@@ -578,43 +726,44 @@ PRUint32 stackSize)
 	PRThread *me = _PR_MD_CURRENT_THREAD();	
 	PRInt32 pid;
 	PRStatus rv;
-    PRStatus creation_status;
 
 	if (!_PR_IS_NATIVE_THREAD(me))
 		_PR_INTSOFF(is);
     thread->md.cvar_pollsem_select = 0;
-    thread->md.creation_status = &creation_status;
     thread->flags |= _PR_GLOBAL_SCOPE;
-    pid = sprocsp(
-        			spentry,            /* startup func    */
-    				PR_SALL,            /* attribute flags     */
-    				(void *)thread,     /* thread param     */
-    				NULL,               /* stack address    */
-    				stackSize);         /* stack size     */
+
+	thread->md.cvar_pollsemfd = -1;
+	if (new_poll_sem(&thread->md,0) == PR_FAILURE) {
+		if (!_PR_IS_NATIVE_THREAD(me))
+			_PR_FAST_INTSON(is);
+		return PR_FAILURE;
+	}
+	thread->md.cvar_pollsemfd =
+		_PR_OPEN_POLL_SEM(thread->md.cvar_pollsem);
+	if ((thread->md.cvar_pollsemfd < 0)) {
+		free_poll_sem(&thread->md);
+		if (!_PR_IS_NATIVE_THREAD(me))
+			_PR_FAST_INTSON(is);
+		return PR_FAILURE;
+	}
+
+    create_sproc(spentry,            /* startup func    */
+    			PR_SALL,            /* attribute flags     */
+    			(void *)thread,     /* thread param     */
+    			NULL,               /* stack address    */
+    			stackSize, &pid);         /* stack size     */
     if (pid > 0) {
-		/*
-		 * Wait for the sproc to signal me after it has initialized
-		 * itself
-		 */
-	    if (!_PR_IS_NATIVE_THREAD(me))
-		    blockproc(me->cpu->md.id);
-        else
-            blockproc(me->md.id);
-    	if (creation_status == PR_FAILURE) {
-			/*
-			 * the sproc failed to create a polled semaphore and exited
-			 */
-        	_MD_ATOMIC_INCREMENT(&_pr_md_irix_sprocs_failed);
-			rv = PR_FAILURE;
-		} else {
-        	_MD_ATOMIC_INCREMENT(&_pr_md_irix_sprocs_created);
-        	_MD_ATOMIC_INCREMENT(&_pr_md_irix_sprocs);
-			rv = PR_SUCCESS;
-		}
+        _MD_ATOMIC_INCREMENT(&_pr_md_irix_sprocs_created);
+        _MD_ATOMIC_INCREMENT(&_pr_md_irix_sprocs);
+		rv = PR_SUCCESS;
 		if (!_PR_IS_NATIVE_THREAD(me))
 			_PR_FAST_INTSON(is);
         return rv;
     } else {
+        close(thread->md.cvar_pollsemfd);
+        thread->md.cvar_pollsemfd = -1;
+		free_poll_sem(&thread->md);
+        thread->md.cvar_pollsem = NULL;
         _MD_ATOMIC_INCREMENT(&_pr_md_irix_sprocs_failed);
 		if (!_PR_IS_NATIVE_THREAD(me))
 			_PR_FAST_INTSON(is);
@@ -686,38 +835,39 @@ extern void __sgi_prda_procmask(int);
 #endif
 
 PRStatus
-_MD_InitThread(PRThread *thread, PRBool wakeup_parent)
+_MD_InitAttachedThread(PRThread *thread, PRBool wakeup_parent)
 {
-    struct sigaction sigact;
 	PRStatus rv = PR_SUCCESS;
 
     if (thread->flags & _PR_GLOBAL_SCOPE) {
-		/*
-		 * create a polled semaphore
-		 *
-		 * NOTE: On Irix there is a bug which requires the sproc that
-		 *		 created a polled semaphore to not exit for that semaphore
-		 *		 to be useable by other sprocs.
-		 */
-		thread->md.id = getpid();
-		thread->md.cvar_pollsemfd = -1;
 		if (new_poll_sem(&thread->md,0) == PR_FAILURE) {
-			if (wakeup_parent == PR_TRUE) {
-				*thread->md.creation_status = PR_FAILURE;
-		 		unblockproc(getppid());
-			}
 			return PR_FAILURE;
 		}
 		thread->md.cvar_pollsemfd =
 			_PR_OPEN_POLL_SEM(thread->md.cvar_pollsem);
 		if ((thread->md.cvar_pollsemfd < 0)) {
 			free_poll_sem(&thread->md);
-			if (wakeup_parent == PR_TRUE) {
-				*thread->md.creation_status = PR_FAILURE;
-		 		unblockproc(getppid());
-			}
 			return PR_FAILURE;
 		}
+		if (_MD_InitThread(thread, PR_FALSE) == PR_FAILURE) {
+			close(thread->md.cvar_pollsemfd);
+			thread->md.cvar_pollsemfd = -1;
+			free_poll_sem(&thread->md);
+			thread->md.cvar_pollsem = NULL;
+			return PR_FAILURE;
+		}
+    }
+	return rv;
+}
+
+PRStatus
+_MD_InitThread(PRThread *thread, PRBool wakeup_parent)
+{
+    struct sigaction sigact;
+	PRStatus rv = PR_SUCCESS;
+
+    if (thread->flags & _PR_GLOBAL_SCOPE) {
+		thread->md.id = getpid();
         setblockproccnt(thread->md.id, 0);
 		_MD_SET_SPROC_PID(getpid());	
 #ifndef IRIX5_3
@@ -729,7 +879,6 @@ _MD_InitThread(PRThread *thread, PRBool wakeup_parent)
 #endif
 		/*
 		 * set up SIGUSR1 handler; this is used to save state
-		 * during PR_SuspendAll
 		 */
 		sigact.sa_handler = save_context_and_block;
 		sigact.sa_flags = SA_RESTART;
@@ -740,51 +889,198 @@ _MD_InitThread(PRThread *thread, PRBool wakeup_parent)
 		sigaction(SIGUSR1, &sigact, 0);
 
 
-        if (_nspr_terminate_on_error) {
+		/*
+		 * PR_SETABORTSIG is a new command implemented in a patch to
+		 * Irix 6.2, 6.3 and 6.4. This causes a signal to be sent to all
+		 * sprocs in the process when one of them terminates abnormally
+		 *
+		 */
+		if (prctl(PR_SETABORTSIG, SIGKILL) < 0) {
 			/*
-			 * PR_SETABORTSIG is a new command implemented in a patch to
-			 * Irix 6.2, 6.3 and 6.4. This causes a signal to be sent to all
-			 * sprocs in the process when one of them terminates abnormally
+			 *  if (errno == EINVAL)
 			 *
+			 *	PR_SETABORTSIG not supported under this OS.
+			 *	You may want to get a recent kernel rollup patch that
+			 *	supports this feature.
 			 */
-
-			if (prctl(PR_SETABORTSIG, SIGKILL) < 0) {
-				/*
-				 *  if (errno == EINVAL)
-				 *
-				 *	PR_SETABORTSIG not supported under this OS.
-				 *	You may want to get a recent kernel rollup patch that
-				 *	supports this feature.
-				 */
-				/*
-				 * SIGCLD handler for detecting abormally-terminating
-				 * sprocs
-				 */
-				sigact.sa_handler = sigchld_handler;
-				sigact.sa_flags = SA_RESTART;
-				sigact.sa_mask = ints_off;
-				sigaction(SIGCLD, &sigact, NULL);
-			}
 		}
 		/*
-		 * unblock the parent sproc
+		 * SIGCLD handler for detecting abormally-terminating
+		 * sprocs and for reaping sprocs
 		 */
-		if (wakeup_parent == PR_TRUE) {
-			*thread->md.creation_status = PR_SUCCESS;
-			unblockproc(getppid());
-		}
+		sigact.sa_handler = sigchld_handler;
+		sigact.sa_flags = SA_RESTART;
+		sigact.sa_mask = ints_off;
+		sigaction(SIGCLD, &sigact, NULL);
     }
 	return rv;
 }
 
+/*
+ * PR_Cleanup should be executed on the primordial sproc; migrate the thread
+ * to the primordial cpu
+ */
+
+void _PR_MD_PRE_CLEANUP(PRThread *me)
+{
+PRIntn is;
+_PRCPU *cpu = _pr_primordialCPU;
+
+	PR_ASSERT(cpu);
+
+	me->flags |= _PR_BOUND_THREAD;	
+
+	if (me->cpu->id != 0) {
+		_PR_INTSOFF(is);
+		_PR_RUNQ_LOCK(cpu);
+		me->cpu = cpu;
+		me->state = _PR_RUNNABLE;
+		_PR_ADD_RUNQ(me, cpu, me->priority);
+		_PR_RUNQ_UNLOCK(cpu);
+		_MD_Wakeup_CPUs();
+
+		_PR_MD_SWITCH_CONTEXT(me);
+
+		_PR_FAST_INTSON(is);
+		PR_ASSERT(me->cpu->id == 0);
+	}
+}
+
+/*
+ * process exiting
+ */
 PR_EXTERN(void ) _MD_exit(PRIntn status)
 {
+PRThread *me = _PR_MD_CURRENT_THREAD();
+
 	/*
-	 * Cause SIGKILL to be sent to other sprocs, if any, in the application
+	 * the exit code of the process is the exit code of the primordial
+	 * sproc
 	 */
-	prctl(PR_SETEXITSIG, SIGKILL);
-	exit(status);
+	if (!_PR_IS_NATIVE_THREAD(me) && (_PR_MD_CURRENT_CPU()->id == 0)) {
+		/*
+		 * primordial sproc case: call _exit directly
+		 * Cause SIGKILL to be sent to other sprocs
+		 */
+		prctl(PR_SETEXITSIG, SIGKILL);
+		_exit(status);
+	} else {
+		int rv;
+		char data;
+		sigset_t set;
+
+		/*
+		 * non-primordial sproc case: cause the primordial sproc, cpu 0,
+		 * to wakeup and call _exit
+		 */
+		_pr_irix_process_exit = 1;
+		_pr_irix_process_exit_code = status;
+		rv = write(_pr_irix_primoridal_cpu_fd[1], &data, 1);
+		PR_ASSERT(rv == 1);
+		/*
+		 * block all signals and wait for SIGKILL to terminate this sproc
+		 */
+		sigfillset(&set);
+		sigsuspend(&set);
+		/*
+		 * this code doesn't (shouldn't) execute
+		 */
+		prctl(PR_SETEXITSIG, SIGKILL);
+		_exit(status);
+	}
 }
+
+/*
+ * Override the exit() function in libc to cause the process to exit
+ * when the primodial/main nspr thread calls exit. Calls to exit by any
+ * other thread simply result in a call to the exit function in libc.
+ * The exit code of the process is the exit code of the primordial
+ * sproc.
+ */
+
+void exit(int status)
+{
+PRThread *me, *thr;
+PRCList *qp;
+void __exit(int status);
+
+	if (!_pr_initialized) 
+		__exit(status);
+
+	me = _PR_MD_CURRENT_THREAD();
+
+	if (me == NULL) 		/* detached thread */
+		(*libc_exit)(status);
+
+	PR_ASSERT(_PR_IS_NATIVE_THREAD(me) ||
+						(_PR_MD_CURRENT_CPU())->id == me->cpu->id);
+
+	if (me->flags & _PR_PRIMORDIAL) {
+
+		me->flags |= _PR_BOUND_THREAD;	
+
+		PR_ASSERT((_PR_MD_CURRENT_CPU())->id == me->cpu->id);
+		if (me->cpu->id != 0) {
+			_PRCPU *cpu = _pr_primordialCPU;
+			PRIntn is;
+
+			_PR_INTSOFF(is);
+			_PR_RUNQ_LOCK(cpu);
+			me->cpu = cpu;
+			me->state = _PR_RUNNABLE;
+			_PR_ADD_RUNQ(me, cpu, me->priority);
+			_PR_RUNQ_UNLOCK(cpu);
+			_MD_Wakeup_CPUs();
+
+			_PR_MD_SWITCH_CONTEXT(me);
+
+			_PR_FAST_INTSON(is);
+		}
+
+		PR_ASSERT((_PR_MD_CURRENT_CPU())->id == 0);
+
+		if (prctl(PR_GETNSHARE) > 1) {
+#define SPROC_EXIT_WAIT_TIME 5
+			int sleep_cnt = SPROC_EXIT_WAIT_TIME;
+
+			/*
+			 * sprocs still running; caue cpus and recycled global threads
+			 * to exit
+			 */
+			_pr_irix_exit_now = 1;
+			if (_pr_numCPU > 1) {
+				_MD_Wakeup_CPUs();
+			}
+			 _PR_DEADQ_LOCK;
+			 if (_PR_NUM_DEADNATIVE != 0) {
+				PRThread *thread;
+				PRCList *ptr;
+
+				ptr = _PR_DEADNATIVEQ.next;
+				while( ptr != &_PR_DEADNATIVEQ ) {
+					thread = _PR_THREAD_PTR(ptr);
+					_MD_CVAR_POST_SEM(thread);
+					ptr = ptr->next;
+				} 
+			 }
+
+			while (sleep_cnt-- > 0) {
+				if (waitpid(0, NULL, WNOHANG) >= 0) 
+					sleep(1);
+				else
+					break;
+			}
+			prctl(PR_SETEXITSIG, SIGKILL);
+		}
+		(*libc_exit)(status);
+	} else {
+		/*
+		 * non-primordial thread; simply call exit in libc.
+		 */
+		(*libc_exit)(status);
+	}
+}
+
 
 void
 _MD_InitRunningCPU(_PRCPU *cpu)
@@ -882,11 +1178,9 @@ _MD_SuspendThread(PRThread *thread)
 void
 _MD_ResumeThread(PRThread *thread)
 {
-    PRInt32 rv;
-
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
         (thread->flags & _PR_GCABLE_THREAD));
-    rv = unblockproc(thread->md.id);
+    (void)unblockproc(thread->md.id);
 }
 
 /*
@@ -902,7 +1196,7 @@ PRInt32 _MD_GetThreadAffinityMask(PRThread *unused, PRUint32 *mask)
     nprocs = sysmp(MP_NPROCS);
     if (nprocs < 0)
         return(-1);
-    pstat = PR_MALLOC(sizeof(struct pda_stat) * nprocs);
+    pstat = (struct pda_stat*)PR_MALLOC(sizeof(struct pda_stat) * nprocs);
     if (pstat == NULL)
         return(-1);
     rv = sysmp(MP_STAT, pstat);
@@ -938,13 +1232,13 @@ static char *_thr_state[] = {
     "DEAD"
 };
 
-_PR_List_Threads()
+void _PR_List_Threads()
 {
     PRThread *thr;
     void *handle;
     struct _PRCPU *cpu;
     PRCList *qp;
-    int len, status, rv, fd;
+    int len, fd;
     char pidstr[24];
     char path[24];
     prpsinfo_t pinfo;
@@ -1097,6 +1391,7 @@ void _MD_EarlyInit(void)
 #if !defined(_PR_PTHREADS)
     char *eval;
     int fd;
+	extern int __ateachexit(void (*func)(void));
 
     sigemptyset(&ints_off);
     sigaddset(&ints_off, SIGALRM);
@@ -1116,23 +1411,26 @@ void _MD_EarlyInit(void)
      * This region exists at the same address, _nspr_sproc_private, for
      * every sproc, but each sproc gets a private copy of the region.
      */
-    _nspr_sproc_private = mmap(0, _pr_pageSize, PROT_READ | PROT_WRITE,
+    _nspr_sproc_private = (char*)mmap(0, _pr_pageSize, PROT_READ | PROT_WRITE,
         MAP_PRIVATE| MAP_LOCAL, fd, 0);
     if (_nspr_sproc_private == (void*)-1) {
         perror("mmap /dev/zero failed");
         exit(1);
     }
+	_MD_SET_SPROC_PID(getpid());	
     close(fd);
+	__ateachexit(irix_detach_sproc);
 #endif
-    _MD_IntervalInit();
+    _MD_IrixIntervalInit();
 }  /* _MD_EarlyInit */
 
 void _MD_IrixInit()
 {
 #if !defined(_PR_PTHREADS)
     struct sigaction sigact;
-    rlim_t stack_max_limit;
     PRThread *me = _PR_MD_CURRENT_THREAD();
+	void *libc_handle;
+	int rv;
 
 #ifndef IRIX5_3
 	/*
@@ -1161,48 +1459,60 @@ void _MD_IrixInit()
     /*
      * Irix-specific terminate on error processing
      */
-    if (_nspr_terminate_on_error) {
+	/*
+	 * PR_SETABORTSIG is a new command implemented in a patch to
+	 * Irix 6.2, 6.3 and 6.4. This causes a signal to be sent to all
+	 * sprocs in the process when one of them terminates abnormally
+	 *
+	 */
+	if (prctl(PR_SETABORTSIG, SIGKILL) < 0) {
 		/*
-		 * PR_SETABORTSIG is a new command implemented in a patch to
-		 * Irix 6.2, 6.3 and 6.4. This causes a signal to be sent to all
-		 * sprocs in the process when one of them terminates abnormally
+		 *  if (errno == EINVAL)
+		 *
+		 *	PR_SETABORTSIG not supported under this OS.
+		 *	You may want to get a recent kernel rollup patch that
+		 *	supports this feature.
 		 *
 		 */
-    	if (prctl(PR_SETABORTSIG, SIGKILL) < 0) {
-			/*
-			 *  if (errno == EINVAL)
-			 *
-			 *	PR_SETABORTSIG not supported under this OS.
-			 *	You may want to get a recent kernel rollup patch that
-			 *	supports this feature.
-		 	 *
-			 */
-			/*
-			 * PR_SETEXITSIG -  send the SIGCLD signal to the parent
-			 *            sproc when any sproc terminates
-			 *
-			 *    This is used to cause the entire application to
-			 *    terminate when    any sproc terminates abnormally by
-			 *     receipt of a SIGSEGV, SIGBUS or SIGABRT signal.
-			 *    If this is not done, the application may seem
-			 *     "hung" to the user because the other sprocs may be
-			 *    waiting for resources held by the
-			 *    abnormally-terminating sproc.
-			 */
-			prctl(PR_SETEXITSIG, 0);
-
-			sigact.sa_handler = sigchld_handler;
-			sigact.sa_flags = SA_RESTART;
-			sigact.sa_mask = ints_off;
-			sigaction(SIGCLD, &sigact, NULL);
-		}
 	}
+	/*
+	 * PR_SETEXITSIG -  send the SIGCLD signal to the parent
+	 *            sproc when any sproc terminates
+	 *
+	 *    This is used to cause the entire application to
+	 *    terminate when    any sproc terminates abnormally by
+	 *     receipt of a SIGSEGV, SIGBUS or SIGABRT signal.
+	 *    If this is not done, the application may seem
+	 *     "hung" to the user because the other sprocs may be
+	 *    waiting for resources held by the
+	 *    abnormally-terminating sproc.
+	 */
+	prctl(PR_SETEXITSIG, 0);
+
+	sigact.sa_handler = sigchld_handler;
+	sigact.sa_flags = SA_RESTART;
+	sigact.sa_mask = ints_off;
+	sigaction(SIGCLD, &sigact, NULL);
 
     /*
      * setup stack fields for the primordial thread
      */
     me->stack->stackSize = prctl(PR_GETSTACKSIZE);
     me->stack->stackBottom = me->stack->stackTop - me->stack->stackSize;
+
+    rv = pipe(_pr_irix_primoridal_cpu_fd);
+    PR_ASSERT(rv == 0);
+#ifndef _PR_USE_POLL
+    _PR_IOQ_MAX_OSFD(me->cpu) = _pr_irix_primoridal_cpu_fd[0];
+    FD_SET(_pr_irix_primoridal_cpu_fd[0], &_PR_FD_READ_SET(me->cpu));
+#endif
+
+	libc_handle = dlopen("libc.so",RTLD_NOW);
+	PR_ASSERT(libc_handle != NULL);
+	libc_exit = (void (*)(int)) dlsym(libc_handle, "exit");
+	PR_ASSERT(libc_exit != NULL);
+	/* dlclose(libc_handle); */
+
 #endif /* _PR_PTHREADS */
 
     _PR_UnixInit();
@@ -1218,7 +1528,7 @@ void _MD_IrixInit()
 #define SGI_CYCLECNTR_SIZE      165     /* Size user needs to use to read CC */
 #endif
 
-static PRUintn mmem_fd = -1;
+static PRIntn mmem_fd = -1;
 static PRIntn clock_width = 0;
 static void *iotimer_addr = NULL;
 static PRUint32 pr_clock_mask = 0;
@@ -1230,7 +1540,7 @@ static PRUint32 pr_previous = 0, pr_residual = 0;
 extern PRIntervalTime _PR_UNIX_GetInterval(void);
 extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
-void _MD_IntervalInit(void)
+static void _MD_IrixIntervalInit()
 {
     /*
      * As much as I would like, the service available through this
@@ -1290,14 +1600,14 @@ void _MD_IntervalInit(void)
             ((__psunsigned_t)iotimer_addr + (phys_addr & poffmask));
     }
 
-}  /* _PR_MD_INTERVAL_INIT */
+}  /* _MD_IrixIntervalInit */
 
-PRIntervalTime _MD_IntervalPerSec()
+PRIntervalTime _MD_IrixIntervalPerSec()
 {
     return pr_clock_granularity;
 }
 
-PRIntervalTime _MD_GetInterval()
+PRIntervalTime _MD_IrixGetInterval()
 {
     if (mmem_fd != -1)
     {
@@ -1333,5 +1643,5 @@ PRIntervalTime _MD_GetInterval()
         pr_ticks *= (PR_CLOCK_GRANULARITY / _PR_UNIX_TicksPerSecond());
     }
     return pr_ticks;
-}  /* _MD_GetInterval */
+}  /* _MD_IrixGetInterval */
 

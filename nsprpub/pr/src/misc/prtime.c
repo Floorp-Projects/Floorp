@@ -524,16 +524,23 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 
 #include <time.h>
 
-#if (defined(OSF1) && !defined(OSF1V4)) || defined(HPUX10_10) \
-        || defined(HPUX10_20)
+#if defined(HAVE_INT_LOCALTIME_R)
+
+/*
+ * In this case we could define the macro as
+ *     #define MT_safe_localtime(timer, result) \
+ *             (localtime_r(timer, result) == 0 ? result : NULL)
+ * I chose to compare the return value of localtime_r with -1 so 
+ * that I can catch the cases where localtime_r returns a pointer
+ * to struct tm.  The macro definition above would not be able to
+ * detect such mistakes because it is legal to compare a pointer
+ * with 0.
+ */
 
 #define MT_safe_localtime(timer, result) \
-        (localtime_r(timer, result) == 0 ? result : NULL)
+        (localtime_r(timer, result) == -1 ? NULL: result)
 
-#elif (defined(SOLARIS) && defined(_REENTRANT)) || defined(IRIX) \
-        || (defined(AIX) && !defined(AIX4_1) && defined(_THREAD_SAFE)) \
-        || defined(OSF1V4) \
-        || defined(HPUX10_30) || defined(HPUX11)
+#elif defined(HAVE_POINTER_LOCALTIME_R)
 
 #define MT_safe_localtime localtime_r
 
@@ -1623,12 +1630,12 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
     a.tm_isdst = tm->tm_params.tp_dst_offset ? 1 : 0;
 
 /*
- * On SunOS 4, struct tm has two additional fields: tm_zone
- * and tm_gmtoff.  The following code attempts to obtain values for
- * these two fields.
+ * On some platforms, for example SunOS 4, struct tm has two additional
+ * fields: tm_zone and tm_gmtoff.  The following code attempts to obtain
+ * values for these two fields.
  */
 
-#if defined(SUNOS4) || defined(MKLINUX) || (__GLIBC__ >= 2)
+#if defined(SUNOS4) || (__GLIBC__ >= 2)
     if (mktime(&a) == -1) {
         PR_snprintf(buf, buflen, "can't get timezone");
         return 0;

@@ -62,6 +62,20 @@ _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
 }
 
 PRInt32
+_PR_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
+{
+    PRInt32 rv;
+
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
+    PR_Lock(monitor);
+    rv = ((*ptr) += val);
+    PR_Unlock(monitor);
+    return rv;
+}
+
+PRInt32
 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 {
     PRInt32 rv;
@@ -115,3 +129,94 @@ PR_AtomicSet(PRInt32 *val, PRInt32 newval)
     return _PR_MD_ATOMIC_SET(val, newval);
 }
 
+PR_IMPLEMENT(PRInt32)
+PR_AtomicAdd(PRInt32 *ptr, PRInt32 val)
+{
+    return _PR_MD_ATOMIC_ADD(ptr, val);
+}
+/*
+ * For platforms, which don't support the CAS (compare-and-swap) instruction
+ * (or an equivalent), the stack operations are implemented by use of PRLock
+ */
+
+PR_IMPLEMENT(PRStack *)
+PR_CreateStack(const char *stack_name)
+{
+PRStack *stack;
+
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
+
+    if ((stack = PR_NEW(PRStack)) == NULL) {
+		return NULL;
+	}
+	if (stack_name) {
+		stack->prstk_name = (char *) PR_Malloc(strlen(stack_name) + 1);
+		if (stack->prstk_name == NULL) {
+			PR_DELETE(stack);
+			return NULL;
+		}
+		strcpy(stack->prstk_name, stack_name);
+	} else
+		stack->prstk_name = NULL;
+
+#ifndef _PR_HAVE_ATOMIC_CAS
+    stack->prstk_lock = PR_NewLock();
+	if (stack->prstk_lock == NULL) {
+		PR_Free(stack->prstk_name);
+		PR_DELETE(stack);
+		return NULL;
+	}
+#endif /* !_PR_HAVE_ATOMIC_CAS */
+
+	stack->prstk_head.prstk_elem_next = NULL;
+	
+    return stack;
+}
+
+PR_IMPLEMENT(PRStatus)
+PR_DestroyStack(PRStack *stack)
+{
+	if (stack->prstk_head.prstk_elem_next != NULL) {
+		PR_SetError(PR_INVALID_STATE_ERROR, 0);
+		return PR_FAILURE;
+	}
+
+	if (stack->prstk_name)
+		PR_Free(stack->prstk_name);
+#ifndef _PR_HAVE_ATOMIC_CAS
+	PR_DestroyLock(stack->prstk_lock);
+#endif /* !_PR_HAVE_ATOMIC_CAS */
+	PR_DELETE(stack);
+
+	return PR_SUCCESS;
+}
+
+#ifndef _PR_HAVE_ATOMIC_CAS
+
+PR_IMPLEMENT(void)
+PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
+{
+    PR_Lock(stack->prstk_lock);
+	stack_elem->prstk_elem_next = stack->prstk_head.prstk_elem_next;
+	stack->prstk_head.prstk_elem_next = stack_elem;
+    PR_Unlock(stack->prstk_lock);
+    return;
+}
+
+PR_IMPLEMENT(PRStackElem *)
+PR_StackPop(PRStack *stack)
+{
+PRStackElem *element;
+
+    PR_Lock(stack->prstk_lock);
+	element = stack->prstk_head.prstk_elem_next;
+	if (element != NULL) {
+		stack->prstk_head.prstk_elem_next = element->prstk_elem_next;
+		element->prstk_elem_next = NULL;	/* debugging aid */
+	}
+    PR_Unlock(stack->prstk_lock);
+    return element;
+}
+#endif /* !_PR_HAVE_ATOMIC_CAS */

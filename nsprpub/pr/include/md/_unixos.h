@@ -37,26 +37,27 @@
 #include <stddef.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <errno.h>
 
 #include "prio.h"
 #include "prmem.h"
 #include "prclist.h"
 
-/* To pick up fd_set */
-#if defined(HPUX)
+/*
+ * For select(), fd_set, and struct timeval.
+ *
+ * In The Single UNIX(R) Specification, Version 2,
+ * the header file for select() is <sys/time.h>.
+ *
+ * fd_set is defined in <sys/types.h>.  Usually
+ * <sys/time.h> includes <sys/types.h>, but on some
+ * older systems <sys/time.h> does not include
+ * <sys/types.h>, so we include it explicitly.
+ */
 #include <sys/time.h>
-#elif defined(OSF1) || defined(AIX) || defined(SOLARIS) || defined(IRIX) \
-        || defined(UNIXWARE) || defined(NCR) || defined(SNI) || defined(NEC) \
-        || defined(BSDI) || defined(SONY)
+#include <sys/types.h>
+#if defined(AIX)  /* Only pre-4.2 AIX needs it, but for simplicity... */
 #include <sys/select.h>
-#elif defined(SUNOS4) || defined(SCO) || defined(FREEBSD) \
-        || defined(NETBSD) || defined(RHAPSODY) || defined(DGUX)
-#include <sys/types.h>
-#elif defined(LINUX)
-#include <sys/time.h>
-#include <sys/types.h>
-#else
-#error Find out what include file defines fd_set on this platform
 #endif
 
 #define PR_DIRECTORY_SEPARATOR		'/'
@@ -64,7 +65,6 @@
 #define PR_PATH_SEPARATOR		':'
 #define PR_PATH_SEPARATOR_STR		":"
 #define GCPTR
-
 typedef int (*FARPROC)();
 
 /*
@@ -72,6 +72,26 @@ typedef int (*FARPROC)();
  */
 #define _PR_INTERRUPT_CHECK_INTERVAL_SECS 5
 extern PRIntervalTime intr_timeout_ticks;
+
+/*
+ * The bit flags for the in_flags and out_flags fields
+ * of _PR_UnixPollDesc
+ */
+#ifdef _PR_USE_POLL
+#define _PR_UNIX_POLL_READ    POLLIN
+#define _PR_UNIX_POLL_WRITE   POLLOUT
+#define _PR_UNIX_POLL_EXCEPT  POLLPRI
+#define _PR_UNIX_POLL_ERR     POLLERR
+#define _PR_UNIX_POLL_NVAL    POLLNVAL
+#define _PR_UNIX_POLL_HUP     POLLHUP
+#else /* _PR_USE_POLL */
+#define _PR_UNIX_POLL_READ    0x1
+#define _PR_UNIX_POLL_WRITE   0x2
+#define _PR_UNIX_POLL_EXCEPT  0x4
+#define _PR_UNIX_POLL_ERR     0x8
+#define _PR_UNIX_POLL_NVAL    0x10
+#define _PR_UNIX_POLL_HUP     0x20
+#endif /* _PR_USE_POLL */
 
 typedef struct _PRUnixPollDesc {
 	PRInt32 osfd;
@@ -92,8 +112,10 @@ typedef struct PRPollQueue {
     ((PRPollQueue*) ((char*) (_qp) - offsetof(PRPollQueue,links)))
 
 
-extern PRInt32 _PR_WaitForFD(PRInt32 osfd, PRUintn how,
-					PRIntervalTime timeout);
+extern PRInt32 _PR_WaitForMultipleFDs(
+    _PRUnixPollDesc *unixpds,
+    PRInt32 pdcnt,
+    PRIntervalTime timeout);
 extern void _PR_Unblock_IO_Wait(struct PRThread *thr);
 
 #if defined(_PR_LOCAL_THREADS_ONLY) || defined(_PR_GLOBAL_THREADS_ONLY)
@@ -113,44 +135,8 @@ struct _MDDir {
 	DIR *d;
 };
 
-/*
- * md-specific cpu structure field, common to all Unix platforms
- */
-#define _PR_MD_MAX_OSFD FD_SETSIZE
-
-struct _MDCPU_Unix {
-    PRCList ioQ;
-    PRUint32 ioq_timeout;
-    PRInt32 ioq_max_osfd;
-    PRInt32 ioq_osfd_cnt;
-#ifndef _PR_USE_POLL
-    fd_set fd_read_set, fd_write_set, fd_exception_set;
-    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
-				fd_exception_cnt[_PR_MD_MAX_OSFD];
-#else
-	struct pollfd *ioq_pollfds;
-	int ioq_pollfds_size;
-#endif	/* _PR_USE_POLL */
-};
 struct _PRCPU;
 extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
-
-#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
-#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
-#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
-#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
-#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
-#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
-#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
-#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
-#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
-#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
-#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
-#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
-#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
-
-#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
-
 
 /*
 ** Make a redzone at both ends of the stack segment. Disallow access
@@ -248,6 +234,7 @@ extern PRStatus _MD_KillUnixProcess(struct PRProcess *process);
 #define _MD_START_INTERRUPTS			_MD_StartInterrupts
 #define _MD_STOP_INTERRUPTS				_MD_StopInterrupts
 #define _MD_DISABLE_CLOCK_INTERRUPTS	_MD_DisableClockInterrupts
+#define _MD_ENABLE_CLOCK_INTERRUPTS		_MD_EnableClockInterrupts
 #define _MD_BLOCK_CLOCK_INTERRUPTS		_MD_BlockClockInterrupts
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS	_MD_UnblockClockInterrupts
 
@@ -291,7 +278,9 @@ extern void		_MD_FreeSegment(PRSegment *seg);
 
 /************************************************************************/
 
+#if !defined(HPUX_LW_TIMER)
 #define _MD_INTERVAL_INIT()
+#endif
 #define _MD_INTERVAL_PER_MILLISEC()	(_PR_MD_INTERVAL_PER_SEC() / 1000)
 #define _MD_INTERVAL_PER_MICROSEC()	(_PR_MD_INTERVAL_PER_SEC() / 1000000)
 
@@ -303,11 +292,6 @@ extern void		_MD_FreeSegment(PRSegment *seg);
 /************************************************************************/
 
 extern PRInt32 _MD_AvailableSocket(PRInt32 osfd);
-
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/stat.h>
 
 extern void _MD_InitSegs(void);
 extern void _MD_StartInterrupts(void);
@@ -327,7 +311,7 @@ extern PRInt32  _MD_getfileinfo64(const char *fn, PRFileInfo64 *info);
 extern PRInt32  _MD_getopenfileinfo(const PRFileDesc *fd, PRFileInfo *info);
 extern PRInt32  _MD_getopenfileinfo64(const PRFileDesc *fd, PRFileInfo64 *info);
 extern PRInt32	_MD_rename(const char *from, const char *to);
-extern PRInt32	_MD_access(const char *name, PRIntn how);
+extern PRInt32	_MD_access(const char *name, PRAccessHow how);
 extern PRInt32	_MD_mkdir(const char *name, PRIntn mode);
 extern PRInt32	_MD_rmdir(const char *name);
 extern PRInt32	_MD_accept_read(PRInt32 sock, PRInt32 *newSock,
@@ -515,5 +499,73 @@ struct pollfd {
 extern int poll(struct pollfd *, unsigned long, int);
 
 #endif /* _PR_NEED_FAKE_POLL */
+
+/*
+** A vector of the UNIX I/O calls we use. These are here to smooth over
+** the rough edges needed for large files. All of NSPR's implmentaions
+** go through this vector using syntax of the form
+**      result = _md_iovector.xxx64(args);
+*/
+
+#if defined(SOLARIS2_5)
+/*
+** Special case: Solaris 2.5.1
+** Solaris starts to have 64-bit file I/O in 2.6.  We build on Solaris
+** 2.5.1 so that we can use the same binaries on both Solaris 2.5.1 and
+** 2.6.  At run time, we detect whether 64-bit file I/O is available by
+** looking up the 64-bit file function symbols in libc.  At build time,
+** we need to define the 64-bit file I/O datatypes that are compatible
+** with their definitions on Solaris 2.6.
+*/
+typedef PRInt64 off64_t;
+typedef PRUint64 ino64_t;
+typedef PRUint64 blkcnt64_t;
+struct stat64 {
+    dev_t st_dev;
+    long st_pad1[3];
+    ino64_t st_ino;
+    mode_t st_mode;
+    nlink_t st_nlink;
+    uid_t st_uid;
+    gid_t st_gid;
+    dev_t st_rdev;
+    long t_pad2[2];
+    off64_t st_size;
+    timestruc_t st_atim;
+    timestruc_t st_mtim;
+    timestruc_t st_ctim;
+    long st_blksize;
+    blkcnt64_t st_blocks;
+    char st_fstype[_ST_FSTYPSZ];
+    long st_pad4[8];
+};
+typedef struct stat64 _MDStat64;
+
+#elif defined(_PR_HAVE_OFF64_T)
+typedef struct stat64 _MDStat64;
+#elif defined(_PR_HAVE_LARGE_OFF_T) || defined(_PR_NO_LARGE_FILES)
+typedef struct stat _MDStat64;
+#else
+#error "I don't know yet"
+#endif
+
+typedef PRIntn (*_MD_Fstat64)(PRIntn osfd, _MDStat64 *buf);
+typedef PRIntn (*_MD_Open64)(const char *path, int oflag, ...);
+typedef PRIntn (*_MD_Stat64)(const char *path, _MDStat64 *buf);
+typedef PRInt64 (*_MD_Lseek64)(PRIntn osfd, PRInt64, PRIntn whence);
+typedef PRIntn (*_MD_Lockf64)(PRIntn osfd, PRIntn function, PRInt64 size);
+typedef void* (*_MD_Mmap64)(
+    void *addr, PRSize len, PRIntn prot, PRIntn flags,
+    PRIntn fildes, PRInt64 offset);
+struct _MD_IOVector
+{
+    _MD_Open64 _open64;
+    _MD_Mmap64 _mmap64;
+    _MD_Stat64 _stat64;
+    _MD_Fstat64 _fstat64;
+    _MD_Lockf64 _lockf64;
+    _MD_Lseek64 _lseek64;
+};
+extern struct _MD_IOVector _md_iovector;
 
 #endif /* prunixos_h___ */

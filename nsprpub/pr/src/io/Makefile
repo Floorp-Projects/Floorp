@@ -29,12 +29,14 @@ endif
 endif
 
 CSRCS = \
+    prfdcach.c \
     prmwait.c \
     priometh.c \
 	prmapopt.c \
     prlayer.c \
     prlog.c \
 	prmmap.c \
+    prpolevt.c \
 	prprf.c \
 	prscanf.c \
 	prstdio.c  \
@@ -45,11 +47,7 @@ ifndef USE_PTHREADS
 	    prdir.c \
 	    prfile.c \
 	    prio.c \
-	    prlog.c \
-	    prmmap.c \
-	    prprf.c \
 	    prsocket.c \
-	    prstdio.c \
 	    $(NULL)
 endif
 

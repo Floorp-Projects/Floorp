@@ -22,49 +22,79 @@
 include $(MOD_DEPTH)/config/UNIX.mk
 
 #
-# The default implementation strategy for Irix is classic nspr.
+# XXX
+# Temporary define for the Client; to be removed when binary release is used
 #
-ifeq ($(USE_PTHREADS),1)
-IMPL_STRATEGY = _PTH
+ifdef MOZILLA_CLIENT
+ifneq ($(USE_PTHREADS),1)
+CLASSIC_NSPR = 1
+endif
+endif
+
+#
+# The default implementation strategy for Irix is pthreads.
+# Classic nspr (user-level threads on top of sprocs) is also
+# available.
+#
+ifeq ($(CLASSIC_NSPR),1)
+	IMPL_STRATEGY = _MxN
+else
+	USE_PTHREADS = 1
+	USE_N32 = 1
+	IMPL_STRATEGY = _PTH
 endif
 
 ifdef NS_USE_GCC
-CC			= gcc
-COMPILER_TAG		= _gcc
-AS			= $(CC) -x assembler-with-cpp
-ODD_CFLAGS		= -Wall -Wno-format
-ifdef BUILD_OPT
-OPTIMIZER		= -O6
-endif
+	CC			= gcc
+	COMPILER_TAG		= _gcc
+	AS			= $(CC) -x assembler-with-cpp -D_ASM -mips2
+	ODD_CFLAGS		= -Wall -Wno-format
+	ifdef BUILD_OPT
+		OPTIMIZER		= -O6
+	endif
 else
-CC			= cc
-CCC         = CC
-ODD_CFLAGS		= -fullwarn -xansi
-ifdef BUILD_OPT
+	CC			= cc
+	CCC         = CC
+	ODD_CFLAGS		= -fullwarn -xansi
+	ifdef BUILD_OPT
+		ifneq ($(USE_N32),1)
+			OPTIMIZER		= -O -Olimit 4000
+		else
+			OPTIMIZER		= -O -OPT:Olimit=4000
+		endif
+	endif
 
-ifeq ($(USE_N32),1)
-OPTIMIZER		= -O -OPT:Olimit=4000
-else
-OPTIMIZER		= -O -Olimit 4000
-endif
-
-endif
-
-# For 6.x machines, include this flag
-ifeq ($(basename $(OS_RELEASE)),6)
-ifeq ($(USE_N32),1)
-ODD_CFLAGS		+= -n32 -exceptions -woff 1209,1642,3201
-COMPILER_TAG		= _n32
-else
-ODD_CFLAGS		+=  -32 -multigot
-endif
-else
-ODD_CFLAGS		+= -xgot
-endif
+#
+# The default behavior is still -o32 generation, hence the explicit tests
+# for -n32 and -64 and implicitly assuming -o32. If that changes, ...
+#
+	ifeq ($(basename $(OS_RELEASE)),6)
+		ODD_CFLAGS += -multigot
+		SHLIB_LD_OPTS = -no_unresolved
+		ifeq ($(USE_N32),1)
+			ODD_CFLAGS += -n32 -woff 1209
+			COMPILER_TAG = _n32
+			LDOPTS += -n32
+        	SHLIB_LD_OPTS += -n32
+			ifeq ($(OS_RELEASE), 6_2)
+				LDOPTS += -Wl,-woff,85
+				SHLIB_LD_OPTS += -woff 85
+			endif
+		else
+			ifeq ($(USE_64),1)
+				ODD_CFLAGS +=  -64
+				COMPILER_TAG = _64
+			else
+				ODD_CFLAGS +=  -32
+				COMPILER_TAG = _o32
+			endif
+		endif
+	else
+		ODD_CFLAGS += -xgot
+	endif
 endif
 
 ODD_CFLAGS		+= -DSVR4 -DIRIX
-
 
 CPU_ARCH		= mips
 
@@ -78,30 +108,15 @@ ifeq ($(OS_RELEASE),5.3)
 OS_CFLAGS               += -DIRIX5_3
 endif
 
-ifeq ($(OS_RELEASE),6.2)
-OS_CFLAGS               += -DIRIX6_2
-endif
-
-ifeq ($(OS_RELEASE),6.3)
-OS_CFLAGS               += -DIRIX6_3
-endif
-
 ifndef NO_MDUPDATE
 OS_CFLAGS		+= $(NOMD_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
 else
 OS_CFLAGS		+= $(NOMD_OS_CFLAGS)
 endif
 
-# catch unresolved symbols
-ifeq ($(basename $(OS_RELEASE)),6)
-SHLIB_LD_OPTS = -no_unresolved
-ifeq ($(USE_N32),1)
-SHLIB_LD_OPTS		+= -n32
-else
-SHLIB_LD_OPTS		+= -32
-endif
-endif
-
+# -rdata_shared is an ld option that puts string constants and
+# const data into the text segment, where they will be shared
+# across processes and be read-only.
 MKSHLIB			= $(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(@:$(OBJDIR)/%.so=%.so)
 
 HAVE_PURIFY		= 1
@@ -110,8 +125,4 @@ DSO_LDOPTS		= -elf -shared -all
 
 ifdef DSO_BACKEND
 DSO_LDOPTS		+= -soname $(DSO_NAME)
-endif
-
-ifdef USE_AUTOCONF
-OS_CFLAGS		=
 endif

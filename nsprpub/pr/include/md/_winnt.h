@@ -34,6 +34,7 @@
 #include <errno.h>
 
 #include "prio.h"
+#include "prclist.h"
 
 /*
  * Internal configuration macros
@@ -49,6 +50,7 @@
 #define HAVE_SOCKET_REUSEADDR
 #define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
+#define _PR_HAVE_ATOMIC_CAS
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
@@ -72,9 +74,39 @@ struct _MDCPU {
     int              unused;
 };
 
+enum _MDIOModel {
+    _MD_BlockingIO = 0x38,
+    _MD_MultiWaitIO = 0x49
+};
+
+typedef struct _MDOverlapped {
+    OVERLAPPED overlapped;              /* Used for async I/O */
+
+    enum _MDIOModel ioModel;            /* The I/O model to implement
+                                         * using overlapped I/O.
+                                         */
+
+    union {
+        struct _MDThread *mdThread;     /* For blocking I/O, this structure
+                                         * is embedded in the _MDThread
+                                         * structure.
+                                         */
+        struct {
+            PRCList links;              /* for group->io_ready list */
+            struct PRRecvWait *desc;    /* For multiwait I/O, this structure
+                                         * is associated with a PRRecvWait
+                                         * structure.
+                                         */
+            struct PRWaitGroup *group;
+            struct TimerEvent *timer;
+            DWORD error;
+        } mw;
+    } data;
+} _MDOverlapped;
+
 struct _MDThread {
         /* The overlapped structure must be first! */
-    OVERLAPPED       overlapped;        /* Used for async IO for this thread */
+    struct _MDOverlapped overlapped;    /* Used for async IO for this thread */
     void            *acceptex_buf;      /* Used for AcceptEx() */
     TRANSMIT_FILE_BUFFERS *xmit_bufs;   /* Used for TransmitFile() */
     HANDLE           blocked_sema;      /* Threads block on this when waiting
@@ -168,6 +200,7 @@ struct _MDProcess {
 
 /* --- IO stuff --- */
 
+extern PRInt32 _md_Associate(HANDLE);
 extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
 
 #define _MD_OPEN                      _PR_MD_OPEN
@@ -213,9 +246,11 @@ extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
 #define _MD_INIT_ATOMIC()
 #if defined(_M_IX86) || defined(_X86_)
 #define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
+#define _MD_ATOMIC_ADD          	  _PR_MD_ATOMIC_ADD
 #define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
 #else /* non-x86 processors */
 #define _MD_ATOMIC_INCREMENT(x)       InterlockedIncrement((PLONG)x)
+#define _MD_ATOMIC_ADD(ptr,val)    (InterlockedExchangeAdd((PLONG)ptr, (LONG)val) + val)
 #define _MD_ATOMIC_DECREMENT(x)       InterlockedDecrement((PLONG)x)
 #endif /* x86 */
 #define _MD_ATOMIC_SET(x,y)           InterlockedExchange((PLONG)x, (LONG)y)
@@ -321,6 +356,7 @@ extern  struct _MDLock              _pr_ioq_lock;
 #define _MD_START_INTERRUPTS()
 #define _MD_STOP_INTERRUPTS()
 #define _MD_DISABLE_CLOCK_INTERRUPTS()
+#define _MD_ENABLE_CLOCK_INTERRUPTS()
 #define _MD_BLOCK_CLOCK_INTERRUPTS()
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _MD_EARLY_INIT                _PR_MD_EARLY_INIT
@@ -370,43 +406,73 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 /* --- Native-Thread Specific Definitions ------------------------------- */
 
-#ifdef _PR_USE_STATIC_TLS
+extern BOOL _pr_use_static_tls;
 
 extern __declspec(thread) struct PRThread *_pr_current_fiber;
-#define _MD_CURRENT_THREAD() _pr_current_fiber
-#define _MD_SET_CURRENT_THREAD(_thread) (_pr_current_fiber = (_thread))
+extern DWORD _pr_currentFiberIndex;
+
+#define _MD_GET_ATTACHED_THREAD() \
+    (_pr_use_static_tls ? _pr_current_fiber \
+    : (PRThread *) TlsGetValue(_pr_currentFiberIndex))
+
+extern struct PRThread * _MD_CURRENT_THREAD(void);
+
+#define _MD_SET_CURRENT_THREAD(_thread) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_current_fiber = (_thread); \
+        } else { \
+            TlsSetValue(_pr_currentFiberIndex, (_thread)); \
+        } \
+    PR_END_MACRO
 
 extern __declspec(thread) struct PRThread *_pr_fiber_last_run;
-#define _MD_LAST_THREAD() _pr_fiber_last_run
-#define _MD_SET_LAST_THREAD(_thread) (_pr_fiber_last_run = (_thread))
+extern DWORD _pr_lastFiberIndex;
+
+#define _MD_LAST_THREAD() \
+    (_pr_use_static_tls ? _pr_fiber_last_run \
+    : (PRThread *) TlsGetValue(_pr_lastFiberIndex))
+
+#define _MD_SET_LAST_THREAD(_thread) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_fiber_last_run = (_thread); \
+        } else { \
+            TlsSetValue(_pr_lastFiberIndex, (_thread)); \
+        } \
+    PR_END_MACRO
 
 extern __declspec(thread) struct _PRCPU *_pr_current_cpu;
-#define _MD_CURRENT_CPU() _pr_current_cpu
-#define _MD_SET_CURRENT_CPU(_cpu) (_pr_current_cpu = (_cpu))
+extern DWORD _pr_currentCPUIndex;
+
+#define _MD_CURRENT_CPU() \
+    (_pr_use_static_tls ? _pr_current_cpu \
+    : (struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
+
+#define _MD_SET_CURRENT_CPU(_cpu) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_current_cpu = (_cpu); \
+        } else { \
+            TlsSetValue(_pr_currentCPUIndex, (_cpu)); \
+        } \
+    PR_END_MACRO
 
 extern __declspec(thread) PRUintn _pr_ints_off;
-#define _MD_SET_INTSOFF(_val) (_pr_ints_off = (_val))
-#define _MD_GET_INTSOFF() _pr_ints_off
-
-#else /* _PR_USE_STATIC_TLS */
-
-extern DWORD _pr_currentFiberIndex;
-#define _MD_CURRENT_THREAD() ((PRThread *) TlsGetValue(_pr_currentFiberIndex))
-#define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentFiberIndex, (_thread))
-
-extern DWORD _pr_lastFiberIndex;
-#define _MD_LAST_THREAD() ((PRThread *) TlsGetValue(_pr_lastFiberIndex))
-#define _MD_SET_LAST_THREAD(_thread) TlsSetValue(_pr_lastFiberIndex, (_thread))
-
-extern DWORD _pr_currentCPUIndex;
-#define _MD_CURRENT_CPU() ((struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
-#define _MD_SET_CURRENT_CPU(_cpu) TlsSetValue(_pr_currentCPUIndex, (_cpu))
-
 extern DWORD _pr_intsOffIndex;
-#define _MD_SET_INTSOFF(_val) TlsSetValue(_pr_intsOffIndex, (LPVOID) (_val))
-#define _MD_GET_INTSOFF() ((PRUintn) TlsGetValue(_pr_intsOffIndex))
 
-#endif /* _PR_USE_STATIC_TLS */
+#define _MD_GET_INTSOFF() \
+    (_pr_use_static_tls ? _pr_ints_off \
+    : (PRUintn) TlsGetValue(_pr_intsOffIndex))
+
+#define _MD_SET_INTSOFF(_val) \
+    PR_BEGIN_MACRO \
+        if (_pr_use_static_tls) { \
+            _pr_ints_off = (_val); \
+        } else { \
+            TlsSetValue(_pr_intsOffIndex, (LPVOID) (_val)); \
+        } \
+    PR_END_MACRO
 
 /* --- Initialization stuff --- */
 #define _MD_INIT_LOCKS()

@@ -50,9 +50,6 @@ PR_BEGIN_EXTERN_C
 
 #elif defined(XP_UNIX)
 
-#include "md/_unixos.h"
-#include "md/_unix_errors.h"
-
 #if defined(AIX)
 #include "md/_aix.h"
 
@@ -61,6 +58,9 @@ PR_BEGIN_EXTERN_C
 
 #elif defined(NETBSD)
 #include "md/_netbsd.h"
+
+#elif defined(OPENBSD)
+#include "md/_openbsd.h"
 
 #elif defined(BSDI)
 #include "md/_bsdi.h"
@@ -111,6 +111,9 @@ PR_BEGIN_EXTERN_C
 #error unknown Unix flavor
 
 #endif
+
+#include "md/_unixos.h"
+#include "md/_unix_errors.h"
 
 #else
 

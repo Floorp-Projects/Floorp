@@ -38,10 +38,6 @@ void _MD_EarlyInit(void)
 {
 extern PRInt32 _nspr_noclock;
 
-#ifdef HPUX
-    _MD_hpux_install_sigfpe_handler();
-#endif
-
 	if (pthread_key_create(&current_thread_key, NULL) != 0) {
 		perror("pthread_key_create failed");
 		exit(1);
@@ -355,6 +351,7 @@ _MD_CreateThread(
     PRUint32 stackSize)
 {
     PRIntn is;
+    int rv;
 	PRThread *me = _PR_MD_CURRENT_THREAD();	
 	pthread_attr_t attr;
 
@@ -386,8 +383,8 @@ _MD_CreateThread(
 	}
 
 	thread->md.wait = 0;
-    if (pthread_create(&thread->md.pthread, &attr, start, (void *)thread)
-						== 0) {
+    rv = pthread_create(&thread->md.pthread, &attr, start, (void *)thread);
+    if (0 == rv) {
         _MD_ATOMIC_INCREMENT(&_pr_md_pthreads_created);
         _MD_ATOMIC_INCREMENT(&_pr_md_pthreads);
 		if (!_PR_IS_NATIVE_THREAD(me))
@@ -400,6 +397,7 @@ _MD_CreateThread(
         _MD_ATOMIC_INCREMENT(&_pr_md_pthreads_failed);
 		if (!_PR_IS_NATIVE_THREAD(me))
 			_PR_FAST_INTSON(is);
+        PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, rv);
         return PR_FAILURE;
     }
 }
@@ -413,7 +411,9 @@ _MD_InitRunningCPU(struct _PRCPU *cpu)
     cpu->md.pthread = pthread_self();
 	if (_pr_md_pipefd[0] >= 0) {
     	_PR_IOQ_MAX_OSFD(cpu) = _pr_md_pipefd[0];
+#ifndef _PR_USE_POLL
     	FD_SET(_pr_md_pipefd[0], &_PR_FD_READ_SET(cpu));
+#endif
 	}
 }
 

@@ -74,7 +74,12 @@ PR_BEGIN_EXTERN_C
 ** log buffer to <size>.
 **
 ** The environment variable NSPR_LOG_FILE specifies the log file to use
-** unless the default of "stderr" is acceptable.
+** unless the default of "stderr" is acceptable. For MS Windows
+** systems, NSPR_LOG_FILE can be set to a special value: "WinDebug"
+** (case sensitive). This value causes PR_LOG() output to be written
+** using the Windows API OutputDebugString(). OutputDebugString()
+** writes to the debugger window; some people find this helpful.
+** 
 **
 ** To put log messages in your programs, use the PR_LOG macro:
 **
@@ -139,11 +144,6 @@ typedef struct PRLogModuleInfo {
 ** Create a new log module.
 */
 PR_EXTERN(PRLogModuleInfo*) PR_NewLogModule(const char *name);
-
-/*
-** Destroys a log module.
-*/
-PR_EXTERN(void) PR_DestroyLogModule(PRLogModuleInfo* logModule);
 
 /*
 ** Set the file to use for logging. Returns PR_FALSE if the file cannot

@@ -21,19 +21,21 @@
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
-CC			= cc
+CC              = cc
 ifeq ($(OS_RELEASE),5.0)
-CCC			= cc++
+CCC             = cc++
 else
-CCC			= c++
+CCC             = c++
 endif
 RANLIB			= ranlib
 
-OS_REL_CFLAGS		= -Dppc
+ifeq (86,$(findstring 86,$(OS_TEST)))
+OS_REL_CFLAGS   = -mno-486 -Di386
+CPU_ARCH        = i386
+else
+OS_REL_CFLAGS   = -Dppc
 CPU_ARCH		= ppc
-
-#OS_REL_CFLAGS		= -mno-486 -Di386
-#CPU_ARCH		= x86
+endif
 
 # "Commons" are tentative definitions in a global scope, like this:
 #     int x;
@@ -45,20 +47,16 @@ CPU_ARCH		= ppc
 # definitions so that the linker can catch multiply-defined symbols.
 # Also, common symbols are not allowed with Rhapsody dynamic libraries.
 
-ifdef USE_AUTOCONF
-OS_CFLAGS		= $(DSO_CFLAGS)
-else
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fno-common -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
-endif
 
-DEFINES			+= -D_PR_LOCAL_THREADS_ONLY -D_PR_NEED_FAKE_POLL
+DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 
 ARCH			= rhapsody
 
 # May override this with -bundle to create a loadable module.
-DSO_LDOPTS		= -dynamiclib
+DSO_LDOPTS		= -dynamiclib -compatibility_version 1 -current_version 1 -all_load
 
 MKSHLIB			= $(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS)
 DLL_SUFFIX		= dylib
 
-#G++INCLUDES		= -I/usr/include/g++
+G++INCLUDES		= -I/usr/include/g++

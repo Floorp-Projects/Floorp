@@ -51,6 +51,9 @@ typedef struct timer_slot_t {
 	unsigned long requests;
 } timer_slot_t;
 
+static long _iterations = 5;
+static long _client_data = 8192;
+
 #if defined(XP_MAC)
 /*
  * Mac does not scale well specially the requirement for thread stack
@@ -58,22 +61,18 @@ typedef struct timer_slot_t {
  * memory and not be able to allocate thread stack or client/server data
  * buffer.
 */
+static long _server_data = (8*1024);
 static long _threads_max = 10, _threads = 10;
-static long _iterations = 50;
-static long _client_data = 8192;
-static long _server_data = 8192;
 #else
-static long _threads_max = 100, _threads = 100;
-static long _iterations = 1000;
-static long _client_data = 8192;
 static long _server_data = (128*1024);
+static long _threads_max = 100, _threads = 100;
 #endif
 
-static long _thread_exit_count;
+static int verbose=0;
 static PRMonitor *exit_cv;
+static long _thread_exit_count;
 static timer_slot_t *timer_data;
 static PRThreadScope scope1, scope2;
-static int verbose=0;
 
 void tally_results(int);
 

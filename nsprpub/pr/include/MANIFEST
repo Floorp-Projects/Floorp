@@ -7,6 +7,7 @@ pratom.h
 prbit.h
 prclist.h
 prcmon.h
+prcountr.h
 prcvar.h
 prdtoa.h
 prenv.h
@@ -23,13 +24,16 @@ prmem.h
 prmon.h
 prmwait.h
 prnetdb.h
+prolock.h
 prpdce.h
 prprf.h
 prproces.h
 prsystem.h
 prthread.h
 prtime.h
+prtrace.h
 prtypes.h
+prvrsion.h
 prwin16.h
 
 obsolete/protypes.h
@@ -39,6 +43,3 @@ obsolete/probslet.h
 private/prpriv.h
 private/pprio.h
 private/pprthred.h
-
-md/prosdep.h
-md/_macos.h

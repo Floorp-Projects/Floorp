@@ -157,7 +157,7 @@ void _PR_NotifyLockedThread (PRThread *thread)
 PRStatus _PR_WaitCondVar(
     PRThread *thread, PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout)
 {
-    intn is;
+    PRIntn is;
     PRStatus rv = PR_SUCCESS;
 
     PR_ASSERT(thread == _PR_MD_CURRENT_THREAD());
@@ -336,7 +336,6 @@ void _PR_ClockInterrupt(void)
         if (elapsed < thread->sleep) {
             thread->sleep -= elapsed;
             _PR_SLEEPQMAX(thread->cpu) -= elapsed;
-            PR_ASSERT((PRInt32)(thread->sleep) >= 0);
             _PR_SLEEPQ_UNLOCK(cpu);
             break;
         }

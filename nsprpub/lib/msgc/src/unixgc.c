@@ -31,7 +31,7 @@
 
 #if defined(SOLARIS)
 #define _MD_MMAP_FLAGS MAP_SHARED
-#elif defined(OSF1) || defined(RELIANTUNIX)
+#elif defined(RELIANTUNIX)
 #define _MD_MMAP_FLAGS MAP_PRIVATE|MAP_FIXED
 #else
 #define _MD_MMAP_FLAGS MAP_PRIVATE

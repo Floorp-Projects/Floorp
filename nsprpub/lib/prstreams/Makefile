@@ -23,59 +23,66 @@ include $(MOD_DEPTH)/config/config.mk
 
 # Disable optimization of the nspr on SunOS4.1.3
 ifeq ($(OS_ARCH),SunOS)
-ifeq ($(OS_RELEASE),4.1.3_U1)
-OPTIMIZER =
+    ifeq ($(OS_RELEASE),4.1.3_U1)
+        OPTIMIZER =
+    endif
 endif
-endif
+
 ifeq ($(OS_ARCH), IRIX)
-CFLAGS += -KPIC
-ifneq ($(OS_RELEASE),5.3)
-CFLAGS += -exceptions
+    CFLAGS += -KPIC
+    ifneq ($(OS_RELEASE),5.3)
+        CFLAGS += -exceptions
+    endif
 endif
+
+ifeq ($(OS_ARCH),HP-UX)
+    ifeq (($USE_64),1)
+        CCCFLAGS += +DA2.0W
+    endif
 endif
 
 INCLUDES = -I$(DIST)/include -I../../../include
 
 HEADERS = *.h
 
-CXXSRCS =           \
-	prstrms.cpp    \
+CXXSRCS = \
+	prstrms.cpp \
 	$(NULL)
 
 OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
-EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
-else
-DLLBASE=/BASE:0x30000000
-RES=$(OBJDIR)/prstrms.res
-RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
-OS_LIBS = user32.lib
-EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
-endif
-else
-ifeq ($(OS_ARCH), AIX)
-  ifeq ($(OS_RELEASE), 4.1)
-    ifeq ($(CLASSIC_NSPR),1)
-    OS_LIBS += -lC -lc
+    ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+        EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
     else
-    OS_LIBS += -lC_r -lc_r
+        DLLBASE=/BASE:0x30000000
+        RES=$(OBJDIR)/prstrms.res
+        RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
+        OS_LIBS = user32.lib
+        EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
     endif
-  else
-    ifeq ($(CLASSIC_NSPR),1)
-    MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib -p 0
-    else
-    MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r -p 0
-    endif
-    OS_LIBS += -ldl
-  endif
-endif
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)_shr
 else
-EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
-endif
+    ifeq ($(OS_ARCH), AIX)
+      ifeq ($(OS_RELEASE), 4.1)
+        ifeq ($(CLASSIC_NSPR),1)
+            OS_LIBS += -lC -lc
+        else
+            OS_LIBS += -lC_r -lc_r
+        endif
+      else
+        ifeq ($(CLASSIC_NSPR),1)
+            MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib -p 0
+        else
+            MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r -p 0
+        endif
+        OS_LIBS += -ldl
+      endif
+    endif
+    ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
+        EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)_shr
+    else
+        EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
+    endif
 endif
 
 # On NCR and SCOOS, we can't link with extra libraries when
@@ -83,14 +90,14 @@ endif
 # complain, but we would run into weird problems at run-time.
 # Therefore on these platforms, we link just the object files.
 ifeq ($(OS_ARCH),NCR)
-EXTRA_LIBS =
+    EXTRA_LIBS =
 endif
 ifeq ($(OS_ARCH),SCOOS)
-EXTRA_LIBS =
+    EXTRA_LIBS =
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
-OS_LIBS += -lC
+    OS_LIBS += -lC
 endif
 
 LIBRARY_NAME    = prstrms

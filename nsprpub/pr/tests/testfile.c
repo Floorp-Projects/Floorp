@@ -44,7 +44,6 @@ extern void SetupMacPrintfLog(char *logFile);
 
 PRLock *lock;
 PRMonitor *mon;
-PRMonitor *mon2;
 PRInt32 count;
 int thread_count;
 
@@ -108,11 +107,12 @@ int offset, len;
 	}	
 	DPRINTF(("Write out_buf[0] = 0x%x\n",(*((int *) buf))));
 	PR_Close(fd_file);
+	PR_DELETE(fp);
 
-	PR_EnterMonitor(mon2);
+	PR_EnterMonitor(mon);
 	--thread_count;
-	PR_Notify(mon2);
-	PR_ExitMonitor(mon2);
+	PR_Notify(mon);
+	PR_ExitMonitor(mon);
 }
 
 static void PR_CALLBACK File_Read(void *arg)
@@ -143,11 +143,12 @@ int offset, len;
 	}	
 	DPRINTF(("Read in_buf[0] = 0x%x\n",(*((int *) buf))));
 	PR_Close(fd_file);
+	PR_DELETE(fp);
 
-	PR_EnterMonitor(mon2);
+	PR_EnterMonitor(mon);
 	--thread_count;
-	PR_Notify(mon2);
-	PR_ExitMonitor(mon2);
+	PR_Notify(mon);
+	PR_ExitMonitor(mon);
 }
 
 
@@ -295,6 +296,7 @@ static PRInt32 PR_CALLBACK FileTest(void)
 PRDir *fd_dir;
 int i, offset, len;
 PRThread *t;
+PRThreadScope scope;
 File_Rdwr_Param *fparamp;
 
 	/*
@@ -334,12 +336,7 @@ File_Rdwr_Param *fparamp;
 	 */
 	offset = 0;
 	len = CHUNK_SIZE;
-	mon2 = PR_NewMonitor();
-	if (mon2 == NULL) {
-		printf("testfile: PR_NewMonitor failed\n");
-		return -1;
-	}
-	PR_EnterMonitor(mon2);
+	PR_EnterMonitor(mon);
 	for (i = 0; i < NUM_RDWR_THREADS; i++) {
 		fparamp = PR_NEW(File_Rdwr_Param);
 		if (fparamp == NULL) {
@@ -356,27 +353,24 @@ File_Rdwr_Param *fparamp;
 		 * Create LOCAL and GLOBAL Threads, alternately
 		 */
 		if (i % 1)
-			t = PR_CreateThread(PR_USER_THREAD,
-				      File_Write, (void *)fparamp, 
-				      PR_PRIORITY_NORMAL,
-				      PR_GLOBAL_THREAD,
-    				  PR_UNJOINABLE_THREAD,
-				      0);
+			scope = PR_GLOBAL_THREAD;
 		else
-			t = PR_CreateThread(PR_USER_THREAD,
-				      File_Write, (void *)fparamp, 
-				      PR_PRIORITY_NORMAL,
-				      PR_LOCAL_THREAD,
-    				  PR_UNJOINABLE_THREAD,
-				      0);
+			scope = PR_LOCAL_THREAD;
+
+		t = PR_CreateThread(PR_USER_THREAD,
+			      File_Write, (void *)fparamp, 
+			      PR_PRIORITY_NORMAL,
+			      scope,
+			      PR_UNJOINABLE_THREAD,
+			      0);
 		offset += len;
 	}
 	thread_count = i;
 	/* Wait for writer threads to exit */
 	while (thread_count) {
-		PR_Wait(mon2, PR_INTERVAL_NO_TIMEOUT);
+		PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
 	}
-	PR_ExitMonitor(mon2);
+	PR_ExitMonitor(mon);
 
 
 	/*
@@ -384,7 +378,7 @@ File_Rdwr_Param *fparamp;
 	 */
 	offset = 0;
 	len = CHUNK_SIZE;
-	PR_EnterMonitor(mon2);
+	PR_EnterMonitor(mon);
 	for (i = 0; i < NUM_RDWR_THREADS; i++) {
 		fparamp = PR_NEW(File_Rdwr_Param);
 		if (fparamp == NULL) {
@@ -400,19 +394,16 @@ File_Rdwr_Param *fparamp;
 		 * Create LOCAL and GLOBAL Threads, alternately
 		 */
 		if (i % 1)
-			t = PR_CreateThread(PR_USER_THREAD,
-				      File_Read, (void *)fparamp, 
-				      PR_PRIORITY_NORMAL,
-				      PR_LOCAL_THREAD,
-    				  PR_UNJOINABLE_THREAD,
-				      0);
+			scope = PR_LOCAL_THREAD;
 		else
-			t = PR_CreateThread(PR_USER_THREAD,
-				      File_Read, (void *)fparamp, 
-				      PR_PRIORITY_NORMAL,
-				      PR_GLOBAL_THREAD,
-    				  PR_UNJOINABLE_THREAD,
-				      0);
+			scope = PR_GLOBAL_THREAD;
+
+		t = PR_CreateThread(PR_USER_THREAD,
+			      File_Read, (void *)fparamp, 
+			      PR_PRIORITY_NORMAL,
+			      scope,
+			      PR_UNJOINABLE_THREAD,
+			      0);
 		offset += len;
 		if ((offset + len) > BUF_DATA_SIZE)
 			break;
@@ -421,9 +412,9 @@ File_Rdwr_Param *fparamp;
 
 	/* Wait for reader threads to exit */
 	while (thread_count) {
-		PR_Wait(mon2, PR_INTERVAL_NO_TIMEOUT);
+		PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
 	}
-	PR_ExitMonitor(mon2);
+	PR_ExitMonitor(mon);
 
 	if (memcmp(in_buf->data, out_buf->data, offset) != 0) {
 		printf("File Test failed: file data corrupted\n");
@@ -759,7 +750,7 @@ HANDLE hfile;
  * Test file and directory NSPR APIs
  */
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 #ifdef XP_UNIX
         int opt;
@@ -784,7 +775,11 @@ void main(int argc, char **argv)
 	SetupMacPrintfLog("testfile.log");
 #endif
 
-	mon2 = PR_NewMonitor();
+	mon = PR_NewMonitor();
+	if (mon == NULL) {
+		printf("testfile: PR_NewMonitor failed\n");
+		exit(2);
+	}
 
 	if (FileTest() < 0) {
 		printf("File Test failed\n");
@@ -798,5 +793,7 @@ void main(int argc, char **argv)
 	}
 	printf("Dir Test passed\n");
 
+	PR_DestroyMonitor(mon);
 	PR_Cleanup();
+    return 0;
 }

@@ -222,13 +222,17 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_SETSOCKOPT                _PR_MD_SETSOCKOPT
 #define _MD_SELECT                    select
 #define _MD_FSYNC                     _PR_MD_FSYNC
+#define READ_FD                       1
+#define WRITE_FD                      2
 
 #define _MD_INIT_ATOMIC()
 #if defined(_M_IX86) || defined(_X86_)
 #define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
+#define _MD_ATOMIC_ADD          	  _PR_MD_ATOMIC_ADD
 #define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
 #else /* non-x86 processors */
 #define _MD_ATOMIC_INCREMENT(x)       InterlockedIncrement((PLONG)x)
+#define _MD_ATOMIC_ADD(ptr,val)    (InterlockedExchangeAdd((PLONG)ptr, (LONG)val) + val)
 #define _MD_ATOMIC_DECREMENT(x)       InterlockedDecrement((PLONG)x)
 #endif /* x86 */
 #define _MD_ATOMIC_SET(x,y)           InterlockedExchange((PLONG)x, (LONG)y)
@@ -325,6 +329,7 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_START_INTERRUPTS()
 #define _MD_STOP_INTERRUPTS()
 #define _MD_DISABLE_CLOCK_INTERRUPTS()
+#define _MD_ENABLE_CLOCK_INTERRUPTS()
 #define _MD_BLOCK_CLOCK_INTERRUPTS()
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _MD_EARLY_INIT                _PR_MD_EARLY_INIT
@@ -368,9 +373,11 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 /* --- Native-Thread Specific Definitions ------------------------------- */
 
+extern struct PRThread * _MD_CURRENT_THREAD(void);
+
 #ifdef _PR_USE_STATIC_TLS
 extern __declspec(thread) struct PRThread *_pr_currentThread;
-#define _MD_CURRENT_THREAD() _pr_currentThread
+#define _MD_GET_ATTACHED_THREAD() _pr_currentThread
 #define _MD_SET_CURRENT_THREAD(_thread) (_pr_currentThread = (_thread))
 
 extern __declspec(thread) struct PRThread *_pr_thread_last_run;
@@ -382,7 +389,7 @@ extern __declspec(thread) struct _PRCPU *_pr_currentCPU;
 #define _MD_SET_CURRENT_CPU(_cpu) (_pr_currentCPU = 0)
 #else /* _PR_USE_STATIC_TLS */
 extern DWORD _pr_currentThreadIndex;
-#define _MD_CURRENT_THREAD() ((PRThread *) TlsGetValue(_pr_currentThreadIndex))
+#define _MD_GET_ATTACHED_THREAD() ((PRThread *) TlsGetValue(_pr_currentThreadIndex))
 #define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentThreadIndex, (_thread))
 
 extern DWORD _pr_lastThreadIndex;

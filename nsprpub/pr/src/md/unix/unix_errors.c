@@ -16,9 +16,10 @@
  * Reserved.
  */
 
-#include "prtypes.h"
-#include "md/_unix_errors.h"
-#include "prerror.h"
+#include "primpl.h"
+#if defined(_PR_POLL_AVAILABLE)
+#include <sys/poll.h>
+#endif
 #include <errno.h>
 
 void _MD_unix_map_opendir_error(int err)
@@ -77,13 +78,10 @@ void _MD_unix_readdir_error(int err)
 		case EBADF:
 			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
 			break;
-#ifdef IRIX
-#ifdef IRIX5_3
-#else
+#ifdef EDIRCORRUPTED
 		case EDIRCORRUPTED:
 			PR_SetError(PR_DIRECTORY_CORRUPTED_ERROR, err);
 			break;
-#endif
 #endif
 #ifdef EOVERFLOW
 		case EOVERFLOW:
@@ -655,6 +653,9 @@ void _MD_unix_map_close_error(int err)
 		case EBADF:
 			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
 			break;
+		case EFBIG:
+			PR_SetError(PR_FILE_TOO_BIG_ERROR, err);
+			break;
 		case EINTR:
 			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
 			break;
@@ -804,6 +805,9 @@ void _MD_unix_map_send_error(int err)
 		case EINVAL:
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
+		case EIO:
+			PR_SetError(PR_IO_ERROR, err);
+			break;
 #if !defined(SCO)
 		case ENOBUFS:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
@@ -910,6 +914,9 @@ void _MD_unix_map_writev_error(int err)
 			break;
 		case EINTR:
 			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
+			break;
+		case EIO:
+			PR_SetError(PR_IO_ERROR, err);
 			break;
 #ifdef ENOSR
 		case ENOSR:
@@ -1382,19 +1389,30 @@ void _MD_unix_map_open_error(int err)
 
 void _MD_unix_map_mmap_error(int err)
 {
-
 	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
+		case EACCES:
+			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
 			break;
 		case EAGAIN:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
 			break;
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
+		case EBADF:
+			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
+			break;
+		case EINVAL:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
+			break;
+		case EMFILE:
+			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+			break;
+		case ENODEV:
+			PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, err);
 			break;
 		case ENOMEM:
 			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
+			break;
+		case ENXIO:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -1432,6 +1450,7 @@ void _MD_unix_map_select_error(int err)
     }
 }
 
+#ifdef _PR_POLL_AVAILABLE
 void _MD_unix_map_poll_error(int err)
 {
     PRErrorCode prerror;
@@ -1451,6 +1470,21 @@ void _MD_unix_map_poll_error(int err)
     }
     PR_SetError(prerror, err);
 }
+
+void _MD_unix_map_poll_revents_error(int err)
+{
+
+    if (err & POLLNVAL)
+		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, EBADF);
+    else if (err & POLLHUP)
+		PR_SetError(PR_CONNECT_RESET_ERROR, EPIPE);
+    else if (err & POLLERR)
+		PR_SetError(PR_IO_ERROR, EIO);
+	else
+		PR_SetError(PR_UNKNOWN_ERROR, err);
+}
+#endif /* _PR_POLL_AVAILABLE */
+
 
 void _MD_unix_map_flock_error(int err)
 {

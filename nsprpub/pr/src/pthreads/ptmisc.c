@@ -32,7 +32,6 @@
 void _PR_InitCPUs(void) {PT_LOG("_PR_InitCPUs")}
 void _MD_StartInterrupts(void) {PT_LOG("_MD_StartInterrupts")}
 void _PR_InitStacks(void) {PT_LOG("_PR_InitStacks")}
-void _PR_InitTPD(void) {PT_LOG("_PR_InitTPD")}
 
 PR_IMPLEMENT(void) PR_SetConcurrency(PRUintn numCPUs) 
     {PT_LOG("PR_SetConcurrency")}

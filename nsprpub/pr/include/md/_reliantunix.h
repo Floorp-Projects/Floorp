@@ -47,6 +47,8 @@
 #define HAVE_WEAK_IO_SYMBOLS
 #define HAVE_WEAK_MALLOC_SYMBOLS
 #define _PR_RECV_BROKEN /* recv doesn't work on Unix Domain Sockets */
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
 
 /*
  * Mike Patnode indicated that it is possibly safe now to use context-switching
@@ -108,6 +110,42 @@ struct _MDCVar {
 struct _MDSegment {
     PRInt8 notused;
 };
+
+/*
+ * md-specific cpu structure field
+ */
+#define _PR_MD_MAX_OSFD FD_SETSIZE
+
+struct _MDCPU_Unix {
+    PRCList ioQ;
+    PRUint32 ioq_timeout;
+    PRInt32 ioq_max_osfd;
+    PRInt32 ioq_osfd_cnt;
+#ifndef _PR_USE_POLL
+    fd_set fd_read_set, fd_write_set, fd_exception_set;
+    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
+				fd_exception_cnt[_PR_MD_MAX_OSFD];
+#else
+	struct pollfd *ioq_pollfds;
+	int ioq_pollfds_size;
+#endif	/* _PR_USE_POLL */
+};
+
+#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
+#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
 
 struct _MDCPU {
 	struct _MDCPU_Unix md_unix;

@@ -86,3 +86,60 @@ _MD_CREATE_THREAD(
 	return PR_FAILURE;
 }
 #endif /* ! _PR_PTHREADS */
+
+#ifdef _PR_HAVE_ATOMIC_CAS
+
+#include <c_asm.h>
+
+#define _PR_OSF_ATOMIC_LOCK 1
+
+void 
+PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
+{
+long locked;
+
+	do {
+		while ((long) stack->prstk_head.prstk_elem_next ==
+							_PR_OSF_ATOMIC_LOCK)
+			;
+		locked = __ATOMIC_EXCH_QUAD(&stack->prstk_head.prstk_elem_next,
+								_PR_OSF_ATOMIC_LOCK);	
+
+	} while (locked == _PR_OSF_ATOMIC_LOCK);
+	stack_elem->prstk_elem_next = (PRStackElem *) locked;
+	/*
+	 * memory-barrier instruction
+	 */
+	asm("mb");
+	stack->prstk_head.prstk_elem_next = stack_elem;
+}
+
+PRStackElem * 
+PR_StackPop(PRStack *stack)
+{
+PRStackElem *element;
+long locked;
+
+	do {
+		while ((long)stack->prstk_head.prstk_elem_next == _PR_OSF_ATOMIC_LOCK)
+			;
+		locked = __ATOMIC_EXCH_QUAD(&stack->prstk_head.prstk_elem_next,
+								_PR_OSF_ATOMIC_LOCK);	
+
+	} while (locked == _PR_OSF_ATOMIC_LOCK);
+
+	element = (PRStackElem *) locked;
+
+	if (element == NULL) {
+		stack->prstk_head.prstk_elem_next = NULL;
+	} else {
+		stack->prstk_head.prstk_elem_next =
+			element->prstk_elem_next;
+	}
+	/*
+	 * memory-barrier instruction
+	 */
+	asm("mb");
+	return element;
+}
+#endif /* _PR_HAVE_ATOMIC_CAS */

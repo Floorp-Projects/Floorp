@@ -23,6 +23,9 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/wait.h>
+#if defined(AIX)
+#include <dlfcn.h>  /* For dlopen, dlsym, dlclose */
+#endif
 
 /*
  * HP-UX 9 doesn't have the SA_RESTART flag.
@@ -98,6 +101,16 @@ static struct {
 #ifdef _PR_SHARE_CLONES
     struct pr_CreateProcOp *opHead, *opTail;
 #endif
+
+#ifdef AIX
+    pid_t (*forkptr)(void);  /* Newer versions of AIX (starting in 4.3.2)
+                              * have f_fork, which is faster than the
+                              * regular fork in a multithreaded process
+                              * because it skips calling the fork handlers.
+                              * So we look up the f_fork symbol to see if
+                              * it's available and fall back on fork.
+                              */
+#endif /* AIX */
 } pr_wp;
 
 #ifdef _PR_SHARE_CLONES
@@ -134,7 +147,11 @@ ForkAndExec(
         return NULL;
     }
 
+#ifdef AIX
+    process->md.pid = (*pr_wp.forkptr)();
+#else
     process->md.pid = fork();
+#endif
     if ((pid_t) -1 == process->md.pid) {
         PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, errno);
         PR_DELETE(process);
@@ -577,6 +594,17 @@ static PRStatus _MD_InitProcesses()
 #else
 #define _PR_NBIO_FLAG O_NONBLOCK
 #endif
+
+#ifdef AIX
+    {
+        void *handle = dlopen(NULL, RTLD_NOW | RTLD_GLOBAL);
+        pr_wp.forkptr = (pid_t (*)(void)) dlsym(handle, "f_fork");
+        if (!pr_wp.forkptr) {
+            pr_wp.forkptr = fork;
+        }
+        dlclose(handle);
+    }
+#endif /* AIX */
 
     pr_wp.ml = PR_NewLock();
     PR_ASSERT(NULL != pr_wp.ml);

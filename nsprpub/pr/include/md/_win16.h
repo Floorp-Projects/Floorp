@@ -296,6 +296,7 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(x)       (*x++)
+#define _MD_ATOMIC_ADD(ptr, val)      ((*x) += val)
 #define _MD_ATOMIC_DECREMENT(x)       (*x--)
 #define _MD_ATOMIC_SET(x,y)           (*x, y)
 
@@ -388,6 +389,7 @@ PR_EXTERN(void) _MD_INIT_RUNNING_CPU(struct _PRCPU *cpu );
 #define _MD_START_INTERRUPTS()
 #define _MD_STOP_INTERRUPTS()
 #define _MD_DISABLE_CLOCK_INTERRUPTS()
+#define _MD_ENABLE_CLOCK_INTERRUPTS()
 #define _MD_BLOCK_CLOCK_INTERRUPTS()
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _MD_EARLY_INIT                  _PR_MD_EARLY_INIT

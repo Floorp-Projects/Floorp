@@ -18,19 +18,61 @@
 
 #include "primpl.h"
 
-/*
- * An invalid method that returns an integer
- */
+/*****************************************************************************/
+/************************** Invalid I/O method object ************************/
+/*****************************************************************************/
+PRIOMethods _pr_faulty_methods = {
+    (PRDescType)0,
+    (PRCloseFN)_PR_InvalidStatus,
+    (PRReadFN)_PR_InvalidInt,
+    (PRWriteFN)_PR_InvalidInt,
+    (PRAvailableFN)_PR_InvalidInt,
+    (PRAvailable64FN)_PR_InvalidInt64,
+    (PRFsyncFN)_PR_InvalidStatus,
+    (PRSeekFN)_PR_InvalidInt,
+    (PRSeek64FN)_PR_InvalidInt64,
+    (PRFileInfoFN)_PR_InvalidStatus,
+    (PRFileInfo64FN)_PR_InvalidStatus,
+    (PRWritevFN)_PR_InvalidInt,        
+    (PRConnectFN)_PR_InvalidStatus,        
+    (PRAcceptFN)_PR_InvalidDesc,        
+    (PRBindFN)_PR_InvalidStatus,        
+    (PRListenFN)_PR_InvalidStatus,        
+    (PRShutdownFN)_PR_InvalidStatus,    
+    (PRRecvFN)_PR_InvalidInt,        
+    (PRSendFN)_PR_InvalidInt,        
+    (PRRecvfromFN)_PR_InvalidInt,    
+    (PRSendtoFN)_PR_InvalidInt,        
+    (PRPollFN)_PR_InvalidInt16,
+    (PRAcceptreadFN)_PR_InvalidInt,   
+    (PRTransmitfileFN)_PR_InvalidInt, 
+    (PRGetsocknameFN)_PR_InvalidStatus,    
+    (PRGetpeernameFN)_PR_InvalidStatus,    
+    (PRGetsockoptFN)_PR_InvalidStatus,    
+    (PRSetsockoptFN)_PR_InvalidStatus,    
+    (PRGetsocketoptionFN)_PR_InvalidStatus,
+    (PRSetsocketoptionFN)_PR_InvalidStatus
+};
 
 PRIntn _PR_InvalidInt()
 {
+    PR_ASSERT(!"I/O method is invalid");
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}  /* _PR_InvalidInt */
+
+PRInt16 _PR_InvalidInt16()
+{
+    PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return -1;
 }  /* _PR_InvalidInt */
 
 PRInt64 _PR_InvalidInt64()
 {
-    PRInt64 rv = LL_INIT( 0xffffffff, 0xffffffff );
+    PRInt64 rv;
+    LL_I2L(rv, -1);
+    PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return rv;
 }  /* _PR_InvalidInt */
@@ -41,6 +83,7 @@ PRInt64 _PR_InvalidInt64()
 
 PRStatus _PR_InvalidStatus()
 {
+    PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return PR_FAILURE;
 }  /* _PR_InvalidDesc */
@@ -51,6 +94,7 @@ PRStatus _PR_InvalidStatus()
 
 PRFileDesc *_PR_InvalidDesc()
 {
+    PR_ASSERT(!"I/O method is invalid");
     PR_SetError(PR_INVALID_METHOD_ERROR, 0);
     return NULL;
 }  /* _PR_InvalidDesc */

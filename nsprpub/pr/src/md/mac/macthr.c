@@ -71,7 +71,6 @@ PRStatus _MD_AllocSegment(PRSegment *seg, PRUint32 size, void *vaddr)
 		return PR_FAILURE;
 	}
 
-	seg->access = PR_SEGMENT_RDWR;	
 	seg->size = size;	
 
 	return PR_SUCCESS;
@@ -163,7 +162,7 @@ pascal void TimerCallback(TMTaskPtr tmTaskPtr)
 		PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);
 		return;
     }
-    _PR_SET_INTSOFF(1);
+    _PR_MD_SET_INTSOFF(1);
 
 	//	And tell nspr that a clock interrupt occured.
 	_PR_ClockInterrupt();
@@ -171,7 +170,7 @@ pascal void TimerCallback(TMTaskPtr tmTaskPtr)
 	if ((_PR_RUNQREADYMASK(cpu)) >> ((_PR_MD_CURRENT_THREAD()->priority)))
 		_PR_SET_RESCHED_FLAG();
 	
-    _PR_SET_INTSOFF(0);
+    _PR_MD_SET_INTSOFF(0);
 
 	//	Reset the clock timer so that we fire again.
 	PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);

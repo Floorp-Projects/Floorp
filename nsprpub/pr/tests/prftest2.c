@@ -105,6 +105,6 @@ int main(    int     argc,    char   *argv[])
 	else
 	{
         printf("PASSED\n");
-		return 1;
+		return 0;
 	}
 }

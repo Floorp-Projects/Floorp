@@ -40,6 +40,9 @@
 #else
 #include "obsolete/pralarm.h"
 #endif
+
+#include "prio.h"
+#include "prprf.h"
 #include "prlock.h"
 #include "prlong.h"
 #include "prcvar.h"
@@ -51,14 +54,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
-PRIntn failed_already=0;
-PRIntn debug_mode;
+static PRIntn debug_mode;
+static PRFileDesc *output;
 
 
 static void TestConversions(void)
@@ -66,25 +63,61 @@ static void TestConversions(void)
     PRIntervalTime ticks = PR_TicksPerSecond();
 
 	if (debug_mode) {
-    printf("PR_TicksPerSecond: %ld\n\n", ticks);
-    printf("PR_SecondsToInterval(1): %ld\n", PR_SecondsToInterval(1));
-    printf("PR_MillisecondsToInterval(1000): %ld\n", PR_MillisecondsToInterval(1000));
-    printf("PR_MicrosecondsToInterval(1000000): %ld\n\n", PR_MicrosecondsToInterval(1000000));
+    PR_fprintf(output, "PR_TicksPerSecond: %ld\n\n", ticks);
+    PR_fprintf(output, "PR_SecondsToInterval(1): %ld\n", PR_SecondsToInterval(1));
+    PR_fprintf(output, "PR_MillisecondsToInterval(1000): %ld\n", PR_MillisecondsToInterval(1000));
+    PR_fprintf(output, "PR_MicrosecondsToInterval(1000000): %ld\n\n", PR_MicrosecondsToInterval(1000000));
 
-    printf("PR_SecondsToInterval(3): %ld\n", PR_SecondsToInterval(3));
-    printf("PR_MillisecondsToInterval(3000): %ld\n", PR_MillisecondsToInterval(3000));
-    printf("PR_MicrosecondsToInterval(3000000): %ld\n\n", PR_MicrosecondsToInterval(3000000));
+    PR_fprintf(output, "PR_SecondsToInterval(3): %ld\n", PR_SecondsToInterval(3));
+    PR_fprintf(output, "PR_MillisecondsToInterval(3000): %ld\n", PR_MillisecondsToInterval(3000));
+    PR_fprintf(output, "PR_MicrosecondsToInterval(3000000): %ld\n\n", PR_MicrosecondsToInterval(3000000));
 
-    printf("PR_IntervalToSeconds(%ld): %ld\n", ticks, PR_IntervalToSeconds(ticks));
-    printf("PR_IntervalToMilliseconds(%ld): %ld\n", ticks, PR_IntervalToMilliseconds(ticks));
-    printf("PR_IntervalToMicroseconds(%ld): %ld\n\n", ticks, PR_IntervalToMicroseconds(ticks));
+    PR_fprintf(output, "PR_IntervalToSeconds(%ld): %ld\n", ticks, PR_IntervalToSeconds(ticks));
+    PR_fprintf(output, "PR_IntervalToMilliseconds(%ld): %ld\n", ticks, PR_IntervalToMilliseconds(ticks));
+    PR_fprintf(output, "PR_IntervalToMicroseconds(%ld): %ld\n\n", ticks, PR_IntervalToMicroseconds(ticks));
 
     ticks *= 3;
-    printf("PR_IntervalToSeconds(%ld): %ld\n", ticks, PR_IntervalToSeconds(ticks));
-    printf("PR_IntervalToMilliseconds(%ld): %ld\n", ticks, PR_IntervalToMilliseconds(ticks));
-    printf("PR_IntervalToMicroseconds(%ld): %ld\n\n", ticks, PR_IntervalToMicroseconds(ticks));
+    PR_fprintf(output, "PR_IntervalToSeconds(%ld): %ld\n", ticks, PR_IntervalToSeconds(ticks));
+    PR_fprintf(output, "PR_IntervalToMilliseconds(%ld): %ld\n", ticks, PR_IntervalToMilliseconds(ticks));
+    PR_fprintf(output, "PR_IntervalToMicroseconds(%ld): %ld\n\n", ticks, PR_IntervalToMicroseconds(ticks));
 	} /*end debug mode */
 }  /* TestConversions */
+
+static void TestIntervalOverhead(void)
+{
+    /* Hopefully the optimizer won't delete this function */
+    PRUint32 elapsed, per_call, loops = 1000000;
+
+    PRIntervalTime timeout, timein = PR_IntervalNow();
+    while (--loops > 0)
+        timeout = PR_IntervalNow();
+
+    elapsed = 1000U * PR_IntervalToMicroseconds(timeout - timein);
+    per_call = elapsed / 1000000U;
+    PR_fprintf(
+        output, "Overhead of 'PR_IntervalNow()' is %u nsecs\n\n", per_call);
+}  /* TestIntervalOverhead */
+
+static void TestNowOverhead(void)
+{
+    PRTime timeout, timein;
+    PRInt32 overhead, loops = 1000000;
+    PRInt64 elapsed, per_call, ten23rd, ten26th;
+
+    LL_I2L(ten23rd, 1000);
+    LL_I2L(ten26th, 1000000);
+
+    timein = PR_Now();
+    while (--loops > 0)
+        timeout = PR_Now();
+
+    LL_SUB(elapsed, timeout, timein);
+    LL_MUL(elapsed, elapsed, ten23rd);
+    LL_DIV(per_call, elapsed, ten26th);
+    LL_L2I(overhead, per_call);
+    PR_fprintf(
+        output, "Overhead of 'PR_Now()' is %u nsecs\n\n", overhead);
+}  /* TestNowOverhead */
 
 static void TestIntervals(void)
 {
@@ -107,58 +140,18 @@ static void TestIntervals(void)
         LL_I2L(thousand, 1000);
         LL_DIV(elapsed, elapsed, thousand);
         LL_L2UI(delta, elapsed);
-        if (debug_mode) printf(
+        if (debug_mode) PR_fprintf(output, 
             "TestIntervals: %swaiting %ld seconds took %ld msecs\n",
             ((rv == PR_SUCCESS) ? "" : "FAILED "), seconds, delta);
     }
     PR_DestroyCondVar(cv);
     PR_DestroyLock(ml);
-    if (debug_mode) printf("\n");
+    if (debug_mode) PR_fprintf(output, "\n");
 }  /* TestIntervals */
-
-static PRUint32 GetInterval(PRUint32 loops)
-{
-    PRIntervalTime interval = 0;
-    while (loops-- > 0) interval += PR_IntervalNow();
-    return 0;
-}  /* GetInterval */
-
-static PRUint32 TimeThis(
-    const char *msg, PRUint32 (*func)(PRUint32 loops), PRUint32 loops)
-{
-    PRUint32 overhead, usecs32;
-    PRTime timein, timeout, usecs;
-
-    timein = PR_Now();
-    overhead = func(loops);
-    timeout = PR_Now();
-
-    LL_SUB(usecs, timeout, timein);
-    LL_L2I(usecs32, usecs);
-   
-    if(usecs32 < overhead)
-    {
-        if (debug_mode) {
-			printf("%s ran in negative time\n", msg);
-			printf("  predicted overhead was %ld usecs\n", overhead);
-			printf("  test completed in %ld usecs\n\n", usecs);
-		}
-    }
-    else
-    {
-        if (debug_mode)
-			printf(
-            "%s [\n\ttotal: %ld usecs\n\toverhead: %ld usecs\n\tcost: %6.3f usecs]\n\n",
-            msg, usecs, overhead,
-            ((double)(usecs32 - overhead) / (double)loops));
-    }
-
-    return overhead;
-}  /* TimeThis */
 
 static PRIntn PR_CALLBACK RealMain(int argc, char** argv)
 {
-    PRUint32 cpu, cpus = 2, loops = 1000;
+    PRUint32 vcpu, cpus = 0, loops = 1000;
 
 	/* The command line argument: -d is used to determine if the test is being run
 	in debug mode. The regress tool requires only one line output:PASS or FAIL.
@@ -191,42 +184,28 @@ static PRIntn PR_CALLBACK RealMain(int argc, char** argv)
     }
 	PL_DestroyOptState(opt);
 	
+    output = PR_GetSpecialFD(PR_StandardOutput);
+    PR_fprintf(output, "inrval: Examine stdout to determine results.\n");
 
-    printf("inrval: Examine stdout to determine results.\n");
-
-    if (cpus == 0) cpus = 2;
+    if (cpus == 0) cpus = 8;
     if (loops == 0) loops = 1000;
-    if (debug_mode) printf("Inrval: Using %d loops\n", loops);
-
-
-    cpus = (argc < 3) ? 2 : atoi(argv[2]);
-    if (cpus == 0) cpus = 2;
-    if (debug_mode) printf("Inrval: Using %d cpu(s)\n", cpus);
 
     if (debug_mode > 0)
     {
-        printf("Inrval: Using %d loops\n", loops);
-        printf("Inrval: Using %d cpu(s)\n", cpus);
+        PR_fprintf(output, "Inrval: Using %d loops\n", loops);
+        PR_fprintf(output, "Inrval: Using 1 and %d cpu(s)\n", cpus);
     }
 
-#ifdef XP_MAC
-	SetupMacPrintfLog("inrval.log");
-	debug_mode = 1;
-#endif
-
-    for (cpu = 1; cpu <= cpus; ++cpu)
+    for (vcpu = 1; vcpu <= cpus; vcpu += cpus - 1)
     {
+        if (debug_mode)
+            PR_fprintf(output, "\nInrval: Using %d CPU(s)\n\n", vcpu);
+        PR_SetConcurrency(vcpu);
 
-        if (debug_mode) printf("\nInrval: Using %d CPU(s)\n", cpu);
-        if (debug_mode > 0)
-            printf("\nInrval: Using %d CPU(s)\n", cpu);
-
-        PR_SetConcurrency(cpu);
-
+        TestNowOverhead();
+        TestIntervalOverhead();
         TestConversions();
         TestIntervals();
-
-        (void)TimeThis("GetInterval", GetInterval, loops);
     }
         
     return 0;

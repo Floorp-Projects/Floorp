@@ -89,7 +89,7 @@ clientThreadFunc(void *arg)
     addr.inet.port = PR_htons((PRUint16)port);
     addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     memset(buf, 0, sizeof(buf));
-    PR_snprintf(buf, sizeof(buf), "%hu", addr.inet.ip);
+    PR_snprintf(buf, sizeof(buf), "%hu", port);
 
     for (i = 0; i < NUM_ITERATIONS; i++) {
 	sock = PR_NewTCPSocket();

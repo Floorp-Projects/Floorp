@@ -114,9 +114,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     
     printf("PASS\n");
 
-#if defined(DEBUG) && defined(_PR_PTHREADS)
     PT_FPrintStats(err, "\nPThread Statistics\n");
-#endif /* defined(DEBUG) && defined(_PR_PTHREADS) */
     return 0;
 }
 
