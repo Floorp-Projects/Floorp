@@ -54,6 +54,8 @@
 #include "txAtoms.h"
 #include "TxLog.h"
 #include "txRtfHandler.h"
+#include "txNodeSetContext.h"
+#include "txSingleNodeContext.h"
 #ifndef TX_EXE
 #include "nsIDocShell.h"
 #include "nsIObserverService.h"
@@ -144,9 +146,10 @@ XSLTProcessor::XSLTProcessor() : mOutputHandler(0),
     xslTypes.put(WITH_PARAM,      new XSLType(XSLType::WITH_PARAM));
 
     // Create default expressions
-    ExprParser parser;
-    String node("node()");
-    mNodeExpr = parser.createExpr(node);
+
+    // "node()"
+    txNodeTest* nt = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
+    mNodeExpr = new LocationStep(nt, LocationStep::CHILD_AXIS);
 
 } //-- XSLTProcessor
 
@@ -351,7 +354,7 @@ Document* XSLTProcessor::process
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         return 0;
     }
     //-- Read in XSL document
@@ -359,7 +362,7 @@ Document* XSLTProcessor::process
     if (!xslDoc) {
         String err("error reading XSL stylesheet document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         delete xmlDoc;
         return 0;
     }
@@ -386,7 +389,7 @@ Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         return 0;
     }
     //-- Read in XSL document
@@ -402,7 +405,7 @@ Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
     if (!xslDoc) {
         String err("error reading XSL stylesheet document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         delete xmlDoc;
         return 0;
     }
@@ -542,7 +545,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                             err.append("\"");
                         }
                         err.append(" decimal format for xsl:decimal-format");
-                        notifyError(err);
+                        aPs->receiveError(err, NS_ERROR_FAILURE);
                     }
                     break;
                 }
@@ -552,7 +555,8 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                     element->getAttr(txXSLTAtoms::name, kNameSpaceID_None,
                                      name);
                     if (name.isEmpty()) {
-                        notifyError("missing required name attribute for xsl:param");
+                        String err("missing required name attribute for xsl:param");
+                        aPs->receiveError(err, NS_ERROR_FAILURE);
                         break;
                     }
 
@@ -563,7 +567,8 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                 }
                 case XSLType::IMPORT :
                 {
-                    notifyError("xsl:import only allowed at top of stylesheet");
+                    String err("xsl:import only allowed at top of stylesheet");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
                 case XSLType::INCLUDE :
@@ -586,7 +591,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         String err("error adding key '");
                         err.append(name);
                         err.append("'");
-                        notifyError(err);
+                        aPs->receiveError(err, NS_ERROR_FAILURE);
                     }
                     break;
                     
@@ -679,7 +684,8 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                     element->getAttr(txXSLTAtoms::name, kNameSpaceID_None,
                                      name);
                     if (name.isEmpty()) {
-                        notifyError("missing required name attribute for xsl:variable");
+                        String err("missing required name attribute for xsl:variable");
+                        aPs->receiveError(err, NS_ERROR_FAILURE);
                         break;
                     }
                     ExprResult* exprResult = processVariable(aSource, element, aPs);
@@ -694,10 +700,10 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         //-- add error to ErrorObserver
                         String err("missing required 'elements' attribute for ");
                         err.append("xsl:preserve-space");
-                        notifyError(err);
+                        aPs->receiveError(err, NS_ERROR_FAILURE);
                     }
                     else {
-                        aPs->shouldStripSpace(elements,
+                        aPs->shouldStripSpace(elements, element,
                                               MB_FALSE,
                                               currentFrame);
                     }
@@ -711,10 +717,10 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         //-- add error to ErrorObserver
                         String err("missing required 'elements' attribute for ");
                         err.append("xsl:strip-space");
-                        notifyError(err);
+                        aPs->receiveError(err, NS_ERROR_FAILURE);
                     }
                     else {
-                        aPs->shouldStripSpace(elements,
+                        aPs->shouldStripSpace(elements, element,
                                               MB_TRUE,
                                               currentFrame);
                     }
@@ -754,7 +760,7 @@ void XSLTProcessor::processInclude(String& aHref,
         if (((String*)iter->next())->isEqual(aHref)) {
             String err("Stylesheet includes itself. URI: ");
             err.append(aHref);
-            notifyError(err);
+            aPs->receiveError(err, NS_ERROR_FAILURE);
             delete iter;
             return;
         }
@@ -767,7 +773,7 @@ void XSLTProcessor::processInclude(String& aHref,
     if (!stylesheet) {
         String err("Unable to load included stylesheet ");
         err.append(aHref);
-        notifyError(err);
+        aPs->receiveError(err, NS_ERROR_FAILURE);
         aPs->getEnteredStylesheets()->pop();
         return;
     }
@@ -785,7 +791,7 @@ void XSLTProcessor::processInclude(String& aHref,
         default:
             // This should never happen
             String err("Unsupported fragment identifier");
-            notifyError(err);
+            aPs->receiveError(err, NS_ERROR_FAILURE);
             break;
     }
 
@@ -823,10 +829,9 @@ Document* XSLTProcessor::process(Document& xmlDocument,
         while (iter.hasNext())
             ps.addErrorObserver(*(ErrorObserver*)iter.next());
     
-        NodeSet nodeSet(&aXMLDocument);
-        ps.pushCurrentNode(&aXMLDocument);
-        ps.getNodeSetStack()->push(&nodeSet);
-    
+        txSingleNodeContext evalContext(&aXMLDocument, &ps);
+        ps.setEvalContext(&evalContext);
+
         // Index templates and process top level xsl elements
         txListIterator importFrame(ps.getImportFrames());
         importFrame.addAfter(new ProcessorState::ImportFrame(0));
@@ -882,9 +887,8 @@ void XSLTProcessor::process(Document& aXMLDocument,
         while (iter.hasNext())
             ps.addErrorObserver(*(ErrorObserver*)iter.next());
 
-        NodeSet nodeSet(&aXMLDocument);
-        ps.pushCurrentNode(&aXMLDocument);
-        ps.getNodeSetStack()->push(&nodeSet);
+        txSingleNodeContext evalContext(&aXMLDocument, &ps);
+        ps.setEvalContext(&evalContext);
 
         // Index templates and process top level xsl elements
         txListIterator importFrame(ps.getImportFrames());
@@ -926,7 +930,7 @@ void XSLTProcessor::process
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         return;
     }
     //-- Read in XSL document
@@ -942,7 +946,7 @@ void XSLTProcessor::process
     if (!xslDoc) {
         String err("error reading XSL stylesheet document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         delete xmlDoc;
         return;
     }
@@ -954,7 +958,7 @@ void XSLTProcessor::process
         stylesheet = xslDoc->getElementById(frag);
         if (!stylesheet) {
             String err("unable to get fragment");
-            notifyError(err, ErrorObserver::FATAL);
+            cerr << err << endl;
             delete xmlDoc;
             delete xslDoc;
             return;
@@ -987,7 +991,7 @@ void XSLTProcessor::process
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         return;
     }
     //-- read in XSL Document
@@ -995,7 +999,7 @@ void XSLTProcessor::process
     if (!xslDoc) {
         String err("error reading XSL stylesheet document: ");
         err.append(xmlParser.getErrorString());
-        notifyError(err, ErrorObserver::FATAL);
+        cerr << err << endl;
         delete xmlDoc;
         return;
     }
@@ -1031,7 +1035,7 @@ void XSLTProcessor::bindVariable
             String err("cannot rebind variables: ");
             err.append(name);
             err.append(" already exists in this scope.");
-            notifyError(err);
+            ps->receiveError(err, NS_ERROR_FAILURE);
         }
     }
     else {
@@ -1067,39 +1071,6 @@ short XSLTProcessor::getElementType(Element* aElement, ProcessorState* aPs)
         return 0;
     return xslType->type;
 }
-
-/**
- * Notifies all registered ErrorObservers of the given error
-**/
-void XSLTProcessor::notifyError(const char* errorMessage) {
-    String err(errorMessage);
-    notifyError(err, ErrorObserver::NORMAL);
-} //-- notifyError
-
-/**
- * Notifies all registered ErrorObservers of the given error
-**/
-void XSLTProcessor::notifyError(String& errorMessage) {
-    notifyError(errorMessage, ErrorObserver::NORMAL);
-} //-- notifyError
-
-/**
- * Notifies all registered ErrorObservers of the given error
-**/
-void XSLTProcessor::notifyError(String& errorMessage, ErrorObserver::ErrorLevel level) {
-    ListIterator* iter = errorObservers.iterator();
-
-    //-- send fatal errors to default observer if no error obersvers
-    //-- have been registered
-    if ((!iter->hasNext()) && (level == ErrorObserver::FATAL)) {
-        fatalObserver.recieveError(errorMessage, level);
-    }
-    while ( iter->hasNext() ) {
-        ErrorObserver* observer = (ErrorObserver*)iter->next();
-        observer->recieveError(errorMessage, level);
-    }
-    delete iter;
-} //-- notifyError
 
 void XSLTProcessor::process(Node* node,
                             const String& mode,
@@ -1150,7 +1121,7 @@ void XSLTProcessor::processAction(Node* aNode,
                 curr = aPs->getCurrentTemplateRule();
                 if (!curr) {
                     String err("apply-imports not allowed here");
-                    aPs->recieveError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
 
@@ -1174,15 +1145,12 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (!expr)
                     break;
 
-                ExprResult* exprResult = expr->evaluate(aNode, aPs);
+                ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
                 if (!exprResult)
                     break;
 
                 if (exprResult->getResultType() == ExprResult::NODESET) {
                     NodeSet* nodeSet = (NodeSet*)exprResult;
-
-                    //-- push nodeSet onto context stack
-                    aPs->getNodeSetStack()->push(nodeSet);
 
                     // Look for xsl:sort elements
                     txNodeSorter sorter(aPs);
@@ -1202,22 +1170,27 @@ void XSLTProcessor::processAction(Node* aNode,
                     String mode;
                     actionElement->getAttr(txXSLTAtoms::mode,
                                            kNameSpaceID_None, mode);
-                    for (int i = 0; i < nodeSet->size(); i++) {
+
+                    txNodeSetContext evalContext(nodeSet, aPs);
+                    txIEvalContext* priorEC =
+                        aPs->setEvalContext(&evalContext);
+                    while (evalContext.hasNext()) {
+                        evalContext.next();
                         ProcessorState::ImportFrame *frame;
-                        Node* currNode = nodeSet->get(i);
+                        Node* currNode = evalContext.getContextNode();
                         Node* xslTemplate;
                         xslTemplate = aPs->findTemplate(currNode, mode, &frame);
                         processMatchedTemplate(xslTemplate, currNode,
                                                actualParams, mode, frame, aPs);
                     }
 
-                    //-- remove nodeSet from context stack
-                    aPs->getNodeSetStack()->pop();
+                    aPs->setEvalContext(priorEC);
 
                     delete actualParams;
                 }
                 else {
-                    notifyError("error processing apply-templates");
+                    String err("error processing apply-templates");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                 }
                 //-- clean up
                 delete exprResult;
@@ -1229,20 +1202,21 @@ void XSLTProcessor::processAction(Node* aNode,
                 String nameAttr;
                 if (!actionElement->getAttr(txXSLTAtoms::name,
                                             kNameSpaceID_None, nameAttr)) {
-                    notifyError("missing required name attribute for xsl:attribute");
+                    String err("missing required name attribute for xsl:attribute");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
 
                 // Process name as an AttributeValueTemplate
                 String name;
-                aPs->processAttrValueTemplate(nameAttr, aNode, name);
+                aPs->processAttrValueTemplate(nameAttr, actionElement, name);
 
                 // Check name validity (must be valid QName and not xmlns)
                 if (!XMLUtils::isValidQName(name)) {
                     String err("error processing xsl:attribute, ");
                     err.append(name);
                     err.append(" is not a valid QName.");
-                    notifyError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
 
@@ -1250,7 +1224,7 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (nameAtom == txXMLAtoms::xmlns) {
                     TX_RELEASE_ATOM(nameAtom);
                     String err("error processing xsl:attribute, name is xmlns.");
-                    notifyError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
                 TX_IF_RELEASE_ATOM(nameAtom);
@@ -1262,7 +1236,8 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (actionElement->getAttr(txXSLTAtoms::_namespace, kNameSpaceID_None,
                                            resultNs)) {
                     String nsURI;
-                    aPs->processAttrValueTemplate(resultNs, aNode, nsURI);
+                    aPs->processAttrValueTemplate(resultNs, actionElement,
+                                                  nsURI);
                     resultNsID = resultDoc->namespaceURIToID(nsURI);
                 }
                 else {
@@ -1314,7 +1289,8 @@ void XSLTProcessor::processAction(Node* aNode,
                     }
                 }
                 else {
-                    notifyError("missing required name attribute for xsl:call-template");
+                    String err("missing required name attribute for xsl:call-template");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                 }
                 break;
             }
@@ -1335,7 +1311,8 @@ void XSLTProcessor::processAction(Node* aNode,
                                 if (!expr)
                                     break;
 
-                                ExprResult* result = expr->evaluate(aNode, aPs);
+                                ExprResult* result = expr->evaluate
+                                    (aPs->getEvalContext());
                                 if (result && result->booleanValue()) {
                                     processChildren(aNode, xslTemplate, aPs);
                                     caseFound = MB_TRUE;
@@ -1384,7 +1361,7 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (!expr)
                     break;
 
-                ExprResult* exprResult = expr->evaluate(aNode, aPs);
+                ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
                 xslCopyOf(exprResult, aPs);
                 delete exprResult;
                 break;
@@ -1396,20 +1373,21 @@ void XSLTProcessor::processAction(Node* aNode,
                 String nameAttr;
                 if (!actionElement->getAttr(txXSLTAtoms::name,
                                             kNameSpaceID_None, nameAttr)) {
-                    notifyError("missing required name attribute for xsl:element");
+                    String err("missing required name attribute for xsl:element");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
 
                 // Process name as an AttributeValueTemplate
                 String name;
-                aPs->processAttrValueTemplate(nameAttr, aNode, name);
+                aPs->processAttrValueTemplate(nameAttr, actionElement, name);
 
                 // Check name validity (must be valid QName and not xmlns)
                 if (!XMLUtils::isValidQName(name)) {
                     String err("error processing xsl:element, '");
                     err.append(name);
                     err.append("' is not a valid QName.");
-                    notifyError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     // XXX We should processChildren without creating attributes or
                     //     namespace nodes.
                     break;
@@ -1421,7 +1399,7 @@ void XSLTProcessor::processAction(Node* aNode,
                 PRInt32 resultNsID;
                 if (actionElement->getAttr(txXSLTAtoms::_namespace, kNameSpaceID_None, resultNs)) {
                     String nsURI;
-                    aPs->processAttrValueTemplate(resultNs, aNode, nsURI);
+                    aPs->processAttrValueTemplate(resultNs, actionElement, nsURI);
                     if (nsURI.isEmpty())
                         resultNsID = kNameSpaceID_None;
                     else
@@ -1439,7 +1417,7 @@ void XSLTProcessor::processAction(Node* aNode,
                     String err("error processing xsl:element, can't resolve prefix on'");
                     err.append(name);
                     err.append("'.");
-                    notifyError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     // XXX We should processChildren without creating attributes or
                     //     namespace nodes.
                     break;
@@ -1459,15 +1437,15 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (!expr)
                     break;
 
-                ExprResult* exprResult = expr->evaluate(aNode, aPs);
+                ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
                 if (!exprResult)
                     break;
 
                 if (exprResult->getResultType() == ExprResult::NODESET) {
                     NodeSet* nodeSet = (NodeSet*)exprResult;
-
-                    //-- push nodeSet onto context stack
-                    aPs->getNodeSetStack()->push(nodeSet);
+                    txNodeSetContext evalContext(nodeSet, aPs);
+                    txIEvalContext* priorEC =
+                        aPs->setEvalContext(&evalContext);
 
                     // Look for xsl:sort elements
                     txNodeSorter sorter(aPs);
@@ -1498,20 +1476,18 @@ void XSLTProcessor::processAction(Node* aNode,
                     oldTemplate = aPs->getCurrentTemplateRule();
                     aPs->setCurrentTemplateRule(0);
 
-                    for (int i = 0; i < nodeSet->size(); i++) {
-                        Node* currNode = nodeSet->get(i);
-                        aPs->pushCurrentNode(currNode);
+                    while (evalContext.hasNext()) {
+                        evalContext.next();
+                        Node* currNode = evalContext.getContextNode();
                         processChildren(currNode, actionElement, aPs);
-                        aPs->popCurrentNode();
                     }
 
                     aPs->setCurrentTemplateRule(oldTemplate);
-
-                    // Remove nodeSet from context stack
-                    aPs->getNodeSetStack()->pop();
+                    aPs->setEvalContext(priorEC);
                 }
                 else {
-                    notifyError("error processing for-each");
+                    String err("error processing for-each");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                 }
                 //-- clean up exprResult
                 delete exprResult;
@@ -1524,7 +1500,7 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (!expr)
                     break;
 
-                ExprResult* exprResult = expr->evaluate(aNode, aPs);
+                ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
                 if (!exprResult)
                     break;
 
@@ -1560,7 +1536,7 @@ void XSLTProcessor::processAction(Node* aNode,
             case XSLType::NUMBER:
             {
                 String result;
-                Numbering::doNumbering(actionElement, result, aNode, aPs);
+                Numbering::doNumbering(actionElement, result, aPs);
                 NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
                 mResultHandler->characters(result);
                 break;
@@ -1579,13 +1555,13 @@ void XSLTProcessor::processAction(Node* aNode,
                                             kNameSpaceID_None, nameAttr)) {
                     String err("missing required name attribute for xsl:");
                     err.append(PROC_INST);
-                    notifyError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
 
                 // Process name as an AttributeValueTemplate
                 String name;
-                aPs->processAttrValueTemplate(nameAttr, aNode, name);
+                aPs->processAttrValueTemplate(nameAttr, actionElement, name);
 
                 // Check name validity (must be valid NCName and a PITarget)
                 // XXX Need to check for NCName and PITarget
@@ -1595,7 +1571,7 @@ void XSLTProcessor::processAction(Node* aNode,
                     err.append(", '");
                     err.append(name);
                     err.append("' is not a valid QName.");
-                    notifyError(err);
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                 }
 
                 // Compute value
@@ -1640,10 +1616,11 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (!expr)
                     break;
 
-                ExprResult* exprResult = expr->evaluate(aNode, aPs);
+                ExprResult* exprResult = expr->evaluate(aPs->getEvalContext());
                 String value;
                 if (!exprResult) {
-                    notifyError("null ExprResult");
+                    String err("null ExprResult");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
                 exprResult->stringValue(value);
@@ -1670,7 +1647,8 @@ void XSLTProcessor::processAction(Node* aNode,
                 String name;
                 if (!actionElement->getAttr(txXSLTAtoms::name,
                                             kNameSpaceID_None, name)) {
-                    notifyError("missing required name attribute for xsl:variable");
+                    String err("missing required name attribute for xsl:variable");
+                    aPs->receiveError(err, NS_ERROR_FAILURE);
                     break;
                 }
                 ExprResult* exprResult = processVariable(aNode, actionElement, aPs);
@@ -1699,7 +1677,7 @@ void XSLTProcessor::processAction(Node* aNode,
                             continue;
                         // Process Attribute Value Templates
                         String value;
-                        aPs->processAttrValueTemplate(attr->getValue(), aNode, value);
+                        aPs->processAttrValueTemplate(attr->getValue(), actionElement, value);
                         NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
                         mResultHandler->attribute(attr->getName(), attr->getNamespaceID(), value);
                     }
@@ -1798,7 +1776,8 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
                 String name;
                 if (!action->getAttr(txXSLTAtoms::name,
                                      kNameSpaceID_None, name)) {
-                    notifyError("missing required name attribute for xsl:with-param");
+                    String err("missing required name attribute for xsl:with-param");
+                    ps->receiveError(err, NS_ERROR_FAILURE);
                 }
                 else {
                     ExprResult* exprResult = processVariable(context, action, ps);
@@ -1807,7 +1786,7 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
                         String err("value for parameter '");
                         err.append(name);
                         err.append("' specified more than once.");
-                        notifyError(err);
+                        ps->receiveError(err, NS_ERROR_FAILURE);
                     }
                     else {
                         VariableBinding* binding = new VariableBinding(name, exprResult);
@@ -1925,9 +1904,7 @@ void XSLTProcessor::processMatchedTemplate(Node* aXslTemplate,
         newTemplate.mParams = aParams;
         aPs->setCurrentTemplateRule(&newTemplate);
 
-        aPs->pushCurrentNode(aNode);
         processTemplate(aNode, aXslTemplate, aPs, aParams);
-        aPs->popCurrentNode();
 
         aPs->setCurrentTemplateRule(oldTemplate);
     }
@@ -1956,28 +1933,29 @@ void XSLTProcessor::processDefaultTemplate(Node* node,
             if (!mNodeExpr)
                 break;
 
-            ExprResult* exprResult = mNodeExpr->evaluate(node, ps);
+            ExprResult* exprResult = mNodeExpr->evaluate(ps->getEvalContext());
             if (!exprResult ||
                 exprResult->getResultType() != ExprResult::NODESET) {
-                notifyError("None-nodeset returned while processing default template");
+                String err("None-nodeset returned while processing default template");
+                ps->receiveError(err, NS_ERROR_FAILURE);
                 delete exprResult;
                 return;
             }
 
             NodeSet* nodeSet = (NodeSet*)exprResult;
+            txNodeSetContext evalContext(nodeSet, ps);
+            txIEvalContext* priorEC = ps->setEvalContext(&evalContext);
 
-            //-- push nodeSet onto context stack
-            ps->getNodeSetStack()->push(nodeSet);
-            for (int i = 0; i < nodeSet->size(); i++) {
-                Node* currNode = nodeSet->get(i);
+            while (evalContext.hasNext()) {
+                evalContext.next();
+                Node* currNode = evalContext.getContextNode();
 
                 ProcessorState::ImportFrame *frame;
                 Node* xslTemplate = ps->findTemplate(currNode, mode, &frame);
                 processMatchedTemplate(xslTemplate, currNode, 0, mode, frame,
                                        ps);
             }
-            //-- remove nodeSet from context stack
-            ps->getNodeSetStack()->pop();
+            ps->setEvalContext(priorEC);
             delete exprResult;
             break;
         }
@@ -2022,7 +2000,8 @@ void XSLTProcessor::processTemplateParams
                     String name;
                     if (!action->getAttr(txXSLTAtoms::name,
                                          kNameSpaceID_None, name)) {
-                        notifyError("missing required name attribute for xsl:param");
+                        String err("missing required name attribute for xsl:param");
+                        ps->receiveError(err, NS_ERROR_FAILURE);
                     }
                     else {
                         VariableBinding* binding = 0;
@@ -2075,7 +2054,7 @@ ExprResult* XSLTProcessor::processVariable
         Expr* expr = ps->getExpr(xslVariable, ProcessorState::SelectAttr);
         if (!expr)
             return new StringResult("unable to process variable");
-        return expr->evaluate(node, ps);
+        return expr->evaluate(ps->getEvalContext());
     }
     else if (xslVariable->hasChildNodes()) {
         txResultTreeFragment* rtf = new txResultTreeFragment();
@@ -2418,10 +2397,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
         // XXX Need to add error observers
 
-        // Set current node and nodeset.
-        NodeSet nodeSet(&sourceDocument);
-        ps.pushCurrentNode(&sourceDocument);
-        ps.getNodeSetStack()->push(&nodeSet);
+        // Set current txIEvalContext
+        txSingleNodeContext evalContext(&sourceDocument, &ps);
+        ps.setEvalContext(&evalContext);
 
         // Index templates and process top level xsl elements
         ListIterator importFrame(ps.getImportFrames());

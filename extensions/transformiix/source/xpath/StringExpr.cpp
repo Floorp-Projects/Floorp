@@ -44,7 +44,8 @@ StringExpr::StringExpr(const String& value) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* StringExpr::evaluate(Node* context, ContextState* cs) {
+ExprResult* StringExpr::evaluate(txIEvalContext* aContext)
+{
    return new StringResult(value);
 } //-- evaluate
 

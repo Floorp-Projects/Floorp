@@ -39,6 +39,7 @@
 #include "XSLTFunctions.h"
 #include "primitives.h"
 #include "Names.h"
+#include "txIXPathContext.h"
 #include <math.h>
 
 #ifndef TX_EXE
@@ -70,10 +71,9 @@ txFormatNumberFunctionCall::txFormatNumberFunctionCall(ProcessorState* aPs) :
  * for evaluation
  * @return the result of the evaluation
  */
-ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
-                                                 ContextState* aCs)
+ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 {
-    if (!requireParams(2, 3, aCs))
+    if (!requireParams(2, 3, aContext))
         return new StringResult();
 
     // Get number and format
@@ -83,16 +83,16 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
     String formatStr;
     String formatName;
 
-    value = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
-    evaluateToString((Expr*)iter.next(), aContext, aCs, formatStr);
+    value = evaluateToNumber((Expr*)iter.next(), aContext);
+    evaluateToString((Expr*)iter.next(), aContext, formatStr);
     if (iter.hasNext())
-        evaluateToString((Expr*)iter.next(), aContext, aCs, formatName);
+        evaluateToString((Expr*)iter.next(), aContext, formatName);
 
     txDecimalFormat* format = mPs->getDecimalFormat(formatName);
     if (!format) {
         String err("unknown decimal format for: ");
         toString(err);
-        aCs->recieveError(err);
+        aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
         return new StringResult(err);
     }
 
@@ -161,7 +161,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
                     else {
                         String err(INVALID_PARAM_VALUE);
                         toString(err);
-                        aCs->recieveError(err);
+                        aContext->receiveError(err,
+                                               NS_ERROR_XPATH_EVAL_FAILED);
                         return new StringResult(err);
                     }
                 }
@@ -171,7 +172,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
                     else {
                         String err(INVALID_PARAM_VALUE);
                         toString(err);
-                        aCs->recieveError(err);
+                        aContext->receiveError(err,
+                                               NS_ERROR_XPATH_EVAL_FAILED);
                         return new StringResult(err);
                     }
                 }
@@ -256,7 +258,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
         groupSize == 0) {
         String err(INVALID_PARAM_VALUE);
         toString(err);
-        aCs->recieveError(err);
+        aContext->receiveError(err,
+                               NS_ERROR_XPATH_EVAL_FAILED);
         return new StringResult(err);
     }
 

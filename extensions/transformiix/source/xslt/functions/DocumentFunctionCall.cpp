@@ -39,6 +39,7 @@
 #include "XSLTFunctions.h"
 #include "XMLDOMUtils.h"
 #include "Names.h"
+#include "txIXPathContext.h"
 
 /*
  * Creates a new DocumentFunctionCall.
@@ -56,19 +57,17 @@ DocumentFunctionCall::DocumentFunctionCall(ProcessorState* aPs,
  * NOTE: the implementation is incomplete since it does not make use of the
  * second argument (base URI)
  * @param context the context node for evaluation of this Expr
- * @param ps the ContextState containing the stack information needed
- * for evaluation
  * @return the result of the evaluation
  */
-ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
+ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
 {
     NodeSet* nodeSet = new NodeSet();
 
     // document(object, node-set?)
-    if (requireParams(1, 2, cs)) {
+    if (requireParams(1, 2, aContext)) {
         ListIterator* iter = params.iterator();
         Expr* param1 = (Expr*) iter->next();
-        ExprResult* exprResult1 = param1->evaluate(context, cs);
+        ExprResult* exprResult1 = param1->evaluate(aContext);
         String baseURI;
         MBool baseURISet = MB_FALSE;
 
@@ -76,11 +75,12 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
             // We have 2 arguments, get baseURI from the first node
             // in the resulting nodeset
             Expr* param2 = (Expr*) iter->next();
-            ExprResult* exprResult2 = param2->evaluate(context, cs);
+            ExprResult* exprResult2 = param2->evaluate(aContext);
             if (exprResult2->getResultType() != ExprResult::NODESET) {
                 String err("node-set expected as second argument to document(): ");
                 toString(err);
-                cs->recieveError(err);
+                aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
+                delete exprResult1;
                 delete exprResult2;
                 return nodeSet;
             }

@@ -36,6 +36,7 @@
 #include "FunctionLib.h"
 #include "XMLDOMUtils.h"
 #include <math.h>
+#include "txIXPathContext.h"
 
 /*
  * Creates a NumberFunctionCall of the given type
@@ -68,23 +69,23 @@ NumberFunctionCall::NumberFunctionCall(NumberFunctions aType) {
  *                for evaluation
  * @return the result of the evaluation
  */
-ExprResult* NumberFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
 {
     ListIterator iter(&params);
 
     if (mType == NUMBER) {
-        if (!requireParams(0, 1, aCs))
+        if (!requireParams(0, 1, aContext))
             return new StringResult("error");
     }
     else {
-        if (!requireParams(1, 1, aCs))
+        if (!requireParams(1, 1, aContext))
             return new StringResult("error");
     }
 
     switch (mType) {
         case CEILING:
         {
-            double dbl = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
+            double dbl = evaluateToNumber((Expr*)iter.next(), aContext);
             if (Double::isNaN(dbl) || Double::isInfinite(dbl))
                 return new NumberResult(dbl);
 
@@ -95,7 +96,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case FLOOR:
         {
-            double dbl = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
+            double dbl = evaluateToNumber((Expr*)iter.next(), aContext);
             if (Double::isNaN(dbl) ||
                 Double::isInfinite(dbl) ||
                 (dbl == 0 && Double::isNeg(dbl)))
@@ -105,7 +106,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case ROUND:
         {
-            double dbl = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
+            double dbl = evaluateToNumber((Expr*)iter.next(), aContext);
             if (Double::isNaN(dbl) || Double::isInfinite(dbl))
                 return new NumberResult(dbl);
 
@@ -117,7 +118,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         case SUM:
         {
             NodeSet* nodes;
-            nodes = evaluateToNodeSet((Expr*)iter.next(), aContext, aCs);
+            nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
 
             if (!nodes)
                 return new StringResult("error");
@@ -137,16 +138,16 @@ ExprResult* NumberFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         {
             if (iter.hasNext()) {
                 return new NumberResult(
-                    evaluateToNumber((Expr*)iter.next(), aContext, aCs));
+                    evaluateToNumber((Expr*)iter.next(), aContext));
             }
 
             String resultStr;
-            XMLDOMUtils::getNodeValue(aContext, resultStr);
+            XMLDOMUtils::getNodeValue(aContext->getContextNode(), resultStr);
             return new NumberResult(Double::toDouble(resultStr));
         }
     }
 
     String err("Internal error");
-    aCs->recieveError(err);
+    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
     return new StringResult("error");
 }

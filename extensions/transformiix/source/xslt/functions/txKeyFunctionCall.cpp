@@ -21,6 +21,7 @@
 #include "XSLTFunctions.h"
 #include "Names.h"
 #include "XMLDOMUtils.h"
+#include "txSingleNodeContext.h"
 
 /*
  * txKeyFunctionCall
@@ -44,9 +45,9 @@ txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs) :
  *                 for evaluation
  * @return the result of the evaluation
  */
-ExprResult* txKeyFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
 {
-    if (!aContext || !requireParams(2, 2, aCs))
+    if (!aContext || !requireParams(2, 2, aContext))
         return new StringResult("error");
 
     NodeSet* res = new NodeSet;
@@ -57,26 +58,27 @@ ExprResult* txKeyFunctionCall::evaluate(Node* aContext, ContextState* aCs)
 
     ListIterator iter(&params);
     String keyName;
-    evaluateToString((Expr*)iter.next(), aContext, aCs, keyName);
+    evaluateToString((Expr*)iter.next(), aContext, keyName);
     Expr* param = (Expr*) iter.next();
 
     txXSLKey* key = mProcessorState->getKey(keyName);
     if (!key) {
         String err("No key with that name in: ");
         toString(err);
-        aCs->recieveError(err);
+        aContext->receiveError(err, NS_ERROR_INVALID_ARG);
         return res;
     }
 
-    ExprResult* exprResult = param->evaluate(aContext, aCs);
+    ExprResult* exprResult = param->evaluate(aContext);
     if (!exprResult)
         return res;
 
     Document* contextDoc;
-    if (aContext->getNodeType() == Node::DOCUMENT_NODE)
-        contextDoc = (Document*)aContext;
+    Node* contextNode = aContext->getContextNode();
+    if (contextNode->getNodeType() == Node::DOCUMENT_NODE)
+        contextDoc = (Document*)contextNode;
     else
-        contextDoc = aContext->getOwnerDocument();
+        contextDoc = contextNode->getOwnerDocument();
 
     if (exprResult->getResultType() == ExprResult::NODESET) {
         NodeSet* nodeSet = (NodeSet*) exprResult;
@@ -155,7 +157,7 @@ const NodeSet* txXSLKey::getNodes(String& aKeyValue, Document* aDoc)
  * @param aUse    use-expression
  * @return MB_FALSE if an error occured, MB_TRUE otherwise
  */
-MBool txXSLKey::addKey(Pattern* aMatch, Expr* aUse)
+MBool txXSLKey::addKey(txPattern* aMatch, Expr* aUse)
 {
     if (!aMatch || !aUse)
         return MB_FALSE;
@@ -226,13 +228,12 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
     while (iter.hasNext())
     {
         Key* key=(Key*)iter.next();
-        if (key->matchPattern->matches(aNode, 0, mProcessorState)) {
-            NodeSet contextNodeSet(aNode);
-            mProcessorState->getNodeSetStack()->push(&contextNodeSet);
-            mProcessorState->pushCurrentNode(aNode);
-            ExprResult* exprResult = key->useExpr->evaluate(aNode, mProcessorState);
-            mProcessorState->popCurrentNode();
-            mProcessorState->getNodeSetStack()->pop();
+        if (key->matchPattern->matches(aNode, mProcessorState)) {
+            txSingleNodeContext evalContext(aNode, mProcessorState);
+            txIEvalContext* prevCon =
+                mProcessorState->setEvalContext(&evalContext);
+            ExprResult* exprResult = key->useExpr->evaluate(&evalContext);
+            mProcessorState->setEvalContext(prevCon);
             if (exprResult->getResultType() == ExprResult::NODESET) {
                 NodeSet* res = (NodeSet*)exprResult;
                 for (int i=0; i<res->size(); i++) {

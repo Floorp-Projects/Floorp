@@ -45,6 +45,8 @@
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
 #include "ProcessorState.h"
+#include "nsContentCID.h"
+#include "ExprParser.h"
 
 NS_IMPL_ADDREF(nsXPathEvaluator)
 NS_IMPL_RELEASE(nsXPathEvaluator)
@@ -69,8 +71,8 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathExpression **aResult)
 {
     String expressionString(PromiseFlatString(aExpression).get());
-    // XXX (pvdb) TODO Set the right resolver on the ExprParser
-    Expr* expression = mParser.createExpr(expressionString);
+    ParseContextImpl pContext(aResolver);
+    Expr* expression = ExprParser::createExpr(expressionString, &pContext);
     if (!expression)
         return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
 
@@ -113,4 +115,59 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
     NS_ENSURE_SUCCESS(rv, rv);
 
     return expression->Evaluate(aContextNode, aType, aInResult, aResult);
+}
+
+/*
+ * Implementation of txIParseContext private to nsXPathEvaluator
+ * ParseContextImpl bases on a nsIDOMXPathNSResolver
+ */
+
+static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
+
+nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
+    (txAtom* aPrefix, PRInt32& aID)
+{
+    nsAutoString prefix;
+    if (aPrefix) {
+        aPrefix->ToString(prefix);
+    }
+    nsAutoString ns;
+    nsresult rv = NS_OK;
+    if (mResolver) {
+        mResolver->LookupNamespaceURI(prefix, ns);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    aID = kNameSpaceID_None;
+    if (ns.IsEmpty()) {
+        return NS_OK;
+    }
+    if (!mResolver) {
+        aID = kNameSpaceID_Unknown;
+        return NS_OK;
+    }
+
+    if (!mNSMan) {
+        mNSMan = do_CreateInstance(kNameSpaceManagerCID);
+        if (!mNSMan) {
+            return NS_ERROR_FAILURE;
+        }
+    }
+    // get the namespaceID for the URI
+
+    return mNSMan->RegisterNameSpace(ns, aID);
+}
+
+nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(txAtom* aName,
+                                                                 PRInt32 aID,
+                                                                 FunctionCall*& aFn)
+{
+    return NS_ERROR_XPATH_PARSE_FAILED;
+}
+
+void nsXPathEvaluator::ParseContextImpl::receiveError(const String& aMsg,
+                                                       nsresult aRes)
+{
+    mLastError = aRes;
+    // forward aMsg to console service?
 }

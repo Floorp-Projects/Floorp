@@ -24,6 +24,8 @@
  */
 
 #include "Expr.h"
+#include "txAtoms.h"
+#include "txIXPathContext.h"
 
   //-------------------/
  //- VariableRefExpr -/
@@ -32,9 +34,25 @@
 /**
  * Creates a VariableRefExpr with the given variable name
 **/
-VariableRefExpr::VariableRefExpr(const String& name) {
-    this->name = name;
-} //-- VariableRefExpr
+VariableRefExpr::VariableRefExpr(txAtom* aPrefix, txAtom* aLocalName,
+                                 PRInt32 aNSID)
+    : mPrefix(aPrefix), mLocalName(aLocalName), mNamespace(aNSID)
+{
+    NS_ASSERTION(mLocalName, "VariableRefExpr without local name?");
+    if (mPrefix == txXMLAtoms::_empty)
+        mPrefix = 0;
+    TX_IF_ADDREF_ATOM(mPrefix);
+    TX_IF_ADDREF_ATOM(mLocalName);
+}
+
+/*
+ * Release the local name atom
+ */
+VariableRefExpr::~VariableRefExpr()
+{
+    TX_IF_RELEASE_ATOM(mPrefix);
+    TX_IF_RELEASE_ATOM(mLocalName);
+}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -43,9 +61,14 @@ VariableRefExpr::VariableRefExpr(const String& name) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* VariableRefExpr::evaluate(Node* context, ContextState* cs) {
-
-    ExprResult* exprResult = cs->getVariable(name);
+ExprResult* VariableRefExpr::evaluate(txIEvalContext* aContext)
+{
+    ExprResult* exprResult = 0;
+    nsresult rv = aContext->getVariable(mNamespace, mLocalName, exprResult);
+    if (NS_FAILED(rv)) {
+      // XXX report error, undefined variable
+      return 0;
+    }
     //-- make copy to prevent deletetion
     //-- I know, I should add a #copy method to ExprResult, I will
     ExprResult* copyOfResult = 0;
@@ -88,7 +111,16 @@ ExprResult* VariableRefExpr::evaluate(Node* context, ContextState* cs) {
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void VariableRefExpr::toString(String& str) {
-    str.append('$');
-    str.append(name);
+void VariableRefExpr::toString(String& aDest)
+{
+    aDest.append('$');
+    if (mPrefix) {
+        String prefix;
+        TX_GET_ATOM_STRING(mPrefix, prefix);
+        aDest.append(prefix);
+        aDest.append(':');
+    }
+    String lname;
+    TX_GET_ATOM_STRING(mLocalName, lname);
+    aDest.append(lname);
 } //-- toString

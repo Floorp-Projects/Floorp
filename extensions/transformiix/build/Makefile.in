@@ -88,19 +88,13 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaProcInstruction.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaText.$(OBJ_SUFFIX) \
   ../source/xpath/AdditiveExpr.$(OBJ_SUFFIX) \
-  ../source/xpath/AttributeExpr.$(OBJ_SUFFIX) \
   ../source/xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \
-  ../source/xpath/BasicNodeExpr.$(OBJ_SUFFIX) \
   ../source/xpath/BooleanExpr.$(OBJ_SUFFIX) \
   ../source/xpath/BooleanFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/BooleanResult.$(OBJ_SUFFIX) \
-  ../source/xpath/ElementExpr.$(OBJ_SUFFIX) \
-  ../source/xpath/ErrorFunctionCall.$(OBJ_SUFFIX) \
-  ../source/xpath/Expr.$(OBJ_SUFFIX) \
   ../source/xpath/ExprLexer.$(OBJ_SUFFIX) \
   ../source/xpath/ExprLexerChars.$(OBJ_SUFFIX) \
   ../source/xpath/ExprParser.$(OBJ_SUFFIX) \
-  ../source/xpath/ExtensionFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/FilterExpr.$(OBJ_SUFFIX) \
   ../source/xpath/FunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/LocationStep.$(OBJ_SUFFIX) \
@@ -122,7 +116,10 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xpath/StringExpr.$(OBJ_SUFFIX) \
   ../source/xpath/StringFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/StringResult.$(OBJ_SUFFIX) \
-  ../source/xpath/TextExpr.$(OBJ_SUFFIX) \
+  ../source/xpath/txNameTest.$(OBJ_SUFFIX) \
+  ../source/xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
+  ../source/xpath/txForwardContext.$(OBJ_SUFFIX) \
+  ../source/xpath/txNodeSetContext.$(OBJ_SUFFIX) \
   ../source/xpath/UnionExpr.$(OBJ_SUFFIX) \
   ../source/xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../source/xpath/VariableRefExpr.$(OBJ_SUFFIX) \
@@ -140,6 +137,8 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xslt/txRtfHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txTextHandler.$(OBJ_SUFFIX) \
   ../source/xslt/VariableBinding.$(OBJ_SUFFIX) \
+  ../source/xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
+  ../source/xslt/txPatternParser.$(OBJ_SUFFIX) \
   ../source/xslt/XSLTProcessor.$(OBJ_SUFFIX) \
   ../source/xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \

@@ -43,7 +43,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMXPathNamespace.h"
 #include "nsXPathResult.h"
-#include "ProcessorState.h"
 
 NS_IMPL_ADDREF(nsXPathExpression)
 NS_IMPL_RELEASE(nsXPathExpression)
@@ -112,8 +111,8 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
     Document document(ownerDOMDocument);
     Node* node = document.createWrapper(aContextNode);
 
-    ProcessorState processorState;
-    ExprResult* exprResult = mExpression->evaluate(node, &processorState);
+    EvalContextImpl eContext(node);
+    ExprResult* exprResult = mExpression->evaluate(&eContext);
     NS_ENSURE_TRUE(exprResult, NS_ERROR_OUT_OF_MEMORY);
 
     PRUint16 resultType = aType;
@@ -151,4 +150,44 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
     NS_ENSURE_SUCCESS(rv, rv);
 
     return CallQueryInterface(xpathResult, aResult);
+}
+
+/*
+ * Implementation of the txIEvalContext private to nsXPathExpression
+ * EvalContextImpl bases on only one context node and no variables
+ */
+
+nsresult nsXPathExpression::EvalContextImpl::getVariable(PRInt32 aNamespace, 
+                                                         txAtom* aLName,
+                                                         ExprResult*& aResult)
+{
+    aResult = 0;
+    return NS_ERROR_INVALID_ARG;
+}
+
+MBool nsXPathExpression::EvalContextImpl::isStripSpaceAllowed(Node* aNode)
+{
+    return MB_FALSE;
+}
+
+void nsXPathExpression::EvalContextImpl::receiveError(const String& aMsg,
+                                                       nsresult aRes)
+{
+    mLastError = aRes;
+    // forward aMsg to console service?
+}
+
+Node* nsXPathExpression::EvalContextImpl::getContextNode()
+{
+    return mNode;
+}
+
+PRUint32 nsXPathExpression::EvalContextImpl::size()
+{
+    return 1;
+}
+
+PRUint32 nsXPathExpression::EvalContextImpl::position()
+{
+    return 1;
 }

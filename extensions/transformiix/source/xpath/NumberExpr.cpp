@@ -41,7 +41,8 @@ NumberExpr::NumberExpr(double dbl) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* NumberExpr::evaluate(Node* context, ContextState* cs) {
+ExprResult* NumberExpr::evaluate(txIEvalContext* aContext)
+{
    return new NumberResult(_value);
 } //-- evaluate
 

@@ -62,12 +62,13 @@ void AttributeValueTemplate::addExpr(Expr* expr) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* AttributeValueTemplate::evaluate(Node* context, ContextState* cs) {
+ExprResult* AttributeValueTemplate::evaluate(txIEvalContext* aContext)
+{
     ListIterator* iter = expressions.iterator();
     String result;
     while ( iter->hasNext() ) {
         Expr* expr = (Expr*)iter->next();
-        ExprResult* exprResult = expr->evaluate(context, cs);
+        ExprResult* exprResult = expr->evaluate(aContext);
         exprResult->stringValue(result);
         delete exprResult;
     }

@@ -73,19 +73,13 @@ CPP_OBJS=							\
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaProcInstruction.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaText.obj \
 	..\source\xpath\$(OBJDIR)\AdditiveExpr.obj \
-	..\source\xpath\$(OBJDIR)\AttributeExpr.obj \
 	..\source\xpath\$(OBJDIR)\AttributeValueTemplate.obj \
-	..\source\xpath\$(OBJDIR)\BasicNodeExpr.obj \
 	..\source\xpath\$(OBJDIR)\BooleanExpr.obj \
 	..\source\xpath\$(OBJDIR)\BooleanFunctionCall.obj \
 	..\source\xpath\$(OBJDIR)\BooleanResult.obj \
-	..\source\xpath\$(OBJDIR)\ElementExpr.obj \
-	..\source\xpath\$(OBJDIR)\ErrorFunctionCall.obj \
-	..\source\xpath\$(OBJDIR)\Expr.obj \
 	..\source\xpath\$(OBJDIR)\ExprLexer.obj \
 	..\source\xpath\$(OBJDIR)\ExprLexerChars.obj \
 	..\source\xpath\$(OBJDIR)\ExprParser.obj \
-	..\source\xpath\$(OBJDIR)\ExtensionFunctionCall.obj \
 	..\source\xpath\$(OBJDIR)\FilterExpr.obj \
 	..\source\xpath\$(OBJDIR)\FunctionCall.obj \
 	..\source\xpath\$(OBJDIR)\LocationStep.obj \
@@ -107,7 +101,10 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\StringExpr.obj \
 	..\source\xpath\$(OBJDIR)\StringFunctionCall.obj \
 	..\source\xpath\$(OBJDIR)\StringResult.obj \
-	..\source\xpath\$(OBJDIR)\TextExpr.obj \
+	..\source\xpath\$(OBJDIR)\txNameTest.obj \
+	..\source\xpath\$(OBJDIR)\txNodeTypeTest.obj \
+	..\source\xpath\$(OBJDIR)\txForwardContext.obj \
+	..\source\xpath\$(OBJDIR)\txNodeSetContext.obj \
 	..\source\xpath\$(OBJDIR)\UnionExpr.obj \
 	..\source\xpath\$(OBJDIR)\UnaryExpr.obj \
 	..\source\xpath\$(OBJDIR)\VariableRefExpr.obj \
@@ -125,6 +122,8 @@ CPP_OBJS=							\
 	..\source\xslt\$(OBJDIR)\txRtfHandler.obj \
 	..\source\xslt\$(OBJDIR)\txTextHandler.obj \
 	..\source\xslt\$(OBJDIR)\VariableBinding.obj \
+	..\source\xslt\$(OBJDIR)\txXSLTPatterns.obj \
+	..\source\xslt\$(OBJDIR)\txPatternParser.obj \
 	..\source\xslt\$(OBJDIR)\XSLTProcessor.obj \
 	..\source\xslt\functions\$(OBJDIR)\CurrentFunctionCall.obj \
 	..\source\xslt\functions\$(OBJDIR)\DocumentFunctionCall.obj \

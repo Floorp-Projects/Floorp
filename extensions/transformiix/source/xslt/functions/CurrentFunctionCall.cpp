@@ -8,22 +8,19 @@
 /**
  * Creates a new current function call
 **/
-CurrentFunctionCall::CurrentFunctionCall(ProcessorState* ps) :
-        FunctionCall(CURRENT_FN)
+CurrentFunctionCall::CurrentFunctionCall(ProcessorState* aPs) 
+    : FunctionCall(CURRENT_FN), mPs(aPs)
 {
-    this->processorState = ps;
 }
 
-/**
- * Evaluates this Expr based on the given context node and processor state
- * @param context the context node for evaluation of this Expr
- * @param cs the ContextState containing the stack information needed
- * for evaluation
- * @return the result of the evaluation
- * @see FunctionCall.h
-**/
-ExprResult* CurrentFunctionCall::evaluate(Node* context, ContextState* cs)
+/*
+ * Evaluates this Expr
+ *
+ * @return NodeSet containing the context node used for the complete
+ * Expr or Pattern.
+ */
+ExprResult* CurrentFunctionCall::evaluate(txIEvalContext* aContext)
 {
-    return new NodeSet(processorState->getCurrentNode());
+    return new NodeSet(mPs->getEvalContext()->getContextNode());
 }
 

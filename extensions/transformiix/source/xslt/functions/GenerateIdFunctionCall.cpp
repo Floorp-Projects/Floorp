@@ -24,6 +24,7 @@
 
 #include "XSLTFunctions.h"
 #include "Names.h"
+#include "txIXPathContext.h"
 #ifdef TX_EXE
 #include <stdio.h>
 #else
@@ -55,10 +56,9 @@ GenerateIdFunctionCall::GenerateIdFunctionCall()
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* GenerateIdFunctionCall::evaluate(Node* aContext,
-                                             ContextState* aCs) {
-
-    if (!requireParams(0, 1, aCs))
+ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
+{
+    if (!requireParams(0, 1, aContext))
         return new StringResult();
 
     Node* node = 0;
@@ -68,14 +68,14 @@ ExprResult* GenerateIdFunctionCall::evaluate(Node* aContext,
         txListIterator iter(&params);
         Expr* param = (Expr*)iter.next();
 
-        ExprResult* exprResult = param->evaluate(aContext, aCs);
+        ExprResult* exprResult = param->evaluate(aContext);
         if (!exprResult)
             return 0;
 
         if (exprResult->getResultType() != ExprResult::NODESET) {
             String err("Invalid argument passed to generate-id(), "
                        "expecting NodeSet");
-            aCs->recieveError(err);
+            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             delete exprResult;
             return new StringResult(err);
         }
@@ -89,7 +89,7 @@ ExprResult* GenerateIdFunctionCall::evaluate(Node* aContext,
         delete exprResult;
     }
     else {
-        node = aContext;
+        node = aContext->getContextNode();
     }
 
     // generate id for selected node

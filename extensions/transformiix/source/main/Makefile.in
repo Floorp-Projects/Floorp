@@ -61,19 +61,13 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/ProcessingInstruction.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Text.$(OBJ_SUFFIX) \
   ../xpath/AdditiveExpr.$(OBJ_SUFFIX) \
-  ../xpath/AttributeExpr.$(OBJ_SUFFIX) \
   ../xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \
-  ../xpath/BasicNodeExpr.$(OBJ_SUFFIX) \
   ../xpath/BooleanExpr.$(OBJ_SUFFIX) \
   ../xpath/BooleanFunctionCall.$(OBJ_SUFFIX) \
   ../xpath/BooleanResult.$(OBJ_SUFFIX) \
-  ../xpath/ElementExpr.$(OBJ_SUFFIX) \
-  ../xpath/ErrorFunctionCall.$(OBJ_SUFFIX) \
-  ../xpath/Expr.$(OBJ_SUFFIX) \
   ../xpath/ExprLexer.$(OBJ_SUFFIX) \
   ../xpath/ExprLexerChars.$(OBJ_SUFFIX) \
   ../xpath/ExprParser.$(OBJ_SUFFIX) \
-  ../xpath/ExtensionFunctionCall.$(OBJ_SUFFIX) \
   ../xpath/FilterExpr.$(OBJ_SUFFIX) \
   ../xpath/FunctionCall.$(OBJ_SUFFIX) \
   ../xpath/LocationStep.$(OBJ_SUFFIX) \
@@ -90,7 +84,10 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xpath/StringExpr.$(OBJ_SUFFIX) \
   ../xpath/StringFunctionCall.$(OBJ_SUFFIX) \
   ../xpath/StringResult.$(OBJ_SUFFIX) \
-  ../xpath/TextExpr.$(OBJ_SUFFIX) \
+  ../xpath/txNameTest.$(OBJ_SUFFIX) \
+  ../xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
+  ../xpath/txForwardContext.$(OBJ_SUFFIX) \
+  ../xpath/txNodeSetContext.$(OBJ_SUFFIX) \
   ../xpath/UnionExpr.$(OBJ_SUFFIX) \
   ../xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../xpath/VariableRefExpr.$(OBJ_SUFFIX) \
@@ -111,6 +108,8 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/txTextHandler.$(OBJ_SUFFIX) \
   ../xslt/txTextOutput.$(OBJ_SUFFIX) \
   ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
+  ../xslt/txPatternParser.$(OBJ_SUFFIX) \
   ../xslt/VariableBinding.$(OBJ_SUFFIX) \
   ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
   ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \

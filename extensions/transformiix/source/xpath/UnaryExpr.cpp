@@ -42,9 +42,9 @@ UnaryExpr::~UnaryExpr()
  * for evaluation.
  * @return the result of the evaluation.
  */
-ExprResult* UnaryExpr::evaluate(Node* context, ContextState* cs)
+ExprResult* UnaryExpr::evaluate(txIEvalContext* aContext)
 {
-    ExprResult* exprRes = expr->evaluate(context, cs);
+    ExprResult* exprRes = expr->evaluate(aContext);
     double value = exprRes->numberValue();
     delete exprRes;
 #ifdef HPUX

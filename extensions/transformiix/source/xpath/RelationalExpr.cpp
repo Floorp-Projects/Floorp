@@ -204,16 +204,19 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* RelationalExpr::evaluate(Node* context, ContextState* cs) {
-
+ExprResult* RelationalExpr::evaluate(txIEvalContext* aContext)
+{
     //-- get result of left expression
     ExprResult* lResult = 0;
-    if ( leftExpr ) lResult = leftExpr->evaluate(context, cs);
-    else return new BooleanResult();
+    if (leftExpr)
+        lResult = leftExpr->evaluate(aContext);
+    else
+        return new BooleanResult();
 
     //-- get result of right expr
     ExprResult* rResult = 0;
-    if ( rightExpr ) rResult = rightExpr->evaluate(context, cs);
+    if (rightExpr)
+        rResult = rightExpr->evaluate(aContext);
     else {
         delete lResult;
         return new BooleanResult();
