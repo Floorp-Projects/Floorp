@@ -32,6 +32,9 @@
 #include "prlog.h"
 
 #include "nsHTMLParts.h"
+#include "nsITextContent.h"
+
+
 #include "nsTablePart.h"
 #include "nsTableRow.h"
 #include "nsTableCell.h"
@@ -60,6 +63,7 @@ static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 #define XXX_ART_HACK 1
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
@@ -82,22 +86,28 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
     }                                             \
   PR_END_MACRO
 
-#define SINK_TRACE_NODE(_bit,_msg,_node)                     \
-  PR_BEGIN_MACRO                                             \
-    if (SINK_LOG_TEST(gSinkLogModuleInfo,_bit)) {            \
-      char cbuf[40];                                         \
-      const char* cp;                                        \
-      PRInt32 nt = (_node).GetNodeType();                    \
-      if ((nt > PRInt32(eHTMLTag_unknown)) &&                \
-          (nt < PRInt32(eHTMLTag_text))) {                   \
-        cp = NS_EnumToTag(nsHTMLTag((_node).GetNodeType())); \
-      } else {                                               \
-        (_node).GetText().ToCString(cbuf, sizeof(cbuf));     \
-        cp = cbuf;                                           \
-      }                                                      \
-      PR_LogPrint("%s: this=%p node='%s'", _msg, this, cp);  \
-    }                                                        \
-  PR_END_MACRO
+#define SINK_TRACE_NODE(_bit,_msg,_node) SinkTraceNode(_bit,_msg,_node,this)
+
+static void
+SinkTraceNode(PRUint32 aBit,
+              const char* aMsg,
+              const nsIParserNode& aNode,
+              void* aThis)
+{
+  if (SINK_LOG_TEST(gSinkLogModuleInfo,aBit)) {
+    char cbuf[40];
+    const char* cp;
+    PRInt32 nt = aNode.GetNodeType();
+    if ((nt > PRInt32(eHTMLTag_unknown)) &&
+        (nt < PRInt32(eHTMLTag_text))) {
+      cp = NS_EnumToTag(nsHTMLTag(aNode.GetNodeType()));
+    } else {
+      aNode.GetText().ToCString(cbuf, sizeof(cbuf));
+      cp = cbuf;
+    }
+    PR_LogPrint("%s: this=%p node='%s'", aMsg, aThis, cp);
+  }
+}
 
 #else
 #define SINK_TRACE(_bit,_args)
@@ -1138,10 +1148,18 @@ SinkContext::FlushText(PRBool* aDidFlush)
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
     nsIHTMLContent* content;
-    rv = NS_NewHTMLText(&content, mText, mTextLength);
+    rv = NS_NewTextNode(&content);
     if (NS_OK == rv) {
       // Set the content's document
       content->SetDocument(mSink->mDocument);
+
+      // Set the text in the text node
+      static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
+      nsITextContent* text = nsnull;
+      content->QueryInterface(kITextContentIID, (void**) &text);
+      text->SetText(mText, mTextLength, PR_FALSE);
+      NS_RELEASE(text);
+
       // Add text to its parent
       NS_ASSERTION(mStackPos > 0, "leaf w/o container");
       nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
