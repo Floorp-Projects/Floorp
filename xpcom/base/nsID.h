@@ -46,6 +46,7 @@
 
 /**
  * A "unique identifier". This is modeled after OSF DCE UUIDs.
+ * @status FROZEN
  */
 
 struct nsID {

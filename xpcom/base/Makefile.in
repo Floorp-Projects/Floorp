@@ -59,16 +59,13 @@ EXPORTS		= \
 		nsComObsolete.h \
 		nsCWeakReference.h \
 		nsError.h \
-		nsID.h \
 		nsIID.h \
-		nsISupportsBase.h \
 		nsISupportsImpl.h \
 		nsISupportsUtils.h \
 		nsISupportsObsolete.h \
 		nsIWeakReferenceUtils.h \
 		nsTraceRefcnt.h \
 		nsWeakPtr.h \
-		nscore.h \
 		nsIInterfaceRequestorUtils.h \
 		$(NULL)
 
@@ -97,6 +94,12 @@ SDK_XPIDLSRCS   = \
 		nsIWeakReference.idl	   \
 		nsIMemory.idl		   \
 		nsrootidl.idl		   \
+
+SDK_HEADERS     = \
+		nsISupportsBase.h \
+		nscore.h \
+		nsID.h \
+
 
 XPIDLSRCS	= \
 		nsIErrorService.idl \
