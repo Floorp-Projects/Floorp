@@ -98,6 +98,8 @@ public:
   // native methods callable from JavaScript
   NS_DECL_NSISIMPLEPLUGIN
 
+  void SetInstance(nsPluginInstance* plugin);
+
 protected:
   nsPluginInstance* mPlugin;
 };

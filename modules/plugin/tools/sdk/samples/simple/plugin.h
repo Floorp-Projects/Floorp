@@ -59,12 +59,12 @@ public:
   // locals
   void getVersion(char* *aVersion);
 
-  nsISimplePlugin* getScriptablePeer();
+  nsScriptablePeer* getScriptablePeer();
 
 private:
   NPP mInstance;
   NPBool mInitialized;
-  nsISimplePlugin * mScriptablePeer;
+  nsScriptablePeer * mScriptablePeer;
 
 public:
   char mString[128];

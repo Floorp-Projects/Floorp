@@ -91,6 +91,11 @@ nsPluginInstance::nsPluginInstance(NPP aInstance) : nsPluginInstanceBase(),
 
 nsPluginInstance::~nsPluginInstance()
 {
+  // mScriptablePeer may be also held by the browser 
+  // so releasing it here does not guarantee that it is over
+  // we should take precaution in case it will be called later
+  // and zero its mPlugin member
+  mScriptablePeer->SetInstance(NULL);
   NS_IF_RELEASE(mScriptablePeer);
 }
 
@@ -356,7 +361,7 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
 // ==============================
 //
 // this method will return the scriptable object (and create it if necessary)
-nsIScriptablePlugin* nsPluginInstance::getScriptablePeer()
+nsScriptablePeer* nsPluginInstance::getScriptablePeer()
 {
   if (!mScriptablePeer) {
     mScriptablePeer = new nsScriptablePeer(this);
@@ -369,6 +374,4 @@ nsIScriptablePlugin* nsPluginInstance::getScriptablePeer()
   // add reference for the caller requesting the object
   NS_ADDREF(mScriptablePeer);
   return mScriptablePeer;
-
-  return NULL;
 }
