@@ -381,10 +381,20 @@ function MsgMoveMessage(destFolder)
 		//get the current folder
 		var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
 		var srcFolder = GetThreadTreeFolder();
-		messenger.CopyMessages(tree.database,
-                               srcFolder.resource,
-                               destFolder.resource, messageList, true);
-		SelectNextMessage(nextMessage);
+        var srcUri = srcFolder.getAttribute('ref');
+        if (srcUri.substring(0,6) == "news:/")
+        {
+            messenger.CopyMessages(tree.database,
+                                   srcFolder.resource,
+                                   destFolder.resource, messageList, false);
+        }
+        else
+        {
+            messenger.CopyMessages(tree.database,
+                                   srcFolder.resource,
+                                   destFolder.resource, messageList, true);
+            SelectNextMessage(nextMessage);
+        }
 	}	
 }
 
