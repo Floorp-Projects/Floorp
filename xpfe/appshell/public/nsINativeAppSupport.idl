@@ -20,15 +20,8 @@
  * Contributor(s): 
  *  Bill Law    <law@netscape.com>
  */
-#ifndef nsINativeAppSupport_h__
-#define nsINativeAppSupport_h__
  
-#include "nsISupports.h"
-#include "nsISplashScreen.h"
-
-// 5fdf8480-1f98-11d4-8077-00600811a9c3
-#define NS_INATIVEAPPSUPPORT_IID \
-    { 0x5fdf8480, 0x1f98, 0x11d4, { 0x80, 0x77, 0x00, 0x60, 0x08, 0x11, 0xa9, 0xc3 } }
+#include "nsISupports.idl"
 
 /* nsINativeAppSupport
  *
@@ -48,10 +41,15 @@
  * interface is instantiated by somewhat unconventional means.
  *
  * To create the implementor of this interface, you call the function
- * NS_CreateNativeAppSupport.
+ * NS_CreateNativeAppSupport.  This is done in the startup code
+ * in mozilla/xpfe/bootstrap.
+ *
+ * You can use this interface by obtaining an instance via the
+ * "nativeAppSupport" attribute of the nsIAppShellService
+ * interface/service.
  *
  * The interface provides these functions:
- *  Start - You call this to inform the native app support that the  
+ *  start - You call this to inform the native app support that the  
  *          application is starting.  In addition, it serves as a
  *          query as to whether the application should continue to
  *          run.  In that respect, it is rougly equivalent to the
@@ -69,7 +67,7 @@
  *                      successfully passed to the instance of the
  *                      application acting as a DDE server.
  *
- *  Stop - You call this to inform the native app support that the
+ *  stop - You call this to inform the native app support that the
  *         application *wishes* to terminate.  If the returned boolean
  *         value is PR_FALSE, then the application should continue
  *         (as if there were still additional top-level windows open).
@@ -80,7 +78,7 @@
  *                     acting as DDE clients, then this function will
  *                     return PR_FALSE.
  * 
- *  Quit - Like Stop, but this method *forces* termination (or more 
+ *  quit - Like Stop, but this method *forces* termination (or more 
  *         precisely, indicates that the application is about to be
  *         terminated regardless of what a call to Stop might have
  *         returned.
@@ -112,31 +110,49 @@
  *                     is quitting.  For this reason, the call to Quit
  *                     should be deferred as long as possible.
  *
- *  ShowSplashScreen - Causes the platform-specific splash screen to be
+ *  showSplashScreen - Causes the platform-specific splash screen to be
  *                     displayed.  This is a replacement for the old
  *                     method of invoking the Show() method on the
  *                     nsISplashScreen interface obtained by calling
  *                     NS_CreateSplashScreen.
  *
- *  HideSplashScreen - Causes the splash screen to be removed (if it is
+ *  hideSplashScreen - Causes the splash screen to be removed (if it is
  *                     being shown).  This replaces the old method of
  *                     invoking the Hide() method on the nsISplashScreen
  *                     interface maintained by the app shell service.
  *
+ *  cacheBrowserWindow - Takes an about-to-be-closed navigator window
+ *                       and "caches it" for later use.  It returns an
+ *                       indicator of whether the window was actually
+ *                       cached.  If that result is false, then the
+ *                       caller should close the window normally.
+ *
+ * This interface has these attributes:
+ *  isServerMode - Boolean attribute indicating whether the application
+ *                 is running in "server mode."  Server mode means the
+ *                 application was started to pre-load shared-libraries,
+ *                 initialize services, and open a hidden Navigator window
+ *                 in order to quickly surface that window when the user
+ *                 launches the application in the normal mode.  This
+ *                 mode is currently Win32-only (and may really only make
+ *                 sense there) and is intended to be initiated from the
+ *                 Windows startup folder at system initialization.
  */
-class nsINativeAppSupport : public nsISupports {
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR( NS_INATIVEAPPSUPPORT_IID )
 
+interface nsIDOMWindow;
+
+[scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
+interface nsINativeAppSupport : nsISupports {
     // Startup/shutdown.
-    NS_IMETHOD Start( PRBool *result ) = 0;
-    NS_IMETHOD Stop( PRBool *result ) = 0;
-    NS_IMETHOD Quit() = 0;
+    boolean start();
+    boolean stop();
+    void    quit();
 
     // Splash screen functions.
-    NS_IMETHOD ShowSplashScreen() = 0;
-    NS_IMETHOD HideSplashScreen() = 0;
+    void showSplashScreen();
+    void hideSplashScreen();
 
-}; // class nsINativeAppSupport
-
-#endif // nsINativeAppSupport_h__
+    // Server mode.
+    attribute boolean isServerMode;
+    boolean cacheBrowserWindow(in nsIDOMWindow aWindow);
+};

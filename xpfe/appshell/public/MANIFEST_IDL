@@ -7,4 +7,5 @@ nsICmdLineService.idl
 nsIWindowMediator.idl
 nsIXULWindow.idl
 nsIUserInfo.idl
+nsINativeAppSupport.idl
 

@@ -24,11 +24,11 @@
 
 nsNativeAppSupportBase::nsNativeAppSupportBase()
     : mRefCnt( 0 ),
-      mSplash( 0 ) {
+      mSplash( 0 ),
+      mServerMode( PR_FALSE ) {
 }
 
 nsNativeAppSupportBase::~nsNativeAppSupportBase() {
-    NS_IF_RELEASE( mSplash );
 }
 
 // Start answer defaults to OK.
@@ -57,7 +57,7 @@ nsNativeAppSupportBase::Quit() {
 NS_IMETHODIMP
 nsNativeAppSupportBase::ShowSplashScreen() {
     if ( !mSplash ) {
-        nsresult rv = CreateSplashScreen( &mSplash );
+        nsresult rv = CreateSplashScreen( getter_AddRefs( mSplash ) );
     }
     if ( mSplash ) {
         mSplash->Show();
@@ -70,11 +70,32 @@ NS_IMETHODIMP
 nsNativeAppSupportBase::HideSplashScreen() {
     // See if there is a splash screen object.
     if ( mSplash ) {
+        // Unhook it.
+        nsCOMPtr<nsISplashScreen> splash = mSplash;
+        mSplash = 0;
         // Hide it.
-        mSplash->Hide();
-        // Release it.
-        NS_RELEASE( mSplash );
+        splash->Hide();
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportBase::SetIsServerMode(PRBool aIsServerMode) {
+    mServerMode = aIsServerMode;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportBase::GetIsServerMode(PRBool *aIsServerMode) {
+    NS_ENSURE_ARG( aIsServerMode );
+    *aIsServerMode = mServerMode;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportBase::CacheBrowserWindow(nsIDOMWindow *aWindow, PRBool *aResult) {
+    NS_ENSURE_ARG( aResult );
+    *aResult = PR_FALSE;
     return NS_OK;
 }
 

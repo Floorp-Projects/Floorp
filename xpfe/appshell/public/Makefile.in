@@ -34,7 +34,6 @@ EXPORTS		= \
 		nsAppShellCIDs.h \
 		nsIDOMXPConnectFactory.h \
 		nsISplashScreen.h \
-		nsINativeAppSupport.h \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -45,6 +44,7 @@ XPIDLSRCS	= \
 		nsIXULWindow.idl \
 		nsIUserInfo.idl \
 		nsITimingService.idl \
+		nsINativeAppSupport.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)

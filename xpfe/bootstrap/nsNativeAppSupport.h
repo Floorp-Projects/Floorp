@@ -21,6 +21,7 @@
  */
  
 #include "nsINativeAppSupport.h"
+#include "nsISplashScreen.h"
  
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult );
 
