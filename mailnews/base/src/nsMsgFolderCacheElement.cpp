@@ -96,7 +96,7 @@ NS_IMETHODIMP nsMsgFolderCacheElement::GetInt32Property(const char *propertyName
     PR_FREEIF(resultStr);
 	*aResult = result;
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolderCacheElement::SetStringProperty(const char *propertyName, const char *propertyValue)
