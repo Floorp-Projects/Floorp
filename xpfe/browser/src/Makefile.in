@@ -64,6 +64,21 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/messagel.gif \
 	$(srcdir)/questionl.gif \
 	$(srcdir)/DumpDOM.js \
+	$(srcdir)/lessCols.gif \
+	$(srcdir)/lessCols_mo.gif \
+	$(srcdir)/lessCols_dis.gif \
+	$(srcdir)/moreCols.gif \
+	$(srcdir)/moreCols_mo.gif \
+	$(srcdir)/moreCols_dis.gif \
+	$(srcdir)/scrollUp.gif \
+	$(srcdir)/scrollUp_mo.gif \
+	$(srcdir)/scrollUp_dis.gif \
+	$(srcdir)/scrollDown.gif \
+	$(srcdir)/scrollDown_mo.gif \
+	$(srcdir)/scrollDown_dis.gif \
+	$(srcdir)/scrollThumb.gif \
+	$(srcdir)/scrollThumb_mo.gif \
+	$(srcdir)/scrollThumb_dis.gif \
 	$(NULL)
 
 install:: 

@@ -844,11 +844,15 @@ box[debug] progressmeter {
 thumb {
    background-color: rgb(206, 207, 206);
    border: 2px outset rgb(156, 154, 156);
-   list-style-image: url(resource:/res/toolbar/TB_Stop.gif)
+   list-style-image: url(scrollThumb.gif)
 }
 
 thumb:hover {
-   background-color: rgb(220, 210, 210);
+   list-style-image: url(scrollThumb_mo.gif);
+}
+
+thumb[disabled="true"] {
+   list-style-image: url(scrollThumb_dis.gif);
 }
 
 thumb:active {
@@ -857,7 +861,7 @@ thumb:active {
 
 slider {
    border: 1px solid black;
-   background-image: url(bg.jpg);
+   background-color: rgb(240,240,240);
 }
 
 scrollbarbutton {
@@ -882,9 +886,49 @@ scrollbarbutton:active {
 }
 
 scrollbarbutton.decrement {
-   list-style-image: url(resource:/res/toolbar/TB_Back.gif)
+   list-style-image: url(scrollUp.gif)
+}
+
+scrollbarbutton.decrement:hover {
+   list-style-image: url(scrollUp_mo.gif)
+}
+
+scrollbarbutton.decrement[disabled="true"] {
+   list-style-image: url(scrollUp_dis.gif) 
 }
 
 scrollbarbutton.increment {
-   list-style-image: url(resource:/res/toolbar/TB_Forward.gif)
+   list-style-image: url(scrollDown.gif)
+}
+
+scrollbarbutton.increment:hover {
+   list-style-image: url(scrollDown_mo.gif)
+}
+
+scrollbarbutton.increment[disabled="true"] {
+   list-style-image: url(scrollDown_dis.gif) 
+}
+
+treepusher.increment {
+   list-style-image: url(moreCols_mo.gif)
+}
+
+treepusher.increment:hover {
+   list-style-image: url(moreCols_mo.gif)
+}
+
+treepusher.increment[disabled="true"] {
+   list-style-image: url(moreCols_dis.gif)
+}
+
+treepusher.decrement {
+   list-style-image: url(lessCols_mo.gif)
+}
+
+treepusher.decrement:hover {
+   list-style-image: url(lessCols_mo.gif)
+}
+
+treepusher.decrement[disabled="true"] {
+   list-style-image: url(lessCols_dis.gif)
 }
