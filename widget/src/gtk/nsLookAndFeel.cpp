@@ -40,6 +40,9 @@
 
 #include "nsXPLookAndFeel.h"
 
+  // for |#ifdef DEBUG|
+#include "nsSize.h"
+
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
