@@ -23,26 +23,54 @@ DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 REQUIRES=xpcom raptor netlib
 
-CPPSRCS=nsHTMLContentSink.cpp \
-    nsHTMLTokens.cpp nsParserNode.cpp nsScanner.cpp \
-    nsToken.cpp nsTokenHandler.cpp  \
-    CNavDTD.cpp \
-    COtherDTD.cpp \
-    nsParser.cpp prstrm.cpp
+CPPSRCS=					\
+	CNavDTD.obj				\
+	COtherDTD.obj				\
+	nsDTDDebug.obj				\
+	nsHTMLContentSink.obj			\
+	nsHTMLTags.obj				\
+	nsHTMLTokens.obj			\
+	nsParser.obj				\
+	nsParserNode.obj			\
+	nsScanner.obj				\
+	nsToken.obj				\
+	nsTokenHandler.obj			\
+	prstrm.obj				\
+	$(NULL)
 
-EXPORTS=nshtmlpars.h nsIContentSink.h nsIHTMLContentSink.h \
-    nsHTMLTokens.h nsIParserNode.h nsIParser.h nsToken.h  \
-    nsIDTDDebug.h nsIParserFilter.h \
-    CNavDTD.h COtherDTD.h nsIDTD.h
+CPP_OBJS=					\
+	.\$(OBJDIR)\CNavDTD.obj			\
+	.\$(OBJDIR)\COtherDTD.obj		\
+	.\$(OBJDIR)\nsDTDDebug.obj		\
+	.\$(OBJDIR)\nsHTMLContentSink.obj	\
+	.\$(OBJDIR)\nsHTMLTags.obj		\
+	.\$(OBJDIR)\nsHTMLTokens.obj		\
+	.\$(OBJDIR)\nsParser.obj		\
+	.\$(OBJDIR)\nsParserNode.obj		\
+	.\$(OBJDIR)\nsScanner.obj		\
+	.\$(OBJDIR)\nsToken.obj			\
+	.\$(OBJDIR)\nsTokenHandler.obj		\
+	.\$(OBJDIR)\prstrm.obj			\
+	$(NULL)
 
-CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
-    .\$(OBJDIR)\CNavDTD.obj \
-    .\$(OBJDIR)\COtherDTD.obj \
-    .\$(OBJDIR)\nsParser.obj \
-    .\$(OBJDIR)\nsHTMLTokens.obj          .\$(OBJDIR)\nsParserNode.obj \
-    .\$(OBJDIR)\nsScanner.obj             .\$(OBJDIR)\nsToken.obj \
-    .\$(OBJDIR)\nsTokenHandler.obj        .\$(OBJDIR)\nsDTDDebug.obj \
-    .\$(OBJDIR)\prstrm.obj
+EXPORTS=					\
+	nshtmlpars.h				\
+	nsIContentSink.h			\
+	nsIHTMLContentSink.h			\
+	nsHTMLTokens.h				\
+	nsIParserNode.h				\
+	nsIParser.h				\
+	nsToken.h				\
+	nsIDTDDebug.h				\
+	nsIParserFilter.h			\
+	CNavDTD.h				\
+	COtherDTD.h				\
+	nsIDTD.h				\
+	$(NULL)
+
+EXTRA_EXPORTS=					\
+	nsHTMLTags.h				\
+	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib
 
@@ -62,12 +90,30 @@ LLIBS=        \
  $(DIST)\lib\libplc21.lib       \
  $(LIBNSPR)  
 
+!ifdef MOZ_NO_DEBUG_RTL
+LLFLAGS= /NODEFAULTLIB msvcirt.lib msvcrt.lib
+#LLFLAGS= /NODEFAULTLIB
+!endif
+
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
-  $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-  $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+export:: generate
+	$(MAKE_INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)\$(MODULE)
+
+libs:: generate $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
-  rm -f $(DIST)\bin\$(DLLNAME).dll
-  rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+
+generate: nsHTMLTags.h
+
+.\$(OBJDIR)\nsHTMLTags.obj: nsHTMLTags.h
+
+GENTAGS = $(DEPTH)\htmlparser\tools\gentags.pl
+
+nsHTMLTags.h: $(GENTAGS)
+	rm -f nsHTMLTags.h
+	$(PERL) $(GENTAGS) nsHTMLTags

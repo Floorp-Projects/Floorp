@@ -34,12 +34,12 @@
 #define HTMLTOKENS_H
 
 #include "nsToken.h"
+#include "nsHTMLTags.h"
 #include <iostream.h>
 
 class CScanner;
 
 enum eHTMLTokenTypes {
-  
   eToken_unknown=0,
   eToken_start=1,     eToken_end,     eToken_comment,         eToken_entity,
   eToken_whitespace,  eToken_newline, eToken_text,            eToken_attribute,
@@ -47,84 +47,10 @@ enum eHTMLTokenTypes {
   eToken_last //make sure this stays the last token...
 };
 
-
-//*** This enum is used to define the known universe of HTML tags.
-//*** The use of this table doesn't preclude of from using non-standard
-//*** tags. It simply makes normal tag handling more efficient.
-enum eHTMLTags
-{
-
-  eHTMLTag_unknown=0,   eHTMLTag_doctype,     eHTMLTag_a,         eHTMLTag_acronym,
-  eHTMLTag_address,     eHTMLTag_applet,      eHTMLTag_area,      eHTMLTag_bold,
-  eHTMLTag_base,        eHTMLTag_basefont,    eHTMLTag_bdo,       eHTMLTag_big,         
-  eHTMLTag_blink,       eHTMLTag_blockquote,  eHTMLTag_body,      eHTMLTag_br,          
-  eHTMLTag_button,      eHTMLTag_caption,     eHTMLTag_center,    
-  eHTMLTag_certificate, eHTMLTag_cite,
-  eHTMLTag_code,        eHTMLTag_col,         eHTMLTag_colgroup,  eHTMLTag_comment,
-  eHTMLTag_dd,          eHTMLTag_del,         eHTMLTag_dfn,       eHTMLTag_dir,       
-  eHTMLTag_div,         eHTMLTag_dl,          eHTMLTag_dt,        
-  eHTMLTag_em,          eHTMLTag_embed,       eHTMLTag_entity,
-  eHTMLTag_fieldset,    eHTMLTag_font,        eHTMLTag_footer,  
-  eHTMLTag_form,        eHTMLTag_frame,       eHTMLTag_frameset,  //39
-  eHTMLTag_h1,          eHTMLTag_h2,          eHTMLTag_h3,        eHTMLTag_h4,
-  eHTMLTag_h5,          eHTMLTag_h6,          eHTMLTag_head,      eHTMLTag_header,
-  eHTMLTag_hr,          eHTMLTag_html,        eHTMLTag_italic,    eHTMLTag_iframe,    
-  eHTMLTag_ilayer,      eHTMLTag_img,         eHTMLTag_input,     eHTMLTag_ins,
-  eHTMLTag_isindex,       
-  eHTMLTag_kbd,         eHTMLTag_keygen,
-  eHTMLTag_label,       eHTMLTag_layer,       eHTMLTag_legend,    eHTMLTag_listitem, 
-  eHTMLTag_link,        eHTMLTag_listing,     eHTMLTag_map,       eHTMLTag_marquee,
-  eHTMLTag_math,        eHTMLTag_menu,        eHTMLTag_meta,      eHTMLTag_newline,
-  eHTMLTag_nobr,
-  eHTMLTag_noembed,     eHTMLTag_noframes,    eHTMLTag_nolayer,   eHTMLTag_noscript,  //
-  eHTMLTag_note,        eHTMLTag_object,      eHTMLTag_ol,
-  eHTMLTag_option,      eHTMLTag_paragraph,   eHTMLTag_param,     eHTMLTag_plaintext,   
-  eHTMLTag_pre,         eHTMLTag_quotation,   
-
-  eHTMLTag_s,           eHTMLTag_samp,        eHTMLTag_script,      
-  eHTMLTag_select,      eHTMLTag_server,      eHTMLTag_small,     
-  eHTMLTag_spacer,      eHTMLTag_span,        eHTMLTag_spell,
-  eHTMLTag_strike,      eHTMLTag_strong,      eHTMLTag_style,       
-  eHTMLTag_sub,         eHTMLTag_sup,           
-
-  eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        //
-  eHTMLTag_text,      //used for plain text; this is not really a tag.  
-  eHTMLTag_textarea,  //
-  
-  eHTMLTag_tfoot,   
-  eHTMLTag_th,          eHTMLTag_thead,       eHTMLTag_title,     eHTMLTag_tr,
-  eHTMLTag_tt,          eHTMLTag_u,           eHTMLTag_ul,          
-  eHTMLTag_var,         eHTMLTag_wbr,         eHTMLTag_whitespace,
-  eHTMLTag_xmp,         
-
-  //the following few enum values never occur in the document.
-  //they're used by the parser/dtd to enable implicit style resolution.
-  eHTMLTag_secret_h1style,  eHTMLTag_secret_h2style,
-  eHTMLTag_secret_h3style,  eHTMLTag_secret_h4style,
-  eHTMLTag_secret_h5style,  eHTMLTag_secret_h6style,
-
-  eHTMLTag_userdefined
-};
-
-//*** This enum is used to define the known universe of HTML attributes.
-//*** The use of this table doesn't preclude of from using non-standard
-//*** attributes. It simply makes normal tag handling more efficient.
-enum eHTMLAttributes {
-  eHTMLAttr_abbrev,     eHTMLAttr_above,      eHTMLAttr_alt,      eHTMLAttr_array,
-  eHTMLAttr_author,     eHTMLAttr_background, eHTMLAttr_banner,   eHTMLAttr_below,
-  eHTMLAttr_bgsound,    eHTMLAttr_box,        eHTMLAttr_bt,       eHTMLAttr_class,
-  eHTMLAttr_comment,    eHTMLAttr_credit,     eHTMLAttr_dir,      eHTMLAttr_figure,
-  eHTMLAttr_footnote,   eHTMLAttr_height,     eHTMLAttr_id,       eHTMLAttr_lang,
-  eHTMLAttr_math,       eHTMLAttr_name,       eHTMLAttr_nextid,   eHTMLAttr_nobreak,
-  eHTMLAttr_note,       eHTMLAttr_option,     eHTMLAttr_overlay,  eHTMLAttr_person,
-  eHTMLAttr_public,     eHTMLAttr_range,      eHTMLAttr_root,     eHTMLAttr_sgml,
-  eHTMLAttr_sqrt,       eHTMLAttr_src,        eHTMLAttr_style,    eHTMLAttr_text,
-  eHTMLAttr_title,      eHTMLAttr_wordbreak,  eHTMLAttr_width,    eHTMLAttr_xmp
-};
+#define eHTMLTags nsHTMLTag
 
 PRInt32         ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner);
 PRInt32         ConsumeAttributeText(PRUnichar aChar,nsString& aString,CScanner& aScanner);
-eHTMLTags       DetermineHTMLTagType(const nsString& aString);
 const char*     GetTagName(PRInt32 aTag);
 //PRInt32         FindEntityIndex(nsString& aString,PRInt32 aCount=-1);
 
