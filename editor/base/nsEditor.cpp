@@ -852,7 +852,7 @@ NS_IMETHODIMP nsEditor::Paste()
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
-  nsITransferable * trans;
+  nsITransferable * trans = 0;
   
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
   if (nsnull != trans) {
