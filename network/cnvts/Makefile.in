@@ -25,6 +25,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= netcnvts
 LIBRARY_NAME	= netcnvts
 
+CPPSRCS		= \
+	magic.cpp	\
+	cvplugin.cpp	\
+	nsNetConverterStream.cpp \
+	$(NULL)
+
 CSRCS		= \
 	cvactive.c	\
 	cvchunk.c	\
@@ -46,6 +52,11 @@ CSRCS += \
 endif
 
 EXPORTS= \
+    magic.h	\
+    magicCID.h	\
+    nsINetPlugin.h \
+    nsINetPluginInstance.h \
+    nsINetOStream.h	\
 	cvactive.h	\
 	cvview.h	\
 	cvproxy.h	\
@@ -55,6 +66,7 @@ EXPORTS= \
     cvcolor.h   \
     cvdisk.h    \
     cvsimple.h  \
+    cvplugin.h  \
     cvunzip.h   \
     cvjscfg.h
 
