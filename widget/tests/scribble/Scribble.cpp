@@ -554,10 +554,6 @@ nsresult CreateApplication(int * argc, char ** argv)
     checkButton->Show(PR_TRUE);
     NS_RELEASE(checkButton);
 
-
-#ifdef NOTNOW
-
-
     //
     // Add the color section
     //
@@ -593,7 +589,6 @@ nsresult CreateApplication(int * argc, char ** argv)
     scribbleData.blue->SetBackgroundColor(NS_RGB(0, 255, 0));
     scribbleData.blue->Show(PR_TRUE);
     y += rect.height +2;
-#endif
 
     //
     // create a button  
