@@ -26,6 +26,7 @@
 #ifdef MOZILLA_CLIENT
 #ifdef XP_UNIX  /* this whole module is ifdef'd UNIX */
 
+#include "mkgeturl.h"
 #include "mkstream.h"
 #include "mkformat.h"
 #include "net.h"
