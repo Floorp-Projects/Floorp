@@ -184,18 +184,21 @@ static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
 
-
+#ifdef MOZ_PERF_METRICS
 // local management of the style watch:
 //  aCtlValue should be set to all actions desired (bitwise OR'd together)
 //  aStyleSet cannot be null
 // NOTE: implementation is noop unless MOZ_PERF_METRICS is defined
-static nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
+static void CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
 #define kStyleWatchEnable  1
 #define kStyleWatchDisable 2
 #define kStyleWatchPrint   4
 #define kStyleWatchStart   8
 #define kStyleWatchStop    16
 #define kStyleWatchReset   32
+#else /* !defined(MOZ_PERF_METRICS */
+#define CtlStyleWatch(ctlvalue_,styleset_) /* nothing */
+#endif /* !defined(MOZ_PERF_METRICS */
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
@@ -672,6 +675,13 @@ FrameArena::FreeFrame(size_t aSize, void* aPtr)
     mRecyclers[index] = aPtr;
     *((void**)aPtr) = currentTop;
   }
+#ifdef DEBUG_dbaron
+  else {
+    fprintf(stderr,
+            "WARNING: FrameArena::FreeFrame leaking chunk of %d bytes.\n",
+            aSize);
+  }
+#endif
 #endif
   return NS_OK;
 }
@@ -7388,13 +7398,13 @@ PresShellViewEventListener::DidRefreshRect(nsIViewManager *aViewManager,
   return RestoreCaretVisibility();
 }
 
+#ifdef MOZ_PERF_METRICS
 // Enable, Disable and Print, Start, Stop and/or Reset the StyleSet watch
 /*static*/
-nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
+void CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
 {
   NS_ASSERTION(aStyleSet!=nsnull,"aStyleSet cannot be null in CtlStyleWatch");
   nsresult rv = NS_OK;
-#ifdef MOZ_PERF_METRICS
   if (aStyleSet != nsnull){
     nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(aStyleSet, &rv);
     if (NS_SUCCEEDED(rv) && watch) {
@@ -7418,9 +7428,8 @@ nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
       }
     }
   }
-#endif
-  return rv;  
 }
+#endif
 
 
 //=============================================================
