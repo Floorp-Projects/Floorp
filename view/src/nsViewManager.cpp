@@ -1797,7 +1797,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         nsIScrollbar* sb;
         PRBool capturedEvent = PR_FALSE;
 
-        if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent)) {
+        if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent) ||
+            NS_IS_IME_EVENT(aEvent)) {
           gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
         }
 
@@ -1810,7 +1811,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           view = mMouseGrabber;
           capturedEvent = PR_TRUE;
         }
-        else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
+        else if (nsnull != mKeyGrabber && (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent))) {
           view = mKeyGrabber;
           capturedEvent = PR_TRUE;
         }
@@ -2009,7 +2010,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
   // accessibility events and key events are dispatched directly to the focused view
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT || aEvent->message == NS_CONTEXTMENU_KEY
-      || NS_IS_KEY_EVENT(aEvent)) {
+      || NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     if (obs) {
        PRBool handled;
