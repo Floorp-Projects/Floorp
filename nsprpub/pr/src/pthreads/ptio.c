@@ -706,7 +706,7 @@ static PRBool pt_accept_cont(pt_Continuation *op, PRInt16 revents)
     if (-1 == op->result.code)
     {
         op->syserrno = errno;
-        if (EWOULDBLOCK == errno || EAGAIN == errno)  /* the only thing we allow */
+        if (EWOULDBLOCK == errno || EAGAIN == errno || ECONNABORTED == errno)
             return PR_FALSE;  /* do nothing - this one ain't finished */
     }
     return PR_TRUE;
@@ -1546,7 +1546,9 @@ static PRFileDesc* pt_Accept(
     {
         if (fd->secret->nonblocking) goto failed;
 
-        if (EWOULDBLOCK != syserrno && EAGAIN != syserrno) goto failed;
+        if (EWOULDBLOCK != syserrno && EAGAIN != syserrno
+        && ECONNABORTED != syserrno)
+            goto failed;
         else
         {
             if (PR_INTERVAL_NO_WAIT == timeout) syserrno = ETIMEDOUT;
