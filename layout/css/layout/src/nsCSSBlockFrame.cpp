@@ -2217,7 +2217,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       else {
         const nsFont& defaultFont = aState.mPresContext->GetDefaultFont();
         nsIFontMetrics* fm = aState.mPresContext->GetMetricsFor(defaultFont);
-        childTopMargin = fm->GetHeight();
+        fm->GetHeight(childTopMargin);
         NS_RELEASE(fm);
       }
     }
@@ -2407,7 +2407,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       if (NS_STYLE_DISPLAY_LIST_ITEM != childDisplay->mDisplay) {
         const nsFont& defaultFont = aState.mPresContext->GetDefaultFont();
         nsIFontMetrics* fm = aState.mPresContext->GetMetricsFor(defaultFont);
-        childBottomMargin = fm->GetHeight();
+        fm->GetHeight(childBottomMargin);
         NS_RELEASE(fm);
       }
     }

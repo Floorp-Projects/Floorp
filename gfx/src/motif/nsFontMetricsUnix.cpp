@@ -56,7 +56,7 @@ nsFontMetricsUnix :: ~nsFontMetricsUnix()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
 
-nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+NS_IMETHODIMP nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
@@ -265,28 +265,32 @@ void nsFontMetricsUnix::RealizeFont()
   mLeading = 0;
 }
 
-nscoord nsFontMetricsUnix :: GetWidth(char ch)
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(char ch, nscoord &aWidth)
 {
   if (ch < 256)
-    return mCharWidths[ch];
+    aWidth = mCharWidths[ch];
   else
-    return 0; //XXX
+    aWidth = 0; //XXX
+
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetWidth(PRUnichar ch)
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
   if (ch < 256)
-    return mCharWidths[PRUint8(ch)];
+    aWidth = mCharWidths[PRUint8(ch)];
   else
-    return 0;/* XXX */
+    aWidth = 0;/* XXX */
+
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const nsString& aString, nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length());
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const char *aString, nscoord &aWidth)
 {
   PRInt32 rc = 0 ;
   
@@ -294,10 +298,13 @@ nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 
   float dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
-  return nscoord(rc * dev2app);
+  aWidth = nscoord(rc * dev2app);
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(const PRUnichar *aString,
+                                            PRUint32 aLength,
+                                            nscoord &aWidth)
 {
   XChar2b * thischar ;
   PRUint16 aunichar;
@@ -328,53 +335,64 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
 
   float dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
-  return nscoord(width * dev2app);
+  aWidth = nscoord(width * dev2app);
+  return NS_OK;
 }
 
 // XXX this needs to be implemented
-nscoord nsFontMetricsUnix :: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidth(nsIDeviceContext *aContext,
+                                            const nsString& aString,
+                                            nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length());
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-nscoord nsFontMetricsUnix :: GetHeight()
+NS_IMETHODIMP nsFontMetricsUnix :: GetHeight(nscoord &aHeight)
 {
-  return mHeight;
+  aHeight = mHeight;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetLeading()
+NS_IMETHODIMP nsFontMetricsUnix :: GetLeading(nscoord &aLeading)
 {
-  return mLeading;
+  aLeading = mLeading;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetMaxAscent()
+NS_IMETHODIMP nsFontMetricsUnix :: GetMaxAscent(nscoord &aAscent)
 {
-  return mMaxAscent;
+  aAscent = mMaxAscent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetMaxDescent()
+NS_IMETHODIMP nsFontMetricsUnix :: GetMaxDescent(nscoord &aDescent)
 {
-  return mMaxDescent;
+  aDescent = mMaxDescent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsUnix :: GetMaxAdvance()
+NS_IMETHODIMP nsFontMetricsUnix :: GetMaxAdvance(nscoord &aAdvance)
 {
-  return mMaxAdvance;
+  aAdvance = mMaxAdvance;
+  return NS_OK;
 }
 
-const nscoord * nsFontMetricsUnix :: GetWidths()
+NS_IMETHODIMP nsFontMetricsUnix :: GetWidths(const nscoord *&aWidths)
 {
-  return mCharWidths;
+  aWidths = mCharWidths;
+  return NS_OK;
 }
 
-const nsFont& nsFontMetricsUnix :: GetFont()
+NS_IMETHODIMP nsFontMetricsUnix :: GetFont(const nsFont*& aFont)
 {
-  return *mFont;
+  aFont = mFont;
+  return NS_OK;
 }
 
-nsFontHandle nsFontMetricsUnix :: GetFontHandle()
+NS_IMETHODIMP nsFontMetricsUnix :: GetFontHandle(nsFontHandle &aHandle)
 {
-  return (nsFontHandle)mFontHandle;
+  aHandle = (nsFontHandle)mFontHandle;
+  return NS_OK;
 }
 
 

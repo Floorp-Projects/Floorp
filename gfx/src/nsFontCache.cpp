@@ -82,7 +82,9 @@ NS_IMETHODIMP FontCacheImpl :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics
   {
     aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
 
-    if (aFont.Equals(aMetrics->GetFont()))
+    const nsFont* font;
+    aMetrics->GetFont(font);
+    if (aFont.Equals(*font))
     {
       NS_ADDREF(aMetrics);
       return NS_OK;

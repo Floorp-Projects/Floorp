@@ -455,7 +455,8 @@ ImageFrame::MeasureString(nsIFontMetrics*  aFontMetrics,
                           PRUint32&        aMaxFit)
 {
   nscoord totalWidth = 0;
-  nscoord spaceWidth = aFontMetrics->GetWidth(' ');
+  nscoord spaceWidth;
+  aFontMetrics->GetWidth(' ', spaceWidth);
 
   aMaxFit = 0;
   while (aLength > 0) {
@@ -471,7 +472,8 @@ ImageFrame::MeasureString(nsIFontMetrics*  aFontMetrics,
     }
   
     // Measure this chunk of text, and see if it fits
-    nscoord width = aFontMetrics->GetWidth(aString, len);
+    nscoord width;
+    aFontMetrics->GetWidth(aString, len, width);
     PRBool  fits = (totalWidth + width) <= aMaxWidth;
 
     // If it fits on the line, or it's the first word we've processed then
@@ -530,8 +532,9 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   // Format the text to display within the formatting rect
   nsIFontMetrics* fm = aRenderingContext.GetFontMetrics();
 
-  nscoord maxDescent = fm->GetMaxDescent();
-  nscoord height = fm->GetHeight();
+  nscoord maxDescent, height;
+  fm->GetMaxDescent(maxDescent);
+  fm->GetHeight(height);
 
   // XXX It would be nice if there was a way to have the font metrics tell
   // use where to break the text given a maximum width. At a minimum we need

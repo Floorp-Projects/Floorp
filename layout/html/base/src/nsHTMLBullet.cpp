@@ -231,6 +231,7 @@ BulletFrame::Paint(nsIPresContext&      aCX,
 {
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  nscoord width;
 
   if (disp->mVisible) {
     const nsStyleList* myList =
@@ -293,8 +294,8 @@ BulletFrame::Paint(nsIPresContext&      aCX,
       fm = aCX.GetMetricsFor(myFont->mFont);
       GetListItemText(&aCX, nsnull, *myList, text);
       aRenderingContext.SetFont(myFont->mFont);
-      aRenderingContext.DrawString(text, mPadding.left, mPadding.top,
-                                   fm->GetWidth(text));
+      fm->GetWidth(text, width);
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top, width);
       NS_RELEASE(fm);
       break;
     }
@@ -523,6 +524,8 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 {
   const nsStyleList* myList =
     (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  nscoord ascent;
+
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.SetURL(myList->mListStyleImage);
     mImageLoader.GetDesiredSize(aCX, aReflowState, aMetrics);
@@ -556,13 +559,14 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_BASIC:
   case NS_STYLE_LIST_STYLE_SQUARE:
     t2p = aCX->GetTwipsToPixels();
-    bulletSize = NSTwipsToIntPixels((nscoord)NSToIntRound(0.8f * (float(fm->GetMaxAscent()) / 2.0f)), t2p);
+    fm->GetMaxAscent(ascent);
+    bulletSize = NSTwipsToIntPixels((nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
     if (bulletSize < 1) {
       bulletSize = MIN_BULLET_SIZE;
     }
     p2t = aCX->GetPixelsToTwips();
     bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
-    mPadding.bottom = (fm->GetMaxAscent() / 8);
+    mPadding.bottom = ascent / 8;
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
       mPadding.right = bulletSize / 2;
     }
@@ -578,15 +582,17 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
   case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
     GetListItemText(aCX, aState, *myList, text);
+    fm->GetHeight(aMetrics.height);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
       // Inside bullets need some extra width to get the padding
       // between the list item and the content that follows.
-      mPadding.right = fm->GetHeight() / 2;          // From old layout engine
+      mPadding.right = aMetrics.height / 2;          // From old layout engine
     }
-    aMetrics.width = mPadding.right + fm->GetWidth(text);
-    aMetrics.height = fm->GetHeight();
-    aMetrics.ascent = fm->GetMaxAscent();
-    aMetrics.descent = fm->GetMaxDescent();
+    
+    fm->GetWidth(text, aMetrics.width);
+    aMetrics.width += mPadding.right;
+    fm->GetMaxAscent(aMetrics.ascent);
+    fm->GetMaxDescent(aMetrics.descent);
     break;
   }
   NS_RELEASE(fm);

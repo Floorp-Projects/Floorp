@@ -44,7 +44,7 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID)
 
-nsresult nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
 /*  NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
@@ -236,28 +236,30 @@ nsresult nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   mLeading = 0;
 }*/
 
-nscoord nsFontMetricsMac :: GetWidth(char ch)
+NS_IMETHODIMP nsFontMetricsMac :: GetWidth(char ch, nscoord &aWidth)
 {
   //if (ch < 256)
   //  return mCharWidths[ch];
   //else
-    return 0; //XXX
+    aWidth = 0; //XXX
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetWidth(PRUnichar ch)
+NS_IMETHODIMP nsFontMetricsMac :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
   //if (ch < 256)
   //  return mCharWidths[PRUint8(ch)];
  // else
-    return 0;/* XXX */
+    aWidth = 0;/* XXX */
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetWidth(const nsString& aString)
+NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const nsString& aString, nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length());
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-nscoord nsFontMetricsMac :: GetWidth(const char *aString)
+NS_IMETHOPIMP nsFontMetricsMac :: GetWidth(const char *aString, nscoord &aWidth)
 {
  /* PRInt32 rc = 0 ;
   
@@ -266,9 +268,10 @@ nscoord nsFontMetricsMac :: GetWidth(const char *aString)
   rc = (PRInt32) ::XTextWidth(fs, aString, nsCRT::strlen(aString));
 
   return (nscoord(rc * mContext->GetDevUnitsToAppUnits()));*/
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
+NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth)
 {
 //  XChar2b * xstring ;
 //  XChar2b * thischar ;
@@ -294,55 +297,67 @@ nscoord nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 
   //return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
    
-  return width;
+  aWidth = width;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // XXX this needs to be implemented correctly
-nscoord  nsFontMetricsMac:: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+NS_IMETHODIMP nsFontMetricsMac:: GetWidth(nsIDeviceContext *aContext,
+                                          const nsString& aString,
+                                          nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length());
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-nscoord nsFontMetricsMac :: GetHeight()
+NS_IMETHODIMP nsFontMetricsMac :: GetHeight(nscoord &aHeight)
 {
   //return mHeight;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetLeading()
+NS_IMETHODIMP nsFontMetricsMac :: GetLeading(nscoord &aLeading)
 {
   //return mLeading;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetMaxAscent()
+NS_IMETHODIMP nsFontMetricsMac :: GetMaxAscent(nscoord &aAscent)
 {
   //return mMaxAscent;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetMaxDescent()
+NS_IMETHODIMP nsFontMetricsMac :: GetMaxDescent(nscoord &aDescent)
 {
   //return mMaxDescent;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsMac :: GetMaxAdvance()
+NS_IMETHODIMP nsFontMetricsMac :: GetMaxAdvance(nscoord &aAdvance)
 {
   //return mMaxAdvance;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-const nscoord * nsFontMetricsMac :: GetWidths()
+NS_IMETHODIMP nsFontMetricsMac :: GetWidths(const nscoord *&aWidths)
 {
   //return mCharWidths;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-const nsFont& nsFontMetricsMac :: GetFont()
+NS_IMETHODIMP nsFontMetricsMac :: GetFont(const nsFont *&aFont)
 {
   //return *mFont;
   //return nsnull;
+  aFont = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsFontHandle nsFontMetricsMac :: GetFontHandle()
+NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 {
   //return (nsFontHandle)mFontHandle;
-  return nsnull;
+  aHandle = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

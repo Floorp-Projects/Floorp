@@ -43,47 +43,47 @@ class nsIFontMetrics : public nsISupports
 
 public:
   //initializer
-  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
+  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
 
   //get the width of an 8 bit char
-  virtual nscoord GetWidth(char aC) = 0;
+  NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
 
   //get the width of a unicode char
-  virtual nscoord GetWidth(PRUnichar aC) = 0;
+  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
 
   //get the width of an nsString
-  virtual nscoord GetWidth(const nsString& aString) = 0;
+  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth) = 0;
 
   //get the width of 8 bit character string
-  virtual nscoord GetWidth(const char *aString) = 0;
+  NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth) = 0;
 
   //get the width of a Unicode character string
-  virtual nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength) = 0;
+  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth) = 0;
 
-  virtual nscoord GetWidth(nsIDeviceContext *aContext, const nsString& aString) = 0;
+  NS_IMETHOD  GetWidth(nsIDeviceContext *aContext, const nsString& aString, nscoord &aWidth) = 0;
 
   //get the height as this font
-  virtual nscoord GetHeight() = 0;
+  NS_IMETHOD  GetHeight(nscoord &aHeight) = 0;
 
   //get height - (ascent + descent)
-  virtual nscoord GetLeading() = 0;
+  NS_IMETHOD  GetLeading(nscoord &aLeading) = 0;
 
   //get the maximum character ascent
-  virtual nscoord GetMaxAscent() = 0;
+  NS_IMETHOD  GetMaxAscent(nscoord &aAscent) = 0;
 
   //get the maximum character descent
-  virtual nscoord GetMaxDescent() = 0;
+  NS_IMETHOD  GetMaxDescent(nscoord &aDescent) = 0;
 
   //get the maximum character advance for the font
-  virtual nscoord GetMaxAdvance() = 0;
+  NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance) = 0;
 
   //get the widths of the first 256 characters of the font
-  virtual const nscoord *GetWidths() = 0;
+  NS_IMETHOD  GetWidths(const nscoord *&aWidths) = 0;
 
   //get the font associated width these metrics
-  virtual const nsFont& GetFont() = 0;
+  NS_IMETHOD  GetFont(const nsFont *&aFont) = 0;
 
-  virtual nsFontHandle GetFontHandle() = 0;
+  NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle) = 0;
 };
 
 #endif /* nsIFontMetrics_h___ */

@@ -888,7 +888,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 		    nsString textStr;
 		    textStr.Append(compressedStr, endPnt->GetOffset()- mContentOffset);
 
-		    nscoord textLen = fm->GetWidth(deviceContext, textStr);
+		    nscoord textLen;
+        fm->GetWidth(deviceContext, textStr, textLen);
 
         // Draw little blue triangle
 		    aRenderingContext.SetColor(NS_RGB(0,0,255));
@@ -1016,7 +1017,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
       if (startCoord > 0) {
         textStr.Append(compressedStr, startCoord);
-        startTwipLen = fm->GetWidth(deviceContext, textStr);
+        fm->GetWidth(deviceContext, textStr, startTwipLen);
         aRenderingContext.DrawString(compressedStr, startCoord, dx, dy, startTwipLen);
       }
       //---------------------------------------------------
@@ -1026,7 +1027,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       textStr.SetLength(0);
       textStr.Append(compressedStr+startCoord, selTextCharLen);
 
-      nscoord selTextTwipLen = fm->GetWidth(deviceContext, textStr);
+      nscoord selTextTwipLen;
+      fm->GetWidth(deviceContext, textStr, selTextTwipLen);
 
       rect.x     = startTwipLen;
       rect.width = selTextTwipLen;
@@ -1050,7 +1052,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         textStr.SetLength(0);
         textStr.Append(compressedStr+endCoord, compressedStrLen-selTextCharLen);
 
-        PRUint32 endTextTwipLen = fm->GetWidth(deviceContext, textStr);
+        nscoord endTextTwipLen;
+        fm->GetWidth(deviceContext, textStr, endTextTwipLen);
 
         aRenderingContext.SetColor(color->mColor);
         aRenderingContext.DrawString(compressedStr+endCoord, compressedStrLen-endCoord, 
@@ -1078,7 +1081,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
         if (startOffset > 0) {
           textStr.Append(compressedStr, startOffset);
-          startTwipLen = fm->GetWidth(deviceContext, textStr);
+          fm->GetWidth(deviceContext, textStr, startTwipLen);
           aRenderingContext.DrawString(compressedStr, startOffset, dx, dy, startTwipLen);
         }
 
@@ -1089,7 +1092,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         textStr.SetLength(0);
         textStr.Append(compressedStr+startOffset, selTextCharLen);
 
-        nscoord selTextTwipLen = fm->GetWidth(deviceContext, textStr);
+        nscoord selTextTwipLen;
+        fm->GetWidth(deviceContext, textStr, selTextTwipLen);
 
         rect.x     = startTwipLen;
         rect.width = selTextTwipLen;
@@ -1146,7 +1150,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         textStr.SetLength(0);
         textStr.Append(compressedStr, selTextCharLen);
 
-        nscoord selTextTwipLen = fm->GetWidth(deviceContext, textStr);
+        nscoord selTextTwipLen;
+        fm->GetWidth(deviceContext, textStr, selTextTwipLen);
 
         rect.width = selTextTwipLen;
 
@@ -1165,7 +1170,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         textStr.SetLength(0);
         textStr.Append(compressedStr+endOffset, compressedStrLen-selTextCharLen);
 
-        PRUint32 endTextTwipLen = fm->GetWidth(deviceContext, textStr);
+        nscoord endTextTwipLen;
+        fm->GetWidth(deviceContext, textStr, endTextTwipLen);
 
         const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
@@ -1297,7 +1303,8 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
   mContentOffset = aStartingOffset;
 
   nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
-  PRInt32 spaceWidth = fm->GetWidth(' ');
+  PRInt32 spaceWidth;
+  fm->GetWidth(' ', spaceWidth);
   PRBool wrapping = PR_TRUE;
   if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
     wrapping = PR_FALSE;
@@ -1369,7 +1376,7 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
         }
         break;
       }
-      width = fm->GetWidth(wordStart, PRUint32(cp - wordStart));
+      fm->GetWidth(wordStart, PRUint32(cp - wordStart), width);
       skipWhitespace = PR_FALSE;
       isWhitespace = PR_FALSE;
     }
@@ -1440,15 +1447,15 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
 
   // Set desired size to the computed size
   aMetrics.width = x;
-  aMetrics.height = fm->GetHeight();
-  aMetrics.ascent = fm->GetMaxAscent();
-  aMetrics.descent = fm->GetMaxDescent();
+  fm->GetHeight(aMetrics.height);
+  fm->GetMaxAscent(aMetrics.ascent);
+  fm->GetMaxDescent(aMetrics.descent);
   if (!wrapping) {
     maxWordWidth = x;
   }
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = maxWordWidth;
-    aMetrics.maxElementSize->height = fm->GetHeight();
+    fm->GetHeight(aMetrics.maxElementSize->height);
   }
   NS_RELEASE(fm);
   return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
@@ -1470,7 +1477,8 @@ TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
 
   mFlags |= TEXT_IS_PRE;
   nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
-  const PRInt32* widths = fm->GetWidths();
+  const PRInt32* widths;
+  fm->GetWidths(widths);
   PRInt32 width = 0;
   PRBool hasMultibyte = PR_FALSE;
   PRUint16 tabs = 0;
@@ -1502,7 +1510,9 @@ TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
     if (ch < 256) {
       width += widths[ch];
     } else {
-      widths += fm->GetWidth(ch);
+      nscoord charWidth;
+      fm->GetWidth(ch, charWidth);
+      widths += charWidth;
       hasMultibyte = PR_TRUE;
     }
     col++;
@@ -1516,9 +1526,9 @@ TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
   mContentOffset = aStartingOffset;
   mContentLength = cp - cpStart;
   aMetrics.width = width;
-  aMetrics.height = fm->GetHeight();
-  aMetrics.ascent = fm->GetMaxAscent();
-  aMetrics.descent = fm->GetMaxDescent();
+  fm->GetHeight(aMetrics.height);
+  fm->GetMaxAscent(aMetrics.ascent);
+  fm->GetMaxDescent(aMetrics.descent);
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
@@ -1548,7 +1558,7 @@ void TextFrame::CalcActualPosition(PRUint32         &aMsgType,
       aWidth = 0;
     }
     else {
-      aWidth  = aFM->GetWidth(aCPStart, aOffset-1);
+      aFM->GetWidth(aCPStart, aOffset-1, aWidth);
     }
   } else if (aMsgType == NS_MOUSE_LEFT_BUTTON_DOWN) {
     aOffset = PRUint32(aCP - aCPStart)-1;
@@ -1613,7 +1623,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
   for (i=1;i<PRInt32(compressedStrLen);i++) {
     strncpy(buffer, compressedStr, i);
 	  buffer[i] = 0;
-    width = fm->GetWidth(buffer);
+    fm->GetWidth(buffer, width);
     //printf("%s %d %d\n", buf, i, width);
     if (width >= aEvent->point.x) {
       if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {

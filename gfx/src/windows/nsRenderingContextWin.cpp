@@ -743,7 +743,9 @@ void nsRenderingContextWin :: SetFont(const nsFont& aFont)
 
 const nsFont& nsRenderingContextWin :: GetFont()
 {
-  return mFontMetrics->GetFont();
+  const nsFont* font;
+  mFontMetrics->GetFont(font);
+  return *font;
 }
 
 nsIFontMetrics* nsRenderingContextWin :: GetFontMetrics()
@@ -1118,7 +1120,7 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOut(mDC,x,y,0,NULL,aString,aLength,NULL);
 
-  if (mFontMetrics->GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
+  if (GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
     DrawLine(aX, aY, aX + aWidth, aY);
 }
 
@@ -1132,7 +1134,7 @@ void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLen
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOutW(mDC,x,y,0,NULL,aString,aLength,NULL);
 
-  if (mFontMetrics->GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
+  if (GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
     DrawLine(aX, aY, aX + aWidth, aY);
 }
 
@@ -1269,7 +1271,9 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
 {
   if ((mFontMetrics != mCurrFontMetrics) || (NULL == mCurrFontMetrics))
   {
-    HFONT   tfont = (HFONT)mFontMetrics->GetFontHandle();
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+    HFONT         tfont = (HFONT)fontHandle;
     
     ::SelectObject(mDC, tfont);
 

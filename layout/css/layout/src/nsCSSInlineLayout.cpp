@@ -348,7 +348,9 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
     // take care of that).
     nsIFontMetrics* fm =
       mLineLayout.mPresContext->GetMetricsFor(mContainerFont->mFont);
-    nscoord dx = fm->GetHeight() / 2;  // from old layout engine
+    nscoord height;
+    fm->GetHeight(height);
+    nscoord dx = height / 2;  // from old layout engine
     NS_RELEASE(fm);
     aFrameRect.x = mX - aFrameRect.width - dx;
     if (aFrameRect.x < 0) aFrameRect.x = 0;

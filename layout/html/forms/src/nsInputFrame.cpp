@@ -471,10 +471,11 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
 
   nsIFontMetrics* fontMet;
   fontCache->GetMetricsFor(font, fontMet);
-  aSize.width  = fontMet->GetWidth(aString);
-  aSize.height = fontMet->GetHeight(); 
+  fontMet->GetWidth(aString, aSize.width);
+  fontMet->GetHeight(aSize.height);
 
-  nscoord charWidth  = fontMet->GetWidth("W");
+  nscoord charWidth;
+  fontMet->GetWidth("W", charWidth);
 
   NS_RELEASE(fontMet);
   NS_RELEASE(fontCache);
