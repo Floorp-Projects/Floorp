@@ -374,7 +374,7 @@ nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
   if (mCurrentRequest)
     return mCurrentRequest->GetURI(aURI);
 
-  *aURI = mCurrentURI;
+  NS_IF_ADDREF(*aURI = mCurrentURI);
   return NS_OK;
 }
 
