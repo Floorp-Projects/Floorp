@@ -14,6 +14,7 @@ CString configName;
 CString configPath;
 CString workspacePath;
 CString cdPath;
+CString networkPath;
 CString tempPath;
 CString iniDstPath;
 CString iniSrcPath;
@@ -95,8 +96,8 @@ int ReplaceINIFile()
 	if(SetCurrentDirectory((char *)(LPCTSTR) cdPath) == FALSE)
 		return FALSE;
 
-	CString Src = nscpxpiPath + exeName;
-	CString Dst = cdPath + exeName;
+	CString Src = nscpxpiPath + "\\" +exeName;
+	CString Dst = cdPath + "\\" + exeName;
 	if (!CopyFile(Src, Dst, TRUE))
 		DWORD e = GetLastError();
 
@@ -269,6 +270,26 @@ void init_components()
 
 }
 
+void invisible()
+{
+	WIDGET *tempWidget;
+	tempWidget = findWidget("SelectedComponents");
+	CString cdConfigPath = cdPath + "\\config.ini";
+	CString component;
+	{
+		int count = (((CCheckListBox *)tempWidget->control))->GetCount();
+			
+		for (int i=0; i < count; i++)
+		{
+			if (((CCheckListBox *)tempWidget->control)->GetCheck(i) != 1)
+			{
+			component = Components[i].compname;	
+			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", cdConfigPath);
+				
+			}
+		}
+	}
+}
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -280,6 +301,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	configName	= GetGlobal("CustomizationList");
 	configPath  = rootPath + "Configs\\" + configName;
 	cdPath 		= configPath + "\\CD";
+	networkPath = configPath + "\\Network";
 	tempPath 	= configPath + "\\Temp";
 	iniDstPath	= cdPath + "\\config.ini";
 	scriptPath	= rootPath + "\\script.ib";
@@ -342,16 +364,40 @@ int StartIB(CString parms, WIDGET *curWidget)
 	/* -- Need to be more selective than this
 	CopyDir(nscpxpiPath, cdPath, NULL, FALSE);
 	*/
-	for (int i=0; i<numComponents; i++)
+	CString cdDir= GetGlobal("CD image");
+	CString networkDir = GetGlobal("Network");
+	CString ftpLocation = GetGlobal("FTPLocation");
+
+	if (cdDir.Compare("1") ==0)
 	{
-		if (Components[i].selected)
-			CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
-					 cdPath + "\\" + Components[i].archive, TRUE);
+		for (int i=0; i<numComponents; i++)
+		{
+			if (Components[i].selected)
+				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
+						 cdPath + "\\" + Components[i].archive, TRUE);
+		}
 	}
+
+	CString component;
+	if (networkDir.Compare("1") ==0)
+	{
+		for (int i=0; i<numComponents; i++)
+		{
+			if (Components[i].selected)
+				CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
+						 networkPath + "\\" + Components[i].archive, TRUE);
+			
+			WritePrivateProfileString(Components[i].compname, "url0", ftpLocation, iniSrcPath);
+		}
+		
+	}
+
 	// Didn't work...
 	CreateRshell ();
 	CString shellPath = workspacePath + "\\Autorun\\Shell\\";
 	CopyDir(shellPath, cdPath, NULL, FALSE);
+
+	invisible();
 
 	ReplaceINIFile();
 
