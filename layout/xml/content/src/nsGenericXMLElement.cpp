@@ -23,6 +23,8 @@
 
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
+#include "nsIBindingManager.h"
+#include "nsIXBLBinding.h"
 #include "nsIDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -124,7 +126,19 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
                                   "nsGenericXMLElement::mScriptObject");
     }
   }
-  *aScriptObject = slots->mScriptObject;
+
+  void* object = nsnull;
+  if (mDocument) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    if (binding) {
+      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(binding));
+      owner->GetScriptObject(aContext, &object);
+    }
+  }
+  *aScriptObject = object ? object : slots->mScriptObject;
   return res;
 }
 

@@ -153,7 +153,7 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
-//#define XULTREE
+#define XULTREE
 #ifdef XULTREE
 #include "nsXULTreeFrame.h"
 #include "nsXULTreeGroupFrame.h"
@@ -4707,6 +4707,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
                                            nsIContent*              aContent,
                                            nsIFrame*                aParentFrame,
                                            nsIAtom*                 aTag,
+                                           PRInt32                  aNameSpaceID,
                                            nsIStyleContext*         aStyleContext,
                                            nsFrameItems&            aFrameItems)
 {
@@ -5377,6 +5378,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
                                          nsIContent*              aContent,
                                          nsIFrame*                aParentFrame,
                                          nsIAtom*                 aTag,
+                                         PRInt32                  aNameSpaceID,
                                          nsIStyleContext*         aStyleContext,
                                          nsFrameItems&            aFrameItems,
                                          PRBool&                  aHaltProcessing)
@@ -5404,9 +5406,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     return NS_OK;
 
   
-  PRInt32 nameSpaceID;
-  if (NS_SUCCEEDED(aContent->GetNameSpaceID(nameSpaceID)) &&
-      nameSpaceID == nsXULAtoms::nameSpaceID) {
+  if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
   
 // was here
 
@@ -6935,6 +6935,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
                                             nsIContent*              aContent,
                                             nsIFrame*                aParentFrame,
                                             nsIAtom*                 aTag,
+                                            PRInt32                  aNameSpaceID,
                                             nsIStyleContext*         aStyleContext,
                                             nsFrameItems&            aFrameItems)
 {
@@ -6954,9 +6955,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     return NS_OK;
 
   // Make sure that we remain confined in the MathML world
-  PRInt32 nameSpaceID;
-  rv = aContent->GetNameSpaceID(nameSpaceID);
-  if (NS_FAILED(rv) || nameSpaceID != nsMathMLAtoms::nameSpaceID) 
+  if (aNameSpaceID != nsMathMLAtoms::nameSpaceID) 
     return NS_OK;
 
   // Initialize the new frame
@@ -7140,6 +7139,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
                                           nsIContent*              aContent,
                                           nsIFrame*                aParentFrame,
                                           nsIAtom*                 aTag,
+                                          PRInt32                  aNameSpaceID,
                                           nsIStyleContext*         aStyleContext,
                                           nsFrameItems&            aFrameItems)
 {
@@ -7158,10 +7158,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   if (aTag == nsnull)
     return NS_OK;
 
-  // Make sure that we remain confined in the MathML world
-  PRInt32 nameSpaceID;
-  rv = aContent->GetNameSpaceID(nameSpaceID);
-  if (NS_FAILED(rv) || nameSpaceID != nsSVGAtoms::nameSpaceID) 
+  // Make sure that we remain confined in the SVG world
+  if (aNameSpaceID != nsSVGAtoms::nameSpaceID) 
     return NS_OK;
 
   // Initialize the new frame
@@ -7274,12 +7272,15 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
     }
     else
     {
+      PRInt32 nameSpaceID;
+      aContent->GetNameSpaceID(nameSpaceID);
       rv = ConstructFrameInternal(aPresShell,
                                     aPresContext,
                                     aState,
                                     aContent,
                                     aParentFrame,
                                     tag,
+                                    nameSpaceID,
                                     styleContext,
                                     aFrameItems,
                                     PR_FALSE);
@@ -7297,6 +7298,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                                nsIContent*              aContent,
                                                nsIFrame*                aParentFrame,
                                                nsIAtom*                 aTag,
+                                               PRInt32                  aNameSpaceID,
                                                nsIStyleContext*         aStyleContext,
                                                nsFrameItems&            aFrameItems,
                                                PRBool                   aXBLBaseTag)
@@ -7321,7 +7323,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
       xblService->LoadBindings(aContent, ui->mBehavior);
 
       nsCOMPtr<nsIAtom> baseTag;
-      xblService->ResolveTag(aContent, getter_AddRefs(baseTag));
+      PRInt32 nameSpaceID;
+      xblService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
  
       if (baseTag.get() != aTag) {
         // Construct the frame using the XBL base tag.
@@ -7331,6 +7334,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                   aContent,
                                   aParentFrame,
                                   baseTag,
+                                  nameSpaceID,
                                   aStyleContext,
                                   aFrameItems,
                                   PR_TRUE);
@@ -7343,7 +7347,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 
   // Handle specific frame types
   nsresult rv = ConstructFrameByTag(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                           aTag, aStyleContext, aFrameItems);
+                           aTag, aNameSpaceID, aStyleContext, aFrameItems);
 
 #ifdef INCLUDE_XUL
   // Failing to find a matching HTML frame, try creating a specialized
@@ -7353,7 +7357,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                          (lastChild == aFrameItems.lastChild))) {
     PRBool haltProcessing = PR_FALSE;
     rv = ConstructXULFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                           aTag, aStyleContext, aFrameItems, haltProcessing);
+                           aTag, aNameSpaceID, aStyleContext, aFrameItems, haltProcessing);
     if (haltProcessing) {
       return rv;
     }
@@ -7365,7 +7369,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     rv = ConstructMathMLFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              aTag, aStyleContext, aFrameItems);
+                              aTag, aNameSpaceID, aStyleContext, aFrameItems);
   }
 #endif
 
@@ -7374,7 +7378,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              aTag, aStyleContext, aFrameItems);
+                              aTag, aNameSpaceID, aStyleContext, aFrameItems);
   }
 #endif
 

@@ -63,7 +63,7 @@ public:
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult);
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding);
 
-  NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult);
+  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
@@ -130,14 +130,14 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
 }
 
 NS_IMETHODIMP
-nsBindingManager::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
+nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult)
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aContent, getter_AddRefs(binding));
   
   if (binding) {
     nsCOMPtr<nsIAtom> tag;
-    binding->GetBaseTag(getter_AddRefs(tag));
+    binding->GetBaseTag(aNameSpaceID, getter_AddRefs(tag));
     if (tag) {
       *aResult = tag;
       NS_ADDREF(*aResult);
@@ -145,6 +145,7 @@ nsBindingManager::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
     }
   }
 
+  aContent->GetNameSpaceID(*aNameSpaceID);
   return aContent->GetTag(*aResult);
 }
 

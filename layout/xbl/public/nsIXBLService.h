@@ -62,7 +62,7 @@ public:
                             PRBool* aMultipleInsertionPoints) = 0;
 
   // Retrieves our base class (e.g., tells us what type of frame and content node to build)
-  NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult) = 0;
+  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts) = 0;
 };
