@@ -38,6 +38,8 @@
 
 #import "NSString+Utils.h"
 
+#import "ChimeraUIConstants.h"
+
 #include "SaveHeaderSniffer.h"
 
 #include "netCore.h"
@@ -56,7 +58,7 @@ const char* const persistContractID = "@mozilla.org/embedding/browser/nsWebBrows
 nsHeaderSniffer::nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile, nsIURI* aURL,
                 nsIDOMDocument* aDocument, nsIInputStream* aPostData,
                 const nsAString& aSuggestedFilename, PRBool aBypassCache,
-                NSView* aFilterView, NSPopUpButton* aFilterList)
+                NSView* aFilterView)
 : mPersist(aPersist)
 , mTmpFile(aFile)
 , mURL(aURL)
@@ -65,9 +67,8 @@ nsHeaderSniffer::nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile,
 , mDefaultFilename(aSuggestedFilename)
 , mBypassCache(aBypassCache)
 , mFilterView(aFilterView)
-, mFilterList(aFilterList)
 {
-    NS_INIT_ISUPPORTS();
+	NS_INIT_ISUPPORTS();
 }
 
 nsHeaderSniffer::~nsHeaderSniffer()
@@ -183,14 +184,16 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         return rv;
     nsCOMPtr<nsIPrefBranch> dirBranch;
     prefs->GetBranch("browser.download.", getter_AddRefs(dirBranch));
-    PRInt32 filterIndex = 0;
+    PRInt32 filterIndex = eSaveFormatHTMLComplete;
     if (dirBranch) {
         nsresult rv = dirBranch->GetIntPref("save_converter_index", &filterIndex);
         if (NS_FAILED(rv))
-            filterIndex = 0;
+            filterIndex = eSaveFormatHTMLComplete;
     }
-    if (mFilterList)
-        [mFilterList selectItemAtIndex: filterIndex];
+    
+    NSPopUpButton* filterList = [mFilterView viewWithTag:kSaveFormatPopupTag];
+    if (filterList)
+        [filterList selectItemAtIndex: filterIndex];
         
     // We need to figure out what file name to use.
     nsAutoString defaultFileName;
@@ -294,17 +297,17 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         return NS_OK;
        
     // Update the filter index.
-    if (isHTML && mFilterList) {
-        filterIndex = [mFilterList indexOfSelectedItem];
+    if (isHTML && filterList) {
+        filterIndex = [filterList indexOfSelectedItem];
         dirBranch->SetIntPref("save_converter_index", filterIndex);
     }
     
     // Convert the content type to text/plain if it was selected in the filter.
-    if (isHTML && filterIndex == 2)
+    if (isHTML && filterIndex == eSaveFormatPlainText)
         mContentType = "text/plain";
     
     nsCOMPtr<nsISupports> sourceData;
-    if (isHTML && filterIndex != 1)
+    if (isHTML && filterIndex != eSaveFormatHTMLSource)
         sourceData = do_QueryInterface(mDocument);
     else
         sourceData = do_QueryInterface(mURL);

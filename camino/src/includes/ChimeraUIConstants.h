@@ -52,3 +52,13 @@ const int kDividerTag = 4000;
 
 // the tag of the separator after which to insert bookmark items
 const int kBookmarksDividerTag = -1;
+
+// Save file dialog
+const int kSaveFormatPopupTag = 1000;
+
+enum
+{
+  eSaveFormatHTMLComplete = 0,
+  eSaveFormatHTMLSource,
+  eSaveFormatPlainText
+};

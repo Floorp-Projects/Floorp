@@ -51,24 +51,31 @@ class nsIRDFService;
 @interface RDFOutlineViewItem : NSObject
 {
     nsIRDFResource* mResource;
+    unsigned int    mCacheVersion;    // if matches the cache version in the data source,
+                                      // cached values are valid
+    BOOL            mExpandable;
+    int             mNumChildren;
+    NSArray*        mChildNodes;
 }
 
-- (nsIRDFResource*) resource;
-- (void) setResource: (nsIRDFResource*) aResource;
+- (nsIRDFResource*)resource;  // addRefs the result
+- (void)setResource:(nsIRDFResource*) aResource;
 
 @end
 
 
-@interface RDFOutlineViewDataSource : NSObject {
-    nsIRDFDataSource* 		mDataSource;
-    nsIRDFContainer* 		mContainer;
-    nsIRDFContainerUtils* 	mContainerUtils;
-    nsIRDFResource* 		mRootResource;
-    nsIRDFService* 			mRDFService;
+@interface RDFOutlineViewDataSource : NSObject
+{
+    nsIRDFDataSource*       mDataSource;
+    nsIRDFContainer*        mContainer;
+    nsIRDFContainerUtils*   mContainerUtils;
+    nsIRDFResource*         mRootResource;
+    nsIRDFService*          mRDFService;
 
-    IBOutlet ExtendedOutlineView* mOutlineView;	
+    IBOutlet ExtendedOutlineView* mOutlineView; 
 
-    NSMutableDictionary*	mDictionary;
+    NSMutableDictionary*    mDictionary;
+    unsigned int            mCacheVersion;
 }
 
 // Initialization Methods
@@ -85,7 +92,6 @@ class nsIRDFService;
 - (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;
 - (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item;
 - (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
-- (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
 
 // tooltip support from the ExtendedOutlineView. Override to provide a tooltip
 // other than the Name property for each item in the view.
@@ -94,14 +100,14 @@ class nsIRDFService;
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
 
 // Implementation Methods
-- (id) makeWrapperFor: (nsIRDFResource*) aRDFResource;
+- (id)getWrapperFor:(nsIRDFResource*) aRDFResource;
+- (void)invalidateCachedItems;
 
 // override to do something different with the cell data rather than just
 // return a string (add an icon in an attributed string, for example).
--(id) createCellContents:(const nsAString&)inValue withColumn:(NSString*)inColumn byItem:(id) inItem;
+- (id)createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id)inItem;
 
--(void) getPropertyString:(NSString*)inPropertyURI forItem:(RDFOutlineViewItem*)inItem
-            result:(PRUnichar**)outResult;
+- (NSString*)getPropertyString:(NSString*)inPropertyURI forItem:(RDFOutlineViewItem*)inItem;
 
 @end
 

@@ -1,18 +1,40 @@
 {
     IBClasses = (
+        {
+            CLASS = CHStackView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mDataSource = id; }; 
+            SUPERCLASS = NSView; 
+        }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = NSObject; LANGUAGE = ObjC; }, 
+        {CLASS = NSView; LANGUAGE = ObjC; SUPERCLASS = NSResponder; }, 
         {
             CLASS = ProgressDlgController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mElapsedTimeLabel = NSTextField; 
-                mFromField = NSTextField; 
-                mProgressBar = NSProgressIndicator; 
-                mStatusLabel = NSTextField; 
-                mTimeLeftLabel = NSTextField; 
-                mToField = NSTextField; 
+                mNoDownloadsText = NSTextField; 
+                mScrollView = NSScrollView; 
+                mStackView = CHStackView; 
             }; 
             SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {stop = id; toggleDisclosure = id; }; 
+            CLASS = ProgressViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mLocationsLabel = NSTextField; 
+                mLocationsLabelCompact = NSTextField; 
+                mProgressBar = NSProgressIndicator; 
+                mProgressView = NSView; 
+                mProgressViewCompact = NSView; 
+                mServerLabel = NSTextField; 
+                mStatusLabel = NSTextField; 
+                mTimeLeftLabel = NSTextField; 
+                mTimeLeftLabelCompact = NSTextField; 
+            }; 
+            SUPERCLASS = NSObject; 
         }
     ); 
     IBVersion = 1; 

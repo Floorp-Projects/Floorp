@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +38,34 @@
 
 #import "CHDownloadProgressDisplay.h"
 
+// CHDownloader is a simple class that that the download UI can talk to
 
-@implementation DownloadControllerFactory
-
-- (NSWindowController<CHDownloadProgressDisplay> *)createDownloadController
-{
-  // a dummy implementation. You should provide a subclass that
-  // returns an instance of your progress dialog controller.
-  return nil;
-}
-
-@end
-
-#pragma mark -
-
-// see the header file for comments
-CHDownloader::CHDownloader(DownloadControllerFactory* inControllerFactory)
-: mControllerFactory(inControllerFactory)
+CHDownloader::CHDownloader()
+: mDisplayFactory(NULL)
 , mDownloadDisplay(nil)
 , mIsFileSave(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-  [mControllerFactory retain];
 }
 
 CHDownloader::~CHDownloader()
 {
-  [mControllerFactory release];
+  [mDisplayFactory release];
 }
 
 NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports);
 
 void
+CHDownloader::SetDisplayFactory(id<CHDownloadDisplayFactory> inDownloadControllerFactory)
+{
+  mDisplayFactory = inDownloadControllerFactory;
+  [mDisplayFactory retain];
+}
+
+void
 CHDownloader::CreateDownloadDisplay()
 {
-  mDownloadDisplay = [mControllerFactory createDownloadController];
+  NS_ASSERTION(mDisplayFactory, "Should have a UI factory");
+  mDownloadDisplay = [mDisplayFactory createProgressDisplay];
   [mDownloadDisplay setDownloadListener:this];
 }

@@ -154,19 +154,6 @@ enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
   return result;
 }
 
-- (BOOL)confirmStorePassword:(NSWindow*)parent
-{
-  int result = [NSApp runModalForWindow:confirmStorePasswordPanel relativeToWindow:parent];
-  [confirmStorePasswordPanel close];
-  return (result == kOKButton);
-}
-
-- (BOOL)confirmChangedPassword:(NSWindow*)parent
-{
-  int result = [NSApp runModalForWindow:confirmChangePasswordPanel relativeToWindow:parent];
-  [confirmChangePasswordPanel close];
-  return (result == kOKButton);
-}
 
 - (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
 {

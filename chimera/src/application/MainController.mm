@@ -260,19 +260,7 @@ const int kReuseWindowOnAE = 2;
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-  if ([ProgressDlgController numDownloadInProgress] > 0)
-  {
-    NSString *alert     = NSLocalizedString(@"QuitWithDownloadsMsg", @"Really Quit?");
-    NSString *message   = NSLocalizedString(@"QuitWithDownloadsExpl", @"");
-    NSString *okButton  = NSLocalizedString(@"QuitWithdownloadsButtonDefault",@"Cancel");
-    NSString *altButton = NSLocalizedString(@"QuitWithdownloadsButtonAlt",@"Quit");
-    // while the panel is up, download dialogs won't update (no timers firing) but
-    // downloads continue (PLEvents being processed)
-    if (NSRunAlertPanel(alert, message, okButton, altButton, nil) == NSAlertDefaultReturn)
-      return NSTerminateCancel;
-  }
-  
-  return NSTerminateNow;
+  return [[ProgressDlgController sharedDownloadController] allowTerminate];
 }
 
 -(void)applicationWillTerminate: (NSNotification*)aNotification
@@ -439,7 +427,7 @@ const int kReuseWindowOnAE = 2;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController saveDocument:NO filterView:mFilterView filterList: mFilterList];
+    [browserController saveDocument:NO filterView:mFilterView];
 }
 
 -(IBAction) pageSetup:(id)aSender
@@ -584,11 +572,21 @@ const int kReuseWindowOnAE = 2;
   }
 }
 
+-(IBAction) downloadsWindow:(id)aSender
+{
+	[[ProgressDlgController sharedDownloadController] showWindow:aSender];
+}
+
 - (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
 {
   [mAddBookmarkMenuItem 							setEnabled:inBrowserWindowFrontmost];
   [mCreateBookmarksFolderMenuItem 		setEnabled:inBrowserWindowFrontmost];
   [mCreateBookmarksSeparatorMenuItem 	setEnabled:NO];		// separators are not implemented yet
+}
+
+- (NSView*)getSavePanelView
+{
+  return mFilterView;
 }
 
 -(NSWindow*)getFrontmostBrowserWindow

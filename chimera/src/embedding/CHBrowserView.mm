@@ -430,7 +430,6 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
         suggestedFilename: (NSString*)aFileName
         bypassCache: (BOOL)aBypassCache
         filterView: (NSView*)aFilterView
-        filterList: (NSPopUpButton*)aFilterList
 {
     // Create our web browser persist object.  This is the object that knows
     // how to actually perform the saving of the page (and of the images
@@ -477,7 +476,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     [aFileName assignTo_nsAString:fileName];
     nsHeaderSniffer* sniffer = new nsHeaderSniffer(webPersist, tmpFile, aURI, 
                                                    aDocument, postData, fileName, aBypassCache,
-                                                   aFilterView, aFilterList);
+                                                   aFilterView);
     if (!sniffer)
         return;
     webPersist->SetProgressListener(sniffer);  // owned
@@ -572,8 +571,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     return found;
 }
 
-- (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
+- (void)saveURL: (NSView*)aFilterView url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
 {
   nsCOMPtr<nsIURI> url;
   nsresult rv = NS_NewURI(getter_AddRefs(url), [aURLSpec UTF8String]);
@@ -584,8 +582,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
         withDocument: nsnull
    suggestedFilename: aFilename
          bypassCache: YES
-          filterView: aFilterView
-          filterList: aFilterList];
+          filterView: aFilterView];
 }
 
 -(NSString*)getFocusedURLString
@@ -616,7 +613,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return [NSString stringWith_nsAString: urlStr];
 }
 
-- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView
 {
   if (!_webBrowser)
     return;
@@ -656,8 +653,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
         withDocument: domDocument
         suggestedFilename: @""
         bypassCache: NO
-        filterView: aFilterView
-        filterList: aFilterList];
+        filterView: aFilterView];
 }
 
 -(void)doCommand:(const char*)commandName

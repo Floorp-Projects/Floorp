@@ -37,10 +37,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
+
 #import "SecurityDialogs.h"
 #import "CocoaPromptService.h"
-#include "nsIGenericFactory.h"
 #import "KeychainService.h"
+#import "nsDownloadListener.h"
+#import "ProgressDlgController.h"
+
+#include "nsIGenericFactory.h"
 
 // {0ffd3880-7a1a-11d6-a384-975d1d5f86fc}
 #define NS_SECURITYDIALOGS_CID \
@@ -55,6 +59,27 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(SecurityDialogs);
 NS_GENERIC_FACTORY_CONSTRUCTOR(CocoaPromptService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(KeychainPrompt);
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadListener);
+
+static NS_IMETHODIMP
+nsDownloadListenerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  *aResult = NULL;
+  if (aOuter)
+      return NS_ERROR_NO_AGGREGATION;
+
+  nsDownloadListener* inst;
+  NS_NEWXPCOM(inst, nsDownloadListener);
+  if (!inst)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(inst);
+  inst->SetDisplayFactory([ProgressDlgController sharedDownloadController]);
+  nsresult rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+  return rv;
+}
+
 
 // used by MainController to register the components in which we want to override
 // with the Gecko embed layer.
@@ -83,6 +108,12 @@ static const nsModuleComponentInfo gAppComponents[] = {
     NS_KEYCHAINPROMPT_CID,
     "@mozilla.org/wallet/single-sign-on-prompt;1",
     KeychainPromptConstructor
+  },
+  {
+    "Download",
+    NS_DOWNLOAD_CID,
+    NS_DOWNLOAD_CONTRACTID,
+    nsDownloadListenerConstructor
   }
 };
 

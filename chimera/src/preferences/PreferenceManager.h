@@ -45,6 +45,9 @@ class nsIPref;
     NSUserDefaults*	mDefaults;
     ICInstance 			mInternetConfig;
     nsIPref*        mPrefs;
+    
+    // proxies notification stuff
+    CFRunLoopSourceRef  mRunLoopSource;
 }
 
 + (PreferenceManager *)sharedInstance;

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *    Simon Fraser <sfraser@netscape.com>
- *
+ *    Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -46,20 +46,25 @@
 #include "nsIURL.h"
 #include "netCore.h"
 
-nsDownloadListener::nsDownloadListener(DownloadControllerFactory* inControllerFactory)
-: CHDownloader(inControllerFactory)
+nsDownloadListener::nsDownloadListener()
+: mDownloadStatus(NS_OK)
 , mBypassCache(PR_FALSE)
 , mNetworkTransfer(PR_FALSE)
 , mGotFirstStateChange(PR_FALSE)
 , mUserCanceled(PR_FALSE)
+,	mSentCancel(PR_FALSE)
 {
+  mStartTime = LL_ZERO;
 }
 
 nsDownloadListener::~nsDownloadListener()
 {
+  // if we go away before the timer fires, cancel it
+  if (mEndRefreshTimer)
+    mEndRefreshTimer->Cancel();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsDownloadListener, CHDownloader, nsIDownload, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS_INHERITED3(nsDownloadListener, CHDownloader, nsIDownload, nsIWebProgressListener, nsITimerCallback)
 
 #pragma mark -
 
@@ -193,14 +198,14 @@ nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress,
                                       PRInt32 aCurTotalProgress, 
                                       PRInt32 aMaxTotalProgress)
 {
-  if (mUserCanceled)
+  if (mUserCanceled && !mSentCancel)
   {
     if (mHelperAppLauncher)
       mHelperAppLauncher->Cancel();
     else if (aRequest)
       aRequest->Cancel(NS_BINDING_ABORTED);
       
-    mUserCanceled = false;
+    mSentCancel = PR_TRUE;
   }
   
   [mDownloadDisplay setProgressTo:aCurTotalProgress ofMax:aMaxTotalProgress];
@@ -236,7 +241,7 @@ nsDownloadListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *a
 // Implementation of nsIWebProgressListener
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
-nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRequest,  PRUint32 aStateFlags, 
+nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, 
                                     PRUint32 aStatus)
 {
   // NSLog(@"State changed: state %u, status %u", aStateFlags, aStatus);  
@@ -250,9 +255,26 @@ nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRe
   // the window and controller. We will get this even in the event of a cancel,
   // so this is the only place in the listener where we should kill the download.
   if ((aStateFlags & STATE_STOP) && (!mNetworkTransfer || (aStateFlags & STATE_IS_NETWORK))) {
-    DownloadDone();
+    DownloadDone(aStatus);
   }
   return NS_OK; 
+}
+
+#pragma mark -
+
+// nsITimerCallback implementation
+NS_IMETHODIMP nsDownloadListener::Notify(nsITimer *timer)
+{
+  // resset the destination, since uniquifying the filename may have
+  // changed it
+  nsAutoString pathStr;
+  mDestination->GetPath(pathStr);
+  [mDownloadDisplay setDestinationPath: [NSString stringWith_nsAString:pathStr]];
+
+  // cancelling should give us a failure status
+  [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(mDownloadStatus) && !mUserCanceled)];
+  mEndRefreshTimer = NULL;
+  return NS_OK;
 }
 
 #pragma mark -
@@ -261,18 +283,36 @@ void
 nsDownloadListener::InitDialog()
 {
   // dialog has to be shown before the outlets get hooked up
-  [mDownloadDisplay onStartDownload:(BOOL)IsFileSave()];
-
   if (mURI)
   {
     nsCAutoString spec;
-    mURI->GetSpec(spec);
+
+    // we need to be careful not to show a password in the url
+    nsCAutoString userPassword;
+    mURI->GetUserPass(userPassword);
+    if (!userPassword.IsEmpty())
+    {
+      // ugh, build it by hand
+      nsCAutoString hostport, path;
+      mURI->GetScheme(spec);
+      mURI->GetHostPort(hostport);
+      mURI->GetPath(path);
+      
+      spec.Append("://");
+      spec.Append(hostport);
+      spec.Append(path);
+    }
+    else
+      mURI->GetSpec(spec);
+
     [mDownloadDisplay setSourceURL: [NSString stringWithUTF8String:spec.get()]];
   }
 
   nsAutoString pathStr;
   mDestination->GetPath(pathStr);
   [mDownloadDisplay setDestinationPath: [NSString stringWith_nsAString:pathStr]];
+
+  [mDownloadDisplay onStartDownload:IsFileSave()];
 }
 
 void
@@ -292,19 +332,19 @@ nsDownloadListener::CancelDownload()
 {
   mUserCanceled = PR_TRUE;
 
-  if (mWebPersist)
+  if (mWebPersist && !mSentCancel)
   {
     mWebPersist->CancelSave();
-    mUserCanceled = PR_FALSE;
+    mSentCancel = PR_TRUE;
   }
   
   // delete any files we've created...
   
-  
+  // DownloadDone will get called (eventually)
 }
 
 void
-nsDownloadListener::DownloadDone()
+nsDownloadListener::DownloadDone(nsresult aStatus)
 {
   // break the reference cycle by removing ourselves as a listener
   if (mWebPersist)
@@ -314,8 +354,23 @@ nsDownloadListener::DownloadDone()
   }
   
   mHelperAppLauncher = nsnull;
-
-  [mDownloadDisplay onEndDownload];
+  mDownloadStatus = aStatus;
+  
+  // hack alert!
+  // Our destination file gets uniquified after the OnStop notification is sent
+  // (in nsExternalAppHandler::ExecuteDesiredAction), so we never get a chance
+  // to figure out the final filename. To work around this, set a timer to fire
+  // in the near future, from which we'll send the done callback.
+  mEndRefreshTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (mEndRefreshTimer)
+  {
+    nsresult rv = mEndRefreshTimer->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);  // defaults to 1-shot, normal priority
+    if (NS_FAILED(rv))
+      mEndRefreshTimer = NULL;
+  }
+  
+  if (!mEndRefreshTimer)			// timer creation or init failed, so just do it now
+    [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(aStatus) && !mUserCanceled)];
 }
 
 //

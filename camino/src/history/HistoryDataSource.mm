@@ -63,33 +63,29 @@
 class HistoryDataSourceObserver : public nsIRDFObserver
 {
 public:
-  HistoryDataSourceObserver(NSOutlineView* outlineView) : 
-    mOutlineView(outlineView), mEnabled(false) 
+  HistoryDataSourceObserver(HistoryDataSource* dataSource)
+  : mHistoryDataSource(dataSource)
   { 
     NS_INIT_ISUPPORTS();
   }
-  virtual ~HistoryDataSourceObserver() { } ;
+  virtual ~HistoryDataSourceObserver() { }
   
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP OnAssert(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*) ;
-  NS_IMETHODIMP OnUnassert(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*) { return NS_OK; }
+  NS_IMETHOD OnAssert(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*);
+  NS_IMETHOD OnUnassert(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*);
 
-  NS_IMETHODIMP OnMove(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*) 
+  NS_IMETHOD OnMove(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*) 
     { return NS_OK; }
 
-  NS_IMETHODIMP OnChange(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*, nsIRDFNode*);
+  NS_IMETHOD OnChange(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*, nsIRDFNode*);
 
-  NS_IMETHODIMP BeginUpdateBatch(nsIRDFDataSource*) { return NS_OK; }
-  NS_IMETHODIMP EndUpdateBatch(nsIRDFDataSource*) { return NS_OK; }
-
-  void Enable() { mEnabled = true; }
-  void Disable() { mEnabled = false; }
+  NS_IMETHOD BeginUpdateBatch(nsIRDFDataSource*) { return NS_OK; }
+  NS_IMETHOD EndUpdateBatch(nsIRDFDataSource*)   { return NS_OK; }
 
 private:
 
-  NSOutlineView* mOutlineView;
-  bool mEnabled;
+  HistoryDataSource* mHistoryDataSource;
 };
 
 NS_IMPL_ISUPPORTS1(HistoryDataSourceObserver, nsIRDFObserver)
@@ -105,15 +101,30 @@ NS_IMETHODIMP
 HistoryDataSourceObserver::OnAssert(nsIRDFDataSource*, nsIRDFResource*, 
                                       nsIRDFResource* aProperty, nsIRDFNode*)
 {
-  if(mEnabled) {
-    const char* p;
-    aProperty->GetValueConst(&p);
-    if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
-      [mOutlineView reloadData];
-  }
+  const char* p;
+  aProperty->GetValueConst(&p);
+  if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
+    [mHistoryDataSource setNeedsRefresh:YES];
+
   return NS_OK;
 }
 
+//
+// OnUnassert
+//
+// This gets called on redirects, when nsGlobalHistory::RemovePage is called.
+//
+NS_IMETHODIMP
+HistoryDataSourceObserver::OnUnassert(nsIRDFDataSource*, nsIRDFResource*, 
+                                      nsIRDFResource* aProperty, nsIRDFNode*)
+{
+  const char* p;
+  aProperty->GetValueConst(&p);
+  if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
+    [mHistoryDataSource setNeedsRefresh:YES];
+
+  return NS_OK;
+}
 
 //
 // OnChange
@@ -125,12 +136,12 @@ NS_IMETHODIMP
 HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*, 
                                       nsIRDFResource* aProperty, nsIRDFNode*, nsIRDFNode*)
 {
-  if(mEnabled) {
-    const char* p;
-    aProperty->GetValueConst(&p);
-    if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
-      [mOutlineView reloadData];
-  }
+  const char* p;
+  aProperty->GetValueConst(&p);
+
+  if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
+    [mHistoryDataSource setNeedsRefresh:YES];
+
   return NS_OK;
 }
 
@@ -138,7 +149,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 
 @interface HistoryDataSource(Private)
 
-- (void)cleanup;
+- (void)cleanupHistory;
 
 @end
 
@@ -146,12 +157,12 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 
 - (void) dealloc
 {
-  [self cleanup];
+  [self cleanupHistory];
   [super dealloc];
 }
 
 // "non-virtual" cleanup method -- safe to call from dealloc.
-- (void)cleanup
+- (void)cleanupHistory
 {
   if (mDataSource && mObserver)
   {
@@ -163,7 +174,7 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 // "virtual" method; called from superclass
 - (void)cleanupDataSource
 {
- 	[self cleanup];
+ 	[self cleanupHistory];
   [super cleanupDataSource];
 }
 
@@ -181,7 +192,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   
   NS_ASSERTION(mRDFService, "Uh oh, RDF service not loaded in parent class");
   
-  if ( !mDataSource ) {
+  if ( !mDataSource )
+  {
     // Get the Global History DataSource
     mRDFService->GetDataSource("rdf:history", &mDataSource);
     // Get the Date Folder Root
@@ -191,14 +203,15 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     [mOutlineView setDoubleAction: @selector(openHistoryItem:)];
     [mOutlineView setDeleteAction: @selector(deleteHistoryItems:)];
   
-    mObserver = new HistoryDataSourceObserver(mOutlineView);
+    mObserver = new HistoryDataSourceObserver(self);
     if ( mObserver ) {
       NS_ADDREF(mObserver);
       mDataSource->AddObserver(mObserver);
     }
     [mOutlineView reloadData];
   }
-  else {
+  else
+  {
     // everything is loaded, but we have to refresh our tree otherwise
     // changes that took place while the drawer was closed won't be noticed
     [mOutlineView reloadData];
@@ -207,18 +220,41 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   NS_ASSERTION(mDataSource, "Uh oh, History RDF Data source not created");
 }
 
-- (void) enableObserver
+- (void)enableObserver
 {
-  if ( mObserver )
-    mObserver->Enable();
+  mUpdatesEnabled = YES;
 }
 
--(void) disableObserver
+-(void)disableObserver
 {
-  if ( mObserver )
-    mObserver->Disable();
+  mUpdatesEnabled = NO;
 }
 
+- (void)setNeedsRefresh:(BOOL)needsRefresh
+{
+  mNeedsRefresh = needsRefresh;
+}
+
+- (BOOL)needsRefresh
+{
+  return mNeedsRefresh;
+}
+
+- (void)refresh
+{
+  if (mNeedsRefresh)
+  {
+    [self invalidateCachedItems];
+    if (mUpdatesEnabled)
+    {
+      // this can be very slow! See bug 180109.
+      //NSLog(@"history reload started");
+      [self reloadDataForItem:nil reloadChildren:NO];
+      //NSLog(@"history reload done");
+    }
+    mNeedsRefresh = NO; 
+  }
+}
 
 //
 // createCellContents:withColumn:byItem
@@ -226,31 +262,29 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 // override to create an NSAttributedString instead of just the string with the
 // given text. We add an icon and adjust the positioning of the text w/in the cell
 //
--(id) createCellContents:(const nsAString&)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
+-(id) createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
 {
-  NSMutableAttributedString *cellValue = [[NSMutableAttributedString alloc] init];
-
-	//Set cell's textual contents
-  [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString:inValue]];
+  if ([inValue length] == 0)
+    inValue = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
   
-  if ([inColumn isEqualToString: @"http://home.netscape.com/NC-rdf#Name"]) {
-    NSMutableAttributedString *attachmentAttrString = nil;
-    NSFileWrapper *fileWrapper = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
-    NSTextAttachment *textAttachment = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
-    NSCell *attachmentAttrStringCell;
+  NSMutableAttributedString *cellValue = [[[NSMutableAttributedString alloc] initWithString:inValue] autorelease];
+  
+  if ([inColumn isEqualToString:@"http://home.netscape.com/NC-rdf#Name"])
+  {
+    NSFileWrapper     *fileWrapper    = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
+    NSTextAttachment  *textAttachment = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
 
-    //Create an attributed string to hold the empty attachment, then release the components.
-    attachmentAttrString = [[NSMutableAttributedString attributedStringWithAttachment:textAttachment] retain];
+    // Create an attributed string to hold the empty attachment, then release the components.
+    NSMutableAttributedString *attachmentAttrString = [NSMutableAttributedString attributedStringWithAttachment:textAttachment];
     [textAttachment release];
     [fileWrapper release];
 
     //Get the cell of the text attachment.
-    attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:
+    NSCell* attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:
               NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
 
-    if ([self outlineView:mOutlineView isItemExpandable:inItem]) {
+    if ([self outlineView:mOutlineView isItemExpandable:inItem])
       [attachmentAttrStringCell setImage:[NSImage imageNamed:@"folder"]];
-    }
     else
       [attachmentAttrStringCell setImage:[NSImage imageNamed:@"smallbookmark"]];
 
@@ -298,11 +332,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
       id item = [toDrag objectAtIndex: 0];
       
       // if we have just one item, we add some more flavours
-      nsXPIDLString urlLiteral, nameLiteral;
-      [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item result:getter_Copies(urlLiteral)];
-      [self getPropertyString:@"http://home.netscape.com/NC-rdf#Name" forItem:item result:getter_Copies(nameLiteral)];
-      NSString* url = [NSString stringWith_nsAString: urlLiteral];
-      NSString* title = [NSString stringWith_nsAString: nameLiteral];      
+      NSString* url   = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL"  forItem:item];
+      NSString* title = [self getPropertyString:@"http://home.netscape.com/NC-rdf#Name" forItem:item];
       NSString *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 
       [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
@@ -340,11 +371,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
       return;
     }
     
-    nsXPIDLString urlLiteral;
-    [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item result:getter_Copies(urlLiteral)];
-    
     // get uri
-    NSString* url = [NSString stringWith_nsAString: urlLiteral];
+    NSString* url = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item];
     [[mBrowserWindowController getBrowserWrapper] loadURI: url referrer: nil flags: NSLoadFlagsNone activate:YES];
 }
 
@@ -376,14 +404,15 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
       index = [currIndex intValue];
       RDFOutlineViewItem* item = [mOutlineView itemAtRow: index];
       if (![mOutlineView isExpandable: item]) {
-        nsXPIDLString urlLiteral;
-        [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item result:getter_Copies(urlLiteral)];
-        history->RemovePage(NS_ConvertUCS2toUTF8(urlLiteral).get());
+        NSString* urlString = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:item];
+        history->RemovePage([urlString UTF8String]);
       }
     }
     history->EndBatchUpdate();
     if ( clearSelectionWhenDone )
       [mOutlineView deselectAll:self];
+
+    [self invalidateCachedItems];
     [mOutlineView reloadData];     // necessary or the outline is really horked
   }
 }
@@ -402,9 +431,8 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     NSString* pageTitle = [super outlineView:outlineView tooltipStringForItem:inItem];
   
     // append url
-    nsXPIDLString literalValue;
-    [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem result:getter_Copies(literalValue)];
-    return [NSString stringWithFormat:@"%@\n%@", pageTitle, [NSString stringWith_nsAString:literalValue]];
+    NSString* url = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
+    return [NSString stringWithFormat:@"%@\n%@", pageTitle, [url stringByTruncatingTo:80 at:kTruncateAtEnd]];
   }
   return nil;
 }

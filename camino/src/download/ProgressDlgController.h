@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Simon Fraser <sfraser@netscape.com>
+ *    Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -38,49 +40,72 @@
 #import <AppKit/AppKit.h>
 
 #import "CHDownloadProgressDisplay.h"
+#import "CHStackView.h"
 
-#include "nscore.h"
+/*
+  How ProgressViewController and ProgressDlgController work. 
+  
+  ProgressDlgController manages the window the the downloads are displayed in.
+  It contains a single CHStackView, a custom class that asks its datasource
+  for a list of views to display, in a similar fashion to the way NSTableView
+  asks its datasource for data to display. There is a single instance of
+  ProgressDlgController, returned by +sharedDownloadController. 
+  
+  The ProgressDlgController is a subclass of CHDownloadController, which
+  means that it gets asked to create new objects conforming to the
+  CHDownloadProgressDisplay protocol, which are used to display
+  the progress of a single download. It does so by returning instances of
+  ProgressViewController, which manage an NSView that contains a progress
+  indicator, some text fields for status info and a cancel button. 
+  
+  After a ProgressViewController is requested, the CHStackView is reloaded,
+  which causes it to ask the ProgressDlgController (it's datasource) to
+  provide it with a list of all the subviews to be diaplyed. It calculates
+  it's new frame, and arranges the subviews in a vertical list. 
+  
+  The ProgressDlgController now needs to resize its window. It knows when
+  to do this because is watches for changes in the CHStackViews frame (using
+  NSViews built in NSNotification for this). 
+  
+  
+  Expanding/contracting download progress views
+  
+  When a disclosure triangle is clicked, the ProgressViewController just swaps
+  the expanded view for a smaller one. It saves the new state as the users
+  preference for "browser.download.compactView". If the option key was held down,
+  a notification is posted (that all ProgressViewControllers listen for) that
+  makes all ProgressViewControllers change their state to the new state of the sender. 
 
-class nsIWebBrowserPersist;
-class nsISupports;
-class nsIInputStream;
-class nsDownloadListener;
+*/
 
+#import "CHDownloadProgressDisplay.h"
 
-@interface ChimeraDownloadControllerFactory : DownloadControllerFactory
-@end
-
-
-@interface ProgressDlgController : NSWindowController <CHDownloadProgressDisplay>
+@interface ProgressDlgController : NSWindowController<CHDownloadDisplayFactory, CHStackViewDataSource>
 {
-    IBOutlet NSTextField *mElapsedTimeLabel;
-    IBOutlet NSTextField *mFromField;
-    IBOutlet NSTextField *mStatusLabel;
-    IBOutlet NSTextField *mTimeLeftLabel;
-    IBOutlet NSTextField *mToField;
-    IBOutlet NSProgressIndicator *mProgressBar;
-
-    NSToolbarItem *leaveOpenToggleToolbarItem;
-
-    BOOL      mSaveFileDialogShouldStayOpen;
-    BOOL      mDoingAutoFileDownload;
-    BOOL      mIsFileSave;
-    BOOL      mDownloadIsComplete;
-    long      mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
-        
-    CHDownloader        *mDownloader;   // we hold a ref to this
-    NSTimer             *mDownloadTimer;
+  IBOutlet CHStackView  *mStackView;
+  IBOutlet NSScrollView *mScrollView;
+  IBOutlet NSTextField  *mNoDownloadsText;
+  
+  NSSize                mDefaultWindowSize;                
+  NSTimer               *mDownloadTimer;
+  NSMutableArray        *mProgressViewControllers;
+  int                   mNumActiveDownloads;
 }
 
-+ (int)numDownloadInProgress;
++ (ProgressDlgController *)sharedDownloadController;
 
--(void)autosaveWindowFrame;
+- (int)numDownloadsInProgress;
 
--(void) setupDownloadTimer;
--(void) killDownloadTimer;
--(void) setDownloadProgress:(NSTimer *)aTimer;
--(NSString *) formatTime:(int)aSeconds;
--(NSString *) formatFuzzyTime:(int)aSeconds;
--(NSString *) formatBytes:(float)aBytes;
+- (void)autosaveWindowFrame;
+
+- (void)setupDownloadTimer;
+- (void)killDownloadTimer;
+- (void)setDownloadProgress:(NSTimer *)aTimer;
+
+- (void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+- (void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+- (void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+
+- (NSApplicationTerminateReply)allowTerminate;
 
 @end

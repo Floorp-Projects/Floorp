@@ -20,6 +20,7 @@
                 doReload = id; 
                 doSearch = id; 
                 doStop = id; 
+                downloadsWindow = id; 
                 exportBookmarks = id; 
                 feedbackLink = id; 
                 findAgain = id; 
@@ -61,7 +62,6 @@
                 mCreateBookmarksFolderMenuItem = NSMenuItem; 
                 mCreateBookmarksSeparatorMenuItem = NSMenuItem; 
                 mDockMenu = NSMenu; 
-                mFilterList = NSPopUpButton; 
                 mFilterView = NSView; 
                 mGoMenu = NSMenu; 
                 mServersSubmenu = NSMenu; 

@@ -69,6 +69,9 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsAppDirectoryServiceDefs.h"
+
+extern NSString* XPCOMShutDownNotificationName;
 
 
 nsresult
@@ -114,7 +117,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     // observer service uses a weakref.
     nsCOMPtr<nsIObserverService> svc = do_GetService("@mozilla.org/observer-service;1");
     NS_ASSERTION(svc, "Keychain can't get observer service");
-    mFormSubmitObserver = new KeychainFormSubmitObserver(self);
+    mFormSubmitObserver = new KeychainFormSubmitObserver();
     if ( mFormSubmitObserver && svc ) {
       NS_ADDREF(mFormSubmitObserver);
       svc->AddObserver(mFormSubmitObserver, NS_FORMSUBMIT_SUBJECT, PR_FALSE);
@@ -122,7 +125,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   
     // register for the cocoa notification posted when XPCOM shutdown so we
     // can unregister the pref callbacks we register below
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shutdown:) name:@"XPCOM Shutdown"
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shutdown:) name:XPCOMShutDownNotificationName
       object:nil];
     
     // cache the values of the prefs and register pref-changed callbacks. Yeah, I know
@@ -139,6 +142,10 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
         pref->RegisterCallback(gAutoFillEnabledPref, KeychainPrefChangedCallback, nsnull);
       }
     }
+    
+    // load the keychain.nib file with our dialogs in it
+    BOOL success = [NSBundle loadNibNamed:@"Keychain" owner:self];
+    NS_ASSERTION(success, "can't load keychain prompt dialogs");
   }
   return self;
 }
@@ -168,6 +175,8 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     pref->UnregisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
     pref->UnregisterCallback(gAutoFillEnabledPref, KeychainPrefChangedCallback, nsnull);
   }
+  
+  [sInstance release];
 }
 
 
@@ -324,7 +333,181 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 //
 - (void) addListenerToView:(CHBrowserView*)view
 {
-  [view addListener:[[[KeychainBrowserListener alloc] initWithBrowser:self browser:view] autorelease]];
+  [view addListener:[[[KeychainBrowserListener alloc] initWithBrowser:view] autorelease]];
+}
+
+//
+// hitButtonOK:
+// hitButtonCancel:
+// hitButtonOther:
+//
+// actions for the buttons of the keychain prompt dialogs.
+//
+
+enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
+
+- (IBAction)hitButtonOK:(id)sender
+{
+  [NSApp stopModalWithCode:kOKButton];
+}
+
+- (IBAction)hitButtonCancel:(id)sender
+{
+  [NSApp stopModalWithCode:kCancelButton];
+}
+
+- (IBAction)hitButtonOther:(id)sender
+{
+  [NSApp stopModalWithCode:kOtherButton];
+}
+
+//
+// confirmStorePassword:
+//
+// Puts up a dialog when the keychain doesn't yet have an entry from
+// this site asking to store it, forget it this once, or mark the site
+// on a deny list so we never ask again.
+//
+- (KeychainPromptResult)confirmStorePassword:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:confirmStorePasswordPanel relativeToWindow:parent];
+  [confirmStorePasswordPanel close];
+  
+  // the results of hitButtonXX: map to the corresponding values in the
+  // |KeychainPromptResult| enum so we can just cast and return
+  return NS_STATIC_CAST(KeychainPromptResult, result);
+}
+
+//
+// confirmChangedPassword:
+//
+// The password stored in the keychain differs from what the user typed
+// in. Ask what they want to do to resolve the issue.
+//
+- (BOOL)confirmChangedPassword:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:confirmChangePasswordPanel relativeToWindow:parent];
+  [confirmChangePasswordPanel close];
+  return (result == kOKButton);
+}
+
+
+- (void) addHostToDenyList:(NSString*)host
+{
+  [[KeychainDenyList instance] addHost:host];
+}
+
+- (BOOL) isHostInDenyList:(NSString*)host
+{
+  return [[KeychainDenyList instance] isHostPresent:host];
+}
+
+@end
+
+
+@interface KeychainDenyList (KeychainDenyListPrivate)
+- (NSString*) pathToDenyListFile;
+@end
+
+
+@implementation KeychainDenyList
+
+static KeychainDenyList *sDenyListInstance = nil;
+
++ (KeychainDenyList*) instance
+{
+  return sDenyListInstance ? sDenyListInstance : sDenyListInstance = [[self alloc] init];
+}
+
+- (id) init
+{
+  if ( (self = [super init]) ) {
+    mDenyList = [[NSUnarchiver unarchiveObjectWithFile:[self pathToDenyListFile]] retain];
+    if ( !mDenyList )
+      mDenyList = [[NSMutableArray alloc] init];
+    
+    mIsDirty = NO;
+    
+    // register for the cocoa notification posted when XPCOM shutdown so we
+    // can release our singleton and flush the file
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shutdown:) name:XPCOMShutDownNotificationName object:nil];
+  }
+  return self;
+}
+
+- (void) dealloc
+{
+  [self writeToDisk];
+  [mDenyList release];
+}
+
+//
+// shutdown:
+//
+// Called in response to the cocoa notification "XPCOM Shutdown" sent by the cocoa
+// browser service before it terminates embedding and shuts down xpcom. Allows us
+// to get rid of anything we're holding onto for the length of the app.
+//
+- (void) shutdown:(id)unused
+{
+  [sDenyListInstance release];
+}
+
+//
+// writeToDisk
+//
+// flushes the deny list to the save file in the user's profile, but only
+// if it has changed since we read it in.
+//
+- (void) writeToDisk
+{
+  if ( mIsDirty )
+    [NSArchiver archiveRootObject:mDenyList toFile:[self pathToDenyListFile]];
+  mIsDirty = NO;
+}
+
+- (BOOL) isHostPresent:(NSString*)host
+{
+  return [mDenyList containsObject:host];
+}
+
+- (void) addHost:(NSString*)host
+{
+  if ( ![self isHostPresent:host] ) {
+    [mDenyList addObject:host];
+    mIsDirty = YES;
+  }
+}
+
+- (void) removeHost:(NSString*)host
+{
+  if ( [self isHostPresent:host] ) {
+    [mDenyList removeObject:host];
+    mIsDirty = YES;
+  }
+}
+
+
+//
+// pathToDenyListFile
+//
+// returns a path ('/' delimited) that cocoa can use to point to the
+// deny list save file in the current user's profile
+//
+- (NSString*) pathToDenyListFile
+{
+  NSMutableString* path = [[[NSMutableString alloc] init] autorelease];
+
+  nsCOMPtr<nsIFile> appProfileDir;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(appProfileDir));
+  if ( appProfileDir ) {
+    nsAutoString profilePath;
+    appProfileDir->GetPath(profilePath);
+    [path setString:[NSString stringWith_nsAString:profilePath]];
+    [path appendString:@"/Keychain Deny List"];    // |profilePath| is '/' delimited
+  }
+  
+  return path;
 }
 
 @end
@@ -338,12 +521,6 @@ NS_IMPL_ISUPPORTS2(KeychainPrompt,
                    nsIAuthPromptWrapper)
 
 KeychainPrompt::KeychainPrompt() 
-  : mKeychain([KeychainService instance])
-{
-  NS_INIT_ISUPPORTS();
-}
-
-KeychainPrompt::KeychainPrompt(KeychainService* keychain) : mKeychain(keychain)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -391,7 +568,8 @@ KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost,
 void
 KeychainPrompt::PreFill(const PRUnichar *realm, PRUnichar **user, PRUnichar **pwd)
 {
-  if(![mKeychain isEnabled] || ![mKeychain isAutoFillEnabled])
+  KeychainService* keychain = [KeychainService instance];
+  if(![keychain isEnabled] || ![keychain isAutoFillEnabled])
     return;
 
   NSString* host = nil;
@@ -409,7 +587,7 @@ KeychainPrompt::PreFill(const PRUnichar *realm, PRUnichar **user, PRUnichar **pw
   // Pre-fill user/password if found in the keychain.
   //
   KCItemRef ignore;
-  if([mKeychain getUsernameAndPassword:(NSString*)host port:port user:username password:password item:&ignore]) {
+  if([keychain getUsernameAndPassword:(NSString*)host port:port user:username password:password item:&ignore]) {
     if ( user )
       *user = [username createNewUnicodeBuffer];
     if ( pwd )
@@ -427,10 +605,12 @@ KeychainPrompt::ProcessPrompt(const PRUnichar* realm, bool checked, PRUnichar* u
   NSString* username = [NSString stringWithPRUnichars:user];
   NSString* password = [NSString stringWithPRUnichars:pwd];
 
+  KeychainService* keychain = [KeychainService instance];
+
   NSMutableString* origUsername = [NSMutableString string];
   NSMutableString* origPwd = [NSMutableString string];
   KCItemRef itemRef;
-  bool found = [mKeychain getUsernameAndPassword:(NSString*)host port:port user:origUsername password:origPwd item:&itemRef];
+  bool found = [keychain getUsernameAndPassword:(NSString*)host port:port user:origUsername password:origPwd item:&itemRef];
   
   //
   // Update, store or remove the user/password depending on the user
@@ -438,11 +618,11 @@ KeychainPrompt::ProcessPrompt(const PRUnichar* realm, bool checked, PRUnichar* u
   // keychain.
   //
   if(checked && !found)
-    [mKeychain storeUsernameAndPassword:(NSString*)host port:port user:username password:password];
+    [keychain storeUsernameAndPassword:(NSString*)host port:port user:username password:password];
   else if(checked && found && (![origUsername isEqualToString:username] || ![origPwd isEqualToString:password]))
-    [mKeychain updateUsernameAndPassword:(NSString*)host port:port user:username password:password item:itemRef];
+    [keychain updateUsernameAndPassword:(NSString*)host port:port user:username password:password item:itemRef];
   else if(!checked && found)
-    [mKeychain removeUsernameAndPassword:(NSString*)host port:port item:itemRef];
+    [keychain removeUsernameAndPassword:(NSString*)host port:port item:itemRef];
 }
 
 //
@@ -476,7 +656,7 @@ KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 {
   PreFill(realm, user, pwd);
 
-  PRBool checked = [mKeychain isEnabled];
+  PRBool checked = [[KeychainService instance] isEnabled];
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
 
   nsresult rv = mPrompt->PromptUsernameAndPassword(dialogTitle, text, user, pwd, checkTitle, &checked, _retval);
@@ -501,7 +681,7 @@ KeychainPrompt::PromptPassword(const PRUnichar *dialogTitle,
 {
   PreFill(realm, nsnull, pwd);
 
-  PRBool checked = [mKeychain isEnabled];
+  PRBool checked = [[KeychainService instance] isEnabled];
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
 
   nsresult rv = mPrompt->PromptPassword(dialogTitle, text, pwd, checkTitle, &checked, _retval);
@@ -530,7 +710,7 @@ NS_IMPL_ISUPPORTS2(KeychainFormSubmitObserver,
                    nsIObserver,
                    nsIFormSubmitObserver)
 
-KeychainFormSubmitObserver::KeychainFormSubmitObserver(KeychainService* keychain) : mKeychain(keychain)
+KeychainFormSubmitObserver::KeychainFormSubmitObserver()
 {
   NS_INIT_ISUPPORTS();
   //NSLog(@"Keychain form submit observer created.");
@@ -551,7 +731,8 @@ NS_IMETHODIMP
 KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* window, nsIURI* actionURL, 
                                     PRBool* cancelSubmit)
 {
-  if (![mKeychain isEnabled])
+	KeychainService* keychain = [KeychainService instance];
+  if (![keychain isEnabled])
     return NS_OK;
 
   nsCOMPtr<nsIDOMHTMLFormElement> formNode(do_QueryInterface(node));
@@ -590,25 +771,41 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     docURL->GetHost(host);
     docURL->GetPort(&port);
 
+    // is the host in the deny list? if yes, bail. otherwise check the keychain.
+    NSString* realm = [NSString stringWithCString:host.get()];
+    if ( [keychain isHostInDenyList:realm] )
+      return NS_OK;
+    
     //
     // If there's already an entry in the keychain, check if the username
     // and password match. If not, ask the user what they want to do and replace
     // it as necessary. If there's no entry, ask if they want to remember it
     // and then put it into the keychain
     //
-    NSString* realm = [NSString stringWithCString:host.get()];
     NSString* existingUser = [NSMutableString string];
     NSString* existingPassword = [NSMutableString string];
     KCItemRef itemRef;
-    BOOL foundExistingPassword = [mKeychain getUsernameAndPassword:realm port:port user:existingUser password:existingPassword item:&itemRef];
+    BOOL foundExistingPassword = [keychain getUsernameAndPassword:realm port:port user:existingUser password:existingPassword item:&itemRef];
     if ( foundExistingPassword ) {
       if ( !([existingUser isEqualToString:username] && [existingPassword isEqualToString:password]) )
         if ( CheckChangeDataYN(window) )
-          [mKeychain updateUsernameAndPassword:realm port:port user:username password:password item:itemRef];
+          [keychain updateUsernameAndPassword:realm port:port user:username password:password item:itemRef];
     }
     else {
-      if (CheckStorePasswordYN(window))
-        [mKeychain storeUsernameAndPassword:realm port:port user:username password:password];
+      switch (CheckStorePasswordYN(window)) {
+        case kSave:
+          [keychain storeUsernameAndPassword:realm port:port user:username password:password];
+          break;
+        
+        case kNeverRemember:
+          // tell the keychain we never want to be prompted about this host again
+          [keychain addHostToDenyList:realm];
+          break;
+        
+        case kDontRemember:
+          // do nothing at all
+          break;
+      }
     }
   }
 
@@ -644,12 +841,11 @@ KeychainFormSubmitObserver::GetNSWindow(nsIDOMWindowInternal* inWindow)
   return nswindow;
 }
 
-BOOL
+KeychainPromptResult
 KeychainFormSubmitObserver::CheckStorePasswordYN(nsIDOMWindowInternal* window)
 {
   NSWindow* nswindow = GetNSWindow(window);
-  nsAlertController* dialog = CHBrowserService::GetAlertController();
-  return [dialog confirmStorePassword:nswindow];
+  return [[KeychainService instance] confirmStorePassword:nswindow];
 }
 
 
@@ -657,16 +853,14 @@ BOOL
 KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 {
   NSWindow* nswindow = GetNSWindow(window);
-  nsAlertController* dialog = CHBrowserService::GetAlertController();
-  return [dialog confirmChangedPassword:nswindow];
+  return [[KeychainService instance] confirmChangedPassword:nswindow];
 }
 
 @implementation KeychainBrowserListener
 
-- (id)initWithBrowser:(KeychainService*)keychain browser:(CHBrowserView*)aBrowser
+- (id)initWithBrowser:(CHBrowserView*)aBrowser
 {
   if ( (self = [super init]) ) {
-    mKeychain = keychain;
     mBrowserView = aBrowser;
   }
   return self;
@@ -683,7 +877,8 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
   if(!succeeded)
     return;
 
-  if(![mKeychain isEnabled] || ![mKeychain isAutoFillEnabled])
+  KeychainService* keychain = [KeychainService instance];
+  if(![keychain isEnabled] || ![keychain isAutoFillEnabled])
     return;
 
   nsCOMPtr<nsIDOMWindow> domWin = getter_AddRefs([mBrowserView getContentWindow]);
@@ -750,7 +945,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
       docURL->GetPort(&port);
       
       KCItemRef ignore;
-      if ([mKeychain getUsernameAndPassword:hostStr port:port user:username password:password item:&ignore]) {
+      if ([keychain getUsernameAndPassword:hostStr port:port user:username password:password item:&ignore]) {
         nsAutoString user, pwd;
         [username assignTo_nsAString:user];
         [password assignTo_nsAString:pwd];

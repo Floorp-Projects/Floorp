@@ -335,10 +335,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   mTabTitle = [mLoadingStatusString retain];
   [mTabItem setLabel:mTabTitle];
 
-  if (mWindowController) {
-    [mWindowController updateToolbarItems];
-    [mWindowController startThrobber];
-  }
+  if (mWindowController)
+    [mWindowController loadingStarted];
 }
 
 - (void)onLoadingCompleted:(BOOL)succeeded
@@ -402,10 +400,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     [self removeFromSuperview];
   }
 
-  if (mWindowController) {
-    [mWindowController updateToolbarItems];
-    [mWindowController stopThrobber];    
-  }
+  if (mWindowController)
+    [mWindowController loadingDone];
 }
 
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes 

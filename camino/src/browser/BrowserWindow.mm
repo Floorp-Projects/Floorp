@@ -54,6 +54,8 @@ static const int kEscapeKeyCode = 53;
   BOOL madeFirstResponder = [super makeFirstResponder:responder];
   if (madeFirstResponder && oldResponder != [self firstResponder])
     [(BrowserWindowController*)[self delegate] focusChangedFrom:oldResponder to:[self firstResponder]];
+
+  //NSLog(@"Old FR %@, new FR %@, responder %@, made %d", oldResponder, [self firstResponder], responder, madeFirstResponder);
   return madeFirstResponder;
 }
 

@@ -56,7 +56,7 @@ public:
     nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile, nsIURI* aURL,
                     nsIDOMDocument* aDocument, nsIInputStream* aPostData,
                     const nsAString& aSuggestedFilename, PRBool aBypassCache,
-                    NSView* aFilterView, NSPopUpButton* aFilterList);
+                    NSView* aFilterView);
     virtual ~nsHeaderSniffer();
 
     NS_DECL_ISUPPORTS
@@ -79,6 +79,5 @@ private:
     nsCString                 mContentType;
     nsCString                 mContentDisposition;
     NSView*                   mFilterView;
-    NSPopUpButton*            mFilterList;
 };
 

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Simon Fraser <sfraser@netscape.com>
+ *    Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -49,6 +50,8 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
+#include "nsITimer.h"
+
 #include "nsExternalHelperAppService.h"
 
 
@@ -56,24 +59,28 @@
 
 class nsDownloadListener :  public CHDownloader,
                             public nsIDownload,
-                            public nsIWebProgressListener
+                            public nsIWebProgressListener,
+                            public nsITimerCallback
 {
 public:
-            nsDownloadListener(DownloadControllerFactory* inDownloadControllerFactory);
+            nsDownloadListener();
     virtual ~nsDownloadListener();
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIDOWNLOAD
     NS_DECL_NSIWEBPROGRESSLISTENER
+    
+    // nsITimerCallback
+    NS_IMETHOD Notify(nsITimer *timer);
   
 public:
-    //void BeginDownload();
+
     void InitDialog();
     
     virtual void PauseDownload();
     virtual void ResumeDownload();
     virtual void CancelDownload();
-    virtual void DownloadDone();
+    virtual void DownloadDone(nsresult aStatus);
     virtual void DetachDownloadDisplay();
     
 private:
@@ -84,10 +91,13 @@ private:
     
     nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
     nsCOMPtr<nsILocalFile>          mDestination;       // Our destination URL.
+    nsCOMPtr<nsITimer>              mEndRefreshTimer;   // Timer used to update the status to done
+    nsresult                        mDownloadStatus;		// status from last nofication
     PRInt64                         mStartTime;         // When the download started
     PRPackedBool                    mBypassCache;       // Whether we should bypass the cache or not.
     PRPackedBool                    mNetworkTransfer;     // true if the first OnStateChange has the NETWORK bit set
     PRPackedBool                    mGotFirstStateChange; // true after we've seen the first OnStateChange
     PRPackedBool                    mUserCanceled;        // true if the user canceled the download
+    PRPackedBool                    mSentCancel;          // true when we've notified the backend of the cancel
 };
 

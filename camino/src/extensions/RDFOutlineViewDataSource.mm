@@ -41,6 +41,7 @@
 #import "RDFOutlineViewDataSource.h"
 #import "CHBrowserService.h"
 
+#include "nsCRT.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIRDFLiteral.h"
@@ -55,13 +56,115 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
-@interface RDFOutlineViewDataSource(Private);
 
-- (void)registerForShutdownNotification;
-- (void)cleanup;
+@interface RDFOutlineViewItem(Private)
+
+- (unsigned int)cacheVersion;
+- (void)setNumChildren:(int)numChildren isExpandable:(BOOL)expandable cacheVersion:(unsigned int)version;
+- (void)setChildren:(NSArray*)childArray;
+- (BOOL)cacheValid:(unsigned int)version needChildren:(BOOL)needChildren;
+- (BOOL)cachedChildren;
+
+- (BOOL)isExpandable;
+- (int)numChildren;
+- (id)childAtIndex:(int)index;
 
 @end
 
+
+@implementation RDFOutlineViewItem
+
+- (id)init
+{
+  if ((self = [super init]))
+  {
+    mCacheVersion = 0;
+    mExpandable   = NO;
+    mNumChildren  = 0;
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mChildNodes release];
+  NS_IF_RELEASE(mResource);
+  [super dealloc];
+}
+
+- (nsIRDFResource*)resource
+{
+  NS_IF_ADDREF(mResource);
+  return mResource;
+}
+
+- (void)setResource:(nsIRDFResource*) aResource
+{
+  nsIRDFResource* oldResource = mResource;
+  NS_IF_ADDREF(mResource = aResource);
+  NS_IF_RELEASE(oldResource);
+}
+
+- (unsigned int)cacheVersion
+{
+  return mCacheVersion;
+}
+
+- (void)setNumChildren:(int)numChildren isExpandable:(BOOL)expandable cacheVersion:(unsigned int)version;
+{
+  mNumChildren  = numChildren;
+  mExpandable   = expandable;
+  mCacheVersion = version;
+}
+
+- (void)setChildren:(NSArray*)childArray
+{
+  // childArray can legally be nil here. If it is, we're clearing the cached children
+  NSArray* oldChildren = mChildNodes;
+  mChildNodes = childArray;
+  [mChildNodes retain];
+  [oldChildren release];
+}
+
+- (BOOL)cacheValid:(unsigned int)version needChildren:(BOOL)needChildren;
+{
+  return (mCacheVersion == version) && (needChildren ? (mChildNodes != nil) : 1);
+}
+
+- (BOOL)cachedChildren
+{
+  return (mChildNodes != nil);
+}
+
+- (BOOL)isExpandable
+{
+  return mExpandable;
+}
+
+- (int)numChildren
+{
+  return mNumChildren;
+}
+
+- (id)childAtIndex:(int)index
+{
+  if (mChildNodes)
+    return [mChildNodes objectAtIndex:index];
+  
+  return nil;
+}
+
+@end
+
+#pragma mark -
+
+@interface RDFOutlineViewDataSource(Private)
+
+- (void)registerForShutdownNotification;
+- (void)cleanup;
+- (void)updateItemProperties:(id)item enumerateChildren:(BOOL)doChildren;
+
+@end
 
 @implementation RDFOutlineViewDataSource
 
@@ -70,6 +173,7 @@
   if ((self = [super init]))
   {
     [self registerForShutdownNotification];
+    mCacheVersion = 1;
   }
   return self;
 }
@@ -78,7 +182,7 @@
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
-	[self cleanup];
+  [self cleanup];
   [super dealloc];
 }
 
@@ -167,123 +271,62 @@
 // XXX - For now, we'll just say that none of our items are editable, as we aren't using any 
 //       RDF datasources that are mutable.
 //
-- (BOOL) outlineView: (NSOutlineView*) aOutlineView shouldEditTableColumn: (NSTableColumn*) aTableColumn
+- (BOOL) outlineView: (NSOutlineView*)aOutlineView shouldEditTableColumn: (NSTableColumn*) aTableColumn
                                                     item: (id) aItem
 {
-    return NO;
+  return NO;
 }
 
-- (BOOL) outlineView: (NSOutlineView*) aOutlineView isItemExpandable: (id) aItem
+- (BOOL) outlineView: (NSOutlineView*)aOutlineView isItemExpandable:(id)aItem
 {
-    if (!mDataSource)
-        return NO;
-    
-    if (!aItem)
-        return YES; // The root is always open
-    
-    nsCOMPtr<nsIRDFResource> itemResource = dont_AddRef([aItem resource]);
-    
-    PRBool isSeq = PR_FALSE;
-    mContainerUtils->IsSeq(mDataSource, itemResource, &isSeq);
-    if (isSeq)
-        return YES;
-    
-    nsCOMPtr<nsIRDFResource> childProperty;
-    mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
-    
-    nsCOMPtr<nsIRDFNode> childNode;
-    mDataSource->GetTarget(itemResource, childProperty, PR_TRUE, getter_AddRefs(childNode));
-    
-    return childNode != nsnull;
+  if (!mDataSource)
+      return NO;
+  
+  if (!aItem)
+      return YES; // The root is always open
+  
+  if (![aItem cacheValid:mCacheVersion needChildren:NO])
+    [self updateItemProperties:aItem enumerateChildren:NO];
+  
+  return [aItem isExpandable];
 }
 
-- (id) outlineView: (NSOutlineView*) aOutlineView child: (int) aIndex
-                                                  ofItem: (id) aItem
+- (id)outlineView:(NSOutlineView*)aOutlineView child:(int)aIndex ofItem:(id)aItem
 {
-    if (!mDataSource)
-        return nil;
+  if (!mDataSource)
+      return nil;
+  
+  if (!aItem)
+  {
+    nsCOMPtr<nsIRDFResource> rootResource = dont_AddRef([self rootResource]);
+    aItem = [self getWrapperFor:rootResource];
+  }
+  
+  if (![aItem cacheValid:mCacheVersion needChildren:YES])
+    [self updateItemProperties:aItem enumerateChildren:YES];
     
-    nsCOMPtr<nsIRDFResource> resource = !aItem ? dont_AddRef([self rootResource]) : dont_AddRef([aItem resource]);
-    
-    nsCOMPtr<nsIRDFResource> ordinalResource;
-    mContainerUtils->IndexToOrdinalResource(aIndex + 1, getter_AddRefs(ordinalResource));
-    
-    nsCOMPtr<nsIRDFNode> childNode;
-    mDataSource->GetTarget(resource, ordinalResource, PR_TRUE, getter_AddRefs(childNode));
-    if (childNode) {
-        // Yay. A regular container. We don't need to count, we can go directly to 
-        // our object. 
-        nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(childNode));
-        if (childResource) 
-            return [self makeWrapperFor:childResource];
-    }
-    else
-    {
-        // Oh well, not a regular container. We need to count, dagnabbit. 
-        nsCOMPtr<nsIRDFResource> childProperty;
-        mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
-
-        nsCOMPtr<nsISimpleEnumerator> childNodes;
-        mDataSource->GetTargets(resource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
-        
-        nsCOMPtr<nsISupports> supp;
-        PRInt32 count = 0;
-
-        PRBool hasMore = PR_FALSE;
-        while (NS_SUCCEEDED(childNodes->HasMoreElements(&hasMore)) && hasMore)
-        {
-            childNodes->GetNext(getter_AddRefs(supp));
-            if (count == aIndex)
-                break;
-            count ++;
-        }
-
-        nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(supp));
-        if (childResource) {
-            return [self makeWrapperFor:childResource];
-        }
-    }
-
-    return nil;
+  return [aItem childAtIndex:aIndex];
 }
     
-- (int) outlineView: (NSOutlineView*) aOutlineView numberOfChildrenOfItem: (id) aItem;
+- (int)outlineView:(NSOutlineView*)aOutlineView numberOfChildrenOfItem:(id) aItem;
 {
-    if (!mDataSource)
-        return 0;
-    
-    nsCOMPtr<nsIRDFResource> resource = dont_AddRef(aItem ? [aItem resource] : [self rootResource]);
-        
-    // XXX just assume NC:child is the only containment arc for now
-    nsCOMPtr<nsIRDFResource> childProperty;
-    mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
-    
-    nsCOMPtr<nsISimpleEnumerator> childNodes;
-    mDataSource->GetTargets(resource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
-    
-    PRBool hasMore = PR_FALSE;
-    PRInt32 count = 0;
-        
-    while (NS_SUCCEEDED(childNodes->HasMoreElements(&hasMore)) && hasMore)
-    {
-        nsCOMPtr<nsISupports> supp;
-        childNodes->GetNext(getter_AddRefs(supp));
-        count ++;
-    }
-    
-    if (count == 0) {
-        nsresult rv = mContainer->Init(mDataSource, resource);
-        if (NS_FAILED(rv))
-            return 0;
-        
-        mContainer->GetCount(&count);
-    }
-    
-    return count;
+  if (!mDataSource)
+      return 0;
+
+  if (!aItem)
+  {
+    nsCOMPtr<nsIRDFResource> rootResource = dont_AddRef([self rootResource]);
+    aItem = [self getWrapperFor:rootResource];
+  }
+  
+  if (![aItem cacheValid:mCacheVersion needChildren:YES])
+    [self updateItemProperties:aItem enumerateChildren:YES];
+
+  return [aItem numChildren];
 }
 
-- (id) outlineView: (NSOutlineView*) aOutlineView objectValueForTableColumn: (NSTableColumn*) aTableColumn
-                                                  byItem: (id) aItem
+- (id)outlineView:(NSOutlineView*)aOutlineView objectValueForTableColumn:(NSTableColumn*)aTableColumn
+                                                  byItem:(id)aItem
 {
   if (!mDataSource || !aItem)
       return nil;
@@ -291,12 +334,10 @@
   // The table column's identifier is the RDF Resource URI of the property being displayed in
   // that column, e.g. "http://home.netscape.com/NC-rdf#Name"
   NSString* columnPropertyURI = [aTableColumn identifier];    
-  nsXPIDLString literalValue;
-  [self getPropertyString:columnPropertyURI forItem:aItem result:getter_Copies(literalValue)];
+  NSString* propString = [self getPropertyString:columnPropertyURI forItem:aItem];
 
-  return [self createCellContents:literalValue withColumn:columnPropertyURI byItem:aItem];
+  return [self createCellContents:propString withColumn:columnPropertyURI byItem:aItem];
 }
-
 
 //
 // createCellContents:withColumn:byItem
@@ -304,11 +345,10 @@
 // Constructs a NSString from the given string data for this item in the given column.
 // This should be overridden to do more fancy things, such as add an icon, etc.
 //
--(id) createCellContents:(const nsAString&)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
+- (id)createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id)inItem
 {
-  return [NSString stringWith_nsAString: inValue];
+  return inValue;
 }
-
 
 //
 // outlineView:tooltipForString
@@ -318,20 +358,8 @@
 //
 - (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)inItem
 {
-  nsXPIDLString literalValue;
-  [self getPropertyString:@"http://home.netscape.com/NC-rdf#Name" forItem:inItem result:getter_Copies(literalValue)];
-  return [NSString stringWith_nsAString:literalValue];
+  return [self getPropertyString:@"http://home.netscape.com/NC-rdf#Name" forItem:inItem];
 }
-
-
-- (void) outlineView: (NSOutlineView*) aOutlineView setObjectValue: (id) aObject
-                                                    forTableColumn: (NSTableColumn*) aTableColumn
-                                                    byItem: (id) aItem
-{
-
-}
-
-
 
 - (void) reloadDataForItem: (id) aItem reloadChildren: (BOOL) aReloadChildren
 {
@@ -341,7 +369,7 @@
     [mOutlineView reloadItem: aItem reloadChildren: aReloadChildren];
 }
 
-- (id) makeWrapperFor: (nsIRDFResource*) aRDFResource
+- (id)getWrapperFor:(nsIRDFResource*) aRDFResource
 {
   const char* k;
   aRDFResource->GetValueConst(&k);
@@ -350,8 +378,9 @@
   // see if we've created a wrapper already, if not, create a new wrapper object
   // and stash it in our dictionary
   RDFOutlineViewItem* item = [mDictionary objectForKey:key];
-  if (!item) {
-    item = [[RDFOutlineViewItem alloc] init];
+  if (!item)
+  {
+    item = [[[RDFOutlineViewItem alloc] init] autorelease];
     [item setResource: aRDFResource];
     [mDictionary setObject:item forKey:key];				// retains |item|
   }
@@ -359,14 +388,56 @@
   return item;
 }
 
-
--(void) getPropertyString:(NSString*)inPropertyURI forItem:(RDFOutlineViewItem*)inItem
-            result:(PRUnichar**)outResult
+- (void)invalidateCachedItems
 {
-  if ( !outResult )
-    return;
-  *outResult = nil;
+  mCacheVersion++;
+}
+
+- (void)updateItemProperties:(id)item enumerateChildren:(BOOL)doChildren
+{
+  BOOL isExpandable = NO;
+  NSMutableArray* itemChildren = doChildren ? [[[NSMutableArray alloc] initWithCapacity:10] autorelease] : nil;
   
+  nsCOMPtr<nsIRDFResource> itemResource = dont_AddRef([item resource]);
+  
+  PRBool isSeq = PR_FALSE;
+  mContainerUtils->IsSeq(mDataSource, itemResource, &isSeq);
+  if (isSeq)
+    isExpandable = YES;
+
+  nsCOMPtr<nsIRDFResource> childProperty;
+  mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
+
+  nsCOMPtr<nsISimpleEnumerator> childNodes;
+  mDataSource->GetTargets(itemResource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
+  
+  PRBool hasMore = PR_FALSE;
+  while (NS_SUCCEEDED(childNodes->HasMoreElements(&hasMore)) && hasMore)
+  {
+    nsCOMPtr<nsISupports> supp;
+    childNodes->GetNext(getter_AddRefs(supp));
+
+    nsCOMPtr<nsIRDFResource> childResource = do_QueryInterface(supp);
+    if (childResource)
+    {
+      id childItem = [self getWrapperFor:childResource];
+      if (childItem)
+      {
+        isExpandable = YES;
+        if (!itemChildren) break;		// know enough already
+        [itemChildren addObject:childItem];
+      }
+    }
+  }
+  
+  // itemChildren will be nil here if we don't care about children, but that's OK.
+  // the setChildren call will clear the cached child list.
+	[item setNumChildren:[itemChildren count] isExpandable:isExpandable cacheVersion:mCacheVersion];
+  [item setChildren:itemChildren];  
+}
+
+- (NSString*)getPropertyString:(NSString*)inPropertyURI forItem:(RDFOutlineViewItem*)inItem
+{
   nsCOMPtr<nsIRDFResource> propertyResource;
   mRDFService->GetResource([inPropertyURI UTF8String], getter_AddRefs(propertyResource));
           
@@ -378,38 +449,20 @@
 #if DEBUG
       NSLog(@"ValueNode is null in RDF objectValueForTableColumn");
 #endif
-      return;
+      return @"";
   }
   
   nsCOMPtr<nsIRDFLiteral> valueLiteral(do_QueryInterface(valueNode));
   if (!valueLiteral)
-      return;
+      return @"";
 
-  valueLiteral->GetValue(outResult);
+  const PRUnichar* value = NULL;
+  valueLiteral->GetValueConst(&value);
+  if (value)
+    return [NSString stringWithCharacters:value length:nsCRT::strlen(value)];
+   
+  return @"";
 }
 
-
-@end
-
-@implementation RDFOutlineViewItem
-
-- (void) dealloc
-{
-    NS_IF_RELEASE(mResource);
-    [super dealloc];
-}
-
-- (nsIRDFResource*) resource
-{
-    NS_IF_ADDREF(mResource);
-    return mResource;
-}
-
-- (void) setResource: (nsIRDFResource*) aResource
-{
-    nsIRDFResource* oldResource = mResource;
-    NS_IF_ADDREF(mResource = aResource);
-    NS_IF_RELEASE(oldResource);
-}
 
 @end

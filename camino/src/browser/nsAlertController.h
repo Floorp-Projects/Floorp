@@ -53,8 +53,6 @@
     IBOutlet id confirmPanelText;
     IBOutlet id confirmPanelButton1;
     IBOutlet id confirmPanelButton2;
-    IBOutlet id confirmStorePasswordPanel;
-    IBOutlet id confirmChangePasswordPanel;
     IBOutlet id promptPanel;
     IBOutlet id promptPanelCheck;
     IBOutlet id promptPanelText;
@@ -90,8 +88,6 @@
 - (int)confirmCheckEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text 
   button1:(NSString*)btn1 button2:(NSString*)btn2 button3:(NSString*)btn3
   checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
-- (BOOL)confirmStorePassword:(NSWindow*)parent;
-- (BOOL)confirmChangedPassword:(NSWindow*)parent;
 
 - (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 - (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;

@@ -286,7 +286,7 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   NSImage*	faviconImage = nil;
   
   NS_DURING
-    faviconImage = [[NSImage alloc] initWithData:data];
+    faviconImage = [[[NSImage alloc] initWithData:data] autorelease];
   NS_HANDLER
     NSLog(@"Exception \"%@ making\" favicon image for %@", localException, inURI);
     faviconImage = nil;

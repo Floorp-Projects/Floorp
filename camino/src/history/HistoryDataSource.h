@@ -49,17 +49,23 @@ class HistoryDataSourceObserver;
 {
   HistoryDataSourceObserver* mObserver;					// STRONG ref, should be nsCOMPtr but can't
   IBOutlet BrowserWindowController* mBrowserWindowController;
+  BOOL                       mUpdatesEnabled;
+  BOOL                       mNeedsRefresh;
 }
 
 // overridden to create a attributed string with icon
--(id) createCellContents:(const nsAString&)inValue withColumn:(NSString*)inColumn byItem:(id) inItem;
+- (id)createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem;
 
 - (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)inItem;
 
--(void) enableObserver;
--(void) disableObserver;
+- (void)enableObserver;
+- (void)disableObserver;
 
--(IBAction)openHistoryItem: (id)aSender;
--(IBAction)deleteHistoryItems: (id)aSender;
+- (void)setNeedsRefresh:(BOOL)needsRefresh;
+- (BOOL)needsRefresh;
+- (void)refresh;
+
+- (IBAction)openHistoryItem: (id)aSender;
+- (IBAction)deleteHistoryItems: (id)aSender;
 
 @end

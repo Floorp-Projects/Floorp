@@ -601,7 +601,7 @@ const int kBookmarksRootItemTag = -2;
       
       //Set cell's textual contents
       //[cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString: nameAttr]];
-      cellValue = [[NSMutableAttributedString alloc] initWithString:[NSString stringWith_nsAString: nameAttr]];
+      cellValue = [[[NSMutableAttributedString alloc] initWithString:[NSString stringWith_nsAString: nameAttr]] autorelease];
       
       //Create an attributed string to hold the empty attachment, then release the components.
       NSMutableAttributedString* attachmentAttrString = [NSMutableAttributedString attributedStringWithAttachment:textAttachment];

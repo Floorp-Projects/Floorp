@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,19 +46,17 @@
   1.  The CHDownloadProgressDisplay protocol.
   
       This is a formal protocol that needs to be implemented by
-      a window controller for your progress window. Its methods
-      will be called by the underlying C++ downloading classes.
+      an object (eg. a window controller or a view controller) 
+      for your progress window. Its methods will be called by the
+      underlying C++ downloading classes.
      
-  2.  The Obj-C DownloadControllerFactory class.
+  2.  The CHDownloadDisplayFactory protocol
   
-      This class should be subclassed by an embedder, with an
-      implementation of 'createDownloadController' that hands back
-      a new instance of an NSWindowController that implements the
-      <CHDownloadProgressDisplay> protocol.
-      
-      The underlying C++ classes use this factory to create the
-      progress window controller.
-  
+      This is a formal protocol that can be implemented by
+      any object that can create objects that themselves
+      implement CHDownloadProgressDisplay. This would probably be 
+      an NSWindowController. 
+            
   3.  The CHDownloader C++ class
   
       This base class exists to hide the complextity of the download
@@ -90,10 +89,10 @@
         
   In both cases, creating the nsDownloadListener and calling its Init() method
   calls nsDownloder::CreateDownloadDisplay(). The nsDownloder has as a member
-  variable a DownloadControllerFactory (see above), which got passed to it
-  via our XPCOM factory for nsIDownload objects. It then uses that DownloadControllerFactory
-  to get an instance of the download progress window controller, which then
-  shows the download progress window.
+  variable an object that implements CHDownloadDisplayFactory (see above), which got set
+  on it via a call to SetDisplayFactory. It then uses that CHDownloadDisplayFactory
+  to create an instance of the download progress display, which then controls
+  something (like a view or window) that shows in the UI.
   
   Simple, eh?
   
@@ -105,13 +104,13 @@
 
 class CHDownloader;
 
-// a formal protocol for something that implements progress display
-// Embedders can make a window controller that conforms to this
+// A formal protocol for something that implements progress display.
+// Embedders can make a window or view controller that conforms to this
 // protocol, and reuse nsDownloadListener to get download UI.
 @protocol CHDownloadProgressDisplay
 
 - (void)onStartDownload:(BOOL)isFileSave;
-- (void)onEndDownload;
+- (void)onEndDownload:(BOOL)completedOK;
 
 - (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress;
 
@@ -121,35 +120,34 @@ class CHDownloader;
 
 @end
 
-// subclass this, and have your subclass instantiate and return your window
-// controller in createDownloadController
-@interface DownloadControllerFactory : NSObject
-{
-}
+// A formal protocol which is implemented by a factory of progress UI.
+@protocol CHDownloadDisplayFactory
 
-- (NSWindowController<CHDownloadProgressDisplay> *)createDownloadController;
+- (id <CHDownloadProgressDisplay>)createProgressDisplay;
 
 @end
 
 
 // Pure virtual base class for a generic downloader, that the progress UI can talk to.
 // It implements nsISupports so that it can be refcounted. This class insulates the
-// UI code from having to know too much about the nsIDownloadListener.
-// It is responsible for creating the download UI, via the DownloadControllerFactory
+// UI code from having to know too much about the nsDownloadListener.
+// It is responsible for creating the download UI, via the CHDownloadController
 // that it owns.
 class CHDownloader : public nsISupports
 {
 public:
-                  CHDownloader(DownloadControllerFactory* inControllerFactory);
+                  CHDownloader();
     virtual       ~CHDownloader();
 
     NS_DECL_ISUPPORTS
 
+    virtual void SetDisplayFactory(id<CHDownloadDisplayFactory> inDownloadDisplayFactory);    // retains
+
     virtual void PauseDownload() = 0;
     virtual void ResumeDownload() = 0;
     virtual void CancelDownload() = 0;
-    virtual void DownloadDone() = 0;
-    virtual void DetachDownloadDisplay() = 0;		// tell downloader to forget about its display
+    virtual void DownloadDone(nsresult aStatus) = 0;
+    virtual void DetachDownloadDisplay() = 0;   // tell downloader to forget about its display
 
     virtual void CreateDownloadDisplay();
     
@@ -160,8 +158,8 @@ protected:
 
 protected:
 
-    DownloadControllerFactory*    mControllerFactory;
-    id <CHDownloadProgressDisplay>  mDownloadDisplay;   // something that implements the CHDownloadProgressDisplay protocol
-    PRBool                        mIsFileSave;        // true if we're doing a save, rather than a download
+    id<CHDownloadDisplayFactory>    mDisplayFactory;
+    id<CHDownloadProgressDisplay>   mDownloadDisplay;   // something that implements the CHDownloadProgressDisplay protocol
+    PRBool                          mIsFileSave;        // true if we're doing a save, rather than a download
 };
 

@@ -163,9 +163,8 @@ enum {
 // nsIWebBrowserSetup methods
 - (void)setProperty:(unsigned int)property toValue:(unsigned int)value;
 
-- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
-- (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView;
+- (void)saveURL:(NSView*)aFilterView url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
 
 - (void)printDocument;
 - (void)pageSetup;

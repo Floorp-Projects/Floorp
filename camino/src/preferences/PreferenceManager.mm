@@ -38,6 +38,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import <SystemConfiguration/SystemConfiguration.h>
+
 #import "PreferenceManager.h"
 #import "UserDefaults.h"
 #import "CHBrowserService.h"
@@ -60,10 +61,22 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 
 @interface PreferenceManager(PreferenceManagerPrivate)
 
++ (PreferenceManager *) sharedInstanceDontCreate;
+
 - (void)registerNotificationListener;
 
 - (void)termEmbedding: (NSNotification*)aNotification;
 - (void)xpcomTerminate: (NSNotification*)aNotification;
+
+- (void)configureProxies;
+- (BOOL)updateOneProxy:(NSDictionary*)configDict
+    protocol:(NSString*)protocol
+    proxyEnableKey:(NSString*)enableKey
+    proxyURLKey:(NSString*)urlKey
+    proxyPortKey:(NSString*)portKey;
+
+- (void)registerForProxyChanges;
+- (BOOL)readSystemProxySettings;
 
 @end
 
@@ -76,7 +89,7 @@ static PreferenceManager* gSharedInstance = nil;
 static BOOL gMadePrefManager;
 #endif
 
-+ (PreferenceManager *) sharedInstance
++ (PreferenceManager *)sharedInstance
 {
   if (!gSharedInstance)
   {
@@ -88,13 +101,20 @@ static BOOL gMadePrefManager;
     gSharedInstance = [[PreferenceManager alloc] init];
   }
     
-	return gSharedInstance;
+  return gSharedInstance;
+}
+
++ (PreferenceManager *)sharedInstanceDontCreate
+{
+  return gSharedInstance;
 }
 
 - (id) init
 {
   if ((self = [super init]))
   {
+    mRunLoopSource = NULL;
+    
     [self registerNotificationListener];
 
     if ([self initInternetConfig] == NO) {
@@ -115,6 +135,8 @@ static BOOL gMadePrefManager;
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  if (self == gSharedInstance)
+    gSharedInstance = nil;
   [super dealloc];
 }
 
@@ -123,6 +145,13 @@ static BOOL gMadePrefManager;
   ::ICStop(mInternetConfig);
   mInternetConfig = nil;
   NS_IF_RELEASE(mPrefs);
+  // remove our runloop observer
+  if (mRunLoopSource)
+  {
+    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes);
+    CFRelease(mRunLoopSource);
+    mRunLoopSource = NULL;
+  }
 }
 
 - (void)xpcomTerminate: (NSNotification*)aNotification
@@ -145,14 +174,14 @@ static BOOL gMadePrefManager;
                                         object:       nil];
 }
 
-- (void) savePrefsFile
+- (void)savePrefsFile
 {
   nsCOMPtr<nsIPrefService> prefsService = do_GetService(NS_PREF_CONTRACTID);
   if (prefsService)
       prefsService->SavePrefFile(nsnull);
 }
 
-- (BOOL) initInternetConfig
+- (BOOL)initInternetConfig
 {
     OSStatus error;
     error = ::ICStart(&mInternetConfig, 'CHIM');
@@ -164,7 +193,7 @@ static BOOL gMadePrefManager;
     return YES;
 }
 
-- (BOOL) initMozillaPrefs
+- (BOOL)initMozillaPrefs
 {
 
 #ifdef _BUILD_STATIC_BIN
@@ -246,15 +275,8 @@ static BOOL gMadePrefManager;
     return YES;
 }
 
-- (void) syncMozillaPrefs
+- (void)syncMozillaPrefs
 {
-    CFArrayRef cfArray;
-    CFDictionaryRef cfDictionary;
-    CFNumberRef cfNumber;
-    CFStringRef cfString;
-    char strbuf[1024];
-    int numbuf;
-
     if (!mPrefs) {
         NSLog(@"Mozilla prefs not set up successfully");
         return;
@@ -268,19 +290,101 @@ static BOOL gMadePrefManager;
     // fix up the cookie prefs. If 'p3p' or 'accept foreign cookies' are on, remap them to
     // something that chimera can deal with.
     PRInt32 acceptCookies = 0;
-		static const char* kCookieBehaviorPref = "network.cookie.cookieBehavior";
+    static const char* kCookieBehaviorPref = "network.cookie.cookieBehavior";
     mPrefs->GetIntPref(kCookieBehaviorPref, &acceptCookies);
-    if ( acceptCookies == 1 )	{          // accept foreign cookies, assume off	
+    if ( acceptCookies == 1 ) {          // accept foreign cookies, assume off  
       acceptCookies = 2;
-		  mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
-		}
+      mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
+    }
     else if ( acceptCookies == 3 ) {     // p3p, assume all cookies on
       acceptCookies = 0;
-		  mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
+      mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
     }
-		
+
+    [self configureProxies];
+}
+
+#pragma mark -
+
+- (void)configureProxies
+{
+  [self readSystemProxySettings];
+  [self registerForProxyChanges];
+}
+
+static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changedKeys, void * /* info */)
+{
+  PreferenceManager* prefsManager = [PreferenceManager sharedInstanceDontCreate];
+  [prefsManager readSystemProxySettings];
+#if DEBUG
+  NSLog(@"Updating proxies");
+#endif
+}
+					
+- (void)registerForProxyChanges
+{
+  if (mRunLoopSource)   // don't register twice
+    return;
+
+  SCDynamicStoreContext context = {0, NULL, NULL, NULL, NULL};
+  
+  SCDynamicStoreRef dynamicStoreRef = SCDynamicStoreCreate(NULL, CFSTR("ChimeraProxiesNotification"), SCProxiesChangedCallback, &context);
+  if (dynamicStoreRef)
+  {
+    CFStringRef proxyIdentifier = SCDynamicStoreKeyCreateProxies(NULL);
+    CFArrayRef  keyList = CFArrayCreate(NULL, (const void **)&proxyIdentifier, 1, &kCFTypeArrayCallBacks);
+
+    Boolean set = SCDynamicStoreSetNotificationKeys(dynamicStoreRef, keyList, NULL);
+    if (set)
+    {
+      mRunLoopSource = SCDynamicStoreCreateRunLoopSource(NULL, dynamicStoreRef, 0);
+      if (mRunLoopSource)
+      {
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes);
+        // we keep the ref to the source, so that we can remove it when the prefs manager is cleaned up.
+      }
+    }
+    
+    CFRelease(proxyIdentifier);
+    CFRelease(keyList);
+    CFRelease(dynamicStoreRef);
+  }
+}
+
+- (BOOL)updateOneProxy:(NSDictionary*)configDict
+  protocol:(NSString*)protocol
+  proxyEnableKey:(NSString*)enableKey
+  proxyURLKey:(NSString*)urlKey
+  proxyPortKey:(NSString*)portKey
+{
+  BOOL gotProxy = NO;
+
+  BOOL enabled = (BOOL)[[configDict objectForKey:enableKey] intValue];
+  if (enabled)
+  {
+    NSString* protocolProxy = [configDict objectForKey:urlKey];
+    int proxyPort = [[configDict objectForKey:portKey] intValue];
+    if ([protocolProxy length] > 0 && proxyPort != 0)
+    {
+      [self setPref:[[NSString stringWithFormat:@"network.proxy.%@", protocol] cString] toString:protocolProxy];
+      [self setPref:[[NSString stringWithFormat:@"network.proxy.%@_port", protocol] cString] toInt:proxyPort];
+      gotProxy = YES;
+    }
+  }
+  
+  return gotProxy;
+}
+
+- (BOOL)readSystemProxySettings
+{
+  BOOL usingProxies = NO;
+  
+  PRInt32 proxyType, newProxyType;
+  mPrefs->GetIntPref("network.proxy.type", &proxyType);
+  newProxyType = proxyType;
+  if (proxyType == 0 || proxyType == 1)
+  {
     // get proxies from SystemConfiguration
-    mPrefs->SetIntPref("network.proxy.type", 0); // 0 == no proxies
     mPrefs->ClearUserPref("network.proxy.http");
     mPrefs->ClearUserPref("network.proxy.http_port");
     mPrefs->ClearUserPref("network.proxy.ssl");
@@ -293,93 +397,65 @@ static BOOL gMadePrefManager;
     mPrefs->ClearUserPref("network.proxy.socks_port");
     mPrefs->ClearUserPref("network.proxy.no_proxies_on");
 
-    if ((cfDictionary = SCDynamicStoreCopyProxies (NULL)) != NULL) {
-        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPEnable, (const void **)&cfNumber) == TRUE) {
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPProxy, (const void **)&cfString) == TRUE) {
-                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                        mPrefs->SetCharPref("network.proxy.http", strbuf);
-                    }
-                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPPort, (const void **)&cfNumber) == TRUE) {
-                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                            mPrefs->SetIntPref("network.proxy.http_port", numbuf);
-                        }
-                        mPrefs->SetIntPref("network.proxy.type", 1);
-                    }
-                }
-            }
+    NSDictionary* proxyConfigDict = (NSDictionary*)SCDynamicStoreCopyProxies(NULL);
+    if (proxyConfigDict)
+    {
+      BOOL gotAProxy = NO;
+      
+      gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"http"
+                              proxyEnableKey:(NSString*)kSCPropNetProxiesHTTPEnable
+                                 proxyURLKey:(NSString*)kSCPropNetProxiesHTTPProxy
+                                proxyPortKey:(NSString*)kSCPropNetProxiesHTTPPort];
+
+      gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"ssl"
+                              proxyEnableKey:(NSString*)kSCPropNetProxiesHTTPSEnable
+                                 proxyURLKey:(NSString*)kSCPropNetProxiesHTTPSProxy
+                                proxyPortKey:(NSString*)kSCPropNetProxiesHTTPSPort];
+
+      gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"ftp"
+                              proxyEnableKey:(NSString*)kSCPropNetProxiesFTPEnable
+                                 proxyURLKey:(NSString*)kSCPropNetProxiesFTPProxy
+                                proxyPortKey:(NSString*)kSCPropNetProxiesFTPPort];
+
+      gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"gopher"
+                              proxyEnableKey:(NSString*)kSCPropNetProxiesGopherEnable
+                                 proxyURLKey:(NSString*)kSCPropNetProxiesGopherProxy
+                                proxyPortKey:(NSString*)kSCPropNetProxiesGopherPort];
+      
+      gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"socks"
+                              proxyEnableKey:(NSString*)kSCPropNetProxiesSOCKSEnable
+                                 proxyURLKey:(NSString*)kSCPropNetProxiesSOCKSProxy
+                                proxyPortKey:(NSString*)kSCPropNetProxiesSOCKSPort];
+
+      if (gotAProxy)
+      {
+        newProxyType = 1;
+
+        NSArray* exceptions = [proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesExceptionsList];
+        if (exceptions)
+        {
+          NSString* sitesList = [exceptions componentsJoinedByString:@", "];
+          if ([sitesList length] > 0)
+            [self setPref:"network.proxy.no_proxies_on" toString:sitesList];
         }
-        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPSEnable, (const void **)&cfNumber) == TRUE) {
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPSProxy, (const void **)&cfString) == TRUE) {
-                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                        mPrefs->SetCharPref("network.proxy.ssl", strbuf);
-                    }
-                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPSPort, (const void **)&cfNumber) == TRUE) {
-                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                            mPrefs->SetIntPref("network.proxy.ssl_port", numbuf);
-                        }
-                        mPrefs->SetIntPref("network.proxy.type", 1);
-                    }
-                }
-            }
-        }
-        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesFTPEnable, (const void **)&cfNumber) == TRUE) {
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesFTPProxy, (const void **)&cfString) == TRUE) {
-                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                        mPrefs->SetCharPref("network.proxy.ftp", strbuf);
-                    }
-                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesFTPPort, (const void **)&cfNumber) == TRUE) {
-                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                            mPrefs->SetIntPref("network.proxy.ftp_port", numbuf);
-                        }
-                        mPrefs->SetIntPref("network.proxy.type", 1);
-                    }
-                }
-            }
-        }
-        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesGopherEnable, (const void **)&cfNumber) == TRUE) {
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesGopherProxy, (const void **)&cfString) == TRUE) {
-                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                        mPrefs->SetCharPref("network.proxy.gopher", strbuf);
-                    }
-                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesGopherPort, (const void **)&cfNumber) == TRUE) {
-                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                            mPrefs->SetIntPref("network.proxy.gopher_port", numbuf);
-                        }
-                        mPrefs->SetIntPref("network.proxy.type", 1);
-                    }
-                }
-            }
-        }
-        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesSOCKSEnable, (const void **)&cfNumber) == TRUE) {
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesSOCKSProxy, (const void **)&cfString) == TRUE) {
-                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                        mPrefs->SetCharPref("network.proxy.socks", strbuf);
-                    }
-                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesSOCKSPort, (const void **)&cfNumber) == TRUE) {
-                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                            mPrefs->SetIntPref("network.proxy.socks_port", numbuf);
-                        }
-                        mPrefs->SetIntPref("network.proxy.type", 1);
-                    }
-                }
-            }
-        }
-        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesExceptionsList, (const void **)&cfArray) == TRUE) {
-            cfString = CFStringCreateByCombiningStrings (NULL, cfArray, CFSTR(", "));
-            if (CFStringGetLength (cfString) > 0) {
-                if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                    mPrefs->SetCharPref("network.proxy.no_proxies_on", strbuf);
-                }
-            }
-        }
-        CFRelease (cfDictionary);
+        usingProxies = YES;
+      }
+      else
+      {
+        newProxyType = 0;
+      }
+      
+      [proxyConfigDict release];
     }
+
+    if (newProxyType != proxyType)
+      mPrefs->SetIntPref("network.proxy.type", 1);    
+  }
+  
+  return usingProxies;
 }
+
+#pragma mark -
 
 - (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess
 {
@@ -406,16 +482,16 @@ static BOOL gMadePrefManager;
 {
   // colors are stored in HTML-like #FFFFFF strings
   NSString* colorString = [self getStringPref:prefName withSuccess:outSuccess];
-  NSColor* 	returnColor = [NSColor blackColor];
+  NSColor*  returnColor = [NSColor blackColor];
 
   if ([colorString hasPrefix:@"#"] && [colorString length] == 7)
   {
     unsigned int redInt, greenInt, blueInt;
     sscanf([colorString cString], "#%02x%02x%02x", &redInt, &greenInt, &blueInt);
     
-    float redFloat 		= ((float)redInt / 255.0);
-    float	greenFloat 	= ((float)greenInt / 255.0);
-    float blueFloat 	= ((float)blueInt / 255.0);
+    float redFloat    = ((float)redInt / 255.0);
+    float greenFloat  = ((float)greenInt / 255.0);
+    float blueFloat   = ((float)blueInt / 255.0);
     
     returnColor = [NSColor colorWithCalibratedRed:redFloat green:greenFloat blue:blueFloat alpha:1.0f];
   }
@@ -548,7 +624,7 @@ static BOOL gMadePrefManager;
         mPrefs->SetCharPref("browser.startup.homepage", [homepagePref UTF8String]);
     }
     else {
-    	homepagePref = [self getStringPref:"browser.startup.homepage" withSuccess:NULL];
+      homepagePref = [self getStringPref:"browser.startup.homepage" withSuccess:NULL];
     }
 
     if (homepagePref && [homepagePref length] > 0 && ![homepagePref isEqualToString:@"HomePageDefault"])
