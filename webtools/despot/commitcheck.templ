@@ -108,7 +108,7 @@ foreach $f (@files) {
         }
     }
     if ($mode{$t} eq "Restricted") {
-        $b = $blessed{$t};
+        my $b = $blessed{$t};
         foreach $u (@$b) {
             if ($debug) {
                 print STDERR "Checking against blessed $u\n";
