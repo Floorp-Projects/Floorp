@@ -92,6 +92,43 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 	}
 
 
+  // add in Calendar if it exists
+
+  int iLastSlash = iniSrcPath.ReverseFind(_T('\\'));
+
+  if (iLastSlash)
+  {
+    CString strCalendarXPIPath = iniSrcPath.Left(iLastSlash);
+    CFileStatus fs;
+
+    strCalendarXPIPath += "\\calendar.xpi";
+
+    if (CFile::GetStatus(strCalendarXPIPath,fs)) // exists
+    {
+      comps[*compNum].archive       = CString("calendar.xpi");
+	    comps[*compNum].compname      = CString("Component Calendar");
+	    comps[*compNum].name 	        = CString("Calendar");
+	    comps[*compNum].desc 	        = CString("Calendar Client");
+
+	    comps[*compNum].selected      = 
+	    comps[*compNum].forceupgrade  = 
+	    comps[*compNum].empty	        = 1;
+
+    	comps[*compNum].invisible     = 
+	    comps[*compNum].launchapp     = 
+	    comps[*compNum].additional    = 
+	    comps[*compNum].disabled      = 
+	    comps[*compNum].uncompress    = 
+	    comps[*compNum].downloadonly  = 
+	    comps[*compNum].unselected    = 0;
+
+    	(*compNum)++;
+	    invNum++;
+
+    }  // file exists
+
+  } // slash found
+
 	return TRUE;
 }
 
