@@ -20,6 +20,8 @@
 #define _nsNativeDragTarget_h_
 
 #include "nsGUIEvent.h"
+#include "nsCOMPtr.h"
+#include "nsIDragSession.h"
 
 class nsIDragService;
 class nsIWidget;
@@ -87,6 +89,7 @@ class nsNativeDragTarget : public IDropTarget
     // Gecko Stuff
     nsIWidget      * mWindow;
     nsIDragService * mDragService;
+    nsCOMPtr<nsIDragSession> mDragSession;
 };
 
 #endif // _nsNativeDragTarget_h_

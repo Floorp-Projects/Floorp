@@ -24,12 +24,16 @@
 #include "nsNativeDragTarget.h"
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
+#include "nsIDataFlavor.h"
+#include "nsISupportsArray.h"
 
 #include <OLE2.h>
 #include "OLEIDL.H"
+#include "DDCOMM.h" // SET_FORMATETC macro
 
 
 static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
+static NS_DEFINE_IID(kIDragSessionIID, NS_IDRAGSESSION_IID);
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
@@ -83,14 +87,64 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
+  if (aIID.Equals(kIDragSessionIID)) {
+    *aInstancePtr = (void*) ((nsIDragSession*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
   return rv;
 }
 
-//---------------------------------------------------------
-NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType)
-
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType)
 {
+  if (anArrayTransferables->Count() == 0) {
+    return NS_ERROR_FAILURE;
+  }
 
+  // The clipboard class contains some static utility methods
+  // that we can use to create an IDataObject from the transferable
+
+  IDataObject * dataObj = nsnull;
+  PRUint32 i;
+  for (i=0;i<anArrayTransferables->Count();i++) {
+    nsISupports * supports = anArrayTransferables->ElementAt(i);
+    nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
+    NS_RELEASE(supports);
+    if (i == 0) {
+      nsClipboard::CreateNativeDataObject(trans, &dataObj);
+    } else {
+      nsClipboard::SetupNativeDataObject(trans, dataObj);
+    }
+    NS_RELEASE(supports);
+  }
+
+  StartInvokingDragSession(dataObj, aActionType);
+
+  NS_IF_RELEASE(dataObj);
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType)
+{
+  // The clipboard class contains some static utility methods
+  // that we can use to create an IDataObject from the transferable
+  IDataObject * dataObj = nsnull;
+  nsClipboard::CreateNativeDataObject(aTransferable, &dataObj);
+
+  StartInvokingDragSession(dataObj, aActionType);
+
+  NS_IF_RELEASE(dataObj);
+
+  return NS_OK;
+
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PRUint32 aActionType)
+{
   // To do the drag we need to create an object that 
   // implements the IDataObject interface (for OLE)
   NS_IF_RELEASE(mNativeDragSrc);
@@ -98,14 +152,6 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, 
   if (nsnull != mNativeDragSrc) {
     mNativeDragSrc->AddRef();
   }
-
-  // 
-  //mTransferable = dont_QueryInterface(aTransferable);
-
-  // The clipboard class contains some static utility methods
-  // that we can use to create an IDataObject from the transferable
-  IDataObject * dataObj;
-  nsClipboard::CreateNativeDataObject(aTransferable, &dataObj);
 
   // Now figure out what the native drag effect should be
   DWORD dropRes;
@@ -121,9 +167,12 @@ NS_IMETHODIMP nsDragService::StartDragSession (nsITransferable * aTransferable, 
   }
 
   mDragAction = aActionType;
+  mDoingDrag  = PR_TRUE;
 
   // Call the native D&D method
-  HRESULT res = ::DoDragDrop(dataObj, mNativeDragSrc, effects, &dropRes);
+  HRESULT res = ::DoDragDrop(aDataObj, mNativeDragSrc, effects, &dropRes);
+
+  mDoingDrag  = PR_FALSE;
 
   return (DRAGDROP_S_DROP == res?NS_OK:NS_ERROR_FAILURE);
 }
@@ -149,5 +198,46 @@ NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
   mDataObject = aDataObj;
   NS_ADDREF(mDataObject);
 
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
+{
+  if (nsnull == aDataFlavor || nsnull == mDataObject) {
+    return NS_ERROR_FAILURE;
+  }
+
+  //DWORD   types[]  = {TYMED_HGLOBAL, TYMED_FILE, TYMED_ISTREAM, TYMED_GDI};
+  //PRInt32 numTypes = 4;
+
+  nsString mime;
+  aDataFlavor->GetMimeType(mime);
+
+  UINT format = nsClipboard::GetFormat(mime);
+
+  // XXX at the moment we only support global memory transfers
+  // It is here where we will add support for native images 
+  // and IStream and Files
+  FORMATETC fe;
+  //SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,TYMED_HGLOBAL | TYMED_FILE | TYMED_ISTREAM | TYMED_GDI);
+  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+
+  // Starting by querying for the data to see if we can get it as from global memory
+  if (S_OK == mDataObject->QueryGetData(&fe)) {
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession ** aSession)
+{
+  if (nsnull == aSession) {
+    return NS_ERROR_FAILURE;
+  }
+  *aSession = (nsIDragSession *)this;
+  NS_ADDREF(this);
   return NS_OK;
 }

@@ -61,6 +61,7 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              kIDragServiceIID,
                                              (nsISupports**)&mDragService);
+  mDragSession = do_QueryInterface(mDragService);
 }
 
 
@@ -69,6 +70,7 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
 //-----------------------------------------------------
 nsNativeDragTarget::~nsNativeDragTarget()
 {
+  mDragSession = do_QueryInterface(0);
   nsServiceManager::ReleaseService(kCDragServiceCID, mDragService);
   NS_IF_RELEASE(mDataObj);
 }
@@ -173,7 +175,7 @@ void nsNativeDragTarget::ProcessDrag(PRUint32     aEventType,
   GetGeckoDragAction(grfKeyState, pdwEffect, &geckoAction);
 
   // Set the current action into the Gecko specific type
-  mDragService->SetDragAction(geckoAction);
+  mDragSession->SetDragAction(geckoAction);
 
   // Dispatch the event into Gecko
   DispatchDragDropEvent(aEventType, pt);
@@ -182,13 +184,13 @@ void nsNativeDragTarget::ProcessDrag(PRUint32     aEventType,
   // the data memeber should have been set by who ever handled the 
   // nsGUIEvent or nsIDOMEvent
   PRBool canDrop;
-  mDragService->GetCanDrop(&canDrop);
+  mDragSession->GetCanDrop(&canDrop);
   if (!canDrop) {
     *pdwEffect = DROPEFFECT_NONE;
   }
 
   // Clear the cached value
-  mDragService->SetCanDrop(PR_FALSE);
+  mDragSession->SetCanDrop(PR_FALSE);
 }
 
 //-----------------------------------------------------
