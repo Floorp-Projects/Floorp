@@ -166,7 +166,7 @@ function SubscribeOnLoad()
 	if (window.arguments[0].preselectedURI) {
 		var uri = window.arguments[0].preselectedURI;
 		//dump("subscribe: got a uri," + uri + "\n");
-		folder = GetMsgFolderFromUri(uri);
+		var folder = GetMsgFolderFromUri(uri);
 		//dump("folder="+folder+"\n");
 		//dump("folder.server="+folder.server+"\n");
 		try {
@@ -356,10 +356,18 @@ function SubscribeOnClick(event)
 	}
 }
 
+// used for caching the tree children (in typedown)
+var lastTreeChildrenValue = null;
+var lastTreeChildren = null;
+
 function RefreshList()
 {
 	// force it to talk to the server
 	SetUpTree(true);
+	
+	// forget the cached tree children
+	lastTreeChildrenValue = null;
+	lastTreeChildren = null;
 }
 
 function trackGroupInTree()
@@ -368,36 +376,75 @@ function trackGroupInTree()
   selectNodeByName( portion );  
 }
 
+
 function selectNodeByName( aMatchString )
 {
   var lastDot = aMatchString.lastIndexOf(gFolderDelimiter);
   var nodeValue = lastDot != -1 ? aMatchString.substring(0, lastDot) : aMatchString;
   
   var chain = aMatchString.split(gFolderDelimiter);
+  var node;
   if( chain.length == 1 ) {
-    var node = getTreechildren(gSubscribeTree);
-    if( !node )
-      return;
+	if (lastTreeChildrenValue != "") {
+    	node = getTreechildren(gSubscribeTree);
+    	if( !node ) return;
+		lastTreeChildrenValue = "";
+		lastTreeChildren = node;
+		//dump("cache miss!\n");
+	}
+	else {
+		node = lastTreeChildren;
+		//dump("cache hit!\n");
+	}
   }
   else {
-    var node = gSubscribeTree.getElementsByAttribute("name",nodeValue)[0];
-    if( node.getAttribute("container") == "true" && 
-        node.getAttribute("open") != "true" )
-      node.setAttribute("open","true");
-    node = getTreechildren(node);
-    dump("*** node = " + node.localName + "\n");
+	// if we can, use the cached tree children
+	if (nodeValue != lastTreeChildrenValue) {
+    	node = gSubscribeTree.getElementsByAttribute("name",nodeValue)[0];
+
+		// expand the node, if we need to
+    	if( node.getAttribute("container") == "true" && 
+        	node.getAttribute("open") != "true" ) {
+      		node.setAttribute("open","true");
+		}
+    	node = getTreechildren(node);
+    	//dump("*** node = " + node.localName + "\n");
+
+		lastTreeChildren = node;
+		lastTreeChildrenValue = nodeValue;
+		//dump("cache miss!\n");
+	}
+	else {
+		//dump("cache hit!\n");
+		node = lastTreeChildren;
+	}
   }
   
-  for( var i = 0; i < node.childNodes.length; i++ )
-  {
-    var currItem = node.childNodes[i];
-    dump("*** chain = " + chain[chain.length-1] + "\n");
-    if( !currItem.getAttribute("name").indexOf( aMatchString ) ) {
+  // find the match, using a binary search.
+  var totalItems = node.childNodes.length;
+  if (totalItems == 0) return;
+  var lastLow = 0;
+  var lastHigh = totalItems;
+  while (true) {
+  	var i = Math.floor((lastHigh + lastLow) / 2);
+	//dump(i+","+lastLow+","+lastHigh+"\n");
+	var currItem = node.childNodes[i];
+	var currValue = (currItem.getAttribute("name")).substring(0,aMatchString.length);
+	//dump(currValue+" vs "+aMatchString+"\n");
+	if (currValue > aMatchString) {
+		if (lastHigh == i) return;
+		lastHigh = i;
+    }
+	else if (currValue < aMatchString) {
+		if (lastLow == i) return;
+		lastLow = i;
+	}
+	else {
       gSubscribeTree.selectItem( currItem );
       gSubscribeTree.ensureElementIsVisible( currItem );
-      return;
-    }
-  }      
+	  return;
+	}
+  }
 }
 
 function getTreechildren( aTreeNode )
