@@ -278,7 +278,7 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
   else
 	SortThreadPane("DateColumn", "http://home.netscape.com/NC-rdf#Date", "", false, null, false);
 
-  SetSentFolderColumns(IsSpecialFolder(newFolder, "Sent"));
+  SetSentFolderColumns(IsSpecialFolder(newFolder, [ "Sent", "Drafts", "Unsent Messages" ]));
 
   // Since SetSentFolderColumns() may alter the template's structure,
   // we need to explicitly force the builder to recompile its rules.
@@ -825,7 +825,7 @@ function OpenToFolder(item, folderURI)
 }
 
 
-function IsSpecialFolder(msgFolder, specialFolderName)
+function IsSpecialFolder(msgFolder, specialFolderNames)
 {
 	var db = GetFolderDatasource();
 	var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -838,10 +838,16 @@ function IsSpecialFolder(msgFolder, specialFolderName)
 		if (!result) return false;
 		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
 		if (!result) return false;
-		dump("We are looking for " + specialFolderName + "\n");
-		dump("special folder name = " + result.Value + "\n");
-		if(result.Value == specialFolderName)
-			return true;
+
+		//dump("We are looking for " + specialFolderNames + "\n");
+		//dump("special folder name = " + result.Value + "\n");
+        
+        var count = specialFolderNames.length;
+        var i;
+        for (i = 0; i < count; i++) {
+            if(result.Value == specialFolderNames[i])
+                return true;
+        }
 	}
 
 	return false;
