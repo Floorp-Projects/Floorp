@@ -103,11 +103,14 @@ error_exit:
  *  Close
  *****************************************************************************/
 nsresult
-nsDiskCacheBlockFile::Close()
+nsDiskCacheBlockFile::Close(PRBool flush)
 {
     if (!mFD)  return NS_OK;
-    
-    nsresult rv  = FlushBitMap();
+    nsresult rv = NS_OK;
+
+    if (flush)
+        rv  = FlushBitMap();
+
     PRStatus err = PR_Close(mFD);
     mFD = nsnull;
     
@@ -285,6 +288,7 @@ nsDiskCacheBlockFile::WriteBlocks( void *   buffer,
     if (bytesWritten < bytesToWrite)  return NS_ERROR_UNEXPECTED;
     
     // write the bit map and flush the file
+    // XXX except we would take a severe performance hit
     // XXX rv = FlushBitMap();
     return rv;
 }

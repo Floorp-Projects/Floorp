@@ -53,6 +53,7 @@ public:
     virtual ~nsDiskCacheBinding();
 
     nsresult EnsureStreamIO();
+    PRBool   IsActive() { return mCacheEntry != nsnull;}
 
 // XXX make friends
 public:
@@ -114,9 +115,11 @@ public:
     nsDiskCacheBinding *    FindBinding(nsDiskCacheRecord * record);
     nsresult                AddBinding(nsDiskCacheBinding * binding);
     void                    RemoveBinding(nsDiskCacheBinding * binding);
+    PRBool                  ActiveBindings();
 
     
 private:
+
     // member variables
     static PLDHashTableOps ops;
     PLDHashTable           table;

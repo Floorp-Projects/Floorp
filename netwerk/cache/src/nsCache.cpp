@@ -26,6 +26,7 @@
 #include "nsCache.h"
 #include "nsReadableUtils.h"
 #include "nsDependentSubstring.h"
+#include "nsString.h"
 
 
 /**
@@ -35,14 +36,28 @@
 #if defined(PR_LOGGING)
 PRLogModuleInfo * gCacheLog = nsnull;
 
+
 void
 CacheLogInit()
 {
     if (gCacheLog) return;
     gCacheLog = PR_NewLogModule("cache");
-    NS_ASSERTION(gCacheLog, "\n### failed to allocate cache log.\n");
+    NS_ASSERTION(gCacheLog, "\nfailed to allocate cache log.\n");
 }
+
+
+void
+CacheLogPrintPath(PRLogModuleLevel level, char * format, nsIFile * item)
+{
+    nsCAutoString path;
+    nsresult rv = item->GetNativePath(path);
+    if (NS_SUCCEEDED(rv)) {
+        PR_LOG(gCacheLog, level, (format, path.get()));
+    }
+}
+
 #endif
+
 
 PRUint32
 SecondsFromPRTime(PRTime prTime)

@@ -321,7 +321,7 @@ struct nsDiskCacheBucket {
     
     void      Swap();
     void      Unswap();
-    PRUint32  CountRecords();
+    PRInt32   CountRecords();
     PRUint32  EvictionRank(PRUint32  targetRank);   // return largest rank in bucket < targetRank
     PRInt32   VisitEachRecord( nsDiskCacheRecordVisitor *  visitor,
                                PRUint32                    evictionRank,
@@ -400,7 +400,7 @@ public:
         {
             NS_ASSERTION(sizeof(nsDiskCacheHeader) == sizeof(nsDiskCacheBucket), "structure misalignment");
         }
-    ~nsDiskCacheMap()                   { (void) Close(); }
+    ~nsDiskCacheMap()                   { (void) Close(PR_TRUE); }
 
 /**
  *  File Operations
@@ -411,7 +411,7 @@ public:
  *  Returns error if it detects change in format or cache wasn't closed.
  */
     nsresult  Open( nsILocalFile *  cacheDirectory);
-    nsresult  Close();
+    nsresult  Close(PRBool flush);
     nsresult  Trim();
 
 //  nsresult  Flush();
@@ -480,17 +480,17 @@ private:
      *  Private methods
      */
     nsresult    OpenBlockFiles();
-    nsresult    CloseBlockFiles();
+    nsresult    CloseBlockFiles(PRBool flush);
+    PRBool      CacheFilesExist();
 
     PRUint32    CalculateFileIndex(PRUint32 size);
 
     nsresult    GetBlockFileForIndex( PRUint32 index, nsILocalFile ** result);
     PRUint32    GetBlockSizeForIndex( PRUint32 index);
     
-    nsresult GetBucketForHashNumber( PRUint32  hashNumber, nsDiskCacheBucket ** result)
+    nsDiskCacheBucket * GetBucketForHashNumber( PRUint32  hashNumber)
     {
-        *result = &mBuckets[GetBucketIndex(hashNumber)];
-        return NS_OK;
+        return &mBuckets[GetBucketIndex(hashNumber)];
     }
 
     PRUint32 GetBucketIndex( PRUint32 hashNumber)

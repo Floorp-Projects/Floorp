@@ -32,6 +32,7 @@
 
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
+#include "nsCOMArray.h"
 
 class nsDiskCacheMap;
 
@@ -40,8 +41,6 @@ class nsDiskCacheDevice : public nsCacheDevice {
 public:
     nsDiskCacheDevice();
     virtual ~nsDiskCacheDevice();
-
-    static nsresult         Create(nsCacheDevice **result);
 
     virtual nsresult        Init();
     virtual nsresult        Shutdown();
@@ -87,13 +86,22 @@ public:
     
     PRBool                  Initialized() { return mInitialized; }
     nsDiskCacheMap *        CacheMap()    { return mCacheMap; }
+    nsresult                Shutdown_Private(PRBool flush);
     
 private:    
     /**
      *  Private methods
      */
-    nsresult    InitializeCacheDirectory();
+
     nsresult    GetCacheTrashDirectory(nsIFile ** result);
+    nsresult    OpenDiskCache();
+    nsresult    ClearDiskCache();
+    nsresult    DeleteFiles(nsCOMArray<nsIFile> * fileList);
+    nsresult    ListTrashContents(nsCOMArray<nsIFile> ** result);
+    nsresult    MoveCacheToTrash(nsIFile ** result);
+    nsresult    InitializeCacheDirectory();
+
+
     nsresult    EvictDiskCacheEntries(PRInt32  targetCapacity);
     
     /**
@@ -104,6 +112,7 @@ private:
     PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
     nsDiskCacheMap *        mCacheMap;
     PRPackedBool            mInitialized;
+    PRPackedBool            mFirstInit;
 };
 
 #endif // _nsDiskCacheDevice_h_

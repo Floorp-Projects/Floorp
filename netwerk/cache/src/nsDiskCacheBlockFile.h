@@ -46,10 +46,10 @@ public:
            , mBitMap(nsnull)
            , mBitMapDirty(PR_FALSE)
             {}
-    ~nsDiskCacheBlockFile() { (void) Close(); }
+    ~nsDiskCacheBlockFile() { (void) Close(PR_TRUE); }
     
     nsresult  Open( nsILocalFile *  blockFile, PRUint32  blockSize);
-    nsresult  Close();
+    nsresult  Close(PRBool flush);
     nsresult  Trim();
     PRInt32   AllocateBlocks( PRInt32  numBlocks);
     nsresult  DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks);

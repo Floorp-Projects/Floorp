@@ -322,7 +322,7 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
         if (binding->mGeneration == p->mGeneration) {
             if (calcGeneration)  ++binding->mGeneration;    // try the next generation
             else {
-                NS_ASSERTION(binding->mGeneration != p->mGeneration,  "generations collide!");
+                NS_ERROR("### disk cache: generations collide!");
                 return NS_ERROR_UNEXPECTED;
             }
         }
@@ -332,7 +332,7 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
             // end of line: insert here or die
             p = (nsDiskCacheBinding *)PR_PREV_LINK(p);  // back up and check generation
             if (p->mGeneration == 255) {
-                NS_ASSERTION(p->mGeneration < 255, "generation capacity at full, the engines canna take it cap'n");
+                NS_WARNING("### disk cache: generation capacity at full");
                 return NS_ERROR_UNEXPECTED;
             }
             PR_INSERT_BEFORE(binding, hashEntry->mBinding);
@@ -355,16 +355,20 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
     HashTableEntry * hashEntry;
     void *           key = (void *)binding->mRecord.HashNumber();
 
-    hashEntry = (HashTableEntry*) PL_DHashTableOperate(&table, (void*) key, PL_DHASH_LOOKUP);
+    hashEntry = (HashTableEntry*) PL_DHashTableOperate(&table,
+                                                       (void*) key,
+                                                       PL_DHASH_LOOKUP);
     if (!PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
-        NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(hashEntry), "binding not in disk cache hashtable!");
+        NS_WARNING("### disk cache: binding not in hashtable!");
         return;
     }
     
     if (binding == hashEntry->mBinding) {
         if (PR_CLIST_IS_EMPTY(binding)) {
             // remove this hash entry
-            (void) PL_DHashTableOperate(&table, (void*) binding->mRecord.HashNumber(), PL_DHASH_REMOVE);
+            (void) PL_DHashTableOperate(&table,
+                                        (void*) binding->mRecord.HashNumber(),
+                                        PL_DHASH_REMOVE);
             return;
             
         } else {
@@ -373,4 +377,47 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
         }
     }
     PR_REMOVE_AND_INIT_LINK(binding);
+}
+
+
+/**
+ *  ActiveBinding : PLDHashTable enumerate function to verify active bindings
+ */
+
+PLDHashOperator PR_CALLBACK
+ActiveBinding(PLDHashTable *    table,
+              PLDHashEntryHdr * hdr,
+              PRUint32          number,
+              void *            arg)
+{
+    nsDiskCacheBinding * binding = ((HashTableEntry *)hdr)->mBinding;
+    NS_ASSERTION(binding, "### disk cache binding = nsnull!");
+    
+    nsDiskCacheBinding * head = binding;
+    do {   
+        if (binding->IsActive()) {
+           *((PRBool *)arg) = PR_TRUE;
+            return PL_DHASH_STOP;
+        }
+
+        binding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
+    } while (binding != head);
+
+    return PL_DHASH_NEXT;
+}
+
+
+/**
+ *  ActiveBindings : return PR_TRUE if any bindings have open descriptors
+ */
+PRBool
+nsDiskCacheBindery::ActiveBindings()
+{
+    NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
+    if (!initialized) return PR_FALSE;
+
+    PRBool  activeBinding = PR_FALSE;
+    PL_DHashTableEnumerate(&table, ActiveBinding, &activeBinding);
+
+    return activeBinding;
 }
