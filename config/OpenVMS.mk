@@ -66,8 +66,6 @@ AS		= vmsas $(OS_CFLAGS)
 ifdef IS_COMPONENT
 OS_LDFLAGS	+= IS_COMPONENT SRCDIR=$(srcdir)
 endif
-LD		= vmsld $(OS_LDFLAGS) \
-		  MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
-		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=))
+LD		= vmsld $(OS_LDFLAGS)
 DSO_LDOPTS	=
 MKSHLIB		= $(LD)
