@@ -450,8 +450,8 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
     }
   } else
     screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
-  if (NS_FAILED(result))
-    return result;
+  if (!screen)
+    return NS_ERROR_FAILURE;
 
   if (aScreen)
     screen->GetAvailRect(&left, &top, &width, &height);
@@ -645,38 +645,38 @@ NS_IMETHODIMP nsXULWindow::EnsurePrimaryContentTreeOwner()
 
 void nsXULWindow::OnChromeLoaded()
 {
-   mChromeLoaded = PR_TRUE;
-  
-   if(mContentTreeOwner)
-      mContentTreeOwner->ApplyChromeFlags();
+  mChromeLoaded = PR_TRUE;
 
-   LoadTitleFromXUL();
+  if(mContentTreeOwner)
+    mContentTreeOwner->ApplyChromeFlags();
+
+  LoadTitleFromXUL();
 #ifdef XP_UNIX
-   /* don't override wm placement prefs on unix --dr */
-   LoadPositionAndSizeFromXUL(PR_FALSE, PR_TRUE);
+  /* don't override wm placement prefs on unix --dr */
+  LoadPositionAndSizeFromXUL(PR_FALSE, PR_TRUE);
 #else
-   LoadPositionAndSizeFromXUL(PR_TRUE, PR_TRUE);
+  LoadPositionAndSizeFromXUL(PR_TRUE, PR_TRUE);
 #endif
 
-   if(mIntrinsicallySized)
-      {
-      nsCOMPtr<nsIContentViewer> cv;
-      mDocShell->GetContentViewer(getter_AddRefs(cv));
-      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-      if(markupViewer)
-         markupViewer->SizeToContent();
-      }
+  if(mIntrinsicallySized) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+    if(markupViewer)
+      markupViewer->SizeToContent();
+  }
 
-   //LoadContentAreas();
+  //LoadContentAreas();
 
-   if (mCenterAfterLoad)
-      Center(nsnull, PR_TRUE, PR_FALSE);
+  if (mCenterAfterLoad) {
+    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
+    Center(parentWindow, PR_TRUE, PR_FALSE);
+  }
 
-   if(mShowAfterLoad)
-      {
-      mWindow->SetSizeMode(mSizeMode);
-      SetVisibility(PR_TRUE);
-      }
+  if(mShowAfterLoad) {
+    mWindow->SetSizeMode(mSizeMode);
+    SetVisibility(PR_TRUE);
+  }
 }
 
 NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
@@ -710,14 +710,14 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
   rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && temp > 0)
+    if (NS_SUCCEEDED(errorCode))
       specX = temp;
   }
 
   rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && temp > 0)
+    if (NS_SUCCEEDED(errorCode))
       specY = temp;
   }
     
