@@ -1046,11 +1046,6 @@ function goFindNewCalendars()
    }
 }
 
-function displayCalendarVersion()
-{
-   window.openDialog('chrome://calendar/content/about.xul', 'About','modal,centerscreen,chrome,width=500,resizable=yes');
-}
-
 function playSound( ThisURL )
 {
    ThisURL = "chrome://calendar/content/sound.wav";
@@ -1524,6 +1519,15 @@ function changeDisplayToDoInViewCheckbox( menuindex ) {
   gCalendarWindow.currentView.refreshEvents( );
 }
 
+// about Calendar dialog
+function displayCalendarVersion()
+{
+  // uses iframe, but iframe does not auto-size per bug 80713, so provide height
+  window.openDialog("chrome://calendar/content/about.xul", "About","modal,centerscreen,chrome,width=500,height=450,resizable=yes");
+}
+
+
+// about Sunbird dialog
 function openAboutDialog()
 {
   window.openDialog("chrome://calendar/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
