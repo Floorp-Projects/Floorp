@@ -30,13 +30,14 @@ DIRS	=
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-	$(DIST)/lib/libraptorbase.a	\
-	$(DIST)/lib/libraptorgfx.a	\
-	$(DIST)/lib/libxpcom.a	\
-	$(DIST)/lib/libreg.a	\
-	$(DIST)/lib/libplc21.a	\
-	$(DIST)/lib/libplds21.a	\
-	$(DIST)/lib/libnspr21.a	\
+	$(DIST)/bin/libwidgetunix.so	\
+	$(DIST)/bin/libgfxunix.so	\
+	$(DIST)/bin/libraptorbase.so	\
+	$(DIST)/bin/libxpcom.so	\
+	$(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libplc21.so	\
+	$(DIST)/bin/libplds21.so	\
+	$(DIST)/bin/libnspr21.so	\
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
