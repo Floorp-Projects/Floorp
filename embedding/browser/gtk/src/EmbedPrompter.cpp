@@ -105,7 +105,7 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
                                           NULL);
 
     // gtk will resize this for us as necessary
-    gtk_window_set_default_size(GTK_WINDOW(mWindow), 200, 100);
+    gtk_window_set_default_size(GTK_WINDOW(mWindow), 100, 50);
 
     // this HBox will contain the icon, and a vbox which contains the
     // dialog text and other widgets.
