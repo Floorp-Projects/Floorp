@@ -1274,8 +1274,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 nsresult
 XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 {
-	PRInt32			childIndex = 0, numChildren = 0, numElements = 0, currentElement, nameSpaceID;
-	PRUint32		loop;
+	PRInt32			childIndex = 0, loop, numChildren = 0, numElements = 0, currentElement, nameSpaceID;
         nsCOMPtr<nsIContent>	child;
 	nsresult		rv;
 
