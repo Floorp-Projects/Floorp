@@ -27,6 +27,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMComment.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
@@ -546,7 +547,8 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
         // Get the first child of the body node:
-        nsCOMPtr<nsIDOMNode> firstNode = GetDeepFirstChild(bodyNode);
+        nsCOMPtr<nsIDOMNode> firstNode;
+        result = GetFirstEditableNode(bodyNode, getter_AddRefs(firstNode));
         if (firstNode)
         {
           result = selection->Collapse(firstNode, 0);
@@ -583,7 +585,8 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
-        nsCOMPtr<nsIDOMNode> lastChild = GetDeepLastChild(bodyNode);
+        nsCOMPtr<nsIDOMNode> lastChild;	// = GetDeepLastChild(bodyNode);
+        result = GetLastEditableNode(bodyNode, getter_AddRefs(lastChild));
         if ((NS_SUCCEEDED(result)) && lastChild)
         {
           // See if the last child is a text node; if so, set offset:
@@ -1563,73 +1566,79 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
   return result;
 }
 
-//
-// GetDeepFirst/LastChild borrowed from nsContentIterator
-//
-nsCOMPtr<nsIDOMNode>
-nsEditor::GetDeepFirstChild(nsCOMPtr<nsIDOMNode> aRoot)
+
+nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outFirstNode)
 {
-  nsCOMPtr<nsIContent> deepFirstChild;
+  *outFirstNode = nsnull;
+  
+  nsCOMPtr<nsIContentIterator> iter;
+  nsresult rv = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                  nsIContentIterator::GetIID(), 
+                                                  getter_AddRefs(iter));
+  if (NS_FAILED(rv)) return rv;
+   
+  nsCOMPtr<nsIContent> contentRoot = do_QueryInterface(aRoot);
+  rv = iter->Init(contentRoot);
+  if (NS_FAILED(rv)) return rv;
 
-  if (aRoot) 
-  {  
-    nsCOMPtr<nsIContent> cN (do_QueryInterface(aRoot));
-    nsCOMPtr<nsIContent> cChild;
-    cN->ChildAt(0,*getter_AddRefs(cChild));
-    while ( cChild )
+  iter->MakePre();
+  
+  while (iter->IsDone() == NS_COMFALSE)
+  {
+    nsCOMPtr<nsIContent> curNode;    
+    rv = iter->CurrentNode(getter_AddRefs(curNode));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(curNode);
+    if (domNode && IsTextNode(domNode) && IsEditable(domNode))
     {
-      cN = cChild;
-      nsCOMPtr<nsIDOMNode> cChildN;
-      int i = 0;
-      do {
-        cN->ChildAt(i++, *getter_AddRefs(cChild));
-        cChildN = do_QueryInterface(cChild);
-      } while (cChild && cChildN && !IsEditable(cChildN));
+      *outFirstNode = domNode;
+      NS_ADDREF(*outFirstNode);
+      return NS_OK;
     }
-    deepFirstChild = cN;
+    
+    iter->Next();
   }
-
-  nsCOMPtr<nsIDOMNode> deepFirstChildN (do_QueryInterface(deepFirstChild));
-  return deepFirstChildN;
+  
+  return NS_OK;
 }
 
 
-nsCOMPtr<nsIDOMNode>
-nsEditor::GetDeepLastChild(nsCOMPtr<nsIDOMNode> aRoot)
+nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outLastNode)
 {
-  nsCOMPtr<nsIContent> deepLastChild;
-
-  if (aRoot) 
-  {  
-    nsCOMPtr<nsIContent> cN (do_QueryInterface(aRoot));
-    nsCOMPtr<nsIContent> cChild;
-    PRInt32 numChildren;
+  *outLastNode = nsnull;
   
-    cN->ChildCount(numChildren);
+  nsCOMPtr<nsIContentIterator> iter;
+  nsresult rv = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                  nsIContentIterator::GetIID(), 
+                                                  getter_AddRefs(iter));
+  if (NS_FAILED(rv)) return rv;
+   
+  nsCOMPtr<nsIContent> contentRoot = do_QueryInterface(aRoot);
+  rv = iter->Init(contentRoot);
+  if (NS_FAILED(rv)) return rv;
 
-    while ( numChildren )
+  iter->MakePre();
+  iter->Last();
+  
+  while (iter->IsDone() == NS_COMFALSE)
+  {
+    nsCOMPtr<nsIContent> curNode;    
+    rv = iter->CurrentNode(getter_AddRefs(curNode));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(curNode);
+    if (domNode && IsTextNode(domNode) && IsEditable(domNode))
     {
-      nsCOMPtr<nsIDOMNode> cChildN;
-      do {
-        cN->ChildAt(--numChildren, *getter_AddRefs(cChild));
-        cChildN = (do_QueryInterface(cChild));
-      } while (cChild && !IsEditable(cChildN));
-
-      if (cChild)
-      {
-        cChild->ChildCount(numChildren);
-        cN = cChild;
-      }
-      else
-      {
-        break;
-      }
+      *outLastNode = domNode;
+      NS_ADDREF(*outLastNode);
+      return NS_OK;
     }
-    deepLastChild = cN;
+    
+    iter->Prev();
   }
-
-  nsCOMPtr<nsIDOMNode> deepLastChildN (do_QueryInterface(deepLastChild));
-  return deepLastChildN;
+  
+  return NS_OK;
 }
 
 
@@ -2820,8 +2829,8 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   // it's not the bogus node, so see if it is an irrelevant text node
   if (PR_TRUE==IsTextNode(aNode))
   {
-    nsCOMPtr<nsIDOMCharacterData>text;
-    text = do_QueryInterface(aNode);
+    nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(aNode);    
+    // nsCOMPtr<nsIDOMComment> commentNode = do_QueryInterface(aNode);
     if (text)
     {
       nsAutoString data;
@@ -2831,6 +2840,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
         return PR_FALSE;
       }
       // if the node contains only newlines, it's not editable
+      // you could use nsITextContent::IsOnlyWhitespace here
       PRUint32 i;
       for (i=0; i<length; i++)
       {
@@ -3603,6 +3613,7 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
         textNode->GetLength(&strLength);
         if (strLength)
         {
+          // you could use nsITextContent::IsOnlyWhitespace here
           textNode->SubstringData(0,1,tempString);
           *aResult = nsString::IsSpace(tempString.First());
           return NS_OK;
@@ -3660,6 +3671,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
         textNode->GetLength(&strLength);
         if (strLength)
         {
+          // you could use nsITextContent::IsOnlyWhitespace here
           textNode->SubstringData(strLength-1,strLength,tempString);
           *aResult = nsString::IsSpace(tempString.First());
           return NS_OK;
