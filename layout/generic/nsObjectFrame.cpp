@@ -1479,6 +1479,42 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
+nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindowless, nsPoint * aOrigin)
+{
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_ARG_POINTER(aOrigin);
+
+  nsresult rv = NS_OK;
+  nsIView * parentWithView;
+  nsPoint origin;
+  nsPoint offset(0,0);
+
+  GetOffsetFromView(aPresContext, origin, &parentWithView);
+
+  // if it's windowless we want to get the offset from the parent frame
+  if (aWindowless) {
+    nsIWidget* aWidget;
+    parentWithView->GetOffsetFromWidget(&offset.x, &offset.y, aWidget);
+    origin += offset;
+
+    nsIFrame* parentFrame;
+    GetParentWithView(aPresContext, &parentFrame);
+
+    if(parentFrame) {
+      nsPoint originFrame;
+      parentFrame->GetOffsetFromView(aPresContext, originFrame, &parentWithView);
+      origin += originFrame;
+    }
+  }
+
+  float t2p;
+  aPresContext->GetTwipsToPixels(&t2p);
+  aOrigin->x = NSTwipsToIntPixels(origin.x, t2p);
+  aOrigin->y = NSTwipsToIntPixels(origin.y, t2p);
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
                          const nsHTMLReflowState*  aReflowState,
@@ -1488,84 +1524,62 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
-  if (NS_FRAME_REFLOW_FINISHED == aStatus && !IsHidden()) {
-    nsIView* view = nsnull;
-    GetView(aPresContext, &view);
-    if (nsnull != view) {
-      nsCOMPtr<nsIViewManager> vm;
-      view->GetViewManager(*getter_AddRefs(vm));
-      if (vm) {
-        vm->SetViewVisibility(view, nsViewVisibility_kShow);
-      }
-    }
+  if ((aStatus != NS_FRAME_REFLOW_FINISHED) || IsHidden()) 
+    return rv;
 
-    if (nsnull != mInstanceOwner) {
-      nsPluginWindow    *window;
-
-      if (NS_OK == mInstanceOwner->GetWindow(window)) {
-        nsIView           *parentWithView;
-        nsPoint           origin;
-        nsIPluginInstance *inst;
-        float             t2p;
-        aPresContext->GetTwipsToPixels(&t2p);
-        nscoord           offx = 0;
-        nscoord           offy = 0;
-
-        GetOffsetFromView(aPresContext, origin, &parentWithView);
-
-        // if it's windowless we want to get the offset from the parent frame
-        if (window->type == nsPluginWindowType_Drawable)
-        {
-
-          nsIWidget* aWidget;
-          parentWithView->GetOffsetFromWidget(&offx, &offy, aWidget);
-
-          nsIFrame* parentFrame;
-          GetParentWithView(aPresContext, &parentFrame);
-
-          if(parentFrame != nsnull)
-            parentFrame->GetOffsetFromView(aPresContext, origin, &parentWithView);
-
-        }
-
-        window->x = NSTwipsToIntPixels(origin.x + offx, t2p);
-        window->y = NSTwipsToIntPixels(origin.y + offy, t2p);
-        // window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
-        // window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
-
-        // refresh the plugin port as well
-        window->window = mInstanceOwner->GetPluginPort();
-
-        // beard: to preserve backward compatibility with Communicator 4.X, the
-        // clipRect must be in port coordinates.
-#ifndef XP_MAC
-       // this is only well-defined on the Mac OS anyway, or perhaps for windowless plugins.
-        window->clipRect.top = 0;
-        window->clipRect.left = 0;
-        window->clipRect.bottom = window->clipRect.top + window->height;
-        window->clipRect.right = window->clipRect.left + window->width;
-#else
-        // now that we have finished the reflow process, the widget is properly positioned
-        // and we can validate the plugin clipping information by syncing the plugin
-        // window info to reflect the current widget location.
-        mInstanceOwner->FixUpPluginWindow();
-#endif
-        if (NS_OK == mInstanceOwner->GetInstance(inst)) {
-          inst->SetWindow(window);
-          NS_RELEASE(inst);
-        }
-
-        mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
-
-        if (mWidget)
-        {
-          PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
-          PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
-          mWidget->Move(x, y);
-        }
-      }
-    }
+  nsIView* view = nsnull;
+  GetView(aPresContext, &view);
+  if (view) {
+    nsCOMPtr<nsIViewManager> vm;
+    view->GetViewManager(*getter_AddRefs(vm));
+    if (vm)
+      vm->SetViewVisibility(view, nsViewVisibility_kShow);
   }
+
+  nsPluginWindow *window;
+
+  if (!mInstanceOwner || NS_FAILED(mInstanceOwner->GetWindow(window)))
+    return rv;
+
+  PRBool windowless = (window->type == nsPluginWindowType_Drawable);
+
+  // if we are on Mac or windowless on Windows we will get Paint 
+  // event anyway so there is no need to update plugin window
+  // and call NPP_SetWindow here, it'll be done in Paint.
+  // Windowed plugins thought need it to be done here, there will
+  // no chance to do it later because they will get paint event
+  // from the OS itself
+#ifdef XP_MAC
+  return rv;
+#endif // XP_MAC
+
+  if(windowless)
+    return rv;
+
+  nsPoint origin;
+  GetWindowOriginInPixels(aPresContext, windowless, &origin);
+
+  window->x = origin.x;
+  window->y = origin.y;
+
+  // refresh the plugin port as well
+  window->window = mInstanceOwner->GetPluginPort();
+
+  nsIPluginInstance *inst;
+
+  if (NS_OK == mInstanceOwner->GetInstance(inst)) {
+    inst->SetWindow(window);
+    NS_RELEASE(inst);
+  }
+
+  mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
+
+  if (mWidget) {
+    PRInt32 x = origin.x;
+    PRInt32 y = origin.y;
+    mWidget->Move(x, y);
+  }
+
   return rv;
 }
 
