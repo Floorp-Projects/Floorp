@@ -40,6 +40,7 @@
 #define __nsHTMLComboboxAccessible_h__
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleSelectable.h"
 
 #include "nsCOMPtr.h"

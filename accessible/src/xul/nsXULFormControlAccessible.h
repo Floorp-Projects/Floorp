@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Author: Aaron Leventhal (aaronl@netscape.com)
+ * Author: John Gaunt (jgaunt@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,19 +37,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsHTMLLinkAccessible_H_
-#define _nsHTMLLinkAccessible_H_
+#ifndef _nsXULFormControlAccessible_H_
+#define _nsXULFormControlAccessible_H_
 
+// NOTE: alphabetically ordered
 #include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
+#include "nsHTMLFormControlAccessible.h"
+#include "nsIDOMXULLabelElement.h"
 
-class nsHTMLLinkAccessible : public nsLinkableAccessible
+/* Accessible for supporting for controls
+ * supports:
+ * - walking up to get name from label
+ * - support basic state
+ */
+class nsXULFormControlAccessible : public nsLeafAccessible
 {
-
 public:
-  nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsXULFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+
+protected:
+  NS_IMETHODIMP AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
+};
+
+class nsXULButtonAccessible : public nsBlockAccessible
+{
+public:
+  nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+};
+
+class nsXULCheckboxAccessible : public nsXULFormControlAccessible
+{
+public:
+  nsXULCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
 #endif  

@@ -42,7 +42,7 @@
 #include "nsReadableUtils.h"
 
 nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHTMLBlockAccessible(aDomNode, aShell)
+nsBlockAccessible(aDomNode, aShell)
 { 
 }
 
@@ -54,7 +54,7 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *_retval)
 }
 
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHTMLBlockAccessible(aDomNode, aShell)
+nsBlockAccessible(aDomNode, aShell)
 { 
 }
 

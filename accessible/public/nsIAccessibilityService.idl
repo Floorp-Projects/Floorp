@@ -38,14 +38,10 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
-  nsIAccessible createXULCheckboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
-  nsIAccessible createXULButtonAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
-  nsIAccessible createXULTextAccessible(in nsIDOMNode aNode);
-  nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
@@ -53,6 +49,10 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLIFrameAccessible(in nsIDOMNode aNode, in nsISupports aPresContext);
   nsIAccessible createHTMLBlockAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
+  nsIAccessible createXULButtonAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULCheckboxAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTextAccessible(in nsIDOMNode aNode);
   nsIAccessible createAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
 };

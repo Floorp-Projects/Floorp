@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      John Gaunt (jgaunt@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,25 +40,23 @@
 #ifndef _nsAccessible_H_
 #define _nsAccessible_H_
 
-#include "nsISupports.h"
-#include "nsGenericAccessible.h"
 #include "nsCOMPtr.h"
-#include "nsIContent.h"
+#include "nsGenericAccessible.h"
+#include "nsIAccessible.h"
 #include "nsIDOMNode.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsWeakReference.h"
 #include "nsIFocusController.h"
-#include "nsIViewManager.h"
-#include "nsRect.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsPoint.h"
+#include "nsRect.h"
+#include "nsWeakReference.h"
 
 #define ACCESSIBLE_BUNDLE_URL "chrome://global/locale/accessible.properties"
 
-class nsIFrame;
-class nsIDocShell;
-class nsIWebShell;
 class nsIContent;
+class nsIDocShell;
+class nsIFrame;
+class nsIWebShell;
 
 class nsAccessible : public nsGenericAccessible
 {
@@ -129,45 +128,5 @@ protected:
   nsCOMPtr<nsIWeakReference> mPresShell;
   nsCOMPtr<nsIFocusController> mFocusController;
 };
-
-/* Special Accessible that knows how to handle hit detection for flowing text */
-class nsHTMLBlockAccessible : public nsAccessible
-{
-public:
-   nsHTMLBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-   NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
-};
-
-/* Leaf version of DOM Accessible
- * has no children
- */
-class nsLeafAccessible : public nsAccessible
-{
-  public:
-    nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-
-    NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-    NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-    NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-};
-
-
-class nsLinkableAccessible : public nsAccessible
-{
-  public:
-    nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-    NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-    NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
-    NS_IMETHOD AccDoAction(PRUint8 index);
-    NS_IMETHOD GetAccState(PRUint32 *_retval);
-    NS_IMETHOD GetAccValue(nsAWritableString& _retval);
-
-  protected:
-    PRBool IsALink();
-    PRBool mIsALinkCached;  // -1 = unknown, 0 = not a link, 1 = is a link
-    nsCOMPtr<nsIContent> mLinkContent;
-    PRBool mIsLinkVisited;
-};
-
 
 #endif  

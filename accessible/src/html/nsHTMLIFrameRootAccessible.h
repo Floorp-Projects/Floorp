@@ -39,6 +39,7 @@
 #ifndef _nsIFrameRootAccessible_H_
 #define _nsIFrameRootAccessible_H_
 
+#include "nsBaseWidgetAccessible.h"
 #include "nsRootAccessible.h"
 #include "nsAccessible.h"
 #include "nsIAccessibleDocument.h"
@@ -46,7 +47,7 @@
 class nsIWebShell;
 class nsIWeakReference;
 
-class nsHTMLIFrameAccessible : public nsHTMLBlockAccessible, 
+class nsHTMLIFrameAccessible : public nsBlockAccessible, 
                                public nsIAccessibleDocument,
                                public nsDocAccessibleMixin
 {

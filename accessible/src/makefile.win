@@ -59,6 +59,9 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsHTMLLinkAccessible.obj    \
         .\$(OBJDIR)\nsHTMLComboboxAccessible.obj    \
         .\$(OBJDIR)\nsHTMLListboxAccessible.obj    \
+        .\$(OBJDIR)\nsXULFormControlAccessible.obj    \
+        .\$(OBJDIR)\nsXULTextAccessible.obj           \
+        .\$(OBJDIR)\nsBaseWidgetAccessible.obj        \
   $(NULL)
 
 EXPORTS = \

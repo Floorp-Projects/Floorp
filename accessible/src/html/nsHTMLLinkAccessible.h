@@ -41,6 +41,7 @@
 #define _nsHTMLLinkAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
 class nsHTMLLinkAccessible : public nsLinkableAccessible
 {

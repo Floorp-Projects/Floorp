@@ -41,6 +41,7 @@
 #define _nsHTMLImageAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
 #include "nsIDOMHTMLMapElement.h"

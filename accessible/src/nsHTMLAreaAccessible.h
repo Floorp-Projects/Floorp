@@ -40,7 +40,7 @@
 #ifndef _nsHTMLAreaAccessible_H_
 #define _nsHTMLAreaAccessible_H_
 
-#include "nsGenericAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 #include "nsAccessible.h"
 
 /* Accessible for image map areas - must be child of image

@@ -40,20 +40,16 @@
 #define _nsHTMLTextAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
 class nsIWeakReference;
-class nsITextControlFrame;
 
-class nsHTMLTextAccessible : public nsLinkableAccessible
+class nsHTMLTextAccessible : public nsTextAccessible
 {
 
 public:
   nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAWritableString& _retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
 };
 
 #endif  
