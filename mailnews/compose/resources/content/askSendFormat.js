@@ -148,7 +148,7 @@ function Startup()
 
       //change the button label
       var buttonlabels = document.getElementById("okCancelButtons");
-      element = document.documentElement.getButton("accept");
+      element = document.getElementById("ok");
       element.setAttribute("label", buttonlabels.getAttribute("button1Label"));
       element = document.getElementById("cancel");
       element.setAttribute("label", buttonlabels.getAttribute("button2Label"));
