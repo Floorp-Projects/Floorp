@@ -38,8 +38,9 @@ DOCDIR=/u/sonmi/doc
 # communicate with this file
 RSH_FILE=$TMP/rsh.$$
 echo >$RSH_FILE
-TMPFILES="$TMPFILES $RSH_FILE"
+TMPFILES="$TMPFILES $RSH_FILE $WARNING_FILE"
 RSH_WAIT_TIME=60 #maximum time allowed for the 2 rsh to finish...
+TOTAL_TESTS=106
 
 Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
@@ -64,11 +65,11 @@ watch_rsh()
         start)
             echo "$2 started" >>$RSH_FILE
             sleep $RSH_WAIT_TIME
-	    O_ALWAYS_YES=ON # may modify global flags because this is a 
-			    # forked off bg process - kill_by_name otherwise
-			    # will ask the user if it really should be killed 
-	    grep "$2 finished" $RSH_FILE >/dev/null || kill_by_name "rsh $2"
-	    exit
+            O_ALWAYS_YES=ON # may modify global flags because this is a 
+                            # forked off bg process - kill_by_name otherwise
+                            # will ask the user if it really should be killed 
+            grep "$2 finished" $RSH_FILE >/dev/null || kill_by_name "rsh $2"
+            exit
             ;;
         stop)
             echo "$2 finished" >>$RSH_FILE
@@ -183,7 +184,9 @@ set_files()
     rm $TMP_PLATFORMLIST_FILE 2>/dev/null
     TMP_PERF_FILE=${RFILE}.perf.$$
     HTML_FILE=${RFILE}.html
-    TMPFILES="$TMPFILES  $TMP_E_FILE $TMP_P_FILE" 
+    WARNING_FILE=${RFILE}.warning
+    TMPFILES="$TMPFILES  $TMP_E_FILE $TMP_P_FILE $WARNING_FILE $TMP_PERF_FILE $TMP_PLATFORMLIST_FILE"
+
 #FIXME rm the rest too - add them to the TMPFILES
     FILENAME=$RFILE        #we might want to mail it...later switch to html file
     O_FILE="ON"
@@ -258,6 +261,9 @@ HTML_ERRORMSG=Failed
 HTML_MISSINGCOLOR=\"#FFFFCC\"
 HTML_MISSINGMSG=Missing
 
+HTML_INCOMPLETECOLOR=$HTML_MISSINGCOLOR
+HTML_INCOMPLETEMSG=Incomplete
+
 HTML_PASSEDCOLOR=\"#66FF99\"
 HTML_PASSEDMSG=Passed
 ################################# html_line() #########################
@@ -279,6 +285,9 @@ html_line()
   elif [ "$1" = "passed" ]
   then
       echo '<td BGCOLOR='$HTML_PASSEDCOLOR' NOSAVE>'$HTML_PASSEDMSG'</td>'
+  elif [ "$1" = "incomplete" ]
+  then
+      echo '<td BGCOLOR='$HTML_INCOMPLETECOLOR' NOSAVE>'$HTML_INCOMPLETEMSG'</td>'
   else
       echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'    
   fi
@@ -318,9 +327,7 @@ qa_errorlist()
         lline
     fi
 
-    #FIXME it should also examine the files for passed messages, since 
-    #sometimes empty results and output.log files are generated
-    grep red */results.html | 
+    grep "bgcolor=red" */results.html | 
         sed -e 's/.results.html:<TR><TD>/ /' -e 's/<[^>]*>/ /g'
     if [ "$1" = "1" ]
     then
@@ -335,14 +342,18 @@ qa_errorlist()
         grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' | 
         grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
         #grep -v '999 cache hits; 1 cache misses, 0 cache not reusable'
-    
+    #if [ "$1" = "1" ]
+    #then
+        #lline
+        #echo "    I n c o m p l e t e    Q A     L i s t"
+        #lline
+    #fi
     if [ "$1" = "1" ]
     then
         lline
         echo "    C o r e l i s t "
         lline
     fi
-    
     find . -name core -print 2>/dev/null
 
 }
@@ -391,8 +402,22 @@ check_platforms()
             echo "$BUILDPLATFORM not tested: $QA_MISSING" >>$TMP_P_FILE
             setQAsysvars
             html_line missing >>$HTML_FILE
+        }
+    done
 
-
+    for w in `ls */results.html`
+    do
+        grep bgcolor=red $w || {
+        PASSED_LINES=""
+        PASSED_LINES=`grep bgcolor=lightGreen $w | wc -l`
+        if [ -n "$PASSED_LINES" -a "$PASSED_LINES" -lt "$TOTAL_TESTS" ] ; then
+            BUILDPLATFORM=`grep Platform $w | sed -e 's/<H4>Platform:/    /'                   -e 's/<BR>//'` 
+            MACHINE=`echo $w | sed -e "s/\.[0-9]*.results.html//"`
+            setQAsysvars
+            html_line incomplete >>$HTML_FILE
+        elif [ "$PASSED_LINES" -gt "$TOTAL_TESTS" ] ; then
+            echo "WARNING - more tests than expected on $w ($PASSED_LINES)" >>$WARNING_FILE
+	fi
         }
     done
 }
@@ -490,6 +515,7 @@ rsaperf >>$HTML_FILE
 echo '<a NAME="errorlist"></a>' >> $HTML_FILE
 
 qa_errorlist 2  | sed -e "s/^/<br>/" >>$HTML_FILE
+cat $WARNING_FILE   2>/dev/null | sed -e "s/^/<br>/" >>$HTML_FILE 2>/dev/null
 
 html_footer >>$HTML_FILE
 
