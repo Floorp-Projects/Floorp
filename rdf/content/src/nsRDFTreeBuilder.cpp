@@ -342,6 +342,8 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 										{
 											lastPulse.SetLength(0);
 											lastPulse.Append(now, 10);
+											// note: don't check for errors when unsetting the attribute in case this is the 1st time
+											child->UnsetAttribute(kNameSpaceID_None, kLastPulseAtom, PR_FALSE);
 											if (NS_SUCCEEDED(rv = child->SetAttribute(kNameSpaceID_None, kLastPulseAtom, lastPulse, PR_FALSE)))
 											{
 #ifdef	DEBUG
