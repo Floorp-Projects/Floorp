@@ -351,7 +351,7 @@ nsresult nsMsgHeaderParser::ReformatUnquotedAddresses (const PRUnichar *line, PR
   PRInt32 lineLen = convertedLine.Length();
   PRInt32 outputMaxLen = (lineLen * sizeof (char) * 2) + 2; //Let's presume we need to escape every char
   char * outputStr = (char *) PR_Malloc(outputMaxLen);
-  if (!*outputStr)
+  if (!outputStr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   const char *readPtr = convertedLine.get();
