@@ -89,26 +89,31 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 6) & 0x000007C0L;
              mState=1;
+             mMinUcs4 = 0x00000080;
          } else if( 0xE0 == (0xF0 & (*in))) {
 			 // 3 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 12) & 0x0000F000L;
              mState=2;
+             mMinUcs4 = 0x00000800;
          } else if( 0xF0 == (0xF8 & (*in))) {
 			 // 4 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 18) & 0x001F0000L;
              mState=3;
+             mMinUcs4 = 0x00010000;
          } else if( 0xF8 == (0xFC & (*in))) {
 			 // 5 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 24) & 0x03000000L;
              mState=4;
+             mMinUcs4 = 0x00200000;
          } else if( 0xFC == (0xFE & (*in))) {
 			 // 6 bytes UTF8
              mUcs4 = (PRUint32)(*in);
              mUcs4 = (mUcs4 << 30) & 0x40000000L;
              mState=5;
+             mMinUcs4 = 0x04000000;
          } else {
 			 
 			 //NS_ASSERTION(0, "The input string is not in utf8");
@@ -130,7 +135,16 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
              mUcs4 |= tmp;
 			 if(0 == --mState)
              {
-                 if(mUcs4 >= 0x00010000) {
+                 if (mUcs4 < mMinUcs4) {
+                    // Overlong sequence
+                    *out++ = 0xFFFD;
+                 } else if (mUcs4 >= 0xD800 && mUcs4 <= 0xDFFF) {
+                    // Surrogates 
+                    *out++ = 0xFFFD;
+                 } else if (mUcs4 == 0xFFFE || mUcs4 == 0xFFFF) {
+                    // prohibited characters
+                    *out++ = 0xFFFD;
+                 } else if(mUcs4 >= 0x00010000) {
                     if(mUcs4 >= 0x00110000) {
                       *out++ = 0xFFFD;
                     } else {
