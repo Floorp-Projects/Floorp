@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#pragma once
+#include "nsString.h"
 
 using namespace System;
 
@@ -54,5 +54,28 @@ namespace Mozilla
         bool OpenURL(IntPtr hWnd, String *url);
         bool Resize(IntPtr hWnd);
     }; // class Gecko
+
+    // Throw an exception if NS_FAILED(rv)
+    void ThrowIfFailed(nsresult rv);
+
+    // Helper for copying an UCS2 Mozilla nsAFlatString to a managed
+    // String.
+    inline String * CopyString(const nsAFlatString& aStr)
+    {
+      return new String(aStr.get(), 0, aStr.Length());
+    }
+
+    // Helper for copying an UTF8 Mozilla nsAFlatCString to a managed
+    // String.
+    String * CopyString(const nsAFlatCString& aStr);
+
+    // Helper for copying a managed String into a Mozilla UCS2
+    // nsAFlatString.
+    nsAFlatString& CopyString(String *aSrc, nsAFlatString& aDest);
+
+    // Helper for copying a managed String into a Mozilla UTF8
+    // nsAFlatCString.
+    nsAFlatCString& CopyString(String *aSrc, nsAFlatCString& aDest);
+
   } // namespace Embedding
 }

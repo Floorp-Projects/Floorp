@@ -18,42 +18,42 @@
 # Contributor(s):
 #
 
-topsrcdir       = ${MOZ_SRC}/mozilla
-srcdir          = ${MOZ_SRC}/mozilla/embedding/wrappers/DotNETEmbed
-VPATH           = ${MOZ_SRC}/mozilla/embedding/wrappers/DotNETEmbed
+ifndef MOZ_OBJ_DIR
+MOZ_OBJ_DIR     = ${MOZ_SRC}/mozilla
+endif
 
 # Compiler variables (implicit rules are used to compile .cpp files)
 CC		= cl
-CFLAGS	= -nologo -Zi
-CXX			= cl
-CXXFLAGS	= -nologo -CLR -TP -Zi -we4700 -we4701 -c -DDEBUG -DXP_WIN -DXP_WIN32 ${INCLUDES}
+CFLAGS		= -nologo -Zi
+CXX		= cl
+CXXFLAGS	= -nologo -CLR -TP -Zi -wd4005 -we4700 -we4701 -c -DDEBUG -DXP_WIN -DXP_WIN32 ${INCLUDES}
 
 OUTPUT_OPTION	= -Fo$@
 
 # Linker variables (implicit rules can't use link.exe, so we do that manually)
-LDFLAGS		= -nologo -dll -debug -libpath:${topsrcdir}/dist/lib/ -NODEFAULTLIB:MSVCRTD
+LDFLAGS		= -nologo -dll -debug -libpath:${MOZ_OBJ_DIR}/dist/lib/ -NODEFAULTLIB:MSVCRTD
 
 INCLUDES	= \
-		  -I${topsrcdir}/dist/include     \
-		  -I${topsrcdir}/dist/include/profile     \
-		  -I${topsrcdir}/dist/include/webbrwsr    \
-		  -I${topsrcdir}/dist/include/widget    \
-		  -I${topsrcdir}/dist/include/xpcom     \
-		  -I${topsrcdir}/dist/include/nspr      \
-		  -I${topsrcdir}/dist/include/necko      \
-		  -I${topsrcdir}/dist/include/docshell        \
-		  -I${topsrcdir}/dist/include/dom       \
-		  -I${topsrcdir}/dist/include/string    \
-		  -I${topsrcdir}/dist/include/embed_base    \
-		  -I${topsrcdir}/dist/include/windowwatcher \
-		  -I${topsrcdir}/dist/include/xpconnect
+		  -I${MOZ_OBJ_DIR}/dist/include			\
+		  -I${MOZ_OBJ_DIR}/dist/include/profile		\
+		  -I${MOZ_OBJ_DIR}/dist/include/webbrwsr	\
+		  -I${MOZ_OBJ_DIR}/dist/include/widget		\
+		  -I${MOZ_OBJ_DIR}/dist/include/xpcom		\
+		  -I${MOZ_OBJ_DIR}/dist/include/nspr		\
+		  -I${MOZ_OBJ_DIR}/dist/include/necko		\
+		  -I${MOZ_OBJ_DIR}/dist/include/docshell	\
+		  -I${MOZ_OBJ_DIR}/dist/include/dom		\
+		  -I${MOZ_OBJ_DIR}/dist/include/string		\
+		  -I${MOZ_OBJ_DIR}/dist/include/embed_base	\
+		  -I${MOZ_OBJ_DIR}/dist/include/windowwatcher	\
+		  -I${MOZ_OBJ_DIR}/dist/include/xpconnect
 
 DEPS      = DotNETEmbed.h Makefile
 
 CPP_FILES	=  \
-		  DotNETEmbed.cpp     \
-		  DotNETProfileManager.cpp     \
-		  DotNETNetworking.cpp     \
+		  DotNETEmbed.cpp				\
+		  DotNETProfileManager.cpp			\
+		  DotNETNetworking.cpp				\
 		  AssemblyInfo.cpp                
 
 OBJ_FILES	= $(CPP_FILES:%.cpp=%.obj)
@@ -64,8 +64,8 @@ LIBS		= user32.lib xpcom.lib embed_base_s.lib
 DotNETEmbed.dll: ${OBJ_FILES} DotNETEmbed.snk ${DEPS}
 	link ${LDFLAGS} ${LIBS} ${OBJ_FILES} -out:DotNETEmbed.dll
 	@echo
-	cp DotNETEmbed.dll ${topsrcdir}/dist/bin
-	cp DotNETEmbed.pdb ${topsrcdir}/dist/bin
+	cp DotNETEmbed.dll ${MOZ_OBJ_DIR}/dist/bin
+	cp DotNETEmbed.pdb ${MOZ_OBJ_DIR}/dist/bin
 #	regasm -silent DotNETEmbed.dll
 #	@echo
 #	gacutil.exe -silent -i DotNETEmbed.dll
@@ -76,18 +76,18 @@ DotNETEmbed.dll: ${OBJ_FILES} DotNETEmbed.snk ${DEPS}
 
 DotNETEmbed.obj: DotNETEmbed.cpp umWebChrome.h ${DEPS} 
 	${CXX} ${CXXFLAGS} ${OUTPUT_OPTION} DotNETEmbed.cpp 
-DotNETProfileManager.obj: DotNETProfileManager.cpp umProfileManager.h ${DEPS} 
+DotNETProfileManager.obj: DotNETProfileManager.cpp ${DEPS} 
 	${CXX} ${CXXFLAGS} ${OUTPUT_OPTION} DotNETProfileManager.cpp 
-DotNETNetworking.obj: DotNETNetworking.cpp umURI.h ${DEPS} 
+DotNETNetworking.obj: DotNETNetworking.cpp DotNETNetworking.h ${DEPS} 
 	${CXX} ${CXXFLAGS} ${OUTPUT_OPTION} DotNETNetworking.cpp 
 AssemblyInfo.obj: AssemblyInfo.cpp ${DEPS} 
 	${CXX} ${CXXFLAGS} ${OUTPUT_OPTION} AssemblyInfo.cpp 
 
 extdlls:
-	cp ${topsrcdir}/dist/bin/nspr4.dll .
-	cp ${topsrcdir}/dist/bin/plc4.dll .
-	cp ${topsrcdir}/dist/bin/plds4.dll .
-	cp ${topsrcdir}/dist/bin/xpcom.dll .
+	cp ${MOZ_OBJ_DIR}/dist/bin/nspr4.dll .
+	cp ${MOZ_OBJ_DIR}/dist/bin/plc4.dll .
+	cp ${MOZ_OBJ_DIR}/dist/bin/plds4.dll .
+	cp ${MOZ_OBJ_DIR}/dist/bin/xpcom.dll .
 
 clean:
 	rm -f *.obj DotNETEmbed.dll

@@ -39,42 +39,39 @@
 
 #pragma once
 
+#include "DotNETEmbed.h"
+
 using namespace System;
 
 namespace Mozilla 
 {
   namespace Embedding
   {
-    namespace ProfileManager
+    // Static
+    public __gc class ProfileManager
     {
-      public __gc class Profile
-      {
-        private:
-          unmanagedProfile __nogc * mProfile;
-          bool CreateUnmanagedProfile();
+    public:
+      // XXX: These should be in an enum!
+      static UInt32 SHUTDOWN_PERSIST = 1;
+      static UInt32 SHUTDOWN_CLEANSE = 2;
 
-        public:
-          Profile();
-          ~Profile();
-          void Dispose(bool disposing);
-          void Dispose();
+      __property static Int32 get_ProfileCount();
+      static String *GetProfileList()[];
+      static bool ProfileExists(String *aProfileName);
+      __property static String* get_CurrentProfile();
+      __property static void set_CurrentProfile(String* aCurrentProfile);
+      static void ShutDownCurrentProfile(UInt32 shutDownType);
+      static void CreateNewProfile(String* aProfileName,
+                                   String *aNativeProfileDir,
+                                   String* aLangcode, bool useExistingDir);
+      static void RenameProfile(String* aOldName, String* aNewName);
+      static void DeleteProfile(String* aName, bool aCanDeleteFiles);
+      static void CloneProfile(String* aProfileName);
 
-          static UInt32 SHUTDOWN_PERSIST = 1;
-          static UInt32 SHUTDOWN_CLEANSE = 2;
+    private:
+      static nsIProfile *sProfileService = 0; // [OWNER]
 
-          __property Int32 get_ProfileCount();
-          void GetProfileList(UInt32* length, String** profileNames);
-          bool ProfileExists(String *aProfileName);
-          __property String* get_CurrentProfile();
-          __property void set_CurrentProfile(String* aCurrentProfile);
-          void ShutDownCurrentProfile(UInt32 shutDownType);
-          bool CreateNewProfile(String* aProfileName, String *aNativeProfileDir, String* aLangcode, bool useExistingDir);
-          void RenameProfile(String* aOldName, String* aNewName);
-          void DeleteProfile(String* aName, bool aCanDeleteFiles);
-          void CloneProfile(String* aProfileName);
-      }; // class Profile 
-
-    } // namespace ProfileManager
-
+      static void EnsureProfileService();
+    }; // class ProfileManager
   } // namespace Embedding
 }
