@@ -160,8 +160,8 @@ public:
                                   EnumTable* aTable,
                                   nsString& aResult);
 
-  static void ParseValueOrPercent(const nsString& aString,
-                                  nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
+  static PRBool ParseValueOrPercent(const nsString& aString,
+                                    nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
  /** used to parser attribute values that could be either:
    *   integer         (n), 

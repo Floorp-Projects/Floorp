@@ -1304,7 +1304,7 @@ PRBool nsHTMLTagContent::TableCaptionAlignParamToString(const nsHTMLValue& aValu
 /* ----- end table specific attribute code ----- */
 
 
-void
+PRBool
 nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
                                       nsHTMLValue& aResult, 
                                       nsHTMLUnit aValueUnit)
@@ -1312,18 +1312,25 @@ nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
   PRInt32 ec, val = tmp.ToInteger(&ec);
-  if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
-    if (val < 0) val = 0;
-    if (val > 100) val = 100;
-    aResult.SetPercentValue(float(val)/100.0f);
-  } else {
-    if (eHTMLUnit_Pixel == aValueUnit) {
-      aResult.SetPixelValue(val);
+  if (NS_OK == ec) {
+    if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+      if (val < 0) val = 0;
+      if (val > 100) val = 100;
+      aResult.SetPercentValue(float(val)/100.0f);
+    } else {
+      if (eHTMLUnit_Pixel == aValueUnit) {
+        aResult.SetPixelValue(val);
+      }
+      else {
+        aResult.SetIntValue(val, aValueUnit);
+      }
     }
-    else {
-      aResult.SetIntValue(val, aValueUnit);
-    }
+    return PR_TRUE;
   }
+
+  // Illegal values are mapped to empty
+  aResult.SetEmptyValue();
+  return PR_FALSE;
 }
 
 /* used to parse attribute values that could be either:
