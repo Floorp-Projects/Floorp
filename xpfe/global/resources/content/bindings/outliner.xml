@@ -52,7 +52,7 @@
         ]]></getter>
       </property>
       
-      <property name="_columnsDirty">true</property>
+      <field name="_columnsDirty">true</field>
 
       <method name="_ensureColumnOrder">
         <body><![CDATA[
@@ -85,6 +85,8 @@
         <parameter name="aColBefore"/>
         <parameter name="aBefore"/>
         <body><![CDATA[
+          this._ensureColumnOrder();
+          
           var cols = [];
           if (aColBefore.ordinal < aColMove.ordinal) {
             var col = aColBefore;
@@ -544,6 +546,11 @@
 
   <binding id="outlinerbody" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <implementation>
+      <constructor>
+        if ("_ensureColumnOrder" in this.parentNode)
+          this.parentNode._ensureColumnOrder();
+      </constructor>
+
       <property name="_lastSelectedRow">
         -1
       </property>
@@ -650,6 +657,10 @@
 
   <binding id="outlinercol-base" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <implementation>
+      <constructor>
+        this.parentNode._columnsDirty = true;
+      </constructor>
+
       <property name="ordinal">
         <getter><![CDATA[
           var val = this.getAttribute("ordinal");
