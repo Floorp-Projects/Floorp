@@ -15,52 +15,14 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../../..
+DEPTH = ../../..
 topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
 VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM	= pop3Test
-
-CPPSRCS = \
-	pop3Test.cpp		   \
-	$(NULL)
-
-ifdef MOZ_OJI
-	JSJ_LIB = -ljsj
-endif
-
-LIBS = \
-	-labouturl \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lremoturl \
-	-lhttpurl \
-	-lsockstuburl \
-	-lnetcache \
-	-lmimetype \
-	-lnetcnvts \
-	-lnetwork \
-	-lnetlib \
-	-lnetutil \
-	-lmailnewsbase \
-	-lreg	\
-	-lxpcom	\
-	-lpwcac \
-	-lmozdbm	\
-	-lxp	\
-	-lpref	\
-	-ljs	\
-	-lraptorbase \
-	-lgmbase$(MOZ_TOOLKIT) \
-	-lsecfree \
-	-lz \
-	$(NSPR_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
+DIRS = pop3
 
 include $(topsrcdir)/config/config.mk
 
