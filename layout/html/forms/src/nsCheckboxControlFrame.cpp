@@ -257,19 +257,6 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
   if (nsFormFrame::GetDisabled(this))
     return NS_OK;
 
-  switch(aEvent->message) {
-    case NS_KEY_PRESS:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-          MouseClicked(&aPresContext);
-        }
-      }
-      break;
-    default:
-      break;
-  }
-
   return(Inherited::HandleEvent(aPresContext, aEvent, aEventStatus));
 }
 
