@@ -55,7 +55,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   mLCID = 1033; // initialize to en-US
   if (locale != nsnull) {
     nsString aLocale;
-    nsString aCategory("NSILOCALE_TIME");
+    nsString aCategory("NSILOCALE_COLLATE");
     nsresult res = locale->GetCatagory(&aCategory, &aLocale);
     if (NS_FAILED(res)) {
       return res;
