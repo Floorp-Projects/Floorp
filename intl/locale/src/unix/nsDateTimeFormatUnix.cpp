@@ -212,7 +212,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   }
 
   // generate data/time string
-  char *old_locale = setlocale(LC_TIME, "");
+  char *old_locale = setlocale(LC_TIME, NULL);
   (void) setlocale(LC_TIME, mPlatformLocale);
   if (PL_strlen(fmtD) && PL_strlen(fmtT)) {
     PL_strncat(fmtD, " ", NSDATETIME_FORMAT_BUFFER_LEN);

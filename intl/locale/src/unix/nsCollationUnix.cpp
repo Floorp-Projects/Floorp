@@ -32,7 +32,7 @@
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h" /* for nsAutoString */
-#define DEBUG_UNIX_COLLATION
+//#define DEBUG_UNIX_COLLATION
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
 
 inline void nsCollationUnix::DoSetLocale()
 {
-  char *locale = setlocale(LC_COLLATE, "");
+  char *locale = setlocale(LC_COLLATE, NULL);
   mSavedLocale.SetString(locale ? locale : "");
   if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
     char newLocale[128];
