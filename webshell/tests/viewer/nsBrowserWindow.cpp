@@ -1633,6 +1633,19 @@ nsBrowserWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::ShowMenuBar(PRBool aShow)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::IsMenuBarVisible(PRBool *aVisible)
+{
+  *aVisible = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              nsLoadType aReason)
 {
@@ -1798,6 +1811,7 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTak
 {
   return NS_OK;
 }
+
 
 //----------------------------------------
 

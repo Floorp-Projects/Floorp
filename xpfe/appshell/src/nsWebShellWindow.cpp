@@ -121,7 +121,7 @@ static NS_DEFINE_IID(kIWebShellWindowIID,     NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIBrowserWindowIID,		  NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 
 static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,           NS_IAPPSHELL_IID);
@@ -247,7 +247,7 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-	if ( aIID.Equals(kIBrowserWindowIID) ) {
+  if (aIID.Equals(kIBrowserWindowIID)) {
     *aInstancePtr = (void*) (nsIBrowserWindow*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2417,4 +2417,16 @@ NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgress
     rv = NotifyObservers( "progress", topic );
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::ShowMenuBar(PRBool aShow)
+{
+  return mWindow->ShowMenuBar(aShow);
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::IsMenuBarVisible(PRBool *aVisible)
+{
+  return mWindow->IsMenuBarVisible(aVisible);
 }
