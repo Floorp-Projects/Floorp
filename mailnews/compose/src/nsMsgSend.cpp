@@ -61,6 +61,7 @@
 #include "nsIAbAddressCollecter.h"
 #include "nsAbBaseCID.h"
 #include "nsCOMPtr.h"
+#include "nsIDNSService.h"
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
@@ -2308,6 +2309,20 @@ MailDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
   if (tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
+
+    if (!ptr) return NS_ERROR_NULL_POINTER;
+
+	if (NS_FAILED(aExitCode))
+		switch (aExitCode)
+		{
+			case NS_ERROR_UNKNOWN_HOST:
+				aExitCode = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+				break;
+			default:
+				if (! NS_IS_MSG_ERROR(aExitCode))
+					aExitCode = NS_ERROR_SEND_FAILED;
+				break;
+		}
     ptr->DeliverAsMailExit(aUrl, aExitCode);
 
     NS_RELEASE(ptr);
@@ -2325,6 +2340,14 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 
     if (!ptr) return NS_ERROR_NULL_POINTER;
 
+	if (NS_FAILED(aExitCode))
+		switch (aExitCode)
+		{
+			default:
+				if (! NS_IS_MSG_ERROR(aExitCode))
+					aExitCode = NS_ERROR_SEND_FAILED;
+				break;
+		}
     ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
 
     NS_RELEASE(ptr);
