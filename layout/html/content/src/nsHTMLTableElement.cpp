@@ -668,23 +668,25 @@ nsHTMLTableElement::DeleteCaption()
 NS_IMETHODIMP
 nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
-  /* get the ref row at aIndex-1
+  /* get the ref row at aIndex
      if there is one, 
        get it's parent
-       insert the new row just after the ref row
+       insert the new row just before the ref row
      else
        get the first row group
        insert the new row as its first child
   */
   *aValue = nsnull;
   nsresult rv;
-  PRInt32 refIndex = aIndex;
-  if (0<=refIndex)
+  PRInt32 refIndex = aIndex;  // use local variable refIndex so we can remember original aIndex
+  if (0>refIndex) // negative aIndex treated as 0
+    refIndex=0;
+  nsIDOMHTMLCollection *rows;
+  GetRows(&rows);
+  PRUint32 rowCount;
+  rows->GetLength(&rowCount);
+  if (0<rowCount)
   {
-    nsIDOMHTMLCollection *rows;
-    GetRows(&rows);
-    PRUint32 rowCount;
-    rows->GetLength(&rowCount);
     if (rowCount<=PRUint32(refIndex))
       refIndex=rowCount-1;  // we set refIndex to the last row so we can get the last row's parent
                             // we then do an AppendChild below if (rowCount<aIndex)
@@ -699,7 +701,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     {
       nsIDOMNode *newRowNode=nsnull;
       newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode); // caller's addref
-      if (rowCount<=PRUint32(aIndex)) // the index is greater than the number of rows, so just append
+      if ((0<=aIndex) && (rowCount<=aIndex)) // the index is greater than the number of rows, so just append
         rv = parent->AppendChild(newRowNode, (nsIDOMNode **)aValue);
       else  // insert the new row before the reference row we found above
         rv = parent->InsertBefore(newRowNode, refRow, (nsIDOMNode **)aValue);
@@ -710,7 +712,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     NS_RELEASE(rows);
   }
   else
-  {
+  { // the row count was 0, so 
     // find the first row group and insert there as first child
     nsIDOMNode *rowGroup=nsnull;
     GenericElementCollection head((nsIContent*)this, nsHTMLAtoms::thead);
