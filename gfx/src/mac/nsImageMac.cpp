@@ -185,7 +185,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 	if (err != noErr)
 	{
 		NS_WARNING("GWorld allocation failed");
-		nsMemory::HeapMinimize();
+		nsMemory::HeapMinimize(PR_FALSE);
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 	
@@ -209,7 +209,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 				err = AllocateGWorld(mAlphaDepth, nsnull, bounds, &mAlphaGWorld);
 				if (err != noErr)
 				{
-      		nsMemory::HeapMinimize();
+      		nsMemory::HeapMinimize(PR_FALSE);
 					return NS_ERROR_OUT_OF_MEMORY;
 				}
 				break;
@@ -227,7 +227,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 				err = AllocateGWorld(mAlphaDepth, grayRamp, bounds, &mAlphaGWorld);
 				if (err != noErr)
 				{
-      		nsMemory::HeapMinimize();
+      		nsMemory::HeapMinimize(PR_FALSE);
 					return NS_ERROR_OUT_OF_MEMORY;
 				}
 					
