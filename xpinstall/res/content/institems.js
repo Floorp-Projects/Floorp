@@ -20,6 +20,7 @@
 
 // dialog param block
 var gParam;
+var gBundle;
 
 function addTreeItem(num, aName, aUrl, aCertName)
 {
@@ -32,7 +33,7 @@ function addTreeItem(num, aName, aUrl, aCertName)
   // second column is for the cert name
   var certName = document.createElement("description");
   if (aCertName == "")
-    certName.setAttribute("value", "Unsigned"); // i18n!
+    certName.setAttribute("value", gBundle.getString("Unsigned") );
   else
     certName.setAttribute("value", aCertName);
 
@@ -61,6 +62,7 @@ function onLoad()
 
   doSetOKCancel(onOk, onCancel);
 
+  gBundle = document.getElementById("xpinstallBundle");
   gParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 
   gParam.SetInt(0, 1 ); /* Set the default return to Cancel */
@@ -76,7 +78,7 @@ function onLoad()
     addTreeItem(row++, moduleName, URL, certName);
   }
 
-  var okText = document.getElementById("xpinstallBundle").getString("OK");
+  var okText = gBundle.getString("OK");
   var okButton = document.getElementById("ok")
   okButton.label = okText;
   okButton.setAttribute("default",false);
