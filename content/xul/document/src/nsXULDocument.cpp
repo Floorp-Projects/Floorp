@@ -411,10 +411,6 @@ nsXULDocument::~nsXULDocument()
         nsresult rv = mBuilders->Count(&cnt);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
 
-#ifdef DEBUG
-        printf("# of builders: %lu\n", (unsigned long)cnt);
-#endif
-
         for (PRUint32 i = 0; i < cnt; ++i) {
           nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
@@ -679,16 +675,6 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener)
 {
-#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
-    mLoadStart = PR_Now();
-
-    {
-        nsInt64 now(PR_Now());
-        now /= nsInt64(1000);
-        printf("##### XUL document created at %d\n", PRInt32(now));
-    }
-#endif
-
     nsresult rv;
     mCommand = aCommand;
 
@@ -4802,21 +4788,6 @@ nsXULDocument::ResumeWalk()
     // Everything after this point we only want to do once we're
     // certain that we've been embedded in a presentation shell.
 
-#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
-    {
-        nsTime finish = PR_Now();
-        nsInt64 diff64 = finish - mLoadStart;
-        PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
-        printf("***** XUL document loaded in %dmsec\n", diff);
-    }
-
-    {
-        nsInt64 now(PR_Now());
-        now /= nsInt64(1000);
-        printf("##### XUL document loaded at %d\n", PRInt32(now));
-    }
-#endif
-
     StartLayout();
 
     for (PRInt32 i = 0; i < mObservers.Count(); i++) {
@@ -4826,21 +4797,6 @@ nsXULDocument::ResumeWalk()
           i--;
         }
     }
-
-#if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
-    {
-        nsTime finish = PR_Now();
-        nsInt64 diff64 = finish - mLoadStart;
-        PRInt32 diff = PRInt32(diff64 / nsInt64(1000));
-        printf("***** XUL document flowed in %dmsec\n", diff);
-    }
-
-    {
-        nsInt64 now(PR_Now());
-        now /= nsInt64(1000);
-        printf("##### XUL document flowed at %d\n", PRInt32(now));
-    }
-#endif
 
     // Remove the placeholder channel; if we're the last channel in the
     // load group, this will fire the OnEndDocumentLoad() method in the
