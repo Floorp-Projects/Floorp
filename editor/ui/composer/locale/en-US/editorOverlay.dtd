@@ -19,6 +19,7 @@
    - 
    - Contributor(s):
    -    Sammy Ford
+   -    Blake Ross
   -->
 
 
@@ -48,8 +49,8 @@
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Preview in Browser">
 <!ENTITY filepreview.accesskey "b">
-<!ENTITY printSetupCmd.label "Print Setup...">
-<!ENTITY fileprintsetup.accesskey "t">
+<!ENTITY printSetupCmd.label "Page Setup...">
+<!ENTITY fileprintsetup.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY fileprintpreview.accesskey "v">
 <!ENTITY printCmd.label "Print...">
