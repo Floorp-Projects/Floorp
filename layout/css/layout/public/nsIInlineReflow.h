@@ -36,7 +36,8 @@ public:
    * missing child frames before proceeding (e.g. when a tree
    * containing inlines is appended/inserted into a block container
    */
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout) = 0;
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand) = 0;
 
   /**
    * InlineReflow method. See below for how to interpret the return value.
