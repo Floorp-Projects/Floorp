@@ -72,8 +72,10 @@ public:
 	NS_IMETHOD AllocateServerPath(const char * aCanonicalPath, char aOnlineDelimiter, char ** aAllocatedPath);
 	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result);
 	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
+	NS_IMETHOD CreateServerDestinationFolderPathString(char **result);
 
-	NS_IMETHOD	CreateListOfMessageIdsString(char **result) ;
+	NS_IMETHOD	CreateSearchCriteriaString(nsString2 *aResult);
+	NS_IMETHOD	CreateListOfMessageIdsString(nsString2 *result) ;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
 

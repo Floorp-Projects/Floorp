@@ -157,10 +157,12 @@ public:
 	NS_IMETHOD AllocateServerPath(const char * aCanonicalPath, char aOnlineDelimiter, char ** aAllocatedPath) = 0;
 	NS_IMETHOD CreateServerSourceFolderPathString(char **result) = 0;
 	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result) = 0;
+	NS_IMETHOD CreateServerDestinationFolderPathString(char **result) = 0;
 
 	NS_IMETHOD AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory) = 0;
 
-	NS_IMETHOD	CreateListOfMessageIdsString(char **result) = 0;
+	NS_IMETHOD	CreateSearchCriteriaString(nsString2 *aResult) = 0;
+	NS_IMETHOD	CreateListOfMessageIdsString(nsString2 *result) = 0;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result) = 0;
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result) = 0;	// kAddMsgFlags or kSubtractMsgFlags only
 

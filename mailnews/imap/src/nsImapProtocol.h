@@ -101,8 +101,13 @@ public:
 	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
+	// message id string utilities.
+	PRUint32		CountMessagesInIdString(const char *idString);
+	PRUint32		CountMessagesInIdString(nsString2 &idString);
+	static	PRBool	HandlingMultipleMessages(const char *messageIdString);
+	static	PRBool	HandlingMultipleMessages(nsString2 &messageIdString);
+
 	// used to start fetching a message.
-	static	PRBool HandlingMultipleMessages(char *messageIdString);
     PRBool GetShouldDownloadArbitraryHeaders();
     char *GetArbitraryHeadersToDownload();
     virtual void AdjustChunkSize();
@@ -115,7 +120,8 @@ public:
                                             nsIMAPeFetchFields whatToFetch,
                                             PRBool idIsUid,
 											char *part,
-											PRUint32 downloadSize);
+											PRUint32 downloadSize,
+											PRBool tryChunking);
 	virtual void PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePartIDArray *parts);
 
 	// used when streaming a message fetch
@@ -182,10 +188,14 @@ public:
 	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool
                                      aConvertToUtf7Imap);
 
+	void Copy(nsString2 &messageList, const char *destinationMailbox, 
+                                    PRBool idsAreUid);
+	void Search(nsString2 &searchCriteria,  PRBool useUID, 
+									  PRBool notifyHit = PR_TRUE);
 	// imap commands issued by the parser
 	void Store(nsString2 &aMessageList, const char * aMessageData, PRBool
                aIdsAreUid);
-	void ProcessStoreFlags(const char *messageIds,
+	void ProcessStoreFlags(nsString2 &messageIds,
                              PRBool idsAreUids,
                              imapMessageFlagsType flags,
                              PRBool addFlags);
@@ -410,6 +420,7 @@ private:
 	PRInt32	m_progressIndex;
 	PRInt32 m_progressCount;
 
+	PRBool m_notifySearchHit;
 	PRBool m_mailToFetch;
 	PRBool m_checkForNewMailDownloadsHeaders;
 	PRBool m_needNoop;

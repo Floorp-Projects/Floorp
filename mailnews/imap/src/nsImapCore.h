@@ -67,6 +67,17 @@ typedef PRUint16 imapMessageFlagsType;
 #define IMAP_URL_TOKEN_SEPARATOR ">"
 #define kUidUnknown -1
 
+// this has to do with Mime Parts on Demand. It used to live in net.h
+// I'm not sure where this will live, but here is OK temporarily
+typedef enum {
+	IMAP_CONTENT_NOT_MODIFIED = 0,
+	IMAP_CONTENT_MODIFIED_VIEW_INLINE,
+	IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS,
+	IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED
+} IMAP_ContentModifiedType;
+
+
+
 // I think this should really go in an imap.h equivalent file
 typedef enum {
 	kPersonalNamespace = 0,

@@ -777,33 +777,43 @@ NS_IMETHODIMP nsImapUrl::GetContentLength(PRInt32 *len)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char **aResult) 
+NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(nsString2 *aResult)
+{
+	if (nsnull == aResult || !m_searchCriteriaString) 
+		return  NS_ERROR_NULL_POINTER;
+
+    NS_LOCK_INSTANCE();
+	aResult->Assign(m_searchCriteriaString);
+    NS_UNLOCK_INSTANCE();
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsString2 *aResult) 
 {
 	if (nsnull == aResult || !m_listOfMessageIds) 
 		return  NS_ERROR_NULL_POINTER;
 
+	PRInt32 bytesToCopy = PL_strlen(m_listOfMessageIds);
     NS_LOCK_INSTANCE();
 
-	char *returnIdString = PL_strdup(m_listOfMessageIds);
-	if (returnIdString)
-	{
-		// mime may have glommed a "&part=" for a part download
-		// we return the entire message and let mime extract
-		// the part. Pop and news work this way also.
-		// this algorithm truncates the "&part" string.
-		char *currentChar = returnIdString;
-		while (*currentChar && (*currentChar != '&'))
-			currentChar++;
-		if (*currentChar == '&')
-			*currentChar = 0;
+	// mime may have glommed a "&part=" for a part download
+	// we return the entire message and let mime extract
+	// the part. Pop and news work this way also.
+	// this algorithm truncates the "&part" string.
+	char *currentChar = m_listOfMessageIds;
+	while (*currentChar && (*currentChar != '&'))
+		currentChar++;
+	if (*currentChar == '&')
+		bytesToCopy = currentChar - m_listOfMessageIds;
 
-		// we should also strip off anything after "/;section="
-		// since that can specify an IMAP MIME part
-		char *wherepart = PL_strstr(returnIdString, "/;section=");
-		if (wherepart)
-			*wherepart = 0;
-	}
-	*aResult = returnIdString;
+	// we should also strip off anything after "/;section="
+	// since that can specify an IMAP MIME part
+	char *wherePart = PL_strstr(m_listOfMessageIds, "/;section=");
+	if (wherePart)
+		bytesToCopy = MIN(bytesToCopy, wherePart - m_listOfMessageIds);
+
+	aResult->Assign(m_listOfMessageIds, bytesToCopy);
 
     NS_UNLOCK_INSTANCE();
 	return NS_OK;
@@ -1369,6 +1379,21 @@ NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
 	*result = PL_strdup(m_sourceCanonicalFolderPathSubString ? m_sourceCanonicalFolderPathSubString : "");
     NS_UNLOCK_INSTANCE();
 	return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsImapUrl::CreateServerDestinationFolderPathString(char **result)
+{
+	nsresult rv = NS_OK;
+	if (!result)
+	    return NS_ERROR_NULL_POINTER;
+	NS_LOCK_INSTANCE();
+	// its possible for the destination folder path to be the root
+	if (!m_destinationCanonicalFolderPathSubString)
+		*result = PL_strdup("");
+	else
+		rv = AllocateServerPath(m_destinationCanonicalFolderPathSubString, kOnlineHierarchySeparatorUnknown, result);
+    NS_UNLOCK_INSTANCE();
+	return (*result) ? rv : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
