@@ -354,7 +354,8 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 #ifdef XP_MAC
         case opWrErr:
 #else
-        case EACCES:    /* file in use */
+        case EROFS:     /* read-only file system */
+        case EACCES:    /* file in use or read-only file*/
 #endif
             /* try read only */
             (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
@@ -391,26 +392,17 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 
     if ( !VALID_FILEHANDLE(*fh) )
     {
-        switch (PR_GetError())
-        {
-        case PR_FILE_NOT_FOUND_ERROR:   /* file not found */
-            return REGERR_NOFILE;
-
-        case PR_FILE_IS_BUSY_ERROR: /* file in use */
-        case PR_FILE_IS_LOCKED_ERROR:
-        case PR_ILLEGAL_ACCESS_ERROR:
-        case PR_NO_ACCESS_RIGHTS_ERROR:
-            /* try read only */
-            (*fh) = XP_FileOpen(path, XP_FILE_READ_BIN);
-            if ( VALID_FILEHANDLE(*fh) )
-                return REGERR_READONLY;
-            else
-                return REGERR_FAIL;
-        default:
-            return REGERR_FAIL;
-        }
+      /* For whatever reason we failed every attempt of getting */
+      /* a read/write registry. Let's try a read-only registry. */
+      (*fh) = XP_FileOpen(path, XP_FILE_READ_BIN);
+      if ( VALID_FILEHANDLE(*fh) )
+        return REGERR_READONLY;
+      else
+        /* we are in big trouble now */
+        return REGERR_FAIL;
     }
 
+    /* succeded in getting a read/write registry */
     return REGERR_OK;
 
 }   /* OpenFile */
