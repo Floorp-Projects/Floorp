@@ -311,7 +311,9 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     nsCOMPtr <nsIMailboxUrl> mailboxUrl = do_QueryInterface(aBaseURI);
 
     nsCOMPtr<nsIFileSpec> path;
-    folder->GetPath(getter_AddRefs(path));
+    rv = folder->GetPath(getter_AddRefs(path));
+    if (NS_FAILED(rv)) return rv;
+
     nsFileSpec fileSpec;
     path->GetFileSpec(&fileSpec);
     folderScanState.m_fileSpec = &fileSpec;
