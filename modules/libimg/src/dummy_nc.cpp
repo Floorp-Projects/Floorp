@@ -126,7 +126,7 @@ NetContextImpl::NetContextImpl(MWContext *aContext,
 {
     NS_INIT_REFCNT();
     mContext = aContext;
-    aReloadPolicy = mReloadPolicy;
+    mReloadPolicy = aReloadPolicy;
 }
 
 NetContextImpl::~NetContextImpl()
