@@ -1,0 +1,162 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIInputStream.idl"
+#include "nsIOutputStream.idl"
+#include "nsILocalFile.idl"
+
+[scriptable, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
+interface nsIFileInputStream : nsIInputStream
+{
+    void init(in nsILocalFile file);
+};
+
+[scriptable, uuid(e6f68040-c7ec-11d3-8cda-0060b0fc14a3)]
+interface nsIFileOutputStream : nsIOutputStream
+{
+    void init(in nsILocalFile file, in long flags, in long mode);
+};
+
+[scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
+interface nsIRandomAccessStore : nsISupports
+{
+    // correspond to PRSeekWhence values
+    const long NS_SEEK_SET = 0;
+    const long NS_SEEK_CUR = 1;
+    const long NS_SEEK_END = 2;
+    
+    void seek(in long whence, in long offset);
+    long tell();
+};
+
+%{C++
+
+#include "prio.h"       // for read/write modes, etc.
+
+#define NS_FILEINPUTSTREAM_CLASSNAME "File Input Stream"
+#define NS_FILEINPUTSTREAM_PROGID "component://netscape/network/file-input-stream"
+
+#define NS_FILEINPUTSTREAM_CID                       \
+{ /* be9a53ae-c7e9-11d3-8cda-0060b0fc14a3 */         \
+    0xbe9a53ae,                                      \
+    0xc7e9,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+#define NS_FILEOUTPUTSTREAM_CLASSNAME "File Output Stream"
+#define NS_FILEOUTPUTSTREAM_PROGID "component://netscape/network/file-output-stream"
+
+#define NS_FILEOUTPUTSTREAM_CID                      \
+{ /* c272fee0-c7e9-11d3-8cda-0060b0fc14a3 */         \
+    0xc272fee0,                                      \
+    0xc7e9,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+// move to nsNetUtil.h later...
+
+#include "nsILoadGroup.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIChannel.h"
+#include "nsILocalFile.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+
+inline nsresult
+NS_NewFileChannel(nsIFile* file,
+                  PRInt32 mode,
+                  const char* contentType, 
+                  PRUint32 contentLength,
+                  nsILoadGroup* group,
+                  nsIInterfaceRequestor* notificationCallbacks,
+                  nsLoadFlags loadAttributes,
+                  nsIURI* originalURI,
+                  PRUint32 bufferSegmentSize,
+                  PRUint32 bufferMaxSize,
+                  nsIFileChannel **result)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileChannel> channel;
+    static NS_DEFINE_CID(kFileChannelCID, NS_FILECHANNEL_CID);
+    rv = nsComponentManager::CreateInstance(kFileChannelCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIFileChannel),
+                                            getter_AddRefs(channel));
+    if (NS_FAILED(rv)) return rv;
+    rv = channel->Init(file, mode, contentType, contentLength, group, 
+                       notificationCallbacks, loadAttributes, originalURI,
+                       bufferSegmentSize, bufferMaxSize);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = channel;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewFileInputStream(nsIFile* file, nsIInputStream* *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileInputStream> in;
+    static NS_DEFINE_CID(kFileInputStreamCID, NS_FILEINPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kFileInputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIFileInputStream),
+                                            getter_AddRefs(in));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = in->Init(localFile);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = in;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewFileOutputStream(nsIFile* file, PRInt32 flags, PRInt32 mode,
+                       nsIOutputStream* *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileOutputStream> out;
+    static NS_DEFINE_CID(kFileOutputStreamCID, NS_FILEOUTPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kFileOutputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIFileOutputStream),
+                                            getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = out->Init(localFile, flags, mode);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = out;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+%}
