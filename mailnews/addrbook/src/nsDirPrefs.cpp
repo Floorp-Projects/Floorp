@@ -260,6 +260,7 @@ typedef struct DIR_Callback
 static PRBool dir_IsServerDeleted(DIR_Server * server);
 static DIR_DefaultAttribute *DIR_GetDefaultAttribute (DIR_AttributeId id);
 static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue);
+static char *DIR_GetLocalizedStringPref(const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue);
 static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 defaultValue);
 static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRBool defaultValue);
 static char * dir_ConvertDescriptionToPrefName(DIR_Server * server);
@@ -323,7 +324,7 @@ PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
 // nsAutoString aStr(uniBuffer);
 // *aBuffer = aStr.ToNewUTF8String();
 // Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
-PRInt32 INTL_ConvertFromUnicode(const void* uniBuffer, const PRInt32 uniLength, char** aBuffer)
+PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, const PRInt32 uniLength, char** aBuffer)
 {
 	nsresult res;
 
@@ -2213,7 +2214,7 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 	PL_strcpy(scratch, prefRoot);
 	PL_strcat(scratch, ".");
 	PL_strcat(scratch, prefLeaf);
-
+ 
 	if (PREF_NOERROR == pPref->CopyCharPref(scratch, &value))
 	{
 		/* unfortunately, there may be some prefs out there which look like this */
@@ -2236,6 +2237,40 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 	return value;
 }
 
+/*
+	Get localized unicode string pref from properties file, convert into an UTF8 string 
+	since address book prefs store as UTF8 strings.  So far there are 2 default 
+	prefs stored in addressbook.properties.
+	"ldap_2.servers.pab.description"
+	"ldap_2.servers.history.description"
+*/
+static char *DIR_GetLocalizedStringPref
+(const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue)
+{
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    if (NS_FAILED(rv) || !pPref) 
+		return nsnull;
+
+	PL_strcpy(scratch, prefRoot);
+	PL_strcat(scratch, ".");
+	PL_strcat(scratch, prefLeaf);
+
+	PRUnichar *wvalue = nsnull;
+	rv = pPref->GetLocalizedUnicharPref(scratch, &wvalue);
+	char *value = nsnull;
+	if (wvalue)
+	{
+		nsString descString(wvalue);
+		PRInt32 unicharLength = descString.Length();
+		// convert to UTF8 string
+		INTL_ConvertFromUnicode(wvalue, unicharLength, &value);
+	}
+	else
+		value = defaultValue ? PL_strdup(defaultValue) : nsnull;
+
+	return value;
+}
 
 static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 defaultValue)
 {
@@ -3064,7 +3099,16 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	if (server->port == 0)
 		server->port = server->isSecure ? LDAPS_PORT : LDAP_PORT;
 	server->maxHits = DIR_GetIntPref (prefstring, "maxHits", tempstring, kDefaultMaxHits);
-	server->description = DIR_GetStringPref (prefstring, "description", tempstring, "");
+
+	if (0 == PL_strcmp(prefstring, "ldap_2.servers.pab") || 
+		0 == PL_strcmp(prefstring, "ldap_2.servers.history")) 
+	{
+		// get default address book name from addressbook.properties 
+		server->description = DIR_GetLocalizedStringPref(prefstring, "description", tempstring, "");
+	}
+	else
+		server->description = DIR_GetStringPref (prefstring, "description", tempstring, "");
+
 	server->serverName = DIR_GetStringPref (prefstring, "serverName", tempstring, "");
 	server->searchBase = DIR_GetStringPref (prefstring, "searchBase", tempstring, "");
 	server->isOffline = DIR_GetBoolPref (prefstring, "isOffline", tempstring, kDefaultIsOffline);
@@ -3884,7 +3928,12 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	DIR_SetFlag(server, DIR_SAVING_SERVER);
 
 	DIR_SetIntPref (prefstring, "position", tempstring, server->position, kDefaultPosition);
-	DIR_SetStringPref (prefstring, "description", tempstring, server->description, "");
+
+	// Only save the non-default address book name
+	if (0 != PL_strcmp(prefstring, "ldap_2.servers.pab") &&
+		0 != PL_strcmp(prefstring, "ldap_2.servers.history")) 
+		DIR_SetStringPref (prefstring, "description", tempstring, server->description, "");
+
 	DIR_SetStringPref (prefstring, "serverName", tempstring, server->serverName, "");
 	DIR_SetStringPref (prefstring, "searchBase", tempstring, server->searchBase, "");
 	DIR_SetStringPref (prefstring, "filename", tempstring, server->fileName, "");

@@ -28,7 +28,7 @@ class nsIPref;
 
 PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength, 
 							  void** uniBuffer, PRInt32* uniLength);
-PRInt32 INTL_ConvertFromUnicode(const void* uniBuffer, 
+PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, 
 								const PRInt32 uniLength, char** aBuffer);
 
 #define kPreviousListVersion   2
