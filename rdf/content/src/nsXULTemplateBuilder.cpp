@@ -80,7 +80,7 @@
 #include "rdfutil.h"
 
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
+#include "nsIXULSortService.h"
 
 #include "nsRDFGenericBuilder.h"
 
@@ -109,6 +109,9 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
+static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
+
 ////////////////////////////////////////////////////////////////////////
 
 nsrefcnt RDFGenericBuilderImpl::gRefCnt = 0;
@@ -119,6 +122,7 @@ nsIAtom* RDFGenericBuilderImpl::kIdAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
+nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
@@ -149,7 +153,7 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
         kIdAtom              = NS_NewAtom("id");
         kOpenAtom            = NS_NewAtom("open");
         kResourceAtom        = NS_NewAtom("resource");
-
+        kNaturalOrderPosAtom = NS_NewAtom("pos");
         kContainmentAtom     = NS_NewAtom("containment");
 
         nsresult rv;
@@ -224,6 +228,8 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kResourceAtom);
 
         NS_RELEASE(kContainmentAtom);
+
+        NS_RELEASE(kNaturalOrderPosAtom);
 
         NS_RELEASE(kNC_Title);
         NS_RELEASE(kNC_Column);
@@ -398,77 +404,6 @@ RDFGenericBuilderImpl::SetRootContent(nsIContent* aElement)
 }
 
 
-typedef	struct	_sortStruct	{
-    nsIRDFCompositeDataSource	*db;
-    nsIRDFResource		*sortProperty;
-    PRBool			descendingSort;
-} sortStruct, *sortPtr;
-
-
-int rdfSortCallback(const void *data1, const void *data2, void *data);
-
-
-int
-rdfSortCallback(const void *data1, const void *data2, void *sortData)
-{
-	int		sortOrder = 0;
-	nsresult	rv;
-
-	nsIRDFNode	*node1, *node2;
-	node1 = *(nsIRDFNode **)data1;
-	node2 = *(nsIRDFNode **)data2;
-	_sortStruct	*sortPtr = (_sortStruct *)sortData;
-
-	nsIRDFResource	*res1;
-	nsIRDFResource	*res2;
-	const PRUnichar	*uniStr1 = nsnull;
-	const PRUnichar	*uniStr2 = nsnull;
-
-	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) &res1)))
-	{
-		nsIRDFNode	*nodeVal1;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, &nodeVal1)))
-		{
-			nsIRDFLiteral *literal1;
-			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
-			{
-				literal1->GetValue(&uniStr1);
-			}
-		}
-	}
-	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) &res2)))
-	{
-		nsIRDFNode	*nodeVal2;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, &nodeVal2)))
-		{
-			nsIRDFLiteral	*literal2;
-			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
-			{
-				literal2->GetValue(&uniStr2);
-			}
-		}
-	}
-	if ((uniStr1 != nsnull) && (uniStr2 != nsnull))
-	{
-		nsAutoString	str1(uniStr1), str2(uniStr2);
-		sortOrder = (int)str1.Compare(str2, PR_TRUE);
-		if (sortPtr->descendingSort == PR_TRUE)
-		{
-			sortOrder = -sortOrder;
-		}
-	}
-	else if ((uniStr1 != nsnull) && (uniStr2 == nsnull))
-	{
-		sortOrder = -1;
-	}
-	else
-	{
-		sortOrder = 1;
-	}
-	return(sortOrder);
-}
-
-
 NS_IMETHODIMP
 RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 {
@@ -568,11 +503,6 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 			       due to sort callback implementation */
                 	tempArray->AppendElement(valueResource);
                 	tempArray->AppendElement(property);
-/*                if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource))) {
-                    NS_ERROR("unable to create tree row");
-                    return rv;
-                }
-*/
             }
             else {
                /* if (NS_FAILED(rv = SetCellValue(aElement, property, value))) {
@@ -588,41 +518,33 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         unsigned long numElements = tempArray->Count();
         if (numElements > 0)
         {
-        	nsIRDFResource ** flatArray = (nsIRDFResource **)malloc(numElements * sizeof(void *));
+        	nsIRDFResource ** flatArray = new nsIRDFResource *[numElements];
         	if (flatArray)
         	{
-			_sortStruct		sortInfo;
-
-			// get sorting info (property to sort on, direction to sort, etc)
-
-			// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-			// XXX Note: currently hardcoded; should get from DOM, or... ?
-			// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-			sortInfo.db = mDB;
-			sortInfo.descendingSort = PR_FALSE;
-			if (NS_FAILED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#Name", &sortInfo.sortProperty)))
-			{
-				NS_ERROR("unable to create gSortProperty resource");
-				return rv;
-			}
-
-			// flatten array of resources, sort them, then add as tree elements
+			// flatten array of resources, sort them, then add as item elements
 			unsigned long loop;
 
         	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
-        		rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *), rdfSortCallback, (void *)&sortInfo);
+
+			nsIXULSortService		*gXULSortService = nsnull;
+
+			nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
+				kIXULSortServiceIID, (nsISupports**) &gXULSortService);
+			if (nsnull != gXULSortService)
+			{
+				gXULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
+				nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+			}
+
         		for (loop=0; loop<numElements; loop+=2)
         		{
-				if (NS_FAILED(rv = AddWidgetItem(aElement,
-							(nsIRDFResource *)flatArray[loop+1],
-							(nsIRDFResource *)flatArray[loop])))
+				if (NS_FAILED(rv = AddWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1)))
 				{
 					NS_ERROR("unable to create widget item");
 				}
         		}
-        		free(flatArray);
+			delete [] flatArray;
         	}
         }
         delete tempArray;
@@ -696,7 +618,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
                 contentsGenerated.EqualsIgnoreCase("true")) {
                 // Okay, it's a "live" element, so go ahead and append the new
                 // child to this node.
-                if (NS_FAILED(rv = AddWidgetItem(element, aPredicate, resource))) {
+                if (NS_FAILED(rv = AddWidgetItem(element, aPredicate, resource, 0))) {
                     NS_ERROR("unable to create new widget item");
                     return rv;
                 }
@@ -1196,6 +1118,37 @@ RDFGenericBuilderImpl::IsWidgetItemElement(nsIContent* aElement)
     return PR_TRUE;
 }
 
+PRBool
+RDFGenericBuilderImpl::IsWidgetInsertionRootElement(nsIContent* element)
+{
+    // Returns PR_TRUE if the element is the root point to insert new items.
+    nsresult rv;
+
+    nsCOMPtr<nsIAtom> rootAtom;
+    if (NS_FAILED(rv = GetInsertionRootAtom(getter_AddRefs(rootAtom)))) {
+        return rv;
+    }
+
+    PRInt32 nameSpaceID;
+    if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID))) {
+        NS_ERROR("unable to get namespace ID");
+        return PR_FALSE;
+    }
+
+    if (nameSpaceID != kNameSpaceID_XUL)
+        return PR_FALSE; // not a XUL element
+
+    nsCOMPtr<nsIAtom> elementTag;
+    if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(elementTag)))) {
+        NS_ERROR("unable to get tag");
+        return PR_FALSE;
+    }
+
+    if (elementTag.get() != rootAtom)
+        return PR_FALSE; // not the place to insert a child
+
+    return PR_TRUE;
+}
 
 PRBool
 RDFGenericBuilderImpl::IsWidgetProperty(nsIContent* aElement, nsIRDFResource* aProperty)

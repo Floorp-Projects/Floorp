@@ -83,6 +83,7 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID,  NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,          NS_RDFTREEBUILDER_CID);
+static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // standard vocabulary items
@@ -126,6 +127,7 @@ private:
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kTreeAtom;
+    static nsIAtom* kMenuAtom;
 
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
@@ -191,8 +193,8 @@ public:
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aValue);
 
-    nsresult CreateTreeBuilder(nsIContent* aElement,
-                               const nsString& aDataSources);
+    nsresult CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
+                           const nsString& aDataSources);
 
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
@@ -227,6 +229,7 @@ nsIAtom*        RDFXULBuilderImpl::kXULContentsGeneratedAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
+nsIAtom*        RDFXULBuilderImpl::kMenuAtom;
 
 nsIRDFResource* RDFXULBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_nextVal;
@@ -282,6 +285,7 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
         kIdAtom                   = NS_NewAtom("id");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kTreeAtom                 = NS_NewAtom("tree");
+        kMenuAtom                 = NS_NewAtom("menu");
 
         if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                            kIRDFServiceIID,
@@ -334,6 +338,7 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kTreeAtom);
+        NS_IF_RELEASE(kMenuAtom);
     }
 }
 
@@ -1512,13 +1517,20 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
     }
 
     // There are some tags that we need to pay extra-special attention to...
-    if (aTag == kTreeAtom) {
+    if (aTag == kTreeAtom || aTag == kMenuAtom) {
         nsAutoString dataSources;
         if (NS_CONTENT_ATTR_HAS_VALUE ==
             element->GetAttribute(kNameSpaceID_None,
                                   kDataSourcesAtom,
                                   dataSources)) {
-            rv = CreateTreeBuilder(element, dataSources);
+
+            nsCID builderCID;
+            if (aTag == kTreeAtom)
+                builderCID = kRDFTreeBuilderCID;
+            else if (aTag == kMenuAtom)
+                builderCID = kRDFMenuBuilderCID;
+
+            rv = CreateBuilder(builderCID, element, dataSources);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
         }
     }
@@ -1645,14 +1657,14 @@ RDFXULBuilderImpl::RemoveAttribute(nsIContent* aElement,
 }
 
 nsresult
-RDFXULBuilderImpl::CreateTreeBuilder(nsIContent* aElement,
-                                     const nsString& aDataSources)
+RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
+                                 const nsString& aDataSources)
 {
     nsresult rv;
 
     // construct a new builder
     nsCOMPtr<nsIRDFContentModelBuilder> builder;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFTreeBuilderCID,
+    if (NS_FAILED(rv = nsRepository::CreateInstance(aBuilderCID,
                                                     nsnull,
                                                     kIRDFContentModelBuilderIID,
                                                     (void**) getter_AddRefs(builder)))) {
