@@ -61,14 +61,10 @@ public:
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
 
-//  NS_IMETHOD CheckFontExistence(const char * aFontName);
-
-//  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
-
+  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
-
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
-
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   virtual PRUint32 ConvertPixel(nscolor aColor);
@@ -90,6 +86,7 @@ protected:
 
 public:
   void InstallColormap(void);
+  void InstallColormap(Display* aDisplay, Drawable aDrawable);
   void SetDrawingSurface(nsDrawingSurfaceUnix * aSurface) { mSurface = aSurface; }
   nsDrawingSurface GetDrawingSurface();
 
