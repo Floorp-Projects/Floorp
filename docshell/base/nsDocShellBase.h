@@ -29,6 +29,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
+#include "nsIContentViewer.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellEdit.h"
@@ -70,15 +71,15 @@ protected:
    nsresult GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
+   nsresult GetPresShell(nsIPresShell** aPresShell);
 
 protected:
    PRBool                     mCreated;
    nsString                   mName;
    nsDocShellInitInfo*        mBaseInitInfo;
+   nsCOMPtr<nsIContentViewer> mContentViewer;
    nsCOMPtr<nsIDocShell>      mParent;
-   nsCOMPtr<nsIPresContext>   mPresContext;
    nsCOMPtr<nsIWidget>        mParentWidget;
-   nsCOMPtr<nsIPresShell>     mPresShell;
    nsCOMPtr<nsIPref>          mPrefs;
 };
 

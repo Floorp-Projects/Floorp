@@ -20,9 +20,11 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#include "nsDocShellBase.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocumentViewer.h"
+
+#include "nsDocShellBase.h"
 
 //*****************************************************************************
 //***    nsDocShellBase: Object Management
@@ -54,23 +56,16 @@ NS_IMPL_ISUPPORTS6(nsDocShellBase, nsIDocShell, nsIDocShellEdit,
 // nsDocShellBase::nsIDocShell
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::LoadURI(const PRUnichar* uri)
+NS_IMETHODIMP nsDocShellBase::LoadURI(const PRUnichar* uri, 
+   nsIPresContext* presContext)
 {
-   NS_ENSURE_ARG(uri);
-   //XXX First Check
-	/*
-	Loads a given URI.  This will give priority to loading the requested URI
-	in the object implementing	this interface.  If it can't be loaded here
-	however, the URL dispatcher will go through its normal process of content
-	loading.
+   //NS_ENSURE_ARG(uri);  // Done in LoadURIVia for us.
 
-	@param uri - The URI to load.
-	*/
-   return NS_ERROR_FAILURE;
+   return LoadURIVia(uri, presContext, 0);
 }
 
 NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* uri, 
-   PRUint32 adapterBinding)
+   nsIPresContext* presContext, PRUint32 adapterBinding)
 {
   NS_ENSURE_ARG(uri);
    //XXX First Check
@@ -89,10 +84,13 @@ NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* uri,
 NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_STATE(mPresShell);
+  NS_ENSURE_STATE(mContentViewer);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument>doc;
-  NS_ENSURE_SUCCESS(mPresShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
   NS_ENSURE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
@@ -102,7 +100,8 @@ NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
 }
 
 // SetDocument is only meaningful for doc shells that support DOM documents.  Not all do.
-NS_IMETHODIMP nsDocShellBase::SetDocument(nsIDOMDocument* aDocument)
+NS_IMETHODIMP nsDocShellBase::SetDocument(nsIDOMDocument* aDocument, 
+   nsIPresContext* presContext)
 {
   NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -135,20 +134,19 @@ NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext)
 {
    NS_ENSURE_ARG_POINTER(aPresContext);
 
-   *aPresContext = mPresContext;
-   NS_IF_ADDREF(*aPresContext);
+   if(!mContentViewer)
+      {
+      *aPresContext = nsnull;
+      return NS_OK;
+      }
+
+   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+   NS_ENSURE(docv, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(docv->GetPresContext(*aPresContext), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
-
-NS_IMETHODIMP nsDocShellBase::SetPresContext(nsIPresContext* aPresContext)
-{
-  // null aPresContext is ok
-   mPresContext = aPresContext;   // this assignment does an addref
-   
-   return NS_OK;
-}
-
 
 NS_IMETHODIMP nsDocShellBase::GetParent(nsIDocShell** parent)
 {
@@ -250,10 +248,12 @@ NS_IMETHODIMP nsDocShellBase::GetSearchable(PRBool* aSearchable)
 
 NS_IMETHODIMP nsDocShellBase::ClearSelection()
 {
-   NS_ENSURE_STATE(mPresShell);
+   NS_ENSURE_STATE(mContentViewer);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDOMSelection> selection;
-   NS_ENSURE_SUCCESS(mPresShell->GetSelection(SELECTION_NORMAL, 
+   NS_ENSURE_SUCCESS(presShell->GetSelection(SELECTION_NORMAL, 
       getter_AddRefs(selection)), NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(selection->ClearSelection(), NS_ERROR_FAILURE);
@@ -269,10 +269,12 @@ NS_IMETHODIMP nsDocShellBase::SelectAll()
 
 NS_IMETHODIMP nsDocShellBase::CopySelection()
 {
-   NS_ENSURE_STATE(mPresShell);
+   NS_ENSURE_STATE(mContentViewer);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
    // the pres shell knows how to copy, so let it do the work
-   NS_ENSURE_SUCCESS(mPresShell->DoCopy(), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(presShell->DoCopy(), NS_ERROR_FAILURE);
    return NS_OK;
 }
 
@@ -283,10 +285,12 @@ NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
 {
    NS_ENSURE_ARG_POINTER(aCopyable);
 
-   NS_ENSURE_STATE(mPresShell);
+   NS_ENSURE_STATE(mContentViewer);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDOMSelection> selection;
-   NS_ENSURE_SUCCESS(mPresShell->GetSelection(SELECTION_NORMAL, 
+   NS_ENSURE_SUCCESS(presShell->GetSelection(SELECTION_NORMAL, 
       getter_AddRefs(selection)), NS_ERROR_FAILURE);
 
    if(!selection)
@@ -1019,4 +1023,64 @@ nsresult nsDocShellBase::GetRootScrollableView(nsIScrollableView** aOutScrollVie
       NS_ERROR_FAILURE);
 
    return NS_OK;
-}        
+} 
+
+nsresult nsDocShellBase::GetPresShell(nsIPresShell** aPresShell)
+{
+   NS_ENSURE_ARG_POINTER(aPresShell);
+   
+   nsCOMPtr<nsIPresContext> presContext;
+   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(presContext->GetShell(aPresShell), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+/*
+
+// null result aPresContext is legal 
+NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext) 
+{ 
+  NS_ENSURE_ARG_POINTER(aPresContext); 
+
+  nsCOMPtr<nsIContentViewer> cv; 
+  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv))); 
+  // null content viewer is legal 
+
+  if (cv) 
+  { 
+    nsIDocumentViewer* docv = nsnull; 
+    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv); 
+    if (docv) 
+    { 
+      nsIPresContext* cx; 
+      NS_ENSURE_SUCCESS(docv->GetPresContext(aPresContext)); 
+    } 
+  } 
+
+  return NS_OK; 
+} 
+
+
+NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument) 
+{ 
+  NS_ENSURE_ARG_POINTER(aDocument); 
+
+  nsCOMPtr<nsIPresShell> presShell; 
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell))); 
+  NS_ENSURE(presShell, NS_ERROR_FAILURE); 
+
+  nsCOMPtr<nsIDocument>doc; 
+  NS_ENSURE_SUCCESS(PresShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE); 
+  NS_ENSURE(doc, NS_ERROR_NULL_POINTER); 
+
+  // the result's addref comes from this QueryInterface call 
+  NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE); 
+
+  return NS_OK; 
+} 
+
+       
+         */
