@@ -3990,24 +3990,12 @@ MOZ_ARG_DISABLE_BOOL(composer,
 AC_SUBST(MOZ_COMPOSER)
 
 dnl ========================================================
-dnl XTF
-dnl ========================================================
-MOZ_XTF=1
-MOZ_ARG_DISABLE_BOOL(xtf,
-[  --disable-xtf           Disable XTF (pluggable xml tags) support],
-    MOZ_XTF=,
-    MOZ_XTF=1 )
-if test "$MOZ_XTF"; then
-  AC_DEFINE(MOZ_XTF)
-fi
-
-dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
 MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming"
 
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm datetime finger cview layout-debug tasks sql xforms"
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm datetime finger cview layout-debug tasks sql"
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
@@ -4059,16 +4047,6 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   else
     MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
   fi
-fi
-
-dnl xforms requires xtf and webservices
-if test -z "$MOZ_XTF" && test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
-    AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
-fi
-if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTENSIONS" | grep -c webservices` -eq 0; then
-    AC_MSG_WARN([Cannot build XForms without webservices.  Removing XForms from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 
 dnl ========================================================
@@ -4266,6 +4244,18 @@ MOZ_ARG_DISABLE_BOOL(mathml,
     MOZ_MATHML=1 )
 if test "$MOZ_MATHML"; then
   AC_DEFINE(MOZ_MATHML)
+fi
+
+dnl ========================================================
+dnl XTF
+dnl ========================================================
+MOZ_XTF=1
+MOZ_ARG_DISABLE_BOOL(xtf,
+[  --disable-xtf           Disable XTF (pluggable xml tags) support],
+    MOZ_XTF=,
+    MOZ_XTF=1 )
+if test "$MOZ_XTF"; then
+  AC_DEFINE(MOZ_XTF)
 fi
 
 dnl ========================================================
