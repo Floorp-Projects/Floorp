@@ -556,7 +556,12 @@ inDOMDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
 // nsIDocumentObserver
 
 NS_IMETHODIMP
-inDOMDataSource::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+inDOMDataSource::AttributeChanged(nsIDocument *aDocument,
+                                  nsIContent* aContent,
+                                  PRInt32 aNameSpaceID,
+                                  nsIAtom* aAttribute,
+                                  PRInt32 aModType,
+                                  PRInt32 aHint)
 {
   nsresult rv;
 
