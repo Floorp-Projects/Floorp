@@ -1546,16 +1546,15 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
         keys.AppendString(NS_LITERAL_STRING("X_COMMAND"));
         values.AppendString(NS_LITERAL_STRING("text/html")); 
 
-        nsAutoString theTagStr; 
-        theTagStr.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
-
         nsCOMPtr<nsIChannel> channel;
         aParser->GetChannel(getter_AddRefs(channel));
 
         for (index=0;index<theObserversCount;index++) {
           nsIElementObserver* observer = NS_STATIC_CAST(nsIElementObserver*,theObservers->ElementAt(index));
           if (observer) {
-            result = observer->Notify(aWebShell,channel,theTagStr.get(),&keys,&values);
+            result = observer->Notify(aWebShell, channel,
+                                      NS_ConvertASCIItoUCS2(nsHTMLTags::GetStringValue(theTag)).get(),
+                                      &keys, &values);
             if (NS_FAILED(result)) {
               break;
             }

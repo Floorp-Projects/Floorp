@@ -2378,7 +2378,7 @@ void CElementTable::InitializeElements() {
 #ifdef DEBUG
 void CElementTable::DebugDumpGroups(CElement* aTag){
 
-  const char* tag=nsHTMLTags::GetStringValue(aTag->mTag);
+  const char* tag=nsHTMLTags::GetStringValue(aTag->mTag).get();
   const char* prefix="     ";
   printf("\n\nTag: <%s>\n",tag);
   printf(prefix);
@@ -2458,7 +2458,7 @@ void CElementTable::DebugDumpGroups(CElement* aTag){
 }
 
 void CElementTable::DebugDumpContainment(CElement* anElement){
-  const char* tag=nsHTMLTags::GetStringValue(anElement->mTag);
+  const char* tag=nsHTMLTags::GetStringValue(anElement->mTag).get();
   const char* prefix="     ";
   printf("\n\nTag: <%s>\n",tag);
   printf(prefix);

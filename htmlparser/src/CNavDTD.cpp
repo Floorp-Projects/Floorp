@@ -2520,7 +2520,7 @@ NS_IMETHODIMP CNavDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 }
 
 NS_IMETHODIMP CNavDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag));
+  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag).get());
   return NS_OK;
 }
 

@@ -766,7 +766,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
           nsAutoString endTagName; 
-          endTagName.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
+          endTagName.AssignWithConversion(nsHTMLTags::GetStringValue(theTag).get());
 
           CToken*     text=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
           CTextToken* textToken=NS_STATIC_CAST(CTextToken*,text);

@@ -224,10 +224,10 @@ nsLoggingSink::CloseContainer(const nsIParserNode& aNode) {
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = nsHTMLTags::GetStringValue(nodeType);
-		theResult=CloseNode(tag);
-	}
-	else theResult= CloseNode("???");
+    const char* tag = nsHTMLTags::GetStringValue(nodeType).get();
+    theResult=CloseNode(tag);
+  }
+  else theResult= CloseNode("???");
 
   //then proxy the call to the real sink if you have one.
   if(mSink) {
@@ -548,7 +548,7 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode) {
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = nsHTMLTags::GetStringValue(nodeType);
+    const char* tag = nsHTMLTags::GetStringValue(nodeType).get();
     PR_fprintf(mOutput, "\"%s\"", tag);
   }
   else {
@@ -660,7 +660,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = nsHTMLTags::GetStringValue(nodeType);
+    const char* tag = nsHTMLTags::GetStringValue(nodeType).get();
 
 		if(tag)
       PR_fprintf(mOutput, "<leaf tag=\"%s\"", tag);

@@ -184,7 +184,7 @@ public:
        tag = kTagTable[i];
        id = nsHTMLTags::LookupTag(nsCAutoString(tag));
        NS_ASSERTION(id != eHTMLTag_userdefined, "can't find tag id");
-       const char* check = nsHTMLTags::GetStringValue(id);
+       const char* check = nsHTMLTags::GetStringValue(id).get();
        NS_ASSERTION(0 == nsCRT::strcmp(check, tag), "can't map id back to tag");
      }
 
@@ -195,11 +195,11 @@ public:
      NS_ASSERTION(id == eHTMLTag_userdefined, "found zzzzz");
 
      const nsCAutoString  kNull;
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) 0);
+     tag = nsHTMLTags::GetStringValue((nsHTMLTag) 0).get();
      NS_ASSERTION(kNull.Equals(tag), "found enum 0");
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) -1);
+     tag = nsHTMLTags::GetStringValue((nsHTMLTag) -1).get();
      NS_ASSERTION(kNull.Equals(tag), "found enum -1");
-     tag = nsHTMLTags::GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
+     tag = nsHTMLTags::GetStringValue((nsHTMLTag) (NS_HTML_TAG_MAX + 1)).get();
      NS_ASSERTION(kNull.Equals(tag), "found past max enum");
      nsHTMLTags::ReleaseTable();
    }
