@@ -307,7 +307,7 @@ typedef enum { LockOutDatabase, UnlockDatabase } DBLockFlagEnum;
 #endif
 
 /* if we're using gcc's -pedantic-errors, uint isn't defined */
-#ifdef __STRICT_ANSI__
+#if defined(__STRICT_ANSI__) || !defined(HAVE_UINT)
 typedef unsigned int uint;
 #endif
 
