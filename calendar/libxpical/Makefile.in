@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  string \
 		  timer \
 		  necko \
+		  msgcompose \
 		  $(NULL)
 
 XPIDLSRCS = oeIICal.idl
