@@ -5,7 +5,7 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding name="thumb" extends="xul:box">
+  <binding id="thumb" extends="xul:box">
     <content>
       <xul:spring flex="1"/>
 		  <xul:image inherits="src"/>
@@ -13,7 +13,7 @@
     </content>
   </binding>
 
-  <binding name="scrollbar">
+  <binding id="scrollbar">
     <content>
       <xul:scrollbarbutton type="decrement">
 	      <xul:image inherits="src"/>
@@ -27,27 +27,27 @@
     </content>
   </binding>
 
-  <binding name="slider">
+  <binding id="slider">
     <content>
 	  <xul:button align="horizontal"/>
 	</content>
   </binding>
 
-  <binding name="tab">
+  <binding id="tab">
     <content>
       <xul:image inherits="src" class="tab-left"/>
       <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
     </content>
   </binding>
 
-  <binding name="menusOnMenuBar">
+  <binding id="menusOnMenuBar">
     <content excludes="template,observes,menupopup">
       <xul:image class="menubar-left"/>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
     </content>
   </binding>
 
-  <binding name="menus">
+  <binding id="menus">
     <content autostretch="never" excludes="template,observes,menupopup">
       <xul:box class="menu-left" orient="vertical" autostretch="never">
         <xul:image/>
@@ -60,7 +60,7 @@
     </content>
   </binding>
 
-  <binding name="menulist">
+  <binding id="menulist">
     <content excludes="template,observes,menupopup">
       <xul:image class="menu-icon" inherits="src"/>
       <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
@@ -71,14 +71,14 @@
 	  </handlers>
   </binding>
 
-  <binding name="menubutton">
+  <binding id="menubutton">
     <content excludes="template,observes,menupopup">
       <xul:button class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
       <xul:image class="menu-dropmarker"/>
     </content>
   </binding>
 
-  <binding name="menulist-editable">
+  <binding id="menulist-editable">
     <content excludes="template,observes,menupopup">
       <xul:image class="menu-icon" inherits="src"/>
 	    <html:input type="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
@@ -89,7 +89,7 @@
 	  </handlers>
   </binding>
 
-  <binding name="treecell-indented-folder">
+  <binding id="treecell-indented-folder">
     <content>
       <xul:treeindentation/>
       <xul:titledbutton class="twisty" allowevents="true"/>
@@ -98,7 +98,7 @@
     </content>
   </binding>
 
-  <binding name="treecell-indented-leaf">
+  <binding id="treecell-indented-leaf">
     <content>
       <xul:treeindentation/>
       <xul:titledbutton class="twisty" disabled="true" allowevents="true"/>
@@ -107,14 +107,14 @@
     </content>
   </binding>
 
-  <binding name="treecell">
+  <binding id="treecell">
     <content>
       <xul:titledbutton class="tree-button" inherits="crop,value,align,src" 
                     flex="1" align="left" crop="right"/>
     </content>
   </binding>
 
-  <binding name="treecell-header">
+  <binding id="treecell-header">
     <content>
       <xul:image class="tree-button" inherits="src"/>
       <xul:text class="tree-text" inherits="crop,value" flex="1" crop="right"/>
@@ -122,7 +122,7 @@
     </content>
   </binding>
   
-  <binding name="basetext">
+  <binding id="basetext">
     <interface>
       <!-- public interface -->
       <property name="value"      onset="return this.setAttribute('value',val);"
@@ -140,7 +140,7 @@
     </interface>      
   </binding>
   
-  <binding name="checkbox" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="checkbox" extends="resource:/chrome/xulBindings.xml#basetext">
     <content>
       <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
@@ -163,7 +163,7 @@
     </handlers>
   </binding>
 
-  <binding name="checkbox-iconic" extends="resource:/chrome/xulBindings.xml#checkbox">
+  <binding id="checkbox-iconic" extends="resource:/chrome/xulBindings.xml#checkbox">
     <content>
       <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
@@ -175,7 +175,7 @@
     </content>
   </binding>
   
-  <binding name="radio" extends="resource:/chrome/xulBindings.xml#checkbox">
+  <binding id="radio" extends="resource:/chrome/xulBindings.xml#checkbox">
     <content>
       <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
@@ -186,7 +186,7 @@
     </content>  
   </binding>
   
-  <binding name="radio-iconic" extends="resource:/chrome/xulBindings.xml#radio">
+  <binding id="radio-iconic" extends="resource:/chrome/xulBindings.xml#radio">
     <content>
       <xul:box flex="1" class="internal-box" autostretch="never">
         <xul:box class="checkmark-box" autostretch="never">
@@ -198,7 +198,7 @@
     </content>  
   </binding>  
 
-  <binding name="radiogroup">
+  <binding id="radiogroup">
   	<handlers>
       <handler type="mouseup" value="try { this.selectedItem = event.target; } catch (e) {}"/>
 	    <handler type="keypress" key=" " value="try { this.selectedItem = event.target; } catch (e) {}"/>
@@ -206,7 +206,7 @@
   </binding>
 
   <!-- XUL <button>s -->
-  <binding name="buttonleft" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="buttonleft" extends="resource:/chrome/xulBindings.xml#basetext">
     <content excludes="observes,template">
   	  <xul:box class="internal-box" inherits="orient" autostretch="never" flex="1">
         <xul:image inherits="src"/>
@@ -217,7 +217,7 @@
     </content>
   </binding>
   
-  <binding name="buttonright" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="buttonright" extends="resource:/chrome/xulBindings.xml#basetext">
     <content excludes="observes,template">
 	    <xul:box autostretch="never" inherits="orient" class="internal-box" flex="1">
         <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
@@ -228,10 +228,10 @@
 	  </content>
   </binding>
   
-  <binding name="separator" extends="xul:spring"/>
+  <binding id="separator" extends="xul:spring"/>
 
   <!-- appending to the end so we don't make hyatt cry -->
-  <binding name="progressmeter" extends="xul:box">
+  <binding id="progressmeter" extends="xul:box">
     <content excludes="observes,template">
       <xul:box class="internal-box" flex="1">
         <xul:stack flex="1">
@@ -255,7 +255,7 @@
     </interface>
   </binding>
 
-  <binding name="textfield" extends="xul:box">
+  <binding id="textfield" extends="xul:box">
     <content excludes="observes,template">
       <xul:box flex="1">
         <html:input flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
@@ -281,7 +281,7 @@
     </handlers>    
   </binding>
 
-  <binding name="textarea" extends="resource:/chrome/xulBindings.xml#textfield">
+  <binding id="textarea" extends="resource:/chrome/xulBindings.xml#textfield">
     <content excludes="observes,template">
       <xul:box flex="1">
         <html:textarea flex="1" inherits="value,disabled,rows,cols,readonly"/>
@@ -289,15 +289,15 @@
     </content>
   </binding>
 
-  <binding name="text">
+  <binding id="text">
     <handlers>
       <handler type="click" value="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
     </handlers>
   </binding>
   
-  <binding name="text-editable-display" extends="resource:/chrome/xulBindings.xml#text"/>
+  <binding id="text-editable-display" extends="resource:/chrome/xulBindings.xml#text"/>
   
-  <binding name="text-editable-edit" extends="xul:box">
+  <binding id="text-editable-edit" extends="xul:box">
     <content>
       <xul:box flex="1">
         <html:input type="text" inherits="value,type,maxlength,disabled,size,readonly"/>
@@ -308,7 +308,7 @@
     </handlers>
   </binding>
 
-  <binding name="popups">
+  <binding id="popups">
     <content>
       <xul:box class="internal-box" orient="vertical">
         <children/>
@@ -316,9 +316,9 @@
     </content>
   </binding>
   
-  <binding name="toolbargrippy" extends="xul:image"/>
+  <binding id="toolbargrippy" extends="xul:image"/>
 
-  <binding name="toolbox">
+  <binding id="toolbox">
     <content orient="vertical">
       <xul:box orient="vertical" flex="1" class="internal-box">
         <children/>
@@ -343,7 +343,7 @@
     </interface>
   </binding>
 
-  <binding name="toolbar">
+  <binding id="toolbar">
     <content>
       <xul:toolbargrippy onclick="var v = parentNode;
                                   var attr = v.getAttribute('collapsed');
@@ -370,7 +370,7 @@
     </content>
   </binding>
 
-  <binding name="colorpicker" extends="xul:box">
+  <binding id="colorpicker" extends="xul:box">
     <interface>
       <property name="color" onset="return this.setAttribute('color', val);"
                              onget="return this.getAttribute('color');"/>

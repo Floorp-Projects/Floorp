@@ -4,7 +4,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding name="inputFieldsBase">
+  <binding id="inputFieldsBase">
     <handlers>
      
     <handler type="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false"
@@ -34,7 +34,7 @@
     </handlers>
   </binding>
 
-  <binding name="textAreasBase">
+  <binding id="textAreasBase">
     <handlers>
 
     <handler type="keypress" id="key_left" keycode="VK_LEFT" alt="false" shift="false" control="false"
