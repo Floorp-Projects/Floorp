@@ -241,8 +241,8 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 
 // Factory methods for creating html layout objects
 
+extern nsresult NS_NewAreaFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 extern nsresult NS_NewBRFrame(nsIFrame*& aNewFrame);
-extern nsresult NS_NewBodyFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 extern nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 
 // Flags for body and block frames

@@ -184,7 +184,7 @@ nsIAtom* nsHTMLAtoms::rel;
 nsIAtom* nsHTMLAtoms::repeat;
 nsIAtom* nsHTMLAtoms::rev;
 nsIAtom* nsHTMLAtoms::rightpadding;
-nsIAtom* nsHTMLAtoms::rootContentPseudo;
+nsIAtom* nsHTMLAtoms::rootPseudo;
 nsIAtom* nsHTMLAtoms::rows;
 nsIAtom* nsHTMLAtoms::rowspan;
 nsIAtom* nsHTMLAtoms::rules;
@@ -243,7 +243,6 @@ nsIAtom* nsHTMLAtoms::wbr;
 nsIAtom* nsHTMLAtoms::width;
 nsIAtom* nsHTMLAtoms::wrap;
 nsIAtom* nsHTMLAtoms::wrappedFramePseudo;
-nsIAtom* nsHTMLAtoms::xmlRootPseudo;
 nsIAtom* nsHTMLAtoms::zindex;
 
 
@@ -416,7 +415,7 @@ void nsHTMLAtoms::AddrefAtoms()
     repeat = NS_NewAtom("REPEAT");
     rev = NS_NewAtom("REV");
     rightpadding = NS_NewAtom("RIGHTPADDING");
-    rootContentPseudo = NS_NewAtom(":ROOT-CONTENT");
+    rootPseudo = NS_NewAtom(":ROOT");
     rows = NS_NewAtom("ROWS");
     rowspan = NS_NewAtom("ROWSPAN");
     rules = NS_NewAtom("RULES");
@@ -475,7 +474,6 @@ void nsHTMLAtoms::AddrefAtoms()
     width = NS_NewAtom("WIDTH");
     wrap = NS_NewAtom("WRAP");
     wrappedFramePseudo = NS_NewAtom(":WRAPPED-FRAME");
-    xmlRootPseudo = NS_NewAtom(":XML-ROOT");
     zindex = NS_NewAtom("ZINDEX");
   }
   ++gRefCnt;
@@ -642,7 +640,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(rel);
     NS_RELEASE(repeat);
     NS_RELEASE(rightpadding);
-    NS_RELEASE(rootContentPseudo);
+    NS_RELEASE(rootPseudo);
     NS_RELEASE(rows);
     NS_RELEASE(rowspan);
     NS_RELEASE(rules);
@@ -698,7 +696,6 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(width);
     NS_RELEASE(wrap);
     NS_RELEASE(wrappedFramePseudo);
-    NS_RELEASE(xmlRootPseudo);
     NS_RELEASE(zindex);
   }
 }

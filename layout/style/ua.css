@@ -32,8 +32,6 @@ BODY {
  * XXX not yet... margin: 8px;
  */
   padding: 8px;
-
-  overflow: auto;
 }
 
 FRAMESET {
@@ -528,7 +526,7 @@ NOFRAMES {
   display: inherit;
 }
 
-:XML-ROOT {
+:ROOT {
   background-color: inherit;
 }
 
