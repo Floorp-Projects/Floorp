@@ -46,6 +46,41 @@ interface nsISOAPMessage;
 interface nsIVariant;
 interface nsISOAPAttachments;
 interface nsISchemaCollection;
+interface nsISOAPEncoding;
+
+/** 
+ * This interface provides access to a collection of SOAP encodings
+ *   and schemas. The registry is owned by an encoding.
+ */
+[scriptable, uuid(9fe91a61-3048-40e3-99ef-e39ab946ae0b)]
+interface nsISOAPEncodingRegistry : nsISupports {
+  /**
+   * Get an associated encoding for a different encoding style.  If
+   *   there is no default associated encoding available for the
+   *   specified encoding style, then if aCreateIf is specified, one
+   *   is created, otherwise a null is returned.  Associated encodings
+   *   are the set of encodings that may be used and modified together
+   *   as a set.
+   *
+   * @param aStyleURI The style URI of the associated encoding.
+   *
+   * @param aCreateIf If true, then create the associated encoding if it
+   *   does not already exist, otherwise return the existing encoding.
+   *
+   * @return The associated encoding which corresponds to the
+   *   specified styleURI, or null if the spefied alternative encoding
+   *   does not exist and it was not requested that it be created.
+   */
+  nsISOAPEncoding getAssociatedEncoding(in AString aStyleURI,
+                                        in boolean aCreateIf);
+
+  /**
+    * The schema collection used by the owning encoding and all 
+    *   associated encodings.
+    */
+  attribute nsISchemaCollection schemaCollection;
+};
+
 
 /**
  * This interface keeps track of the current encoding style and

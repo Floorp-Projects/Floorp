@@ -41,44 +41,73 @@
 
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsISOAPEncoding.h"
+#include "nsISOAPEncoding.h"  // contains nsISOAPEncodingRegistry too
 #include "nsISOAPEncoder.h"
 #include "nsISOAPDecoder.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsISchema.h"
+#include "nsWeakReference.h"
 
-class nsSOAPEncoding;
+// Notes regarding the ownership model between the nsSOAPEncoding (encoding)
+//   and the nsSOAPEncodingRegsitry (registry). To avoid cyclic referencing
+//   and thereby leaking encodings and the registry holding them the registry 
+//   was given ownership of the encodings. In the encoding specialized 
+//   AddRef() and Release() functions were written to pass the refcounting
+//   to the registry. Instead of ref couting the encodings all refs are
+//   accumulated in the registry. When the registry is the only thing holding
+//   on to the encodings it's own refcount will hit zero causing it to 
+//   go away and take with it any encodings stored in its hashtable. To make
+//   this work the registry had to be a weak reference (*-style pointer)
+//   in each encoding and the storage of the encodings had to be weak as
+//   well (*-style pointers in the nsObjectHashtable).
 
-/* Header file */
-class nsSOAPEncodingRegistry:public nsISOAPEncoding {
+class nsSOAPEncodingRegistry : public nsISOAPEncodingRegistry
+{
+
 public:
-  NS_DECL_ISUPPORTS NS_DECL_NSISOAPENCODING nsSOAPEncodingRegistry() {
-  } nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding);
-  virtual ~ nsSOAPEncodingRegistry();
+  NS_DECL_ISUPPORTS 
+  NS_DECL_NSISOAPENCODINGREGISTRY
+
+  nsSOAPEncodingRegistry(nsISOAPEncoding *aEncoding);
+
+  // the nsObjectHashtable has a callback to delete all the encodings
+  //    the callback is defined in nsSOAPEncoding.cpp
+  virtual ~nsSOAPEncodingRegistry() {}
+
 protected:
-  nsSupportsHashtable * mEncodings;
+  nsObjectHashtable mEncodings;
   nsCOMPtr < nsISchemaCollection > mSchemaCollection;
+
 };
 
-class nsSOAPEncoding:public nsISOAPEncoding {
+
+class nsSOAPEncoding : public nsISOAPEncoding
+{
+
 public:
-  NS_DECL_ISUPPORTS NS_DECL_NSISOAPENCODING nsSOAPEncoding();
-  nsSOAPEncoding(const nsAString & aStyleURI,
-                 nsSOAPEncodingRegistry * aRegistry,
-                 nsISOAPEncoding * aDefaultEncoding);
-  virtual ~ nsSOAPEncoding();
-  /* additional members */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISOAPENCODING 
+  
+  nsSOAPEncoding();
+  nsSOAPEncoding(const nsAString &aStyleURI,
+                 nsSOAPEncodingRegistry *aRegistry,
+                 nsISOAPEncoding *aDefaultEncoding);
+  virtual ~nsSOAPEncoding() {}
 
 protected:
   nsString mStyleURI;
-  nsSupportsHashtable *mEncoders;
-  nsSupportsHashtable *mDecoders;
-  nsCOMPtr < nsISOAPEncoding > mRegistry;
+  nsSupportsHashtable mEncoders;
+  nsSupportsHashtable mDecoders;
+
+  // Weak Reference to avoid cyclic refs and leaks. See notes above.
+  nsISOAPEncodingRegistry *mRegistry;
+
   nsCOMPtr < nsISOAPEncoding > mDefaultEncoding;
   nsCOMPtr < nsISOAPEncoder > mDefaultEncoder;
   nsCOMPtr < nsISOAPDecoder > mDefaultDecoder;
-  nsSupportsHashtable *mMappedInternal;
-  nsSupportsHashtable *mMappedExternal;
+  nsSupportsHashtable mMappedInternal;
+  nsSupportsHashtable mMappedExternal;
+
 };
 #endif

@@ -51,38 +51,45 @@
 #include "nsISchemaLoader.h"
 #include "nsSOAPUtils.h"
 
-//  First comes the registry which shares between associated encodings but is never seen by xpconnect.
+//
+// callback for deleting the encodings from the nsObjectHashtable, mEncodings,
+//   in the nsSOAPEncodingRegistry
+//
+static PRBool PR_CALLBACK
+DeleteEncodingEntry(nsHashKey *aKey, void *aData, void *aClosure)
+{
+  NS_DELETEXPCOM(aData);
+  return PR_TRUE;
+}
 
-NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncoding) nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding) : mEncodings(new nsSupportsHashtable)
+//
+//  First the registry, which is shared between associated encodings 
+//    but is never seen by xpconnect.
+//
+
+NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncodingRegistry);
+
+nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding *aEncoding)
+: mEncodings(nsnull, nsnull, DeleteEncodingEntry, nsnull, 4)
 {
   nsAutoString style;
   nsresult rc = aEncoding->GetStyleURI(style);
-  if (NS_FAILED(rc)) {
-    mEncodings = nsnull;
-  }
-  //  If there are any failures, encodings becomes null, and calls fail.
-  nsStringKey styleKey(style);
-  mEncodings->Put(&styleKey, aEncoding);
-  /* member initializers and constructor code */
-}
+  NS_ASSERTION(rc, "nsSOAPEncoding Regsitry constructed without style");
 
-nsSOAPEncodingRegistry::~nsSOAPEncodingRegistry()
-{
-  /* destructor code */
-  delete mEncodings;
+  nsStringKey styleKey(style);
+  mEncodings.Put(&styleKey, aEncoding);
 }
 
 nsresult
-    nsSOAPEncodingRegistry::
-GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf,
-                      nsISOAPEncoding * *aEncoding)
+nsSOAPEncodingRegistry::GetAssociatedEncoding(const nsAString & aStyleURI,
+                                              PRBool aCreateIf,
+                                              nsISOAPEncoding **aEncoding)
 {
   NS_SOAP_ENSURE_ARG_STRING(aStyleURI);
   NS_ENSURE_ARG_POINTER(aEncoding);
-  if (!mEncodings)
-    return NS_ERROR_FAILURE;
+
   nsStringKey styleKey(aStyleURI);
-  *aEncoding = (nsISOAPEncoding *) mEncodings->Get(&styleKey);
+  *aEncoding = (nsISOAPEncoding *) mEncodings.Get(&styleKey);
   if (!*aEncoding) {
     nsCOMPtr < nsISOAPEncoding > defaultEncoding;
     nsCAutoString encodingContractid;
@@ -94,13 +101,16 @@ GetAssociatedEncoding(const nsAString & aStyleURI, PRBool aCreateIf,
       *aEncoding = encoding;
       if (encoding) {
         NS_ADDREF(*aEncoding);
-        mEncodings->Put(&styleKey, encoding);
+        mEncodings.Put(&styleKey, encoding);
       }
-      else
-      {
+      else {
         return NS_ERROR_FAILURE;
       }
     }
+  }
+  else {
+    // need to AddRef the *-style pointer coming from mEncodings
+    NS_ADDREF(*aEncoding);
   }
   return NS_OK;
 }
@@ -134,151 +144,53 @@ nsresult
   return NS_OK;
 }
 
-/* readonly attribute AString styleURI; */
-NS_IMETHODIMP nsSOAPEncodingRegistry::GetStyleURI(nsAString & aStyleURI)
+//
+//  Second, the encodings themselves.
+//
+
+NS_IMPL_QUERY_INTERFACE1(nsSOAPEncoding, nsISOAPEncoding)
+NS_IMPL_CI_INTERFACE_GETTER1(nsSOAPEncoding, nsISOAPEncoding)
+
+// Due to circular referencing with the registry we abdicate all ref counting
+//   to the registry itself. When the registry reaches zero it destroys all
+//   the encodings with itself.
+NS_IMETHODIMP_(nsrefcnt) 
+nsSOAPEncoding::AddRef(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if(mRegistry)
+    return mRegistry->AddRef();
+  return 1;
 }
 
-/* nsISOAPEncoder setEncoder (in AString aKey, in nsISOAPEncoder aEncoder); */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::SetEncoder(const nsAString & aKey,
-                                       nsISOAPEncoder * aEncoder)
+NS_IMETHODIMP_(nsrefcnt) 
+nsSOAPEncoding::Release()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if(mRegistry)
+    return mRegistry->Release();
+  return 1;
 }
 
-/* nsISOAPEncoder getEncoder (in AString aKey); */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::GetEncoder(const nsAString & aKey,
-                                       nsISOAPEncoder ** _retval)
+nsSOAPEncoding::nsSOAPEncoding() : mEncoders(), 
+                                   mDecoders(), 
+                                   mMappedInternal(), 
+                                   mMappedExternal()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsISOAPDecoder setDecoder (in AString aKey, in nsISOAPDecoder aDecoder); */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::SetDecoder(const nsAString & aKey,
-                                       nsISOAPDecoder * aDecoder)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsISOAPDecoder getDecoder (in AString aKey); */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::GetDecoder(const nsAString & aKey,
-                                       nsISOAPDecoder ** _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsISOAPEncoder defaultEncoder; */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::GetDefaultEncoder(nsISOAPEncoder *
-                                              *aDefaultEncoder)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::SetDefaultEncoder(nsISOAPEncoder *
-                                              aDefaultEncoder)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsISOAPDecoder defaultDecoder; */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::GetDefaultDecoder(nsISOAPDecoder *
-                                              *aDefaultDecoder)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::SetDefaultDecoder(nsISOAPDecoder *
-                                              aDefaultDecoder)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIDOMElement encode (in nsIVariant aSource, in AString aNamespaceURI, in AString aName, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments, in nsIDOMElement aDestination); */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::Encode(nsIVariant * aSource,
-                                   const nsAString & aNamespaceURI,
-                                   const nsAString & aName,
-                                   nsISchemaType * aSchemaType,
-                                   nsISOAPAttachments * aAttachments,
-                                   nsIDOMElement * aDestination,
-                                   nsIDOMElement ** _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIVariant decode (in nsIDOMElement aSource, in nsISchemaType aSchemaType, in nsISOAPAttachments aAttachments); */
-NS_IMETHODIMP
-    nsSOAPEncodingRegistry::Decode(nsIDOMElement * aSource,
-                                   nsISchemaType * aSchemaType,
-                                   nsISOAPAttachments * aAttachments,
-                                   nsIVariant ** _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean mapSchemaURI (in AString aExternalURI, in AString aInternalURI, in boolean aOutput); */
-NS_IMETHODIMP nsSOAPEncodingRegistry::MapSchemaURI(const nsAString & aExternalURI, const nsAString & aInternalURI, PRBool aOutput, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean unmapSchemaURI (in AString aExternalURI); */
-NS_IMETHODIMP nsSOAPEncodingRegistry::UnmapSchemaURI(const nsAString & aExternalURI, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* AString getInternalSchemaURI (in AString aExternalURI); */
-NS_IMETHODIMP nsSOAPEncodingRegistry::GetInternalSchemaURI(const nsAString & aExternalURI, nsAString & _retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* AString getExternalSchemaURI (in AString aInternalURI); */
-NS_IMETHODIMP nsSOAPEncodingRegistry::GetExternalSchemaURI(const nsAString & aInternalURI, nsAString & _retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//  Second, we create the encodings themselves.
-
-NS_IMPL_ISUPPORTS1_CI(nsSOAPEncoding, nsISOAPEncoding) 
-
-nsSOAPEncoding::nsSOAPEncoding() : mEncoders(new nsSupportsHashtable()),
-mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable()), mMappedExternal(new nsSupportsHashtable())
-{
-  /* member initializers and constructor code */
-
   mStyleURI.Assign(nsSOAPUtils::kSOAPEncURI11);
-  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
   mRegistry = new nsSOAPEncodingRegistry(this);
+  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
 }
-nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, nsSOAPEncodingRegistry * aRegistry, nsISOAPEncoding * aDefaultEncoding) : mEncoders(new nsSupportsHashtable()),
-mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable()), mMappedExternal(new nsSupportsHashtable())
-{
-  /* member initializers and constructor code */
 
+nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, 
+                               nsSOAPEncodingRegistry * aRegistry, 
+                               nsISOAPEncoding * aDefaultEncoding) 
+                              : mEncoders(),
+                                mDecoders(), 
+                                mMappedInternal(), 
+                                mMappedExternal()
+{
   mStyleURI.Assign(aStyleURI);
   mRegistry = aRegistry;
   mDefaultEncoding = aDefaultEncoding;
-}
-
-nsSOAPEncoding::~nsSOAPEncoding()
-{
-  /* destructor code */
-  delete mEncoders;
-  delete mDecoders;
-  delete mMappedExternal;
-  delete mMappedInternal;
 }
 
 nsresult
@@ -331,9 +243,9 @@ NS_IMETHODIMP
   NS_ENSURE_ARG(aEncoder);
   nsStringKey nameKey(aKey);
   if (aEncoder) {
-    mEncoders->Put(&nameKey, aEncoder, nsnull);
+    mEncoders.Put(&nameKey, aEncoder, nsnull);
   } else {
-    mEncoders->Remove(&nameKey, nsnull);
+    mEncoders.Remove(&nameKey, nsnull);
   }
   return NS_OK;
 }
@@ -346,7 +258,7 @@ NS_IMETHODIMP
   NS_SOAP_ENSURE_ARG_STRING(aKey);
   NS_ENSURE_ARG_POINTER(_retval);
   nsStringKey nameKey(aKey);
-  *_retval = (nsISOAPEncoder *) mEncoders->Get(&nameKey);
+  *_retval = (nsISOAPEncoder *) mEncoders.Get(&nameKey);
   if (*_retval == nsnull && mDefaultEncoding) {
     return mDefaultEncoding->GetEncoder(aKey, _retval);
   }
@@ -362,9 +274,9 @@ NS_IMETHODIMP
   NS_ENSURE_ARG(aDecoder);
   nsStringKey nameKey(aKey);
   if (aDecoder) {
-    mDecoders->Put(&nameKey, aDecoder, nsnull);
+    mDecoders.Put(&nameKey, aDecoder, nsnull);
   } else {
-    mDecoders->Remove(&nameKey, nsnull);
+    mDecoders.Remove(&nameKey, nsnull);
   }
   return NS_OK;
 }
@@ -377,7 +289,7 @@ NS_IMETHODIMP
   NS_SOAP_ENSURE_ARG_STRING(aKey);
   NS_ENSURE_ARG_POINTER(_retval);
   nsStringKey nameKey(aKey);
-  *_retval = (nsISOAPDecoder *) mDecoders->Get(&nameKey);
+  *_retval = (nsISOAPDecoder *) mDecoders.Get(&nameKey);
   if (*_retval == nsnull && mDefaultEncoding) {
     return mDefaultEncoding->GetDecoder(aKey, _retval);
   }
@@ -471,21 +383,24 @@ NS_IMETHODIMP
   return NS_OK;
 }
 
-/* boolean mapSchemaURI (in AString aExternalURI, in AString aInternalURI, in boolean aOutput); */
-NS_IMETHODIMP nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI, const nsAString & aInternalURI, PRBool aOutput, PRBool *_retval)
+NS_IMETHODIMP
+nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI, 
+                             const nsAString & aInternalURI, 
+                             PRBool aOutput, 
+                             PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(&aExternalURI);
   NS_ENSURE_ARG_POINTER(&aInternalURI);
   if (aExternalURI.IsEmpty() || aInternalURI.IsEmpty())  //  Permit no empty URIs.
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_SCHEMA_URI_MAPPING", "No schema URI mapping possible of empty strings.");
   nsStringKey externalKey(aExternalURI);
-  if (mMappedExternal->Exists(&externalKey)) {
+  if (mMappedExternal.Exists(&externalKey)) {
     *_retval = PR_FALSE;  //  Do not permit duplicate external
     return NS_OK;
   }
   if (aOutput) {
     nsStringKey internalKey(aInternalURI);
-    if (mMappedInternal->Exists(&internalKey)) {
+    if (mMappedInternal.Exists(&internalKey)) {
       *_retval = PR_FALSE;  //  Do not permit duplicate internal
       return NS_OK;
     }
@@ -497,7 +412,7 @@ NS_IMETHODIMP nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI, const
     p->SetAsAString(aExternalURI);
     if (NS_FAILED(rc))
       return rc;
-    mMappedInternal->Put(&internalKey, p);
+    mMappedInternal.Put(&internalKey, p);
   }
   nsresult rc;
   nsCOMPtr < nsIWritableVariant > p =
@@ -507,7 +422,7 @@ NS_IMETHODIMP nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI, const
   p->SetAsAString(aInternalURI);
   if (NS_FAILED(rc))
     return rc;
-  mMappedExternal->Put(&externalKey, p);
+  mMappedExternal.Put(&externalKey, p);
   if (_retval)
     *_retval = PR_TRUE;
   return NS_OK;
@@ -518,15 +433,15 @@ NS_IMETHODIMP nsSOAPEncoding::UnmapSchemaURI(const nsAString & aExternalURI, PRB
 {
   NS_ENSURE_ARG_POINTER(&aExternalURI);
   nsStringKey externalKey(aExternalURI);
-  nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal->Get(&externalKey)));
+  nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal.Get(&externalKey)));
   if (internal) {
     nsAutoString internalstr;
     nsresult rc = internal->GetAsAString(internalstr);
     if (NS_FAILED(rc))
       return rc;
     nsStringKey internalKey(internalstr);
-    mMappedExternal->Remove(&externalKey);
-    mMappedInternal->Remove(&internalKey);
+    mMappedExternal.Remove(&externalKey);
+    mMappedInternal.Remove(&internalKey);
     if (_retval)
       *_retval = PR_TRUE;
   }
@@ -542,9 +457,9 @@ NS_IMETHODIMP nsSOAPEncoding::GetInternalSchemaURI(const nsAString & aExternalUR
 {
   NS_ENSURE_ARG_POINTER(&aExternalURI);
   NS_ENSURE_ARG_POINTER(&_retval);
-  if (mMappedExternal->Count()) {
+  if (mMappedExternal.Count()) {
     nsStringKey externalKey(aExternalURI);
-    nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal->Get(&externalKey)));
+    nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal.Get(&externalKey)));
     if (internal) {
       return internal->GetAsAString(_retval);
     }
@@ -561,9 +476,9 @@ NS_IMETHODIMP nsSOAPEncoding::GetExternalSchemaURI(const nsAString & aInternalUR
 {
   NS_ENSURE_ARG_POINTER(&aInternalURI);
   NS_ENSURE_ARG_POINTER(&_retval);
-  if (mMappedInternal->Count()) {
+  if (mMappedInternal.Count()) {
     nsStringKey internalKey(aInternalURI);
-    nsCOMPtr<nsIVariant> external = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedInternal->Get(&internalKey)));
+    nsCOMPtr<nsIVariant> external = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedInternal.Get(&internalKey)));
     if (external) {
       return external->GetAsAString(_retval);
     }
