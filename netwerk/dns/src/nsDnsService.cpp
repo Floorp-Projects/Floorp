@@ -634,3 +634,9 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     return result;
 #endif
 }
+
+NS_IMETHODIMP
+nsDNSService::Shutdown()
+{
+    return NS_OK;
+}
