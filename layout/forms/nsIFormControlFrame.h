@@ -67,15 +67,6 @@ public:
 
   virtual void SetFormFrame(nsFormFrame* aFrame) = 0;
 
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
-                                           float aPixToTwip,
-                                           nscoord aInnerHeight) const = 0;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const = 0;
-
-
   /**
    * Set the suggested size for the form element. 
    * This is used to control the size of the element during reflow if it hasn't had it's size

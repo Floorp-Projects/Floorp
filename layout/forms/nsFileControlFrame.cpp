@@ -205,8 +205,13 @@ nsFileControlFrame::GetType(PRInt32* aType) const
 void 
 nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+  // Fix for Bug 6133 
   if (mTextFrame) {
-    mTextFrame->SetFocus(aOn, aRepaint);
+    nsCOMPtr<nsIContent> content;
+    mTextFrame->GetContent(getter_AddRefs(content));
+    if (content) {
+      content->SetFocus(mPresContext);
+    }
   }
 }
 
@@ -290,7 +295,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       currentFile->GetUnicodeLeafName(&leafName);
       if (leafName) {
         filePicker->SetDefaultString(leafName);
-        //nsAllocator::Free(leafName);
+        nsMemory::Free(leafName);
       }
 
       // set directory
@@ -316,12 +321,12 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsILocalFile> localFile;
   result = filePicker->GetFile(getter_AddRefs(localFile));
   if (localFile) {
-    PRUnichar *nativePath;
+    PRUnichar *nativePath = nsnull;
     result = localFile->GetUnicodePath(&nativePath);
     if (nativePath) {
       nsAutoString pathName(nativePath);
       mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
-      //nsAllocator::Free(nativePath);
+      nsMemory::Free(nativePath);
       return NS_OK;
     }
   }

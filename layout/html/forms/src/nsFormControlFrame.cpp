@@ -379,35 +379,6 @@ nsFormControlFrame::GetScrollbarWidth(float aPixToTwip)
    return NSIntPixelsToTwips(19, aPixToTwip);  // XXX this is windows
 }
 
-nscoord 
-nsFormControlFrame::GetVerticalBorderWidth(float aPixToTwip) const
-{
-   return NSIntPixelsToTwips(3, aPixToTwip);
-}
-
-nscoord 
-nsFormControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
-{
-  return GetVerticalBorderWidth(aPixToTwip);
-}
-
-nscoord 
-nsFormControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerHeight) const
-{
-   return NSIntPixelsToTwips(3, aPixToTwip);
-}
-
-nscoord 
-nsFormControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
-                                               float aPixToTwip, 
-                                               nscoord aInnerWidth,
-                                               nscoord aCharWidth) const
-{
-  return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
-}
-
 PRInt32
 nsFormControlFrame::GetMaxNumValues()
 {

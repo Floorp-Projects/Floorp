@@ -157,10 +157,6 @@ public:
 
   static void  GetBoolString(const PRBool aValue, nsAWritableString& aResult);
 
-  // XXX similar functionality needs to be added to widget library and these
-  //     need to change to use it.
-  static  nscoord GetScrollbarWidth(float aPixToTwip);
-
   static nsCompatibility GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2);
 
   // wrap can be one of these three values.  
@@ -268,69 +264,6 @@ public:
                  PRBool aHorz, nscoord aWidth, nscoord aOnePixel);
 
    /**
-    * Draw an arrow glyph. 
-	  * 
-    * @param aRenderingContext the rendering context
-    * @param aSX upper left x coordinate pixels
-   	* @param aSY upper left y coordinate pixels
-    * @param aType @see nsArrowDirection enumeration 
-    * @param aOnePixel number of twips in a single pixel.
-    */
-
-  static void PaintArrowGlyph(nsIRenderingContext& aRenderingContext, 
-                              nscoord aSX, nscoord aSY, nsArrowDirection aArrowDirection, 
-                              nscoord aOnePixel);
-
-   /**
-    * Draw an arrow 
-   	* 
-    * @param aArrowDirection @see nsArrowDirection enumeration
-    * @param aRenderingContext the rendering context
-		* @param aPresContext the presentation context
-		* @param aDirtyRect rectangle requiring update
-    * @param aOnePixel number of TWIPS in a single pixel
-		* @param aColor color of the arrow glph
-		* @param aSpacing spacing for the arrow background
-		* @param aForFrame frame which the arrow will be rendered into.
-    * @param aFrameRect rectangle for the frame specified by aForFrame
-    */
-
-  static void PaintArrow(nsArrowDirection aArrowDirection,
-			 nsIRenderingContext& aRenderingContext,
-			 nsIPresContext* aPresContext, 
-		 	 const nsRect& aDirtyRect,
-                         nsRect& aRect, 
-			 nscoord aOnePixel, 
-                         nsIStyleContext* aArrowStyle,
-			 const nsStyleSpacing& aSpacing,
-			 nsIFrame* aForFrame,
-                         nsRect& aFrameRect);
-   /**
-    * Paint a scrollbar
-	  * 
-    * @param aRenderingContext the rendering context
-		* @param aPresContext the presentation context
-		* @param aDirtyRect rectangle requiring update
-    * @param aRect width and height of the scrollbar
-		* @param aHorizontal if TRUE scrollbar is drawn horizontally, vertical if FALSE
-		* @param aOnePixel number TWIPS per pixel
-    * @param aScrollbarStyleContext style context for the scrollbar
-    * @param aScrollbarArrowStyleContext style context for the scrollbar arrow
-		* @param aForFrame the frame that the scrollbar will be rendered in to
-    * @param aFrameRect the rectangle for the frame passed as aForFrame
-    */
-
-  static void PaintScrollbar(nsIRenderingContext& aRenderingContext,
-																	nsIPresContext* aPresContext, 
-																  const nsRect& aDirtyRect,
-                                  nsRect& aRect, 
-																  PRBool aHorizontal, 
-																  nscoord aOnePixel, 
-                                  nsIStyleContext* aScrollbarStyleContext,
-                                  nsIStyleContext* aScrollbarArrowStyleContext,
-																	nsIFrame* aForFrame,
-                                  nsRect& aFrameRect);
-   /**
     * Paint a fixed size checkmark
 	  * 
     * @param aRenderingContext the rendering context
@@ -386,68 +319,6 @@ public:
 							              nsIStyleContext* aFocusStyle,
                             nsIStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
-   /**
-    * Paint a focus indicator.
-	  * 
-    * @param aRenderingContext the rendering context
-    * @param aDirtyRect rectangle requiring update
-	  * @param aInside border inside
-    * @param aOutside border outside
-    */
-
-  static void PaintFocus(nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect, nsRect& aInside, nsRect& aOutside);
-
-   /**
-    * Get the rectangle for a circular area. To maintain the aspect ratio of the circular
-    * area the rectangle is offset to center the circular area within the width and height
-    * specified.
-	  * 
-    * @param aWidth width to center within
-    * @param aHeight height to center within 
-    * @param aRect the computed rectangle centering the circle by setting the x and y of the rect.
-    */
-
-  static void GetCircularRect(PRUint32 aWidth, PRUint32 aHeight, nsRect& aRect);
-
-   /**
-    * Paint a circular background
-	  * 
-    * @param aPresContext the presentation context
-    * @param aRenderingContext the rendering context
-    * @param aDirtyRect rectangle requiring update
-    * @param aStyleContext style context specifying colors and spacing
-    * @param aInset if PR_TRUE draw inset, otherwise draw outset
-    * @param aForFrame the frame that the scrollbar will be rendered in to
-    * @param aWidth width of the border in TWIPS
-    * @param aHeight height ofthe border in TWIPS
-    */
-
-  static void PaintCircularBackground(nsIPresContext* aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
-                         nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);
-
-
-   /**
-    * Paint a circular border
-	  * 
-    * @param aPresContext the presentation context
-    * @param aRenderingContext the rendering context
-    * @param aDirtyRect rectangle requiring update
-    * @param aStyleContext style context specifying colors and spacing
-    * @param aInset if PR_TRUE draw inset, otherwise draw outset
-    * @param aForFrame the frame that the scrollbar will be rendered in to
-    * @param aWidth width of the border in TWIPS
-    * @param aHeight height ofthe border in TWIPS
-    */
-
-  static void PaintCircularBorder(nsIPresContext* aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
-                         nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);
-
-
 
 protected:
   nsFormControlHelper();

@@ -177,15 +177,7 @@ public:
   // XXX similar functionality needs to be added to widget library and these
   //     need to change to use it.
   static  nscoord GetScrollbarWidth(float aPixToTwip);
-  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
-                                           float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
+
   virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
 
