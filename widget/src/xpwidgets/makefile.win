@@ -25,6 +25,9 @@ DEFINES =-D_IMPL_NS_WIDGET
 CPPSRCS =nsBaseWidget.cpp      \
 	nsMenuButton.cpp        \
 	nsImageButton.cpp         \
+	nsBaseClipboard.cpp         \
+	nsDataFlavor.cpp         \
+	nsTransferable.cpp         \
 	$(NULL)
 
 MODULE=raptor 
@@ -32,6 +35,9 @@ MODULE=raptor
 OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsMenuButton.obj  \
 	.\$(OBJDIR)\nsImageButton.obj  \
+	.\$(OBJDIR)\nsBaseClipboard.obj  \
+	.\$(OBJDIR)\nsDataFlavor.obj  \
+	.\$(OBJDIR)\nsTransferable.obj  \
 	$(NULL)
 
 LINCS=                                  \
