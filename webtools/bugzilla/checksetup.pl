@@ -226,8 +226,9 @@ if (!$xmlparser) {
 }
 if (@missing > 0) {
     print "\n\n";
-    print "You are missing some Perl modules which are required by Bugzilla.\n";
-    print "They can be installed by running (as root) the following:\n";
+    print "Bugzilla requires some Perl modules which are either missing from your\n",
+    "system, or the version on your system is too old.\n",
+    "They can be installed by running (as root) the following:\n";
     foreach my $module (@missing) {
         print "   perl -MCPAN -e 'install \"$module\"'\n";
     }
