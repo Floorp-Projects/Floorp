@@ -1,3 +1,24 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *
+ */
 #ifndef webshell____h
 #define webshell____h
 
@@ -10,9 +31,9 @@
 class nsIController;
 
 typedef enum {
-   eCharsetReloadInit,
-   eCharsetReloadRequested,
-   eCharsetReloadStopOrigional
+eCharsetReloadInit,
+eCharsetReloadRequested,
+eCharsetReloadStopOrigional
 } eCharsetReloadState;
 
 class nsWebShell : public nsDocShell,
@@ -23,148 +44,131 @@ class nsWebShell : public nsDocShell,
                    public nsIClipboardCommands
 {
 public:
-  nsWebShell();
-  virtual ~nsWebShell();
+    nsWebShell();
+    virtual ~nsWebShell();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+    NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSICLIPBOARDCOMMANDS
-  NS_DECL_NSIWEBSHELLSERVICES
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSICLIPBOARDCOMMANDS
+    NS_DECL_NSIWEBSHELLSERVICES
 
-  NS_IMETHOD SetupNewViewer(nsIContentViewer* aViewer);
+    NS_IMETHOD SetupNewViewer(nsIContentViewer* aViewer);
 
-  // nsIContentViewerContainer
-  NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
+    // nsIContentViewerContainer
+    NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
                    const char* aCommand,
                    nsISupports* aExtraInfo);
 
-  // nsIWebShell
-  NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
-  NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-  NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
-  NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
-  /*NS_IMETHOD SetParent(nsIWebShell* aParent);
-  NS_IMETHOD GetParent(nsIWebShell*& aParent);*/
-  NS_IMETHOD GetReferrer(nsIURI **aReferrer);
+    // nsIWebShell
+    NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
+    NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
+    NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
+    NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
+    /*NS_IMETHOD SetParent(nsIWebShell* aParent);
+    NS_IMETHOD GetParent(nsIWebShell*& aParent);*/
+    NS_IMETHOD GetReferrer(nsIURI **aReferrer);
 
-  // Document load api's
-  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
+    // Document load api's
+    NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
 
-/*  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     const char* aCommand,
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull,
-                     const char * aWindowTarget = nsnull);
+    void SetReferrer(const PRUnichar* aReferrer);
 
-  NS_IMETHOD LoadURI(nsIURI * aUri,
-                     const char * aCommand,
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull,
-                     const char * aWindowTarget = nsnull);
-  */
-  void SetReferrer(const PRUnichar* aReferrer);
+    // History api's
+    NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
+    NS_IMETHOD GetHistoryLength(PRInt32& aResult);
+    NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
+    NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
 
-  // History api's
-  NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
-  NS_IMETHOD GetHistoryLength(PRInt32& aResult);
-  NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
+    // nsIWebShellContainer
+    NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
+    NS_IMETHOD FireUnloadEvent(void);
 
-  // nsIWebShellContainer
-  NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
-  NS_IMETHOD FireUnloadEvent(void);
-
-  // nsILinkHandler
-  NS_IMETHOD OnLinkClick(nsIContent* aContent,
-                         nsLinkVerb aVerb,
-                         const PRUnichar* aURLSpec,
-                         const PRUnichar* aTargetSpec,
-                         nsIInputStream* aPostDataStream = 0,
-			 nsIInputStream* aHeadersDataStream = 0);
-  NS_IMETHOD OnOverLink(nsIContent* aContent,
-                        const PRUnichar* aURLSpec,
-                        const PRUnichar* aTargetSpec);
-  NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState);
+    // nsILinkHandler
+    NS_IMETHOD OnLinkClick(nsIContent* aContent,
+        nsLinkVerb aVerb,
+        const PRUnichar* aURLSpec,
+        const PRUnichar* aTargetSpec,
+        nsIInputStream* aPostDataStream = 0,
+        nsIInputStream* aHeadersDataStream = 0);
+    NS_IMETHOD OnOverLink(nsIContent* aContent,
+        const PRUnichar* aURLSpec,
+        const PRUnichar* aTargetSpec);
+    NS_IMETHOD GetLinkState(const char* aLinkURI, nsLinkState& aState);
 
 
-  NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+    NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase,
+        PRBool aSearchDown, PRBool &aIsFound);
 
-  // nsIBaseWindow 
-  NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-    PRInt32 cy, PRBool fRepaint);
-  NS_IMETHOD GetPositionAndSize(PRInt32* x, PRInt32* y, 
-   PRInt32* cx, PRInt32* cy);
-  NS_IMETHOD Create();
-  NS_IMETHOD Destroy();
+    // nsIBaseWindow 
+    NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
+        PRInt32 cy, PRBool fRepaint);
+    NS_IMETHOD GetPositionAndSize(PRInt32* x, PRInt32* y, 
+        PRInt32* cx, PRInt32* cy);
+    NS_IMETHOD Create();
+    NS_IMETHOD Destroy();
 
   // nsWebShell
-  nsIEventQueue* GetEventQueue(void);
-  void HandleLinkClickEvent(nsIContent *aContent,
-                            nsLinkVerb aVerb,
-                            const PRUnichar* aURLSpec,
-                            const PRUnichar* aTargetSpec,
-                            nsIInputStream* aPostDataStream = 0,
-			    nsIInputStream* aHeadersDataStream = 0);
+    nsIEventQueue* GetEventQueue(void);
+    void HandleLinkClickEvent(nsIContent *aContent,
+        nsLinkVerb aVerb,
+        const PRUnichar* aURLSpec,
+        const PRUnichar* aTargetSpec,
+        nsIInputStream* aPostDataStream = 0,
+        nsIInputStream* aHeadersDataStream = 0);
 
-  static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+    static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  NS_IMETHOD SetURL(const PRUnichar* aURL);
+    NS_IMETHOD SetURL(const PRUnichar* aURL);
 
-  // XXX: Temporary - until I can get rid of SetDocLoaderObserver :-)
-  NS_IMETHOD OnStateChange(nsIWebProgress *aProgress,
-                           nsIRequest *aRequest,
-                           PRInt32 aStateFlags,
-                           nsresult aStatus);
+    // XXX: Temporary - until I can get rid of SetDocLoaderObserver :-)
+    NS_IMETHOD OnStateChange(nsIWebProgress *aProgress,
+        nsIRequest *aRequest,
+        PRInt32 aStateFlags,
+        nsresult aStatus);
 
 protected:
-  void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
-  void InitFrameData();
-  
+    void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
+    void InitFrameData();
+
     // helpers for executing commands
-  virtual nsresult GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController );
-  virtual nsresult IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled );
-  virtual nsresult DoCommand ( const nsAReadableString & inCommand );
+    virtual nsresult GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController );
+    virtual nsresult IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled );
+    virtual nsresult DoCommand ( const nsAReadableString & inCommand );
 
-  //
-  // Helper method that is called when a new document (including any
-  // sub-documents - ie. frames) has been completely loaded.
-  //
-  virtual nsresult EndPageLoad(nsIWebProgress *aProgress,
-                               nsIChannel* channel,
-                               nsresult aStatus);
+    //
+    // Helper method that is called when a new document (including any
+    // sub-documents - ie. frames) has been completely loaded.
+    //
+    virtual nsresult EndPageLoad(nsIWebProgress *aProgress,
+        nsIChannel* channel,
+        nsresult aStatus);
 
-  nsIEventQueue* mThreadEventQueue;
+    nsIEventQueue* mThreadEventQueue;
 
-  nsIWebShellContainer* mContainer;
-  nsIDocumentLoader* mDocLoader;
+    nsIWebShellContainer* mContainer;
+    nsIDocumentLoader* mDocLoader;
 
-  PRBool mFiredUnloadEvent;
+    PRBool mFiredUnloadEvent;
 
-  nsRect   mBounds;
+    nsRect   mBounds;
 
-  eCharsetReloadState mCharsetReloadState;
+    eCharsetReloadState mCharsetReloadState;
 
-  nsISupports* mHistoryState; // Weak reference.  Session history owns this.
+    nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
-  nsresult FireUnloadForChildren();
+    nsresult FireUnloadForChildren();
 
-  nsresult CreateViewer(nsIRequest* request,
-                        const char* aContentType,
-                        const char* aCommand,
-                        nsIStreamListener** aResult);
+    nsresult CreateViewer(nsIRequest* request,
+        const char* aContentType,
+        const char* aCommand,
+        nsIStreamListener** aResult);
 
 #ifdef DEBUG
 private:
-  // We're counting the number of |nsWebShells| to help find leaks
-  static unsigned long gNumberOfWebShells;
+    // We're counting the number of |nsWebShells| to help find leaks
+    static unsigned long gNumberOfWebShells;
 #endif /* DEBUG */
 };
 
