@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Chris Seawood <cls@seawood.org>
  */
 
 
@@ -47,6 +48,11 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
   PRUint64 l_paramCount = paramCount;
   PRUint64 regCount = 0;  // return the number of registers to load from the stack
 
+  typedef struct {
+    float hi;
+    float lo;
+  } DU;
+
   for(PRUint64 i = 0; i < l_paramCount; i++, l_d++, l_s++)
   {
     if (regCount < 5) regCount++;
@@ -68,7 +74,11 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
       case nsXPTType::T_U32    : *((PRUint64*)l_d) = l_s->val.u32;   break;
       case nsXPTType::T_U64    : *((PRUint64*)l_d) = l_s->val.u64;   break;
       
-      case nsXPTType::T_FLOAT  : *((float*)l_d)    = l_s->val.f;     break;
+      case nsXPTType::T_FLOAT  : {
+        ((DU *)l_d)->lo = l_s->val.f;
+        ((DU *)l_d)->hi = l_s->val.f;
+        break;
+      }
       case nsXPTType::T_DOUBLE : *((double*)l_d)   = l_s->val.d;     break;
       case nsXPTType::T_BOOL   : *((PRBool*)l_d)   = l_s->val.b;     break;
       case nsXPTType::T_CHAR   : *((PRUint64*)l_d) = l_s->val.c;     break;
