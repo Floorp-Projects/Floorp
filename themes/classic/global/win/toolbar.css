@@ -1,19 +1,26 @@
 
 toolbox
   {
-    background-color      : #999999;
+    background-color      : appworkspace;
   }
   
 toolbar
   {
-    background-color      : #CCCCCC;
-    border                : 1px outset #CCCCCC;
+    background-color      : threedface;
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
   }
 
 toolbargrippy
   {
-    background-color      : #CCCCCC;
-    border                : 1px solid #CCCCCC;
+    background-color      : threedface;
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    list-style-image      : url("chrome://global/skin/toolbar/toolbar-grippy.gif");
   }
   
 toolbar[collapsed="true"] > toolbargrippy

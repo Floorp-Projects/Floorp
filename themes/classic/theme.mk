@@ -1,0 +1,1 @@
+THEME=classic
