@@ -6866,13 +6866,9 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsIPresShell*            aPresShell,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
-
-    nsIFrame* geometricParent = isAbsolutelyPositioned
-                              ? aState.mAbsoluteItems.containingBlock
-                              : aParentFrame;
-
     InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        geometricParent, aStyleContext, nsnull, newFrame);
+                        aState.GetGeometricParent(disp, aParentFrame),
+                        aStyleContext, nsnull, newFrame);
 
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, forceView);
 
