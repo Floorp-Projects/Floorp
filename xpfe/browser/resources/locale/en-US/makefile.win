@@ -25,22 +25,10 @@ install::
     $(MAKE_INSTALL) openLocation.dtd $(DISTBROWSWER)
 	$(MAKE_INSTALL) viewSource.dtd $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.dtd $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportConfirm.dtd $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportAlert.dtd $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportConfirmCheck.dtd $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheckYN.dtd $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportPassword.dtd $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportPrompt.dtd $(DISTBROWSWER)
-	$(MAKE_INSTALL) NetSupportUserPassword.dtd $(DISTBROWSWER)
-
 
 clobber::
   rm -f $(DISTBROWSER)\viewSource.dtd
   rm -f $(DISTBROWSER)\navigator.dtd
-  rm -f $(DISTBROWSER)\NetSupportConfirm.dtd
-  rm -f $(DISTBROWSER)\NetSupportAlert.dtd
-  rm -f $(DISTBROWSER)\NetSupportConfirmCheck.dtd
   rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.dtd
-  rm -f $(DISTBROWSER)\NetSupportPassword.dtd
-  rm -f $(DISTBROWSER)\NetSupportPrompt.dtd
-  rm -f $(DISTBROWSER)\NetSupportUserPassword.dtd
+

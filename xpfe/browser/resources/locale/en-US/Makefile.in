@@ -30,13 +30,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/navigator.dtd \
 	$(srcdir)/openLocation.dtd \
 	$(srcdir)/viewSource.dtd \
-	$(srcdir)/NetSupportConfirm.dtd \
-	$(srcdir)/NetSupportAlert.dtd \
-	$(srcdir)/NetSupportConfirmCheck.dtd \
 	$(srcdir)/NetSupportConfirmCheckYN.dtd \
-	$(srcdir)/NetSupportPassword.dtd \
-	$(srcdir)/NetSupportPrompt.dtd \
-	$(srcdir)/NetSupportUserPassword.dtd \
 	$(NULL)
 
 install:: 

@@ -32,14 +32,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/navigator.js \
 		$(srcdir)/openLocation.xul \
 		$(srcdir)/viewSource.xul \
-		$(srcdir)/NetsupportConfirm.xul \
 		$(srcdir)/NetSupportConfirmYN.xul \
-		$(srcdir)/NetSupportAlert.xul \
-		$(srcdir)/NetSupportConfirmCheck.xul \
 		$(srcdir)/NetSupportConfirmCheckYN.xul \
-		$(srcdir)/NetSupportPassword.xul \
-		$(srcdir)/NetSupportPrompt.xul \
-		$(srcdir)/NetSupportUserPAssword.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
