@@ -120,6 +120,9 @@ function init() {
 
   window.XULBrowserWindow = new nsHelpStatusHandler();
 
+  //Start the status handler.
+  window.XULBrowserWindow.init();
+
   // Hook up UI through Progress Listener
   const interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   const webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
@@ -321,7 +324,17 @@ function nsHelpStatusHandler()
 
 nsHelpStatusHandler.prototype =
 {
-  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {},
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {
+    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+
+    // Turn on the throbber.
+    if (aStateFlags & nsIWebProgressListener.STATE_START)
+      this.throbberElement.setAttribute("busy", "true");
+    else if (aStateFlags & nsIWebProgressListener.STATE_STOP)
+      this.throbberElement.removeAttribute("busy");
+  },
+  onStatusChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {},
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
                               aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
   onSecurityChange : function(aWebProgress, aRequest, state) {},
@@ -338,6 +351,18 @@ nsHelpStatusHandler.prototype =
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
+
+  init : function()
+  {
+    this.throbberElement = document.getElementById("navigator-throbber");
+  },
+
+  destroy : function()
+  {
+    //this is needed to avoid memory leaks, see bug 60729
+    this.throbberElement = null;
+  },
+
   setJSStatus : function(status) {},
   setJSDefaultStatus : function(status) {},
   setOverLink : function(link) {}

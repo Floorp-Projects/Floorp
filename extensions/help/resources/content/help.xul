@@ -25,7 +25,8 @@
    width="480"
    height="360"
    persist="width height screenX screenY"
-   onload="init();" >
+   onload="init();"
+   onunload="window.XULBrowserWindow.destroy();">
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
@@ -111,6 +112,10 @@
         <toolbarbutton id="print" class="toolbarbutton-1"
           label="&printButton.label;" oncommand="print();"
           tooltiptext="&printButton.tooltip;"/>
+
+        <hbox id="throbber-box" align="center">
+          <button id="navigator-throbber" oncommand="goHome();" tooltiptext="&helpThrobber.tooltip;"/>
+        </hbox>
       </toolbar>
     </toolbox>
 

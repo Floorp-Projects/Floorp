@@ -23,3 +23,5 @@
 <!ENTITY gobtn.label        "Search">
 <!ENTITY name.label	    "Item">
 
+<!ENTITY helpThrobber.tooltip "Go to the Help Home Page">
+
