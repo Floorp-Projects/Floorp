@@ -51,6 +51,7 @@ EXTRA_DSO_LDOPTS = \
 	-ljsdomcore_s	\
 	-ljsdomevents_s	\
 	-ljsdomhtml_s	\
+	-ljsdomcss_s	\
 	-ljsurl		\
 	-L$(DIST)/bin	\
 	-lraptorbase	\
@@ -70,6 +71,7 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/libjsdomcore_s.a			\
 	$(DIST)/lib/libjsdomevents_s.a			\
 	$(DIST)/lib/libjsdomhtml_s.a			\
+	$(DIST)/lib/libjsdomcss_s.a			\
 	$(DIST)/lib/libjsurl.a				\
 	$(LD_NONE)					\
 	$(DIST)/bin/libraptorbase.so			\

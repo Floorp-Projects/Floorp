@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIDOMHTMLCollection);
 // HTMLCollection property ids
 //
 enum HTMLCollection_slots {
-  HTMLCOLLECTION_LENGTH = -11
+  HTMLCOLLECTION_LENGTH = -1
 };
 
 /***********************************************************************/

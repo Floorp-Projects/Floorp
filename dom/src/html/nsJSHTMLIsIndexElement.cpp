@@ -42,8 +42,8 @@ NS_DEF_PTR(nsIDOMHTMLIsIndexElement);
 // HTMLIsIndexElement property ids
 //
 enum HTMLIsIndexElement_slots {
-  HTMLISINDEXELEMENT_FORM = -11,
-  HTMLISINDEXELEMENT_PROMPT = -12
+  HTMLISINDEXELEMENT_FORM = -1,
+  HTMLISINDEXELEMENT_PROMPT = -2
 };
 
 /***********************************************************************/

@@ -42,9 +42,9 @@ NS_DEF_PTR(nsIDOMHTMLLegendElement);
 // HTMLLegendElement property ids
 //
 enum HTMLLegendElement_slots {
-  HTMLLEGENDELEMENT_FORM = -11,
-  HTMLLEGENDELEMENT_ACCESSKEY = -12,
-  HTMLLEGENDELEMENT_ALIGN = -13
+  HTMLLEGENDELEMENT_FORM = -1,
+  HTMLLEGENDELEMENT_ACCESSKEY = -2,
+  HTMLLEGENDELEMENT_ALIGN = -3
 };
 
 /***********************************************************************/

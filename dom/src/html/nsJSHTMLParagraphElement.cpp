@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLParagraphElement);
 // HTMLParagraphElement property ids
 //
 enum HTMLParagraphElement_slots {
-  HTMLPARAGRAPHELEMENT_ALIGN = -11
+  HTMLPARAGRAPHELEMENT_ALIGN = -1
 };
 
 /***********************************************************************/

@@ -51,18 +51,18 @@ NS_DEF_PTR(nsIDOMWindow);
 // Window property ids
 //
 enum Window_slots {
-  WINDOW_WINDOW = -11,
-  WINDOW_SELF = -12,
-  WINDOW_DOCUMENT = -13,
-  WINDOW_NAVIGATOR = -14,
-  WINDOW_PARENT = -15,
-  WINDOW_TOP = -16,
-  WINDOW_CLOSED = -17,
-  WINDOW_FRAMES = -18,
-  WINDOW_OPENER = -19,
-  WINDOW_STATUS = -110,
-  WINDOW_DEFAULTSTATUS = -111,
-  WINDOW_NAME = -112
+  WINDOW_WINDOW = -1,
+  WINDOW_SELF = -2,
+  WINDOW_DOCUMENT = -3,
+  WINDOW_NAVIGATOR = -4,
+  WINDOW_PARENT = -5,
+  WINDOW_TOP = -6,
+  WINDOW_CLOSED = -7,
+  WINDOW_FRAMES = -8,
+  WINDOW_OPENER = -9,
+  WINDOW_STATUS = -10,
+  WINDOW_DEFAULTSTATUS = -11,
+  WINDOW_NAME = -12
 };
 
 /***********************************************************************/

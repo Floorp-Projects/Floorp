@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLBaseElement);
 // HTMLBaseElement property ids
 //
 enum HTMLBaseElement_slots {
-  HTMLBASEELEMENT_HREF = -11,
-  HTMLBASEELEMENT_TARGET = -12
+  HTMLBASEELEMENT_HREF = -1,
+  HTMLBASEELEMENT_TARGET = -2
 };
 
 /***********************************************************************/

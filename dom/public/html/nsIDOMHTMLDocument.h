@@ -32,7 +32,7 @@ class nsIDOMHTMLCollection;
 class nsIDOMNodeList;
 
 #define NS_IDOMHTMLDOCUMENT_IID \
-{ 0x6f7652fc,  0xee43, 0x11d1, \
+{ 0x6f7652fe,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMHTMLDocument : public nsIDOMDocument {

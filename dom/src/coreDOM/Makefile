@@ -34,6 +34,8 @@ CPPSRCS =				\
 	nsJSNodeList.cpp		\
 	nsJSProcessingInstruction.cpp	\
 	nsJSText.cpp			\
+	nsJSStyleSheet.cpp		\
+	nsJSStyleCollection.cpp		\
 	$(NULL)
 
 DEFINES = -D_IMPL_NS_DOM

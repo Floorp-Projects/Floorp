@@ -51,7 +51,7 @@
       attribute wstring display; 
       attribute wstring elevation; 
       attribute wstring emptyCells; 
-      attribute wstring float; 
+      attribute wstring styleFloat; 
       attribute wstring font; 
       attribute wstring fontFamily; 
       attribute wstring fontSize; 

@@ -39,10 +39,10 @@ NS_DEF_PTR(nsIDOMHTMLTfootElement);
 // HTMLTfootElement property ids
 //
 enum HTMLTfootElement_slots {
-  HTMLTFOOTELEMENT_ALIGN = -11,
-  HTMLTFOOTELEMENT_CH = -12,
-  HTMLTFOOTELEMENT_CHOFF = -13,
-  HTMLTFOOTELEMENT_VALIGN = -14
+  HTMLTFOOTELEMENT_ALIGN = -1,
+  HTMLTFOOTELEMENT_CH = -2,
+  HTMLTFOOTELEMENT_CHOFF = -3,
+  HTMLTFOOTELEMENT_VALIGN = -4
 };
 
 /***********************************************************************/

@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIDOMNodeList);
 // NodeList property ids
 //
 enum NodeList_slots {
-  NODELIST_LENGTH = -11
+  NODELIST_LENGTH = -1
 };
 
 /***********************************************************************/

@@ -39,9 +39,9 @@ NS_DEF_PTR(nsIDOMAttribute);
 // Attribute property ids
 //
 enum Attribute_slots {
-  ATTRIBUTE_NAME = -11,
-  ATTRIBUTE_SPECIFIED = -12,
-  ATTRIBUTE_VALUE = -13
+  ATTRIBUTE_NAME = -1,
+  ATTRIBUTE_SPECIFIED = -2,
+  ATTRIBUTE_VALUE = -3
 };
 
 /***********************************************************************/

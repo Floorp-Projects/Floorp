@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLModElement);
 // HTMLModElement property ids
 //
 enum HTMLModElement_slots {
-  HTMLMODELEMENT_CITE = -11,
-  HTMLMODELEMENT_DATETIME = -12
+  HTMLMODELEMENT_CITE = -1,
+  HTMLMODELEMENT_DATETIME = -2
 };
 
 /***********************************************************************/

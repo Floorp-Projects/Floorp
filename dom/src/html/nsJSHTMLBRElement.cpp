@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLBRElement);
 // HTMLBRElement property ids
 //
 enum HTMLBRElement_slots {
-  HTMLBRELEMENT_CLEAR = -11
+  HTMLBRELEMENT_CLEAR = -1
 };
 
 /***********************************************************************/

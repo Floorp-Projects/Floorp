@@ -42,8 +42,8 @@ NS_DEF_PTR(nsIDOMDocumentType);
 // DocumentType property ids
 //
 enum DocumentType_slots {
-  DOCUMENTTYPE_NAME = -11,
-  DOCUMENTTYPE_ENTITIES = -12
+  DOCUMENTTYPE_NAME = -1,
+  DOCUMENTTYPE_ENTITIES = -2
 };
 
 /***********************************************************************/

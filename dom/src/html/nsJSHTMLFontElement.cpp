@@ -39,9 +39,9 @@ NS_DEF_PTR(nsIDOMHTMLFontElement);
 // HTMLFontElement property ids
 //
 enum HTMLFontElement_slots {
-  HTMLFONTELEMENT_COLOR = -11,
-  HTMLFONTELEMENT_FACE = -12,
-  HTMLFONTELEMENT_SIZE = -13
+  HTMLFONTELEMENT_COLOR = -1,
+  HTMLFONTELEMENT_FACE = -2,
+  HTMLFONTELEMENT_SIZE = -3
 };
 
 /***********************************************************************/

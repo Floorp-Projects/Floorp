@@ -39,9 +39,9 @@ NS_DEF_PTR(nsIDOMHTMLOListElement);
 // HTMLOListElement property ids
 //
 enum HTMLOListElement_slots {
-  HTMLOLISTELEMENT_COMPACT = -11,
-  HTMLOLISTELEMENT_START = -12,
-  HTMLOLISTELEMENT_TYPE = -13
+  HTMLOLISTELEMENT_COMPACT = -1,
+  HTMLOLISTELEMENT_START = -2,
+  HTMLOLISTELEMENT_TYPE = -3
 };
 
 /***********************************************************************/

@@ -34,6 +34,8 @@ EXPORTS =               \
 	nsIDOMNodeList.h \
 	nsIDOMProcessingInstruction.h \
 	nsIDOMText.h \
+	nsIDOMStyleSheet.h \
+	nsIDOMStyleSheetCollection.h \
         $(NULL)
 
 MODULE = dom

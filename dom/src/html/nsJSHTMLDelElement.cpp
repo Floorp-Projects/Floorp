@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLDelElement);
 // HTMLDelElement property ids
 //
 enum HTMLDelElement_slots {
-  HTMLDELELEMENT_CITE = -11,
-  HTMLDELELEMENT_DATETIME = -12
+  HTMLDELELEMENT_CITE = -1,
+  HTMLDELELEMENT_DATETIME = -2
 };
 
 /***********************************************************************/

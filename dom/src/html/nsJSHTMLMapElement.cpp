@@ -42,8 +42,8 @@ NS_DEF_PTR(nsIDOMHTMLCollection);
 // HTMLMapElement property ids
 //
 enum HTMLMapElement_slots {
-  HTMLMAPELEMENT_AREAS = -11,
-  HTMLMAPELEMENT_NAME = -12
+  HTMLMAPELEMENT_AREAS = -1,
+  HTMLMAPELEMENT_NAME = -2
 };
 
 /***********************************************************************/

@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLLIElement);
 // HTMLLIElement property ids
 //
 enum HTMLLIElement_slots {
-  HTMLLIELEMENT_TYPE = -11,
-  HTMLLIELEMENT_VALUE = -12
+  HTMLLIELEMENT_TYPE = -1,
+  HTMLLIELEMENT_VALUE = -2
 };
 
 /***********************************************************************/

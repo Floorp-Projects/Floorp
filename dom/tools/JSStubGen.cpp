@@ -183,7 +183,7 @@ static const char *kPropEnumStr =
 "// %s property ids\n"
 "//\n"
 "enum %s_slots {\n";
-static const char *kPropSlotStr = "  %s_%s = -%d%d";
+static const char *kPropSlotStr = "  %s_%s = -%d";
 
 void     
 JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
@@ -191,6 +191,7 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
   char buf[512];
   ofstream *file = GetFile();
   int any_props = 0;
+  int prop_counter = 0;
 
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
@@ -216,7 +217,7 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
 
-      sprintf(buf, kPropSlotStr, iface_name, attr_name, i+1, a+1);
+      sprintf(buf, kPropSlotStr, iface_name, attr_name, ++prop_counter);
       *file << buf;
       if (a != acount-1) {
         *file << ",\n";

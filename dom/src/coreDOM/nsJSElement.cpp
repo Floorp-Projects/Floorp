@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMNodeList);
 // Element property ids
 //
 enum Element_slots {
-  ELEMENT_TAGNAME = -11
+  ELEMENT_TAGNAME = -1
 };
 
 /***********************************************************************/

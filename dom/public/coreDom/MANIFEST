@@ -30,3 +30,5 @@ nsIDOMNamedNodeMap.h
 nsIDOMNodeList.h
 nsIDOMProcessingInstruction.h
 nsIDOMText.h
+nsIDOMStyleSheet.h
+nsIDOMStyleSheetCollection.h

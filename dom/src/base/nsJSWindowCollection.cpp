@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIDOMWindow);
 // WindowCollection property ids
 //
 enum WindowCollection_slots {
-  WINDOWCOLLECTION_LENGTH = -11
+  WINDOWCOLLECTION_LENGTH = -1
 };
 
 /***********************************************************************/

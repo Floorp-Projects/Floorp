@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMData);
 // Data property ids
 //
 enum Data_slots {
-  DATA_DATA = -11,
-  DATA_SIZE = -12
+  DATA_DATA = -1,
+  DATA_SIZE = -2
 };
 
 /***********************************************************************/

@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLFrameSetElement);
 // HTMLFrameSetElement property ids
 //
 enum HTMLFrameSetElement_slots {
-  HTMLFRAMESETELEMENT_COLS = -11,
-  HTMLFRAMESETELEMENT_ROWS = -12
+  HTMLFRAMESETELEMENT_COLS = -1,
+  HTMLFRAMESETELEMENT_ROWS = -2
 };
 
 /***********************************************************************/

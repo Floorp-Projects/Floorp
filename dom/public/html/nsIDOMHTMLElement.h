@@ -25,9 +25,10 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMElement.h"
 
+class nsIDOMCSSStyleDeclaration;
 
 #define NS_IDOMHTMLELEMENT_IID \
-{ 0x6f7652fd,  0xee43, 0x11d1, \
+{ 0x6f7652ff,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMHTMLElement : public nsIDOMElement {
@@ -47,6 +48,8 @@ public:
 
   NS_IMETHOD    GetClassName(nsString& aClassName)=0;
   NS_IMETHOD    SetClassName(const nsString& aClassName)=0;
+
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
 };
 
 
@@ -61,6 +64,7 @@ public:
   NS_IMETHOD    SetDir(const nsString& aDir);  \
   NS_IMETHOD    GetClassName(nsString& aClassName);  \
   NS_IMETHOD    SetClassName(const nsString& aClassName);  \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
 
 
 
@@ -75,6 +79,7 @@ public:
   NS_IMETHOD    SetDir(const nsString& aDir) { return _to##SetDir(aDir); } \
   NS_IMETHOD    GetClassName(nsString& aClassName) { return _to##GetClassName(aClassName); } \
   NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to##SetClassName(aClassName); } \
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
 
 
 extern nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLMenuElement);
 // HTMLMenuElement property ids
 //
 enum HTMLMenuElement_slots {
-  HTMLMENUELEMENT_COMPACT = -11
+  HTMLMENUELEMENT_COMPACT = -1
 };
 
 /***********************************************************************/

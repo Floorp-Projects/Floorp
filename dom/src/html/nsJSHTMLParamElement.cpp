@@ -39,10 +39,10 @@ NS_DEF_PTR(nsIDOMHTMLParamElement);
 // HTMLParamElement property ids
 //
 enum HTMLParamElement_slots {
-  HTMLPARAMELEMENT_NAME = -11,
-  HTMLPARAMELEMENT_TYPE = -12,
-  HTMLPARAMELEMENT_VALUE = -13,
-  HTMLPARAMELEMENT_VALUETYPE = -14
+  HTMLPARAMELEMENT_NAME = -1,
+  HTMLPARAMELEMENT_TYPE = -2,
+  HTMLPARAMELEMENT_VALUE = -3,
+  HTMLPARAMELEMENT_VALUETYPE = -4
 };
 
 /***********************************************************************/

@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMProcessingInstruction);
 // ProcessingInstruction property ids
 //
 enum ProcessingInstruction_slots {
-  PROCESSINGINSTRUCTION_TARGET = -11,
-  PROCESSINGINSTRUCTION_DATA = -12
+  PROCESSINGINSTRUCTION_TARGET = -1,
+  PROCESSINGINSTRUCTION_DATA = -2
 };
 
 /***********************************************************************/

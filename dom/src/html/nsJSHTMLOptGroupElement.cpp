@@ -39,8 +39,8 @@ NS_DEF_PTR(nsIDOMHTMLOptGroupElement);
 // HTMLOptGroupElement property ids
 //
 enum HTMLOptGroupElement_slots {
-  HTMLOPTGROUPELEMENT_DISABLED = -11,
-  HTMLOPTGROUPELEMENT_LABEL = -12
+  HTMLOPTGROUPELEMENT_DISABLED = -1,
+  HTMLOPTGROUPELEMENT_LABEL = -2
 };
 
 /***********************************************************************/

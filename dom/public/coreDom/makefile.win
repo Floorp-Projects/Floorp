@@ -23,7 +23,7 @@ EXPORTS=nsIDOMAttribute.h nsIDOMCDATASection.h nsIDOMComment.h nsIDOMData.h \
 	nsIDOMDOM.h nsIDOMDocument.h nsIDOMDocumentType.h \
 	nsIDOMDocumentFragment.h nsIDOMElement.h nsIDOMNode.h \
 	nsIDOMNamedNodeMap.h nsIDOMNodeList.h nsIDOMProcessingInstruction.h \
-	nsIDOMText.h
+	nsIDOMText.h nsIDOMStyleSheet.h nsIDOMStyleSheetCollection.h 
 
 MODULE=dom 
 

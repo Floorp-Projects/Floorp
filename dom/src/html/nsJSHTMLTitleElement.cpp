@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLTitleElement);
 // HTMLTitleElement property ids
 //
 enum HTMLTitleElement_slots {
-  HTMLTITLEELEMENT_TEXT = -11
+  HTMLTITLEELEMENT_TEXT = -1
 };
 
 /***********************************************************************/

@@ -39,7 +39,7 @@ NS_DEF_PTR(nsIDOMHTMLQuoteElement);
 // HTMLQuoteElement property ids
 //
 enum HTMLQuoteElement_slots {
-  HTMLQUOTEELEMENT_CITE = -11
+  HTMLQUOTEELEMENT_CITE = -1
 };
 
 /***********************************************************************/
