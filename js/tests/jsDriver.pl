@@ -48,7 +48,7 @@ local $opt_suite_path = "./";
 local $opt_shell_path = "";
 local $opt_java_path = "";
 local $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
-local $opt_trace = 1;
+local $opt_trace = 0;
 local $opt_console_failures = 0;
 local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 
@@ -72,6 +72,11 @@ local $exec_time_string;
 local $start_time = time;
 
 if ($os_type ne "WIN") {
+    # on unix, ^C pauses the tests, and gives the user a chance to quit, but 
+    # report on what has been done, to just quit, or to continue (the
+    # interrupted test will still be skipped.)
+    # windows doesn't handle the int handler they way we want it to,
+    # so don't even pretend to let the user continue.
     $SIG{INT} = 'int_handler';
 }
 
@@ -216,20 +221,20 @@ sub write_results {
       100;
     &dd ("Writing output to $opt_output_file.");
 
-    if ($#opt_test_list_file == -1) {
+    if ($#opt_test_list_files == -1) {
         $list_name = "All tests";
-    } elsif ($#opt_test_list_file < 10) {
-        $list_name = "List " . join (", ", @opt_test_list_file);
+    } elsif ($#opt_test_list_files < 10) {
+        $list_name = join (", ", @opt_test_list_files);
     } else {
-        $list_name = "($#opt_test_list_file test files specified)";
+        $list_name = "($#opt_test_list_files test files specified)";
     }
 
-    if ($#opt_neg_list_file == -1) {
+    if ($#opt_neg_list_files == -1) {
         $neglist_name = "(none)";
-    } elsif ($#opt_test_list_file < 10) {
-        $neglist_name = "List " . join (", ", @opt_neg_list_file);
+    } elsif ($#opt_test_list_files < 10) {
+        $neglist_name = join (", ", @opt_neg_list_files);
     } else {
-        $neglist_name = "($#opt_neg_list_file skip files specified)";
+        $neglist_name = "($#opt_neg_list_files skip files specified)";
     }
     
     open (OUTPUT, "> $opt_output_file") ||
