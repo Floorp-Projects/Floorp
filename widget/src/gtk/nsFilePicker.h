@@ -24,7 +24,7 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
-#include "nsIFilePicker.h"
+#include "nsBaseFilePicker.h"
 
 #include <gtk/gtk.h>
 
@@ -32,7 +32,7 @@
  * Native GTK FileSelector wrapper
  */
 
-class nsFilePicker : public nsIFilePicker 
+class nsFilePicker : public nsBaseFilePicker
 {
 public:
   nsFilePicker(); 
@@ -42,6 +42,11 @@ public:
   NS_DECL_NSIFILEPICKER
 
 protected:
+  /* method from nsBaseFilePicker */
+  NS_IMETHOD CreateNative(nsIWidget *aParent,
+                          const PRUnichar *aTitle,
+                          PRInt16 aMode);
+
   static gint DestroySignal(GtkWidget *  aGtkWidget,
                             nsFilePicker* aWidget);
 

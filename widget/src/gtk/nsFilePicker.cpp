@@ -32,7 +32,7 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 // nsFilePicker constructor
 //
 //-------------------------------------------------------------------------
-nsFilePicker::nsFilePicker() : nsIFilePicker()
+nsFilePicker::nsFilePicker()
 {
   NS_INIT_REFCNT();
   mWidget = nsnull;
@@ -217,7 +217,7 @@ NS_IMETHODIMP nsFilePicker::GetSelectedFilter(PRInt32 *aType)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(PRUnichar *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
 {
   if (mWidget) {
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
@@ -254,11 +254,17 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsIFileSpec **aDirectory)
   return NS_OK;
 }
 
-
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::Create(nsIDOMWindow *aParent,
                                    const PRUnichar *aTitle,
                                    PRInt16 aMode)
+{
+  return nsBaseFilePicker::Create(aParent, aTitle, aMode);
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
+                                         const PRUnichar *aTitle,
+                                         PRInt16 aMode)
 {
   mWidget = gtk_file_selection_new((const gchar *)nsAutoCString(aTitle));
   gtk_signal_connect(GTK_OBJECT(mWidget),
