@@ -76,8 +76,8 @@ checkbox[disabled="true"] {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  width: 13px;
-  height: 13px;
+  min-width: 13px;
+  min-height: 13px;
   background: -moz-Field no-repeat 50% 50%;
 }
   
