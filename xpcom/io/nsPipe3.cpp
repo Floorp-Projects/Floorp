@@ -834,7 +834,6 @@ nsPipeInputStream::Search(const char *forString,
 
     nsAutoMonitor mon(mPipe->Monitor());
 
-    nsresult rv;
     char *cursor1, *limit1;
     PRUint32 index = 0, offset = 0;
     PRUint32 strLen = strlen(forString);
@@ -870,13 +869,7 @@ nsPipeInputStream::Search(const char *forString,
         mPipe->PeekSegment(index, cursor2, limit2);
         if (cursor2 == limit2) {
             *found = PR_FALSE;
-            // if we're unable to get the next segment because of some pipe
-            // exception, then we should just inform that caller that all
-            // data has been searched (even though it hasn't).
-            if (rv != NS_BASE_STREAM_WOULD_BLOCK)
-                *offsetSearchedTo = offset;
-            else
-                *offsetSearchedTo = offset - strLen + 1;
+            *offsetSearchedTo = offset - strLen + 1;
             LOG(("  result [found=%u offset=%u]\n", *found, *offsetSearchedTo));
             return NS_OK;
         }
