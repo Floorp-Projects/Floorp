@@ -127,16 +127,32 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 	mMimeDescription = new_str(aPluginTag->mMimeDescription);
 	mExtensions = new_str(aPluginTag->mExtensions);
 	mVariants = aPluginTag->mVariants;
-	mMimeTypeArray = new char*[mVariants];
-	mMimeDescriptionArray = new char*[mVariants];
-	mExtensionsArray = new char*[mVariants];
-	if (mMimeTypeArray && mMimeDescriptionArray && mExtensionsArray) {
-		for (int i = 0; i < mVariants; i++) {
+
+  mMimeTypeArray = nsnull;
+  mMimeDescriptionArray = nsnull;
+  mExtensionsArray = nsnull;
+
+  if(aPluginTag->mMimeTypeArray != nsnull)
+  {
+    mMimeTypeArray = new char*[mVariants];
+		for (int i = 0; i < mVariants; i++)
 			mMimeTypeArray[i] = new_str(aPluginTag->mMimeTypeArray[i]);
+  }
+
+  if(aPluginTag->mMimeDescriptionArray != nsnull) 
+  {
+    mMimeDescriptionArray = new char*[mVariants];
+		for (int i = 0; i < mVariants; i++)
 			mMimeDescriptionArray[i] = new_str(aPluginTag->mMimeDescriptionArray[i]);
+  }
+
+  if(aPluginTag->mExtensionsArray != nsnull) 
+  {
+    mExtensionsArray = new char*[mVariants];
+		for (int i = 0; i < mVariants; i++)
 			mExtensionsArray[i] = new_str(aPluginTag->mExtensionsArray[i]);
-		}
 	}
+
 	mLibrary = nsnull;
 	mEntryPoint = nsnull;
 	mFlags = NS_PLUGIN_FLAG_ENABLED;
@@ -153,23 +169,27 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 	mExtensions = new_str(aPluginInfo->fExtensions);
 	mVariants = aPluginInfo->fVariantCount;
 
-  mMimeTypeArray = new char*[mVariants];
+  mMimeTypeArray = nsnull;
+  mMimeDescriptionArray = nsnull;
+  mExtensionsArray = nsnull;
+
   if(aPluginInfo->fMimeTypeArray != nsnull)
   {
+    mMimeTypeArray = new char*[mVariants];
 		for (int i = 0; i < mVariants; i++)
 			mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
   }
 
-  mMimeDescriptionArray = new char*[mVariants];
   if(aPluginInfo->fMimeDescriptionArray != nsnull) 
   {
+    mMimeDescriptionArray = new char*[mVariants];
 		for (int i = 0; i < mVariants; i++)
 			mMimeDescriptionArray[i] = new_str(aPluginInfo->fMimeDescriptionArray[i]);
   }
 
-  mExtensionsArray = new char*[mVariants];
   if(aPluginInfo->fExtensionArray != nsnull) 
   {
+    mExtensionsArray = new char*[mVariants];
 		for (int i = 0; i < mVariants; i++)
 			mExtensionsArray[i] = new_str(aPluginInfo->fExtensionArray[i]);
 	}
