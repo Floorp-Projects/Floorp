@@ -110,6 +110,47 @@
     </interface>  
   </binding>
 
+  <binding id="treerows">
+    <handlers>
+      <handler type="click" shift="false" primary="false"
+               value="if (event.target.tagName == 'treecell') 
+                        parentNode.selectItem(event.target.parentNode.parentNode);"/>
+      <handler type="click" shift="false" primary="true"
+               value="if (event.target.tagName == 'treecell') 
+                        parentNode.toggleItemSelection(event.target.parentNode.parentNode);"/>
+      <handler type="click" shift="true" primary="false"
+               value="if (event.target.tagName == 'treecell') 
+                        parentNode.selectItemRange(event.target.parentNode.parentNode);"/>
+      <handler type="click" shift="false" primary="false" clickcount="2">
+      <![CDATA[
+         if (event.target.tagName == 'treecell') {
+           var n = event.target.parentNode.parentNode;
+           if ((n.getAttribute('container') == 'true') &&
+               (n.getAttribute('empty') != 'true')) {
+             if (n.getAttribute('open') == 'true')
+               n.removeAttribute('open');
+             else n.setAttribute('open', 'true');
+           }
+         }
+      ]]>
+      </handler>
+      <handler type="click" shift="false" primary="false">
+      <![CDATA[
+         if (event.target.getAttribute('twisty') == 'true') {
+           var n = event.target.parentNode.parentNode.parentNode;
+           if ((n.getAttribute('container') == 'true') &&
+               (n.getAttribute('empty') != 'true')) {
+             if (n.getAttribute('open') == 'true')
+               n.removeAttribute('open');
+             else n.setAttribute('open', 'true');
+           }
+         }
+      ]]>
+      </handler>
+      
+    </handlers>
+  </binding>
+              
   <binding id="treecell-indented-folder">
     <content autostretch="never">
       <xul:treeindentation/>
