@@ -898,12 +898,8 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
-                SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
         ChangeStatus('REOPENED');
         ChangeResolution('');
-                if (FetchOneColumn() eq 'DUPLICATE') {
-                        SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
-                }
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
@@ -1058,7 +1054,7 @@ foreach my $id (@idlist) {
             "profiles $write, dependencies $write, votes $write, " .
             "products READ, components READ, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "bug_group_map $write, flags $write, " .
+            "bug_group_map $write, flags $write, duplicates $write," .
             "user_group_map READ, flagtypes READ, " . 
             "flaginclusions AS i READ, flagexclusions AS e READ, " .
             "keyworddefs READ, groups READ, attachments READ");
@@ -1243,6 +1239,13 @@ foreach my $id (@idlist) {
     if ($::comma ne "") {
         SendSQL($query);
     }
+    # Check for duplicates if the bug is [re]open
+    SendSQL("SELECT resolution FROM bugs WHERE bug_id = $id");
+    my $resolution = FetchOneColumn();
+    if ($resolution eq '') {
+        SendSQL("DELETE FROM duplicates WHERE dupe = $id");
+    }
+    
     my @groupAddNames = ();
     foreach my $grouptoadd (@groupAdd) {
         if (!BugInGroupId($id, $grouptoadd)) {
