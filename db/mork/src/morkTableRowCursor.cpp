@@ -246,6 +246,30 @@ morkTableRowCursor::NextRowOid( // get row id of next row in the table
     *outRowPos = pos;
   return outErr;
 }
+
+NS_IMETHODIMP
+morkTableRowCursor::PrevRowOid( // get row id of previous row in the table
+  nsIMdbEnv* mev, // context
+  mdbOid* outOid, // out row oid
+  mdb_pos* outRowPos)
+{
+  mdb_err outErr = 0;
+  mork_pos pos = -1;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    if ( outOid )
+    {
+      pos = PrevRowOid(ev, outOid);
+    }
+    else
+      ev->NilPointerError();
+    outErr = ev->AsErr();
+  }
+  if ( outRowPos )
+    *outRowPos = pos;
+  return outErr;
+}
 // } ----- end oid iteration methods -----
 
 // { ----- begin row iteration methods -----
@@ -275,6 +299,34 @@ morkTableRowCursor::NextRow( // get row cells from table for cells already in ro
     *acqRow = outRow;
   return outErr;
 }
+
+NS_IMETHODIMP
+morkTableRowCursor::PrevRow( // get row cells from table for cells already in row
+  nsIMdbEnv* mev, // context
+  nsIMdbRow** acqRow, // acquire previous row in table
+  mdb_pos* outRowPos)
+{
+  mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+      
+    mdbOid oid; // place to put oid we intend to ignore
+    morkRow* row = PrevRow(ev, &oid, outRowPos);
+    if ( row )
+    {
+      morkStore* store = row->GetRowSpaceStore(ev);
+      if ( store )
+        outRow = row->AcquireRowHandle(ev, store);
+    }
+    outErr = ev->AsErr();
+  }
+  if ( acqRow )
+    *acqRow = outRow;
+  return outErr;
+}
+
 // } ----- end row iteration methods -----
 
 
@@ -358,6 +410,14 @@ morkTableRowCursor::NextRowOid(morkEnv* ev, mdbOid* outOid)
   return outPos;
 }
 
+mdb_pos
+morkTableRowCursor::PrevRowOid(morkEnv* ev, mdbOid* outOid)
+{
+  mdb_pos outPos = -1;
+  (void) this->PrevRow(ev, outOid, &outPos);
+  return outPos;
+}
+
 mork_bool
 morkTableRowCursor::CanHaveDupRowMembers(morkEnv* ev)
 {
@@ -374,6 +434,52 @@ morkTableRowCursor::GetMemberCount(morkEnv* ev)
     return 0;
 }
 
+morkRow*
+morkTableRowCursor::PrevRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos)
+{
+  morkRow* outRow = 0;
+  mork_pos pos = -1;
+  
+  morkTable* table = mTableRowCursor_Table;
+  if ( table )
+  {
+    if ( table->IsOpenNode() )
+    {
+      morkArray* array = &table->mTable_RowArray;
+      pos = mCursor_Pos - 1;
+        
+      if ( pos >= 0 && pos < (mork_pos)(array->mArray_Fill) )
+      {
+        mCursor_Pos = pos; // update for next time
+        morkRow* row = (morkRow*) array->At(pos);
+        if ( row )
+        {
+          if ( row->IsRow() )
+          {
+            outRow = row;
+            *outOid = row->mRow_Oid;
+          }
+          else
+            row->NonRowTypeError(ev);
+        }
+        else
+          ev->NilPointerError();
+      }
+      else
+      {
+        outOid->mOid_Scope = 0;
+        outOid->mOid_Id = morkId_kMinusOne;
+      }
+    }
+    else
+      table->NonOpenNodeError(ev);
+  }
+  else
+    ev->NilPointerError();
+
+  *outPos = pos;
+  return outRow;
+}
 
 morkRow*
 morkTableRowCursor::NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos)
