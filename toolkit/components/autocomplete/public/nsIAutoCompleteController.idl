@@ -117,6 +117,12 @@ interface nsIAutoCompleteController : nsISupports
   boolean handleKeyNavigation(in unsigned short key);
 
   /*
+   * Notify the controller that the user chose to delete the current
+   * auto-complete result.
+   */
+  boolean handleDelete();
+  
+  /*
    * Get the value of the result at a given index in the last completed search
    */
   AString getValueAt(in long index);

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -704,7 +705,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
       nsIMdbRow *row;
       result->GetRowAt(i, &row);
       if (!RowMatch(row, aInputName, aInputValue, nsnull))
-        result->RemoveRowAt(i);
+        result->RemoveRowAt(i, PR_FALSE);
     }
   } else {
     result = do_CreateInstance("@mozilla.org/autocomplete/mdb-result;1");
@@ -790,11 +791,12 @@ nsFormHistory::SortComparison(const void *v1, const void *v2, void *closureVoid)
 PRBool
 nsFormHistory::RowMatch(nsIMdbRow *aRow, const nsAString &aInputName, const nsAString &aInputValue, PRUnichar **aValue)
 {
-  nsAutoString name, value;
+  nsAutoString name;
   GetRowValue(aRow, kToken_NameColumn, name);
-  GetRowValue(aRow, kToken_ValueColumn, value);
-  
+
   if (name.Equals(aInputName)) {
+    nsAutoString value;
+    GetRowValue(aRow, kToken_ValueColumn, value);
     if (value.Length() != aInputValue.Length() && // ignore exact matches
         Compare(Substring(value, 0, aInputValue.Length()), aInputValue, nsCaseInsensitiveStringComparator()) == 0)
     {

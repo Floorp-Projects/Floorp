@@ -210,9 +210,18 @@ nsAutoCompleteMdbResult::AddRow(nsIMdbRow *aRow)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteMdbResult::RemoveRowAt(PRUint32 aRowIndex)
+nsAutoCompleteMdbResult::RemoveRowAt(PRUint32 aRowIndex, PRBool aRemoveFromDb)
 {
+  nsIMdbRow *row = (nsIMdbRow *)mResults.ElementAt(aRowIndex);
+  NS_ENSURE_TRUE(row, NS_ERROR_INVALID_ARG);
+
   mResults.RemoveElementAt(aRowIndex);
+
+  if (aRemoveFromDb && mTable && mEnv) {
+    mdb_err err = mTable->CutRow(mEnv, row);
+    NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
+  }
+
   return NS_OK;
 }
 
