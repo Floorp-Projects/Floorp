@@ -42,9 +42,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS  += skin/mac
-endif
-
 include $(topsrcdir)/config/rules.mk
 
