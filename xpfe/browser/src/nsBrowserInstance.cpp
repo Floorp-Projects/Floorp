@@ -792,6 +792,144 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserInstance::GetDocumentCharset(PRUnichar **aCharset)
+{
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) 
+  {
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+      if (markupCV) {
+        // This allocates a new buffer
+        NS_ENSURE_SUCCESS(markupCV->GetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
+      }
+    }
+  }
+  
+  if (!*aCharset) {
+    nsAutoString blank;
+    *aCharset = blank.ToNewUnicode();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserInstance::SetDocumentCharset(const PRUnichar *aCharset)
+{
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) 
+  {
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+      if (markupCV) {
+        NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX isolate the common code in the next two methods into a common method
+
+NS_IMETHODIMP    
+nsBrowserInstance::SetForcedCharset(const PRUnichar * aCharset)
+{
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell) return NS_OK;
+
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
+
+  res = docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
+  if (dcInfo.get() == NULL) {
+    res = nsComponentManager::CreateInstance(kDocumentCharsetInfoCID, NULL,
+      NS_GET_IID(nsIDocumentCharsetInfo), getter_AddRefs(dcInfo));
+    if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+    res = docShell->SetDocumentCharsetInfo(dcInfo);
+    if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+  }
+
+  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> csAtom;
+  res = ccMan->GetCharsetAtom(aCharset, getter_AddRefs(csAtom));
+  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+
+  res = dcInfo->SetForcedCharset(csAtom);
+  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserInstance::SetForcedDetector()
+{
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell) return NS_OK;
+
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
+
+  res = docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
+  if (dcInfo.get() == NULL) {
+    res = nsComponentManager::CreateInstance(kDocumentCharsetInfoCID, NULL,
+      NS_GET_IID(nsIDocumentCharsetInfo), getter_AddRefs(dcInfo));
+    if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+    res = docShell->SetDocumentCharsetInfo(dcInfo);
+    if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+  }
+
+  res = dcInfo->SetForcedDetector(PR_TRUE);
+  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsBrowserInstance::Close()
 { 

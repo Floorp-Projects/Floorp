@@ -451,7 +451,7 @@ function Startup()
       var arrayArgComponents = window.arguments[1].split("=");
       if (arrayArgComponents) {
         //we should "inherit" the charset menu setting in a new window
-        BrowserSetDefaultCharacterSet(arrayArgComponents[1]);
+        appCore.SetDocumentCharset(arrayArgComponents[1]);
       }
     }
   }
@@ -807,7 +807,8 @@ function BrowserEditBookmarks()
 
 function BrowserPrintPreview()
 {
-  // implement me
+  // this is currently a do-nothing on appCore which is going to die
+  // ???.printPreview();
 }
 
 function BrowserPrint()
@@ -818,21 +819,18 @@ function BrowserPrint()
 
 function BrowserSetDefaultCharacterSet(aCharset)
 {
-  getMarkupDocumentViewer().defaultCharacterSet = aCharset;
+  appCore.SetDocumentCharset(aCharset);
   getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
 function BrowserSetForcedCharacterSet(aCharset)
 {
-  var charsetConverterManager = Components.classes["@mozilla.org/charset-converter-manager;1"]
-                                          .getService(Components.interfaces.nsICharsetConverterManager2);
-  var characterSet = charsetConverterManager.GetCharsetAtom(aCharset);
-  getBrowser().documentCharsetInfo.forcedCharset = characterSet;
+  appCore.SetForcedCharset(aCharset);
 }
 
 function BrowserSetForcedDetector()
 {
-  getBrowser().documentCharsetInfo.forcedDetector = true;
+  appCore.SetForcedDetector();
 }
 
 function BrowserClose()
@@ -1128,7 +1126,11 @@ function checkForDirectoryListing()
   if ("HTTPIndex" in _content &&
       typeof _content.HTTPIndex == "object" &&
       !_content.HTTPIndex.constructor) {
-    _content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
+    // Give directory .xul/.js access to browser instance.
+    // XXX The following line leaks (bug 61821), so the next line is a hack
+    // to avoid the leak.
+    // _content.defaultCharacterset = getBrowser().markupDocumentViewer.defaultCharacterSet;
+    _content.defaultCharacterset = getBrowser().docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer).defaultCharacterSet;
     _content.parentWindow = window;
   }
 }
