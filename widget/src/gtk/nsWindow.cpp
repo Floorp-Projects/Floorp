@@ -909,9 +909,6 @@ PRBool gJustGotDeactivate = PR_TRUE;
 NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
-#ifdef DEBUG_blizzard
-  printf("nsWindow::SetFocus\n");
-#endif
 
   GtkWidget *top_mozarea = GetMozArea();
   
@@ -2558,7 +2555,7 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
 {
   GtkWindow *window = NULL;
   GtkBin    *bin = NULL;
-#if defined (DEBUG_sarri) || defined(DEBUG_blizzard)
+#if defined (DEBUG_sarri)
   printf("handle_toplevel_focus_in\n");
 #endif
   if (!aWidget) {
@@ -2600,7 +2597,7 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
     return PR_TRUE;
   }
 
-#if defined(DEBUG_sarri) || defined(DEBUG_blizzard)
+#if defined(DEBUG_sarri)
   printf("handle_toplevel_focus_out\n");
 #endif
 
@@ -2622,7 +2619,7 @@ gint handle_mozarea_focus_in(GtkWidget *      aWidget,
                              GdkEventFocus *  aGdkFocusEvent, 
                              gpointer         aData)
 {
-#if defined (DEBUG_saari) || defined (DEBUG_blizzard)
+#if defined (DEBUG_saari)
   printf("handle_mozarea_focus_in\n");
 #endif
   if (!aWidget) {
@@ -2644,7 +2641,7 @@ gint handle_mozarea_focus_in(GtkWidget *      aWidget,
 
   nsGUIEvent eventGotFocus;
   eventGotFocus.message = NS_GOTFOCUS;
-#if defined (DEBUG_saari) || defined (DEBUG_blizzard)
+#if defined (DEBUG_saari)
   printf("Send NS_GOTFOCUS from handle_mozarea_focus_in\n");
 #endif
   eventGotFocus.widget  = widget;
@@ -2667,7 +2664,7 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
                               GdkEventFocus *  aGdkFocusEvent, 
                               gpointer         aData)
 {
-#if defined (DEBUG_saari) || (DEBUG_blizzard)
+#if defined (DEBUG_saari)
   printf("handle_mozarea_focus_out\n");
   printf("... send NS_DEACTIVATE\n");
 #endif
