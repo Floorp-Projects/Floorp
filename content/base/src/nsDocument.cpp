@@ -440,12 +440,41 @@ nsDocumentChildNodes::DropReference()
   mDocument = nsnull;
 }
 
+class nsXPathDocumentTearoff : public nsIDOMXPathEvaluator
+{
+public:
+  nsXPathDocumentTearoff(nsIDOMXPathEvaluator* aEvaluator,
+                         nsIDocument* aDocument) : mEvaluator(aEvaluator),
+                                                   mDocument(aDocument)
+  {
+  }
+  virtual ~nsXPathDocumentTearoff()
+  {
+  }
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_FORWARD_NSIDOMXPATHEVALUATOR(mEvaluator->)
+
+private:
+  nsCOMPtr<nsIDOMXPathEvaluator> mEvaluator;
+  nsIDocument* mDocument;
+};
+
+NS_INTERFACE_MAP_BEGIN(nsXPathDocumentTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
+NS_INTERFACE_MAP_END_AGGREGATED(mDocument)
+NS_IMPL_ADDREF_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
+NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
+
+
 // ==================================================================
 // =
 // ==================================================================
 
 nsDocument::nsDocument() : mIsGoingAway(PR_FALSE),
-                           mCSSLoader(nsnull)
+                           mCSSLoader(nsnull),
+                           mXPathDocument(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -478,6 +507,8 @@ nsDocument::nsDocument() : mIsGoingAway(PR_FALSE),
 
 nsDocument::~nsDocument()
 {
+  delete mXPathDocument;
+
   // XXX Inform any remaining observers that we are going away.
   // Note that this currently contradicts the rule that all
   // observers must hold on to live references to the document.
@@ -575,6 +606,9 @@ nsDocument::~nsDocument()
   }
 }
 
+PRBool gCheckedForXPathDOM = PR_FALSE;
+PRBool gHaveXPathDOM = PR_FALSE;
+
 NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
@@ -592,6 +626,24 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
+  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) &&
+      (!gCheckedForXPathDOM || gHaveXPathDOM)) {
+    if (!mXPathDocument) {
+      nsCOMPtr<nsIDOMXPathEvaluator> evaluator;
+      nsresult rv;
+      evaluator = do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID, &rv);
+      gCheckedForXPathDOM = PR_TRUE;
+      gHaveXPathDOM = (evaluator != nsnull);
+      if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
+          return NS_ERROR_NO_INTERFACE;
+      }
+      NS_ENSURE_SUCCESS(rv, rv);
+      mXPathDocument = new nsXPathDocumentTearoff(evaluator, this);
+      NS_ENSURE_TRUE(mXPathDocument, NS_ERROR_OUT_OF_MEMORY);
+    }
+    foundInterface = mXPathDocument;
+  }
+  else
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDocument)

@@ -100,6 +100,7 @@
 
 // baseURI
 #include "nsIXMLDocument.h"
+#include "nsIDOMXPathEvaluator.h"
 
 #ifdef DEBUG_waterson
 
@@ -828,6 +829,9 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
   return NS_OK;
 }
 
+extern PRBool gCheckedForXPathDOM;
+extern PRBool gHaveXPathDOM;
+
 nsresult
 nsGenericElement::InternalIsSupported(const nsAString& aFeature,
                                       const nsAString& aVersion,
@@ -858,6 +862,16 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
     if (aVersion.IsEmpty() || aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
+  } else if ((!gCheckedForXPathDOM || gHaveXPathDOM) &&
+             feature.Equals(NS_LITERAL_STRING("XPath"), nsCaseInsensitiveStringComparator()) &&
+             (aVersion.IsEmpty() || aVersion.Equals(NS_LITERAL_STRING("3.0")))) {
+    if (!gCheckedForXPathDOM) {
+      nsCOMPtr<nsIDOMXPathEvaluator> evaluator;
+      evaluator = do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID);
+      gHaveXPathDOM = (evaluator != nsnull);
+      gCheckedForXPathDOM = PR_TRUE;
+    }
+    *aReturn = gHaveXPathDOM;
   }
 
   return NS_OK;

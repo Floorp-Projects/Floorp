@@ -232,7 +232,7 @@ static const nsModuleComponentInfo gComponents[] = {
       RegisterTransformiix },
     { "XPathEvaluator",
       TRANSFORMIIX_XPATH_EVALUATOR_CID,
-      TRANSFORMIIX_XPATH_EVALUATOR_CONTRACTID,
+      NS_XPATH_EVALUATOR_CONTRACTID,
       nsXPathEvaluatorConstructor },
     { "Transformiix Synchronous Loader",
       TRANSFORMIIX_SYNCLOADER_CID,
