@@ -116,7 +116,9 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   delete[] nameStr;
 
   if (!mIsMenuBarAdded) {
-    mParent->SetMenuBar(this);
+  	if(mParent){
+      mParent->SetMenuBar(this);
+    }
     mIsMenuBarAdded = PR_TRUE;
   }
 
