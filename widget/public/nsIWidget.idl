@@ -314,6 +314,9 @@ interface nsIWidget : nsISupports
   /**
    * Force a synchronous repaint of the window if there are dirty rects.
    *
+   * NOTE: calling update can result in other windows being invalidated;
+   * see bug 80345 for an example of how unexpected this can be.
+   *
    * @see Invalidate()
    */
   void update();
