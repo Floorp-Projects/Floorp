@@ -50,7 +50,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              const nsString& inJarLocation,
                              nsInstallFolder *folderSpec,
                              const nsString& inPartialPath,
-                             PRBool forceInstall,
+                             PRInt32 mode,
                              PRInt32 *error) 
   : nsInstallObject(inInstall),
     mVersionInfo(nsnull),
@@ -58,7 +58,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     mExtractedFile(nsnull),
     mFinalFile(nsnull),
     mVersionRegistryName(nsnull),
-    mForceInstall(forceInstall),
+    mMode(mode),
     mReplaceFile(PR_FALSE),
     mChildFile(PR_TRUE),
     mUpgradeFile(PR_FALSE),
@@ -76,7 +76,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     
     /* Check for existence of the newer	version	*/
 #if 0 // XXX need to re-implement force mode in the opposite sense
-    
+
     char* qualifiedRegNameString = inComponentName.ToNewCString();
 
     // --------------------------------------------------------------------
@@ -86,7 +86,8 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     // IFF it's not force, AND the new file has a version, AND it's been
     // previously installed, THEN we have to do the version comparing foo.
     // --------------------------------------------------------------------
-    if ( (forceInstall == PR_FALSE ) && (inVInfo !=  "") && ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
+    if ( !(mode & INSTALL_NO_COMPARE ) && (inVInfo !=  "") && 
+          ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
     {
         nsInstallVersion *newVersion = new nsInstallVersion();
         

@@ -35,6 +35,13 @@
 #include "nsInstall.h"
 #include "nsInstallVersion.h"
 
+
+/* Global defines for file handling mode bitfield values */
+#define INSTALL_NO_COMPARE        0x1
+#define INSTALL_IF_NEWER          0x2
+#define INSTALL_IF_EQUAL_OR_NEWER 0x4
+
+
 class nsInstallFile : public nsInstallObject 
 {
     public:
@@ -55,7 +62,7 @@ class nsInstallFile : public nsInstallObject
                         const nsString& inJarLocation,
                         nsInstallFolder *folderSpec,
                         const nsString& inPartialPath,
-                        PRBool forceInstall,
+                        PRInt32 mode,
                         PRInt32 *error);
 
         virtual ~nsInstallFile();
@@ -85,10 +92,14 @@ class nsInstallFile : public nsInstallObject
         PRBool      mChildFile;      /* whether file is a child */
         PRBool      mUpgradeFile;    /* whether file is an upgrade */
         PRBool      mSkipInstall;    /* if true don't install this file */
-
+        
+        PRInt32    mMode;            /* an integer used like a bitfield to control *
+                                      * how a file is installed or registered      */
 
         PRInt32     CompleteFileMove();
         PRInt32     RegisterInVersionRegistry();
+    
+
 };
 
 #endif /* nsInstallFile_h__ */
