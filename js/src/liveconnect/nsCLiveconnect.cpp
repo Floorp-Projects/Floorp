@@ -572,11 +572,12 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     }
 
     /* Allocate space for JS arguments */
-    if (java_args) {
-        argc = jEnv->GetArrayLength(java_args);
+    argc = java_args ? jEnv->GetArrayLength(java_args) : 0;
+    if (argc) {
         argv = (jsval*)JS_malloc(cx, argc * sizeof(jsval));
+        if (!argv)
+            goto done;
     } else {
-        argc = 0;
         argv = 0;
     }
 
