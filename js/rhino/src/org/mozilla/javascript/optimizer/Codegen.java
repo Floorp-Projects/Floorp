@@ -2076,36 +2076,21 @@ public class Codegen extends Interpreter {
             // get the label to goto
             int catchLabel = catchTarget.getExistingIntProp(Node.LABEL_PROP);
 
-            generateCatchBlock(JAVASCRIPTEXCEPTION, savedVariableObject,
+            generateCatchBlock(JAVASCRIPT_EXCEPTION, savedVariableObject,
                                catchLabel, startLabel);
             /*
              * catch WrappedExceptions, see if they are wrapped
              * JavaScriptExceptions. Otherwise, rethrow.
              */
-            generateCatchBlock(WRAPPEDEXCEPTION, savedVariableObject,
+            generateCatchBlock(WRAPPED_EXCEPTION, savedVariableObject,
                                catchLabel, startLabel);
 
             /*
                 we also need to catch EcmaErrors and feed the
                 associated error object to the handler
             */
-            int jsHandler = acquireLabel();
-            classFile.markHandler(jsHandler);
-            short exceptionObject = getNewWordLocal();
-            astore(exceptionObject);
-            aload(savedVariableObject);
-            astore(variableObjectLocal);
-            aload(exceptionObject);
-            addVirtualInvoke("org/mozilla/javascript/EcmaError",
-                             "getErrorObject",
-                             "()Lorg/mozilla/javascript/Scriptable;");
-            releaseWordLocal(exceptionObject);
-            addByteCode(ByteCode.GOTO, catchLabel);
-            classFile.addExceptionHandler
-                (startLabel, catchLabel, jsHandler,
-                 "org/mozilla/javascript/EcmaError");
-
-
+            generateCatchBlock(ECMAERROR_EXCEPTION, savedVariableObject,
+                               catchLabel, startLabel);
         }
 
         // finally handler; catch all exceptions, store to a local; JSR to
@@ -2138,8 +2123,9 @@ public class Codegen extends Interpreter {
         markLabel(realEnd);
     }
 
-    private final int JAVASCRIPTEXCEPTION = 0;
-    private final int WRAPPEDEXCEPTION    = 1;
+    private final int JAVASCRIPT_EXCEPTION = 0;
+    private final int WRAPPED_EXCEPTION    = 2;
+    private final int ECMAERROR_EXCEPTION  = 3;
 
     private void generateCatchBlock(int exceptionType,
                                     short savedVariableObject,
@@ -2160,24 +2146,30 @@ public class Codegen extends Interpreter {
         aload(exceptionObject);
         releaseWordLocal(exceptionObject);
 
-        if (exceptionType == JAVASCRIPTEXCEPTION) {
+        String exceptionName;
+
+        if (exceptionType == JAVASCRIPT_EXCEPTION) {
             // unwrap the exception...
             addScriptRuntimeInvoke(
                 "unwrapJavaScriptException",
                 "(Lorg/mozilla/javascript/JavaScriptException;"
                 +")Ljava/lang/Object;");
-        } else {
+            exceptionName = "org/mozilla/javascript/JavaScriptException";
+        } else if (exceptionType == WRAPPED_EXCEPTION) {
             // unwrap the exception...
             addScriptRuntimeInvoke(
                 "unwrapWrappedException",
                 "(Lorg/mozilla/javascript/WrappedException;"
                 +")Ljava/lang/Object;");
+            exceptionName = "org/mozilla/javascript/WrappedException";
+        } else {
+            if (exceptionType != ECMAERROR_EXCEPTION) Context.codeBug();
+            // unwrap the exception...
+            addVirtualInvoke("org/mozilla/javascript/EcmaError",
+                             "getErrorObject",
+                             "()Lorg/mozilla/javascript/Scriptable;");
+            exceptionName = "org/mozilla/javascript/EcmaError";
         }
-
-
-        String exceptionName = exceptionType == JAVASCRIPTEXCEPTION
-                               ? "org/mozilla/javascript/JavaScriptException"
-                               : "org/mozilla/javascript/WrappedException";
 
         // mark the handler
         classFile.addExceptionHandler(startLabel, catchLabel, handler,
