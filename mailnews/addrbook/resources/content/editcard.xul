@@ -56,14 +56,14 @@
 		style="height:100%; width:100%; border:none"
 		align="vertical">
 
-	<tabcontrol align="vertical" style="margin:5px; border:2px groove white">
+	<tabcontrol align="vertical" style="margin:5px">
 	   <tabbox align="horizontal">
 	      <tab>&Name.tab;</tab>
 	      <tab>&Address.tab;</tab>
 	      <tab>&Other.tab;</tab>
 	   </tabbox>
 	   
-	   <tabpanel align="vertical" flex="100%">
+	   <tabpanel align="vertical" flex="100%" style="border:2px groove white">
 
 			<!-- ** Name Tab ** -->
 			<box index="name" align="vertical" flex="100%">
@@ -133,12 +133,12 @@
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="HomePhone">&WorkPhone.label;</html:label>
+							<html:label for="HomePhone">&HomePhone.label;</html:label>
 							<html:input id="HomePhone" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="FaxPhone">&WorkPhone.label;</html:label>
+							<html:label for="FaxNumber">&FaxNumber.label;</html:label>
 							<html:input id="FaxNumber" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">

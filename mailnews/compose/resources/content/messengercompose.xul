@@ -89,10 +89,10 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		onunload="ComposeUnload()"
+		width="640" height="480"
 		title="&msgComposeWindow.title;"
-		style="width:100%;height:100%"
-		align="vertical"
-		> 
+		style="width:100%; height:100%"
+		align="vertical"> 
   
 
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
