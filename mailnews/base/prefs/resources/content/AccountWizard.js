@@ -250,8 +250,8 @@ function createAccount(accountData)
 
     dump("am.createAccount()\n");
     var account = am.createAccount();
-    account.incomingServer = server;
     account.addIdentity(identity);
+    account.incomingServer = server;
     return account;
 }
 
