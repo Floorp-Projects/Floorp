@@ -105,7 +105,7 @@ public:
   /**
    * Called when scripts are enabled/disabled.
    */
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled) = 0;
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
 };
 
 #endif

@@ -704,9 +704,9 @@ GlobalWindowImpl::OnFinalize(JSObject *aJSObject)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled)
+GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
-  if (aEnabled) {
+  if (aEnabled && aFireTimeouts) {
     // Scripts are enabled (again?) on this context, run timeouts that
     // fired on this context while scripts were disabled.
 
