@@ -46,6 +46,7 @@
 #include "nsIOutlinerSelection.h"
 #include "nsIOutlinerView.h"
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 
 // For sorting
 #include "nsICollation.h"
