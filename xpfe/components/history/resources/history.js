@@ -79,7 +79,7 @@ var HistoryController = {
                 doSelectAll();
                 break;
         }
-    },
+    }
 };
 
 var historyDNDObserver = {
@@ -97,6 +97,6 @@ var historyDNDObserver = {
     flavourList["text/html"] = { width: 2, data: htmlString };
     flavourList["text/x-moz-url"] = { width: 2, data: uri + "\n" + title };
     return flavourList;
-  },
+  }
 
 };
