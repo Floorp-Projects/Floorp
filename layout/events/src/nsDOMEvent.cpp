@@ -40,6 +40,7 @@
 #include "nsIDOMAbstractView.h"
 #include "prmem.h"
 #include "nsLayoutAtoms.h"
+#include "nsMutationEvent.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -50,7 +51,10 @@ static char* mEventNames[] = {
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "create", "close", "destroy", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
-  "scroll","overflow", "underflow", "overflowchanged"
+  "scroll","overflow", "underflow", "overflowchanged",
+  "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
+  "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
+  "DOMAttrModified", "DOMCharacterDataModified"
 }; 
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType) {
@@ -75,6 +79,10 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
     else if (eventType.EqualsIgnoreCase("HTMLEvent")) {
       mEvent = PR_NEWZAP(nsEvent);
       mEvent->eventStructType = NS_EVENT;
+    }
+    else if (eventType.EqualsIgnoreCase("MutationEvent")) {
+      mEvent = PR_NEWZAP(nsMutationEvent);
+      mEvent->eventStructType = NS_MUTATION_EVENT;
     }
     else {
       mEvent = PR_NEWZAP(nsEvent);
@@ -1013,7 +1021,6 @@ nsDOMEvent::InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg
   return NS_OK;
 }
 
-
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
   //XXX Write me!
@@ -1183,6 +1190,20 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_underflow];
   case NS_SCROLLPORT_OVERFLOWCHANGED:
     return mEventNames[eDOMEvents_overflowchanged];
+  case NS_MUTATION_SUBTREEMODIFIED:
+    return mEventNames[eDOMEvents_subtreemodified];
+  case NS_MUTATION_NODEINSERTED:
+    return mEventNames[eDOMEvents_nodeinserted];
+  case NS_MUTATION_NODEREMOVED:
+    return mEventNames[eDOMEvents_noderemoved];
+  case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
+    return mEventNames[eDOMEvents_noderemovedfromdocument];
+  case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
+    return mEventNames[eDOMEvents_nodeinsertedintodocument];
+  case NS_MUTATION_ATTRMODIFIED:
+    return mEventNames[eDOMEvents_attrmodified];
+  case NS_MUTATION_CHARACTERDATAMODIFIED:
+    return mEventNames[eDOMEvents_characterdatamodified];
   default:
     break;
   }

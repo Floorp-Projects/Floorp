@@ -30,6 +30,8 @@ MODULE		= layout
 
 IDLSRCS		= \
 		Event.idl \
+    MutationEvent.idl \
+    MouseKeyEvent.idl \
 		UIEvent.idl \
 		$(NULL)
 

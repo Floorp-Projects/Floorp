@@ -34,6 +34,7 @@ CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
 		nsDOMEvent.cpp \
+    nsDOMMutationEvent.cpp \
 		nsDOMEventsIIDs.cpp \
 		nsPrivateTextRange.cpp \
 		$(NULL)

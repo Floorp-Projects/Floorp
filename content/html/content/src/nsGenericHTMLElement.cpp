@@ -42,6 +42,7 @@
 #include "nsIHTMLContent.h"
 #include "nsILink.h"
 #include "nsILinkHandler.h"
+#include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"
@@ -85,6 +86,13 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsILanguageAtomService.h"
+
+#include "nsIDOMMutationEvent.h"
+#include "nsMutationEvent.h"
+#include "nsEventListenerManager.h"
+
+#include "nsIBindingManager.h"
+#include "nsIXBLBinding.h"
 
 #include "nsIParser.h"
 #include "nsParserCIID.h"
@@ -1229,6 +1237,73 @@ nsGenericHTMLElement::NormalizeAttributeString(const nsAReadableString& aStr,
   return nimgr->GetNodeInfo(lower, nsnull, kNameSpaceID_None, aNodeInfo);
 }
 
+static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
+{
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  doc->GetScriptGlobalObject(getter_AddRefs(global));
+  if (!global)
+    return PR_FALSE;
+
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
+  if (!window)
+    return PR_FALSE;
+
+  PRBool set;
+  window->HasMutationListeners(aType, &set);
+  if (!set)
+    return PR_FALSE;
+
+  // We know a mutation listener is registered, but it might not
+  // be in our chain.  Check quickly to see.
+  nsCOMPtr<nsIContent> curr = aContent;
+  nsCOMPtr<nsIEventListenerManager> manager;
+
+  while (curr) {
+    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(curr));
+    if (rec) {
+      rec->GetListenerManager(getter_AddRefs(manager));
+      if (manager) {
+        PRBool hasMutationListeners = PR_FALSE;
+        manager->HasMutationListeners(&hasMutationListeners);
+        if (hasMutationListeners)
+          return PR_TRUE;
+      }
+    }
+
+    nsCOMPtr<nsIContent> prev = curr;
+    prev->GetParent(*getter_AddRefs(curr));
+  }
+
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
+  if (rec) {
+    rec->GetListenerManager(getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasMutationListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasMutationListeners);
+      if (hasMutationListeners)
+        return PR_TRUE;
+    }
+  }
+  
+  rec = do_QueryInterface(window);
+  if (rec) {
+    rec->GetListenerManager(getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasMutationListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasMutationListeners);
+      if (hasMutationListeners)
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
@@ -1302,6 +1377,9 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   if (NS_OK != result) {
     return result;
   }
+
+  nsAutoString strValue;
+  PRBool modification = PR_TRUE;
   if (NS_CONTENT_ATTR_NOT_THERE !=
       htmlContent->StringToAttribute(aAttribute, aValue, val)) {
     // string value was mapped to nsHTMLValue, set it that way
@@ -1324,12 +1402,13 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     // don't do any update if old == new
-    nsAutoString strValue;
     result = GetAttribute(aNameSpaceID, aAttribute, strValue);
     if ((NS_CONTENT_ATTR_NOT_THERE != result) && aValue.Equals(strValue)) {
       NS_RELEASE(htmlContent);
       return NS_OK;
     }
+
+    modification = (result != NS_CONTENT_ATTR_NOT_THERE);
 
     if (aNotify && (nsnull != mDocument)) {
       mDocument->BeginUpdate();
@@ -1363,11 +1442,45 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   }
   NS_RELEASE(htmlContent);
 
-  if (aNotify && (nsnull != mDocument)) {
-    result = mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, NS_STYLE_HINT_UNKNOWN);
-    mDocument->EndUpdate();
-  }
+  if (mDocument) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    if (binding)
+      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_FALSE);
 
+    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_ATTRMODIFIED;
+      mutation.mTarget = node;
+
+      nsAutoString attrName;
+      aAttribute->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      GetAttributeNode(attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
+
+      mutation.mAttrName = aAttribute;
+      if (!strValue.IsEmpty()) 
+        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(strValue));
+      if (!aValue.IsEmpty())
+        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
+      mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION : 
+                                             nsIDOMMutationEvent::ADDITION;
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsCOMPtr<nsIDOMEvent> domEvent;
+      mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    }
+
+    if (aNotify) {
+      mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, NS_STYLE_HINT_UNKNOWN);
+      mDocument->EndUpdate();
+    }
+  }
+ 
   return result;
 }
 
@@ -1447,6 +1560,41 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
                                         htmlContent, mAttributes);
         NS_RELEASE(sheet);
     }
+
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    if (binding)
+      binding->AttributeChanged(aAttribute, kNameSpaceID_None, PR_TRUE);
+
+    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      // XXX Figure out how to get the old value, so I can fill in
+      // the prevValue field and so that I can correctly indicate
+      // MODIFICATIONs/ADDITIONs.
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_ATTRMODIFIED;
+      mutation.mTarget = node;
+
+      nsAutoString attrName;
+      aAttribute->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      GetAttributeNode(attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
+
+      mutation.mAttrName = aAttribute;
+      nsAutoString value;
+      aValue.ToString(value);
+      if (!value.IsEmpty())
+        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(value));
+      mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsCOMPtr<nsIDOMEvent> domEvent;
+      mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    }
+
     if (aNotify) {
       mDocument->AttributeChanged(mContent, kNameSpaceID_None, aAttribute, impact);
       mDocument->EndUpdate();
@@ -1504,11 +1652,48 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
         }
       }
     }
+
+    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_ATTRMODIFIED;
+      mutation.mTarget = node;
+
+      nsAutoString attrName;
+      aAttribute->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      GetAttributeNode(attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
+
+      mutation.mAttrName = aAttribute;
+
+      nsHTMLValue oldAttr;
+      GetHTMLAttribute(aAttribute, oldAttr);
+      nsAutoString attr;
+      oldAttr.ToString(attr);
+      if (!attr.IsEmpty()) 
+        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(attr));
+      mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsCOMPtr<nsIDOMEvent> domEvent;
+      mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    }
+
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
       result = sheet->UnsetAttributeFor(aAttribute, htmlContent, mAttributes);
       NS_RELEASE(sheet);
     }
+
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    if (binding)
+      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE);
+
     if (aNotify) {
       mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, impact);
       mDocument->EndUpdate();
@@ -3198,7 +3383,6 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
   return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aChildNodes);
 }
 
-
 //----------------------------------------------------------------------
 
 nsGenericHTMLContainerElement::nsGenericHTMLContainerElement()
@@ -3375,6 +3559,21 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
+
+      if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
+        nsMutationEvent mutation;
+        mutation.eventStructType = NS_MUTATION_EVENT;
+        mutation.message = NS_MUTATION_NODEINSERTED;
+        mutation.mTarget = node;
+
+        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+        mutation.mRelatedNode = relNode;
+
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsCOMPtr<nsIDOMEvent> domEvent;
+        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      }
     }
   }
   if (aNotify && (nsnull != doc)) {
@@ -3433,6 +3632,21 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
       if (aNotify) {
         doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
+
+      if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
+        nsMutationEvent mutation;
+        mutation.eventStructType = NS_MUTATION_EVENT;
+        mutation.message = NS_MUTATION_NODEINSERTED;
+        mutation.mTarget = node;
+
+        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+        mutation.mRelatedNode = relNode;
+
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsCOMPtr<nsIDOMEvent> domEvent;
+        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      }
     }
   }
   if (aNotify && (nsnull != doc)) {
@@ -3450,6 +3664,22 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
+
+    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_NODEREMOVED;
+      mutation.mTarget = node;
+
+      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+      mutation.mRelatedNode = relNode;
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsCOMPtr<nsIDOMEvent> domEvent;
+      oldKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    }
+
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     mChildren.RemoveElementAt(aIndex);
     if (aNotify) {

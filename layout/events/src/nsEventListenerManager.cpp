@@ -37,7 +37,9 @@
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMScrollListener.h"
+#include "nsIDOMMutationListener.h"
 #include "nsIEventStateManager.h"
+#include "nsPIDOMWindow.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptEventListener.h"
@@ -56,6 +58,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsMutationEvent.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -77,6 +80,7 @@ nsEventListenerManager::nsEventListenerManager()
   mCompositionListeners = nsnull;
   mMenuListeners = nsnull;
   mScrollListeners = nsnull;
+  mMutationListeners = nsnull;
   mDestroyed = PR_FALSE;
   mTarget = nsnull;
   NS_INIT_REFCNT();
@@ -97,6 +101,7 @@ nsEventListenerManager::~nsEventListenerManager()
   ReleaseListeners(&mCompositionListeners, PR_FALSE);
   ReleaseListeners(&mMenuListeners, PR_FALSE);
   ReleaseListeners(&mScrollListeners, PR_FALSE);
+  ReleaseListeners(&mMutationListeners, PR_FALSE);
 }
 
 NS_IMPL_ADDREF(nsEventListenerManager)
@@ -184,6 +189,9 @@ nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
   else if (aIID.Equals(kIDOMScrollListenerIID)) {
   return &mScrollListeners;
   }
+  else if (aIID.Equals(kIDOMMutationListenerIID)) {
+    return &mMutationListeners;
+  }
   return nsnull;
 }
 
@@ -243,6 +251,25 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
 
   if (nsnull == *listeners) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // For mutation listeners, we need to update the global bit on the DOM window.
+  // Otherwise we won't actually fire the mutation event.
+  if (aIID.Equals(NS_GET_IID(nsIDOMMutationListener))) {
+    // Go from our target to the nearest enclosing DOM window.
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
+    if (content)
+      content->GetDocument(*getter_AddRefs(document));
+    else document = do_QueryInterface(mTarget);
+    if (document)
+      document->GetScriptGlobalObject(getter_AddRefs(global));
+    else global = do_QueryInterface(mTarget);
+    if (global) {
+      nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
+      window->SetMutationListeners(aSubType);
+    }
   }
 
   PRBool found = PR_FALSE;
@@ -503,6 +530,34 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
   else if (aType == nsLayoutAtoms::ondraggesture) {
     aIID = NS_GET_IID(nsIDOMDragListener); 
     *aFlags = NS_EVENT_BITS_DRAG_GESTURE;
+  }
+  else if (aType == nsLayoutAtoms::onDOMSubtreeModified) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
+  }
+  else if (aType == nsLayoutAtoms::onDOMNodeInserted) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_NODEINSERTED;
+  }
+  else if (aType == nsLayoutAtoms::onDOMNodeRemoved) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_NODEREMOVED;
+  }
+  else if (aType == nsLayoutAtoms::onDOMNodeInsertedIntoDocument) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
+  }
+  else if (aType == nsLayoutAtoms::onDOMNodeRemovedFromDocument) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
+  }
+  else if (aType == nsLayoutAtoms::onDOMAttrModified) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_ATTRMODIFIED;
+  }
+  else if (aType == nsLayoutAtoms::onDOMCharacterDataModified) {
+    aIID = NS_GET_IID(nsIDOMMutationListener);
+    *aFlags = NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
   }
   else {
     return NS_ERROR_FAILURE;
@@ -1676,6 +1731,112 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       }
       break;
 
+    case NS_MUTATION_SUBTREEMODIFIED:
+    case NS_MUTATION_NODEINSERTED:
+    case NS_MUTATION_NODEREMOVED:
+    case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
+    case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
+    case NS_MUTATION_ATTRMODIFIED:
+    case NS_MUTATION_CHARACTERDATAMODIFIED:
+      if (nsnull != mMutationListeners) {
+        if (nsnull == *aDOMEvent) {
+          ret = NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
+        }
+        if (NS_OK == ret) {
+          for (int i=0; mMutationListeners && i<mMutationListeners->Count(); i++) {
+            nsListenerStruct *ls;
+            nsCOMPtr<nsIDOMMutationListener> mutationListener;
+          
+            ls = (nsListenerStruct*)mMutationListeners->ElementAt(i);
+
+            if (ls->mFlags & aFlags) {
+              mutationListener = do_QueryInterface(ls->mListener);
+              if (mutationListener) {
+                switch(aEvent->message) {
+                  case NS_MUTATION_SUBTREEMODIFIED:
+                    ret = mutationListener->SubtreeModified(*aDOMEvent);
+                    break;
+                  case NS_MUTATION_NODEINSERTED:
+                    ret = mutationListener->NodeInserted(*aDOMEvent);
+                    break;
+                  case NS_MUTATION_NODEREMOVED:
+                    ret = mutationListener->NodeRemoved(*aDOMEvent);
+                    break;
+                  case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
+                    ret = mutationListener->NodeInsertedIntoDocument(*aDOMEvent);
+                    break;
+                  case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
+                    ret = mutationListener->NodeRemovedFromDocument(*aDOMEvent);
+                    break;
+                  case NS_MUTATION_ATTRMODIFIED:
+                    ret = mutationListener->AttrModified(*aDOMEvent);
+                    break;
+                  case NS_MUTATION_CHARACTERDATAMODIFIED:
+                    ret = mutationListener->CharacterDataModified(*aDOMEvent);
+                    break;
+                  default:
+                    break;
+                }
+              }
+              else {
+                PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
+                switch(aEvent->message) {
+                  case NS_MUTATION_SUBTREEMODIFIED:
+                    subType = NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MUTATION_NODEINSERTED:
+                    subType = NS_EVENT_BITS_MUTATION_NODEINSERTED;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEINSERTED) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MUTATION_NODEREMOVED:
+                    subType = NS_EVENT_BITS_MUTATION_NODEREMOVED;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEREMOVED) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
+                    subType = NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
+                    subType = NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MUTATION_ATTRMODIFIED:
+                    subType = NS_EVENT_BITS_MUTATION_ATTRMODIFIED;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_ATTRMODIFIED) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_MUTATION_CHARACTERDATAMODIFIED:
+                    subType = NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
+                    if (ls->mSubType & NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  default:
+                    break;
+                }
+                if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
+                }
+              }
+            }
+          }
+        }
+      }
+      break;
+
     default:
       break;
   }
@@ -1701,10 +1862,12 @@ nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
 {
   nsAutoString str(aEventType);
   if (!aEvent && !str.EqualsIgnoreCase("MouseEvent") && !str.EqualsIgnoreCase("KeyEvent") &&
-      !str.EqualsIgnoreCase("HTMLEvent")) {
+      !str.EqualsIgnoreCase("HTMLEvent") && !str.EqualsIgnoreCase("MutationEvent")) {
     return NS_ERROR_FAILURE;
   }
 
+  if (str.EqualsIgnoreCase("MutationEvent"))
+    return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, aEvent);
   return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEventType, aEvent);
 }
 
@@ -1965,6 +2128,7 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   ReleaseListeners(&mPaintListeners, aScriptOnly);
   ReleaseListeners(&mTextListeners, aScriptOnly);
   ReleaseListeners(&mCompositionListeners, aScriptOnly);
+  ReleaseListeners(&mMutationListeners, aScriptOnly);
   mDestroyed = PR_TRUE;
   return NS_OK;
 }

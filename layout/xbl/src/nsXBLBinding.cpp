@@ -63,6 +63,7 @@
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMDragListener.h"
+#include "nsIDOMMutationListener.h"
 
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -73,6 +74,7 @@
 #include "nsXBLFocusHandler.h"
 #include "nsXBLMouseHandler.h"
 #include "nsXBLMouseMotionHandler.h"
+#include "nsXBLMutationHandler.h"
 #include "nsXBLXULHandler.h"
 #include "nsXBLScrollHandler.h"
 #include "nsXBLFormHandler.h"
@@ -210,6 +212,14 @@ nsXBLBinding::kEventHandlerMap[] = {
     { "dragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
     { "dragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
     { "draggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+
+    { "DOMSubtreeModified",           nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+    { "DOMAttrModified",              nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+    { "DOMCharacterDataModified",     nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+    { "DOMNodeInserted",              nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+    { "DOMNodeRemoved",               nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+    { "DOMNodeInsertedIntoDocument",  nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
+    { "DOMNodeRemovedFromDocument",   nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
 
     { nsnull,            nsnull, nsnull                                 }
 };
@@ -653,6 +663,12 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           NS_NewXBLLoadHandler(receiver, curr, &loadHandler);
           receiver->AddEventListener(type, (nsIDOMLoadListener*)loadHandler, useCapture);
           handler = loadHandler;
+        }
+        else if(iid.Equals(NS_GET_IID(nsIDOMMutationListener))) {
+          nsXBLMutationHandler* mutationHandler;
+          NS_NewXBLMutationHandler(receiver, curr, &mutationHandler);
+          receiver->AddEventListener(type, (nsIDOMMutationListener*)mutationHandler, useCapture);
+          handler = mutationHandler;
         }
         else {
           NS_WARNING("***** Non-compliant XBL event listener attached! *****");

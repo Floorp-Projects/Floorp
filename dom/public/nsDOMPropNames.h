@@ -704,6 +704,12 @@
     "mouseevent.relatedtarget", \
     "mouseevent.screenx", \
     "mouseevent.screeny", \
+    "mutationevent.attrchange", \
+    "mutationevent.attrname", \
+    "mutationevent.initmutationevent", \
+    "mutationevent.newvalue", \
+    "mutationevent.prevvalue", \
+    "mutationevent.relatednode", \
     "namednodemap.getnameditem", \
     "namednodemap.getnameditemns", \
     "namednodemap.item", \

@@ -33,6 +33,7 @@ EXPORTS		= \
 		nsIDOMUIEvent.h \
 		nsIDOMKeyEvent.h \
 		nsIDOMMouseEvent.h \
+    nsIDOMMutationEvent.h \
 		nsIDOMEventListener.h \
 		nsIDOMEventCapturer.h \
 		nsIDOMEventReceiver.h \
@@ -42,6 +43,7 @@ EXPORTS		= \
 		nsIDOMLoadListener.h \
 		nsIDOMMouseListener.h \
 		nsIDOMMouseMotionListener.h \
+    nsIDOMMutationListener.h \
 		nsIDOMPaintListener.h \
 		nsIDOMDragListener.h \
 		nsIDOMNSUIEvent.h \

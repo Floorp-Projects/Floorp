@@ -1,0 +1,20 @@
+interface MutationEvent : Event {
+/* IID: { 0x8e440d86, 0x886a, 0x4e76, { 0x9e, 0x59, 0xc1, 0x3b, 0x93, 0x9c, 0x9a, 0x4b } } */
+
+  const unsigned short      MODIFICATION                   = 1;
+  const unsigned short      ADDITION                       = 2;
+  const unsigned short      REMOVAL                        = 3;
+
+  readonly attribute Node             relatedNode;
+  readonly attribute DOMString        prevValue;
+  readonly attribute DOMString        newValue;
+  readonly attribute DOMString        attrName;
+  readonly attribute unsigned short   attrChange;
+  void               initMutationEvent(in DOMString typeArg, 
+                                       in boolean canBubbleArg, 
+                                       in boolean cancelableArg, 
+                                       in Node relatedNodeArg, 
+                                       in DOMString prevValueArg, 
+                                       in DOMString newValueArg, 
+                                       in DOMString attrNameArg);
+};
