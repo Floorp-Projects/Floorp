@@ -96,6 +96,8 @@ static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID,        NS_IDOCUMENT_VIEWER_IID);
 
+static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
+static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 
 #define APP_DEBUG 0 
 
@@ -228,7 +230,6 @@ nsEditorAppCore::GetPresShellFor(nsIWebShell* aWebShell)
 void
 nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 {
-  PRInt32 i, n;
   if (nsnull != aWebShell) {
     nsIContentViewer* mCViewer;
     aWebShell->GetContentViewer(&mCViewer);
@@ -242,11 +243,32 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 	        nsIDOMDocument* mDOMDoc;
 	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
           {
-            nsIPresShell* shell = GetPresShellFor(aWebShell);
-            NS_InitEditorMode(mDOMDoc, shell);
-            mEditor = GetEditor();
+            nsIPresShell* presShell = GetPresShellFor(aWebShell);
+            if( presShell )
+            {
+              nsIHTMLEditor *editor = nsnull;
+              nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull,
+                                                    kIHTMLEditorIID, (void **)&editor);
+              if(!editor)
+                result = NS_ERROR_OUT_OF_MEMORY;
+              if (NS_SUCCEEDED(result))
+              {
+                result = editor->Init(mDOMDoc, presShell);
+                if (NS_SUCCEEDED(result) && editor)
+                {
+                  // The EditorAppCore "owns" the editor
+                  mEditor = editor;
+                }
+#ifdef DEBUG
+                else
+                {
+                  printf("Failed to init editor\n");
+                }
+#endif
+              }
+            }
 	          NS_RELEASE(mDOMDoc);
-            NS_IF_RELEASE(shell);
+            NS_IF_RELEASE(presShell);
 	        }
 	        NS_RELEASE(mDoc);
 	      }
@@ -254,7 +276,9 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
       }
       NS_RELEASE(mCViewer);
     }
-    
+#if 0    
+// Not sure if this makes sense any more
+    PRInt32 i, n;
     aWebShell->GetChildCount(n);
     for (i = 0; i < n; i++) {
       nsIWebShell* mChild;
@@ -262,6 +286,7 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
       DoEditorMode(mChild);
       NS_RELEASE(mChild);
     }
+#endif
   }
 }
 

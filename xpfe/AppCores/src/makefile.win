@@ -84,7 +84,6 @@ OBJS = \
     .\$(OBJDIR)\nsAppCores.obj         \
     .\$(OBJDIR)\nsEditorAppCore.obj         \
     .\$(OBJDIR)\nsEditorAppCoreFactory.obj         \
-    .\$(OBJDIR)\nsEditorMode.obj         \
     .\$(OBJDIR)\nsJSEditorAppCore.obj         \
     $(NULL)
 
