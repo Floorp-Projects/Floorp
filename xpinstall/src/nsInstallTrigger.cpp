@@ -324,18 +324,16 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
         return NS_OK;
 
     VERSION              cVersion;
-    char*                tempCString;
+    NS_ConvertUCS2toUTF8 regName(aRegName);
     REGERR               status;
     nsInstallVersion     regNameVersion;
     
-    tempCString = aRegName.ToNewCString();
-
-    status = VR_GetVersion( tempCString, &cVersion );
+    status = VR_GetVersion( regName, &cVersion );
 
     /* if we got the version */
     if ( status == REGERR_OK ) 
     {
-        if ( VR_ValidateComponent( tempCString ) == REGERR_NOFILE ) 
+        if ( VR_ValidateComponent( regName ) == REGERR_NOFILE ) 
         {
             regNameVersion.Init(0,0,0,0);
         }
@@ -352,9 +350,6 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
         
     regNameVersion.CompareTo( aVersion, aReturn );
 
-    if (tempCString)
-        Recycle(tempCString);
-    
     return NS_OK;
 }
 
@@ -368,12 +363,10 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
         return NS_OK;
 
     VERSION              cVersion;
-    char*                tempCString;
+    NS_ConvertUCS2toUTF8 regName(component);
     REGERR               status;
     
-    tempCString = component.ToNewCString();
-
-    status = VR_GetVersion( tempCString, &cVersion );
+    status = VR_GetVersion( regName, &cVersion );
 
     version.Truncate();
 
@@ -392,9 +385,6 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
         regNameVersion.ToString(version);
     }
     
-    if (tempCString)
-         Recycle(tempCString);
-
     return NS_OK;
 }
 

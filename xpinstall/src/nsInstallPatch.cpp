@@ -22,6 +22,7 @@
 
 #include "nsFileSpec.h"
 #include "prmem.h"
+#include "nsXPIDLString.h"
 #include "nsInstall.h"
 #include "nsInstallPatch.h"
 #include "nsInstallResources.h"
@@ -79,11 +80,9 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     MOZ_COUNT_CTOR(nsInstallPatch);
 
     char tempTargetFile[MAXREGPATHLEN];
-    char* tempVersionString = inVRName.ToNewCString();
 
-    PRInt32 err = VR_GetPath(tempVersionString, MAXREGPATHLEN, tempTargetFile );
-    
-    Recycle(tempVersionString);
+    PRInt32 err = VR_GetPath( NS_ConvertUCS2toUTF8(inVRName), 
+                              sizeof(tempTargetFile), tempTargetFile );
     
     if (err != REGERR_OK)
     {
@@ -305,22 +304,16 @@ PRInt32 nsInstallPatch::Complete()
             nsString tempVersionString;
             mVersionInfo->ToString(tempVersionString);
             
-            char* tempRegName = mRegistryName->ToNewCString();
-            char* tempVersion = tempVersionString.ToNewCString();
-            char* tempPath;
-            mTargetFile->GetPath(&tempPath);
+            nsXPIDLCString tempPath;
+            mTargetFile->GetPath(getter_Copies(tempPath));
 
             // DO NOT propogate version registry errors, it will abort 
             // FinalizeInstall() leaving things hosed. These piddly errors
             // aren't worth that.
-            VR_Install( tempRegName, 
-                        tempPath,
-                        tempVersion, 
+            VR_Install( NS_ConvertUCS2toUTF8(mRegistryName->GetUnicode()), 
+                        (char*)(const char*)tempPath,
+                        NS_ConvertUCS2toUTF8(tempVersionString), 
                         PR_FALSE );
-            
-            if (tempRegName) Recycle(tempRegName);
-            if (tempVersion) Recycle(tempVersion);
-
         }
         else
         {

@@ -79,68 +79,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     *error = nsInstall::SUCCESS;
     
-    /* Check for existence of the newer	version	*/
-#if 0 // XXX need to re-implement force mode in the opposite sense
-
-    char* qualifiedRegNameString = inComponentName.ToNewCString();
-
-    // --------------------------------------------------------------------
-    // we always install if forceInstall is true, or the new file's
-    // version is null, or the file doesn't previously exist.
-    //
-    // IFF it's not force, AND the new file has a version, AND it's been
-    // previously installed, THEN we have to do the version comparing foo.
-    // --------------------------------------------------------------------
-    if ( !(mode & INSTALL_NO_COMPARE ) && (inVInfo !=  "") && 
-          ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
-    {
-        nsInstallVersion *newVersion = new nsInstallVersion();
-        
-        if (newVersion == nsnull)
-        {
-            Recycle(qualifiedRegNameString);
-            *error = nsInstall::OUT_OF_MEMORY;
-            return;
-        }
-
-        newVersion->Init(inVInfo);
-        
-        VERSION versionStruct;
-        
-        VR_GetVersion( qualifiedRegNameString, &versionStruct );
-        
-        nsInstallVersion* oldVersion = new nsInstallVersion();
-        
-        if (oldVersion == nsnull)
-        {
-            Recycle(qualifiedRegNameString);
-            delete oldVersion;
-            *error = nsInstall::OUT_OF_MEMORY;
-            return;
-        }
-
-        oldVersion->Init(versionStruct.major,
-                         versionStruct.minor,
-                         versionStruct.release,
-                         versionStruct.build);
-
-        PRInt32 areTheyEqual;
-        newVersion->CompareTo(oldVersion, &areTheyEqual);
-        
-        delete oldVersion;
-        delete newVersion;
-
-        if ( areTheyEqual < 0 )
-        {
-            // the file to be installed is OLDER than what is on disk.
-            // Don't install it.
-            mSkipInstall = PR_TRUE;
-        }
-    }
-
-    Recycle(qualifiedRegNameString);
-#endif
-
     nsCOMPtr<nsIFile> tmp = folderSpec->GetFileSpec();
     if (!tmp)
     {
