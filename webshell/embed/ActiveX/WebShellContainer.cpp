@@ -444,9 +444,12 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
 
-
 NS_IMETHODIMP
+#ifdef NECKO
 CWebShellContainer::OnStartRequest(nsIURI* aURL, const char *aContentType)
+#else
+CWebShellContainer::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStartRequest(..., \"%s\")\n"), A2CT(aContentType));
@@ -479,7 +482,11 @@ CWebShellContainer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
+#ifdef NECKO
 CWebShellContainer::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+#else
+CWebShellContainer::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+#endif
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStopRequest(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
