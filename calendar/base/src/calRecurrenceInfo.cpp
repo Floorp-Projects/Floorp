@@ -233,6 +233,7 @@ calRecurrenceInfo::GetRecurEnd(calIDateTime * *aRecurEnd)
         struct icaltimetype last = next;
         while (!icaltime_is_null_time(next)) {
             last = next;
+            next = icalrecur_iterator_next(recur_iter);
         }
 
         if (icaltime_is_null_time(last)) {
