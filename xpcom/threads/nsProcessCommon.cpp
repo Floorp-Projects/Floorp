@@ -353,10 +353,9 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
         if (blocking) {
             mExitValue = err;
         }
-    } else {
-#else
-    {
+    } else
 #endif
+    {
         if (blocking) {
             mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL,
                                         NULL);
