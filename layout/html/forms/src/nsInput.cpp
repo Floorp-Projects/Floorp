@@ -36,7 +36,7 @@
 #include "nsHTMLForms.h"
 #include "nsStyleConsts.h"
 
-#define ALIGN_UNSET PRUint8(-1);
+#define ALIGN_UNSET PRUint8(-1)
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
@@ -51,8 +51,6 @@ nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
   }
   mSize  = ATTR_NOTSET; 
   mAlign = ALIGN_UNSET;
-  mWidth = ATTR_NOTSET;
-  mHeight= ATTR_NOTSET;
   mLastClickPoint.x = -1;
   mLastClickPoint.y = -1;
 }
@@ -89,10 +87,9 @@ void nsInput::SetContent(const nsString& aValue)
 }
 
 void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
-                                  nsIPresContext* aPresContext)
+                                nsIPresContext* aPresContext)
 {
-  // if (ALIGN_UNSET != mAlign) { XXX why won't this compile 
-  if (-1 != mAlign) {
+  if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetData(kStyleDisplaySID);
     nsStyleText* text = (nsStyleText*)
@@ -287,14 +284,6 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   else if (aAttribute == nsHTMLAtoms::size) {
     CacheAttribute(aValue, ATTR_NOTSET, mSize);
   } 
-  else if (aAttribute == nsHTMLAtoms::width) {
-    CacheAttribute(aValue, ATTR_NOTSET, mWidth);
-    nsInputSuper::SetAttribute(aAttribute, aValue); // is this needed?
-  } 
-  else if (aAttribute == nsHTMLAtoms::height) {
-    CacheAttribute(aValue, ATTR_NOTSET, mHeight);
-    nsInputSuper::SetAttribute(aAttribute, aValue); // is this needed?
-  } 
   else if (aAttribute == nsHTMLAtoms::value) {
     CacheAttribute(aValue, mValue);
   } 
@@ -408,12 +397,6 @@ nsContentAttr nsInput::GetAttribute(nsIAtom* aAttribute,
   } 
   else if (aAttribute == nsHTMLAtoms::size) {
     return GetCacheAttribute(mSize, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
-  }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    return GetCacheAttribute(mWidth, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
-  }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    return GetCacheAttribute(mHeight, aValue, eHTMLUnit_Pixel); // XXX pixel or percent??
   }
   else if (aAttribute == nsHTMLAtoms::value) {
     return GetCacheAttribute(mValue, aValue);
