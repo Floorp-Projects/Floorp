@@ -153,13 +153,7 @@ UINT os2TimerGlue::SetTimer(HWND hWnd, UINT timerID, UINT aDelay)
    //  of what ID's we've used and what is still open.  Hopefully these id's
    //  will be unique enough.   IBM-AKR
  
-   ULONG ulTimerID = ((ULONG)timerID & TID_USERMAX);
- 
-   // Doing this fixer stuff since most values will be double word aligned.
-   //    This will help make it a little more unique by potentially giving us
-   //    3 times as many values.  IBM-AKR
-   ULONG fixer = ((ULONG)timerID & 0x00018000) >> 15;
-   ulTimerID = (ulTimerID | fixer);
+   ULONG ulTimerID = ((ULONG)timerID % (TID_USERMAX - 1)) + 1;
  
    ULONG newTimerID = WinStartTimer(NULLHANDLE, timerHWND, ulTimerID, aDelay);
    return (UINT)newTimerID;
