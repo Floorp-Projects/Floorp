@@ -146,7 +146,7 @@
               <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
                 <treerow>
                   <treecell allowevents="true">
-                    <html:input type="checkbox" onclick="doCheck(this)" />
+                    <checkbox onclick="doCheck(this)" />
                   </treecell>
                   <treecell>
                     <titledbutton class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
