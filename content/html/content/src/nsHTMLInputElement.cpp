@@ -288,7 +288,7 @@ nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
   if (aDefaultChecked) {                                                     
     return mInner.SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
   } else {                                                            
-    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultchecked, PR_TRUE);             
+    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
     return NS_OK;                                                   
   }                                                                 
 }
