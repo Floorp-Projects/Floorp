@@ -82,6 +82,8 @@ protected:
 
   PRBool CanResize(nsPoint& aPoint);
 
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext) { return NS_OK; };
+
 protected:
   // Data members
   PRBool mIsHeader; // Whether or not we're a column header

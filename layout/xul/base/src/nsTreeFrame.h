@@ -62,6 +62,10 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
+                        nsDidReflowStatus aStatus);
+
+  void WillNeedDirtyReflow() { mNeedsDirtyReflow = PR_TRUE; };
 
 protected:
   nsTreeFrame();
@@ -70,5 +74,6 @@ protected:
 protected: // Data Members
   PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
   nsTreeTwistyListener* mTwistyListener;
+  PRBool mNeedsDirtyReflow;
 
 }; // class nsTreeFrame
