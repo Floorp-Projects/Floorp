@@ -584,98 +584,6 @@ public class ClassFileWriter {
     }
 
     /**
-     * Generate code to load the given integer on stack.
-     *
-     * @param k the constant
-     */
-    public void addPush(int k)
-    {
-        if ((byte)k == k) {
-            if (k == -1) {
-                add(ByteCode.ICONST_M1);
-            } else if (0 <= k && k <= 5) {
-                add((byte)(ByteCode.ICONST_0 + k));
-            } else {
-                add(ByteCode.BIPUSH, (byte)k);
-            }
-        } else if ((short)k == k) {
-            add(ByteCode.SIPUSH, (short)k);
-        } else {
-            addLoadConstant(k);
-        }
-    }
-
-    /**
-     * Generate code to load the given double on stack.
-     *
-     * @param k the constant
-     */
-    public void addPush(double k)
-    {
-        if (k == 0.0 && 1.0 / k >= 0.0) {
-            // Positive zero
-            add(ByteCode.DCONST_0);
-        } else if (k == 1.0) {
-            add(ByteCode.DCONST_1);
-        } else {
-            addLoadConstant(k);
-        }
-    }
-
-    /**
-     * Generate the code to leave on stack the given string even if the
-     * string encoding exeeds the class file limit for single string constant
-     *
-     * @param k the constant
-     */
-    public void addPush(String k) {
-        int length = k.length();
-        int limit = itsConstantPool.getUtfEncodingLimit(k, 0, length);
-        if (limit == length) {
-            addLoadConstant(k);
-            return;
-        }
-        // Split string into picies fitting the UTF limit and generate code for
-        // StringBuffer sb = new StringBuffer(length);
-        // sb.append(loadConstant(piece_1));
-        // ...
-        // sb.append(loadConstant(piece_N));
-        // sb.toString();
-        final String SB = "java/lang/StringBuffer";
-        add(ByteCode.NEW, SB);
-        add(ByteCode.DUP);
-        addPush(length);
-        addInvoke(ByteCode.INVOKESPECIAL, SB, "<init>", "(I)V");
-        int cursor = 0;
-        for (;;) {
-            add(ByteCode.DUP);
-            String s = k.substring(cursor, limit);
-            addLoadConstant(s);
-            addInvoke(ByteCode.INVOKEVIRTUAL, SB, "append",
-                      "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
-            add(ByteCode.POP);
-            if (limit == length) {
-                break;
-            }
-            cursor = limit;
-            limit = itsConstantPool.getUtfEncodingLimit(k, limit, length);
-        }
-        addInvoke(ByteCode.INVOKEVIRTUAL, SB, "toString",
-                  "()Ljava/lang/String;");
-    }
-
-    /**
-     * Check if k fits limit on string constant size imposed by class file
-     * format.
-     *
-     * @param k the string constant
-     */
-    public boolean isUnderStringSizeLimit(String k)
-    {
-        return itsConstantPool.isUnderUtfEncodingLimit(k);
-    }
-
-    /**
      * Add the given two-operand bytecode to the current method.
      *
      * @param theOpCode the opcode of the bytecode
@@ -860,6 +768,218 @@ public class ClassFileWriter {
         if (DEBUGSTACK) {
             System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
+        }
+    }
+
+    /**
+     * Generate code to load the given integer on stack.
+     *
+     * @param k the constant
+     */
+    public void addPush(int k)
+    {
+        if ((byte)k == k) {
+            if (k == -1) {
+                add(ByteCode.ICONST_M1);
+            } else if (0 <= k && k <= 5) {
+                add((byte)(ByteCode.ICONST_0 + k));
+            } else {
+                add(ByteCode.BIPUSH, (byte)k);
+            }
+        } else if ((short)k == k) {
+            add(ByteCode.SIPUSH, (short)k);
+        } else {
+            addLoadConstant(k);
+        }
+    }
+
+    /**
+     * Generate code to load the given double on stack.
+     *
+     * @param k the constant
+     */
+    public void addPush(double k)
+    {
+        if (k == 0.0 && 1.0 / k >= 0.0) {
+            // Positive zero
+            add(ByteCode.DCONST_0);
+        } else if (k == 1.0) {
+            add(ByteCode.DCONST_1);
+        } else {
+            addLoadConstant(k);
+        }
+    }
+
+    /**
+     * Generate the code to leave on stack the given string even if the
+     * string encoding exeeds the class file limit for single string constant
+     *
+     * @param k the constant
+     */
+    public void addPush(String k) {
+        int length = k.length();
+        int limit = itsConstantPool.getUtfEncodingLimit(k, 0, length);
+        if (limit == length) {
+            addLoadConstant(k);
+            return;
+        }
+        // Split string into picies fitting the UTF limit and generate code for
+        // StringBuffer sb = new StringBuffer(length);
+        // sb.append(loadConstant(piece_1));
+        // ...
+        // sb.append(loadConstant(piece_N));
+        // sb.toString();
+        final String SB = "java/lang/StringBuffer";
+        add(ByteCode.NEW, SB);
+        add(ByteCode.DUP);
+        addPush(length);
+        addInvoke(ByteCode.INVOKESPECIAL, SB, "<init>", "(I)V");
+        int cursor = 0;
+        for (;;) {
+            add(ByteCode.DUP);
+            String s = k.substring(cursor, limit);
+            addLoadConstant(s);
+            addInvoke(ByteCode.INVOKEVIRTUAL, SB, "append",
+                      "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+            add(ByteCode.POP);
+            if (limit == length) {
+                break;
+            }
+            cursor = limit;
+            limit = itsConstantPool.getUtfEncodingLimit(k, limit, length);
+        }
+        addInvoke(ByteCode.INVOKEVIRTUAL, SB, "toString",
+                  "()Ljava/lang/String;");
+    }
+
+    /**
+     * Check if k fits limit on string constant size imposed by class file
+     * format.
+     *
+     * @param k the string constant
+     */
+    public boolean isUnderStringSizeLimit(String k)
+    {
+        return itsConstantPool.isUnderUtfEncodingLimit(k);
+    }
+
+    /**
+     * Store integer from stack top into the given local. 
+     *
+     * @param local number of local register
+     */
+    public void istore(int local)
+    {
+        xop(ByteCode.ISTORE_0, ByteCode.ISTORE, local);
+    }
+
+    /**
+     * Store long from stack top into the given local. 
+     *
+     * @param local number of local register
+     */
+    public void lstore(int local)
+    {
+        xop(ByteCode.LSTORE_0, ByteCode.LSTORE, local);
+    }
+
+    /**
+     * Store float from stack top into the given local. 
+     *
+     * @param local number of local register
+     */
+    public void fstore(int local)
+    {
+        xop(ByteCode.FSTORE_0, ByteCode.FSTORE, local);
+    }
+
+    /**
+     * Store double from stack top into the given local. 
+     *
+     * @param local number of local register
+     */
+    public void dstore(int local)
+    {
+        xop(ByteCode.DSTORE_0, ByteCode.DSTORE, local);
+    }
+
+    /**
+     * Store object from stack top into the given local. 
+     *
+     * @param local number of local register
+     */
+    public void astore(int local)
+    {
+        xop(ByteCode.ASTORE_0, ByteCode.ASTORE, local);
+    }
+
+    /**
+     * Load integer from the given local into stack.
+     *
+     * @param local number of local register
+     */
+    public void iload(int local)
+    {
+        xop(ByteCode.ILOAD_0, ByteCode.ILOAD, local);
+    }
+
+    /**
+     * Load long from the given local into stack.
+     *
+     * @param local number of local register
+     */
+    public void lload(int local)
+    {
+        xop(ByteCode.LLOAD_0, ByteCode.LLOAD, local);
+    }
+
+    /**
+     * Load float from the given local into stack.
+     *
+     * @param local number of local register
+     */
+    public void fload(int local)
+    {
+        xop(ByteCode.FLOAD_0, ByteCode.FLOAD, local);
+    }
+
+    /**
+     * Load double from the given local into stack.
+     *
+     * @param local number of local register
+     */
+    public void dload(int local)
+    {
+        xop(ByteCode.DLOAD_0, ByteCode.DLOAD, local);
+    }
+
+    /**
+     * Load object from the given local into stack.
+     *
+     * @param local number of local register
+     */
+    public void aload(int local)
+    {
+        xop(ByteCode.ALOAD_0, ByteCode.ALOAD, local);
+    }
+
+    private void xop(byte shortOp, byte op, int local)
+    {
+        switch (local) {
+          case 0:
+            add(shortOp);
+            break;
+          case 1:
+            add((byte)(shortOp + 1));
+            break;
+          case 2:
+            add((byte)(shortOp + 2));
+            break;
+          case 3:
+            add((byte)(shortOp + 3));
+            break;
+          default:
+            add(op, local);
         }
     }
 
