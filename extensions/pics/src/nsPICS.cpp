@@ -389,14 +389,18 @@ nsPICS::ProcessPICSLabel(char *label)
 	  rs = ParsePICSLabel(label);
     status = CompareToUserSettings(rs, "http://www.w3.org/");
     if(status == PICS_NO_RATINGS) {
+#ifdef DEBUG
         printf("PICS_PassFailReturnVal  %d", status);
+#endif
         if(mPICSPagesMustBeRatedPref)
             status = PICS_RATINGS_FAILED;
         else
             status = PICS_RATINGS_PASSED;
     }
   }
+#ifdef DEBUG
 	printf("\nPICS_PassFailReturnVal  %d\n", status);
+#endif
 	FreeRatingsStruct(rs);
 	return status;
 }
@@ -655,10 +659,11 @@ nsPICS::ParsePICSLabel(char * label)
 
 	while((rating_value = (PICS_RatingValue *)HTList_nextObject(list_ptr)) != NULL) {
 
+#ifdef DEBUG
 		if (rating_value->name) 
 			printf(" rating_value->name: %s\n", rating_value->name);
 		printf(" rating_value->value: %f\n\n", rating_value->value);
-
+#endif
 	}
 
 
