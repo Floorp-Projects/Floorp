@@ -910,24 +910,6 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetViewFlags(PRUint32 aFlags)
-{
-  mVFlags |= aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::ClearViewFlags(PRUint32 aFlags)
-{
-  mVFlags &= ~aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetViewFlags(PRUint32 *aFlags) const
-{
-  *aFlags = mVFlags;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
 {
   nsView   *ancestor = GetParent();
@@ -1044,9 +1026,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   // Walk all of the way up the views to see if any
   // ancestor sets the NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN
   while (parentView) {  
-     PRUint32 flags;
-     parentView->GetViewFlags(&flags);
-     if (flags & NS_VIEW_FLAG_CLIPCHILDREN) {
+    if ((parentView->GetViewFlags() & NS_VIEW_FLAG_CLIPCHILDREN) != 0) {
       aIsClipped = PR_TRUE;
       // Adjust for clip specified by ancestor
       nscoord clipLeft;

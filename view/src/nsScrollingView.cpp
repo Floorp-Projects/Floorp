@@ -1679,9 +1679,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByWhole(PRBool aTop)
 
 PRBool nsScrollingView::CannotBitBlt(nsView* aScrolledView)
 {
-  PRUint32  scrolledViewFlags;
-
-  aScrolledView->GetViewFlags(&scrolledViewFlags);
+  PRUint32  scrolledViewFlags = aScrolledView->GetViewFlags();
 
   return (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
     (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT) ||
