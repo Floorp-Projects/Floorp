@@ -353,7 +353,9 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontNam
   char        **fnames = nsnull;
   PRInt32     namelen = aFontName.Length() + 1;
   char        *wildstring = (char *)PR_Malloc(namelen + 200);
-  PRInt32     dpi = NSToIntRound(GetTwipsToDevUnits() * 1440);
+  float       t2d;
+  GetTwipsToDevUnits(t2d);
+  PRInt32     dpi = NSToIntRound(t2d * 1440);
   Display     *dpy = XtDisplay((Widget)GetNativeWidget());
   int         numnames = 0;
   XFontStruct *fonts;
