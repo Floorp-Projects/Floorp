@@ -441,11 +441,16 @@ function DoSort(column, key, direction)
 			WaitUntilDocumentIsLoaded();
 			RestoreResultsTreeSelection(selectionArray);
 		}
-                else 
-                {
-			xulSortService.Sort(node, key, direction);
-			WaitUntilDocumentIsLoaded();
-                } 
+		else 
+		{
+			try {
+				xulSortService.Sort(node, key, direction);
+				WaitUntilDocumentIsLoaded();
+			}
+			catch (ex) {
+				dump("failed to do sort\n");
+			}	
+		}
 	}
 }
 
