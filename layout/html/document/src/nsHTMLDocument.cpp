@@ -4143,6 +4143,7 @@ PRBool
 nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
                               const nsIContent* aContent) const
 {
+#if 0
   // HTML document has to include body in the selection,
   // so that output can see style nodes on the body
   // in case the caller doesn't know to specify wrap column
@@ -4155,6 +4156,7 @@ nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
     NS_IF_RELEASE(tag);
     return PR_TRUE;
   }
+#endif
 
   // If it's a block node, return true if the node itself
   // is in the selection.  If it's inline, return true if
