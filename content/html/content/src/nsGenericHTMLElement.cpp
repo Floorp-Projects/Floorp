@@ -536,6 +536,10 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 void
 nsGenericHTMLElement::RecreateFrames()
 {
+  if (!mDocument) {
+    return;
+  }
+
   PRInt32 numShells = mDocument->GetNumberOfShells();
   for (PRInt32 i = 0; i < numShells; ++i) {
     nsIPresShell *shell = mDocument->GetShellAt(i);
