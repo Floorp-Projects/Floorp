@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.14 2001/06/09 03:18:07 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.15 2001/06/09 19:45:22 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -208,7 +208,7 @@ struct sslBufferStr {
 ** SSL3 cipher suite policy and preference struct.
 */
 typedef struct {
-#ifdef AIX
+#if !defined(_WIN32)
     unsigned int    cipher_suite : 16;
     unsigned int    policy       :  8;
     unsigned int    enabled      :  1;
