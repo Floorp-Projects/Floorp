@@ -1859,7 +1859,7 @@ XP_NewContext
 # XP_NotifyObservers
 # XP_OffsetRect
 XP_OpenDir
-# XP_ParseTimeString
+XP_ParseTimeString
 XP_PlatformFileToURL
 # XP_PlatformPartialPathToXPPartialPath
 # XP_PointInRect
