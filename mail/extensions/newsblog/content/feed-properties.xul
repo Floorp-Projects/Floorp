@@ -47,7 +47,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
 #ifdef XP_MACOSX
-  style="width: 55em;"
+  style="width: 40em;"
 #else
   style="width: 30em;"
 #endif

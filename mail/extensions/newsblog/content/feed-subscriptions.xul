@@ -45,7 +45,11 @@
 <window id="subscriptionsDialog"
         title="&newsBlogSubscriptions.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+#ifdef XP_MACOSX
+        style="width: 40em; height: 30em;"
+#else
         style="width: 30em; height: 25em;"
+#endif
         persist="width height"
         onload="gFeedSubscriptionsWindow.init();"
         onunload="return gFeedSubscriptionsWindow.uninit();"
