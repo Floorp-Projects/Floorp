@@ -35,8 +35,6 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "nsIFileStream.h"
 #include "nsIChannel.h"
-#include "nsITransport.h"
-#include "nsIFileTransportService.h"
 #include "nsIMsgFolderCompactor.h"
 #if defined(XP_OS2)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
@@ -589,12 +587,10 @@ nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsITransport **aFileChannel)
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel)
 {
   NS_ENSURE_ARG(aFileChannel);
 
-  *offset = *size = 0;
-  
   nsresult rv;
 
   rv = nsComponentManager::CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID, nsnull, 
@@ -608,14 +604,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
     rv = NS_NewLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
     if (NS_SUCCEEDED(rv) && localStore)
     {
-      NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-      NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    
-      if (NS_FAILED(rv))
-        return rv;
-      
-      rv = fts->CreateTransport(localStore, PR_RDWR | PR_CREATE_FILE, 0664, aFileChannel);
-
+      rv = (*aFileChannel)->Init(localStore, PR_CREATE_FILE | PR_RDWR, 0);
       if (NS_SUCCEEDED(rv))
       {
 
@@ -623,8 +612,12 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
 	      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
         if (hdr && NS_SUCCEEDED(rv))
         {
-          hdr->GetMessageOffset(offset);
-          hdr->GetOfflineMessageSize(size);
+          PRUint32 messageOffset;
+          PRUint32 messageSize;
+          hdr->GetMessageOffset(&messageOffset);
+          hdr->GetOfflineMessageSize(&messageSize);
+          (*aFileChannel)->SetTransferOffset(messageOffset);
+          (*aFileChannel)->SetTransferCount(messageSize);
         }
       }
     }
@@ -644,6 +637,11 @@ nsresult nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStre
     nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID);
     if (fileChannel)
     {
+      PRUint32 fileSize = 0;
+      nsXPIDLCString nativePath;
+      mPath->GetNativePath(getter_Copies(nativePath));
+
+      mPath->GetFileSize(&fileSize);
       nsCOMPtr <nsILocalFile> localStore;
       rv = NS_NewLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
       if (NS_SUCCEEDED(rv) && localStore)
@@ -651,7 +649,8 @@ nsresult nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStre
         rv = fileChannel->Init(localStore, PR_CREATE_FILE | PR_RDWR, 0);
         if (NS_FAILED(rv)) 
           return rv; 
-        rv = fileChannel->Open(outputStream);
+        fileChannel->SetTransferOffset(fileSize);
+        rv = fileChannel->OpenOutputStream(outputStream);
         if (NS_FAILED(rv)) 
           return rv; 
       }
@@ -697,6 +696,7 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	//					(c) does not already exist on the disk
 	// then we simply return nsCRT::strdup(userLeafName)
 	// Otherwise we mangle it
+
 	// mangledPath is the entire path to the newly mangled leaf name
 	nsCAutoString mangledLeaf(userLeafName);
 

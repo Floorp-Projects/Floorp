@@ -33,7 +33,7 @@
 #include "nsIUrlListener.h"
 #include "nsIMsgHdr.h"
 #include "nsIOutputStream.h"
-#include "nsITransport.h"
+
 class nsIMsgFolderCacheElement;
 
  /* 
@@ -93,7 +93,7 @@ public:
   NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
 
   NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
-  NS_IMETHOD GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsITransport **_retval);
+  NS_IMETHOD GetOfflineFileChannel(nsMsgKey msgKey, nsIFileChannel **aFileChannel);
   NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
   NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);

@@ -107,14 +107,13 @@ function (iid) {
 }
 
 IRCContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowTarget, aSourceContext, aRequest)
+function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
 {
     var e;
-    var channel = aRequest.QueryInterface(nsIChannel);
-
+    
     dump ("ircLoader.handleContent (" + aContentType + ", " +
           aCommand + ", " + aWindowTarget + ", " + aSourceContext + ", " +
-          channel.URI.spec + ")\n");
+          aChannel.URI.spec + ")\n");
     
     var windowManager =
         Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
@@ -124,13 +123,13 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aRequest)
     if (w)
     {
         w.focus();
-        w.gotoIRCURL(channel.URI.spec);
+        w.gotoIRCURL(aChannel.URI.spec);
     }
     else
     {
         var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
         w = ass.getHiddenDOMWindow();
-        w.open("chrome://chatzilla/content/chatzilla.xul?" + channel.URI.spec,
+        w.open("chrome://chatzilla/content/chatzilla.xul?" + aChannel.URI.spec,
                "_blank", "chrome,menubar,toolbar,resizable");
     }
     
@@ -211,6 +210,8 @@ function (iid) {
 }
 
 /* nsIChannel */
+BogusChannel.prototype.transferOffset = 0;
+BogusChannel.prototype.transferCount = 0;
 BogusChannel.prototype.loadAttributes = null;
 BogusChannel.prototype.contentType = "x-application-irc";
 BogusChannel.prototype.contentLength = 0;
@@ -218,9 +219,14 @@ BogusChannel.prototype.owner = null;
 BogusChannel.prototype.loadGroup = null;
 BogusChannel.prototype.notificationCallbacks = null;
 BogusChannel.prototype.securityInfo = null;
+BogusChannel.prototype.bufferSegmentSize = 0;
+BogusChannel.prototype.bufferMaxSize = 0;
+BogusChannel.prototype.shouldCache = false;
+BogusChannel.prototype.pipeliningAllowed = false;
 
-BogusChannel.prototype.open =
-BogusChannel.prototype.asyncOpen =
+BogusChannel.prototype.openInputStream =
+BogusChannel.prototype.openOutputStream =
+BogusChannel.prototype.asyncWrite =
 function ()
 {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

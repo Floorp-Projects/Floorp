@@ -59,6 +59,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsMimeTypes.h"
+
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsIMsgWindow.h"

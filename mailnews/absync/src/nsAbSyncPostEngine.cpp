@@ -342,7 +342,7 @@ NS_IMETHODIMP
 nsAbSyncPostEngine::DoContent(const char * aContentType,
                       nsURILoadCommand aCommand,
                       const char * aWindowTarget,
-                      nsIRequest *request,
+                      nsIChannel * aOpenedChannel,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
 {
@@ -391,7 +391,7 @@ nsAbSyncPostEngine::StillRunning(PRBool *running)
 
 // Methods for nsIStreamListener...
 nsresult
-nsAbSyncPostEngine::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputStream *aIStream, 
+nsAbSyncPostEngine::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInputStream *aIStream, 
                                     PRUint32 sourceOffset, PRUint32 aLength)
 {
   PRUint32        readLen = aLength;
@@ -417,7 +417,7 @@ nsAbSyncPostEngine::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsI
 
 // Methods for nsIStreamObserver 
 nsresult
-nsAbSyncPostEngine::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+nsAbSyncPostEngine::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
 {
   if (mAuthenticationRunning)
     NotifyListenersOnStartAuthOperation();
@@ -427,7 +427,7 @@ nsAbSyncPostEngine::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 }
 
 nsresult
-nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
+nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG_rhp
   printf("nsAbSyncPostEngine::OnStopRequest()\n");
@@ -441,20 +441,20 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
   mStillRunning = PR_FALSE;
 
   // Check the content type!
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (channel)
+  if (aChannel)
   {
     char    *contentType = nsnull;
     char    *charset = nsnull;
 
-    if (NS_SUCCEEDED(channel->GetContentType(&contentType)) && contentType)
+    if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
     {
       if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
       {
         mContentType = contentType;
       }
     }
-    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
     if (httpChannel)
     {
       if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
@@ -706,8 +706,8 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, const char *postData)
   httpChannel->SetRequestMethod(method);
   if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
     httpChannel->SetUploadStream(postStream);
-  
-  httpChannel->AsyncOpen(this, nsnull);
+
+  httpChannel->AsyncRead(this, nsnull);
 
   return NS_OK;
 }
@@ -844,9 +844,11 @@ nsAbSyncPostEngine::CancelAbSync()
   {
     rv = mSyncMojo->CancelTheMojo();
   }
-  else if (mChannel)
+  else
   {
-    rv = mChannel->Cancel(NS_BINDING_ABORTED);
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(mChannel);
+    if (httpChannel)
+      rv = httpChannel->Cancel(NS_BINDING_ABORTED);
   }
 
   return rv;

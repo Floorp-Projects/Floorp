@@ -63,6 +63,8 @@ protected:
     nsCString                           mContentType;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
 };
 
 #endif /* nsFTPChannel_h___ */

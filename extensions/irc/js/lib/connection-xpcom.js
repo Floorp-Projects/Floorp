@@ -79,7 +79,7 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     if (!this._channel)
         throw ("Error opening channel.");
 
-    this._outputStream = this._channel.openOutputStream(0, -1, 0);
+    this._outputStream = this._channel.openOutputStream(0);
     if (!this._outputStream)
         throw ("Error getting output stream.");
 
@@ -134,7 +134,7 @@ CBSConnection.prototype.readData = function(timeout)
     if (!this._inputStream)
     {
         this._inputStream =
-            toScriptableInputStream(this._channel.openInputStream (0, -1, 0));
+            toScriptableInputStream(this._channel.openInputStream (0, 0));
         if (!this._inputStream)
             throw ("Error getting input stream.");
     }
@@ -168,7 +168,7 @@ if (jsenv.HAS_DOCUMENT)
     CBSConnection.prototype.startAsyncRead =
     function (server)
     {
-        this._channel.asyncRead (new StreamListener (server), this, 0, -1, 0);
+        this._channel.asyncRead (new StreamListener (server), this);
         
     }
 }
@@ -179,20 +179,20 @@ function StreamListener(server)
 }
 
 StreamListener.prototype.onStartRequest =
-function (request, ctxt)
+function (channel, ctxt)
 {
-    dd ("onStartRequest: " + request + ", " + ctxt);
+    dd ("onStartRequest: " + channel + ", " + ctxt);
 }
 
 StreamListener.prototype.onStopRequest =
-function (request, ctxt, status, errorMsg)
+function (channel, ctxt, status, errorMsg)
 {
-    dd ("onStopRequest: " + request + ", " + ctxt + ", " + status + ", " +
+    dd ("onStopRequest: " + channel + ", " + ctxt + ", " + status + ", " +
         errorMsg);
 }
 
 StreamListener.prototype.onDataAvailable =
-function (request, ctxt, inStr, sourceOffset, count)
+function (channel, ctxt, inStr, sourceOffset, count)
 {
     ctxt = ctxt.wrappedJSObject;
     if (!ctxt)

@@ -90,20 +90,20 @@ protected:
     void DocLoaderIsEmpty(nsresult aStatus);
 
     void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                 nsIRequest *request);
+                                 nsIChannel* aChannel);
 
     void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                               nsIRequest *aDocRequest,
+                               nsIChannel *aDocChannel,
                                nsresult aStatus);
 							   
     void FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                            nsIRequest *request);
+                            nsIChannel* channel);
 
     void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                          nsIRequest *request, nsresult aStatus);
+                          nsIChannel* channel, nsresult aStatus);
 
     void FireOnProgressChange(nsDocLoaderImpl* aLoadInitiator,
-                              nsIRequest *request,
+                              nsIChannel* aChannel,
                               PRInt32 aProgress,
                               PRInt32 aProgressMax,
                               PRInt32 aProgressDelta,
@@ -111,14 +111,14 @@ protected:
                               PRInt32 aMaxTotalProgress);
 
     void FireOnStateChange(nsIWebProgress *aProgress,
-                           nsIRequest* request,
+                           nsIRequest* aChannel,
                            PRInt32 aStateFlags,
                            nsresult aStatus);
 
     void doStartDocumentLoad();
-    void doStartURLLoad(nsIRequest *request);
-    void doStopURLLoad(nsIRequest *request, nsresult aStatus);
-    void doStopDocumentLoad(nsIRequest *request, nsresult aStatus);
+    void doStartURLLoad(nsIChannel *aChannel);
+    void doStopURLLoad(nsIChannel *aChannel, nsresult aStatus);
+    void doStopDocumentLoad(nsIChannel* aChannel, nsresult aStatus);
 
     // get web progress returns our web progress listener or if
     // we don't have one, it will look up the doc loader hierarchy
@@ -133,7 +133,7 @@ protected:
     // (ie, non owning) references. If you add any members to this
     // class, please make the ownership explicit (pinkerton, scc).
   
-    nsCOMPtr<nsIRequest>       mDocumentRequest;       // [OWNER] ???compare with document
+    nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
     nsVoidArray                mDocObservers;
     nsCOMPtr<nsISupportsArray> mListenerList;
     nsISupports*               mContainer;             // [WEAK] it owns me!
@@ -172,8 +172,8 @@ private:
     nsresult GetCurTotalProgress(PRInt32* aCurTotalProgress);
     nsresult GetMaxTotalProgress(PRInt32* aMaxTotalProgress);
 
-    nsresult AddChannelInfo(nsIChannel* channel);
-    nsChannelInfo *GetChannelInfo(nsIChannel* channel);
+    nsresult AddChannelInfo(nsIChannel *aChannel);
+    nsChannelInfo *GetChannelInfo(nsIChannel *aChannel);
     nsresult ClearChannelInfoList(void);
     void CalculateMaxProgress(PRInt32 *aMax);
 ///    void DumpChannelInfo(void);

@@ -28,7 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsEnumeratorUtils.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIFileTransportService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -289,18 +289,18 @@ NS_IMETHODIMP
 nsXMLMIMEDataSource::Serialize() {
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsITransport> transport;
+  nsCOMPtr<nsIChannel> channel;
 
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
   if(NS_FAILED(rv)) return rv ;
  
-  rv = fts->CreateTransport(mFile, PR_WRONLY|PR_CREATE_FILE, PR_IRWXU, getter_AddRefs(transport)) ;
+  rv = fts->CreateTransport( mFile,PR_WRONLY|PR_CREATE_FILE, PR_IRWXU, getter_AddRefs(channel)) ;
   if(NS_FAILED(rv))
     return rv ;
   
   // we don't need to worry about notification callbacks
   nsCOMPtr<nsIOutputStream> stream;
-  rv = transport->OpenOutputStream(0, -1, 0, getter_AddRefs( stream ) ) ;
+  rv = channel->OpenOutputStream(  getter_AddRefs( stream ) ) ;
 	if(NS_FAILED(rv))
     return rv ;
 	nsCOMPtr<nsISimpleEnumerator> enumerator;	
@@ -683,19 +683,20 @@ private:
 nsresult
 nsXMLMIMEDataSource::InitFromFile( nsIFile*  aFile  )
 {
- nsresult rv;
- nsCOMPtr<nsITransport> transport;
 
- NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
- if(NS_FAILED(rv)) return rv ;
- // Made second parameter 0 since I really don't know what it is used for
- rv = fts->CreateTransport(aFile, PR_RDONLY, PR_IRWXU, getter_AddRefs(transport)) ;
- if(NS_FAILED(rv))
-   return rv ;
+	nsresult rv;
+	nsCOMPtr<nsIChannel> channel;
+	
+  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
+  if(NS_FAILED(rv)) return rv ;
+  // Made second parameter 0 since I really don't know what it is used for
+  rv = fts->CreateTransport(aFile, PR_RDONLY, PR_IRWXU, getter_AddRefs(channel)) ;
+  if(NS_FAILED(rv))
+    return rv ;
   
   // we don't need to worry about notification callbacks
  nsCOMPtr<nsIInputStream> stream;
- rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs( stream ) ) ;
+ rv = channel->OpenInputStream( getter_AddRefs( stream ) ) ;
  if(NS_FAILED(rv))  return rv ;
     
  PRUint32 streamLength;

@@ -42,7 +42,7 @@ public:
 protected:
     nsCOMPtr<nsIInputStream>  mPipeIn;
     nsCOMPtr<nsIOutputStream> mPipeOut;
-    nsCOMPtr<nsIRequest>      mRequestToResume;
+    nsCOMPtr<nsIChannel>      mChannelToResume;
     PRLock                   *mLock;
     PRUint32                  mPendingCount;
     PRBool                    mPipeEmptied;

@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIRequest;
+interface nsIChannel;
 interface nsIEventQueue;
 
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
@@ -31,22 +31,22 @@ interface nsIStreamObserver : nsISupports
     /**
      * Called to signify the beginning of an asynchronous request.
      *
-     * @param request - request being observed
+     * @param channel - channel being observed
      * @param ctxt - user specified data passed to AsyncRead/Write
      */
-    void onStartRequest(in nsIRequest request,
+    void onStartRequest(in nsIChannel channel,
                         in nsISupports ctxt);
 
     /**
      * Called to signify the end of an asynchronous request.  This
      * call is always preceded by a call to onStartRequest.
      *
-     * @param request - request being observed
+     * @param channel - channel being observed
      * @param ctxt - user specified data passed to AsyncRead/Write
      * @param statusCode - reason for stopping (NS_OK if completed successfully)
      * @param statusText - human readable reason for stopping (can be NULL)
      */
-    void onStopRequest(in nsIRequest request,
+    void onStopRequest(in nsIChannel channel,
                        in nsISupports ctxt,
                        in nsresult statusCode,
                        in wstring statusText);

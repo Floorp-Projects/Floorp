@@ -72,7 +72,7 @@ public:
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
-    nsIRequest*         mRequest; // provided by necko to differnciate different input streams
+    nsIChannel*         mChannel; // provided by necko to differnciate different input streams
 
     nsScanner*          mScanner;
     nsIDTD*             mDTD;

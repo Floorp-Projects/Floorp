@@ -70,7 +70,7 @@ class nsStreamObserverEvent
 {
 public:
     nsStreamObserverEvent(nsStreamProxyBase *proxy,
-                          nsIRequest *request, nsISupports *context);
+                          nsIChannel *channel, nsISupports *context);
     virtual ~nsStreamObserverEvent();
 
     nsresult FireEvent(nsIEventQueue *);
@@ -82,7 +82,7 @@ protected:
 
     PLEvent                mEvent;
     nsStreamProxyBase     *mProxy;
-    nsCOMPtr<nsIRequest>   mRequest;
+    nsCOMPtr<nsIChannel>   mChannel;
     nsCOMPtr<nsISupports>  mContext;
 };
 

@@ -1033,7 +1033,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
          if (empytingOnExit)
          {
             nsCOMPtr<nsIImapIncomingServer> imapServer;
-            rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+            nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
             if (NS_SUCCEEDED(rv) && imapServer) 
             {
@@ -3644,18 +3644,18 @@ nsImapMailFolder::SetContentModified(nsIImapUrl *aImapUrl, nsImapContentModified
 // to hook up the mock channel and other stuff when downloading messages for offline use.
 // But we don't really need to do anything with these notifications because we use 
 // the nsIImapMesageSink interfaces ParseAdoptedMessageLine and NormalEndMsgWriteStream
-NS_IMETHODIMP nsImapMailFolder::OnDataAvailable(nsIRequest * /* request */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
+NS_IMETHODIMP nsImapMailFolder::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	nsresult rv = NS_OK;
 	return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsImapMailFolder::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
   return NS_OK;
 }
@@ -4207,9 +4207,7 @@ nsresult nsImapMailFolder::DisplayStatusMsg(nsIImapUrl *aImapUrl, const PRUnicha
     mockChannel->GetProgressEventSink(getter_AddRefs(progressSink));
     if (progressSink)
     {
-        nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
-        if (!request) return NS_ERROR_FAILURE;
-      progressSink->OnStatus(request, nsnull, NS_OK, msg);      // XXX i18n message
+      progressSink->OnStatus(mockChannel, nsnull, NS_OK, msg);      // XXX i18n message
     }
   }
   return NS_OK;
@@ -4272,12 +4270,9 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
         mockChannel->GetProgressEventSink(getter_AddRefs(progressSink));
         if (progressSink)
         {
-            nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
-            if (!request) return NS_ERROR_FAILURE;
-
-          progressSink->OnProgress(request, nsnull, aInfo->currentProgress, aInfo->maxProgress);
+          progressSink->OnProgress(mockChannel, nsnull, aInfo->currentProgress, aInfo->maxProgress);
           if (aInfo->message)
-            progressSink->OnStatus(request, nsnull, NS_OK, aInfo->message);      // XXX i18n message
+            progressSink->OnStatus(mockChannel, nsnull, NS_OK, aInfo->message);      // XXX i18n message
 
         }
 

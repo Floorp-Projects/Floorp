@@ -39,17 +39,17 @@
 #endif
 
 class nsResChannel : public nsIResChannel,
-                     public nsIFileChannel,
-                     public nsIStreamListener
+                     public nsIStreamListener,
+                     public nsIStreamProvider
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSIFILECHANNEL
     NS_DECL_NSIRESCHANNEL
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMPROVIDER
 
     nsResChannel();
     virtual ~nsResChannel();
@@ -119,6 +119,10 @@ protected:
     Substitutions                       mSubstitutions;
     nsCOMPtr<nsIStreamObserver>         mUserObserver;
     nsCOMPtr<nsISupports>               mUserContext;
+    PRUint32                            mStartPosition;
+    PRInt32                             mCount;
+    PRUint32                            mBufferSegmentSize;
+    PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
 #ifdef DEBUG
     PRThread*                           mInitiator;

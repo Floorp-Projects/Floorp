@@ -162,7 +162,7 @@ NS_IMETHODIMP
 nsURLFetcher::DoContent(const char * aContentType,
                       nsURILoadCommand aCommand,
                       const char * aWindowTarget,
-                      nsIRequest *request,
+                      nsIChannel * aOpenedChannel,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
 {
@@ -230,7 +230,7 @@ nsURLFetcher::StillRunning(PRBool *running)
 
 // Methods for nsIStreamListener...
 nsresult
-nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputStream *aIStream, 
+nsURLFetcher::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInputStream *aIStream, 
                               PRUint32 sourceOffset, PRUint32 aLength)
 {
   PRUint32        readLen = aLength;
@@ -263,13 +263,13 @@ nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputS
 
 // Methods for nsIStreamObserver 
 nsresult
-nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+nsURLFetcher::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
 {
   return NS_OK;
 }
 
 nsresult
-nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
+nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStopRequest()\n");
@@ -294,30 +294,29 @@ nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsres
     mOutStream = nsnull;
   }
 
-  
   // Check the content type!
-  char    *contentType = nsnull;
-  char    *charset = nsnull;
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if(!aChannel) return NS_ERROR_FAILURE;
-
-  if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
+  if (aChannel)
   {
-    if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
-    {
-      mContentType = contentType;
-    }
-  }
+    char    *contentType = nsnull;
+    char    *charset = nsnull;
 
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel)
-  {
-    if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
+    if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
     {
-      mCharset = charset;
+      if (PL_strcasecmp(contentType, UNKNOWN_CONTENT_TYPE))
+      {
+        mContentType = contentType;
+      }
     }
-  }
+
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+    if (httpChannel)
+    {
+      if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
+      {
+        mCharset = charset;
+      }
+    }
+  }  
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
@@ -403,7 +402,10 @@ nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
   // the url....
 
   if (NS_FAILED(aStatus))
-    OnStopRequest(aRequest, nsnull, aStatus, nsnull);
+  {
+    nsCOMPtr<nsIChannel> channel (do_QueryInterface(aRequest));
+    OnStopRequest(channel, nsnull, aStatus, nsnull);
+  }
 
   return NS_OK;
 }

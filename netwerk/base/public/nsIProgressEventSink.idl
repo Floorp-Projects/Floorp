@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIRequest;
+interface nsIChannel;
 
 /**
  * An instance of nsIFfpEventSink should be passed as the eventSink
@@ -34,9 +34,9 @@ interface nsIRequest;
 interface nsIProgressEventSink : nsISupports
 {
     /**
-     * Notify the EventSink that progress has occurred for the URL load.<BR>
+     * Notify the EventSink that progress as occurred for the URL load.<BR>
      */
-    void onProgress(in nsIRequest request,
+    void onProgress(in nsIChannel channel,
                     in nsISupports ctxt,
                     in unsigned long aProgress,
                     in unsigned long aProgressMax);
@@ -52,7 +52,7 @@ interface nsIProgressEventSink : nsISupports
      *          message. Multiple arguments can be passed by delimiting them 
      *          with newline ('\n') characters.
      */
-    void onStatus(in nsIRequest request,
+    void onStatus(in nsIChannel channel,
                   in nsISupports ctxt,
                   in nsresult status,
                   in wstring statusArg);

@@ -28,7 +28,7 @@
 #include "nsIEventQueue.h"
 #include "nsIStreamObserver.h"
 #include "nsIStreamListener.h"
-#include "nsIRequest.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsAsyncStreamObserver : public nsIAsyncStreamObserver
@@ -66,20 +66,20 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnStartRequest(nsIRequest* request,
+    NS_IMETHOD OnStartRequest(nsIChannel* channel,
                               nsISupports* context) 
     { 
-        return nsAsyncStreamObserver::OnStartRequest(request, context); 
+        return nsAsyncStreamObserver::OnStartRequest(channel, context); 
     }
 
-    NS_IMETHOD OnStopRequest(nsIRequest* request,
+    NS_IMETHOD OnStopRequest(nsIChannel* channel,
                              nsISupports* context, 
                              nsresult aStatus, const PRUnichar* aStatusArg) 
     { 
-        return nsAsyncStreamObserver::OnStopRequest(request, context, aStatus, aStatusArg); 
+        return nsAsyncStreamObserver::OnStopRequest(channel, context, aStatus, aStatusArg); 
     }
 
-    NS_IMETHOD OnDataAvailable(nsIRequest* request, nsISupports* context,
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);

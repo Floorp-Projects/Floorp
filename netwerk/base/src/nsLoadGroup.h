@@ -59,20 +59,21 @@ protected:
     virtual ~nsLoadGroup();
     nsresult Init();
 
-    nsresult MergeLoadAttributes(nsIRequest *aRequest, nsLoadFlags& flags);
+    nsresult MergeLoadAttributes(nsIChannel *aChannel);
 
 protected:
     PRUint32                    mDefaultLoadAttributes;
     PRUint32                    mForegroundCount;
 
-    nsCOMPtr<nsIRequest>        mDefaultLoadRequest;
-    nsISupportsArray*           mRequests;
+    nsISupportsArray*           mChannels;
 
-    nsWeakPtr                   mObserver;
+    nsWeakPtr               mObserver;
     // nsCOMPtr<nsIStreamObserver> mObserver;
-    
+    nsCOMPtr<nsIChannel>        mDefaultLoadChannel;
+
     nsWeakPtr                   mGroupListenerFactory;
-    nsresult                    mStatus;
+
+    nsresult                      mStatus;
 };
 
 #endif // nsLoadGroup_h__

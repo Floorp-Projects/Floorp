@@ -49,7 +49,6 @@
 #include "mozITXTToHTMLConv.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMsgWindow.h"
-#include "nsStreamConverter.h"
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
@@ -611,7 +610,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   GetContentType(getter_Copies(contentTypeToUse));
   // mscott --> my theory is that we don't need this fake outgoing channel. Let's use the
   // original channel and just set our content type ontop of the original channel...
-
   aChannel->SetContentType(contentTypeToUse);
 
   //rv = NS_NewInputStreamChannel(getter_AddRefs(mOutgoingChannel), aURI, nsnull, contentTypeToUse, -1);
@@ -818,7 +816,7 @@ nsStreamConverter::SetIdentity(nsIMsgIdentity * aIdentity)
 // networking library...
 //
 nsresult 
-nsStreamConverter::OnDataAvailable(nsIRequest *request, nsISupports    *ctxt, 
+nsStreamConverter::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports    *ctxt, 
                                    nsIInputStream *aIStream, 
                                    PRUint32       sourceOffset, 
                                    PRUint32       aLength)
@@ -889,7 +887,7 @@ char *output = "\
 // called only once, at the beginning of a URL load.
 //
 nsresult 
-nsStreamConverter::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 {
 #ifdef DEBUG_rhp
     printf("nsStreamConverter::OnStartRequest()\n");
@@ -902,21 +900,25 @@ nsStreamConverter::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   // here's a little bit of hackery....
   // since the mime converter is now between the channel
   // and the 
-  if (request)
+  nsresult rv = NS_OK;
+  if (aChannel)
   {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel)
-    {
-      nsXPIDLCString contentType;
-      GetContentType(getter_Copies(contentType));
-
-      channel->SetContentType(contentType);
-    }
+    nsXPIDLCString contentType;
+    GetContentType(getter_Copies(contentType));
+    aChannel->SetContentType(contentType);
   }
 
-	// forward the start rquest to any listeners
+	// forward the start request to any listeners
   if (mOutListener)
-  	mOutListener->OnStartRequest(request, ctxt);
+    if (mOutputType == nsMimeOutput::nsMimeMessageRaw)
+    {
+      //we need to delay the on start request until we have figure out the real content type
+      mPendingChannel = aChannel;
+      mPendingContext = ctxt; 
+    }
+    else
+  	  mOutListener->OnStartRequest(aChannel, ctxt);
+
 	return NS_OK;
 }
 
@@ -925,7 +927,7 @@ nsStreamConverter::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 // called once when the networking library has finished processing the 
 //
 nsresult 
-nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 {
 #ifdef DEBUG_rhp
     printf("nsStreamConverter::OnStopRequest()\n");
@@ -1004,7 +1006,7 @@ nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresul
 
   // forward on top request to any listeners
   if (mOutListener)
-    mOutListener->OnStopRequest(request, ctxt, status, errorMsg);
+    mOutListener->OnStopRequest(/* mOutgoingChannel */ aChannel, ctxt, status, errorMsg);
     
 
   mAlreadyKnowOutputType = PR_FALSE;
@@ -1068,6 +1070,7 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
 
 	nsCOMPtr<nsIURI> aUri;
 	aChannel->GetURI(getter_AddRefs(aUri));
+
 	return Init(aUri, aListener, aChannel);
 }
 

@@ -48,8 +48,7 @@
 #include "nsIRefreshURI.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHelperAppLauncherDialog.h"
-#include "nsITransport.h"
-#include "nsIFileTransportService.h"
+
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
 #include "nsMimeTypes.h"
@@ -600,7 +599,7 @@ NS_IMETHODIMP nsExternalAppHandler::CloseProgressWindow()
   return NS_OK;
 }
 
-void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChannel)
+void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel)
 {
   // if the channel is an http channel and we have a content disposition header set, 
   // then use the file name suggested there as the preferred file name to SUGGEST to the user.
@@ -641,15 +640,12 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
   } // if we had an http channel
 }
 
-nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
+nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIChannel * aChannel)
 {
   // we are going to run the downloading of the helper app in our own little docloader / load group context. 
   // so go ahead and force the creation of a load group and doc loader for us to use...
   nsresult rv = NS_OK;
   
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  NS_ENSURE_TRUE(aChannel, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
@@ -672,12 +668,12 @@ nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
     origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
 
   if(oldLoadGroup)
-     oldLoadGroup->RemoveRequest(request, nsnull, NS_OK, nsnull);
+     oldLoadGroup->RemoveChannel(aChannel, nsnull, NS_OK, nsnull);
       
    aChannel->SetLoadGroup(newLoadGroup);
    nsCOMPtr<nsIInterfaceRequestor> req (do_QueryInterface(mLoadCookie));
    aChannel->SetNotificationCallbacks(req);
-   rv = newLoadGroup->AddRequest(request, nsnull);
+   rv = newLoadGroup->AddChannel(aChannel, nsnull);
    return rv;
 }
 
@@ -756,16 +752,13 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->Append(saltedTempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
-  NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsITransport> fileTransport;
-  rv = fts->CreateTransport(mTempFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0664, getter_AddRefs(fileTransport));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = fileTransport->OpenOutputStream(0, -1, 0, getter_AddRefs(mOutStream));  
-
+  nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID);
+  if (fileChannel)
+  {
+    rv = fileChannel->Init(mTempFile, -1, 0);
+    if (NS_FAILED(rv)) return rv; 
+    rv = fileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
+    if (NS_FAILED(rv)) return rv;
 #ifdef XP_MAC
     nsXPIDLCString contentType;
     mMimeInfo->GetMIMEType(getter_Copies(contentType));
@@ -780,25 +773,24 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
       }
     }
 #endif
+  }
 
   return rv;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
+NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
 {
-  NS_ENSURE_ARG(request);
+  NS_ENSURE_ARG(aChannel);
 
   // first, check to see if we've been canceled....
   if (mCanceled) // then go cancel our underlying channel too
-    return request->Cancel(NS_BINDING_ABORTED);
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+    return aChannel->Cancel(NS_BINDING_ABORTED);
 
   nsresult rv = SetUpTempFile(aChannel);
   
   
   // retarget all load notifcations to our docloader instead of the original window's docloader...
-  RetargetLoadNotifications(request);
+  RetargetLoadNotifications(aChannel);
   // ignore failure...
   ExtractSuggestedFileNameFromChannel(aChannel); 
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
@@ -835,12 +827,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
+NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt,
                                                   nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   // first, check to see if we've been canceled....
   if (mCanceled) // then go cancel our underlying channel too
-    return request->Cancel(NS_BINDING_ABORTED);
+    return aChannel->Cancel(NS_BINDING_ABORTED);
 
   // read the data out of the stream and write it to the temp file.
   PRUint32 numBytesRead = 0;
@@ -861,7 +853,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
+NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupports *aCtxt, 
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
   nsresult rv = NS_OK;
@@ -869,7 +861,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
 
   // first, check to see if we've been canceled....
   if (mCanceled) // then go cancel our underlying channel too
-    return request->Cancel(NS_BINDING_ABORTED);
+    return aChannel->Cancel(NS_BINDING_ABORTED);
 
   // go ahead and execute the application passing in our temp file as an argument
   // this may involve us calling back into the OS external app service to make the call
@@ -1143,7 +1135,7 @@ NS_IMETHODIMP nsExternalAppHandler::CanHandleContent(const char * aContentType, 
 } 
 
 NS_IMETHODIMP nsExternalAppHandler::DoContent(const char * aContentType, nsURILoadCommand aCommand, const char * aWindowTarget, 
-                                              nsIRequest * aRequest,
+                                              nsIChannel * aOpenedChannel,
                                               nsIStreamListener ** aContentHandler,PRBool * aAbortProcess)
 {
   NS_NOTREACHED("DoContent");

@@ -87,20 +87,15 @@ public:
 // HandleUnknownContentType (from nsIUnknownContentTypeHandler) implementation.
 // XXX We can get the content type from the channel now so that arg could be dropped.
 NS_IMETHODIMP
-nsUnknownContentTypeHandler::HandleUnknownContentType( nsIRequest *request,
+nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                        const char *aContentType,
                                                        nsIDOMWindowInternal *aWindow ) {
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIChannel> aChannel;
     nsCOMPtr<nsISupports> channel;
     nsCAutoString         contentDisp;
-    
 
-    if ( request ) {
-        
-      channel = do_QueryInterface(request);
-
+    if ( aChannel ) {
         // Need root nsISupports for later JS_PushArguments call.
         channel = do_QueryInterface( aChannel );
 
@@ -119,7 +114,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIRequest *request,
         }
 
         // Cancel input channel now.
-        rv = request->Cancel(NS_BINDING_ABORTED);
+        rv = aChannel->Cancel(NS_BINDING_ABORTED);
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Cancel failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );

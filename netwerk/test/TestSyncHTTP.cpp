@@ -49,9 +49,9 @@ struct TestContext {
 
     TestContext()
         : t1(0), t2(0), bytesRead(0), totalRead(0)
-        { printf("TestContext [this=%p]\n", (void*)this); }
+        { printf("TestContext [this=%p]\n", this); }
    ~TestContext()
-        { printf("~TestContext [this=%p]\n", (void*)this); }
+        { printf("~TestContext [this=%p]\n", this); }
 };
 
 int
@@ -78,7 +78,7 @@ main(int argc, char **argv)
 
         nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(c[i].channel);
         if (httpChannel)
-            httpChannel->SetOpenHasEventQueue(PR_FALSE);
+            httpChannel->SetOpenInputStreamHasEventQueue(PR_FALSE);
 
         // initialize these fields for reading
         c[i].bytesRead = 1;
@@ -88,7 +88,7 @@ main(int argc, char **argv)
     for (i=0; i<nc; ++i) {
         c[i].t1 = PR_Now();
 
-        rv = c[i].channel->Open(getter_AddRefs(c[i].inputStream));
+        rv = c[i].channel->OpenInputStream(getter_AddRefs(c[i].inputStream));
         RETURN_IF_FAILED(rv, "nsIChannel::OpenInputStream");
     }
 

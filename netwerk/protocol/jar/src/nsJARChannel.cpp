@@ -31,7 +31,6 @@
 #include "nsMimeTypes.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIAggregatePrincipal.h"
-#include "nsIProgressEventSink.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -61,9 +60,13 @@ PRLogModuleInfo* gJarProtocolLog = nsnull;
 
 nsJARChannel::nsJARChannel()
     : mLoadAttributes(LOAD_NORMAL),
+      mStartPosition(0),
+      mReadCount(-1),
       mContentType(nsnull),
       mContentLength(-1),
       mJAREntry(nsnull),
+      mBufferSegmentSize(NS_DEFAULT_JAR_BUFFER_SEGMENT_SIZE),
+      mBufferMaxSize(NS_DEFAULT_JAR_BUFFER_MAX_SIZE),
       mStatus(NS_OK),
       mMonitor(nsnull)
 {
@@ -252,12 +255,12 @@ nsJARChannel::OpenJARElement()
     rv = Open(nsnull, nsnull);
     if (NS_SUCCEEDED(rv))
         rv = GetInputStream(getter_AddRefs(mSynchronousInputStream));
-    mon.Notify();       // wake up nsIChannel::Open
+    mon.Notify();       // wake up OpenInputStream
 	return rv;
 }
 
 NS_IMETHODIMP
-nsJARChannel::Open(nsIInputStream* *result)
+nsJARChannel::OpenInputStream(nsIInputStream* *result)
 {
     nsAutoCMonitor mon(this);
     nsresult rv;
@@ -270,7 +273,7 @@ nsJARChannel::Open(nsIInputStream* *result)
     {
         *result = mSynchronousInputStream; // Result of GetInputStream called on transport thread
         NS_ADDREF(*result);
-        mSynchronousInputStream = 0;
+        mSynchronousInputStream = null_nsCOMPtr();
         return NS_OK;
     } 
     else 
@@ -278,7 +281,14 @@ nsJARChannel::Open(nsIInputStream* *result)
 }
 
 NS_IMETHODIMP
-nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
+nsJARChannel::OpenOutputStream(nsIOutputStream* *result)
+{
+	NS_NOTREACHED("nsJARChannel::OpenOutputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARChannel::AsyncRead(nsIStreamListener* listener, nsISupports* ctxt)
 {
     nsresult rv;
     mUserContext = ctxt;
@@ -300,7 +310,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
                 }
             }
         }
-        rv = mLoadGroup->AddRequest(this, nsnull);
+        rv = mLoadGroup->AddChannel(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -332,7 +342,7 @@ nsJARChannel::EnsureJARFileAvailable()
 
     rv = NS_NewDownloader(getter_AddRefs(mDownloader),
                           mJARBaseURI, this, nsnull, mSynchronousRead, mLoadGroup, mCallbacks, 
-                          mLoadAttributes);
+                          mLoadAttributes, mBufferSegmentSize, mBufferMaxSize);
 
     // if DownloadComplete() was called early, need to release the reference.
     if (mSynchronousRead && mSynchronousInputStream)
@@ -340,7 +350,7 @@ nsJARChannel::EnsureJARFileAvailable()
 
   error:
     if (NS_FAILED(rv) && mLoadGroup) {
-        nsresult rv2 = mLoadGroup->RemoveRequest(this, nsnull, NS_OK, nsnull);
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, nsnull, NS_OK, nsnull);
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
     }
     return rv;
@@ -356,16 +366,20 @@ nsJARChannel::AsyncReadJARElement()
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsITransport> jarTransport;
-    rv = fts->CreateTransportFromStreamIO(this, getter_AddRefs(jarTransport));
+    rv = fts->CreateTransportFromStreamIO(this, 
+                                          getter_AddRefs(mJarExtractionTransport));
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetBufferSegmentSize(mBufferSegmentSize);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetBufferMaxSize(mBufferMaxSize);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetTransferOffset(mStartPosition);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetTransferCount(mReadCount);
     if (NS_FAILED(rv)) return rv;
 
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
-        if (sink)
-            jarTransport->SetProgressEventSink(sink);
-    }
-    
 #ifdef PR_LOGGING
     nsXPIDLCString jarURLStr;
     mURI->GetSpec(getter_Copies(jarURLStr));
@@ -373,8 +387,16 @@ nsJARChannel::AsyncReadJARElement()
            ("nsJarProtocol: AsyncRead jar entry %s", (const char*)jarURLStr));
 #endif
 
-    rv = jarTransport->AsyncRead(this, nsnull, 0, -1, 0, getter_AddRefs(mJarExtractionTransport));
+    rv = mJarExtractionTransport->AsyncRead(this, nsnull);
     return rv;
+}
+
+NS_IMETHODIMP
+nsJARChannel::AsyncWrite(nsIStreamProvider* provider, 
+						 nsISupports* ctxt)
+{
+	NS_NOTREACHED("nsJARChannel::AsyncWrite");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -466,6 +488,83 @@ NS_IMETHODIMP
 nsJARChannel::SetContentLength(PRInt32 aContentLength)
 {
     NS_NOTREACHED("nsJARChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    *aTransferOffset = mStartPosition;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    mStartPosition = aTransferOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    *aTransferCount = mReadCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    mReadCount = aTransferCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetLocalFile(nsIFile* *file)
+{
+    *file = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJARChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -568,7 +667,7 @@ nsJARChannel::OnDownloadComplete(nsIDownloader* aDownloader, nsISupports* aClosu
        else
            rv = AsyncReadJARElement();
    }
-   mDownloader = 0;
+   mDownloader = null_nsCOMPtr();
    return rv;
 }
 
@@ -576,14 +675,14 @@ nsJARChannel::OnDownloadComplete(nsIDownloader* aDownloader, nsISupports* aClosu
 // nsIStreamObserver methods:
 
 NS_IMETHODIMP
-nsJARChannel::OnStartRequest(nsIRequest* jarExtractionTransport,
+nsJARChannel::OnStartRequest(nsIChannel* jarExtractionTransport,
                              nsISupports* context)
 {
     return mUserListener->OnStartRequest(this, mUserContext);
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* context, 
+nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport, nsISupports* context, 
                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
@@ -602,7 +701,7 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
 
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
-            mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
+            mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
         }
     }
 
@@ -616,7 +715,7 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
 // nsIStreamListener methods:
 
 NS_IMETHODIMP
-nsJARChannel::OnDataAvailable(nsIRequest* jarCacheTransport, 
+nsJARChannel::OnDataAvailable(nsIChannel* jarCacheTransport, 
                               nsISupports* context, 
                               nsIInputStream *inStr, 
                               PRUint32 sourceOffset, 

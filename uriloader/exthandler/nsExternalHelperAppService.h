@@ -179,7 +179,7 @@ protected:
   // when we download a helper app, we are going to retarget all load notifications into our own docloader
   // and load group instead of using the window which initiated the load....RetargetLoadNotifications contains
   // that information...
-  nsresult RetargetLoadNotifications(nsIRequest *request); 
+  nsresult RetargetLoadNotifications(nsIChannel * aChannel); 
   // if the user tells us how they want to dispose of the content and we still haven't finished downloading while
   // they were deciding, then throw a progress dialog so they know what's going on...
   nsresult ShowProgressDialog();

@@ -76,7 +76,7 @@ TestOpenInputStream(const char* url)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> in;
-    rv = channel->Open(getter_AddRefs(in));
+    rv = channel->OpenInputStream(getter_AddRefs(in));
     if (NS_FAILED(rv)) {
         fprintf(stdout, "failed to OpenInputStream for %s\n", url);
         return NS_OK;
@@ -127,11 +127,9 @@ public:
     Listener() { NS_INIT_REFCNT(); }
     virtual ~Listener() {}
 
-    NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
+    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
         nsresult rv;
         nsCOMPtr<nsIURI> uri;
-        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-        
         rv = channel->GetURI(getter_AddRefs(uri));
         if (NS_SUCCEEDED(rv)) {
             char* str;
@@ -144,12 +142,10 @@ public:
         return NS_OK;
     }
     
-    NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
+    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
                              nsresult aStatus, const PRUnichar* aStatusArg) {
         nsresult rv;
         nsCOMPtr<nsIURI> uri;
-        nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-        
         rv = channel->GetURI(getter_AddRefs(uri));
         if (NS_SUCCEEDED(rv)) {
             char* str;
@@ -163,7 +159,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports *ctxt, 
+    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, 
                                nsIInputStream *inStr,
                                PRUint32 sourceOffset, PRUint32 count) {
         nsresult rv;
@@ -209,7 +205,8 @@ TestAsyncRead(const char* url)
     nsCOMPtr<nsIStreamListener> listener = new Listener();
     if (listener == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = channel->AsyncOpen(nsnull, listener);
+
+    rv = channel->AsyncRead(nsnull, listener);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {

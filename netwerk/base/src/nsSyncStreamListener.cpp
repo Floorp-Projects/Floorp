@@ -55,13 +55,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsSyncStreamListener,
                               nsIStreamObserver)
 
 NS_IMETHODIMP 
-nsSyncStreamListener::OnStartRequest(nsIRequest* request, nsISupports* context)
+nsSyncStreamListener::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsSyncStreamListener::OnStopRequest(nsIRequest* request, nsISupports* context,
+nsSyncStreamListener::OnStopRequest(nsIChannel* channel, nsISupports* context,
                                     nsresult aStatus, const PRUnichar* aStatusArg)
 {
     // XXX what do we do with the status and error message?
@@ -69,7 +69,7 @@ nsSyncStreamListener::OnStopRequest(nsIRequest* request, nsISupports* context,
 }
 
 NS_IMETHODIMP 
-nsSyncStreamListener::OnDataAvailable(nsIRequest* request,
+nsSyncStreamListener::OnDataAvailable(nsIChannel* channel,
                                       nsISupports* context, 
                                       nsIInputStream *aIStream, 
                                       PRUint32 aSourceOffset,

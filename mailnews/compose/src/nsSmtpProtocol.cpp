@@ -391,7 +391,7 @@ const char * nsSmtpProtocol::GetUserDomainName()
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
+NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
 	nsMsgProtocol::OnStopRequest(nsnull, ctxt, aStatus, aMsg);
 
@@ -765,8 +765,7 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
   {
 
       nsCOMPtr<nsISupports> secInfo;
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(m_request);
-      rv = channel->GetSecurityInfo(getter_AddRefs(secInfo));
+      rv = m_channel->GetSecurityInfo(getter_AddRefs(secInfo));
 
       if (NS_SUCCEEDED(rv) && secInfo) {
           nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);

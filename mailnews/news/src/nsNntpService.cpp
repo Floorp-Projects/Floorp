@@ -1610,12 +1610,9 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 
 
 NS_IMETHODIMP 
-nsNntpService::HandleContent(const char * aContentType, const char * aCommand, const char * aWindowTarget, nsISupports * aWindowContext, nsIRequest *request)
+nsNntpService::HandleContent(const char * aContentType, const char * aCommand, const char * aWindowTarget, nsISupports * aWindowContext, nsIChannel * aChannel)
 {
   nsresult rv = NS_OK;
-  if (!request) return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
   if (!aChannel) return NS_ERROR_NULL_POINTER;
 
   if (nsCRT::strcasecmp(aContentType, "x-application-newsgroup") == 0) {

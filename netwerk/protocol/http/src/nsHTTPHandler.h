@@ -52,7 +52,6 @@
 //Forward decl.
 class nsHashtable;
 class nsHTTPChannel;
-class nsITransport;
 
 #define TRANSPORT_REUSE_ALIVE   1
 #define TRANSPORT_OPEN_ALWAYS   2
@@ -70,10 +69,6 @@ class nsITransport;
 #define DEFAULT_MAX_ALLOWED_KEEPALIVES  20
 #define DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER   8
 #define DEFAULT_PIPELINE_MAX_REQUESTS   4
-
-// xxx fix need to tune
-#define HTTP_DEFAULT_SEGMENT_SIZE    4096
-#define HTTP_DEFAULT_BUFFER_SIZE     (1024*1024)
 
 typedef struct  BrokenServersTable_s
         {
@@ -102,7 +97,9 @@ public:
     */
     virtual nsresult RequestTransport(nsIURI *i_Uri, 
                                       nsHTTPChannel* i_Channel, 
-                                      nsITransport** o_pTrans, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
+                                      PRUint32 bufferSegmentSize,
+                                      PRUint32 bufferMaxSize,
+                                      nsIChannel** o_pTrans, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
     
     /**
     *    Called to create a transport from RequestTransport to accually
@@ -112,16 +109,20 @@ public:
     virtual nsresult CreateTransport(const char* host, PRInt32 port, 
                                      const char* aPrintHost,
                                      PRBool usingProxy, 
-                                     nsITransport** o_pTrans);
+                                     PRUint32 bufferSegmentSize,
+                                     PRUint32 bufferMaxSize,
+                                     nsIChannel** o_pTrans);
     
     virtual nsresult CreateTransportOfType(const char* socketType,
                                            const char* host, PRInt32 port, 
                                            const char* aPrintHost,
                                            PRBool usingProxy, 
-                                           nsITransport** o_pTrans);
+                                           PRUint32 bufferSegmentSize,
+                                           PRUint32 bufferMaxSize,
+                                           nsIChannel** o_pTrans);
     
     /* Remove this transport from the list. */
-    virtual nsresult ReleaseTransport(nsITransport* i_pTrans, PRUint32 capabilies = 0, PRBool aDontRestartChannels = PR_FALSE, PRUint32 aKeepAliveTimeout = 0, PRInt32 aKeepAliveMaxCon = -1);
+    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0, PRBool aDontRestartChannels = PR_FALSE, PRUint32 aKeepAliveTimeout = 0, PRInt32 aKeepAliveMaxCon = -1);
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
     PRTime GetSessionStartTime() { return mSessionStartTime; }
 

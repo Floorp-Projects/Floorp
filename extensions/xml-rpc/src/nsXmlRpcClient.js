@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.13 $
+ *  Version: $Revision: 1.14 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.13 2001/02/10 00:14:31 dougt%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.14 2001/02/12 03:12:39 disttsc%bart.nl Exp $
  */
 
 /*
@@ -125,7 +125,7 @@ nsXmlRpcClient.prototype = {
 
         debug('Do the deed.');
 
-        var input = channel.open(0, 0, 0);
+        var input = channel.openInputStream();
         input = toScriptableStream(input);
         
         var now = new Date()
@@ -220,7 +220,7 @@ nsXmlRpcClient.prototype = {
         var chann = this._getChannel(requestBody);
 
         // And...... call!
-        chann.asyncOpen(this, context);
+        chann.asyncRead(this, context);
     },
 
     // Return a HTTP channel ready for POSTing.

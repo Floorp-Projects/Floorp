@@ -39,10 +39,10 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 //----------------------------------------------------------------------------
 //
 nsStreamObserverEvent::nsStreamObserverEvent(nsStreamProxyBase *aProxy,
-                                             nsIRequest *aRequest,
+                                             nsIChannel *aChannel,
                                              nsISupports *aContext)
     : mProxy(aProxy)
-    , mRequest(aRequest)
+    , mChannel(aChannel)
     , mContext(aContext)
 {
     NS_IF_ADDREF(mProxy);
@@ -94,9 +94,9 @@ class nsOnStartRequestEvent : public nsStreamObserverEvent
 {
 public:
     nsOnStartRequestEvent(nsStreamProxyBase *aProxy,
-                          nsIRequest *aRequest,
+                          nsIChannel *aChannel,
                           nsISupports *aContext)
-        : nsStreamObserverEvent(aProxy, aRequest, aContext)
+        : nsStreamObserverEvent(aProxy, aChannel, aContext)
     {
         MOZ_COUNT_CTOR(nsOnStartRequestEvent);
     }
@@ -112,8 +112,8 @@ public:
 NS_IMETHODIMP
 nsOnStartRequestEvent::HandleEvent()
 {
-    LOG(("nsOnStartRequestEvent: HandleEvent [event=%x req=%x]\n",
-        this, mRequest.get()));
+    LOG(("nsOnStartRequestEvent: HandleEvent [event=%x chan=%x]\n",
+        this, mChannel.get()));
 
     nsCOMPtr<nsIStreamObserver> observer = mProxy->GetReceiver();
     if (!observer) {
@@ -121,7 +121,7 @@ nsOnStartRequestEvent::HandleEvent()
         return NS_ERROR_FAILURE;
     }
 
-    return observer->OnStartRequest(mRequest, mContext);
+    return observer->OnStartRequest(mChannel, mContext);
 }
 
 //
@@ -133,9 +133,9 @@ class nsOnStopRequestEvent : public nsStreamObserverEvent
 {
 public:
     nsOnStopRequestEvent(nsStreamProxyBase *aProxy,
-                         nsIRequest *aRequest, nsISupports *aContext,
+                         nsIChannel *aChannel, nsISupports *aContext,
                          nsresult aStatus, const PRUnichar *aStatusText)
-        : nsStreamObserverEvent(aProxy, aRequest, aContext)
+        : nsStreamObserverEvent(aProxy, aChannel, aContext)
         , mStatus(aStatus)
         , mStatusText(aStatusText)
     {
@@ -157,8 +157,8 @@ protected:
 NS_IMETHODIMP
 nsOnStopRequestEvent::HandleEvent()
 {
-    LOG(("nsOnStopRequestEvent: HandleEvent [event=%x req=%x]\n",
-        this, mRequest.get()));
+    LOG(("nsOnStopRequestEvent: HandleEvent [event=%x chan=%x]\n",
+        this, mChannel.get()));
 
     nsCOMPtr<nsIStreamObserver> observer = mProxy->GetReceiver();
     if (!observer) {
@@ -171,7 +171,7 @@ nsOnStopRequestEvent::HandleEvent()
     //
     mProxy->SetReceiver(nsnull);
 
-    return observer->OnStopRequest(mRequest,
+    return observer->OnStopRequest(mChannel,
                                    mContext,
                                    mStatus,
                                    mStatusText.GetUnicode());
@@ -191,12 +191,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsStreamProxyBase,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP 
-nsStreamProxyBase::OnStartRequest(nsIRequest *aRequest,
+nsStreamProxyBase::OnStartRequest(nsIChannel *aChannel,
                                   nsISupports *aContext)
 {
-    LOG(("nsStreamProxyBase: OnStartRequest [this=%x req=%x]\n", this, aRequest));
+    LOG(("nsStreamProxyBase: OnStartRequest [this=%x chan=%x]\n", this, aChannel));
     nsOnStartRequestEvent *ev = 
-        new nsOnStartRequestEvent(this, aRequest, aContext);
+        new nsOnStartRequestEvent(this, aChannel, aContext);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -207,15 +207,15 @@ nsStreamProxyBase::OnStartRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP 
-nsStreamProxyBase::OnStopRequest(nsIRequest *aRequest,
+nsStreamProxyBase::OnStopRequest(nsIChannel *aChannel,
                                  nsISupports *aContext,
                                  nsresult aStatus,
                                  const PRUnichar *aStatusText)
 {
-    LOG(("nsStreamProxyBase: OnStopRequest [this=%x req=%x status=%x]\n",
-        this, aRequest, aStatus));
+    LOG(("nsStreamProxyBase: OnStopRequest [this=%x chan=%x status=%x]\n",
+        this, aChannel, aStatus));
     nsOnStopRequestEvent *ev = 
-        new nsOnStopRequestEvent(this, aRequest, aContext, aStatus, aStatusText);
+        new nsOnStopRequestEvent(this, aChannel, aContext, aStatus, aStatusText);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 

@@ -32,7 +32,6 @@
 #include "nsIStreamProvider.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamIO.h"
-#include "nsITransport.h"
 
 class nsInputStreamIO : public nsIInputStreamIO
 {
@@ -91,8 +90,7 @@ protected:
     nsCOMPtr<nsIStreamIO>               mStreamIO;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
-    nsCOMPtr<nsITransport>              mFileTransport;
-    nsCOMPtr<nsIRequest>                mRequest;
+    nsCOMPtr<nsIChannel>                mFileTransport;
     nsCOMPtr<nsIStreamObserver>         mUserObserver;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;

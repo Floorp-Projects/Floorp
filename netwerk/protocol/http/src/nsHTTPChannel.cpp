@@ -80,7 +80,7 @@ extern PRLogModuleInfo* gHTTPLog;
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
     mResponse(nsnull),
     mHandler(dont_QueryInterface(i_Handler)),
-    mRequest(nsnull),
+    mRequest (nsnull),
     mHTTPServerListener(nsnull),
     mResponseContext(nsnull),
     mCachedResponse(nsnull),
@@ -93,18 +93,20 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mCachedContentIsValid(PR_FALSE),
     mFiredOnHeadersAvailable(PR_FALSE),
     mFiredOpenOnStartRequest(PR_FALSE),
-    mFiredOpenOnStopRequest(PR_FALSE),
+    mFiredOpenOnStopRequest (PR_FALSE),
     mAuthTriedWithPrehost(PR_FALSE),
     mAuthRealm(nsnull),
     mProxy(0),
     mProxyPort(-1),
     mProxyType(nsnull),
     mProxyTransparent(PR_FALSE),
+    mBufferSegmentSize(0),
+    mBufferMaxSize(0),
     mStatus(NS_OK),
-    mPipeliningAllowed(PR_TRUE),
-    mPipelinedRequest(nsnull),
+    mPipeliningAllowed (PR_TRUE),
+    mPipelinedRequest (nsnull),
     mApplyConversion(PR_TRUE),
-    mOpenHasEventQueue(PR_TRUE)
+    mOpenInputStreamHasEventQueue (PR_TRUE)
 {
     NS_INIT_REFCNT();
     NS_NewISupportsArray(getter_AddRefs(mStreamAsFileObserverArray));
@@ -246,25 +248,25 @@ nsHTTPChannel::SetURI(nsIURI* o_URL)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetOpenHasEventQueue (PRBool * hasEventQueue)
+nsHTTPChannel::GetOpenInputStreamHasEventQueue (PRBool * hasEventQueue)
 {
     if (!hasEventQueue)
         return NS_ERROR_NULL_POINTER;
 
-    *hasEventQueue = mOpenHasEventQueue;
+    *hasEventQueue = mOpenInputStreamHasEventQueue;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetOpenHasEventQueue (PRBool hasEventQueue)
+nsHTTPChannel::SetOpenInputStreamHasEventQueue (PRBool hasEventQueue)
 {
 
-    mOpenHasEventQueue = hasEventQueue;
+    mOpenInputStreamHasEventQueue = hasEventQueue;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::Open(nsIInputStream **o_Stream)
+nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
 {
     nsresult rv;
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
@@ -278,26 +280,34 @@ nsHTTPChannel::Open(nsIInputStream **o_Stream)
     if (NS_FAILED(rv))
         return rv;
 
-    if (mOpenHasEventQueue) {
-        rv = AsyncOpen(listener, nsnull);
+    if (mOpenInputStreamHasEventQueue)
+    {
+        rv = AsyncRead (listener, nsnull);
         return rv;
     }
 
-    nsSyncHelper *helper = new nsSyncHelper();
+    nsSyncHelper *helper = new nsSyncHelper ();
     if (!helper)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = helper->Init(NS_STATIC_CAST (nsIChannel*, this), listener);
+    rv = helper -> Init (NS_STATIC_CAST (nsIChannel*, this), listener);
     if (NS_FAILED(rv))
         return rv;
 
     // spin up a new helper thread.
     nsCOMPtr<nsIThread> helperThread;
-    return NS_NewThread(getter_AddRefs(helperThread), NS_STATIC_CAST(nsIRunnable*, helper));
+    return NS_NewThread (getter_AddRefs(helperThread), NS_STATIC_CAST(nsIRunnable*, helper));
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
+nsHTTPChannel::OpenOutputStream(nsIOutputStream **_retval)
+{
+    NS_NOTREACHED("nsHTTPChannel::OpenOutputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
 {
     nsresult rv = NS_OK;
 
@@ -322,7 +332,7 @@ nsHTTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
     mResponseContext = aContext;
 
-    Begin();
+    Open();
     
     // If the data in the cache hasn't expired, then there's no need to talk
     // with the server.  Create a stream from the cache, synthesizing all the
@@ -330,7 +340,35 @@ nsHTTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     if (mCachedContentIsValid) {
         ReadFromCache();
     }
+
     return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::AsyncWrite(nsIStreamProvider *provider,
+                          nsISupports *ctxt)
+{
+    NS_NOTREACHED("nsHTTPChannel::AsyncWrite");
+    return NS_ERROR_NOT_IMPLEMENTED;
+#if 0
+    nsresult rv = NS_OK;
+
+    // parameter validation
+    if (!fromStream) return NS_ERROR_NULL_POINTER;
+    // currently we are allowing a null observer... fire and forget...
+
+    if (mResponseDataListener) {
+        return NS_ERROR_IN_PROGRESS; // too late...
+    } 
+
+    mResponseContext = ctxt;
+    mRequestStream = fromStream;
+    mWriteObserver = observer;
+
+    Open();
+
+    return rv;
+#endif
 }
 
 NS_IMETHODIMP
@@ -443,6 +481,89 @@ nsHTTPChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
+nsHTTPChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("nsHTTPChannel::GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("nsHTTPChannel::SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("nsHTTPChannel::GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("nsHTTPChannel::SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetLocalFile(nsIFile* *file)
+{
+    nsresult rv;
+    rv = GetFile(file);
+    if (NS_FAILED(rv)) 
+        *file = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    if (aPipeliningAllowed == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *aPipeliningAllowed = mPipeliningAllowed;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsHTTPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    mPipeliningAllowed = aPipeliningAllowed;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
@@ -494,18 +615,25 @@ nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor*
     mCallbacks = aNotificationCallbacks;
 
     // Verify that the event sink is http
-    if (mCallbacks) {
-        mRealEventSink = do_GetInterface(mCallbacks);
-        mRealPrompter = do_GetInterface(mCallbacks);
-        mRealProgressEventSink = do_GetInterface(mCallbacks);
+    if (mCallbacks)
+    {
+        mCallbacks -> GetInterface (NS_GET_IID(nsIHTTPEventSink),
+                                    getter_AddRefs(mRealEventSink));
+
+        mCallbacks -> GetInterface(NS_GET_IID(nsIPrompt),
+                                    getter_AddRefs(mRealPrompter));
+
+        mCallbacks -> GetInterface (NS_GET_IID(nsIProgressEventSink),
+                                    getter_AddRefs(mRealProgressEventSink));
         
-        rv = BuildNotificationProxies();
+        rv = BuildNotificationProxies ();
+    
     }
     return rv;
 }
 
 nsresult
-nsHTTPChannel::BuildNotificationProxies()
+nsHTTPChannel::BuildNotificationProxies ()
 {
     nsresult rv = NS_OK;
 
@@ -516,11 +644,11 @@ nsHTTPChannel::BuildNotificationProxies()
     
     nsCOMPtr<nsIEventQueue> eventQ;
 
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+    rv = eventQService -> GetThreadEventQueue (NS_CURRENT_THREAD, getter_AddRefs (eventQ));
     if (NS_FAILED (rv))
         return rv;
     
-    NS_WITH_SERVICE(nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
+    NS_WITH_SERVICE ( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
     
     if (NS_FAILED(rv)) 
         return rv;
@@ -586,7 +714,7 @@ NS_IMETHODIMP
 nsHTTPChannel::GetResponseHeader(nsIAtom* i_Header, char* *o_Value)
 {
     if (!mConnected)
-        Begin();
+        Open();
     if (mResponse)
         return mResponse->GetHeader(i_Header, o_Value);
     else
@@ -600,7 +728,7 @@ nsHTTPChannel::GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult)
     nsresult rv;
 
     if (!mConnected) {
-        Begin();
+        Open();
     }
 
     if (mResponse) {
@@ -617,7 +745,7 @@ nsHTTPChannel::SetResponseHeader(nsIAtom* i_Header, const char* i_HeaderValue) {
     nsresult rv = NS_OK;
 
     if (!mConnected) {
-        rv = Begin();
+        rv = Open();
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -639,7 +767,7 @@ NS_IMETHODIMP
 nsHTTPChannel::GetResponseStatus(PRUint32  *o_Status)
 {
     if (!mConnected) 
-        Begin();
+        Open();
     if (mResponse)
         return mResponse->GetStatus(o_Status);
     return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
@@ -649,7 +777,7 @@ NS_IMETHODIMP
 nsHTTPChannel::GetResponseString(char* *o_String) 
 {
     if (!mConnected) 
-        Begin();
+        Open();
     if (mResponse)
         return mResponse->GetStatusString(o_String);
     return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
@@ -766,7 +894,7 @@ nsHTTPChannel::GetInterface(const nsIID &anIID, void **aResult )
 
 // nsIProgressEventSink methods
 NS_IMETHODIMP
-nsHTTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext, 
+nsHTTPChannel::OnStatus(nsIChannel *aChannel, nsISupports *aContext, 
                         nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv = NS_OK;
@@ -777,7 +905,7 @@ nsHTTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
+nsHTTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
   // These progreess notifications are coming from the raw socket and are not
   // as interesting as the progress of HTTP channel (pushing the real data
@@ -797,7 +925,7 @@ nsresult nsHTTPChannel::Init()
     Set up a request object - later set to a clone of a default 
     request from the handler. TODO
   */
-  mRequest = new nsHTTPRequest(mURI, mHandler);
+  mRequest = new nsHTTPRequest(mURI, mHandler, mBufferSegmentSize, mBufferMaxSize);
   if (!mRequest) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -887,10 +1015,10 @@ nsHTTPChannel::CheckCache()
     }
     
     // Hook up stream as listener
-    nsCOMPtr<nsIStreamAsFile> streamAsFile(do_QueryInterface(mCacheEntry));
-    if (streamAsFile)
+    nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheEntry ) );
+    if ( streamAsFile )
     {
-        nsCOMPtr<nsIStreamAsFileObserver> observer;
+        nsCOMPtr< nsIStreamAsFileObserver> observer;
         PRUint32 count = 0;
         mStreamAsFileObserverArray->Count( & count );
         for ( PRUint32 i=0; i< count; i++ )
@@ -898,6 +1026,7 @@ nsHTTPChannel::CheckCache()
             mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
             streamAsFile->AddObserver( observer );
         }
+			
     }
 		
     // Be pessimistic: Assume cache entry has no useful data
@@ -949,7 +1078,7 @@ nsHTTPChannel::CheckCache()
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mCachedResponse);
     nsSubsumeCStr cachedHeadersCStr(NS_CONST_CAST(char*, 
-                                    NS_STATIC_CAST(const char*, cachedHeaders)),
+                                                  NS_STATIC_CAST(const char*, cachedHeaders)),
                                     PR_FALSE);
     rv = mCachedResponse->ParseHeaders(cachedHeadersCStr);
     if (NS_FAILED(rv)) return rv;
@@ -1105,18 +1234,15 @@ nsHTTPChannel::ReadFromCache()
 #endif /* PR_LOGGING */
 
     // Create a cache transport to read the cached response...
-    rv = mCacheEntry->NewTransport(mLoadGroup, getter_AddRefs(mCacheTransport));
+    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheTransport));
     if (NS_FAILED(rv)) return rv;
 
-// XXX Transports do not have load attributes
-#if 0
     //
     // Propagate the load attributes of this channel into the cache channel.
     // This will ensure that notifications are suppressed if necessary.
     //
     rv = mCacheTransport->SetLoadAttributes(mLoadAttributes);
     if (NS_FAILED(rv)) return rv;
-#endif
 
     // Fake it so that HTTP headers come from cached versions
     SetResponse(mCachedResponse);
@@ -1136,8 +1262,7 @@ nsHTTPChannel::ReadFromCache()
     FinishedResponseHeaders();
 
     // Pump the cache data downstream
-    nsCOMPtr<nsIRequest> request;
-    rv = mCacheTransport->AsyncRead(listener, mResponseContext, 0, -1, 0, getter_AddRefs(request));
+    rv = mCacheTransport->AsyncRead(listener, mResponseContext);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
         ResponseCompleted(nsnull, rv, nsnull);
@@ -1331,7 +1456,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 }
 
 nsresult
-nsHTTPChannel::Begin(PRBool bIgnoreCache)
+nsHTTPChannel::Open(PRBool bIgnoreCache)
 {
     if (mConnected || (mState > HS_WAITING_FOR_OPEN))
         return NS_ERROR_ALREADY_CONNECTED;
@@ -1343,7 +1468,7 @@ nsHTTPChannel::Begin(PRBool bIgnoreCache)
     // If this is the first time, then add the channel to its load group
     if (mState == HS_IDLE) {
         if (mLoadGroup)
-            mLoadGroup->AddRequest(this, nsnull);
+            mLoadGroup->AddChannel(this, nsnull);
 
         // See if there's a cache entry for the given URL
         if (!bIgnoreCache) 
@@ -1564,10 +1689,8 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
 
-
-//  removing redirect.xul for loop. bugs 44153, 56523, 58658
-// XXX This is broken
 #if 0
+//  removing redirect.xul for loop. bugs 44153, 56523, 58658
     nsXPIDLCString spec1;
     nsXPIDLCString spec2;
 
@@ -1601,6 +1724,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     if (NS_SUCCEEDED(rv) && !newref) {
       nsXPIDLCString   baseref;
       nsCOMPtr<nsIURL> baseurl;
+
 
       baseurl = do_QueryInterface(mURI, &rv);
       if (NS_SUCCEEDED(rv)) {
@@ -1643,18 +1767,18 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   loadFlags |= nsIChannel::LOAD_REPLACE;
 
   rv = NS_OpenURI(getter_AddRefs(channel), newURI, serv, mLoadGroup,
-                  mCallbacks, loadFlags);
+                  mCallbacks, loadFlags,
+                  mBufferSegmentSize, mBufferMaxSize);
   if (NS_FAILED(rv)) return rv;
   rv = channel->SetOriginalURI(mOriginalURI);
   if (NS_FAILED(rv)) return rv;
 
  if (mLoadGroup) {
-    nsCOMPtr<nsIRequest> tempRequest;
-    rv = mLoadGroup->GetDefaultLoadRequest(getter_AddRefs(tempRequest));
+    nsCOMPtr<nsIChannel> tempChannel;
+    rv = mLoadGroup->GetDefaultLoadChannel(getter_AddRefs(tempChannel));
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIChannel> tempChannel = do_QueryInterface(tempRequest);
       if (tempChannel == this) {
-        mLoadGroup->SetDefaultLoadRequest(channel);
+        mLoadGroup->SetDefaultLoadChannel(channel);
       }
     }
   }
@@ -1682,9 +1806,9 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   {
       // Start the redirect...
       nsIStreamListener   *sl = mResponseDataListener;
-      nsHTTPFinalListener *fl = NS_STATIC_CAST(nsHTTPFinalListener*, sl);
-      rv = channel->AsyncOpen(fl->GetListener(), mResponseContext);
-      fl->Shutdown();
+      nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
+      rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
+      fl -> Shutdown ();
   }
   else
       rv = NS_ERROR_FAILURE;
@@ -1703,7 +1827,9 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   //
   mResponseDataListener = 0;
 
-  NS_ADDREF(*aResult = channel);
+  *aResult = channel;
+  NS_ADDREF(*aResult);
+
   return rv;
 }
 
@@ -1823,7 +1949,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
     //
     
     if (mLoadGroup)
-        mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+        mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
 
 
     // Null out pointers that are no longer needed...
@@ -2152,7 +2278,8 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     // This smells like a clone function... maybe there is a 
     // benefit in doing that, think. TODO.
     rv = NS_OpenURI(&channel, // delibrately...
-                    mURI, serv, mLoadGroup, mCallbacks, mLoadAttributes);
+                    mURI, serv, mLoadGroup, mCallbacks, 
+                    mLoadAttributes, mBufferSegmentSize, mBufferMaxSize);
     if (NS_FAILED(rv)) return rv; 
     rv = channel->SetOriginalURI(mOriginalURI);
     if (NS_FAILED(rv)) return rv;
@@ -2179,8 +2306,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         // Fire the new request...
         nsIStreamListener   *sl = mResponseDataListener;
         nsHTTPFinalListener *fl = NS_STATIC_CAST (nsHTTPFinalListener*, sl);
-        nsCOMPtr<nsIRequest> request;
-        rv = channel->AsyncOpen(fl->GetListener (), mResponseContext);
+        rv = channel->AsyncRead(fl -> GetListener (), mResponseContext);
     }
     else
         rv = NS_ERROR_FAILURE;
@@ -2463,23 +2589,24 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     SetResponse(mCachedResponse);
 
     // Create a cache transport to read the cached response...
-    rv = mCacheEntry->NewTransport(mLoadGroup, getter_AddRefs(mCacheTransport));
+    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheTransport));
     if (NS_FAILED (rv)) return rv;
 
-    // Set StreamAsFileObserver
-    nsCOMPtr<nsIStreamAsFile> streamAsFile = do_QueryInterface(mCacheTransport);
-    if (streamAsFile)
-    {
-        nsCOMPtr< nsIStreamAsFileObserver> observer;
-        PRUint32 count = 0;
-        mStreamAsFileObserverArray->Count( & count );
-        for ( PRUint32 i=0; i< count; i++ )
-        {
-            mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
-            streamAsFile->AddObserver( observer );
-        }
-        
-    }
+
+		// Set StreamAsFileObserver
+		nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheTransport ) );
+		if ( streamAsFile )
+		{
+			nsCOMPtr< nsIStreamAsFileObserver> observer;
+			PRUint32 count = 0;
+			mStreamAsFileObserverArray->Count( & count );
+			for ( PRUint32 i=0; i< count; i++ )
+			{
+				mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
+				streamAsFile->AddObserver( observer );
+			}
+			
+		}
 
     // Create a new HTTPCacheListener...
     nsHTTPResponseListener *cacheListener;
@@ -2492,9 +2619,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     cacheListener->SetListener(aListener);
     mResponseDataListener = 0/* aListener */;
 
-    nsCOMPtr<nsIRequest> request;
-    rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext, 
-                                    0, -1, 0, getter_AddRefs(request));
+    rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext);
     if (NS_FAILED(rv)) {
       ResponseCompleted(cacheListener, rv, nsnull);
     }
@@ -2719,7 +2844,7 @@ nsHTTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
     if (mRequest)
     {
-        nsCOMPtr<nsITransport> trans;
+        nsCOMPtr<nsIChannel> trans;
 
         mRequest->GetTransport(getter_AddRefs(trans));
         if (trans)
@@ -2836,8 +2961,7 @@ nsSyncHelper::Run()
         
     // initiate the AsyncRead from this thread so events are
     // sent here for processing.
-    
-    rv = mChannel->AsyncOpen(this, nsnull);
+    rv = mChannel->AsyncRead(this, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     // process events until we're finished.
@@ -2859,29 +2983,29 @@ nsSyncHelper::Run()
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsSyncHelper::OnDataAvailable(nsIRequest *request,
+nsSyncHelper::OnDataAvailable(nsIChannel *aChannel,
                               nsISupports *aContext,
                               nsIInputStream *aInStream,
                               PRUint32 aOffset, PRUint32 aCount)
 {    
-    return mListener->OnDataAvailable(request, aContext, aInStream,
+    return mListener->OnDataAvailable(aChannel, aContext, aInStream,
                                       aOffset, aCount);
 }
 
 
 // nsIStreamObserver implementation
 NS_IMETHODIMP
-nsSyncHelper::OnStartRequest(nsIRequest *request, nsISupports *aContext)
+nsSyncHelper::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 {
-    return mListener->OnStartRequest(request, aContext);
+    return mListener->OnStartRequest(aChannel, aContext);
 }
 
 NS_IMETHODIMP
-nsSyncHelper::OnStopRequest(nsIRequest *request, nsISupports *aContext,
+nsSyncHelper::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
     mProcessing = PR_FALSE;
-    return mListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 }
 
 
@@ -2893,7 +3017,7 @@ nsSyncHelper::nsSyncHelper()
 }
 
 nsresult
-nsSyncHelper::Init (nsIChannel* aChannel,
+nsSyncHelper::Init (nsIChannel *aChannel,
                    nsIStreamListener* aListener) 
 {
     if (!aChannel || !aListener) 

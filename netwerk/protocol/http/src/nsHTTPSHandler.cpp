@@ -73,9 +73,12 @@ nsresult nsHTTPSHandler::CreateTransport(const char* host,
                                          PRInt32 port, 
                                          const char* proxyHost, 
                                          PRInt32 proxyPort, 
-                                         nsITransport** o_pTrans)
+                                         PRUint32 bufferSegmentSize, 
+                                         PRUint32 bufferMaxSize,
+                                         nsIChannel** o_pTrans)
 {
-    return CreateTransportOfType(nsnull, host, port, proxyHost, proxyPort, o_pTrans);
+    return CreateTransportOfType(nsnull, host, port, proxyHost, proxyPort,
+                                 bufferSegmentSize, bufferMaxSize, o_pTrans);
 }
 
 nsresult nsHTTPSHandler::CreateTransportOfType(const char * type,
@@ -83,7 +86,9 @@ nsresult nsHTTPSHandler::CreateTransportOfType(const char * type,
                                                PRInt32 port, 
                                                const char* proxyHost, 
                                                PRInt32 proxyPort, 
-                                               nsITransport** o_pTrans)
+                                               PRUint32 bufferSegmentSize, 
+                                               PRUint32 bufferMaxSize,
+                                               nsIChannel** o_pTrans)
 {
     nsresult rv;
     
@@ -98,7 +103,7 @@ nsresult nsHTTPSHandler::CreateTransportOfType(const char * type,
                                         port, 
                                         proxyHost, 
                                         proxyPort, 
-                                        0,
-                                        0,
+                                        bufferSegmentSize, 
+                                        bufferMaxSize, 
                                         o_pTrans);
 }

@@ -335,7 +335,7 @@ nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 NS_IMETHODIMP
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                nsIRequest* request,
+                                nsIChannel* channel,
                                 nsresult aStatus)
 {
   nsresult rv;
@@ -356,7 +356,6 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
   }
 
   nsCOMPtr<nsIURI> aURL;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) {
     return rv;
@@ -459,14 +458,14 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader,
-                             nsIRequest* request)
+                             nsIChannel* channel)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                nsIRequest* request,
+                                nsIChannel* channel,
                                 PRUint32 aProgress, 
                                 PRUint32 aProgressMax)
 {
@@ -475,14 +474,14 @@ nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader,
-                              nsIRequest* request, 
+                              nsIChannel* channel, 
                               nsString& aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request,
+nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
                            nsresult aStatus)
 {
   return NS_OK;

@@ -719,15 +719,12 @@ NS_IMPL_ISUPPORTS(CertDownloader,NS_GET_IID(nsIStreamListener));
 const PRInt32 kDefaultCertAllocLength = 2048;
 
 NS_IMETHODIMP
-CertDownloader::OnStartRequest(nsIRequest *request, nsISupports* context)
+CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-	nsresult rv = NS_OK;
-    
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel)
-        rv = channel->GetContentLength(&mContentLength);
-    
-    if (!channel || rv != NS_OK || mContentLength == -1)
+	nsresult rv;
+	
+    rv = channel->GetContentLength(&mContentLength);
+    if (rv != NS_OK || mContentLength == -1)
       mContentLength = kDefaultCertAllocLength;
     
     mBufferOffset = 0;
@@ -740,7 +737,7 @@ CertDownloader::OnStartRequest(nsIRequest *request, nsISupports* context)
 
 
 NS_IMETHODIMP
-CertDownloader::OnDataAvailable(nsIRequest *request, 
+CertDownloader::OnDataAvailable(nsIChannel* channel, 
                                 nsISupports* context,
                                 nsIInputStream *aIStream, 
                                 PRUint32 aSourceOffset,
@@ -779,7 +776,7 @@ CertDownloader::OnDataAvailable(nsIRequest *request,
 
 
 NS_IMETHODIMP
-CertDownloader::OnStopRequest(nsIRequest *request, 
+CertDownloader::OnStopRequest(nsIChannel* channel, 
                               nsISupports* context,
                               nsresult aStatus,
                               const PRUnichar* aMsg)
@@ -860,23 +857,20 @@ nsPSMComponent::HandleContent(const char * aContentType,
                               const char * aCommand, 
                               const char * aWindowTarget, 
                               nsISupports* aWindowContext, 
-                              nsIRequest *request)
+                              nsIChannel * aChannel)
 {
     // We were called via CI.  We better protect ourselves and addref.
     NS_ADDREF_THIS();
 
     nsresult rv = NS_OK;
-    if (!request) return NS_ERROR_NULL_POINTER;
+    if (!aChannel) return NS_ERROR_NULL_POINTER;
     
     CMUint32 type = getPSMCertType(aContentType);
 
     if (type != -1)
     {
-      nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-      if (!aChannel)
-        return NS_ERROR_FAILURE;
+        // I can't directly open the passed channel cause it fails :-(
 
-      
         nsCOMPtr<nsIURI> uri;
         rv = aChannel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv)) return rv;
@@ -885,11 +879,10 @@ nsPSMComponent::HandleContent(const char * aContentType,
         rv = NS_OpenURI(getter_AddRefs(channel), uri);
         if (NS_FAILED(rv)) return rv;
 
-        return channel->AsyncOpen(new CertDownloader(type), NS_STATIC_CAST(nsIPSMComponent*,this)); 
-                                 
+        return channel->AsyncRead(new CertDownloader(type), NS_STATIC_CAST(nsIPSMComponent*,this));
     }
 
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMPL_ISUPPORTS(CertContentListener, NS_GET_IID(nsIURIContentListener)); 
@@ -964,7 +957,7 @@ NS_IMETHODIMP
 CertContentListener::DoContent(const char * aContentType,
                                nsURILoadCommand aCommand,
                                const char * aWindowTarget,
-                               nsIRequest * request,
+                               nsIChannel * aOpenedChannel,
                                nsIStreamListener ** aContentHandler,
                                PRBool * aAbortProcess)
 {

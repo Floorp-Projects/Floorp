@@ -293,7 +293,7 @@ write : function(buffer, perms) {
 
     var fileSize            = parseInt( this.fileInst.fileSize );
 
-    var outStream           = this.fileChannel.open();
+    var outStream           = this.fileChannel.openOutputStream();
 
     if( outStream.write(buffer, buffSize) )
       dump("io.js:write: Write to file successful . . . \n\n");
@@ -341,7 +341,7 @@ read : function() {
 
     this.fileChannel.init(this.fileInst, READ, perm);
 
-    var inStream = this.fileChannel.open();
+    var inStream = this.fileChannel.openInputStream();
 
     this.inputStream.init(inStream);
 

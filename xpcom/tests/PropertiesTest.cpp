@@ -119,7 +119,7 @@ main(int argc, char* argv[])
   ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
   if (NS_FAILED(ret)) return ret;
 
-  ret = channel->Open(&in);
+  ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
 
   nsIPersistentProperties* props = nsnull;

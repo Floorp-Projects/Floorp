@@ -2062,11 +2062,11 @@ nsITokenizer* nsParser::GetTokenizer(void) {
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::OnProgress(nsIRequest *request, nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+nsParser::OnProgress(nsIChannel* channel, nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult result=0;
   if (nsnull != mProgressEventSink) {
-    mProgressEventSink->OnProgress(request, aContext, aProgress, aProgressMax);
+    mProgressEventSink->OnProgress(channel, aContext, aProgress, aProgressMax);
   }
   return result;
 }
@@ -2079,12 +2079,12 @@ nsParser::OnProgress(nsIRequest *request, nsISupports* aContext, PRUint32 aProgr
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::OnStatus(nsIRequest *request, nsISupports* aContext,
+nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext,
                    nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv;
   if (nsnull != mProgressEventSink) {
-    rv = mProgressEventSink->OnStatus(request, aContext, aStatus, aStatusArg);
+    rv = mProgressEventSink->OnStatus(channel, aContext, aStatus, aStatusArg);
     NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
   }
   return NS_OK;
@@ -2102,22 +2102,19 @@ nsParser::OnStatus(nsIRequest *request, nsISupports* aContext,
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
+nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
 
   NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
 
   if (nsnull != mObserver) {
-    mObserver->OnStartRequest(request, aContext);
+    mObserver->OnStartRequest(channel, aContext);
   }
   mParserContext->mStreamListenerState=eOnStart;
   mParserContext->mAutoDetectStatus=eUnknownDetect;
-  mParserContext->mRequest=request;
+  mParserContext->mChannel=channel;
   mParserContext->mDTD=0;
   nsresult rv;
   char* contentType = nsnull;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  NS_ASSERTION(channel, "parser needs a channel to find a dtd");
-
   rv = channel->GetContentType(&contentType);
   if (NS_SUCCEEDED(rv))
   {
@@ -2313,7 +2310,7 @@ ParserWriteFunc(nsIInputStream* in,
  *  @return  error code (usually 0)
  */
 
-nsresult nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext, 
+nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, 
                                    nsIInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength) 
 { 
 
@@ -2325,12 +2322,12 @@ NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail
   CParserContext *theContext=mParserContext; 
   
   while(theContext) { 
-    if(theContext->mRequest!=request && theContext->mPrevContext) 
+    if(theContext->mChannel!=channel && theContext->mPrevContext) 
       theContext=theContext->mPrevContext; 
     else break; 
   } 
 
-  if(theContext && theContext->mRequest==request) { 
+  if(theContext && theContext->mChannel==channel) { 
 
     theContext->mStreamListenerState=eOnDataAvail; 
 
@@ -2369,7 +2366,7 @@ NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
+nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
                                  nsresult status, const PRUnichar* aMsg)
 {  
 
@@ -2401,7 +2398,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
-    mObserver->OnStopRequest(request, aContext, status, aMsg);
+    mObserver->OnStopRequest(channel, aContext, status, aMsg);
   }
 
 #ifdef rickgdebug

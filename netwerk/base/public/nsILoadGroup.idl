@@ -23,7 +23,6 @@
 #include "nsIRequest.idl"
 
 interface nsIChannel;
-interface nsIRequest;
 interface nsISimpleEnumerator;
 interface nsIStreamObserver;
 interface nsIStreamListener;
@@ -53,35 +52,35 @@ interface nsILoadGroup : nsIRequest
 
     /**
      * Accesses the default load channel for the group.  Each time a number
-     * of request are added to a group, the DefaultLoadChannel may be set
-     * to indicate that all of the requests are related to a particular URL.
+     * of channels are added to a group, the DefaultLoadChannel may be set
+     * to indicate that all of the channels are related to a particular URL.
      */
-    attribute nsIRequest defaultLoadRequest;
+    attribute nsIChannel defaultLoadChannel;
 
     /**
-     * Adds a new request to the group. This will cause the default load
-     * attributes to be applied to that request. If the request added is 
-     * the first request in the group, the group's observer's OnStartRequest
+     * Adds a new channel to the group. This will cause the default load
+     * attributes to be applied to that channel. If the channel added is 
+     * the first channel in the group, the group's observer's OnStartRequest
      * method is called.
      */
-    void addRequest(in nsIRequest request,
+    void addChannel(in nsIChannel channel,
                     in nsISupports ctxt);
 
     /**
-     * Removes a request from the group. If the request removed is 
-     * the last request in the group, the group's observer's OnStopRequest
+     * Removes a channel from the group. If the channel removed is 
+     * the last channel in the group, the group's observer's OnStopRequest
      * method is called.
      */
-    void removeRequest(in nsIRequest request, 
+    void removeChannel(in nsIChannel channel, 
                        in nsISupports ctxt,
                        in nsresult status,
                        in wstring statusArg);
 
     /**
-     * Returns the requests contained directly in this group.
-     * Enumerator element type: nsIRequest.
+     * Returns the channels contained directly in this group.
+     * Enumerator element type: nsIChannel.
      */
-    readonly attribute nsISimpleEnumerator requests;
+    readonly attribute nsISimpleEnumerator channels;
 
     attribute nsIStreamObserver groupObserver;
 

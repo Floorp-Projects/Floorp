@@ -157,14 +157,14 @@ public:
 
   virtual ~PluginViewerImpl();
 
-  nsresult CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const nsRect& aBounds,
+  nsresult CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
                         nsIStreamListener*& aResult);
 
   nsresult MakeWindow(nsNativeWidget aParent,
                       nsIDeviceContext* aDeviceContext,
                       const nsRect& aBounds);
 
-  nsresult StartLoad(nsIRequest* request, nsIStreamListener*& aResult);
+  nsresult StartLoad(nsIChannel* channel, nsIStreamListener*& aResult);
 
   void ForceRefresh(void);
 
@@ -307,18 +307,15 @@ PluginViewerImpl::Init(nsIWidget* aParentWidget,
 }
 
 nsresult
-PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
+PluginViewerImpl::StartLoad(nsIChannel* channel, nsIStreamListener*& aResult)
 {
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel) return NS_ERROR_FAILURE;
-  
   NS_IF_RELEASE(mChannel);
   mChannel = channel;
   NS_ADDREF(mChannel);
 
 #ifdef DEBUG
   char* contentType;
-  channel->GetContentType(&contentType);
+  mChannel->GetContentType(&contentType);
   printf("PluginViewerImpl::StartLoad: content-type=%s\n", contentType);
   nsCRT::free(contentType);
 #endif
@@ -334,14 +331,14 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
   {
     nsRect r;
     mWindow->GetClientBounds(r);
-    rv = CreatePlugin(request, host, nsRect(0, 0, r.width, r.height), aResult);
+    rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height), aResult);
   }
 
   return rv;
 }
 
 nsresult
-PluginViewerImpl::CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const nsRect& aBounds,
+PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
                                nsIStreamListener*& aResult)
 {
   nsresult rv = NS_OK;
@@ -375,9 +372,7 @@ PluginViewerImpl::CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const 
     nsCRT::free(spec);
 
     char* ct;
-  
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    channel->GetContentType(&ct);
+    rv = mChannel->GetContentType(&ct);
     if (NS_FAILED(rv)) return rv;
     rv = aHost->InstantiateFullPagePlugin(ct, str, aResult, mOwner);
     delete[] ct;
@@ -697,45 +692,43 @@ PluginListener::~PluginListener()
 NS_IMPL_ISUPPORTS(PluginListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
-PluginListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+PluginListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
   nsresult rv;
   char* contentType = nsnull;
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   rv = channel->GetContentType(&contentType);
-
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = mViewer->StartLoad(request, mNextStream);
+  rv = mViewer->StartLoad(channel, mNextStream);
 
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (nsnull == mNextStream) 
     return NS_ERROR_FAILURE;
-  return mNextStream->OnStartRequest(request, ctxt);
+  return mNextStream->OnStartRequest(channel, ctxt);
 }
 
 NS_IMETHODIMP
-PluginListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+PluginListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                               nsresult status, const PRUnichar *errorMsg)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnStopRequest(request, ctxt, status, errorMsg);
+  return mNextStream->OnStopRequest(channel, ctxt, status, errorMsg);
 }
 
 NS_IMETHODIMP
-PluginListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+PluginListener::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
                                 nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
+  return mNextStream->OnDataAvailable(channel, ctxt, inStr, sourceOffset, count);
 }
 
 //----------------------------------------------------------------------

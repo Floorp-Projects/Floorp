@@ -953,7 +953,7 @@ public:
 private:
 
   nsresult SetUpCache(nsIURI* aURL);
-  nsresult SetUpStreamListener(nsIRequest* request, nsIURI* aURL);
+  nsresult SetUpStreamListener(nsIChannel *channel, nsIURI* aURL);
 
   nsIURI                  *mURL;
   nsIPluginInstanceOwner  *mOwner;
@@ -1014,13 +1014,13 @@ nsPluginCacheListener::~nsPluginCacheListener()
 NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
 
 NS_IMETHODIMP
-nsPluginCacheListener::OnStartRequest(nsIRequest *request, nsISupports* ctxt)
+nsPluginCacheListener::OnStartRequest(nsIChannel* channel, nsISupports* ctxt)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsPluginCacheListener::OnDataAvailable(nsIRequest *request, nsISupports* ctxt, 
+nsPluginCacheListener::OnDataAvailable(nsIChannel* channel, nsISupports* ctxt, 
                                        nsIInputStream* aIStream, 
                                        PRUint32 sourceOffset, 
                                        PRUint32 aLength)
@@ -1043,7 +1043,7 @@ nsPluginCacheListener::OnDataAvailable(nsIRequest *request, nsISupports* ctxt,
 }
 
 NS_IMETHODIMP 
-nsPluginCacheListener::OnStopRequest(nsIRequest *request, 
+nsPluginCacheListener::OnStopRequest(nsIChannel* channel, 
                                      nsISupports* aContext, 
                                      nsresult aStatus, 
                                      const PRUnichar* aMsg)
@@ -1211,14 +1211,9 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
 
 
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aContext)
+nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 {
   nsresult  rv = NS_OK;
-
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-
-  if (!channel)
-      return NS_ERROR_FAILURE;
 
   char* aContentType = nsnull;
   rv = channel->GetContentType(&aContentType);
@@ -1292,14 +1287,14 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   }
 
 
-  rv = SetUpStreamListener(request, aURL);
+  rv = SetUpStreamListener(channel, aURL);
   if (NS_FAILED(rv)) return rv;
 
   return rv;
 }
 
 
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIRequest *request, 
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIChannel* channel, 
                                                      nsISupports* aContext, 
                                                      PRUint32 aProgress, 
                                                      PRUint32 aProgressMax)
@@ -1308,7 +1303,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIRequest *request,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIRequest *request, 
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIChannel* channel, 
                                                    nsISupports* aContext,
                                                    nsresult aStatus,
                                                    const PRUnichar* aStatusArg)
@@ -1316,7 +1311,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request, 
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIChannel* channel, 
                                                           nsISupports* aContext, 
                                                           nsIInputStream *aIStream, 
                                                           PRUint32 sourceOffset, 
@@ -1324,9 +1319,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> aURL;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel) return NS_ERROR_FAILURE;
-  
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
@@ -1348,7 +1340,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     // if a plugin returns an error, the peer must kill the stream
     //   else the stream and PluginStreamListener leak
     if (NS_FAILED(rv))
-      request->Cancel(rv);
+      channel->Cancel(rv);
   }
   else
   {
@@ -1361,15 +1353,13 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request, 
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel, 
                                                         nsISupports* aContext,
                                                         nsresult aStatus, 
                                                         const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> aURL;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel) return NS_ERROR_FAILURE;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
@@ -1377,11 +1367,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   {
     char* urlString;
     nsCOMPtr<nsIFile> localFile;
-    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel);
-    
-    if (fileChannel)
-        rv = fileChannel->GetFile(getter_AddRefs(localFile));
-    
+    rv = channel->GetLocalFile(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv) && localFile)
     {
       char* pathAndFilename;
@@ -1436,7 +1422,7 @@ nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURI* aURL)
 	return NS_OpenURI(cacheListener, nsnull, aURL, nsnull);
 }
 
-nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
+nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIChannel* channel,
                                                          nsIURI* aURL)
 {
   nsresult rv = NS_OK;
@@ -1468,8 +1454,6 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   nsCOMPtr<nsIHTTPHeaderListener> headerListener = 
     do_QueryInterface(mPStreamListener);
   if (headerListener) {
-    
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
     nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
     if (httpChannel) {
       ReadHeadersFromChannelAndPostToListener(httpChannel, headerListener);
@@ -1481,8 +1465,6 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   mPluginStreamInfo->SetSeekable(PR_FALSE);
   
   // get Last-Modified header for plugin info
-  
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   nsCOMPtr<nsIHTTPChannel>	theHTTPChannel = do_QueryInterface(channel);
   if (theHTTPChannel) {
      char * lastModified;
@@ -3824,7 +3806,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
             }  
 
         }
-       rv = channel->AsyncOpen(listenerPeer, nsnull);
+
+       rv = channel->AsyncRead(listenerPeer, nsnull);
       }
     
     NS_RELEASE(listenerPeer);

@@ -35,7 +35,6 @@
 #include "nsString.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsITransport.h"
 
 // imap event sinks
 #include "nsIImapMailFolderSink.h"
@@ -316,7 +315,7 @@ private:
   PRUint32        m_curReadIndex;  // current read index
 
 	// Ouput stream for writing commands to the socket
-	nsCOMPtr<nsITransport>		m_channel; 
+	nsCOMPtr<nsIChannel>		m_channel; 
 	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
 	nsCOMPtr<nsIInputStream>    m_inputStream;
 
