@@ -2666,8 +2666,10 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
 
     if (part == JSEXEC_PROLOG)
         tmp.length = PTRDIFF(tmp.main, tmp.code, jsbytecode);
-    else
+    else {
+        tmp.length -= PTRDIFF(tmp.main, tmp.code, jsbytecode);
         tmp.code = tmp.main;
+    }
     return JS_ExecuteScript(cx, obj, &tmp, rval);
 }
 
