@@ -134,6 +134,7 @@ void              DsNodeDelete(dsN **dsNTemp);
 void              DeInitDSNode(dsN **dsnComponentDSRequirement);
 void              UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullInstallSize, dsN **dsnComponentDSRequirement);
 HRESULT           InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement);
+HRESULT           CheckInstances();
 
 BOOL              bSDInit;
 
