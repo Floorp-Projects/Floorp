@@ -25,7 +25,7 @@
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
 
-#include "nsString.h"
+#include "nsString2.h"
 
 class nsIConnectionGroup;
 class nsIFtpEventSink;
@@ -113,17 +113,22 @@ protected:
     nsIUrl*                 mUrl;
     nsIFtpEventSink*        mEventSink;
     PLEventQueue*           mEventQueue;
+
+// these members should be hung off of a specific transport connection
     PRInt32                 mServerType;
     PRBool                  mPasv;
 	PRBool					mList;					// use LIST instead of NLST
+// end "these ...."
+
     PRBool                  mConnected;
+	PRBool					mUseDefaultPath;		// use PWD to figure out path
     FTP_STATE               mState;
     nsITransport*           mCPipe;                 // the command channel
     nsITransport*           mDPipe;                 // the data channel
     PRInt32                 mResponseCode;          // the last command response code.
-	nsString				mResponseMsg;			// the last command response text
-    nsString                mUsername;
-    nsString                mPassword;
+	nsString2				mResponseMsg;			// the last command response text
+    nsString2               mUsername;
+    nsString2               mPassword;
 };
 
 #endif /* nsFtpProtocolConnection_h___ */

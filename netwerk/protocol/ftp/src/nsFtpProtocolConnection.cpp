@@ -42,7 +42,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 nsFtpProtocolConnection::nsFtpProtocolConnection()
     : mUrl(nsnull), mEventSink(nsnull), mPasv(TRUE),
     mServerType(FTP_GENERIC_TYPE), mConnected(FALSE),
-    mResponseCode(0), mList(FALSE) {
+    mResponseCode(0), mList(FALSE), mUseDefaultPath(TRUE) {
 
     mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
 }
@@ -132,6 +132,8 @@ nsFtpProtocolConnection::Open(void) {
     if (NS_FAILED(rv)) return rv;
     rv = mUrl->GetPort(port);
 	if (NS_FAILED(rv)) return rv;
+
+	// XXX this should be reusing connections for us behind the scenes.
     rv = sts->CreateTransport(host, port, &mCPipe); // the command channel
     if (NS_FAILED(rv)) return rv;
 
@@ -320,7 +322,7 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
 
     // we've got some data. suck it out of the inputSteam.
     char *buffer = new char[aLength+1];
-    // XXX maybe use an nsString
+    // XXX maybe use an nsString2
     PRUint32 read = 0;
     rv = aIStream->Read(buffer, aLength, &read);
     if (NS_FAILED(rv)) return rv;
@@ -357,6 +359,11 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
 
 		case FTP_R_SYST:
 			if (mResponseCode == 2) {
+				if (mUseDefaultPath)
+					mState = FTP_S_PWD;
+				else
+					; // ftp figure out what to do.
+
 				SetSystInternals(); // must be called first to setup member vars.
 
 				// setup next state based on server type.
@@ -394,12 +401,92 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
 			break;
 
 		case FTP_R_PWD:
+			{
+			// fun response interpretation begins :)
+			PRInt32 start = mResponseMsg.Find('"', FALSE, 5);
+			nsString2 lNewMsg;
+			if (start > -1) {
+				mResponseMsg.Left(lNewMsg, start);
+			} else {
+				lNewMsg = mResponseMsg;				
+			}
+
+			// default next state
+			// mState = figure out what to do
+
+			// reset server types if necessary
+			if (mServerType == FTP_TCPC_TYPE) {
+				if (lNewMsg.CharAt(1) == '/') {
+					mServerType = FTP_NCSA_TYPE;
+				}
+			}
+			else if(mServerType == FTP_GENERIC_TYPE) {
+				if (lNewMsg.CharAt(1) == '/') {
+					// path names ending with '/' imply unix
+					mServerType = FTP_UNIX_TYPE;
+					mList = TRUE;
+				} else if (lNewMsg.Last() == ']') {
+					// path names ending with ']' imply vms
+					mServerType = FTP_VMS_TYPE;
+					mList = TRUE;
+				}
+			}
+
+			if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
+				// we want to use the default path specified by the PWD command.
+				PRInt32 start = lNewMsg.Find('"', FALSE, 1);
+				nsString2 path, ptr;
+				lNewMsg.Right(path, start);
+
+				if (path.First() != '/') {
+					start = path.Find('/');
+					if (start > -1) {
+						path.Right(ptr, start);
+					} else {
+						// if we couldn't find a slash, check for back slashes and switch them out.
+						PRInt32 start = path.Find('\\');
+						if (start > -1) {
+							path.ReplaceChar('\\', '/');
+						}
+					}
+				} else {
+					ptr = path;
+				}
+
+				// construct the new url
+				if (ptr.Length()) {
+					nsString2 newPath;
+
+					newPath = ptr;
+
+
+					const char *initialPath = nsnull;
+					rv = mUrl->GetPath(&initialPath);
+					if (NS_FAILED(rv)) return rv;
+					
+					if (initialPath && *initialPath) {
+						if (newPath.Last() == '/')
+							newPath.Cut(newPath.Length()-1, 1);
+						newPath.Append(initialPath);
+					}
+
+					char *p = newPath.ToNewCString();
+					mUrl->SetPath(p);
+					delete [] p;
+				}
+			}
+
+			// change state for these servers.
+			if (mServerType == FTP_GENERIC_TYPE
+				|| mServerType == FTP_NCSA_TYPE
+				|| mServerType == FTP_TCPC_TYPE
+				|| mServerType == FTP_WEBSTAR_TYPE
+				|| mServerType == FTP_PETER_LEWIS_TYPE)
+				mState = FTP_S_MACB;
 
 			break;
+			}
 
-
-		// call back into the sending state machine.
-        OnStopBinding(nsnull, rv, nsnull);
         case FTP_R_PORT:
         case FTP_COMPLETE:
         default:
@@ -407,6 +494,11 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
     }
 
     delete [] buffer;
+	// XXX this may not be necessary. presumably OnStopBinding will be called
+	// XXX right after this call, so we probably don't need to explicitly call 
+	// XXX it here.
+	// call back into the sending state machine.
+    OnStopBinding(nsnull, rv, nsnull);
     return NS_OK;
 }
 
