@@ -19,7 +19,7 @@ DEPTH=..\..\..
 MODULE=rdf
 LIBRARY_NAME=rdfdatasource_s
 
-LCFLAGS=-DXPIDL_JS_STUBS
+LCFLAGS=-DXPIDL_JS_STUBS -DMOZ_BRPROF
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj    \
