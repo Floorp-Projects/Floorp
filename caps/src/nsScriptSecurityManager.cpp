@@ -137,23 +137,34 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsScriptSecurityManager,
 
 ///////////////// Security Checks /////////////////
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckPropertyAccess(PRUint32 aAction,
-                                             JSContext* aJSContext,
+nsScriptSecurityManager::CheckPropertyAccess(JSContext* aJSContext,
                                              JSObject* aJSObject,
-                                             nsISupports* aObj,
-                                             nsIClassInfo* aClassInfo,
                                              const char* aClassName,
-                                             const char* aProperty)
+                                             const char* aPropertyName,
+                                             PRUint32 aAction)
 {
-    return CheckPropertyAccessImpl(aAction, nsnull, aJSContext, aJSObject, aObj,
-                                   aClassInfo, nsnull, aClassName, aProperty, nsnull);
+    return CheckPropertyAccessImpl(aAction, nsnull, aJSContext, aJSObject,
+                                   nsnull, nsnull, nsnull, nsnull,
+                                   aClassName, aPropertyName, nsnull);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckConnect(JSContext* aJSContext,
+                                      nsIURI* aTargetURI,
+                                      const char* aClassName,
+                                      const char* aPropertyName)
+{
+    return CheckPropertyAccessImpl(nsIXPCSecurityManager::ACCESS_GET_PROPERTY, nsnull,
+                                   aJSContext, nsnull, nsnull, aTargetURI,
+                                   nsnull, nsnull, aClassName, aPropertyName, nsnull);
 }
 
 nsresult
 nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                                                  nsIXPCNativeCallContext* aCallContext,
                                                  JSContext* aJSContext, JSObject* aJSObject,
-                                                 nsISupports* aObj, nsIClassInfo* aClassInfo,
+                                                 nsISupports* aObj, nsIURI* aTargetURI,
+                                                 nsIClassInfo* aClassInfo,
                                                  jsval aName, const char* aClassName, 
                                                  const char* aProperty, void** aPolicy)
 {
@@ -214,8 +225,11 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             propertyName.AssignWithConversion((PRUnichar*)JSValIDToString(aJSContext, aName));
         }
 
-        secLevel = GetSecurityLevel(aJSContext, subjectPrincipal, aClassInfo, className,
-                                    propertyName, aAction, capability, aPolicy);
+        // if (aPropertyStr), we were called from CheckPropertyAccess or checkConnect,
+        // so we can assume this is a DOM class. Otherwise, we ask the ClassInfo.
+        secLevel = GetSecurityLevel(aJSContext, subjectPrincipal,
+                                    (aProperty || IsDOMClass(aClassInfo)),
+                                    className, propertyName, aAction, capability, aPolicy);
     }
 
     nsresult rv;
@@ -232,18 +246,27 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 #ifdef DEBUG_mstoltz
 		    printf("Level: SameOrigin ");
 #endif
+            nsCOMPtr<nsIPrincipal> objectPrincipal;
             if(aJSObject)
             {
-                nsCOMPtr<nsIPrincipal> objectPrincipal;
                 if (NS_FAILED(GetObjectPrincipal(aJSContext, 
                                                  NS_REINTERPRET_CAST(JSObject*, aJSObject),
                                                  getter_AddRefs(objectPrincipal))))
                     return NS_ERROR_FAILURE;
-                rv = CheckSameOrigin(aJSContext, subjectPrincipal, objectPrincipal,
-                                     aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+            }
+            else if(aTargetURI)
+            {
+                if (NS_FAILED(GetCodebasePrincipal(aTargetURI, getter_AddRefs(objectPrincipal))))
+                    return NS_ERROR_FAILURE;
             }
             else
+            {
                 rv = NS_ERROR_DOM_SECURITY_ERR;
+                break;
+            }
+            rv = CheckSameOrigin(aJSContext, subjectPrincipal, objectPrincipal,
+                                 aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+
             break;
         }
     case SCRIPT_SECURITY_CAPABILITY_ONLY:
@@ -383,7 +406,7 @@ nsScriptSecurityManager::IsDOMClass(nsIClassInfo* aClassInfo)
 PRInt32 
 nsScriptSecurityManager::GetSecurityLevel(JSContext* aJSContext,
                                           nsIPrincipal *principal,
-                                          nsIClassInfo* aClassInfo,
+                                          PRBool aIsDOM,
                                           const char* aClassName,
                                           const char* aPropertyName,
                                           PRUint32 aAction,
@@ -447,7 +470,7 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext* aJSContext,
     }
     //-- No policy for this property.
     //   Use the default policy: sameOrigin for DOM, noAccess for everything else
-    if(IsDOMClass(aClassInfo))
+    if(aIsDOM)
         secLevel = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
     if (!classPolicy && aPolicy)
         //-- If there's no stored policy for this property, 
@@ -1688,8 +1711,9 @@ nsScriptSecurityManager::CanAccess(PRUint32 aAction,
                                    jsval aName,
                                    void** aPolicy)
 {
-    return CheckPropertyAccessImpl(aAction, aCallContext, aJSContext, aJSObject,
-                                   aObj, aClassInfo, aName, nsnull, nsnull, aPolicy);
+    return CheckPropertyAccessImpl(aAction, aCallContext, aJSContext,
+                                   aJSObject, aObj, nsnull, aClassInfo,
+                                   aName, nsnull, nsnull, aPolicy);
 }
 
 nsresult
@@ -1951,12 +1975,10 @@ nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNam
         else if (count > 3)
         { // capability.policy.<policyname>.<class>.<property>[.(get|set)]
           // Store the class name so we know this class has a policy set on it
-            const char* className = dots[2] + 1;
-            PRInt32 classNameLen = dots[3] - className;
-            char* classNameNullTerm = PL_strndup(className, classNameLen);
-            if (!classNameNullTerm)
-                return NS_ERROR_OUT_OF_MEMORY;
-            nsCStringKey classNameKey(classNameNullTerm);
+          // Shoving a null into the pref anme string is unorthodox
+          // but it saves a malloc & copy - hash keys require null-terminated strings
+            *(char*)dots[3] = '\0';
+            nsCStringKey classNameKey(dots[2] + 1);
             if (!(mClassPolicies))
                 mClassPolicies = new nsHashtable(31);
             // We don't actually have to store the class name as data in the hashtable, 
@@ -1966,7 +1988,6 @@ nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNam
                 mClassPolicies->Put(&classNameKey, (void*)CLASS_POLICY_DEFAULT);
             else if (!isDefault && classPolicy != (void*)CLASS_POLICY_SITE)
                 mClassPolicies->Put(&classNameKey, (void*)CLASS_POLICY_SITE);
-            PR_Free(classNameNullTerm);
         }
     }
     return NS_OK;

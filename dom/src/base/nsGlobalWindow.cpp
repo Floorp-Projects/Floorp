@@ -4123,8 +4123,8 @@ NavigatorImpl::Preference()
       action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
   else
       action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
-  rv = secMan->CheckPropertyAccess(action, cx, nsnull, nsnull, nsnull,
-                                   "Navigator", "preferenceinternal");
+  rv = secMan->CheckPropertyAccess(cx, nsnull,
+                                   "Navigator", "preferenceinternal", action);
   if (NS_FAILED(rv))
   {
       //-- XXX doing the right thing here? Does the exception propagate?
