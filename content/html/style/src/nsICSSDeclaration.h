@@ -251,6 +251,7 @@ struct nsCSSText : public nsCSSStruct  {
 
 struct nsCSSRect {
   void List(FILE* out = 0, PRInt32 aPropID = -1, PRInt32 aIndent = 0) const;
+  void List(FILE* out, PRInt32 aIndent, PRIntn aTRBL[]) const;
 
   nsCSSValue mTop;
   nsCSSValue mRight;
