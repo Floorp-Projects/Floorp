@@ -2209,7 +2209,10 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
           fontMetricsWin->GetSpaceWidth(twWidth);
 
         } else {
-          pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+          if(prevFont)
+             pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+          else
+             pxWidth = 0;
           twWidth = NSToCoordRound(float(pxWidth) * mP2T);
         }
 
@@ -2263,7 +2266,7 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
             breakIndex = 0;
             if (aBreaks[breakIndex] < i)
             {
-                while (aBreaks[breakIndex + 1] < i) {
+                while (((breakIndex + 1) < aNumBreaks) && (aBreaks[breakIndex + 1] < i)) {
                   breakIndex++;
                 }
             }
@@ -2287,7 +2290,10 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
               fontMetricsWin->GetSpaceWidth(twWidth);
 
             } else {
-              pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+              if(prevFont)
+                 pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+              else
+                 pxWidth =0;
               twWidth = NSToCoordRound(float(pxWidth) * mP2T);
             }
 
@@ -3451,7 +3457,8 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
           while (aBreaks[breakIndex + 1] <= estimatedBreakOffset) {
             breakIndex++;
           }
-          NS_ASSERTION(aBreaks[breakIndex] <= estimatedBreakOffset, "bad break index");
+          if (breakIndex == -1)
+              breakIndex = 0;
 
           // We found a place to break that is before the estimated break
           // offset. Where we break depends on whether the text crosses a
@@ -3488,7 +3495,10 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
           fontMetricsWin->GetSpaceWidth(twWidth);
 
         } else {
-          pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+          if(prevFont)
+             pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+          else
+             pxWidth =0;
           twWidth = NSToCoordRound(float(pxWidth) * mP2T);
         }
 
@@ -3540,8 +3550,12 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
           i = start + numChars;
           if (breakIndex == -1) {
             breakIndex = 0;
-            while (aBreaks[breakIndex + 1] < i) {
-              breakIndex++;
+
+            if (aBreaks[breakIndex] < i)
+            {
+                while (((breakIndex + 1) < aNumBreaks) && (aBreaks[breakIndex + 1] < i)) {
+                  breakIndex++;
+                }
             }
           }
 
@@ -3563,7 +3577,10 @@ nsRenderingContextWinA::GetWidth(const PRUnichar *aString,
               fontMetricsWin->GetSpaceWidth(twWidth);
 
             } else {
-              pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+              if(prevFont)
+                 pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+              else
+                 pxWidth =0;
               twWidth = NSToCoordRound(float(pxWidth) * mP2T);
             }
 
