@@ -101,41 +101,21 @@ inline nsresult nsICODecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PR
   return rv;
 }
 
-inline nsresult nsICODecoder::SetData(PRUint8* aData)
+inline nsresult nsICODecoder::SetImageData()
 {
-  NS_ENSURE_ARG_POINTER(aData);
   PRUint32 bpr;
-  nsresult rv;
-
-  rv = mFrame->GetImageBytesPerRow(&bpr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 offset = (mCurLine - 1) * bpr;
-  // XXX Possibly aData doesn't contain bpr bytes of data;
-  // will SetImageData access that data?
-  rv = mFrame->SetImageData(aData, bpr, offset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mFrame->GetImageBytesPerRow(&bpr);
+  for (PRUint32 offset = 0, PRUint32 i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
+    mFrame->SetImageData(mDecodedBuffer+offset, bpr, offset);
   return NS_OK;
 }
 
-inline nsresult nsICODecoder::SetAlphaData(PRUint8* aData)
+inline nsresult nsICODecoder::SetAlphaData()
 {
-  NS_ENSURE_ARG_POINTER(aData);
   PRUint32 bpr;
-  nsresult rv;
-
   mFrame->GetAlphaBytesPerRow(&bpr);
-  
-  PRUint32 offset = (mCurLine - 1) * bpr;
-  // XXX Possibly aData doesn't contain bpr bytes of data;
-  // will SetImageData access that data?
-  rv = mFrame->SetAlphaData(aData, bpr, offset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRect r(0, mCurLine, mDirEntry.mWidth, 1);
-  rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  for (PRUint32 offset = 0, PRUint32 i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
+    mFrame->SetAlphaData(mAlphaBuffer+offset, bpr, offset);
   return NS_OK;
 }
 
@@ -146,6 +126,8 @@ nsICODecoder::nsICODecoder()
   mColors = nsnull;
   mRow = nsnull;
   mDecodingAndMask = PR_FALSE;
+  mDecodedBuffer = nsnull;
+  mAlphaBuffer = nsnull;
 }
 
 nsICODecoder::~nsICODecoder()
@@ -193,6 +175,8 @@ NS_IMETHODIMP nsICODecoder::Close()
   mRow = nsnull;
 
   mDecodingAndMask = PR_FALSE;
+  delete[] mDecodedBuffer;
+  delete[] mAlphaBuffer;
 
   return NS_OK;
 }
@@ -231,6 +215,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     mNumIcons = LITTLE_TO_NATIVE16(((PRUint16*)aBuffer)[0]);
     aBuffer += 2;
     mPos += 2;
+    aCount -= 2;
   }
 
   if (mNumIcons == 0)
@@ -345,8 +330,16 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 
   if (!mDecodingAndMask && (mPos >= (mImageOffset + BITMAPINFOSIZE + mNumColors*4))) {
     // Increment mPos to avoid reprocessing the info header.
-    if (mPos == (mImageOffset + BITMAPINFOSIZE + mNumColors*4))
+    if (mPos == (mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
       mPos++;
+#ifdef XP_MAC
+      mDecodedBuffer = new PRUint8[mDirEntry.mHeight*mDirEntry.mWidth*4];
+#else
+      mDecodedBuffer = new PRUint8[mDirEntry.mHeight*mDirEntry.mWidth*3];
+#endif
+      if (!mDecodedBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     PRUint32 rowSize = (mBIH.bpp * mDirEntry.mWidth + 7) / 8; // +7 to round up
     if (rowSize % 4)
@@ -363,15 +356,11 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             mRowBytes += toCopy;
         }
         if ((rowSize - mRowBytes) == 0) {
-            PRUint8* decoded;
 #ifdef XP_MAC
-            decoded = new PRUint8[mDirEntry.mWidth * 4];
+            PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*4);
 #else
-            decoded = new PRUint8[mDirEntry.mWidth * 3];
+            PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*3);
 #endif
-            if (!decoded)
-                return NS_ERROR_OUT_OF_MEMORY;
-
             PRUint8* p = mRow;
             PRUint8* d = decoded;
             PRUint32 lpos = 0;
@@ -430,10 +419,6 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                 return NS_ERROR_FAILURE;
             }
 
-            nsresult rv = SetData(decoded);
-            delete[] decoded;
-            NS_ENSURE_SUCCESS(rv, rv);
-
             if (mCurLine == 1)
               mDecodingAndMask = PR_TRUE;
               
@@ -443,18 +428,19 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
   }
 
   if (mDecodingAndMask) {
+    PRUint32 rowSize = (mDirEntry.mWidth + 7) / 8; // +7 to round up
+    if (rowSize % 4)
+      rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
+    
     if (mPos == (1 + mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
       mPos++;
       mRowBytes = 0;
-      mBIH.bpp = 1;
       mCurLine = mDirEntry.mHeight;
       delete []mRow;
-      mRow = new PRUint8[(mDirEntry.mWidth * mBIH.bpp)/8 + 4];
+      mRow = new PRUint8[rowSize];
+      mAlphaBuffer = new PRUint8[mDirEntry.mHeight*rowSize];
     }
 
-    PRUint32 rowSize = (mBIH.bpp * mDirEntry.mWidth + 7) / 8; // +7 to round up
-    if (rowSize % 4)
-      rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
     PRUint32 toCopy;
     do {
         toCopy = rowSize - mRowBytes;
@@ -467,15 +453,10 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             mRowBytes += toCopy;
         }
         if ((rowSize - mRowBytes) == 0) {
-            PRUint8* decoded;
-            decoded = new PRUint8[mDirEntry.mWidth/4];
-
-            if (!decoded)
-                return NS_ERROR_OUT_OF_MEMORY;
-
+            PRUint8* decoded = mAlphaBuffer+((mCurLine-1)*rowSize);
             PRUint8* p = mRow;
             PRUint32 lpos = 0;
-            while (lpos < mDirEntry.mWidth/4) {
+            while (lpos < rowSize) {
               PRUint8 idx = *p;
               idx ^= 255;  // We complement the value, since our method of storing transparency is opposite
                            // what Win32 uses in its masks.
@@ -483,11 +464,10 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
               lpos++;
               p++;
             }
-            nsresult rv = SetAlphaData(decoded);
-            delete[] decoded;
-            NS_ENSURE_SUCCESS(rv, rv);
-
+            
             if (mCurLine == 1) {
+              SetAlphaData();
+              SetImageData();
               mObserver->OnStopFrame(nsnull, nsnull, mFrame);
               return NS_OK;
             }
