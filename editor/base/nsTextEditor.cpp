@@ -311,7 +311,9 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     }
     //cmanske: Shouldn't we check result from this?
     erP->AddEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
-    //erP->AddEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
+#ifdef NEW_DRAG_AND_DROP
+    erP->AddEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
+#endif
     erP->AddEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
 	
 	erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
