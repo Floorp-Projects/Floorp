@@ -159,6 +159,8 @@
 <!ENTITY sortThreaded.accesskey "T">
 <!ENTITY sortUnthreaded.label "Unthreaded">
 <!ENTITY sortUnthreaded.accesskey "h">
+<!ENTITY groupBySort.label "Grouped By Sort">
+<!ENTITY groupBySort.accesskey "G">
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "M">
 <!ENTITY viewAll.label "All">
