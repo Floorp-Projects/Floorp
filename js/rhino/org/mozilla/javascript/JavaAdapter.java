@@ -150,27 +150,18 @@ public class JavaAdapter extends ScriptableObject {
     public static Object callMethod(FlattenedObject object, Object methodId, 
                                     Object[] args) 
     {
+        Context cx = Context.enter();
         try {
-            // old way, bind a Context dynamically, unbind if it wasn't there before.
-            Context cx = Context.getCurrentContext();
-            if (cx == null) {
-                cx = new Context();
-                cx.enter();
-                try {
-                    return (object.hasProperty(methodId) 
-                            ? object.callMethod(methodId, args) 
-                            : Context.getUndefinedValue());
-                } finally {	
-                    cx.exit();
-                }
-            } else {
-                return (object.hasProperty(methodId) 
-                        ? object.callMethod(methodId, args) 
-                        : Context.getUndefinedValue());
-            }
+            return (object.hasProperty(methodId) 
+                    ? object.callMethod(methodId, args) 
+                    : Context.getUndefinedValue());
         } catch (Exception ex) {
+            // TODO: wouldn't it be better to let the exception propagate
+            // up so that it could be dealt with by the calling code?
             ex.printStackTrace(System.err);
             throw new Error(ex.getMessage());
+        } finally {	
+            Context.exit();
         }
     }
     
@@ -187,13 +178,14 @@ public class JavaAdapter extends ScriptableObject {
                 superClass.getName().replace('.', '/'), 
                 "<init>", "()", "V");
         
-        // save parameter in instance variable
+        // Save parameter in instance variable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.ALOAD_1);  // first arg
         cfw.add(ByteCode.PUTFIELD, genName, "o", 
                 "Lorg/mozilla/javascript/FlattenedObject;");
 
-		// store Scriptable object in "self" a public instance variable, so scripts can read it.
+        // Store Scriptable object in "self" a public instance variable, 
+        //  so scripts can read it.
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.add(ByteCode.ALOAD_1);  // first arg
         cfw.add(ByteCode.INVOKEVIRTUAL,
@@ -352,6 +344,15 @@ public class JavaAdapter extends ScriptableObject {
             cfw.add(ByteCode.INVOKEINTERFACE,
                     "org/mozilla/javascript/Wrapper", 
                     "unwrap", "()", "Ljava/lang/Object;");
+
+            // If Undefined, return null	   
+            cfw.add(ByteCode.DUP);
+            cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Undefined");
+            // skip 3 for IFEQ, 1 for ACONST_NULL, 1 for ARETURN
+            cfw.add(ByteCode.IFEQ, 5);
+            cfw.add(ByteCode.ACONST_NULL);
+            cfw.add(ByteCode.ARETURN);
+
             // Now cast to return type
             String retTypeStr = retType.getName().replace('.', '/');
             cfw.add(ByteCode.CHECKCAST, retTypeStr);
