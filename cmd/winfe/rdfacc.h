@@ -67,7 +67,7 @@ private:
 	int width; // The column's width
 	void* token; // The column token
 	uint32 tokenType; // The column token type
-	char buffer[200]; // A temp. storage buffer for column data
+	CString buffer; // A temp. storage buffer for column data
 
 public:
 	CRDFColumn(char* n, int w, void* t, uint32 tt)
@@ -76,7 +76,7 @@ public:
 	uint32 GetDataType() const { return tokenType; }
 	char* GetName() { return name; }
 	void* GetToken() { return token; }
-	char* GetStorageBuffer() { return buffer; }
+	CString& GetStorageBuffer() { return buffer; }
 };
 
 class CRDFMenuCommand : public CObject
@@ -180,5 +180,8 @@ NSNavCenterImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWi
 HICON FetchLocalFileIcon(HT_Resource r);
 NSNavCenterImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* pObject, BOOL largeIcon);
 IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon);
+
+void PaintBackground(HDC hdc, CRect rect, NSNavCenterImage* pImage, int ySrcOffset = -1);
+		// This function tiles and paints the background image in the tree.
 
 #endif // RDFACC_H
