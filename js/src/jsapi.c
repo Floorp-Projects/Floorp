@@ -53,6 +53,7 @@
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdate.h"
+#include "jsdtoa.h"
 #include "jsemit.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -726,6 +727,8 @@ JS_ShutDown(void)
     js_FreeStringGlobals();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
+#else
+    js_FinishDtoa();
 #endif
 }
 
