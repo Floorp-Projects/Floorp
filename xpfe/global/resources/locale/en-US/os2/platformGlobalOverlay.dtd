@@ -10,5 +10,5 @@
 <!ENTITY quitApplicationCmd.accesskey		"q">
 
 <!ENTITY redoCmd.label						"Redo">  
-<!ENTITY redoCmd.key						"Z">  
+<!ENTITY redoCmd.key						"Y">  
 <!ENTITY redoCmd.accesskey					"r">
