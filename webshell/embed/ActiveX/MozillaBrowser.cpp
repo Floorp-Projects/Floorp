@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -53,7 +53,7 @@ CMozillaBrowser::CMozillaBrowser()
 #endif
 
 	// Ready state of control
-	m_nReadyState = READYSTATE_UNINITIALIZED;
+	m_nBrowserReadyState = READYSTATE_UNINITIALIZED;
 	
 	// Create the container that handles some things for us
 	m_pWebShellContainer = NULL;
@@ -64,26 +64,26 @@ CMozillaBrowser::CMozillaBrowser()
 	// Register components
 	NS_SetupRegistry();
 
-  // Create the Event Queue for the UI thread...
-  //
-  // If an event queue already exists for the thread, then 
-  // CreateThreadEventQueue(...) will fail...
-  nsresult rv;
-  nsIEventQueueService* eventQService = NULL;
+	// Create the Event Queue for the UI thread...
+	//
+	// If an event queue already exists for the thread, then 
+	// CreateThreadEventQueue(...) will fail...
+	nsresult rv;
+	nsIEventQueueService* eventQService = NULL;
 
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&eventQService);
-  if (NS_SUCCEEDED(rv)) {
-    rv = eventQService->CreateThreadEventQueue();
-    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
-  }
+	rv = nsServiceManager::GetService(kEventQueueServiceCID,
+								kIEventQueueServiceIID,
+								(nsISupports **)&eventQService);
+	if (NS_SUCCEEDED(rv)) {
+		rv = eventQService->CreateThreadEventQueue();
+		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
+	}
 }
 
 
 CMozillaBrowser::~CMozillaBrowser()
 {
-  // XXX: Do not call DestroyThreadEventQueue(...) for now...
+	// XXX: Do not call DestroyThreadEventQueue(...) for now...
 	NG_TRACE(_T("CMozillaBrowser::~CMozillaBrowser\n"));
 }
 
@@ -114,7 +114,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     CreateWebShell();
 
 	// Control is ready
-	m_nReadyState = READYSTATE_LOADED;
+	m_nBrowserReadyState = READYSTATE_LOADED;
 
 	// Browse to a default page
 	USES_CONVERSION;
@@ -176,8 +176,6 @@ LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	// TODO show a print dialog
-
 	// Print the contents
 	if (m_pIWebShell)
 	{
@@ -1032,7 +1030,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 
 	// Get the url from the web shell
 	PRUnichar *pszUrl = nsnull;
-	m_pIWebShell->GetURL(0, &pszUrl);
+	PRInt32 aHistoryIndex;
+	m_pIWebShell->GetHistoryIndex(aHistoryIndex);
+	m_pIWebShell->GetURL(aHistoryIndex, &pszUrl);
 	if (pszUrl == nsnull)
 	{
 		return E_FAIL;
@@ -1555,7 +1555,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ReadyState(READYSTATE __RPC_FAR *
 		return E_INVALIDARG;
 	}
 
-	*plReadyState = m_nReadyState;
+	*plReadyState = m_nBrowserReadyState;
 
 	return S_OK;
 }
@@ -1683,7 +1683,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TheaterMode(VARIANT_BOOL __RPC_FA
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (pbRegister == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// No theatermode!
+	*pbRegister = VARIANT_FALSE;
+
+	return S_OK;
 }
 
 
@@ -1697,7 +1706,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_TheaterMode(VARIANT_BOOL bRegiste
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
