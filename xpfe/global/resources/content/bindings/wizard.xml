@@ -27,17 +27,17 @@
                              onset="this.setAttribute('title', val);"/>
 
       <property name="canAdvance" onget="return this._canAdvance;"
-                                  onset="this._canAdvance=val; this._nextButton.disabled=!val;"/>
+                                  onset="this._canAdvance=val; this._nextButton.setAttribute('disabled', !val);"/>
       <property name="canRewind" onget="return this._canRewind;"
-                                 onset="this._canRewind=val; this._backButton.disabled=!val;"/>
+                                 onset="this._canRewind=val; this._backButton.setAttribute('disabled', !val);"/>
 
-      <property name="accessMethod" onget="return this._accessMethod"/>
+      <property name="pageStep" onget="return this._pageStack.length"/>
 
       <field name="pageCount">0</field>
-
-      <field name="pageStack">null</field>
-
-      <property name="pageStep" onget="return this.pageStack.length"/>
+      
+      <field name="_accessMethod">null</field>
+      <field name="_pageStack">null</field>
+      <field name="_currentPage">null</field>
 
       <property name="currentPage" onget="return this._currentPage">
         <setter>
@@ -60,7 +60,7 @@
           }
 
           this._deck.setAttribute("selectedIndex", val.pageIndex);
-          document.commandDispatcher.advanceFocusIntoSubtree(val);
+          this._advanceFocusToPage(val);
 
           this._adjustWizardHeader();
           this._wizardButtons.onPageChange();
@@ -84,7 +84,7 @@
       </property>
 
       <property name="onFirstPage"
-                onget="return this.pageStack.length == 1;"/>
+                onget="return this._pageStack.length == 1;"/>
 
       <property name="onLastPage">
         <getter><![CDATA[
@@ -124,90 +124,11 @@
           event.preventDefault();
       })</field>
        
-      <method name="getPageById">
-        <parameter name="aPageId"/>
-        <body><![CDATA[
-          var els = this.getElementsByAttribute("pageid", aPageId);
-          return els.length > 0 ? els[0] : null;
-        ]]></body>
-      </method>
-
-      <method name="rewind">
-        <body><![CDATA[
-          if (!this.canRewind)
-            return;
-
-          if (this.currentPage && !this.currentPage.fireHide())
-            return;
-
-          if (!this._fireEvent(this, "wizardback"))
-            return;
-            
-          this.pageStack.pop();
-          this.currentPage = this.pageStack[this.pageStack.length-1];
-          this.setAttribute("pagestep", this.pageStack.length);
-        ]]></body>
-      </method>
-
-      <method name="advance">
-        <parameter name="aPageId"/>
-        <body><![CDATA[
-          if (!this.canAdvance)
-            return; 
-            
-          if (this.currentPage && !this.currentPage.fireHide())
-            return;
-          
-          if (this.onLastPage) {
-            if (!this._fireEvent(this, "wizardfinish"))
-              window.close();
-          } else {
-            if (!this._fireEvent(this, "wizardnext"))
-              return; 
-            
-            var page;
-            if (aPageId)
-              page = this.getPageById(aPageId);
-            else {
-              if (this._accessMethod == "random")
-                page = this.getPageById(this.currentPage.next);
-              else
-                page = this.childNodes[this.currentPage.pageIndex+1];
-            }
-
-            this.pageStack.push(page);
-            this.setAttribute("pagestep", this.pageStack.length);
-
-            this.currentPage = page;
-          }
-        ]]></body>
-      </method>
-      
-      <method name="goTo">
-        <parameter name="aPageId"/>
-        <body><![CDATA[
-          var page = this.getPageById(aPageId);
-          if (page) {
-            this.pageStack[this.pageStack.length-1] = page;
-            this.currentPage = page;
-          }
-        ]]></body>
-      </method>
-              
-      <method name="cancel">
-        <body><![CDATA[
-          if (!this._fireEvent(this, "wizardcancel"))
-            return true;
-
-          window.close();
-        ]]></body>
-      </method>
-      
       <constructor><![CDATA[
         this._canAdvance = true;
         this._canRewind = false;
         
-        this.pageStack = [];
+        this._pageStack = [];
         
         // need to create string bundle manually instead of using <xul:stringbundle/>
         // see bug 63370 for details
@@ -231,9 +152,117 @@
         
         window.addEventListener("close", this._closeHandler, false);
         
+        // start off on the first page
         this.pageCount = this.childNodes.length;
         this.advance(this.childNodes[0].pageid);
+        
+        // give focus to the first focusable element in the dialog
+        window.addEventListener("load", this.setInitialFocus, false);
       ]]></constructor>
+
+      <method name="getPageById">
+        <parameter name="aPageId"/>
+        <body><![CDATA[
+          var els = this.getElementsByAttribute("pageid", aPageId);
+          return els.length > 0 ? els[0] : null;
+        ]]></body>
+      </method>
+
+      <method name="rewind">
+        <body><![CDATA[
+          if (!this.canRewind)
+            return;
+
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+            return;
+
+          if (!this._fireEvent(this, "wizardback"))
+            return;
+            
+          this._pageStack.pop();
+          this.currentPage = this._pageStack[this._pageStack.length-1];
+          this.setAttribute("pagestep", this._pageStack.length);
+        ]]></body>
+      </method>
+
+      <method name="advance">
+        <parameter name="aPageId"/>
+        <body><![CDATA[
+          if (!this.canAdvance)
+            return; 
+            
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+            return;
+          
+          if (this.onLastPage) {
+            if (this._fireEvent(this, "wizardfinish"))
+              window.setTimeout(function() {window.close();}, 1);
+          } else {
+            if (!this._fireEvent(this, "wizardnext"))
+              return; 
+            
+            var page;
+            if (aPageId)
+              page = this.getPageById(aPageId);
+            else {
+              if (this._accessMethod == "random")
+                page = this.getPageById(this.currentPage.next);
+              else
+                page = this.childNodes[this.currentPage.pageIndex+1];
+            }
+
+            this._pageStack.push(page);
+            this.setAttribute("pagestep", this._pageStack.length);
+
+            this.currentPage = page;
+          }
+        ]]></body>
+      </method>
+      
+      <method name="goTo">
+        <parameter name="aPageId"/>
+        <body><![CDATA[
+          var page = this.getPageById(aPageId);
+          if (page) {
+            this._pageStack[this._pageStack.length-1] = page;
+            this.currentPage = page;
+          }
+        ]]></body>
+      </method>
+              
+      <method name="cancel">
+        <body><![CDATA[
+          if (!this._fireEvent(this, "wizardcancel"))
+            return true;
+
+          window.setTimeout(function() {window.close();}, 1);
+        ]]></body>
+      </method>
+      
+      <method name="_setInitialFocus">
+        <parameter name="event"/>
+        <body>
+        <![CDATA[
+          if (!document.commandDispatcher.focusedElement)
+            document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+        ]]>
+        </body>
+      </method>                
+
+      <method name="_advanceFocusToPage">
+        <parameter name="aPage"/>
+        <body>
+        <![CDATA[
+          document.commandDispatcher.advanceFocusIntoSubtree(aPage);
+          
+          // if advanceFocusIntoSubtree tries to focus one of our
+          // dialog buttons, then remove it and put it on the root
+          var focused = document.commandDispatcher.focusedElement;
+          if (focused && focused.hasAttribute("dlgtype"))
+            this.focus();
+        ]]>
+        </body>
+      </method>                
 
       <method name="_initPages">
         <body><![CDATA[
@@ -279,7 +308,7 @@
           // if a button is focused, dispatch its command instead 
           // of advancing the wizard
           var focused = document.commandDispatcher.focusedElement;
-          if (!(focused.localName == "button" && focused.hasAttribute("dlgtype")))
+          if (!(focused && focused.localName == "button" && focused.hasAttribute("dlgtype")))
             this.advance();
         ]]>
         </body>
@@ -304,7 +333,7 @@
             if (returned == false)
               noCancel = false;
           }
-          
+
           return noCancel;
         ]]>
         </body>
