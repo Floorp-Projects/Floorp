@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsRenderingContextXp_h___
@@ -190,9 +191,13 @@ class nsRenderingContextXp : public nsRenderingContextImpl
   nsresult CommonInit(void);
   
   xGC *GetGC() { mGC->AddRef(); return mGC; };
- 
-private:
   void UpdateGC();
+  
+  /* use UpdateGC() to update GC-cache !! */
+  void SetCurrentFont(XFontStruct *cf){ mCurrentFont = cf; };
+  XFontStruct *GetCurrentFont() { return mCurrentFont; };
+   
+private:
   nsXPrintContext         *mPrintContext;
   nsCOMPtr<nsIDeviceContextXp> mContext;
   nsIFontMetrics          *mFontMetrics;

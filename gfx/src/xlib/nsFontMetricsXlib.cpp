@@ -23,6 +23,8 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   pocemit <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "xp_core.h"
@@ -1735,6 +1737,10 @@ nsFontXlib::LoadFont(void)
 
   XFontStruct *xlibFont = XLoadQueryFont(aDisplay, mName);
 
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, 
+         ("nsFontXlib::LoadFont(): XLoadQueryFont(aDisplay='%s',mName='%s') returned %lx\n", 
+         XDisplayString(aDisplay), mName, (long)xlibFont));
+
   if (xlibFont) {
     if (mCharSetInfo == &ISO106461) {
       mMap = GetMapFor10646Font(xlibFont);
@@ -1869,8 +1875,9 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
   int len = mCharSetInfo->Convert(mCharSetInfo, mFont, aString, aLength,
                                   p, bufLen);
 
-  xGC *gc = aContext->GetGC();
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0)) {
+    xGC *gc = aContext->GetGC();
+    
     XDrawString(aSurface->GetDisplay(),
                 aSurface->GetDrawable(),
                 *gc,
@@ -1881,32 +1888,30 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
   }
   else
   {
-    /* XXX is this the right way to do it? Can I get GCCache to give me a
-     * new GC? */
-    GC copyGC;
-    XGCValues values;
-    memset(&values, 0, sizeof(XGCValues));
+    XFontStruct *savedFont = aContext->GetCurrentFont();
+    aContext->SetCurrentFont(mFont);
+    aContext->UpdateGC();
 
-    XGetGCValues(aSurface->GetDisplay(), *gc, GCForeground | GCBackground,
-        &values);
-    values.font = mFont->fid;
-    copyGC = XCreateGC(aSurface->GetDisplay(), aSurface->GetDrawable(),
-        GCForeground | GCBackground | GCFont, &values);
-
+    xGC *gc = aContext->GetGC();
+    
     /* note the length must be divided by 2 for X*16 functions */
     XDrawString16(aSurface->GetDisplay(),
                   aSurface->GetDrawable(),
-                  copyGC,
+                  *gc,
                   aX, aY + mBaselineAdjust, (XChar2b *)p, len / 2);
-    XFreeGC(aSurface->GetDisplay(), copyGC);
+                  
     gc->Release();
+    
     textWidth = XTextWidth16(mFont, (XChar2b *)p, len / 2);
+
+    aContext->SetCurrentFont(savedFont);
+    aContext->UpdateGC();
   }
 
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return textWidth;
 }
-#endif
+#endif /* !_IMPL_NS_XPRINT */
 
 #ifdef USE_XPRINT
 int
@@ -1932,8 +1937,9 @@ nsFontXlibNormal::DrawString(nsRenderingContextXp* aContext,
   int len = mCharSetInfo->Convert(mCharSetInfo, mFont, aString, aLength,
                                   p, bufLen);
 
-  xGC *gc = aContext->GetGC();
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0)) {
+    xGC *gc = aContext->GetGC();
+    
     XDrawString(aSurface->GetDisplay(),
                 aSurface->GetDrawable(),
                 *gc,
@@ -1944,26 +1950,24 @@ nsFontXlibNormal::DrawString(nsRenderingContextXp* aContext,
   }
   else
   {
-    /* XXX is this the right way to do it? Can I get GCCache to give me a
-     * new GC? */
-    GC copyGC;
-    XGCValues values;
-    memset(&values, 0, sizeof(XGCValues));
+    XFontStruct *savedFont = aContext->GetCurrentFont();
+    aContext->SetCurrentFont(mFont);
+    aContext->UpdateGC();
 
-    XGetGCValues(aSurface->GetDisplay(), *gc, GCForeground | GCBackground,
-        &values);
-    values.font = mFont->fid;
-    copyGC = XCreateGC(aSurface->GetDisplay(), aSurface->GetDrawable(),
-        GCForeground | GCBackground | GCFont, &values);
-
+    xGC *gc = aContext->GetGC();
+    
     /* note the length must be divided by 2 for X*16 functions */
     XDrawString16(aSurface->GetDisplay(),
                   aSurface->GetDrawable(),
-                  copyGC,
+                  *gc,
                   aX, aY + mBaselineAdjust, (XChar2b *)p, len / 2);
-    XFreeGC(aSurface->GetDisplay(), copyGC);
+                  
     gc->Release();
+    
     textWidth = XTextWidth16(mFont, (XChar2b *)p, len / 2);
+
+    aContext->SetCurrentFont(savedFont);
+    aContext->UpdateGC();
   }
 
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);

@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
+ *   pocemit <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsRenderingContextXlib_h___
@@ -202,9 +204,13 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   nsresult CommonInit(void);
 
   xGC *GetGC() { mGC->AddRef(); return mGC; }
-
-private:
   void UpdateGC();
+  
+  /* use UpdateGC() to update GC-cache !! */
+  void SetCurrentFont(XFontStruct *cf){ mCurrentFont = cf; };
+  XFontStruct *GetCurrentFont() { return mCurrentFont; };
+  
+private:
   nsDrawingSurfaceXlib    *mOffscreenSurface;
   nsDrawingSurfaceXlib    *mRenderingSurface;
   nsIDeviceContext        *mContext;
