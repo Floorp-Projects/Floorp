@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.81 $ ';
+$::UtilsVersion = '$Revision: 1.82 $ ';
 
 package TinderUtils;
 
@@ -954,6 +954,7 @@ sub run_all_tests {
 		$avg_startuptime = $agg_startuptime / $startup_count;
 		print_log "Average startup time: $avg_startuptime\n";
 		print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
+		print_log "\n\nTinderboxPrint:Ts:$avg_startuptimems\n\n";
 		
 		# Report data back to server
 		if($Settings::TestsPhoneHome) {
