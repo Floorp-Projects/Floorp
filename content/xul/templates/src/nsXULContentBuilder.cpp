@@ -130,7 +130,6 @@ class nsXULContentBuilder : public nsXULTemplateBuilder
 {
 public:
     // nsIXULTemplateBuilder interface
-    NS_IMETHOD Rebuild();
     NS_IMETHOD CreateContents(nsIContent* aElement);
 
     // nsIDocumentObserver interface
@@ -244,6 +243,9 @@ protected:
     InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode);
 
     virtual nsresult
+    RebuildAll();
+
+    virtual nsresult
     CompileCondition(nsIAtom* aTag,
                      nsTemplateRule* aRule,
                      nsIContent* aCondition,
@@ -287,9 +289,6 @@ protected:
      * Information about the currently active sort
      */
     nsRDFSortState sortState;
-
-    nsresult
-    Rebuild(nsIContent* aElement);
 
     virtual nsresult
     ReplaceMatch(nsIRDFResource* aMember, const nsTemplateMatch* aOldMatch, nsTemplateMatch* aNewMatch);
@@ -1671,77 +1670,6 @@ nsXULContentBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory**
 // nsIXULTemplateBuilder methods
 //
 
-nsresult
-nsXULContentBuilder::Rebuild(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    // Next, see if it's a XUL element whose contents have never even
-    // been generated. If so, short-circuit and bail; there's nothing
-    // for us to "rebuild" yet. They'll get built correctly the next
-    // time somebody asks for them. 
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-
-    if (xulcontent) {
-        PRBool containerContentsBuilt = PR_FALSE;
-        xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, containerContentsBuilt);
-
-        if (! containerContentsBuilt)
-            return NS_OK;
-    }
-
-    // If we get here, then we've tried to generate content for this
-    // element. Remove it.
-    rv = RemoveGeneratedContent(aElement);
-    if (NS_FAILED(rv)) return rv;
-
-    if (aElement == mRoot) {
-        // Nuke the content support map and conflict set completely.
-        mContentSupportMap.Clear();
-        mTemplateMap.Clear();
-        mConflictSet.Clear();
-
-        rv = CompileRules();
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Forces the XUL element to remember that it needs to
-    // re-generate its children next time around.
-    if (xulcontent) {
-        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-        xulcontent->ClearLazyState(nsIXULContent::eTemplateContentsBuilt);
-        xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
-    }
-
-    // Now, regenerate both the template- and container-generated
-    // contents for the current element...
-    nsCOMPtr<nsIContent> container;
-    PRInt32 newIndex;
-    CreateTemplateAndContainerContents(aElement, getter_AddRefs(container), &newIndex);
-
-    if (container) {
-        nsCOMPtr<nsIDocument> doc;
-        mRoot->GetDocument(*getter_AddRefs(doc));
-        NS_ASSERTION(doc != nsnull, "root element has no document");
-        if (! doc)
-            return NS_ERROR_UNEXPECTED;
-
-        doc->ContentAppended(container, newIndex);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULContentBuilder::Rebuild()
-{
-    return Rebuild(mRoot);
-}
-
 NS_IMETHODIMP
 nsXULContentBuilder::CreateContents(nsIContent* aElement)
 {
@@ -2075,6 +2003,75 @@ nsXULContentBuilder::InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode)
     mRDFTests.Add(membernode);
 
     *aChildNode = membernode;
+    return NS_OK;
+}
+
+nsresult
+nsXULContentBuilder::RebuildAll()
+{
+    NS_PRECONDITION(mRoot != nsnull, "not initialized");
+    if (! mRoot)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsCOMPtr<nsIDocument> doc;
+    nsresult rv = mRoot->GetDocument(*getter_AddRefs(doc));
+    if (NS_FAILED(rv)) return rv;
+
+    // Bail out early if we are being torn down.
+    if (!doc)
+        return NS_OK;
+
+    // See if it's a XUL element whose contents have never even
+    // been generated. If so, short-circuit and bail; there's nothing
+    // for us to "rebuild" yet. They'll get built correctly the next
+    // time somebody asks for them. 
+    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(mRoot);
+
+    if (xulcontent) {
+        PRBool containerContentsBuilt = PR_FALSE;
+        xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, containerContentsBuilt);
+
+        if (! containerContentsBuilt)
+            return NS_OK;
+    }
+
+    // If we get here, then we've tried to generate content for this
+    // element. Remove it.
+    rv = RemoveGeneratedContent(mRoot);
+    if (NS_FAILED(rv)) return rv;
+
+    // Nuke the content support map and conflict set completely.
+    mContentSupportMap.Clear();
+    mTemplateMap.Clear();
+    mConflictSet.Clear();
+
+    rv = CompileRules();
+    if (NS_FAILED(rv)) return rv;
+
+    // Forces the XUL element to remember that it needs to
+    // re-generate its children next time around.
+    if (xulcontent) {
+        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+        xulcontent->ClearLazyState(nsIXULContent::eTemplateContentsBuilt);
+        xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
+    }
+
+    // Now, regenerate both the template- and container-generated
+    // contents for the current element...
+    nsCOMPtr<nsIContent> container;
+    PRInt32 newIndex;
+    CreateTemplateAndContainerContents(mRoot, getter_AddRefs(container), &newIndex);
+
+    if (container) {
+        nsCOMPtr<nsIDocument> doc;
+        mRoot->GetDocument(*getter_AddRefs(doc));
+        NS_ASSERTION(doc != nsnull, "root element has no document");
+        if (! doc)
+            return NS_ERROR_UNEXPECTED;
+
+        doc->ContentAppended(container, newIndex);
+    }
+
     return NS_OK;
 }
 

@@ -626,11 +626,9 @@ function LoadBookmarksCallback()
   // loads the services
   initServices();
   initBMService();
-  var hasRead = BMSVC.readBookmarks();  
+  BMSVC.readBookmarks();
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
-    if (hasRead) 
-      bt.builder.rebuild();
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
   }
   window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);

@@ -52,7 +52,6 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
-#include "nsITimer.h"
 #include "nsIXULTemplateBuilder.h"
 
 #include "nsConflictSet.h"
@@ -60,6 +59,7 @@
 #include "nsResourceSet.h"
 #include "nsRuleNetwork.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -91,12 +91,8 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIXULTemplateBuilder interface
-    NS_IMETHOD GetRoot(nsIDOMElement** aResult);
-    NS_IMETHOD GetDatabase(nsIRDFCompositeDataSource** aResult);
-    NS_IMETHOD Rebuild() = 0; // must be implemented by subclasses
-    NS_IMETHOD Init(nsIContent* aElement);
-    NS_IMETHOD CreateContents(nsIContent* aElement);
-
+    NS_DECL_NSIXULTEMPLATEBUILDER
+   
     // nsISecurityCheckedComponent
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
@@ -124,6 +120,9 @@ public:
      */
     virtual nsresult
     InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode) = 0;
+
+    virtual nsresult
+    RebuildAll() = 0; // must be implemented by subclasses
 
     /**
      * Find the <template> tag that applies for this builder
@@ -311,7 +310,8 @@ protected:
     nsCOMPtr<nsIContent> mRoot;
 
     nsCOMPtr<nsIRDFDataSource> mCache;
-    nsCOMPtr<nsITimer> mTimer;
+
+    nsCOMArray<nsIXULBuilderListener> mListeners;
 
     PRInt32     mUpdateBatchNest;
 

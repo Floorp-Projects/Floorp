@@ -214,6 +214,14 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+    NS_IMETHOD BeginUpdateBatch() {
+        return mInner->BeginUpdateBatch();
+    }
+                                                                                
+    NS_IMETHOD EndUpdateBatch() {
+        return mInner->EndUpdateBatch();
+    }
+
     NS_IMETHOD GetLoaded(PRBool* _result);
 	NS_IMETHOD Init(const char *uri);
 	NS_IMETHOD Flush();

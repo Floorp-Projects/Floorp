@@ -223,14 +223,12 @@ nsHistoryController.prototype =
             if (!gGlobalHistory)
                 gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastHostname, false)
-            gHistoryTree.builder.rebuild();
             return true;
 
         case "cmd_deleteByDomain":
             if (!gGlobalHistory)
                 gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
             gGlobalHistory.removePagesFromHost(gLastDomain, true)
-            gHistoryTree.builder.rebuild();
             return true;
 
         default:

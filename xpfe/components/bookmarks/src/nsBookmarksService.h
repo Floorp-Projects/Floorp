@@ -40,6 +40,7 @@
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
+#include "nsIRDFPropagatableDataSource.h"
 #include "nsIStreamListener.h"
 #include "nsIRDFObserver.h"
 #include "nsISupportsArray.h"
@@ -69,6 +70,7 @@ class nsIOutputStream;
 class nsBookmarksService : public nsIBookmarksService,
                            public nsIRDFDataSource,
                            public nsIRDFRemoteDataSource,
+                           public nsIRDFPropagatableDataSource,
                            public nsIStreamListener,
                            public nsIRDFObserver,
                            public nsIObserver,
@@ -172,13 +174,17 @@ protected:
     void AnnotateBookmarkSchedule(nsIRDFResource* aSource,
                                   PRBool scheduleFlag);
 
-    nsresult IsBookmarkedInternal(nsIRDFResource *bookmark,
-                                  PRBool *isBookmarkedFlag);
-
     nsresult InsertResource(nsIRDFResource* aResource,
                             nsIRDFResource* aParentFolder, PRInt32 aIndex);
 
     nsresult getLocaleString(const char *key, nsString &str);
+
+    static int PR_CALLBACK
+    Compare(const void* aElement1, const void* aElement2, void* aData);
+
+    nsresult
+    Sort(nsIRDFResource* aFolder, nsIRDFResource* aProperty,
+         PRInt32 aDirection, PRBool aFoldersFirst, PRBool aRecurse);
 
     nsresult LoadBookmarks();
     nsresult initDatasource();
@@ -289,8 +295,19 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+    NS_IMETHOD BeginUpdateBatch() {
+        return mInner->BeginUpdateBatch();
+    }
+
+    NS_IMETHOD EndUpdateBatch() {
+        return mInner->EndUpdateBatch();
+    }
+
     // nsIRDFRemoteDataSource
     NS_DECL_NSIRDFREMOTEDATASOURCE
+
+    // nsIRDFPropagatableDataSource
+    NS_DECL_NSIRDFPROPAGATABLEDATASOURCE
 
     // nsIRDFObserver
     NS_DECL_NSIRDFOBSERVER

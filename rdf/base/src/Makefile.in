@@ -32,10 +32,8 @@ REQUIRES	= xpcom \
 		  string \
 		  rdfutil \
 		  necko \
-		  layout \
 		  content \
 		  htmlparser \
-		  js \
 		  unicharutil \
 		  $(NULL)
 

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>  
+<?xml version="1.0"?>
 
 <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
 <!--
@@ -51,24 +51,28 @@
 
         BMSVC.readBookmarks();
         
-        // We implement nsIController
+        // Add controllers and listeners.
         this.tree.controllers.appendController(this.controller);
-        var olb = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
-        olb = olb.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-        olb.addObserver(this.builderObserver);
+
+        // XXXvarga this observer should go away once bug 120071 is fixed.
+        this.treeBuilder.addObserver(this.builderObserver);
+
+        this.tree.builder.addListener(this.builderListener);
+
+        BMSVC.transactionManager.AddListener(this.transactionListener);
 
         // Load column settings from persisted attribute
         var colinfostr = this.getAttribute("colinfo");
         var colinfo = colinfostr.split(" ");
         for (var i = 0; i < colinfo.length; ++i) {
           if (colinfo[i] == "") continue;
-          
+
           var querymarker = colinfo[i].indexOf("?");
           var anonid = colinfo[i].substring(4, querymarker);
           var col = document.getAnonymousElementByAttribute(this, "id", anonid);
-          
+
           if (!anonid || !col) break;
-          
+
           var attrstring = colinfo[i].substr(querymarker + 1);
 
           var attrpairs = attrstring.split("&");
@@ -77,30 +81,19 @@
             col.setAttribute(pair[0], pair[1]);
           }
         }
-        
-        // Load sort data from preferences
-        this.refreshSort();
-        
-        // Observe for changes in sort from other concurrent UI
-        const kPrefSvcContractID = "@mozilla.org/preferences;1";
-        const kPrefSvcIID = Components.interfaces.nsIPrefService;
-        var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-        var prefs = prefSvc.getBranch(null);
-        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranchInternal;
-        var bookmarksPrefsInternal = prefs.QueryInterface(kPrefBranchInternalIID);
-        bookmarksPrefsInternal.addObserver(this.sortChangedObserver.domain, 
-                                           this.sortChangedObserver, false);
       ]]></constructor>
       <destructor><![CDATA[
-        
+        // Remove controllers and listeners.
+        BMSVC.transactionManager.RemoveListener(this.transactionListener);
+
+        this.tree.builder.removeListener(this.builderListener);
+
         this.treeBuilder.removeObserver(this.builderObserver);
+
         this.tree.controllers.removeController(this.controller);
 
         // Save column settings and sort info to persisted attribute
         var persistString = "";
-        
-        var sortResource = NC_NS + "Name";
-        var sortDirection = "none";
 
         var treecols = document.getAnonymousElementByAttribute(this, "anonid", "treecols");
         var child = treecols.firstChild;
@@ -110,33 +103,14 @@
             formatString = formatString.replace(/%1%/, child.getAttribute("id"));
             formatString = formatString.replace(/%2%/, child.getAttribute("width"));
             formatString = formatString.replace(/%3%/, child.getAttribute("hidden"));
-
-            // While we're walking the columns, if we discover the column that represents the
-            // field sorted by, save the resource associated with that column so that we 
-            // can save that in prefs (see below)
-            if (child.getAttribute("sortActive") == "true") {
-              sortResource = child.getAttribute("sort");
-              sortDirection = child.getAttribute("sortDirection");
-            }
             formatString = formatString.replace(/%6%/, child.getAttribute("ordinal"));
             persistString += formatString;
-          }          
+          }
           child = child.nextSibling;
         }
         this.setAttribute("colinfo", persistString);
-        
-        document.persist(this.id, "colinfo");
-        
-        // Unhook the sort change observer for this tree
-        const kPrefSvcContractID = "@mozilla.org/preferences;1";
-        const kPrefSvcIID = Components.interfaces.nsIPrefService;
-        var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-        var prefs = prefSvc.getBranch(null);
-        const kPrefBranchInternalIID = Components.interfaces.nsIPrefBranchInternal;
-        var bookmarksPrefsInternal = prefs.QueryInterface(kPrefBranchInternalIID);
-        bookmarksPrefsInternal.removeObserver(this.sortChangedObserver.domain, 
-                                              this.sortChangedObserver);
 
+        document.persist(this.id, "colinfo");
       ]]></destructor>
 
       <property name="db">
@@ -144,64 +118,6 @@
           return this.tree.database;
         ]]></getter>
       </property>      
-      
-      <field name="sortChangedObserver">
-      <![CDATA[
-      ({
-        outer: this,
-        domain: "browser.bookmarks.sort",
-        observe: function BMOL_sortChangedObserver(aSubject, aTopic, aPrefName) 
-        {
-          if (aTopic != "nsPref:changed") return;
-          if (aPrefName.substr(0, this.domain.length) != this.domain) return;
-                    
-          this.outer.refreshSort();
-        }      
-      })
-      ]]>
-      </field>
-      
-      <field name="sorted">false</field>
-      <method name="refreshSort">
-        <body>
-        <![CDATA[
-          const kPrefSvcContractID = "@mozilla.org/preferences;1";
-          const kPrefSvcIID = Components.interfaces.nsIPrefService;
-          var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-          var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
-          
-          // This ensures that we don't sort twice in the tree that is clicked on 
-          // as a result of 1) the click and 2) the pref listener. 
-          if (!this.sorted) {
-            try {
-              var sortResource = bookmarksSortPrefs.getCharPref("resource");
-              var sortDirection = bookmarksSortPrefs.getCharPref("direction");
-          
-              // Walk the columns, when we find a column with a sort resource that matches the supplied
-              // data, stop and make sure it's sort active. 
-              var treecols = document.getAnonymousElementByAttribute(this, "anonid", "treecols");
-              var child = treecols.firstChild;
-              while (child) {
-                if (child.localName != "splitter") {
-                  if (child.getAttribute("sort") == sortResource) {
-                    child.setAttribute("sortActive", "true");
-                    child.setAttribute("sortDirection", sortDirection);
-                    this.treeBuilder.sort(child, false);
-                    break;
-                  }
-                }          
-                child = child.nextSibling;
-              }
-            }
-            catch (e) {
-              dump("error in refresh sort:"+e)
-            }
-          }
-
-          this.sorted = false;
-        ]]>
-        </body>
-      </method>
       
       <property name="columns">
         <getter>
@@ -215,8 +131,6 @@
               var obj = {
                 label: child.getAttribute("label"),
                 accesskey: child.getAttribute("accesskey"),
-                resource: child.getAttribute("sort"),
-                sortActive: child.getAttribute("sortActive") == "true",
                 hidden: child.getAttribute("hidden")
               }
               cols.push(obj);
@@ -377,95 +291,51 @@
       </method>
 
       <!--
-        This function saves the current selection state before the tree is rebuilt
-        following a command execution. This allows us to remember which item(s)
-        was/were selected so that the user does not need to constantly refocus the 
-        tree to perform a sequence of commands.
+        This function saves the current selection state before the tree is
+        rebuilt.
       -->
       <field name="_savedSelection">[]</field>
       <method name="saveSelection">
         <body><![CDATA[
+          this._savedSelection = [];
           var selection = this.treeBoxObject.view.selection;
-          var rangeCount = selection.getRangeCount();
-          var ranges = [];
-          var min = {}; var max = {};
-          for (var i = 0; i < rangeCount; ++i) {
-            selection.getRangeAt(i, min, max);
-            ranges.push({min: min.value, max: max.value});
+          if (selection) {
+            var rangeCount = selection.getRangeCount();
+            var min = {}; var max = {};
+            for (var i = 0; i < rangeCount; ++i) {
+              selection.getRangeAt(i, min, max);
+              for (var j = min.value; j <= max.value; ++j) {
+                var resource = this.treeBuilder.getResourceAtIndex(j);
+                this._savedSelection.push(resource);
+              }
+            }
           }
-          this._savedSelection = ranges;
         ]]></body>
       </method>
       
       <!--
-        This function restores the selection appropriately after a command executes. 
-        This is necessary because most commands trigger a rebuild of the tree which
-        destroys the selection. The restoration of selection is handled in three 
-        different ways depending on the type of command that has been executed:
-         1) Commands that remove rows:
-              The row immediately after the first range in the selection is selected, 
-              if there is no row immediately after the first range the item before it
-              is selected
-         2) Commands that insert rows:
-              The newly inserted rows are selected
-         3) Commands that do not change the row count 
-              The row(s) that was/were operated on remain selected.
-
-        The calls to save/restore are placed in the doCommand method and thus all
-        commands must pass through this gate. The result is that this method becomes
-        the POLICY CENTER FOR POST-VIEW/EDIT SELECTION CHANGES.
+        This function restores the selection appropriately after the tree has
+        been rebuilt.
       -->
       <method name="restoreSelection">
-        <parameter name="aCommand"/>
         <body><![CDATA[ 
-          var oldRanges = this._savedSelection;
-          var newRanges = [];
+          var selection = this.treeBoxObject.view.selection;
+          if (selection) {
+            selection.selectEventsSuppressed = true;
 
-          switch(aCommand) {
-          // [Category 1] - Commands that remove rows
-          case "cmd_bm_cut":
-          case "cmd_bm_delete":
-            // Since rows have been removed, the row immediately after the first range 
-            // in the original selection now has the index of the first item in the first
-            // range. 
-            var nextRow = oldRanges[0].min;
-            newRanges.push({min: nextRow, max: nextRow});
-            break;
-          // [Category 2] - Commands that insert rows
-          case "cmd_bm_paste":
-          case "cmd_bm_import":
-          case "cmd_bm_movebookmark":
-          case "cmd_bm_newbookmark":
-          case "cmd_bm_newfolder":
-          case "cmd_bm_newseparator":
-          // [Category 2 bis] - Temporary hack 
-          case "cmd_undo":
-          case "cmd_redo":
-            // All items inserted will be selected. The implementation of this model
-            // is left to |preUpdateTreeSelection|, called when an insert transaction is
-            // executed, and |updateTreeSelection| called here. 
-            this.updateTreeSelection();
-            break;
-          // [Category 3] - Commands that do not alter the row count
-          case "cmd_bm_copy":
-          case "cmd_bm_properties":
-          case "cmd_bm_rename":
-          case "cmd_bm_setnewbookmarkfolder":
-          case "cmd_bm_setpersonaltoolbarfolder":
-          case "cmd_bm_setnewsearchfolder":
-          case "cmd_bm_export":
-          default:
-            // The selection is unchanged.
-            newRanges = oldRanges;
-            break;
+            selection.clearSelection();
+            for (var i = 0; i < this._savedSelection.length; ++i) {
+              var index = this.treeBuilder.getIndexOfResource(this._savedSelection[i]);
+              if (index >= 0) {
+                selection.toggleSelect(index);
+              }
+            }
+
+            selection.selectEventsSuppressed = false;
           }
-          
-          var newSelection = this.treeBoxObject.view.selection;
-          for (i = 0; i < newRanges.length; ++i)
-            newSelection.rangedSelect(newRanges[i].min, newRanges[i].max, true);
         ]]></body>
       </method>
-          
+
       <field name="_itemToBeToggled">  []</field>
       <field name="_parentToBeToggled">[]</field>
       <method name="preUpdateTreeSelection">
@@ -488,7 +358,7 @@
           this.treeBoxObject.selection.clearSelection();
           for (var i=0; i<this._itemToBeToggled.length; ++i) {
             index = this.treeBuilder.getIndexOfResource(this._itemToBeToggled[i]);
-            if (index != -1 && !this.treeBoxObject.selection.isSelected(index))
+            if (index >=0)
               this.treeBoxObject.selection.toggleSelect(index);
           }
         ]]></body>
@@ -572,14 +442,44 @@
         ]]></body>
       </method>
 
+      <method name="sortBookmarks">
+      <parameter name="aColumn"/>
+      <parameter name="aReverse"/>
+        <body><![CDATA[
+          var confirmed;
+          if (PREF.getBoolPref("browser.bookmarks.confirm_sorting")) {
+            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                .getService(Components.interfaces.nsIPromptService);
+            var title = BookmarksUtils.getLocaleString("confirm_sorting_title");
+            var message = BookmarksUtils.getLocaleString("confirm_sorting_message");
+            var checkMessage = BookmarksUtils.getLocaleString("confirm_sorting_check_message");
+            var checkValue = {};
+            confirmed = promptService.confirmCheck(window, title, message,
+                                                   checkMessage, checkValue);
+            if (checkValue.value) {
+              PREF.setBoolPref("browser.bookmarks.confirm_sorting", false);
+            }
+          }
+          else {
+            confirmed = true;
+          }
+          if (confirmed) {
+            var folder = RDF.GetResource("NC:BookmarksRoot");
+            var property = BookmarksUtils.getResource(aColumn);
+            var direction =
+              aReverse ? kBMSVCIID.SORT_DESCENDING : kBMSVCIID.SORT_ASCENDING;
+            var foldersFirst = aColumn == "Name";
+            BMDS.sortFolder(folder, property, direction, foldersFirst, true);
+          }
+        ]]></body>
+      </method>
+
       <!-- observer -->
       <field name="DNDObserver" readonly="true"><![CDATA[
       ({
         mOuter: this,
         onDragStart: function (aEvent, aXferData, aDragAction)
         {
-          if (this.mOuter.tree.getAttribute("sortActive") == "true")
-            throw Components.results.NS_OK; 
           var selection = this.mOuter._selection;
           aXferData.data = BookmarksUtils.getXferDataFromSelection(selection);
           const kDSIID = Components.interfaces.nsIDragService;
@@ -608,33 +508,46 @@
         {
           var selection = this.mOuter._selection;
           var target    = this.mOuter._target;
-          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
-          
           switch (aCommand) {
-          case "cmd_bm_selectAll":
-            this.mOuter.treeBoxObject.selection.selectAll();
-            break;
-          case "cmd_bm_expandfolder":
-            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
-            break;
-          default:
-            // Notify the datasource that we're about to begin a batch operation
-            var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
-            observer.beginUpdateBatch(this.db);
-            BookmarksController.doCommand(aCommand, selection, target);
-            observer.endUpdateBatch(this.db);
-
-            this.mOuter.saveSelection();
-
-            var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
-            this.mOuter.treeBoxObject.selection.currentIndex=-1;
-            this.mOuter.tree.builder.rebuild();
-            // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
-            // if the first visible row is not 0
-            this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-            this.mOuter.restoreSelection(aCommand);
+            // Commands that insert rows
+            case "cmd_bm_newfolder":
+            case "cmd_bm_newbookmark":
+            case "cmd_bm_newseparator":
+            case "cmd_bm_import":
+            case "cmd_bm_movebookmark":
+            case "cmd_bm_paste":
+            // XXXvarga undo/redo can insert or remove rows.
+            case "cmd_undo":
+            case "cmd_redo":
+              // All items inserted will be selected. The implementation of
+              // this model is left to |preUpdateTreeSelection|, called when
+              // an insert transaction is executed, and |updateTreeSelection|
+              // called here. 
+              BookmarksController.doCommand(aCommand, selection, target);
+              this.mOuter.updateTreeSelection();
+              break;
+            // Commands that remove rows
+            case "cmd_bm_cut":
+            case "cmd_bm_delete":
+              // Since rows have been removed, the row immediately after the
+              // first range in the original selection now has the index of
+              // the first item in the first range.
+              var s = this.mOuter.treeBoxObject.selection;
+              rangeMin = {};
+              rangeMax = {};
+              s.getRangeAt(0, rangeMin, rangeMax);
+              BookmarksController.doCommand(aCommand, selection, target);
+              s.select(rangeMin.value);
+              break;
+            case "cmd_bm_expandfolder":
+              this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
+              break;
+            case "cmd_bm_selectAll":
+              this.mOuter.treeBoxObject.selection.selectAll();
+              break;
+            default:
+              BookmarksController.doCommand(aCommand, selection, target);
           }
-          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = false;
         }
       })
       ]]></field>
@@ -659,10 +572,21 @@
         mOuter: this,
         canDropOn: function(index)
         {
-          return true;
+          var dragSession = DS.getCurrentSession();
+          if (!dragSession)
+            return false;
+          var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
+          return !selection.containsRF;
         },
         canDropBeforeAfter: function(index, before)
         {
+          var dragSession = DS.getCurrentSession();
+          if (!dragSession)
+            return false;
+          var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
+          if (selection.containsRF)
+            return false;
+
           if (index != 0)
             return true;
           if (this.mOuter.getRowResource(index).Value != "NC:BookmarksRoot")
@@ -671,8 +595,7 @@
         },
         onDrop: function(row, orientation)
         {  
-          var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);  
-          var dragSession = dragService.getCurrentSession();
+          var dragSession = DS.getCurrentSession();
           if (!dragSession)
             return;
           var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
@@ -689,10 +612,8 @@
           }
           const kDSIID = Components.interfaces.nsIDragService;
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
-          // disabling ctrl-DND for now bookmarks are not cloned
           if (dragSession.dragAction & kCopyAction)
-             SOUND.beep();
-            //BookmarksUtils.insertSelection("drag", selection, target, true);
+            BookmarksUtils.insertSelection("drag", selection, target);
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
         },
@@ -710,19 +631,7 @@
           }
         },
         
-        onCycleHeader: function (aColumnID, aHeaderElement)
-        {
-          const kPrefSvcContractID = "@mozilla.org/preferences;1";
-          const kPrefSvcIID = Components.interfaces.nsIPrefService;
-          var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-          var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
-          
-          // Sorted! http://www.sorted.org.nz/
-          this.mOuter.sorted = true;
-
-          bookmarksSortPrefs.setCharPref("resource", aHeaderElement.getAttribute("sort"));
-          bookmarksSortPrefs.setCharPref("direction", aHeaderElement.getAttribute("sortDirection"));
-        },
+        onCycleHeader: function (aColumnID, aHeaderElement) {},
     
         onSelectionChanged: function ()
         {
@@ -757,8 +666,23 @@
       })
       ]]></field>
 
+      <!-- nsIXULBuilderListener -->
+      <field name="builderListener"><![CDATA[
+      ({
+        mOuter: this,
+
+        willRebuild: function(aBuilder) {
+          this.mOuter.saveSelection();
+        },
+
+        didRebuild: function(aBuilder) {
+          this.mOuter.restoreSelection();
+        }
+      })
+      ]]></field>
+
       <!-- nsITransactionManager listener -->
-      <field name="bookmarkTreeTransactionListener"><![CDATA[
+      <field name="transactionListener"><![CDATA[
       ({
 
         mOuter: this,
@@ -862,42 +786,43 @@
               </treechildren>
             </rule>
           </template>
-          <treecols anonid="treecols">
-            <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true" 
-                         class="sortDirectionIndicator" 
-                         persist="width hidden ordinal" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                         sortActive="true" sortDirection="none"/>
+          <treecols anonid="treecols" onclick="if (event.target.localName == 'treecol') this.parentNode.parentNode.parentNode.sortBookmarks(event.target.id, event.ctrlKey || event.metaKey)">
+            <treecol id="Name" flex="1" primary="true"
+                     label="&treecol.name.label;"
+                     tooltiptext="&treecol.name.tooltip;"
+                     sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                     sortActive="true" sortLocked="true"
+                     persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
-            <treecol id="URL" label="&treecol.url.label;" 
-                         flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#URL" 
-                         persist="width hidden ordinal" />
+            <treecol id="URL" flex="1"
+                     label="&treecol.url.label;"
+                     tooltiptext="&treecol.url.tooltip;"
+                     persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
-            <treecol id="ShortcutURL" label="&treecol.shortcut.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         persist="hidden width ordinal" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+            <treecol id="ShortcutURL" flex="1" hidden="true"
+                     label="&treecol.shortcut.label;"
+                     tooltiptext="&treecol.shortcut.tooltip;"
+                     persist="hidden width ordinal"/>
             <splitter class="tree-splitter"/>
-            <treecol id="Description" label="&treecol.description.label;" 
-                         flex="1" class="sortDirectionIndicator" 
-                         persist="hidden width ordinal" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
+            <treecol id="Description" flex="1"
+                     label="&treecol.description.label;"
+                     tooltiptext="&treecol.description.tooltip;"
+                     persist="hidden width ordinal"/>
             <splitter class="tree-splitter"/>
-            <treecol id="AddDate" label="&treecol.addedon.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" 
-                         persist="width hidden ordinal" />
+            <treecol id="BookmarkAddDate" flex="1" hidden="true"
+                     label="&treecol.addedon.label;"
+                     tooltiptext="&treecol.addedon.tooltip;"
+                     persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
-            <treecol id="LastModDate" label="&treecol.lastmod.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" 
-                         persist="width hidden ordinal" />
+            <treecol id="LastModifiedDate" flex="1" hidden="true"
+                     label="&treecol.lastmod.label;"
+                     tooltiptext="&treecol.lastmod.tooltip;"
+                     persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
-            <treecol id="LastVisitDate" label="&treecol.lastvisit.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" 
-                         persist="width hidden ordinal" />
+            <treecol id="LastVisitDate" flex="1" hidden="true"
+                     label="&treecol.lastvisit.label;"
+                     tooltiptext="&treecol.lastvisit.tooltip;"
+                     persist="width hidden ordinal"/>
           </treecols>
         </tree>
         <statusbar class="chromeclass-status" xbl:inherits="hidden=hidestatusbar" hidden="false">
@@ -906,13 +831,6 @@
       </vbox>
     </xbl:content>
     <implementation>
-      <constructor>
-        // Adding the transaction listener
-        BMSVC.transactionManager.AddListener(this.bookmarkTreeTransactionListener);
-      </constructor>  
-      <destructor>
-        BMSVC.transactionManager.RemoveListener(this.bookmarkTreeTransactionListener);
-      </destructor>  
       <field name="clickCount">2</field>
     </implementation>
   </binding>
@@ -963,7 +881,7 @@
         <treecols anonid="treecols">
           <treecol id="Name" flex="1" primary="true" hideheader="true"
                    sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                   sortActive="true" sortDirection="none"/>
+                   sortActive="true" sortLocked="true"/>
         </treecols>
       </tree>
     </xbl:content>
@@ -993,7 +911,7 @@
         <treecols anonid="treecols">
           <treecol id="Name" flex="1" primary="true" hideheader="true"
                    sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                   sortActive="true" sortDirection="none"/>
+                   sortActive="true" sortLocked="true"/>
         </treecols>
       </tree>
     </xbl:content>

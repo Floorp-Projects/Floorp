@@ -53,6 +53,8 @@
       <command id="cmd_bm_import"                    oncommand="goDoCommand('cmd_bm_import');"/>
       <command id="cmd_bm_export"                    oncommand="goDoCommand('cmd_bm_export');"/>
       <command id="cmd_bm_movebookmark"              oncommand="goDoCommand('cmd_bm_movebookmark');"/>
+      <command id="cmd_bm_sortfolder"                oncommand="goDoCommand('cmd_bm_sortfolder');"/>
+      <command id="cmd_bm_sortfolderbyname"          oncommand="goDoCommand('cmd_bm_sortfolderbyname');"/>
 
       <command id="cmd_bm_cut"                    oncommand="goDoCommand('cmd_bm_cut');"/>
       <command id="cmd_bm_copy"                   oncommand="goDoCommand('cmd_bm_copy');"/>

@@ -45,11 +45,9 @@
  */
 
 #include <stdlib.h> // XXX for atoi(), maybe this should go into nsCRT?
-#include "nsCRT.h"
 #include "nsIURL.h"
 #include "nsString.h"
 #include "nsRDFParserUtils.h"
-#include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 
 // XXX This totally sucks. I wish that mozilla/base had this code.
 PRUnichar

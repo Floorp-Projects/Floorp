@@ -81,6 +81,7 @@
 #include "nsIRDFContainerUtils.h" 
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
+#include "nsIXULBuilderListener.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -151,7 +152,6 @@ PRLogModuleInfo* gXULTemplateLog;
 nsXULTemplateBuilder::nsXULTemplateBuilder(void)
     : mDB(nsnull),
       mRoot(nsnull),
-      mTimer(nsnull),
       mUpdateBatchNest(0),
       mRulesCompiled(PR_FALSE),
       mFlags(0),
@@ -228,6 +228,22 @@ nsXULTemplateBuilder::GetDatabase(nsIRDFCompositeDataSource** aResult)
 }
 
 NS_IMETHODIMP
+nsXULTemplateBuilder::Rebuild()
+{
+    for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i) {
+        mListeners[i]->WillRebuild(this);
+    }
+
+    nsresult rv = RebuildAll();
+
+    for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i) {
+        mListeners[i]->DidRebuild(this);
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
 nsXULTemplateBuilder::Init(nsIContent* aElement)
 {
     NS_PRECONDITION(aElement, "null ptr");
@@ -238,6 +254,26 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
 NS_IMETHODIMP
 nsXULTemplateBuilder::CreateContents(nsIContent* aElement)
 {
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::AddListener(nsIXULBuilderListener* aListener)
+{
+    NS_ENSURE_ARG(aListener);
+
+    mListeners.AppendObject(aListener);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::RemoveListener(nsIXULBuilderListener* aListener)
+{
+    NS_ENSURE_ARG(aListener);
+
+    mListeners.RemoveObject(aListener);
+
     return NS_OK;
 }
 
@@ -613,7 +649,7 @@ nsXULTemplateBuilder::OnMove(nsIRDFDataSource* aDataSource,
 
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+nsXULTemplateBuilder::OnBeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
     mUpdateBatchNest++;
     return NS_OK;
@@ -621,10 +657,12 @@ nsXULTemplateBuilder::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+nsXULTemplateBuilder::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    if (mUpdateBatchNest > 0)
-        --mUpdateBatchNest;
+    NS_ASSERTION(mUpdateBatchNest > 0, "badly nested update batch");
+    if (--mUpdateBatchNest == 0) {
+        Rebuild();
+    }
 
     return NS_OK;
 }

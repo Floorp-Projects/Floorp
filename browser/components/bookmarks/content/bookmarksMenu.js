@@ -853,8 +853,8 @@ var BookmarksToolbarRDFObserver =
   },
   onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {},
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {},
-  beginUpdateBatch: function (aDataSource) {},
-  endUpdateBatch:   function (aDataSource) {},
+  onBeginUpdateBatch: function (aDataSource) {},
+  onEndUpdateBatch:   function (aDataSource) {},
 
   _overflowTimerInEffect: false,
   setOverflowTimeout: function (aSource, aProperty)

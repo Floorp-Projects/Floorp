@@ -6,6 +6,7 @@ nsIRDFLiteral.idl
 nsIRDFNode.idl
 nsIRDFObserver.idl
 nsIRDFInMemoryDataSource.idl
+nsIRDFPropagatableDataSource.idl
 nsIRDFPurgeableDataSource.idl
 nsIRDFRemoteDataSource.idl
 nsIRDFResource.idl

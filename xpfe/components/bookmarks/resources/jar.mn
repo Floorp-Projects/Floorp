@@ -33,11 +33,14 @@ comm.jar:
 	content/communicator/bookmarks/bm-panel.js
 	content/communicator/bookmarks/findBookmark.xul
 	content/communicator/bookmarks/findBookmark.js
+	content/communicator/bookmarks/sortFolder.xul
+	content/communicator/bookmarks/sortFolder.js
 
 en-US.jar:
 	locale/en-US/communicator/bookmarks/addBookmark.dtd         (locale/en-US/addBookmark.dtd)
 	locale/en-US/communicator/bookmarks/bm-props.dtd            (locale/en-US/bm-props.dtd)
 	locale/en-US/communicator/bookmarks/bookmarks.dtd           (locale/en-US/bookmarks.dtd)
-	locale/en-US/communicator/bookmarks/bookmarks.properties     (locale/en-US/bookmarks.properties)
+	locale/en-US/communicator/bookmarks/bookmarks.properties    (locale/en-US/bookmarks.properties)
 	locale/en-US/communicator/bookmarks/bookmarksOverlay.dtd    (locale/en-US/bookmarksOverlay.dtd)
 	locale/en-US/communicator/bookmarks/findBookmark.dtd	    (locale/en-US/findBookmark.dtd)
+	locale/en-US/communicator/bookmarks/sortFolder.dtd          (locale/en-US/sortFolder.dtd)

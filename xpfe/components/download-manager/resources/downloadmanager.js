@@ -262,23 +262,17 @@ var downloadViewController = {
       selectedItems = getSelectedItems();
       // Figure out where to place the selection after deletion
       var newSelectionPos = gDownloadView.contentView.getIndexOfItem(selectedItems[0]);
-      
       gDownloadManager.startBatchUpdate();
       
       // Notify the datasource that we're about to begin a batch operation
-      var observer = gDownloadView.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
-      var ds = gDownloadView.database;
-      observer.beginUpdateBatch(ds);
-      
+      var ds = window.arguments[0];
+      ds.beginUpdateBatch();
       for (i = 0; i <= selectedItems.length - 1; ++i) {
         gDownloadManager.removeDownload(selectedItems[i].id);
       }
+      ds.endUpdateBatch();
 
       gDownloadManager.endBatchUpdate();
-      observer.endUpdateBatch(ds);
-      var remote = window.arguments[0].QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-      remote.Flush();
-      gDownloadView.builder.rebuild();
       // If there's nothing on the panel now, skip setting the selection
       if (gDownloadView.treeBoxObject.view && gDownloadView.treeBoxObject.view.rowCount > 0) {
         // Select the item that replaced the first deleted one

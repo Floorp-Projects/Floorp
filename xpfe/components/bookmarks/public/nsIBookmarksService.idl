@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Ben Goodger              <ben@netscape.com> 
+ *   Jan Varga                <varga@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -52,8 +53,12 @@ interface nsIBookmarksService : nsISupports
     const unsigned long BOOKMARK_SEARCH_TYPE    = 1;
     const unsigned long BOOKMARK_FIND_TYPE      = 2;
 
+    const long SORT_DESCENDING = -1;
+    const long SORT_ASCENDING = 1;
+
     boolean readBookmarks();
     boolean isBookmarked(in string aURL);
+    boolean isBookmarkedResource(in nsIRDFResource aSource);
 
     void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
@@ -64,6 +69,12 @@ interface nsIBookmarksService : nsISupports
     nsIRDFResource createGroup(in wstring aName);
     nsIRDFResource createGroupInContainer(in wstring aName, in nsIRDFResource aParentFolder, 
                                           in long aIndex);
+
+    void sortFolder(in nsIRDFResource aFolder,
+                    in nsIRDFResource aProperty,
+                    in long aDirection,
+                    in boolean aFoldersFirst,
+                    in boolean aRecurse);
 
     nsIRDFResource createBookmark(in wstring aName,
                                   in string aURL,
@@ -79,6 +90,8 @@ interface nsIBookmarksService : nsISupports
                                              in long aIndex);
 
     nsIRDFResource createSeparator();
+
+    nsIRDFResource cloneResource(in nsIRDFResource aSource);
 
     void updateBookmarkIcon(in string aURL, in wstring aIconURL);
     void removeBookmarkIcon(in string aURL, in wstring aIconURL);

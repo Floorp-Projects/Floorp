@@ -1316,6 +1316,18 @@ nsHTTPIndex::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand,
 }
 
 NS_IMETHODIMP
+nsHTTPIndex::BeginUpdateBatch()
+{
+        return mInner->BeginUpdateBatch();
+}
+
+NS_IMETHODIMP
+nsHTTPIndex::EndUpdateBatch()
+{
+        return mInner->EndUpdateBatch();
+}
+
+NS_IMETHODIMP
 nsHTTPIndex::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 {
 	nsresult	rv = NS_ERROR_UNEXPECTED;

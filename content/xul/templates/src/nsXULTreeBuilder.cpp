@@ -92,9 +92,6 @@ public:
     // nsITreeView
     NS_DECL_NSITREEVIEW
 
-    // nsXULTemplateBuilder
-    NS_IMETHOD Rebuild();
-
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:
@@ -118,6 +115,9 @@ protected:
 
     virtual nsresult
     InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode);
+
+    virtual nsresult
+    RebuildAll();
 
     /**
      * Override default behavior to additionally handle the <row>
@@ -407,60 +407,66 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
     if (! header)
         return NS_ERROR_FAILURE;
 
+    nsAutoString sortLocked;
+    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortLocked, sortLocked);
+    if (sortLocked.Equals(NS_LITERAL_STRING("true")))
+        return NS_OK;
+
     nsAutoString sort;
     header->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
 
-    if (!sort.IsEmpty()) {
-        // Grab the new sort variable
-        mSortVariable = mRules.LookupSymbol(sort.get());
+    if (sort.IsEmpty())
+        return NS_OK;
 
-        // Cycle the sort direction
-        nsAutoString dir;
-        header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
+    // Grab the new sort variable
+    mSortVariable = mRules.LookupSymbol(sort.get());
 
-        if (dir == NS_LITERAL_STRING("ascending")) {
-            dir = NS_LITERAL_STRING("descending");
-            mSortDirection = eDirection_Descending;
-        }
-        else if (dir == NS_LITERAL_STRING("descending")) {
-            dir = NS_LITERAL_STRING("natural");
-            mSortDirection = eDirection_Natural;
-        }
-        else {
-            dir = NS_LITERAL_STRING("ascending");
-            mSortDirection = eDirection_Ascending;
-        }
+    // Cycle the sort direction
+    nsAutoString dir;
+    header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
 
-        // Sort it
-        SortSubtree(mRows.GetRoot());
-        mRows.InvalidateCachedRow();
-        if (mBoxObject) 
-            mBoxObject->Invalidate();
+    if (dir == NS_LITERAL_STRING("ascending")) {
+        dir = NS_LITERAL_STRING("descending");
+        mSortDirection = eDirection_Descending;
+    }
+    else if (dir == NS_LITERAL_STRING("descending")) {
+        dir = NS_LITERAL_STRING("natural");
+        mSortDirection = eDirection_Natural;
+    }
+    else {
+        dir = NS_LITERAL_STRING("ascending");
+        mSortDirection = eDirection_Ascending;
+    }
 
-        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_TRUE);
-        header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
+    // Sort it.
+    SortSubtree(mRows.GetRoot());
+    mRows.InvalidateCachedRow();
+    if (mBoxObject) 
+        mBoxObject->Invalidate();
 
-        // Unset sort attribute(s) on the other columns
-        nsCOMPtr<nsIContent> parentContent;
-        header->GetParent(*getter_AddRefs(parentContent));
-        if (parentContent) {
-            nsCOMPtr<nsIAtom> parentTag;
-            parentContent->GetTag(*getter_AddRefs(parentTag));
-            if (parentTag == nsXULAtoms::treecols) {
-                PRInt32 numChildren;
-                parentContent->ChildCount(numChildren);
-                for (int i = 0; i < numChildren; ++i) {
-                    nsCOMPtr<nsIContent> childContent;
-                    nsCOMPtr<nsIAtom> childTag;
-                    parentContent->ChildAt(i, *getter_AddRefs(childContent));
-                    if (childContent) {
-                        childContent->GetTag(*getter_AddRefs(childTag));
-                        if (childTag == nsXULAtoms::treecol && childContent != header) {
-                            childContent->UnsetAttr(kNameSpaceID_None,
-                                                    nsXULAtoms::sortDirection, PR_TRUE);
-                            childContent->UnsetAttr(kNameSpaceID_None,
-                                                    nsXULAtoms::sortActive, PR_TRUE);
-                        }
+    header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_TRUE);
+    header->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, NS_LITERAL_STRING("true"), PR_TRUE);
+
+    // Unset sort attribute(s) on the other columns
+    nsCOMPtr<nsIContent> parentContent;
+    header->GetParent(*getter_AddRefs(parentContent));
+    if (parentContent) {
+        nsCOMPtr<nsIAtom> parentTag;
+        parentContent->GetTag(*getter_AddRefs(parentTag));
+        if (parentTag == nsXULAtoms::treecols) {
+            PRInt32 numChildren;
+            parentContent->ChildCount(numChildren);
+            for (int i = 0; i < numChildren; ++i) {
+                nsCOMPtr<nsIContent> childContent;
+                nsCOMPtr<nsIAtom> childTag;
+                parentContent->ChildAt(i, *getter_AddRefs(childContent));
+                if (childContent) {
+                    childContent->GetTag(*getter_AddRefs(childTag));
+                    if (childTag == nsXULAtoms::treecol && childContent != header) {
+                        childContent->UnsetAttr(kNameSpaceID_None,
+                                                nsXULAtoms::sortDirection, PR_TRUE);
+                        childContent->UnsetAttr(kNameSpaceID_None,
+                                                nsXULAtoms::sortActive, PR_TRUE);
                     }
                 }
             }
@@ -1051,56 +1057,6 @@ nsXULTreeBuilder::PerformActionOnCell(const PRUnichar* action, PRInt32 row, cons
     return NS_OK;
 }
 
-//----------------------------------------------------------------------
-//
-// nsIXULTemplateBuilder methods
-//
-
-NS_IMETHODIMP
-nsXULTreeBuilder::Rebuild()
-{
-    NS_PRECONDITION(mRoot != nsnull, "not initialized");
-    if (! mRoot)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsresult rv;
-
-    PRInt32 count = mRows.Count();
-    mRows.Clear();
-    mConflictSet.Clear();
-    if (mBoxObject)
-      mBoxObject->RowCountChanged(0, -count);
-
-    rv = CompileRules();
-    if (NS_FAILED(rv)) return rv;
-
-    // Seed the rule network with assignments for the tree row
-    // variable
-    nsCOMPtr<nsIRDFResource> root;
-    nsXULContentUtils::GetElementRefResource(mRoot, getter_AddRefs(root));
-    mRows.SetRootResource(root);
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-        const char* s = "(null)";
-        if (root)
-            root->GetValueConst(&s);
-
-        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-               ("xultemplate[%p] root=%s", this, s));
-    }
-#endif
-
-    if (root)
-        OpenContainer(-1, root);
-
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------
-//
-// nsXULTemplateBuilder abstract methods
-//
 
 NS_IMETHODIMP
 nsXULTreeBuilder::DocumentWillBeDestroyed(nsIDocument* aDocument)
@@ -1368,6 +1324,58 @@ nsXULTreeBuilder::InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode)
     mRDFTests.Add(membernode);
 
     *aChildNode = membernode;
+    return NS_OK;
+}
+
+nsresult
+nsXULTreeBuilder::RebuildAll()
+{
+    NS_PRECONDITION(mRoot != nsnull, "not initialized");
+    if (! mRoot)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsCOMPtr<nsIDocument> doc;
+    nsresult rv = mRoot->GetDocument(*getter_AddRefs(doc));
+    if (NS_FAILED(rv)) return rv;
+
+    // Bail out early if we are being torn down.
+    if (!doc)
+        return NS_OK;
+
+    if (mBoxObject) {
+        mBoxObject->BeginUpdateBatch();
+    }
+
+    mRows.Clear();
+    mConflictSet.Clear();
+
+    rv = CompileRules();
+    if (NS_FAILED(rv)) return rv;
+
+    // Seed the rule network with assignments for the tree row
+    // variable
+    nsCOMPtr<nsIRDFResource> root;
+    nsXULContentUtils::GetElementRefResource(mRoot, getter_AddRefs(root));
+    mRows.SetRootResource(root);
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        const char* s = "(null)";
+        if (root)
+            root->GetValueConst(&s);
+
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] root=%s", this, s));
+    }
+#endif
+
+    if (root)
+        OpenContainer(-1, root);
+
+    if (mBoxObject) {
+        mBoxObject->EndUpdateBatch();
+    }
+
     return NS_OK;
 }
 
