@@ -79,10 +79,10 @@ nsMsgGroupRecord::GroupNameCompare(const char* name1, const char* name2,
 
 nsMsgGroupRecord*
 nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* partname,
-						PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset)
+						PRInt64 aTime, PRInt32 uniqueid, PRInt32 fileoffset)
 {
 	nsMsgGroupRecord* result = new nsMsgGroupRecord(parent, partname,
-												  time, uniqueid, fileoffset);
+												  aTime, uniqueid, fileoffset);
 	if (result && partname && !result->m_partname) {
 		// We ran out of memory.
 		delete result;
@@ -94,7 +94,7 @@ nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* partname,
 
 
 nsMsgGroupRecord::nsMsgGroupRecord(nsMsgGroupRecord* parent, const char* partname,
-								 PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset,
+								 PRInt64 aTime, PRInt32 uniqueid, PRInt32 fileoffset,
 								 char delimiter /* = '.' */)
 {
 	int length;
@@ -104,7 +104,7 @@ nsMsgGroupRecord::nsMsgGroupRecord(nsMsgGroupRecord* parent, const char* partnam
 	m_sibling = NULL;
 	m_flags = 0;
 	m_partname = NULL;
-	m_addtime = time;
+	m_addtime = aTime;
 	m_uniqueId = uniqueid;
 	m_fileoffset = fileoffset;
 	m_delimiter = delimiter;
