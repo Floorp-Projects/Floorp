@@ -22,7 +22,14 @@
 #include "ilISystemServices.h"
 #include "nscore.h"
 
-extern "C" NS_GFX_(nsresult) NS_NewImageNetContext(ilINetContext **aInstancePtrResult);
+class nsIStreamListener;
+typedef PRBool (*nsReconnectCB)(void* arg, nsIStreamListener* aListener);
+
+extern "C" NS_GFX_(nsresult)
+  NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
+                        nsReconnectCB aReconnectCallback,
+                        void* aReconnectArg);
+
 extern "C" NS_GFX_(nsresult) NS_NewImageURL(ilIURL **aInstancePtrResult,  const char *aURL);
 
 extern "C" NS_GFX_(nsresult) NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult);
