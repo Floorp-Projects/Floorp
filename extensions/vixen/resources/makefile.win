@@ -22,15 +22,9 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = content locale
-
-CHROME_DIR = packages\vixen
-CHROME_MISC_DIR = .
-CHROME_TYPE = content locale skin
-
-CHROME_MISC = \
-	.\manifest.rdf \
-	$(NULL)
-
-
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) content vixen vixen.jar
+        $(REGCHROME) skin modern/vixen vixen.jar
+        $(REGCHROME) locale en-US/vixen vixen.jar

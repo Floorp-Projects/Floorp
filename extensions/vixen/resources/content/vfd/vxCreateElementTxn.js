@@ -44,6 +44,11 @@ vxCreateElementTxn.prototype = {
 
   undoTransaction: function ()
   {
+    _ddf("element", this.mElement.localName);
+    _ddf("parent", this.mParentNode.localName);
+    for (var i = 0; i < this.mParentNode.childNodes.length; i++) {
+      _ddf("childnode at " + i, this.mParentNode.childNodes[i]);
+    }
     this.mParentNode.removeChild(this.mElement);
   },
   

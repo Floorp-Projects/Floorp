@@ -27,6 +27,7 @@
 var vxPalette = 
 {
   // we want to use controllers, but this will do to test our txns.
+  nButtons: 0, // XXX hack
   insertButtonElement: function (aType) 
   {
     _dd("insertButtonElement");
@@ -37,12 +38,14 @@ var vxPalette =
     var vfdDocument = focusedWindow.vxVFD.getContent(true).document;
     _dd(vfdDocument);
     
-    // need to find a way to batch these
     // create a button
+    this.nButtons++;
     var buttontxn = new vxCreateElementTxn(vfdDocument, "button", insertionPoint.parent, insertionPoint.index);
-    var buttonvaluetxn = new vxChangeAttributeTxn(buttontxn.mElement, "value", "Button", false);
+    var attributes = ["value", "id"];
+    var values = ["Button " + this.nButtons, "button_" + this.nButtons];
+    var buttonattrtxn = new vxChangeAttributeTxn(buttontxn.mElement, attributes, values, false);
 
-    var aggregateTxn = new vxAggregateTxn([buttontxn, buttonvaluetxn]);
+    var aggregateTxn = new vxAggregateTxn([buttontxn, buttonattrtxn]);
     focusedWindow.vxVFD.mTxMgrShell.doTransaction(aggregateTxn);
   }
 };
