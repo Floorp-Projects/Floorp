@@ -55,19 +55,23 @@ void nsImageGTK :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-PRBool nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                          PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                                 PRInt32 aSX, PRInt32 aSY,
+                                 PRInt32 aSWidth, PRInt32 aSHeight,
+                                 PRInt32 aDX, PRInt32 aDY,
+                                 PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-PRBool nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                          PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                                 PRInt32 aX, PRInt32 aY,
+                                 PRInt32 aWidth, PRInt32 aHeight)
 {
-  return PR_TRUE;
+  return NS_OK;
 }
 
 //------------------------------------------------------------

@@ -42,37 +42,26 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext* aContext);
-  virtual nscoord GetWidth(char aC);
-  virtual nscoord GetWidth(PRUnichar aC);
-  virtual nscoord GetWidth(const nsString& aString);
-  virtual nscoord GetWidth(const char *aString);
-  virtual nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength);
-  virtual nscoord GetHeight();
-  virtual nscoord GetLeading();
-  virtual nscoord GetMaxAscent();
-  virtual nscoord GetMaxDescent();
-  virtual nscoord GetMaxAdvance();
-  virtual const nscoord *GetWidths();
-  virtual const nsFont& GetFont();
-  virtual nsFontHandle GetFontHandle();
+  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Destroy();
+
+  NS_IMETHOD  GetXHeight(nscoord& aResult);
+  NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
+  NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
+  NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
+  NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
+
+  NS_IMETHOD  GetHeight(nscoord &aHeight);
+  NS_IMETHOD  GetLeading(nscoord &aLeading);
+  NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
+  NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
+  NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
+
+  NS_IMETHOD  GetFont(const nsFont*& aFont);
+  NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
 protected:
-  void QueryFont();
 
-  nsFont            *mFont;
-  nsIDeviceContext  *mContext;
-  GdkFont           *mGdkFont;
-  nscoord           mCharWidths[256];
-  nscoord           mHeight;
-  nscoord           mWidth;
-  nscoord           mAscent;
-  nscoord           mDescent;
-  nsFontMetricsGTK  *mFontMetrics;
-  /*
-  XFontStruct       *mFontInfo;
-  Font              mFontHandle;
-  */
 };
 
 #endif
