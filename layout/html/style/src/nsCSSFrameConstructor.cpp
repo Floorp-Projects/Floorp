@@ -4604,6 +4604,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
     nsCOMPtr<nsIAtom> tag;
+    if (!aContainer) return NS_ERROR_NULL_POINTER;
     aContainer->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::treechildren ||
         tag.get() == nsXULAtoms::treeitem) {
