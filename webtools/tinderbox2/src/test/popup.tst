@@ -1,10 +1,11 @@
 #!#perl# -w --
 
 # generate static html pages for use in testing the popup libraries.
+# Output is written to the directory $TinderConfig::TINDERBOX_HTML_DIR/popup
 
 
-# $Revision: 1.2 $ 
-# $Date: 2002/12/10 19:20:04 $ 
+# $Revision: 1.3 $ 
+# $Date: 2003/01/19 17:17:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/popup.tst,v $ 
 # $Name:  $ 
@@ -44,6 +45,10 @@ use lib '#tinder_libdir#';
 use TinderConfig;
 use HTMLPopUp;
 use Utils;
+
+set_static_vars();
+get_env();
+
 
 # define some static tables which look like the kind of popups we
 # normally produce.
