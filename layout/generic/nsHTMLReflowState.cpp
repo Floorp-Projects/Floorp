@@ -174,7 +174,7 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   mCompactMarginWidth = 0;
   mAlignCharOffset = 0;
   mUseAlignCharOffset = 0;
-#ifdef DEBGUG
+#ifdef DEBUG
   mDebugHook = nsnull;
 #endif
 
