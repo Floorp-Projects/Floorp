@@ -110,6 +110,9 @@ components\xmlextras.xpt
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+LICENSE
+README.txt
+
 ; NSPR:
 nspr4.dll      
 plc4.dll       
