@@ -249,7 +249,6 @@ nsChromeRegistry::nsChromeRegistry()
 
   mUseXBLForms = PR_FALSE;
   mBatchInstallFlushes = PR_FALSE;
-  mRuntimeProvider = PR_FALSE;
 
   nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
   if (prefService)
@@ -1522,15 +1521,6 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const PRUnichar *aLocale,
   return SetProvider(nsCAutoString("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath).get(), PR_TRUE);
 }
 
-/* void setRuntimeProvider (in boolean runtimeProvider); */
-// should we inline this one?
-NS_IMETHODIMP nsChromeRegistry::SetRuntimeProvider(PRBool runtimeProvider)
-{
-  mRuntimeProvider = runtimeProvider;
-  return NS_OK;
-}
-
-
 /* wstring getSelectedLocale (); */
 NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
                                                   PRUnichar **_retval)
@@ -1731,14 +1721,8 @@ nsChromeRegistry::SetProviderForPackage(const nsCString& aProvider,
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // add one more check: 
-  //   assert the data source only when we are not setting runtime-only provider
-  if (!mBatchInstallFlushes && !mRuntimeProvider)
+  if (!mBatchInstallFlushes)
     rv = remote->Flush();
-
-  // always reset the flag
-  mRuntimeProvider = PR_FALSE;
-
   return rv;
 }
 

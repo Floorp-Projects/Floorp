@@ -43,7 +43,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
-#include "nsILocaleService.h"
 #include "plevent.h"
 #include "prmem.h"
 #include "prnetdb.h"
@@ -235,7 +234,6 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs);
 
 // Install global locale if possible
 static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs);
-static nsresult getUILangCountry(nsAString& aUILang, nsAString& aCountry);
 
 class stTSMCloser
 {
@@ -961,59 +959,11 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
   return rv;
 }
 
-// match OS locale
-static char kMatchOSLocalePref[] = "intl.locale.matchOS";
-
-nsresult
-getCountry(const nsAString& lc_name, nsAString& aCountry)
-{
-
-  nsresult        result = NS_OK;
-
-  PRInt32 dash = lc_name.FindChar('-');
-  if (dash > 0)
-    aCountry = Substring(lc_name, dash+1, lc_name.Length()-dash);
-  else
-    result = NS_ERROR_FAILURE;
-
-  return result;
-}
-
-static nsresult
-getUILangCountry(nsAString& aUILang, nsAString& aCountry)
-{
-  nsresult	 result;
-  // get a locale service 
-  nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &result);
-  NS_ASSERTION(NS_SUCCEEDED(result),"getUILangCountry: get locale service failed");
-
-  nsXPIDLString uiLang;
-  result = localeService->GetLocaleComponentForUserAgent(getter_Copies(uiLang));
-  aUILang = uiLang;
-  result = getCountry(aUILang, aCountry);
-  return result;
-}
-
 // update global locale if possible (in case when user-*.rdf can be updated)
 // so that any apps after this can be invoked in the UILocale and contentLocale
 static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
 {
     nsresult rv = NS_OK;
-
-    // check the pref first
-    nsCOMPtr<nsIPref> prefService(do_GetService("@mozilla.org/preferences;1"));
-    PRBool matchOS = PR_FALSE;
-    if (prefService)
-      prefService->GetBoolPref(kMatchOSLocalePref, &matchOS);
-
-    // match os locale
-    nsAutoString uiLang;
-    nsAutoString country;
-    if (matchOS) {
-      // compute lang and region code only when needed!
-      rv = getUILangCountry(uiLang, country);
-    }
-
     nsXPIDLCString cmdUI;
     rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
     if (NS_SUCCEEDED(rv)){
@@ -1025,15 +975,6 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
                 rv = chromeRegistry->SelectLocale(UILocaleName.get(), PR_FALSE);
         }
     }
-    // match OS when no cmdline override
-    if (!cmdUI && matchOS) {
-      nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-      if (chromeRegistry) {
-        chromeRegistry->SetRuntimeProvider(PR_TRUE);
-        rv = chromeRegistry->SelectLocale(uiLang.get(), PR_FALSE);
-      }
-    }
-
     nsXPIDLCString cmdContent;
     rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
     if (NS_SUCCEEDED(rv)){
@@ -1045,15 +986,6 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
                 rv = chromeRegistry->SelectLocale(ContentLocaleName.get(), PR_FALSE);
         }
     }
-    // match OS when no cmdline override
-    if (!cmdContent && matchOS) {
-      nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-      if (chromeRegistry) {
-        chromeRegistry->SetRuntimeProvider(PR_TRUE);        
-        rv = chromeRegistry->SelectLocale(country.get(), PR_FALSE);
-      }
-    }
-
     return NS_OK;
 }
 

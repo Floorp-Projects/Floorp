@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  intl \
 		  uconv \
-		  locale \
 		  profile \
 		  xpconnect \
 		  $(NULL)
