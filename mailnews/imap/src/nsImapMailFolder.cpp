@@ -72,25 +72,7 @@ nsImapMailFolder::nsImapMailFolder() :
     m_urlRunning(PR_FALSE), m_haveDiscoverAllFolders(PR_FALSE)
 {
 	m_pathName = nsnull;
-
-    //XXXX This is a hack for the moment.  I'm assuming the only listener is
-    //our rdf:mailnews datasource. 
-    //In reality anyone should be able to listen to folder changes. 
-    nsCOMPtr<nsIRDFDataSource> datasource;
-	m_tempMessageFile = nsnull;
-	nsresult rv = NS_OK;
-
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-    if(NS_SUCCEEDED(rv))
-    {
-        rv = rdfService->GetDataSource("rdf:mailnewsfolders", getter_AddRefs(datasource));
-        if(NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsIFolderListener> folderListener = do_QueryInterface(datasource);
-            if(folderListener)
-                AddFolderListener(folderListener);
-        }
-    }
+	nsresult rv;
 
     // Get current thread envent queue
 
@@ -257,6 +239,7 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
   
 	mSubFolders->AppendElement(folder);
+    folder->SetParent(this);
     folder->SetDepth(mDepth+1);
 	*child = folder;
 	NS_IF_ADDREF(*child);
