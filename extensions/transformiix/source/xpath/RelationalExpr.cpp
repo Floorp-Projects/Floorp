@@ -28,6 +28,8 @@
  */
 
 #include "Expr.h"
+#include "NodeSet.h"
+#include "TxString.h"
 #include "XMLDOMUtils.h"
 
   //------------------/

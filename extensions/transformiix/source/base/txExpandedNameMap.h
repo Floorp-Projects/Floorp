@@ -39,9 +39,10 @@
 #ifndef TRANSFRMX_EXPANDEDNAMEMAP_H
 #define TRANSFRMX_EXPANDEDNAMEMAP_H
 
-#include "XMLUtils.h"
-#include "TxObject.h"
 #include "txError.h"
+#include "XMLUtils.h"
+
+class TxObject;
 
 class txExpandedNameMap {
 public:

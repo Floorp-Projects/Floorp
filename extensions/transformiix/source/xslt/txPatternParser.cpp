@@ -36,10 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txXSLTPatterns.h"
 #include "txPatternParser.h"
+#include "ExprLexer.h"
 #include "Names.h"
 #include "txAtoms.h"
+#include "txXSLTPatterns.h"
 
 txPattern* txPatternParser::createPattern(const String& aPattern,
                                           txIParseContext* aContext,

@@ -45,6 +45,7 @@
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
 #include "nsContentCID.h"
+#include "Expr.h"
 #include "ExprParser.h"
 #include "nsDOMError.h"
 #include "txURIUtils.h"

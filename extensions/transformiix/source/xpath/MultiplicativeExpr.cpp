@@ -36,7 +36,9 @@
 **/
 
 #include "Expr.h"
+#include "ExprResult.h"
 #include <math.h>
+#include "primitives.h"
 
 /**
  * Creates a new MultiplicativeExpr using the given operator

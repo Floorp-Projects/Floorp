@@ -29,11 +29,12 @@
  * A representation of the XPath String funtions
 **/
 
+#include "ExprResult.h"
 #include "FunctionLib.h"
-#include "XMLDOMUtils.h"
-#include "XMLUtils.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "XMLDOMUtils.h"
+#include "XMLUtils.h"
 #include <math.h>
 
 /**

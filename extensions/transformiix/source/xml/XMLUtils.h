@@ -31,8 +31,8 @@
 #define MITRE_XMLUTILS_H
 
 #include "baseutils.h"
-#include "txAtom.h"
 #include "dom.h"
+#include "txAtom.h"
 #include "txError.h"
 
 class String;

@@ -25,6 +25,8 @@
  */
 
 #include "Expr.h"
+#include "ExprResult.h"
+#include "primitives.h"
 
   //--------------/
  //- NumberExpr -/

@@ -40,7 +40,8 @@
 #define MITRE_PRIMITIVES_H
 
 #include "baseutils.h"
-#include "TxString.h"
+
+class String;
 
 /*
  * Utility class for doubles

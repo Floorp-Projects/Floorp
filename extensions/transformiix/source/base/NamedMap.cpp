@@ -32,6 +32,7 @@
 **/
 
 #include "NamedMap.h"
+#include "StringList.h"
 
   //-------------/
  //- Constants -/

@@ -28,10 +28,10 @@
 #ifndef txString_h__
 #define txString_h__
 
-#include "TxObject.h"
 #include "baseutils.h"
 
 #ifdef TX_EXE
+#include "TxObject.h"
 #include <iostream.h>
 typedef unsigned short UNICODE_CHAR;
 const PRInt32 kNotFound = -1;
