@@ -167,6 +167,9 @@ nsresult nsTextEditor::InsertText(const nsString& aStringToInsert)
   if (mEditor)
   {
     result = mEditor->InsertText(aStringToInsert);
+    if (NS_SUCCEEDED(result)) {
+      mEditor->ScrollIntoView(PR_TRUE);
+    }
   }
   return result;
 }
@@ -232,6 +235,9 @@ nsresult nsTextEditor::Undo(PRUint32 aCount)
   if (mEditor)
   {
     result = mEditor->Undo(aCount);
+    if (NS_SUCCEEDED(result)) {
+      mEditor->ScrollIntoView(PR_TRUE);
+    }
   }
   return result;
 }
@@ -252,6 +258,9 @@ nsresult nsTextEditor::Redo(PRUint32 aCount)
   if (mEditor)
   {
     result = mEditor->Redo(aCount);
+    if (NS_SUCCEEDED(result)) {
+      mEditor->ScrollIntoView(PR_TRUE);
+    }
   }
   return result;
 }
