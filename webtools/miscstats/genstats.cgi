@@ -22,7 +22,7 @@
 #
 
 #
-# $Id: genstats.cgi,v 1.12 2001/04/14 01:47:39 myk%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.13 2001/04/23 06:02:59 myk%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -267,7 +267,7 @@ print "These statistics were generated using the assumption that " .
 
 print p();
 print "Perhaps you are looking for " . 
-      qq|<a href="http://mothra.mozilla.org/miscstats/">the Bugzilla statistics?</a> |;
+      qq|<a href="http://mothra.mozilla.org/webtools/miscstats/">the Bugzilla statistics?</a> |;
 
 
 # generate the row of headers listing the months
