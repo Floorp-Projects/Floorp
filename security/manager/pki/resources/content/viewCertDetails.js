@@ -228,7 +228,7 @@ function DisplayGeneralDataFromCert(cert)
   var issuerCommonname, issuerOrg, issuerOrgUnit;
   issuerCommonname = cert.issuerCommonName;
   issuerOrg = cert.issuerOrganization;
-  issuerOrgUnit = cert.issuerOrganizationalUnit;
+  issuerOrgUnit = cert.issuerOrganizationUnit;
   addAttributeFromCert('issuercommonname', issuerCommonname);
   addAttributeFromCert('issuerorganization', issuerOrg);
   addAttributeFromCert('issuerorgunit', issuerOrgUnit);
