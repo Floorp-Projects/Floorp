@@ -20,21 +20,25 @@
 #define nsHTItem_h___
 
 class nsHierarchicalDataModel;
+class nsIContent;
 
 class nsHTItem 
                   
 {
 public:
-    nsHTItem();
+    nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel);
     virtual ~nsHTItem();
 
 	virtual PRBool IsExpandedDelegate() const;
 	virtual PRUint32 GetIndentationLevelDelegate() const;
 	
-	virtual void SetDataModelDelegate(nsHierarchicalDataModel* pDataModel) { mDataModel = pDataModel; }
+public:
+	nsIContent* FindChildWithName(const nsString& name) const; // Caller must release the content ptr.
+	static void GetChildTextForNode(nsIContent* pChildNode, nsString& text);
 
 protected:
 	nsHierarchicalDataModel* mDataModel;
+	nsIContent* mContentNode;
 };
 
 #endif /* nsHTItem_h___ */

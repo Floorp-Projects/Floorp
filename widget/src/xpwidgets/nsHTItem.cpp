@@ -19,14 +19,20 @@
 #include "nspr.h"
 #include "nsString.h"
 #include "nsHTItem.h"
+#include "nsIContent.h"
+#include "nsIDOMNode.h"
 
-nsHTItem::nsHTItem()
+nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
 {
+	NS_ADDREF(pContent);
+    mContentNode = pContent;
+	mDataModel = pDataModel;
 }
 
 //--------------------------------------------------------------------
 nsHTItem::~nsHTItem()
 {
+	NS_IF_RELEASE(mContentNode);
 }
 
 PRBool nsHTItem::IsExpandedDelegate() const
@@ -37,4 +43,43 @@ PRBool nsHTItem::IsExpandedDelegate() const
 PRUint32 nsHTItem::GetIndentationLevelDelegate() const
 {
 	return 0;
+}
+
+nsIContent* nsHTItem::FindChildWithName(const nsString& name) const
+{
+	PRInt32 count;
+	mContentNode->ChildCount(count);
+	for (PRInt32 i = 0; i < count; i++)
+	{
+		nsIAtom* pAtom = nsnull;
+		nsIContent* pChild = nsnull;
+		mContentNode->ChildAt(i, pChild);
+		pChild->GetTag(pAtom);
+		nsString answer;
+		pAtom->ToString(answer);
+		NS_IF_RELEASE(pAtom);
+		if (answer.EqualsIgnoreCase(name))
+			return pChild;
+		else NS_IF_RELEASE(pChild);
+	}
+
+	return nsnull;
+}
+
+void nsHTItem::GetChildTextForNode(nsIContent* pChildNode, nsString& text)
+{
+	nsIContent* pChild;
+	pChildNode->ChildAt(0, pChild);
+	nsIDOMNode* pTextChild = nsnull;
+
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+
+	if (pChild->QueryInterface(kIDOMNodeIID, (void**)&pTextChild))
+	{
+		pTextChild->GetNodeValue(text);
+		NS_IF_RELEASE(pTextChild);
+	}
+	else text = "null";
+
+	NS_IF_RELEASE(pChild);
 }

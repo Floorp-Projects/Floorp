@@ -25,6 +25,8 @@
 
 class nsDataModelWidget;
 class nsHTItem;
+class nsIDocument;
+class nsIContent;
 
 //------------------------------------------------------------
 // The HyperTree Base Class
@@ -40,6 +42,9 @@ public:
     nsHTDataModel();
     virtual ~nsHTDataModel();
 
+	// Set the content root
+	void SetContentRootDelegate(nsIContent* pContent);
+
 	// Retrieve the root node of the data model.
 	virtual nsHierarchicalDataItem* GetRootDelegate() const;
 
@@ -52,18 +57,28 @@ public:
 	virtual void SetDataModelListenerDelegate(nsDataModelWidget* pListener);
 
 public:
+	virtual nsHierarchicalDataItem* CreateDataItemWithContentNode(nsIContent* pContent) = 0;
+
 	void ImageLoaded(nsHierarchicalDataItem* pItem);
 	nsIImageGroup* GetImageGroup() const { NS_ADDREF(mImageGroup); return mImageGroup; }
 
 protected:
+	void AddNodesToArray(nsIContent* pContent); 
+		// This recursive function is called to add nodes to the visibility array.
+
 	enum { cDMImageLoaded = 0 } ;
 
 	nsDataModelWidget* mListener; // Events are sent to the listening widget.
 	nsIImageGroup* mImageGroup; // Image group used for loading all images in the model.
 
 protected:
-	// Hard-coded values for testing. Will go away.
-	nsHTItem* mSingleNode;
+	// The document being observed (and the content node that serves as the root for the
+	// widget attached to the model).
+	nsIDocument* mDocument;
+	nsIContent* mContentRoot;
+	
+	nsHierarchicalDataItem* mRootNode;
+	nsVoidArray mVisibleItemArray;
 };
 
 #endif /* nsToolbar_h___ */

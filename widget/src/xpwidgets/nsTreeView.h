@@ -50,7 +50,9 @@ public:
 	// nsISupports Interface --------------------------------
 	NS_DECL_ISUPPORTS
 	
-	void HandleDataModelEvent(int event, nsHierarchicalDataItem* pItem);
+	// nsITreeView Interface --------------------------------
+	NS_IMETHOD SetContentRoot(nsIContent* pContent);
+	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
 	// Override the widget creation method
 	NS_IMETHOD Create(nsIWidget *aParent,
@@ -60,6 +62,9 @@ public:
                                 nsIAppShell *aAppShell,
                                 nsIToolkit *aToolkit,
                                 nsWidgetInitData *aInitData);
+
+
+	void HandleDataModelEvent(int event, nsHierarchicalDataItem* pItem);
 
 protected:
 
@@ -106,8 +111,6 @@ protected:
 	// rendering context, so the font metrics can be retrieved and used.
 	void DrawCroppedString(nsIRenderingContext* drawCtx, nsString text, 
 							const nsRect& rect);
-
-	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
 protected:
 	// Data members

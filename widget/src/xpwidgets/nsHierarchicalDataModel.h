@@ -21,6 +21,7 @@
 
 class nsHierarchicalDataItem;
 class nsDataModelWidget;
+class nsIContent;
 
 // Style info helper struct shared by most widgets.
 struct nsBasicStyleInfo
@@ -54,6 +55,8 @@ public:
     virtual ~nsHierarchicalDataModel() {};
 
 	// Retrieve the root node of the data model.
+	// Setting the Content Root for the tree
+	virtual void SetContentRoot(nsIContent* pContent) = 0;
 	virtual nsHierarchicalDataItem* GetRoot() const = 0;
 
 	// A visibility hint can be stored and retrieved (e.g., the leftmost or topmost

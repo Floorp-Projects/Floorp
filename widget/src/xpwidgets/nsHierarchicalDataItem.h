@@ -36,8 +36,13 @@ public:
 
 	virtual PRBool IsExpanded() const = 0;
 	virtual PRUint32 GetIndentationLevel() const = 0;
-	
-	virtual void SetDataModel(nsHierarchicalDataModel* pDataModel) = 0; 
+
+public:
+	void* GetImplData() { return mImplData; }
+	void SetImplData(void* pData) { mImplData = pData; }
+
+protected:
+	void* mImplData;
 };
 
 #endif /* nsHierarchicalDataItem_h___ */

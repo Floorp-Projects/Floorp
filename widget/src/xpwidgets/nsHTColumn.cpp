@@ -46,7 +46,7 @@ double nsHTColumn::GetDesiredPercentage() const
 
 void nsHTColumn::GetColumnName(nsString& name) const
 {
-	name = "Header";
+	name = "Name";
 }
 
 PRBool nsHTColumn::IsSortColumn() const

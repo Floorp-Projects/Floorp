@@ -25,6 +25,7 @@
 
 class nsHTDataModel;
 class nsIImageGroup;
+class nsIContent;
 
 //------------------------------------------------------------
 // This class functions as the data source for column information (things like
@@ -34,7 +35,7 @@ class nsHTTreeItem : public nsTreeItem, public nsHTItem, public nsIImageRequestO
                   
 {
 public:
-    nsHTTreeItem();
+    nsHTTreeItem(nsIContent* pContent, nsHierarchicalDataModel* pModel);
     virtual ~nsHTTreeItem();
 
 	// Isupports interface ------------------
@@ -55,7 +56,6 @@ public:
 	// the concrete implementation.
 	virtual PRBool IsExpanded() const { return IsExpandedDelegate(); };
 	virtual PRUint32 GetIndentationLevel() const { return GetIndentationLevelDelegate(); };
-	virtual void SetDataModel(nsHierarchicalDataModel* pDataModel) { SetDataModelDelegate(pDataModel); }; 
 	// End of delegated functions
 
 	virtual void GetItemStyle(nsIDeviceContext* dc, 
