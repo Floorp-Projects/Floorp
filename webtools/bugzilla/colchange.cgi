@@ -77,18 +77,18 @@ push(@masterlist, ("short_desc", "short_short_desc"));
 $vars->{'masterlist'} = \@masterlist;
 
 my @collist;
-if (defined $::FORM{'rememberedquery'}) {
+if (defined $cgi->param('rememberedquery')) {
     my $splitheader = 0;
-    if (defined $::FORM{'resetit'}) {
+    if (defined $cgi->param('resetit')) {
         @collist = @::default_column_list;
     } else {
         foreach my $i (@masterlist) {
-            if (defined $::FORM{"column_$i"}) {
+            if (defined $cgi->param("column_$i")) {
                 push @collist, $i;
             }
         }
-        if (exists $::FORM{'splitheader'}) {
-            $splitheader = $::FORM{'splitheader'};
+        if (defined $cgi->param('splitheader')) {
+            $splitheader = $cgi->param('splitheader');
         }
     }
     my $list = join(" ", @collist);
@@ -98,11 +98,11 @@ if (defined $::FORM{'rememberedquery'}) {
                       -value => $list,
                       -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
     $cgi->send_cookie(-name => 'SPLITHEADER',
-                      -value => $::FORM{'splitheader'},
+                      -value => $cgi->param('splitheader'),
                       -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
 
     $vars->{'message'} = "change_columns";
-    $vars->{'redirect_url'} = "buglist.cgi?$::FORM{'rememberedquery'}";
+    $vars->{'redirect_url'} = "buglist.cgi?".$cgi->param('rememberedquery');
 
     # If we're running on Microsoft IIS, using cgi->redirect discards
     # the Set-Cookie lines -- workaround is to use the old-fashioned 
@@ -119,8 +119,8 @@ if (defined $::FORM{'rememberedquery'}) {
     exit;
 }
 
-if (defined $::COOKIE{'COLUMNLIST'}) {
-    @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
+if (defined $cgi->cookie('COLUMNLIST')) {
+    @collist = split(/ /, $cgi->cookie('COLUMNLIST'));
 } else {
     @collist = @::default_column_list;
 }
