@@ -218,8 +218,8 @@ Feed.prototype.parseAsRSS2 = function() {
 
   var itemNodes = this.request.responseXML.getElementsByTagName("item");
 
-  gItemsToStore = new Array();
-  gItemsToStoreIndex = 0; 
+  this.itemsToStore = new Array();
+  this.itemsToStoreIndex = 0; 
 
   for ( var i=0 ; i<itemNodes.length ; i++ ) {
     var itemNode = itemNodes[i];
@@ -250,10 +250,10 @@ Feed.prototype.parseAsRSS2 = function() {
                              || itemNode.getElementsByTagName("date")[0])
                 || item.date;
 
-    gItemsToStore[i] = item;
+    this.itemsToStore[i] = item;
   }
   
-  storeNextItem();
+  this.storeNextItem();
 }
 
 Feed.prototype.parseAsRSS1 = function() {
@@ -284,8 +284,8 @@ Feed.prototype.parseAsRSS1 = function() {
   if (!items.hasMoreElements())
     items = ds.GetSources(RDF_TYPE, RSS_ITEM, true);
 
-  gItemsToStore = new Array();
-  gItemsToStoreIndex = 0; 
+  this.itemsToStore = new Array();
+  this.itemsToStoreIndex = 0; 
   var index = 0; 
 
   while (items.hasMoreElements()) {
@@ -312,10 +312,10 @@ Feed.prototype.parseAsRSS1 = function() {
     item.date = getRDFTargetValue(ds, itemResource, DC_DATE) || item.date;
     item.content = getRDFTargetValue(ds, itemResource, RSS_CONTENT_ENCODED);
 
-    gItemsToStore[index++] = item;
+    this.itemsToStore[index++] = item;
   }
   
-  storeNextItem();
+  this.storeNextItem();
 }
 
 Feed.prototype.parseAsAtom = function() {
@@ -337,8 +337,8 @@ Feed.prototype.parseAsAtom = function() {
 
   var items = this.request.responseXML.getElementsByTagName("entry");
 
-  gItemsToStore = new Array();
-  gItemsToStoreIndex = 0; 
+  this.itemsToStore = new Array();
+  this.itemsToStoreIndex = 0; 
 
   for ( var i=0 ; i<items.length ; i++ ) {
     var itemNode = items[i];
@@ -410,10 +410,10 @@ Feed.prototype.parseAsAtom = function() {
     }
     item.content = content;
 
-    gItemsToStore[i] = item;
+    this.itemsToStore[i] = item;
   }
   
-  storeNextItem();
+  this.storeNextItem();
 }
 
 Feed.prototype.invalidateItems = function invalidateItems() {
@@ -450,32 +450,28 @@ Feed.prototype.removeInvalidItems = function() {
     }
 }
 
-var gItemsToStore;
-var gItemsToStoreIndex = 0;
-var gStoreItemsTimer;
-
 // gets the next item from gItemsToStore and forces that item to be stored
 // to the folder. If more items are left to be stored, fires a timer for the next one.
 // otherwise it triggers a download done notification to the UI
-function storeNextItem()
+Feed.prototype.storeNextItem = function()
 {
-  var item = gItemsToStore[gItemsToStoreIndex]; 
+  var item = this.itemsToStore[this.itemsToStoreIndex]; 
   item.store();
   item.markValid();
 
   // if the listener is tracking progress for storing each item, report it here...
   if (item.feed.downloadCallback && item.feed.downloadCallback.onFeedItemStored)
-    item.feed.downloadCallback.onFeedItemStored(item.feed, gItemsToStoreIndex, gItemsToStore.length);
+    item.feed.downloadCallback.onFeedItemStored(item.feed, this.itemsToStoreIndex, this.itemsToStore.length);
  
-  gItemsToStoreIndex++
+  this.itemsToStoreIndex++
 
   // eventually we'll report individual progress here....
 
-  if (gItemsToStoreIndex < gItemsToStore.length)
+  if (this.itemsToStoreIndex < this.itemsToStore.length)
   {
-    if (!gStoreItemsTimer)
-      gStoreItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-    gStoreItemsTimer.initWithCallback(storeNextItemTimerCallback, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    if (!this.storeItemsTimer)
+      this.storeItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+    this.storeItemsTimer.initWithCallback(this, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
   }
   else
   {    
@@ -491,21 +487,21 @@ function storeNextItem()
     item.feed.request = null; // force the xml http request to go away. This helps reduce some
                               // nasty assertions on shut down of all things.
 
-    gItemsToStore = "";
-    gItemsToStoreIndex = 0;
+    this.itemsToStore = "";
+    this.itemsToStoreIndex = 0;
+    this.storeItemsTimer = null;
   }   
 }
 
-var storeNextItemTimerCallback = {
-  notify: function(aTimer) {
-    storeNextItem();
-  },
+Feed.prototype.notify = function(aTimer) {
+  this.storeNextItem();
+}
   
-  QueryInterface: function(aIID) {
+Feed.prototype.QueryInterface = function(aIID) {
     if (aIID.equals(Components.interfaces.nsITimerCallback) || aIID.equals(Components.interfaces.nsISupports))
       return this;
     
     Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
     return null;           
   }
-}
+
