@@ -191,6 +191,7 @@ JSBool XPCDispObject::Dispatch(XPCCallContext& ccx, IDispatch * disp,
     }
     if(SUCCEEDED(invokeResult))
     {
+        *retval = JSVAL_VOID;
         if(mode == CALL_METHOD)
         {
             NS_ASSERTION(member, "member must not be null if this is a method");
