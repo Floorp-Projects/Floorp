@@ -1055,22 +1055,6 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 } // nsWebShellWindow::LoadMenus
 #endif
 
-//------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildShell)
-{
-	// Set to null just to be certain
-   *aChildShell = nsnull;
-
-   nsCOMPtr<nsIDocShellTreeItem> content;
-
-   nsXULWindow::GetContentShellById(aID.get(), getter_AddRefs(content));
-   if(!content)
-      return NS_ERROR_FAILURE;
-   CallQueryInterface(content, aChildShell);
-
-   return NS_OK;
-}
 
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
@@ -1439,7 +1423,6 @@ void nsWebShellWindow::LoadContentAreas() {
     nsString    contentAreaID,
                 contentURL;
     char        *urlChar;
-    nsIWebShell *contentShell;
     nsresult rv;
     for (endPos = 0; endPos < (PRInt32)searchSpec.Length(); ) {
       // extract contentAreaID and URL substrings
@@ -1456,13 +1439,14 @@ void nsWebShellWindow::LoadContentAreas() {
       endPos++;
 
       // see if we have a webshell with a matching contentAreaID
-      rv = GetContentShellById(contentAreaID, &contentShell);
+      nsCOMPtr<nsIDocShellTreeItem> content;
+      rv = GetContentShellById(contentAreaID.get(), getter_AddRefs(content));
       if (NS_SUCCEEDED(rv)) {
         urlChar = ToNewCString(contentURL);
         if (urlChar) {
           nsUnescape(urlChar);
           contentURL.AssignWithConversion(urlChar);
-          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(contentShell));
+          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(content));
           webNav->LoadURI(contentURL.get(),
                           nsIWebNavigation::LOAD_FLAGS_NONE,
                           nsnull,
@@ -1470,7 +1454,6 @@ void nsWebShellWindow::LoadContentAreas() {
                           nsnull);
           nsMemory::Free(urlChar);
         }
-        NS_RELEASE(contentShell);
       }
     }
   }

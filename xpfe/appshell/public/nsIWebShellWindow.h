@@ -63,9 +63,6 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
   NS_IMETHOD GetDOMWindow(nsIDOMWindowInternal** aDOMWindow) = 0;
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow) = 0;
-
-  NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult) = 0;
-
   NS_IMETHOD LockUntilChromeLoad() = 0;
   NS_IMETHOD GetLockedState(PRBool& aResult) = 0;
 

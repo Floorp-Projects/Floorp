@@ -85,7 +85,6 @@ public:
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
 
