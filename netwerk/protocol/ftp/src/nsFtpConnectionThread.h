@@ -207,6 +207,8 @@ private:
 
     nsCOMPtr<nsIEventQueue> mEventQueue;
     nsCOMPtr<nsIPrompt>     mPrompter;
+    PRBool                  mIPv6Checked;
+    char                    *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)

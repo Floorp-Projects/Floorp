@@ -26,6 +26,7 @@
 #include "nsIStreamConverterService.h"
 #include "prprf.h"
 #include "prlog.h"
+#include "prnetdb.h"
 #include "netCore.h"
 #include "ftpCore.h"
 #include "nsProxiedService.h"
@@ -74,6 +75,9 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mWriteCount = 0;
     mBufferSegmentSize = 0;
     mBufferMaxSize = 0;
+
+    mIPv6Checked = PR_FALSE;
+    mIPv6ServerAddress = nsnull;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -81,6 +85,7 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
     mURL->GetSpec(getter_Copies(spec));
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpConnectionThread() for %s", (const char*)spec));
     if (mLock) PR_DestroyLock(mLock);
+    if (mIPv6ServerAddress) nsAllocator::Free(mIPv6ServerAddress);
 }
 
 nsresult
@@ -154,7 +159,9 @@ nsFtpConnectionThread::Process() {
                     mState = FTP_S_PASV;
                 }
 
+                PR_ASSERT(mIPv6Checked == PR_FALSE);
                 mConnected = PR_TRUE;                
+
                 break;
                 } // END: FTP_COMMAND_CONNECT
 
@@ -1266,73 +1273,121 @@ nsFtpConnectionThread::R_stor() {
 
 
 #define PASV_COMM ("PASV" CRLF)
+#define EPSV_COMM ("EPSV" CRLF)
 nsresult
 nsFtpConnectionThread::S_pasv() {
+    if (mIPv6Checked == PR_FALSE) {
+        // Find IPv6 socket address, if server is IPv6
+        nsresult rv;
+
+        mIPv6Checked = PR_TRUE;
+        PR_ASSERT(mIPv6ServerAddress == 0);
+        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mCPipe, &rv);
+
+        if (!NS_FAILED(rv)) {
+            rv = sTrans->GetIPStr(100, &mIPv6ServerAddress);
+        }
+
+        if (!NS_FAILED(rv)) {
+            PRNetAddr addr;
+            if (PR_StringToNetAddr(mIPv6ServerAddress, &addr) != PR_SUCCESS ||
+                PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
+                nsAllocator::Free(mIPv6ServerAddress);
+                mIPv6ServerAddress = 0;
+            }
+            PR_ASSERT(!mIPv6ServerAddress || addr.raw.family == PR_AF_INET6);
+        }
+    }
+
     PRUint32 bytes;
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL.get(), PASV_COMM));
-    return mCOutStream->Write(PASV_COMM, PL_strlen(PASV_COMM), &bytes);
+    const char *comm = mIPv6ServerAddress ? EPSV_COMM : PASV_COMM;
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\" (addr is %s)\n", mURL.get(), comm, mIPv6ServerAddress ? mIPv6ServerAddress : "v6"));
+    return mCOutStream->Write(comm, PL_strlen(comm), &bytes);
 }
 
 FTP_STATE
 nsFtpConnectionThread::R_pasv() {
     nsresult rv;
-    PRInt32 h0, h1, h2, h3, p0, p1;
     PRInt32 port;
 
     if (mResponseCode/100 != 2)  {
         return FTP_ERROR;
     }
 
-    char *ptr = nsnull;
     char *response = mResponseMsg.ToNewCString();
     if (!response) return FTP_ERROR;
+    char *ptr = response;
 
-    // The returned address string can be of the form
-    // (xxx,xxx,xxx,xxx,ppp,ppp) or
-    //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
-    ptr = response;
-    while (*ptr++) {
-        if (*ptr == '(') {
-            // move just beyond the open paren
-            ptr++;
-            break;
-        }
-        if (*ptr == ',') {
-            ptr--;
-            // backup to the start of the digits
-            while ( (*ptr >= '0') && (*ptr <= '9'))
-                ptr--;
-            ptr++; // get back onto the numbers
-            break;
-        }
-    } // end while
-
-    PRInt32 fields = PR_sscanf(ptr, 
-#ifdef __alpha
-        "%d,%d,%d,%d,%d,%d",
-#else
-        "%ld,%ld,%ld,%ld,%ld,%ld",
-#endif
-        &h0, &h1, &h2, &h3, &p0, &p1);
-
-    if (fields < 6) {
-        return FTP_ERROR;
-    }
-
-    port = ((PRInt32) (p0<<8)) + p1;
     nsCAutoString host;
-    host.AppendInt(h0);
-    host.Append('.');
-    host.AppendInt(h1);
-    host.Append('.');
-    host.AppendInt(h2);
-    host.Append('.');
-    host.AppendInt(h3);
+    if (mIPv6ServerAddress) {
+        // The returned string is of the form
+        // text (|||ppp|)
+        // Where '|' can be any single character
+        char delim;
+        while (*ptr && *ptr != '(') ptr++;
+        if (*ptr++ != '(') {
+            return FTP_ERROR;
+        }
+        delim = *ptr++;
+        if (!delim || *ptr++ != delim || *ptr++ != delim || 
+            *ptr < '0' || *ptr > '9') {
+            return FTP_ERROR;
+        }
+        port = 0;
+        do {
+            port = port * 10 + *ptr++ - '0';
+        } while (*ptr >= '0' && *ptr <= '9');
+        if (*ptr++ != delim || *ptr != ')') {
+            return FTP_ERROR;
+        }
+    } else {
+        // The returned address string can be of the form
+        // (xxx,xxx,xxx,xxx,ppp,ppp) or
+        //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
+        PRInt32 h0, h1, h2, h3, p0, p1;
+        while (*ptr++) {
+            if (*ptr == '(') {
+                // move just beyond the open paren
+                ptr++;
+                break;
+            }
+            if (*ptr == ',') {
+                ptr--;
+                // backup to the start of the digits
+                while ( (*ptr >= '0') && (*ptr <= '9'))
+                    ptr--;
+                ptr++; // get back onto the numbers
+                break;
+            }
+        } // end while
+
+        PRInt32 fields = PR_sscanf(ptr, 
+#ifdef __alpha
+            "%d,%d,%d,%d,%d,%d",
+#else
+            "%ld,%ld,%ld,%ld,%ld,%ld",
+#endif
+            &h0, &h1, &h2, &h3, &p0, &p1);
+
+        if (fields < 6) {
+            return FTP_ERROR;
+        }
+
+        port = ((PRInt32) (p0<<8)) + p1;
+        host.AppendInt(h0);
+        host.Append('.');
+        host.AppendInt(h1);
+        host.Append('.');
+        host.AppendInt(h2);
+        host.Append('.');
+        host.AppendInt(h3);
+    }
 
     nsAllocator::Free(response);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, 
+    rv = mSTS->CreateTransport(mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer(),
+                               port, nsnull, 
                                mBufferSegmentSize, mBufferMaxSize,
                                getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
@@ -1716,6 +1771,11 @@ nsFtpConnectionThread::StopProcessing() {
     // Release the transports
     mCPipe = 0;
     mDPipe = 0;
+    mIPv6Checked = PR_FALSE;
+    if (mIPv6ServerAddress) {
+        nsAllocator::Free(mIPv6ServerAddress);
+        mIPv6ServerAddress = 0;
+    }
 
     if (mFireCallbacks) {
         // we never got to the point that the transport would be
