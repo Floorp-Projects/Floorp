@@ -277,20 +277,28 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   // XXX Now that we have a resource, we must examine all of its outgoing
   // arcs and use the literals at the ends of the arcs to set the fields
   // of the chrome entry.
-  nsAutoString name;
+  nsAutoString name, text, author, version, siteURL, previewImageURL, archive;
   nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
                                       nsChromeRegistry::kCHROME_name);
-
-/*
-  nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  const PRUnichar* valueStr;
-  rv = value->GetValueConst(&valueStr);
-  if (NS_FAILED(rv))
-    return rv;
-    */
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_text);
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_author);
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_version);
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_siteURL);
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_previewImageURL);
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_archive);
+  chromeEntry->SetName(name.GetUnicode());
+  chromeEntry->SetText(text.GetUnicode());
+  chromeEntry->SetAuthor(author.GetUnicode());
+  chromeEntry->SetVersion(version.GetUnicode());
+  chromeEntry->SetSiteURL(siteURL.GetUnicode());
+  chromeEntry->SetPreviewImageURL(previewImageURL.GetUnicode());
+  chromeEntry->SetArchive(archive.GetUnicode());
 
   nsCOMPtr<nsISupports> sup;
   sup = do_QueryInterface(chromeEntry, &rv);
