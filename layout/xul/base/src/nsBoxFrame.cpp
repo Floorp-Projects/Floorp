@@ -826,13 +826,6 @@ nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
   m = aReflowState.mComputedBorderPadding;
   // GetBorderAndPadding(m);
 
-  // this happens sometimes. So lets handle it gracefully.
-  if (aReflowState.mComputedHeight == 0) {
-    nsSize minSize(0,0);
-    GetMinSize(state, minSize);
-    computedSize.height = minSize.height - m.top - m.bottom;
-  }
-
   nsSize prefSize(0,0);
 
   // if we are told to layout intrinic then get our preferred size.
