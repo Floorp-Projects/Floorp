@@ -2905,7 +2905,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 nsAutoString bytesStr; bytesStr.AppendInt(mBytesReceived);
 		
                 const PRUnichar *formatStrings[] = { bytesStr.GetUnicode() };
-		const PRUnichar *propertyTag = NS_LITERAL_STRING("bytesReceived");
+				const PRUnichar *propertyTag = NS_LITERAL_STRING("bytesReceived");
                 rv = bundle->FormatStringFromName(propertyTag,
                                                   formatStrings, 1,
                                                   getter_Copies(statusString));
@@ -3644,19 +3644,29 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		if ((m_newsRCListCount >= NEWS_GROUP_DISPLAY_FREQ) && ((m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 ||
 									(m_newsRCListIndex == m_newsRCListCount)))
 		{
-			char thisGroup[20];
-			char totalGroups[20];
-			char *statusText;
-			
-			PR_snprintf (thisGroup, sizeof(thisGroup), "%ld", (long) m_newsRCListIndex);
-			PR_snprintf (totalGroups, sizeof(totalGroups), "%ld", (long) m_newsRCListCount);
+                nsXPIDLString statusString;
 
-			statusText = PR_smprintf ("%s / %s", thisGroup, totalGroups);
-			if (statusText)
-			{
-				SetProgressStatus(statusText);
-				PR_Free(statusText);
-			}
+                nsCOMPtr<nsIStringBundleService> bundleService =
+                do_GetService(kStringBundleServiceCID, &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsCOMPtr<nsIStringBundle> bundle;
+                rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull,
+                                            getter_AddRefs(bundle));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsAutoString thisGroupStr; thisGroupStr.AppendInt((long) m_newsRCListIndex);
+                nsAutoString totalGroupStr; totalGroupStr.AppendInt((long) m_newsRCListCount);
+
+                const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
+                const PRUnichar *propertyTag = NS_LITERAL_STRING("checkingForNewNews");
+                rv = bundle->FormatStringFromName(propertyTag,
+                                                  formatStrings, 2,
+                                                  getter_Copies(statusString));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+				rv = SetProgressStatus((const PRUnichar *)statusString);
+                NS_ENSURE_SUCCESS(rv, rv);
 		}
 		
 		m_newsRCListIndex++;
@@ -5069,18 +5079,15 @@ void nsNNTPProtocol::SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgres
     mProgressEventSink->OnProgress(this, m_channelContext, aProgress, aProgressMax);                                       
 }
 
-void
-nsNNTPProtocol::SetProgressStatus(char *message)
+nsresult
+nsNNTPProtocol::SetProgressStatus(const PRUnichar *aMessage)
 {
-  nsresult rv;
-  PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::SetProgressStatus(%s)",message));
+  nsresult rv = NS_OK;
   if (mProgressEventSink) 
   {
-    nsAutoString formattedString; 
-    formattedString.AssignWithConversion(message);
-    rv = mProgressEventSink->OnStatus(this, m_channelContext, NS_OK, formattedString.GetUnicode());      // XXX i18n message
-    NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
+    rv = mProgressEventSink->OnStatus(this, m_channelContext, NS_OK, aMessage);
   }
+  return rv;
 }
 
 NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
