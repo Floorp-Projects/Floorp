@@ -1520,6 +1520,7 @@ sub BuildBrowserUtilsProjects()
     BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",           "Cookie$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",           "Wallet$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",    "WalletViewers$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:universalchardet:macbuild:Universalchardet.mcp", "Universalchardet$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     
