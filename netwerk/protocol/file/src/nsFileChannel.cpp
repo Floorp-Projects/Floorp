@@ -218,14 +218,6 @@ nsFileChannel::EnsureTransport()
 {
     nsresult rv = NS_OK;
     
-    PRBool exist;
-    rv = mFile->Exists(&exist);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (!exist)
-        return NS_ERROR_FILE_NOT_FOUND;
-
     nsCOMPtr<nsIFileTransportService> fts = 
              do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -236,7 +228,6 @@ nsFileChannel::EnsureTransport()
 
     mFileTransport->SetNotificationCallbacks(mCallbacks,
                                              (mLoadFlags & LOAD_BACKGROUND));
-
     return rv;
 }
 
@@ -280,14 +271,13 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 
     NS_ASSERTION(listener, "null listener");
     mRealListener = listener;
-    nsCOMPtr<nsIStreamListener> tempListener = this;
 
     if (mLoadGroup) {
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
     
-    rv = mFileTransport->AsyncRead(tempListener, ctxt, 0, -1, 0,
+    rv = mFileTransport->AsyncRead(this, ctxt, 0, -1, 0,
                                    getter_AddRefs(mCurrentRequest));
 
     if (NS_FAILED(rv)) {
@@ -445,6 +435,8 @@ nsFileChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsFileChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
+    // unconditionally inherit the status of the file transport
+    request->GetStatus(&mStatus);
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
                  "wrong thread calling this routine");
@@ -461,6 +453,8 @@ NS_IMETHODIMP
 nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
                              nsresult aStatus)
 {
+    // unconditionally inherit the status of the file transport
+    mStatus = aStatus;
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
                  "wrong thread calling this routine");
@@ -496,14 +490,6 @@ nsFileChannel::OnDataAvailable(nsIRequest* request, nsISupports* context,
     if (mRealListener) {
         rv = mRealListener->OnDataAvailable(this, context, aIStream,
                                             aSourceOffset, aLength);
-    }
-    //
-    // If the connection is being aborted cancel the transport.  This will
-    // insure that the transport will go away even if it is blocked waiting
-    // for the consumer to empty the pipe...
-    //
-    if (NS_FAILED(rv) && mCurrentRequest) {
-        mCurrentRequest->Cancel(rv);
     }
     return rv;
 }
