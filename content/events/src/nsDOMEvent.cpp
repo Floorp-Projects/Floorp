@@ -1060,11 +1060,7 @@ NS_METHOD nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 nsresult
 nsDOMEvent::SetEventType(const nsAReadableString& aEventTypeArg)
 {
-  nsAutoString str; str.AssignWithConversion("on");
-  nsIAtom* atom;
-
-  str.Append(aEventTypeArg);
-  atom = NS_NewAtom(str);
+  nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aEventTypeArg)));
 
   if (atom == nsLayoutAtoms::onmousedown && mEvent->eventStructType == NS_MOUSE_EVENT) {
     mEvent->message = NS_MOUSE_LEFT_BUTTON_DOWN;
