@@ -19,7 +19,7 @@
 #ifndef nsWidget_h__
 #define nsWidget_h__
 
-#include "nsIWidget.h"
+#include "nsBaseWidget.h"
 #include "nsToolkit.h"
 #include "nsIAppShell.h"
 
@@ -33,17 +33,29 @@
  * Base of all GTK native widgets.
  */
 
-class nsWidget : public nsIWidget
+class nsWidget : public nsBaseWidget
 {
  public:
     nsWidget();
     virtual ~nsWidget();
 
-    NS_DECL_ISUPPORTS
+    NS_IMETHOD            Create(nsIWidget *aParent,
+                                     const nsRect &aRect,
+                                     EVENT_CALLBACK aHandleEventFunction,
+                                     nsIDeviceContext *aContext,
+                                     nsIAppShell *aAppShell = nsnull,
+                                     nsIToolkit *aToolkit = nsnull,
+                                     nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD            Create(nsNativeWidget aParent,
+                                     const nsRect &aRect,
+                                     EVENT_CALLBACK aHandleEventFunction,
+                                     nsIDeviceContext *aContext,
+                                     nsIAppShell *aAppShell = nsnull,
+                                     nsIToolkit *aToolkit = nsnull,
+                                     nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD Destroy(void);
     nsIWidget* GetParent(void);
-    nsIEnumerator* GetChildren(void);
 
     NS_IMETHOD Show(PRBool state);
     NS_IMETHOD IsVisible(PRBool &aState);
@@ -57,8 +69,6 @@ class nsWidget : public nsIWidget
     NS_IMETHOD SetFocus(void);
 
     NS_IMETHOD GetBounds(nsRect &aRect);
-    NS_IMETHOD GetClientBounds(nsRect &aRect);
-    NS_IMETHOD GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
 
     nscolor GetForegroundColor(void);
     NS_IMETHOD SetForegroundColor(const nscolor &aColor);
@@ -71,23 +81,12 @@ class nsWidget : public nsIWidget
     nsCursor GetCursor(void);
     NS_IMETHOD SetCursor(nsCursor aCursor);
 
-    NS_IMETHOD AddMouseListener(nsIMouseListener *aListener);
-    nsIToolkit *GetToolkit(void);
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
 
-    void AddChild(nsIWidget *aChild);
-    void RemoveChild(nsIWidget *aChild);
     void* GetNativeData(PRUint32 aDataType);
     nsIRenderingContext *GetRenderingContext(void);
     nsIDeviceContext *GetDeviceContext(void);
-
-    NS_IMETHOD SetBorderStyle(nsBorderStyle aBorderStyle);
-    NS_IMETHOD SetTitle(const nsString & aTitle);
-
-    NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips, nsRect* aTooltipAreas[]);
-    NS_IMETHOD UpdateTooltips(nsRect *aNewTips[]);
-    NS_IMETHOD RemoveTooltips(void);
 
     NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
@@ -97,9 +96,6 @@ class nsWidget : public nsIWidget
 
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
-
-    NS_IMETHOD GetClientData(void*& aClientData);
-    NS_IMETHOD SetClientData(void* aClientData);
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
@@ -119,37 +115,33 @@ class nsWidget : public nsIWidget
     PRBool     ConvertStatus(nsEventStatus aStatus);
     PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
 
-  // This probably should be removed altogether
-
-    NS_IMETHOD AddEventListener(nsIEventListener * aListener);
-
-
  protected:
-    void InitToolkit(nsIToolkit *aToolKit, nsIWidget *aParent);
-    void InitDeviceContext(nsIDeviceContext *aContext,
-			   GtkWidget *aParentWidget);
-    void InitCallbacks(char * aName = nsnull);
+    virtual void InitCallbacks(char * aName = nsnull);
+    void CreateGC();
+
+    NS_IMETHOD CreateNative(GtkWidget *parentWindow) {};
+
+    nsresult StandardWindowCreate(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData,
+                      nsNativeWidget aNativeParent = nsnull);
+
 
     PRBool DispatchWindowEvent(nsGUIEvent* event);
 
     GtkWidget *mWidget;
     nsWidget *mParent;
-    nsToolkit *mToolkit;
 
     GdkGC *mGC;
-    nsIDeviceContext *mContext;
 
     PRBool mShown;
 
-    nscolor mForeground, mBackground;
-    nsCursor mCursor;
     PRUint32 mPreferredWidth, mPreferredHeight;
     nsRect mBounds;
-    void *mClientData;
-
-    EVENT_CALLBACK mEventCallback;
-    nsIMouseListener * mMouseListener;
-    nsIEventListener * mEventListener;
 };
 
 #endif /* nsWidget_h__ */

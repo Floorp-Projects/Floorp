@@ -51,76 +51,18 @@ nsTextAreaWidget::~nsTextAreaWidget()
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+//
+// Create the native Text widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
-  if (aParent) {
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-  } else {
-    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
   mWidget = gtk_text_new(FALSE, FALSE);
 
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+  gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
 
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
-
-/*
-  mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmTextWidgetClass,
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, PR_FALSE,
-                                    XmNhighlightOnEnter, PR_FALSE,
-                                    XmNeditMode, XmMULTI_LINE_EDIT,
-                                    XmNeditable, mMakeReadOnly?PR_FALSE:PR_TRUE,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y,
-                                    nsnull);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsTextAreaWidget");
-
-  if (mMakeReadOnly) {
-    PRBool oldReadOnly;
-    SetReadOnly(PR_TRUE, oldReadOnly);
-  }
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-NS_METHOD nsTextAreaWidget::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_OK;
-}
-
 
 nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {

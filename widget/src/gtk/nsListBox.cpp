@@ -88,9 +88,9 @@ NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
   mMultiSelect = aMultipleSelections;
 
   if (mMultiSelect)
-    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_MULTIPLE);
+    gtk_clist_set_selection_mode(GTK_CLIST(mCList), GTK_SELECTION_MULTIPLE);
   else
-    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
+    gtk_clist_set_selection_mode(GTK_CLIST(mCList), GTK_SELECTION_BROWSE);
 
   return NS_OK;
 }
@@ -107,9 +107,9 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
   NS_ALLOC_STR_BUF(text, aItem, 256);
 //  str = XmStringCreateLocalized(val);
 
-  gtk_clist_insert(GTK_CLIST(mWidget), (int)aPosition+1, NULL);
-  gtk_clist_set_text(GTK_CLIST(mWidget), (int)aPosition+1, 0, text);
-  gtk_clist_set_row_data(GTK_CLIST(mWidget), (int)aPosition+1, aItem);
+  gtk_clist_insert(GTK_CLIST(mCList), (int)aPosition+1, NULL);
+  gtk_clist_set_text(GTK_CLIST(mCList), (int)aPosition+1, 0, text);
+  gtk_clist_set_row_data(GTK_CLIST(mCList), (int)aPosition+1, aItem);
 
   NS_FREE_STR_BUF(text);
 
@@ -123,7 +123,7 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  int index = gtk_clist_find_row_from_data(GTK_CLIST(mWidget), aItem)-1;
+  int index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), aItem)-1;
 
   if (index < aStartPos) {
     index = -1;
@@ -139,7 +139,7 @@ PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::GetItemCount()
 {
-  return GTK_CLIST(mWidget)->rows;
+  return GTK_CLIST(mCList)->rows;
 }
 
 //-------------------------------------------------------------------------
@@ -149,12 +149,12 @@ PRInt32  nsListBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
-  gtk_clist_remove(GTK_CLIST(mWidget), aPosition+1);
+  gtk_clist_remove(GTK_CLIST(mCList), aPosition+1);
 /*
   int count = 0;
-  XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
+  XtVaGetValues(mCList, XmNitemCount, &count, nsnull);
   if (aPosition >= 0 && aPosition < count) {
-    XmListDeletePos(mWidget, aPosition+1);
+    XmListDeletePos(mCList, aPosition+1);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -172,7 +172,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
   PRBool result = PR_FALSE;
   char *text = NULL;
 
-  gtk_clist_get_text(GTK_CLIST(mWidget),aPosition,0,&text);
+  gtk_clist_get_text(GTK_CLIST(mCList),aPosition,0,&text);
   if (text) {
     anItem.SetLength(0);
     anItem.Append(text);
@@ -183,7 +183,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
   XmStringTable list;
 
   int count = 0;
-  XtVaGetValues(mWidget,  XmNitems, &list, XmNitemCount, &count, nsnull);
+  XtVaGetValues(mCList,  XmNitems, &list, XmNitemCount, &count, nsnull);
 
   if (aPosition >= 0 && aPosition < count) {
     char * text;
@@ -209,7 +209,7 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
   int * list;
   int   count;
 
-  if (XmListGetSelectedPos(mWidget, &list, &count)) {
+  if (XmListGetSelectedPos(mCList, &list, &count)) {
     GetItemAt(aItem, list[0]-1);
     XtFree((char *)list);
   }
@@ -229,7 +229,7 @@ PRInt32 nsListBox::GetSelectedIndex()
     int * list;
     int   count;
 
-    if (XmListGetSelectedPos(mWidget, &list, &count)) {
+    if (XmListGetSelectedPos(mCList, &list, &count)) {
       int index = -1;
       if (count > 0) {
         index = list[0]-1;
@@ -251,12 +251,12 @@ PRInt32 nsListBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
-  gtk_clist_select_row(GTK_CLIST(mWidget), aPosition+1, 0);
+  gtk_clist_select_row(GTK_CLIST(mCList), aPosition+1, 0);
 /*
   int count = 0;
-  XtVaGetValues(mWidget,  XmNitemCount, &count, nsnull);
+  XtVaGetValues(mCList,  XmNitemCount, &count, nsnull);
   if (aPosition >= 0 && aPosition < count) {
-    XmListSelectPos(mWidget, aPosition+1, FALSE);
+    XmListSelectPos(mCList, aPosition+1, FALSE);
   }
 */
   return NS_OK;
@@ -269,7 +269,7 @@ NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedCount()
 {
-  return (PRInt32)g_list_length(GTK_CLIST(mWidget)->selection);
+  return (PRInt32)g_list_length(GTK_CLIST(mCList)->selection);
 }
 
 //-------------------------------------------------------------------------
@@ -283,7 +283,7 @@ NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
   int * list;
   int   count;
 
-  if (XmListGetSelectedPos(mWidget, &list, &count)) {
+  if (XmListGetSelectedPos(mCList, &list, &count)) {
     int num = aSize > count?count:aSize;
     int i;
     for (i=0;i<num;i++) {
@@ -304,7 +304,7 @@ NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
 #if 0
   if (GetSelectedCount() > 0) {
-    XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
+    XtVaSetValues(mCList, XmNselectedItemCount, 0, NULL);
   }
   int i;
   for (i=0;i<aSize;i++) {
@@ -321,103 +321,32 @@ NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::Deselect()
 {
-  gtk_clist_unselect_all(GTK_CLIST(mWidget));
-//  XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
+  gtk_clist_unselect_all(GTK_CLIST(mCList));
+//  XtVaSetValues(mCList, XmNselectedItemCount, 0, NULL);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 //
-// nsListBox Creator
+// Create the native widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
 {
-  GtkWidget *scrolled_win;
-
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = (GtkWidget*) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (GtkWidget*) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   // to handle scrolling
-  scrolled_win = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
+  mWidget = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mWidget),
                                   GTK_POLICY_AUTOMATIC,
 				  GTK_POLICY_ALWAYS);
 
-  mWidget = gtk_clist_new(1);
-  gtk_clist_column_titles_hide(GTK_CLIST(mWidget));
+  mCList = gtk_clist_new(1);
+  gtk_clist_column_titles_hide(GTK_CLIST(mCList));
   // Default (it may be changed)
-  gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
+  gtk_clist_set_selection_mode(GTK_CLIST(mCList), GTK_SELECTION_BROWSE);
 
-  gtk_container_add (GTK_CONTAINER (scrolled_win), mWidget);
+  gtk_container_add (GTK_CONTAINER (mWidget), mCList);
 
-  gtk_layout_put(GTK_LAYOUT(parentWidget), scrolled_win, aRect.x, aRect.y);
-  gtk_widget_set_usize(scrolled_win, aRect.width, aRect.height);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show_all(scrolled_win);
-/*
-  mWidget = ::XtVaCreateManagedWidget("",
-                                    xmListWidgetClass,
-                                    parentWidget,
-                                    XmNitemCount, 0,
-                                    XmNx, aRect.x,
-                                    XmNy, aRect.y,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNselectionPolicy, selectionPolicy,
-                                    XmNautomaticSelection, autoSelection,
-                                    XmNscrollBarDisplayPolicy, XmAS_NEEDED,
-                                    XmNlistSizePolicy, XmCONSTANT,
-                                    XmNmarginTop, 0,
-                                    XmNmarginBottom, 0,
-                                    XmNmarginLeft, 0,
-                                    XmNmarginRight, 0,
-                                    XmNmarginHeight, 0,
-                                    XmNmarginWidth, 0,
-                                    XmNlistMarginHeight, 0,
-                                    XmNlistMarginWidth, 0,
-                                    XmNscrolledWindowMarginWidth, 0,
-                                    XmNscrolledWindowMarginHeight, 0,
-                                    nsnull);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  //InitCallbacks();
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsListBox Creator
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsListBox::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

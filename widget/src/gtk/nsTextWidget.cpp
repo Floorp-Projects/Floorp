@@ -54,76 +54,14 @@ nsTextWidget::~nsTextWidget()
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+//
+// Create the native Entry widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
-  if (aParent) {
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-  } else {
-    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   mWidget = gtk_entry_new();
-  gtk_entry_set_editable(GTK_ENTRY(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
-  
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
-/*
-  mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmTextWidgetClass,
-                                    parentWidget,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, PR_FALSE,
-                                    XmNhighlightOnEnter, PR_FALSE,
-                                    XmNeditable, mMakeReadOnly?PR_FALSE:PR_TRUE,
-		                    XmNx, aRect.x,
-		                    XmNy, aRect.y,
-                                    nsnull);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-/*
-  InitCallbacks("nsTextWidget");
-
-  XtAddCallback(mWidget,
-                XmNfocusCallback,
-                nsXtWidget_Focus_Callback,
-                this);
-
-  XtAddCallback(mWidget,
-                XmNlosingFocusCallback,
-                nsXtWidget_Focus_Callback,
-                this);
-*/
-  if (mMakeReadOnly) {
-    PRUint32 oldReadOnly;
-    SetReadOnly(PR_TRUE, oldReadOnly);
-  }
-  if (mMakePassword) {
-    SetPassword(PR_TRUE);
-    /*
-    PasswordData * data = new PasswordData();
-    data->mPassword = "";
-    XtVaSetValues(mWidget, XmNuserData, data, NULL);
-    */
-  }
+  gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
 
   return NS_OK;
 }
@@ -146,20 +84,6 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
     return result;
 }
-
-
-//-------------------------------------------------------------------------
-NS_METHOD nsTextWidget::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
-}
-
 
 //-------------------------------------------------------------------------
 //

@@ -50,14 +50,13 @@ extern GtkWidget *gAppContext;
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow():
-  mFontMetrics(nsnull),
-  mVBox(nsnull),
-  mAppShell(nsnull),
-  mIgnoreResize(PR_FALSE)
+nsWindow::nsWindow()
 {
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
+  mFontMetrics = nsnull;
+  mVBox = nsnull;
+  mIgnoreResize = PR_FALSE;
   mResized = PR_FALSE;
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
@@ -120,70 +119,15 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
-void nsWindow::CreateGC()
+
+//-------------------------------------------------------------------------
+//
+// Create the native widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
-  if (nsnull == mGC) {
-    if (!mWidget) {
-      mWidget = ::gtk_window_new(GTK_WINDOW_POPUP);
-      gtk_widget_realize(mWidget);
-      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
-    }
-    else if (!GTK_WIDGET(mWidget)->window) {
-      gtk_widget_realize(mWidget);
-      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
-    }
-    else
-      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
-  }
-}
-
-nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
-		      const nsRect &aRect,
-		      EVENT_CALLBACK aHandleEventFunction,
-		      nsIDeviceContext *aContext,
-		      nsIAppShell *aAppShell,
-		      nsIToolkit *aToolkit,
-		      nsWidgetInitData *aInitData,
-		      nsNativeWidget aNativeParent)
-{
-  GtkWidget *mainWindow = nsnull;
-  GtkWidget *parentWidget = nsnull;
-  mBounds = aRect;
-  mAppShell = aAppShell;
-
-#ifdef DEBUG_shaver
-  fprintf(stderr,
-          "StandardWindowCreate: par %p, con %p, app %p, tk %p, init %p,\n"
-          "                      natpar %p\n", aParent, aContext, aAppShell,
-          aToolkit, aInitData, aNativeParent);
-#endif
-
-  InitToolkit(aToolkit, aParent);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  if (aParent) {
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-#ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: have aParent %p/%p\n",
-            aParent, parentWidget);
-#endif
-  } else if (aNativeParent) {
-    parentWidget = GTK_WIDGET(aNativeParent);
-#ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: have aNativeParent %p\n",
-            aNativeParent);
-#endif
-  } else if(aAppShell) {
-    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
-    if (shellWidget)
-      parentWidget = GTK_WIDGET(shellWidget);
-#ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: have aAppShell %p/%p\n",
-            aAppShell, parentWidget);
-#endif
-  }
+  GtkWidget *mainWindow;
 
   mWidget = gtk_layout_new(FALSE, FALSE);
   gtk_widget_set_events (mWidget,
@@ -197,9 +141,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                          GDK_KEY_RELEASE_MASK);
 
   if (!parentWidget) {
-#ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: creating toplevel\n");
-#endif
+
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(FALSE, 3);
@@ -208,70 +150,12 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     gtk_widget_show (mWidget);
     gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
-  } else {
-#ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea (%d,%d)\n", aRect.x, aRect.y);
-#endif
-    mainWindow = mWidget;
-    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
   }
-                         
-  gtk_widget_set_usize(mainWindow, aRect.width, aRect.height);
-
-  if (aParent) {
-#ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: adding to aParent\n");
-#endif
-    aParent->AddChild(this);
-  }
-
   // Force cursor to default setting
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
-
-  InitDeviceContext(aContext, parentWidget);
-  InitCallbacks();
-  CreateGC();
-  
-  return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// create with nsIWidget parent
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
-                           aContext, aAppShell, aToolkit, aInitData,
-			   nsnull));
-}
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
-                           aContext, aAppShell, aToolkit, aInitData,
-			   aParent));
-}
 
 //-------------------------------------------------------------------------
 //
@@ -331,42 +215,6 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
 		     this);
-}
-
-//-------------------------------------------------------------------------
-//
-// Get this nsWindow's list of children
-//
-//-------------------------------------------------------------------------
-nsIEnumerator* nsWindow::GetChildren()
-{
-  NS_NOTYETIMPLEMENTED("nsWindow::GetChildren");
-  //XXX: Implement this
-  return nsnull;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Add a child to the list of children
-//
-//-------------------------------------------------------------------------
-void nsWindow::AddChild(nsIWidget* aChild)
-{
-  NS_NOTYETIMPLEMENTED("nsWindow::AddChild");
-  // XXX:Implement this
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Remove a child from the list of children
-//
-//-------------------------------------------------------------------------
-void nsWindow::RemoveChild(nsIWidget* aChild)
-{
-  NS_NOTYETIMPLEMENTED("nsWindow::RemoveChild");
-  // XXX:Implement this
 }
 
 //-------------------------------------------------------------------------
@@ -605,8 +453,8 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
 	      if (mGC) {
 		      res = mGC;
 	      } else {
-		  NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
-		  res = (void *)mToolkit->GetSharedGC();
+          NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
+          res = (void *)((nsToolkit *)mToolkit)->GetSharedGC();
 	      }
 	      NS_ASSERTION(res, "unable to return NS_NATIVE_GRAPHIC");
 	      return res;
@@ -1005,20 +853,6 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
   printf("adding menu bar (%p) to vbox (%p)\n", menubar, mVBox);
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-  aWidth  = mPreferredWidth;
-  aHeight = mPreferredHeight;
-  return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-  mPreferredWidth  = aWidth;
-  mPreferredHeight = aHeight;
   return NS_OK;
 }
 

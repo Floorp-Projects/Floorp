@@ -45,22 +45,6 @@ public:
   NS_IMETHOD              GetState(PRBool& aState);
 
 
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
   // nsIRadioButton part
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(nsPaintEvent &aEvent);
@@ -72,6 +56,7 @@ public:
   void DisArmed();
 
 protected:
+  NS_IMETHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow);
   GtkWidget *mLabel;
 
 private:

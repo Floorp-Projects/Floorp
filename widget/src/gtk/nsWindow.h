@@ -45,32 +45,10 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
-    // we don't use NS_DECL_ISUPPORTS, since we derive from nsWidget and
-    // support the same interfaces
-
-    NS_IMETHOD            Create(nsIWidget *aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
-    NS_IMETHOD            Create(nsNativeWidget aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
-
-    virtual nsIEnumerator*  GetChildren();
-
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
     NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
 
-    virtual void            AddChild(nsIWidget* aChild);
-    virtual void            RemoveChild(nsIWidget* aChild);
     virtual void*           GetNativeData(PRUint32 aDataType);
 
     NS_IMETHOD              Show  (PRBool bState);
@@ -107,8 +85,6 @@ public:
 
     NS_IMETHOD            BeginResizingChildren(void);
     NS_IMETHOD            EndResizingChildren(void);
-    NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-    NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
 
     virtual PRBool IsChild() { return(PR_FALSE); };
@@ -132,19 +108,10 @@ public:
     PRBool GetResized();
 
     char gInstanceClassName[256];
-
+  
 protected:
-  void CreateGC();
-  void InitCallbacks(char * aName = nsnull);
-
-  nsresult StandardWindowCreate(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData,
-                      nsNativeWidget aNativeParent = nsnull);
+  virtual void InitCallbacks(char * aName = nsnull);
+  NS_IMETHOD CreateNative(GtkWidget *parentWidget);
 
   virtual void            UpdateVisibilityFlag();
   virtual void            UpdateDisplay();
@@ -152,8 +119,6 @@ protected:
 public:
 protected:
   nsIFontMetrics *mFontMetrics;
-  nsIAppShell *mAppShell;
-  nsBorderStyle mBorderStyle;
   PRBool      mIgnoreResize;
   PRBool      mVisible;
   PRBool      mDisplayed;

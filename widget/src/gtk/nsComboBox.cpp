@@ -260,95 +260,16 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// nsComboBox Creator
+// Create the native GtkCombo widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsComboBox::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-  } else if (aAppShell) {
-    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   mWidget = gtk_combo_new();
 
   gtk_combo_set_value_in_list(GTK_COMBO(mWidget), TRUE, TRUE);
 
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
-
-  gtk_widget_show(mWidget);
-
-  mEventCallback = aHandleEventFunction;
-  InitCallbacks("nsComboBox");
-  
   return NS_OK;
-/*
-  Arg	args[30];
-  int	argc;
-
-  argc = 0;
-  XtSetArg(args[argc], XmNx, 0); argc++;
-  XtSetArg(args[argc], XmNy, 0); argc++;
-  mPullDownMenu = XmCreatePulldownMenu(parentWidget, "pulldown", args, argc);
-
-  argc = 0;
-  XtSetArg(args[argc], XmNmarginHeight, 0); argc++;
-  XtSetArg(args[argc], XmNmarginWidth, 0); argc++;
-  XtSetArg(args[argc], XmNrecomputeSize, False); argc++;
-  XtSetArg(args[argc], XmNresizeHeight, False); argc++;
-  XtSetArg(args[argc], XmNresizeWidth, False); argc++;
-  XtSetArg(args[argc], XmNspacing, False); argc++;
-  XtSetArg(args[argc], XmNborderWidth, 0); argc++;
-  XtSetArg(args[argc], XmNnavigationType, XmTAB_GROUP); argc++;
-  XtSetArg(args[argc], XmNtraversalOn, True); argc++;
-  XtSetArg(args[argc], XmNorientation, XmVERTICAL); argc++;
-  XtSetArg(args[argc], XmNadjustMargin, False); argc++;
-  XtSetArg(args[argc], XmNsubMenuId, mPullDownMenu); argc++;
-  XtSetArg(args[argc], XmNuserData, (XtPointer)this); argc++;
-  XtSetArg(args[argc], XmNx, aRect.x); argc++;
-  XtSetArg(args[argc], XmNy, aRect.y); argc++;
-  XtSetArg(args[argc], XmNwidth, aRect.width); argc++;
-  XtSetArg(args[argc], XmNheight, aRect.height); argc++;
-  mWidget = XmCreateOptionMenu(parentWidget, "", args, argc);
-
-  mOptionMenu = XmOptionLabelGadget(mWidget);
-  XtUnmanageChild(mOptionMenu);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-  //InitCallbacks();
-  return NS_OK;
-*/
-}
-
-//-------------------------------------------------------------------------
-//
-// nsComboBox Creator
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsComboBox::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

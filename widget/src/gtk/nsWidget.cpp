@@ -23,17 +23,13 @@
 #include "nsRepository.h"
 #include <gdk/gdkx.h>
 
-nsWidget::nsWidget() :
-  mContext(nsnull),
-  mGC(nsnull),
-  mWidget(nsnull),
-  mParent(nsnull),
-  mToolkit(nsnull),
-  mEventCallback(nsnull),
-  mEventListener(nsnull),
-  mMouseListener(nsnull)
+nsWidget::nsWidget()
 {
+  // XXX Shouldn't this be done in nsBaseWidget? 
   NS_INIT_REFCNT();
+  mGC = nsnull;
+  mWidget = nsnull;
+  mParent = nsnull;
   mPreferredWidth  = 0;
   mPreferredHeight = 0;
   mShown = PR_FALSE;
@@ -41,35 +37,10 @@ nsWidget::nsWidget() :
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
-  mCursor = eCursor_standard;
-  mClientData = nsnull;
 }
 
 nsWidget::~nsWidget()
 {
-}
-
-static NS_DEFINE_IID(kWidgetIID, NS_IWIDGET_IID);
-NS_IMPL_QUERY_INTERFACE(nsWidget, kWidgetIID)
-NS_IMPL_ADDREF(nsWidget)
-NS_IMPL_RELEASE(nsWidget)
-
-NS_METHOD nsWidget::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::SetTooltips");
-    return NS_OK;
-}
-
-NS_METHOD nsWidget::UpdateTooltips(nsRect* aNewTips[])
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::UpdateTooltips");
-    return NS_OK;
-}
-
-NS_METHOD nsWidget::RemoveTooltips()
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::RemoveTooltips");
-    return NS_OK;
 }
 
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
@@ -82,24 +53,6 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
     return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Accessor functions to get/set the client data
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWidget::GetClientData(void*& aClientData)
-{
-  aClientData = mClientData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWidget::SetClientData(void* aClientData)
-{
-  mClientData = aClientData;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -123,22 +76,6 @@ nsIWidget *nsWidget::GetParent(void)
 {
   NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
   return mParent;
-}
-
-nsIEnumerator* nsWidget::GetChildren()
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::GetChildren");
-    return nsnull;
-}
-
-void nsWidget::AddChild(nsIWidget* aChild)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::AddChild");
-}
-
-void nsWidget::RemoveChild(nsIWidget* aChild)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::RemoveChild");
 }
 
 //-------------------------------------------------------------------------
@@ -421,8 +358,8 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
 	      if (mGC) {
 		      res = mGC;
 	      } else {
-		  NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
-		  res = (void *)mToolkit->GetSharedGC();
+          NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
+          res = (void *)((nsToolkit *)mToolkit)->GetSharedGC();
 	      }
 	      NS_ASSERTION(res, "unable to return NS_NATIVE_GRAPHIC");
 	      return res;
@@ -431,16 +368,6 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
 	break;
     }
     return nsnull;
-}
-
-//-------------------------------------------------------------------------
-//
-// Return the toolkit this widget was created on
-//
-//-------------------------------------------------------------------------
-nsIToolkit *nsWidget::GetToolkit(void)
-{
-    return (nsIToolkit *)mToolkit;
 }
 
 //-------------------------------------------------------------------------
@@ -471,30 +398,6 @@ NS_METHOD nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     return NS_OK;
 }
 
-NS_METHOD nsWidget::SetBorderStyle(nsBorderStyle aBorderStyle)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::SetBorderStyle");
-    return NS_OK;
-}
-
-NS_METHOD nsWidget::SetTitle(const nsString& aTitle)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::SetTitle");
-    return NS_OK;
-}
-
-NS_METHOD nsWidget::AddEventListener(nsIEventListener * aListener)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::AddEventListener");
-  return NS_OK;
-}
-
-NS_METHOD nsWidget::AddMouseListener(nsIMouseListener *aListener)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::AddMouseListener");
-    return NS_OK;
-}
-
 NS_METHOD nsWidget::BeginResizingChildren(void)
 {
   return NS_OK;
@@ -519,79 +422,86 @@ NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
     return NS_OK;
 }
 
-NS_METHOD nsWidget::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
-{
-    nsRect rectWin;
-    nsRect rectClient;
-    GetBounds(rectWin);
-    GetClientBounds(rectClient);
-
-    aWidth  = rectWin.width - rectClient.width;
-    aHeight = rectWin.height - rectClient.height;
-
-    return NS_OK;
-}
-
-NS_METHOD nsWidget::GetClientBounds(nsRect &aRect)
-{
-    return GetBounds(aRect);
-}
-
 NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::SetMenuBar");
     return NS_OK;
 }
 
-void nsWidget::InitToolkit(nsIToolkit *aToolkit,
-                           nsIWidget  *aWidgetParent)
+nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
+		      const nsRect &aRect,
+		      EVENT_CALLBACK aHandleEventFunction,
+		      nsIDeviceContext *aContext,
+		      nsIAppShell *aAppShell,
+		      nsIToolkit *aToolkit,
+		      nsWidgetInitData *aInitData,
+		      nsNativeWidget aNativeParent)
 {
-  if (nsnull == mToolkit) {
-    if (nsnull != aToolkit) {
-      mToolkit = (nsToolkit*)aToolkit;
-      mToolkit->AddRef();
-    }
-    else {
-      if (nsnull != aWidgetParent) {
-        mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
-      }
-      // it's some top level window with no toolkit passed in.
-      // Create a default toolkit with the current thread
-      else {
-        mToolkit = new nsToolkit();
-        mToolkit->AddRef();
-        mToolkit->Init(PR_GetCurrentThread());
+  GtkWidget *parentWidget = nsnull;
+  mBounds = aRect;
 
-        // Create a shared GC for all widgets
-        ((nsToolkit *)mToolkit)->SetSharedGC((GdkGC*)GetNativeData(NS_NATIVE_GRAPHIC));
-      }
-    }
+  BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
+             aAppShell, aToolkit, aInitData);
+
+  if (aParent) {
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
+
+  } else if (aNativeParent) {
+    parentWidget = GTK_WIDGET(aNativeParent);
+
+  } else if(aAppShell) {
+    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    if (shellWidget)
+      parentWidget = GTK_WIDGET(shellWidget);
   }
+
+  CreateNative (parentWidget);
+
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+  if (parentWidget)
+    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+
+  InitCallbacks();
+  CreateGC();
+  
+  return NS_OK;
 }
 
-void nsWidget::InitDeviceContext(nsIDeviceContext *aContext,
-                                 GtkWidget *aParentWidget)
+//-------------------------------------------------------------------------
+//
+// create with nsIWidget parent
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD nsWidget::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
 {
-  // keep a reference to the toolkit object
-  if (aContext) {
-    mContext = aContext;
-    mContext->AddRef();
-  }
-  else {
-    nsresult  res;
+    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
+                           aContext, aAppShell, aToolkit, aInitData,
+			   nsnull));
+}
 
-    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-    //res = !NS_OK;
-    res = nsRepository::CreateInstance(kDeviceContextCID,
-                                       nsnull,
-                                       kDeviceContextIID,
-                                       (void **)&mContext);
-    if (NS_OK == res) {
-      mContext->Init(aParentWidget);
-    }
-  }
+//-------------------------------------------------------------------------
+//
+// create with a native parent
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWidget::Create(nsNativeWidget aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
+                           aContext, aAppShell, aToolkit, aInitData,
+			   aParent));
 }
 
 //-------------------------------------------------------------------------
@@ -626,6 +536,23 @@ nsIRenderingContext* nsWidget::GetRenderingContext()
     }
 
     return ctx;
+}
+
+void nsWidget::CreateGC()
+{
+  if (nsnull == mGC) {
+    if (!mWidget) {
+      mWidget = ::gtk_window_new(GTK_WINDOW_POPUP);
+      gtk_widget_realize(mWidget);
+      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+    }
+    else if (!GTK_WIDGET(mWidget)->window) {
+      gtk_widget_realize(mWidget);
+      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+    }
+    else
+      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+  }
 }
 
 void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)

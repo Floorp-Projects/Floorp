@@ -71,115 +71,14 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// nsRadioButton Creator
+// Create the native RadioButton widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-/* FIXME
- * we need to have a slist here, so store
- * the radio buttons that go with this one.
- */
   mWidget = gtk_radio_button_new(NULL);
 
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
-
-/*
-  mWidget = ::XmCreateRadioBox(parentWidget, "radio", nsnull, 0);
-  XtVaSetValues(mWidget, XmNwidth, aRect.width,
-                         XmNheight, aRect.height,
-                         XmNx, aRect.x,
-                         XmNy, aRect.y,
-                         XmNrecomputeSize, False,
-                         XmNresizeHeight, False,
-                         XmNresizeWidth, False,
-                         XmNradioAlwaysOne, False,
-                         XmNmarginHeight, 0,
-                         XmNmarginWidth, 0,
-                         XmNadjustMargin, False,
-                         XmNspacing, 0,
-                         XmNisAligned, False,
-                         XmNentryBorder, 0,
-                         XmNorientation, XmVERTICAL,
-                         XmNborderWidth, 0,
-                         0);
-
-  mRadioBtn = ::XmCreateToggleButton(mWidget, "", nsnull, 0);
-
-// This is goign to be the same as mWidget, not different. FIXME
-
-  XtVaSetValues(mRadioBtn,
-                         XmNwidth, aRect.width,
-                         XmNheight, aRect.height,
-                         XmNx, 0,
-                         XmNy, 0,
-                         XmNrecomputeSize, False,
-                         XmNresizeHeight, False,
-                         XmNresizeWidth, False,
-                         XmNmarginHeight, 0,
-                         XmNmarginWidth, 0,
-                         XmNadjustMargin, False,
-                         XmNspacing, 0,
-                         XmNisAligned, False,
-                         XmNentryBorder, 0,
-                         XmNborderWidth, 0,
-                         0);
-
-  XtManageChild(mRadioBtn);
-*/
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks();
-/*
-  XtAddCallback(mRadioBtn,
-                XmNarmCallback,
-                nsXtWidget_RadioButton_ArmCallback,
-                this);
-
-  XtAddCallback(mRadioBtn,
-                XmNdisarmCallback,
-                nsXtWidget_RadioButton_DisArmCallback,
-                this);
-*/
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsRadioButton Creator
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsRadioButton::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

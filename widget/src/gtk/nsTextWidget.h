@@ -43,29 +43,13 @@ public:
    // nsISupports. Forware to the nsObject base class
   NS_DECL_ISUPPORTS
 
-
-  NS_IMETHOD Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-  NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
-
-
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
   virtual PRBool  OnResize(nsSizeEvent &aEvent);
   NS_IMETHOD SetPassword(PRBool aIsPassword);
 
 protected:
+  NS_IMETHOD CreateNative(GtkWidget *parentWindow);
+
   PRBool mIsPasswordCallBacksInstalled;
 
 private:

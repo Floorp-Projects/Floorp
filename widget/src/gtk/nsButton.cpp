@@ -38,53 +38,16 @@ nsButton::nsButton() : nsWidget() , nsIButton()
 {
 }
 
-
-NS_METHOD nsButton::Create(nsIWidget        *aParent,
-                      const nsRect     &aRect,
-                      EVENT_CALLBACK    aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell      *aAppShell,
-                      nsIToolkit       *aToolkit,
-                      nsWidgetInitData *aInitData)
+//-------------------------------------------------------------------------
+//
+// Create the native Button widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsButton::CreateNative(GtkWidget *parentWindow)
 {
-  aParent->AddChild(this);
-  GtkWidget *parentWidget = nsnull;
-
-  if (aParent) {
-    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else if (aAppShell) {
-    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
   mWidget = gtk_button_new_with_label("");
 
-  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
-
-  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
-  gtk_widget_show(mWidget);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitCallbacks("nsButton");
   return NS_OK;
-
-}
-
-NS_METHOD nsButton::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
-
 }
 
 //-------------------------------------------------------------------------
