@@ -244,3 +244,4 @@ nsP3PService::GetConsent(const char* aURI,
 
   return result;
 }
+

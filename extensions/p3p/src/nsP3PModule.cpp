@@ -69,3 +69,4 @@ Shutdown(nsIModule* aSelf)
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsP3PModule, gP3PComponents,Initialize,Shutdown)
+

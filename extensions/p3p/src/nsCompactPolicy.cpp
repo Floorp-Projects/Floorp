@@ -266,3 +266,4 @@ nsCompactPolicy::GetConsent(const char* aURI,
   
   return result;
 }
+

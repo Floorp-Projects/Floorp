@@ -49,3 +49,4 @@ interface nsIP3PService : nsISupports {
 %{C++
 #define NS_P3PSERVICE_CONTRACTID "@mozilla.org/p3p-service;1"
 %}
+
