@@ -41,15 +41,15 @@
 #include "prio.h"
 
 #ifdef XP_UNIX
-#define ARTICLE_PATH "/usr/tmp/tempArticle.eml"
+#define ARTICLE_PATH "/usr/tmp/tempMessage.eml"
 #endif
 
 #ifdef XP_PC
-#define ARTICLE_PATH  "c:\\temp\\tempArticle.eml"
+#define ARTICLE_PATH  "c:\\temp\\tempMessage.eml"
 #endif
 
 #ifdef XP_MAC
-#define ARTICLE_PATH "tempArticle.eml"	
+#define ARTICLE_PATH "tempMessage.eml"	
 #endif
 
 // State Flags (Note, I use the word state in terms of storing 
