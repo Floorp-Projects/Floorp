@@ -12,7 +12,7 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "addressingAutocomplete", "enableCABsizeLimit", "CABsizeLimit"];
+    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "emailCollectionNewsgroup", "addressingAutocomplete", "enableCABsizeLimit", "CABsizeLimit"];
   ]]>
 
 	function Startup(){
@@ -24,6 +24,7 @@
 		var emailCollection = document.getElementById("emailCollection");
 		var emailCollectionIncoming = document.getElementById("emailCollectionIncoming");
 		var emailCollectionOutgoing = document.getElementById("emailCollectionOutgoing");
+		var emailCollectionNewsgroup = document.getElementById("emailCollectionNewsgroup");
 		var emailCollectionTypeText = document.getElementById("emailCollectionTypeText");
 		var enableCABsizeLimit = document.getElementById("enableCABsizeLimit");
 		var CABsizeLimit = document.getElementById("CABsizeLimit");
@@ -32,6 +33,7 @@
 		if( emailCollection.checked ){
 			emailCollectionIncoming.removeAttribute("disabled");
 			emailCollectionOutgoing.removeAttribute("disabled");
+			emailCollectionNewsgroup.removeAttribute("disabled");
 			emailCollectionTypeText.removeAttribute("disabled");
 			enableCABsizeLimit.removeAttribute("disabled");
 			CABsizeLimit.removeAttribute("disabled");
@@ -39,6 +41,7 @@
 		} else {
 			emailCollectionIncoming.setAttribute("disabled", "true");
 			emailCollectionOutgoing.setAttribute("disabled", "true");
+			emailCollectionNewsgroup.setAttribute("disabled", "true");
 			emailCollectionTypeText.setAttribute("disabled", "true");
 			enableCABsizeLimit.setAttribute("disabled", "true");
 			CABsizeLimit.setAttribute("disabled", "true");
@@ -63,6 +66,9 @@
               prefattribute="checked"/>
 		<checkbox id="emailCollectionOutgoing" value="&emailCollectionOutgoingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_outgoing"
+              prefattribute="checked"/>
+		<checkbox id="emailCollectionNewsgroup" value="&emailCollectionNewsgroupEnable.label;"
+              pref="true" preftype="bool" prefstring="mail.collect_email_address_newsgroup"
               prefattribute="checked"/>
 		<box autostretch="never">
 			<checkbox id="enableCABsizeLimit" value="&useCABSizelimitPart1.label;"

@@ -36,11 +36,12 @@ Rights Reserved.
 <!ENTITY useAddress.label       "Use the address and do not search in the directory">
 <!ENTITY useAddress.accesskey   "u">
 <!ENTITY emailCollectionEnable.label	"Enable Email Address Collection">
-<!ENTITY emailCollectionIncomingEnable.label	"Incoming Messages">
-<!ENTITY emailCollectionOutgoingEnable.label	"Outgoing Messages">
-<!ENTITY emailCollectionTypeText.label "Save email addresses from my:">
+<!ENTITY emailCollectionIncomingEnable.label	"Incoming Mail Messages">
+<!ENTITY emailCollectionOutgoingEnable.label	"Outgoing Mail Messages">
+<!ENTITY emailCollectionNewsgroupEnable.label	"Newsgroup Messages">
+<!ENTITY emailCollectionTypeText.label "Save email addresses from:">
 <!ENTITY emailCollectiontitle.label	"Email Address Collection">
-<!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing mail and stores them in a local address book, 'Collected Addresses'.">
+<!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing messages and stores them in a local address book, 'Collected Addresses'.">
 <!ENTITY useCABSizelimitPart1.label	"Limit the Collected Address book to">
 <!ENTITY useCABSizelimitPart2.label	"cards.">
 

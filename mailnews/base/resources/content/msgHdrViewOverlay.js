@@ -44,6 +44,8 @@ var gGeneratedViewAllHeaderInfo = false;
 var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
+var gCollectIncoming = false;
+var gCollectNewsgroup = false;
 
 // attachments array
 var attachmentUrlArray = new Array();
@@ -125,6 +127,8 @@ function OnLoadMsgHeaderPane()
   // displaying a message...
   gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
   gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
+  gCollectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
+  gCollectNewsgroup = pref.GetBoolPref("mail.collect_email_address_newsgroup");
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
@@ -173,7 +177,7 @@ var messageHeaderSink = {
       UpdateMessageHeaders();
     },
 
-    handleHeader: function(headerName, headerValue) 
+    handleHeader: function(headerName, headerValue, dontCollectAddress) 
     {
       // WARNING: if you are modifying this function, make sure you do not do *ANY*
       // dom manipulations which would trigger a reflow. This method gets called 
@@ -191,8 +195,8 @@ var messageHeaderSink = {
       currentHeaderData[lowerCaseHeaderName] = foo;
       if (lowerCaseHeaderName == "from")
       {
- 		    var  collectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
-        if (collectIncoming && headerValue && abAddressCollector)
+        if (headerValue && abAddressCollector && 
+		    ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
           abAddressCollector.collectUnicodeAddress(headerValue);  
       }
  
