@@ -1123,7 +1123,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
         if (PBHGetVInfo(&pb,FALSE) != noErr)
             break;
         nsFileSpec fss(pb.volumeParam.ioVRefNum, fsRtParID, fname);
-        rv = gRDFService->GetResource(nsFileURL(fss).GetAsString(), getter_AddRefs(vol));
+        rv = gRDFService->GetResource(nsDependentCString(nsFileURL(fss).GetAsString()), getter_AddRefs(vol));
         if (NS_FAILED(rv)) return rv;
 
         volumes->AppendElement(vol);
