@@ -55,6 +55,7 @@ XML::Parser (any)
   version 3.23.x.  The exact minimum version number required
   has not yet been decided.
   (bug 87958)
+
 - This is possibly the last stable release to support the
   shadow database. The replacement (using MySQL's built in
   replication) is not present in 2.16, but we expect that
@@ -70,6 +71,7 @@ XML::Parser (any)
   (sanitycheck.cgi).  The changer will receive a warning to do
   this when altering the keyword.
   (bug 69621)
+
 - Email notifications will not work out of the box if you are
   using Postfix, Exim or possibly other non-SendMail mail
   transfer agents, as Bugzilla sends mail by default in
@@ -77,15 +79,26 @@ XML::Parser (any)
   line option, which needs to be supported by the sendmail
   program.  To fix this, you can turn on the "sendmailnow"
   parameter on the Edit Parameters page (editparams.cgi).
-  (bug 50159)
+  (bug 37765)
+
 - Users behind rotating transparent proxies or otherwise having
-  a dynamic IP will find they need to log in regularly.
+  an IP that changes each URL fetch will find they need to log in
+  regularly.
   (bug 20122)
+
 - If you search on any CC or added comments, as well as at least
   one other of CC, added comments, assignee, reporter, etc, then
   the search can be very slow.  This is because of limitations of
   the MySQL optimiser.
   (bug 96101)
+
+- It is recommended you use the high speed XS Stash of the Template
+  Toolkit, in order to achieve best performance.  However, there are
+  known problems with XS Stash and Perl 5.005_02 and lower.  If you
+  wish to use these older versions of Perl, please use the regular
+  stash. You are asked which stash you want to use at Template Toolkit
+  installation time.
+  (bug 140674)
 
 - This release of Bugzilla uses the Template Toolkit. For speed,
   compiled templates are cached on disk. If you modify the templates
@@ -158,14 +171,22 @@ XML::Parser (any)
   Most output is now templatised.  This process will be complete next
   milestone.
   (bug 86168)
-- index.html is now configurable, as is now index.cgi. ??? Web server setup ???
-  (bug 80183)
+
 - Administrators can now configure maximum attachment sizes.  These
-  should remain below the maximum size for MySQL
+  should remain below the maximum size for MySQL, or you will get
+  obscure MySQL errors if you attach a bigger attachment.  ??? the size is ???
   (bug 91664)
+
 - Perl 5.004 is no longer supported because the Template Toolkit
   requires 5.005.
   (bug 97721)
+
+- The index page is now a CGI instead of an HTML page.  You should remove
+  any existing HTML page and make sure your web server allows index.cgi to
+  be the default page.  If you are not able to do that you can set index_html
+  to 1 and checksetup.pl will create a redirect page for you.
+  (bug 80183)
+
 - It is now strongly recommended that administrators run
   "processmail rescanall" after upgrading to 2.16 or beyond.
 
@@ -177,6 +198,13 @@ XML::Parser (any)
   lengthy delays in future if this reoccurs.
   (bug 106377)
 
+- If you wish to use ??? webdot htaccess stuff here ???
+
+- In parallel with templatisation, a lot of changes have been made to the HTML
+  output of the Bugzilla CGIs.  This could break code that attempts to parse
+  such code.  For example, this breaks mozbot.
+  (no bug number)
+
 *** Other changes of note ***
 
 - The query page has been redesigned for better user friendliness.
@@ -187,7 +215,8 @@ XML::Parser (any)
   dependent bug's summary.
   (bug 28736)
 - Bugs with severity "critical", "blocker", and "enhancement" are
-  visually differentiated on bug lists for recent browsers.
+  visually differentiated on bug lists for browsers with sufficient
+  CSS support.
   (bug 28884)
 - Bugzilla now has a sidebar for the Mozilla browser.
   (bug 37339)
@@ -233,7 +262,7 @@ XML::Parser (any)
   field or use the back/forward buttons in your browser to return
   to the page.
   (bug 97966)
-- You could not reverse dependencies in one step.
+- You could not reverse dependencies in one step. ??? really fixed ???
   (bug 82143)
 - Mass reassignment of non-open bugs will no longer reopen them.
   (bug 30731)
@@ -255,11 +284,11 @@ XML::Parser (any)
   (bug 98368)
 - Apostrophes in component/milestone/version names no longer cause
   a problem on the query page.
-  (bug 30689/42810)
+  (bug 30689/42810) ??? resolve dupe ???
 - File attachment comments will now wrap.
   (bug 52060)
 - Saved queries are no longer mangled if you need to log in again,
-  for example if you had cookies of.
+  for example if you had cookies off.
   (bug 38835)
 - Bug counts (on reports.cgi) were very slow if you had to
   count a lot of bugs.
@@ -281,9 +310,9 @@ XML::Parser (any)
   (bug 121741)
 - Querying on CC took too long on big databases, it is quicker
   now.
-  (bug 127200)
-
-??? 109357
+  (bug 127200) ??? reopened ???
+- Operating system detection fixes.
+  (bugs 92763, 135666)
 
 ************************************************************
 *** USERS UPGRADING FROM 2.14 OR EARLIER - 2.14.1 ISSUES ***
