@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
+#  Arthur Wiebe <artooro@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -93,7 +94,7 @@ ifeq ($(OS_ARCH), WINNT)
 PACKAGE_NAME = Sunbird-win32.zip
 else
 ifeq ($(OS_ARCH), Darwin)
-PACKAGE_NAME = Sunbird-mac.dmg.gz
+PACKAGE_NAME = Sunbird-mac.dmg
 endif
 endif
 endif

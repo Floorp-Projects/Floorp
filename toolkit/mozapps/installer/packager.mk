@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Benjamin Smedberg <bsmedberg@covad.net>
+#   Arthur Wiebe <artooro@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -94,9 +95,9 @@ _APPNAME	= $(MOZ_APP_DISPLAYNAME)Debug.app
 else
 _APPNAME	= $(MOZ_APP_DISPLAYNAME).app
 endif
-PKG_SUFFIX	= .dmg.gz
+PKG_SUFFIX	= .dmg
 _ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
-MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_APP_DISPLAYNAME) && gzip -vf9 $(PKG_BASENAME).dmg
+MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_APP_DISPLAYNAME)
 endif
 
 # dummy macro if we don't have PSM built
@@ -175,7 +176,7 @@ PLATFORM_EXCLUDE_LIST = ! -name "*.ico"
 endif
 
 $(PACKAGE): $(MOZILLA_BIN)
-	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $(DIST)/$(PKG_BASENAME).dmg $(DIST)/$(PKG_BASENAME).dmg.gz $@ $(EXCLUDE_LIST)
+	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $(DIST)/$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
