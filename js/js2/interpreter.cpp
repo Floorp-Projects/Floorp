@@ -104,7 +104,7 @@ struct Linkage : public gc_base, public Context::Frame {
     {
     }
     
-    Frame* getNext() { return mNext; }
+    Context::Frame* getNext() { return mNext; }
     
     void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode)
     {
