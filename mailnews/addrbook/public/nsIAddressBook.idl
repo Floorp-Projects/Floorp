@@ -41,7 +41,7 @@ interface nsIAddressBook : nsISupports {
   void printAddressbook();
   void setDocShellWindow(in nsIDOMWindowInternal win);
 	void importAddressBook();
-  void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating);
+  void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating, in nsIAddrDatabase db, in boolean bStoreLocAsHome, in boolean bImportingComm4x);
   void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);
   void getAbDatabaseFromURI(in string URI, out nsIAddrDatabase db);
 	boolean mailListNameExistsInDB(in wstring name, in string URI);

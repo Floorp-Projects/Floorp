@@ -434,6 +434,9 @@ protected:
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 	PRInt32	mFileType;
 	PRBool mMigrating;
+	PRBool mStoreLocAsHome;
+	PRBool mDeleteDB;
+	PRBool mImportingComm4x;
 
     nsresult ParseTabFile();
     nsresult ParseLDIFFile();
@@ -446,25 +449,32 @@ protected:
 	char * str_getline( char **next );
 
 public:
-    AddressBookParser(nsIFileSpec *fileSpec, PRBool migrating);
+    AddressBookParser(nsIFileSpec *fileSpec, PRBool migrating, nsIAddrDatabase *db, PRBool bStoreLocAsHome, PRBool bImportingComm4x);
     ~AddressBookParser();
 
     nsresult ParseFile();
 };
 
-AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec, PRBool migrating)
+AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec, PRBool migrating, nsIAddrDatabase *db, PRBool bStoreLocAsHome, PRBool bImportingComm4x)
 {
 	mFileSpec = fileSpec;
 	mDbUri = nsnull;
 	mFileType = UnknownFile;
 	mMigrating = migrating;
+  mDatabase = db;
+  if (mDatabase)
+    mDeleteDB = PR_FALSE;
+  else
+    mDeleteDB = PR_TRUE;
+  mStoreLocAsHome = bStoreLocAsHome;
+  mImportingComm4x = bImportingComm4x;
 }
 
 AddressBookParser::~AddressBookParser(void)
 {
 	if(mDbUri)
 		PR_smprintf_free(mDbUri);
-	if (mDatabase)
+	if (mDatabase && mDeleteDB)
 	{
 		mDatabase->Close(PR_TRUE);
 		mDatabase = null_nsCOMPtr();
@@ -477,6 +487,15 @@ const char *kLdifExtension = ".ldi";
 
 nsresult AddressBookParser::ParseFile()
 {
+  // Initialize the parser for a run...
+  mLine.Truncate();
+
+  // this is converting 4.x to 6.0
+  if (mImportingComm4x && mDatabase) 
+  {
+    return ParseLDIFFile();
+  }
+
 	/* Get database file name */
 	char *leafName = nsnull;
 	nsAutoString fileString;
@@ -553,9 +572,6 @@ nsresult AddressBookParser::ParseFile()
 	else
 		parentDir->CreateDirectoryByURI(fileString.get(), mDbUri, mMigrating);
 			
-    // Initialize the parser for a run...
-  mLine.Truncate();
-
 	if (mFileType == TABFile)
 		rv = ParseTabFile();
 	else if (mFileType == LDIFFile)
@@ -1085,7 +1101,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 		  mDatabase->AddDisplayName(newRow, column);
 	  }
 	  else if ( -1 != colType.Find("countryname") )
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeCountry(newRow, column);
+      else
 		mDatabase->AddWorkCountry(newRow, column);
+	  }
 
 	  // else if ( -1 != colType.Find("charset") )
 	  //   ioRow->AddColumn(ev, this->ColCharset(), yarn);
@@ -1201,7 +1222,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'l':
 	  if ( -1 != colType.Find("l") || -1 != colType.Find("locality") )
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeCity(newRow, column);
+      else
 		mDatabase->AddWorkCity(newRow, column);
+	  }
 
 //		  else if ( -1 != colType.Find("language") )
 //			ioRow->AddColumn(ev, this->ColLanguage(), yarn);
@@ -1261,7 +1287,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'p':
 	  if ( -1 != colType.Find("postalcode") )
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeZipCode(newRow, column);
+      else
 		mDatabase->AddWorkZipCode(newRow, column);
+    }
 
 	  else if ( -1 != colType.Find("postOfficeBox") )
 		mDatabase->AddWorkAddress(newRow, column);
@@ -1289,7 +1320,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'r':
 	  if ( -1 != colType.Find("region") )
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeState(newRow, column);
+      else
 		mDatabase->AddWorkState(newRow, column);
+	  }
 
 //		  else if ( -1 != colType.Find("rfc822mailbox") )
 //			ioRow->AddColumn(ev, this->ColPrimaryEmail(), yarn);
@@ -1306,10 +1342,19 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 		mDatabase->AddLastName(newRow, column);
 
 	  else if ( -1 != colType.Find("streetaddress") )
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeAddress(newRow, column);
+      else
 		mDatabase->AddWorkAddress(newRow, column);
-
+    }
 	  else if ( -1 != colType.Find("st") )
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeState(newRow, column);
+      else
 		mDatabase->AddWorkState(newRow, column);
+    }
 
 //		  else if ( -1 != colType.Find("secretary") )
 //			ioRow->AddColumn(ev, this->ColSecretary(), yarn);
@@ -1327,7 +1372,9 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 		mDatabase->AddJobTitle(newRow, column);
 
 	  else if ( -1 != colType.Find("telephonenumber") )
+	  {
 		mDatabase->AddWorkPhone(newRow, column);
+	  }
 
 //		  else if ( -1 != colType.Find("tiff") )
 //			ioRow->AddColumn(ev, this->ColTiff(), yarn);
@@ -1383,7 +1430,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'z':
 	  if ( -1 != colType.Find("zip") ) // alias for postalcode
+	  {
+      if (mStoreLocAsHome )
+        mDatabase->AddHomeZipCode(newRow, column);
+      else
 		mDatabase->AddWorkZipCode(newRow, column);
+    }
 
 	  break; // 'z'
 
@@ -1414,7 +1466,7 @@ NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileS
   return rv;  
 }
 
-NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migrating)
+NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migrating, nsIAddrDatabase *db, PRBool bStoreLocAsHome, PRBool bImportingComm4x)
 {
     nsresult rv;
     if (!fileSpec) return NS_ERROR_FAILURE;
@@ -1422,7 +1474,7 @@ NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migr
 	rv = fileSpec->OpenStreamForReading();
   NS_ENSURE_SUCCESS(rv, rv);
 
-	AddressBookParser abParser(fileSpec, migrating);
+	AddressBookParser abParser(fileSpec, migrating, db, bStoreLocAsHome, bImportingComm4x);
 
 	rv = abParser.ParseFile();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1506,7 +1558,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 		rv = ConvertNA2toLDIF(fileSpec, tmpLDIFFile);
   	NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ConvertLDIFtoMAB(tmpLDIFFile, PR_FALSE /* migrating */);
+    rv = ConvertLDIFtoMAB(tmpLDIFFile, PR_FALSE /* migrating */, nsnull, PR_FALSE, PR_FALSE /* importing Comm4x */);
     NS_ENSURE_SUCCESS(rv, rv);
 
 		rv = tmpLDIFFile->Delete(PR_TRUE);
@@ -1514,7 +1566,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 	}
 	else {
 		// this will convert ldif and tab files
-    rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */);
+    rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */, nsnull, PR_FALSE, PR_FALSE /* importing Comm4x */);
   	NS_ENSURE_SUCCESS(rv, rv);
 	}
     return rv;
