@@ -20,6 +20,10 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsICSSStyleSheet.h"
+#include "nsICSSParser.h"
+#include "nsICSSLoader.h"
+#include "nsIHTMLContentContainer.h"
+#include "nsIURL.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
@@ -48,6 +52,7 @@ static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 static NS_DEFINE_IID(kICSSRuleIID, NS_ICSS_RULE_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSRuleIID, NS_IDOMCSSRULE_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
@@ -534,10 +539,8 @@ public:
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
-                                        PRInt32 aHint);
+  virtual nsresult ParseDeclaration(const nsString& aDecl);
   virtual nsresult GetParent(nsISupports **aParent);
-  virtual nsresult GetBaseURL(nsIURI** aURL);
 
 protected:
   nsICSSStyleRule *mRule;
@@ -575,28 +578,72 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsICSSDeclaration **aDecl,
 }
 
 nsresult 
-DOMCSSDeclarationImpl::StylePropertyChanged(const nsString& aPropertyName,
-                                            PRInt32 aHint)
+DOMCSSDeclarationImpl::ParseDeclaration(const nsString& aDecl)
 {
-  nsIStyleSheet* sheet = nsnull;
-  if (mRule) {
-    mRule->GetStyleSheet(sheet);
-    if (sheet) {
-      nsICSSStyleSheet* cssSheet = nsnull;
-      if (NS_SUCCEEDED(sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet))) {
-        cssSheet->SetModified(PR_TRUE);
-        NS_RELEASE(cssSheet);
-      }
-      nsIDocument*  doc = nsnull;
-      sheet->GetOwningDocument(doc);
-      if (nsnull != doc) {
-        doc->StyleRuleChanged(sheet, mRule, aHint);
+  nsICSSDeclaration *decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
+
+  if (NS_SUCCEEDED(result) && (decl)) {
+    nsICSSLoader* cssLoader = nsnull;
+    nsICSSParser* cssParser = nsnull;
+    nsIURI* baseURI = nsnull;
+    nsICSSStyleSheet* cssSheet = nsnull;
+    nsIDocument*  owningDoc = nsnull;
+
+    nsIStyleSheet* sheet = nsnull;
+    if (mRule) {
+      mRule->GetStyleSheet(sheet);
+      if (sheet) {
+        sheet->GetURL(baseURI);
+        sheet->GetOwningDocument(owningDoc);
+        sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
+        if (owningDoc) {
+          nsIHTMLContentContainer* htmlContainer;
+          result = owningDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+          if (NS_SUCCEEDED(result)) {
+            result = htmlContainer->GetCSSLoader(cssLoader);
+            NS_RELEASE(htmlContainer);
+          }
+        }
+        NS_RELEASE(sheet);
       }
     }
+    if (cssLoader) {
+      result = cssLoader->GetParserFor(nsnull, &cssParser);
+    }
+    else {
+      result = NS_NewCSSParser(&cssParser);
+    }
+
+    if (NS_SUCCEEDED(result)) {
+      PRInt32 hint;
+      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl, &hint);
+      if (NS_SUCCEEDED(result)) {
+        if (cssSheet) {
+          cssSheet->SetModified(PR_TRUE);
+        }
+        if (owningDoc) {
+          owningDoc->StyleRuleChanged(cssSheet, mRule, hint);
+        }
+      }
+      if (cssLoader) {
+        cssLoader->RecycleParser(cssParser);
+      }
+      else {
+        NS_RELEASE(cssParser);
+      }
+    }
+    NS_IF_RELEASE(cssLoader);
+    NS_IF_RELEASE(baseURI);
+    NS_IF_RELEASE(cssSheet);
+    NS_IF_RELEASE(owningDoc);
+    NS_RELEASE(decl);
   }
 
-  return NS_OK;
+  return result;
 }
+
+
 
 nsresult 
 DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
@@ -606,26 +653,6 @@ DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
   }
 
   return NS_OK;
-}
-
-nsresult
-DOMCSSDeclarationImpl::GetBaseURL(nsIURI** aURL)
-{
-  NS_ASSERTION(nsnull != aURL, "null pointer");
-
-  nsresult result = NS_ERROR_NULL_POINTER;
-
-  if (nsnull != aURL) {
-    *aURL = nsnull;
-    if (nsnull != mRule) {
-      nsIStyleSheet* sheet = nsnull;
-      result = mRule->GetStyleSheet(sheet);
-      if (nsnull != sheet) {
-        result = sheet->GetURL(*aURL);
-      }
-    }
-  }
-  return result;
 }
 
 // -- nsCSSStyleRule -------------------------------
