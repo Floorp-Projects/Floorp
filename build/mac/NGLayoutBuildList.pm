@@ -1476,6 +1476,9 @@ sub BuildClientDist()
     #XPINSTALL (the one and only!)
     _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                      "$distdirectory:xpinstall:");
 
+	# XPFE
+    _InstallFromManifest(":mozilla:xpfe:appfilelocprovider:public:MANIFEST",        "$distdirectory:xpfe:");
+
     # XPFE COMPONENTS
     _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",                "$distdirectory:xpfe:components");
     _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",            "$distdirectory:idl:");
@@ -2298,6 +2301,10 @@ sub BuildXPAppProjects()
     BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:urlbarhistory:macbuild:urlbarhistory.mcp", "urlbarhistory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoComplete.mcp", "AutoComplete$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);        
+
+    # Static Lib
+    BuildOneProject(":mozilla:xpfe:appfilelocprovider:macbuild:appfilelocprovider.mcp", "appfilelocprovider$D.o", 0, 0, 0);
+    MakeAlias(":mozilla:xpfe:appfilelocprovider:macbuild:appfilelocprovider$D.o", ":mozilla:dist:xpfe:");
 
     # Applications
     BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",             "AppShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
