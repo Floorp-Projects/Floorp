@@ -33,6 +33,7 @@ ifdef MOZ_OJI
 endif
 
 LIBS = \
+	-lmsgbaseutil \
         -labouturl \
         -lfileurl \
         -lftpurl \
