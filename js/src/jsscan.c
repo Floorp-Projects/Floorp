@@ -276,126 +276,128 @@ GetChar(JSTokenStream *ts)
     if (ts->ungetpos != 0) {
 	c = ts->ungetbuf[--ts->ungetpos];
     } else {
-	if (ts->linebuf.ptr == ts->linebuf.limit) {
-	    len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
-	    if (len <= 0) {
-		/* Fill ts->userbuf so that \r and \r\n convert to \n. */
-		if (ts->file) {
-		    JSBool crflag;
-		    char cbuf[JS_LINE_LIMIT];
-		    jschar *ubuf;
-		    ptrdiff_t i, j;
+        do {
+	    if (ts->linebuf.ptr == ts->linebuf.limit) {
+	        len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
+	        if (len <= 0) {
+		    /* Fill ts->userbuf so that \r and \r\n convert to \n. */
+		    if (ts->file) {
+		        JSBool crflag;
+		        char cbuf[JS_LINE_LIMIT];
+		        jschar *ubuf;
+		        ptrdiff_t i, j;
 
-		    crflag = (ts->flags & TSF_CRFLAG) != 0;
-		    if (!fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file)) {
-			ts->flags |= TSF_EOF;
-			return EOF;
+		        crflag = (ts->flags & TSF_CRFLAG) != 0;
+		        if (!fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file)) {
+			    ts->flags |= TSF_EOF;
+			    return EOF;
+		        }
+		        len = olen = strlen(cbuf);
+		        JS_ASSERT(len > 0);
+		        ubuf = ts->userbuf.base;
+		        i = 0;
+		        if (crflag) {
+			    ts->flags &= ~TSF_CRFLAG;
+			    if (cbuf[0] != '\n') {
+			        ubuf[i++] = '\n';
+			        len++;
+			        ts->linepos--;
+			    }
+		        }
+		        for (j = 0; i < len; i++, j++)
+			    ubuf[i] = (jschar) (unsigned char) cbuf[j];
+		        ts->userbuf.limit = ubuf + len;
+		        ts->userbuf.ptr = ubuf;
+		    } else {
+		        ts->flags |= TSF_EOF;
+		        return EOF;
 		    }
-		    len = olen = strlen(cbuf);
-		    JS_ASSERT(len > 0);
-		    ubuf = ts->userbuf.base;
-		    i = 0;
-		    if (crflag) {
-			ts->flags &= ~TSF_CRFLAG;
-			if (cbuf[0] != '\n') {
-			    ubuf[i++] = '\n';
-			    len++;
-			    ts->linepos--;
-			}
+	        }
+                if (ts->listener)
+                    (*ts->listener)(ts->filename, ts->lineno, ts->userbuf.ptr, len,
+                                    &ts->listenerTSData, ts->listenerData);
+	        /*
+	         * Any one of \n, \r, or \r\n ends a line (longest match wins).
+	         */
+	        for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
+		    if (*nl == '\n')
+		        break;
+		    if (*nl == '\r') {
+		        if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
+			    nl++;
+		        break;
 		    }
-		    for (j = 0; i < len; i++, j++)
-			ubuf[i] = (jschar) (unsigned char) cbuf[j];
-		    ts->userbuf.limit = ubuf + len;
-		    ts->userbuf.ptr = ubuf;
-		} else {
-		    ts->flags |= TSF_EOF;
-		    return EOF;
-		}
-	    }
-            if (ts->listener)
-                (*ts->listener)(ts->filename, ts->lineno, ts->userbuf.ptr, len,
-                                &ts->listenerTSData, ts->listenerData);
-	    /*
-	     * Any one of \n, \r, or \r\n ends a line (longest match wins).
-	     */
-	    for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
-		if (*nl == '\n')
-		    break;
-		if (*nl == '\r') {
-		    if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
-			nl++;
-		    break;
-		}
-	    }
+	        }
 
-	    /*
-	     * If there was a line terminator, copy thru it into linebuf.
-	     * Else copy JS_LINE_LIMIT-1 bytes into linebuf.
-	     */
-	    if (nl < ts->userbuf.limit)
-		len = PTRDIFF(nl, ts->userbuf.ptr, jschar) + 1;
-	    if (len >= JS_LINE_LIMIT)
-		len = JS_LINE_LIMIT - 1;
-	    js_strncpy(ts->linebuf.base, ts->userbuf.ptr, len);
-	    ts->userbuf.ptr += len;
-	    olen = len;
+	        /*
+	         * If there was a line terminator, copy thru it into linebuf.
+	         * Else copy JS_LINE_LIMIT-1 bytes into linebuf.
+	         */
+	        if (nl < ts->userbuf.limit)
+		    len = PTRDIFF(nl, ts->userbuf.ptr, jschar) + 1;
+	        if (len >= JS_LINE_LIMIT)
+		    len = JS_LINE_LIMIT - 1;
+	        js_strncpy(ts->linebuf.base, ts->userbuf.ptr, len);
+	        ts->userbuf.ptr += len;
+	        olen = len;
 
-	    /*
-	     * Make sure linebuf contains \n for EOL (don't do this in
-	     * userbuf because the user's string might be readonly).
-	     */
-	    if (nl < ts->userbuf.limit) {
-		if (*nl == '\r') {
-		    if (ts->linebuf.base[len-1] == '\r') {
-                        /*
-                         * Does the line segment end in \r?  We must check for
-                         * a \n at the front of the next segment before storing
-                         * a \n into linebuf.  This case only matters when we're
-                         * reading from a file.
-                         */
-			if (nl + 1 == ts->userbuf.limit && ts->file) {
+	        /*
+	         * Make sure linebuf contains \n for EOL (don't do this in
+	         * userbuf because the user's string might be readonly).
+	         */
+	        if (nl < ts->userbuf.limit) {
+		    if (*nl == '\r') {
+		        if (ts->linebuf.base[len-1] == '\r') {
+                            /*
+                             * Does the line segment end in \r?  We must check for
+                             * a \n at the front of the next segment before storing
+                             * a \n into linebuf.  This case only matters when we're
+                             * reading from a file.
+                             */
+			    if (nl + 1 == ts->userbuf.limit && ts->file) {
+			        len--;
+			        ts->flags |= TSF_CRFLAG; /* clear NLFLAG? */
+                                if (len == 0) {
+                                    /*
+                                     * This can happen when a segment ends in \r\r.
+                                     * Start over.  ptr == limit in this case, so
+                                     * we'll fall into buffer-filling code.
+                                     */
+                                    return GetChar(ts);
+                                }
+			    } else
+                                ts->linebuf.base[len-1] = '\n';
+		        }
+		    } else if (*nl == '\n') {
+		        if (nl > ts->userbuf.base &&
+			    nl[-1] == '\r' &&
+			    ts->linebuf.base[len-2] == '\r') {
 			    len--;
-			    ts->flags |= TSF_CRFLAG; /* clear NLFLAG? */
-                            if (len == 0) {
-                                /*
-                                 * This can happen when a segment ends in \r\r.
-                                 * Start over.  ptr == limit in this case, so
-                                 * we'll fall into buffer-filling code.
-                                 */
-                                return GetChar(ts);
-                            }
-			} else
-                            ts->linebuf.base[len-1] = '\n';
+			    JS_ASSERT(ts->linebuf.base[len] == '\n');
+			    ts->linebuf.base[len-1] = '\n';
+		        }
 		    }
-		} else if (*nl == '\n') {
-		    if (nl > ts->userbuf.base &&
-			nl[-1] == '\r' &&
-			ts->linebuf.base[len-2] == '\r') {
-			len--;
-			JS_ASSERT(ts->linebuf.base[len] == '\n');
-			ts->linebuf.base[len-1] = '\n';
-		    }
-		}
+	        }
+
+	        /* Reset linebuf based on adjusted segment length. */
+	        ts->linebuf.limit = ts->linebuf.base + len;
+	        ts->linebuf.ptr = ts->linebuf.base;
+
+	        /* Update position of linebuf within physical line in userbuf. */
+	        if (!(ts->flags & TSF_NLFLAG))
+		    ts->linepos += ts->linelen;
+	        else
+		    ts->linepos = 0;
+	        if (ts->linebuf.limit[-1] == '\n')
+		    ts->flags |= TSF_NLFLAG;
+	        else
+		    ts->flags &= ~TSF_NLFLAG;
+
+	        /* Update linelen from original segment length. */
+	        ts->linelen = olen;
 	    }
-
-	    /* Reset linebuf based on adjusted segment length. */
-	    ts->linebuf.limit = ts->linebuf.base + len;
-	    ts->linebuf.ptr = ts->linebuf.base;
-
-	    /* Update position of linebuf within physical line in userbuf. */
-	    if (!(ts->flags & TSF_NLFLAG))
-		ts->linepos += ts->linelen;
-	    else
-		ts->linepos = 0;
-	    if (ts->linebuf.limit[-1] == '\n')
-		ts->flags |= TSF_NLFLAG;
-	    else
-		ts->flags &= ~TSF_NLFLAG;
-
-	    /* Update linelen from original segment length. */
-	    ts->linelen = olen;
-	}
-	c = *ts->linebuf.ptr++;
+	    c = *ts->linebuf.ptr++;
+        } while (JS_ISFORMAT(c));
     }
     if (c == '\n')
 	ts->lineno++;
@@ -642,6 +644,30 @@ AddToTokenBuf(JSContext *cx, JSTokenBuf *tb, jschar c)
     return JS_TRUE;
 }
 
+/*
+* We encountered a '\', check for a following unicode
+* escape sequence - returning it's value if so.
+* Otherwise, non-destructively return the original '\'.
+*/
+static int32 
+getUnicodeEscape(JSTokenStream *ts)
+{
+    jschar cp[5];
+    int32 c;
+    if (PeekChars(ts, 5, cp) && (cp[0] == 'u') &&
+	    JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
+	    JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4])) {
+	c = (((((JS7_UNHEX(cp[1]) << 4)
+		+ JS7_UNHEX(cp[2])) << 4)
+	      + JS7_UNHEX(cp[3])) << 4)
+	    + JS7_UNHEX(cp[4]);
+	SkipChars(ts, 5);
+    }
+    else
+        c = '\\';
+    return c;
+}
+
 JSTokenType
 js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
@@ -649,6 +675,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
     JSToken *tp;
     int32 c;
     JSAtom *atom;
+    JSBool hadUnicodeEscape;
 
 #define INIT_TOKENBUF(tb)   ((tb)->ptr = (tb)->base)
 #define FINISH_TOKENBUF(tb) if (!AddToTokenBuf(cx, tb, 0)) RETURN(TOK_ERROR)
@@ -688,13 +715,26 @@ retry:
     if (c == EOF)
 	RETURN(TOK_EOF);
 
-    if (JS_ISIDENT(c)) {
+    hadUnicodeEscape = JS_FALSE;
+    if (JS_ISIDENT_START(c) 
+                || ((c == '\\') 
+                        && (c = getUnicodeEscape(ts), 
+                            hadUnicodeEscape = JS_ISIDENT_START(c)))) {
 	INIT_TOKENBUF(&ts->tokenbuf);
-	do {
+        for (;;) {
 	    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
 		RETURN(TOK_ERROR);
 	    c = GetChar(ts);
-	} while (JS_ISIDENT2(c));
+            if (c == '\\') {
+                c = getUnicodeEscape(ts);
+                if (JS_ISIDENT(c))
+                    hadUnicodeEscape = JS_TRUE;
+                else
+                    break;
+            }
+            else
+                if (!JS_ISIDENT(c)) break;
+        }
 	UngetChar(ts, c);
 	FINISH_TOKENBUF(&ts->tokenbuf);
 
@@ -704,13 +744,16 @@ retry:
 			       0);
 	if (!atom)
 	    RETURN(TOK_ERROR);
-	if (atom->kwindex >= 0) {
-	    struct keyword *kw;
+        if (hadUnicodeEscape) /* Can never be a keyword, then. */
+            atom->kwindex = -1;
+        else
+	    if (atom->kwindex >= 0) {
+	        struct keyword *kw;
 
-	    kw = &keywords[atom->kwindex];
-	    tp->t_op = (JSOp) kw->op;
-	    RETURN(kw->tokentype);
-	}
+	        kw = &keywords[atom->kwindex];
+	        tp->t_op = (JSOp) kw->op;
+	        RETURN(kw->tokentype);
+	    }
 	tp->t_op = JSOP_NAME;
 	tp->t_atom = atom;
 	RETURN(TOK_NAME);
