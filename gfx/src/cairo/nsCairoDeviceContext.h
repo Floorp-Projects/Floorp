@@ -48,6 +48,8 @@
 #include "xlibrgb.h"
 #endif
 
+class nsCairoSurfaceManager;
+
 class nsCairoDeviceContext : public DeviceContextImpl
 {
 public:
@@ -108,6 +110,8 @@ public:
     Drawable GetXPixmapParentDrawable();
 #endif
 
+    nsCairoSurfaceManager *GetSurfaceManager() { return mSurfaceManager; }
+
 private:
     nsNativeWidget mWidget;
 
@@ -117,6 +121,8 @@ private:
     float mHeightFloat;
     PRInt32 mWidth;
     PRInt32 mHeight;
+
+    nsCairoSurfaceManager *mSurfaceManager;
 
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Drawable mPixmapParentDrawable;

@@ -75,6 +75,7 @@ CPPSRCS		= \
 		nsCairoScreenManager.cpp \
 		nsCairoDrawingSurface.cpp \
 		nsCairoGfxFactory.cpp \
+		nsCairoSurfaceManager.cpp \
 		nsCairoBlender.cpp \
 		nsFontMetricsUtils.cpp \
 		nsFontMetricsXft.cpp \

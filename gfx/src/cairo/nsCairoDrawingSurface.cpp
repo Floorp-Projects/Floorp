@@ -53,7 +53,7 @@
 NS_IMPL_ISUPPORTS1(nsCairoDrawingSurface, nsIDrawingSurface)
 
 nsCairoDrawingSurface::nsCairoDrawingSurface()
-    : mSurface(nsnull), mImageSurface(nsnull)
+    : mSurface(nsnull), mImageSurface(nsnull), mDC(nsnull), mNativeWidget(nsnull)
 {
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     mPixmap = 0;
@@ -161,26 +161,33 @@ nsresult
 nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
 {
     nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
-    fprintf (stderr, "++++ [%p] Creating DRAWABLE (0x%08x) surface\n", this, nativeWidget);
+    return Init (aDC, nativeWidget);
+}
+
+nsresult
+nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsNativeWidget aNativeWidget)
+{
+    fprintf (stderr, "++++ [%p] Creating DRAWABLE (0x%08x) surface\n", this, aNativeWidget);
 
     mDC = aDC;
 
 #ifdef MOZ_ENABLE_GTK2
-    mDrawable = GDK_DRAWABLE_XID(GDK_DRAWABLE(nativeWidget));
-    NS_ASSERTION (GDK_IS_WINDOW(nativeWidget), "unsupported native widget type!");
+    mNativeWidget = aNativeWidget;
+    mDrawable = GDK_DRAWABLE_XID(GDK_DRAWABLE(aNativeWidget));
+    NS_ASSERTION (GDK_IS_WINDOW(aNativeWidget), "unsupported native widget type!");
     mSurface = cairo_xlib_surface_create
-        (GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
-         GDK_WINDOW_XWINDOW(GDK_DRAWABLE(nativeWidget)),
-         GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(nativeWidget))),
+        (GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(aNativeWidget)),
+         GDK_WINDOW_XWINDOW(GDK_DRAWABLE(aNativeWidget)),
+         GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(aNativeWidget))),
          CAIRO_FORMAT_ARGB32, // I hope!
-         GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(GDK_DRAWABLE(nativeWidget))));
+         GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(GDK_DRAWABLE(aNativeWidget))));
 
     Window root_ignore;
     int x_ignore, y_ignore;
     unsigned int bwidth_ignore, width, height, depth;
 
-    XGetGeometry(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
-                 GDK_WINDOW_XWINDOW(GDK_DRAWABLE(nativeWidget)),
+    XGetGeometry(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(aNativeWidget)),
+                 GDK_WINDOW_XWINDOW(GDK_DRAWABLE(aNativeWidget)),
                  &root_ignore, &x_ignore, &y_ignore,
                  &width, &height,
                  &bwidth_ignore, &depth);

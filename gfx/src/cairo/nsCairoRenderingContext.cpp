@@ -36,6 +36,7 @@
 
 #include "nsCairoRenderingContext.h"
 #include "nsCairoDeviceContext.h"
+#include "nsCairoSurfaceManager.h"
 
 #include "nsRect.h"
 #include "nsString.h"
@@ -87,16 +88,12 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mDeviceContext = aContext;
     mWidget = aWidget;
 
-
-    mDrawingSurface = new nsCairoDrawingSurface();
-    mDrawingSurface->Init (cairoDC, aWidget);
+    nsCOMPtr<nsIDrawingSurface> ids;
+    cairoDC->GetSurfaceManager()->GetDrawingSurfaceForWidget (cairoDC,  aWidget, getter_AddRefs(ids));
+    mDrawingSurface = ((nsCairoDrawingSurface*) (ids.get()));
 
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
-
-    mClipRegion = new nsCairoRegion();
-
-    cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
     return (CommonInit());
 }
@@ -114,16 +111,14 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSu
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
 
-    mClipRegion = new nsCairoRegion();
-
-    cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-
     return (CommonInit());
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::CommonInit(void)
 {
+    mClipRegion = new nsCairoRegion();
+
     float app2dev;
     app2dev = mDeviceContext->AppUnitsToDevUnits();
     Scale(app2dev, app2dev);
@@ -767,7 +762,15 @@ nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
         cairo_transform_distance (mCairo, &dw, &dh);
     }
 
+    fprintf (stderr, "***** --> %g,%g [%d,%d] -> %g,%g %gx%g\n", sx, sy, srcWidth, srcHeight, dx, dy, dw, dh);
     cairo_save (mCairo);
+    cairo_init_clip (mCairo);
+
+    cairo_set_rgb_color (mCairo, 0.0, 0.0, 1.0);
+    cairo_set_alpha (mCairo, 0.5);
+
+    cairo_rectangle(mCairo, dx, dy, dw, dh);
+    cairo_fill(mCairo);
 
     // args are in pixels!!
     cairo_identity_matrix (mCairo);
@@ -779,7 +782,7 @@ nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
     cairo_scale(mCairo, dw / double(srcWidth), dh / double(srcHeight));
     cairo_translate(mCairo, dx - sx, dy - sy);
 
-    cairo_show_surface(mCairo, src, srcWidth, srcHeight);
+//    cairo_show_surface(mCairo, src, srcWidth, srcHeight);
 
     cairo_restore (mCairo);
 
@@ -796,8 +799,8 @@ nsCairoRenderingContext::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 NS_IMETHODIMP
 nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
-    //    *aUseBackbuffer = PR_FALSE;
-    *aUseBackbuffer = PR_TRUE;
+    *aUseBackbuffer = PR_FALSE;
+    // *aUseBackbuffer = PR_TRUE;
     return NS_OK;
 }
 
