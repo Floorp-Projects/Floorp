@@ -6,6 +6,8 @@
 <!DOCTYPE window [
 <!ENTITY  title.label "Download">
 <!ENTITY  download "Download">
+<!ENTITY  downOnlyCheck "Download only unread messages">
+<!ENTITY  downDateCheck "Download by date">
 <!ENTITY  newmes "Newsgroup Messages">
 <!ENTITY  downUnread "Download only unread messages">
 <!ENTITY  downloadDate "Download by date">
@@ -37,13 +39,13 @@
 
 
 <html:DIV ID="top">
-		<html:SPAN ID="lefttext">Download</html:SPAN>
+		<html:SPAN ID="lefttext">&download;</html:SPAN>
 </html:DIV>
 
 &newmes;
 <html:table>
-			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:offline.news.download.unread_only" />Download only unread messages</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:offline.news.download.by_date" />Download by date</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:offline.news.download.unread_only" />&downOnlyCheck;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input type="checkbox" id="pref:0:bool:offline.news.download.by_date" />&downDateCheck;</html:label></html:td></html:tr>
 			<html:tr><html:td>
 			    <html:label>
 				<html:input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" val="checked" />&fromRadio.label;
