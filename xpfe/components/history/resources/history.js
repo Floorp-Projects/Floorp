@@ -49,7 +49,13 @@ var gHistoryStatus;
 var gHistoryGrouping = "";
 var gWindowManager = null;
 
-function HistoryInit()
+function HistoryWindowInit()
+{
+    HistoryCommonInit();
+    gHistoryTree.focus();
+}
+
+function HistoryCommonInit()
 {
     gHistoryTree =  document.getElementById("historyTree");
     gDeleteByHostname = document.getElementById("menu_deleteByHostname");
@@ -102,7 +108,7 @@ function HistoryInit()
             pbi.addObserver("browser.history.grouping", groupObserver, false);
         }
     } 
-    gHistoryTree.focus();
+
     gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
