@@ -505,6 +505,12 @@ AC_ARG_ENABLE(ldap,
 	    NO_UNIX_LDAP=
 	fi] )
 
+AC_ARG_ENABLE(idltool,
+[  --enable-idltool        build idl tool (default=no) ],
+	[if test "$enableval" = "yes"; then
+	    MOZ_IDL_TOOL=1
+	fi] )
+
 AC_SUBST(OS_TARGET)
 AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_SECURITY)
@@ -526,6 +532,7 @@ AC_SUBST(MOZ_DOM)
 AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
+AC_SUBST(MOZ_IDL_TOOL)
 
 dnl Checks for X libraries.
 dnl Ordering is important.

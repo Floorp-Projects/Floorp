@@ -18,7 +18,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef XP_UNIX
 #include <direct.h>
+#endif
 #include <fstream.h>
 #include <ctype.h>
 #include "nsIPtr.h"

@@ -834,13 +834,25 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
   switch(token->id) {
     // base type
     case INPUT_PARAM_TOKEN:
+#ifdef XP_UNIX
+      argObj->SetAttribute(IdlParameter::INPUT);
+#else
       argObj->SetAttribute(IdlParameter.INPUT);
+#endif
       break;
     case OUTPUT_PARAM_TOKEN:
+#ifdef XP_UNIX
+      argObj->SetAttribute(IdlParameter::OUTPUT);
+#else
       argObj->SetAttribute(IdlParameter.OUTPUT);
+#endif
       break;
     case INOUT_PARAM_TOKEN:
+#ifdef XP_UNIX
+      argObj->SetAttribute(IdlParameter::INOUT);
+#else
       argObj->SetAttribute(IdlParameter.INOUT);
+#endif
       break;
     default:
       delete argObj;
@@ -924,3 +936,6 @@ void IdlParser::TrimComments()
     mScanner->NextToken();
   }
 }
+
+
+

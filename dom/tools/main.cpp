@@ -21,7 +21,9 @@
 #include "string.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef XP_UNIX
 #include <direct.h>
+#endif
 #include "IdlParser.h"
 #include "Exceptions.h"
 #include "IdlSpecification.h"
@@ -66,9 +68,17 @@ int main(int argc, char *argv[])
     if (op_dir) {
       struct stat sb;
       if (stat(argv[op_dir_arg], &sb) == 0) {
+#ifdef XP_UNIX
+        if (!(sb.st_mode & S_IFDIR)) {
+#else
         if (!(sb.st_mode & _S_IFDIR)) {
+#endif
           cout << "Creating directory " << argv[op_dir_arg] << " ...\n";
+#ifdef XP_UNIX
+          if (mkdir(argv[op_dir_arg],S_IWGRP | S_IWOTH) < 0) {
+#else
           if (mkdir(argv[op_dir_arg]) < 0) {
+#endif
             cout << "WARNING: cannot create output directory [" << argv[op_dir_arg] << "]\n";
             cout << "++++++++ using current directory\n";
           }
@@ -107,7 +117,7 @@ int main(int argc, char *argv[])
         
         cout << "Generating XPCOM headers for " << argv[i] << ".\n";
        try {
-          xpcomgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
+          xpcomgen->Generate(argv[i], op_dir ? argv[op_dir_arg] :(char*)NULL,
                              *specification, is_global);
         }
         catch(CantOpenFileException &exc) {
@@ -124,7 +134,7 @@ int main(int argc, char *argv[])
         
         cout << "Generating JavaScript stubs for " << argv[i] << ".\n";
         try {
-          jsgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
+          jsgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : (char*)NULL,
                           *specification, is_global);
         }
         catch(CantOpenFileException &exc) {

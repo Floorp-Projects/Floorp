@@ -19,6 +19,10 @@
 #ifndef _IdlVariable_h__
 #define _IdlVariable_h__
 
+#ifdef XP_UNIX
+#include <stddef.h>
+#endif
+
 #include "IdlObject.h"
 
 enum Type {
@@ -56,7 +60,7 @@ public:
   void            SetType(Type aType);
   Type            GetType();
   void            SetTypeName(char *aTypeName);
-  char*           GetTypeName();
+  char*           GetTypeName(void);
   void            GetTypeAsString(char *aString, size_t aStringSize);
   
   void            SetValue(unsigned long aValue);

@@ -24,42 +24,58 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-PROGRAM = idlc
 
-CPPSRCS =		     \
-	main.cpp	     \
-	IdlParser.cpp	     \
-	IdlScanner.cpp	     \
-	Exceptions.cpp	     \
-	Id.cppect.cpp	     \
-	IdlVariable.cpp	     \
-	IdlAttribute.cpp     \
-	IdlEnum.cpp	     \
-	IdlFunction.cpp	     \
-	IdlInterface.cpp     \
-	IdlParameter.cpp     \
-	IdlSpecification.cpp \
-	FileGen.cpp	     \
-	XPCOMGen.cpp	     \
-	JSStubGen.cpp	     \
-	$(NULL)
+CPPSRCS =  \
+	   	main.cpp		\
+		IdlParser.cpp		\
+		IdlScanner.cpp		\
+		Exceptions.cpp		\
+		IdlObject.cpp		\
+		IdlVariable.cpp		\
+		IdlAttribute.cpp	\
+		IdlEnum.cpp		\
+		IdlFunction.cpp		\
+		IdlInterface.cpp	\
+		IdlParameter.cpp	\
+		IdlSpecification.cpp	\
+		FileGen.cpp		\
+		XPCOMGen.cpp		\
+		JSStubGen.cpp		\
+		$(NULL)
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-EX_LIBS = \
-	$(NULL)
+PROGS = $(OBJDIR)/idlc
 
-NON_DIRS = $(PROGS)
-TARGETS = $(NON_DIRS)
+TARGETS = $(PROGS)
+
+INCLUDES += \
+			-I$(PUBLIC)/raptor \
+			-I$(PUBLIC)/xpcom \
+			$(NULL)
+
+EX_LIBS = \
+			-L$(DIST)/bin \
+			-lraptorbase
+
 
 include $(topsrcdir)/config/rules.mk
 
-$(OBJDIR)/%.o: %.cpp
+$(PROGS): $(OBJS) # $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -DUSE_NSREG -c $<
+ifeq ($(OS_ARCH),Linux)
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
+else
+ifeq ($(OS_ARCH),IRIX)
+	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
+else
+	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
+endif
+endif
 
 export::
 
-install:: $(PROGRAM)
-	$(INSTALL) $(PROGRAM) $(DIST)/bin
+install:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
+
 
