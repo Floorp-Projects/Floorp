@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <unistd.h>
+
 #include <oeIICal.h>
 #include <oeICalImpl.h>
 #include <nsIServiceManager.h>
