@@ -887,16 +887,19 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
 	{
 	  if (*in == CR || *in == LF)
 		{
-		  /* Whitespace cannot be allowed to occur at the end of the line.
-			 So we encode " \n" as " =\n\n", that is, the whitespace, a
-			 soft line break, and then a hard line break.
-		   */
-		  if (white)
-			{
-			  *out++ = '=';
-			  *out++ = CR;
-			  *out++ = LF;
-			}
+
+      /* Whitespace cannot be allowed to occur at the end of           
+         the line, so we backup and replace the whitespace with        
+         it's code.                                                    
+       */                                                               
+      if (white)                                                       
+      {                                                              
+        out--;                                                       
+        char whitespace_char = *out;                                 
+        *out++ = '=';                                                
+        *out++ = hexdigits[whitespace_char >> 4];                    
+        *out++ = hexdigits[whitespace_char & 0xF];                   
+      }                                                   
 
 		  /* Now write out the newline. */
 		  *out++ = CR;
