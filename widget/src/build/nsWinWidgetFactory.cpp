@@ -25,19 +25,30 @@
 #include "nsdefs.h"
 #include "nsWidgetsCID.h"
 
-#include "nsButton.h"
 #include "nsFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsLookAndFeel.h"
 #include "nsScrollbar.h"
-#include "nsTextHelper.h"
-#include "nsTextWidget.h"
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsFontRetrieverService.h"
 #include "nsSound.h"
+
+//---------------------------
+// needed for viewer only
+#include "nsButton.h"
+#include "nsTextHelper.h"
+#include "nsTextWidget.h"
+#include "nsCheckButton.h"
+#include "nsLabel.h"
+
+static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
+static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
+//---------------------------
 
 #include "nsWindowsTimer.h"
 #include "nsTimerManager.h"
@@ -50,11 +61,9 @@
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
@@ -162,9 +171,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCChild)) {
         inst = (nsISupports*)(nsBaseWidget*)new ChildWindow();
     }
-    else if (mClassID.Equals(kCButton)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
-    }
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
     }
@@ -173,9 +179,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_TRUE);
-    }
-    else if (mClassID.Equals(kCTextField)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
         inst = (nsISupports*)new nsAppShell();
@@ -213,6 +216,21 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCTimerManager)) {
         inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
+    }
+    ///////////////////////////////////////
+    // These are needed for Viewer only
+    ///////////////////////////////////////
+    else if (mClassID.Equals(kCButton)) {
+        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
+    }
+    else if (mClassID.Equals(kCTextField)) {
+        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextWidget();
+    }
+    else if (mClassID.Equals(kCLabel)) {
+        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsLabel();
+    }
+    else if (mClassID.Equals(kCCheckButton)) {
+        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
     }
 
     if (inst == NULL) {  
