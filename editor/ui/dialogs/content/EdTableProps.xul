@@ -1,6 +1,33 @@
 <?xml version="1.0"?>
+
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+  -->
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
+
+
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorTableProperties.dtd">
 
 <window class="dialog" title="&tableWindow.title;"
@@ -14,6 +41,7 @@
   </html:script>
   <html:script language="JavaScript" src="chrome://editor/content/EdTableProps.js">
   </html:script>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
 <tabcontrol align="vertical" >
@@ -27,6 +55,7 @@
 		<box align="vertical">
      <titledbutton value="TABLE PANEL"/> 
       <html:div> WORK IN PROGRESS:  This is the TABLE Tab </html:div>
+      <titledbutton class="spaced" id="AdvancedEditTable" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
     </box>
 <!-- end of table tab -->
 
@@ -34,16 +63,13 @@
 		<box align="vertical">
       <titledbutton value="CELL PANEL"/> 
       <html:div> WORK IN PROGRESS:  This is the CELL Tab </html:div>
+      <titledbutton class="spaced" id="AdvancedEditCell" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
     </box>
 <!-- end of cell tab -->
 	 </tabpanel> 
 </tabcontrol>
 
   <spring flex="100%"/>
-  <box>
-    <titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
-    <spring flex="100%"/>    
-    <titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
-    <titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
-  </box>
+
+	<box id="okCancelButtons"/> 
 </window>
