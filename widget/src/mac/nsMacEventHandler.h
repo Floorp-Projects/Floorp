@@ -39,28 +39,31 @@ class nsMacWindow;
 //
 //-------------------------------------------------------------------------
 
-class nsMacFocusHandler : public nsDeleteObserver
+class nsMacEventDispatchHandler : public nsDeleteObserver
 {
 public:
-  nsMacFocusHandler();
-  virtual				~nsMacFocusHandler();
+	nsMacEventDispatchHandler();
+	virtual			~nsMacEventDispatchHandler();
 
-	void 					SetFocus(nsWindow *aFocusedWidget);
-	nsWindow*			GetFocus()	{return(mFocusedWidget);}
+    void 			SetFocus(nsWindow *aFocusedWidget);
 
-	void 					SetWidgetHit(nsWindow *aWidgetHit);
-	void 					SetWidgetPointed(nsWindow *aWidgetPointed);
+	void 			SetActivated(nsWindow *aActiveWidget);
+	nsWindow*		GetActive()	{return(mActiveWidget);}
+	void			SetDeactivated(nsWindow *aActiveWidget);
 
-	nsWindow*			GetWidgetHit()			{return(mWidgetHit);}
-	nsWindow*			GetWidgetPointed()	{return(mWidgetPointed);}
+	void 			SetWidgetHit(nsWindow *aWidgetHit);
+	void 			SetWidgetPointed(nsWindow *aWidgetPointed);
+
+	nsWindow*		GetWidgetHit()		{return(mWidgetHit);}
+	nsWindow*		GetWidgetPointed()	{return(mWidgetPointed);}
 
 	// DeleteObserver
 	virtual void	NotifyDelete(void* aDeletedObject);
 
 private:
-	nsWindow*			mFocusedWidget;
-	nsWindow*			mWidgetHit;
-	nsWindow*			mWidgetPointed;
+	nsWindow*	mActiveWidget;
+	nsWindow*	mWidgetHit;
+	nsWindow*	mWidgetPointed;
 };
 
 
@@ -68,7 +71,7 @@ private:
 //
 //-------------------------------------------------------------------------
 
-extern nsMacFocusHandler	gFocusHandler;
+extern nsMacEventDispatchHandler	gEventDispatchHandler;
 
 
 //-------------------------------------------------------------------------

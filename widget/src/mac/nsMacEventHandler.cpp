@@ -49,16 +49,16 @@ extern nsIWidget         * gRollupWidget;
 PRBool	nsMacEventHandler::mInBackground = PR_FALSE;
 PRBool	nsMacEventHandler::mMouseInWidgetHit = PR_FALSE;
 
-nsMacFocusHandler	gFocusHandler;
+nsMacEventDispatchHandler	gEventDispatchHandler;
 
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsMacFocusHandler::nsMacFocusHandler()
+nsMacEventDispatchHandler::nsMacEventDispatchHandler()
 {
-	mFocusedWidget	= nsnull;
-	mWidgetHit			= nsnull;
+	mActiveWidget	= nsnull;
+	mWidgetHit		= nsnull;
 	mWidgetPointed	= nsnull;
 }
 
@@ -66,12 +66,12 @@ nsMacFocusHandler::nsMacFocusHandler()
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsMacFocusHandler::~nsMacFocusHandler()
+nsMacEventDispatchHandler::~nsMacEventDispatchHandler()
 {
-	if (mFocusedWidget)
+	if (mActiveWidget)
 	{
-	  mFocusedWidget->RemoveDeleteObserver(this);
-	  mFocusedWidget = nsnull;
+	  mActiveWidget->RemoveDeleteObserver(this);
+	  mActiveWidget = nsnull;
 	}
 
 	if (mWidgetHit)
@@ -90,9 +90,10 @@ nsMacFocusHandler::~nsMacFocusHandler()
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-void nsMacFocusHandler::SetFocus(nsWindow *aFocusedWidget)
+void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 {
-	if (aFocusedWidget == mFocusedWidget)
+    // This short circut lives inside of nsEventStateManager now
+	if (aFocusedWidget == mActiveWidget)
 		return;
 		
 	nsGUIEvent guiEvent;
@@ -104,33 +105,86 @@ void nsMacFocusHandler::SetFocus(nsWindow *aFocusedWidget)
 	guiEvent.nativeMsg	= nsnull;
 
 	// tell the old widget it is not focused
-	if (mFocusedWidget)
+	if (mActiveWidget)
 	{
-		mFocusedWidget->RemoveDeleteObserver(this);
+		mActiveWidget->RemoveDeleteObserver(this);
 
 		guiEvent.message = NS_LOSTFOCUS;
-		guiEvent.widget = mFocusedWidget;
-		mFocusedWidget->DispatchWindowEvent(guiEvent);
+		guiEvent.widget = mActiveWidget;
+		mActiveWidget->DispatchWindowEvent(guiEvent);
 	}
 
-	mFocusedWidget = aFocusedWidget;
+	mActiveWidget = aFocusedWidget;
 
 	// let the new one know it got the focus
-	if (mFocusedWidget)
+	if (mActiveWidget)
 	{
-		mFocusedWidget->AddDeleteObserver(this);
+		mActiveWidget->AddDeleteObserver(this);
 
 		guiEvent.message = NS_GOTFOCUS;
-		guiEvent.widget = mFocusedWidget;		
-		mFocusedWidget->DispatchWindowEvent(guiEvent);
+		guiEvent.widget = mActiveWidget;		
+		mActiveWidget->DispatchWindowEvent(guiEvent);
 	}
 }
-
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-void nsMacFocusHandler::SetWidgetHit(nsWindow *aWidgetHit)
+void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
+{
+	if (aActivatedWidget == mActiveWidget)
+		return;
+
+	mActiveWidget = aActivatedWidget;
+
+	// let the new one know it got activation
+	if (mActiveWidget)
+	{
+		mActiveWidget->AddDeleteObserver(this);
+		
+	    // Dispatch an NS_ACTIVATE event 
+		nsGUIEvent guiEvent;
+		guiEvent.eventStructType = NS_GUI_EVENT;
+		guiEvent.point.x	= 0;
+		guiEvent.point.y	= 0;
+		guiEvent.time		= PR_IntervalNow();
+		guiEvent.widget		= nsnull;
+		guiEvent.nativeMsg	= nsnull;
+		guiEvent.message 	= NS_ACTIVATE;
+		guiEvent.widget 	= mActiveWidget;
+		mActiveWidget->DispatchWindowEvent(guiEvent);
+	}
+}
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
+{
+	// let the old one know it lost activation
+	if (mActiveWidget)
+	{	
+	    // Dispatch an NS_DEACTIVATE event 
+		nsGUIEvent guiEvent;
+		guiEvent.eventStructType = NS_GUI_EVENT;
+		guiEvent.point.x	= 0;
+		guiEvent.point.y	= 0;
+		guiEvent.time		= PR_IntervalNow();
+		guiEvent.widget		= nsnull;
+		guiEvent.nativeMsg	= nsnull;
+		guiEvent.message 	= NS_DEACTIVATE;
+		guiEvent.widget 	= mActiveWidget;
+		mActiveWidget->DispatchWindowEvent(guiEvent);
+		
+		mActiveWidget->RemoveDeleteObserver(this);
+		mActiveWidget = nsnull;
+	}
+}
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+void nsMacEventDispatchHandler::SetWidgetHit(nsWindow *aWidgetHit)
 {
 	if (aWidgetHit == mWidgetHit)
 		return;
@@ -149,7 +203,7 @@ void nsMacFocusHandler::SetWidgetHit(nsWindow *aWidgetHit)
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-void nsMacFocusHandler::SetWidgetPointed(nsWindow *aWidgetPointed)
+void nsMacEventDispatchHandler::SetWidgetPointed(nsWindow *aWidgetPointed)
 {
 	if (aWidgetPointed == mWidgetPointed)
 		return;
@@ -168,10 +222,10 @@ void nsMacFocusHandler::SetWidgetPointed(nsWindow *aWidgetPointed)
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-void nsMacFocusHandler::NotifyDelete(void* aDeletedObject)
+void nsMacEventDispatchHandler::NotifyDelete(void* aDeletedObject)
 {
-	if (mFocusedWidget == aDeletedObject)
-		mFocusedWidget = nsnull;
+	if (mActiveWidget == aDeletedObject)
+		mActiveWidget = nsnull;
 	else
 	if (mWidgetHit == aDeletedObject)
 		mWidgetHit = nsnull;
@@ -301,7 +355,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
   long         aMenuResult)
 {
 	// get the focused widget
-	nsWindow* focusedWidget = gFocusHandler.GetFocus();
+	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
 	if (!focusedWidget)
 		focusedWidget = mTopLevelWidget;
 
@@ -331,7 +385,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 		// make sure the focusedWidget wasn't changed or deleted
 		// when we dispatched the event (even though if we get here, 
 		// the event is supposed to not have been handled)
-		if (focusedWidget == gFocusHandler.GetFocus())
+		if (focusedWidget == gEventDispatchHandler.GetActive())
 		{
 			nsCOMPtr<nsWindow> grandParent;
 			nsCOMPtr<nsWindow> parent ( dont_AddRef((nsWindow*)focusedWidget->GetParent()) );
@@ -840,7 +894,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 	nsresult result;
 
 	// get the focused widget
-	nsWindow* focusedWidget = gFocusHandler.GetFocus();
+	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
 	if (!focusedWidget)
 		focusedWidget = mTopLevelWidget;
 	
@@ -914,14 +968,12 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		//¥TODO: we should restore the focus to the the widget
 		//       that had it when the window was deactivated
 		nsWindow*	focusedWidget = mTopLevelWidget;
-		gFocusHandler.SetFocus(focusedWidget);
+		gEventDispatchHandler.SetActivated(focusedWidget);
+		
+		// Twiddle menu bars
 		nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
 		if (menuBar)
 		{
-		  MenuHandle menuHandle = nsnull;
-
-		  //menuBar->GetNativeData((void *)menuHandle);
-		  //::SetMenuBar((Handle)menuHandle);
 		  menuBar->Paint();
 		}
 		else
@@ -930,8 +982,6 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		  //				look all the way up to the window
 		  //				until one of the parents has a menubar
 		}
-
-		//¥TODO: set the menu bar here
 	}
 	else
 	{
@@ -948,18 +998,10 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 #ifdef DEBUG_TSM
 		NS_ASSERTION((noErr==err)||(tsmDocNotActiveErr==err),"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
 		printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p] %s return %d\n",mTSMDocument,
-		(err==noErr)||(tsmDocNotActiveErr==noErr)? "" : "ERROR!!!", err);
+		(err==noErr)?"":"ERROR", err);
 #endif
-		
-		//¥TODO: save the focused widget for that window
-		gFocusHandler.SetFocus(nsnull);
-
-		//nsIMenuBar* menuBarInterface = mTopLevelWidget->GetMenuBar();
-		//if (menuBarInterface)
-		//{
-			//Handle menuBar = ::GetMenuBar(); // Get a copy of the menu list
-			//menuBarInterface->SetNativeData((void*)menuBar);
-		//}
+		// Dispatch an NS_DEACTIVATE event 
+		gEventDispatchHandler.SetDeactivated(mTopLevelWidget);
 	}
 	return PR_TRUE;
 }
@@ -1064,15 +1106,20 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 						}
 				}
 #endif
-				// set the focus on the widget hit, if it accepts it
-				if (widgetHit->AcceptFocusOnClick())
-						gFocusHandler.SetFocus(widgetHit);
+				// set the activation and focus on the widget hit, if it accepts it
+				{
+					nsMouseEvent mouseActivateEvent;
+			        ConvertOSEventToMouseEvent(aOSEvent, mouseActivateEvent, NS_MOUSE_ACTIVATE);
+					widgetHit->DispatchMouseEvent(mouseActivateEvent);
+					if( mouseActivateEvent.acceptActivation )
+						gEventDispatchHandler.SetFocus(widgetHit);
+				}
 
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
 			} 
 						
-			gFocusHandler.SetWidgetHit(widgetHit);
+			gEventDispatchHandler.SetWidgetHit(widgetHit);
 			mMouseInWidgetHit = PR_TRUE;
 			break;
 		}
@@ -1114,14 +1161,14 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_UP);
 
 	nsWindow* widgetReleased = (nsWindow*)mouseEvent.widget;
-	nsWindow* widgetHit = gFocusHandler.GetWidgetHit();
+	nsWindow* widgetHit = gEventDispatchHandler.GetWidgetHit();
 
 	if ((widgetReleased != nsnull) && (widgetReleased != widgetHit))
 		retVal |= widgetReleased->DispatchMouseEvent(mouseEvent);
 
 	if (widgetHit)
 	{
-		gFocusHandler.SetWidgetHit(nsnull);
+		gEventDispatchHandler.SetWidgetHit(nsnull);
 
 		mouseEvent.widget = widgetHit;
 		retVal |= widgetHit->DispatchMouseEvent(mouseEvent);
@@ -1136,11 +1183,10 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 // HandleMouseMoveEvent
 //
 //-------------------------------------------------------------------------
-PRBool nsMacEventHandler::HandleMouseMoveEvent(
-														EventRecord&		aOSEvent)
+PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 {
-	nsWindow* lastWidgetHit = gFocusHandler.GetWidgetHit();
-	nsWindow* lastWidgetPointed = gFocusHandler.GetWidgetPointed();
+	nsWindow* lastWidgetHit = gEventDispatchHandler.GetWidgetHit();
+	nsWindow* lastWidgetPointed = gEventDispatchHandler.GetWidgetPointed();
 
 	PRBool retVal = PR_FALSE;
 
@@ -1171,7 +1217,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 				retVal |= lastWidgetPointed->DispatchMouseEvent(mouseEvent);
 			}
 
-			gFocusHandler.SetWidgetPointed(widgetPointed);
+			gEventDispatchHandler.SetWidgetPointed(widgetPointed);
 
 			if (widgetPointed)
 			{
@@ -1252,7 +1298,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
 
 	// if the mouse button is still down, send events to the last widget hit
-	nsWindow* lastWidgetHit = gFocusHandler.GetWidgetHit();
+	nsWindow* lastWidgetHit = gEventDispatchHandler.GetWidgetHit();
 	nsWindow* widgetHit = nsnull;
 
 	if (lastWidgetHit)
@@ -1263,7 +1309,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	 	{
 	 		// Some widgets can eat mouseUp events (text widgets in TEClick, sbars in TrackControl).
 	 		// In that case, stop considering this widget as being still hit.
-	 		gFocusHandler.SetWidgetHit(nsnull);
+	 		gEventDispatchHandler.SetWidgetHit(nsnull);
 	 	}
 	}
 
@@ -1302,6 +1348,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// nsMouseEvent
 	aMouseEvent.clickCount = sLastClickCount;
+	aMouseEvent.acceptActivation = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -1722,7 +1769,7 @@ nsresult nsMacEventHandler::HandleStartComposition(void)
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//
-	nsWindow* focusedWidget = gFocusHandler.GetFocus();
+	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
 	if (!focusedWidget)
 		focusedWidget = mTopLevelWidget;
 	
@@ -1768,7 +1815,7 @@ nsresult nsMacEventHandler::HandleEndComposition(void)
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//
-	nsWindow* focusedWidget = gFocusHandler.GetFocus();
+	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
 	if (!focusedWidget)
 		focusedWidget = mTopLevelWidget;
 	
@@ -1841,7 +1888,7 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//
-	nsWindow* focusedWidget = gFocusHandler.GetFocus();
+	nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
 	if (!focusedWidget)
 		focusedWidget = mTopLevelWidget;
 	
