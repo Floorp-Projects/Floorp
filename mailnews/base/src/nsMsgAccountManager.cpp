@@ -303,7 +303,6 @@ private:
   static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
 
   // methods for migration / upgrading
-  nsresult createSpecialFile(nsFileSpec & dir, const char *specialFileName);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   
   nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
@@ -1080,30 +1079,6 @@ nsMsgAccountManager::findAccountByKey(nsISupports* element, void *aData)
     return PR_TRUE;
 }
 
-nsresult
-nsMsgAccountManager::createSpecialFile(nsFileSpec & dir, const char *specialFileName)
-{
-	if (!specialFileName) return NS_ERROR_NULL_POINTER;
-
-	nsresult rv;
-	nsFileSpec file(dir);
-	file += specialFileName;
-
-	nsCOMPtr <nsIFileSpec> specialFile;
-	rv = NS_NewFileSpecWithSpec(file, getter_AddRefs(specialFile));
-    if (NS_FAILED(rv)) return rv;
-
-	PRBool specialFileExists;
-	rv = specialFile->Exists(&specialFileExists);
-	if (NS_FAILED(rv)) return rv;
-
-	if (!specialFileExists) {
-		rv = specialFile->Touch();
-	}
-
-	return rv;
-}
-
 NS_IMETHODIMP
 nsMsgAccountManager::UpgradePrefs()
 {
@@ -1481,27 +1456,6 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   if (!dirExists) {
     mailDir->CreateDir();
   }
-  
-  // create the files for the special folders.
-  // TODO:  use string bundles
-  // TODO:  should we even be doing this here?
-  rv = createSpecialFile(dir,"Inbox");
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = createSpecialFile(dir,"Sent");
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = createSpecialFile(dir,"Trash");
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = createSpecialFile(dir,"Drafts");
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = createSpecialFile(dir,"Templates");
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = createSpecialFile(dir,"Unsent Messages");
-  if (NS_FAILED(rv)) return rv;
   
   return NS_OK;
 }
