@@ -101,6 +101,15 @@ nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip,
 #ifdef XP_UNIX
   return NSIntPixelsToTwips(10, aPixToTwip); // XXX this is probably wrong
 #endif
+#ifdef XP_MAC
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_TEXTAREA == type) {
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.40f);
+  } else {
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.25f);
+  }
+#endif
 }
 
 nscoord 
@@ -127,6 +136,22 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
 #endif
 #ifdef XP_UNIX
   return NSIntPixelsToTwips(6, aPixToTwip);  // XXX this is probably wrong
+#endif
+#ifdef XP_MAC
+  nscoord padding;
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_TEXTAREA == type) {
+    padding = (nscoord)(40 * aCharWidth / 100);
+  } else {
+    padding = (nscoord)(95 * aCharWidth / 100);
+  }
+  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
+  if (padding > min) {
+    return padding;
+  } else {
+    return min;
+  }
 #endif
 }
 
