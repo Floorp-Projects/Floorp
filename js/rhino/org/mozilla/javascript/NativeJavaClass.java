@@ -19,7 +19,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *
+ * Norris Boyd
+ * Frank Mitchell
+ * Mike Shaver
+ * Kurt Westerfeld
+ * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
