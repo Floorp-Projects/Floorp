@@ -4091,12 +4091,9 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     cx->GetContainer(getter_AddRefs(container));
     NS_ENSURE_TRUE(container, NS_OK);
 
+    // get content root frame
     nsCOMPtr<nsIDOMWindow> domwindow(do_GetInterface(container));
     NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
-
-    rv = editSession->Init(domwindow);  // content root frame
-    if (NS_FAILED(rv))
-      return rv;
 
     rv = editSession->MakeWindowEditable(domwindow, "html", PR_FALSE);
     if (NS_FAILED(rv))
@@ -4168,9 +4165,13 @@ static struct MidasCommand gMidasCommandTable[] = {
   { "backcolor",     "cmd_backgroundColor", "", PR_FALSE },
   { "forecolor",     "cmd_fontColor",       "", PR_FALSE },
   { "fontname",      "cmd_fontFace",        "", PR_FALSE },
+  { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
+  { "increasefontsize", "cmd_increaseFont", "", PR_FALSE },
+  { "decreasefontsize", "cmd_decreaseFont", "", PR_FALSE },
+  { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
   { "inserthorizontalrule", "cmd_hline",    "", PR_TRUE },
-  { "hr",            "cmd_hline",           "", PR_TRUE },
-  { "createlink",    "cmd_link",            "", PR_TRUE },
+  { "createlink",    "cmd_insertLinkNoUI",  "", PR_FALSE },
+  { "insertimage",   "cmd_insertImageNoUI", "", PR_FALSE },
   { "justifyleft",   "cmd_align",       "left", PR_TRUE },
   { "justifyright",  "cmd_align",      "right", PR_TRUE },
   { "justifycenter", "cmd_align",     "center", PR_TRUE },
@@ -4183,9 +4184,8 @@ static struct MidasCommand gMidasCommandTable[] = {
   { "formatblock",   "cmd_paragraphState",  "", PR_FALSE },
   { "heading",       "cmd_paragraphState",  "", PR_FALSE },
 #if 0
-  { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
+// no editor support to remove alignments right now
   { "justifynone",   "cmd_align",           "", PR_TRUE },
-  { "insertimage",   "cmd_xxxxx",           "", PR_FALSE },
 
 // the following will need special review before being turned on
   { "saveas",        "cmd_saveAs",          "", PR_TRUE },
