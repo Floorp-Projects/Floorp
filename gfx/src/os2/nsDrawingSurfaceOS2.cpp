@@ -103,12 +103,16 @@ void nsDrawingSurfaceOS2::FlushFontCache()
 // get inclusive-inclusive rect
 void nsDrawingSurfaceOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
 {
+   const static nscoord kBottomLeftLimit = -8192;
+   const static nscoord kTopRightLimit   =  16384;
+
    PRUint32 ulHeight = GetHeight ();
 
-   rcl.xLeft = in.x;
-   rcl.xRight = in.x + in.width - 1;
-   rcl.yTop = ulHeight - in.y - 1;
-   rcl.yBottom = rcl.yTop - in.height + 1;
+   rcl.xLeft    = PR_MAX(kBottomLeftLimit, in.x);
+   rcl.xRight   = PR_MIN(in.x+in.width-1, kTopRightLimit);
+   rcl.yTop     = PR_MIN(ulHeight-in.y-1, kTopRightLimit);
+   rcl.yBottom  = PR_MAX(rcl.yTop-in.height+1, kBottomLeftLimit);
+   return;
 }
 
 void nsDrawingSurfaceOS2::PM2NS_ININ( const RECTL &in, nsRect &out)
