@@ -454,6 +454,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
 }
 
 
+static
 void DebugCheckChildSize(nsIFrame*            aChild, 
                          nsHTMLReflowMetrics& aMet, 
                          nsSize&              aAvailSize,
