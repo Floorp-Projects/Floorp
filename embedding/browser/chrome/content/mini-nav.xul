@@ -20,8 +20,9 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
-
 <?xml-stylesheet href="chrome://embedding/browser/skin/embedding.css" type="text/css"?> 
+
+<!-- TODO localise this chrome !!! -->
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -31,9 +32,22 @@ Contributor(s): ______________________________________. -->
   align="vertical"
   title="Embedding">
 
-<script language="javascript" src="chrome://global/content/strres.js"></script>
-<script language="javascript" src="chrome://embedding/browser/content/mini-nav.js"></script>
-    
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://embedding/browser/content/mini-nav.js"></script>
+
+  <!-- Context menu -->
+  <popupset>
+    <popup id="context"
+           oncreate="InitContextMenu(this)">
+      <menuitem id="context-back" value="Back" accesskey="" oncommand="BrowserBack()"/>
+      <menuitem id="context-forward" value="Forward" accesskey="" oncommand="BrowserForward()"/>
+      <menuitem id="context-stop" value="Stop" accesskey="" oncommand="BrowserStop()"/>
+      <menuitem id="context-reload" value="Reload" accesskey="" oncommand="BrowserReload()"/>
+    </popup>
+  </popupset>
+
+  <!-- Embedding apps probably don't need a toolbar, but it's useful
+       for embedding -->
   <toolbox>
     <toolbar id="nav-bar">
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
@@ -55,7 +69,7 @@ Contributor(s): ______________________________________. -->
   <box flex="1" >
     <box id="appcontent" flex="100%">
       <!-- this box is temporary, pending XBLified <browser> -->
-      <box id="browser" flex="1">
+      <box id="browser" context="context" flex="1">
         <!-- type attribute is used by frame construction to locate iframes
              intended to hold (html) content -->
         <browser context="context" type="content-primary" id="content"
