@@ -87,8 +87,13 @@ function onOK()
   if (!file)
     return false;
 
-  var isDir = file.isDirectory();
-  var isFile = file.isFile();
+  if (file.exists()) {
+    var isDir = file.isDirectory();
+    var isFile = file.isFile();
+  } else { /* we are saving a new file */
+    isDir = false;
+    isFile = false;
+  }
 
   switch(filePickerMode) {
   case nsIFilePicker.modeOpen:
@@ -110,6 +115,9 @@ function onOK()
         ret = nsIFilePicker.returnReplace;
       else
         ret = nsIFilePicker.returnCancel;
+      retvals.directory = file.parent.path;
+    } else if (!file.exists()) {
+      ret = nsIFilePicker.returnOK;
       retvals.directory = file.parent.path;
     }
     break;
