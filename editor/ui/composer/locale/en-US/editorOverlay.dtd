@@ -29,7 +29,7 @@
 <!ENTITY newBlankPage.accesskey "b" >
 <!ENTITY newMenu.label "New">
 <!ENTITY newMenu.accesskey "n">
-<!ENTITY openCmd.label "Open...">
+<!ENTITY openCmd.label "Open File...">
 <!ENTITY fileopen.accesskey "o">
 <!ENTITY fileopen.keybinding "o">
 <!ENTITY openremoteCmd.label "Open Web Location...">
