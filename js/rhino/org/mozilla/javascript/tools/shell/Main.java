@@ -69,45 +69,35 @@ public class Main {
         if (result != 0)
             System.exit(result);
     }
-
+    
     /**
-     *  Execute the given arguments, but don't exit at the end.
+     *  Execute the given arguments, but don't System.exit at the end.
      */
     public static int exec(String args[]) {
         Context cx = Context.enter();
+        // Create the top-level scope object.
+        scope = new ImporterTopLevel();
+        cx.initStandardObjects(scope);
+        globalState = Global.initTopLevelScope(cx, scope);
 
-        errorReporter = new ToolErrorReporter(false, getErr());
+        errorReporter = new ToolErrorReporter(false, globalState.getErr());
         cx.setErrorReporter(errorReporter);
-
-        // Create the "global" object where top-level variables will live.
-        global = new Global();
 
         args = processOptions(cx, args);
 
-        // Set up "arguments" in the global scope to contain the command
-        // line arguments after the name of the script to execute
+        // get the command line arguments after the name of the script,
+        // and define "arguments" array in the top-level object
         Object[] array = args;
         if (args.length > 0) {
             int length = args.length - 1;
             array = new Object[length];
             System.arraycopy(args, 1, array, 0, length);
         }
-        Scriptable argsObj = cx.newArray(global, array);
-        global.defineProperty("arguments", argsObj,
-                              ScriptableObject.DONTENUM);
+        Scriptable argsObj = cx.newArray(scope, array);
+        scope.defineProperty("arguments", argsObj,
+                             ScriptableObject.DONTENUM);
         
-        // Set up "environment" in the global scope to provide access to the
-        // System environment variables.
-        Environment.defineClass(global);
-        Environment environment = new Environment(global);
-        global.defineProperty("environment", environment,
-                              ScriptableObject.DONTENUM);
-        
-        global.history = (NativeArray) cx.newArray(global, 0);
-        global.defineProperty("history", global.history,
-                              ScriptableObject.DONTENUM);
-
-        if (global.processStdin)
+        if (processStdin)
             processSource(cx, args.length == 0 ? null : args[0]);
 
         cx.exit();
@@ -146,11 +136,11 @@ public class Main {
                 continue;
             }
             if (arg.equals("-e")) {
-                global.processStdin = false;
+                processStdin = false;
                 if (++i == args.length)
                     usage(arg);
                 Reader reader = new StringReader(args[i]);
-                evaluateReader(cx, global, reader, "<command>", 1);
+                evaluateReader(cx, scope, reader, "<command>", 1);
                 continue;
             }
             if (arg.equals("-w")) {
@@ -158,11 +148,11 @@ public class Main {
                 continue;
             }
             if (arg.equals("-f")) {
-                global.processStdin = false;
+                processStdin = false;
                 if (++i == args.length)
                     usage(arg);
                 if (args[i].equals("-"))
-                    global.processStdin = false;
+                    processStdin = false;
                 processSource(cx, args[i]);
                 continue;
             }
@@ -170,7 +160,7 @@ public class Main {
                 // XXX check for bad combinations with -opt
                 cx.setOptimizationLevel(-1);
                 cx.setGeneratingDebug(true);
-                invokeDebugger(cx, global);
+                invokeDebugger(cx, scope);
                 continue;
             }
             usage(arg);
@@ -199,14 +189,14 @@ public class Main {
             cx.setOptimizationLevel(-1);
             
             BufferedReader in = new BufferedReader
-                (new InputStreamReader(Main.getIn()));
+                (new InputStreamReader(globalState.getIn()));
             int lineno = 1;
             boolean hitEOF = false;
             while (!hitEOF) {
                 int startline = lineno;
                 if (filename == null)
-                    getErr().print("js> ");
-                getErr().flush();
+                    globalState.getErr().print("js> ");
+                globalState.getErr().flush();
                 String source = "";
                     
                 // Collect lines of source to compile.
@@ -216,7 +206,7 @@ public class Main {
                         newline = in.readLine();
                     }
                     catch (IOException ioe) {
-                        getErr().println(ioe.toString());
+                        globalState.getErr().println(ioe.toString());
                         break;
                     }
                     if (newline == null) {
@@ -225,10 +215,10 @@ public class Main {
                     }
                     if (newline.equals("#")) {
                         if (cx.getDebugger() == null) {
-                            getErr().println(
+                            globalState.getErr().println(
                                 "Can't invoke debugger: -debug not specified.");
                         } else {
-                            invokeDebugger(cx, global);
+                            invokeDebugger(cx, scope);
                         }
                         break;
                     }
@@ -238,11 +228,11 @@ public class Main {
                         break;
                 }
                 Reader reader = new StringReader(source);
-                Object result = evaluateReader(cx, global, reader, 
+                Object result = evaluateReader(cx, scope, reader, 
                                                "<stdin>", startline);
                 if (result != cx.getUndefinedValue()) {
                     try {
-                        getErr().println(cx.toString(result));
+                        globalState.getErr().println(cx.toString(result));
                     } catch (EcmaError ee) {
                         String msg = ToolErrorReporter.getMessage(
                             "msg.uncaughtJSException", ee.toString());
@@ -257,11 +247,11 @@ public class Main {
                         }
                     }
                 }
-                NativeArray h = global.history;
+                NativeArray h = globalState.history;
                 h.put((int)h.jsGet_length(), h, source);
             }
-            getErr().println();
-        } else processFile(cx, global, filename);
+            globalState.getErr().println();
+        } else processFile(cx, scope, filename);
         System.gc();
     }
     
@@ -298,7 +288,7 @@ public class Main {
                 exitCode = EXITCODE_FILE_NOT_FOUND;
                 return;
             } catch (IOException ioe) {
-                getErr().println(ioe.toString());
+                globalState.getErr().println(ioe.toString());
             }
             
             // Here we evalute the entire contents of the file as
@@ -316,7 +306,7 @@ public class Main {
             result = cx.evaluateReader(scope, in, sourceName, lineno, null);
         }
         catch (WrappedException we) {
-            getErr().println(we.getWrappedException().toString());
+            globalState.getErr().println(we.getWrappedException().toString());
             we.printStackTrace();
         }
         catch (EcmaError ee) {
@@ -347,60 +337,66 @@ public class Main {
                 jse.getMessage()));
         }
         catch (IOException ioe) {
-            getErr().println(ioe.toString());
+            globalState.getErr().println(ioe.toString());
         }
         finally {
             try {
                 in.close();
             }
             catch (IOException ioe) {
-                getErr().println(ioe.toString());
+                globalState.getErr().println(ioe.toString());
             }
         }
         return result;
     }
 
     private static void p(String s) {
-        getOut().println(s);
+        globalState.getOut().println(s);
     }
 
-    public static InputStream getIn() {
-        return inStream == null ? System.in : inStream;
-    }
-    
-    public static void setIn(InputStream _in) {
-        inStream = _in;
-    }
-
-    public static PrintStream getOut() {
-        return outStream == null ? System.out : outStream;
-    }
-    
-    public static void setOut(PrintStream _out) {
-        outStream = _out;
-    }
-
-    public static PrintStream getErr() { 
-        return errStream == null ? System.err : errStream;
-    }
-
-    public static void setErr(PrintStream _err) {
-        errStream = _err;
-    }
     
     private static void invokeDebugger(Context cx, Scriptable scope) {
+      /*
         if (debugShell == null)
             debugShell = new DebugShell(cx);
         debugShell.enterShell(cx, scope);
+      */
     }
     
+    public static ScriptableObject getScope() {
+        return scope;
+    }
+    
+    public static InputStream getIn() {
+        return Global.getInstance(scope).getIn();
+    }
+    
+    public static void setIn(InputStream in) {
+        Global.getInstance(scope).setIn(in);
+    }
+
+    public static PrintStream getOut() {
+        return Global.getInstance(scope).getOut();
+    }
+    
+    public static void setOut(PrintStream out) {
+        Global.getInstance(scope).setOut(out);
+    }
+
+    public static PrintStream getErr() { 
+        return Global.getInstance(scope).getErr();
+    }
+
+    public static void setErr(PrintStream err) {
+        Global.getInstance(scope).setErr(err);
+    }
+     
     static protected ToolErrorReporter errorReporter;
-    static protected Global global;
+    static protected ScriptableObject scope;
+    static protected Global globalState;
     static protected int exitCode = 0;
-    static public InputStream inStream;
-    static public PrintStream outStream;
-    static public PrintStream errStream;
     static private final int EXITCODE_RUNTIME_ERROR = 3;
     static private final int EXITCODE_FILE_NOT_FOUND = 4;
-    static private DebugShell debugShell;
+    //static private DebugShell debugShell;
+    static boolean processStdin = true;
 }

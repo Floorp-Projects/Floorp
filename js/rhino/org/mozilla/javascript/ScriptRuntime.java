@@ -41,6 +41,7 @@ package org.mozilla.javascript;
 
 import java.util.*;
 import java.lang.reflect.*;
+import org.mozilla.javascript.tools.shell.Global;
 
 /**
  * This is the class that implements the runtime.
@@ -1821,29 +1822,16 @@ public class ScriptRuntime {
         throws JavaScriptException
     {
         Context cx = Context.enter();
+        ScriptableObject global = new ImporterTopLevel();
+        cx.initStandardObjects(global);
+        Global.initTopLevelScope(cx, global);        
 
-        Scriptable global = cx.initStandardObjects(new ImporterTopLevel());
-
-        // Set up "arguments" in the global scope to contain the command
-        // line arguments after the name of the script to execute
-        Scriptable argsObj;
-        try {
-            argsObj = cx.newObject(global, "Array");
-        }
-        catch (PropertyException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (NotAFunctionException e) {
-            throw WrappedException.wrapException(e);
-        }
-        catch (JavaScriptException e) {
-            throw WrappedException.wrapException(e);
-        }
-        for (int i=0; i < args.length; i++) {
-            argsObj.put(i, argsObj, args[i]);
-        }
-        global.put("arguments", global, argsObj);
-
+        // get the command line arguments and define "arguments" 
+        // array in the top-level object
+        Scriptable argsObj = cx.newArray(global, args);
+        global.defineProperty("arguments", argsObj,
+                              ScriptableObject.DONTENUM);
+        
         try {
             Class cl = loadClassName(scriptClassName);
             Script script = (Script) cl.newInstance();
@@ -1910,7 +1898,9 @@ public class ScriptRuntime {
 
     public static Scriptable runScript(Script script) {
         Context cx = Context.enter();
-        Scriptable global = cx.initStandardObjects(new ImporterTopLevel());
+        ScriptableObject global = new ImporterTopLevel();
+        cx.initStandardObjects(global);
+        Global.initTopLevelScope(cx, global);        
         try {
             script.exec(cx, global);
         } catch (JavaScriptException e) {

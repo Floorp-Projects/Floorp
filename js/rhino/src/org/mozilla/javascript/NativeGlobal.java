@@ -64,10 +64,10 @@ public class NativeGlobal {
                            "unescape",
                            "isNaN",
                            "isFinite",
-						   "decodeURI",
-						   "decodeURIComponent",
-						   "encodeURI",
-						   "encodeURIComponent"
+                           "decodeURI",
+                           "decodeURIComponent",
+                           "encodeURI",
+                           "encodeURIComponent"
                          };
 
         // We can downcast here because Context.initStandardObjects

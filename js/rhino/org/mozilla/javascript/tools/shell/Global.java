@@ -50,51 +50,46 @@ import org.mozilla.javascript.tools.ToolErrorReporter;
  *
  * @author Norris Boyd
  */
-public class Global extends ImporterTopLevel {
+public class Global {
 
-    /**
-     * Return name of this class, the global object.
-     *
-     * This method must be implemented in all concrete classes
-     * extending ScriptableObject.
-     *
-     * @see org.mozilla.javascript.Scriptable#getClassName
-     */
-    public String getClassName() {
-        return "global";
-    }
-
-    /**
-     * Initialize new SharedGlobal object.
-     */
-    public Global() {
-        Context cx = Context.enter();
-        
-        // Initialize the standard objects (Object, Function, etc.)
-        // This must be done before scripts can be executed.
-        cx.initStandardObjects(this, false);
-		
+    public static Global initTopLevelScope(Context cx, ScriptableObject scope) 
+    {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn" };
         try {
-            defineFunctionProperties(names, Global.class,
-                                     ScriptableObject.DONTENUM);
+            scope.defineFunctionProperties(names, Global.class,
+                                           ScriptableObject.DONTENUM);
         } catch (PropertyException e) {
-            throw new Error(e.getMessage());
-        } finally {
-            Context.exit();
-        }   
+            throw new Error();  // shouldn't occur.
+        }
+        Global result = new Global();
+        scope.defineProperty(privateName, result, ScriptableObject.DONTENUM);
+        
+        // Set up "environment" in the global scope to provide access to the
+        // System environment variables.
+        Environment.defineClass(scope);
+        Environment environment = new Environment(scope);
+        scope.defineProperty("environment", environment,
+                             ScriptableObject.DONTENUM);
+        
+        result.history = (NativeArray) cx.newArray(scope, 0);
+        scope.defineProperty("history", result.history,
+                             ScriptableObject.DONTENUM);
+        return result;
     }
-
+    
     /**
      * Print a help message.
      *
      * This method is defined as a JavaScript function.
      */
-    public static void help(String s) {
-        Main.getOut().println(ToolErrorReporter.getMessage("msg.help"));
+    public static void help(Context cx, Scriptable thisObj,
+                            Object[] args, Function funObj) 
+    {
+        PrintStream out = getInstance(thisObj).getOut();
+        out.println(ToolErrorReporter.getMessage("msg.help"));
     }
 
     /**
@@ -109,19 +104,20 @@ public class Global extends ImporterTopLevel {
     public static Object print(Context cx, Scriptable thisObj,
                                Object[] args, Function funObj)
     {
+        PrintStream out = getInstance(thisObj).getOut();
         for (int i=0; i < args.length; i++) {
             if (i > 0)
-                Main.getOut().print(" ");
+                out.print(" ");
 
             // Convert the arbitrary JavaScript value into a string form.
             String s = Context.toString(args[i]);
 
-            Main.getOut().print(s);
+            out.print(s);
         }
-        Main.getOut().println();
+        out.println();
         return Context.getUndefinedValue();
     }
-
+    
     /**
      * Quit the shell.
      *
@@ -258,7 +254,7 @@ public class Global extends ImporterTopLevel {
      * js> a
      * 3
      */
-    public static Object spawn(Context cx, Scriptable thisObj, Object[] args, 
+    public static Object spawn(Context cx, Scriptable thisObj, Object[] args,
                                Function funObj)
     {
         Scriptable scope = funObj.getParentScope();
@@ -280,8 +276,43 @@ public class Global extends ImporterTopLevel {
         return thread;
     }
     
-    boolean processStdin = true;    
+    public InputStream getIn() {
+        return inStream == null ? System.in : inStream;
+    }
+    
+    public void setIn(InputStream in) {
+        inStream = in;
+    }
+
+    public PrintStream getOut() {
+        return outStream == null ? System.out : outStream;
+    }
+    
+    public void setOut(PrintStream out) {
+        outStream = out;
+    }
+
+    public PrintStream getErr() { 
+        return errStream == null ? System.err : errStream;
+    }
+
+    public void setErr(PrintStream err) {
+        errStream = err;
+    }
+        
+    static final String privateName = "org.mozilla.javascript.tools.shell.Global private";
+    
+    public static Global getInstance(Scriptable scope) {
+        Object v = scope.get(privateName, scope);
+        if (v instanceof Global)
+            return (Global) v;
+        return null;
+    }
+
     NativeArray history;
+    public InputStream inStream;
+    public PrintStream outStream;
+    public PrintStream errStream;
 }
 
 

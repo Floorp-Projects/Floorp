@@ -15,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
- * John Bandhauer
+ * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,38 +33,21 @@
  * file under either the NPL or the GPL.
  */
 
+// API class
+
 package org.mozilla.javascript;
 
 /**
- * This interface supports low-level error reporter hooks.
- * <p>
- * This interface can be implemented and used to hook calls to the
- * error reporter. org.mozilla.javascript.debug.IDebugManager uses this 
- * system and provides a higher level abstraction more appropriate 
- * as a debugger API.
- *
- * @see org.mozilla.javascript.Context#setErrorReporterHook
- * @see org.mozilla.javascript.debug.IDebugManager
- * @author John Bandhauer
+ * Embeddings that wish to 
+ * @see org.mozilla.javascript.Context#addContextListener
  */
+public interface ContextListener {
 
-public interface DeepErrorReporterHook extends ErrorReporter
-{
-    /**
-     * Change the current error reporter.
-     *
-     * @return the previous error reporter
-     * @see org.mozilla.javascript.ErrorReporter
-     * @see org.mozilla.javascript.Context#setErrorReporter
-     */
-    public ErrorReporter setErrorReporter(ErrorReporter reporter);
-
-    /**
-     * Get the current error reporter.
-     *
-     * @see org.mozilla.javascript.ErrorReporter
-     * @see org.mozilla.javascript.Context#getErrorReporter
-     */
-    public ErrorReporter getErrorReporter();
-}    
-
+    public void contextCreated(Context cx);
+    
+    public void contextEntered(Context cx);
+    
+    public void contextExited(Context cx);
+    
+    public void contextReleased(Context cx);
+}

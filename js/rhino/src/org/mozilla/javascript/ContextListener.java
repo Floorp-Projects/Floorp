@@ -15,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
- * John Bandhauer
+ * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -33,42 +33,21 @@
  * file under either the NPL or the GPL.
  */
 
+// API class
+
 package org.mozilla.javascript;
 
 /**
- * This interface supports low-level script load/unload debug hooks.
- * <p>
- * This interface can be implemented and used to hook script loading 
- * and unloading. org.mozilla.javascript.debug.IDebugManager uses this 
- * system and provides a higher level abstraction more appropriate 
- * as a debugger API.
- *
- * @see org.mozilla.javascript.Context#setScriptHook
- * @see org.mozilla.javascript.debug.IDebugManager
- * @author John Bandhauer
+ * Embeddings that wish to 
+ * @see org.mozilla.javascript.Context#addContextListener
  */
+public interface ContextListener {
 
-public interface DeepScriptHook
-{
-    /**
-     * Notification that a script is being loaded.
-     *
-     * @param cx current context
-     * @param obj script or function being loaded
-     */
-    public void loadingScript(Context cx, NativeFunction obj);
-
-    /**
-     * Notification that a script is being unloaded.
-     * <p>
-     * NOTE: this currently happens as part of the Java garbage 
-     * collection process; i.e. it is called by the finalize method
-     * of the script and is thus likely to be called on a system 
-     * thread. Also, this is thus not likely to be called if there are 
-     * any outstanding references to the script.
-     *
-     * @param cx context which originally loaded the script
-     * @param obj script or function being unloaded
-     */
-    public void unloadingScript(Context cx, NativeFunction obj);
+    public void contextCreated(Context cx);
+    
+    public void contextEntered(Context cx);
+    
+    public void contextExited(Context cx);
+    
+    public void contextReleased(Context cx);
 }

@@ -95,8 +95,7 @@ public final class Context {
      * @see org.mozilla.javascript.Context#enter
      */
     public Context() {
-        setLanguageVersion(VERSION_DEFAULT);
-        optimizationLevel = codegenClass != null ? 0 : -1;
+        init();
     }
     
     /**
@@ -107,8 +106,15 @@ public final class Context {
      * @see org.mozilla.javascript.SecuritySupport
      */
     public Context(SecuritySupport securitySupport) {
-        this();
         this.securitySupport = securitySupport;
+        init();
+    }
+    
+    private void init() {
+        setLanguageVersion(VERSION_DEFAULT);
+        optimizationLevel = codegenClass != null ? 0 : -1;
+        for (int i=0; contextListeners != null && i < contextListeners.size(); i++) 
+            ((ContextListener)contextListeners.elementAt(i)).contextCreated(this);
     }
         
     /**
@@ -160,6 +166,8 @@ public final class Context {
             synchronized (current) {
                 current.enterCount++;
             }
+            for (int i=0; contextListeners != null && i < contextListeners.size(); i++) 
+                ((ContextListener)contextListeners.elementAt(i)).contextEntered(current);
             return current;
         }
         if (cx != null) {
@@ -168,14 +176,18 @@ public final class Context {
                     cx.currentThread = t;
                     threadContexts.put(t, cx);
                     cx.enterCount++;
-                    return cx;
                 }
             }
+            for (int i=0; contextListeners != null && i < contextListeners.size(); i++)
+                ((ContextListener)contextListeners.elementAt(i)).contextEntered(cx);
+            return cx;
         }
         current = new Context();
         current.currentThread = t;
         threadContexts.put(t, current);
         current.enterCount = 1;
+        for (int i=0; contextListeners != null && i < contextListeners.size(); i++)
+            ((ContextListener)contextListeners.elementAt(i)).contextEntered(current);
         return current;
      }
         
@@ -194,12 +206,19 @@ public final class Context {
      */
     public static void exit() {
         Context cx = getCurrentContext();
+        boolean released = false;
         if (cx != null) {
             synchronized (cx) {
                 if (--cx.enterCount == 0) {
                     threadContexts.remove(cx.currentThread);
                     cx.currentThread = null;
+                    released = true;
                 }
+            }
+            for (int i=0; contextListeners != null && i < contextListeners.size(); i++) {
+                ((ContextListener)contextListeners.elementAt(i)).contextExited(cx);
+                if (released)
+                    ((ContextListener)contextListeners.elementAt(i)).contextReleased(cx);
             }
         }
     }
@@ -1302,6 +1321,28 @@ public final class Context {
         if (nameHelper != null)
             nameHelper.setClassOutput(classOutput);
     }
+    
+    /**
+     * Add a Context listener.
+     */
+    public static void addContextListener(ContextListener listener) {
+        if (contextListeners == null) {
+            contextListeners = new Vector();
+        }
+        contextListeners.addElement(listener);
+    }
+    
+    /**
+     * Remove a Context listener.
+     */
+    public static void removeContextListener(ContextListener listener) {
+        if (contextListeners == null)
+            return;
+        for (int i=0; i < contextListeners.size(); i++) {
+            if (contextListeners.elementAt(i).equals(listener))
+                contextListeners.removeElementAt(i);
+        }
+    }
         
     /**
      * Return true if a security domain is required on calls to
@@ -1836,6 +1877,7 @@ public final class Context {
     private int enterCount;
     private ListenerCollection listeners;
     private Hashtable hashtable;
+    private static Vector contextListeners;
 
     // For the interpreter to indicate line/source for error reports.
     int interpreterLine;
