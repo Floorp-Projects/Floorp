@@ -1370,12 +1370,14 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                                  nscoord aHardBorderSize,
                                  PRBool  aShouldIgnoreRounded)
 {
-  PRIntn    cnt;
-  nsMargin  border;
-  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
-  PRInt16       theRadius;
-  nsStyleCoord  borderRadius;
-  float         percent;
+PRIntn              cnt;
+nsMargin            border;
+const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+nsStyleCoord        bordStyleRadius[4];
+PRInt16             borderRadii[4],i;
+nsStyleCoord        tr,lr,rr,br;
+nsStyleCoord        borderRadius;
+float               percent;
 
   if (aHardBorderSize > 0) {
     border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
@@ -1388,28 +1390,39 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
     return;
   }
 
-    // get the radius for our border
-  aBorderStyle.mBorderRadius.GetTop(borderRadius);		// XXX-border-radius
-  theRadius = 0;
-  switch (borderRadius.GetUnit() ) {
+
+  // get the radius for our border
+  aBorderStyle.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
+  aBorderStyle.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
+  aBorderStyle.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
+  aBorderStyle.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+
+  for(i=0;i<4;i++) {
+    borderRadii[i] = 0;
+    switch ( bordStyleRadius[i].GetUnit()) {
     case eStyleUnit_Inherit:
       break;
     case eStyleUnit_Percent:
-      percent = borderRadius.GetPercentValue();
-      theRadius = (nscoord)(percent * aBorderArea.width);
+      percent = bordStyleRadius[i].GetPercentValue();
+      borderRadii[i] = (nscoord)(percent * aBorderArea.width);
       break;
     case eStyleUnit_Coord:
-      theRadius = borderRadius.GetCoordValue();
+      borderRadii[i] = bordStyleRadius[i].GetCoordValue();
       break;
     default:
       break;
+    }
   }
+
 
   // rounded version of the border
   if (!aShouldIgnoreRounded) {
-    if (theRadius > 0){
-      PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,theRadius,aGap);
-      return;
+    // check for any corner that is rounded
+    for(i=0;i<4;i++){
+      if(borderRadii[i] > 0){
+        PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,borderRadii,aGap);
+        return;
+      }
     }
   }
 
@@ -1864,10 +1877,13 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 nscoord aDX,
                                 nscoord aDY)
 {
-  PRInt16       theRadius;
-  nsStyleCoord  borderRadius;
-  PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
+//PRInt16       theRadius;
+//nsStyleCoord  borderRadius;
+PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
                                 (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+float         percent;
+nsStyleCoord  bordStyleRadius[4];
+PRInt16       borderRadii[4],i;
 
   if (0 < aColor.mBackgroundImage.Length()) {
     // Lookup the image
@@ -2189,25 +2205,38 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
     if (!transparentBG) {
-      // check to see if we have a radius
-      aSpacing.mBorderRadius.GetTop(borderRadius);	// XXX-border-radius
-      theRadius = 0;
-      switch (borderRadius.GetUnit() ) {
+
+
+    // get the radius for our border
+    aSpacing.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
+    aSpacing.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
+    aSpacing.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
+    aSpacing.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+
+    for(i=0;i<4;i++) {
+      borderRadii[i] = 0;
+      switch ( bordStyleRadius[i].GetUnit()) {
         case eStyleUnit_Inherit:
           break;
         case eStyleUnit_Percent:
+          percent = bordStyleRadius[i].GetPercentValue();
+          borderRadii[i] = (nscoord)(percent * aBorderArea.width);
           break;
         case eStyleUnit_Coord:
-          theRadius = borderRadius.GetCoordValue();
+          borderRadii[i] = bordStyleRadius[i].GetCoordValue();
           break;
         default:
           break;
       }
+    }
+
 
       // rounded version of the border
-      if (theRadius > 0){
-        PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aColor,aSpacing,aDX,aDY,theRadius);
-        return;
+      for(i=0;i<4;i++){
+        if (borderRadii[0] > 0){
+          PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aColor,aSpacing,aDX,aDY,borderRadii);
+          return;
+        }
       }
 
       aRenderingContext.SetColor(aColor.mBackgroundColor);
@@ -2249,10 +2278,6 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
   } 
 }
 
-#ifdef NOTNOW
-static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32 aStartIndex,PRInt32 curIndex,PRInt8 aSide,PRInt8 aCorner);
-#endif
-
 /** ---------------------------------------------------
  *  See documentation in nsCSSRendering.h
  *	@update 3/26/99 dwc
@@ -2267,7 +2292,7 @@ nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
                                 const nsStyleSpacing& aSpacing,
                                 nscoord aDX,
                                 nscoord aDY,
-                                PRInt16 aTheRadius)
+                                PRInt16 aTheRadius[4])
 {
 RoundedRect   outerPath;
 QBCurve       cr1,cr2,cr3,cr4;
@@ -2356,7 +2381,7 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
                                  const nsStyleSpacing& aBorderStyle,
                                  nsIStyleContext* aStyleContext,
                                  PRIntn aSkipSides,
-                                 PRInt16 aBorderRadius,
+                                 PRInt16 aBorderRadius[4],
                                  nsRect* aGap)
 {
 RoundedRect   outerPath;
@@ -2488,7 +2513,7 @@ nscolor   sideColor;
 nsPoint   polypath[MAXPOLYPATHSIZE];
 PRInt32   curIndex,c1Index,c2Index,junk;
 PRInt8    border_Style;
-PRInt16   r,g,b,thickness;
+PRInt16   thickness;
 
   // set the style information
   aBorderStyle.GetBorderColor(aSide,sideColor);
@@ -2551,20 +2576,17 @@ PRInt16   r,g,b,thickness;
         aRenderingContext.FillPolygon(polypath,curIndex);
 
         // anti-alias this
-        r = NS_GET_R(sideColor);
-        g = NS_GET_G(sideColor);
-        b = NS_GET_B(sideColor);
+        //r = NS_GET_R(sideColor);
+        //g = NS_GET_G(sideColor);
+        //b = NS_GET_B(sideColor);
 
-        r += (255-r)>>1;
-        g += (255-g)>>1;
-        b += (255-b)>>1;
+        //r += (255-r)>>1;
+        //g += (255-g)>>1;
+        //b += (255-b)>>1;
         
-        sideColor = NS_RGB(r,g,b);
+        //sideColor = NS_RGB(r,g,b);
 
-        aRenderingContext.SetColor(sideColor);
-        //AntiAliasPoly(aRenderingContext,polypath,0,c1Index,aSide,1);
-        //AntiAliasPoly(aRenderingContext,polypath,c1Index+1,c2Index,aSide,2);
-
+        //aRenderingContext.SetColor(sideColor);
        break;
       case NS_STYLE_BORDER_STYLE_DOUBLE:
         polypath[0].x = aPoints[0].x;
@@ -2628,59 +2650,6 @@ PRInt16   r,g,b,thickness;
   }
 }
 
-#ifdef NOTNOW
-/** ---------------------------------------------------
- *  AntiAlias the polygon
- *	@update 4/13/99 dwc
- */
-static void
-AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32 aStartIndex,PRInt32 aCurIndex,PRInt8 aSide,PRInt8 aCorner)
-{
-PRInt32 i;
-PRInt32 x0,y0,x1,y1,offsetx,offsety;
-
-  offsetx = offsety = 0;
-  switch (aSide) {
-    case NS_SIDE_TOP:
-      if( aCorner == 1) {
-        offsetx = 0;
-      }else{
-        offsetx = -10;
-      }  
-    break;
-    case NS_SIDE_LEFT:
-      if( aCorner == 1) {
-        offsetx = 0;
-      }else{
-        offsetx = 0;
-      }
-    break;
-    case NS_SIDE_RIGHT:
-      if( aCorner == 1) {
-        offsetx = -10;
-      }else{
-        offsetx = -10;
-      }
-    break;
-    case NS_SIDE_BOTTOM:
-      if( aCorner == 1) {
-        offsety = -10;
-      }else{
-        offsety = -10;
-      }
-    break;
-  } 
-
-  for(i=aStartIndex+1;i<aCurIndex;i++) {
-    x0 = aPoints[i-1].x+offsetx;
-    y0 = aPoints[i-1].y+offsety;
-    x1 = aPoints[i].x+offsetx;
-    y1 = aPoints[i].y+offsety;
-    aRenderingContext.DrawLine(x0,y0,x1,y1); 
-  }
-}
-#endif
-
 /** ---------------------------------------------------
  *  See documentation in nsCSSRendering.h
  *	@update 3/26/99 dwc
@@ -2689,29 +2658,74 @@ void
 RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder)
 {
 PRInt32   nLeft,nTop,nRight,nBottom;
+PRInt32   tLeft,bLeft,tRight,bRight,lTop,rTop,lBottom,rBottom;
 PRInt16   adjust=0;
 
   if(mDoRound)
-    adjust = mRoundness>>3;
+    adjust = mRoundness[0]>>3;
 
-  nLeft = mOuterLeft+aBorder.left;
-  nTop = mOuterTop+aBorder.top;
-  nRight = mOuterRight-aBorder.right;
-  nBottom = mOuterBottom-aBorder.bottom;
+  nLeft = mLeft + aBorder.left;
+  tLeft = mLeft + mRoundness[0];
+  bLeft = mLeft + mRoundness[3];
 
-  if(nLeft > nRight){
-    nLeft = nRight;
+  if(tLeft < nLeft){
+    tLeft = nLeft;
   }
 
-  if(nTop > nBottom){
-    nTop = nBottom;
+  if(bLeft < nLeft){
+    bLeft = nLeft;
   }
+
+  nRight = mRight - aBorder.right;
+  tRight = mRight - mRoundness[1];
+  bRight = mRight - mRoundness[2];
+
+  if(tRight > nRight){
+    tRight = nRight;
+  }
+
+  if(bRight > nRight){
+    bRight = nRight;
+  }
+
+  nTop = mTop + aBorder.top;
+  lTop = mTop + mRoundness[0];
+  rTop = mTop + mRoundness[1];
+
+  if(lTop < nTop){
+    lTop = nTop;
+  }
+
+  if(rTop < nTop){
+    rTop = nTop;
+  }
+
+  nBottom = mBottom - aBorder.bottom;
+  lBottom = mBottom - mRoundness[3];
+  rBottom = mBottom - mRoundness[2];
+
+  if(lBottom > nBottom){
+    lBottom = nBottom;
+  }
+
+  if(rBottom > nBottom){
+    rBottom = nBottom;
+  }
+
 
   // set the passed in curves to the rounded borders of the rectangle
-  aULCurve.SetPoints(nLeft,mInnerTop,nLeft+adjust,nTop+adjust,mInnerLeft,nTop);
-  aURCurve.SetPoints(mInnerRight,nTop,nRight-adjust,nTop+adjust,nRight,mInnerTop);
-  aLRCurve.SetPoints(nRight,mInnerBottom,nRight-adjust,nBottom-adjust,mInnerRight,nBottom);
-  aLLCurve.SetPoints(mInnerLeft,nBottom,nLeft+adjust,nBottom-adjust,nLeft,mInnerBottom);
+  aULCurve.SetPoints( nLeft,lTop,
+                      nLeft+adjust,nTop+adjust,
+                      tLeft,nTop);
+  aURCurve.SetPoints( tRight,nTop,
+                      nRight-adjust,nTop+adjust,
+                      nRight,rTop);
+  aLRCurve.SetPoints( nRight,rBottom,
+                      nRight-adjust,nBottom-adjust,
+                      bRight,nBottom);
+  aLLCurve.SetPoints( bLeft,nBottom,
+                      nLeft+adjust,nBottom-adjust,
+                      nLeft,lBottom);
 
 }
 
@@ -2720,45 +2734,43 @@ PRInt16   adjust=0;
  *	@update 4/13/99 dwc
  */
 void 
-RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius,PRInt16 aNumTwipPerPix)
+RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius[4],PRInt16 aNumTwipPerPix)
 {
-nscoord x,y,width,height,br;
-
+nscoord x,y,width,height;
+int     i;
 
   // convert this rect to pixel boundaries
   x = (aLeft/aNumTwipPerPix)*aNumTwipPerPix;
   y = (aTop/aNumTwipPerPix)*aNumTwipPerPix;
   width = (aWidth/aNumTwipPerPix)*aNumTwipPerPix;
   height = (aHeight/aNumTwipPerPix)*aNumTwipPerPix;
-  br = (aRadius/aNumTwipPerPix)*aNumTwipPerPix;
 
-  if( (aRadius) > (aWidth>>1) ){
-    mRoundness = (aWidth>>1); 
-  } else {
-    mRoundness = aRadius;
+
+  for(i=0;i<4;i++) {
+    if( (aRadius[i]) > (aWidth>>1) ){
+      mRoundness[i] = (aWidth>>1); 
+    } else {
+      mRoundness[i] = aRadius[i];
+    }
+
+    if( mRoundness[i] > (aHeight>>1) )
+      mRoundness[i] = aHeight>>1;
   }
-
-  if( mRoundness > (aHeight>>1) )
-    mRoundness = aHeight>>1;
 
 
   // are we drawing a circle
-  if( (aHeight==aWidth) && (mRoundness>=(aWidth>>1)) ) {
+  if( (aHeight==aWidth) && (mRoundness[0]>=(aWidth>>1)) ) {
     mDoRound = PR_TRUE;
-    mRoundness = aWidth>>1;
+    mRoundness[0] = aWidth>>1;
   } else {
     mDoRound = PR_FALSE;
   }
 
   // important coordinates that the path hits
-  mOuterLeft = x;
-  mOuterRight = x + width;
-  mOuterTop = y;
-  mOuterBottom = y+height;
-  mInnerLeft = mOuterLeft + mRoundness;
-  mInnerRight = mOuterRight - mRoundness;
-  mInnerTop = mOuterTop + mRoundness;
-  mInnerBottom = mOuterBottom - mRoundness;
+  mLeft = x;
+  mTop = y;
+  mRight = x+width;
+  mBottom = y+height;
 
 }
 
@@ -2773,13 +2785,21 @@ RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLC
 PRInt16 adjust=0;
 
   if(mDoRound)
-    adjust = mRoundness>>3;
+    adjust = mRoundness[0]>>3;
 
   // set the passed in curves to the rounded borders of the rectangle
-  aULCurve.SetPoints(mOuterLeft,mInnerTop,mOuterLeft+adjust,mOuterTop+adjust,mInnerLeft,mOuterTop);
-  aURCurve.SetPoints(mInnerRight,mOuterTop,mOuterRight-adjust,mOuterTop+adjust,mOuterRight,mInnerTop);
-  aLRCurve.SetPoints(mOuterRight,mInnerBottom,mOuterRight-adjust,mOuterBottom-adjust,mInnerRight,mOuterBottom);
-  aLLCurve.SetPoints(mInnerLeft,mOuterBottom,mOuterLeft+adjust,mOuterBottom-adjust,mOuterLeft,mInnerBottom);
+  aULCurve.SetPoints( mLeft,mTop + mRoundness[0],
+                      mLeft+adjust,mTop+adjust,
+                      mLeft+mRoundness[0],mTop);
+  aURCurve.SetPoints( mRight - mRoundness[1],mTop,
+                      mRight-adjust,mTop+adjust,
+                      mRight,mTop + mRoundness[1]);
+  aLRCurve.SetPoints( mRight,mBottom - mRoundness[2],
+                      mRight-adjust,mBottom-adjust,
+                      mRight - mRoundness[2],mBottom);
+  aLLCurve.SetPoints( mLeft + mRoundness[3],mBottom,
+                      mLeft+adjust,mBottom-adjust,
+                      mLeft,mBottom - mRoundness[3]);
 }
 
 /** ---------------------------------------------------
@@ -2879,49 +2899,12 @@ PRInt16		fx,fy,smag;
       (*aCurIndex)++;
     }else{
 		  // draw the curve 
-
-
       nsTransform2D *aTransform;
       aRenderingContext->GetCurrentTransform(aTransform);
 
-
-#ifdef DCDEBUG
-      nscoord x1,x2,x3,x4,y1,y2,y3,y4;
-      float fx1,fx2,fx3,fx4,fy1,fy2,fy3,fy4;
-      fx1 = x1 = curve1.mAnc1.x;
-      fx2 = x2 = curve1.mAnc2.x;
-      fx3 = x3 = curve2.mAnc1.x;
-      fx4 = x4 = curve2.mAnc2.x;
-      fy1 = y1 = curve1.mAnc1.y;
-      fy2 = y2 = curve1.mAnc2.y;
-      fy3 = y3 = curve2.mAnc1.y;
-      fy4 = y4 = curve2.mAnc2.y;
-	    aTransform->TransformCoord(&x1,&y1);
-	    aTransform->TransformCoord(&x2,&y2);
-	    aTransform->TransformCoord(&x3,&y3);
-	    aTransform->TransformCoord(&x4,&y4);
-	    aTransform->Transform(&fx1,&fy1);
-	    aTransform->Transform(&fx2,&fy2);
-	    aTransform->Transform(&fx3,&fy3);
-	    aTransform->Transform(&fx4,&fy4);
-#endif
       
       aRenderingContext->DrawLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
       aRenderingContext->DrawLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
-
-#ifdef DCDEBUG      
-      printf("L1 %d %d %d %d  X %f %f %f %f Rnd  %d %d %d %d Dif %d %d\n", 
-                  curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y,
-                  fx1,fy1,fx2,fy2,
-                  x1,y1,x2,y2,
-                  x2-x1,y2-y1);
-
-      printf("L2 %d %d %d %d  X %f %f %f %f Rnd  %d %d %d %d Dif %d %d\n", 
-                  curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y,
-                  fx2,fy2,fx4,fy4,
-                  x2,y2,x4,y4,
-                  x4-x2,y4-y2);
-#endif
     }
 	}
 }
@@ -2935,7 +2918,6 @@ QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
 {
 double  c1x,c1y,c2x,c2y;
 nsPoint	a1;
-
 
   c1x = (mAnc1.x+mCon.x)/2.0;
   c1y = (mAnc1.y+mCon.y)/2.0;
