@@ -463,6 +463,11 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 #endif
   } // end outer loop over lines of aInString
 
+#ifdef DEBUG_wrapping
+  printf("Final out string is now: '%s'\n",
+         NS_LossyConvertUCS2toASCII(aOutString).get());
+
+#endif
   return NS_OK;
 }
 

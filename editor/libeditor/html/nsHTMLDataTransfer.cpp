@@ -1604,6 +1604,9 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
   if (mWrapToWindow)
     return InsertText(aStringToInsert);
 
+  // The whole operation should be undoable in one transaction:
+  BeginTransaction();
+
   // We're going to loop over the string, collecting up a "hunk"
   // that's all the same type (quoted or not),
   // Whenever the quotedness changes (or we reach the string's end)
@@ -1631,7 +1634,7 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
   // Loop over lines:
   nsresult rv = NS_OK;
   nsAString::const_iterator lineStart (hunkStart);
-  while (lineStart != strEnd)
+  while (1)   // we will break from inside when we run out of newlines
   {
     // Search for the end of this line (dom newlines, see above):
     PRBool found = FindCharInReadable('\n', lineStart, strEnd);
@@ -1680,6 +1683,8 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
     curHunkIsQuoted = quoted;
     hunkStart = lineStart;
   }
+
+  EndTransaction();
 
   return rv;
 }
