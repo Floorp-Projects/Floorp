@@ -425,6 +425,14 @@ IFRAME {
 INPUT {
   vertical-align: bottom;
 }
+INPUT[type=radio] {
+  background-color:white;
+  color:black;
+  width:12px;
+  height:12px;
+  border-color:gray;
+  border-style:inset;
+}
 INPUT[type=checkbox] {
   width:11px;
   height:11px;
