@@ -1343,8 +1343,9 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	{
 		// walk up the content model to find the REAL
 		// parent container to determine if its a RDF_Seq
-		nsCOMPtr<nsIContent>		parent = do_QueryInterface(container);
-		while(PR_TRUE)
+		nsCOMPtr<nsIContent>		parent = do_QueryInterface(container, &rv);
+		nsCOMPtr<nsIContent>		aContent;
+		while(NS_SUCCEEDED(rv) && parent)
 		{
 			nsAutoString	uriStr;
 			if (NS_SUCCEEDED(rv = parent->GetAttribute(kNameSpaceID_None, kIdAtom, uriStr))
@@ -1367,10 +1368,9 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 				}
 				break;
 			}
-			if (NS_FAILED(rv = parent->GetParent(*getter_AddRefs(parent))))
-				break;
-			if (!parent)
-				break;
+			aContent = do_QueryInterface(parent, &rv);
+			if (NS_SUCCEEDED(rv))
+				rv = aContent->GetParent(*getter_AddRefs(parent));
 		}
 	}
 
