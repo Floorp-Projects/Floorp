@@ -339,14 +339,18 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   if (NS_FAILED(rv)) return rv;
 
   // Set the new content type on the channel...
-  channel->SetContentType(mContentType);
+  rv = channel->SetContentType(mContentType);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to set content type on channel!");
+  if (NS_FAILED(rv))
+    return rv;
 
   // Fire the OnStartRequest(...)
   rv = mNextListener->OnStartRequest(request, aCtxt);
 
   // Fire the first OnDataAvailable for the data that was read from the
   // stream into the sniffer buffer...
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && (mBufferLen > 0)) {
     PRUint32 len = 0;
     nsCOMPtr<nsIInputStream> in;
     nsCOMPtr<nsIOutputStream> out;
@@ -358,7 +362,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
     if (NS_SUCCEEDED(rv)) {
       rv = out->Write(mBuffer, mBufferLen, &len);
       if (NS_SUCCEEDED(rv)) {
-        if (len && len == mBufferLen) {
+        if (len == mBufferLen) {
           rv = mNextListener->OnDataAvailable(request, aCtxt, in, 0, len);
         } else {
           NS_ASSERTION(0, "Unable to write all the data into the pipe.");
