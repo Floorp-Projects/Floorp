@@ -370,8 +370,26 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
-NS_IMPL_STRING_ATTR(nsHTMLInputElement, Type, type)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetType(nsAWritableString& aValue)
+{
+  nsresult rv = mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type,
+                                    aValue);
+
+  if (rv == NS_CONTENT_ATTR_NOT_THERE)
+    aValue.Assign(NS_LITERAL_STRING("text"));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetType(const nsAReadableString& aValue)
+{
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, aValue,
+                             PR_TRUE);
+}
 
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsAWritableString& aValue)
