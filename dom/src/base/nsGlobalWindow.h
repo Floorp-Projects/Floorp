@@ -270,6 +270,8 @@ public:
 
 protected:
   void *mScriptObject;
+  nsIDOMMimeTypeArray* mMimeTypes;
+  nsIDOMPluginArray* mPlugins;
 };
 
 class nsIURL;

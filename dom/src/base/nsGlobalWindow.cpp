@@ -55,6 +55,9 @@
 #include "nsScreen.h"
 #include "nsHistory.h"
 
+#include "nsMimeTypeArray.h"
+#include "nsPluginArray.h"
+
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -2000,10 +2003,14 @@ NavigatorImpl::NavigatorImpl()
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
+  mMimeTypes = nsnull;
+  mPlugins = nsnull;
 }
 
 NavigatorImpl::~NavigatorImpl()
 {
+	NS_IF_RELEASE(mMimeTypes);
+	NS_IF_RELEASE(mPlugins);
 }
 
 NS_IMPL_ADDREF(NavigatorImpl)
@@ -2161,12 +2168,28 @@ NavigatorImpl::GetSecurityPolicy(nsString& aSecurityPolicy)
 NS_IMETHODIMP
 NavigatorImpl::GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes)
 {
+  if (nsnull == mMimeTypes) {
+    mMimeTypes = new MimeTypeArrayImpl(this);
+    NS_IF_ADDREF(mMimeTypes);
+  }
+
+  *aMimeTypes = mMimeTypes;
+  NS_IF_ADDREF(mMimeTypes);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetPlugins(nsIDOMPluginArray** aPlugins)
 {
+  if (nsnull == mPlugins) {
+    mPlugins = new PluginArrayImpl(this);
+    NS_IF_ADDREF(mPlugins);
+  }
+
+  *aPlugins = mPlugins;
+  NS_IF_ADDREF(mPlugins);
+
   return NS_OK;
 }
 
