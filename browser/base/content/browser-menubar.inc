@@ -1,4 +1,4 @@
-       <menubar id="main-menubar" statusbar="statusbar-display" 
+       <menubar id="main-menubar" statusbar="statusbar-display"
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
@@ -261,8 +261,7 @@
           </menu>
     
 #ifdef XP_MACOSX
-<!-- XXXnoririty localize! -->
-        <menu id="windowMenu" label="Window"
+        <menu id="windowMenu" label="&windowMenu.label;"
             datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
             onpopupshown="checkFocusedWindow();">
             <template>
