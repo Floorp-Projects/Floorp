@@ -120,7 +120,6 @@ static PRBool sDidShutdown = PR_FALSE;
 
 static PRInt32 sContextCount = 0;
 
-static nsIScriptSecurityManager *sSecurityManager = nsnull;
 
 void JS_DLL_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
@@ -437,6 +436,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
 nsJSContext::~nsJSContext()
 {
+  mSecurityManager = nsnull; // Force release
+
   // Cope with JS_NewContext failure in ctor (XXXbe move NewContext to Init?)
   if (!mContext)
     return;
@@ -468,12 +469,9 @@ nsJSContext::~nsJSContext()
 
   if (!sContextCount && sDidShutdown) {
     // The last context is being deleted, and we're already in the
-    // process of shutting down, release the JS runtime service, and
-    // the security manager.
+    // process of shutting down, release the JS runtime service.
 
     NS_IF_RELEASE(sRuntimeService);
-
-    NS_IF_RELEASE(sSecurityManager);
   }
 }
 
@@ -932,35 +930,25 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                  const nsAString& aBody,
                                  PRBool aShared, void** aHandler)
 {
-  if (!sSecurityManager) {
-    NS_ERROR("Huh, we need a script security manager to compile "
-             "an event handler!");
-
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  JSObject *target = (JSObject*)aTarget;
-
   JSPrincipals *jsprin = nsnull;
 
-  if (target) {
-    // Get the principal of the event target (the object principal),
-    // don't get the principal of the global object in this context
-    // since that opens up security exploits with delayed event
-    // handler compilation on stale DOM objects (objects that live in
-    // a document that has already been unloaded).
-    nsCOMPtr<nsIPrincipal> prin;
-    nsresult rv = sSecurityManager->GetObjectPrincipal(mContext, target,
-                                                       getter_AddRefs(prin));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    prin->GetJSPrincipals(&jsprin);
-    NS_ENSURE_TRUE(jsprin, NS_ERROR_NOT_AVAILABLE);
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  GetGlobalObject(getter_AddRefs(global));
+  if (global) {
+    // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
+    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
+    if (globalData) {
+      nsCOMPtr<nsIPrincipal> prin;
+      if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
+        return NS_ERROR_FAILURE;
+      prin->GetJSPrincipals(&jsprin);
+    }
   }
 
   char charName[64];
   AtomToEventHandlerName(aName, charName, sizeof charName);
 
+  JSObject *target = (JSObject*)aTarget;
   JSFunction* fun =
       ::JS_CompileUCFunctionForPrincipals(mContext, target, jsprin,
                                           charName, 1, gEventArgv,
@@ -969,12 +957,10 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                           //XXXbe filename, lineno:
                                           nsnull, 0);
 
-  if (jsprin) {
+  if (jsprin)
     JSPRINCIPALS_DROP(mContext, jsprin);
-  }
-  if (!fun) {
+  if (!fun)
     return NS_ERROR_FAILURE;
-  }
 
   JSObject *handler = ::JS_GetFunctionObject(fun);
   if (aHandler)
@@ -1536,12 +1522,14 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
 NS_IMETHODIMP
 nsJSContext::GetSecurityManager(nsIScriptSecurityManager **aInstancePtr)
 {
-  *aInstancePtr = sSecurityManager;
+  if (!mSecurityManager) {
+    nsresult rv = NS_OK;
 
-  if (!sSecurityManager) {
-    return NS_ERROR_NOT_AVAILABLE;
+    mSecurityManager = do_GetService(kScriptSecurityManagerContractID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  *aInstancePtr = mSecurityManager;
   NS_ADDREF(*aInstancePtr);
 
   return NS_OK;
@@ -1744,10 +1732,6 @@ nsresult nsJSEnvironment::Init()
   }
 #endif /* OJI */
 
-  rv = nsServiceManager::GetService(kScriptSecurityManagerContractID,
-                                    NS_GET_IID(nsIScriptSecurityManager),
-                                    (nsISupports**)&sSecurityManager);
-
   isInitialized = NS_SUCCEEDED(rv);
 
   return rv;
@@ -1770,10 +1754,9 @@ void nsJSEnvironment::ShutDown()
 
   if (!sContextCount) {
     // We're being shutdown, and there are no more contexts
-    // alive, release the JS runtime service and the security manager.
+    // alive, release the JS runtime service.
 
     NS_IF_RELEASE(sRuntimeService);
-    NS_IF_RELEASE(sSecurityManager);
   }
 
   sDidShutdown = PR_TRUE;
