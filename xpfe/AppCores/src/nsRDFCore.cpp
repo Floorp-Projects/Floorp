@@ -18,6 +18,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsRDFCore.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -38,6 +39,7 @@
 #include "rdf.h"
 #include "nsIXULSortService.h"
 #include "nsIBookmarkDataSource.h"
+#include "nsIRDFService.h"
 
 
 // Globals
@@ -53,9 +55,7 @@ static NS_DEFINE_CID(kBrowserWindowCID,          NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
 
-static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
-static NS_DEFINE_CID(kIRDFBookmarkDataSourceIID, NS_IRDFBOOKMARKDATASOURCE_IID);
-
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 
 /////////////////////////////////////////////////////////////////////////
 // nsRDFCore
@@ -193,24 +193,30 @@ nsRDFCore::AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle)
         printf("----------------------------\n");
 #endif
 
-	nsIRDFBookmarkDataSource	*RDFBookmarkDataSource = nsnull;
-
-	nsresult rv = nsServiceManager::GetService(kRDFBookmarkDataSourceCID,
-		kIRDFBookmarkDataSourceIID, (nsISupports**) &RDFBookmarkDataSource);
+        nsIRDFService* rdf;
+	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   nsIRDFService::GetIID(),
+                                                   (nsISupports**) &rdf);
 	if (NS_SUCCEEDED(rv))
 	{
-		if (nsnull != RDFBookmarkDataSource)
+                nsCOMPtr<nsIRDFDataSource> ds;
+                rv = rdf->GetDataSource("rdf:bookmarks", getter_AddRefs(ds));
+
+                nsCOMPtr<nsIRDFBookmarkDataSource> RDFBookmarkDataSource
+                    = do_QueryInterface(ds);
+
+		if (RDFBookmarkDataSource)
 		{
 			char *url = aUrl.ToNewCString();
 			char *optionalTitle = aOptionalTitle.ToNewCString();
 			rv = RDFBookmarkDataSource->AddBookmark(url, optionalTitle);
 			if (url)		delete []url;
 			if (optionalTitle)	delete []optionalTitle;
-
-			nsServiceManager::ReleaseService(kRDFBookmarkDataSourceCID,
-							RDFBookmarkDataSource);
 		}
 	}
+
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+
         return(rv);
 }
 
@@ -231,13 +237,20 @@ nsRDFCore::FindBookmarkShortcut(const nsString& aUserInput, nsString & shortcutU
         printf("----------------------------\n");
 #endif
 
-	nsIRDFBookmarkDataSource	*RDFBookmarkDataSource = nsnull;
+        nsIRDFService* rdf;
+	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   nsIRDFService::GetIID(),
+                                                   (nsISupports**) &rdf);
 
-	nsresult rv = nsServiceManager::GetService(kRDFBookmarkDataSourceCID,
-		kIRDFBookmarkDataSourceIID, (nsISupports**) &RDFBookmarkDataSource);
 	if (NS_SUCCEEDED(rv))
 	{
-		if (nsnull != RDFBookmarkDataSource)
+                nsCOMPtr<nsIRDFDataSource> ds;
+                rv = rdf->GetDataSource("rdf:bookmarks", getter_AddRefs(ds));
+
+                nsCOMPtr<nsIRDFBookmarkDataSource> RDFBookmarkDataSource
+                    = do_QueryInterface(ds);
+
+		if (RDFBookmarkDataSource)
 		{
 			char *userInput = aUserInput.ToNewCString();
 			char *cShortcutURL = nsnull;
@@ -247,10 +260,11 @@ nsRDFCore::FindBookmarkShortcut(const nsString& aUserInput, nsString & shortcutU
 				shortcutURL = cShortcutURL;
 			}
 			if (userInput)		delete []userInput;
-			nsServiceManager::ReleaseService(kRDFBookmarkDataSourceCID,
-							RDFBookmarkDataSource);
 		}
 	}
+
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+
 	if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
 	{
 		shortcutURL = "";
