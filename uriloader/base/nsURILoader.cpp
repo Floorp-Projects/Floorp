@@ -106,8 +106,6 @@ protected:
     // and it will return TRUE.
     PRBool ProcessCanceledCase(nsIChannel * aChannel);
 
-    nsresult InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindowInternal * aDomWindow);
-
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
@@ -371,8 +369,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       // the listener is doing all the work from here...we are done!!!
       if (bAbortProcess) return rv;
 
-      // BEFORE we fail and bring up the unknown content handler dialog...
-      // try to detect if there is a helper application we an use instead...
+      // try to detect if there is a helper application we an use...
       if (/* mCommand == nsIURILoader::viewUserClick && */ !contentStreamListener)
       {
         nsCOMPtr<nsIURI> uri;
@@ -389,12 +386,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
         rv = NS_ERROR_FAILURE; // this will cause us to bring up the unknown content handler dialog.
       }
 
-      if (NS_FAILED(rv))
-      {
-        nsCOMPtr<nsIDOMWindowInternal> domWindow (do_GetInterface(originalWindowContext));
-        return InvokeUnknownContentHandler(aChannel, contentType, domWindow);
-      }
-
       // okay, all registered listeners have had a chance to handle this content...
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
@@ -403,17 +394,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     } 
   }
   return rv;
-}
-
-nsresult nsDocumentOpenInfo::InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindowInternal * aDomWindow)
-{
-  NS_ENSURE_ARG(aChannel);
-  NS_ENSURE_ARG(aDomWindow);
-
-  nsCOMPtr<nsIUnknownContentTypeHandler> handler (do_GetService(NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID));
-  NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
-
-  return handler->HandleUnknownContentType( aChannel, aContentType, aDomWindow );
 }
 
 nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * aSrcContentType, const char * aOutContentType,
