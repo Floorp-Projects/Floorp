@@ -890,7 +890,7 @@ run::
 JAR_MANIFEST = manifest.jm
 !if exist($(JAR_MANIFEST))
 
-install:: 
+xinstall:: 
         @echo +++ make: packaging jars from $(JAR_MANIFEST)
         $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
