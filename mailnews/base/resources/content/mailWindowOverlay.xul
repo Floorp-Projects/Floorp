@@ -63,7 +63,6 @@ Rights Reserved.
 
     <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
     <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
-    <command id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" disabled="true" />
     <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
     <command id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
     <command id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
@@ -810,7 +809,7 @@ Rights Reserved.
 
       <menu label="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
         <menupopup>
-           <menuitem label="&workOfflineCmd.label;" accesskey="&workOfflineCmd.accesskey;"  observes="cmd_toggleWorkOffline"/>
+           <menuitem observes="Communicator:WorkMode"/>
 		   <menuseparator/>
 		   <menuitem label="&synchronizeOfflineCmd.label;"  accesskey="&synchronizeOfflineCmd.accesskey;" observes="cmd_synchronizeOffline"/>
 		   <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;"    observes="cmd_settingsOffline"/>
@@ -1296,7 +1295,7 @@ Rights Reserved.
     <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
   </box>
   <box insertafter="totalMessageCount">
-    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
+    <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-icononly"/> 
     <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
 	  <resizer class="window-diagonal"/>
   </box>

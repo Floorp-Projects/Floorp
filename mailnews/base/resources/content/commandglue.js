@@ -827,14 +827,39 @@ function Redo()
     messenger.Redo(msgWindow);
 }
 
-function MsgToggleWorkOffline()
-{
-  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}", "nsIIOService");
-  var broadcaster = document.getElementById("cmd_toggleWorkOffline");
+var mailOfflineObserver = {
+  Observe: function(subject, topic, state) {
+    // sanity checks
+    if (topic != "network:offline-status-changed") return;
+    MailOfflineStateChanged(state == "offline");
+  }
+}
 
-  // this is just code for my testing purposes, and doesn't have the proper UI, as in the offline spec.
-  // we could use the account manager, or add a new service, the offline manager.
-  // what the heck, might as well bite the bullet and add a new service.
+function AddMailOfflineObserver() 
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService); 
+  observerService.AddObserver(mailOfflineObserver, "network:offline-status-changed");
+}
+
+function RemoveMailOfflineObserver()
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService); 
+  observerService.RemoveObserver(mailOfflineObserver,"network:offline-status-changed");
+}
+
+function MailOfflineStateChanged(goingOffline)
+{
+  // tweak any mail UI here that needs to change when we go offline or come back online
+}
+
+// return false if you want to prevent the offline state change
+function MailCheckBeforeOfflineChange()
+{
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+
+  var goingOnline = ioService.offline;
+
   offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
 
   var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
@@ -850,122 +875,58 @@ function MsgToggleWorkOffline()
   // dump("prefSendUnsentMessages" + prefSendUnsentMessages + "\n");
   // dump("prefDownloadMessages" + prefDownloadMessages + "\n");
 
-	if(ioService.offline && broadcaster)
-	{
-		// going online.
-		switch(prefSendUnsentMessages)
-		{	
-			case 0:
-			    window.openDialog("chrome://messenger/content/sendMsgs.xul", "sendUnsentMessages", 
-							      "centerscreen,chrome,modal,titlebar,resizable=no", args);
-			    if(args.result == 1) { 
-				    ioService.offline = !ioService.offline;
-				    broadcaster.removeAttribute("offline");
-				    broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-				    broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
-				    FillInTooltip(broadcaster);
-				    // void goOnline (in boolean sendUnsentMessages, in boolean playbackOfflineImapOperations, in nsIMsgWindow aMsgWindow); 
-    offlineManager.goOnline(true, true, msgWindow);
-				    // dump("MsgToggleWorkOffline() : 1");
-			    }
-			    else if(args.result == 2) { 
-				    ioService.offline = !ioService.offline;
-				    broadcaster.removeAttribute("offline");
-				    broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-				    broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
-				    FillInTooltip(broadcaster);
-				    offlineManager.goOnline(false, true, msgWindow);
-				    // dump("MsgToggleWorkOffline() : 2");
-			    }
-			    else if(args.result == 3) { 
-				    // dump("MsgToggleWorkOffline() : 3");
-				    return;
-			    }
-			    break;
-			case 1:
-				ioService.offline = !ioService.offline;
-				broadcaster.removeAttribute("offline");
-				broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-				broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
-				FillInTooltip(broadcaster);
-				offlineManager.goOnline(true, true, msgWindow);
-				// dump("MsgToggleWorkOffline() : 4");
-				break;
-			case 2:
-				ioService.offline = !ioService.offline;
-				broadcaster.removeAttribute("offline");
-				broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-				broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
-				FillInTooltip(broadcaster);
-				offlineManager.goOnline(false, true, msgWindow);
-				// dump("MsgToggleWorkOffline() : 5");
-				break;
-		}
+  if(goingOnline) {
+    switch(prefSendUnsentMessages) {	
+      case 0:
+	window.openDialog("chrome://messenger/content/sendMsgs.xul", "sendUnsentMessages", 
+		"centerscreen,chrome,modal,titlebar,resizable=no", args);
+	if(args.result == 1) { 
+          offlineManager.goOnline(true, true, msgWindow);
 	}
-	else if(broadcaster)
-	{
-		// going offline
-		switch(prefDownloadMessages)
-		{	
-		    case 0:
-				window.openDialog("chrome://messenger/content/downloadMsgs.xul", "downloadMessages", 
-								  "centerscreen,chrome,modal,titlebar,resizable=no", args);
-				if(args.result == 1) { 
-					ioService.offline = !ioService.offline;
-					broadcaster.setAttribute("offline", "true");
-					broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-					broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
-					FillInTooltip(broadcaster);
-
-					// download news, download mail, send unsent messages, go offline when done, msg window
-					offlineManager.synchronizeForOffline(false, true, true, true, msgWindow);
-					// dump("MsgToggleWorkOffline() : 6");
-
-				}
-				else if(args.result == 2) { 
-					ioService.offline = !ioService.offline;
-					broadcaster.setAttribute("offline", "true");
-					broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-					broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
-					FillInTooltip(broadcaster);
-
-					// download news, download mail, send unsent messages, go offline when done, msg window
-					offlineManager.synchronizeForOffline(false, false, true, true, msgWindow);
-					// dump("MsgToggleWorkOffline() : 7");
-
-				}
-				else if(args.result == 3) { 
-					
-					return; 
-				}
-				break;
-		    case 1:
-				ioService.offline = !ioService.offline;
-				broadcaster.setAttribute("offline", "true");
-				broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-				broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
-				FillInTooltip(broadcaster);
-
-				// download news, download mail, send unsent messages, go offline when done, msg window
-				offlineManager.synchronizeForOffline(false, true, true, true, msgWindow);
-				// dump("MsgToggleWorkOffline() : 8");
-
-				break;
-		    case 2:
-				ioService.offline = !ioService.offline;
-				broadcaster.setAttribute("offline", "true");
-				broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-				broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
-				FillInTooltip(broadcaster);
-
-				// download news, download mail, send unsent messages, go offline when done, msg window
-				offlineManager.synchronizeForOffline(false, false, true, true, msgWindow);
-				// dump("MsgToggleWorkOffline() : 9");
-				break;
-		}
+	else if(args.result == 2) { 
+	  offlineManager.goOnline(false, true, msgWindow);
 	}
+	else if(args.result == 3) { 
+	  return false;
+	}
+	break;
+      case 1:
+        offlineManager.goOnline(true, true, msgWindow);
+	break;
+      case 2:
+        offlineManager.goOnline(false, true, msgWindow);
+	break;
+    }
   }
-
+  else {
+    // going offline
+     switch(prefDownloadMessages) {	
+       case 0:
+	 window.openDialog("chrome://messenger/content/downloadMsgs.xul", "downloadMessages", 
+		"centerscreen,chrome,modal,titlebar,resizable=no", args);
+	 if(args.result == 1) { 
+	   // download news, download mail, send unsent messages, go offline when done, msg window
+	   offlineManager.synchronizeForOffline(false, true, true, true, msgWindow);
+	 }
+	 else if(args.result == 2) { 
+	   // download news, download mail, send unsent messages, go offline when done, msg window
+	   offlineManager.synchronizeForOffline(false, false, true, true, msgWindow);
+	 }
+	 else if(args.result == 3) { 
+	   return false;
+         }
+	 break;
+       case 1:
+         // download news, download mail, send unsent messages, go offline when done, msg window
+	 offlineManager.synchronizeForOffline(false, true, true, true, msgWindow);
+	 break;
+       case 2:
+         // download news, download mail, send unsent messages, go offline when done, msg window
+	 offlineManager.synchronizeForOffline(false, false, true, true, msgWindow);
+	 break;
+       }
+   }
+}
 
 function MsgSettingsOffline()
 {

@@ -143,6 +143,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
 function OnLoadMessageWindow()
 {
 	HideMenus();
+  	AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
 	verifyAccounts();
@@ -439,7 +440,6 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
       case "button_file":
 			case "cmd_file":
-      case "cmd_toggleWorkOffline":
       case "cmd_synchronizeOffline":
 			case "cmd_downloadFlagged":
 			case "cmd_downloadSelected":
@@ -516,7 +516,6 @@ var MessageWindowController =
 				return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
 				return IsGetNextNMessagesEnabled();
-      case "cmd_toggleWorkOffline":
 			case "cmd_synchronizeOffline":
 			case "cmd_downloadFlagged":
 			case "cmd_downloadSelected":
@@ -631,9 +630,6 @@ var MessageWindowController =
         return;
       case "cmd_downloadSelected":
         MsgDownloadSelected();
-        return;
-      case "cmd_toggleWorkOffline":
-        MsgToggleWorkOffline();
         return;
       case "cmd_synchronizeOffline":
         MsgSynchronizeOffline();

@@ -28,6 +28,9 @@ var abPreferMailFormat = Components.interfaces.nsIAbPreferMailFormat;
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var accountManager = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
 
+var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+
 //var mailSessionContractID   = "@mozilla.org/messenger/services/session;1";
 //var mailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
 
@@ -38,9 +41,6 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 
 var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
 promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-
-var ioService = Components.classesByID["{9ac9e770-18bc-11d3-9337-00104ba0fd40}"].getService();
-ioService = ioService.QueryInterface(Components.interfaces.nsIIOService);
 
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
@@ -389,7 +389,7 @@ var defaultController =
   },
 
   doCommand: function(command)
-  {
+  { 
     switch (command)
     {
       //File Menu
@@ -552,13 +552,35 @@ function CommandUpdate_MsgCompose()
   } catch(e) {}
 }
 
-function UpdateOfflineState()
+var messageComposeOfflineObserver = {
+  Observe: function(subject, topic, state) {
+    // sanity checks
+    if (topic != "network:offline-status-changed") return;
+    MessageComposeOfflineStateChanged(state == "offline");
+  }
+}
+
+function AddMessageComposeOfflineObserver()
 {
-  //dump("UpdateOfflineState\n");
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.AddObserver(messageComposeOfflineObserver, "network:offline-status-changed");
+  
+  // set the initial state of the send button
+  MessageComposeOfflineStateChanged(ioService.offline);
+}
+
+function RemoveMessageComposeOfflineObserver()
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.RemoveObserver(messageComposeOfflineObserver,"network:offline-status-changed");
+}
+
+function MessageComposeOfflineStateChanged(goingOffline)
+{
   try {
     var sendButton = document.getElementById("button-send");
 
-    if (ioService && ioService.offline)
+    if (goingOffline)
     {
       sendButton.label = sendButton.getAttribute('later_label');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('later_tooltiptext'));
@@ -885,6 +907,8 @@ function WizCallback(state)
 
 function ComposeLoad()
 {
+  AddMessageComposeOfflineObserver();
+
   if (msgComposeService)
     msgComposeService.TimeStamp("Start Initializing the compose window (ComposeLoad)", false);
   gComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
@@ -930,6 +954,7 @@ function ComposeLoad()
 function ComposeUnload()
 {
 	dump("\nComposeUnload from XUL\n");
+	RemoveMessageComposeOfflineObserver();
 	msgCompose.UnregisterStateListener(stateListener);
 }
 

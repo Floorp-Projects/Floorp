@@ -243,7 +243,6 @@ var DefaultController =
       case "cmd_downloadFlagged":
       case "cmd_downloadSelected":
 	  case "cmd_settingsOffline":
-      case "cmd_toggleWorkOffline":
       case "cmd_synchronizeOffline":
       case "cmd_close":
       case "cmd_selectThread":
@@ -388,7 +387,6 @@ var DefaultController =
       case "cmd_setFolderCharset":
         return IsFolderCharsetEnabled();
       case "cmd_close":
-      case "cmd_toggleWorkOffline":
                 return true;
             case "cmd_downloadFlagged":
 				return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
@@ -569,9 +567,6 @@ var DefaultController =
                 break;
             case "cmd_downloadSelected":
                 MsgDownloadSelected();
-                break;
-      case "cmd_toggleWorkOffline":
-        MsgToggleWorkOffline();
                 break;
       case "cmd_synchronizeOffline":
         MsgSynchronizeOffline();

@@ -64,6 +64,8 @@ var gIsEditableMsgFolder = false;
 
 function OnMailWindowUnload()
 {
+  RemoveMailOfflineObserver();
+
   var dbview = GetDBView();
   if (dbview) {
     dbview.close(); 
@@ -158,8 +160,6 @@ function CreateMailWindowGlobals()
   messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
   gPaneConfig = pref.GetIntPref("mail.pane_config");
-
-  setOfflineStatus();
 }
 
 function InitMsgWindow()

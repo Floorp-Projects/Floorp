@@ -263,6 +263,7 @@ function OnLoadMessenger()
       beforeLoadMessenger = new Date();
   }
 
+  AddMailOfflineObserver();
   CreateMailWindowGlobals();
   Create3PaneGlobals();
   verifyAccounts();
@@ -345,16 +346,12 @@ function OnLoadMessenger()
 
 function OnUnloadMessenger()
 {
-	dump("\nOnUnload from XUL\nClean up ...\n");
-	
-	OnMailWindowUnload();
+  OnMailWindowUnload();
 }
-
 
 function Create3PaneGlobals()
 {
 }
-
 
 function PerformExpandForAllOpenServers(tree)
 {

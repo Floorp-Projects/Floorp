@@ -66,8 +66,6 @@ Rights Reserved.
 <!ENTITY importCmd.accesskey			"i">  
 <!ENTITY offlineMenu.label				"Offline"> 
 <!ENTITY offlineMenu.accesskey    "l">
-<!ENTITY workOfflineCmd.label			"Work Offline">  
-<!ENTITY workOfflineCmd.accesskey    "w">
 <!ENTITY synchronizeOfflineCmd.label  "Download/Sync Now...">  
 <!ENTITY synchronizeOfflineCmd.accesskey "s">
 <!ENTITY settingsOfflineCmd.label  "Offline Settings">  
