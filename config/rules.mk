@@ -306,7 +306,6 @@ endif
 endif
 
 ifneq ($(XPIDLSRCS),)
-MAKE_DIRS		+= $(XPIDL_GEN_DIR)
 GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 endif
 
@@ -1095,14 +1094,14 @@ export:: $(XPIDLSRCS) $(DIST)/idl
 	$(INSTALL) $(IFLAGS1) $^
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
-# warn against overriding existing .h file.  (Added to MAKE_DIRS above.)
-$(XPIDL_GEN_DIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
+# warn against overriding existing .h file. 
+$(XPIDL_GEN_DIR)/.done:
+	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR)/.done; rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); touch $@ else true; fi
 
 # don't depend on $(XPIDL_GEN_DIR), because the modification date changes
 # with any addition to the directory, regenerating all .h files -> everything.
 
-$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE)
+$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	$(REPORT_BUILD)
 	$(ELOG) $(XPIDL_COMPILE) -m header -w -I $(DIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
