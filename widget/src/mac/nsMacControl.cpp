@@ -137,7 +137,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		}
 
 		::Draw1Control(mControl);
-//ее		::ValidRect(&(*mControl)->contrlRect);
+		::ValidRect(&(*mControl)->contrlRect);
 	}
 	return PR_FALSE;
 }
