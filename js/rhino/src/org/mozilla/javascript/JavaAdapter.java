@@ -21,6 +21,7 @@
  * Contributor(s):
  * Patrick Beard
  * Norris Boyd
+ * Igor Bukanov
  * Mike McCabe
  * Matthias Radestock
  * Andi Vajda
@@ -123,24 +124,8 @@ public final class JavaAdapter
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = ScriptRuntime.toObject(cx, scope, args[N - 1]);
 
-        GlobalScope global = GlobalScope.get(scope);
-        Hashtable generated = global.javaAdapterGeneratedClasses;
-
-        ObjToIntMap names = getObjectFunctionNames(obj);
-        JavaAdapterSignature sig;
-        sig = new JavaAdapterSignature(superClass, interfaces, names);
-        Class adapterClass = (Class) generated.get(sig);
-        if (adapterClass == null) {
-            String adapterName;
-            synchronized (generated) {
-                adapterName = "adapter" + global.javaAdapterSerial++;
-            }
-            byte[] code = createAdapterCode(names, adapterName,
-                                            superClass, interfaces, null);
-
-            adapterClass = loadAdapterClass(cx, adapterName, code);
-            generated.put(sig, adapterClass);
-        }
+        Class adapterClass = getAdapterClass(scope, superClass, interfaces,
+                                             obj);
 
         Class[] ctorParms = { ScriptRuntime.ScriptableClass };
         Object[] ctorArgs = { obj };
@@ -160,28 +145,8 @@ public final class JavaAdapter
                                      Scriptable obj, Scriptable self)
         throws ClassNotFoundException
     {
-        GlobalScope global = GlobalScope.get(scope);
-        Hashtable generated = global.javaAdapterGeneratedClasses;
-
-        ObjToIntMap names = getObjectFunctionNames(obj);
-        JavaAdapterSignature sig;
-        sig = new JavaAdapterSignature(superClass, interfaces, names);
-        Class adapterClass = (Class) generated.get(sig);
-        if (adapterClass == null) {
-            String adapterName;
-            synchronized (generated) {
-                adapterName = "adapter" + global.javaAdapterSerial++;
-            }
-            byte[] code = createAdapterCode(names, adapterName,
-                                            superClass, interfaces, null);
-            Context cx = Context.enter();
-            try {
-                adapterClass = loadAdapterClass(cx, adapterName, code);
-                generated.put(sig, adapterClass);
-            } finally {
-                Context.exit();
-            }
-        }
+        Class adapterClass = getAdapterClass(scope, superClass, interfaces,
+                                             obj);
 
         try {
             Class[] ctorParms = {
@@ -219,6 +184,30 @@ public final class JavaAdapter
             }
         }
         return map;
+    }
+
+    private static Class getAdapterClass(Scriptable scope, Class superClass,
+                                         Class[] interfaces, Scriptable obj)
+    {
+        GlobalScope global = GlobalScope.get(scope);
+        Hashtable generated = global.javaAdapterGeneratedClasses;
+
+        ObjToIntMap names = getObjectFunctionNames(obj);
+        JavaAdapterSignature sig;
+        sig = new JavaAdapterSignature(superClass, interfaces, names);
+        Class adapterClass = (Class) generated.get(sig);
+        if (adapterClass == null) {
+            String adapterName;
+            synchronized (generated) {
+                adapterName = "adapter" + global.javaAdapterSerial++;
+            }
+            byte[] code = createAdapterCode(names, adapterName,
+                                            superClass, interfaces, null);
+
+            adapterClass = loadAdapterClass(adapterName, code);
+            generated.put(sig, adapterClass);
+        }
+        return adapterClass;
     }
 
     public static byte[] createAdapterCode(ObjToIntMap functionNames,
@@ -340,9 +329,9 @@ public final class JavaAdapter
         return cfw.toByteArray();
     }
 
-    private static Class loadAdapterClass(Context cx, String className,
-                                          byte[] classBytes)
+    private static Class loadAdapterClass(String className, byte[] classBytes)
     {
+        Context cx = Context.getContext();
         ClassLoader parentLoader = cx.getApplicationClassLoader();
         GeneratedClassLoader loader;
         SecurityController sc = cx.getSecurityController();
