@@ -105,6 +105,9 @@ void CnsIHttpChannelTests::OnStartTests(UINT nMenuID)
 		case ID_INTERFACES_NSIHTTPCHANNEL_GETRESPONSESTATUS :
 			GetResponseStatusTest(theHttpChannel, 2);
 			break;
+		case ID_INTERFACES_NSIHTTPCHANNEL_GETRESPONSESTATUSTEXT :
+			GetResponseStatusTextTest(theHttpChannel, 2);
+			break;
 	}
 }
 
@@ -132,9 +135,11 @@ void CnsIHttpChannelTests::RunAllTests()
 	SetRedirectionLimitTest(theHttpChannel, 5, 1);
 	GetRedirectionLimitTest(theHttpChannel, 1);
 
-	// see nsIRequestObserver->OnStartRequest for response tests
+	// see nsIRequestObserver->OnStartRequest for Successful response tests
 
+	// we're running response tests here to verify they fail when called here.
 	GetResponseStatusTest(theHttpChannel, 1);
+	GetResponseStatusTextTest(theHttpChannel, 1);
 	QAOutput("\n");
 }
 
@@ -263,6 +268,15 @@ void  CnsIHttpChannelTests::GetRedirectionLimitTest(nsIHttpChannel *theHttpChann
 	FormatAndPrintOutput("GetRedirectionLimit value = ", mRedirectionLimit, displayMode);
 }
 
+// Response tests
+
+void CnsIHttpChannelTests::CallResponseTests(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	GetResponseStatusTest(theHttpChannel, displayMode);
+	GetResponseStatusTextTest(theHttpChannel, displayMode);
+}
+
 void CnsIHttpChannelTests::GetResponseStatusTest(nsIHttpChannel *theHttpChannel,
 												 PRInt16 displayMode)
 {
@@ -272,5 +286,16 @@ void CnsIHttpChannelTests::GetResponseStatusTest(nsIHttpChannel *theHttpChannel,
 	RvTestResult(rv, "GetResponseStatus()", displayMode);
 	FormatAndPrintOutput("GetResponseStatus value = ", mResponseStatus, displayMode);
 }
+
+void CnsIHttpChannelTests::GetResponseStatusTextTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	nsCAutoString mText;
+
+	rv = theHttpChannel->GetResponseStatusText(mText);
+	RvTestResult(rv, "GetResponseStatusText()", displayMode);
+	FormatAndPrintOutput("GetResponseStatusText = ", mText, displayMode);
+}
+
 
 
