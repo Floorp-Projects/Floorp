@@ -18,7 +18,7 @@
 #ifndef nsIHTMLContent_h___
 #define nsIHTMLContent_h___
 
-#include "nsIContent.h"
+#include "nsIStyledContent.h"
 #include "nsHTMLValue.h"
 class nsString;
 class nsIFrame;
@@ -39,7 +39,7 @@ typedef void (*nsMapAttributesFunc)(nsIHTMLAttributes* aAttributes,
                                     nsIPresContext* aPresContext);
 
 // Abstract interface for all html content
-class nsIHTMLContent : public nsIContent {
+class nsIHTMLContent : public nsIStyledContent {
 public:
   static const nsIID& IID() { static nsIID iid = NS_IHTMLCONTENT_IID; return iid; }
 
@@ -56,13 +56,6 @@ public:
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aValue) const = 0;
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const = 0;
-
-  NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
-  NS_IMETHOD HasClass(nsIAtom* aClass) const = 0;
-
-  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) = 0;
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) = 0;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
@@ -99,15 +92,6 @@ public:
   NS_IMETHOD ToHTMLString(nsString& aResult) const = 0;
 
   NS_IMETHOD ToHTML(FILE* out) const = 0;
-
-  /** NRA ***
-   * Get a hint that tells the style system what to do when 
-   * an attribute on this node changes.
-   */
-  NS_IMETHOD GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const = 0;
-
 };
 
 #endif /* nsIHTMLContent_h___ */
