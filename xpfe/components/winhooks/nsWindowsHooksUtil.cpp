@@ -121,7 +121,7 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
         keyName += "\\shell\\open\\command";
 
         // Append appropriate suffix to setting.
-        if ( protocol == "chrome" ) {
+        if ( this->protocol == "chrome" ) {
             // Use "-chrome" command line flag.
             setting += chromeSuffix;
         } else {
@@ -262,6 +262,7 @@ nsresult SavedRegistryEntry::set() {
 
 // Set this entry and its corresponding DDE entry.  The DDE entry
 // must be turned off to stop Windows from trying to use DDE.
+// XXX Now that Mozilla supports DDE, need to change this to use it.
 nsresult ProtocolRegistryEntry::set() {
     // Set this entry.
     nsresult rv = SavedRegistryEntry::set();
@@ -274,8 +275,8 @@ nsresult ProtocolRegistryEntry::set() {
     SavedRegistryEntry( HKEY_LOCAL_MACHINE, ddeName, NULL, NULL ).set();
 
     // Special case.
-    if ( protocol = "http" ) {
-        // We need to zap HKR\Software\Classes\http\shell\open\ddeexec\Application
+    if ( protocol.Equals( "http" ) ) {
+        // We need to zap HKLM\Software\Classes\http\shell\open\ddeexec\Application
         // because Communicator looks there to determine whether they're the
         // "default browser."  If they are (the value there is "NSShell" or "Netscape")
         // then it will reset lots of registry entries, "stealing" them from us.
