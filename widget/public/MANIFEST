@@ -45,3 +45,4 @@ nsIImageButton.h
 nsIImageButtonListener.h
 nsIContentConnector.h
 nsIKeyBindMgr.h
+nsIContextMenu.h
