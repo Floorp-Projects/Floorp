@@ -531,10 +531,11 @@ stub_interface(TreeState *state)
                 "  JSObject *globj = JS_GetGlobalObject(cx);\n"
                 "  if (!globj)\n"
                 "    return 0;\n"
+                "  jsval v;\n"
                 "  if (!JS_LookupElement(cx, globj, (jsint)priv >> 1, &v))\n"
                 "    return 0;\n"
                 "  if (JSVAL_IS_VOID(v)) {\n"
-                "    JSObject *obj = JS_NewObject(cx, &foo_class, 0, 0);\n"
+                "    JSObject *obj = JS_NewObject(cx, &%s_class, 0, 0);\n"
                 "    if (!obj || !JS_SetPrivate(cx, obj, priv))\n"
                 "      return 0;\n"
                 "    NS_ADDREF(priv);\n"
@@ -546,7 +547,7 @@ stub_interface(TreeState *state)
                 "  }\n"
                 "  return (JSObject *)JSVAL_TO_PRIVATE(v);\n"
                 "}\n",
-                className, className);
+                className, className, className);
     }
 
     /* Clean up whether or not there were errors. */
