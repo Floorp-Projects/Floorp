@@ -44,7 +44,9 @@
 #include "mimemoz2.h"
 
 // Forward declares...
-extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, 
+                                              char *charset,
+                                              PRBool eatContinuations);
 extern "C"  char    *MIME_StripContinuations(char *original);
 int MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
@@ -872,7 +874,7 @@ mime_decode_filename(char *name)
 		if (d) *d = '?';
 		win_csid = INTL_DocToWinCharSetID(mail_csid);
 
-    cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName);
+    cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName, PR_TRUE);
 
     // rhp - trying to fix header conversion bug
     //

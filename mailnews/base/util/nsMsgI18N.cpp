@@ -229,13 +229,13 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
 }
 
 // MIME decoder
-nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString)
+nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString, PRBool eatContinuations)
 {
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
                                                     nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
-    res = converter->DecodeMimePartIIStr(header, charset, decodedString);
+    res = converter->DecodeMimePartIIStr(header, charset, decodedString, eatContinuations);
     NS_RELEASE(converter);
   }
   return res;

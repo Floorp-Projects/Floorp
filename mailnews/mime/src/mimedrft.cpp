@@ -66,7 +66,8 @@ int                 mime_decompose_file_output_fn ( char *buf, PRInt32 size, voi
 int                 mime_decompose_file_close_fn ( void *stream_closure );
 extern int          MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
-static nsString& mime_decode_string(const char* str /*, PRBool toHtml*/);
+static nsString& mime_decode_string(const char* str , 
+                                    PRBool eatContinuations = PR_TRUE);
 
 // CID's
 static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);       
@@ -235,21 +236,13 @@ mime_dump_attachments ( attachmentList );
   return rv;
 }
 
-static nsString& mime_decode_string(const char* str /*, 
-                                    PRBool toHtml = PR_FALSE */)
+static nsString& mime_decode_string(const char* str, 
+                                    PRBool eatContinuations)
 {
     static nsString decodedString;
     nsString encodedCharset;
     nsMsgI18NDecodeMimePartIIStr(nsString(str), encodedCharset,
-                                 decodedString);
-#if 0
-    if (toHtml)
-    {
-        nsString htmlString;
-        nsMsgI18NConvertToEntity(decodedString, &htmlString);
-        decodedString = htmlString;
-    }
-#endif
+                                 decodedString, eatContinuations);
     return decodedString;
 }
 
@@ -1290,7 +1283,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         }
         // setting the charset while we were creating the composition fields
         // fields->SetCharacterSet(nsString("UTF-8").GetUnicode());
-        fields->SetBody(mime_decode_string(body).GetUnicode());
+        fields->SetBody(mime_decode_string(body, PR_FALSE).GetUnicode());
         PR_FREEIF(body);
       } // end if (messageBody)
   

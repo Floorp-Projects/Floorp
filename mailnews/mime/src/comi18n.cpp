@@ -1510,7 +1510,8 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
   return res;
 }
 
-extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
+extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
+                                          PRBool eatContinuations)
 {
   char *result = nsnull;
 
@@ -1519,7 +1520,9 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
 
   // If no MIME encoded then do nothing otherwise decode the input.
   if (*header != '\0' && intlmime_is_mime_part2_header(header)) {
-     result = MIME_StripContinuations(intl_decode_mime_part2_str(header, charset));
+	  result = intl_decode_mime_part2_str(header, charset);
+	  if (eatContinuations)
+		  result = MIME_StripContinuations(result);
   }
   else if (*charset == '\0') {
     // no charset name is specified then assume it's us-ascii and dup the input

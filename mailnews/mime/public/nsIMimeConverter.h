@@ -56,12 +56,14 @@ public:
   // Decode routine
   NS_IMETHOD DecodeMimePartIIStr(const char *header, 
                                  char       *charset, 
-                                 char **decodedString) = 0;
+                                 char **decodedString,
+								 PRBool eatContinuations = PR_TRUE) = 0;
 
   // Decode routine (also converts output to unicode)
   NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 
                                  nsString& charset, 
-                                 nsString& decodedString) = 0;
+                                 nsString& decodedString,
+								 PRBool eatContinuations = PR_TRUE) = 0;
 
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char    *header, 

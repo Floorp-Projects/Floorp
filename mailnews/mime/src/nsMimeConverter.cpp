@@ -51,7 +51,8 @@ nsMimeConverter::~nsMimeConverter()
 nsresult 
 nsMimeConverter::DecodeMimePartIIStr(const nsString& header, 
                                            nsString& charset, 
-                                           nsString& decodedString)
+                                           nsString& decodedString,
+                                     PRBool eatContinuations)
 {
   char charsetCstr[kMAX_CSNAME+1];
   char *encodedCstr = nsnull;
@@ -62,7 +63,8 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
   encodedCstr = header.ToNewCString();
   if (nsnull != encodedCstr) {
     // apply MIME decode.
-    decodedCstr = MIME_DecodeMimePartIIStr((const char *) encodedCstr, charsetCstr);
+    decodedCstr = MIME_DecodeMimePartIIStr((const char *) encodedCstr,
+                                           charsetCstr, eatContinuations);
     if (nsnull == decodedCstr) {
       // no decode needed and no default charset was specified
       if (*charsetCstr == '\0') {
@@ -86,9 +88,10 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
 nsresult
 nsMimeConverter::DecodeMimePartIIStr(const char *header, 
                                            char       *charset, 
-                                           char **decodedString)
+                                           char **decodedString,
+                                     PRBool eatContinuations)
 {
-  char *retString = MIME_DecodeMimePartIIStr(header, charset); 
+  char *retString = MIME_DecodeMimePartIIStr(header, charset, eatContinuations); 
   if (retString == NULL)
     return NS_ERROR_FAILURE;
   else

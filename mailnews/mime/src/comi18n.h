@@ -89,7 +89,8 @@ extern "C" {
  *                    Caller should allocate at least 65 bytes (kMAX_CSNAME + 1) for a charset name.
  * @return            Decoded buffer (in C string) or return NULL if the header is not MIME encoded.
  */
-extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
+										  PRBool eatContinuations);
 
 /**
  * Encode an input string into RFC 2047 form.

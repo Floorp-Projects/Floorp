@@ -46,7 +46,7 @@ NS_MSG_BASE nsresult ConvertToUnicode(const nsString& aCharset,
                                  const char* inCString, 
                                  nsString& outString);
 
-NS_MSG_BASE nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
+NS_MSG_BASE nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString, PRBool eatContinuations=PR_TRUE);
 
 NS_MSG_BASE const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
 

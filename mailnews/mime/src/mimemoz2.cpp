@@ -78,7 +78,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // Text Scanning...
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
-extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, 
+                                              char *charset,
+                                              PRBool eatContinuations);
 
 static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_NoInlineAttachments;
@@ -520,7 +522,7 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
       line[input_length] = 0;
     }
 
-  converted = MIME_DecodeMimePartIIStr(line, charset);
+  converted = MIME_DecodeMimePartIIStr(line, charset, PR_TRUE);
 
   if (line != input_line)
     PR_Free(line);
