@@ -145,6 +145,7 @@ proc navigation_header {} {
     }
   }
   puts "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=\"query.cgi\">Query page</A>"
+  puts "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=\"enter_bug.cgi\">Enter new bug</A>"
 }
 
 proc make_options { src default {isregexp 0} } {
