@@ -213,7 +213,33 @@ int main(int argc, char* argv[])
     goto done;
   }
 
+  /* ********************************************************************* */
+  /* This is a temporary hack to get mail working with autoregistration
+   * This won't succeed unless messenger was found
+   * through autoregistration, and will go away when the service manager
+     * is accessable from JavaScript
+     */
+  /* Comments/questions to alecf@netscape.com */
+  {
+    nsIAppShellService *messenger;
+    nsCID cid;
+    nsresult result =
+      nsRepository::ProgIDToCLSID("component://netscape/messenger", &cid);
+      
+    if (NS_SUCCEEDED(result)) {
+      result = nsRepository::CreateInstance(cid,
+                                            NULL,
+                                            nsIAppShellService::IID,
+                                            (void **)&messenger);
+      }
+    if (NS_SUCCEEDED(result)) {
+      result = messenger->Initialize();
+    }
+  }
+  /* End of mailhack */
+  /* ********************************************************************* */
 
+  /* Kick off appcores */
   nsIDOMAppCoresManager *appCoresManager;
   rv = nsServiceManager::GetService(kAppCoresManagerCID,
                                     kIDOMAppCoresManagerIID,
