@@ -527,11 +527,13 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 .autocomplete-search-box {
-  border-top: 2px groove;
+  border-top: 2px groove -moz-Dialog;
+  background-color: -moz-Dialog;
+  color: ButtonText;
 }
 
-.autocomplete-result-popup[nomatch="true"] > .autocomplete-search-box {
-  border-top: 1px solid;
+.autocomplete-result-popup[nomatch] > .autocomplete-search-box {
+  border-top: 1px solid ThreeDHighlight;
 }
 
 .autocomplete-search-engine {
@@ -539,8 +541,8 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 .autocomplete-search-engine[menuactive="true"] {
-  background-color: #9499AC;
-  color: #FFFFFF;
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 .autocomplete-search-engine-img {
