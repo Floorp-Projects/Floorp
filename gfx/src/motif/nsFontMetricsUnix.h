@@ -77,6 +77,9 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
+
+  XChar2b *         mXstring;
+  PRUint32          mXstringSize;
 };
 
 #endif
