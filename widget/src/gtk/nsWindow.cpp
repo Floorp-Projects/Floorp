@@ -665,6 +665,8 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
                          GDK_POINTER_MOTION_MASK),
                         (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
 
+      gdk_keyboard_grab(mSuperWin->bin_window, PR_TRUE, GDK_CURRENT_TIME);
+
       gdk_cursor_destroy(cursor);
     }
     gRollupConsumeRollupEvent = PR_TRUE;
@@ -677,6 +679,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
       mGrabWindow = NULL;
     }
     mIsGrabbing = PR_FALSE;
+
+    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
 
     gRollupListener = nsnull;
