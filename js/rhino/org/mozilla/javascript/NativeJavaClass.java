@@ -158,7 +158,9 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                     }
                 } catch (Exception ex) {
                     // fall through to error
-                    msg = ex.getMessage();
+                    String m = ex.getMessage();
+                    if (m != null)
+                        msg = m;
                 }
 	        Object[] errArgs = { msg, classObject.getName() };
 	        throw Context.reportRuntimeError(Context.getMessage
