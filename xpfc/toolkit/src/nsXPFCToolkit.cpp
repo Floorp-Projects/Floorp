@@ -84,6 +84,17 @@ nsIXPFCObserverManager * nsXPFCToolkit::GetObserverManager()
   return (mObserverManager);
 }
 
+nsresult nsXPFCToolkit::SetApplicationShell(nsIApplicationShell * aApplicationShell)
+{
+  mApplicationShell = aApplicationShell;
+  return NS_OK;
+}
+
+nsIApplicationShell * nsXPFCToolkit::GetApplicationShell()
+{
+  return (mApplicationShell);
+}
+
 nsresult nsXPFCToolkit::SetCanvasManager(nsIXPFCCanvasManager * aCanvasManager)
 {
   mCanvasManager = aCanvasManager;

@@ -32,6 +32,7 @@
 #include "nsITimer.h"
 #include "nsIThrobber.h"
 #include "nsXPItem.h"
+#include "nsIWebViewerContainer.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPButtonCID, NS_XP_BUTTON_CID);
@@ -41,6 +42,8 @@ static NS_DEFINE_IID(kInsButtonIID, NS_IBUTTON_IID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
+
+nsString gCommandString;
 
 nsXPButton :: nsXPButton(nsISupports* outer) : nsXPItem(outer)
 {
@@ -119,6 +122,13 @@ nsresult nsXPButton :: SetParameter(nsString& aKey, nsString& aValue)
     CreateImageGroup();
 
     mFullPressedImageRequest = RequestImage(aValue);
+
+  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_COMMAND)) {
+
+    // XXX: Total hack here for demo purposes ... sorry
+    
+    aValue.Mid(gCommandString,8,aValue.Length()-8);
+    
 
   } else if (aKey.EqualsIgnoreCase(XPFC_STRING_ENABLE)) {
 
@@ -327,6 +337,19 @@ nsEventStatus nsXPButton :: OnLeftButtonUp(nsGUIEvent *aEvent)
 {
   mState &= ~eButtonState_pressed;
   GetWidget()->Invalidate(PR_FALSE);
+
+  if (gCommandString.Length() > 0)
+  {
+    nsIWebViewerContainer * webViewerContainer = nsnull;
+    gXPFCToolkit->GetApplicationShell()->GetWebViewerContainer(&webViewerContainer);
+
+    if (webViewerContainer != nsnull)
+    {
+      webViewerContainer->LoadURL(gCommandString,nsnull);
+      NS_RELEASE(webViewerContainer);
+    }
+  }
+
   return (nsXPItem::OnLeftButtonUp(aEvent));
 }
 

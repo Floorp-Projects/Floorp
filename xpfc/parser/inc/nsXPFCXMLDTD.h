@@ -29,6 +29,7 @@ enum eXPFCXMLTags
   eXPFCXMLTag_doctype,
   eXPFCXMLTag_xml,
 
+  eXPFCXMLTag_application,
   eXPFCXMLTag_button,
   eXPFCXMLTag_canvas,
   eXPFCXMLTag_dialog,
