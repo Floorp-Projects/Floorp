@@ -33,12 +33,14 @@
  */
 
 #include "nsISupports.idl"
-#include "nsILDAPOperation.idl"
 
 /* hack around XPIDL bug 78848; when that's fixed, this can disappear */
 %{C++
 #include "nsAString.h"
 %}
+
+interface nsILDAPBERValue;
+interface nsILDAPOperation;
 
 [scriptable, uuid(973ff50f-2002-4f0c-b57d-2242156139a2)]
 interface nsILDAPMessage : nsISupports
@@ -178,4 +180,20 @@ interface nsILDAPMessage : nsISupports
      * it also returns the closest existing DN to the entry requested.
      */
     readonly attribute AString matchedDn;
+
+    /**
+     * Get an array of all the attribute values in this message (a wrapper
+     * around the LDAP C SDK's get_values_len()).
+     *
+     * @param attr      The attribute whose values are to be returned
+     * @param count     Number of values in the outbound array.
+     * @param values    Array of nsILDAPBERValue objects
+     *
+     * @exception NS_ERROR_UNEXPECTED           Bug or memory corruption
+     * @exception NS_ERROR_LDAP_DECODING_ERROR  Attribute not found or other 
+     *                                          decoding error.
+     * @exception NS_ERROR_OUT_OF_MEMORY
+     */
+    void getBinaryValues(in string attr, out unsigned long count,
+                         [retval, array, size_is(count)] out nsILDAPBERValue values);
 };

@@ -33,6 +33,7 @@ XPIDLSRCS= .\nsILDAPConnection.idl \
            .\nsILDAPErrors.idl \
            .\nsILDAPServer.idl \
            .\nsILDAPService.idl \
+           .\nsILDAPBERValue.idl \
 !if defined(ENABLE_LDAP_EXPERIMENTAL)
 !endif
            $(NULL)

@@ -699,7 +699,8 @@ CheckLDAPOperationResult(nsHashKey *aKey, void *aData, void* aClosure)
             // we want nsLDAPMessage specifically, not a compatible, since
             // we're sharing native objects used by the LDAP C SDK
             //
-            nsLDAPMessage *rawMsg = new nsLDAPMessage();
+            nsLDAPMessage *rawMsg;
+            NS_NEWXPCOM(rawMsg, nsLDAPMessage);
             if (!rawMsg) {
             NS_ERROR("CheckLDAPOperationResult(): couldn't allocate memory"
                      " for new LDAP message; search entry dropped");

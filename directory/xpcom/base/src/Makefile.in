@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsLDAPURL.cpp \
 		nsLDAPServer.cpp \
 		nsLDAPService.cpp \
+		nsLDAPBERValue.cpp \
 		$(NULL)
 
 ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL

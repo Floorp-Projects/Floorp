@@ -6,3 +6,4 @@ nsILDAPMessageListener.idl
 nsILDAPErrors.idl
 nsILDAPServer.idl
 nsILDAPService.idl
+nsILDAPBERValue.idl

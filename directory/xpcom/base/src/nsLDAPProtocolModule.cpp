@@ -40,6 +40,7 @@
 #include "nsLDAPMessage.h"
 #include "nsLDAPServer.h"
 #include "nsLDAPService.h"
+#include "nsLDAPBERValue.h"
 #include "ldappr.h"
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
@@ -55,13 +56,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPMessage);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPServer);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPURL, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPBERValue);
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
 #endif
 
-
-// a table of the CIDs implemented by this module (in this case, just one)
+// a table of the CIDs implemented by this module
 //
 static const nsModuleComponentInfo components[] =
 {
@@ -83,7 +84,9 @@ static const nsModuleComponentInfo components[] =
           nsLDAPProtocolHandlerConstructor },   
 #endif
     { "LDAP URL", NS_LDAPURL_CID,
-          "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor }
+          "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor },
+    { "LDAP BER Value", NS_LDAPBERVALUE_CID,
+          "@mozilla.org/network/ldap-ber-value;1", nsLDAPBERValueConstructor }
 };
 
 PR_STATIC_CALLBACK(nsresult)
@@ -92,7 +95,8 @@ nsLDAPInitialize(nsIModule *aSelf)
 #ifdef PR_LOGGING
     gLDAPLogModule = PR_NewLogModule("ldap");
     if (!gLDAPLogModule) {
-        PR_fprintf(PR_STDERR, "LDAP_Initialize(): PR_NewLogModule() failed\n");
+        PR_fprintf(PR_STDERR, 
+                   "nsLDAP_Initialize(): PR_NewLogModule() failed\n");
         return NS_ERROR_NOT_AVAILABLE;
     }
 #endif
@@ -103,7 +107,7 @@ nsLDAPInitialize(nsIModule *aSelf)
 
     if (rv != LDAP_SUCCESS) {
         PR_LOG(gLDAPLogModule, PR_LOG_ERROR,
-               ("LDAPInitialize(): pr_ldap_install_routines() failed: %s\n",
+               ("nsLDAPInitialize(): pr_ldap_install_routines() failed: %s\n",
                ldap_err2string(rv)));
         return NS_ERROR_FAILURE;
     }
@@ -115,7 +119,7 @@ nsLDAPInitialize(nsIModule *aSelf)
                                    10000);
     if (rv != LDAP_SUCCESS) {
         PR_LOG(gLDAPLogModule, PR_LOG_ERROR,
-               ("LDAPInitialize(): error setting PRLDAP_OPT_IO_MAX_TIMEOUT:"
+               ("nsLDAPInitialize(): error setting PRLDAP_OPT_IO_MAX_TIMEOUT:"
                 " %s\n", ldap_err2string(rv)));
         return NS_ERROR_FAILURE;
     }

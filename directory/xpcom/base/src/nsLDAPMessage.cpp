@@ -39,6 +39,8 @@
 #include "nsCRT.h"
 #include "nsLDAPConnection.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsUtils.h"
+#include "nsLDAPBERValue.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage);
 
@@ -536,6 +538,98 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     ldap_value_free(values);
 
     *aCount = numVals;
+    return NS_OK;
+}
+
+// wrapper for get_values_len
+//
+NS_IMETHODIMP 
+nsLDAPMessage::GetBinaryValues(const char *aAttr, PRUint32 *aCount,
+                               nsILDAPBERValue ***aValues)
+{
+    struct berval **values;
+
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG,
+           ("nsLDAPMessage::GetBinaryValues(): called with aAttr = '%s'", 
+            aAttr));
+
+    values = ldap_get_values_len(mConnectionHandle, mMsgHandle, aAttr);
+
+    // bail out if there was a problem
+    //
+    if (!values) {
+        PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
+
+        if ( lderrno == LDAP_DECODING_ERROR ) {
+            // this may not be an error; it could just be that the 
+            // caller has asked for an attribute that doesn't exist.
+            //
+            PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+                   ("nsLDAPMessage::GetBinaryValues(): ldap_get_values "
+                    "returned LDAP_DECODING_ERROR"));
+            return NS_ERROR_LDAP_DECODING_ERROR;
+
+        } else if ( lderrno == LDAP_PARAM_ERROR ) {
+            NS_ERROR("nsLDAPMessage::GetBinaryValues(): internal error: 1");
+            return NS_ERROR_UNEXPECTED;
+
+        } else {
+            NS_ERROR("nsLDAPMessage::GetBinaryValues(): internal error: 2");
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
+
+    // count the values
+    //
+    PRUint32 numVals = ldap_count_values_len(values);
+
+    // create the out array
+    //
+    *aValues = 
+        NS_STATIC_CAST(nsILDAPBERValue **, 
+                       nsMemory::Alloc(numVals * sizeof(nsILDAPBERValue)));
+    if (!aValues) {
+        ldap_value_free_len(values);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // clone the array (except for the trailing NULL entry) using the 
+    // shared allocator for XPCOM correctness
+    //
+    PRUint32 i;
+    nsresult rv;
+    nsCOMPtr<nsILDAPBERValue> berValue;
+    for ( i = 0 ; i < numVals ; i++ ) {
+
+        // create an nsBERValue object
+        //
+        NS_NEWXPCOM(berValue, nsLDAPBERValue);
+        if (!berValue) {
+            NS_ERROR("nsLDAPMessage::GetBinaryValues(): out of memory"
+                     " creating nsBERValue object");
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
+            ldap_value_free_len(values);
+            return rv == NS_ERROR_OUT_OF_MEMORY ? rv : NS_ERROR_UNEXPECTED;
+        }
+
+        // copy the value from the struct into the nsBERValue
+        //
+        rv = berValue->Set(values[i]->bv_len, 
+                           NS_REINTERPRET_CAST(PRUint8 *, values[i]->bv_val));
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPMessage::GetBinaryValues(): error setting"
+                     " nsBERValue");
+            ldap_value_free_len(values);
+            return rv == NS_ERROR_OUT_OF_MEMORY ? rv : NS_ERROR_UNEXPECTED;
+        }
+
+        // put the nsIBERValue object into the out array
+        //
+        NS_ADDREF( (*aValues)[i] = berValue.get() );
+    }
+
+    *aCount = numVals;
+    ldap_value_free_len(values);
     return NS_OK;
 }
 
