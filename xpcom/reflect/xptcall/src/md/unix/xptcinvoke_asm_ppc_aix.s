@@ -19,6 +19,7 @@
  # Rights Reserved.
  #
  # Contributor(s): 
+ #   IBM Corporation
  #
 
 .set r0,0; .set sp,1; .set RTOC,2; .set r3,3; .set r4,4
@@ -49,7 +50,6 @@
         .csect  H.10.NO_SYMBOL{PR}
         .globl  .XPTC_InvokeByIndex
         .globl  XPTC_InvokeByIndex{DS}
-        .extern .invoke_count_words
         .extern .invoke_copy_to_stack
         .extern ._ptrgl{PR}
 
@@ -72,19 +72,13 @@
 		stw	r0,8(sp)
 		stwu	sp,-136(sp)		#  = 24 for linkage area,  8 * 13 for fprData area, 8 for saved registers
 
-# set up for and call 'invoke_count_words' to get new stack size
-#	
-		mr	r3,r5
-		mr	r4,r6
-		bl	.invoke_count_words
-		nop
-
 # prepare args for 'invoke_copy_to_stack' call
 #		
 		lwz	r4,168(sp)		# paramCount
 		lwz	r5,172(sp)		# params
 		mr	r6,sp			# fprData
-		slwi	r3,r3,2			# number of bytes of stack required
+		slwi	r3,r4,3			# number of bytes of stack required
+								# at most 8*paramCount
 		addi	r3,r3,28		# linkage area
 		mr	r31,sp			# save original stack top
 		subfc	sp,r3,sp		# bump the stack
