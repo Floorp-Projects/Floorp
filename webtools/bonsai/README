@@ -561,3 +561,10 @@ Hook			The 'hook' is actually the oldest part of the Bonsai
 
 			So, it works out to: the list of people who have
 			checked in since the tree was last closed.
+
+
+	==========
+	Maintainer
+	==========
+
+The current primary maintainer of Bonsai is Terry Weissman <terry@mozilla.org>.
