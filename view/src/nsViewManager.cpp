@@ -2221,17 +2221,17 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
         //Invalidate the union of the old and new size
         view->SetDimensions(aRect, PR_TRUE);
 
+        UpdateView(view, aRect, NS_VMREFRESH_NO_SYNC);
+        view->ConvertToParentCoords(&oldDimensions.x, &oldDimensions.y);
         UpdateView(parentView, oldDimensions, NS_VMREFRESH_NO_SYNC);
-        nsRect r = aRect;
-        view->ConvertFromParentCoords(&r.x, &r.y);
-        UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
       } else {
         view->SetDimensions(aRect, PR_FALSE);
-        InvalidateRectDifference(parentView, oldDimensions, aRect, NS_VMREFRESH_NO_SYNC);
+
+        InvalidateRectDifference(view, aRect, oldDimensions, NS_VMREFRESH_NO_SYNC);
         nsRect r = aRect;
-        view->ConvertFromParentCoords(&r.x, &r.y);
-        view->ConvertFromParentCoords(&oldDimensions.x, &oldDimensions.y);
-        InvalidateRectDifference(view, r, oldDimensions, NS_VMREFRESH_NO_SYNC);
+        view->ConvertToParentCoords(&r.x, &r.y);
+        view->ConvertToParentCoords(&oldDimensions.x, &oldDimensions.y);
+        InvalidateRectDifference(parentView, oldDimensions, r, NS_VMREFRESH_NO_SYNC);
       } 
     }
   }
