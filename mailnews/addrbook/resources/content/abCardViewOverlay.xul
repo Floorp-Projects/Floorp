@@ -51,8 +51,8 @@ Rights Reserved.
 					<html class="CardViewText" hide="true" id="cvHomeAddress2"/>
 					<html class="CardViewText" hide="true" id="cvHomeCityStZip"/>
 					<html class="CardViewText" hide="true" id="cvHomeCountry"/>
-					<html class="CardViewText"><html:p>
-						<html:a href="" id="cvHomeWebPage" hide="true"/>
+					<html class="CardViewText" hide="true" id="cvHomeWebPageBox">
+						<html:p><html:a href="" id="cvHomeWebPage"/>
 					</html:p></html>
 				</box>
 
@@ -87,8 +87,8 @@ Rights Reserved.
 					<html class="CardViewText" hide="true" id="cvWorkAddress2"/>
 					<html class="CardViewText" hide="true" id="cvWorkCityStZip"/>
 					<html class="CardViewText" hide="true" id="cvWorkCountry"/>
-					<html class="CardViewText"><html:p>
-						<html:a href="" id="cvWorkWebPage" hide="true"/>
+					<html class="CardViewText" hide="true" id="cvWorkWebPageBox">
+						<html:p><html:a href="" id="cvWorkWebPage"/>
 					</html:p></html>
 				</box>
 			</box>

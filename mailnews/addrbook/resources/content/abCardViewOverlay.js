@@ -69,6 +69,7 @@ function OnLoadCardView()
 	cvData.cvHomeAddress2	= doc.getElementById("cvHomeAddress2");
 	cvData.cvHomeCityStZip	= doc.getElementById("cvHomeCityStZip");
 	cvData.cvHomeCountry	= doc.getElementById("cvHomeCountry");
+	cvData.cvHomeWebPageBox = doc.getElementById("cvHomeWebPageBox");
 	cvData.cvHomeWebPage	= doc.getElementById("cvHomeWebPage");
 	// Other section
 	cvData.cvbOther			= doc.getElementById("cvbOther");
@@ -96,6 +97,7 @@ function OnLoadCardView()
 	cvData.cvWorkAddress2	= doc.getElementById("cvWorkAddress2");
 	cvData.cvWorkCityStZip	= doc.getElementById("cvWorkCityStZip");
 	cvData.cvWorkCountry	= doc.getElementById("cvWorkCountry");
+	cvData.cvWorkWebPageBox = doc.getElementById("cvWorkWebPageBox");
 	cvData.cvWorkWebPage	= doc.getElementById("cvWorkWebPage");
 }
 	
@@ -144,8 +146,10 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetNode(data.cvHomeAddress2, card.homeAddress2) || visible;
 	visible = cvSetCityStateZip(data.cvHomeCityStZip, card.homeCity, card.homeState, card.homeZipCode) || visible;
 	visible = cvSetNode(data.cvHomeCountry, card.homeCountry) || visible;
-	visible = cvSetNode(data.cvHomeWebPage, card.webPage2) || visible;
+	var homeWebPageVisible = cvSetNode(data.cvHomeWebPage, card.webPage2);
+    visible = homeWebPageVisible || visible;
 	data.cvHomeWebPage.setAttribute('href', card.webPage2);
+    cvSetVisible(data.cvHomeWebPageBox, homeWebPageVisible);
 	cvSetVisible(data.cvhHome, visible);
 	cvSetVisible(data.cvbHome, visible);
 	// Other section
@@ -172,8 +176,10 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetNode(data.cvWorkAddress2, card.workAddress2) || visible;
 	visible = cvSetCityStateZip(data.cvWorkCityStZip, card.workCity, card.workState, card.workZipCode) || visible;
 	visible = cvSetNode(data.cvWorkCountry, card.workCountry) || visible;
-	visible = cvSetNode(data.cvWorkWebPage, card.webPage1) || visible;
+	var workWebPageVisible = cvSetNode(data.cvWorkWebPage, card.webPage1);
+    visible = workWebPageVisible || visible;
 	data.cvWorkWebPage.setAttribute('href', card.webPage1);
+    cvSetVisible(data.cvWorkWebPageBox, workWebPageVisible);
 	cvSetVisible(data.cvhWork, visible);
 	cvSetVisible(data.cvbWork, visible);
 
