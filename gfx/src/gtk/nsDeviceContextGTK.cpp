@@ -27,6 +27,9 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#define GDK_COLOR_TO_NS_RGB(c) \
+  ((nscolor) NS_RGB(c.red, c.green, c.blue))
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
