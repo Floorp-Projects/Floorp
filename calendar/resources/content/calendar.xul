@@ -451,7 +451,7 @@
       <spacer flex="1"/>
       <hbox id="throbber-box" align="center">
          <button id="navigator-throbber2"
-                 oncommand="goClickThrobber('browser.throbber.url')"
+                 oncommand="displayCalendarVersion()"
                  tooltiptext="&throbber.tooltip;"/>
       </hbox>
    </toolbar>
