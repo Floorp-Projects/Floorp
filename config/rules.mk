@@ -210,8 +210,7 @@ endif # LIBRARY_NAME
 endif # MOZ_MAPINFO
 
 ifdef DEFFILE
-CFLAGS += /DEF:$(DEFFILE)
-CXXFLAGS += /DEF:$(DEFFILE)
+OS_LDFLAGS += /DEF:$(DEFFILE)
 DSO_LDOPTS += /DEF:$(DEFFILE)
 endif
 
@@ -1477,7 +1476,11 @@ ifeq ($(OS_TARGET),WIN95)
 _NO_FLOCK=-l
 endif
 
-libs chrome:: $(CHROME_DEPS)
+chrome::
+	$(MAKE) realchrome
+	+$(LOOP_OVER_MOZ_DIRS)
+
+libs realchrome:: $(CHROME_DEPS)
 ifndef NO_DIST_INSTALL
 ifdef MOZ_XUL_APP
 	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(if $(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)),-x) $(_NO_FLOCK) $(_JAR_AUTO_REG) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl -- "$(DEFINES) $(ACDEFINES)" < $(JAR_MANIFEST); fi
@@ -1633,7 +1636,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner $(DIRS) FORCE
+.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner $(DIRS) FORCE
 
 # Used as a dependency to force targets to rebuild
 FORCE:
