@@ -420,7 +420,7 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 
     status = VR_GetVersion( tempCString, &cVersion );
 
-    version.SetString("");
+    version.Truncate();
 
     /* if we got the version */
     if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK) 
@@ -451,7 +451,7 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 
     if ( aURL.EqualsIgnoreCase("file:/", 6) )
     {       
-        tempFileString.SetString( nsNSPRPath(nsFileURL(aURL)) );
+        tempFileString.Assign( nsNSPRPath(nsFileURL(aURL)) );
     }
     else
     {
@@ -482,7 +482,7 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 
         tempFile.MakeUnique();
 
-        tempFileString.SetString( nsNSPRPath( nsFilePath(tempFile) ) );
+        tempFileString.Assign( nsNSPRPath( nsFilePath(tempFile) ) );
     }
 }
 

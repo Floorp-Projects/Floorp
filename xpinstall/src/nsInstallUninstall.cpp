@@ -50,14 +50,14 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
         return;
     }
     
-    mRegName.SetString(regName);
+    mRegName.Assign(regName);
 
     char* userName = (char*)PR_Malloc(MAXREGPATHLEN);
     PRInt32 err = VR_GetUninstallUserName( (char*) (const char*) nsAutoCString(regName), 
                                            userName, 
                                            MAXREGPATHLEN );
     
-    mUIName.SetString(userName);
+    mUIName.Assign(userName);
     
     if (err != REGERR_OK)
     {
