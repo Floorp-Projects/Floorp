@@ -98,15 +98,6 @@
 /*** Overridden Methods                 ***/
 /******************************************/
 
-- (BOOL)isOpaque
-{
-  // see http://developer.apple.com/qa/qa2001/qa1117.html
-  if ( ([self tabViewType] == NSNoTabsBezelBorder) && (NSAppKitVersionNumber < 633) )
-    return NO;
-
-  return [super isOpaque];
-}
-
 - (void)drawRect:(NSRect)aRect
 {
   if (mIsDropTarget)
