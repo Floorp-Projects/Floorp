@@ -327,15 +327,22 @@ protected:
 #define EXTENDED_UNICODE_PLANES    16
 
 // get plane number from ccmap, bmp excluded, so plane 1's number is 0.
-#define CCMAP_PLANE(h)  (((PRUint16)(h) - (PRUint16)0xd800) >> 6)
+#define CCMAP_PLANE_FROM_SURROGATE(h)  ((((PRUint16)(h) - (PRUint16)0xd800) >> 6) + 1)
+
+// same as above, but get plane number from a ucs4 char
+#define CCMAP_PLANE(u)  ((((PRUint32)(u))>>16))
 
 // scalar value inside the plane
 #define CCMAP_INPLANE_OFFSET(h, l) (((((PRUint16)(h) - (PRUint16)0xd800) & 0x3f) << 10) + ((PRUint16)(l) - (PRUint16)0xdc00))
 
 // get ccmap for that plane
-#define CCMAP_FOR_PLANE_EXT(m, i)  ((m) + ((PRUint32*)((m) + CCMAP_SIZE(m)))[i])
+#define CCMAP_FOR_PLANE_EXT(m, i)  ((m) + ((PRUint32*)((m) + CCMAP_SIZE(m)))[(i)-1])
 
 // test the bit for surrogate pair
-#define CCMAP_HAS_CHAR_EXT(m, h, l)  (CCMAP_FLAG(m)&CCMAP_SURROGATE_FLAG && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(h)), CCMAP_INPLANE_OFFSET(h, l)))
+#define CCMAP_HAS_CHAR_EXT2(m, h, l)  (CCMAP_FLAG(m)&CCMAP_SURROGATE_FLAG && \
+                                      CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE_FROM_SURROGATE(h)), CCMAP_INPLANE_OFFSET(h, l)))
+// test the bit for a character in UCS4
+#define CCMAP_HAS_CHAR_EXT(m, ucs4)  (!((ucs4)&0xffff0000) && CCMAP_HAS_CHAR(m, (PRUnichar)(ucs4)) ||  \
+                                      CCMAP_FLAG(m)&CCMAP_SURROGATE_FLAG && CCMAP_HAS_CHAR(CCMAP_FOR_PLANE_EXT((m), CCMAP_PLANE(ucs4)), (ucs4)&0xffff))
 
 #endif // NSCOMPRESSEDCHARMAP_H 

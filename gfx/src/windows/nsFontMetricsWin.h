@@ -35,17 +35,15 @@
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
 
-#ifdef FONT_HAS_GLYPH
-#undef FONT_HAS_GLYPH
-#endif
-//#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
-#define FONT_HAS_GLYPH(map, g) IS_REPRESENTABLE(map, g)
-
 #ifdef ADD_GLYPH
 #undef ADD_GLYPH
 #endif
-//#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
 #define ADD_GLYPH(map, g) SET_REPRESENTABLE(map, g)
+
+#ifdef IS_IN_BMP
+#undef IS_IN_BMP
+#endif
+#define IS_IN_BMP(ucs4)   ((ucs4) < 0x10000)
 
 enum eFontType {
  eFontType_UNKNOWN = -1,
@@ -91,7 +89,7 @@ public:
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength) = 0;
 
-  virtual PRBool HasGlyph(PRUnichar ch) {return CCMAP_HAS_CHAR(mCCMap, ch);};
+  virtual PRBool HasGlyph(PRUint32 ch) {return CCMAP_HAS_CHAR_EXT(mCCMap, ch);};
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
@@ -123,8 +121,8 @@ public:
   nsFontWinSubstitute(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap, PRBool aDisplayUnicode);
   virtual ~nsFontWinSubstitute();
 
-  virtual PRBool HasGlyph(PRUnichar ch) {return IS_REPRESENTABLE(mRepresentableCharMap, ch);};
-  virtual void SetRepresentable(PRUnichar ch) {SET_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual PRBool HasGlyph(PRUint32 ch) {return IS_IN_BMP(ch) && IS_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual void SetRepresentable(PRUint32 ch) { if (IS_IN_BMP(ch)) SET_REPRESENTABLE(mRepresentableCharMap, ch); };
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength);
@@ -217,16 +215,16 @@ public:
                    nsFontSwitchCallback aFunc, 
                    void*                aData);
 
-  nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindUserDefinedFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindGenericFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindPrefFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
+  nsFontWin*         FindFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindUserDefinedFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindLocalFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindGenericFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindPrefFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUint32 aChar);
 
   virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
-  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName);
+  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName);
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
   virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
 
@@ -291,7 +289,7 @@ protected:
   PRInt32  GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable);
   PRInt32  GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable);
   PRUint16 GetFontWeightTable(HDC aDC, nsString* aFontName);
-  nsFontWin* LocateFont(HDC aDC, PRUnichar aChar, PRInt32 & aCount);
+  nsFontWin* LocateFont(HDC aDC, PRUint32 aChar, PRInt32 & aCount);
 
   nsresult RealizeFont();
   void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight,
@@ -403,8 +401,8 @@ public:
   nsFontWinSubstituteA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap);
   virtual ~nsFontWinSubstituteA();
 
-  virtual PRBool HasGlyph(PRUnichar ch) {return IS_REPRESENTABLE(mRepresentableCharMap, ch);};
-  virtual void SetRepresentable(PRUnichar ch) {SET_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual PRBool HasGlyph(PRUint32 ch) {return IS_IN_BMP(ch) && IS_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual void SetRepresentable(PRUint32 ch) { if (IS_IN_BMP(ch)) SET_REPRESENTABLE(mRepresentableCharMap, ch); };
   virtual nsFontSubset* FindSubset(HDC aDC, PRUnichar aChar, nsFontMetricsWinA* aFontMetrics) {return mSubsets[0];};
 
   //We need to have a easily operatable charmap for substitute font
