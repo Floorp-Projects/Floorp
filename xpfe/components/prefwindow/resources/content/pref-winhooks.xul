@@ -40,49 +40,109 @@
         onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
         orient="vertical">
 
-<script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
+    <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
     
     <box class="box-smallheader" title="&title.label;"/>
 
-        <!-- File types -->
-        <titledbox>
-            <label value="&files.label;"/>
-            <box orient="vertical" flex="1">
-                <html>
-                    &files.text;
-                </html>
-                <box class="indent">
-                  <box orient="vertical" autostretch="never" flex="1">
-                    <checkbox id="isHandlingHTML" label="&html.label;" accesskey="&html.accesskey;"/>
-                    <checkbox id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;"/>
-                    <checkbox id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;"/>
-                  </box>
-                  <box orient="vertical" autostretch="never" flex="1">
-                    <checkbox id="isHandlingJPEG" label="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
-                    <checkbox id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;"/>
-                    <checkbox id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;"/>
-                  </box>
-                </box>
-            </box>
-        </titledbox>
-        <!-- Internet Shortcuts -->
-        <titledbox>
-            <label value="&shortcuts.label;"/>
-            <box orient="vertical" autostretch="never" flex="1">
-                <html>
-                    &shortcuts.text;
-                </html>
-                <checkbox id="isHandlingHTTP"   label="&http.label;" accesskey="&http.accesskey;" class="indent"/>
-                <checkbox id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;" class="indent"/>
-                <checkbox id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;" class="indent"/>
-                <checkbox id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;" class="indent"/>
-		 <checkbox id="isHandlingGOPHER" label="&gopher.label;" accesskey="&gopher.accesskey;" class="indent"/>
-            </box>
-        </titledbox>
-        <!-- Misc -->
-        <box autostretch="never">
-          <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>
-        </box>
+    <!-- File types -->
+    <text class="label" value="&files.text;"/>
+    <tree class="inset indent" style="width: 0px; height: 0px;" flex="2">
+        <treechildren flex="1">
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingHTML" label="&html.label;" accesskey="&html.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingJPEG" label="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+        </treechildren>
+    </tree>
+
+    <separator/>
+
+    <!-- Internet Shortcuts -->
+    <text class="label" value="&shortcuts.text;"/>
+    <tree class="inset indent" style="width: 0px; height: 0px;" flex="2">
+        <treechildren flex="1">
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingHTTP"   label="&http.label;" accesskey="&http.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
+                        <checkbox id="isHandlingGOPHER" label="&gopher.label;" accesskey="&gopher.accesskey;"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+        </treechildren>
+    </tree>
+
+    <separator/>
+
+    <!-- Misc -->
+    <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>
+
+    <spring flex="1"/>
 
 </window>
 

@@ -1,11 +1,10 @@
 <!-- LOCALIZATION NOTE : FILE "Windows integration" preferences -->
 
-<!ENTITY title.label "Windows Integration">
-<!ENTITY info.label  "Configuration">
+<!ENTITY title.label "System">
 
 <!-- These entities are used on the "File Types" section of the dialog. -->
 <!ENTITY files.label    "File Types">
-<!ENTITY files.text     "Select the types of files you want to view using &brandShortName;.  Windows will use &brandShortName; when you open any files of the selected types.">
+<!ENTITY files.text     "Windows should use &brandShortName; to open these file types:">
 <!ENTITY html.label     "HTML documents">
 <!ENTITY html.accesskey "H">
 <!ENTITY jpeg.label     "JPEG images">
@@ -21,20 +20,20 @@
 
 <!-- These entities are used on the "Internet Shortcuts" section of the dialog. -->
 <!ENTITY shortcuts.label "Internet Shortcuts">
-<!ENTITY shortcuts.text  "Select the types of Internet Shortcuts you want to view using &brandShortName;.  Windows will use &brandShortName; when you open any shortcuts of the selected types.">
-<!ENTITY http.label      "Hypertext Transfer Protocol (http:)">
+<!ENTITY shortcuts.text  "Windows should use &brandShortName; to handle these protocols:">
+<!ENTITY http.label      "http: (Hypertext Transfer Protocol)">
 <!ENTITY http.accesskey  "H">
-<!ENTITY https.label      "Secure HTTP (https:)">
+<!ENTITY https.label      "https: (Secure HTTP)">
 <!ENTITY https.accesskey  "S">
-<!ENTITY ftp.label        "File Transfer Protocol (ftp:)">
+<!ENTITY ftp.label        "ftp: (File Transfer Protocol)">
 <!ENTITY ftp.accesskey    "F">
 <!--LOCALIZATION NOTE (chrome.label): Don't translate 'chrome' -->
-<!ENTITY chrome.label     "Chrome Protocol (chrome:)">
+<!ENTITY chrome.label     "chrome: (Chrome Protocol)">
 <!ENTITY chrome.accesskey "C">
-<!ENTITY gopher.label     "Gopher Protocol (gopher:)">
+<!ENTITY gopher.label     "gopher: (Gopher Protocol)">
 <!ENTITY gopher.accesskey "G">
 
 <!-- This entity is for the "show this dialog" checkbox. -->
-<!ENTITY showDialog.label "Check that Windows is set up to match these preferences each time &brandShortName; starts up.">
-<!ENTITY showDialog.accesskey "k">
+<!ENTITY showDialog.label "Alert me if other applications change these settings">
+<!ENTITY showDialog.accesskey "A">
 
