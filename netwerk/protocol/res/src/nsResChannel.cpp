@@ -575,7 +575,7 @@ nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
 {
     nsresult rv;
 
-    if (NS_FAILED(aStatus)) {
+    if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED) {
         // if we failed to process this channel, then try the next one:
         switch (mState) {
           case ASYNC_OPEN:
@@ -590,13 +590,13 @@ nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
     }
 
     rv = mUserObserver->OnStopRequest(this, mUserContext, aStatus, aMsg);
-
+#if 0 // we don't add the resource channel to the group (although maybe we should)
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
             mLoadGroup->RemoveChannel(this, context, aStatus, aMsg);
         }
     }
-
+#endif
     // Release the reference to the consumer stream listener...
     mUserObserver = null_nsCOMPtr();
     mUserContext = null_nsCOMPtr();
