@@ -27,8 +27,8 @@
 #include "nsIMsgFolderCacheElement.h"
 
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "mdb.h"
+#include "nsHashTable.h"
 
 class FolderCachePool;
 
@@ -45,7 +45,6 @@ public:
     NS_DECL_NSIMSGFOLDERCACHE
 
 protected:
-	static PRBool FindCacheElementByKey(nsISupports *aElement, void *data);
 	static nsIMdbFactory *GetMDBFactory();
 
 	nsresult AddCacheElement(const char *key, nsIMdbRow *row, nsIMsgFolderCacheElement **result);
@@ -59,7 +58,7 @@ protected:
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 
 	nsFileSpec		m_dbFileSpec;
-	nsISupportsArray	*m_cacheElements;
+	nsSupportsHashtable	*m_cacheElements;
 	FolderCachePool		*m_morkEnvMemPool;
 	// mdb stuff
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.

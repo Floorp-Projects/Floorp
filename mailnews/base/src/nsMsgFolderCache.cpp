@@ -76,7 +76,7 @@ static nsIMdbFactory *gMDBFactory = nsnull;
 
 nsMsgFolderCache::~nsMsgFolderCache()
 {
-	NS_RELEASE(m_cacheElements);
+	delete m_cacheElements;
 	if (m_mdbStore)
 		m_mdbStore->Release();
 	if (gMDBFactory)
@@ -359,9 +359,11 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 	if (!dbFileSpec)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv = NS_NewISupportsArray(&m_cacheElements);
+	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
-	if (NS_SUCCEEDED(rv) && m_cacheElements)
+	m_cacheElements = new nsSupportsHashtable;
+
+	if (m_cacheElements)
 	{
 		rv = dbFileSpec->GetFileSpec(&m_dbFileSpec);
 
@@ -375,27 +377,20 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 	return rv;
 }
 
-typedef struct _findCacheElementByKeyEntry {
-  const char *m_key;
-  nsIMsgFolderCacheElement *m_cacheElement;
-} findCacheElementByKeyEntry;
-
 NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool createIfMissing, 
 							nsIMsgFolderCacheElement **result)
 {
+	nsStringKey hashKey(pathKey);
+
 	if (!result || !pathKey)
 		return NS_ERROR_NULL_POINTER;
 
-	findCacheElementByKeyEntry findEntry;
-	findEntry.m_key = pathKey;
-	findEntry.m_cacheElement = nsnull;
 
-	m_cacheElements->EnumerateForwards(FindCacheElementByKey, (void *)&findEntry);
+	*result = (nsIMsgFolderCacheElement *) m_cacheElements->Get(&hashKey);
 
-	if (findEntry.m_cacheElement)
+	// nsHashTable already does an address on *result
+	if (*result)
 	{
-		*result = findEntry.m_cacheElement;
-		NS_ADDREF(*result);
 		return NS_OK;
 	}
 	else if (createIfMissing)
@@ -446,33 +441,6 @@ NS_IMETHODIMP nsMsgFolderCache::Close()
 	return ret;
 }
 
-
-PRBool
-nsMsgFolderCache::FindCacheElementByKey(nsISupports *aElement, void *data)
-{
-	nsresult rv;
-	nsCOMPtr<nsIMsgFolderCacheElement> cacheElement = do_QueryInterface(aElement, &rv);
-	if (NS_FAILED(rv)) 
-		return PR_TRUE;
-
-	findCacheElementByKeyEntry *entry = (findCacheElementByKeyEntry *) data;
-
-	nsXPIDLCString key;
-	rv = cacheElement->GetKey(getter_Copies(key));
-	if (NS_FAILED(rv)) 
-		return rv;
-  
-	if (entry && entry->m_key && !PL_strcmp(key, entry->m_key ))
-	{
-		entry->m_cacheElement = cacheElement;
-		// caller will addref!
-//		NS_ADDREF(entry->m_cacheElement);
-		return PR_FALSE;
-	}
-
-	return PR_TRUE;
-}
-
 nsresult nsMsgFolderCache::AddCacheElement(const char *key, nsIMdbRow *row, nsIMsgFolderCacheElement **result)
 {
 	nsMsgFolderCacheElement *cacheElement = new nsMsgFolderCacheElement;
@@ -481,19 +449,24 @@ nsresult nsMsgFolderCache::AddCacheElement(const char *key, nsIMdbRow *row, nsIM
 	{
 		cacheElement->SetMDBRow(row);
 		cacheElement->SetOwningCache(this);
+		nsCAutoString hashStrKey(key);
 		// if caller didn't pass in key, try to get it from row.
 		if (!key)
 		{
 			char *existingKey = nsnull;
 			cacheElement->GetStringProperty("key", &existingKey);	
 			cacheElement->SetKey(existingKey);
+			hashStrKey = existingKey;
 			PR_Free(existingKey);
 		}
 		else
 			cacheElement->SetKey((char *) key);
 		nsCOMPtr<nsISupports> supports(do_QueryInterface(cacheElement));
 		if(supports)
-			m_cacheElements->AppendElement(supports);
+		{
+			nsStringKey hashKey(hashStrKey);
+			m_cacheElements->Put(&hashKey, supports);
+		}
 		if (result)
 		{
 			*result = cacheElement;

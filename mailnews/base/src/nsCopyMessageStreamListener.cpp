@@ -178,7 +178,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 	PRBool copySucceeded = (aStatus == NS_BINDING_SUCCEEDED);
 	rv = mDestination->EndCopy(copySucceeded);
 	//If this is a move and we finished the copy, delete the old message.
-	if(copySucceeded)
+	if(NS_SUCCEEDED(rv) && copySucceeded)
 	{
 		PRBool moveMessage;
 		// this only happens for local messages, because it checks for a
