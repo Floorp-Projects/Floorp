@@ -35,6 +35,7 @@ public:
   
   NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)=0;
   NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)=0;
+  NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat)=0;
 };
 
 
