@@ -1768,8 +1768,7 @@ nsBulletFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGro
   if (!shell)
     return;
 
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = shell->GetDocument();
   if (!doc)
     return;
 

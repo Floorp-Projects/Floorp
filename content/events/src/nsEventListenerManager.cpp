@@ -1975,11 +1975,10 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   // from the focus controller.
   nsCOMPtr<nsIDOMEventTarget> currentTarget(aCurrentTarget);
   nsCOMPtr<nsIDOMElement> currentFocus;
-  nsCOMPtr<nsIDocument> doc;
   nsIPresShell* shell = aPresContext->PresShell();
 
   if (aEvent->message == NS_CONTEXTMENU_KEY) {
-    shell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = shell->GetDocument();
     if (doc) {
       nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       if (privWindow) {

@@ -755,8 +755,7 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
       // Now, get the current URI to see if we doing chrome
       nsIPresShell *presShell = aState.PresShell();
       if (!presShell) return PR_FALSE;
-      nsCOMPtr<nsIDocument> doc;
-      presShell->GetDocument(getter_AddRefs(doc));
+      nsIDocument *doc = presShell->GetDocument();
       if (!doc) return PR_FALSE;
       nsIURI *uri = doc->GetDocumentURI();
       if (!uri) return PR_FALSE;

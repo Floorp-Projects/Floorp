@@ -1084,7 +1084,6 @@ public:
   NS_IMETHOD PopStackMemory();
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult);
 
-  NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
   NS_IMETHOD GetViewManager(nsIViewManager** aResult);
   nsIViewManager* GetViewManager() { return mViewManager; }
@@ -2005,18 +2004,6 @@ void*
 PresShell::AllocateFrame(size_t aSize)
 {
   return mFrameArena.AllocateFrame(aSize);
-}
-
-NS_IMETHODIMP
-PresShell::GetDocument(nsIDocument** aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mDocument;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4436,9 +4423,7 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
 
   *outSelection = nsnull;
 
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  if (!doc) return NS_ERROR_FAILURE;
+  if (!mDocument) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
@@ -4487,9 +4472,7 @@ PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aS
 {
   aOutValue.Truncate();
   
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  if (!doc) return NS_ERROR_FAILURE;
+  if (!mDocument) return NS_ERROR_FAILURE;
 
   nsresult rv;
   nsCOMPtr<nsISelection> sel;
@@ -4508,15 +4491,14 @@ PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aS
   }
   
   // call the copy code
-  return nsCopySupport::GetContents(aMimeType, aFlags, sel, doc, aOutValue);
+  return nsCopySupport::GetContents(aMimeType, aFlags, sel,
+                                    mDocument, aOutValue);
 }
 
 NS_IMETHODIMP
 PresShell::DoCopy()
 {
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  if (!doc) return NS_ERROR_FAILURE;
+  if (!mDocument) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISelection> sel;
   nsresult rv = GetSelectionForCopy(getter_AddRefs(sel));
@@ -4532,12 +4514,13 @@ PresShell::DoCopy()
     return NS_OK;
 
   // call the copy code
-  rv = nsCopySupport::HTMLCopy(sel, doc, nsIClipboard::kGlobalClipboard);
+  rv = nsCopySupport::HTMLCopy(sel, mDocument, nsIClipboard::kGlobalClipboard);
   if (NS_FAILED(rv))
     return rv;
 
   // Now that we have copied, update the Paste menu item
-  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+  nsCOMPtr<nsIDOMWindowInternal> domWindow =
+    do_QueryInterface(mDocument->GetScriptGlobalObject());
   if (domWindow)
   {
     domWindow->UpdateCommands(NS_LITERAL_STRING("clipboard"));

@@ -404,8 +404,7 @@ NS_IMETHODIMP nsXPBaseWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* a
   nsIPresShell* shell;
   GetPresShell(shell);
   if (nsnull != shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = shell->GetDocument();
     if (doc) {
       NS_IF_ADDREF(mContentRoot = doc->GetRootContent());
       mDocIsLoaded = PR_TRUE;
@@ -513,8 +512,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetDocument(nsIDOMHTMLDocument *& aDocument)
   nsIPresShell *shell = nsnull;
   GetPresShell(shell);
   if (nsnull != shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = shell->GetDocument();
     if (doc) {
       doc->QueryInterface(kIDOMHTMLDocumentIID,(void **)&htmlDoc);
     }

@@ -960,8 +960,7 @@ nsEditor::GetDocumentCharacterSet(nsACString &characterSet)
   nsresult rv = GetPresShell(getter_AddRefs(presShell));
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIDocument> doc;
-    presShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = presShell->GetDocument();
     if (doc) {
       characterSet = doc->GetDocumentCharacterSet();
       return NS_OK;
@@ -980,8 +979,7 @@ nsEditor::SetDocumentCharacterSet(const nsACString& characterSet)
   nsresult rv = GetPresShell(getter_AddRefs(presShell));
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIDocument> doc;
-    presShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = presShell->GetDocument();
     if (doc) {
       doc->SetDocumentCharacterSet(characterSet);
       return NS_OK;

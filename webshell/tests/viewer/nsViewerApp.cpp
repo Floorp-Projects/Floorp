@@ -1084,8 +1084,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
   {
     nsIPresShell* shell = aWindow->GetPresShell();
     if (nsnull != shell) {
-      nsCOMPtr<nsIDocument> doc;
-      shell->GetDocument(getter_AddRefs(doc));
+      nsIDocument *doc = shell->GetDocument();
       if (doc) {
         nsCAutoString str;
         nsresult rv = doc->GetDocumentURI()->GetSpec(str);

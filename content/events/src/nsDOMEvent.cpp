@@ -314,8 +314,8 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
     //Always want a target.  Use document if nothing else.
     nsIPresShell *presShell;
     if (mPresContext && (presShell = mPresContext->GetPresShell())) {
-      nsCOMPtr<nsIDocument> doc;
-      if (NS_SUCCEEDED(presShell->GetDocument(getter_AddRefs(doc))) && doc) {
+      nsIDocument *doc = presShell->GetDocument();
+      if (doc) {
         mTarget = do_QueryInterface(doc);
         if (mTarget) {
           *aTarget = mTarget;

@@ -93,7 +93,7 @@ nsPrintObject::Init(nsIWebShell* aWebShell)
   mDocShell->GetPresContext(getter_AddRefs(mDisplayPresContext));
   NS_ENSURE_TRUE(mDisplayPresContext, NS_ERROR_FAILURE);
 
-  mDisplayPresShell->GetDocument(getter_AddRefs(mDocument));
+  mDocument = mDisplayPresShell->GetDocument();
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
   return NS_OK;

@@ -954,8 +954,7 @@ CantRenderReplacedElementEvent::~CantRenderReplacedElementEvent()
 nsresult
 CantRenderReplacedElementEvent::AddLoadGroupRequest(nsIPresShell* aPresShell)
 {
-  nsCOMPtr<nsIDocument> doc;
-  aPresShell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = aPresShell->GetDocument();
   if (!doc) return NS_ERROR_FAILURE;
 
   nsresult rv = nsDummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), aPresShell);
@@ -986,8 +985,7 @@ CantRenderReplacedElementEvent::RemoveLoadGroupRequest()
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
     if (!presShell) return NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIDocument> doc;
-    presShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = presShell->GetDocument();
     if (!doc) return NS_ERROR_FAILURE;;
 
     nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();

@@ -90,7 +90,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
 
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (shell) {
-    shell->GetDocument(getter_AddRefs(mDocument));
+    mDocument = shell->GetDocument();
     nsIViewManager* vm = shell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;

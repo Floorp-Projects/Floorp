@@ -450,8 +450,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
     // When display if first asked for, go ahead and get our colors set up.
     nsIPresShell *presShell = aData->mPresContext->GetPresShell();
     if (presShell) {
-      nsCOMPtr<nsIDocument> doc;
-      presShell->GetDocument(getter_AddRefs(doc));
+      nsIDocument *doc = presShell->GetDocument();
       if (doc) {
         nsHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
         if (styleSheet) {

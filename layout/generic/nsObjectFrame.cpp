@@ -1247,12 +1247,7 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
   // Check to see if content-policy wants to veto this
   if(aURI)
   {
-    nsresult rv;
-
-    nsCOMPtr<nsIDocument> document;
-    rv = aPresContext->PresShell()->GetDocument(getter_AddRefs(document));
-    if (NS_FAILED(rv)) return rv;
-
+    nsIDocument *document = aPresContext->PresShell()->GetDocument();
     if (! document)
       return NS_ERROR_FAILURE;
 
@@ -1260,13 +1255,13 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
     //don't care if we can't get the originating URL
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
-                                   aURI,
-                                   docURI,
-                                   mContent,
-                                   nsDependentCString(aMimetype ? aMimetype : ""),
-                                   nsnull, //extra
-                                   &shouldLoad);
+    nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
+                                            aURI,
+                                            docURI,
+                                            mContent,
+                                            nsDependentCString(aMimetype ? aMimetype : ""),
+                                            nsnull, //extra
+                                            &shouldLoad);
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
     }
@@ -2344,13 +2339,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  if (!aDocument)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDocument = nsnull;
   if (nsnull != mContext) {
     nsIPresShell *shell = mContext->GetPresShell();
     if (shell)
-      rv = shell->GetDocument(aDocument);
+      NS_IF_ADDREF(*aDocument = shell->GetDocument());
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
@@ -2544,10 +2542,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
       return NS_ERROR_FAILURE;
     }
     
-    nsCOMPtr<nsIDocument> doc;
-    mContext->PresShell()->GetDocument(getter_AddRefs(doc));
-
-    rv = doc->GetBaseURI()->GetSpec(mDocumentBase);
+    rv = mContext->PresShell()->GetDocument()->GetBaseURI()->GetSpec(mDocumentBase);
   }
   if (rv == NS_OK)
     *result = ToNewCString(mDocumentBase);

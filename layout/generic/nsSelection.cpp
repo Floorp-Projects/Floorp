@@ -1635,8 +1635,7 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc;
-  rv = shell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = shell->GetDocument();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Flags should always include OutputSelectionOnly if we're coming from here:
@@ -3092,10 +3091,7 @@ NS_IMETHODIMP nsSelection::SelectAll()
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDocument> doc;
-    rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIDocument *doc = shell->GetDocument();
     if (!doc)
       return NS_ERROR_FAILURE;
     rootContent = doc->GetRootContent();
@@ -7479,16 +7475,10 @@ nsTypedSelection::NotifySelectionListeners()
   PRInt32 cnt = mSelectionListeners.Count();
   
   nsCOMPtr<nsIDOMDocument> domdoc;
-  nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = GetPresShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell)
-  {
-    rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv))
-      doc = 0;
-    domdoc = do_QueryInterface(doc);
-  }
+    domdoc = do_QueryInterface(shell->GetDocument());
   short reason = mFrameSelection->PopReason();
   for (PRInt32 i = 0; i < cnt; i++)
   {

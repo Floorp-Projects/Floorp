@@ -2392,8 +2392,7 @@ DumpContentRecurse(nsIDocShell* aDocShell, FILE* out)
     fprintf(out, "docshell=%p \n", aDocShell);
     nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
-      nsCOMPtr<nsIDocument> doc;
-      shell->GetDocument(getter_AddRefs(doc));
+      nsIDocument *doc = shell->GetDocument();
       if (doc) {
         nsIContent *root = doc->GetRootContent();
         if (nsnull != root) {
@@ -2855,8 +2854,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
       nsIPresShell* shell = GetPresShell();
       if (nsnull != shell) {
         nsAutoString  defaultStyle;
-        nsCOMPtr<nsIDocument> doc;
-        shell->GetDocument(getter_AddRefs(doc));
+        nsIDocument *doc = shell->GetDocument();
         if (doc) {
           nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);
@@ -2893,8 +2891,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
     {
       nsIPresShell* shell = GetPresShell();
       if (nsnull != shell) {
-        nsCOMPtr<nsIDocument> doc;
-        shell->GetDocument(getter_AddRefs(doc));
+        nsIDocument *doc = shell->GetDocument();
         if (doc) {
           nsAutoString  defaultStyle;
           nsIAtom* defStyleAtom = NS_NewAtom("default-style");

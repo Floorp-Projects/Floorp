@@ -1383,10 +1383,9 @@ nsDocShell::GetCharset(char** aCharset)
     *aCharset = nsnull; 
 
     nsCOMPtr<nsIPresShell> presShell;
-    nsCOMPtr<nsIDocument> doc;
     GetPresShell(getter_AddRefs(presShell));
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-    presShell->GetDocument(getter_AddRefs(doc));
+    nsIDocument *doc = presShell->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
     *aCharset = ToNewCString(doc->GetDocumentCharacterSet());
     if (!*aCharset) {
@@ -1956,8 +1955,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
   nsCOMPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = presShell->GetDocument();
 
   nsCOMPtr<nsIScriptGlobalObject> sgo;
   doc->GetScriptGlobalObject(getter_AddRefs(sgo));
@@ -3364,17 +3362,12 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(treeItem));
         docShell->GetPresShell(getter_AddRefs(presShell));
 
-        nsCOMPtr<nsIDocument> doc;
-        presShell->GetDocument(getter_AddRefs(doc));
-
         nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentItem);
         nsCOMPtr<nsIPresShell> pPresShell;
         parentDS->GetPresShell(getter_AddRefs(pPresShell));
 
-        nsCOMPtr<nsIDocument> pDoc;
-        pPresShell->GetDocument(getter_AddRefs(pDoc));
-
-        nsIContent *shellContent = pDoc->FindContentForSubDocument(doc);
+        nsIContent *shellContent =
+            pPresShell->GetDocument()->FindContentForSubDocument(presShell->GetDocument());
         NS_ASSERTION(shellContent, "subshell not in the map");
 
         nsIFrame* frame;
@@ -7017,8 +7010,7 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
   GetPresShell(getter_AddRefs(presShell));
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocument> doc;
-  presShell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = presShell->GetDocument();
   if (!doc) return NS_ERROR_FAILURE;
 
   nsIContent *rootContent = doc->GetRootContent();

@@ -894,8 +894,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
 
   // get the document and the global script object
   nsIPresShell *presShell = aPresContext->PresShell();
-  nsCOMPtr<nsIDocument> document;
-  presShell->GetDocument(getter_AddRefs(document));
+  nsIDocument *document = presShell->GetDocument();
 
   PRBool sizedToPopup = (mContent->Tag() != nsXULAtoms::tooltip) &&
     (nsMenuFrame::IsSizedToPopup(aFrame->GetContent(), PR_FALSE));

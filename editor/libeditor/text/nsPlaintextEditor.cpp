@@ -1329,10 +1329,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc;
-  rv = presShell->GetDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsIDocument *doc = presShell->GetDocument();
   rv = docEncoder->Init(doc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 

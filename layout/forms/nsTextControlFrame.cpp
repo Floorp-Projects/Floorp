@@ -1578,13 +1578,11 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Get the DOM document
 
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = shell->GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv))
-    return rv;
+  nsIDocument *doc = shell->GetDocument();
   if (!doc)
     return NS_ERROR_FAILURE;
 
+  nsresult rv;
   nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc, &rv);
   if (NS_FAILED(rv))
     return rv;

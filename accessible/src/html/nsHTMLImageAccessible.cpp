@@ -53,12 +53,11 @@ nsHTMLImageAccessible::nsHTMLImageAccessible(nsIDOMNode* aDOMNode, nsIWeakRefere
 nsLinkableAccessible(aDOMNode, aShell)
 { 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aDOMNode));
-  nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (!shell)
     return;
 
-  shell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = shell->GetDocument();
   nsAutoString mapElementName;
 
   if (doc && element) {

@@ -683,9 +683,7 @@ void nsAccessible::GetScrollOffset(nsRect *aRect)
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(shell->GetDocument()));
     if (!docView) 
       return;
 

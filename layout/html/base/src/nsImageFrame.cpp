@@ -1522,9 +1522,7 @@ nsImageFrame::TriggerLink(nsPresContext* aPresContext,
       if (!ps)
         return;
 
-      nsCOMPtr<nsIDocument> doc;
-      rv = ps->GetDocument(getter_AddRefs(doc));
-      
+      nsIDocument *doc = ps->GetDocument();
       if (doc) {
         rv = securityManager->
           CheckLoadURIWithPrincipal(doc->GetPrincipal(), aURI,
@@ -1899,8 +1897,7 @@ nsImageFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGrou
   if (!shell)
     return;
 
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  nsIDocument *doc = shell->GetDocument();
   if (!doc)
     return;
 
