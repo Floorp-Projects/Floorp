@@ -47,15 +47,9 @@ PR_STATIC_CALLBACK(PRBool) ReleaseObjects(void* aElement, void*);
 // object gets another AddRef()
 nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
 {
-    PRInt32 count = aOther.Count();
     // make sure we do only one allocation
-    mArray.SizeTo(count);
-    
-    PRInt32 i;
-    for (i=0; i<count; i++) {
-        // ReplaceObjectAt will handle existing null entries for us
-        ReplaceObjectAt(aOther[i], i);
-    }
+    mArray.SizeTo(aOther.Count());
+    AppendObjects(aOther);
 }
 
 PRBool
