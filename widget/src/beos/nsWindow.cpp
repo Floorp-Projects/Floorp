@@ -79,7 +79,7 @@ nsWindow::nsWindow() : nsBaseWidget()
    
     mHitMenu            = nsnull;
     mHitSubMenus        = new nsVoidArray();
-    mVScrollbar         = nsnull;
+//    mVScrollbar         = nsnull;
 
 #ifdef DRAG_DROP
     mDragDrop           = nsnull;
@@ -718,6 +718,10 @@ NS_METHOD nsWindow::Show(PRBool bState)
 
 	mIsVisible = bState;     
 	return NS_OK;
+}
+
+NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
+{
 }
 
 //-------------------------------------------------------------------------
