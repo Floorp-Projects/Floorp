@@ -42,7 +42,7 @@ class nsIPresContext;
  */
 enum nsPrintStatus {
   ePrintStatus_StartPage,   // beginning the specified page
-  ePrintStatus_EndPage,     // finished with the specified page
+  ePrintStatus_EndPage      // finished with the specified page
 };
 
 /**
