@@ -31,6 +31,9 @@
 #include "prclist.h"
 #include "nsCOMPtr.h"
 
+#include "nsIInterfaceRequestor.h"
+#include "nsIProgressEventSink.h"
+
 /**
  * Each "stream-based" memory cache entry has one transport
  * associated with it.  The transport supports multiple 
@@ -155,6 +158,10 @@ public: /* internal */
 
     PRBool HasWriter() { return (mOutputStream != nsnull); }
 
+    void FireOnProgress(nsIRequest *aRequest,
+                        nsISupports *aContext,
+                        PRUint32 aOffset);
+
 private:
 
     /**
@@ -192,6 +199,9 @@ private:
 
     nsSegment      *mWriteSegment;
     PRUint32        mWriteCursor;
+
+    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
 };
 
 #endif

@@ -29,6 +29,7 @@
 #include "nsCacheEntry.h"
 #include "nsIOutputStream.h"
 #include "nsITransport.h"
+#include "nsIInterfaceRequestor.h"
 
 /******************************************************************************
 * nsCacheEntryDescriptor
@@ -76,12 +77,15 @@ private:
          NS_DECL_ISUPPORTS_INHERITED
          NS_DECL_NSITRANSPORT
 
-         nsTransportWrapper() : mTransport(nsnull) {}
+         nsTransportWrapper() : mCallbackFlags(0) {}
          virtual ~nsTransportWrapper() {}
 
          nsresult EnsureTransportWithAccess(nsCacheAccessMode  mode);
 
-         nsCOMPtr<nsITransport>   mTransport;
+         PRUint32                         mCallbackFlags;
+
+         nsCOMPtr<nsITransport>           mTransport;
+         nsCOMPtr<nsIInterfaceRequestor>  mCallbacks;
      }; // end of class nsTransportWrapper
      friend class nsTransportWrapper;
 
