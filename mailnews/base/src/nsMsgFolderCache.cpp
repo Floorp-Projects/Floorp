@@ -380,11 +380,11 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool createIfMissing, 
 							nsIMsgFolderCacheElement **result)
 {
-	nsCStringKey hashKey(pathKey);
 
 	if (!result || !pathKey)
 		return NS_ERROR_NULL_POINTER;
 
+	nsCStringKey hashKey(pathKey);
 
 	*result = (nsIMsgFolderCacheElement *) m_cacheElements->Get(&hashKey);
 
