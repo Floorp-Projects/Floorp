@@ -2313,6 +2313,7 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
     // else, if we are saving the message to disk!
     else if (m_imapMessageSink /* && m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk */) 
     {
+      // we get here when download the inbox for offline use
         nsCOMPtr<nsIFileSpec> fileSpec;
         PRBool addDummyEnvelope = PR_TRUE;
         nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
@@ -4836,13 +4837,8 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
       nsImapAction imapAction;
       m_runningUrl->GetImapAction(&imapAction);
 
-      // this code used to check for imapAction==nsIImapUrl::nsImapAppendMsgFromFile, which
-      // meant we'd get into this code whenever sending a message, as well
-      // as when copying messages to an imap folder from local folders or an other imap server.
-      // This made sending a message slow when there was a large sent folder. I don't believe
-      // we need to do this code when appending a msg from a file.
       if (GetServerStateParser().LastCommandSuccessful() &&  (
-        imapAction == nsIImapUrl::nsImapAppendDraftFromFile ))
+        imapAction == nsIImapUrl::nsImapAppendDraftFromFile  || imapAction==nsIImapUrl::nsImapAppendMsgFromFile))
       {
         if (GetServerStateParser().GetCapabilityFlag() &
           kUidplusCapability)
@@ -4865,7 +4861,13 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             UidExpunge(oldMsgId);
           }
         }
-        else if (m_imapExtensionSink)
+      // for non UIDPLUS servers,
+      // this code used to check for imapAction==nsIImapUrl::nsImapAppendMsgFromFile, which
+      // meant we'd get into this code whenever sending a message, as well
+      // as when copying messages to an imap folder from local folders or an other imap server.
+      // This made sending a message slow when there was a large sent folder. I don't believe
+      // this code worked anyway.
+        else if (m_imapExtensionSink && imapAction == nsIImapUrl::nsImapAppendDraftFromFile )
         {   // *** code me to search for the newly appended message
           // go to selected state
           AutoSubscribeToMailboxIfNecessary(mailboxName);
