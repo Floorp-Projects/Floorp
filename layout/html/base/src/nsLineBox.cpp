@@ -793,8 +793,10 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     return NS_OK;
   }
 
-  if (!line->mBounds.width)
+  if (line->mBounds.width == 0)
     return NS_ERROR_FAILURE;
+
+  nsRect r1, r2;
 
   if (aX < line->mBounds.x) {
     nsIFrame* frame;
@@ -804,10 +806,14 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     else {
       frame = line->mFirstChild;
     }
-    *aFrameFound = frame;
-    *aXIsBeforeFirstFrame = PR_TRUE;
-    *aXIsAfterLastFrame = PR_FALSE;
-    return NS_OK;
+    frame->GetRect(r1);
+    if (r1.width > 0)
+    {
+      *aFrameFound = frame;
+      *aXIsBeforeFirstFrame = PR_TRUE;
+      *aXIsAfterLastFrame = PR_FALSE;
+      return NS_OK;
+    }
   }
   else if (aX >= line->mBounds.XMost()) {
     nsIFrame* frame;
@@ -817,10 +823,14 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     else {
       frame = line->LastChild();
     }
-    *aFrameFound = frame;
-    *aXIsBeforeFirstFrame = PR_FALSE;
-    *aXIsAfterLastFrame = PR_TRUE;
-    return NS_OK;
+    frame->GetRect(r1);
+    if (r1.width > 0)
+    {
+      *aFrameFound = frame;
+      *aXIsBeforeFirstFrame = PR_FALSE;
+      *aXIsAfterLastFrame = PR_TRUE;
+      return NS_OK;
+    }
   }
 
   // Find the frame closest to the X coordinate. Gaps can occur
@@ -834,7 +844,6 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   if (aCouldBeReordered)
     CheckLineOrder(aLineNumber, &isReordered, &firstVisual, &lastVisual);
 #endif
-  nsRect r1, r2;
   nsIFrame* frame = line->mFirstChild;
 #ifdef IBMBIDI
   if (isReordered)
@@ -876,15 +885,15 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
 #endif // IBMBIDI
         frame->GetNextSibling(&nextFrame);
       frame->GetRect(r1);
-      if (aX > r1.x) {
+      if (r1.width && aX > r1.x) {
         break;
       }
       if (nextFrame) {
         nextFrame->GetRect(r2);
-        if (aX > r2.XMost()) {
+        if (r2.width && aX > r2.XMost()) {
           nscoord rightEdge = r2.XMost();
           nscoord delta = r1.x - rightEdge;
-          if (aX < rightEdge + delta/2) {
+          if (!r1.width || aX < rightEdge + delta/2) {
             frame = nextFrame;
           }
           break;
@@ -919,7 +928,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
           if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
               && testLine == aLineNumber) {
             tempFrame->GetRect(tempRect);
-            if (tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
+            if (tempRect.width && tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
               minX = tempRect.x;
               nextFrame = tempFrame;
             }
@@ -931,15 +940,15 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
 #endif // IBMBIDI
       frame->GetNextSibling(&nextFrame);
       frame->GetRect(r1);
-      if (aX < r1.XMost()) {
+      if (r1.width && aX < r1.XMost()) {
         break;
       }
       if (nextFrame) {
         nextFrame->GetRect(r2);
-        if (aX < r2.x) {
+        if (r2.width && aX < r2.x) {
           nscoord rightEdge = r1.XMost();
           nscoord delta = r2.x - rightEdge;
-          if (aX >= rightEdge + delta/2) {
+          if (!r1.width || aX >= rightEdge + delta/2) {
             frame = nextFrame;
           }
           break;
