@@ -796,6 +796,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::WANT_ENUMERATE)
 
 #ifdef MOZ_XUL
+  NS_DEFINE_CLASSINFO_DATA(XULTemplateBuilder, nsDOMGenericSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
+
   NS_DEFINE_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
 #endif
@@ -2261,6 +2264,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
 #ifdef MOZ_XUL
+  DOM_CLASSINFO_MAP_BEGIN(XULTemplateBuilder, nsIXULTemplateBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXULTemplateBuilder)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(XULTreeBuilder, nsIXULTreeBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsIXULTreeBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)

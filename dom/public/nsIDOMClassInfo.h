@@ -225,6 +225,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_ImageDocument_id,
 
 #ifdef MOZ_XUL
+  eDOMClassInfo_XULTemplateBuilder_id,
   eDOMClassInfo_XULTreeBuilder_id,
 #endif
 
