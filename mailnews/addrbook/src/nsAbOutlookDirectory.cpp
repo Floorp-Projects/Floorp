@@ -424,7 +424,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
     buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, uri) ;
     uri.Append(entryString) ;
     nsCOMPtr<nsIRDFResource> resource ;
-    retCode = gRDFService->GetResource(uri.get(), getter_AddRefs(resource)) ;
+    retCode = gRDFService->GetResource(uri, getter_AddRefs(resource)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     nsCOMPtr<nsIAbDirectory> newList(do_QueryInterface(resource, &retCode)) ;
     
@@ -1155,7 +1155,7 @@ nsresult nsAbOutlookDirectory::GetChildNodes(nsISupportsArray **aNodes)
         nodeEntries.mEntries [node].ToString(entryId) ;
         buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, uriName) ;
         uriName.Append(entryId) ;
-        retCode = gRDFService->GetResource(uriName.get(), getter_AddRefs(resource)) ;
+        retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
         nodes->AppendElement(resource) ;
     }
