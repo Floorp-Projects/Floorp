@@ -66,14 +66,17 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
-#include "nsIFormControl.h"
 
 // HTMLFormElement helper includes
 #include "nsIForm.h"
+#include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormControlList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIHTMLDocument.h"
+
+// HTMLSelectElement helper includes
+#include "nsIDOMHTMLSelectElement.h"
 
 // HTMLEmbed/ObjectElement helper includes
 #include "nsIPluginInstance.h"
@@ -207,7 +210,7 @@ nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Plugin, nsPluginSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PluginArray, nsPluginArraySH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MimeType, nsDOMGenericSH,
@@ -369,8 +372,9 @@ nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLScriptElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLSelectElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLSelectElement, nsHTMLSelectElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_GETPROPERTY)
   NS_DEFINE_CLASSINFO_DATA(HTMLSpacerElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLSpanElement, nsElementSH,
@@ -2336,6 +2340,70 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
 // HTMLFormElement helper
 
+// static
+nsresult
+nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, JSString *str,
+                                   nsISupports **aResult)
+{
+  *aResult = nsnull;
+
+  nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
+                                           ::JS_GetStringChars(str)),
+                       ::JS_GetStringLength(str));
+
+  aForm->ResolveName(name, aResult);
+
+  if (!*aResult) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aForm));
+    nsCOMPtr<nsIDOMHTMLFormElement> form_element(do_QueryInterface(aForm));
+
+    nsCOMPtr<nsIDocument> doc;
+    content->GetDocument(*getter_AddRefs(doc));
+
+    nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(doc));
+
+    if (html_doc && form_element) {
+      html_doc->ResolveName(name, form_element, aResult);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                                JSContext *cx, JSObject *obj, jsval id,
+                                PRUint32 flags, JSObject **objp,
+                                PRBool *_retval)
+{
+  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSVAL_IS_STRING(id)) {
+    nsCOMPtr<nsISupports> native;
+
+    wrapper->GetNative(getter_AddRefs(native));
+    NS_ABORT_IF_FALSE(native, "No native!");
+
+    nsCOMPtr<nsIForm> form(do_QueryInterface(native));
+    nsCOMPtr<nsISupports> result;
+
+    JSString *str = JSVAL_TO_STRING(id);
+
+    FindNamedItem(form, str, getter_AddRefs(result));
+
+    if (result) {
+      *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                       ::JS_GetStringLength(str),
+                                       JSVAL_VOID, nsnull, nsnull, 0);
+
+      *objp = obj;
+
+      return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    }
+  }
+
+  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
+
 NS_IMETHODIMP
 nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                  JSContext *cx, JSObject *obj, jsval id,
@@ -2349,29 +2417,11 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIForm> form(do_QueryInterface(native));
 
   if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-
-    nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(str)),
-                         ::JS_GetStringLength(str));
-
     nsCOMPtr<nsISupports> result;
 
-    form->ResolveName(name, getter_AddRefs(result));
+    JSString *str = JSVAL_TO_STRING(id);
 
-    if (!result) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(native));
-      nsCOMPtr<nsIDOMHTMLFormElement> form_element(do_QueryInterface(native));
-
-      nsCOMPtr<nsIDocument> doc;
-      content->GetDocument(*getter_AddRefs(doc));
-
-      nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(doc));
-
-      if (html_doc && form_element) {
-        html_doc->ResolveName(name, form_element, getter_AddRefs(result));
-      }
-    }
+    FindNamedItem(form, str, getter_AddRefs(result));
 
     if (result) {
       // Wrap result, result can be either an element or a list of
@@ -2395,6 +2445,105 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   }
 
   return NS_OK;
+}
+
+
+// HTMLSelectElement helper
+
+NS_IMETHODIMP
+nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
+                                   JSContext *cx, JSObject *obj, jsval id,
+                                   jsval *vp, PRBool *_retval)
+{
+  int32 n = -1;
+
+  if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
+      ::JS_ValueToInt32(cx, id, &n) && n >= 0) {
+    nsCOMPtr<nsISupports> native;
+
+    wrapper->GetNative(getter_AddRefs(native));
+    NS_ABORT_IF_FALSE(native, "No native!");
+
+    nsCOMPtr<nsIDOMHTMLSelectElement> s(do_QueryInterface(native));
+
+    nsCOMPtr<nsIDOMHTMLCollection> options;
+
+    s->GetOptions(getter_AddRefs(options));
+
+    if (options) {
+      nsCOMPtr<nsIDOMNode> node;
+
+      options->Item(n, getter_AddRefs(node));
+
+      return WrapNative(cx, ::JS_GetGlobalObject(cx), node,
+                        NS_GET_IID(nsIDOMNode), vp);
+    }
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+nsHTMLSelectElementSH::SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
+                                 nsIDOMNSHTMLOptionCollection *aOptCollection)
+{
+  // vp must refer to an object
+  if (!JSVAL_IS_OBJECT(*vp) && !::JS_ConvertValue(cx, *vp, JSTYPE_OBJECT,
+                                                  vp)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIDOMHTMLOptionElement> new_option;
+
+  if (!JSVAL_IS_NULL(*vp)) {
+    nsCOMPtr<nsIXPConnectWrappedNative> new_wrapper;
+    nsresult rv;
+
+    rv = sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
+                                                getter_AddRefs(new_wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> native;
+    new_wrapper->GetNative(getter_AddRefs(native));
+
+    new_option = do_QueryInterface(native);
+
+    if (!new_option) {
+      // Someone is trying to set an option to a non-option object.
+
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  return aOptCollection->SetOption(aIndex, new_option);
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+                                   JSContext *cx, JSObject *obj, jsval id,
+                                   jsval *vp, PRBool *_retval)
+{
+  int32 n = -1;
+
+  if ((!JSVAL_IS_NUMBER(id) && !JSVAL_IS_STRING(id)) ||
+      !::JS_ValueToInt32(cx, id, &n) || n < 0) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupports> native;
+  wrapper->GetNative(getter_AddRefs(native));
+
+  nsCOMPtr<nsIDOMHTMLSelectElement> select(do_QueryInterface(native));
+  NS_ENSURE_TRUE(select, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMHTMLCollection> options;
+  select->GetOptions(getter_AddRefs(options));
+
+  nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(options));
+  NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
+
+  return SetOption(cx, vp, n, oc);
 }
 
 
@@ -2803,36 +2952,11 @@ nsHTMLOptionCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                       JSContext *cx, JSObject *obj, jsval id,
                                       jsval *vp, PRBool *_retval)
 {
-  if (!JSVAL_IS_INT(id)) {
+  int32 n = -1;
+
+  if ((!JSVAL_IS_NUMBER(id) && !JSVAL_IS_STRING(id)) ||
+      !::JS_ValueToInt32(cx, id, &n) || n < 0) {
     return NS_OK;
-  }
-
-  // vp must refer to an object
-  if (!JSVAL_IS_OBJECT(*vp) && !::JS_ConvertValue(cx, *vp, JSTYPE_OBJECT,
-                                                  vp)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIDOMHTMLOptionElement> new_option;
-
-  if (!JSVAL_IS_NULL(*vp)) {
-    nsCOMPtr<nsIXPConnectWrappedNative> new_wrapper;
-    nsresult rv;
-
-    rv = sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
-                                                getter_AddRefs(new_wrapper));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsISupports> native;
-    new_wrapper->GetNative(getter_AddRefs(native));
-
-    new_option = do_QueryInterface(native);
-
-    if (!new_option) {
-      // Someone is trying to set an option to a non-option object.
-
-      return NS_ERROR_UNEXPECTED;
-    }
   }
 
   nsCOMPtr<nsISupports> native;
@@ -2841,7 +2965,7 @@ nsHTMLOptionCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(native));
   NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
 
-  return oc->SetOption(JSVAL_TO_INT(id), new_option);
+  return nsHTMLSelectElementSH::SetOption(cx, vp, n, oc);
 }
 
 
