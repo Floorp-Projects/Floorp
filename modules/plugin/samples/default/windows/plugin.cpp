@@ -44,6 +44,10 @@
 #include "utils.h"
 #include "dialogs.h"
 #include "dbg.h"
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+
+nsIServiceManager * gServiceManager = NULL;
 
 static char szNullPluginWindowClassName[] = CLASS_NULL_PLUGIN;
 
@@ -211,6 +215,29 @@ BOOL CPlugin::init(HWND hWndParent)
 {
   dbgOut1("CPlugin::init()");
 
+  nsISupports * sm = NULL;
+  nsIPref * nsPrefService = NULL;
+  PRBool bSendUrls = PR_FALSE; // default to false if problem getting pref
+
+  // note that Mozilla will add reference, so do not forget to release
+  NPN_GetValue(NULL, NPNVserviceManager, &sm);
+
+  // do a QI on the service manager we get back to ensure it's the one we are expecting
+  if(sm) {
+    sm->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&gServiceManager);
+    NS_RELEASE(sm);
+  }
+  
+  if (gServiceManager) {
+    // get service using its contract id and use it to allocate the memory
+    gServiceManager->GetServiceByContractID("@mozilla.org/preferences;1", NS_GET_IID(nsIPref), (void **)&nsPrefService);
+    if(nsPrefService) {      
+      nsPrefService->GetBoolPref("application.use_ns_plugin_finder", &bSendUrls);
+      NS_RELEASE(nsPrefService);
+    }
+  }
+  m_bSmartUpdate = bSendUrls;
+
   if(!m_bHidden)
   {
     assert(IsWindow(hWndParent));
@@ -259,6 +286,10 @@ void CPlugin::shut()
     DestroyWindow(m_hWnd);
     m_hWnd = NULL;
   }
+
+  // we should release the service manager
+  NS_IF_RELEASE(gServiceManager);
+  gServiceManager = NULL;
 }
 
 HWND CPlugin::getWindow()
@@ -294,7 +325,7 @@ LPSTR CPlugin::createURLString()
   }
 
   // check if there is file URL first
-  if(m_szFileURL != NULL)
+  if(!m_bSmartUpdate && m_szFileURL != NULL)
   {
     m_szURLString = new char[lstrlen(m_szFileURL) + 1];
     if(m_szURLString == NULL)
@@ -313,7 +344,7 @@ LPSTR CPlugin::createURLString()
 				     m_pNPMIMEType)) ? 1 : 0;
   }
   
-  if(m_szPageURL != NULL && !contentTypeIsJava)
+  if(!m_bSmartUpdate && m_szPageURL != NULL && !contentTypeIsJava)
   {
     szAddress = new char[lstrlen(m_szPageURL) + 1];
     if(szAddress == NULL)
@@ -330,7 +361,7 @@ LPSTR CPlugin::createURLString()
   }
   else // default
   {
-    if(!m_bJavaScript)
+    if(!m_bSmartUpdate)
     {
       urlToOpen = szDefaultPluginFinderURL;
       
@@ -343,27 +374,33 @@ LPSTR CPlugin::createURLString()
         return NULL;
       lstrcpy(szAddress, urlToOpen);
 
-      m_szURLString = new char[lstrlen(szAddress) + 1 + lstrlen((LPSTR)m_pNPMIMEType) + 1];
+      m_szURLString = new char[lstrlen(szAddress) + 1 + 
+                               lstrlen((LPSTR)m_pNPMIMEType) + 1];
 
       if(m_szURLString == NULL)
         return NULL;
 
       // Append the MIME type to the URL
-      wsprintf(m_szURLString, "%s?%s", szAddress, (LPSTR)m_pNPMIMEType);
+      wsprintf(m_szURLString, "%s?mimetype=%s", 
+               szAddress, (LPSTR)m_pNPMIMEType);
     }
     else
     {
       urlToOpen = szPageUrlForJavaScript;
 
       if (contentTypeIsJava) {
-	urlToOpen = szPageUrlForJVM;
+        urlToOpen = szPageUrlForJVM;
       }
 
       m_szURLString = new char[lstrlen(szPluginFinderCommandBeginning) + lstrlen(urlToOpen) + 10 + 
-                               lstrlen((LPSTR)m_pNPMIMEType) + lstrlen(szPluginFinderCommandEnd) + 1];
-      wsprintf(m_szURLString, "%s%s?mimetype=%s%s",
+                               lstrlen((LPSTR)m_pNPMIMEType) + 13 +
+                               lstrlen((LPSTR)m_szPageURL) + 11 + 
+                               lstrlen((LPSTR)m_szFileURL) +
+                               lstrlen(szPluginFinderCommandEnd) + 1];
+      wsprintf(m_szURLString, "%s%s?mimetype=%s&pluginspage=%s&pluginurl=%s%s",
                szPluginFinderCommandBeginning, urlToOpen, 
-               (LPSTR)m_pNPMIMEType, szPluginFinderCommandEnd);
+               (LPSTR)m_pNPMIMEType, m_szPageURL, m_szFileURL, szPluginFinderCommandEnd);
+
     }
   }
 
@@ -385,14 +422,7 @@ void CPlugin::getPluginRegular()
 
   dbgOut3("CPlugin::getPluginRegular(), %#08x '%s'", m_pNPInstance, szURL);
 
-  if(m_szFileURL != NULL)
-    NPN_GetURL(m_pNPInstance, szURL, "_current");
-  else if(m_szPageURL != NULL)
-    NPN_GetURL(m_pNPInstance, szURL, "_blank");
-  else if(m_bJavaScript)
-    NPN_GetURL(m_pNPInstance, szURL, NULL);
-  else
-    NPN_GetURL(m_pNPInstance, szURL, "_blank");
+  NPN_GetURL(m_pNPInstance, szURL, "_blank");
 }
 
 void CPlugin::getPluginSmart()
@@ -425,7 +455,7 @@ void CPlugin::showGetPluginDialog()
 
   NPN_GetValue(m_pNPInstance, NPNVisOfflineBool, (void *)&bOffline);
   NPN_GetValue(m_pNPInstance, NPNVjavascriptEnabledBool, (void *)&m_bJavaScript);
-  NPN_GetValue(m_pNPInstance, NPNVasdEnabledBool, (void *)&m_bSmartUpdate);
+  //NPN_GetValue(m_pNPInstance, NPNVasdEnabledBool, (void *)&m_bSmartUpdate);
 
   m_bOnline = !bOffline;
 
@@ -441,7 +471,7 @@ void CPlugin::showGetPluginDialog()
   dbgOut2("JavaScript %s", m_bJavaScript ? "Enabled" : "Disabled");
   dbgOut2("SmartUpdate %s", m_bSmartUpdate ? "Enabled" : "Disabled");
 
-  if((m_szPageURL != NULL) || (m_szFileURL != NULL) || !m_bJavaScript)
+  if((!m_bSmartUpdate && (m_szPageURL != NULL) || (m_szFileURL != NULL)) || !m_bJavaScript)
   {
     // we don't want it more than once
     if(m_hWndDialog == NULL)
