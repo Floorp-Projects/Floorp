@@ -55,17 +55,6 @@
         return permissionmanager.testPermission(uri, "image") != nsIPermissionManager.DENY_ACTION;
       },
 
-      // Determine if "imageBlocker.enabled" pref is set
-      isPrefSet: function () {
-        var pref = gContextMenu.getService('@mozilla.org/preferences-service;1', 'nsIPrefBranch');
-        var result = false;
-        try {
-          result = pref.getBoolPref( "imageblocker.enabled" );
-        } catch(e) {
-        }
-        return result;
-      },
-
       // Block image from loading in the future.
       blockImage : function () {
         const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
@@ -103,13 +92,11 @@
 
         gContextMenu.showItem
           ("context-blockimage",
-           gContextMenu.onImage && cookieContextMenu.isPrefSet() &&
-           cookieContextMenu.isBlockingImages());
+           gContextMenu.onImage && cookieContextMenu.isBlockingImages());
 
         gContextMenu.showItem
           ("context-unblockimage",
-           gContextMenu.onImage && cookieContextMenu.isPrefSet() &&
-           !cookieContextMenu.isBlockingImages());
+           gContextMenu.onImage && !cookieContextMenu.isBlockingImages());
         } catch (e) {}
       },
 

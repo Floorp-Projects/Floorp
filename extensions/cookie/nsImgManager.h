@@ -69,13 +69,12 @@ public:
 protected:
 
   void PrefChanged(nsIPrefBranch *, const char *);
+
+  nsCOMPtr<nsIPermissionManager> mPermissionManager;  
   
   PRUint8      mBehaviorPref;
-  PRPackedBool mBlockerPref;
   PRPackedBool mWarningPref;
   PRPackedBool mBlockInMailNewsPref;
-
-  nsCOMPtr<nsIPermissionManager> mPermissionManager;
 };
 
 // {D60B3710-166D-11d5-A542-0010A401EB10}

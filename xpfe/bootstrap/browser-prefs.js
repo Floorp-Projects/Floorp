@@ -149,8 +149,6 @@ pref("wallet.creditPanel.hide",             false);
 pref("wallet.employPanel.hide",             false);
 pref("wallet.miscPanel.hide",               false);
 
-pref("imageblocker.enabled",                true);
-
 // -- folders (Mac: these are binary aliases.)
 pref("mail.signature_file",             "");
 pref("mail.directory",                  "");
