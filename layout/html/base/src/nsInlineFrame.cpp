@@ -17,14 +17,16 @@
  */
 #include "nsHTMLContainerFrame.h"
 #include "nsFrameReflowState.h"
-#include "nsLineLayout.h"
 #include "nsInlineReflow.h"
-#include "nsPlaceholderFrame.h"
-#include "nsIReflowCommand.h"
-#include "nsIStyleContext.h"
+#include "nsLineLayout.h"
+#include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 
+#include "nsIPresContext.h"
+#include "nsIReflowCommand.h"
 #include "nsISpaceManager.h"
+#include "nsIStyleContext.h"
+
 
 struct nsInlineReflowState : nsFrameReflowState {
   nsInlineReflowState(nsIPresContext& aPresContext,
@@ -67,6 +69,10 @@ public:
                                    nsIFrame* aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*& aContinuingFrame);
+  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute);
 
   // nsIInlineReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
@@ -207,6 +213,24 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   aContinuingFrame = cf;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("nsInlineFrame::CreateContinuingFrame: newFrame=%p", cf));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInlineFrame::AttributeChanged(nsIPresShell* aShell,
+                                nsIPresContext* aPresContext,
+                                nsIContent* aChild,
+                                nsIAtom* aAttribute)
+{
+  if (nsHTMLAtoms::color == aAttribute) {
+    ApplyStyleChangeToTree(*aPresContext, this);
+    ApplyRenderingChangeToTree(*aPresContext, this);
+  }
+  else if (nsHTMLAtoms::face == aAttribute) {
+    ApplyStyleChangeToTree(*aPresContext, this);
+    ApplyReflowChangeToTree(*aPresContext, this);
+    ApplyRenderingChangeToTree(*aPresContext, this);
+  }
   return NS_OK;
 }
 
