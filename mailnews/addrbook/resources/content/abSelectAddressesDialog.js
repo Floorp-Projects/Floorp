@@ -150,15 +150,14 @@ function AddAddressFromComposeWindow(addresses, prefix)
 {
   if ( addresses )
   {
-    var addressArray = addresses.split(",");
+    var emails = {};
+    var names = {};
+    var fullNames = {};
+    var numAddresses = gHeaderParser.parseHeadersWithArray(addresses, emails, names, fullNames);
 
-    for ( var index = 0; index < addressArray.length; index++ )
+    for ( var index = 0; index < numAddresses; index++ )
     {
-      // remove leading spaces
-      while ( addressArray[index][0] == " " )
-        addressArray[index] = addressArray[index].substring(1, addressArray[index].length);
-
-      AddAddressIntoBucket(prefix + addressArray[index]);
+      AddAddressIntoBucket(prefix, fullNames.value[index], emails.value[index]);
     }
   }
 }
@@ -166,7 +165,7 @@ function AddAddressFromComposeWindow(addresses, prefix)
 function SelectAddressOKButton()
 {
   var body = document.getElementById('bucketBody');
-  var item, row, cell, text, colon,email;
+  var item, row, cell, prefix, address, email;
   var toAddress="", ccAddress="", bccAddress="", emptyEmail="";
 
   for ( var index = 0; index < body.childNodes.length; index++ )
@@ -178,26 +177,27 @@ function SelectAddressOKButton()
       if (  row.childNodes &&  row.childNodes.length )
       {
         cell = row.childNodes[0];
-        text = cell.getAttribute('label');
+        prefix = cell.getAttribute('prefix');
+        address = cell.getAttribute('address');
         email = cell.getAttribute('email');
-        if ( text )
+        if ( prefix )
         {
-          switch ( text[0] )
+          switch ( prefix )
           {
-            case prefixTo[0]:
+            case prefixTo:
               if ( toAddress )
                 toAddress += ", ";
-              toAddress += text.substring(prefixTo.length, text.length);
+              toAddress += address;
               break;
-            case prefixCc[0]:
+            case prefixCc:
               if ( ccAddress )
                 ccAddress += ", ";
-              ccAddress += text.substring(prefixCc.length, text.length);
+              ccAddress += address;
               break;
-            case prefixBcc[0]:
+            case prefixBcc:
               if ( bccAddress )
                 bccAddress += ", ";
-              bccAddress += text.substring(prefixBcc.length, text.length);
+              bccAddress += address;
               break;
           }
         }
@@ -255,24 +255,26 @@ function AddSelectedAddressesIntoBucket(prefix)
 
 function AddCardIntoBucket(prefix, card)
 {
-  var address = prefix + GenerateAddressFromCard(card);
+  var address = GenerateAddressFromCard(card);
   if (card.isMailList) {
-    AddAddressIntoBucket(address, card.displayName);
+    AddAddressIntoBucket(prefix, address, card.displayName);
     }
   else {
-    AddAddressIntoBucket(address, card.primaryEmail);
+    AddAddressIntoBucket(prefix, address, card.primaryEmail);
   }
 }
 
-function AddAddressIntoBucket(address,email)
+function AddAddressIntoBucket(prefix, address, email)
 {
   var body = document.getElementById("bucketBody");
 
   var item = document.createElement('treeitem');
   var row = document.createElement('treerow');
   var cell = document.createElement('treecell');
-  cell.setAttribute('label', address);
-  cell.setAttribute('email',email);
+  cell.setAttribute('label', prefix + address);
+  cell.setAttribute('prefix', prefix);
+  cell.setAttribute('address', address);
+  cell.setAttribute('email', email);
 
   row.appendChild(cell);
   item.appendChild(row);
@@ -408,7 +410,7 @@ function DropOnBucketPane(event)
     if (!address)
       continue;
 
-    AddAddressIntoBucket(prefixTo + address, address);
+    AddAddressIntoBucket(prefixTo, address, address);
   }
 }
 
