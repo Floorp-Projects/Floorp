@@ -55,6 +55,7 @@ class nsIDOMEventReceiver;
 class nsIDOMNodeList;
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
+class nsIURI;
 
 // {0E7903E1-C7BB-11d3-97FB-00400553EEF0}
 #define NS_IXBLSERVICE_IID \
@@ -92,6 +93,9 @@ public:
   // Hooks up the global key and DragDrop event handlers to the document root.
   NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement)=0;
   NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement)=0;
+  
+   // Helper method for loading an XML doc.
+  NS_IMETHOD FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult) = 0;
 };
 
 #endif // nsIXBLService_h__
