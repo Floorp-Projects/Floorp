@@ -645,6 +645,7 @@ nsStyleXUL::nsStyleXUL()
   mBoxFlex = 0.0f;
   mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
   mBoxPack   = NS_STYLE_BOX_PACK_START;
+  mBoxOrdinal = 1;
 }
 
 nsStyleXUL::~nsStyleXUL() 
@@ -663,8 +664,11 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
       mBoxDirection == aOther.mBoxDirection &&
       mBoxFlex == aOther.mBoxFlex &&
       mBoxOrient == aOther.mBoxOrient &&
-      mBoxPack == aOther.mBoxPack)
+      mBoxPack == aOther.mBoxPack &&
+      mBoxOrdinal == aOther.mBoxOrdinal)
     return NS_STYLE_HINT_NONE;
+  if (mBoxOrdinal != aOther.mBoxOrdinal)
+    return NS_STYLE_HINT_FRAMECHANGE;
   return NS_STYLE_HINT_REFLOW;
 }
 

@@ -836,7 +836,8 @@ static const PropertyCheckData XULCheckProperties[] = {
   CHECKDATA_PROP(nsCSSXUL, mBoxDirection, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSXUL, mBoxFlex, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSXUL, mBoxOrient, CHECKDATA_VALUE, PR_FALSE),
-  CHECKDATA_PROP(nsCSSXUL, mBoxPack, CHECKDATA_VALUE, PR_FALSE)
+  CHECKDATA_PROP(nsCSSXUL, mBoxPack, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSXUL, mBoxOrdinal, CHECKDATA_VALUE, PR_FALSE)
 };
 #endif
 
@@ -4065,6 +4066,11 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
   else if (eCSSUnit_Inherit == xulData.mBoxPack.GetUnit()) {
     inherited = PR_TRUE;
     xul->mBoxPack = parentXUL->mBoxPack;
+  }
+
+  // box-ordinal-group: integer
+  if (eCSSUnit_Integer == xulData.mBoxOrdinal.GetUnit()) {
+    xul->mBoxOrdinal = xulData.mBoxOrdinal.GetIntValue();
   }
 
   if (inherited)

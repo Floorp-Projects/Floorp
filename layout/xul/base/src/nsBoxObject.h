@@ -47,6 +47,7 @@ public:
   virtual nsIFrame* GetFrame();
   nsresult GetOffsetRect(nsRect& aRect);
   nsresult GetScreenRect(nsRect& aRect);
+  nsIDOMElement* GetChildByOrdinalAt(PRUint32 aIndex);
 
 // MEMBER VARIABLES
 protected: 

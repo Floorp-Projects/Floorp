@@ -26,6 +26,8 @@
 #include "nsIBoxLayoutManager.idl"
 #include "nsIBoxPaintManager.idl"
 
+interface nsIDOMElement;
+
 [scriptable, uuid(CAABF76F-9D35-401f-BEAC-3955817C645C)]
 interface nsIBoxObject : nsISupports
 {
@@ -45,6 +47,13 @@ interface nsIBoxObject : nsISupports
   void setProperty(in wstring propertyName, in wstring propertyValue);
   void removeProperty(in wstring propertyName);
   
+  // for stepping through content in the expanded dom with box-ordinal-group order
+  readonly attribute nsIDOMElement parentBox;
+  readonly attribute nsIDOMElement firstChild;
+  readonly attribute nsIDOMElement lastChild;
+  readonly attribute nsIDOMElement nextSibling;
+  readonly attribute nsIDOMElement previousSibling;
+
   wstring getLookAndFeelMetric(in wstring propertyName);
 };
 

@@ -993,6 +993,7 @@ struct nsStyleXUL : public nsStyleStruct {
   float         mBoxFlex;               // [reset] see nsStyleConsts.h
   PRUint8       mBoxOrient;             // [reset] see nsStyleConsts.h
   PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
+  PRUint32      mBoxOrdinal;            // [reset] see nsStyleConsts.h
 };
 #endif
 

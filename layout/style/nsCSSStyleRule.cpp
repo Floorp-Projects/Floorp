@@ -1718,6 +1718,10 @@ MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL)
   if (aXUL.mBoxPack.GetUnit() == eCSSUnit_Null && ourXUL->mBoxPack.GetUnit() != eCSSUnit_Null)
     aXUL.mBoxPack = ourXUL->mBoxPack;
 
+  // box-ordinal-group: number
+  if (aXUL.mBoxOrdinal.GetUnit() == eCSSUnit_Null && ourXUL->mBoxOrdinal.GetUnit() != eCSSUnit_Null)
+    aXUL.mBoxOrdinal = ourXUL->mBoxOrdinal;
+
   return NS_OK;
 }
 #endif

@@ -48,6 +48,7 @@ public:
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
 
   virtual nsIBox* GetBoxAt(PRInt32 aIndex);
   virtual nsIBox* GetBox(nsIFrame* aFrame);
@@ -65,7 +66,8 @@ public:
   virtual nsIBox* GetPrevious(nsIFrame* aChild);
   virtual void SanityCheck(nsFrameList& aFrameList);
   virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
-
+  virtual void CheckBoxOrder(nsBoxLayoutState& aState);
+  
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
 
@@ -78,6 +80,7 @@ protected:
   nsIBox* mFirstChild;
   nsIBox* mLastChild;
   PRInt32 mChildCount;
+  PRBool mOrderBoxes;
   nsCOMPtr<nsIBoxLayout> mLayoutManager;
 };
 

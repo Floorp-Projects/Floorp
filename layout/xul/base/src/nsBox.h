@@ -65,6 +65,7 @@ public:
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
+  NS_IMETHOD GetOrdinal(nsBoxLayoutState& aBoxLayoutState, PRUint32& aOrdinal);
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed);
   NS_IMETHOD Collapse(nsBoxLayoutState& aBoxLayoutState);
@@ -79,6 +80,7 @@ public:
   NS_IMETHOD GetDebug(PRBool& aDebug);
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild);
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
   NS_IMETHOD MarkChildrenStyleChange();

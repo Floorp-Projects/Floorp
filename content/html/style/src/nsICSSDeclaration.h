@@ -425,6 +425,7 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSValue  mBoxFlex;
   nsCSSValue  mBoxOrient;
   nsCSSValue  mBoxPack;
+  nsCSSValue  mBoxOrdinal;
 };
 #endif
 
