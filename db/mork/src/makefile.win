@@ -29,6 +29,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    orkinCell.cpp\
 			orkinEnv.cpp\
 			orkinFactory.cpp\
+			orkinHeap.cpp\
 			orkinPortTableCursor.cpp\
 			orkinRow.cpp\
 			orkinRowCellCursor.cpp\
@@ -36,39 +37,43 @@ CPPSRCS=    orkinCell.cpp\
 			orkinTable.cpp\
 			orkinTableRowCursor.cpp\
 			orkinThumb.cpp\
-#			morkAtomSpace.cpp\
-#			morkBlob.cpp\
-#			morkBuilder.cpp\
-#			morkCellObject.cpp\
-#			morkCursor.cpp \
-#			moreDeque.cpp\
-#			morkEnv.cpp\
-#			morkFactory.cpp\
-#			morkFile.cpp\
-#			morkHandle.cpp\
-#			morkMap.cpp\
-#			morkNode.cpp\
-#			morkNodeMap.cpp\
-#			morkObject.cpp\
-#			morkParser.cpp\
-#			morkPool.cpp\
-#			morkPort.cpp\
-#			morkQuaser.cpp\
-#			morkRow.cpp\
-#			morkRowObject.cpp\
-#			morkRowSpace.cpp\
-#			morkSink.cpp\
-#			morkSpace.cpp\
-#			morkStore.cpp\
-#			morkStream.cpp\
-#			morkTable.cpp\
-#			morkThumb.cpp\
-#			morkYarn.cpp\
+			morkArray.cpp\
+			morkAtom.cpp\
+			morkAtomMap.cpp\
+			morkAtomSpace.cpp\
+			morkBlob.cpp\
+			morkBuilder.cpp\
+			morkCellObject.cpp\
+			morkCursor.cpp \
+			morkDeque.cpp\
+			morkEnv.cpp\
+			morkFactory.cpp\
+			morkFile.cpp\
+			morkHandle.cpp\
+			morkIntMap.cpp\
+			morkMap.cpp\
+			morkNode.cpp\
+			morkNodeMap.cpp\
+			morkObject.cpp\
+			morkParser.cpp\
+			morkPool.cpp\
+			morkRow.cpp\
+			morkRowMap.cpp\
+			morkRowObject.cpp\
+			morkRowSpace.cpp\
+			morkSink.cpp\
+			morkSpace.cpp\
+			morkStore.cpp\
+			morkStream.cpp\
+			morkTable.cpp\
+			morkThumb.cpp\
+			morkYarn.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj\
 			.\$(OBJDIR)\orkinEnv.obj\
 			.\$(OBJDIR)\orkinFactory.obj\
+			.\$(OBJDIR)\orkinHeap.obj\
 			.\$(OBJDIR)\orkinPortTableCursor.obj\
 			.\$(OBJDIR)\orkinRow.obj\
 			.\$(OBJDIR)\orkinRowCellCursor.obj\
@@ -76,34 +81,37 @@ CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj\
 			.\$(OBJDIR)\orkinTable.obj\
 			.\$(OBJDIR)\orkinTableRowCursor.obj\
 			.\$(OBJDIR)\orkinThumb.obj\
-#			.\$(OBJDIR)\morkAtomSpace.obj  \
-#			.\$(OBJDIR)\morkBlob.obj\
-#			.\$(OBJDIR)\morkBuilder.obj\
-#			.\$(OBJDIR)\morkCellObject.obj\
-#			.\$(OBJDIR)\morkCursor.obj\
-#			.\$(OBJDIR)\moreDeque.obj\
-#			.\$(OBJDIR)\morkCursor.obj\
-#			.\$(OBJDIR)\morkEnv.obj\
-#			.\$(OBJDIR)\morkFactory.obj\
-#			.\$(OBJDIR)\morkFile.obj\
-#			.\$(OBJDIR)\morkHandle.obj\
-#			.\$(OBJDIR)\morkMap.obj\
-#			.\$(OBJDIR)\morkNode.obj\
-#			.\$(OBJDIR)\morkNodeMap.obj\
-#			.\$(OBJDIR)\morkParser.obj\
-#			.\$(OBJDIR)\morkPool.obj\
-#			.\$(OBJDIR)\morkPort.obj\
-#			.\$(OBJDIR)\morkQuaser.obj\
-#			.\$(OBJDIR)\morkRow.obj\
-#			.\$(OBJDIR)\morkRowObject.obj\
-#			.\$(OBJDIR)\morkRowSpace.obj\
-#			.\$(OBJDIR)\morkSink.obj\
-#			.\$(OBJDIR)\morkSpace.obj\
-#			.\$(OBJDIR)\morkStore.obj\
-#			.\$(OBJDIR)\morkStream.obj\
-#			.\$(OBJDIR)\morkTable.obj\
-#			.\$(OBJDIR)\morkThumb.obj\
-#			.\$(OBJDIR)\morkYarn.obj\
+			.\$(OBJDIR)\morkArray.obj  \
+			.\$(OBJDIR)\morkAtom.obj  \
+			.\$(OBJDIR)\morkAtomMap.obj  \
+			.\$(OBJDIR)\morkAtomSpace.obj  \
+			.\$(OBJDIR)\morkBlob.obj\
+			.\$(OBJDIR)\morkBuilder.obj\
+			.\$(OBJDIR)\morkCellObject.obj\
+			.\$(OBJDIR)\morkCursor.obj\
+			.\$(OBJDIR)\morkDeque.obj\
+			.\$(OBJDIR)\morkEnv.obj\
+			.\$(OBJDIR)\morkFactory.obj\
+			.\$(OBJDIR)\morkFile.obj\
+			.\$(OBJDIR)\morkHandle.obj\
+			.\$(OBJDIR)\morkIntMap.obj\
+			.\$(OBJDIR)\morkMap.obj\
+			.\$(OBJDIR)\morkNode.obj\
+			.\$(OBJDIR)\morkNodeMap.obj\
+			.\$(OBJDIR)\morkObject.obj\
+			.\$(OBJDIR)\morkParser.obj\
+			.\$(OBJDIR)\morkPool.obj\
+			.\$(OBJDIR)\morkRow.obj\
+			.\$(OBJDIR)\morkRowMap.obj\
+			.\$(OBJDIR)\morkRowObject.obj\
+			.\$(OBJDIR)\morkRowSpace.obj\
+			.\$(OBJDIR)\morkSink.obj\
+			.\$(OBJDIR)\morkSpace.obj\
+			.\$(OBJDIR)\morkStore.obj\
+			.\$(OBJDIR)\morkStream.obj\
+			.\$(OBJDIR)\morkTable.obj\
+			.\$(OBJDIR)\morkThumb.obj\
+			.\$(OBJDIR)\morkYarn.obj\
 			$(NULL)
 
 
