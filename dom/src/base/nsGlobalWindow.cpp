@@ -285,7 +285,7 @@ GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
 
   if (nsnull != mParentWebShell) {
     nsIScriptContextOwner *mParentContextOwner;
-    if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)mParentContextOwner)) {
+    if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mParentContextOwner)) {
       nsIScriptGlobalObject *mParentGlobalObject;
       if (NS_OK == mParentContextOwner->GetScriptGlobalObject(&mParentGlobalObject)) {
         ret = mParentGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aParent);
@@ -321,7 +321,7 @@ GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 
   if (nsnull != mRootWebShell) {
     nsIScriptContextOwner *mRootContextOwner;
-    if (NS_OK == mRootWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)mRootContextOwner)) {
+    if (NS_OK == mRootWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mRootContextOwner)) {
       nsIScriptGlobalObject *mRootGlobalObject;
       if (NS_OK == mRootContextOwner->GetScriptGlobalObject(&mRootGlobalObject)) {
         ret = mRootGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aTop);
