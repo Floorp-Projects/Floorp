@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<bindings id="menuButtonToolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          
+  <binding id="menubutton-toolbar-top">
+    <content excludes="observes,template,menupopup">
+      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
+                  inherits="value,src,accesskey,crop,disabled,buttonaction:oncommand" 
+                  onmousedown="this.parentNode.setAttribute('buttondown','true');"
+                  onmouseup="this.parentNode.removeAttribute('buttondown');"
+                  onmouseover="this.parentNode.setAttribute('buttonover','true');"
+                  onmouseout="this.parentNode.removeAttribute('buttonover');"/>
+      <xul:box class="classic-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
+        <xul:image class="classic-dropmarker" inherits="disabled"/>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content excludes="observes,template" autostretch="never">
+      <xul:image class="classic-simplebutton-icon" inherits="src"/>
+      <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
+        <xul:text class="classic-simplebutton-text" inherits="value,accesskey,crop"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content excludes="observes,template" orient="vertical" autostretch="never" halign="middle">
+      <xul:image class="classic-simplebutton-icon" inherits="src"/>
+      <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
+        <xul:text class="classic-simplebutton-text" inherits="value,accesskey,crop"/>
+      </xul:box>
+    </content>
+  </binding>
+  
+</bindings>

@@ -130,6 +130,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	loading.gif \
 	smallheader-bg.gif \
 	splitter-drag-bg.gif \
+	menubuttonBindings.xml \
 	$(NULL)
 
 DIRS = unix

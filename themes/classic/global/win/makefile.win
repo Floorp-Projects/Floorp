@@ -34,7 +34,6 @@ install::
 	$(MAKE_INSTALL) checkbox.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) commonDialog.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) console.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) dialogOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) filepicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) global.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -45,7 +44,6 @@ install::
 	$(MAKE_INSTALL) scrollbars.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tasksOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) textfield.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tree.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin

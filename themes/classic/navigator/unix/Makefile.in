@@ -32,7 +32,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 	navigator.css \
-	NavSecurityOverlay.css \
 	pageInfo.css \
     $(NULL)
 

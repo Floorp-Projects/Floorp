@@ -72,18 +72,19 @@
     {
       behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 0px;
-      margin              : 2px 2px 0px 4px;
+      margin              : 1px;
       border              : 1px solid transparent;
     }
     
   .button-toolbar-1:hover 
     {
       border              : 1px solid threeddarkshadow;
+      color               : #0000FF;
     } 
 
   .button-toolbar-1 > .button-internal-box
     {
-      padding             : 2px;
+      padding             : 2px 8px 2px 7px;
       vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
@@ -94,17 +95,10 @@
   .button-toolbar-1[disabled="true"]:hover:active
     {
       border              : 1px solid transparent;
+      color               : graytext;
     }
     
 /* internal frame */
-  .button-toolbar-1[disabled="true"] > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box
-    {
-      padding             : 2px;
-      border              : 1px solid transparent;
-    }
-      
   .button-toolbar-1:hover > .button-internal-box
     {
       border-left         : 1px solid threedhighlight;
@@ -115,11 +109,11 @@
 
   .button-toolbar-1:hover:active > .button-internal-box
     {
-      padding             : 3px 1px 1px 3px;
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
+      padding             : 3px 7px 1px 8px;
+      border-left         : 1px solid threedshadow !important;
+      border-top          : 1px solid threedshadow !important;
+      border-right        : 1px solid threedhighlight !important;
+      border-bottom       : 1px solid threedhighlight !important;
     }
     
   .button-toolbar-1 > .button-internal-box > .button-text-container 
@@ -127,6 +121,15 @@
       text-align          : center;
     }
     
+  .button-toolbar-1[disabled="true"] > .button-internal-box,
+  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box
+    {
+      padding             : 2px 8px 2px 7px !important;
+      border              : 1px solid transparent !important;
+    }
+      
+
 /** Styles for the standard 'large' toolbar button, these buttons are used for
  *  toolbar buttons that are the most commonly used elements on a toolbar, e.g.
  *  'GetMsg' in Mailnews or 'Send' in Mail/Compose.

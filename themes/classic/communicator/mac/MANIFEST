@@ -6,4 +6,6 @@ communicator.css
 formatting.css
 menubutton.css
 toolbar.css
-
+dialogOverlay.css
+tasksOverlay.css
+securityOverlay.css

@@ -5,6 +5,7 @@
     border                : 1px solid threedface;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 0px;
+    min-width             : 0px;
     cursor                : pointer;
   }  
   

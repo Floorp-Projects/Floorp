@@ -6,7 +6,6 @@ checkbox.css
 classicBindings.xml
 commonDialog.css
 console.css
-dialogOverlay.css
 filepicker.css
 formatting.css
 global.css
@@ -18,7 +17,6 @@ radio.css
 scrollbars.css
 splitter.css
 tabcontrol.css
-tasksOverlay.css
 textfield.css
 toolbar.css
 tree.css

@@ -36,7 +36,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	checkbox.css \
 	commonDialog.css \
 	console.css \
-	dialogOverlay.css \
 	filepicker.css \
 	formatting.css \
 	global.css \
@@ -47,7 +46,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	scrollbars.css \
 	splitter.css \
 	tabcontrol.css \
-	tasksOverlay.css \
 	textfield.css \
 	toolbar.css \
 	tree.css \

@@ -58,18 +58,18 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #back-button[disabled="true"],
-#back-button[disabled="true"]:hover,
-#back-button[disabled="true"]:hover:active
+#back-button[disabled="true"][buttonover="true"],
+#back-button[disabled="true"][buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
   }
 
-#back-button:hover
+#back-button[buttonover="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
-#back-button:hover:active
+#back-button[buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
@@ -81,18 +81,18 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
 
 #forward-button[disabled="true"],
-#forward-button[disabled="true"]:hover,
-#forward-button[disabled="true"]:hover:active
+#forward-button[disabled="true"][buttonover="true"],
+#forward-button[disabled="true"][buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
   }
 
-#forward-button:hover
+#forward-button[buttonover="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
-#forward-button:hover:active
+#forward-button[buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
   }

@@ -36,6 +36,9 @@ EXPORT_RESOURCE = \
 		$(srcdir)/formatting.css \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/toolbar.css \
+		$(srcdir)/dialogOverlay.css \
+		$(srcdir)/tasksOverlay.css \
+		$(srcdir)/securityOverlay.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

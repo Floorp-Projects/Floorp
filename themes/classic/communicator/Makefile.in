@@ -32,6 +32,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/navbar-endbox.gif \
 		$(srcdir)/tb-menubutton-dm.gif \
 		$(srcdir)/tb-menubutton-dm-disabled.gif \
+		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/offline.gif \
 		$(srcdir)/online.gif \
 		$(NULL)
