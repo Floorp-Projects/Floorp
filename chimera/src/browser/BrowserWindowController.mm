@@ -569,16 +569,22 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)performAppropriateLocationAction
 {
-    if ( [[[self window] toolbar] isVisible] ) {
-        if ( ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconAndLabel) ||
-             ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconOnly) ) {
-            [self focusURLBar];
-        } else {
-            [self beginLocationSheet];
+  NSToolbar *toolbar = [[self window] toolbar];
+  if ( [toolbar isVisible] ) {
+    if ( ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconAndLabel) ||
+          ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconOnly) ) {
+      NSArray *itemsWeCanSee = [toolbar visibleItems];
+      
+      for (unsigned int i=0;i<[itemsWeCanSee count];i++) {
+        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:LocationToolbarItemIdentifier]) {
+          [self focusURLBar];
+          return;
         }
-    } else {
-        [self beginLocationSheet];
+      }
     }
+  }
+  
+  [self beginLocationSheet];
 }
 
 - (void)focusURLBar
