@@ -70,14 +70,54 @@ const short kMinWindowHeight = 150;
 
 NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
 
-/*
-// a small helper routine, inlined for efficiency
-bool IsUserWindow(WindowPtr);
-inline bool IsUserWindow(WindowPtr wp)
+//======================================================================================
+//									PROFILE
+//======================================================================================
+#ifdef DEBUG
+
+// Important Notes:
+// ----------------
+//
+//  - To turn the profiler on, you must define "#pragma profile on"
+//    in IDE_Options.h and recompile everything.
+//
+//  - You may need to turn the profiler off ("#pragma profile off")
+//	  in NSPR.Debug.Prefix because of incompatiblity with NSPR threads.
+//
+//	- The profiler utilities (ProfilerUtils.c) and the profiler
+//	  shared library (ProfilerLib) sit in NSStdLib.mcp and NSRuntime.mcp.
+//
+
+		// Define this if you want to start profiling when the Caps Lock
+		// key is pressed. Press Caps Lock, start the command you want to
+		// profile, release Caps Lock when the command is done. It works
+		// for all the major commands: display a page, open a window, etc...
+		//
+		// If you want to profile the project, you must make sure that the
+		// global prefix file (IDE_Options.h) contains "#pragma profile on".
+
+//#define PROFILE
+
+
+		// Define this if you want to let the profiler run while you're
+		// spending time in other apps. Usually you don't.
+
+//#define PROFILE_WAITNEXTEVENT
+
+
+#ifdef PROFILE
+#include "ProfilerUtils.h"
+#endif //PROFILE
+#endif //DEBUG
+
+//======================================================================================
+
+static Boolean KeyDown(const UInt8 theKey)
 {
-	return wp && ((::GetWindowKind(wp) & kRaptorWindowKindBit) != 0);
+	KeyMap map;
+	GetKeys(map);
+	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
 }
-*/
 
 //=================================================================
 
@@ -105,6 +145,8 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 	return (menuResult);
 }
 
+#pragma mark -
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
@@ -118,6 +160,7 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 	: mToolkit(aToolkit), mMessageSink(aSink), mEventQueue(NULL)
 {
 	mRunning = PR_FALSE;
+	mMouseRgn = ::NewRgn();
 
 	nsIServiceManager* serviceManager = NULL;
 	if (nsServiceManager::GetGlobalServiceManager(&serviceManager) == NS_OK) {
@@ -137,6 +180,9 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
  */
 nsMacMessagePump::~nsMacMessagePump()
 {
+	if (mMouseRgn)
+		::DisposeRgn(mMouseRgn);
+
   //¥TODO? release the toolkits and sinks? not if we use COM_auto_ptr.
 	NS_IF_RELEASE(mEventQueue);
 }
@@ -148,91 +194,6 @@ nsMacMessagePump::~nsMacMessagePump()
  */
 void nsMacMessagePump::DoMessagePump()
 {
-#if 0
-	Boolean					haveEvent;
-	EventRecord			theEvent;
-	long						sleep				=	0;
-	unsigned short	eventMask 	= (everyEvent - diskMask);
-
-	mInBackground = PR_FALSE;
-	
-	// calculate the region to watch
-	RgnHandle mouseRgn = ::NewRgn();
-	
-	while (mRunning)
-	{			
-		::LMSetSysEvtMask(eventMask);	// we need keyUp events
-		haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mouseRgn);
-
-		Point globalMouse = theEvent.where;
-		::SetRectRgn(mouseRgn, globalMouse.h, globalMouse.v, globalMouse.h + 1, globalMouse.v + 1);
-
-		if (haveEvent)
-		{
-
-#if DEBUG
-			if (SIOUXHandleOneEvent(&theEvent))
-				continue;
-#endif
-
-			switch(theEvent.what)
-			{
-				case keyUp:
-				case keyDown:
-				case autoKey:
-					DoKey(theEvent);
-					break;
-
-				case mouseDown:
-					DoMouseDown(theEvent);
-					break;
-
-				case mouseUp:
-					DoMouseUp(theEvent);
-					break;
-
-				case updateEvt:
-					DoUpdate(theEvent);
-					break;
-
-				case activateEvt:
-					DoActivate(theEvent);
-					break;
-
-				case diskEvt:
-					DoDisk(theEvent);
-					break;
-
-				case osEvt:
-					unsigned char eventType = ((theEvent.message >> 24) & 0x00ff);
-					switch (eventType)
-					{
-						case suspendResumeMessage:
-							if ((theEvent.message & 1) == resumeFlag)
-								mInBackground = PR_FALSE;		// resume message
-							else
-								mInBackground = PR_TRUE;		// suspend message
-							DoMouseMove(theEvent);
-							break;
-
-						case mouseMovedMessage:
-							DoMouseMove(theEvent);
-							break;
-					}
-					break;
-			}
-		}
-		else
-		{
-			DoIdle(theEvent);
-			if (mRunning)
-				Repeater::DoIdlers(theEvent);
-		}
-
-		if (mRunning)
-			Repeater::DoRepeaters(theEvent);
-	}
-#else
 	PRBool				haveEvent;
 	EventRecord			theEvent;
 
@@ -240,10 +201,29 @@ void nsMacMessagePump::DoMessagePump()
 	
 	while (mRunning)
 	{			
+#ifdef PROFILE 
+		if (KeyDown(0x39))	// press [caps lock] to start the profile
+			ProfileStart();
+		else
+			ProfileStop(); 
+#endif // PROFILE 
+
+#ifdef PROFILE 
+#ifndef PROFILE_WAITNEXTEVENT 
+	 	ProfileSuspend(); 
+#endif // PROFILE_WAITNEXTEVENT 
+#endif // PROFILE 
+
 		haveEvent = GetEvent(theEvent);
+
+#ifdef PROFILE 
+#ifndef PROFILE_WAITNEXTEVENT 
+		ProfileResume(); 
+#endif // PROFILE_WAITNEXTEVENT 
+#endif // PROFILE 
+
 		DispatchEvent(haveEvent, &theEvent);
 	}
-#endif
 }
 
 //=================================================================
@@ -255,15 +235,16 @@ void nsMacMessagePump::DoMessagePump()
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
 	long				sleep		= 0;
-	unsigned short		eventMask 	= everyEvent;
+	unsigned short		eventMask 	= (everyEvent - diskMask);
 
-	RgnHandle mouseRgn = ::NewRgn();	// may want to move this into a class variable
-	
 	::LMSetSysEvtMask(eventMask);	// we need keyUp events
-	PRBool haveEvent
-		= ::WaitNextEvent(eventMask, &theEvent, sleep, mouseRgn) ? PR_TRUE : PR_FALSE;
+	PRBool haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mMouseRgn) ? PR_TRUE : PR_FALSE;
 
-	::DisposeRgn(mouseRgn);
+	if (mMouseRgn)
+	{
+		Point globalMouse = theEvent.where;
+		::SetRectRgn(mMouseRgn, globalMouse.h, globalMouse.v, globalMouse.h + 1, globalMouse.v + 1);
+	}
 
 	return haveEvent;
 }
