@@ -43,11 +43,6 @@ nsresult InsertTextTxn::Undo(void)
   return (mElement->DeleteData(mOffset, length));
 }
 
-nsresult InsertTextTxn::Redo(void)
-{
-  return Do();
-}
-
 nsresult InsertTextTxn::GetIsTransient(PRBool *aIsTransient)
 {
   if (nsnull!=aIsTransient)
