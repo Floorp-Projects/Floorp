@@ -33,7 +33,14 @@
 class nsMathMLmfencedFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  
+
+  NS_IMETHOD
+  SetAdditionalStyleContext(PRInt32          aIndex, 
+                            nsIStyleContext* aStyleContext);
+  NS_IMETHOD
+  GetAdditionalStyleContext(PRInt32           aIndex, 
+                            nsIStyleContext** aStyleContext) const;
+
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
@@ -73,16 +80,15 @@ protected:
   static nsresult
   ReflowChar(nsIPresContext*      aPresContext,
              nsIRenderingContext& aRenderingContext,
-             nsIStyleContext*     aStyleContext,
              nsMathMLChar*        aMathMLChar,
              nsOperatorFlags      aForm,
              PRInt32              aScriptLevel,
              nscoord              fontAscent,
              nscoord              fontDescent,
+             nscoord              axisHeight,
              nscoord              em,
-             nsStretchMetrics&    aContainerSize,
-             nsHTMLReflowMetrics& aDesiredSize,
-             nscoord&             aX);
+             nsBoundingMetrics&   aContainerSize,
+             nsHTMLReflowMetrics& aDesiredSize);
 
   // clean up
   void
@@ -90,7 +96,7 @@ protected:
 
   // add fences and separators when all child frames are known
   nsresult
-  ReCreateFencesAndSeparators();
+  ReCreateFencesAndSeparators(nsIPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmfencedFrame_h___ */

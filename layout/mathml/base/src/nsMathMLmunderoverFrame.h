@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 #ifndef nsMathMLmunderoverFrame_h___
@@ -40,12 +41,6 @@ public:
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
 
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,

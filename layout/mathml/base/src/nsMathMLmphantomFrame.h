@@ -35,6 +35,13 @@ public:
   friend nsresult NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
+  Init(nsIPresContext*  aPresContext,
+       nsIContent*      aContent,
+       nsIFrame*        aParent,
+       nsIStyleContext* aContext,
+       nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,

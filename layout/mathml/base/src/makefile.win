@@ -36,11 +36,11 @@ CPPSRCS=          nsMathMLChar.cpp                      \
                   nsMathMLmfracFrame.cpp		\
                   nsMathMLmsubFrame.cpp			\
                   nsMathMLmiFrame.cpp			\
-                  nsMathMLmnFrame.cpp			\
+                  nsMathMLmtextFrame.cpp		\
                   nsMathMLmsubsupFrame.cpp		\
                   nsMathMLmmultiscriptsFrame.cpp	\
                   nsMathMLmsupFrame.cpp			\
-                  nsMathMLmtdFrame.cpp			\
+                  nsMathMLmtableFrame.cpp		\
                   nsMathMLmoFrame.cpp			\
                   nsMathMLmunderFrame.cpp		\
                   nsMathMLmoverFrame.cpp		\
@@ -62,11 +62,11 @@ CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
           .\$(OBJDIR)\nsMathMLmfracFrame.obj		\
           .\$(OBJDIR)\nsMathMLmsubFrame.obj		\
           .\$(OBJDIR)\nsMathMLmiFrame.obj		\
-          .\$(OBJDIR)\nsMathMLmnFrame.obj		\
+          .\$(OBJDIR)\nsMathMLmtextFrame.obj		\
           .\$(OBJDIR)\nsMathMLmsubsupFrame.obj		\
           .\$(OBJDIR)\nsMathMLmmultiscriptsFrame.obj	\
           .\$(OBJDIR)\nsMathMLmsupFrame.obj		\
-          .\$(OBJDIR)\nsMathMLmtdFrame.obj		\
+          .\$(OBJDIR)\nsMathMLmtableFrame.obj		\
           .\$(OBJDIR)\nsMathMLmoFrame.obj		\
           .\$(OBJDIR)\nsMathMLmunderFrame.obj		\
           .\$(OBJDIR)\nsMathMLmoverFrame.obj		\

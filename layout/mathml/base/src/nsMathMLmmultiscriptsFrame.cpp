@@ -124,16 +124,26 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   ////////////////////////////////////////
 
   // get x-height (an ex)
+#if 0
   nscoord xHeight = 0;
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
     (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
   aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
+#endif
 
-  nscoord aRuleSize = 0;
-  // XXX need to do update this ...
-  GetRuleThickness (fm, aRuleSize);
+  nsStyleFont font;
+  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  aRenderingContext.SetFont(font.mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+
+  nscoord xHeight;
+  fm->GetXHeight (xHeight);
+
+  nscoord aRuleSize;
+  GetRuleThickness (aRenderingContext, fm, aRuleSize);
 
   /////////////////////////////////////
   // first the shift for the subscript
@@ -212,9 +222,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   nsHTMLReflowMetrics baseSize (nsnull);
   nsHTMLReflowMetrics subScriptSize (nsnull);
   nsHTMLReflowMetrics supScriptSize (nsnull);
-  nsIFrame* baseFrame;
-  nsIFrame* subScriptFrame;
-  nsIFrame* supScriptFrame;
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* subScriptFrame = nsnull;
+  nsIFrame* supScriptFrame = nsnull;
 
   PRBool firstPrescriptsPair = PR_FALSE;
   nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
@@ -311,7 +321,10 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 	      rightBearing = PR_MAX(rightBearing, bmSupScript.rightBearing + mScriptSpace);
 	    }
 
-	    NS_ASSERTION((isSubScriptPresent || isSupScriptPresent),"mmultiscripts : both sup/subscripts are absent");
+            if (!isSubScriptPresent && !isSupScriptPresent) {
+              // report an error, encourage people to get their markups in order
+              return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+            }
 
             if (!mprescriptsFrame) { // we are still looping over base & postscripts
               mBoundingMetrics.rightBearing = mBoundingMetrics.width + rightBearing;
@@ -366,6 +379,11 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
     rv = aChildFrame->GetNextSibling(&aChildFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
+  // note: width=0 if all sup-sub pairs match correctly
+  if ((0 != width) || !baseFrame || !subScriptFrame || !supScriptFrame) {
+    // report an error, encourage people to get their markups in order
+    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+  }
 
   // we left out the width of prescripts, so ...
   mBoundingMetrics.rightBearing += prescriptsWidth;
@@ -386,7 +404,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.width = mBoundingMetrics.width;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+  mReference.y = aDesiredSize.ascent;
 
   //////////////////
   // Place Children 
@@ -405,7 +423,6 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
       if (nsnull == aChildFrame) { // end of prescripts,
 	// place the base ...
 	aChildFrame = baseFrame; 
-//	dy = mBoundingMetrics.ascent - bmBase.ascent;
         dy = aDesiredSize.ascent - baseSize.ascent;
         FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
 	dx += baseSize.width + bmBase.supItalicCorrection;
@@ -433,14 +450,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 	    supScriptSize.width = aRect.width;
 	    supScriptSize.height = aRect.height;
 
-	    // XXX should we really center the boxes
-	    // XXX i'm leaving it as left-justified 
-	    // XXX which is consistent with what's done for <msubsup>
-
-           // reverting to center. It looks much nicer and adds a bit
-           // of variety to the engine. At least we have two functions
-           // doing two different things.
-
+            // center w.r.t. largest width
 	    width = PR_MAX(subScriptSize.width, supScriptSize.width);
 
 	    dy = aDesiredSize.ascent - 

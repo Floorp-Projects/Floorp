@@ -18,7 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  */
-
+#define SHOW_BOUNDING_BOX 1
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
@@ -81,14 +81,14 @@ public:
   *        the stretched frame. Only member data of the struct that are 
   *        relevant to the direction are used (the rest is ignored). 
   * @param aDesiredStretchSize [in/out] On input the current size
-  *        size of the frame, on output the size after stretching.
+  *        of the frame, on output the size after stretching.
   */
   NS_IMETHOD 
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
-          nsStretchMetrics&    aContainerSize,
-          nsStretchMetrics&    aDesiredStretchSize) = 0;
+          nsBoundingMetrics&   aContainerSize,
+          nsHTMLReflowMetrics& aDesiredStretchSize) = 0;
 
 #if 0
   NS_IMETHOD
@@ -187,20 +187,23 @@ public:
   SetPresentationData(const nsPresentationData& aPresentationData) = 0;
 
  /* UpdatePresentationData :
-  * Increments the scriptlevel of the frame, and set its displaystyle. 
+  * Increments the scriptlevel of the frame, and
+  * sets its displaystyle and compression flags.
   * Note that <mstyle> is the only tag which allows to set
   * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
   * to reset or increment the scriptlevel in a manual way. 
-  * Therefore <mstyle> has its peculiar version of this method.
+  * Therefore <mstyle> has its own peculiar version of this method.
   */ 
   NS_IMETHOD
   UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                         PRBool  aDisplayStyle) = 0;
+                         PRBool  aDisplayStyle,
+                         PRBool  aCompressed) = 0;
 
  /* UpdatePresentationDataFromChildAt :
-  * Increments the scriplevel and set the display level on the whole tree.
-  * For child frames at: aIndex, aIndex+1, aIndex+2, etc, this method set 
-  * their mDisplayStyle to aDisplayStyle and increment their mScriptLevel
+  * Increments the scriplevel and
+  * sets the displaystyle and compression flags on the whole tree.
+  * For child frames at: aIndex, aIndex+1, aIndex+2, etc, this method sets 
+  * their displaystyle and compressed flags, and increment their mScriptLevel
   * with aScriptLevelIncrement. The increment is propagated down to the 
   * subtrees of each of these child frames. Note that <mstyle> is the only
   * tag which allows <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
@@ -210,57 +213,8 @@ public:
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
                                     PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle) = 0;
-};
-
-/* Structure used for stretching a frame. */
-struct nsStretchMetrics {
-//  nscoord leading;
-  nscoord descent, ascent;
-  nscoord width, height;
-  float leftSpace, rightSpace;
-
-  nsStretchMetrics(nscoord aDescent    = 0, 
-                   nscoord aAscent     = 0, 
-                   nscoord aWidth      = 0, 
-                   nscoord aHeight     = 0,
-                   float   aLeftSpace  = 0.0f, 
-                   float   aRightSpace = 0.0f) {
-    width = aWidth; 
-    height = aHeight;
-    ascent = aAscent; 
-    descent = aDescent;
-    leftSpace = aLeftSpace;
-    rightSpace = aRightSpace;
-  }
-
-  nsStretchMetrics(const nsStretchMetrics& aStretchMetrics) {
-    width = aStretchMetrics.width; 
-    height = aStretchMetrics.height;
-    ascent = aStretchMetrics.ascent; 
-    descent = aStretchMetrics.descent;
-    leftSpace = aStretchMetrics.leftSpace;
-    rightSpace = aStretchMetrics.rightSpace;
-  }
-
-  nsStretchMetrics(const nsHTMLReflowMetrics& aReflowMetrics) {
-    width = aReflowMetrics.width; 
-    height = aReflowMetrics.height;
-    ascent = aReflowMetrics.ascent; 
-    descent = aReflowMetrics.descent;
-    leftSpace = 0.0f;
-    rightSpace = 0.0f;
-  }
-
-  PRBool
-  operator == (const nsStretchMetrics& aStretchMetrics) {
-    return (width == aStretchMetrics.width &&
-            height == aStretchMetrics.height &&
-            ascent == aStretchMetrics.ascent &&
-            descent == aStretchMetrics.descent &&
-            leftSpace == aStretchMetrics.leftSpace &&
-            rightSpace == aStretchMetrics.rightSpace);
-  }
+                                    PRBool  aDisplayStyle,
+                                    PRBool  aCompressed) = 0;
 };
 
 // struct used by a frame to modulate its presentation
@@ -283,7 +237,7 @@ struct nsEmbellishData {
   nsIFrame* firstChild; // handy pointer on our embellished child 
   nsIFrame* core; // pointer on the mo frame at the core of the embellished hierarchy
   nsStretchDirection direction;
-  nscoord leftSpace, rightSpace;
+  float leftSpace, rightSpace;
 
   nsEmbellishData()
   {
@@ -291,7 +245,7 @@ struct nsEmbellishData {
     firstChild = nsnull;
     core = nsnull;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    leftSpace = rightSpace = 0;
+    leftSpace = rightSpace = 0.0f;
   }
 };
 
@@ -328,16 +282,21 @@ struct nsEmbellishData {
 // an accentunder frame
 #define NS_MATHML_ACCENTUNDER                         0x00000020
 
-// This bit is set if the frame is <mover>, <munder> or <munderover>
+// This bit is set if the frame is an <mover>, <munder> or <munderover>
 // whose base frame is a <mo> frame (or an embellished container with
 // a core <mo>) for which the movablelimits attribute is set to true
 #define NS_MATHML_MOVABLELIMITS                       0x00000040
 
+// This bit is set when the frame cannot be formatted due to an
+// error (e.g., invalid markup such as a <msup> without an overscript).
+// When set, a visual feedback will be provided to the user.
+#define NS_MATHML_ERROR                               0x80000000
+
 // This bit is used for visual debug. When set, the bounding box
-// of your frame is painted. You should therefore ensure that you
-// have properly filled your mReference and mBoundingMetrics in
+// of your frame is painted. This visual debug enable to ensure that
+// you have properly filled your mReference and mBoundingMetrics in
 // Place().
-#define NS_MATHML_SHOW_BOUNDING_METRICS               0x80000000
+#define NS_MATHML_SHOW_BOUNDING_METRICS               0x40000000
 
 // Macros that retrieve those bits
 #define NS_MATHML_IS_DISPLAYSTYLE(_flags) \
@@ -361,6 +320,9 @@ struct nsEmbellishData {
 #define NS_MATHML_IS_MOVABLELIMITS(_flags) \
   (NS_MATHML_MOVABLELIMITS == ((_flags) & NS_MATHML_MOVABLELIMITS))
 
+#define NS_MATHML_HAS_ERROR(_flags) \
+  (NS_MATHML_ERROR == ((_flags) & NS_MATHML_ERROR))
+
 #define NS_MATHML_PAINT_BOUNDING_METRICS(_flags) \
   (NS_MATHML_SHOW_BOUNDING_METRICS == ((_flags) & NS_MATHML_SHOW_BOUNDING_METRICS))
 
@@ -369,28 +331,30 @@ struct nsEmbellishData {
 // in their relevant situation as they become available
 
 // This bit is set if the frame is an embellished operator. 
-#define NS_MATHML_EMBELLISH_OPERATOR             0x00000001
+#define NS_MATHML_EMBELLISH_OPERATOR                0x00000001
 
-// This bit is set if the frame is an embellished container that
-// will fire a stretch command on its first (non-empty) child.
-#define NS_MATHML_STRETCH_FIRST_CHILD            NS_MATHML_EMBELLISH_OPERATOR
+// This bit is set if the frame will fire a vertical stretch
+// command on all its (non-empty) children.
+// Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
+// vertical stretch command on all their non-empty children
+#define NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY   0x00000002
 
-// This bit is set if the frame will fire a stretch command on all
-// its (non-empty) children.
-// Tags like <mrow> (or an inferred mrow), munderover, etc,
-// will fire a stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN            0x00000002
+// This bit is set if the frame will fire a horizontal stretch
+// command on all its (non-empty) children.
+// Tags like munder, mover, munderover, will fire a 
+// horizontal stretch command on all their non-empty children
+#define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY 0x00000004
 
 // This bit is set if the frame is an <mo> frame that should behave
-// like an accent
-#define NS_MATHML_EMBELLISH_ACCENT                0x00000004
+// like an accent XXX since it is <mo> specific, use NS_MATHML_EMBELLISH_MO_ACCENT instead?
+#define NS_MATHML_EMBELLISH_ACCENT                  0x00000008
 
 // This bit is set if the frame is an <mo> frame with the movablelimits
-// attribute set to true 
-#define NS_MATHML_EMBELLISH_MOVABLELIMITS         0x00000008
+// attribute set to true XXX since it is <mo> specific, use NS_MATHML_EMBELLISH_MO_MOVABLELIMITS instead?
+#define NS_MATHML_EMBELLISH_MOVABLELIMITS           0x00000010
 
 // a bit used for debug
-#define NS_MATHML_STRETCH_DONE                    0x80000000
+#define NS_MATHML_STRETCH_DONE                      0x80000000
 
 
 // Macros that retrieve those bits
@@ -398,11 +362,11 @@ struct nsEmbellishData {
 #define NS_MATHML_IS_EMBELLISH_OPERATOR(_flags) \
   (NS_MATHML_EMBELLISH_OPERATOR == ((_flags) & NS_MATHML_EMBELLISH_OPERATOR))
 
-#define NS_MATHML_WILL_STRETCH_FIRST_CHILD(_flags) \
-  (NS_MATHML_STRETCH_FIRST_CHILD == ((_flags) & NS_MATHML_STRETCH_FIRST_CHILD))
+#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(_flags) \
+  (NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY))
 
-#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN(_flags) \
-  (NS_MATHML_STRETCH_ALL_CHILDREN == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN))
+#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(_flags) \
+  (NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY))
 
 #define NS_MATHML_STRETCH_WAS_DONE(_flags) \
   (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))

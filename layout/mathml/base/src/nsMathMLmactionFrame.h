@@ -57,23 +57,16 @@ public:
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  GetFrameForPoint(nsIPresContext* aPresContext,
-                   const nsPoint&  aPoint,
+  GetFrameForPoint(nsIPresContext*   aPresContext,
+                   const nsPoint&    aPoint,
                    nsFramePaintLayer aWhichLayer,
-                   nsIFrame**      aFrame);
+                   nsIFrame**        aFrame);
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
-
-  NS_IMETHOD
-  ReflowChildren(PRInt32                  aDirection,
-                 nsIPresContext*          aPresContext,
-                 nsHTMLReflowMetrics&     aDesiredSize,
-                 const nsHTMLReflowState& aReflowState,
-                 nsReflowStatus&          aStatus);
 
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,

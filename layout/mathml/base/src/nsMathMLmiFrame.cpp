@@ -131,13 +131,13 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       if (NS_CONTENT_ATTR_HAS_VALUE == mstyleContent->GetAttribute(kNameSpaceID_None, 
                        nsMathMLAtoms::fontstyle_, fontStyle))
       {
-        if (fontStyle == "italic")
+        if (fontStyle.Equals("italic"))
           return rv;
       }
     }
 
     // Get a pseudo style context for the appropriate style font 
-    fontStyle = ":-moz-math-font-style-normal";                           
+    fontStyle.Assign(":-moz-math-font-style-normal");                           
     nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
     nsCOMPtr<nsIStyleContext> newStyleContext;
     aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,

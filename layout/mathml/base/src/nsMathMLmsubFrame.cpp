@@ -91,7 +91,7 @@ nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
   }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+//  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
   return rv;
 }
@@ -136,14 +136,17 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
 	// parameter v, Rule 18a, App. G, TeXbook
 	minSubScriptShift = bmBase.descent + aSubDrop;
       }
-      else {
-	NS_ASSERTION((count < 2),"nsMathMLmsubFrame : invalid markup");
-      }
       count++;
     }
-    
     rv = aChildFrame->GetNextSibling(&aChildFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+  }
+#ifdef NS_DEBUG
+  if (2 != count) printf("msub: invalid markup");
+#endif
+  if ((2 != count) || !baseFrame || !subScriptFrame) {
+    // report an error, encourage people to get their markups in order
+    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
   //////////////////
@@ -199,7 +202,7 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+  mReference.y = aDesiredSize.ascent;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;

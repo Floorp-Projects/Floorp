@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 #ifndef nsMathMLmrootFrame_h___
@@ -33,7 +34,14 @@
 class nsMathMLmrootFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  
+
+  NS_IMETHOD
+  SetAdditionalStyleContext(PRInt32          aIndex, 
+                            nsIStyleContext* aStyleContext);
+  NS_IMETHOD
+  GetAdditionalStyleContext(PRInt32           aIndex, 
+                            nsIStyleContext** aStyleContext) const;
+
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
@@ -48,7 +56,7 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(1, 2, PR_FALSE);
+    UpdatePresentationDataFromChildAt(1, 2, PR_FALSE, PR_FALSE);
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
@@ -71,7 +79,8 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  nsMathMLChar mSqrChar, mBarChar;
+  nsMathMLChar mSqrChar;
+  nsRect       mBarRect;
 };
 
 #endif /* nsMathMLmrootFrame_h___ */

@@ -100,7 +100,7 @@ nsMathMLmsubsupFrame::Init(nsIPresContext*  aPresContext,
   }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+//  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
   return rv;
 }
@@ -120,9 +120,9 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   nsHTMLReflowMetrics baseSize (nsnull);
   nsHTMLReflowMetrics subScriptSize (nsnull);
   nsHTMLReflowMetrics supScriptSize (nsnull);
-  nsIFrame* baseFrame;
-  nsIFrame* subScriptFrame;
-  nsIFrame* supScriptFrame;
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* subScriptFrame = nsnull;
+  nsIFrame* supScriptFrame = nsnull;
   // parameter v, Rule 18a, Appendix G of the TeXbook
   nscoord minSubScriptShift = 0; 
   // parameter u in Rule 18a, Appendix G of the TeXbook
@@ -159,14 +159,17 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
 	// parameter u, Rule 18a, App. G, TeXbook
 	minSupScriptShift = bmBase.ascent - aSupDrop;
       }
-      else {
-	NS_ASSERTION((count < 2),"nsMathMLmsubFrame : invalid markup");
-      }
       count++;
     }
-
     rv = aChildFrame->GetNextSibling(&aChildFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+  }
+#ifdef NS_DEBUG
+  if (3 != count) printf("msubsup: invalid markup");
+#endif
+  if ((3 != count) || !baseFrame || !subScriptFrame || !supScriptFrame) {
+    // report an error, encourage people to get their markups in order
+    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
   //////////////////
@@ -184,18 +187,21 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   // aSubScriptShift1 = subscriptshift attribute * x-height
   nscoord aSubScriptShift1, aSubScriptShift2;
 
-  // get x-height (an ex)
-  nscoord xHeight = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
-
 //  const nsStyleFont* aFont =
 //    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
 
-  const nsStyleFont* aFont;
-  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)aFont);
+  const nsStyleFont* font;
+  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
+  aRenderingContext.SetFont(font->mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
-  aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
+  // get x-height (an ex)
+  nscoord xHeight;
   fm->GetXHeight (xHeight);
+
+  nscoord aRuleSize;
+  GetRuleThickness (aRenderingContext, fm, aRuleSize);
   
   // Get aSubScriptShift{1,2} default from font
   GetSubScriptShifts (fm, aSubScriptShift1, aSubScriptShift2);
@@ -206,7 +212,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
     aSubScriptShift1 = PR_MAX(aSubScriptShift1, mSubScriptShift);
     aSubScriptShift2 = NSToCoordRound(aFactor * aSubScriptShift1);
   }
- 
+
   // get a tentative value for subscriptshift
   // Rule 18d, App. G, TeXbook
   nscoord aSubScriptShift = 
@@ -271,10 +277,6 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   // Rule 18e, App. G, TeXbook
   //////////////////////////////////////////////////
 
-  nscoord aRuleSize;
-  // XXX need to do update this ...
-  GetRuleThickness (fm, aRuleSize);
-//   aRuleSize /= 2;
   nscoord gap = 
     (aSupScriptShift - bmSupScript.descent) - 
     (bmSubScript.ascent - aSubScriptShift);
@@ -310,7 +312,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
     PR_MAX((bmBase.supItalicCorrection + bmSupScript.width),
            (bmBase.subItalicCorrection + bmSubScript.width));
 
-  // to be simplfied later
+  // to be simplified later
   nscoord dyBase = mBoundingMetrics.ascent - bmBase.ascent;
   nscoord dySubScript = mBoundingMetrics.ascent - bmSubScript.ascent + aSubScriptShift;
   nscoord dySupScript = mBoundingMetrics.ascent - bmSupScript.ascent - aSupScriptShift;
@@ -327,7 +329,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+  mReference.y = aDesiredSize.ascent;
   mBoundingMetrics.leftBearing = bmBase.leftBearing;
   mBoundingMetrics.rightBearing = bmBase.width + mScriptSpace + 
     PR_MAX((bmBase.supItalicCorrection + bmSupScript.rightBearing),

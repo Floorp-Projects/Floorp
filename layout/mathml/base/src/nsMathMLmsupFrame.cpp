@@ -90,7 +90,7 @@ nsMathMLmsupFrame::Init(nsIPresContext*  aPresContext,
   }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+//  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
   return rv;
 }
@@ -110,8 +110,8 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   nsRect aRect;
   nsHTMLReflowMetrics baseSize (nsnull);
   nsHTMLReflowMetrics supScriptSize (nsnull);
-  nsIFrame* baseFrame;
-  nsIFrame* supScriptFrame;
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* supScriptFrame = nsnull;
   // parameter u in Rule 18a, Appendix G of the TeXbook
   nscoord minSupScriptShift = 0;   
 
@@ -136,13 +136,17 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
 	// parameter u, Rule 18a, App. G, TeXbook
 	minSupScriptShift = bmBase.ascent - aSupDrop;
       }
-      else {
-	NS_ASSERTION((count < 2),"nsMathMLmsupFrame : invalid markup");
-      }
       count++;
     }
     rv = aChildFrame->GetNextSibling(&aChildFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+  }
+#ifdef NS_DEBUG
+  if (2 != count) printf("msup: invalid markup");
+#endif
+  if ((2 != count) || !baseFrame || !supScriptFrame) {
+    // report an error, encourage people to get their markups in order
+    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
   //////////////////
@@ -226,7 +230,7 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.width = baseSize.width + mScriptSpace + supScriptSize.width;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+  mReference.y = aDesiredSize.ascent;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;

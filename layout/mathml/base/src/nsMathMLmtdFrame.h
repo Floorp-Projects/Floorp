@@ -31,14 +31,26 @@
 //
 
 class nsMathMLmtdFrame : public nsAreaFrame {
+//class nsMathMLmtdFrame : public nsBlockFrame {
 public:
   friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+#if 0
+  NS_IMETHOD
+  SetInitialChildList(nsIPresContext* aPresContext,
+                       nsIAtom*        aListName,
+                       nsIFrame*       aChildList);
+#endif
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
+
+  NS_IMETHOD
+  DidReflow(nsIPresContext*   aPresContext,
+            nsDidReflowStatus aStatus);
 
 protected:  
   nsMathMLmtdFrame();

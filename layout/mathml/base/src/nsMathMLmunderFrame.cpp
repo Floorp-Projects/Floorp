@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -76,8 +77,11 @@ nsMathMLmunderFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
@@ -190,45 +194,14 @@ XXX The winner is the outermost setting in conflicting settings like these:
 
   if (underscriptMathMLFrame) {
     incrementScriptLevel = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
-    underscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE);
-    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE);
+    underscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE, PR_FALSE);
+    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE, PR_FALSE);
   }
 
   // switch the style of the underscript
   InsertScriptLevelStyleContext(aPresContext);
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsMathMLmunderFrame::Reflow(nsIPresContext*          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus)
-{
-
-  nsresult rv = NS_OK;
-
-  /////////////
-  // Reflow children
-
-  ReflowChildren(1, aPresContext, aDesiredSize, aReflowState, aStatus);
-
-  /////////////
-  // Ask stretchy children to stretch themselves
-
-  nsIRenderingContext& renderingContext = *aReflowState.rendContext;
-  nsStretchMetrics containerSize(aDesiredSize);
-  nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_HORIZONTAL;
-
-  StretchChildren(aPresContext, renderingContext, stretchDir, containerSize);
-	
-  /////////////
-  // Place children now by re-adjusting the origins to align the baselines
-  FinalizeReflow(1, aPresContext, renderingContext, aDesiredSize);
-
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
 }
 
 /*
@@ -256,61 +229,120 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
                            PRBool               aPlaceOrigin,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
-  nscoord count = 0;
-  nsRect rect[2];
-  nsIFrame* child[2];
+  nsresult rv = NS_OK;
+
+  ////////////////////////////////////
+  // Get the children's desired sizes
+
+  PRInt32 count = 0;
+  nsBoundingMetrics bmBase, bmUnder;
+  nsHTMLReflowMetrics baseSize (nsnull);
+  nsHTMLReflowMetrics underSize (nsnull);
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* underFrame = nsnull;
+
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame) && 2 > count) {
-      childFrame->GetRect(rect[count]);
-      child[count] = childFrame;
+    if (!IsOnlyWhitespace(childFrame)) {
+      if (0 == count) {
+        // base 
+        baseFrame = childFrame;
+        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
+      }
+      else if (1 == count) {
+        // under
+        underFrame = childFrame;
+        GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
+      }
       count++;
     }
-    childFrame->GetNextSibling(&childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+  }
+  if ((2 != count) || !baseFrame || !underFrame) {
+#ifdef NS_DEBUG
+    printf("munder: invalid markup");
+#endif
+    // report an error, encourage people to get their markups in order
+    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
-  aDesiredSize.descent = rect[0].x;           
-  aDesiredSize.ascent = rect[0].y;
-   
-  aDesiredSize.descent += rect[1].height;
-  aDesiredSize.width = PR_MAX(rect[0].width, rect[1].width);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  ////////////////////
+  // Place Children
 
-  rect[0].x = (aDesiredSize.width - rect[0].width) / 2; // center w.r.t largest width
-  rect[1].x = (aDesiredSize.width - rect[1].width) / 2;
-  rect[0].y = 0;
-  rect[1].y = aDesiredSize.height - rect[1].height;  
-
-//ignore the leading (line spacing) that is attached to the text
-  nscoord leading;
+  const nsStyleFont* font =
+    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
+  aRenderingContext.SetFont(font->mFont);
   nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* aFont =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
-  fm->GetLeading(leading);
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
-  aDesiredSize.height -= leading;
-  aDesiredSize.descent -= leading;
-  rect[1].y -= leading;
-// 
+  nscoord xHeight = 0;
+  fm->GetXHeight (xHeight);
+
+  nscoord ruleThickness;
+  GetRuleThickness (aRenderingContext, fm, ruleThickness);
+
+  // there are 2 different types of placement depending on 
+  // whether we want an accented under or not
+
+  nscoord italicCorrection = 0;
+  nscoord delta1 = 0; // gap between base and underscript
+  nscoord delta2 = 0; // extra space beneath underscript
+  if (!NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)) {    
+    // Rule 13a, App. G, TeXbook
+//    GetItalicCorrectionFromChild (baseFrame, italicCorrection);
+    nscoord bigOpSpacing2, bigOpSpacing4, bigOpSpacing5, dummy; 
+    GetBigOpSpacings (fm, 
+                      dummy, bigOpSpacing2, 
+                      dummy, bigOpSpacing4, 
+                      bigOpSpacing5);
+    delta1 = PR_MAX(bigOpSpacing2, (bigOpSpacing4 - bmUnder.ascent));
+    delta2 = bigOpSpacing5;
+  }
+  else {
+    // No corresponding rule in TeXbook - we are on our own here
+    // XXX tune the gap delta between base and underscript 
+
+    // Should we use Rule 10 like \underline does?
+    delta1 = ruleThickness;
+    delta2 = ruleThickness;
+  }
+  // empty under?
+  if (0 == (bmUnder.ascent + bmUnder.descent)) delta1 = 0;
+
+  mBoundingMetrics.ascent = bmBase.ascent;
+  mBoundingMetrics.descent = 
+    bmBase.descent + delta1 + bmUnder.ascent + bmUnder.descent;
+  mBoundingMetrics.width = 
+    PR_MAX(bmBase.width/2,(bmUnder.width + italicCorrection/2)/2) +
+    PR_MAX(bmBase.width/2,(bmUnder.width - italicCorrection/2)/2);
+
+  nscoord dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
+  nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
+  
+  aDesiredSize.ascent = baseSize.ascent;
+  aDesiredSize.descent = mBoundingMetrics.descent + delta2;
+  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.width = mBoundingMetrics.width;
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
+
+  mBoundingMetrics.leftBearing = 
+    PR_MIN(dxBase + bmBase.leftBearing, dxUnder + bmUnder.leftBearing);
+  mBoundingMetrics.rightBearing = 
+    PR_MAX(dxBase + bmBase.rightBearing, dxUnder + bmUnder.rightBearing);
+
   if (aPlaceOrigin) {
-    // child[0]->SetRect(aPresContext, rect[0]);
-    // child[1]->SetRect(aPresContext, rect[1]);
-    nsHTMLReflowMetrics childSize(nsnull);
-    for (PRInt32 i=0; i<count; i++) {
-      childSize.width = rect[i].width;
-      childSize.height = rect[i].height;
-      FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
-    }
-  }
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    nscoord dy = 0;
+    // place base
+    dy = 0;
+    FinishReflowChild(baseFrame, aPresContext, baseSize, dxBase, dy, 0);
+    // place underscript
+    dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent - underSize.ascent;
+    FinishReflowChild(underFrame, aPresContext, underSize, dxUnder, dy, 0);
   }
 
-  // XXX Fix me!
-  mBoundingMetrics.ascent  = aDesiredSize.ascent;
-  mBoundingMetrics.descent = aDesiredSize.descent;
-  mBoundingMetrics.width   = aDesiredSize.width;
   return NS_OK;
 }
+

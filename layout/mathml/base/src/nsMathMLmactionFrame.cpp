@@ -233,7 +233,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   if (mSelectedFrame) {
     nsIMathMLFrame* aMathMLFrame = nsnull;
-    rv = mSelectedFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    rv = mSelectedFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
     if (NS_SUCCEEDED(rv) && aMathMLFrame) {
       nsEmbellishData embellishData;
       aMathMLFrame->GetEmbellishData(embellishData);
@@ -270,10 +270,10 @@ nsMathMLmactionFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
 // Return the selected frame ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                                       const nsPoint&  aPoint, 
+nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+                                       const nsPoint&    aPoint,
                                        nsFramePaintLayer aWhichLayer,
-                                       nsIFrame**      aFrame)
+                                       nsIFrame**        aFrame)
 {
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame)
@@ -292,7 +292,7 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
   const nsStyleDisplay* disp = 
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->mVisible && mRect.width && mRect.height) {
+    if (disp->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color = (const nsStyleColor*)
@@ -317,42 +317,6 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
-// Only reflow the selected child ...
-NS_IMETHODIMP
-nsMathMLmactionFrame::ReflowChildren(PRInt32                  aDirection,
-                                     nsIPresContext*          aPresContext,
-                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState,
-                                     nsReflowStatus&          aStatus)
-{
-  nsresult rv = NS_OK;
-  aStatus = NS_FRAME_COMPLETE;
-  nsIFrame* childFrame = GetSelectedFrame();
-  aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
-  if (childFrame) {
-    // ask the child to compute its bounding metrics 
-    nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
-                        aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
-    nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize);
-    rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
-                     childReflowState, aStatus);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-    if (NS_FAILED(rv)) return rv;
-    // origins are used as placeholders to store the child's ascent and descent.
-    childFrame->SetRect(aPresContext,
-                        nsRect(childDesiredSize.descent, childDesiredSize.ascent,
-                               childDesiredSize.width, childDesiredSize.height));
-
-    aDesiredSize.width = childDesiredSize.width;
-    aDesiredSize.ascent = childDesiredSize.ascent;
-    aDesiredSize.descent = childDesiredSize.descent;
-    aDesiredSize.height = childDesiredSize.height;
-  }
-  return NS_OK;
-}
-
 // Only place the selected child ...
 NS_IMETHODIMP
 nsMathMLmactionFrame::Place(nsIPresContext*      aPresContext,
@@ -360,7 +324,9 @@ nsMathMLmactionFrame::Place(nsIPresContext*      aPresContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
+  aDesiredSize.width = aDesiredSize.height = 0;
+  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  mBoundingMetrics.Clear();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
@@ -368,8 +334,9 @@ nsMathMLmactionFrame::Place(nsIPresContext*      aPresContext,
       FinishReflowChild(childFrame, aPresContext, aDesiredSize, 0, 0, 0);
     }
     mReference.x = 0;
-    mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+    mReference.y = aDesiredSize.ascent;
   }
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   return NS_OK;
 }
 

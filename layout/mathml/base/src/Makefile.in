@@ -50,8 +50,8 @@ CPPSRCS =         nsMathMLChar.cpp		        \
                   nsMathMLmsubsupFrame.cpp		\
                   nsMathMLmmultiscriptsFrame.cpp	\
                   nsMathMLmiFrame.cpp			\
-                  nsMathMLmnFrame.cpp			\
-                  nsMathMLmtdFrame.cpp			\
+                  nsMathMLmtextFrame.cpp		\
+                  nsMathMLmtableFrame.cpp		\
                   nsMathMLmoFrame.cpp			\
                   nsMathMLmunderFrame.cpp		\
                   nsMathMLmoverFrame.cpp		\
