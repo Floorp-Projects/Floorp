@@ -96,7 +96,7 @@ HistoryImpl::GetLength(PRInt32* aLength)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
+HistoryImpl::GetCurrent(nsString& aCurrent)
 {
   PRInt32 curIndex;
   const PRUnichar* curURL = nsnull;
@@ -111,7 +111,7 @@ HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
+HistoryImpl::GetPrevious(nsString& aPrevious)
 {
   PRInt32 curIndex;
   const PRUnichar* prevURL = nsnull;
@@ -126,7 +126,7 @@ HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetNext(nsAWritableString& aNext)
+HistoryImpl::GetNext(nsString& aNext)
 {
   PRInt32 curIndex;
   const PRUnichar* nextURL = nsnull;

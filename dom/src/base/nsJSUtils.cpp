@@ -337,7 +337,7 @@ nsJSUtils::nsConvertJSValToXPCObject(nsISupports** aSupports,
 
 
 NS_EXPORT void 
-nsJSUtils::nsConvertJSValToString(nsAWritableString& aString,
+nsJSUtils::nsConvertJSValToString(nsString& aString,
                                   JSContext* aContext,
                                   jsval aValue)
 {
@@ -432,7 +432,6 @@ nsJSUtils::nsGenericFinalize(JSContext* aContext,
       NS_RELEASE(owner);
     }
     
-    // The addref was part of JSObject construction
     NS_RELEASE(nativeThis);
   }
 }

@@ -165,7 +165,7 @@ public:
 
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey)=0;
 
-  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg)=0;
+  NS_IMETHOD    InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg)=0;
 };
 
 
@@ -176,7 +176,7 @@ public:
   NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey);  \
   NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);  \
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);  \
-  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg);  \
+  NS_IMETHOD    InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg);  \
 
 
 
@@ -187,7 +187,7 @@ public:
   NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey) { return _to GetCtrlKey(aCtrlKey); } \
   NS_IMETHOD    GetShiftKey(PRBool* aShiftKey) { return _to GetShiftKey(aShiftKey); } \
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return _to GetMetaKey(aMetaKey); } \
-  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg) { return _to InitKeyEvent(aTypeArg, aCanBubbleArg, aCancelableArg, aCtrlKeyArg, aAltKeyArg, aShiftKeyArg, aMetaKeyArg, aKeyCodeArg, aCharCodeArg, aViewArg); }  \
+  NS_IMETHOD    InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg) { return _to InitKeyEvent(aTypeArg, aCanBubbleArg, aCancelableArg, aCtrlKeyArg, aAltKeyArg, aShiftKeyArg, aMetaKeyArg, aKeyCodeArg, aCharCodeArg, aViewArg); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitKeyEventClass(nsIScriptContext *aContext, void **aPrototype);

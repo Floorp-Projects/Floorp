@@ -127,7 +127,7 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 }
 
 NS_IMETHODIMP 
-nsDOMWindowList::NamedItem(const nsAReadableString& aName, nsIDOMWindow** aReturn)
+nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 
@@ -146,7 +146,7 @@ nsDOMWindowList::NamedItem(const nsAReadableString& aName, nsIDOMWindow** aRetur
       }
     }
 
-    mDocShellNode->FindChildWithName(nsAutoString(aName).GetUnicode(), PR_FALSE, PR_FALSE,
+    mDocShellNode->FindChildWithName(aName.GetUnicode(), PR_FALSE, PR_FALSE,
                                      nsnull, getter_AddRefs(item));
     
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
