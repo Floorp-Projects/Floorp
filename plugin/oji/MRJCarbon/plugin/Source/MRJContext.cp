@@ -424,7 +424,17 @@ inline CFMutableDictionaryRef createStringDictionary(PRUint16 capacity)
                                      &kCFTypeDictionaryValueCallBacks);
 }
 
-static CFDictionaryRef getAttributes(nsIPluginTagInfo* tagInfo)
+static CFStringRef createUppercaseString(const char* cstr, CFStringEncoding encoding)
+{
+    CFMutableStringRef str = CFStringCreateMutable(NULL, strlen(cstr));
+    if (str) {
+        CFStringAppendCString(str, cstr, encoding);
+        CFStringUppercase(str, NULL);
+    }
+    return str;
+}
+
+static CFMutableDictionaryRef getAttributes(nsIPluginTagInfo* tagInfo)
 {
     PRUint16 count;
     const char* const* names;
@@ -433,7 +443,7 @@ static CFDictionaryRef getAttributes(nsIPluginTagInfo* tagInfo)
         CFMutableDictionaryRef attributes = createStringDictionary(count);
         if (attributes != NULL) {
             for (PRUint16 i = 0; i < count; ++i) {
-                cfref<CFStringRef> name = CFStringCreateWithCString(NULL, names[i], kCFStringEncodingUTF8);
+                cfref<CFStringRef> name = createUppercaseString(names[i], kCFStringEncodingUTF8);
                 cfref<CFStringRef> value = CFStringCreateWithCString(NULL, values[i], kCFStringEncodingUTF8);
                 if (name && value)
                     CFDictionaryAddValue(attributes, name, value);
@@ -444,7 +454,7 @@ static CFDictionaryRef getAttributes(nsIPluginTagInfo* tagInfo)
     return NULL;
 } 
 
-static CFDictionaryRef getParameters(nsIPluginTagInfo2* tagInfo2)
+static CFMutableDictionaryRef getParameters(nsIPluginTagInfo2* tagInfo2)
 {
     PRUint16 count;
     const char* const* names;
@@ -453,7 +463,7 @@ static CFDictionaryRef getParameters(nsIPluginTagInfo2* tagInfo2)
         CFMutableDictionaryRef parameters = createStringDictionary(count);
         if (parameters) {
             for (PRUint16 i = 0; i < count; ++i) {
-                cfref<CFStringRef> name = CFStringCreateWithCString(NULL, names[i], kCFStringEncodingUTF8);
+                cfref<CFStringRef> name = createUppercaseString(names[i], kCFStringEncodingUTF8);
                 cfref<CFStringRef> value = CFStringCreateWithCString(NULL, values[i], kCFStringEncodingUTF8);
                 if (name && value)
                     CFDictionaryAddValue(parameters, name, value);
@@ -1272,7 +1282,27 @@ static void showDocumentCallback(jobject applet, CFURLRef url, CFStringRef windo
     }
 }
 
-#endif
+static void fixAttributes(CFMutableDictionaryRef attributes, nsIPluginTagInfo* tagInfo, nsPluginWindow* window)
+{
+    // check for WIDTH & HEIGHT attributes that end with % or *, and replace those with the physical values.
+    const char* width;
+    if (tagInfo->GetAttribute("WIDTH", &width) == NS_OK) {
+        if (strpbrk(width, "%*")) {
+            cfref<CFStringRef> actualWidth = CFStringCreateWithFormat(NULL, NULL, CFSTR("%d"), window->width);
+            CFDictionaryReplaceValue(attributes, CFSTR("WIDTH"), actualWidth);
+        }
+    }
+    
+    const char* height;
+    if (tagInfo->GetAttribute("HEIGHT", &height) == NS_OK) {
+        if (strpbrk(height, "%*")) {
+            cfref<CFStringRef> actualHeight = CFStringCreateWithFormat(NULL, NULL, CFSTR("%d"), window->height);
+            CFDictionaryReplaceValue(attributes, CFSTR("HEIGHT"), actualHeight);
+        }
+    }
+}
+
+#endif /* TARGET_CARBON */
 
 Boolean MRJContext::loadApplet()
 {
@@ -1282,14 +1312,15 @@ Boolean MRJContext::loadApplet()
     // Use whizzy new JavaEmbedding APIs to construct an AppletDescriptor.
     
     // gather all attributes and parameters.
-    cfref<CFDictionaryRef> attributes, parameters;
+    cfref<CFMutableDictionaryRef> attributes, parameters;
     nsIPluginTagInfo2* tagInfo2 = NULL;
     if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), (void**)&tagInfo2) == NS_OK) {
         attributes = getAttributes(tagInfo2);
+        fixAttributes(attributes, tagInfo2, mPluginWindow); 
         parameters = getParameters(tagInfo2);
         NS_RELEASE(tagInfo2);
     }
-
+    
     cfref<CFURLRef> documentBase;
     if (::strncmp(mDocumentBase, "file:", 5) == 0) {
         // file: URLs. Need to create the URL from HFS+ style using CFURLCreateWithFileSystemPath.
