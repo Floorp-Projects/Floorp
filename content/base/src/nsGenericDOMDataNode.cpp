@@ -718,7 +718,7 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
       nsCOMPtr<nsIScriptContext> context;
-      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
         context->RemoveReference((void *)&mScriptObject,
                                  mScriptObject);
       }
@@ -736,7 +736,7 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if (globalObject) {
       nsCOMPtr<nsIScriptContext> context;
-      if (NS_OK == globalObject->GetContext(getter_AddRefs(context))) {
+      if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
         context->AddNamedReference((void *)&mScriptObject,
                                    mScriptObject,
                                    "Text");
