@@ -57,19 +57,24 @@ sub RederiveRegexp ($$)
     my $gid = shift;
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare("SELECT userid, login_name FROM profiles");
-    my $sthadd = $dbh->prepare("INSERT IGNORE INTO user_group_map
-                               (user_id, group_id, grant_type, isbless)
-                               VALUES (?, ?, ?, 0)");
+    my $sthqry = $dbh->prepare("SELECT 1 FROM user_group_map
+                                 WHERE user_id = ? AND group_id = ?
+                                 AND grant_type = ? and isbless = 0");
+    my $sthadd = $dbh->prepare("INSERT INTO user_group_map
+                                 (user_id, group_id, grant_type, isbless)
+                                 VALUES (?, ?, ?, 0)");
     my $sthdel = $dbh->prepare("DELETE FROM user_group_map
-                                WHERE user_id = ? AND group_id = ?
-                                AND grant_type = ? and isbless = 0");
+                                 WHERE user_id = ? AND group_id = ?
+                                 AND grant_type = ? and isbless = 0");
     $sth->execute();
     while (my ($uid, $login) = $sth->fetchrow_array()) {
+        my $present = $dbh->selectrow_array($sthqry, undef,
+                                            $uid, $gid, GRANT_REGEXP);
         if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i))
         {
-            $sthadd->execute($uid, $gid, GRANT_REGEXP);
+            $sthadd->execute($uid, $gid, GRANT_REGEXP) unless $present;
         } else {
-            $sthdel->execute($uid, $gid, GRANT_REGEXP);
+            $sthdel->execute($uid, $gid, GRANT_REGEXP) if $present;
         }
     }
 }
