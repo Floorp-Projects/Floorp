@@ -639,7 +639,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
     nsXPIDLCString filePath;
     nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!ioService) return NS_ERROR_FAILURE;
-    ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aSearchItem).get(), nsIIOService::url_Directory, 0, 0, getter_Copies(filePath));
+    ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aSearchItem).get(), nsIIOService::url_Path, 0, 0, getter_Copies(filePath));
         
         // Don't bother checking for hostname if the search string
         // already has a filepath;
@@ -647,7 +647,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
             return NS_OK;
         }
           
-   ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aMatchStr).get(), nsIIOService::url_Directory, 0, 0, getter_Copies(filePath));
+   ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aMatchStr).get(), nsIIOService::url_Path, 0, 0, getter_Copies(filePath));
 
         // If the match string doesn't have a filepath
         // we need to do nothing here,  return.
