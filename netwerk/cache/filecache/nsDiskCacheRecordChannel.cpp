@@ -561,9 +561,10 @@ nsDiskCacheRecordChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetShouldCache(PRBool *aShouldCache)
+nsDiskCacheRecordChannel::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_FALSE;
+    *file = mSpec;
+    NS_ADDREF(*file);
     return NS_OK;
 }
 

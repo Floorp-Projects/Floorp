@@ -2165,24 +2165,24 @@ nsSocketTransport::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetShouldCache(PRBool *aShouldCache)
+nsSocketTransport::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_TRUE;
-    return NS_OK;
+  *file = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
 {
-    *aPipeliningAllowed = PR_FALSE;
-    return NS_OK;
+  *aPipeliningAllowed = PR_FALSE;
+  return NS_OK;
 }
  
 NS_IMETHODIMP
 nsSocketTransport::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 {
-    NS_NOTREACHED("SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_NOTREACHED("SetPipeliningAllowed");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

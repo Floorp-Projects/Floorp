@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -502,9 +502,9 @@ nsHTTPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetShouldCache(PRBool *aShouldCache)
+nsHTTPChannel::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_TRUE;
+    *file = nsnull;       // XXX should we return the cache file here?
     return NS_OK;
 }
 
@@ -880,25 +880,25 @@ nsHTTPChannel::CheckCache()
                                             
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(mCacheEntry, 
-                "Cache manager must always return cache entry");
+                     "Cache manager must always return cache entry");
         if (!mCacheEntry)
             return NS_ERROR_FAILURE;
     }
     
     // Hook up stream as listener
     nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheEntry ) );
-		if ( streamAsFile )
-		{
-			nsCOMPtr< nsIStreamAsFileObserver> observer;
-			PRUint32 count = 0;
-			mStreamAsFileObserverArray->Count( & count );
-			for ( PRUint32 i=0; i< count; i++ )
-			{
-				mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
-				streamAsFile->AddObserver( observer );
-			}
+    if ( streamAsFile )
+    {
+        nsCOMPtr< nsIStreamAsFileObserver> observer;
+        PRUint32 count = 0;
+        mStreamAsFileObserverArray->Count( & count );
+        for ( PRUint32 i=0; i< count; i++ )
+        {
+            mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
+            streamAsFile->AddObserver( observer );
+        }
 			
-		}
+    }
 		
     // Be pessimistic: Assume cache entry has no useful data
     mCachedContentIsAvailable = mCachedContentIsValid = PR_FALSE;
@@ -947,7 +947,7 @@ nsHTTPChannel::CheckCache()
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mCachedResponse);
     nsSubsumeCStr cachedHeadersCStr(NS_CONST_CAST(char*, 
-                NS_STATIC_CAST(const char*, cachedHeaders)),
+                                                  NS_STATIC_CAST(const char*, cachedHeaders)),
                                     PR_FALSE);
     rv = mCachedResponse->ParseHeaders(cachedHeadersCStr);
     if (NS_FAILED(rv)) return rv;
@@ -969,7 +969,7 @@ nsHTTPChannel::CheckCache()
     PRBool mustRevalidate = PR_FALSE;
     nsXPIDLCString header;
     mCachedResponse->GetHeader(nsHTTPAtoms::Cache_Control, 
-            getter_Copies(header));
+                               getter_Copies(header));
     if (header) {
         PRInt32 offset;
 
@@ -1024,7 +1024,7 @@ nsHTTPChannel::CheckCache()
         // Add If-Modified-Since header
         nsXPIDLCString lastModified;
         mCachedResponse->GetHeader(nsHTTPAtoms::Last_Modified, 
-                getter_Copies(lastModified));
+                                   getter_Copies(lastModified));
         if (lastModified)
             SetRequestHeader(nsHTTPAtoms::If_Modified_Since, lastModified);
 

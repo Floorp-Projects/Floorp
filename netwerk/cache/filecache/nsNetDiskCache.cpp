@@ -137,7 +137,7 @@ nsNetDiskCache::nsNetDiskCache() :
 
 nsNetDiskCache::~nsNetDiskCache()
 {
-	if ( mDB )
+  if ( mDB )
   	SetSizeEntry();
 
   NS_IF_RELEASE(mDB) ;

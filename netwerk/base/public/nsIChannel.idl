@@ -182,14 +182,9 @@ interface nsIChannel : nsIRequest
     attribute unsigned long bufferMaxSize;
 
     /**
-     * Returns true if the data from this channel should be cached. Local files
-     * report false because they exist on the local disk and need not be cached.
-     * Input stream channels, data protocol, datetime protocol and finger 
-     * protocol channels also should not be cached. Http and ftp on the other 
-     * hand should. Note that the value of this attribute doesn't reflect any
-     * http headers that may specify that this channel should not be cached.
+     * Returns a local file to the channel's data if one exists, null otherwise.
      */
-    readonly attribute boolean shouldCache;
+    readonly attribute nsIFile localFile;
 
     /**
      * Setting pipeliningAllowed causes the load of a URL (issued via asyncOpen,

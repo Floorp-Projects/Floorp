@@ -100,7 +100,7 @@ interface nsIStreamAsFileObserver : nsISupports
      * as the cache manager will effectively relinquished ownership of the
      * file.
      */
-    void ObserveStreamAsFile(in nsIStreamAsFile aStreamAsFile,
-			     in PRUint32 aMessage,
-			     in nsresult aError);
+    void observeStreamAsFile(in nsIStreamAsFile aStreamAsFile,
+                             in PRUint32 aMessage,
+                             in nsresult aError);
 };

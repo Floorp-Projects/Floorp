@@ -473,9 +473,9 @@ nsDataChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetShouldCache(PRBool *aShouldCache)
+nsDataChannel::GetLocalFile(nsIFile* *file)
 {
-    *aShouldCache = PR_FALSE;
+    *file = nsnull;
     return NS_OK;
 }
 
