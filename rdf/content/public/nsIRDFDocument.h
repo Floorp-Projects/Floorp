@@ -52,6 +52,11 @@ public:
   static const nsIID& IID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
 
   /**
+   * Set the content type (to either text/rdf or text/xul)
+   */
+  NS_IMETHOD SetContentType(const char* aContentType) = 0;
+
+  /**
    * Set the document's content model builder.
    */
   NS_IMETHOD SetContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;

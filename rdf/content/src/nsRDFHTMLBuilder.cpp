@@ -296,6 +296,9 @@ RDFHTMLBuilderImpl::OnAssert(nsIRDFContent* parent,
         rv = AddLeafChild(parent, property, valueLiteral);
         NS_RELEASE(valueLiteral);
     }
+	else {
+		return NS_OK; // ignore resources on the leaf.
+	}
     return rv;
 }
 
