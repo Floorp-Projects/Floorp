@@ -1023,7 +1023,18 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Enable(PRBool bState)
 {
-printf("nsWindow::Enable - FIXME: not implemented\n");
+    if(mView && mView->LockLooper()) {
+        if (mView->Window()) {
+            uint flags = mView->Window()->Flags();
+            if (bState == PR_TRUE) {
+               flags &= ~(B_AVOID_FRONT|B_AVOID_FOCUS);
+            } else {
+               flags |= B_AVOID_FRONT|B_AVOID_FOCUS;
+            }
+            mView->Window()->SetFlags(flags);
+        }
+        mView->UnlockLooper();
+    }
     return NS_OK;
 }
 
