@@ -26,8 +26,12 @@
 #include "nsSmtpUrl.h"
 
 #include "nsINetService.h"  /* XXX: NS_FALSE */
-#include "xp.h"
 #include "nsString.h"
+
+extern "C" {
+	char * NET_SACopy (char **destination, const char *source);
+	char * NET_SACat (char **destination, const char *source);
+};
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -329,8 +333,8 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 					{
 						if (m_bccPart && *m_bccPart)
 						{
-							StrAllocCat (m_bccPart, ", ");
-							StrAllocCat (m_bccPart, value);
+							NET_SACat (&m_bccPart, ", ");
+							NET_SACat (&m_bccPart, value);
 						}
 						else
 							m_bccPart = PL_strdup(value); 
@@ -339,8 +343,8 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 					{
 						if (m_bodyPart && *m_bodyPart)
 						{
-							StrAllocCat (m_bodyPart, "\n");
-							StrAllocCat (m_bodyPart, value);
+							NET_SACat (&m_bodyPart, "\n");
+							NET_SACat (&m_bodyPart, value);
 						}
 						else
 							m_bodyPart = PL_strdup(value);
@@ -351,8 +355,8 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 					{
 						if (m_ccPart && *m_ccPart)
 						{
-							StrAllocCat (m_ccPart, ", ");
-							StrAllocCat (m_ccPart, value);
+							NET_SACat (&m_ccPart, ", ");
+							NET_SACat (&m_ccPart, value);
 						}
 						else
 							m_ccPart = PL_strdup(value);
@@ -404,8 +408,8 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 					  {
 						if (m_toPart && *m_toPart)
 						  {
-							StrAllocCat (m_toPart, ", ");
-							StrAllocCat (m_toPart, value);
+							NET_SACat (&m_toPart, ", ");
+							NET_SACat (&m_toPart, value);
 						  }
 						else
 							m_toPart = PL_strdup(value);
