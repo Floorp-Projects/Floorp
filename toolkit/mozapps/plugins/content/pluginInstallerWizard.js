@@ -415,9 +415,6 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
     // [plugin image] [Plugin_Name Plugin_Version] [Success/Failed] [Manual Install (if Failed)]
 
     var myPluginItem = this.mPluginInfoArray[pluginInfoItem];
-    
-    if (myPluginItem.needsRestart)
-      needsRestart = true;
 
     if (myPluginItem.toBeInstalled) {
       var statusMsg;
@@ -434,6 +431,10 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
       } else {
         this.mSuccessfullPluginInstallation++;
         statusMsg = this.getString("pluginInstallationSummary.success");
+
+        // only check needsRestart if the plugin was successfully installed.
+        if (myPluginItem.needsRestart)
+          needsRestart = true;
       }
 
       // manual url - either returned from the webservice or the pluginspage attribute
@@ -474,6 +475,10 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
   if (this.mPluginInfoArrayLength == 0) {
     var noPluginsFound = this.getString("pluginInstallation.noPluginsFound");
     document.getElementById("pluginSummaryDescription").setAttribute("value", noPluginsFound);
+  } else if (this.mSuccessfullPluginInstallation == 0) {
+    // plugins found, but none were installed.
+    var noPluginsInstalled = this.getString("pluginInstallation.noPluginsInstalled");
+    document.getElementById("pluginSummaryDescription").setAttribute("value", noPluginsInstalled);
   }
 
   document.getElementById("pluginSummaryRestartNeeded").hidden = !needsRestart;
@@ -490,7 +495,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
   document.getElementById("moreInfoLink").setAttribute("onclick",
     "gPluginInstaller.loadURL('https://pfs.mozilla.org/plugins/"+notInstalledList+"')");
-  
+
   // clear the tab's plugin list
   this.mTab.missingPlugins = null;
 
