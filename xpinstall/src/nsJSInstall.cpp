@@ -235,7 +235,7 @@ void ConvertJSValToStr(nsString&  aString,
 {
   JSString *jsstring;
 
-  if ( JSVAL_IS_STRING(aValue) &&
+  if ( !JSVAL_IS_NULL(aValue) &&
        (jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
     aString.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
