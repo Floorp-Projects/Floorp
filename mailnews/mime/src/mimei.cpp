@@ -1359,6 +1359,17 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
 	  if (!content_type)
 		content_type = TEXT_PLAIN;
 
+    // 
+    // Set the charset on the channel we are dealing with so people know 
+    // what the charset is set to. Do this for quoting/Printing ONLY! 
+    // 
+    extern void   ResetChannelCharset(MimeObject *obj);
+    if ( (obj->options) && 
+         ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
+           (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 
+           (obj->options->format_out == nsMimeOutput::nsMimeMessagePrintOutput) ) ) 
+      ResetChannelCharset(obj); 
+
 	  status = obj->options->output_init_fn (content_type, charset, name,
 											 x_mac_type, x_mac_creator,
 											 obj->options->stream_closure);

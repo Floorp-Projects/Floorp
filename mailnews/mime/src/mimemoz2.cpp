@@ -1633,3 +1633,21 @@ MimeGetStringByID(PRInt32 stringID)
   else
     return tempString;
 }
+
+void 
+ResetChannelCharset(MimeObject *obj) 
+{ 
+  if (obj->options && obj->options->stream_closure && 
+      obj->options->default_charset && obj->headers ) 
+  { 
+    mime_stream_data  *msd = (mime_stream_data *) (obj->options->stream_closure); 
+    char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE); 
+    if ( (ct) && (msd) && (msd->channel) ) 
+    { 
+      char *ptr = PL_strstr(ct, "charset="); 
+      if (ptr) 
+        msd->channel->SetContentType(ct); 
+      PR_FREEIF(ct); 
+    } 
+  } 
+}
