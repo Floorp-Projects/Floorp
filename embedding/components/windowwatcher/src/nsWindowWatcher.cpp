@@ -729,7 +729,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     JSObject *scriptObject = GetWindowScriptObject(aParent ? aParent : *_retval);
     nsWWJSUtils::nsGetStaticScriptContext(cx, scriptObject,
                                           getter_AddRefs(scriptCX));
-    if (!scriptCX ||
+    if (scriptCX &&
         NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
       return NS_ERROR_FAILURE;
 
@@ -737,7 +737,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-    if (NS_FAILED(rv) || !uriToLoadIsChrome) {
+    if (!uriToLoadIsChrome && secMan) {
       nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
         return NS_ERROR_FAILURE;
