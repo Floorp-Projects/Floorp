@@ -82,6 +82,7 @@ EXPORTS		= \
 		nsAVLTree.h \
 		nsAtomService.h \
 		nsBufferHandle.h \
+		nsBufferHandleUtils.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
 		nsDeque.h \

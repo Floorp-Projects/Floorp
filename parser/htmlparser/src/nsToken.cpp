@@ -43,7 +43,7 @@ int CToken::GetTokenCount(){return TokenCount-DelTokenCount;}
  *  
  *  @update gess 7/21/98
  */
-CToken::CToken(PRInt32 aTag) : mTextValue() {
+CToken::CToken(PRInt32 aTag) {
   // Tokens are allocated through the arena ( not heap allocated..yay ).
   // We, therefore, don't need this macro anymore..
 #ifdef MATCH_CTOR_DTOR 
@@ -66,65 +66,6 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
 }
 
 /**
- *  Constructor with string for tagname assignment
- *  
- *  @update gess 3/25/98
- *  @param  nsString--name of token
- */
-CToken::CToken(const nsString& aName) : mTextValue(aName) {
-  // Tokens are allocated through the arena ( not heap allocated..yay ).
-  // We, therefore, don't need this macro anymore..
-#ifdef MATCH_CTOR_DTOR 
-  MOZ_COUNT_CTOR(CToken);
-#endif
-  
-  mTypeID=0;
-  mAttrCount=0;
-  mNewlineCount=0;
-  mOrigin=eSource;
-  // Note that the use count starts with 1 instead of 0. This
-  // is because of the assumption that any token created is in
-  // use and therefore does not require an explicit addref, or
-  // rather IF_HOLD. This, also, will make sure that tokens created 
-  // on the stack do not accidently hit the arena recycler.
-  mUseCount=1;
-
-#ifdef NS_DEBUG
-  TokenCount++;
-#endif
-}
-
-/**
- *  constructor from char*
- *  
- *  @update gess 3/25/98
- *  @param  aName--char* containing name of token
- */
-CToken::CToken(const char* aName) {
-  // Tokens are allocated through the arena ( not heap allocated..yay ).
-  // We, therefore, don't need this macro anymore..
-#ifdef MATCH_CTOR_DTOR 
-  MOZ_COUNT_CTOR(CToken);
-#endif
-  
-  mTypeID=0;
-  mAttrCount=0;
-  mNewlineCount=0;
-  mOrigin=eSource;
-  mTextValue.AssignWithConversion(aName);
-  // Note that the use count starts with 1 instead of 0. This
-  // is because of the assumption that any token created is in
-  // use and therefore does not require an explicit addref, or
-  // rather IF_HOLD. This, also, will make sure that tokens created 
-  // on the stack do not accidently hit the arena recycler.
-  mUseCount=1;
-
-#ifdef NS_DEBUG
-  TokenCount++;
-#endif
-}
- 
-/**
  *  Decstructor
  *  
  *  @update gess 3/25/98
@@ -139,31 +80,6 @@ CToken::~CToken() {
   mUseCount=0;
 }
 
-
-/**
- * This method gets called when a token is about to be reused
- * for some other purpose. The token should initialize itself 
- * to some reasonable default values.
- * @update	gess7/25/98
- * @param   aTag
- * @param   aString
- */
-void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
-  if(0==aString.Length()) 
-    mTextValue.Truncate(0);
-  else mTextValue=aString;
-  mAttrCount=0;
-  mAttrCount=0;
-  mNewlineCount=0;
-  mTypeID=aTag;
-  mOrigin=eSource;
-  // Note that the use count starts with 1 instead of 0. This
-  // is because of the assumption that any token created is in
-  // use and therefore does not require an explicit addref, or
-  // rather IF_HOLD. This, also, will make sure that tokens created 
-  // on the stack do not accidently hit the arena recycler.
-  mUseCount=1;
-}
  
 /**
  *  Virtual method used to tell this toke to consume his
@@ -190,9 +106,9 @@ nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
 void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
   PRUint32 i=0;
-  PRUint32 theLen=mTextValue.Length();
+  PRUint32 theLen=GetStringValue().Length();
   for(i=0;i<theLen;i++){
-    anOutputStream << char(mTextValue.CharAt(i));
+    anOutputStream << (const char*)NS_ConvertUCS2toUTF8(GetStringValue());
   }
   anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;
 }
@@ -205,36 +121,9 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
  *  @param  ostream -- output stream to accept output data
  */
 void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
-  char buf[256];
-  mTextValue.ToCString(buf,sizeof(buf));
-  anOutputStream << buf;
+  anOutputStream << (const char*)NS_ConvertUCS2toUTF8(GetStringValue());
 }
 
-/**
- * Setter method that changes the string value of this token
- * @update	gess5/11/98
- * @param   name is a char* value containing new string value
- */
-void CToken::SetCStringValue(const char* name){
-  mTextValue.AssignWithConversion(name);
-}
-
-/**
- * Setter method for the string value of this token
- */
-void CToken::SetStringValue(nsString& aStr) {
-  mTextValue = aStr;
-}
-
-/**
- *  This method retrieves the value of this internal string. 
- *  
- *  @update gess 3/25/98
- *  @return nsString reference to internal string value
- */
-nsString& CToken::GetStringValueXXX(void) {
-  return mTextValue;
-}
 
 /**
  * Get string of full contents, suitable for debug dump.
@@ -243,7 +132,7 @@ nsString& CToken::GetStringValueXXX(void) {
  * @return  reference to string containing string value
  */
 void CToken::GetSource(nsString& anOutputString){
-  anOutputString=mTextValue;
+  anOutputString.Assign(GetStringValue());
 }
 
 /**
@@ -251,19 +140,7 @@ void CToken::GetSource(nsString& anOutputString){
  * @return  reference to string containing string value
  */
 void CToken::AppendSource(nsString& anOutputString){
-  anOutputString+=mTextValue;
-}
-
-/**
- *  This method retrieves the value of this internal string
- *  as a cstring.
- *  
- *  @update gess 3/25/98
- *  @return char* rep of internal string value
- */
-char* CToken::GetCStringValue(char* aBuffer, PRInt32 aMaxLen) {
-  strcpy(aBuffer,"string");
-  return aBuffer;
+  anOutputString.Append(GetStringValue());
 }
 
 /**

@@ -242,7 +242,7 @@ public:
   void ReplaceSubstring( const nsString& aTarget, const nsString& aNewValue );
   void ReplaceSubstring( const PRUnichar* aTarget, const PRUnichar* aNewValue );
 
-  PRInt32 CountChar( PRUnichar aChar );
+  PRInt32 CountChar( PRUnichar aChar ) const;
 
   /**
    *  This method trims characters found in aTrimSet from

@@ -44,10 +44,16 @@
 
 typedef struct _XMLParserState {
   XML_Parser parser;
+  nsScanner* scanner;
+  const PRUnichar* bufferStart;
+  const PRUnichar* bufferEnd;
+  nsReadingIterator<PRUnichar> currentIterator;
   nsDeque* tokenDeque;
   nsTokenAllocator* tokenAllocator;
-  CToken* doctypeToken;
-  CToken* cdataToken;  // Used by the begin and end handlers of the cdata section
+  nsString doctypeText;
+  PRBool indoctype;
+  nsString cdataText;
+  PRBool incdata;
 } XMLParserState;
 
  /************************************************************************
@@ -176,10 +182,10 @@ nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {
   mBytesParsed = 0;
   mState = new XMLParserState;
   mState->tokenAllocator = nsnull;
-  mState->cdataToken = nsnull;
   mState->parser = nsnull;
   mState->tokenDeque = nsnull;
-  mState->doctypeToken = nsnull;
+  mState->indoctype = PR_FALSE;
+  mState->incdata = PR_FALSE;
 
   nsAutoString buffer; buffer.AssignWithConversion("UTF-16");
   const PRUnichar* encoding = buffer.GetUnicode();
@@ -341,18 +347,15 @@ nsExpatTokenizer::AddErrorMessageTokens(nsParserError* aError)
   AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenAllocator);
 
   CAttributeToken* attrToken = (CAttributeToken*) 
-      mState->tokenAllocator->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown);  
-  nsString& key = attrToken->GetKey();
-  key.AssignWithConversion("xmlns");
-  attrToken->SetCStringValue(kHTMLNameSpaceURI);
+      mState->tokenAllocator->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown, NS_ConvertASCIItoUCS2(kHTMLNameSpaceURI));  
+  attrToken->SetKey(NS_LITERAL_STRING("xmlns"));
   newToken->SetAttributeCount(1);
   newToken = (CToken*) attrToken;
   AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenAllocator);
   
   nsAutoString textStr;
   CreateErrorText(aError, textStr);
-  newToken = mState->tokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_unknown);
-  newToken->SetStringValue(textStr);
+  newToken = mState->tokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_unknown, textStr);
   AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenAllocator);
 
   newToken = mState->tokenAllocator->CreateTokenOfType(eToken_start, eHTMLTag_sourcetext);
@@ -360,8 +363,7 @@ nsExpatTokenizer::AddErrorMessageTokens(nsParserError* aError)
   
   textStr.Truncate();
   CreateSourceText(aError, textStr);
-  newToken = mState->tokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_unknown);      
-  newToken->SetStringValue(textStr);
+  newToken = mState->tokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_unknown,textStr);      
   AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenAllocator);  
 
   newToken = mState->tokenAllocator->CreateTokenOfType(eToken_end, eHTMLTag_sourcetext);  
@@ -470,19 +472,35 @@ nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens
   // Ask the scanner to send us all the data it has
   // scanned and pass that data to expat.
   nsresult result = NS_OK;
-  nsString& theBuffer = aScanner.GetBuffer();  
-  PRUint32 bufLength = theBuffer.Length() * sizeof(PRUnichar);
-  const PRUnichar* expatBuffer = (bufLength) ? theBuffer.GetUnicode() : nsnull;
-  
+  nsReadingIterator<PRUnichar> start, end;
+  aScanner.CurrentPosition(start);
+  aScanner.EndReading(end);
   mState->tokenDeque = &mTokenDeque;
   mState->parser = mExpatParser;
+  mState->scanner = &aScanner;
 
-  result = ParseXMLBuffer((const char *)expatBuffer, bufLength);
-    
-  theBuffer.Truncate(0);
+  while (start != end) {
+    PRUint32 fragLength = PRUint32(start.size_forward());
+    PRUint32 bufLength = fragLength * sizeof(PRUnichar);
+    const PRUnichar* expatBuffer = start.get();
+
+    mState->bufferStart = expatBuffer;
+    mState->bufferEnd = expatBuffer + fragLength;
+    mState->currentIterator = start;
+    result = ParseXMLBuffer((const char *)expatBuffer, bufLength);
+    if (NS_FAILED(result)) return result;
+
+    start.advance(fragLength);
+  }
+
+  aScanner.SetPosition(end, PR_TRUE);
   
   if(NS_OK==result)
     result=aScanner.Eof();
+
+  mState->scanner = nsnull;
+  mState->bufferStart = mState->bufferEnd = nsnull;
+
   return result;
 }
 
@@ -506,7 +524,7 @@ void nsExpatTokenizer::FrontloadMisplacedContent(nsDeque& aDeque){
 
 void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
+  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
   if(theToken) {    
     // If an ID attribute exists for this element, set it on the start token
     PRInt32 index = XML_GetIdAttributeIndex(state->parser);
@@ -516,9 +534,6 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
       startToken->SetIDAttributeAtom(attributeAtom);
     }
 
-    // Set the element name on the start token and add the token to the token queue
-    nsString& theString=theToken->GetStringValueXXX();
-    theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
 
     // For each attribute on this element, create and add attribute tokens to the token queue
@@ -526,15 +541,25 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
     while(*atts){
       theAttrCount++;
       CAttributeToken* theAttrToken = (CAttributeToken*) 
-        state->tokenAllocator->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown);
+      state->tokenAllocator->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown, nsLiteralString((PRUnichar*)atts[1]));
       if(theAttrToken){
-        nsString& theKey=theAttrToken->GetKey();
-        theKey.Assign((PRUnichar *) (*atts++));
-        nsString& theValue=theAttrToken->GetStringValueXXX();
-        theValue.Assign((PRUnichar *) (*atts++));        
+        PRUnichar* ptr = (PRUnichar*)atts[0];
+        if ((ptr >= state->bufferStart) && (ptr < state->bufferEnd)) {
+          PRUint32 len = nsCRT::strlen(ptr);
+          nsReadingIterator<PRUnichar> start, end;
+          start = state->currentIterator;
+          start.advance(ptr - state->bufferStart);
+          end = start;
+          end.advance(len);
+          theAttrToken->BindKey(state->scanner, start, end);
+        }
+        else {
+          theAttrToken->SetKey(nsLiteralString(ptr));
+        }
       }
       CToken* theTok=(CToken*)theAttrToken;
       AddToken(theTok, NS_OK, state->tokenDeque, state->tokenAllocator);
+      atts += 2;
     }
     theToken->SetAttributeCount(theAttrCount);
   }
@@ -545,10 +570,8 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
 
 void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
+  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown, nsLiteralString((PRUnichar *) name));
   if(theToken) {
-    nsString& theString=theToken->GetStringValueXXX();
-    theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
   else{
@@ -558,13 +581,11 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
 
 void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len) { 
   XMLParserState* state = (XMLParserState*) userData;
-  CCDATASectionToken* currentCDataToken = (CCDATASectionToken*) state->cdataToken;
 
-  if (currentCDataToken) {
-    // While there exists a current CDATA token, keep appending all strings
+  if (state->incdata) {    
+    // While we're in a CDATASection, keep appending all strings
     // from expat into it.
-    nsString& theString = currentCDataToken->GetStringValueXXX();
-    theString.Append((PRUnichar *) s,len);
+    state->cdataText.Append((PRUnichar *) s,len);
   } else {
     CToken* newToken = 0;
 
@@ -575,17 +596,28 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
         break;
       case kSpace:
       case kTab:
-        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown); 
+        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown, nsLiteralString((PRUnichar*)s, len)); 
         break;
       default:
-        newToken = state->tokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_unknown);
+        {
+          CTextToken* textToken = (CTextToken*)state->tokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_unknown);
+          PRUnichar* ptr = (PRUnichar*)s;
+          if ((ptr >= state->bufferStart) && (ptr < state->bufferEnd)) {
+            nsReadingIterator<PRUnichar> start, end;
+            start = state->currentIterator;
+            start.advance(ptr - state->bufferStart);
+            end = start;
+            end.advance(len);
+            textToken->Bind(state->scanner, start, end);
+          }
+          else {
+            textToken->Bind(nsLiteralString(ptr, len));
+          }
+          newToken = textToken;
+        }
     }
     
     if(newToken) {
-      if ((((PRUnichar*)s)[0] != (XML_Char)kNewLine) && (((PRUnichar*)s)[0] != (XML_Char)kCR)) {
-        nsString& theString=newToken->GetStringValueXXX();
-        theString.Append((PRUnichar *) s,len);
-      }
       AddToken(newToken, NS_OK, state->tokenDeque, state->tokenAllocator);
     }
     else {
@@ -596,10 +628,8 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
 
 void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown);
+  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_comment, eHTMLTag_unknown, nsLiteralString((PRUnichar*)name));
   if(theToken) {
-    nsString& theString=theToken->GetStringValueXXX();
-    theString.Assign((PRUnichar *) name);
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
   else{
@@ -609,21 +639,22 @@ void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
 
 void nsExpatTokenizer::HandleStartCdataSection(void *userData) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* cdataToken = state->tokenAllocator->CreateTokenOfType(eToken_cdatasection,
-                                                         eHTMLTag_unknown);
 
-  state->cdataToken = cdataToken;
+  state->incdata = PR_TRUE;
 }
 
 void nsExpatTokenizer::HandleEndCdataSection(void *userData) {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* currentCDataToken = (CToken*) state->cdataToken;
+  CToken* cdataToken = state->tokenAllocator->CreateTokenOfType(eToken_cdatasection,
+                                                                eHTMLTag_unknown,
+                                                                state->cdataText);
 
   // We've reached the end of the current CDATA section. Push the current
   // CDATA token onto the token queue 
-  AddToken(currentCDataToken, NS_OK, state->tokenDeque, state->tokenAllocator);
+  AddToken(cdataToken, NS_OK, state->tokenDeque, state->tokenAllocator);
 
-  state->cdataToken = nsnull;
+  state->incdata = PR_FALSE;
+  state->cdataText.Truncate();
 }
 
 void nsExpatTokenizer::HandleProcessingInstruction(void *userData, 
@@ -631,16 +662,17 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData,
                                                    const XML_Char *data) 
 {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown);
+  nsAutoString theString;
+  theString. AppendWithConversion("<?");
+  theString.Append((PRUnichar *) target);
+  if(data) {
+    theString.AppendWithConversion(" ");
+    theString.Append((PRUnichar *) data);
+  }
+  theString.AppendWithConversion("?>");
+  
+  CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown, theString);
   if(theToken) {
-    nsString& theString=theToken->GetStringValueXXX();
-    theString. AppendWithConversion("<?");
-    theString.Append((PRUnichar *) target);
-    if(data) {
-      theString.AppendWithConversion(" ");
-      theString.Append((PRUnichar *) data);
-    }
-    theString.AppendWithConversion("?>");
     AddToken(theToken, NS_OK, state->tokenDeque, state->tokenAllocator);
   }
   else{
@@ -650,9 +682,8 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData,
 
 void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
   XMLParserState* state = (XMLParserState*) userData;
-  if (state->doctypeToken) {
-    nsString& doctypestr = state->doctypeToken->GetStringValueXXX();
-    doctypestr.Append((PRUnichar*)s, len);
+  if (state->indoctype) {
+    state->doctypeText.Append((PRUnichar*)s, len);
   }
   else {
     nsAutoString str((PRUnichar *)s, len);
@@ -872,23 +903,20 @@ void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData,
                                               const XML_Char *doctypeName)
 {  
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* token = state->tokenAllocator->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown);
-  if (token) {
-    nsString& str = token->GetStringValueXXX();
-    str.AppendWithConversion(kDocTypeDeclPrefix);
-    state->doctypeToken = token;
-  }
+  state->indoctype = PR_TRUE;
+  state->doctypeText.Assign((PRUnichar*)kDocTypeDeclPrefix);
 }
 
 void nsExpatTokenizer::HandleEndDoctypeDecl(void *userData)
 {
   XMLParserState* state = (XMLParserState*) userData;
-  CToken* token = state->doctypeToken;
+
+  state->doctypeText.AppendWithConversion(">");
+  CToken* token = state->tokenAllocator->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown, state->doctypeText);
   if (token) {
-    nsString& str = token->GetStringValueXXX();
-    str.AppendWithConversion(">");
     AddToken(token, NS_OK, state->tokenDeque, state->tokenAllocator);
-    state->doctypeToken = nsnull;
   }
+  state->indoctype = PR_FALSE;
+  state->doctypeText.Truncate();
   // Do nothing
 }

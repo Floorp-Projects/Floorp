@@ -802,7 +802,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsStr
   CAbacus::eNumFormat  theNumFormat=CAbacus::eDecimal;
 
   for(theIndex=0;theIndex<theCount;theIndex++){
-    const nsString& theKey=aNode.GetKeyAt(theIndex);
+    nsAutoString theKey(aNode.GetKeyAt(theIndex));
     const nsString& theValue=aNode.GetValueAt(theIndex);
 
     if(theKey.EqualsWithConversion("name",PR_TRUE)){
@@ -1225,7 +1225,7 @@ public:
  *
  * @return  ptr to new token (or 0).
  */
-CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
+CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAReadableString& aString) {
 
   CToken* result=0;
 
@@ -1233,22 +1233,22 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     mTotals[aType-1]++;
 #endif
   switch(aType){
-    case eToken_start:            result=new(mArenaPool) CStartToken(aTag); break;
-    case eToken_end:              result=new(mArenaPool) CEndToken(aTag); break;
-    case eToken_comment:          result=new(mArenaPool) CCommentToken(); break;
+    case eToken_start:            result=new(mArenaPool) CStartToken(aString, aTag); break;
+    case eToken_end:              result=new(mArenaPool) CEndToken(aString, aTag); break;
+    case eToken_comment:          result=new(mArenaPool) CCommentToken(aString); break;
     case eToken_entity:           result=new(mArenaPool) CEntityToken(aString); break;
-    case eToken_whitespace:       result=new(mArenaPool) CWhitespaceToken(); break;
+    case eToken_whitespace:       result=new(mArenaPool) CWhitespaceToken(aString); break;
     case eToken_newline:          result=new(mArenaPool) CNewlineToken(); break;
     case eToken_text:             result=new(mArenaPool) CTextToken(aString); break;
     case eToken_attribute:        result=new(mArenaPool) CAttributeToken(aString); break;
-    case eToken_script:           result=new(mArenaPool) CScriptToken(); break;
-    case eToken_style:            result=new(mArenaPool) CStyleToken(); break;
-    case eToken_skippedcontent:   result=new(mArenaPool) CSkippedContentToken(aString); break;
-    case eToken_instruction:      result=new(mArenaPool) CInstructionToken(); break;
-    case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(); break;
+    case eToken_script:           result=new(mArenaPool) CScriptToken(aString); break;
+    case eToken_style:            result=new(mArenaPool) CStyleToken(aString); break;
+    case eToken_instruction:      result=new(mArenaPool) CInstructionToken(aString); break;
+    case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(aString); break;
     case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
     case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(); break;
       default:
+        NS_ASSERTION(PR_FALSE, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
         break;
   }
 
@@ -1279,44 +1279,20 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
     case eToken_entity:           result=new(mArenaPool) CEntityToken(); break;
     case eToken_whitespace:       result=new(mArenaPool) CWhitespaceToken(); break;
     case eToken_newline:          result=new(mArenaPool) CNewlineToken(); break;
-    case eToken_text:             result=new(mArenaPool) CTextToken(NS_ConvertToString("")); break;
+    case eToken_text:             result=new(mArenaPool) CTextToken(); break;
     case eToken_script:           result=new(mArenaPool) CScriptToken(); break;
     case eToken_style:            result=new(mArenaPool) CStyleToken(); break;
-    case eToken_skippedcontent:   result=new(mArenaPool) CSkippedContentToken(NS_ConvertToString("")); break;
     case eToken_instruction:      result=new(mArenaPool) CInstructionToken(); break;
     case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(); break;
     case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
     case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aTag); break;
     default:
+      NS_ASSERTION(PR_FALSE, "nsDTDUtils::CreateTokenOfType: illegal token type"); 
       break;
    }
 
   return result;
 }
-
-/**
- * Let's get this code ready to be reused by all the contexts.
- * 
- * @update	harishd 08/04/00
- * @param   aType -- tells you the type of token to create
- * @param   aTag  -- tells you the type of tag to init with this token
- *
- * @return  ptr to new token (or 0).
- */
-CToken* nsTokenAllocator::CreateRTFTokenOfType(eRTFTokenTypes aType,eRTFTags aTag) {
-
-  CToken* result=0;
-
-  switch(aType){
-    case eRTFToken_controlword:   result=new(mArenaPool) CRTFControlWord(aTag); break;
-    case eRTFToken_content:       result=new(mArenaPool) CRTFContent();         break;
-    default: 
-      break;
-   }
-  
-  return result;
-}
-
 
 CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
 
@@ -1550,7 +1526,7 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniq
       mValues.Empty();
       int index = 0; 
       for(index=0; index<theAttrCount; index++) {
-        mKeys.Push((PRUnichar*)aNode.GetKeyAt(index).GetUnicode()); 
+        mKeys.Push((void*)nsPromiseFlatString(aNode.GetKeyAt(index)).get()); 
         mValues.Push((PRUnichar*)aNode.GetValueAt(index).GetUnicode()); 
       } 
 

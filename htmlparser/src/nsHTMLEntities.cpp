@@ -174,7 +174,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 
 
 PRInt32 
-nsHTMLEntities::EntityToUnicode(const nsString& aEntity) {
+nsHTMLEntities::EntityToUnicode(const nsAReadableString& aEntity) {
   nsCAutoString theEntity; theEntity.AssignWithConversion(aEntity);
   if(';'==theEntity.Last()) {
     theEntity.Truncate(theEntity.Length()-1);

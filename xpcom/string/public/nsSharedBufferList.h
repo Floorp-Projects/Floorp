@@ -40,6 +40,12 @@
   // for |nsReadingIterator|
 #endif
 
+#ifndef nsBufferHandleUtils_h___
+#include "nsBufferHandleUtils.h"
+  // for |NS_AllocateContiguousHandleWithData|
+#endif
+
+
   /**
    * This class forms the basis for several multi-fragment string classes, in
    * particular: |nsFragmentedString| (though not yet), and |nsSlidingString|/|nsSlidingSubstring|.
@@ -61,6 +67,27 @@ class nsSharedBufferList
               {
                 if ( aIsSingleAllocation )
                   this->mFlags |= this->kIsSingleAllocationWithBuffer;
+              }
+
+              /**
+               * These buffers will be `owned' by the list, and only the
+               *  the list itself will be allowed to delete member |Buffer|s,
+               *  therefore, we cannot use the inherited |AcquireReference|
+               *  and |ReleaseReference|, as they use the model that the
+               *  buffer manages its own lifetime.
+               */
+            void
+            AcquireNonOwningReference() const
+              {
+                Buffer* mutable_this = NS_CONST_CAST(Buffer*, this);
+                mutable_this->set_refcount( get_refcount()+1 );
+              }
+
+            void
+            ReleaseNonOwningReference() const
+              {
+                Buffer* mutable_this = NS_CONST_CAST(Buffer*, this);
+                mutable_this->set_refcount( get_refcount()-1 );
               }
 
             Buffer* mPrev;
@@ -108,6 +135,9 @@ class nsSharedBufferList
 
           // Position( const Position& );             -- automatically generated copy-constructor is OK
           // Position& operator=( const Position& );  -- automatically generated copy-assignment operator is OK
+
+            // don't want to provide this as |operator-|, since that might imply O(1)
+          static ptrdiff_t Distance( const Position&, const Position& );
         };
 
 
@@ -137,8 +167,20 @@ class nsSharedBufferList
       Buffer* UnlinkBuffer( Buffer* );
       void    SplitBuffer( const Position& );
 
-      static Buffer* NewSingleAllocationBuffer( const PRUnichar*, PRUint32, PRUint32 = 0 );
-      static Buffer* NewWrappingBuffer( PRUnichar*, PRUnichar*, PRUnichar* );
+      static
+      Buffer*
+      NewSingleAllocationBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRUint32 aAdditionalCapacity = 1 )
+        {
+          typedef Buffer* Buffer_ptr;
+          return NS_AllocateContiguousHandleWithData(Buffer_ptr(0), nsLiteralString(aData, aDataLength), aAdditionalCapacity);
+        }
+
+      static
+      Buffer*
+      NewWrappingBuffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
+        {
+          return new Buffer(aDataStart, aDataEnd, aDataStart, aStorageEnd);
+        }
 
       void    DiscardSuffix( PRUint32 );
         // need other discards: prefix, and by iterator or pointer or something

@@ -1,4 +1,4 @@
-!#!nmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -23,10 +23,10 @@ DEPTH=..\..\..
 
 
 MAKE_OBJ_TYPE   = EXE
-PROGRAM = .\$(OBJDIR)\logparse.exe
+PROGRAM = .\$(OBJDIR)\TestParser.exe
 
 OBJS =					\
-	.\$(OBJDIR)\logparse.obj	\
+	.\$(OBJDIR)\TestParser.obj	\
 	$(NULL)
 
 LINCS=					\
@@ -52,4 +52,4 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\logparse.exe
+	rm -f $(DIST)\bin\TestParser.exe

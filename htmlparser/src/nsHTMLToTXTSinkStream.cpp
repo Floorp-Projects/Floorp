@@ -449,8 +449,8 @@ nsHTMLToTXTSinkStream::GetValueOfAttribute(const nsIParserNode& aNode,
   PRInt32 count=aNode.GetAttributeCount();
   for (PRInt32 i=0;i<count;i++)
   {
-    const nsString& key = aNode.GetKeyAt(i);
-    if (key == matchKey)
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+    if (key.Equals(matchKey))
     {
       aValueRet = aNode.GetValueAt(i);
       return NS_OK;
@@ -509,8 +509,8 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  const nsString&   name = aNode.GetText();
-  if (name.EqualsWithConversion("document_info"))
+  const nsAReadableString&   name = aNode.GetText();
+  if (name.Equals(NS_LITERAL_STRING("document_info")))
   {
     nsString value;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "charset", value)))
@@ -893,7 +893,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   
-  nsString text = aNode.GetText();
+  nsAutoString text(aNode.GetText());
 
   if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select)
   {

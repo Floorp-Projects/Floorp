@@ -174,13 +174,6 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
 #endif
 }
 
-void COtherDTD::ReleaseTable(void) {
-  if(gElementTable) {
-    delete gElementTable;
-    gElementTable=0;
-  }
-}
-
 /**
  * This method creates a new parser node. It tries to get one from
  * the recycle list before allocating a new one.
@@ -647,7 +640,7 @@ nsresult COtherDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         if(theCount) {
           PRInt32 theIndex=0;
           for(theIndex=0;theIndex<theCount;theIndex++){
-            const nsString& theKey=aNode.GetKeyAt(theIndex);
+            nsAutoString theKey(aNode.GetKeyAt(theIndex));
             if(theKey.EqualsWithConversion("ENTITY",PR_TRUE)) {
               const nsString& theName=aNode.GetValueAt(theIndex);
               theNamePtr=&theName;
@@ -902,7 +895,8 @@ nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt3
 nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
   nsresult  result=NS_OK;
 
-  nsString& theStr=aToken->GetStringValueXXX();
+  nsAutoString theStr;
+  aToken->GetSource(theStr);
   PRUnichar theChar=theStr.CharAt(0);
   CToken    *theToken=0;
 
@@ -916,8 +910,10 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
     else {
       //if you're here we have a bogus entity.
       //convert it into a text token.
-      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,NS_ConvertToString("&"));
-
+      nsAutoString entityName;
+      entityName.AssignWithConversion("&");
+      entityName.Append(theStr); //should append the entity name; fix bug 51161.
+      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
     }
     result=HandleStartToken(theToken);
   }

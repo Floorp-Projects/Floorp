@@ -1715,7 +1715,7 @@ public:
     nsCParserNode *theNode=(nsCParserNode*)aNode;
     nsresult result=NS_OK;
     if(theNode) {
-      nsString  theStr=theNode->mToken->GetStringValueXXX();
+      nsAutoString  theStr(theNode->mToken->GetStringValue());
       PRInt32   theLen=theStr.Length();
       //PRInt32   thePos=theStr.RFindChar(kGreaterThan);
 

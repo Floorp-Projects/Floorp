@@ -47,7 +47,7 @@ class nsIParserFilter : public nsISupports {
 
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERFILTER_IID)
       
-   NS_IMETHOD RawBuffer(char * buffer, PRUint32 * buffer_length) = 0;
+   NS_IMETHOD RawBuffer(const char * buffer, PRUint32 * buffer_length) = 0;
 
    NS_IMETHOD WillAddToken(CToken & token) = 0;
 

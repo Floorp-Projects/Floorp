@@ -43,7 +43,6 @@
 #include "nsIElementObserver.h"
 #include "nsIParserNode.h"
 #include "nsFixedSizeAllocator.h"
-#include "CRtfDTD.h"
 
 #define IF_HOLD(_ptr) if(_ptr) { _ptr->AddRef(); }
 #define IF_FREE(_ptr) if(_ptr) { _ptr->Release(); _ptr=0; } // recycles _ptr
@@ -226,9 +225,8 @@ public:
 
                   nsTokenAllocator();
   virtual         ~nsTokenAllocator();
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAReadableString& aString);
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
-  virtual CToken* CreateRTFTokenOfType(eRTFTokenTypes  aType,eRTFTags aTag);
 
 protected:
     nsFixedSizeAllocator mArenaPool;

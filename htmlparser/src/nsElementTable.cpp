@@ -1307,6 +1307,14 @@ void InitializeElementTable(void) {
   }//if
 };
 
+void DeleteElementTable(void) 
+{
+  if(gHTMLElements) {
+    delete [] gHTMLElements;  //fixed bug 49564
+    gHTMLElements=0;
+  }
+}
+
 int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
   int result=0;
 

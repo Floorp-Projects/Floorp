@@ -32,7 +32,7 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
-#include "nsHTMLTokens.h"
+#include "nsHTMLTags.h"
 #include "nsDeque.h"
 
 

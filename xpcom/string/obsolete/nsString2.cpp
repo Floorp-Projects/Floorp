@@ -500,7 +500,7 @@ nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
  *  @param  
  *  @return *this 
  */
-PRInt32 nsString::CountChar(PRUnichar aChar) {
+PRInt32 nsString::CountChar(PRUnichar aChar) const {
   PRInt32 theIndex=0;
   PRInt32 theCount=0;
   PRInt32 theLen=(PRInt32)mLength;

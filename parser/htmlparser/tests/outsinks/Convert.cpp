@@ -88,7 +88,9 @@ Compare(nsString& str, nsString& aFileName)
     return 0;
   else
   {
-    char* cstr = str.ToNewUTF8String();
+    nsAutoString left;
+    str.Left(left, different);
+    char* cstr = left.ToNewUTF8String();
     printf("Comparison failed at char %d:\n-----\n%s\n-----\n",
            different, cstr);
     Recycle(cstr);

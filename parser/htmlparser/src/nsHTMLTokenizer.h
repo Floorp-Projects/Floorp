@@ -81,18 +81,18 @@ protected:
   virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner,nsString& aLeadingWS);
+  virtual nsresult ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner);
   virtual nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeText(const nsString& aString,CToken*& aToken,nsScanner& aScanner);
+  virtual nsresult ConsumeText(CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
           nsresult ScanDocStructure(PRBool aIsFinalChunk);
 
-  virtual void     RecordTrailingContent(CStartToken* aStartToken,nsScanner& aScanner);
+  virtual void     RecordTrailingContent(CStartToken* aStartToken, nsScanner& aScanner, nsReadingIterator<PRUnichar> aOrigin);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
 

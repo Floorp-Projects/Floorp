@@ -484,7 +484,7 @@ inline void Recycle( PRUnichar* aBuffer) { nsMemory::Free(aBuffer); }
 * @param  anIndex tells us where in dest to get the char from
 * @return the given char, or 0 if anIndex is out of range
 */
-inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
+inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex) {
   if(anIndex<aDest.mLength)  {
     return (eTwoByte==aDest.mCharSize) ? aDest.mUStr[anIndex] : (PRUnichar)aDest.mStr[anIndex];
   }//if

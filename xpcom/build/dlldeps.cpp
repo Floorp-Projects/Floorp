@@ -64,6 +64,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
+#include "nsSlidingString.h"
 #ifdef DEBUG
 #include "pure.h"
 #endif
@@ -153,6 +154,7 @@ void XXXNeverCalled()
     ToNewCString(str1);
     ToNewCString(str2);
     PL_DHashTableFinish(NULL);
+    nsSlidingString sliding(NULL, NULL, NULL);
 #ifdef NS_ENABLE_LOGGING
     nsLog();
 #endif

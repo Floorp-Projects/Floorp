@@ -37,7 +37,7 @@ public:
  * passed in must NOT have the leading "&" nor the trailing ";"
  * in it.
  */
-  static PRInt32 EntityToUnicode(const nsString& aEntity);
+  static PRInt32 EntityToUnicode(const nsAReadableString& aEntity);
   static PRInt32 EntityToUnicode(const nsCString& aEntity);
 
 /**

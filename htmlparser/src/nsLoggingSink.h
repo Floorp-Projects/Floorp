@@ -75,7 +75,8 @@ public:
   nsresult CloseNode(const char* aKind);
   nsresult LeafNode(const nsIParserNode& aNode);
   nsresult WriteAttributes(const nsIParserNode& aNode);
-  nsresult QuoteText(const nsString& aValue, nsString& aResult);
+  nsresult QuoteText(const nsAReadableString& aValue, nsString& aResult);
+  nsresult GetNewCString(const nsAReadableString& aValue, char** aResult);
   PRBool WillWriteAttributes(const nsIParserNode& aNode);
 
 protected:

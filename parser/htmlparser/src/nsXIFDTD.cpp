@@ -164,17 +164,19 @@ public:
  *  @return  valid id, or user_defined.
  */
 static
-eXIFTags DetermineXIFTagType(const nsString& aString)
+eXIFTags DetermineXIFTagType(const nsAReadableString& aString)
 {
   PRInt32  result=-1;
   PRInt32  cnt=sizeof(gXIFTagTable)/sizeof(nsXIFTagEntry);
   PRInt32  low=0; 
   PRInt32  high=cnt-1;
   PRInt32  middle=kNotFound;
-  
+  nsCAutoString tag;
+  tag.AssignWithConversion(aString);
+
   while(low<=high){
     middle=(PRInt32)(low+high)/2;
-    result=aString.CompareWithConversion(gXIFTagTable[middle].mName, PR_TRUE); 
+    result=tag.CompareWithConversion((const char*)gXIFTagTable[middle].mName); 
     if (result==0)
       return gXIFTagTable[middle].fTagID; 
     if (result<0)
@@ -460,7 +462,7 @@ nsresult nsXIFDTD::WillHandleToken(CToken* aToken,PRInt32& aType) {
     eXIFTags theNewType = eXIFTag_userdefined;
 
     if((eToken_start==aType) || (eToken_end==aType)) {
-      nsString& name = aToken->GetStringValueXXX();
+      const nsAReadableString& name = aToken->GetStringValue();
       theNewType=DetermineXIFTagType(name);
       if (theNewType != eXIFTag_userdefined) {
         aToken->SetTypeID(theNewType);
@@ -714,7 +716,8 @@ nsresult nsXIFDTD::HandleContainer(nsIParserNode& aNode) {
 
       theTagID=nsHTMLTags::LookupTag(theTagName);
 
-      theNode->mToken->Reinitialize(theTagID,theTagName);
+      CToken* theToken = mTokenAllocator->CreateTokenOfType(eToken_start,theTagID, theTagName);
+      theNode->SetToken(theToken);
       theNode->Init(theNode->mToken,0,mTokenAllocator);
     }
     mXIFContext->Push(&aNode);
@@ -810,8 +813,9 @@ nsresult nsXIFDTD::HandleCommentToken(CToken* aToken, nsIParserNode& aNode) {
       nsAutoString fragment;
       PRBool       done=PR_FALSE;
       PRBool       inContent=PR_FALSE;
-      nsString&    comment=aToken->GetStringValueXXX(); 
-      comment.AssignWithConversion("<!--"); // overwrite comment with "<!--"
+      CCommentToken* theToken = (CCommentToken*)aToken;
+      nsAutoString comment;
+      comment.AssignWithConversion("<!--"); 
       while (!done && NS_SUCCEEDED(result))
       {
         token=mTokenizer->PopToken();
@@ -819,7 +823,7 @@ nsresult nsXIFDTD::HandleCommentToken(CToken* aToken, nsIParserNode& aNode) {
         if(!token) return result;
 
         type=(eHTMLTokenTypes)token->GetTokenType();
-        fragment.Assign(token->GetStringValueXXX());
+        fragment.Assign(token->GetStringValue());
         if(fragment.EqualsWithConversion("content")) {
           if(type==eToken_start) 
             inContent=PR_TRUE;
@@ -827,6 +831,7 @@ nsresult nsXIFDTD::HandleCommentToken(CToken* aToken, nsIParserNode& aNode) {
         }
         else if(fragment.EqualsWithConversion("comment")) {
           comment.AppendWithConversion("-->");
+          theToken->SetStringValue(comment);
           result=(mSink)? mSink->AddComment(aNode):NS_OK;
           done=PR_TRUE;
         }
@@ -862,8 +867,7 @@ nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken,nsIParserNode& aNode) {
 
     if(hasValue) {
       CToken* attribute = mTokenAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,theValue);
-      nsString& key=((CAttributeToken*)attribute)->GetKey();
-      key=theKey; // set the new key on the attribute..
+      ((CAttributeToken*)attribute)->SetKey(theKey); // set the new key on the attribute..
       thePeekNode->AddAttribute(attribute);
     }
   }
@@ -985,7 +989,7 @@ PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, 
   PRInt32   count = aNode.GetAttributeCount();
   for (i = 0; i < count; i++)
   {
-    const nsString& key = aNode.GetKeyAt(i);
+    const nsAReadableString& key = aNode.GetKeyAt(i);
     if (key.Equals(aKey))
     {
       const nsString& value = aNode.GetValueAt(i);
@@ -1014,7 +1018,7 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
 
   for (i = 0; i < count; i++)
   {
-    const nsString& k = aNode.GetKeyAt(i);
+    const nsAReadableString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
 
     nsAutoString key; key.Assign(k);
@@ -1094,8 +1098,8 @@ nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
          break;
       case eXIFTag_text:
         if(theToken) {
-          nsString& temp =theToken->GetStringValueXXX();
-          if (temp.EqualsWithConversion("<xml version=\"1.0\"?>")) handled=PR_TRUE;
+          const nsAReadableString& temp =theToken->GetStringValue();
+          if (temp.Equals(NS_LITERAL_STRING("<xml version=\"1.0\"?>"))) handled=PR_TRUE;
         }
         break;
       default:
@@ -1332,18 +1336,19 @@ nsresult nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
   // That's totally worng. 
   if (GetAttribute(aNode,NS_ConvertToString("value"),value)) {
     value.AppendWithConversion(';');
-    CToken* entity=((nsCParserNode&)aNode).mToken;
+    CToken* entity = mTokenAllocator->CreateTokenOfType(eToken_entity, eHTMLTag_entity, value);
     if(entity) {
-      entity->Reinitialize(eHTMLTag_entity,value);
       nsCParserNode*  thePeekNode=(nsCParserNode*)mXIFContext->PeekNode();
       if(thePeekNode) {
         eHTMLTags theTag=(eHTMLTags)thePeekNode->mToken->GetTypeID();
         if(theTag==eHTMLTag_script || theTag==eHTMLTag_style) {
           nsAutoString scratch;
           ((CEntityToken*)entity)->TranslateToUnicodeStr(scratch);  // Ex. &gt would become '<'
-          entity->Reinitialize(eHTMLTag_text,scratch); // Covert type to text and set the translated value.
+          IF_FREE(entity);
+          entity = mTokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_text, scratch);
         }
       }
+      // XXX Casting from an interface down to a class? For shame!
       ((nsCParserNode&)aNode).Init(entity,mLineNumber,mTokenAllocator);
     }
     result=mSink->AddLeaf(aNode);
@@ -1364,10 +1369,10 @@ nsresult nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
 
   PRInt32  error;
   nsAutoString value;
-  CToken* theToken=((nsCParserNode&)aNode).mToken;
-  
+  CToken* theToken=mTokenAllocator->CreateTokenOfType(eToken_start, eHTMLTag_style, NS_ConvertASCIItoUCS2("style"));
+ 
   if(theToken) {
-    theToken->Reinitialize(eHTMLTag_style,NS_ConvertASCIItoUCS2("style"));
+    ((nsCParserNode&)aNode).SetToken(theToken);
     mXIFContext->Push(&aNode);
   }
 

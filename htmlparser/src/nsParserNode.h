@@ -85,7 +85,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @return  string containing node text
      */
-    virtual const nsString& GetText() const;
+    virtual const nsAReadableString& GetText() const;
 
     /**
      * Retrieve skipped context from node
@@ -133,7 +133,7 @@ class nsCParserNode :  public nsIParserNode {
      * @param   anIndex is the index of the key you want
      * @return  string containing key.
      */
-    virtual const nsString& GetKeyAt(PRUint32 anIndex) const;
+    virtual const nsAReadableString& GetKeyAt(PRUint32 anIndex) const;
 
     /**
      * Retrieve the value (of key/value pair) at given index
@@ -202,7 +202,7 @@ class nsCParserNode :  public nsIParserNode {
      * @return  void
      */
     virtual nsresult ReleaseAll();
-    
+
     PRInt32   mLineNumber;
     CToken*   mToken;
     nsDeque*  mAttributes;

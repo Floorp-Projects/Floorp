@@ -115,41 +115,17 @@ class CToken {
     CToken(PRInt32 aTag=0);
 
     /**
-     * Constructor with string assignment for tag
-     * @update	gess5/11/98
-     * @param   aName is the given name of the token 
-     */
-    CToken(const nsString& aName);
-
-    /**
-     * constructor from char*
-     * @update	gess5/11/98
-     * @param   aName is the given name of the token 
-     */
-    CToken(const char* aName);
-
-    /**
      * destructor
      * @update	gess5/11/98
      */
     virtual ~CToken();
 
     /**
-     * This method gets called when a token is about to be reused
-     * for some other purpose. The token should reinit itself to
-     * some reasonable default values.
-     * @update	gess7/25/98
-     * @param   aTag
-     * @param   aString
-     */
-    virtual void Reinitialize(PRInt32 aTag, const nsString& aString);
-    
-    /**
      * Retrieve string value of the token
      * @update	gess5/11/98
      * @return  reference to string containing string value
      */
-    virtual nsString& GetStringValueXXX(void);
+    virtual const nsAReadableString& GetStringValue(void) = 0;
 
     /**
      * Get string of full contents, suitable for debug dump.
@@ -164,25 +140,6 @@ class CToken {
      */
     virtual void AppendSource(nsString& anOutputString);
 
-    /**
-     * Setter method that changes the string value of this token
-     * @update	gess5/11/98
-     * @param   name is a char* value containing new string value
-     */
-    virtual void SetCStringValue(const char* name);
-
-    /**
-     * Setter method for the string value of this token
-     */    
-    virtual void SetStringValue(nsString& aStr);
-
-    /**
-     * Retrieve string value of the token as a c-string
-     * @update	gess5/11/98
-     * @return  reference to string containing string value
-     */
-    virtual char* GetCStringValue(char* aBuffer, PRInt32 aMaxLen);
-    
     /**
      * Sets the ordinal value of this token (not currently used)
      * @update	gess5/11/98
@@ -276,7 +233,6 @@ protected:
 
     PRInt32				mTypeID;
     PRInt16				mAttrCount;
-    nsString      mTextValue;
     PRInt32       mUseCount;
 };
 
