@@ -608,6 +608,21 @@ gtk_moz_embed_realize(GtkWidget *widget)
   rv = embedPrivate->Realize(&alreadyRealized);
   g_return_if_fail(NS_SUCCEEDED(rv));
 
+  GtkWidget *child_widget = GTK_BIN(widget)->child;
+#ifdef MOZ_WIDGET_GTK2
+  GtkWidget *toplevel = gtk_widget_get_toplevel(widget);
+  gtk_signal_connect_while_alive(GTK_OBJECT(toplevel),
+				 "focus_in_event",
+				 GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
+				 embedPrivate,
+				 GTK_OBJECT(child_widget));
+  gtk_signal_connect_while_alive(GTK_OBJECT(toplevel),
+				 "focus_out_event",
+				 GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
+				 embedPrivate,
+				 GTK_OBJECT(child_widget));
+#endif /* MOZ_WIDGET_GTK2 */
+
   // if we're already realized we don't need to hook up to anything below
   if (alreadyRealized)
     return;
@@ -616,7 +631,6 @@ gtk_moz_embed_realize(GtkWidget *widget)
     embedPrivate->LoadCurrentURI();
 
   // connect to the focus out event for the child
-  GtkWidget *child_widget = GTK_BIN(widget)->child;
   gtk_signal_connect_while_alive(GTK_OBJECT(child_widget),
 				 "focus_out_event",
 				 GTK_SIGNAL_FUNC(handle_child_focus_out),
@@ -643,20 +657,6 @@ gtk_moz_embed_realize(GtkWidget *widget)
 				 embed,
 				 GTK_OBJECT(mozarea));
 #endif /* MOZ_WIDGET_GTK */
-
-#ifdef MOZ_WIDGET_GTK2
-  GtkWidget *toplevel = gtk_widget_get_toplevel(child_widget);
-  gtk_signal_connect_while_alive(GTK_OBJECT(toplevel),
-				 "focus_in_event",
-				 GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
-				 embedPrivate,
-				 GTK_OBJECT(child_widget));
-  gtk_signal_connect_while_alive(GTK_OBJECT(toplevel),
-				 "focus_out_event",
-				 GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
-				 embedPrivate,
-				 GTK_OBJECT(child_widget));
-#endif /* MOZ_WIDGET_GTK2 */
 }
 
 static void
@@ -674,6 +674,16 @@ gtk_moz_embed_unrealize(GtkWidget *widget)
   if (embedPrivate) {
     embedPrivate->Unrealize();
   }
+
+#ifdef MOZ_WIDGET_GTK2
+  GtkWidget *toplevel = gtk_widget_get_toplevel(widget);
+  gtk_signal_disconnect_by_func(GTK_OBJECT(toplevel),
+                                GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
+                                embedPrivate);
+  gtk_signal_disconnect_by_func(GTK_OBJECT(toplevel),
+                                GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
+                                embedPrivate);
+#endif /* MOZ_WIDGET_GTK2 */
 
   if (GTK_WIDGET_CLASS(embed_parent_class)->unrealize)
     (* GTK_WIDGET_CLASS(embed_parent_class)->unrealize)(widget);
