@@ -91,6 +91,11 @@ struct nsCSSStruct {
 #define NS_CSS_AURAL_SID  \
 {0x166d2bb0, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+#ifdef INCLUDE_XUL
+// {FC075D62-B1CF-47a1-AF4E-CB40E11A4314}
+#define NS_CSS_XUL_SID  \
+{ 0xfc075d62, 0xb1cf, 0x47a1, { 0xaf, 0x4e, 0xcb, 0x40, 0xe1, 0x1a, 0x43, 0x14 } }
+#endif
 
 // IID for the nsICSSDeclaration interface {7b36b9ac-b48d-11d1-9ca5-0060088f9ff7}
 #define NS_ICSS_DECLARATION_IID   \
@@ -383,6 +388,19 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSValue mVoiceFamily;
   nsCSSValue mVolume;
 };
+
+#ifdef INCLUDE_XUL
+struct nsCSSXUL : public nsCSSStruct  {
+  nsCSSXUL(void);
+  nsCSSXUL(const nsCSSXUL& aCopy);
+  virtual ~nsCSSXUL(void);
+
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue  mBoxOrient;
+};
+#endif
 
 class nsICSSDeclaration : public nsISupports {
 public:

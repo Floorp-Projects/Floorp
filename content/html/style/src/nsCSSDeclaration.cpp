@@ -48,7 +48,9 @@ static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
 static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 static NS_DEFINE_IID(kCSSAuralSID, NS_CSS_AURAL_SID);
-
+#ifdef INCLUDE_XUL
+static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
+#endif
 
 #define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
 
@@ -973,6 +975,41 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   fputs(buffer, out);
 }
 
+#ifdef INCLUDE_XUL
+// --- nsCSSXUL -----------------
+
+nsCSSXUL::nsCSSXUL(void)
+{
+  MOZ_COUNT_CTOR(nsCSSXUL);
+}
+
+nsCSSXUL::nsCSSXUL(const nsCSSXUL& aCopy)
+  : mBoxOrient(aCopy.mBoxOrient)
+{
+  MOZ_COUNT_CTOR(nsCSSXUL);
+}
+
+nsCSSXUL::~nsCSSXUL(void)
+{
+  MOZ_COUNT_DTOR(nsCSSXUL);
+}
+
+const nsID& nsCSSXUL::GetID(void)
+{
+  return kCSSXULSID;
+}
+
+void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  mBoxOrient.AppendToString(buffer, eCSSProperty_box_orient);
+  fputs(buffer, out);
+}
+
+#endif // INCLUDE_XUL
 
 
 // --- nsCSSDeclaration -----------------
@@ -1042,6 +1079,9 @@ protected:
   nsCSSContent*   mContent;
   nsCSSUserInterface* mUserInterface;
   nsCSSAural*     mAural;
+#ifdef INCLUDE_XUL
+  nsCSSXUL*       mXUL;
+#endif
 
   CSSDeclarationImpl* mImportant;
 
@@ -1084,6 +1124,9 @@ CSSDeclarationImpl::CSSDeclarationImpl(const CSSDeclarationImpl& aCopy)
   DECL_IF_COPY(Content);
   DECL_IF_COPY(UserInterface);
   DECL_IF_COPY(Aural);
+#ifdef INCLUDE_XUL
+  DECL_IF_COPY(XUL);
+#endif
 
 #ifdef DEBUG_REFS
   ++gInstanceCount;
@@ -1126,6 +1169,9 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
   CSS_IF_DELETE(mContent);
   CSS_IF_DELETE(mUserInterface);
   CSS_IF_DELETE(mAural);
+#ifdef INCLUDE_XUL
+  CSS_IF_DELETE(mXUL);
+#endif
 
   NS_IF_RELEASE(mImportant);
   CSS_IF_DELETE(mOrder);
@@ -1161,7 +1207,11 @@ CSSDeclarationImpl::GetData(const nsID& aSID, nsCSSStruct** aDataPtr)
   CSS_IF_GET_ELSE(aSID, Page, aDataPtr)
   CSS_IF_GET_ELSE(aSID, Content, aDataPtr)
   CSS_IF_GET_ELSE(aSID, UserInterface, aDataPtr)
-  CSS_IF_GET_ELSE(aSID, Aural, aDataPtr) {
+  CSS_IF_GET_ELSE(aSID, Aural, aDataPtr)
+#ifdef INCLUDE_XUL
+  CSS_IF_GET_ELSE(aSID, XUL, aDataPtr)
+#endif
+  {
     return NS_NOINTERFACE;
   }
   return NS_OK;
@@ -1691,6 +1741,18 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
         }
       }
       break;
+
+#ifdef INCLUDE_XUL
+    // nsCSSXUL
+    case eCSSProperty_box_orient:
+      CSS_ENSURE(XUL) {
+        switch (aProperty) {
+          case eCSSProperty_box_orient:   mXUL->mBoxOrient = aValue;   break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+#endif
 
       // nsCSSAural
     case eCSSProperty_azimuth:
@@ -2427,6 +2489,20 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         }
         break;
 
+#ifdef INCLUDE_XUL
+      // nsCSSXUL
+      case eCSSProperty_box_orient:
+        if (nsnull != mXUL) {
+          CSS_ENSURE_IMPORTANT(XUL) {
+            switch (aProperty) {
+              CSS_CASE_IMPORTANT(eCSSProperty_box_orient,   mXUL->mBoxOrient);
+              CSS_BOGUS_DEFAULT; // make compiler happy
+            }
+          }
+        }
+        break;
+#endif
+
         // nsCSSAural
       case eCSSProperty_azimuth:
       case eCSSProperty_elevation:
@@ -3100,6 +3176,18 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
         }
       }
       break;
+
+#ifdef INCLUDE_XUL
+    // nsCSSXUL
+    case eCSSProperty_box_orient:
+      CSS_CHECK(XUL) {
+        switch(aProperty) {
+        case eCSSProperty_box_orient:          mXUL->mBoxOrient.Reset();          break;
+        CSS_BOGUS_DEFAULT; // Make compiler happy
+        }
+      }
+      break;
+#endif
 
       // nsCSSAural
     case eCSSProperty_azimuth:
@@ -3827,6 +3915,21 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
         aValue.Reset();
       }
       break;
+
+#ifdef INCLUDE_XUL
+    // nsCSSXUL
+    case eCSSProperty_box_orient:
+      if (nsnull != mXUL) {
+        switch (aProperty) {
+          case eCSSProperty_box_orient: aValue = mXUL->mBoxOrient;  break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+#endif
 
       // nsCSSAural
     case eCSSProperty_azimuth:
@@ -4615,6 +4718,11 @@ void CSSDeclarationImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   if(mUserInterface && uniqueItems->AddItem(mUserInterface)){
     aSize += sizeof(*mUserInterface);
   }
+#ifdef INCLUDE_XUL
+  if(mXUL && uniqueItems->AddItem(mXUL)){
+    aSize += sizeof(*mXUL);
+  }
+#endif
   if(mAural && uniqueItems->AddItem(mAural)){
     aSize += sizeof(*mAural);
   }
