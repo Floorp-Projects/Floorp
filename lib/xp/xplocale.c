@@ -91,20 +91,29 @@ const char* INTL_ctime(MWContext* context, time_t *date)
   return result;
 }
 
-static int16 res_csid = CS_DEFAULT;
 char *XP_GetStringForHTML(int i, int16 wincsid, char* english)
 {
-	/* Need to do some initialization */
-	if(res_csid == CS_DEFAULT)
-		res_csid = INTL_CharSetNameToID(INTL_ResourceCharSet());
-
-	if(INTL_DocToWinCharSetID(wincsid) == res_csid)
+	if(INTL_DocToWinCharSetID(wincsid) 
+		== INTL_GetCharSetID(INTL_XPResourcesCsidSel))
 		return XP_GetString(i);
 	else
 		return english;
 		
 }
 
+char *XP_CopyString(int i)
+{
+	return XP_STRDUP(XP_GetString(i));
+}
+char *XP_CopyStringInUTF8(int i)
+{
+	char* str = XP_GetString(i);
+	return (char*)INTL_ConvertLineWithoutAutoDetect(
+			INTL_GetCharSetID(INTL_XPResourcesCsidSel),
+			CS_UTF8,
+			(unsigned char*)str,
+			XP_STRLEN(str));
+}
 
 
 
