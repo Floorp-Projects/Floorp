@@ -45,7 +45,16 @@ public:
   /** Refresh
    *  Refresh the caret after the frame it is being drawn in has painted
    */
- 	NS_IMETHOD Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect) = 0;
+  NS_IMETHOD Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect) = 0;
+
+  /** GetWindowRelativeCoordinates
+   *  Get the position of the caret in (top-level) window coordinates.
+   *  If the selection is collapsed, this returns the caret location
+   *    and true in outIsCollapsed.
+   *  If the selection is not collapsed, this returns the location of the focus pos,
+   *    and false in outIsCollapsed.
+   */
+  NS_IMETHOD GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRBool& outIsCollapsed) = 0;
 
   /** ClearFrameRefs
    *  The caret stores a reference to the frame that the caret was last drawn in.

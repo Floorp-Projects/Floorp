@@ -171,6 +171,72 @@ NS_IMETHODIMP nsCaret::Refresh(nsIView *aView, nsIRenderingContext& inRendContex
 
 
 //-----------------------------------------------------------------------------
+NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRBool& outIsCollapsed)
+{
+	if (!mPresShell)
+		return NS_ERROR_NOT_INITIALIZED;
+		
+	nsCOMPtr<nsIDOMSelection> domSelection;
+	nsresult err = mPresShell->GetSelection(getter_AddRefs(domSelection));
+	if (NS_FAILED(err))
+		return err;
+		
+	if (!domSelection)
+		return NS_ERROR_NOT_INITIALIZED;		// no selection
+	
+	// fill in defaults for failure
+	outCoordinates.x = -1;
+	outCoordinates.y = -1;
+	outIsCollapsed = PR_FALSE;
+	
+	err = domSelection->GetIsCollapsed(&outIsCollapsed);
+	if (NS_FAILED(err))	
+		return err;
+		
+#if 0
+	// code in progress
+	nsCOMPtr<nsIDOMNode>	focusNode;
+	PRInt32	focusOffset;
+	
+	if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
+			NS_SUCCEEDED(domSelection->GetFocusOffset(&focusOffset)))
+	{
+		// is this a text node?
+		nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+		
+		// note that we only work with text nodes here, unlike when drawing the caret.
+		// this is because this routine is intended for IME support, which only cares about text.
+		if (nodeAsText)
+		{
+			nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+      
+			if (contentNode)
+			{
+				nsIFrame*	theFrame = nsnull;
+				PRInt32 	contentOffset = focusOffset;
+				
+				if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
+					 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame)))
+				{
+					nsCOMPtr<nsIPresContext> presContext;
+					if (NS_SUCCEEDED(mPresShell->GetPresContext(getter_AddRefs(presContext))))
+					{
+						nsPoint		framePos(0, 0);
+						
+						theFrame->GetPointFromOffset(presContext, &inRendContext, mLastContentOffset, &framePos);
+						frameRect += framePos;
+
+					}
+				}
+			}
+		}
+	}
+#endif
+
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 {
 
@@ -275,7 +341,7 @@ nsresult nsCaret::StopBlinking()
 
 //-----------------------------------------------------------------------------
 // Get the nsIFrame and the content offset for the current caret position.
-// Returns PR_TRUE if we should go ahead and draw, PR_FALSE otherwise.
+// Returns PR_TRUE if we should go ahead and draw, PR_FALSE otherwise. 
 //
 PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
