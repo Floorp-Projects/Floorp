@@ -157,9 +157,11 @@ il_png_abort(il_container *ic)
 
         PR_FREEIF(ipng_p->rgbrow);
         PR_FREEIF(ipng_p->alpharow);
+        PR_FREEIF(ipng_p->interlacebuf);
 
         ipng_p->rgbrow = NULL;
         ipng_p->alpharow = NULL;
+        ipng_p->interlacebuf = NULL;
 
         if((ipng_p->pngs_p)&&(ipng_p->info_p))
              png_destroy_read_struct(&ipng_p->pngs_p, &ipng_p->info_p, NULL);
@@ -270,18 +272,25 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     PR_ASSERT(ipng_p->rgbrow == NULL);
     PR_ASSERT(ipng_p->alpharow == NULL);
 
-#define USE_RGBA 1
-
-    if(channels > 3 && USE_RGBA )
-        ipng_p->rgbrow = (PRUint8 *)PR_MALLOC(4*width); /*rgba*/
-    else
-        ipng_p->rgbrow = (PRUint8 *)PR_MALLOC(3*width); /*rgb*/
-
+    ipng_p->rgbrow = (PRUint8 *)PR_MALLOC(channels*width);
+ 
     if (!ipng_p->rgbrow) {
         ILTRACE(0, ("il:png: MEM row"));
         ipng_p->state = PNG_ERROR;
         return;
     }
+
+     if(interlace_type == PNG_INTERLACE_ADAM7) {
+         ipng_p->interlacebuf = (PRUint8 *)PR_MALLOC(channels*width*height);
+         if (!ipng_p->interlacebuf) {
+             ILTRACE(0, ("il:png: MEM interlacebuf"));
+             ipng_p->state = PNG_ERROR;
+             return;
+         }            
+     }
+     else
+         ipng_p->interlacebuf = NULL;
+ 
 
     if (channels > 3) {
         ipng_p->alpharow = NULL;
@@ -345,15 +354,23 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     ipng_structp ipng_p = (ipng_structp)ic->ds;
 
     PR_ASSERT(ipng_p);
+
+    int bw = ipng_p->channels * ipng_p->width;
+
+    png_bytep line;
+    if(ipng_p->interlacebuf)
+    {
+      line = ipng_p->interlacebuf+row_num*bw;
+      png_progressive_combine_row(png_ptr, line, new_row);
+    }
+    else
+      line = new_row;
+
     if (new_row) {
         /* first we copy the row data to a different buffer so that
          * il_emit_row() in scale.cpp doesn't mess up libpng's row buffer
          */
-        if (ipng_p->channels < 4) {                            /* RGB */
-            memcpy(ipng_p->rgbrow, new_row, 3*ipng_p->width);
-        } else {                                               /* RGBA */
-            memcpy(ipng_p->rgbrow, new_row, 4*ipng_p->width);
-        }
+        memcpy(ipng_p->rgbrow, line, bw);
         ic->imgdcb->ImgDCBHaveRow(0, ipng_p->rgbrow, 0, ipng_p->width,
           row_num, 1, ilErase /* ilOverlay */, pass);
     }
