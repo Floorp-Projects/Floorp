@@ -55,10 +55,11 @@
 #include "nsPIDOMWindow.h"
 #include "nsIEnumerator.h"
 #include "nsFrameTraversal.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-#include "nsISessionHistory.h"
 
 #include "nsXULAtoms.h"
 #include "nsIDOMXULDocument.h"
@@ -846,24 +847,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsCOMPtr<nsISupports> pcContainer;
           mPresContext->GetContainer(getter_AddRefs(pcContainer));
           if (pcContainer) {
-            nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(pcContainer);
-            if (webShell) {
-              nsCOMPtr<nsIWebShell> root;
-              webShell->GetRootWebShell(*getter_AddRefs(root));
-              if (nsnull != root) {
-                nsCOMPtr<nsISessionHistory> sHist;
-                root->GetSessionHistory(*getter_AddRefs(sHist));
-                if (sHist) {
-                  if (numLines > 0)
-                  {
-                    sHist->GoBack(root);
-                  }
-                  else
-                  {
-                    sHist->GoForward(root);
-                  }
-                }
-              }
+            nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
+            if (webNav) {
+              if (numLines > 0)
+                 webNav->GoBack();
+              else
+                 webNav->GoForward();
             }
           }
         }
