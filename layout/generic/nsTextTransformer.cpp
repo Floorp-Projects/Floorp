@@ -137,6 +137,7 @@ nsTextTransformer::GrowBuffer()
     }
   }
   mBuffer = newBuffer;
+  mBufferLength = newLen;
   return PR_TRUE;
 }
 
@@ -268,6 +269,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             }
 
             // Store character in buffer; grow buffer if we have to
+            NS_ASSERTION(bp < bufEnd, "whoops");
             *bp++ = ch;
             if (bp == bufEnd) {
               PRInt32 delta = bp - mBuffer;
@@ -331,6 +333,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             }
 
             // Store character in buffer; grow buffer if we have to
+            NS_ASSERTION(bp < bufEnd, "whoops");
             *bp++ = ch;
             if (bp == bufEnd) {
               PRInt32 delta = bp - mBuffer;
