@@ -55,7 +55,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 {
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;  // we're always complete
 
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
@@ -100,31 +100,104 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
     // Reflow the page
     nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
                                        nextFrame, pageSize);
+    nsReflowStatus      status;
     nsHTMLReflowMetrics kidSize(nsnull);
   
     // Dispatch the reflow command to our child frame. Allow it to be as high
     // as it wants
-    ReflowChild(nextFrame, aPresContext, kidSize, kidReflowState, aStatus);
+    ReflowChild(nextFrame, aPresContext, kidSize, kidReflowState, status);
   
-    // Place and size the page. If the page is narrower than our max width then
+    // Place and size the page. If the page is narrower than our max width, then
     // center it horizontally
     nsRect  rect(x, y, kidSize.width, kidSize.height);
     nextFrame->SetRect(rect);
+    y += kidSize.height + PAGE_SPACING_TWIPS;
 
-    // XXX Check if the page is complete...
+    // Check if the page is complete...
+    nsIFrame* kidNextInFlow;
+    nextFrame->GetNextInFlow(&kidNextInFlow);
 
-    // Update the y-offset to reflect the remaining pages
-    nextFrame->GetNextSibling(&nextFrame);
-    while (nsnull != nextFrame) {
-      nsSize  size;
+    if (NS_FRAME_IS_COMPLETE(status)) {
+      if (kidNextInFlow) {
+        // Delete the page
+        DeleteChildsNextInFlow(aPresContext, kidNextInFlow);
+      }
+    } else {
+      nsReflowReason  reflowReason = eReflowReason_Resize;
+      
+      if (!kidNextInFlow) {
+        // The page isn't complete and it doesn't have a next-in-flow so
+        // create a continuing page
+        nsIPresShell* presShell;
+        nsIStyleSet*  styleSet;
+        nsIFrame*     continuingPage;
+  
+        aPresContext.GetShell(&presShell);
+        presShell->GetStyleSet(&styleSet);
+        NS_RELEASE(presShell);
+        styleSet->CreateContinuingFrame(&aPresContext, nextFrame, this, &continuingPage);
+        NS_RELEASE(styleSet);
+  
+        // Add it to our child list
+        nextFrame->SetNextSibling(continuingPage);
+        reflowReason = eReflowReason_Initial;
+      }
 
-      nextFrame->GetSize(size);
-      y += size.height + PAGE_SPACING_TWIPS;
-      nextFrame->GetNextSibling(&nextFrame);
+      // Reflow the remaining pages
+      // XXX Ideally we would only reflow the next page if the current page indicated
+      // its next-in-flow was dirty...
+      nsIFrame* kidFrame;
+      nextFrame->GetNextSibling(&kidFrame);
+
+      nsHTMLReflowMetrics kidSize(nsnull);
+      while (kidFrame) {
+        // Reflow the page
+        nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
+                                         pageSize, reflowReason);
+        nsReflowStatus  status;
+
+        // Place and size the page. If the page is narrower than our
+        // max width then center it horizontally
+        ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
+        kidFrame->SetRect(nsRect(x, y, kidSize.width, kidSize.height));
+        y += kidSize.height;
+
+        // Leave a slight gap between the pages
+        y += PAGE_SPACING_TWIPS;
+
+        // Is the page complete?
+        nsIFrame* kidNextInFlow;
+        kidFrame->GetNextInFlow(&kidNextInFlow);
+
+        if (NS_FRAME_IS_COMPLETE(status)) {
+          NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
+        } else if (nsnull == kidNextInFlow) {
+          // The page isn't complete and it doesn't have a next-in-flow so
+          // create a continuing page
+          nsIPresShell* presShell;
+          nsIStyleSet*  styleSet;
+          nsIFrame*     continuingPage;
+
+          aPresContext.GetShell(&presShell);
+          presShell->GetStyleSet(&styleSet);
+          NS_RELEASE(presShell);
+          styleSet->CreateContinuingFrame(&aPresContext, kidFrame, this, &continuingPage);
+          NS_RELEASE(styleSet);
+          reflowReason = eReflowReason_Initial;
+
+          // Add it to our child list
+  #ifdef NS_DEBUG
+          nsIFrame* kidNextSibling;
+          kidFrame->GetNextSibling(&kidNextSibling);
+          NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
+  #endif
+          kidFrame->SetNextSibling(continuingPage);
+        }
+
+        // Get the next page
+        kidFrame->GetNextSibling(&kidFrame);
+      }
     }
-
-	// XXX We're always complete...
-	aStatus = NS_FRAME_COMPLETE;
 
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
@@ -148,8 +221,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 
       // Is the page complete?
       nsIFrame* kidNextInFlow;
-       
       kidFrame->GetNextInFlow(&kidNextInFlow);
+
       if (NS_FRAME_IS_COMPLETE(status)) {
         NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
       } else if (nsnull == kidNextInFlow) {
@@ -164,12 +237,6 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
         NS_RELEASE(presShell);
         styleSet->CreateContinuingFrame(&aPresContext, kidFrame, this, &continuingPage);
         NS_RELEASE(styleSet);
-        // XXX TROY Should be handled by frame construction code
-        nsIStyleContext*  kidSC;
-        continuingPage->GetStyleContext(&kidSC);
-        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, continuingPage,
-                                                 kidSC, PR_TRUE);
-        NS_RELEASE(kidSC);
         reflowReason = eReflowReason_Initial;
 
         // Add it to our child list
