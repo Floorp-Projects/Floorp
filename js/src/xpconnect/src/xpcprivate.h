@@ -1921,7 +1921,6 @@ public:
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     const char* GetInterfaceName();
 
-    static JSBool InitClasses(XPCCallContext& ccx, JSObject* aGlobalJSObj);
     static JSBool IsWrappedJS(nsISupports* aPtr);
 
     NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,

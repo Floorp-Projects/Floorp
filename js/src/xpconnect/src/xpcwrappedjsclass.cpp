@@ -1431,22 +1431,6 @@ done:
     return retval;
 }
 
-static JSClass WrappedJSOutArg_class = {
-    "XPCOutArg", 0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
-};
-
-// static
-JSBool
-nsXPCWrappedJSClass::InitClasses(XPCCallContext& ccx, JSObject* aGlobalJSObj)
-{
-    if(!JS_InitClass(ccx, aGlobalJSObj,
-                     0, &WrappedJSOutArg_class, 0, 0, 0, 0, 0, 0))
-        return JS_FALSE;
-    return JS_TRUE;
-}
-
 const char*
 nsXPCWrappedJSClass::GetInterfaceName()
 {
@@ -1458,7 +1442,7 @@ nsXPCWrappedJSClass::GetInterfaceName()
 JSObject*
 nsXPCWrappedJSClass::NewOutObject(JSContext* cx)
 {
-    return JS_NewObject(cx, &WrappedJSOutArg_class, nsnull, nsnull);
+    return JS_NewObject(cx, nsnull, nsnull, nsnull);
 }
 
 
