@@ -518,7 +518,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
   // We only need a valid aParent if we have a sheet
-  if (aInitData->mWindowType != eWindowType_sheet)
+  if (!aInitData || aInitData->mWindowType != eWindowType_sheet)
     aParent = nil;
 
   // init base class
