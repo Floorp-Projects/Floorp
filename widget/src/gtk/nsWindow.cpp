@@ -63,6 +63,7 @@ nsWindow::nsWindow():
   mFontMetrics(nsnull),
   mContext(nsnull),
   mWidget(nsnull),
+  mGC(nsnull),
   mEventCallback(nsnull),
   mIgnoreResize(PR_FALSE)
 {
@@ -73,7 +74,6 @@ nsWindow::nsWindow():
   mBounds.width = 0;
   mBounds.height = 0;
   mResized = PR_FALSE;
-  mGC = nsnull ;
   mShown = PR_FALSE;
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
@@ -183,37 +183,6 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
   }
 }
 
-//-------------------------------------------------------------------------
-//
-//
-//
-//-------------------------------------------------------------------------
-void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
-                                 GtkWidget *aParentWidget)
-{
-  // keep a reference to the toolkit object
-  if (aContext) {
-    mContext = aContext;
-    mContext->AddRef();
-  }
-  else {
-    nsresult  res;
-
-    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-    //res = !NS_OK;
-    res = nsRepository::CreateInstance(kDeviceContextCID,
-                                       nsnull,
-                                       kDeviceContextIID,
-                                       (void **)&mContext);
-    if (NS_OK == res) {
-      mContext->Init(aParentWidget);
-    }
-  }
-}
-
-
 void nsWindow::CreateGC()
 {
   if (nsnull == mGC) {
@@ -231,140 +200,48 @@ void nsWindow::CreateGC()
   }
 }
 
-void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
+		      const nsRect &aRect,
+		      EVENT_CALLBACK aHandleEventFunction,
+		      nsIDeviceContext *aContext,
+		      nsIAppShell *aAppShell,
+		      nsIToolkit *aToolkit,
+		      nsWidgetInitData *aInitData,
+		      nsNativeWidget aNativeParent)
 {
-  GtkWidget *mainWindow = 0, *frame = 0;
+  GtkWidget *mainWindow = 0, *parentWidget = 0;
   mBounds = aRect;
   mAppShell = aAppShell;
 
-  InitToolkit(aToolkit, aWidgetParent);
+  InitToolkit(aToolkit, aParent);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
-  InitDeviceContext(aContext,
-                    (GtkWidget*) aAppShell->GetNativeData(NS_NATIVE_SHELL));
-
-  GtkWidget *frameParent = 0;
+  if (aParent) {
+     parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
+  } else if (aAppShell) {
+     parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
+  }
 
    // XXX: This is a kludge, need to be able to create multiple top
    // level windows instead.
   if (gFirstTopLevelWindow == 0) {
-    mainWindow = aAppShell->GetNativeData(NS_NATIVE_SHELL);
-    //gtk_window_new(GTK_WINDOW_TOPLEVEL);
-/*  mainWindow = ::XtVaCreateManagedWidget("mainWindow",
-        xmMainWindowWidgetClass,
-        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL),
-        nsnull);
-*/
+    mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gFirstTopLevelWindow = mainWindow;
+  } else {
+    mainWindow = gtk_window_new(GTK_WINDOW_POPUP);
   }
-/*
-  else {
-    Widget shell = ::XtVaCreatePopupShell(" ",
-        xmDialogShellWidgetClass,
-        (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 0);
 
-    XtVaSetValues(shell, XmNwidth,
-    				 aRect.width, XmNheight,
-				 aRect.height, nsnull);
+  gtk_widget_set_usize(mainWindow, aRect.width, aRect.height);
 
-    mainWindow = ::XtVaCreateManagedWidget("mainWindow",
-				 xmMainWindowWidgetClass,
-				 shell,
-        			 nsnull);
-
-    XtVaSetValues(mainWindow, XmNallowShellResize, 1,
-         XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
-  }
-*/
-
-  // Initially used xmDrawingAreaWidgetClass instead of
-  // newManageClass. Drawing area will spontaneously resize
-  // to fit it's contents.
-/*
-  frame = ::XtVaCreateManagedWidget("drawingArea",
-				    newManageClass,
-				    mainWindow,
-				    XmNwidth, aRect.width,
-				    XmNheight, aRect.height,
-				    XmNmarginHeight, 0,
-				    XmNmarginWidth, 0,
-                                    XmNrecomputeSize, False,
-                                    XmNuserData, this,
-				    nsnull);
-*/
-  mWidget = gtk_vbox_new(0, FALSE);
+//  mWidget = gtk_layout_new(FALSE,FALSE);
+  mWidget = gtk_label_new("foobar!");
   gtk_container_add(GTK_CONTAINER(mainWindow), mWidget);
 
-  GtkAdjustment *hadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  GtkAdjustment *vadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-
-  frame = gtk_layout_new(hadj,vadj);
-
-  gtk_box_pack_start(GTK_BOX(mWidget), frame, FALSE, FALSE, 0);
-
-  if (mainWindow) {
-//    gtk_container_add(GTK_CONTAINER(mainWindow), frame);
-//    XmMainWindowSetAreas(mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
+  if (aParent) {
+    aParent->AddChild(this);
   }
-
-  if (aWidgetParent) {
-    aWidgetParent->AddChild(this);
-  }
-
-  InitCallbacks();
-  CreateGC();
-}
-
-
-void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  mBounds = aRect;
-  mAppShell = aAppShell;
-
-  InitToolkit(aToolkit, aWidgetParent);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  InitDeviceContext(aContext, (GtkWidget*)aNativeParent);
-
-  // Initially used xmDrawingAreaWidgetClass instead of
-  // newManageClass. Drawing area will spontaneously resize
-  // to fit it's contents.
-#if 0
-  mWidget = ::XtVaCreateManagedWidget("drawingArea",
-                                    newManageClass,
-				    (Widget)aNativeParent,
-				    XmNwidth, aRect.width,
-				    XmNheight, aRect.height,
-				    XmNmarginHeight, 0,
-				    XmNmarginWidth, 0,
-                                    XmNrecomputeSize, False,
-                                    XmNuserData, this,
-				    nsnull);
-  GtkAdjustment *hadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  GtkAdjustment *vadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  mWidget = gtk_layout_new(hadj,vadj);
-  if (aWidgetParent) {
-    aWidgetParent->AddChild(this);
-  }
-#endif
 
   // Force cursor to default setting
   mCursor = eCursor_select;
@@ -372,50 +249,8 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 
   InitCallbacks();
   CreateGC();
-}
 
-//-------------------------------------------------------------------------
-//
-// Create a window.
-//
-// Note: aNativeParent is always non-null if aWidgetParent is non-null.
-// aNativeaParent is set regardless if the parent for the Create() was an
-// nsIWidget or a Native widget.
-// aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
-//-------------------------------------------------------------------------
-
-void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-      // keep a reference to the device context
-    if (aContext) {
-        mContext = aContext;
-        NS_ADDREF(mContext);
-    }
-    else {
-      nsresult  res;
-
-      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-      static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
-
-      if (NS_OK == res)
-        mContext->Init(nsnull);
-    }
-
-  if (nsnull==aNativeParent)
-    CreateMainWindow(aNativeParent, aWidgetParent, aRect,
-        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-  else
-    CreateChildWindow(aNativeParent, aWidgetParent, aRect,
-        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -524,12 +359,9 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    if (aParent)
-      aParent->AddChild(this);
-      CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0),
-        aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
-        aInitData);
-  return NS_OK;
+    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
+                           aContext, aAppShell, aToolkit, aInitData,
+			   nsnull));
 }
 
 //-------------------------------------------------------------------------
@@ -545,8 +377,9 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-  return NS_OK;
+    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
+                           aContext, aAppShell, aToolkit, aInitData,
+			   aParent));
 }
 
 

@@ -45,7 +45,14 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 CFLAGS += $(TOOLKIT_CFLAGS)
 
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
+
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp
+else
+ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
 CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
+endif
+endif
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)

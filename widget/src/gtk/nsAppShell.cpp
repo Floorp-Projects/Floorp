@@ -49,10 +49,10 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   gtk_init (argc, &argv);
 
   gdk_rgb_init ();
-  
-  mTopLevel = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  /* we should probibly set even handlers here */
-
+ 
+  // Windows and Mac don't create anything here, so why should we?
+//  mTopLevel = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+/* we should probibly set even handlers here */
   return NS_OK;
 }
 
@@ -78,7 +78,7 @@ NS_METHOD nsAppShell::Run()
 
 NS_METHOD nsAppShell::Exit()
 {
-  gtk_widget_destroy (mTopLevel);
+//  gtk_widget_destroy (mTopLevel);
   gtk_main_quit ();
  
   return NS_OK;
@@ -112,7 +112,7 @@ nsAppShell::~nsAppShell()
 void* nsAppShell::GetNativeData(PRUint32 aDataType)
 {
   if (aDataType == NS_NATIVE_SHELL) {
-    return mTopLevel;
+//    return mTopLevel;
   }
   return nsnull;
 }
