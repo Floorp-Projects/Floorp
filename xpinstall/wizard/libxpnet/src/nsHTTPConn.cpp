@@ -362,7 +362,7 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
 
     int rv = OK;
     char resp[kRespBufSize];
-    int bufSize, total, fwriteLen, fwrote, bytesWritten = 0, expectedSize = 0;
+    int bufSize, total = 0, fwriteLen, fwrote, bytesWritten = 0, expectedSize = 0;
     FILE *destFd;
     char *fwritePos;
     int bFirstIter = TRUE;

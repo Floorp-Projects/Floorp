@@ -922,7 +922,7 @@ nsInstallDlg::ShowProxySettings(GtkWidget *aWidget, gpointer aData)
     GtkWidget *okButton, *cancelButton;
     GtkWidget *psLabel[NUM_PS_ENTRIES];
     int i;
-    char resName[16], *text;
+    char resName[16], *text = nsnull;
 
     psDlg = gtk_dialog_new();
     gtk_window_set_title(GTK_WINDOW(psDlg), gCtx->opt->mTitle);
@@ -1132,7 +1132,7 @@ nsInstallDlg::DLCancel(GtkWidget *aWidget, gpointer aData)
 int
 nsInstallDlg::CancelOrPause()
 {
-    int err;
+    int err = OK;
 
     if (bDLPause)
     {
