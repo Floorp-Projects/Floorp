@@ -182,7 +182,6 @@ typedef BufioFile* XP_File;
 #define XP_FileOpen(path, mode)         PR_Open((path), mode )
 #define XP_FileClose(file)              PR_Close(file)
 #define XP_FileFlush(file)              PR_Sync(file)
-#endif
 
 typedef PRFileDesc* XP_File;
 
