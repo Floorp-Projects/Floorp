@@ -416,6 +416,14 @@ nsCertOutliner::IsContainerEmpty(PRInt32 index, PRBool *_retval)
   return NS_OK;
 }
 
+/* boolean isSeparator (in long index); */
+NS_IMETHODIMP 
+nsCertOutliner::IsSeparator(PRInt32 index, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
 /* long getParentIndex (in long rowIndex); */
 NS_IMETHODIMP 
 nsCertOutliner::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)

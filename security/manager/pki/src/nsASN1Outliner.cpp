@@ -276,6 +276,14 @@ nsNSSASN1Outliner::IsContainerEmpty(PRInt32 index, PRBool *_retval)
   return NS_OK;
 }
 
+/* boolean isSeparator (in long index); */
+NS_IMETHODIMP 
+nsNSSASN1Outliner::IsSeparator(PRInt32 index, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK; 
+}
+
 PRInt32
 nsNSSASN1Outliner::GetParentOfObjectAtIndex(PRUint32 index,
                                             nsIASN1Object *sourceObject)
