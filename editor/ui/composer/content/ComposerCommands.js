@@ -2121,7 +2121,7 @@ var nsRevertCommand =
       // Reload page if first button (Revert) was pressed
       if(result == 0)
       {
-        SetEditMode(PreviousNonSourceDisplayMode);
+        SetEditMode(gPreviousNonSourceDisplayMode);
         window.editorShell.LoadUrl(GetDocumentUrl());
       }
     }
@@ -3222,7 +3222,7 @@ var nsHTMLSourceModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
+    return (window.editorShell && window.editorShell.documentEditable && isHTMLEditor());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3230,8 +3230,8 @@ var nsHTMLSourceModeCommand =
 
   doCommand: function(aCommand)
   {
-    if (gEditorDisplayMode != DisplayModeSource)
-      SetEditMode(DisplayModeSource);
+    if (gEditorDisplayMode != gDisplayModeSource)
+      SetEditMode(gDisplayModeSource);
   }
 };
 
@@ -3239,7 +3239,7 @@ var nsPreviewModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
+    return (window.editorShell && window.editorShell.documentEditable && isHTMLEditor());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3248,8 +3248,8 @@ var nsPreviewModeCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-    if (gEditorDisplayMode != DisplayModePreview)
-      SetEditMode(DisplayModePreview);
+    if (gEditorDisplayMode != gDisplayModePreview)
+      SetEditMode(gDisplayModePreview);
   }
 };
 

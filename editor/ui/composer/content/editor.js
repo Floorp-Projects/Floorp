@@ -46,15 +46,18 @@ var gEditor;
 var editorShell;   // XXX THIS NEEDS TO DIE
 var documentModified;
 var prefAuthorString = "";
-var NormalMode = 1;
-var PreviewMode = 2;
+
 // These must match enums in nsIEditorShell.idl:
-var DisplayModePreview = 0;
-var DisplayModeNormal = 1;
-var DisplayModeAllTags = 2;
-var DisplayModeSource = 3;
-var PreviousNonSourceDisplayMode = 1;
-var gEditorDisplayMode = 1;  // Normal Editor mode
+const gDisplayModePreview = 0;
+const gDisplayModeNormal = 1;
+const gDisplayModeAllTags = 2;
+const gDisplayModeSource = 3;
+const gNormalStyleSheet = "chrome://editor/content/EditorContent.css";
+const gAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
+const gParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
+
+var gPreviousNonSourceDisplayMode = 1;
+var gEditorDisplayMode = -1;
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var gContentWindow = 0;
@@ -195,7 +198,7 @@ function PageIsEmptyAndUntouched()
 
 function IsInHTMLSourceMode()
 {
-  return (gEditorDisplayMode == DisplayModeSource);
+  return (gEditorDisplayMode == gDisplayModeSource);
 }
 
 // are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
@@ -347,6 +350,9 @@ var DocumentStateListener =
     // Add mouse click watcher if right type of editor
     if (isHTMLEditor())
       addEditorClickEventListener();
+
+    // Start in "Normal" edit mode
+    SetDisplayMode(gDisplayModeNormal);
   },
 
     // note that the editor seems to be gone at this point 
@@ -1429,7 +1435,7 @@ function EditorClick(event)
   // In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event.target && isHTMLEditor() && gEditorDisplayMode == DisplayModeAllTags)
+  if (event.target && isHTMLEditor() && gEditorDisplayMode == gDisplayModeAllTags)
   {
     try
     {
@@ -1517,7 +1523,7 @@ function SetEditMode(mode)
   if (!SetDisplayMode(mode))
     return;
 
-  if (mode == DisplayModeSource)
+  if (mode == gDisplayModeSource)
   {
     // Display the DOCTYPE as a non-editable string above edit area
     var domdoc;
@@ -1564,7 +1570,7 @@ function SetEditMode(mode)
     gSourceContentWindow.addEventListener("input", oninputHTMLSource, false);
     gHTMLSourceChanged = false;
   }
-  else if (previousMode == DisplayModeSource)
+  else if (previousMode == gDisplayModeSource)
   {
     // Only rebuild document if a change was made in source window
     if (gHTMLSourceChanged)
@@ -1650,7 +1656,7 @@ function CancelHTMLSource()
   // Don't convert source text back into the DOM document
   gSourceContentWindow.value = "";
   gHTMLSourceChanged = false;
-  SetDisplayMode(PreviousNonSourceDisplayMode);
+  SetDisplayMode(gPreviousNonSourceDisplayMode);
 }
 
 function FinishHTMLSource()
@@ -1667,8 +1673,8 @@ function FinishHTMLSource()
       {
         AlertWithTitle(GetString("Alert"), GetString("NoHeadTag"));
         //cheat to force back to Source Mode
-        gEditorDisplayMode = DisplayModePreview;
-        SetDisplayMode(DisplayModeSource);
+        gEditorDisplayMode = gDisplayModePreview;
+        SetDisplayMode(gDisplayModeSource);
         throw Components.results.NS_ERROR_FAILURE;
       }
 
@@ -1677,15 +1683,15 @@ function FinishHTMLSource()
       {
         AlertWithTitle(GetString("Alert"), GetString("NoBodyTag"));
         //cheat to force back to Source Mode
-        gEditorDisplayMode = DisplayModePreview;
-        SetDisplayMode(DisplayModeSource);
+        gEditorDisplayMode = gDisplayModePreview;
+        SetDisplayMode(gDisplayModeSource);
         throw Components.results.NS_ERROR_FAILURE;
       }
     }
   }
 
   // Switch edit modes -- converts source back into DOM document
-  SetEditMode(PreviousNonSourceDisplayMode);
+  SetEditMode(gPreviousNonSourceDisplayMode);
 }
 
 function CollapseItem(id, collapse)
@@ -1710,23 +1716,49 @@ function SetDisplayMode(mode)
 
   gEditorDisplayMode = mode;
 
-  // Save the last non-source mode so we can cancel source editing easily
-  if (mode != DisplayModeSource)
-    PreviousNonSourceDisplayMode = mode;
+  // Load/unload appropriate override style sheet
+  try {
+    var editor = GetCurrentEditor();
 
-  // Editorshell does the style sheet loading/unloading
-  editorShell.SetDisplayMode(mode);
+    if (mode == gDisplayModePreview)
+    {
+      // Disable all extra "edit mode" style sheets 
+      editor.enableStyleSheet(gNormalStyleSheet, false);
+      editor.enableStyleSheet(gAllTagsStyleSheet, false);
+    }
+    else if (mode == gDisplayModeNormal)
+    {
+      editor.addOverrideStyleSheet(gNormalStyleSheet);
+
+      // Disable ShowAllTags mode if that was the previous mode
+      if (gPreviousNonSourceDisplayMode == gDisplayModeAllTags)
+        editor.enableStyleSheet(gAllTagsStyleSheet, false);
+    }
+    else if (mode == gDisplayModeAllTags)
+    {
+      editor.addOverrideStyleSheet(gNormalStyleSheet);
+      editor.addOverrideStyleSheet(gAllTagsStyleSheet);
+    }
+  } catch(e) {}
+
+  //XXX We still have to tell editorShell if we are in HTMLSource mode
+  //    because commands in nsComposerCommands.cpp can't access JS command results yet
+  editorShell.HTMLSourceMode = (mode == gDisplayModeSource);
+
+  // Save the last non-source mode so we can cancel source editing easily
+  if (mode != gDisplayModeSource)
+    gPreviousNonSourceDisplayMode = mode;
 
   // Set the UI states
   var selectedTab = null;
-  if (mode == DisplayModePreview) selectedTab = gPreviewModeButton;
-  if (mode == DisplayModeNormal) selectedTab = gNormalModeButton;
-  if (mode == DisplayModeAllTags) selectedTab = gTagModeButton;
-  if (mode == DisplayModeSource) selectedTab = gSourceModeButton;
+  if (mode == gDisplayModePreview) selectedTab = gPreviewModeButton;
+  if (mode == gDisplayModeNormal) selectedTab = gNormalModeButton;
+  if (mode == gDisplayModeAllTags) selectedTab = gTagModeButton;
+  if (mode == gDisplayModeSource) selectedTab = gSourceModeButton;
   if (selectedTab)
     document.getElementById("EditModeTabs").selectedItem = selectedTab;
 
-  if (mode == DisplayModeSource)
+  if (mode == gDisplayModeSource)
   {
     // Switch to the sourceWindow (second in the deck)
     gContentWindowDeck.setAttribute("selectedIndex","1");
@@ -1766,16 +1798,16 @@ function SetDisplayMode(mode)
   var menuID;
   switch(mode)
   {
-    case DisplayModePreview:
+    case gDisplayModePreview:
       menuID = "viewPreviewMode";
       break;
-    case DisplayModeNormal:
+    case gDisplayModeNormal:
       menuID = "viewNormalMode";
       break;
-    case DisplayModeAllTags:
+    case gDisplayModeAllTags:
       menuID = "viewAllTagsMode";
       break;
-    case DisplayModeSource:
+    case gDisplayModeSource:
       menuID = "viewSourceMode";
       break;
   }
@@ -1795,8 +1827,10 @@ function EditorToggleParagraphMarks()
     //  so if "checked" is true now, it was just switched to that mode
     var checked = menuItem.getAttribute("checked");
     try {
-      // XXX There's no non-editorshell equivalent yet for this:
-      editorShell.DisplayParagraphMarks(checked == "true");
+      if (checked == "true")
+        GetCurrentEditor().addOverrideStyleSheet(gParagraphMarksStyleSheet);
+      else
+        GetCurrentEditor().enableStyleSheet(gParagraphMarksStyleSheet, false);
     }
     catch(e) { return; }
   }

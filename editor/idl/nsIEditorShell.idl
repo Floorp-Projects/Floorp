@@ -67,6 +67,11 @@ interface nsIEditorShell : nsISupports
   attribute nsIDOMWindowInternal contentWindow;
   attribute wstring              editorType;
   attribute string               contentsMIMEType;
+
+  /** XXX Temporary: editorShell must know when we are in HTML Source mode
+   *   for proper command disabling in nsComposerCommands.cpp
+   */
+  attribute boolean HTMLSourceMode;
            
   readonly attribute nsIEditor editor;
   
@@ -75,13 +80,6 @@ interface nsIEditorShell : nsISupports
   enum {
     eDocumentStatusUnmodified,
     eDocumentStatusModified
-  };
-
-  enum {
-    eDisplayModePreview,
-    eDisplayModeNormal,
-    eDisplayModeAllTags,
-    eDisplayModeSource
   };
 %}
   readonly attribute boolean              documentModified;
@@ -506,44 +504,6 @@ interface nsIEditorShell : nsISupports
   wstring GetAlignment(out boolean mixed);
 
   void ApplyStyleSheet(in wstring url);
-
-  /** Set the display mode for editing
-    * displayMode
-    *       0 (eDisplayModeWYSIWIG) Preview mode
-    *           that looks exactly like the browser display except
-    *           for certain behaviors like cursor style over links, etc.
-    *       1 (eDisplayModeNormal) Use minimal extra CSS style 
-    *           (from override styles in EditorContent.css) 
-    *           to show named anchors, table borders, etc for editing
-    *       2 (eDisplayModeAllTags) Use maximum extra CSS style 
-    *           (from override styles in EditorAllTags.css) 
-    *           to show icon for every HTML tag
-    */
-  void SetDisplayMode(in PRInt32 displayMode);
-
-  /** Get current mode for editing
-    *  Returns:
-    *  0 (eDisplayModePreview,)
-    *  1 (eDisplayModeNormal)
-    *  2 (eDisplayModeAllTags)
-    *  3 (eDisplayModeSource)
-    */
-  PRInt32 GetEditMode();
-  
-  /** For quicker test if we are in HTML Source mode
-    */
-  boolean IsHTMLSourceMode();
-
-  /** Save the current HTML source edit session
-    *  by inserting it into the document,
-    *  replacing existing DOM
-    */
-  void FinishHTMLSource();
-
-  /** Add/remove an overridestyle sheet to show paragraph marks
-    *
-    */
-  void DisplayParagraphMarks(in PRBool showMarks);
 
   /* Output.
    * format is mime type, e.g. text/html;

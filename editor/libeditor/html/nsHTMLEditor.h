@@ -63,6 +63,8 @@
 #include "nsHTMLCSSUtils.h"
 #include "nsIParserService.h"
 
+#include "nsVoidArray.h"
+
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
@@ -206,15 +208,15 @@ public:
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
-  NS_IMETHOD ApplyStyleSheet(const nsAString & aURL, nsICSSStyleSheet **aStyleSheet);
-  NS_IMETHOD ApplyOverrideStyleSheet(const nsAString & aURL, nsICSSStyleSheet **aStyleSheet);
-  /* Above 2 methods call this with appropriate aOverride value 
-   * Not exposed to IDL interface 
-  */
-  nsresult   ApplyDocumentOrOverrideStyleSheet(const nsAString & aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet);
-  NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet);
-  NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet);
-  NS_IMETHOD RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet);
+  NS_IMETHOD AddStyleSheet(const nsAString & aURL);
+  NS_IMETHOD ReplaceStyleSheet(const nsAString& aURL);
+  NS_IMETHOD RemoveStyleSheet(const nsAString &aURL);
+
+  NS_IMETHOD AddOverrideStyleSheet(const nsAString & aURL);
+  NS_IMETHOD ReplaceOverrideStyleSheet(const nsAString& aURL);
+  NS_IMETHOD RemoveOverrideStyleSheet(const nsAString &aURL);
+
+  NS_IMETHOD EnableStyleSheet(const nsAString& aURL, PRBool aEnable);
 
   /* ------------ nsIEditorMailSupport methods -------------- */
 
@@ -451,6 +453,25 @@ public:
                            PRBool aListOrCellNotEmpty,
                            PRBool aSafeToAskFrames,
                            PRBool *aSeenBR);
+
+  // Stylesheet-related methods that aren't part of nsIEditorStyleSheets.
+  nsresult AddCSSStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult GetCSSLoader(const nsAString& aURL, nsICSSLoader** aCSSLoader);
+
+  // Returns TRUE if sheet was loaded, false if it wasn't
+  PRBool   EnableExistingStyleSheet(const nsAString& aURL);
+
+  // Dealing with the internal style sheet lists:
+  nsresult EnsureStyleSheetArrays();
+  NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
+                               nsICSSStyleSheet **_retval);
+  NS_IMETHOD GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet, nsAString &aURL);
+
+  // Add a url + known style sheet to the internal lists:
+  nsresult AddNewStyleSheetToList(const nsAString &aURL,
+                                  nsICSSStyleSheet *aStyleSheet);
+
+  nsresult RemoveStyleSheetFromList(const nsAString &aURL);
                        
 protected:
 
@@ -470,13 +491,6 @@ protected:
     *         an error if some serious error occurs
     */
   NS_IMETHOD GetLayoutObject(nsIDOMNode *aInNode, nsISupports **aOutLayoutObject);
-
-  /* StyleSheet load callback */
-  static void ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData);
-
-  /* remove the old style sheet, and apply the supplied one */
-  NS_IMETHOD ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet);
-
 
   // Return TRUE if aElement is a table-related elemet and caret was set
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);
@@ -767,13 +781,24 @@ protected:
   PRBool   mCachedUnderlineStyle;
   nsString mCachedFontName;
 
+  // Used to disable HTML formatting commands during HTML source editing
+  PRBool   mCanEditHTML;
+
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   PRInt32  mSelectedCellIndex;
 
   nsCOMPtr<nsIRangeUtils> mRangeHelper;
 
+  nsString mLastStyleSheetURL;
+  nsString mLastOverrideStyleSheetURL;
+
   PRBool mCSSAware;
   nsHTMLCSSUtils *mHTMLCSSUtils;
+
+  // Maintain a list of associated style sheets and their urls.
+  nsStringArray mStyleSheetURLs;
+  nsCOMPtr<nsISupportsArray> mStyleSheets;
+  PRInt32 mNumStyleSheets;
 
   // Maintain a static parser service ...
   static nsCOMPtr<nsIParserService> sParserService;

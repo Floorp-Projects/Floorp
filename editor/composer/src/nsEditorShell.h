@@ -218,20 +218,6 @@ class nsEditorShell :   public nsIEditorShell,
     // Pointer to localized strings used for UI
     nsCOMPtr<nsIStringBundle>   mStringBundle;
 
-    // Pointer to extra style sheets we load/unload
-    //  for various Edit Modes or for Paragraph Marks
-    nsCOMPtr<nsICSSStyleSheet>  mEditModeStyleSheet;
-    nsCOMPtr<nsICSSStyleSheet>  mAllTagsModeStyleSheet;
-    nsCOMPtr<nsICSSStyleSheet>  mParagraphMarksStyleSheet;
-
-    // The override style sheet that we never unload while editing
-    nsCOMPtr<nsICSSStyleSheet>  mBaseStyleSheet;
-    
-    // Saves the current display mode to reload style sheets
-    //   after loading a url
-    PRInt32 mDisplayMode;
-    // We don't store the HTMLSource mode in mDisplayMode,
-    //  so we need to track it separately
     PRBool  mHTMLSourceMode;
     
     nsIDOMWindowInternal            *mWebShellWindow;        // weak reference
