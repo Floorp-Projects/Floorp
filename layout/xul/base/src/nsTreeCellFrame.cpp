@@ -163,10 +163,10 @@ nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext,
   if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
 
     aEventStatus = nsEventStatus_eConsumeDoDefault;
-	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
-		HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
-	else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK)
-		HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
+	  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
+		  HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
+	  else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK)
+		  HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
   }
 
   return NS_OK;
@@ -184,11 +184,11 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
   else
   {
     // Perform a selection
-	if (((nsMouseEvent *)aEvent)->isShift)
-	  mTreeFrame->RangedSelection(aPresContext, this); // Applying a ranged selection.
-	else if (((nsMouseEvent *)aEvent)->isControl)
-	  mTreeFrame->ToggleSelection(aPresContext, this); // Applying a toggle selection.
-	else mTreeFrame->SetSelection(aPresContext, this); // Doing a single selection only.
+	  if (((nsMouseEvent *)aEvent)->isShift)
+	    mTreeFrame->RangedSelection(aPresContext, this); // Applying a ranged selection.
+	  else if (((nsMouseEvent *)aEvent)->isControl)
+	    mTreeFrame->ToggleSelection(aPresContext, this); // Applying a toggle selection.
+	  else mTreeFrame->SetSelection(aPresContext, this); // Doing a single selection only.
   }
   return NS_OK;
 }
@@ -201,53 +201,52 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
   if (!mIsHeader)
   {
     // Perform an expand/collapse
-	// Iterate up the chain to the row and then to the item.
-	nsCOMPtr<nsIContent> pTreeItemContent;
-	mContent->GetParent(*getter_AddRefs(pTreeItemContent));
-	
-	// Take the tree item content and toggle the value of its open attribute.
-	nsString attrValue;
+	  // Iterate up the chain to the row and then to the item.
+	  nsCOMPtr<nsIContent> pTreeItemContent;
+	  mContent->GetParent(*getter_AddRefs(pTreeItemContent));
+	  
+	  // Take the tree item content and toggle the value of its open attribute.
+	  nsString attrValue;
     nsCOMPtr<nsIAtom> kOpenAtom ( dont_AddRef(NS_NewAtom("open")) );
     nsresult result = pTreeItemContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded =  (result == NS_CONTENT_ATTR_NO_VALUE ||
 						 (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
     if (isExpanded)
-	{
-		// We're collapsing and need to remove frames from the flow.
-		pTreeItemContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, PR_FALSE);
-	}
-	else
-	{
-		// We're expanding and need to add frames to the flow.
-		pTreeItemContent->SetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, "true", PR_FALSE);
-	}
+	  {
+		  // We're collapsing and need to remove frames from the flow.
+		  pTreeItemContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, PR_FALSE);
+	  }
+	  else
+	  {
+		  // We're expanding and need to add frames to the flow.
+		  pTreeItemContent->SetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, "true", PR_FALSE);
+	  }
 
-	// Ok, try out the hack of doing frame reconstruction
-	nsCOMPtr<nsIPresShell> pShell;
-  aPresContext.GetShell(getter_AddRefs(pShell));
-	nsCOMPtr<nsIStyleSet> pStyleSet;
-  pShell->GetStyleSet(getter_AddRefs(pStyleSet));
-	nsCOMPtr<nsIDocument> pDocument;
-  pShell->GetDocument(getter_AddRefs(pDocument));
-	nsCOMPtr<nsIContent> pRoot ( dont_AddRef(pDocument->GetRootContent()) );
-	
-	if (pRoot) {
-		nsIFrame*   docElementFrame;
-		nsIFrame*   parentFrame;
+	  // Ok, try out the hack of doing frame reconstruction
+	  nsCOMPtr<nsIPresShell> pShell;
+    aPresContext.GetShell(getter_AddRefs(pShell));
+	  nsCOMPtr<nsIStyleSet> pStyleSet;
+    pShell->GetStyleSet(getter_AddRefs(pStyleSet));
+	  nsCOMPtr<nsIDocument> pDocument;
+    pShell->GetDocument(getter_AddRefs(pDocument));
+	  nsCOMPtr<nsIContent> pRoot ( dont_AddRef(pDocument->GetRootContent()) );
+	  
+	  if (pRoot) {
+		  nsIFrame*   docElementFrame;
+		  nsIFrame*   parentFrame;
     
-		// Get the frame that corresponds to the document element
-		pShell->GetPrimaryFrameFor(pRoot, &docElementFrame);
-		if (nsnull != docElementFrame) {
-		  docElementFrame->GetParent(&parentFrame);
+		  // Get the frame that corresponds to the document element
+		  pShell->GetPrimaryFrameFor(pRoot, &docElementFrame);
+		  if (nsnull != docElementFrame) {
+		    docElementFrame->GetParent(&parentFrame);
       
-		  pShell->EnterReflowLock();
-		  pStyleSet->ReconstructFrames(&aPresContext, pRoot,
-									   parentFrame, docElementFrame);
-		  pShell->ExitReflowLock();
-		}
+		    pShell->EnterReflowLock();
+		    pStyleSet->ReconstructFrames(&aPresContext, pRoot,
+									     parentFrame, docElementFrame);
+		    pShell->ExitReflowLock();
+		  }
     }
-
   }
   return NS_OK;
 }
@@ -256,17 +255,24 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 void
 nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PRBool notifyForReflow)
 {
-	nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef(NS_NewAtom("selected")) );
-    if (isSelected)
+	nsCOMPtr<nsIAtom> kSelectedCellAtom(dont_AddRef(NS_NewAtom("selectedcell")));
+  nsCOMPtr<nsIAtom> kSelectedAtom(dont_AddRef(NS_NewAtom("selected")));
+
+  nsIContent* pParentContent;
+  mContent->GetParent(pParentContent);
+
+  if (isSelected)
 	{
 		// We're selecting the node.
-		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, "true", notifyForReflow);
-		
+		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedCellAtom, "true", notifyForReflow);
+    pParentContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, "true", notifyForReflow);
 	}
 	else
 	{
-		// We're unselecting the node.
-		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, notifyForReflow);
+		// We're deselecting the node.
+		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedCellAtom, notifyForReflow);
+    pParentContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, notifyForReflow);
 	}
 
+  NS_IF_RELEASE(pParentContent);
 }
