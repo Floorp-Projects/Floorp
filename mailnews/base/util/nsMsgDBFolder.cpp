@@ -1773,11 +1773,18 @@ nsMsgDBFolder::CallFilterPlugins()
     PRInt32 numClassifyRequests = 0;
     for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
     {
+        nsXPIDLCString junkScore;
+        nsCOMPtr <nsIMsgDBHdr> msgHdr;
+        rv = mDatabase->GetMsgHdrForKey(newMessageKeys->GetAt(i), getter_AddRefs(msgHdr));
+        if (!NS_SUCCEEDED(rv))
+          continue;
+
+        msgHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
+        if (!junkScore.IsEmpty()) // ignore already scored messages.
+          continue;
       // check whitelist first:
         if (whiteListDirectory)
         {
-          nsCOMPtr <nsIMsgDBHdr> msgHdr;
-          rv = mDatabase->GetMsgHdrForKey(newMessageKeys->GetAt(i), getter_AddRefs(msgHdr));
           if (NS_SUCCEEDED(rv))
           {
             PRBool cardExists = PR_FALSE;
