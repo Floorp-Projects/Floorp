@@ -62,7 +62,10 @@ public:
                           nsEventStatus&  aEventStatus);
 
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                        nsIStyleContext* aParentContext) ;
+                                      nsIStyleContext* aParentContext,
+                                      PRInt32 aParentChange,
+                                      nsStyleChangeList* aChangeList,
+                                      PRInt32* aLocalChange) ;
 
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);

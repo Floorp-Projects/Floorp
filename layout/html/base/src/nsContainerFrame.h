@@ -40,7 +40,10 @@ public:
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                              nsIFrame**     aFrame);
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext);
+                                   nsIStyleContext* aParentContext,
+                                   PRInt32 aParentChange,
+                                   nsStyleChangeList* aChangeList,
+                                   PRInt32* aLocalChange);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIHTMLReflow overrides

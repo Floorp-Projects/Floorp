@@ -517,14 +517,18 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 static nsresult
 ReResolveLineList(nsIPresContext* aPresContext,
                   nsLineBox* aLine,
-                  nsIStyleContext* aStyleContext)
+                  nsIStyleContext* aStyleContext,
+                  PRInt32 aParentChange,
+                  nsStyleChangeList* aChangeList)
 {
   nsresult rv = NS_OK;
+  PRInt32 childChange;
   while (nsnull != aLine) {
     nsIFrame* child = aLine->mFirstChild;
     PRInt32 n = aLine->mChildCount;
     while ((--n >= 0) && NS_SUCCEEDED(rv)) {
-      rv = child->ReResolveStyleContext(aPresContext, aStyleContext);
+      rv = child->ReResolveStyleContext(aPresContext, aStyleContext, 
+                                        aParentChange, aChangeList, &childChange);
       child->GetNextSibling(&child);
     }
     aLine = aLine->mNext;
@@ -534,18 +538,21 @@ ReResolveLineList(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aParentContext)
+                                    nsIStyleContext* aParentContext,
+                                    PRInt32 aParentChange,
+                                    nsStyleChangeList* aChangeList,
+                                    PRInt32* aLocalChange)
 {
-  nsIStyleContext* oldContext = mStyleContext;
-
   // NOTE: using nsFrame's ReResolveStyleContext method to avoid
   // useless version in base classes.
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext);
+  PRInt32 ourChange = aParentChange;
+  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, 
+                                               ourChange, aChangeList, &ourChange);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (oldContext != mStyleContext) {
+  if (NS_COMFALSE != rv) {
     // Re-resolve the :first-line pseudo style context
     if (nsnull == mPrevInFlow) {
       nsIStyleContext* newFirstLineStyle;
@@ -555,6 +562,8 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
                                                PR_FALSE,
                                                &newFirstLineStyle);
       if (newFirstLineStyle != mFirstLineStyle) {
+        CaptureStyleChangeFor(this, mFirstLineStyle, newFirstLineStyle, 
+                              ourChange, aChangeList, &ourChange);
         NS_IF_RELEASE(mFirstLineStyle);
         mFirstLineStyle = newFirstLineStyle;
       }
@@ -572,6 +581,8 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
                                                PR_FALSE,
                                                &newFirstLetterStyle);
       if (newFirstLetterStyle != mFirstLetterStyle) {
+        CaptureStyleChangeFor(this, mFirstLetterStyle, newFirstLetterStyle, 
+                              ourChange, aChangeList, &ourChange);
         NS_IF_RELEASE(mFirstLetterStyle);
         mFirstLetterStyle = newFirstLetterStyle;
       }
@@ -580,8 +591,30 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
     }
 
+    // XXX Need to check if the bullet is inside and hence
+    // in the line list. If so, we don't need to do this.
+    if (NS_SUCCEEDED(rv) && (nsnull != mBullet)) {
+      nsIStyleContext* newBulletSC;
+      nsIStyleContext* oldBulletSC = nsnull;
+      mBullet->GetStyleContext(&oldBulletSC);
+      aPresContext->ResolvePseudoStyleContextFor(mContent, 
+                                                 nsHTMLAtoms::mozListBulletPseudo,
+                                                 mStyleContext, 
+                                                 PR_FALSE, &newBulletSC);
+      rv = mBullet->SetStyleContext(aPresContext, newBulletSC);
+      CaptureStyleChangeFor(this, oldBulletSC, newBulletSC, 
+                            ourChange, aChangeList, &ourChange);
+      NS_RELEASE(oldBulletSC);
+      NS_RELEASE(newBulletSC);
+    }
+
+    if (aLocalChange) {
+      *aLocalChange = ourChange;
+    }
+
     // Update the child frames on each line
     nsLineBox* line = mLines;
+    PRInt32 childChange;
     while (nsnull != line) {
       nsIFrame* child = line->mFirstChild;
       PRInt32 n = line->mChildCount;
@@ -590,10 +623,13 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
           rv = child->ReResolveStyleContext(aPresContext,
                                             (nsnull != mFirstLineStyle
                                              ? mFirstLineStyle
-                                             : mStyleContext));
+                                             : mStyleContext),
+                                             ourChange, 
+                                             aChangeList, &childChange);
         }
         else {
-          rv = child->ReResolveStyleContext(aPresContext, mStyleContext);
+          rv = child->ReResolveStyleContext(aPresContext, mStyleContext,
+                                            ourChange, aChangeList, &childChange);
         }
         child->GetNextSibling(&child);
       }
@@ -601,25 +637,15 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
 
     if (NS_SUCCEEDED(rv) && (nsnull != mOverflowLines)) {
-      rv = ReResolveLineList(aPresContext, mOverflowLines, mStyleContext);
+      rv = ReResolveLineList(aPresContext, mOverflowLines, mStyleContext, 
+                             ourChange, aChangeList);
     }
     if (NS_SUCCEEDED(rv) && (nsnull != mPrevInFlow)) {
       nsLineBox* lines = ((nsBlockFrame*)mPrevInFlow)->mOverflowLines;
       if (nsnull != lines) {
-        rv = ReResolveLineList(aPresContext, lines, mStyleContext);
+        rv = ReResolveLineList(aPresContext, lines, mStyleContext, 
+                               ourChange, aChangeList);
       }
-    }
-
-    // XXX Need to check if the bullet is inside and hence
-    // in the line list. If so, we don't need to do this.
-    if (NS_SUCCEEDED(rv) && (nsnull != mBullet)) {
-      nsIStyleContext* bulletSC;
-      aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                                 nsHTMLAtoms::mozListBulletPseudo,
-                                                 mStyleContext, 
-                                                 PR_FALSE, &bulletSC);
-      rv = mBullet->SetStyleContext(aPresContext, bulletSC);
-      NS_RELEASE(bulletSC);
     }
   }
   return rv;
@@ -2160,7 +2186,8 @@ nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
       ((nsFrame*)aFrame)->ListTag(stdout);
       printf(" adding in first-line style\n");
 #endif
-      aFrame->ReResolveStyleContext(&aState.mPresContext, mFirstLineStyle);
+      aFrame->ReResolveStyleContext(&aState.mPresContext, mFirstLineStyle,
+                                    NS_STYLE_HINT_REFLOW, nsnull, nsnull);
       repairStyleContext = PR_FALSE;
 #ifdef REALLY_NOISY_FIRST_LINE
       DumpStyleGeneaology(aFrame, "  ");
@@ -2168,7 +2195,8 @@ nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
     }
     if ((nsnull != mFirstLetterStyle) &&
         aState.mLineLayout->GetFirstLetterStyleOK()) {
-      aFrame->ReResolveStyleContext(&aState.mPresContext, mFirstLetterStyle);
+      aFrame->ReResolveStyleContext(&aState.mPresContext, mFirstLetterStyle,
+                                    NS_STYLE_HINT_REFLOW, nsnull, nsnull);
       repairStyleContext = PR_FALSE;
     }
   }
@@ -2182,7 +2210,8 @@ nsBlockFrame::WillReflowFrame(nsBlockReflowState& aState,
       kidParentSC = kidSC->GetParent();
       if (nsnull != kidParentSC) {
         if (kidParentSC != mStyleContext) {
-          aFrame->ReResolveStyleContext(&aState.mPresContext, mStyleContext);
+          aFrame->ReResolveStyleContext(&aState.mPresContext, mStyleContext,
+                                        NS_STYLE_HINT_REFLOW, nsnull, nsnull);
         }
         NS_RELEASE(kidParentSC);
       }

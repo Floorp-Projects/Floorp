@@ -138,32 +138,49 @@ nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 
 NS_IMETHODIMP
 nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                        nsIStyleContext* aParentContext)
+                                        nsIStyleContext* aParentContext,
+                                        PRInt32 aParentChange,
+                                        nsStyleChangeList* aChangeList,
+                                        PRInt32* aLocalChange)
 {
-  nsIStyleContext*  oldContext = mStyleContext;
-  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext);
-  if (oldContext != mStyleContext) {
+  PRInt32 ourChange = aParentChange;
+  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, 
+                                                   ourChange, aChangeList, &ourChange);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  if (aLocalChange) {
+    *aLocalChange = ourChange;
+  }
+
+  if (NS_COMFALSE != result) {
     // Update primary child list
     nsIFrame* child;
+    PRInt32 childChange;
     result = FirstChild(nsnull, &child);
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
-      result = child->ReResolveStyleContext(aPresContext, mStyleContext);
+      result = child->ReResolveStyleContext(aPresContext, mStyleContext, 
+                                            ourChange, aChangeList, &childChange);
       child->GetNextSibling(&child);
     }
 
     // Update overflow list too
     child = mOverflowFrames.FirstChild();
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
-      result = child->ReResolveStyleContext(aPresContext, mStyleContext);
+      result = child->ReResolveStyleContext(aPresContext, mStyleContext, 
+                                            ourChange, aChangeList, &childChange);
       child->GetNextSibling(&child);
     }
 
     // And just to be complete, update our prev-in-flows overflow list
     // too (since in theory, those frames will become our frames)
+    // XXX Eeek, this is potentially re-resolving these frames twice, can this be optimized?
     if (nsnull != mPrevInFlow) {
       child = ((nsContainerFrame*)mPrevInFlow)->mOverflowFrames.FirstChild();
       while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
-        result = child->ReResolveStyleContext(aPresContext, mStyleContext);
+        result = child->ReResolveStyleContext(aPresContext, mStyleContext,
+                                              ourChange, aChangeList, &childChange);
         child->GetNextSibling(&child);
       }
     }

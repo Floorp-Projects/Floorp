@@ -62,11 +62,6 @@ public:
                                      nsIStyleContext* aStyleContext,
                                      PRBool aForce);
 
-  static void UpdateStyleContexts(nsIPresContext& aPresContext,
-                                  nsIFrame* aFrame,
-                                  nsIFrame* aOldParent,
-                                  nsIFrame* aNewParent);
-
 protected:
   virtual PRIntn GetSkipSides() const = 0;
 };

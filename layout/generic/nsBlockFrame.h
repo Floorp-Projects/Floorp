@@ -79,7 +79,10 @@ public:
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext);
+                                   nsIStyleContext* aParentContext,
+                                   PRInt32 aParentChange,
+                                   nsStyleChangeList* aChangeList,
+                                   PRInt32* aLocalChange);
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,

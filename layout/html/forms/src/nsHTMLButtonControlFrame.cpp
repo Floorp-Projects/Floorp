@@ -90,7 +90,10 @@ public:
                    nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext) ;
+                                      nsIStyleContext* aParentContext,
+                                      PRInt32 aParentChange,
+                                      nsStyleChangeList* aChangeList,
+                                      PRInt32* aLocalChange) ;
 
  
 
@@ -675,20 +678,22 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aV
 // When the style context changes, make sure that all of our styles are still up to date.
 //
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+nsHTMLButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
+                                                  PRInt32 aParentChange, nsStyleChangeList* aChangeList, 
+                                                  PRInt32* aLocalChange)
 {
-
-  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
-  
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext,
+                                                            aParentChange, aChangeList, aLocalChange); 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mRenderer.ReResolveStyles(*aPresContext);
+  if (NS_COMFALSE != rv) {
+    mRenderer.ReResolveStyles(*aPresContext);
+  }
   
-  return NS_OK;
+  return rv;
   
 } // ReResolveStyleContext
 

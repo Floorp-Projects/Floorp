@@ -132,17 +132,18 @@ nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
 // When the style context changes, make sure that all of our styles are still up to date.
 //
 NS_IMETHODIMP
-nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
+                                          PRInt32 aParentChange, nsStyleChangeList* aChangeList,
+                                          PRInt32* aLocalChange)
 {
-  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
-  
   // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext, 
+                                                            aParentChange, aChangeList, aLocalChange); 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if ( old.get() != mStyleContext ) {
+  if (NS_COMFALSE != rv) {
     nsCOMPtr<nsIAtom> grippyRolloverPseudo ( dont_AddRef(NS_NewAtom(":toolbox-rollover")) );
     RefreshStyleContext(aPresContext, grippyRolloverPseudo, &mGrippyRolloverStyle, mContent, mStyleContext);
 
@@ -150,7 +151,7 @@ nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyle
     RefreshStyleContext(aPresContext, grippyNormalPseudo, &mGrippyNormalStyle, mContent, mStyleContext);
   }
   
-  return NS_OK;
+  return rv;
   
 } // ReResolveStyleContext
 
@@ -265,7 +266,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   //*** should it go?
   switch (aReflowState.reason) {
     case eReflowReason_Initial:
-      ReResolveStyleContext(&aPresContext, mStyleContext);
+      ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
       break;
 
     default:

@@ -139,7 +139,10 @@ public:
   NS_IMETHOD  GetStyleData(nsStyleStructID aSID,
                            const nsStyleStruct*& aStyleStruct) const;
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aParentContext);
+                                    nsIStyleContext* aParentContext,
+                                    PRInt32 aParentChange,
+                                    nsStyleChangeList* aChangeList,
+                                    PRInt32* aLocalChange);
   NS_IMETHOD  GetParent(nsIFrame** aParent) const;
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   NS_IMETHOD  GetRect(nsRect& aRect) const;
@@ -269,6 +272,15 @@ public:
   // Helper function to return the index in parent of the frame's content
   // object. Returns -1 on error or if the frame doesn't have a content object
   static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);
+
+  // Helper function to compute an capture style change information
+  // call this when replacing style contexts within ReResilveStyleContext
+  static void CaptureStyleChangeFor(nsIFrame* aFrame,
+                                    nsIStyleContext* aOldContext, 
+                                    nsIStyleContext* aNewContext,
+                                    PRInt32 aParentChange,
+                                    nsStyleChangeList* aChangeList,
+                                    PRInt32* aLocalChange);
 
 #ifdef NS_DEBUG
   /**

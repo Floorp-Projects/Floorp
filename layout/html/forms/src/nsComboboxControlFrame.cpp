@@ -273,7 +273,7 @@ void nsComboboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
       SetFocus(PR_TRUE, PR_TRUE);    
     }
 
-    mListFrame->ReResolveStyleContext(aPresContext, mCurrentStyleContext);
+    mListFrame->ReResolveStyleContext(aPresContext, mCurrentStyleContext, NS_STYLE_HINT_NONE, nsnull, nsnull);
     nsFormControlHelper::ForceDrawFrame(mListFrame);
   }
 
@@ -297,8 +297,8 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
                                              nsReflowStatus&          aStatus)
 {
   if (mFirstTime) {
-    ReResolveStyleContext(&aPresContext, mStyleContext); // XXX This temporary
-    mListFrame->ReResolveStyleContext(&aPresContext, mCurrentStyleContext);
+    ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull); // XXX This temporary
+    mListFrame->ReResolveStyleContext(&aPresContext, mCurrentStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
     mFirstTime = PR_FALSE;
   }
 
@@ -674,19 +674,26 @@ nsComboboxControlFrame::RefreshStyleContext(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                              nsIStyleContext* aParentContext)
+                                              nsIStyleContext* aParentContext,
+                                              PRInt32 aParentChange,
+                                              nsStyleChangeList* aChangeList,
+                                              PRInt32* aLocalChange)
 {
-  nsIStyleContext* oldContext = mStyleContext;
-
   // NOTE: using nsFrame's ReResolveStyleContext method to avoid
   // useless version in base classes.
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  PRInt32 ourChange = aParentChange;
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext, 
+                                                            ourChange, aChangeList, &ourChange); 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (oldContext != mStyleContext) {
+  if (aLocalChange) {
+    *aLocalChange = ourChange;
+  }
 
+  if (NS_COMFALSE != rv) {
+    PRInt32 childChange;
     PRBool currentIsVisible = (mCurrentStyleContext == mVisibleStyleContext?PR_TRUE:PR_FALSE);
 
     RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownVisible, mVisibleStyleContext, mContent, mStyleContext);
@@ -695,7 +702,8 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     mCurrentStyleContext = (currentIsVisible?mVisibleStyleContext:mHiddenStyleContext);
 
     mListFrame->ReResolveStyleContext(aPresContext, 
-                                      (nsnull != mCurrentStyleContext? mCurrentStyleContext : mStyleContext));
+                                      (nsnull != mCurrentStyleContext? mCurrentStyleContext : mStyleContext),
+                                      ourChange, aChangeList, &childChange);
 
     // Button Style
     RefreshStyleContext(aPresContext, nsHTMLAtoms::dropDownBtnOut, mBtnOutStyleContext, mContent, mStyleContext);

@@ -50,6 +50,7 @@
 
 #include "nsFrameTraversal.h"
 #include "nsCOMPtr.h"
+#include "nsStyleChangeList.h"
 
 
 // Some Misc #defines
@@ -440,39 +441,77 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
   return NS_OK;
 }
 
+void nsFrame::CaptureStyleChangeFor(nsIFrame* aFrame,
+                                    nsIStyleContext* aOldContext, 
+                                    nsIStyleContext* aNewContext,
+                                    PRInt32 aParentChange,
+                                    nsStyleChangeList* aChangeList,
+                                    PRInt32* aLocalChange)
+{
+  if (aChangeList && aLocalChange) {  // does caller really want change data?
+    PRInt32 change = NS_STYLE_HINT_NONE;
+    if (aOldContext) {
+      aNewContext->CalcStyleDifference(aOldContext, change);
+    }
+    else {
+      nsIStyleContext* parent = aNewContext->GetParent();
+      if (parent) {
+        aNewContext->CalcStyleDifference(parent, change);
+        NS_RELEASE(parent);
+      }
+    }
+    if (aParentChange < change) { // found larger change, record it
+      aChangeList->AppendChange(aFrame, change);
+      *aLocalChange = change;
+    }
+    else {
+      *aLocalChange = aParentChange;
+    }
+  }
+}
+
 NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                             nsIStyleContext* aParentContext)
+                                             nsIStyleContext* aParentContext,
+                                             PRInt32 aParentChange,
+                                             nsStyleChangeList* aChangeList,
+                                             PRInt32* aLocalChange)
 {
 // XXX TURN THIS ON  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
   NS_ASSERTION(nsnull != mStyleContext, "null style context");
+
+  nsresult result = NS_COMFALSE;
+
   if (nsnull != mStyleContext) {
     nsIAtom*  pseudoTag = nsnull;
     mStyleContext->GetPseudoType(pseudoTag);
     nsIStyleContext*  newContext;
     if (nsnull != pseudoTag) {
-        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag,
-                                                   aParentContext,
-                                                   PR_FALSE, &newContext);
+      result = aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag,
+                                                          aParentContext,
+                                                          PR_FALSE, &newContext);
     }
     else {
-      aPresContext->ResolveStyleContextFor(mContent, aParentContext,
-                                           PR_FALSE, &newContext);
+      result = aPresContext->ResolveStyleContextFor(mContent, aParentContext,
+                                                    PR_FALSE, &newContext);
     }
 
     NS_ASSERTION(nsnull != newContext, "failed to get new style context");
     if (nsnull != newContext) {
       if (newContext != mStyleContext) {
-        NS_RELEASE(mStyleContext);
+        nsIStyleContext* oldContext = mStyleContext;
         mStyleContext = newContext;
-        DidSetStyleContext(aPresContext);
+        result = DidSetStyleContext(aPresContext);
+        CaptureStyleChangeFor(this, oldContext, newContext, 
+                              aParentChange, aChangeList, aLocalChange);
+        NS_RELEASE(oldContext);
       }
       else {
         NS_RELEASE(newContext);
-        mStyleContext->RemapStyle(aPresContext);
+        result = NS_COMFALSE;
       }
     }
   }
-  return NS_OK;
+  return result;
 }
 
 // Geometric parent member functions
