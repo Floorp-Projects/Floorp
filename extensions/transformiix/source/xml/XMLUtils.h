@@ -137,11 +137,11 @@ public:
     **/
     static void normalizePIValue(nsAString& attValue);
 
-    static PRBool isValidQName(const nsAFlatString& aQName,
-                               const PRUnichar** aColon)
     /**
      * Returns true if the given string is a valid XML QName
      */
+    static PRBool isValidQName(const nsAFlatString& aQName,
+                               const PRUnichar** aColon)
     {
 #ifdef TX_EXE
         const PRUnichar* end;
