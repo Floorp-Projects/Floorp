@@ -418,13 +418,12 @@ DoubleCrossCheck("milestones", "product_id", "value",
 Status("Checking profile logins");
 
 my $emailregexp = Param("emailregexp");
-$emailregexp =~ s/'/\\'/g;
-SendSQL("SELECT userid, login_name FROM profiles " .
-        "WHERE login_name NOT REGEXP '" . $emailregexp . "'");
-
+SendSQL("SELECT userid, login_name FROM profiles");
 
 while (my ($id,$email) = (FetchSQLData())) {
-    Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
+    unless ($email =~ m/$emailregexp/) {
+        Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
+    }
 }
 
 ###########################################################################
