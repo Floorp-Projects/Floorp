@@ -72,7 +72,7 @@ public:
     * the actual table width in a given situation will depend on the available size
     * provided by the parent (especially for percent-width tables.)
     */
-  virtual nscoord GetTableMaxWidth() const = 0;
+  virtual nscoord GetTableMaxWidth(const nsHTMLReflowState& aReflowState) const = 0;
 
   /** return the computed minimum possible size of the table. 
     * this is the sum of the minimum sizes of the content taking into account table

@@ -83,7 +83,7 @@ public:
 
   // these accessors are mostly for debugging purposes
   nscoord GetTableMinWidth() const;
-  nscoord GetTableMaxWidth() const;
+  nscoord GetTableMaxWidth(const nsHTMLReflowState& aReflowState) const;
   nscoord GetCOLSAttribute() const;
   void Dump(PRInt32 aIndent);
 
