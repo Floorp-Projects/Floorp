@@ -35,18 +35,9 @@ static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 class nsPluginFactory : public nsIFactory
 {   
   public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                                       void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+    NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIFACTORY
 
     nsPluginFactory(const nsCID &aClass, nsIServiceManager* serviceMgr);   
 
@@ -54,48 +45,23 @@ class nsPluginFactory : public nsIFactory
     virtual ~nsPluginFactory();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
     nsIServiceManager *mserviceMgr;
 };   
 
 nsPluginFactory :: nsPluginFactory(const nsCID &aClass, nsIServiceManager* serviceMgr)   
 {   
-  mRefCnt = 0;
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
+  // XXX Are we sure about this weak reference. -dp
   mserviceMgr = serviceMgr;
 }   
 
 nsPluginFactory :: ~nsPluginFactory()   
-{   
+{
 }   
 
-nsresult nsPluginFactory :: QueryInterface(const nsIID &aIID,   
-                                       void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsPluginFactory);
-NS_IMPL_RELEASE(nsPluginFactory);
+NS_IMPL_ISUPPORTS(nsPluginFactory, NS_GET_IID(nsIFactory))
 
 nsresult nsPluginFactory :: CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  
@@ -105,25 +71,31 @@ nsresult nsPluginFactory :: CreateInstance(nsISupports *aOuter,
     return NS_ERROR_NULL_POINTER;  
   }  
 
+  if (aOuter) {
+    *aResult = nsnull;
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
   *aResult = NULL;  
   
-  nsISupports *inst = nsnull;
+  nsPluginHostImpl *inst = nsnull;
 
   //if (mClassID.Equals(kCPluginHost) || mClassID.Equals(kCPluginManagerCID) ){
-  if (mClassID.Equals(kCPluginManagerCID) ){
-    inst = (nsISupports *)(nsIPluginManager *)new nsPluginHostImpl(mserviceMgr);
+  if (mClassID.Equals(kCPluginManagerCID) ) {
+    inst = new nsPluginHostImpl(mserviceMgr);
+  } else {
+    return NS_ERROR_NO_INTERFACE;
   }
 
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
+  NS_ADDREF(inst);  // Stabilize
+  
   nsresult res = inst->QueryInterface(aIID, aResult);
 
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
+  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 
   return res;  
 }  
@@ -158,3 +130,4 @@ NSGetFactory(nsISupports* serviceMgr,
 
   return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
+

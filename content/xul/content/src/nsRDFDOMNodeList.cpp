@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_C
 
 
 nsRDFDOMNodeList::nsRDFDOMNodeList(void)
-    : mInner(nsnull),
+    : //mInner(nsnull), Not being used?
       mElements(nsnull),
       mScriptObject(nsnull)
 {
@@ -65,7 +65,7 @@ nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
 #endif
 
     NS_IF_RELEASE(mElements);
-    delete mInner;
+    //delete mInner; Not being used?
 }
 
 nsresult

@@ -414,8 +414,7 @@ NSGetFactory(nsISupports* aServMgr,
     }
 
     *aFactory = nsnull;
-    nsISupports *inst;
-
+    nsProxyEventFactory *inst = nsnull;
     
     if (aClass.Equals(kProxyObjectManagerCID) )
         inst = new nsProxyEventFactory();
@@ -425,12 +424,11 @@ NSGetFactory(nsISupports* aServMgr,
     if (inst == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult res = inst->QueryInterface(nsIFactory::GetIID(), (void**) aFactory);
+    NS_ADDREF(inst);    // Stabilize
 
-    if (NS_FAILED(res)) 
-    {   
-        delete inst;
-    }
+    nsresult res = inst->QueryInterface(NS_GET_IID(nsIFactory), (void**) aFactory);
+
+    NS_RELEASE(inst);   // Destabilize and avoid leaks. Note we also avoid delete <interface pointer>.
 
     return res;
 }

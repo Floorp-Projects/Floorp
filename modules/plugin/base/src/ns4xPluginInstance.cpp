@@ -512,17 +512,16 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
 NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamListener** listener)
 {
-	nsISupports* stream = nsnull;
-	stream = (nsISupports *)(nsIPluginStreamListener *)new ns4xPluginStreamListener(this, nsnull);
+	ns4xPluginStreamListener* stream = new ns4xPluginStreamListener(this, nsnull);
 
 	if(stream == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsresult res = stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
+	NS_ADDREF(stream);  // Stabilize
+    
+    nsresult res = stream->QueryInterface(kIPluginStreamListenerIID, (void**)listener);
 
-	// If we didn't get the right interface, clean up  
-	if (res != NS_OK)
-		delete stream;  
+	NS_RELEASE(stream); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 
 	return res;
 }

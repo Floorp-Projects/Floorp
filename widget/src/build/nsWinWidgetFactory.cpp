@@ -506,17 +506,11 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
 
 
 
+    NS_ADDREF(inst);  // Stabilize
+    
     nsresult res = inst->QueryInterface(aIID, aResult);
 
-
-
-    if (res != NS_OK) {  
-
-        // We didn't get the right interface, so clean up  
-
-        delete inst;  
-
-    }
+    NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 
 
 

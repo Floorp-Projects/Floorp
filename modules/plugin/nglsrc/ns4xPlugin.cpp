@@ -366,21 +366,18 @@ nsresult ns4xPlugin :: CreateInstance(nsISupports *aOuter,
 
   *aResult = NULL;  
   
-  nsISupports *inst;
-
-  inst = nsnull;
-  inst = (nsISupports *)(nsIPluginInstance *)new ns4xPluginInstance(&fCallbacks);
+  // XXX This is suspicuous!
+  ns4xPluginInstance *inst = new ns4xPluginInstance(&fCallbacks);
 
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
+  NS_ADDREF(inst);  // Stabilize
+
   nsresult res = inst->QueryInterface(aIID, aResult);
 
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
+  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>    
 
   return res;  
 }  

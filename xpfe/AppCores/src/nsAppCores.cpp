@@ -104,12 +104,11 @@ NSGetFactory(nsISupports* serviceMgr,
     }
 
 
+    NS_ADDREF(inst);  // Stabilize
+    
     nsresult res = inst->QueryInterface(kIFactoryIID, (void**) aFactory);
 
-    if (res != NS_OK)
-    {   
-        delete inst;
-    }
+    NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>    
 
   return res;
 
