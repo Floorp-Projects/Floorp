@@ -221,12 +221,14 @@ NS_IMETHODIMP nsBaseFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 {
-  if (mDisplayDirectory)
-    return mDisplayDirectory->InitWithFile(aDirectory);
-  if (!aDirectory)
+  if (!aDirectory) {
+    mDisplayDirectory = nsnull;
     return NS_OK;
+  }
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aDirectory->Clone(getter_AddRefs(directory));
+  if (NS_FAILED(rv))
+    return rv;
   mDisplayDirectory = do_QueryInterface(directory, &rv);
   return rv;
 }
@@ -238,10 +240,9 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 {
-  if (!mDisplayDirectory) {
-    *aDirectory = nsnull;
+  *aDirectory = nsnull;
+  if (!mDisplayDirectory)
     return NS_OK;
-  }
   nsCOMPtr<nsIFile> directory;
   nsresult rv = mDisplayDirectory->Clone(getter_AddRefs(directory));
   if (NS_FAILED(rv))

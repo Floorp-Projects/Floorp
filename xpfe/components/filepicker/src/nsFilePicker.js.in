@@ -83,14 +83,16 @@ function nsFilePicker()
   /* attributes */
   this.mDefaultString = "";
   this.mFilterIndex = 0;
-  if (lastDirectory) {
-    this.mDisplayDirectory = Components.classes[LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
-    this.mDisplayDirectory.initWithPath(lastDirectory);
-  } else {
-    this.mDisplayDirectory = null;
-  }
   this.mFilterTitles = new Array();
   this.mFilters = new Array();
+  this.mDisplayDirectory = null;
+  if (lastDirectory) {
+    try {
+      var dir = Components.classes[LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
+      dir.initWithPath(lastDirectory);
+      this.mDisplayDirectory = dir;
+    } catch (e) {}
+  }
 }
 
 nsFilePicker.prototype = {

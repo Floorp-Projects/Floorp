@@ -71,7 +71,6 @@ char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 nsFilePicker::nsFilePicker()
 {
   mSelectedType   = 1;
-  mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
 }
 
 //-------------------------------------------------------------------------
