@@ -137,10 +137,10 @@ nsDST::Insert(void* aKey, void* aValue)
   return previousValue;
 }
 
-// Helper function that returns one of the leaf nodes of the specified
+// Helper function that returns the left most leaf node of the specified
 // subtree
 nsDST::Node**
-nsDST::FindLeafNode(Node** aNode) const
+nsDST::GetLeftMostLeafNode(Node** aNode) const
 {
 keepLooking:
   // See if the node has none, one, or two child nodes
@@ -150,7 +150,7 @@ keepLooking:
     goto keepLooking;
 
   } else if ((*aNode)->mRight) {
-    // Walk down the right branch
+    // No left branch, so walk down the right branch
     aNode = &(*aNode)->mRight;
     goto keepLooking;
 
@@ -182,8 +182,8 @@ nsDST::Remove(void* aKey)
     } else {
       // We can't just move the left or right subtree up one level, because
       // then we would have to re-sort the tree. Instead replace the node
-      // with any leaf node below it in the tree
-      Node** leaf = FindLeafNode(node);
+      // with the left most leaf node
+      Node** leaf = GetLeftMostLeafNode(node);
 
       // Copy over both the left and right subtree pointers
       if ((*node)->mLeft != (*leaf)) {

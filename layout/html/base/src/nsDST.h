@@ -85,7 +85,7 @@ private:
 private:
   // Helper functions
   Node** SearchTree(void* aKey) const;
-  Node** FindLeafNode(Node** aNode) const;
+  Node** GetLeftMostLeafNode(Node** aNode) const;
   void   DestroyNode(Node* aNode);
 
 #ifdef NS_DEBUG
