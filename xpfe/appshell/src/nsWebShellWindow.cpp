@@ -520,14 +520,19 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         void* data;
         aEvent->widget->GetClientData(data);
         if (data) {
+          nsCOMPtr<nsIDOMWindow> domWindow;
           nsCOMPtr<nsIWebShell> contentShell;
           ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
           if (contentShell) {
-            nsCOMPtr<nsIDOMWindow> domWindow;
+            
             if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
                 ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
               domWindow->Focus();
             }
+          }
+          else if (webShell && NS_SUCCEEDED(((nsWebShellWindow *)data)->
+                ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow)))) {
+              domWindow->Focus();
           }
         }
       }
