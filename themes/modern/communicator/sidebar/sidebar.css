@@ -124,11 +124,11 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
    
 .sidebar-tab-leftcap {
   background: url("chrome://communicator/skin/sidebar/sbtab-lft.gif") no-repeat top;
-  width: 16px;
+  width: 2px;
 }
 
 .sidebar-tab-text {
-  margin: 10px 0px 0px 3px;
+  margin: 10px 0px 0px 6px;
 }
   
 .sidebar-tab-mid {
@@ -137,7 +137,7 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
 
 .sidebar-tab-mid1 {
   background: url("chrome://communicator/skin/sidebar/sbtab-mid1.gif") no-repeat top;
-  width: 81px;
+  width: 95px;
 }
 
 .sidebar-tab-mid2 {
