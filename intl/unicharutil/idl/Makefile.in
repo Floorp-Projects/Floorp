@@ -24,7 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= unicharutil
 
-XPIDLSRCS	= nsIEntityConverter.idl
+XPIDLSRCS	= \
+		nsIEntityConverter.idl \
+		nsISaveAsCharset.idl \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
