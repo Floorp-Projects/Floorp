@@ -50,7 +50,8 @@
         buttonlabelaccept="&closeLog.label;"
         buttonaccesskeyaccept="&closeLog.accesskey;"
         ondialogaccept="window.close()"
-        persist="screenX screenY width height">
+        persist="screenX screenY width height"
+        style="width: 40em; height: 25em;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/viewLog.js"/>
 
