@@ -58,7 +58,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMWindowInternal.h"
@@ -117,7 +116,6 @@ class GlobalWindowImpl : public nsIScriptGlobalObject,
                          public nsIDOMJSWindow,
                          public nsIScriptObjectPrincipal,
                          public nsIDOMEventReceiver,
-                         public nsIDOM3EventTarget,
                          public nsPIDOMWindow,
                          public nsIDOMViewCSS,
                          public nsSupportsWeakReference,
@@ -157,10 +155,13 @@ public:
   NS_DECL_NSIDOMJSWINDOW
 
   // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
-
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener* aListener,
+                              PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
 
   // nsIDOMEventReceiver
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
@@ -168,8 +169,8 @@ public:
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                       const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsPIDOMWindow
   NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult);

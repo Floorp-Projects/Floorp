@@ -309,7 +309,6 @@ NS_INTERFACE_MAP_BEGIN(GlobalWindowImpl)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
@@ -699,13 +698,12 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     else {
       aDOMEvent = &domEvent;
     }
-    aEvent->flags |= aFlags;
+    aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
-    aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
 
     // Execute bindingdetached handlers before we tear ourselves
     // down.
-    if (aEvent->message == NS_PAGE_UNLOAD && mDocument && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+    if (aEvent->message == NS_PAGE_UNLOAD && mDocument) {
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
       nsCOMPtr<nsIBindingManager> bindingManager;
       doc->GetBindingManager(getter_AddRefs(bindingManager));
@@ -724,19 +722,20 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Capturing stage
-  if ((NS_EVENT_FLAG_CAPTURE & aFlags) && mChromeEventHandler) {
+  if ((NS_EVENT_FLAG_BUBBLE != aFlags) && mChromeEventHandler) {
     // Check chrome document capture here.
     // XXX The chrome can not handle this, see bug 51211
     if (aEvent->message != NS_IMAGE_LOAD) {
       mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent, aDOMEvent,
-                                             aFlags & NS_EVENT_CAPTURE_MASK,
+                                             NS_EVENT_FLAG_CAPTURE,
                                              aEventStatus);
     }
   }
 
   // Local handling stage
-  if (mListenerManager &&
-      !(NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags && NS_EVENT_FLAG_BUBBLE & aFlags && !(NS_EVENT_FLAG_INIT & aFlags))) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+      !((NS_EVENT_FLAG_BUBBLE & aFlags) &&
+        (NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags))) {
     aEvent->flags |= aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this,
                                   aFlags, aEventStatus);
@@ -747,7 +746,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     mIsDocumentLoaded = PR_TRUE;
 
   // Bubbling stage
-  if ((NS_EVENT_FLAG_BUBBLE & aFlags) && mChromeEventHandler) {
+  if ((NS_EVENT_FLAG_CAPTURE != aFlags) && mChromeEventHandler) {
     // Bubble to a chrome document if it exists
     // XXX Need a way to know if an event should really bubble or not.
     // For now filter out load and unload, since they cause problems.
@@ -757,7 +756,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
         (aEvent->message != NS_FOCUS_CONTENT) &&
         (aEvent->message != NS_BLUR_CONTENT)) {
       mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent,
-                                             aDOMEvent, aFlags & NS_EVENT_BUBBLE_MASK,
+                                             aDOMEvent, NS_EVENT_FLAG_BUBBLE,
                                              aEventStatus);
     }
   }
@@ -3535,7 +3534,15 @@ GlobalWindowImpl::AddEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    PRBool aUseCapture)
 {
-  return AddGroupedEventListener(aType, aListener, aUseCapture, nsnull);
+  nsCOMPtr<nsIEventListenerManager> manager;
+
+  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3543,7 +3550,13 @@ GlobalWindowImpl::RemoveEventListener(const nsAString& aType,
                                       nsIDOMEventListener* aListener,
                                       PRBool aUseCapture)
 {
-  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
+  if (mListenerManager) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -3572,50 +3585,6 @@ GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
     }
   }
   return NS_ERROR_FAILURE;
-}
-
-//*****************************************************************************
-// GlobalWindowImpl::nsIDOM3EventTarget
-//*****************************************************************************
-
-NS_IMETHODIMP
-GlobalWindowImpl::AddGroupedEventListener(const nsAString & aType, nsIDOMEventListener *aListener, 
-                                          PRBool aUseCapture, nsIDOMEventGroup *aEvtGrp)
-{
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::RemoveGroupedEventListener(const nsAString & aType, nsIDOMEventListener *aListener, 
-                                             PRBool aUseCapture, nsIDOMEventGroup *aEvtGrp)
-{
-  if (mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags, aEvtGrp);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::CanTrigger(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::IsRegisteredHere(const nsAString & type, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //*****************************************************************************
@@ -3662,21 +3631,18 @@ GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aResult)
   return CallQueryInterface(mListenerManager, aResult);
 }
 
+//XXX I need another way around the circular link problem.
+NS_IMETHODIMP
+GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
+{
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
 {
   PRBool noDefault;
   return DispatchEvent(aEvent, &noDefault);
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
-{
-  nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager))) && manager) {
-    return manager->GetSystemEventGroupLM(aGroup);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************

@@ -47,7 +47,6 @@ class nsIPresContext;
 class nsIDOMEventListener;
 class nsIScriptContext;
 class nsIDOMEventTarget;
-class nsIDOMEventGroup;
 
 /*
  * Event listener manager interface.
@@ -82,8 +81,7 @@ public:
   */
   NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
                                     const nsAString& type,
-                                    PRInt32 flags,
-                                    nsIDOMEventGroup* aEvtGrp) = 0;
+                                    PRInt32 flags) = 0;
 
   /**
   * Removes events listeners of all types.
@@ -91,8 +89,7 @@ public:
   */
   NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                        const nsAString& type,
-                                       PRInt32 flags,
-                                       nsIDOMEventGroup* aEvtGrp) = 0;
+                                       PRInt32 flags) = 0;
 
   /**
   * Creates a script event listener for the given script object with
@@ -176,13 +173,6 @@ public:
   * Allows us to quickly determine if we have mutation listeners registered.
   */
   NS_IMETHOD HasMutationListeners(PRBool* aListener) = 0;
-
-  /**
-  * Gets the EventGroup registered for use by system event listeners.
-  * This is a special EventGroup which is used in the secondary DOM Event
-  * Loop pass for evaluation of system event listeners.
-  */
-  NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup) = 0;
 };
 
 extern nsresult

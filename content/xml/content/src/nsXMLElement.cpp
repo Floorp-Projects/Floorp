@@ -446,7 +446,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                            aEventStatus);
 
   if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {

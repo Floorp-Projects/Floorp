@@ -51,7 +51,6 @@
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOM3EventTarget.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
@@ -61,7 +60,6 @@
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIDOM3DocumentEvent.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIWordBreakerFactory.h"
@@ -254,7 +252,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMXMLDocument, // inherits nsIDOMDocument 
                    public nsIDOMNSDocument,
                    public nsIDOMDocumentEvent,
-                   public nsIDOM3DocumentEvent,
                    public nsIDOMDocumentStyle,
                    public nsIDOMDocumentView,
                    public nsIDOMDocumentRange,
@@ -263,7 +260,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOM3Node,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
-                   public nsIDOM3EventTarget,
                    public nsIScriptObjectPrincipal
 {
 public:
@@ -546,9 +542,6 @@ public:
   // nsIDOMDocumentEvent
   NS_DECL_NSIDOMDOCUMENTEVENT
 
-  // nsIDOM3DocumentEvent
-  NS_DECL_NSIDOM3DOCUMENTEVENT
-
   // nsIDOMDocumentStyle
   NS_DECL_NSIDOMDOCUMENTSTYLE
 
@@ -571,13 +564,16 @@ public:
                                       const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
-  // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
+  // nsIDOMEventTarget interface
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener* aListener, 
+                              PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener, 
+                                 PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
 
-  // nsIDOM3EventTarget
-  NS_DECL_NSIDOM3EVENTTARGET
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
