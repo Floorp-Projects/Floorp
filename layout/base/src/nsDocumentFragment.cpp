@@ -140,6 +140,11 @@ public:
       aResult = nsnull;
       return NS_OK;
     }
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const
+    {
+      aResult = nsnull;
+      return NS_OK;
+    }
   NS_IMETHOD CanContainChildren(PRBool& aResult) const
     { return mInner.CanContainChildren(aResult); }
   NS_IMETHOD ChildCount(PRInt32& aResult) const

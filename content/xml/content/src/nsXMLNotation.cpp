@@ -216,6 +216,13 @@ nsXMLNotation::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXMLNotation::GetNodeInfo(nsINodeInfo*& aResult) const
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXMLNotation::GetNodeName(nsString& aNodeName)
 {
