@@ -80,6 +80,10 @@ public:
 
   virtual void SetColIndex (int aColIndex);
 
+  virtual nscoord GetPriorAvailWidth();
+  
+  virtual void SetPriorAvailWidth(nscoord aPriorAvailWidth);
+
   virtual ~nsTableCellFrame();
 
   // Get the TableFrame that contains this cell frame
@@ -121,6 +125,9 @@ protected:
   /** the starting column for this cell */
   int          mColIndex;
 
+  /** the available width we were given in our previous reflow */
+  nscoord      mPriorAvailWidth;
+
   nsCellLayoutData *mCellLayoutData;
 
 };
@@ -155,5 +162,11 @@ inline nsCellLayoutData * nsTableCellFrame::GetCellLayoutData()
   
 inline void nsTableCellFrame::SetCellLayoutData(nsCellLayoutData *aData)
 { mCellLayoutData = aData;}
+
+inline nscoord nsTableCellFrame::GetPriorAvailWidth()
+{ return mPriorAvailWidth;}
+
+inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
+{ mPriorAvailWidth = aPriorAvailWidth;}
 
 #endif

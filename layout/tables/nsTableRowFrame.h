@@ -148,7 +148,7 @@ protected:
                             nsIFrame*       aKidFrame,
                             const nsRect&   aKidRect,
                             nsSize*         aMaxElementSize,
-                            nsSize&         aKidMaxElementSize);
+                            nsSize*         aKidMaxElementSize);
 
   nsresult      IncrementalReflow(nsIPresContext*      aPresContext,
                                   RowReflowState&      aState,

@@ -59,6 +59,7 @@ nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
   mRowSpan=1;
   mColSpan=1;
   mColIndex=0;
+  mPriorAvailWidth=0;
 }
 
 nsTableCellFrame::~nsTableCellFrame()
@@ -284,6 +285,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
            availSize.width, availSize.height);
   nsReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
+  SetPriorAvailWidth(aReflowState.maxSize.width);
   nsReflowState kidReflowState(mFirstChild, aReflowState, availSize);
   mFirstChild->WillReflow(*aPresContext);
   mFirstChild->MoveTo(leftInset, topInset);
@@ -322,7 +324,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   // first, compute the height
   // the height can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
-  if (NS_UNCONSTRAINEDSIZE!=cellHeight)
+  if (NS_UNCONSTRAINEDSIZE!=aReflowState.maxSize.height)
   {
     cellHeight += topInset + bottomInset;
   }
@@ -331,8 +333,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
              this, cellHeight, kidSize.height, topInset, bottomInset);
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;  // at this point, we've factored in the cell's style attributes
-  if (NS_UNCONSTRAINEDSIZE!=cellWidth)
+  // if we're really in a constrained situation, factor in insets
+  if (NS_UNCONSTRAINEDSIZE!=aReflowState.maxSize.width)
+  {
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE!=cellWidth, "child says it has unconstrained width in a constrained case");
     cellWidth += leftInset + rightInset;
+  }
+
   // Nav4 hack for 0 width cells.  If the cell has any content, it must have a desired width of at least 1
   /*
   if (0==cellWidth)
@@ -363,9 +370,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   if (nsnull!=aDesiredSize.maxElementSize)
   {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->height)
+    if (NS_UNCONSTRAINEDSIZE!=aReflowState.maxSize.height)
       aDesiredSize.maxElementSize->height += topInset + bottomInset;
-    if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->width)
+    if (NS_UNCONSTRAINEDSIZE!=aReflowState.maxSize.width)
       aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
   

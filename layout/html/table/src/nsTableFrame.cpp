@@ -38,7 +38,6 @@
 #include "nsStyleConsts.h"
 #include "nsCellLayoutData.h"
 #include "nsVoidArray.h"
-#include "prinrval.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
@@ -48,7 +47,6 @@
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
 static PRBool gsDebugCLD = PR_FALSE;
-static PRBool gsTiming = PR_FALSE;
 static PRBool gsDebugNT = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
@@ -56,7 +54,6 @@ static PRBool gsDebugNT = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugCLD = PR_FALSE;
-static const PRBool gsTiming = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
@@ -1085,11 +1082,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  PRIntervalTime startTime;
-  if (gsTiming) {
-    startTime = PR_IntervalNow();
-  }
-
   if (eReflowReason_Incremental == aReflowState.reason) {
     nsIFrame* target;
     aReflowState.reflowCommand->GetTarget(target);
@@ -1141,12 +1133,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     nsReflowState    reflowState(aReflowState);
     reflowState.maxSize.width = mRect.width;
     aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, 0, 0);
-
-    if (gsTiming) {
-      PRIntervalTime endTime = PR_IntervalNow();
-      printf("Table reflow took %ld ticks for frame %d\n",
-             endTime-startTime, this);/* XXX need to use LL_* macros! */
-    }
 
     mPass = kPASS_UNDEFINED;
   }
@@ -2921,40 +2907,6 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
 /* helper method for getting the width of the table's containing block */
 nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
 {
-//STEVES_WAY is out of synch, because it doesn't handle nested table case.
-#ifdef STEVES_WAY // from BasicTableLayoutStrategy::TableIsAutoWidth()
-  // get the parent's width (available only from parent frames that claim they can provide it)
-  // note that we start with our parent's parent (the outer table frame's parent)
-  nscoord parentWidth = 0;
-  NS_ASSERTION(nsnull!=aReflowState.parentReflowState, "bad outer table reflow state.");
-  NS_ASSERTION(nsnull!=aReflowState.parentReflowState->parentReflowState, "bad table parent reflow state.");
-  if ((nsnull!=aReflowState.parentReflowState) &&
-      (nsnull!=aReflowState.parentReflowState->parentReflowState))
-  {
-    const nsReflowState *parentReflowState = aReflowState.parentReflowState->parentReflowState;
-    nsIFrame *parentFrame=parentReflowState->frame;
-    NS_ASSERTION(nsnull!=parentFrame, "bad parent frame in reflow state struct.");
-    while(nsnull!=parentFrame)
-    {
-      PRBool isPercentageBase=PR_FALSE;
-      parentFrame->IsPercentageBase(isPercentageBase);
-      if (PR_TRUE==isPercentageBase)
-      { // found the ancestor who claims to be the container to base my percentage width on
-        parentWidth = parentReflowState->maxSize.width;
-        if (PR_TRUE==gsDebug) printf("  ** width for parent frame %p = %d\n", parentFrame, parentWidth);
-        break;
-      }
-      parentReflowState = parentReflowState->parentReflowState; // get next ancestor
-      if (nsnull!=parentReflowState)
-        parentFrame = parentReflowState->frame;
-      else
-        parentFrame = nsnull; // terminates loop.  
-      // TODO: do we need a backstop in case there are no IsPercentageBase==true frames?
-    }
-  }
-
-#else
-
   nscoord parentWidth = aReflowState.maxSize.width;
 
   // Walk up the reflow state chain until we find a block
@@ -3008,7 +2960,9 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
       const nsStyleSpacing* spacing;
       nsIFrame* cell = nsnull;
       rs->frame->QueryInterface(kTableCellFrameCID, (void**) &cell);
-      if (nsnull != cell) {
+      // if the cell has a specified width, use it
+      if (nsnull != cell) 
+      {
         // Compute and subtract out the insets (sum of border and padding) for the table
         cell->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
         if (eStyleUnit_Coord == tablePosition->mWidth.GetUnit())
@@ -3116,7 +3070,6 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
     rs = rs->parentReflowState;
   }
 
-#endif
   return parentWidth;
 }
 
