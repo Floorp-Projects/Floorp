@@ -211,12 +211,12 @@ interface oeIICal : nsISupports
 	oeIICalEvent fetchEvent( in string id );
 //	nsISimpleEnumerator searchBySQL( in string sqlstr );
 	nsISimpleEnumerator getAllEvents();
-	nsISimpleEnumerator getEventsForMonth(in PRTime date, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getEventsForWeek(in PRTime date, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getEventsForDay(in PRTime date, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getEventsForRange(in PRTime begindate, in PRTime enddate, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getNextNEvents(in PRTime begindate, in long count, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getFirstEventsForRange(in PRTime begindate, in PRTime enddate );
+	nsISimpleEnumerator getEventsForMonth( in PRTime date );
+	nsISimpleEnumerator getEventsForWeek( in PRTime date );
+	nsISimpleEnumerator getEventsForDay( in PRTime date );
+	nsISimpleEnumerator getEventsForRange( in PRTime begindate, in PRTime enddate );
+	nsISimpleEnumerator getNextNEvents( in PRTime begindate, in long count );
+	nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
 
 	string addTodo( in oeIICalTodo icaltodo );
 	string modifyTodo( in oeIICalTodo icaltodo );
@@ -246,12 +246,12 @@ interface oeIICalContainer : nsISupports
 	void deleteEvent( in string id );
 	oeIICalEvent fetchEvent( in string id );
 	nsISimpleEnumerator getAllEvents();
-	nsISimpleEnumerator getEventsForMonth(in PRTime date, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getEventsForWeek(in PRTime date, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getEventsForDay(in PRTime date, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getEventsForRange(in PRTime begindate, in PRTime enddate, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getNextNEvents(in PRTime begindate, in long count, out nsISimpleEnumerator datelist );
-	nsISimpleEnumerator getFirstEventsForRange(in PRTime begindate, in PRTime enddate );
+	nsISimpleEnumerator getEventsForMonth( in PRTime date );
+	nsISimpleEnumerator getEventsForWeek( in PRTime date );
+	nsISimpleEnumerator getEventsForDay( in PRTime date  );
+	nsISimpleEnumerator getEventsForRange( in PRTime begindate, in PRTime enddate );
+	nsISimpleEnumerator getNextNEvents( in PRTime begindate, in long count );
+	nsISimpleEnumerator getFirstEventsForRange( in PRTime begindate, in PRTime enddate );
 
 	string addTodo( in oeIICalTodo icaltodo, in string server );
 	string modifyTodo( in oeIICalTodo icaltodo );

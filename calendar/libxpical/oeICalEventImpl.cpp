@@ -1584,6 +1584,53 @@ NS_IMETHODIMP oeICalEventImpl::GetDuration(PRBool *is_negative, PRUint16 *weeks,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void oeICalEventImpl::ChopAndAddEventToEnum( struct icaltimetype startdate, nsISimpleEnumerator **eventlist, 
+                                               bool isallday, bool isbeginning ) {
+
+    nsCOMPtr<oeEventEnumerator> eventEnum;
+    eventEnum = (oeEventEnumerator *)*eventlist;
+
+    oeIICalEventDisplay* eventDisplay;
+    nsresult rv = NS_NewICalEventDisplay( this, &eventDisplay );
+    if( NS_FAILED( rv ) ) {
+    #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::ChopAndAddEventToEnum() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+    #endif
+        return;
+    }
+    eventEnum->AddEvent( eventDisplay );
+
+    PRTime startdateinms = ConvertToPrtime( startdate );
+    eventDisplay->SetDisplayDate( startdateinms );
+
+    struct icaltimetype endofday = startdate;
+    endofday.hour = 23; endofday.minute = 59; endofday.second = 59;
+
+    PRTime enddateinms;
+    if( isallday ) {
+        enddateinms = ConvertToPrtime( endofday );
+        eventDisplay->SetDisplayEndDate( enddateinms );
+    } else {
+        if( isbeginning ) {
+            struct icaldurationtype eventlength = icaltime_subtract( m_end->m_datetime, m_start->m_datetime );
+            struct icaltimetype eventenddate = icaltime_add( startdate, eventlength );
+
+            if( icaltime_compare( endofday, eventenddate ) < 0 ) {
+                enddateinms = ConvertToPrtime( endofday );
+            } else {
+                enddateinms = ConvertToPrtime( eventenddate );
+            }
+        } else {
+            struct icaltimetype eventenddate = endofday;
+            eventenddate.hour = m_end->m_datetime.hour;
+            eventenddate.minute = m_end->m_datetime.minute;
+            eventenddate.second = m_end->m_datetime.second;
+            enddateinms = ConvertToPrtime( eventenddate );
+        }
+        eventDisplay->SetDisplayEndDate( enddateinms );
+    }
+}
+
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 {
 #ifdef ICAL_DEBUG_ALL

@@ -116,6 +116,8 @@ public:
     icaltimetype GetPreviousOccurrence( icaltimetype beforethis );
     NS_IMETHODIMP SetParent( oeIICal *parent );
     icaltimetype CalculateEventTime( icaltimetype alarmtime );
+    void ChopAndAddEventToEnum( struct icaltimetype startdate, nsISimpleEnumerator **eventlist, 
+                                               bool isallday, bool isbeginning );
 private:
     char *m_id;
     char *m_syncid;

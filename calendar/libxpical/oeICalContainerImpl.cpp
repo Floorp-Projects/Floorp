@@ -418,7 +418,7 @@ oeICalContainerImpl::GetAllEvents(nsISimpleEnumerator **resultList )
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+oeICalContainerImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetEventsForMonth()\n" );
 #endif
@@ -427,13 +427,7 @@ oeICalContainerImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **dat
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
-    
-    if (!dateEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
 
     PRUint32 num;
     unsigned int i;
@@ -443,14 +437,14 @@ oeICalContainerImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **dat
     {
         oeIICal* calendar;
         m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
-        calendar->GetEventsForMonth( datems, (nsISimpleEnumerator **)&dateEnum, (nsISimpleEnumerator **)&eventEnum );
+        calendar->GetEventsForMonth( datems, (nsISimpleEnumerator **)&eventEnum );
     }
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+oeICalContainerImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetEventsForWeek()\n" );
 #endif
@@ -459,13 +453,7 @@ oeICalContainerImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **date
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
-    
-    if (!dateEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
 
     PRUint32 num;
     unsigned int i;
@@ -475,13 +463,13 @@ oeICalContainerImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **date
     {
         oeIICal* calendar;
         m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
-        calendar->GetEventsForWeek( datems, (nsISimpleEnumerator **)&dateEnum, (nsISimpleEnumerator **)&eventEnum );
+        calendar->GetEventsForWeek( datems, (nsISimpleEnumerator **)&eventEnum );
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+oeICalContainerImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetEventsForDay()\n" );
 #endif
@@ -491,13 +479,7 @@ oeICalContainerImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datel
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
-    
-    if (!dateEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
 
     PRUint32 num;
     unsigned int i;
@@ -507,13 +489,13 @@ oeICalContainerImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datel
     {
         oeIICal* calendar;
         m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
-        calendar->GetEventsForDay( datems, (nsISimpleEnumerator **)&dateEnum, (nsISimpleEnumerator **)&eventEnum );
+        calendar->GetEventsForDay( datems, (nsISimpleEnumerator **)&eventEnum );
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+oeICalContainerImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalContainerImpl::GetEventsForRange()\n" );
 #endif
@@ -523,13 +505,7 @@ oeICalContainerImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddat
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
-    
-    if (!dateEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
 
     PRUint32 num;
     unsigned int i;
@@ -539,7 +515,7 @@ oeICalContainerImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddat
     {
         oeIICal* calendar;
         m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
-        calendar->GetEventsForRange( checkdateinms, checkenddateinms, (nsISimpleEnumerator **)&dateEnum, (nsISimpleEnumerator **)&eventEnum );
+        calendar->GetEventsForRange( checkdateinms, checkenddateinms, (nsISimpleEnumerator **)&eventEnum );
     }
 
     return NS_OK;
@@ -596,7 +572,7 @@ icaltimetype oeICalContainerImpl::GetNextEvent( icaltimetype starting ) {
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetNextNEvents( %d )\n", maxcount );
 #endif
@@ -606,13 +582,7 @@ oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleE
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
-    
-    if (!dateEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
 
     struct icaltimetype checkdate = ConvertFromPrtime( datems );
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
@@ -633,13 +603,13 @@ oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleE
                 EventList *tmplistptr = calendar->GetEventList();
                 while( tmplistptr && count<maxcount ) {
                     if( tmplistptr->event ) {
+                        bool isbeginning,isallday;
                         oeIICalEvent* tmpevent = tmplistptr->event;
-                        icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull  );
+                        icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
+                        isallday = next.is_date;
                         next.is_date = false;
                         if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                            eventEnum->AddEvent( tmpevent );
-                            PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
-                            dateEnum->AddDate( nextdateinms );
+                            ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
                             count++;
                         }
                     }

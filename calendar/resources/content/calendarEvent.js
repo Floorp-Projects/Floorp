@@ -262,9 +262,7 @@ CalendarEventDataSource.prototype.getEventsForDay = function calEvent_getEventsF
 {
    var eventDisplays =  new Array();
 
-   var displayDates =  new Object();
-   
-   var eventList = this.gICalLib.getEventsForDay( date, displayDates );
+   var eventList = this.gICalLib.getEventsForDay( date );
    
    while( eventList.hasMoreElements() )
    {
@@ -302,21 +300,17 @@ CalendarEventDataSource.prototype.getEventsForWeek = function calEvent_getEvents
 {
    var eventDisplays =  new Array();
 
-   var displayDates =  new Object();
-   
-   var eventList = this.gICalLib.getEventsForWeek( date, displayDates );
+   var eventList = this.gICalLib.getEventsForWeek( date );
    
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
       
-      var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
-      
       var EventObject = new Object;
       
       EventObject.event = tmpevent.event;
       
-      EventObject.displayDate = displayDate;
+      EventObject.displayDate = new Date( tmpevent.displayDate );
       EventObject.displayEndDate = new Date( tmpevent.displayEndDate );
 
       eventDisplays[ eventDisplays.length ] = EventObject;
@@ -342,9 +336,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function calEvent_getEvent
 {
    var eventDisplays =  new Array();
 
-   var displayDates =  new Object();
-   
-   var eventList = this.gICalLib.getEventsForMonth( date, displayDates );
+   var eventList = this.gICalLib.getEventsForMonth( date );
    
    while( eventList.hasMoreElements() )
    {
@@ -372,9 +364,7 @@ CalendarEventDataSource.prototype.getNextEvents = function calEvent_getNextEvent
    
    var today = new Date();
    
-   var displayDates =  new Object();
-   
-   var eventList = this.gICalLib.getNextNEvents( today, EventsToGet, displayDates );
+   var eventList = this.gICalLib.getNextNEvents( today, EventsToGet );
    
    while( eventList.hasMoreElements() )
    {
