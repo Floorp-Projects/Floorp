@@ -1,4 +1,4 @@
-#!c:\perl\bin\perl
+#!c:\perl\bin\perl -w
 # 
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -40,6 +40,8 @@ if($#ARGV < 2)
                            ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install
        \n";
 }
+
+require "$ENV{MOZ_SRC}\\mozilla\\config\\zipcfunc.pl";
 
 $inDefaultVersion     = $ARGV[0];
 $inStagePath          = $ARGV[1];
@@ -110,15 +112,33 @@ MakeUninstall();
 MakeConfigFile();
 
 # Copy the setup files to the dist setup directory.
-system("copy config.ini                 $inDistPath");
-system("copy config.ini                 $inDistPath\\setup");
-system("copy $inDistPath\\setup.exe     $inDistPath\\setup");
-system("copy $inDistPath\\setuprsc.dll  $inDistPath\\setup");
+if(system("copy config.ini $inDistPath") != 0)
+{
+  die "\n Error: copy config.ini $inDistPath\n";
+}
+if(system("copy config.ini $inDistPath\\setup") != 0)
+{
+  die "\n Error: copy config.ini $inDistPath\\setup\n";
+}
+if(system("copy $inDistPath\\setup.exe $inDistPath\\setup") != 0)
+{
+  die "\n Error: copy $inDistPath\\setup.exe $inDistPath\\setup\n";
+}
+if(system("copy $inDistPath\\setuprsc.dll $inDistPath\\setup") != 0)
+{
+  die "\n Error: copy $inDistPath\\setuprsc.dll $inDistPath\\setup\n";
+}
 
 # build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
-system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
-system("$inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
+if(system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific") != 0)
+{
+  die "\n Error: copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific\n";
+}
+if(system("$inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*") != 0)
+{
+  die "\n Error: $inDistPath\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*\n";
+}
 
 print " done!\n\n";
 
@@ -164,15 +184,33 @@ sub MakeUninstall
   MakeUninstallIniFile();
 
   # Copy the uninstall files to the dist uninstall directory.
-  system("copy uninstall.ini              $inDistPath");
-  system("copy uninstall.ini              $inDistPath\\uninstall");
-  system("copy $inDistPath\\uninstall.exe $inDistPath\\uninstall");
+  if(system("copy uninstall.ini $inDistPath") != 0)
+  {
+    die "\n Error: copy uninstall.ini $inDistPath\n";
+  }
+  if(system("copy uninstall.ini $inDistPath\\uninstall") != 0)
+  {
+    die "\n Error: copy uninstall.ini $inDistPath\\uninstall\n";
+  }
+  if(system("copy $inDistPath\\uninstall.exe $inDistPath\\uninstall") != 0)
+  {
+    die "\n Error: copy $inDistPath\\uninstall.exe $inDistPath\\uninstall\n";
+  }
 
   # build the self-extracting .exe (uninstaller) file.
   print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
-  system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
-  system("$inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
-  system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi");
+  if(system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific") != 0)
+  {
+    die "\n Error: copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific\n";
+  }
+  if(system("$inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*") != 0)
+  {
+    die "\n Error: $inDistPath\\nsztool.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*\n";
+  }
+  if(system("copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi") != 0)
+  {
+    die "\n Error: copy $inDistPath\\$seuFileNameSpecific $inDistPath\\xpi\n";
+  }
 }
 
 sub MakeUninstallIniFile
@@ -198,6 +236,10 @@ sub MakeJsFile
 sub MakeXpiFile
 {
   my($componentName) = @_;
+
+  # Make chrome archive files
+  # We don't care if it fails because not all components have chrome archives.
+  &ZipChrome("win32", "$inStagePath\\$componentName\\bin\\chrome", "$inStagePath\\$componentName\\bin\\chrome");
 
   # Make .js files
   MakeJsFile($componentName);

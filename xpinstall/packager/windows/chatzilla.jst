@@ -7,11 +7,11 @@ addFile("Chatzilla service",
         "");
 
 addFile("Chatzilla Chrome",
-        "bin/chrome/packages/chatzilla.jar", // jar source folder 
-        getFolder("Chrome","packages"),      // target folder
+        "bin/chrome/chatzilla.pkg", // jar source folder 
+        getFolder("Chrome"),      // target folder
         "");                                 // target subdir 
 
-registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","packages/chatzilla.jar"));
+registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","chatzilla.pkg"));
 
 err = getLastError();
 if (err==SUCCESS)
