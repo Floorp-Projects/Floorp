@@ -1502,6 +1502,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
           }
           result = mDomSelections[index]->Collapse(weakNodeUsed,offsetused);
           mDomSelections[index]->ScrollIntoView();
+          mHint = HINTRIGHT;
           return NS_OK;
          } break;
       case nsIDOMKeyEvent::DOM_VK_RIGHT : 
@@ -1516,6 +1517,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
           }
           result = mDomSelections[index]->Collapse(weakNodeUsed,offsetused);
           mDomSelections[index]->ScrollIntoView();
+          mHint = HINTLEFT;
           return NS_OK;
          } break;
       
