@@ -64,7 +64,6 @@ function SetupHTMLEditorCommands()
   commandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
   commandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
   commandManager.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
-  commandManager.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
   commandManager.registerCommand("cmd_removeNamedAnchors", nsRemoveNamedAnchorsCommand);
   commandManager.registerCommand("cmd_editLink",        nsEditLinkCommand);
   
@@ -3140,26 +3139,6 @@ var nsColorPropertiesCommand =
     window.content.focus();
   }
 };
-
-//-----------------------------------------------------------------------------------
-var nsRemoveLinksCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    // We could see if there's any link in selection, but it doesn't seem worth the work!
-    return (IsDocumentEditable() && IsEditingRenderedHTML());
-  },
-
-  getCommandStateParams: function(aCommand, aParams, aRefCon) {},
-  doCommandParams: function(aCommand, aParams, aRefCon) {},
-
-  doCommand: function(aCommand)
-  {
-    EditorRemoveTextProperty("href", "");
-    window.content.focus();
-  }
-};
-
 
 //-----------------------------------------------------------------------------------
 var nsRemoveNamedAnchorsCommand =
