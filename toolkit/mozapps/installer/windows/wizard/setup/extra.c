@@ -3119,7 +3119,11 @@ void GetXpinstallPath(char *aPath, int aPathBufSize)
   {
     MozCopyStr(siCFXpcomFile.szDestination, aPath, aPathBufSize);
     AppendBackSlash(aPath, aPathBufSize);
+#ifdef MOZ_THUNDERBIRD
+    lstrcat(aPath, "thunderbird");
+#else
     lstrcat(aPath, "bin");
+#endif
   }
   else
     MozCopyStr(gGre.homePath, aPath, aPathBufSize);
