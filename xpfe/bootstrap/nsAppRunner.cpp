@@ -1468,14 +1468,16 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   PRBool windowOpened = PR_FALSE;
   PRBool defaultStartup;
-#if defined(XP_MAC)
-  // if we do no command line args on the mac, it says argc is 0, and not 1
-  defaultStartup = ((argc == 1) || (argc == 0));
-#elif defined(XP_MACOSX)
-  defaultStartup = (argc == 1);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  // On Mac, nsCommandLineServiceMac may have added synthetic
+  // args. Check this adjusted value instead of the raw value.
+  PRInt32 processedArgc;
+  cmdLineArgs->GetArgc(&processedArgc);
+  defaultStartup = (processedArgc == 1);
+#if defined(XP_MACOSX)
   // On OSX, we get passed two args if double-clicked from the Finder.
   // The second is our PSN. Check for this and consider it to be default.
-  if (argc == 2) {
+  if (argc == 2 && processedArgc == 2) {
     ProcessSerialNumber ourPSN;
     if (::MacGetCurrentProcess(&ourPSN) == noErr) {
       char argBuf[64];
@@ -1484,6 +1486,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
         defaultStartup = PR_TRUE;
     }
   }
+#endif /* XP_MACOSX */
 #else
   defaultStartup = (argc == 1);
 #endif

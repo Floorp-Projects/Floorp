@@ -111,8 +111,9 @@ static PRInt32 ReadLine(FILE* inStream, char* buf, PRInt32 bufSize)
 
 //----------------------------------------------------------------------------------------
 nsMacCommandLine::nsMacCommandLine()
-: mArgsBuffer(NULL)
-, mArgs(NULL)
+: mArgs(NULL)
+, mArgsAllocated(0)
+, mArgsUsed(0)
 , mStartedUp(PR_FALSE)
 //----------------------------------------------------------------------------------------
 {
@@ -124,8 +125,11 @@ nsMacCommandLine::~nsMacCommandLine()
 //----------------------------------------------------------------------------------------
 {
   ShutdownAEHandlerClasses();
-  nsMemory::Free(mArgsBuffer);
-  mArgsBuffer = NULL;
+  if (mArgs) {
+    for (PRUint32 i = 0; i < mArgsUsed; i++)
+      free(mArgs[i]);
+    free(mArgs);
+  }
 }
 
 
@@ -133,22 +137,22 @@ nsMacCommandLine::~nsMacCommandLine()
 nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
 //----------------------------------------------------------------------------------------
 {
-  typedef char* charP;
-  mArgs = new charP[kMaxTokens];
+  mArgs = static_cast<char **>(malloc(kArgsGrowSize * sizeof(char *)));
+  if (!mArgs)
+    return NS_ERROR_FAILURE;
   mArgs[0] = nsnull;
+  mArgsAllocated = kArgsGrowSize;
+  mArgsUsed = 0;
   
 #if defined(XP_MACOSX)
   // Here, we may actually get useful args.
-  // Copy them before we reset argc & argv.
+  // Copy them first to mArgv.
   for (int arg = 0; arg < argc; arg++)
     AddToCommandLine(argv[arg]);
 #else
   // init the args buffer with the program name
-  mTempArgsString.Assign("mozilla");
+  AddToCommandLine("mozilla");
 #endif
-
-  argc = 0;
-  argv = mArgs;
 
   // Set up AppleEvent handling.
   OSErr err = CreateAEHandlerClasses(false);
@@ -179,42 +183,10 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   
   // we've started up now
   mStartedUp = PR_TRUE;
-
-  // Care! We have to ensure that the addresses we pass out in
-  // argv continue to point to valid memory. Because we can't guarantee
-  // anything about the way that nsCString works, we make a copy
-  // of the buffer, which is never freed until the command line handler
-  // goes way (and, since it's static, that is at library unload time).
   
-  mArgsBuffer = ToNewCString(mTempArgsString);
-  mTempArgsString.Truncate();   // it's job is done
+  argc = mArgsUsed;
+  argv = mArgs;
   
-  // Parse the buffer.
-  char* strtokFirstParam = mArgsBuffer;
-  while (argc < kMaxTokens)
-  {
-    // Get the next token.  Initialize strtok by passing the string the
-    // first time.  Subsequently, pass nil.
-    char* nextToken = strtok(strtokFirstParam, " \t\n\r");
-    mArgs[argc] = nextToken;
-    if (!nextToken)
-      break;
-    // Loop
-    argc++;
-    strtokFirstParam = nsnull;
-  }
-
-  // Release the unneeded memory.
-  if (argc < kMaxTokens)
-  {
-    charP* oldArgs = mArgs;
-    int arraySize = 1 + argc;
-    mArgs = new charP[arraySize];
-    memcpy(mArgs, oldArgs, arraySize * sizeof(charP));
-    delete [] oldArgs;
-    argv = mArgs;
-  }
-
   return NS_OK;
 }
 
@@ -222,9 +194,18 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
 nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 //----------------------------------------------------------------------------------------
 {
-  if (*inArgText != ' ')
-    mTempArgsString.Append(" ");
-  mTempArgsString.Append(inArgText);
+  if (mArgsUsed >= mArgsAllocated) {
+    // realloc does not free the given pointer if allocation fails.
+    char **temp = static_cast<char **>(realloc(mArgs, (mArgsAllocated + kArgsGrowSize) * sizeof(char *)));
+    if (!temp)
+      return NS_ERROR_OUT_OF_MEMORY;
+    mArgs = temp;
+    mArgsAllocated += kArgsGrowSize;
+  }
+  char *temp2 = strdup(inArgText);
+  if (!temp2)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mArgs[mArgsUsed++] = temp2;
   return NS_OK;
 }
 
@@ -243,7 +224,6 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FS
   rv = NS_GetURLSpecFromFile(inFile, specBuf);
   if (NS_FAILED(rv))
     return rv;
-  mTempArgsString.Append(" ");
   AddToCommandLine(inOptionString);  
   AddToCommandLine(specBuf.get());
   return NS_OK;
