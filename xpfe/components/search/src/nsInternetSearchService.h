@@ -108,7 +108,7 @@ protected:
 	nsCOMPtr<nsIRDFResource>		busyResource;
 
 
-friend	int		searchModePrefCallback(const char *pref, void *aClosure);
+friend	int	PR_CALLBACK	searchModePrefCallback(const char *pref, void *aClosure);
 
 	// helper methods
 	nsresult	GetSearchEngineToPing(nsIRDFResource **theResource, nsCString &updateURL);
