@@ -14,7 +14,11 @@
 #include "nsSoftwareUpdate.h"
 #include "nsXPITriggerInfo.h"
 
-
+#define CHROMETYPE_SAFESKIN      1
+#define CHROMETYPE_LOCALE        2
+#define CHROMETYPE_SAFEMAX       CHROMETYPE_LOCALE
+#define CHROMETYPE_SCRIPTSKIN    3
+#define CHROMETYPE_PACKAGE       4
 
 
 class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTriggerGlobal
@@ -32,6 +36,7 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
 
         NS_IMETHOD    UpdateEnabled(PRBool* aReturn);
         NS_IMETHOD    Install(nsXPITriggerInfo *aInfo, PRBool* aReturn);
+        NS_IMETHOD    InstallChrome(PRUint32 aType, nsXPITriggerItem* aItem, PRBool* aReturn);
         NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn);
         NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn);
         NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn);

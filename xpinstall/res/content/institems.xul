@@ -19,6 +19,7 @@ Rights Reserved.
 
 Contributor(s): 
    Don Bragg (dbragg@netscape.com)
+   Dan Veditz <dveditz@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
@@ -30,7 +31,7 @@ Contributor(s):
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()"
-        title="&items.label;"
+        title="&dialog.title;"
         class = "dialog"
         align = "vertical"
 > 

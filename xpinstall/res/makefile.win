@@ -24,13 +24,3 @@ DEPTH=..\..
 DIRS = locale content skin
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) progress.xul $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) progress.css $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) progress.html $(DIST)\bin\res\xpinstall
-
-clobber::
-	rm -f $(DIST)\res\xpinstall\progress.xul
-    rm -f $(DIST)\res\xpinstall\progress.css
-    rm -f $(DIST)\res\xpinstall\progress.html

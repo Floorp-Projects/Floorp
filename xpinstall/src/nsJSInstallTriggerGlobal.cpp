@@ -31,6 +31,7 @@
 #include "nsString.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
+#include "nsInstallTrigger.h"
 #include "nsXPITriggerInfo.h"
 
 #include "nsRepository.h"
@@ -235,6 +236,80 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   JS_ReportError(cx, "Incorrect arguments to InstallTrigger.Install()");
   return JS_FALSE;
 }
+
+
+//
+// Native method InstallChrome
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
+  PRBool       nativeRet;
+  PRUint32     chromeType;
+  nsAutoString baseURL;
+  nsAutoString sourceURL;
+  nsAutoString name;
+
+  *rval = JSVAL_FALSE;
+
+  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) ) {
+    return JS_FALSE;
+  }
+
+
+  // make sure XPInstall is enabled, return if not
+  PRBool enabled = PR_FALSE;
+  nativeThis->UpdateEnabled(&enabled);
+  if (!enabled)
+      return JS_TRUE;
+
+
+  // get window.location to construct relative URLs
+  JSObject* global = JS_GetGlobalObject(cx);
+  if (global)
+  {
+    jsval v;
+    if (JS_GetProperty(cx,global,"location",&v))
+    {
+      ConvertJSValToStr( baseURL, cx, v );
+      PRInt32 lastslash = baseURL.RFindChar('/');
+      if (lastslash != kNotFound)
+      {
+        baseURL.Truncate(lastslash+1);
+      }
+    }
+  }
+
+  
+
+  if ( argc >= 3 )
+  {
+    chromeType = JSVAL_TO_INT(argv[0]);
+    ConvertJSValToStr(sourceURL, cx, argv[1]);
+    ConvertJSValToStr(name, cx, argv[2]);
+
+    if ( chromeType == CHROMETYPE_SAFESKIN || chromeType == CHROMETYPE_LOCALE )
+    {
+        nsresult rv;
+
+        nsXPITriggerItem* item = new nsXPITriggerItem(name.GetUnicode(),
+                                                      sourceURL.GetUnicode());
+
+        if (item && item->IsRelativeURL())
+            item->mURL.Insert( baseURL, 0 );
+
+        rv = nativeThis->InstallChrome(chromeType, item, &nativeRet);
+        
+        if (NS_FAILED(rv))
+            return JS_FALSE;
+
+        *rval = BOOLEAN_TO_JSVAL(nativeRet);
+    }
+  }
+  return JS_TRUE;
+}
+
 
 //
 // Native method StartSoftwareUpdate
@@ -571,17 +646,19 @@ JSClass InstallTriggerGlobalClass = {
 //
 static JSFunctionSpec InstallTriggerGlobalMethods[] = 
 {
+  // -- obsolete forms, do not document. Kept for 4.x compatibility
   {"UpdateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
-  {"Install",                   InstallTriggerGlobalInstall,                   2},
   {"StartSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
   {"ConditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
   {"CompareVersion",            InstallTriggerGlobalCompareVersion,            5},
   {"GetVersion",                InstallTriggerGlobalGetVersion,                2},
-  // -- new forms to match JS style --
   {"updateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
-  {"install",                   InstallTriggerGlobalInstall,                   2},
-  {"startSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
   {"conditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
+  // -- new forms to match JS style --
+  {"enabled",                   InstallTriggerGlobalUpdateEnabled,             0},
+  {"install",                   InstallTriggerGlobalInstall,                   2},
+  {"installChrome",             InstallTriggerGlobalInstallChrome,             2},
+  {"startSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
   {"compareVersion",            InstallTriggerGlobalCompareVersion,            5},
   {"getVersion",                InstallTriggerGlobalGetVersion,                2},
   {0}
@@ -595,6 +672,10 @@ static JSConstDoubleSpec diff_constants[] =
     { nsIDOMInstallTriggerGlobal::REL_DIFF,      "REL_DIFF"   },
     { nsIDOMInstallTriggerGlobal::BLD_DIFF,      "BLD_DIFF"   },
     { nsIDOMInstallTriggerGlobal::EQUAL,         "EQUAL"      },
+    { CHROMETYPE_SAFESKIN,                       "THEME"      },
+    { CHROMETYPE_LOCALE,                         "LOCALE"     },
+    { CHROMETYPE_SCRIPTSKIN,                     "SUPERSKIN"  },
+    { CHROMETYPE_PACKAGE,                        "PACKAGE"    },
     {0}
 };
 

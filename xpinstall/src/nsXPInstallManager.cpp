@@ -42,9 +42,11 @@
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
+#include "nsTextFormatter.h"
 
 #include "nsXPITriggerInfo.h"
 #include "nsXPInstallManager.h"
+#include "nsInstallTrigger.h"
 #include "nsInstallProgressDialog.h"
 #include "nsInstallResources.h"
 #include "nsSpecialSystemDirectory.h"
@@ -54,6 +56,7 @@
 #include "nsDirectoryService.h"
 
 #include "nsIAppShellComponentImpl.h"
+#include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -62,16 +65,16 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-#define XPINSTALL_BUNDLE_URL "chrome://communicator/locale/xpinstall/xpinstall.properties"
-
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), 
-    mFinalizing(PR_FALSE), mCancelled(PR_FALSE), mContentLength(0)
+    mFinalizing(PR_FALSE), mCancelled(PR_FALSE), mChromeType(0),
+    mSelectChrome(PR_TRUE), mContentLength(0)
 {
     NS_INIT_ISUPPORTS();
 
@@ -142,13 +145,14 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 NS_IMETHODIMP
-nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
+nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
     PRBool OKtoInstall = PR_FALSE;
 
     mTriggers = aTriggers;
+    mChromeType = aChromeType;
 
     if ( !mTriggers || mTriggers->Size() == 0 )
     {
@@ -172,48 +176,10 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
       
       LoadDialogWithNames(ioParamBlock);
 
-      // Now do the stuff to create a window and pass the JS args to it.
-      NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
-      if ( NS_SUCCEEDED( rv ) ) 
-      {
-        nsCOMPtr<nsIDOMWindow> hiddenWindow;
-        JSContext* jsContext;
-        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
-        if (NS_SUCCEEDED(rv))
-        {
-          void* stackPtr;
-          jsval *argv = JS_PushArguments( jsContext,
-                                          &stackPtr,
-                                          "sss%ip",
-                                          "chrome://communicator/content/xpinstall/institems.xul",
-                                          "_blank",
-                                          "chrome,modal",
-                                          (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
-                                          (nsISupports*)ioParamBlock);
-
-          if (argv)
-          {
-            nsCOMPtr<nsIDOMWindow> newWindow;
-            rv = hiddenWindow->OpenDialog( jsContext,
-                                           argv,
-                                           4,
-                                           getter_AddRefs( newWindow));
-            if (NS_SUCCEEDED(rv))
-            {
-              JS_PopArguments( jsContext, stackPtr);
-
-              //Now get which button was pressed from the ParamBlock
-              PRInt32 buttonPressed = 0;
-              ioParamBlock->GetInt( 0, &buttonPressed );
-              OKtoInstall = buttonPressed ? PR_FALSE : PR_TRUE;
-            }
-          }
-          else
-          {
-            rv = NS_ERROR_FAILURE; // fix, better error code??
-          }
-        }
-      }
+      if (mChromeType == 0 || mChromeType > CHROMETYPE_SAFEMAX )
+          OKtoInstall = ConfirmInstall(ioParamBlock);
+      else
+          OKtoInstall = ConfirmChromeInstall();
     }
 
     // --- create and open the progress dialog
@@ -268,6 +234,114 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     }
 
     return rv;
+}
+
+PRBool nsXPInstallManager::ConfirmInstall(nsIDialogParamBlock* ioParamBlock)
+{
+    nsresult rv = NS_OK;
+    PRBool result = PR_FALSE;
+
+    // create a window and pass the JS args to it.
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv );
+    if ( NS_SUCCEEDED( rv ) ) 
+    {
+      nsCOMPtr<nsIDOMWindow> hiddenWindow;
+      JSContext* jsContext;
+      rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs(hiddenWindow), &jsContext);
+      if (NS_SUCCEEDED(rv))
+      {
+        void* stackPtr;
+        jsval *argv = JS_PushArguments( jsContext,
+                                        &stackPtr,
+                                        "sss%ip",
+                                        "chrome://communicator/content/xpinstall/institems.xul",
+                                        "_blank",
+                                        "chrome,modal",
+                                        (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
+                                        (nsISupports*)ioParamBlock);
+
+        if (argv)
+        {
+          nsCOMPtr<nsIDOMWindow> newWindow;
+          rv = hiddenWindow->OpenDialog( jsContext,
+                                         argv,
+                                         4,
+                                         getter_AddRefs( newWindow));
+          if (NS_SUCCEEDED(rv))
+          {
+            JS_PopArguments( jsContext, stackPtr);
+
+            //Now get which button was pressed from the ParamBlock
+            PRInt32 buttonPressed = 0;
+            ioParamBlock->GetInt( 0, &buttonPressed );
+            result = buttonPressed ? PR_FALSE : PR_TRUE;
+          }
+        }
+      }
+    }
+
+    return result;
+}
+
+PRBool nsXPInstallManager::ConfirmChromeInstall()
+{
+    nsXPITriggerItem* item = (nsXPITriggerItem*)mTriggers->Get(0);
+
+    // get the dialog strings
+    nsresult rv;
+    nsXPIDLString applyNowText;
+    nsXPIDLString confirmFormat;
+    PRUnichar*    confirmText = nsnull;
+    nsCOMPtr<nsIStringBundle> xpiBundle;
+    NS_WITH_SERVICE( nsIStringBundleService, bundleSvc,
+                     kStringBundleServiceCID, &rv );
+    if (NS_SUCCEEDED(rv) && bundleSvc)
+    {
+        rv = bundleSvc->CreateBundle( XPINSTALL_BUNDLE_URL, nsnull,
+                                      getter_AddRefs(xpiBundle) );
+        if (NS_SUCCEEDED(rv) && xpiBundle)
+        {
+            if ( mChromeType == CHROMETYPE_LOCALE )
+            {
+                xpiBundle->GetStringFromName(
+                    NS_ConvertASCIItoUCS2("ApplyNowLocale").GetUnicode(),
+                    getter_Copies(applyNowText));
+                xpiBundle->GetStringFromName(
+                    NS_ConvertASCIItoUCS2("ConfirmLocale").GetUnicode(),
+                    getter_Copies(confirmFormat));
+            }
+            else
+            {
+                xpiBundle->GetStringFromName(
+                    NS_ConvertASCIItoUCS2("ApplyNowSkin").GetUnicode(),
+                    getter_Copies(applyNowText));
+                xpiBundle->GetStringFromName(
+                    NS_ConvertASCIItoUCS2("ConfirmSkin").GetUnicode(),
+                    getter_Copies(confirmFormat));
+            }
+
+            confirmText = nsTextFormatter::smprintf(confirmFormat,
+                                                    item->mName.GetUnicode(),
+                                                    item->mURL.GetUnicode());
+        }
+    }
+
+
+    // confirmation dialog
+    PRBool bInstall = PR_FALSE;
+    if (confirmText)
+    {
+        NS_WITH_SERVICE(nsIPrompt, dlgService, kNetSupportDialogCID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = dlgService->ConfirmCheck( confirmText, 
+                                           applyNowText, 
+                                           &mSelectChrome, 
+                                           &bInstall );
+        }
+    }
+
+    return bInstall;
 }
 
 
@@ -430,10 +504,6 @@ void nsXPInstallManager::Shutdown()
         // proxy exists: we're being called from script thread
         mProxy->Close();
     }
-//    else if (mDlg)
-//        mDlg->Close();
-
-//    mDlg = 0;
 
     // Clean up downloaded files
     nsXPITriggerItem* item;
