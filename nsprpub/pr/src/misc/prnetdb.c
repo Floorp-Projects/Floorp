@@ -2056,7 +2056,7 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
                                                 PRIntn       flags)
 {
     /* restrict input to supported values */
-    if (af != PR_AF_UNSPEC || flags != PR_AI_ADDRCONFIG) {
+    if ((af != PR_AF_INET && af != PR_AF_UNSPEC) || flags != PR_AI_ADDRCONFIG) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return NULL;
     }
@@ -2083,7 +2083,7 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
 
         memset(&hints, 0, sizeof(hints));
         hints.ai_flags = AI_CANONNAME;
-        hints.ai_family = AF_UNSPEC;
+        hints.ai_family = (af == PR_AF_INET) ? AF_INET : AF_UNSPEC;
 
         /*
          * it is important to select a socket type in the hints, otherwise we
