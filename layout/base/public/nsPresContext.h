@@ -44,6 +44,7 @@
 #include "nsIRequest.h"
 #include "nsCompatibility.h"
 #include "nsCOMPtr.h"
+#include "nsIPresShell.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -131,6 +132,11 @@ public:
    * Get the PresentationShell that this context is bound to.
    */
   NS_IMETHOD GetShell(nsIPresShell** aResult) = 0;
+  nsIPresShell* GetPresShell() { return mShell; }
+
+  nsIDocument* GetDocument() { return GetPresShell()->GetDocument(); } 
+  nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
+  nsIStyleSet* GetStyleSet() { return GetPresShell()->GetStyleSet(); } 
 
   /**
    * Access compatibility mode for this context
@@ -393,10 +399,12 @@ public:
    */
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const = 0;
 
-  //be sure to Relase() after you are done with the Get()
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const = 0;
+  nsIDeviceContext* GetDeviceContext() { return mDeviceContext; }
 
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
+  nsIEventStateManager* GetEventStateManager();
+
   NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage) = 0;
 
   /**
@@ -546,6 +554,20 @@ public:
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRendingContext, nsIFrame * aFrame, PRUint32 aColor) = 0;
 #endif
+
+protected:
+  // IMPORTANT: The ownership implicit in the following member variables
+  // has been explicitly checked.  If you add any members to this class,
+  // please make the ownership explicit (pinkerton, scc).
+  
+  nsIPresShell*         mShell;         // [WEAK]
+  nsIDeviceContext*     mDeviceContext; // [STRONG] could be weak, but
+                                        // better safe than sorry.
+                                        // Cannot reintroduce cycles
+                                        // since there is no dependency
+                                        // from gfx back to layout.
+  nsIEventStateManager* mEventManager;  // [STRONG]
+
 };
 
 // Bit values for StartLoadImage's aImageStatus

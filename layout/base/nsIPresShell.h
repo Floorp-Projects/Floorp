@@ -150,12 +150,16 @@ public:
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult) = 0;
   
   NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
+  nsIDocument* GetDocument() { return mDocument; }
 
   NS_IMETHOD GetPresContext(nsIPresContext** aResult) = 0;
+  nsIPresContext* GetPresContext() { return mPresContext; }
 
   NS_IMETHOD GetViewManager(nsIViewManager** aResult) = 0;
+  nsIViewManager* GetViewManager() { return mViewManager; }
 
   NS_IMETHOD GetStyleSet(nsIStyleSet** aResult) = 0;
+  nsIStyleSet* GetStyleSet() { return mStyleSet; }
 
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
 
@@ -609,6 +613,17 @@ public:
   NS_IMETHOD BidiStyleChangeReflow(void) = 0;
 #endif
 
+protected:
+  // IMPORTANT: The ownership implicit in the following member variables
+  // has been explicitly checked.  If you add any members to this class,
+  // please make the ownership explicit (pinkerton, scc).
+
+  // these are the same Document and PresContext owned by the DocViewer.
+  // we must share ownership.
+  nsIDocument*              mDocument;      // [STRONG]
+  nsIPresContext*           mPresContext;   // [STRONG]
+  nsIStyleSet*              mStyleSet;      // [STRONG]
+  nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
 };
 
 /**

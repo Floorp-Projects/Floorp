@@ -155,6 +155,9 @@ public:
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
+  nsIEventStateManager* GetEventStateManager() {
+    return nsIPresContext::GetEventStateManager();
+  }
   NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage);
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType);
@@ -208,16 +211,8 @@ protected:
   nsPresContext();
   virtual ~nsPresContext();
 
-  // IMPORTANT: The ownership implicit in the following member variables has been 
-  // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
-  // pointers for weak (ie, non owning) references. If you add any members to this
-  // class, please make the ownership explicit (pinkerton, scc).
-  
-  nsIPresShell*         mShell;         // [WEAK]
   nsCOMPtr<nsIPref>     mPrefs;
   nsRect                mVisibleArea;
-  nsCOMPtr<nsIDeviceContext>  mDeviceContext; // could be weak, but better safe than sorry. Cannot reintroduce cycles
-                                              // since there is no dependency from gfx back to layout.
   nsCOMPtr<nsILanguageAtomService> mLangService;
   nsCOMPtr<nsILanguageAtom> mLanguage;
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
@@ -257,7 +252,6 @@ protected:
 
   nsSupportsHashtable   mImageLoaders;
 
-  nsCOMPtr<nsIEventStateManager> mEventManager;
   nsCOMPtr<nsIURI>      mBaseURL;
 
   nsCompatibility       mCompatibilityMode;
