@@ -61,6 +61,9 @@
 #include <Quickdraw.h>
 #include "nsCarbonHelpers.h"
 
+#include "nsISocketTransportService.h"
+#include "nsIFileTransportService.h"
+
 #ifndef topLeft
 #define topLeft(r)	(((Point *) &(r))[0])
 #endif
@@ -245,6 +248,54 @@ void nsMacMessagePump::DoMessagePump()
 	}
 }
 
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
+
+// #define BUSINESS_INDICATOR
+
+//=================================================================
+/* Return TRUE if the program is busy, like doing network stuff.
+ *
+*/
+PRBool nsMacMessagePump::BrowserIsBusy()
+{
+#ifdef BUSINESS_INDICATOR
+	static PRBool wasBusy;
+#endif
+	
+	PRBool isBusy = PR_FALSE;
+	
+	nsCOMPtr<nsISocketTransportService> socketTransport = do_GetService(kSocketTransportServiceCID);
+	if (socketTransport)
+	{
+		PRUint32 inUseTransports;
+		socketTransport->GetInUseTransportCount(&inUseTransports);
+		isBusy = inUseTransports > 0;
+	}
+
+	nsCOMPtr<nsIFileTransportService> fileTransport = do_GetService(kFileTransportServiceCID);
+	if (fileTransport)
+	{
+		PRUint32 inUseTransports;
+		fileTransport->GetInUseTransportCount(&inUseTransports);
+		isBusy |= (inUseTransports > 0);
+	}
+	
+#ifdef BUSINESS_INDICATOR
+	if (isBusy != wasBusy)
+	{
+		if (isBusy)
+			printf("¤¤ Message pump became busy\n");
+		else
+			printf("¤¤ Message pump became idle\n");
+			
+	  wasBusy = isBusy;
+	}
+#endif
+
+	return isBusy;
+}
+
 //=================================================================
 /*	Fetch a single event
  *	@update	 dc 08/31/98
@@ -255,19 +306,19 @@ void nsMacMessagePump::DoMessagePump()
 
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
-	SInt32			sleepTime = 1;		// we should adjust this depending on activity
 	const UInt32	kWNECallIntervalTicks = 4;
 	static UInt32	sNextWNECall = 0;
 	
 	// Make sure we call WNE if we have user events, or the mouse is down
 	EventRecord tempEvent;
-	if (::EventAvail(kEventAvailMask, &tempEvent) || !(tempEvent.modifiers & btnState))
-		sNextWNECall = 0;
+	PRBool havePendingEvent = ::EventAvail(kEventAvailMask, &tempEvent) || !(tempEvent.modifiers & btnState);
 	
 	// don't call more than once every 4 ticks
-	if (::TickCount() < sNextWNECall)
+	if (!havePendingEvent && (::TickCount() < sNextWNECall))
 		return PR_FALSE;
-		
+	
+	SInt32  sleepTime = (havePendingEvent || BrowserIsBusy()) ? 0 : 2;
+	
 	::LMSetSysEvtMask(everyEvent); // we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mMouseRgn);
 
