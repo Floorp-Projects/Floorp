@@ -437,6 +437,31 @@ net_ftp_response (ActiveEntry *ce)
     status = NET_BufferedReadLine(cd->cc->csock, &line, &cd->data_buf, 
                         &cd->data_buf_size, &cd->pause_for_read);
 
+    if (status > 0 && !line && cd->next_state_after_response == FTP_DONE)
+    {
+      /* This is wierd. I have been seeing this consistently when the ftp directory
+       * listing has ended. The condition is that there is no data on the socket,
+       * and we are waiting to gobble the final bytes from the ftp server for
+       * completing a ftp directory listing. NET_BufferedReadLine() seems to indicate
+       * that the call would block and no data is available now by returning a
+       * status of 1 and line set to NULL.
+       *
+       * For the end of ftp directory, next_state_after_response will be FTP_DONE.
+       * We will use that to fix this. How we are fixing it is by turning status to 0.
+       * This will make it adopt the following if condition of status==0 and set next_state to
+       * next_state_after_response which would be done.
+       *
+       * If we dont do this, ftp directory doesnt end and we have our ftp waiting indefinitely
+       * for some thing from the ftp server while there aint any more data showing up.
+       *
+       * XXX The right thing however would be to see why we are getting a non-zero status
+       * XXX but no data from NET_BufferedReadLine(). The smarted question to ask would
+       * XXX be "if no data is available, then why was this socket selected for read again ?"
+       */
+      TRACEMSG(("Wierd state. status > 0 but no data and next_state_after_response = %d. Fixing up...\n", cd->next_state_after_response));
+      status = 0;
+    }
+
 	if(status == 0)
 	  {
 		/* this shouldn't really happen, but...
