@@ -97,14 +97,14 @@
 
     <separator class="thin"/> 
 
-    <tree id="abResultsTree" flex="1" context="cardProperties" class="plain" sortCol="GeneratedName" persist="sortCol" ondblclick="addSelectedAddresses('addr_to')">
+    <tree id="abResultsTree" flex="1" context="cardProperties" class="plain" sortCol="GeneratedName" persist="sortCol" ondblclick="contactsListDoubleClick(event);">
       <treecols>
         <!-- these column ids must match up to the mork column names, see nsIAddrDatabase.idl -->
         <treecol id="GeneratedName" class="sortDirectionIndicator" 
                  persist="hidden ordinal width sortDirection" flex="1" label="&GeneratedName.label;" primary="true"/>
         <splitter class="tree-splitter"/>
         <treecol id="PrimaryEmail" class="sortDirectionIndicator" 
-                 persist="hidden ordinal width sortDirection" hiddenbydefault="true"
+                 persist="hidden ordinal width sortDirection" hidden="true"
                  flex="1" label="&PrimaryEmail.label;"/>
       </treecols>
       <treechildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>

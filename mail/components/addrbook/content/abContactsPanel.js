@@ -40,6 +40,26 @@ function GetAbViewListener()
   return null;
 }
 
+
+function contactsListDoubleClick(event)
+{
+  // we only care about button 0 (left click) events
+  if (event.button != 0)
+    return;
+
+  var row = {}, colID = {}, childElt = {};
+  var contactsTree = document.getElementById("abResultsTree");
+  contactsTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+  if (row.value == -1 || row.value > contactsTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") 
+  {
+    // double clicking on a non valid row should not open the edit filter dialog
+    return;
+  }
+
+  // ok, go ahead and add the entry
+  addSelectedAddresses('addr_to');  
+}
+
 function addSelectedAddresses(recipientType)
 {
   var cards = GetSelectedAbCards();
