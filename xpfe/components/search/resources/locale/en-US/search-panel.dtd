@@ -16,14 +16,6 @@
    - Corp. are Copyright (C) 1999 Netscape Communications Corp. All
    - Rights Reserved.
    - 
-   - Contributor(s): Stephen Lamm <slamm@netscape.com>
+   - Contributor(s):
   --> 
 
-<!-- extracted from ./sidebar.rdf -->
-
-<!ENTITY sidebar.whats-related.label  "What's Related">
-<!ENTITY sidebar.search.label         "Search Results">
-<!ENTITY sidebar.alerts.label         "Alerts">
-<!-- LOCALIZATION NOTE sidebar.tinderbox.label: DONT_TRANSLATE -->
-<!ENTITY sidebar.tinderbox.label      "Tinderbox">
-<!ENTITY sidebar.bookmarks.label      "Bookmarks">

@@ -22,9 +22,9 @@
 
 -->
 
-<?xml-stylesheet href="chrome://related/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://search/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://related/locale/related-panel.dtd" >
+<!DOCTYPE window SYSTEM "chrome://searcg/locale/search-panel.dtd" >
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -32,18 +32,12 @@
   align="vertical"
   onload="Init();">
 
-  <html:script src="chrome://related/content/related-panel.js" />
+  <html:script src="chrome://search/content/search-panel.js" />
 
-  <!--
-     Note that the empty "datasources='rdf:null'" will ensure that a composite
-     datasource is created and a content model builder is installed, even
-     though there is no datasource from which to build content yet.
-  -->
-
-  <html:div style="width:100%; height:100%" flex="1">
-  <tree id="Tree" ref="NC:RelatedLinks" container="true"
+  <html:div style="width:100px; height:100px" flex="1">
+  <tree id="Tree" ref="NC:LastSearchRoot"
     style="width: 100%; height: 100%"
-    datasources="rdf:null"
+    datasources="rdf:internetsearch"
     onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
 
     <template>
@@ -61,12 +55,12 @@
 
       <rule>
         <treechildren>
-          <treeitem uri="..."
+          <treeitem uri="..." persist="open"
                   loading="rdf:http://home.netscape.com/NC-rdf#loading"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
-                                      src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+              <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon" />
             </treerow>
           </treeitem>
         </treechildren>

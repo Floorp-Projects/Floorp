@@ -35,6 +35,8 @@ CHROME_CONTENT	= \
                 default.htm \
                 search.js \
                 search.xul \
+                search-panel.js \
+                search-panel.xul \
                 shared.js \
                 find.js \
                 find.xul \
@@ -59,6 +61,7 @@ CHROME_L10N	= \
 		locale/en-US/internet.dtd \
 		locale/en-US/internetresults.dtd \
 		locale/en-US/search.dtd \
+		locale/en-US/search-panel.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -40,11 +40,11 @@
      though there is no datasource from which to build content yet.
   -->
 
-  <html:div style="width:100px; height:100px" flex="1">
-  <tree id="Tree"
+  <html:div style="width:100%; height:100%" flex="1">
+  <tree id="Tree" ref="NC:RelatedLinks" container="true"
     style="width: 100%; height: 100%"
-    datasources="rdf:internetsearch"
-    onclick="clicked(event,event.target.parentNode.parentNode)">
+    datasources="rdf:null"
+    onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
 
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -52,7 +52,7 @@
           <treeitem uri="...">
             <treerow>
               <treecell>
-                <html:hr width="75%" align="center" size="1" />
+                <html:hr width="100%" size="1" />
               </treecell>
             </treerow>
           </treeitem>
@@ -61,7 +61,7 @@
 
       <rule>
         <treechildren>
-          <treeitem uri="..." persist="open"
+          <treeitem uri="..."
                   loading="rdf:http://home.netscape.com/NC-rdf#loading"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
@@ -75,26 +75,6 @@
 
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
 
-    <treechildren>
-      <treeitem id="NC:RelatedLinks" container="true">
-        <treerow>
-          <treecell value="&related.row.label;" indent="true" />
-        </treerow>
-      </treeitem>
-
-      <treeitem id="NC:LastSearchRoot" container="true">
-        <treerow>
-          <treecell value="&lastsearch.row.label;" indent="true" />
-        </treerow>
-      </treeitem>
-
-      <treeitem id="NC:SiteMapRoot" container="true">
-        <treerow>
-          <treecell value="&sitemap.row.label;" indent="true" />
-        </treerow>
-      </treeitem>
-
-    </treechildren>
   </tree>
   </html:div>
 </window>
