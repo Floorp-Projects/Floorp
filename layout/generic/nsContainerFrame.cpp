@@ -139,8 +139,8 @@ nsContainerFrame::Destroy(nsIPresContext* aPresContext)
   // Delete the primary child list
   mFrames.DestroyFrames(aPresContext);
 
-  // Base class will destroy the frame
-  return nsFrame::Destroy(aPresContext);
+  // Destroy the frame and remove the flow pointers
+  return nsSplittableFrame::Destroy(aPresContext);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1101,7 +1101,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsIPresContext* aPresContext,
     }
   }
 
-  // Delete the next-in-flow frame
+  // Delete the next-in-flow frame and its descendants.
   aNextInFlow->Destroy(aPresContext);
 
 #ifdef NS_DEBUG

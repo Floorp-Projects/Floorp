@@ -1051,17 +1051,6 @@ nsTableRowGroupFrame::UndoContinuedRow(nsIPresContext*  aPresContext,
   aRow->GetNextSibling((nsIFrame**)&next);
   rowBefore->SetNextSibling(next);
 
-  // Remove the next-in-flow of the row, its cells and their cell blocks.
-  for (nsTableCellFrame* cell = aRow->GetFirstCell(); cell; cell->GetNextCell()) {
-    nsIFrame* cellBlock;
-    cell->FirstChild(aPresContext, nsnull, &cellBlock);
-    if (cellBlock) {
-      nsSplittableFrame::RemoveFromFlow(cellBlock);
-    }
-    nsSplittableFrame::RemoveFromFlow(cell);
-  }
-  nsSplittableFrame::RemoveFromFlow(aRow);
-
   // Destroy the row, its cells, and their cell blocks. Cell blocks that have split
   // will not have reflowed yet to pick up content from any overflow lines.
   aRow->Destroy(aPresContext);

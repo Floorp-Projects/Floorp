@@ -50,6 +50,9 @@ public:
                   nsIFrame*        aPrevInFlow);
   
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
 #ifdef DEBUG
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif

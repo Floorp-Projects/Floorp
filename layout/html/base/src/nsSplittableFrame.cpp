@@ -61,6 +61,18 @@ nsSplittableFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
+nsSplittableFrame::Destroy(nsIPresContext* aPresContext)
+{
+  // Disconnect from the flow list
+  if (mPrevInFlow || mNextInFlow) {
+    RemoveFromFlow(this);
+  }
+
+  // Let the base class destroy the frame
+  return nsFrame::Destroy(aPresContext);
+}
+
+NS_IMETHODIMP
 nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
   aIsSplittable = NS_FRAME_SPLITTABLE;
