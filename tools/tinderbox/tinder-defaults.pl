@@ -1,5 +1,19 @@
-$ENV{MOZ_PACKAGE_MSI}   = 0; # Default: 0.  Create a MSI package where possible.
-                             # (Requires Windows + local MakeMSI installation.)
+# $ENV{MOZ_PACKAGE_MSI}
+#-----------------------------------------------------------------------------
+#  Default: 0
+#   Values: 0 | 1
+#  Purpose: Controls whether a MSI package is made.
+# Requires: Windows and a local MakeMSI installation.
+$ENV{MOZ_PACKAGE_MSI} = 0;
+
+# $ENV{MOZ_SYMBOLS_TRANSFER_TYPE}
+#-----------------------------------------------------------------------------
+#  Default: scp
+#   Values: scp | rsync
+#  Purpose: Use scp or rsync to transfer symbols to the Talkback server.
+# Requires: The selected type requires the command be available both locally
+#           and on the Talkback server.
+$ENV{MOZ_SYMBOLS_TRANSFER_TYPE} = "scp"
 
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
