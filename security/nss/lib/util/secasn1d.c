@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.8 2001/05/09 22:40:22 kirke%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.9 2001/08/24 18:34:33 relyea%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -1349,8 +1349,18 @@ sec_asn1d_parse_bit_string (sec_asn1d_state *state,
 {
     unsigned char byte;
 
-    PORT_Assert (state->pending > 0);
+    /*PORT_Assert (state->pending > 0); */
     PORT_Assert (state->place == beforeBitString);
+
+    if (state->pending == 0) {
+	if (state->dest != NULL) {
+	    SECItem *item = (SECItem *)(state->dest);
+	    item->data = NULL;
+	    item->len = 0;
+	    state->place = beforeEndOfContents;
+	    return 0;
+	}
+    }
 
     if (len == 0) {
 	state->top->status = needBytes;
