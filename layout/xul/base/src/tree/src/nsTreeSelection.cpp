@@ -25,6 +25,26 @@
 #include "nsOutlinerSelection.h"
 #include "nsIOutlinerBoxObject.h"
 
+// A helper class for managing our ranges of selection.
+struct nsOutlinerRange
+{
+  PRInt32 mMin;
+  PRInt32 mMax;
+
+  nsOutlinerRange* mNext;
+  nsOutlinerRange* mPrev;
+
+  nsOutlinerRange(PRInt32 aSingleVal):mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
+  nsOutlinerRange(PRInt32 aMin, PRInt32 aMax) :mNext(nsnull), mMin(aMin), mMax(aMax) {};
+
+  ~nsOutlinerRange() { delete mNext; };
+
+  void Connect(nsOutlinerRange* aPrev = nsnull, nsOutlinerRange* aNext = nsnull) {
+    mPrev = aPrev;
+    mNext = aNext;
+  }
+};
+
 nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
 {
   NS_INIT_ISUPPORTS();
