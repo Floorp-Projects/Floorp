@@ -122,13 +122,13 @@ XFE_Component::setBaseWidget(Widget w)
   m_widget = w;
 }
 //////////////////////////////////////////////////////////////////////////
-void
+/* virtual */ void
 XFE_Component::setSensitive(Boolean sensitive)
 {
   XtSetSensitive(m_widget, sensitive);
 }
 //////////////////////////////////////////////////////////////////////////
-Boolean
+/* virtual */ Boolean
 XFE_Component::isSensitive()
 {
   return XtIsSensitive(m_widget);
@@ -320,7 +320,9 @@ XFE_Component::getShowHideLabelString(char* cmd, Boolean show, Widget widget)
 void
 XFE_Component::installDestroyHandler()
 {
-  XtAddCallback(m_widget, XmNdestroyCallback, destroy_cb, this);
+	XP_ASSERT( isAlive() );
+
+	XtAddCallback(m_widget, XmNdestroyCallback, destroy_cb, this);
 }
 //////////////////////////////////////////////////////////////////////////
 void

@@ -45,8 +45,8 @@ public:
     
   XFE_Component *getToplevel();
 
-  void setSensitive(Boolean sensitive);
-  Boolean isSensitive();
+  virtual void setSensitive(Boolean sensitive);
+  virtual Boolean isSensitive();
 
   virtual void show();
   virtual void hide();
