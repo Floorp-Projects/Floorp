@@ -1,0 +1,3 @@
+nsIShEntry.idl   \
+nsISHTransaction.idl \
+nsISHContainer.idl
