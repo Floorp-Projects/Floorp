@@ -26,7 +26,7 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 
-#define USE_ATSUI_HACK
+//#define USE_ATSUI_HACK
 
 #ifdef USE_ATSUI_HACK
 #include <ATSUnicode.h>
