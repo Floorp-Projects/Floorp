@@ -325,6 +325,40 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
     return 0;
   }
 
+#if defined(USE_XIM) && defined(_AIX)
+  // On AIX, GDK doesn't get correct keysyms from XIM. Follow GDK 
+  // reference recommending to use the 'string' member of GdkEventKey 
+  // instead. See:
+  //
+  // developer.gnome.org/doc/API/gdk/gdk-event-structures.html#GDKEVENTKEY
+
+  PRBool controlChar = (aGEK->state & GDK_CONTROL_MASK ||
+                        aGEK->state & GDK_MOD1_MASK ||
+                        aGEK->state & GDK_MOD4_MASK);
+
+  // Use 'string' as opposed to 'keyval' when control, alt, or meta is 
+  // not pressed. This allows keyboard shortcuts to continue to function
+  // properly, while fixing input problems and mode switching in certain
+  // locales where the 'keyval' does not correspond to the actual input.
+  // See Bug #157397 and Bug #161581 for more details.
+
+  if (!controlChar && gdk_im_ready() && aGEK->length > 0 
+        && aGEK->keyval != (guint)*aGEK->string) {
+    nsGtkIMEHelper* IMEHelper = nsGtkIMEHelper::GetSingleton();
+    if (IMEHelper != nsnull) {
+      PRUnichar* unichars = IMEHelper->GetUnichars();
+      PRInt32 unilen = IMEHelper->GetUnicharsSize();
+      PRInt32 unichar_size = IMEHelper->MultiByteToUnicode(
+                                          aGEK->string, aGEK->length,
+                                          &unichars, &unilen);
+      if (unichar_size > 0) {
+        IMEHelper->SetUnichars(unichars);
+        IMEHelper->SetUnicharsSize(unilen);
+        return (long)*unichars;
+      }
+    }
+  }
+#endif
   // we're supposedly printable, let's try to convert
   long ucs = keysym2ucs(aGEK->keyval);
   if ((ucs != -1) && (ucs < 0x10000))
