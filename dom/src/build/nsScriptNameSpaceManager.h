@@ -42,9 +42,16 @@
 #include "pldhash.h"
 
 #include "nsDOMClassInfo.h"
- 
+
 struct nsGlobalNameStruct
 {
+  struct ConstructorAlias
+  {
+    nsCID mCID;
+    nsString mProtoName;
+    nsGlobalNameStruct* mProto;    
+  };
+
   enum nametype {
     eTypeNotInitialized,
     eTypeInterface,
@@ -55,13 +62,15 @@ struct nsGlobalNameStruct
     eTypeClassConstructor,
     eTypeClassProto,
     eTypeExternalClassInfoCreator,
-    eTypeExternalClassInfo
+    eTypeExternalClassInfo,
+    eTypeExternalConstructorAlias
   } mType;
 
   union {
     PRInt32 mDOMClassInfoID; // eTypeClassConstructor
     nsIID mIID; // eTypeClassProto
     nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
+    ConstructorAlias* mAlias; // eTypeExternalConstructorAlias
     nsCID mCID; // All other types...
   };
 
@@ -111,6 +120,8 @@ public:
                              PRUint32 aScriptableFlags,
                              PRBool aHasClassInterface,
                              const nsCID *aConstructorCID);
+
+  nsGlobalNameStruct* GetConstructorProto(const nsGlobalNameStruct* aStruct);
 
 protected:
   // Adds a new entry to the hash and returns the nsGlobalNameStruct

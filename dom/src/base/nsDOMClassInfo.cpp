@@ -3131,6 +3131,7 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if (NS_FAILED(rv) || !name_struct ||
       (name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructor &&
+       name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructorAlias &&
        name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfoCreator &&
        name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo)) {
     return JS_FALSE;
@@ -3176,6 +3177,8 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsCOMPtr<nsISupports> native;
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     native = do_CreateInstance(name_struct->mCID, &rv);
+  } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+    native = do_CreateInstance(name_struct->mAlias->mCID, &rv);
   } else {
     native = do_CreateInstance(*name_struct->mData->mConstructorCID, &rv);
   }
@@ -3406,10 +3409,31 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
       name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo ||
-      name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
+      name_struct->mType == nsGlobalNameStruct::eTypeClassProto ||
+      name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+    const nsDOMClassInfoData *ci_data = nsnull;
+    const nsGlobalNameStruct* alias_struct = nsnull;
+
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
+        name_struct->mDOMClassInfoID >= 0) {
+      ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
+    } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+      ci_data = name_struct->mData;
+    } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+      alias_struct = gNameSpaceManager->GetConstructorProto(name_struct);
+      NS_ENSURE_TRUE(alias_struct, NS_ERROR_UNEXPECTED);
+
+      if (alias_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+        ci_data = &sClassInfoData[alias_struct->mDOMClassInfoID];
+      } else if (alias_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+        ci_data = alias_struct->mData;
+      }
+    }
+
     JSNative native;
-    if (name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo &&
-        name_struct->mData->mConstructorCID) {
+    if ((name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo &&
+         name_struct->mData->mConstructorCID) ||
+        name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
       native = StubConstructor;
     } else {
       native = NativeConstructor;
@@ -3426,15 +3450,6 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
     if (!cfnc_obj) {
       return NS_ERROR_UNEXPECTED;
-    }
-
-    const nsDOMClassInfoData *ci_data = nsnull;
-
-    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
-        name_struct->mDOMClassInfoID >= 0) {
-      ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
-    } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
-      ci_data = name_struct->mData;
     }
 
     const nsIID *primary_iid = &NS_GET_IID(nsISupports);
@@ -3527,11 +3542,15 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
     JSObject *dot_prototype = nsnull;
 
-    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-      NS_ABORT_IF_FALSE(name_struct->mDOMClassInfoID >= 0,
-                        "Negative DOM classinfo?!?");
+    if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+      name_struct = alias_struct;
+    }
 
-      nsDOMClassInfoID ci_id = (nsDOMClassInfoID)name_struct->mDOMClassInfoID;
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+      PRInt32 id = name_struct->mDOMClassInfoID;
+      NS_ABORT_IF_FALSE(id >= 0, "Negative DOM classinfo?!?");
+
+      nsDOMClassInfoID ci_id = (nsDOMClassInfoID)id;
 
       nsCOMPtr<nsIClassInfo> ci(dont_AddRef(GetClassInfoInstance(ci_id)));
       NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);

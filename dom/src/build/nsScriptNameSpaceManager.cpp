@@ -113,6 +113,9 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     // Release our pointer to the helper.
     NS_IF_RELEASE(ci);
   }
+  else if (e->mGlobalName.mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+    delete e->mGlobalName.mAlias;
+  }
 
   // This will set e->mGlobalName.mType to
   // nsGlobalNameStruct::eTypeNotInitialized
@@ -161,6 +164,25 @@ nsScriptNameSpaceManager::AddToHash(const nsAString& aKey)
   return &entry->mGlobalName;
 }
 
+nsGlobalNameStruct*
+nsScriptNameSpaceManager::GetConstructorProto(const nsGlobalNameStruct* aStruct)
+{
+  NS_ASSERTION(aStruct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias,
+               "This function only works on constructor aliases!");
+  if (!aStruct->mAlias->mProto) {
+    GlobalNameMapEntry *proto =
+      NS_STATIC_CAST(GlobalNameMapEntry *,
+                     PL_DHashTableOperate(&mGlobalNames,
+                                          &aStruct->mAlias->mProtoName,
+                                          PL_DHASH_LOOKUP));
+
+    if (PL_DHASH_ENTRY_IS_LIVE(proto)) {
+      aStruct->mAlias->mProto = &proto->mGlobalName;
+    }
+  }
+  return aStruct->mAlias->mProto;
+}
+
 nsresult
 nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                    const char *aCategory,
@@ -185,9 +207,10 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
     }
 
     rv = category->GetData(categoryEntry);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
-                                       getter_Copies(contractId));
+    rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
+                                            getter_Copies(contractId));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCID cid;
@@ -197,10 +220,37 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
     if (NS_FAILED(rv)) {
       NS_WARNING("Bad contract id registed with the script namespace manager");
 
-      // Make sure we don't leak this error code to the caller.
-      rv = NS_OK;
-
       continue;
+    }
+
+    if (aType == nsGlobalNameStruct::eTypeExternalConstructor) {
+      nsXPIDLCString constructorProto;
+      rv = aCategoryManager->GetCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
+                                              categoryEntry.get(),
+                                              getter_Copies(constructorProto));
+      if (NS_SUCCEEDED(rv)) {
+        nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(categoryEntry));
+        NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+        if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+          s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
+          if (!s->mAlias) {
+            // Free entry
+            PL_DHashTableOperate(&mGlobalNames,
+                                 &NS_ConvertASCIItoUCS2(categoryEntry),
+                                 PL_DHASH_REMOVE);
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
+          s->mAlias->mCID = cid;
+          s->mAlias->mProtoName.AssignWithConversion(constructorProto);
+          s->mAlias->mProto = nsnull;
+        } else {
+          NS_WARNING("Global script name not overwritten!");
+        }
+
+        continue;
+      }
     }
 
     nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(categoryEntry));
@@ -214,7 +264,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 
