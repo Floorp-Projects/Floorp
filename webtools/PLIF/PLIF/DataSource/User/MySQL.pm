@@ -374,13 +374,13 @@ sub setupInstall {
         # fields, such as changeID, which old format knew nothing
         # about.
         if ($helper->columnExists($app, $database, 'user', 'newFieldID')) {
-            $database->execute('ALTER TABLE user REMOVE COLUMN newFieldID');
+            $database->execute('ALTER TABLE user DROP COLUMN newFieldID');
         }
         if ($helper->columnExists($app, $database, 'user', 'newFieldValue')) {
-            $database->execute('ALTER TABLE user REMOVE COLUMN newFieldValue');
+            $database->execute('ALTER TABLE user DROP COLUMN newFieldValue');
         }
         if ($helper->columnExists($app, $database, 'user', 'newFieldKey')) {
-            $database->execute('ALTER TABLE user REMOVE COLUMN newFieldKey');
+            $database->execute('ALTER TABLE user DROP COLUMN newFieldKey');
         }
     }
     if (not $helper->tableExists($app, $database, 'userData')) {
