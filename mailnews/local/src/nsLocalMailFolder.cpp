@@ -772,18 +772,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
-  if (mDepth == 1) {
-    // Depth == 1 means we are on the mail server level
-    // override the name here to say "Local Mail"
-	nsString localMailStr("Local Mail");
-    *prettyName = localMailStr.ToNewUnicode();
-	if(!(*prettyName))
-		return NS_ERROR_OUT_OF_MEMORY;
-  }
-  else
-    return nsMsgFolder::GetPrettyName(prettyName);
+  return nsMsgFolder::GetPrettyName(prettyName);
 
-  return NS_OK;
 }
 
 nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
