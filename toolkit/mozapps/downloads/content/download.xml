@@ -41,6 +41,8 @@
 <!DOCTYPE window [
   <!ENTITY % downloadDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd" >
   %downloadDTD;
+  <!ENTITY % browserDTD  SYSTEM "chrome://browser/locale/browser.dtd" >
+  %browserDTD;
 ]>
 
 <bindings id="downloadBindings"
@@ -523,6 +525,7 @@
       <handler event="keypress" keycode="vk_right" modifiers="meta" action="this.selected = null"/>
       <handler event="keypress" keycode="vk_delete" action="if (this.selected) this.selected.fireEvent('remove');"/>
       <handler event="keypress" key=" " action="if (this.selected) { this.selected.pauseResume(); }"/>
++       <handler event="keypress" key="&newNavigatorCmd.key;" modifiers="control" action="parent.window.open('');"/>
     </handlers>
   </binding>
   
