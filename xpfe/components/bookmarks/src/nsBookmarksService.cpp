@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+#define NS_IMPL_IDS
+
 /*
   The global bookmarks service.
  */
@@ -114,14 +116,6 @@ static NS_DEFINE_CID(kFileLocatorCID,             NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIIOServiceIID,		  NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-#ifndef	NS_IPLATFORMCHARSET_CID
-// XXX this CID should be defined elsewhere
-#define NS_IPLATFORMCHARSET_CID \
-{ 0x84b0f182, 0xc6c7, 0x11d2, {0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
-#endif
-
-static NS_DEFINE_CID(kPlatformCharsetCID,	  NS_IPLATFORMCHARSET_CID);
 
 static NS_DEFINE_IID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID,    NS_ISTRINGBUNDLESERVICE_IID);
