@@ -1281,8 +1281,10 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
     windowBounds *= p2t;
     mWindow->GetBounds(nonclientBounds);
     nonclientBounds *= p2t;
-    fprintf(out, "(widget=%p pos={%d,%d,%d,%d}) ",
-            mWindow,
+    nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
+    mWindow->Release();
+    fprintf(out, "(widget=%p[%d] pos={%d,%d,%d,%d}) ",
+            mWindow, widgetRefCnt,
             nonclientBounds.x, nonclientBounds.y,
             windowBounds.width, windowBounds.height);
   }
