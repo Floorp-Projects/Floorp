@@ -31,18 +31,20 @@
 %pippkiDTD;
 ]>
 
-<window id="devicemanager"
+<dialog id="devicemanager"
 	windowtype="mozilla:devicemanager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&devmgr.title;"
         persist="screenX screenY width height"
-        onload="LoadModules();">
+        onload="LoadModules();"
+        buttons="accept,help"
+        ondialoghelp="openHelp('sec_devices');">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/device_manager.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-<grid flex="1">
+<grid flex="1" style="margin:5px">
   <columns>
     <column flex="1"/> 
     <column flex="1"/> 
@@ -94,13 +96,4 @@
   </rows>
 </grid>
 
-<hbox>
-  <button id="help_button" 
-          label="&help.label;" 
-          oncommand="openHelp('sec_devices');"/> 
-  <button id="ok_button" 
-          label="&ok.label;" 
-          oncommand="window.close();"/> 
-</hbox>
-
-</window>
+</dialog>

@@ -44,7 +44,7 @@ function openCertManager()
       lastCertManager.focus();
     else {
       window.open('chrome://pippki/content/certManager.xul',  "",
-                  'chrome,width=500,height=400,resizable=yes,dialog=no');
+                  'chrome,height=400,centerscreen,resizable=yes,dialog=no');
     }
 }
 
@@ -59,6 +59,6 @@ function openDeviceManager()
       lastCertManager.focus();
     else {
       window.open('chrome://pippki/content/device_manager.xul',  "devmgr",
-                  'chrome,width=540,height=360,resizable=yes');
+                  'chrome,height=400,centerscreen,resizable=yes,dialog=no');
     }
 }

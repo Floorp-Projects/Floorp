@@ -32,11 +32,13 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<window id="certmanager" 
+<dialog id="certmanager" 
 	windowtype="mozilla:certmanager"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&certmgr.title;"
-        onload="LoadCerts();">
+        onload="LoadCerts();"
+        buttons="accept,help"
+        ondialoghelp="return doHelpButton();">
 
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -44,7 +46,7 @@
   <script type="application/x-javascript" src="chrome://pippki/content/certManager.js"/>
 
   <vbox flex="1">
-    <tabbox flex="1">
+    <tabbox flex="1" style="margin:5px">
       <tabs id="certMgrTabbox">
         <tab id="mine_tab" label="&certmgr.tab.mine;"/>
         <tab id="others_tab" label="&certmgr.tab.others;"/>
@@ -58,14 +60,6 @@
         <vbox id="CACerts" flex="1"/>
       </tabpanels>
     </tabbox>
-
-    <hbox align="center">
-      <button id="HelpButton"
-              label="&certmgr.help.label;" 
-              accesskey="&certmgr.helpButtonAccessKey;"
-              oncommand="doHelpButton();"/>
-      <description id="ocsp_info" hidden="true">&certmgr.ocsp_info;</description>
-    </hbox>
   </vbox>
 
-</window>
+</dialog>

@@ -65,6 +65,8 @@
 
     <treechildren id="crlList"/>
   </tree>
+  <separator class="thin"/>
+
   <hbox>
     <button id="deleteCrl" disabled="true"
             label="&validation.deletecrl.label;"
@@ -80,5 +82,4 @@
             oncommand="openHelp('validation-crl-manage');"/> 
 
   </hbox>
-  <separator class="thin"/>
 </window>
