@@ -1,14 +1,14 @@
 toolkit.jar:
-*+       content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
 +        content/global/xul.css                             (content/xul.css)
 +        content/global/globalOverlay.js                    (content/globalOverlay.js)
-+        content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
 *+       content/global/finddialog.xul                      (content/finddialog.xul)
 *+       content/global/finddialog.js                       (content/finddialog.js)
 *+       content/global/findUtils.js                        (content/findUtils.js)
 *        content/global/customizeToolbar.xul                (content/customizeToolbar.xul)
 *        content/global/customizeToolbar.js                 (content/customizeToolbar.js)
          content/global/customizeToolbar.css                (content/customizeToolbar.css)
+*+       content/global/nsDragAndDrop.js                    (content/nsDragAndDrop.js)
+*+       content/global/nsWidgetStateManager.js             (content/nsWidgetStateManager.js)
 *+       content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
          content/global/widgets/autocomplete.xml            (content/widgets/autocomplete.xml)
          content/global/widgets/browser.xml                 (content/widgets/browser.xml)
@@ -18,6 +18,7 @@ toolkit.jar:
          content/global/widgets/radio.xml                   (content/widgets/radio.xml)
          content/global/widgets/checkbox.xml                (content/widgets/checkbox.xml)
          content/global/widgets/button.xml                  (content/widgets/button.xml)
+         content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
          content/global/widgets/toolbarbutton.xml           (content/widgets/toolbarbutton.xml)
          content/global/widgets/checkbox.xml                (content/widgets/checkbox.xml)
          content/global/widgets/colorpicker.xml             (content/widgets/colorpicker.xml)
@@ -38,7 +39,6 @@ toolkit.jar:
          content/global/widgets/text.xml                    (content/widgets/text.xml)
          content/global/widgets/tree.xml                    (content/widgets/tree.xml)
          content/global/widgets/wizard.xml                  (content/widgets/wizard.xml)
-*+       content/global/nsDragAndDrop.js                    (content/nsDragAndDrop.js)
          
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
