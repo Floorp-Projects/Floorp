@@ -126,7 +126,7 @@ float64 *JS2Engine::newDoubleValue(float64 x)
 
 // if the argument can be stored as an integer value, do so
 // otherwise get a double value
-js2val JS2Engine::pushNumber(float64 x)
+js2val JS2Engine::allocNumber(float64 x)
 {
     uint32 i;
     js2val retval;
@@ -134,7 +134,6 @@ js2val JS2Engine::pushNumber(float64 x)
         retval = INT_TO_JS2VAL(i);
     else
         retval = DOUBLE_TO_JS2VAL(newDoubleValue(x));
-    push(retval);
     return retval;
 }
 
@@ -232,6 +231,7 @@ JS2Engine::JS2Engine(World &world)
               INIT_STRINGATOM(undefined),
               INIT_STRINGATOM(public),
               INIT_STRINGATOM(private),
+              INIT_STRINGATOM(function),
               INIT_STRINGATOM(object)
 {
     nanValue = (float64 *)gc_alloc_8();
@@ -258,17 +258,29 @@ int JS2Engine::getStackEffect(JS2Op op)
     case eTrue:
     case eFalse:
     case eNumber:
+    case eNull:
         return 1;       // push literal value
 
     case eLexicalRead:
         return 1;       // push the value
     case eLexicalWrite:
         return -1;      // pop the value
+    case eLexicalRef:
+        return 2;       // push base & value
 
     case eDotRead:
         return 0;       // pop a base, push the value
     case eDotWrite:
         return -2;      // pop a base and the value
+    case eDotRef:
+        return 1;       // leave the base, push the value
+
+    case eBracketRead:
+        return -1;      // pop a base and an index, push the value
+    case eBracketWrite:
+        return -3;      // pop a base and an index and the value
+    case eBracketRef:
+        return 1;       // leave the base, pop the index, push the value
 
     case eReturnVoid:
     case eBranch:
@@ -287,6 +299,24 @@ int JS2Engine::getStackEffect(JS2Op op)
 
     case eNew:          // pop the class or function, push the new instance
         return 0;
+
+    case eLexicalPostInc:
+    case eLexicalPostDec:
+    case eLexicalPreInc:
+    case eLexicalPreDec:
+        return 1;       // push the new/old value
+
+    case eDotPostInc:
+    case eDotPostDec:
+    case eDotPreInc:
+    case eDotPreDec:
+        return 0;       // pop the base, push the new/old value
+
+    case eBracketPostInc:
+    case eBracketPostDec:
+    case eBracketPreInc:
+    case eBracketPreDec:
+        return -1;       // pop the base, pop the index, push the new/old value
 
     default:
         ASSERT(false);

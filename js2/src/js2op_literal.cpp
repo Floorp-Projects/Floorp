@@ -33,24 +33,35 @@
 */
 
 
-        case eNumber: {
-            push(DOUBLE_TO_JS2VAL(newDoubleValue(BytecodeContainer::getFloat64(pc))));
-            pc += sizeof(float64);
-        }
-        break;
+        case eNumber: 
+            {
+                push(DOUBLE_TO_JS2VAL(newDoubleValue(BytecodeContainer::getFloat64(pc))));
+                pc += sizeof(float64);
+            }
+            break;
 
-        case eTrue: {
-	    push(JS2VAL_TRUE);
-	}
-	break;
+        case eTrue: 
+            {
+	        push(JS2VAL_TRUE);
+	    }
+	    break;
 
-        case eFalse: {
-	    push(JS2VAL_TRUE);
-	}
-	break;
+        case eFalse: 
+            {
+	        push(JS2VAL_TRUE);
+	    }
+	    break;
 
-        case eString: {
-            push(STRING_TO_JS2VAL(BytecodeContainer::getString(pc)));
-            pc += sizeof(String *);
-        }
-        break;
+        case eString: 
+            {
+                push(STRING_TO_JS2VAL(BytecodeContainer::getString(pc)));
+                pc += sizeof(String *);
+            }
+            break;
+
+        case eNull: 
+            {
+	        push(JS2VAL_NULL);
+	    }
+	    break;
+

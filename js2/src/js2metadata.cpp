@@ -84,6 +84,8 @@ namespace MetaData {
         }
     }
 
+        
+
     /*
      * Validate an individual statement 'p', including it's children
      */
@@ -117,6 +119,80 @@ namespace MetaData {
                 ValidateStmt(cxt, env, i->stmt2);
             }
             break;
+        case StmtNode::While:
+            {
+            }
+            break;
+        case StmtNode::Function:
+            {
+                Attribute *attr = NULL;
+                FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
+                if (f->attributes) {
+                    ValidateAttributeExpression(cxt, env, f->attributes);
+                    attr = EvalAttributeExpression(env, CompilePhase, f->attributes);
+                }
+                CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                if (a->dynamic)
+                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                VariableBinding *vb = f->function.parameters;
+                bool untyped = true;
+                while (vb) {
+                    if (vb->type) {
+                        untyped = false;
+                        break;
+                    }
+                    vb = vb->next;
+                }
+                bool unchecked = !cxt->strict && (env->getTopFrame()->kind == ClassKind)
+                                    && (f->function.prefix != FunctionName::normal) && untyped;
+                bool prototype = unchecked || a->prototype;
+                Attribute::MemberModifier memberMod = a->memberMod;
+                if (env->getTopFrame()->kind == ClassKind) {
+                    if (memberMod == Attribute::NoModifier)
+                        memberMod = Attribute::Virtual;
+                }
+                else {
+                    if (memberMod != Attribute::NoModifier)
+                        reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                }
+                if (prototype && ((f->function.prefix != FunctionName::normal) || (memberMod == Attribute::Constructor))) {
+                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                }
+                js2val compileThis = JS2VAL_VOID;
+                if (prototype || (memberMod == Attribute::Constructor) 
+                              || (memberMod == Attribute::Virtual) 
+                              || (memberMod == Attribute::Final))
+                    compileThis = JS2VAL_INACCESSIBLE;
+                ParameterFrame *compileFrame = new ParameterFrame();
+                compileFrame->thisObject = compileThis;
+                compileFrame->prototype = prototype;
+                Frame *topFrame = env->getTopFrame();
+                env->addFrame(compileFrame);
+//                ValidateStmt(cxt, env, f->function.parameters);
+                ValidateStmt(cxt, env, f->function.body);
+                if (unchecked 
+                        && ((topFrame->kind == GlobalObjectKind)
+                                        || (topFrame->kind == ParameterKind))
+                        && (f->attributes == NULL)) {
+                    defineHoistedVar(env, *f->function.name, p);
+                }
+                else {
+                    switch (memberMod) {
+                    case Attribute::NoModifier:
+                    case Attribute::Static:
+                        {
+                            FixedInstance *fInst = new FixedInstance(functionClass);
+                            fInst->fWrap = new FunctionWrapper();
+                            fInst->fWrap->compileThis = compileThis;
+                            Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
+                            defineStaticMember(env, *f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                        }
+                        break;
+                    }
+                }
+                env->removeTopFrame();
+            }
+            break;
         case StmtNode::Var:
         case StmtNode::Const:
             {
@@ -133,11 +209,12 @@ namespace MetaData {
                 Frame *regionalFrame = env->getRegionalFrame();
                 while (vb)  {
                     const StringAtom *name = vb->name;
-                    ValidateTypeExpression(cxt, env, vb->type);
+                    if (vb->type)
+                        ValidateTypeExpression(cxt, env, vb->type);
                     vb->member = NULL;
 
                     if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
-                                        || (regionalFrame->kind == FunctionKind))
+                                        || (regionalFrame->kind == ParameterKind))
                                     && !immutable
                                     && (vs->attributes == NULL)
                                     && (vb->type == NULL)) {
@@ -153,8 +230,12 @@ namespace MetaData {
                             memberMod = Attribute::Final;
                         switch (memberMod) {
                         case Attribute::NoModifier:
-                        case Attribute::Static: {
-                            Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
+                        case Attribute::Static: 
+                            {
+                                // Set type to FUTURE_TYPE - it will be resolved during 'PreEval'. The value is either FUTURE_VALUE
+                                // for 'const' - in which case the expression is compile time evaluated (or attempted) or set
+                                // to INACCESSIBLE until run time initialization occurs.
+                                Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
                                 vb->member = v;
                                 v->vb = vb;
                                 vb->mn = defineStaticMember(env, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
@@ -174,7 +255,6 @@ namespace MetaData {
                             break;
                         }
                     }
-
                     vb = vb->next;
                 }
             }
@@ -258,7 +338,7 @@ namespace MetaData {
                     reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
                     break;
                 }
-                JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), final, classStmt->name);
+                JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), true, final, classStmt->name);
                 classStmt->c = c;
                 Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
                 defineStaticMember(env, classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
@@ -371,6 +451,20 @@ namespace MetaData {
                 bCon->setLabel(skipOverFalseStmt);
             }
             break;
+        case StmtNode::While:
+            {
+            }
+            break;
+        case StmtNode::Function:
+            {
+                FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
+                BytecodeContainer *saveBacon = bCon;
+                f->fWrap->bCon = new BytecodeContainer();
+                bCon = f->fWrap->bCon;
+                EvalStmt(env, phase, f->function.body);
+                bCon = saveBacon;
+            }
+            break;
         case StmtNode::Var:
         case StmtNode::Const:
             {
@@ -384,36 +478,33 @@ namespace MetaData {
                             JS2Class *type = getVariableType(v, CompilePhase, p->pos);
                             if (JS2VAL_IS_FUTURE(v->value)) {
                                 v->value = JS2VAL_INACCESSIBLE;
-                                try {
-                                    if (vb->initializer) {
+                                if (vb->initializer) {
+                                    try {
                                         js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
                                         v->value = engine->assignmentConversion(newValue, type);
                                     }
-                                    else
-                                        // Would only have come here if the variable was immutable
-                                        reportError(Exception::compileExpressionError, "Missing compile time expression", p->pos);
-                                }
-                                catch (Exception x) {
-                                    // If a compileExpressionError occurred, then the initialiser is not a compile-time 
-                                    // constant expression. In this case, ignore the error and leave the value of the 
-                                    // variable inaccessible until it is defined at run time.
-                                    if (x.kind != Exception::compileExpressionError)
-                                        throw x;
-                                }
-                                if (vb->initializer) {
+                                    catch (Exception x) {
+                                        // If a compileExpressionError occurred, then the initialiser is not a compile-time 
+                                        // constant expression. In this case, ignore the error and leave the value of the 
+                                        // variable inaccessible until it is defined at run time.
+                                        if (x.kind != Exception::compileExpressionError)
+                                            throw x;
+                                    }
                                     // XXX more here - 
                                     //
                                     // eGET_TOP_FRAME    <-- establish base
                                     // eDotRead <v->mn>
-                                    // eIS_INACCESSIBLE
-                                    // eBRANCH_FALSE <lbl>
+                                    // eIS_INACCESSIBLE      ??
+                                    // eBRANCH_FALSE <lbl>   ?? eBRANCH_ACC <lbl>
                                     //      eGET_TOP_FRAME
                                     //      <vb->initializer code>
                                     //      <convert to 'type'>
                                     //      eDotWrite <v->mn>
                                     // <lbl>:
                                 }
-
+                                else
+                                    // Would only have come here if the variable was immutable - i.e. a 'const' definition
+                                    reportError(Exception::compileExpressionError, "Missing compile time expression", p->pos);
                             }
                         }
                         else {
@@ -730,10 +821,36 @@ namespace MetaData {
     void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
         switch (p->getKind()) {
+        case ExprNode::Null:
         case ExprNode::number:
         case ExprNode::boolean:
             break;
+        case ExprNode::This:
+            {
+                if (env->findThis(true) == JS2VAL_VOID)
+                    reportError(Exception::syntaxError, "No 'this' available", p->pos);
+            }
+            break;
         case ExprNode::objectLiteral:
+            break;
+        case ExprNode::index:
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                ValidateExpression(cxt, env, i->op);
+                ExprPairList *ep = i->pairs;
+                uint16 positionalCount = 0;
+                while (ep) {
+                    if (ep->field)
+                        reportError(Exception::argumentMismatchError, "Indexing doesn't support named arguments", p->pos);
+                    else {
+                        if (positionalCount)
+                            reportError(Exception::argumentMismatchError, "Indexing doesn't support more than 1 argument", p->pos);
+                        positionalCount++;
+                        ValidateExpression(cxt, env, ep->value);
+                    }
+                    ep = ep->next;
+                }
+            }
             break;
         case ExprNode::dot:
             {
@@ -752,10 +869,32 @@ namespace MetaData {
                 ValidateExpression(cxt, env, b->op2);
             }
             break;
+
+        case ExprNode::postIncrement:
+        case ExprNode::postDecrement:
+        case ExprNode::preIncrement:
+        case ExprNode::preDecrement:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                ValidateExpression(cxt, env, u->op);
+            }
+            break;
+
         case ExprNode::qualify:
         case ExprNode::identifier:
             {
 //                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
+            }
+            break;
+        case ExprNode::call:
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                ValidateExpression(cxt, env, i->op);
+                ExprPairList *args = i->pairs;
+                while (args) {
+                    ValidateExpression(cxt, env, args->value);
+                    args = args->next;
+                }
             }
             break;
         case ExprNode::New: 
@@ -831,16 +970,16 @@ doBinary:
                 bCon->emitOp(binaryOp, p->pos);
             }
             break;
-
-        case ExprNode::postIncrement:
+        case ExprNode::This:
             {
-                if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
-                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op);
-                    ASSERT(false);
+
             }
             break;
-
+        case ExprNode::Null:
+            {
+                bCon->emitOp(eNull, p->pos);
+            }
+            break;
         case ExprNode::number:
             {
                 bCon->emitOp(eNumber, p->pos);
@@ -868,6 +1007,60 @@ doBinary:
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(i->name, cxt.strict);
                 ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
+            }
+            break;
+        case ExprNode::postIncrement:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, u->op);
+                if (lVal)
+                    lVal->emitPostIncBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "PostIncrement needs an lValue", p->pos);
+            }
+            break;
+        case ExprNode::postDecrement:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, u->op);
+                if (lVal)
+                    lVal->emitPostDecBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "PostDecrement needs an lValue", p->pos);
+            }
+            break;
+        case ExprNode::preIncrement:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, u->op);
+                if (lVal)
+                    lVal->emitPreIncBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "PreIncrement needs an lValue", p->pos);
+            }
+            break;
+        case ExprNode::preDecrement:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, u->op);
+                if (lVal)
+                    lVal->emitPreDecBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "PreDecrement needs an lValue", p->pos);
+            }
+            break;
+        case ExprNode::index:
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                Reference *baseVal = EvalExprNode(env, phase, i->op);
+                if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
+                ExprPairList *ep = i->pairs;
+                while (ep) {
+                    Reference *argVal = EvalExprNode(env, phase, ep->value);
+                    if (argVal) argVal->emitReadBytecode(bCon, p->pos);
+                    ep = ep->next;
+                }
+                returnRef = new BracketReference();
             }
             break;
         case ExprNode::dot:
@@ -921,7 +1114,23 @@ doBinary:
                     argCount++;
                     e = e->next;
                 }
-                bCon->emitOp(eNewObject, -argCount + 1);
+                bCon->emitOp(eNewObject, p->pos, -argCount + 1);    // pop argCount args and push a new object
+                bCon->addShort(argCount);
+            }
+            break;
+        case ExprNode::call:
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                Reference *rVal = EvalExprNode(env, phase, i->op);
+                if (rVal) rVal->emitReadForInvokeBytecode(bCon, p->pos);
+                ExprPairList *args = i->pairs;
+                uint16 argCount = 0;
+                while (args) {
+                    EvalExprNode(env, phase, args->value);
+                    argCount++;
+                    args = args->next;
+                }
+                bCon->emitOp(eCall, p->pos);
                 bCon->addShort(argCount);
             }
             break;
@@ -931,13 +1140,14 @@ doBinary:
                 Reference *rVal = EvalExprNode(env, phase, i->op);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 ExprPairList *args = i->pairs;
-                uint32 argCount = 0;
+                uint16 argCount = 0;
                 while (args) {
                     EvalExprNode(env, phase, args->value);
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eNew, p->pos);
+                bCon->emitOp(eNew, p->pos, -argCount + 1);    // pop argCount args and push a result
+                bCon->addShort(argCount);
             }
             break;
         default:
@@ -1004,10 +1214,10 @@ doBinary:
     {
         Frame *pf = firstFrame;
         while (pf) {
-            if ((pf->kind == FunctionKind)
-                    && !JS2VAL_IS_NULL(checked_cast<FunctionFrame *>(pf)->thisObject))
-                if (allowPrototypeThis || !checked_cast<FunctionFrame *>(pf)->prototype)
-                    return checked_cast<FunctionFrame *>(pf)->thisObject;
+            if ((pf->kind == ParameterKind)
+                    && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
+                if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
+                    return checked_cast<ParameterFrame *>(pf)->thisObject;
             pf = pf->nextFrame;
         }
         return JS2VAL_VOID;
@@ -1342,7 +1552,7 @@ doBinary:
     {
         QualifiedName qName(publicNamespace, id);
         Frame *regionalFrame = env->getRegionalFrame();
-        ASSERT((env->getTopFrame()->kind == GlobalObjectKind) || (env->getTopFrame()->kind == FunctionKind));
+        ASSERT((env->getTopFrame()->kind == GlobalObjectKind) || (env->getTopFrame()->kind == ParameterKind));
     
         // run through all the existing bindings, both read and write, to see if this
         // variable already exists.
@@ -1399,8 +1609,11 @@ doBinary:
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
 
-        objectClass = new JS2Class(NULL, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), true, false, engine->object_StringAtom);
+        objectClass = new JS2Class(NULL, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), false, true, false, engine->object_StringAtom);
         objectClass->complete = true;
+
+        functionClass = new JS2Class(objectClass, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), false, true, true, engine->function_StringAtom);
+        functionClass->complete = true;
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
@@ -1442,7 +1655,7 @@ doBinary:
             return packageClass;
 
         case SystemKind:
-        case FunctionKind: 
+        case ParameterKind: 
         case BlockKind: 
         default:
             ASSERT(false);
@@ -1621,7 +1834,7 @@ readClassProperty:
         case SystemKind:
         case GlobalObjectKind: 
         case PackageKind:
-        case FunctionKind: 
+        case ParameterKind: 
         case BlockKind: 
             return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, rval);
 
@@ -1744,7 +1957,7 @@ readClassProperty:
         case SystemKind:
         case GlobalObjectKind: 
         case PackageKind:
-        case FunctionKind: 
+        case ParameterKind: 
         case BlockKind: 
             return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase);
 
@@ -2086,7 +2299,7 @@ readClassProperty:
  ************************************************************************************/
 
 
-    JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name) 
+    JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const StringAtom &name) 
         : Frame(ClassKind), 
             instanceInitOrder(NULL), 
             complete(false), 
@@ -2094,13 +2307,14 @@ readClassProperty:
             prototype(proto), 
             privateNamespace(privateNamespace), 
             dynamic(dynamic),
-            primitive(false),
+            allowNull(allowNull),
             final(final),
             call(NULL),
             construct(JS2Engine::defaultConstructor),
             slotCount(0),
             name(name)
-    { 
+    {
+
     }
 
  

@@ -61,7 +61,8 @@ namespace JavaScript
             badValueError,
             compileExpressionError,
             propertyAccessError,
-            uninitializedError
+            uninitializedError,
+            argumentMismatchError
         };
         
         Kind kind;              // The exception's kind

@@ -63,6 +63,8 @@
 
     case eNew:
         {
+            uint16 argCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(uint16);
             js2val v = top();
             ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
             JS2Object *obj = JS2VAL_TO_OBJECT(v);
@@ -72,3 +74,56 @@
             push(retval);
         }
         break;
+
+    case eCall:
+        {
+            uint16 argCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(uint16);
+            js2val tgt = top(argCount);
+            if (JS2VAL_IS_PRIMITIVE(tgt))
+                meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
+            JS2Object *obj = JS2VAL_TO_OBJECT(tgt);
+            if (obj->kind == FixedInstanceKind) {
+                FixedInstance *fInst = checked_cast<FixedInstance *>(obj);
+                js2val compileThis = fInst->fWrap->compileThis;
+                js2val runtimeThis;
+                if (JS2VAL_IS_VOID(compileThis))
+                    runtimeThis = JS2VAL_VOID;
+                else {
+                    if (JS2VAL_IS_INACCESSIBLE(compileThis)) {
+                        //runtimeThis = ;
+                        Frame *g = meta->env.getPackageOrGlobalFrame();
+                        
+                    }
+                }
+
+/*
+proc call(this: OBJECT, args: ARGUMENTLIST, runtimeEnv: ENVIRONMENT, phase: PHASE): OBJECT
+if phase = compile then throw compileExpressionError end if;
+runtimeThis: OBJECTOPT;
+case compileThis of
+{none} do runtimeThis ® none;
+{inaccessible} do
+runtimeThis ® this;
+g: PACKAGE ª GLOBAL ® getPackageOrGlobalFrame(runtimeEnv);
+if prototype and runtimeThis å {null, undefined} and g å GLOBAL then
+runtimeThis ® g
+end if
+end case;
+runtimeFrame: PARAMETERFRAME ® new PARAMETERFRAME∑∑staticReadBindings: {},
+staticWriteBindings: {}, plurality: singular, this: runtimeThis, prototype: prototype,
+signature: compileFrame.signature““;
+instantiateFrame(compileFrame, runtimeFrame, [runtimeFrame] ! runtimeEnv);
+assignArguments(runtimeFrame, compileFrame.signature, unchecked, args);
+try
+Eval[Block]([runtimeFrame] ! runtimeEnv, undefined);
+throw RETURNEDVALUE∑value: undefined“
+catch x: SEMANTICEXCEPTION do
+if x å RETURNEDVALUE then return x.value else throw x end if
+end try
+
+*/
+            }
+            else
+                ASSERT(false);
+        }

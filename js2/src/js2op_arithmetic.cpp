@@ -55,7 +55,6 @@
 	    } 
         }
         break;
-
     case eSubtract: 
         {
 	    js2val a = pop();
@@ -63,5 +62,155 @@
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
             retval = pushNumber(anum - bnum);
+        }
+        break;
+
+    case eLexicalPostInc:
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            retval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(retval);
+            retval = allocNumber(num);
+            meta->env.lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
+        }
+        break;
+    case eLexicalPostDec:
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            retval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(retval);
+            retval = allocNumber(num);
+            meta->env.lexicalWrite(meta, mn, allocNumber(num - 1.0), true, phase);
+        }
+        break;
+    case eLexicalPreInc:
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            retval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(retval);
+            retval = pushNumber(num + 1.0);
+            meta->env.lexicalWrite(meta, mn, retval, true, phase);
+        }
+        break;
+    case eLexicalPreDec:
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            retval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(retval);
+            retval = pushNumber(num - 1.0);
+            meta->env.lexicalWrite(meta, mn, retval, true, phase);
+        }
+        break;
+
+    case eDotPostInc:
+        {
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            float64 num = toNumber(retval);
+            retval = allocNumber(num);
+            meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
+        }
+        break;
+    case eDotPostDec:
+        {
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            float64 num = toNumber(retval);
+            retval = allocNumber(num);
+            meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
+        }
+        break;
+    case eDotPreInc:
+        {
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            float64 num = toNumber(retval);
+            retval = pushNumber(num + 1.0);
+            meta->writeProperty(baseVal, mn, &lookup, true, retval, RunPhase);
+        }
+        break;
+    case eDotPreDec:
+        {
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            float64 num = toNumber(retval);
+            retval = pushNumber(num - 1.0);
+            meta->writeProperty(baseVal, mn, &lookup, true, retval, RunPhase);
+        }
+        break;
+    case eBracketPostInc:
+        {
+            LookupKind lookup(false, NULL);
+            js2val indexVal = pop();
+            js2val baseVal = pop();
+            String *indexStr = toString(indexVal);
+            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            float64 num = toNumber(retval);
+            retval = allocNumber(num);
+            meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
+        }
+        break;
+    case eBracketPostDec:
+        {
+            LookupKind lookup(false, NULL);
+            js2val indexVal = pop();
+            js2val baseVal = pop();
+            String *indexStr = toString(indexVal);
+            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            float64 num = toNumber(retval);
+            retval = allocNumber(num);
+            meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
+        }
+        break;
+    case eBracketPreInc:
+        {
+            LookupKind lookup(false, NULL);
+            js2val indexVal = pop();
+            js2val baseVal = pop();
+            String *indexStr = toString(indexVal);
+            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            float64 num = toNumber(retval);
+            retval = pushNumber(num + 1.0);
+            meta->writeProperty(baseVal, &mn, &lookup, true, retval, RunPhase);
+        }
+        break;
+    case eBracketPreDec:
+        {
+            LookupKind lookup(false, NULL);
+            js2val indexVal = pop();
+            js2val baseVal = pop();
+            String *indexStr = toString(indexVal);
+            Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            float64 num = toNumber(retval);
+            retval = pushNumber(num - 1.0);
+            meta->writeProperty(baseVal, &mn, &lookup, true, retval, RunPhase);
         }
         break;

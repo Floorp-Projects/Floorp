@@ -55,7 +55,8 @@ static const char *const kindStrings[] = {
     "Definition error",                     // a monkey is a small cup of milk
     "Bad Value error",                      // bad value, no biscuit
     "Compile expression error",             // invalid compile-time execution 
-    "Uninitialized error"                   // read before write
+    "Uninitialized error",                  // read before write
+    "Argument mismatch error",              // bad argument type/number
 };
 
 // Return a null-terminated string describing the exception's kind.

@@ -53,13 +53,19 @@ enum JS2Op {
     eSubtract,
     eTrue,
     eFalse,
+    eNull,
     eNumber,
     eString,            // <string pointer:u32>
     eNewObject,         // <argCount:u16>
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
+    eLexicalRef,        // <multiname index:u16>
     eDotRead,           // <multiname index:u16>
     eDotWrite,          // <multiname index:u16>
+    eDotRef,            // <multiname index:u16>
+    eBracketRead,
+    eBracketWrite,
+    eBracketRef,
     eReturn,
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
@@ -68,7 +74,22 @@ enum JS2Op {
     eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
     eBranchTrue,        // <branch displacement:s32>
     eBranch,            // <branch displacement:s32>
-    eNew
+    eNew,               // <argCount:u16>
+    eCall,              // <argCount:u16>
+
+    eLexicalPostInc,    // <multiname index:u16>
+    eLexicalPostDec,    // <multiname index:u16>
+    eLexicalPreInc,     // <multiname index:u16>
+    eLexicalPreDec,     // <multiname index:u16>
+    eDotPostInc,        // <multiname index:u16>
+    eDotPostDec,        // <multiname index:u16>
+    eDotPreInc,         // <multiname index:u16>
+    eDotPreDec,         // <multiname index:u16>
+    eBracketPostInc,
+    eBracketPostDec,
+    eBracketPreInc,
+    eBracketPreDec,
+
 };
 
 
@@ -90,13 +111,15 @@ public:
 
     size_t errorPos();
 
-    js2val pushNumber(float64 x);
+    js2val allocNumber(float64 x); 
+    js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }
 
 #define MAX_EXEC_STACK (20)
 
-    void push(js2val x) { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
-    js2val pop()        { ASSERT(sp > execStack); return *--sp; }
-    js2val top()        { return *(sp - 1); }
+    void push(js2val x)         { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
+    js2val pop()                { ASSERT(sp > execStack); return *--sp; }
+    js2val top()                { return *(sp - 1); }
+    js2val top(int argCount)    { return *(sp - (1 + argCount)); }
 
     String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
@@ -126,6 +149,7 @@ public:
     StringAtom &undefined_StringAtom;
     StringAtom &public_StringAtom;
     StringAtom &private_StringAtom;
+    StringAtom &function_StringAtom;
     StringAtom &object_StringAtom;
     
     js2val *execStack;

@@ -61,7 +61,7 @@ enum ObjectKind {
     SystemKind,
     GlobalObjectKind, 
     PackageKind, 
-    FunctionKind, 
+    ParameterKind, 
     ClassKind, 
     BlockKind, 
     PrototypeInstanceKind, 
@@ -241,8 +241,8 @@ public:
 
 class Variable : public StaticMember {
 public:
-    Variable() : StaticMember(Member::Variable), type(NULL), value(JS2VAL_VOID), immutable(false) { }
-    Variable(JS2Class *type, js2val value, bool immutable) : StaticMember(StaticMember::Variable), type(type), value(value), immutable(immutable) { }
+    Variable() : StaticMember(Member::Variable), type(NULL), vb(NULL), value(JS2VAL_VOID), immutable(false) { }
+    Variable(JS2Class *type, js2val value, bool immutable) : StaticMember(StaticMember::Variable), type(type), vb(NULL), value(value), immutable(immutable) { }
 
     JS2Class *type;                 // Type of values that may be stored in this variable, NULL if INACCESSIBLE, FUTURE_TYPE if pending
     VariableBinding *vb;            // The variable definition node, to resolve future types
@@ -385,7 +385,7 @@ public:
 
 class JS2Class : public Frame {
 public:
-    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name);
+    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool allowNull, bool final, const StringAtom &name);
 
     const StringAtom &getName()                 { return name; }
         
@@ -402,7 +402,7 @@ public:
     Namespace *privateNamespace;                // This class's private namespace
 
     bool dynamic;                               // true if this class or any of its ancestors was defined with the dynamic attribute
-    bool primitive;                             // true if this class was defined with the primitive attribute
+    bool allowNull;                             // true if null is considered to be an instance of this class
     bool final;                                 // true if this class cannot be subclassed
 
     Callor *call;                               // A procedure to call when this class is used in a call expression
@@ -431,12 +431,19 @@ public:
     js2val value;                // This fixed property's current value; uninitialised if the fixed property is an uninitialised constant
 };
 
+class FunctionWrapper {
+public:
+    BytecodeContainer   *bCon;
+    js2val              compileThis;    // The value of 'this' established at Validate time
+};
+
 // Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
 class FixedInstance : public JS2Object {
 public:
     FixedInstance(JS2Class *type);
 
     JS2Class    *type;          // This instance's type
+    FunctionWrapper *fWrap;
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
     Environment *env;           // The environment to pass to the call or construct procedure
@@ -483,6 +490,11 @@ public:
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)             { ASSERT(false); }
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); };
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { ASSERT(false); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
 };
 
 class LexicalReference : public Reference {
@@ -501,6 +513,13 @@ public:
     
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(variableMultiname); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
+
 };
 
 class DotReference : public Reference {
@@ -520,6 +539,13 @@ public:
                                     // example above)
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(propertyMultiname); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
+
 };
 
 
@@ -542,10 +568,21 @@ class BracketReference : public Reference {
 // applying the [] operator to the base object with the given arguments. BRACKETREFERENCE tuples arise from evaluating
 // subexpressions such as a[x] or a[x,y].
 public:
-    js2val base;                     // The object whose property was referenced (a in the examples above). The object may be a
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eBracketRead, pos); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eBracketWrite, pos); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eBracketRef, pos); }
+/*
+    js2val base;                    // The object whose property was referenced (a in the examples above). The object may be a
                                     // LIMITEDINSTANCE if a is a super expression, in which case the property lookup will be
                                     // restricted to definitions of the [] operator defined in proper ancestors of base.limit.
     ArgumentList args;              // The list of arguments between the brackets (x or x,y in the examples above)
+*/
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eBracketPostInc, pos); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eBracketPostDec, pos); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreInc, pos); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreDec, pos); }
+
 };
 
 
@@ -556,9 +593,9 @@ public:
 };
 
 // Frames holding bindings for invoked functions
-class FunctionFrame : public Frame {
+class ParameterFrame : public Frame {
 public:
-    FunctionFrame() : Frame(FunctionKind) { }
+    ParameterFrame() : Frame(ParameterKind) { }
 
     Plurality plurality;
     js2val thisObject;               // The value of this; none if this function doesn't define this;
@@ -745,6 +782,7 @@ public:
     JS2Class *packageClass;
     JS2Class *prototypeClass;
     JS2Class *attributeClass;
+    JS2Class *functionClass;
 
     Parser *mParser;                // used for error reporting
 

@@ -64,6 +64,7 @@ namespace JavaScript {
         class Multiname;
         class OverrideStatus;
         typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
+        class FunctionWrapper;
     }
 #endif
 
@@ -146,9 +147,9 @@ namespace JavaScript {
         JS2Runtime::JSObject *scope;    // ditto
 #endif
 #ifdef EPIMETHEUS
-        MetaData::Member *member;
-        MetaData::Multiname *mn;
-        MetaData::OverrideStatusPair *osp;
+        MetaData::Member *member;           // the associated definition...
+        MetaData::Multiname *mn;            // ...and name constructed by the semantics phase
+        MetaData::OverrideStatusPair *osp;  // Read & Write status for PreEval stage
 #endif
 
         VariableBinding(size_t pos, const StringAtom *name, ExprNode *type, ExprNode *initializer, bool constant):
@@ -411,10 +412,15 @@ namespace JavaScript {
 
     struct InvokeExprNode: PairListExprNode {
         ExprNode *op;                   // The called function, called constructor, or indexed object; nil only for superStmt
+#ifdef DIKDIK
         bool isSuperInvoke;             // used by backend to handle super constructor call in a constructor
-
+#endif
         InvokeExprNode(size_t pos, Kind kind, ExprNode *op, ExprPairList *pairs):
-                PairListExprNode(pos, kind, pairs), op(op), isSuperInvoke(false) {ASSERT(op || kind == superStmt);}
+                PairListExprNode(pos, kind, pairs), op(op)
+#ifdef DIKDIK
+                    , isSuperInvoke(false) 
+#endif
+                {ASSERT(op || kind == superStmt);}
 
         void print(PrettyPrinter &f) const;
     };
@@ -666,6 +672,9 @@ namespace JavaScript {
         FunctionDefinition function;    // Function definition
 #ifdef DIKDIK
         JS2Runtime::JSFunction *mFunction; // used by backend
+#endif
+#ifdef EPIMETHEUS
+        MetaData::FunctionWrapper *fWrap;
 #endif
         FunctionStmtNode(size_t pos, Kind kind, ExprNode *attributes): AttributeStmtNode(pos, kind, attributes) {}
 
