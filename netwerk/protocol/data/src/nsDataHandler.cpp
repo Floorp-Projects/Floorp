@@ -81,7 +81,6 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     NS_ASSERTION(!aBaseURI, "base url passed into data protocol handler");
 
     nsCAutoString spec(aSpec);
-    spec.StripWhitespace();
 
     nsIURI* url;
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
