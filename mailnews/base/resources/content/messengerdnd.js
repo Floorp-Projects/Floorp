@@ -133,10 +133,6 @@ function CanDropOnFolderTree(index, orientation)
           if (targetUri == sourceUri)	
               return false;
 
-          //don't allow drop on different imap servers.
-          if (sourceServer != targetServer && targetServer.type == "imap")
-              return false;
-
           //don't allow immediate child to be dropped to it's parent
           if (targetFolder.URI == sourceFolder.parent.URI)
           {

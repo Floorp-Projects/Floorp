@@ -135,4 +135,5 @@ PR_END_EXTERN_C
 #define IMAP_QUOTA_STATUS_NOQUOTA                   5097
 #define	IMAP_OUT_OF_MEMORY                          5100
 #define IMAP_AUTH_SECURE_NOTSUPPORTED               5102
+#define IMAP_COPYING_MESSAGE_OF                     5103
 #endif /* _nsImapStringBundle_H__ */
