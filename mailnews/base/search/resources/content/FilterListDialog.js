@@ -108,6 +108,8 @@ function onLoad()
     if (firstItem) {
         selectServer(firstItem);
     }
+
+    gFilterTree.addEventListener("click",onFilterClick,true);
 }
 
 /*
@@ -567,12 +569,19 @@ function getServerThatCanHaveFilters()
 function onFilterClick(event)
 {
     // we only care about button 0 (left click) events
-    if (event.button != 0 || event.originalTarget.localName != "treechildren") return;
+    if (event.button != 0)
+      return;
+    
     var row = {}, colID = {}, childElt = {};
     var filterTree = document.getElementById("filterTree");
     filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
-    if (row.value == -1 || row.value > filterTree.view.rowCount-1)
-        return;
+    if (row.value == -1 || row.value > filterTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") {
+      if (event.originalTarget.localName == "treecol") { 
+        // clicking on the name column in the filter list should not sort
+        event.preventBubble();
+      }
+      return;
+    }
         
     if (colID.value == "activeColumn") {
       var res = filterTree.builderView.getResourceAtIndex(row.value);
@@ -583,10 +592,22 @@ function onFilterClick(event)
 function onFilterDoubleClick(event)
 {
     // we only care about button 0 (left click) events
-    if (event.button != 0 || event.originalTarget.localName != "treechildren")
+    if (event.button != 0)
       return;
 
-    onEditFilter();
+    var row = {}, colID = {}, childElt = {};
+    var filterTree = document.getElementById("filterTree");
+    filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+    if (row.value == -1 || row.value > filterTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") {
+      // double clicking on a non valid row should not open the edit filter dialog
+      return;
+    }
+
+    // if the cell is in a "cycler" column (the enabled column)
+    // don't open the edit filter dialog with the selected filter
+    var col = document.getElementById(colID.value);
+    if (col.getAttribute("cycler") != "true")
+      onEditFilter();
 }
 
 function onFilterTreeKeyPress(event)

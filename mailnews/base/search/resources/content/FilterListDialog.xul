@@ -115,7 +115,6 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
           <tree id="filterTree" flex="1" hidecolumnpicker="true"
                 onselect="onFilterSelect(event);"
                 onkeypress="onFilterTreeKeyPress(event);"
-                onclick="onFilterClick(event);"
                 ondblclick="onFilterDoubleClick(event);"
                 datasources="rdf:msgfilters rdf:msgaccountmanager" flags="dont-build-content">
 
