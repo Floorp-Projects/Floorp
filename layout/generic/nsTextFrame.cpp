@@ -261,7 +261,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
-  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 
@@ -2339,9 +2339,9 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
       }
       else {
         aReflowState.rendContext->GetWidth(bp, wordLen, width);
-      }
-      if (ts.mLetterSpacing) {
-        width += ts.mLetterSpacing * wordLen;
+        if (ts.mLetterSpacing) {
+          width += ts.mLetterSpacing * wordLen;
+        }
       }
       skipWhitespace = PR_FALSE;
       lastWordWidth = width;
@@ -2564,7 +2564,7 @@ nsTextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 }
 
 NS_IMETHODIMP
-nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth)
 {
