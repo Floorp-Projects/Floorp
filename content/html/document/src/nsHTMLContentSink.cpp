@@ -49,6 +49,7 @@
 #include "nsIFormControl.h"
 
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 
 #include "nsIScrollableView.h"
 #include "nsHTMLAtoms.h"
@@ -65,6 +66,9 @@
 #include "nsIScriptContextOwner.h"
 #include "nsHTMLIIDs.h"
 #include "nsTextFragment.h"
+
+#include "nsIParserService.h"
+#include "nsParserCIID.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -109,29 +113,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
     }                                             \
   PR_END_MACRO
 
-#define SINK_TRACE_NODE(_bit,_msg,_node) SinkTraceNode(_bit,_msg,_node,this)
-
-
-static void
-SinkTraceNode(PRUint32 aBit,
-              const char* aMsg,
-              const nsIParserNode& aNode,
-              void* aThis)
-{
-  if (SINK_LOG_TEST(gSinkLogModuleInfo,aBit)) {
-    char cbuf[40];
-    const char* cp;
-    PRInt32 nt = aNode.GetNodeType();
-    if ((nt > PRInt32(eHTMLTag_unknown)) &&
-        (nt < PRInt32(eHTMLTag_text))) {
-      cp = nsHTMLTags::GetStringValue(nsHTMLTag(aNode.GetNodeType()));
-    } else {
-      aNode.GetText().ToCString(cbuf, sizeof(cbuf));
-      cp = cbuf;
-    }
-    PR_LogPrint("%s: this=%p node='%s'", aMsg, aThis, cp);
-  }
-}
+#define SINK_TRACE_NODE(_bit,_msg,_node,_obj) _obj->SinkTraceNode(_bit,_msg,_node,this)
 
 #else
 #define SINK_TRACE(_bit,_args)
@@ -188,6 +170,27 @@ public:
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
 
   NS_IMETHOD DoFragment(PRBool aFlag);
+
+  void ReduceEntities(nsString& aString);
+  void GetAttributeValueAt(const nsIParserNode& aNode,
+                           PRInt32 aIndex,
+                           nsString& aResult,
+                           nsIScriptContextOwner* aScriptContextOwner);
+  nsresult AddAttributes(const nsIParserNode& aNode,
+                         nsIHTMLContent* aContent,
+                         nsIScriptContextOwner* aScriptContextOwner,
+                         PRBool aNotify = PR_FALSE);
+  nsresult CreateContentObject(const nsIParserNode& aNode,
+                               nsHTMLTag aNodeType,
+                               nsIDOMHTMLFormElement* aForm,
+                               nsIWebShell* aWebShell,
+                               nsIHTMLContent** aResult);
+#ifdef NS_DEBUG
+  void SinkTraceNode(PRUint32 aBit,
+                     const char* aMsg,
+                     const nsIParserNode& aNode,
+                     void* aThis);
+#endif
 
   nsIDocument* mDocument;
   nsIHTMLDocument* mHTMLDocument;
@@ -346,105 +349,144 @@ public:
 
 //----------------------------------------------------------------------
 
-static void
-ReduceEntities(nsString& aString)
+#ifdef NS_DEBUG
+void
+HTMLContentSink::SinkTraceNode(PRUint32 aBit,
+                               const char* aMsg,
+                               const nsIParserNode& aNode,
+                               void* aThis)
 {
-  // Reduce any entities
-  // XXX Note: as coded today, this will only convert well formed
-  // entities.  This may not be compatible enough.
-  // XXX there is a table in navigator that translates some numeric entities
-  // should we be doing that? If so then it needs to live in two places (bad)
-  // so we should add a translate numeric entity method from the parser...
-  char cbuf[100];
-  PRInt32 i = 0;
-  while (i < aString.Length()) {
-    // If we have the start of an entity (and it's not at the end of
-    // our string) then translate the entity into it's unicode value.
-    if ((aString.CharAt(i++) == '&') && (i < aString.Length())) {
-      PRInt32 start = i - 1;
-      PRUnichar e = aString.CharAt(i);
-      if (e == '#') {
-        // Convert a numeric character reference
-        i++;
-        char* cp = cbuf;
-        char* limit = cp + sizeof(cbuf) - 1;
-        PRBool ok = PR_FALSE;
-        PRInt32 slen = aString.Length();
-        while ((i < slen) && (cp < limit)) {
-          e = aString.CharAt(i);
-          if (e == ';') {
-            i++;
-            ok = PR_TRUE;
-            break;
-          }
-          if ((e >= '0') && (e <= '9')) {
-            *cp++ = char(e);
-            i++;
-            continue;
-          }
-          break;
-        }
-        if (!ok || (cp == cbuf)) {
-          continue;
-        }
-        *cp = '\0';
-        if (cp - cbuf > 5) {
-          continue;
-        }
-        PRInt32 ch = PRInt32( ::atoi(cbuf) );
-        if (ch > 65535) {
-          continue;
-        }
+  if (SINK_LOG_TEST(gSinkLogModuleInfo,aBit)) {
+    char cbuf[40];
+    const char* cp;
+    nsAutoString str;
+    PRInt32 nt = aNode.GetNodeType();
+    if ((nt > PRInt32(eHTMLTag_unknown)) &&
+        (nt < PRInt32(eHTMLTag_text)) && mParser) {
+      nsCOMPtr<nsIDTD> dtd;
+      mParser->GetDTD(getter_AddRefs(dtd));
+      dtd->IntTagToStringTag(nsHTMLTag(aNode.GetNodeType()), str);
+      cp = str.ToCString(cbuf, sizeof(cbuf));
+    } else {
+      aNode.GetText().ToCString(cbuf, sizeof(cbuf));
+      cp = cbuf;
+    }
+    PR_LogPrint("%s: this=%p node='%s'", aMsg, aThis, cp);
+  }
+}
+#endif
 
-        // Remove entity from string and replace it with the integer
-        // value.
-        aString.Cut(start, i - start);
-        aString.Insert(PRUnichar(ch), start);
-        i = start + 1;
-      }
-      else if (((e >= 'A') && (e <= 'Z')) ||
-               ((e >= 'a') && (e <= 'z'))) {
-        // Convert a named entity
-        i++;
-        char* cp = cbuf;
-        char* limit = cp + sizeof(cbuf) - 1;
-        *cp++ = char(e);
-        PRBool ok = PR_FALSE;
-        PRInt32 slen = aString.Length();
-        while ((i < slen) && (cp < limit)) {
-          e = aString.CharAt(i);
-          if (e == ';') {
-            i++;
-            ok = PR_TRUE;
-            break;
-          }
-          if (((e >= '0') && (e <= '9')) ||
-              ((e >= 'A') && (e <= 'Z')) ||
-              ((e >= 'a') && (e <= 'z'))) {
-            *cp++ = char(e);
-            i++;
-            continue;
-          }
-          break;
-        }
-        if (!ok || (cp == cbuf)) {
-          continue;
-        }
-        *cp = '\0';
-        PRInt32 ch = nsHTMLEntities::EntityToUnicode(nsSubsumeCStr(cbuf, PR_FALSE));
-        if (ch < 0) {
-          continue;
-        }
+void
+HTMLContentSink::ReduceEntities(nsString& aString)
+{
+  if (mParser) {
+    nsCOMPtr<nsIDTD> dtd;
+    
+    nsresult rv = mParser->GetDTD(getter_AddRefs(dtd));
+    
+    if (NS_SUCCEEDED(rv)) {
 
-        // Remove entity from string and replace it with the integer
-        // value.
-        aString.Cut(start, i - start);
-        aString.Insert(PRUnichar(ch), start);
-        i = start + 1;
-      }
-      else if (e == '{') {
-        // Convert a script entity
-        // XXX write me!
+      // Reduce any entities
+      // XXX Note: as coded today, this will only convert well formed
+      // entities.  This may not be compatible enough.
+      // XXX there is a table in navigator that translates some numeric entities
+      // should we be doing that? If so then it needs to live in two places (bad)
+      // so we should add a translate numeric entity method from the parser...
+      char cbuf[100];
+      PRInt32 i = 0;
+      while (i < aString.Length()) {
+        // If we have the start of an entity (and it's not at the end of
+        // our string) then translate the entity into it's unicode value.
+        if ((aString.CharAt(i++) == '&') && (i < aString.Length())) {
+          PRInt32 start = i - 1;
+          PRUnichar e = aString.CharAt(i);
+          if (e == '#') {
+            // Convert a numeric character reference
+            i++;
+            char* cp = cbuf;
+            char* limit = cp + sizeof(cbuf) - 1;
+            PRBool ok = PR_FALSE;
+            PRInt32 slen = aString.Length();
+            while ((i < slen) && (cp < limit)) {
+              e = aString.CharAt(i);
+              if (e == ';') {
+                i++;
+                ok = PR_TRUE;
+                break;
+              }
+              if ((e >= '0') && (e <= '9')) {
+                *cp++ = char(e);
+                i++;
+                continue;
+              }
+              break;
+            }
+            if (!ok || (cp == cbuf)) {
+              continue;
+            }
+            *cp = '\0';
+            if (cp - cbuf > 5) {
+              continue;
+            }
+            PRInt32 ch = PRInt32( ::atoi(cbuf) );
+            if (ch > 65535) {
+              continue;
+            }
+            
+            // Remove entity from string and replace it with the integer
+            // value.
+            aString.Cut(start, i - start);
+            aString.Insert(PRUnichar(ch), start);
+            i = start + 1;
+          }
+          else if (((e >= 'A') && (e <= 'Z')) ||
+                   ((e >= 'a') && (e <= 'z'))) {
+            // Convert a named entity
+            i++;
+            char* cp = cbuf;
+            char* limit = cp + sizeof(cbuf) - 1;
+            *cp++ = char(e);
+            PRBool ok = PR_FALSE;
+            PRInt32 slen = aString.Length();
+            while ((i < slen) && (cp < limit)) {
+              e = aString.CharAt(i);
+              if (e == ';') {
+                i++;
+                ok = PR_TRUE;
+                break;
+              }
+              if (((e >= '0') && (e <= '9')) ||
+                  ((e >= 'A') && (e <= 'Z')) ||
+                  ((e >= 'a') && (e <= 'z'))) {
+                *cp++ = char(e);
+                i++;
+                continue;
+              }
+              break;
+            }
+            if (!ok || (cp == cbuf)) {
+              continue;
+            }
+            *cp = '\0';
+            PRInt32 ch;
+            nsAutoString str(cbuf);
+            dtd->ConvertEntityToUnicode(str, &ch);
+
+            if (ch < 0) {
+              continue;
+            }
+            
+            // Remove entity from string and replace it with the integer
+            // value.
+            aString.Cut(start, i - start);
+            aString.Insert(PRUnichar(ch), start);
+            i = start + 1;
+          }
+          else if (e == '{') {
+            // Convert a script entity
+            // XXX write me!
+          }
+        }
       }
     }
   }
@@ -452,11 +494,11 @@ ReduceEntities(nsString& aString)
 
 // Temporary factory code to create content objects
 
-static void
-GetAttributeValueAt(const nsIParserNode& aNode,
-                    PRInt32 aIndex,
-                    nsString& aResult,
-                    nsIScriptContextOwner* aScriptContextOwner)
+void
+HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
+                                     PRInt32 aIndex,
+                                     nsString& aResult,
+                                     nsIScriptContextOwner* aScriptContextOwner)
 {
   // Copy value
   const nsString& value = aNode.GetValueAt(aIndex);
@@ -479,11 +521,11 @@ GetAttributeValueAt(const nsIParserNode& aNode,
   ReduceEntities(aResult);
 }
 
-static nsresult
-AddAttributes(const nsIParserNode& aNode,
-              nsIHTMLContent* aContent,
-              nsIScriptContextOwner* aScriptContextOwner,
-              PRBool aNotify = PR_FALSE)
+nsresult
+HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
+                               nsIHTMLContent* aContent,
+                               nsIScriptContextOwner* aScriptContextOwner,
+                               PRBool aNotify)
 {
   // Add tag attributes to the content attributes
   nsAutoString k, v;
@@ -782,13 +824,15 @@ GetOptionText(const nsIParserNode& aNode, nsString& aText)
 /**
  * Factory subroutine to create all of the html content objects.
  */
-static nsresult
-CreateContentObject(const nsIParserNode& aNode,
-                    nsHTMLTag aNodeType,
-                    nsIDOMHTMLFormElement* aForm,
-                    nsIWebShell* aWebShell,                    
-                    nsIHTMLContent** aResult)
+nsresult
+HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
+                                     nsHTMLTag aNodeType,
+                                     nsIDOMHTMLFormElement* aForm,
+                                     nsIWebShell* aWebShell,
+                                     nsIHTMLContent** aResult)
 {
+  nsresult rv = NS_OK;
+
   // Find/create atom for the tag name
   nsAutoString tmp;
   if (eHTMLTag_userdefined == aNodeType) {
@@ -796,41 +840,63 @@ CreateContentObject(const nsIParserNode& aNode,
     tmp.ToLowerCase();
   }
   else {
-    tmp.Append(nsHTMLTags::GetStringValue(aNodeType));
-  }
-  nsIAtom* atom = NS_NewAtom(tmp);
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIDTD> dtd;
+    rv = mParser->GetDTD(getter_AddRefs(dtd));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString str;
+      dtd->IntTagToStringTag(aNodeType, str);
+      tmp.Append(str);
+    }
   }
 
-  // Make the content object
-  // XXX why is textarea not a container?
-  nsAutoString content;
-  if (eHTMLTag_textarea == aNodeType) {
-    content = aNode.GetSkippedContent();
-  }
-  nsresult rv = MakeContentObject(aNodeType, atom, aForm, aWebShell,
-                                  aResult, &content);
+  if (NS_SUCCEEDED(rv)) {
+    nsIAtom* atom = NS_NewAtom(tmp);
+    if (nsnull == atom) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  NS_RELEASE(atom);
+    // Make the content object
+    // XXX why is textarea not a container?
+    nsAutoString content;
+    if (eHTMLTag_textarea == aNodeType) {
+      content = aNode.GetSkippedContent();
+    }
+    rv = MakeContentObject(aNodeType, atom, aForm, aWebShell,
+                           aResult, &content);
+    
+    NS_RELEASE(atom);
+  }
 
   return rv;
 }
 
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
+
 nsresult
 NS_CreateHTMLElement(nsIHTMLContent** aResult, const nsString& aTag)
 {
-  // Find tag in tag table
-  nsHTMLTag id = nsHTMLTags::LookupTag(aTag);
-  if (eHTMLTag_userdefined == id) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  nsresult rv = NS_OK;
 
-  // Create atom for tag and then create content object
-  const nsCString& tag = nsHTMLTags::GetStringValue(id);
-  nsIAtom* atom = NS_NewAtom((const char*)tag);
-  nsresult rv = MakeContentObject(id, atom, nsnull, nsnull, aResult);
-  NS_RELEASE(atom);
+  NS_WITH_SERVICE(nsIParserService,
+                  parserService, 
+                  kParserServiceCID,
+                  &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+    // Find tag in tag table
+    PRInt32 id; 
+    rv = parserService->HTMLStringTagToId(aTag, &id);
+    if (eHTMLTag_userdefined == nsHTMLTag(id)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    // Create atom for tag and then create content object
+    nsAutoString tag;
+    rv = parserService->HTMLIdToStringTag(id, tag);
+    nsIAtom* atom = NS_NewAtom(tag.GetUnicode());
+    rv = MakeContentObject(nsHTMLTag(id), atom, nsnull, nsnull, aResult);
+    NS_RELEASE(atom);
+  }
 
   return rv;
 }
@@ -994,7 +1060,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   FlushText();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::OpenContainer", aNode);
+                  "SinkContext::OpenContainer", aNode, mSink);
 
   nsresult rv;
   if (mStackPos + 1 > mStackSize) {
@@ -1007,10 +1073,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   // Create new container content object
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   nsIHTMLContent* content;
-  rv = CreateContentObject(aNode, nodeType,
-                           mSink->mCurrentForm,
-                           mSink->mFrameset ? mSink->mWebShell : nsnull,
-                           &content);
+  rv = mSink->CreateContentObject(aNode, nodeType,
+                                  mSink->mCurrentForm,
+                                  mSink->mFrameset ? mSink->mWebShell : nsnull,
+                                  &content);
   if (NS_OK != rv) {
     return rv;
   }
@@ -1022,7 +1088,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   content->SetDocument(mSink->mDocument, PR_FALSE);
   
   nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
-  rv = AddAttributes(aNode, content, sco);
+  rv = mSink->AddAttributes(aNode, content, sco);
   NS_IF_RELEASE(sco);
 
   if (mPreAppend) {
@@ -1073,7 +1139,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   FlushText();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::CloseContainer", aNode);
+                  "SinkContext::CloseContainer", aNode, mSink);
 
   --mStackPos;
   nsHTMLTag nodeType = mStack[mStackPos].mType;
@@ -1242,7 +1308,7 @@ nsresult
 SinkContext::AddLeaf(const nsIParserNode& aNode)
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::AddLeaf", aNode);
+                  "SinkContext::AddLeaf", aNode, mSink);
 
   nsresult rv = NS_OK;
 
@@ -1254,9 +1320,9 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Create new leaf content object
       nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
       nsIHTMLContent* content;
-      rv = CreateContentObject(aNode, nodeType,
-                               mSink->mCurrentForm, mSink->mWebShell,
-                               &content);
+      rv = mSink->CreateContentObject(aNode, nodeType,
+                                      mSink->mCurrentForm, mSink->mWebShell,
+                                      &content);
       if (NS_OK != rv) {
         return rv;
       }
@@ -1266,7 +1332,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       content->SetDocument(mSink->mDocument, PR_FALSE);
 
       nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
-      rv = AddAttributes(aNode, content, sco);
+      rv = mSink->AddAttributes(aNode, content, sco);
       NS_IF_RELEASE(sco);
       if (NS_OK != rv) {
         NS_RELEASE(content);
@@ -1900,7 +1966,7 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenHTML", aNode);
+                  "HTMLContentSink::OpenHTML", aNode, this);
 
   NS_STOP_STOPWATCH(mWatch)
   return NS_OK;
@@ -1911,7 +1977,7 @@ HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 {
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseHTML", aNode);
+                  "HTMLContentSink::CloseHTML", aNode, this);
   if (nsnull != mHeadContext) {
     mHeadContext->End();
     delete mHeadContext;
@@ -1926,7 +1992,7 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenHead", aNode);
+                  "HTMLContentSink::OpenHead", aNode, this);
   nsresult rv = NS_OK;
   if (nsnull == mHeadContext) {
     mHeadContext = new SinkContext(this);
@@ -1959,7 +2025,7 @@ HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 {
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseHead", aNode);
+                  "HTMLContentSink::CloseHead", aNode, this);
   PRInt32 n = mContextStack.Count() - 1;
   mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
   mContextStack.RemoveElementAt(n);
@@ -1974,7 +2040,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   //NS_PRECONDITION(nsnull == mBody, "parser called OpenBody twice");
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenBody", aNode);
+                  "HTMLContentSink::OpenBody", aNode, this);
   // Add attributes, if any, to the current BODY node
   if(mBody != nsnull){
     nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
@@ -2007,7 +2073,7 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseBody", aNode);
+                  "HTMLContentSink::CloseBody", aNode, this);
 
   PRBool didFlush;
   nsresult rv = mCurrentContext->FlushText(&didFlush);
@@ -2036,7 +2102,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   mCurrentContext->FlushText();
   
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenForm", aNode);
+                  "HTMLContentSink::OpenForm", aNode, this);
   
   // Close out previous form if it's there. If there is one
   // around, it's probably because the last one wasn't well-formed.
@@ -2096,7 +2162,7 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 
   mCurrentContext->FlushText();
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseForm", aNode);
+                  "HTMLContentSink::CloseForm", aNode, this);
 
   if (nsnull != mCurrentForm) {
     // Check if this is a well-formed form
@@ -2125,7 +2191,7 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenFrameset", aNode);
+                  "HTMLContentSink::OpenFrameset", aNode, this);
 
   nsresult rv = mCurrentContext->OpenContainer(aNode);
   if ((NS_OK == rv) && (nsnull == mFrameset)) {
@@ -2142,7 +2208,7 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   NS_START_STOPWATCH(mWatch)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseFrameset", aNode);
+                  "HTMLContentSink::CloseFrameset", aNode, this);
 
   SinkContext* sc = mCurrentContext;
   nsIHTMLContent* fs = sc->mStack[sc->mStackPos-1].mContent;
@@ -2161,7 +2227,7 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
   NS_START_STOPWATCH(mWatch)
   nsresult rv = NS_OK;
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenMap", aNode);
+                  "HTMLContentSink::OpenMap", aNode, this);
   // We used to treat MAP elements specially (i.e. they were
   // only parent elements for AREAs), but we don't anymore.
   // HTML 4.0 says that MAP elements can have block content
@@ -2177,7 +2243,7 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
   NS_START_STOPWATCH(mWatch)
   nsresult rv = NS_OK;
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseMap", aNode);
+                  "HTMLContentSink::CloseMap", aNode, this);
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mCurrentDOMMap);
 
