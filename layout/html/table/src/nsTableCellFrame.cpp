@@ -48,31 +48,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
-
-NS_IMETHODIMP
-nsTableCellFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                      nsIAtom*        aListName,
-                                      nsIFrame*       aChildList)
-{
-  // Create body pseudo frame
-  NS_NewBodyFrame(mFirstChild, NS_BODY_NO_AUTO_MARGINS);
-
-  // Resolve style and set the style context
-  nsIStyleContext* styleContext =
-    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::cellContentPseudo, mStyleContext);              // styleContext: ADDREF++
-  mFirstChild->Init(aPresContext, mContent, this, styleContext);
-  NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
-
-  // Set the geometric and content parent for each of the child frames
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-    frame->SetGeometricParent(mFirstChild);
-    frame->SetContentParent(mFirstChild);
-  }
-
-  // Queue up the frames for the block frame
-  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
-}
-
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect)

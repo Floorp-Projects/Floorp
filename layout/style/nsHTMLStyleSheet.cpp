@@ -357,6 +357,12 @@ protected:
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aNewFrame);
 
+  nsresult ConstructTableCellFrame(nsIPresContext*  aPresContext,
+                                   nsIContent*      aContent,
+                                   nsIFrame*        aParentFrame,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aNewFrame);
+
   nsresult ConstructFrameByTag(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
                                nsIFrame*        aParentFrame,
@@ -1268,6 +1274,51 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
+HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
+                                            nsIContent*      aContent,
+                                            nsIFrame*        aParentFrame,
+                                            nsIStyleContext* aStyleContext,
+                                            nsIFrame*&       aNewFrame)
+{
+  nsresult  rv;
+
+  // Create a table cell frame
+  rv = NS_NewTableCellFrame(aNewFrame);
+  if (NS_SUCCEEDED(rv)) {
+    // Initialize the table cell frame
+    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+
+    // Create a body frame that will format the cell's content
+    nsIFrame*   cellBodyFrame;
+
+    rv = NS_NewBodyFrame(cellBodyFrame, NS_BODY_NO_AUTO_MARGINS);
+    if (NS_FAILED(rv)) {
+      aNewFrame->DeleteFrame(*aPresContext);
+      aNewFrame = nsnull;
+      return rv;
+    }
+  
+    // Resolve pseudo style and initialize the body cell frame
+    nsIStyleContext*  bodyPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                          nsHTMLAtoms::cellContentPseudo, aStyleContext);
+    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, bodyPseudoStyle);
+    NS_RELEASE(bodyPseudoStyle);
+
+    // Process children and set the body cell frame's initial child list
+    nsIFrame* childList;
+    rv = ProcessChildren(aPresContext, cellBodyFrame, aContent, childList);
+    if (NS_SUCCEEDED(rv)) {
+      cellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    }
+
+    // Set the table cell frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, cellBodyFrame);
+  }
+
+  return rv;
+}
+
+nsresult
 HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
                                        nsIContent*      aContent,
                                        nsIStyleContext* aStyleContext,
@@ -1383,7 +1434,7 @@ HTMLStyleSheetImpl::ConstructXMLRootDescendants(nsIPresContext*  aPresContext,
       (nsnull, nsHTMLAtoms::scrolledContentPseudo,
        aRootPseudoStyle);
     
-      // Create a body frame to wrap the document element
+    // Create a body frame to wrap the document element
     NS_NewBodyFrame(wrapperFrame, NS_BODY_THE_BODY|NS_BODY_SHRINK_WRAP);
     wrapperFrame->Init(*aPresContext, nsnull, scrollFrame, scrolledPseudoStyle);
     
@@ -1643,9 +1694,11 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
   case NS_STYLE_DISPLAY_TABLE_CELL:
     // XXX We should check for being inside of a table row frame...
-    rv = NS_NewTableCellFrame(aNewFrame);
-    processChildren = PR_TRUE;
-    break;
+    rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame,
+                                 aStyleContext, aNewFrame);
+    // Note: table construction function takes care of initializing the frame,
+    // processing children, and setting the initial child list
+    return rv;
 
   case NS_STYLE_DISPLAY_TABLE_CAPTION:
     // XXX We should check for being inside of a table row frame...
