@@ -16,32 +16,37 @@
  * Reserved.
  */
 
-/* 
+/*
+
     The nsHTTPHandlerFactory implementation. This was directly
-    plagiarized from Chris Waterson the Great's nsRDFFactory.cpp
-    So if you find a fault here... make sure you notify him as 
-    well. 
+    plagiarized from Chris Waterson the Great. So if you find 
+    a fault here... make sure you notify him as well. 
 
     -Gagan Saksena 03/25/99
+
 */
 
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
-#include "nsHTTPHandlerFactory.h"
-#include "nsHTTPCID.h"
 #include "nsIHTTPHandler.h"
+#include "nsHTTPCID.h"
+#include "nsHTTPHandlerFactory.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsXPComFactory.h"
+#include "nsIProtocolHandler.h" // for NS_NETWORK_PROTOCOL_PROGID_PREFIX
 
+static NS_DEFINE_IID(kISupportsIID,        NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kHTTPHandlerFactoryCID, NS_HTTP_HANDLER_FACTORY_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID,      NS_HTTP_HANDLER_FACTORY_CID);
+
+////////////////////////////////////////////////////////////////////////
 
 nsHTTPHandlerFactory::nsHTTPHandlerFactory(const nsCID &aClass, 
-                               const char* className,
-                               const char* progID)
-    : mClassID(aClass), 
-    mClassName(className), 
-    mProgID(progID)
+                                   const char* className,
+                                   const char* progID)
+    : mClassID(aClass), mClassName(className), mProgID(progID)
 {
     NS_INIT_REFCNT();
 }
@@ -57,13 +62,14 @@ nsHTTPHandlerFactory::QueryInterface(const nsIID &aIID, void **aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
+    // Always NULL result, in case of failure
     *aResult = nsnull;
 
-    if (aIID.Equals(nsISupports::GetIID())) {
+    if (aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsISupports*, this);
         AddRef();
         return NS_OK;
-    } else if (aIID.Equals(nsIFactory::GetIID())) {
+    } else if (aIID.Equals(kIFactoryIID)) {
         *aResult = NS_STATIC_CAST(nsIFactory*, this);
         AddRef();
         return NS_OK;
@@ -76,19 +82,21 @@ NS_IMPL_RELEASE(nsHTTPHandlerFactory);
 
 NS_IMETHODIMP
 nsHTTPHandlerFactory::CreateInstance(nsISupports *aOuter,
-                               const nsIID &aIID,
-                               void **aResult)
+                                 const nsIID &aIID,
+                                 void **aResult)
 {
-    if (!aResult)
+    if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
     *aResult = nsnull;
+
     nsresult rv;
+
     nsISupports *inst = nsnull;
-    if (mClassID.Equals(nsIProtocolHandler::GetIID())) {
+    if (mClassID.Equals(kHTTPHandlerCID)) {
         if (NS_FAILED(rv = CreateOrGetHTTPHandler((nsIHTTPHandler**) &inst)))
             return rv;
     }
@@ -99,13 +107,8 @@ nsHTTPHandlerFactory::CreateInstance(nsISupports *aOuter,
     if (!inst)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(rv)) {
-        // We didn't get the right interface.
-        NS_ERROR("don't support the interface you want");
-    }
-    NS_IF_RELEASE(inst);
+    NS_ADDREF(inst);
+    *aResult = inst;
     return rv;
 }
 
@@ -116,7 +119,8 @@ nsresult nsHTTPHandlerFactory::LockFactory(PRBool aLock)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// The actual C functions for factory compliance.
+
+
 
 // return the proper factory to the caller
 extern "C" PR_IMPLEMENT(nsresult)
@@ -129,7 +133,6 @@ NSGetFactory(nsISupports* aServMgr,
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    //Who deletes this? Ask DP... TODO
     nsHTTPHandlerFactory* factory = new nsHTTPHandlerFactory(aClass, aClassName, aProgID);
     if (factory == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -140,32 +143,26 @@ NSGetFactory(nsISupports* aServMgr,
 }
 
 
+
 extern "C" PR_IMPLEMENT(nsresult)
 NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 {
     nsresult rv;
 
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) 
-        return rv;
+    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    // register the factory
-    rv = compMgr->RegisterComponent(
-                            nsIProtocolHandler::GetIID(),  
-                            "HTTP Handler",
-                            NS_COMPONENT_NETSCAPE_NETWORK_PROTOCOLS "http",
-                            aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) 
-        (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    
-    return rv;
+    rv = compMgr->RegisterComponent(kHTTPHandlerCID,
+                                    "HTTP Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
+                                    aPath, PR_TRUE, PR_TRUE);
+
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 
@@ -175,23 +172,13 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     nsresult rv;
 
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) 
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) 
-        return rv;
+    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kHTTPHandlerFactoryCID,  aPath);
-    if (NS_FAILED(rv))
-        (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+    rv = compMgr->UnregisterComponent(kHTTPHandlerCID, aPath);
+    if (NS_FAILED(rv)) return rv;
 
-    return rv;
+    return NS_OK;
 }
-
-
-
-
