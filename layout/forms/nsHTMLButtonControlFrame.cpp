@@ -375,25 +375,25 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
 static
 void ButtonHack(nsHTMLReflowState& aReflowState, char* aMessage)
 {
-  if (aReflowState.computedWidth == 0) {
-    aReflowState.computedWidth = aReflowState.availableWidth;
+  if (aReflowState.mComputedWidth == 0) {
+    aReflowState.mComputedWidth = aReflowState.availableWidth;
   }
-  if ((aReflowState.computedWidth != NS_INTRINSICSIZE) &&
-      (aReflowState.computedWidth > aReflowState.availableWidth) &&
+  if ((aReflowState.mComputedWidth != NS_INTRINSICSIZE) &&
+      (aReflowState.mComputedWidth > aReflowState.availableWidth) &&
       (aReflowState.availableWidth > 0)) {
 //    printf("BUG - %s has a computed width = %d, available width = %d \n", 
-//    aMessage, aReflowState.computedWidth, aReflowState.availableWidth);
-    aReflowState.computedWidth = aReflowState.availableWidth;
+//    aMessage, aReflowState.mComputedWidth, aReflowState.availableWidth);
+    aReflowState.mComputedWidth = aReflowState.availableWidth;
   }
-  if (aReflowState.computedHeight == 0) {
-    aReflowState.computedHeight = aReflowState.availableHeight;
+  if (aReflowState.mComputedHeight == 0) {
+    aReflowState.mComputedHeight = aReflowState.availableHeight;
   }
-  if ((aReflowState.computedHeight != NS_INTRINSICSIZE) &&
-      (aReflowState.computedHeight > aReflowState.availableHeight) &&
+  if ((aReflowState.mComputedHeight != NS_INTRINSICSIZE) &&
+      (aReflowState.mComputedHeight > aReflowState.availableHeight) &&
       (aReflowState.availableHeight > 0)) {
 //    printf("BUG - %s has a computed height = %d, available height = %d \n", 
-//    aMessage, aReflowState.computedHeight, aReflowState.availableHeight);
-    aReflowState.computedHeight = aReflowState.availableHeight;
+//    aMessage, aReflowState.mComputedHeight, aReflowState.availableHeight);
+    aReflowState.mComputedHeight = aReflowState.availableHeight;
   }
 }
 
@@ -445,7 +445,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   // reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
-  nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
+  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
   // indent the child inside us by the the focus border. We must do this separate from the
   // regular border.

@@ -284,14 +284,14 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // XXX this needs to be changed from (200,200) to a better default
   // for inline frames
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
-    aDesiredSize.width = aReflowState.computedWidth;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+    aDesiredSize.width = aReflowState.mComputedWidth;
   }
   else {
     aDesiredSize.width = NSIntPixelsToTwips(200, p2t);
   }
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
-    aDesiredSize.height = aReflowState.computedHeight;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+    aDesiredSize.height = aReflowState.mComputedHeight;
   }
   else {
     aDesiredSize.height = NSIntPixelsToTwips(200, p2t);

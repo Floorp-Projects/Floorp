@@ -401,14 +401,14 @@ nsTriStateCheckboxFrame :: GetDesiredSize(nsIPresContext* aPresContext,
                                            nsHTMLReflowMetrics& aDesiredLayoutSize)
 {
   nsSize styleSize;
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
-    styleSize.width = aReflowState.computedWidth;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+    styleSize.width = aReflowState.mComputedWidth;
   }
   else {
     styleSize.width = CSS_NOTSET;
   }
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
-    styleSize.height = aReflowState.computedHeight;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+    styleSize.height = aReflowState.mComputedHeight;
   }
   else {
     styleSize.height = CSS_NOTSET;

@@ -625,12 +625,12 @@ nsProgressMeterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   CalcSize(*aPresContext,aDesiredSize.width,aDesiredSize.height);
 
    // if the width is set use it
-	if (NS_INTRINSICSIZE != aReflowState.computedWidth) 
-	  aDesiredSize.width = aReflowState.computedWidth;
+	if (NS_INTRINSICSIZE != aReflowState.mComputedWidth) 
+	  aDesiredSize.width = aReflowState.mComputedWidth;
 
 	// if the height is set use it
- 	if (NS_INTRINSICSIZE != aReflowState.computedHeight) 
-		aDesiredSize.height = aReflowState.computedHeight;
+ 	if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) 
+		aDesiredSize.height = aReflowState.mComputedHeight;
 }
 
 

@@ -284,17 +284,17 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
       // If our height is fixed, then make sure the child frame plus its top and
       // bottom margin is at least that high as well...
-      if (NS_AUTOHEIGHT != aReflowState.computedHeight) {
-        nscoord totalHeight = kidDesiredSize.height + kidReflowState.computedMargin.top +
-          kidReflowState.computedMargin.bottom;
+      if (NS_AUTOHEIGHT != aReflowState.mComputedHeight) {
+        nscoord totalHeight = kidDesiredSize.height + kidReflowState.mComputedMargin.top +
+          kidReflowState.mComputedMargin.bottom;
 
-        if (totalHeight < aReflowState.computedHeight) {
-          kidDesiredSize.height += aReflowState.computedHeight - totalHeight;
+        if (totalHeight < aReflowState.mComputedHeight) {
+          kidDesiredSize.height += aReflowState.mComputedHeight - totalHeight;
         }
       }
 
       // Position and size the child frame
-      nsRect  rect(kidReflowState.computedMargin.left, kidReflowState.computedMargin.top,
+      nsRect  rect(kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                    kidDesiredSize.width, kidDesiredSize.height);
       kidFrame->SetRect(rect);
     }
@@ -306,10 +306,10 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     }
 
     // Return our desired size
-    aDesiredSize.width = kidDesiredSize.width + kidReflowState.computedMargin.left +
-      kidReflowState.computedMargin.right;
-    aDesiredSize.height = kidDesiredSize.height + kidReflowState.computedMargin.top +
-      kidReflowState.computedMargin.bottom;
+    aDesiredSize.width = kidDesiredSize.width + kidReflowState.mComputedMargin.left +
+      kidReflowState.mComputedMargin.right;
+    aDesiredSize.height = kidDesiredSize.height + kidReflowState.mComputedMargin.top +
+      kidReflowState.mComputedMargin.bottom;
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
     // XXX Don't completely ignore NS_FRAME_OUTSIDE_CHILDREN for child frames

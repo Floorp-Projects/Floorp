@@ -2555,7 +2555,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull!=mTableLayoutStrategy)
       {
         if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.computedWidth);
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.mComputedWidth);
         mColumnWidthsValid=PR_TRUE; //so we don't do this a second time below
       }
     }
@@ -2564,7 +2564,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
       if (nsnull!=mTableLayoutStrategy)
       {
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.computedWidth);
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount(), aReflowState.mComputedWidth);
         mColumnWidthsValid=PR_TRUE;
       }
     }
@@ -4102,13 +4102,13 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
-    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.computedWidth);
+    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.mComputedWidth);
     mColumnWidthsValid=PR_TRUE;
   }
   // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
   // reflow gets called twice and the 2nd time has the correct space available.
   else if (!RequiresPass1Layout()) {
-    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.computedWidth);
+    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount(), aReflowState.mComputedWidth);
   }
 
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
@@ -4203,9 +4203,9 @@ nscoord nsTableFrame::GetEffectiveContainerHeight(const nsHTMLReflowState& aRefl
         break;
       }
     }
-    if (NS_AUTOHEIGHT != rs->computedHeight)
+    if (NS_AUTOHEIGHT != rs->mComputedHeight)
     {
-      result = rs->computedHeight;
+      result = rs->mComputedHeight;
       break;
     }
     // XXX: evil cast!

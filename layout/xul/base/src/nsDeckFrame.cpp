@@ -221,19 +221,19 @@ nsDeckFrame::Reflow(nsIPresContext&   aPresContext,
   } 
 
   // get our available size
-  nsSize availableSize(aReflowState.computedWidth,aReflowState.computedHeight);
+  nsSize availableSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
 
   // if the width or height are intrinsic then lay us our children out at our preferred size
-  if (aReflowState.computedWidth == NS_INTRINSICSIZE || aReflowState.computedHeight == NS_INTRINSICSIZE)
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE || aReflowState.mComputedHeight == NS_INTRINSICSIZE)
   {
     // get our size
     nsBoxInfo ourSize;
     GetBoxInfo(aPresContext, aReflowState, ourSize);
 
-    if (aReflowState.computedWidth == NS_INTRINSICSIZE)
+    if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
        availableSize.width = ourSize.prefSize.width;
   
-    if (aReflowState.computedHeight == NS_INTRINSICSIZE)
+    if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
        availableSize.height = ourSize.prefSize.height;
   }
   
@@ -360,12 +360,12 @@ nsDeckFrame::FlowChildAt(nsIFrame* childFrame,
         nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
         reflowState.reason = reason;
 
-        reflowState.computedWidth = size.width;
-        reflowState.computedHeight = size.height;
+        reflowState.mComputedWidth = size.width;
+        reflowState.mComputedHeight = size.height;
 
         // only subrtact margin and border.
-        reflowState.computedWidth -= (total.left + total.right);
-        reflowState.computedHeight -= (total.top + total.bottom);
+        reflowState.mComputedWidth -= (total.left + total.right);
+        reflowState.mComputedHeight -= (total.top + total.bottom);
 
         nsSize maxElementSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
         

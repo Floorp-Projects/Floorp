@@ -70,7 +70,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                                 nsHTMLReflowState& aRS)
 {
   // Get aFrame's top margin
-  nscoord topMargin = aRS.computedMargin.top;
+  nscoord topMargin = aRS.mComputedMargin.top;
 
   // Calculate aFrame's generational top-margin from its child
   // blocks. Note that if aFrame has a non-zero top-border or
@@ -90,7 +90,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
         // child blocks margin and so in so that we can look into
         // it. For its margins to be computed we need to have a reflow
         // state for it.
-        nsSize availSpace(aRS.computedWidth, aRS.computedHeight);
+        nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
         nsHTMLReflowState reflowState(*aPresContext, aRS, childFrame,
                                       availSpace);
         generationalTopMargin =
@@ -183,7 +183,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
   // reflow auto left/right margins will have a zero value.
-  mMargin = reflowState.computedMargin;
+  mMargin = reflowState.mComputedMargin;
   mStyleSpacing = reflowState.mStyleSpacing;
   nscoord x = aSpace.x + mMargin.left;
   nscoord y = aSpace.y + topMargin;
@@ -218,10 +218,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // border+padding before translating.
   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
-  mOuterReflowState.spaceManager->Translate(tx, ty);
+  mOuterReflowState.mSpaceManager->Translate(tx, ty);
   rv = htmlReflow->Reflow(*mPresContext, mMetrics, reflowState,
                           aFrameReflowStatus);
-  mOuterReflowState.spaceManager->Translate(-tx, -ty);
+  mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
 
 #ifdef DEBUG
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
@@ -379,7 +379,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // downward, just below another floater?
       nscoord dy = mSpace.y - mY;
       htmlReflow->MoveInSpaceManager(mPresContext,
-                                     mOuterReflowState.spaceManager, 0, dy);
+                                     mOuterReflowState.mSpaceManager, 0, dy);
     }
     y = mSpace.y;
 
@@ -507,7 +507,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
           // If the child has any floaters that impact the space manager,
           // slide them now
           htmlReflow->MoveInSpaceManager(mPresContext,
-                                         mOuterReflowState.spaceManager,
+                                         mOuterReflowState.mSpaceManager,
                                          dx, dy);
         }
       }

@@ -129,9 +129,9 @@ typedef PRUint32  nsCSSFrameType;
 struct nsHTMLReflowState : nsReflowState {
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
-  nsCSSFrameType   frameType;
+  nsCSSFrameType   mFrameType;
 
-  nsISpaceManager* spaceManager;
+  nsISpaceManager* mSpaceManager;
 
   // LineLayout object (only for inline reflow; set to NULL otherwise)
   nsLineLayout*    lineLayout;
@@ -145,7 +145,7 @@ struct nsHTMLReflowState : nsReflowState {
   // For block-level frames, the computed width is based on the width of the
   // containing block and the margin/border/padding areas and the min/max
   // width
-  nscoord          computedWidth; 
+  nscoord          mComputedWidth; 
 
   // The computed height specifies the frame's content height, and it does
   // not apply to inline non-replaced elements
@@ -160,10 +160,10 @@ struct nsHTMLReflowState : nsReflowState {
   //
   // For replaced block-level frames, a value of NS_INTRINSICSIZE
   // means you use your intrinsic height as the computed height
-  nscoord          computedHeight;
+  nscoord          mComputedHeight;
 
   // Computed margin values
-  nsMargin         computedMargin;
+  nsMargin         mComputedMargin;
 
   // Cached copy of the border values
   nsMargin         mComputedBorderPadding;

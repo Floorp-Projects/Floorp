@@ -272,8 +272,8 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
    // Get the size of option elements inside the listbox
    // Compute the width based on the longest line in the listbox.
   
-  firstPassState.computedWidth = NS_UNCONSTRAINEDSIZE;
-  firstPassState.computedHeight = NS_UNCONSTRAINEDSIZE;
+  firstPassState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+  firstPassState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
   firstPassState.availableWidth = NS_UNCONSTRAINEDSIZE;
   firstPassState.availableHeight = NS_UNCONSTRAINEDSIZE;
 
@@ -341,16 +341,16 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   nscoord visibleWidth = 0;
   if (IsInDropDownMode() == PR_TRUE) {
      // Calculate visible width for dropdown
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.computedWidth) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
-      visibleWidth = aReflowState.computedWidth - (border.left + border.right);
+      visibleWidth = aReflowState.mComputedWidth - (border.left + border.right);
     }
   } else {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.computedWidth) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
-      visibleWidth = aReflowState.computedWidth;
+      visibleWidth = aReflowState.mComputedWidth;
     }
   }
   
@@ -380,8 +380,8 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
    
   } else {
       // Calculate the visible height of the listbox
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
-      visibleHeight = aReflowState.computedHeight;
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+      visibleHeight = aReflowState.mComputedHeight;
     } else {
       visibleHeight = mNumRows * heightOfARow;
     }
@@ -398,8 +398,8 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 
    // Do a second reflow with the adjusted width and height settings
    // This sets up all of the frames with the correct width and height.
-  secondPassState.computedWidth = visibleWidth;
-  secondPassState.computedHeight = visibleHeight;
+  secondPassState.mComputedWidth = visibleWidth;
+  secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
   nsScrollFrame::Reflow(aPresContext, 
                     aDesiredSize,

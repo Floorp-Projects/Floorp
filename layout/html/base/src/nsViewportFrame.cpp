@@ -170,8 +170,8 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
 {
   // Initialize the values to the computed width/height in our reflow
   // state struct
-  aWidth = aReflowState.computedWidth;
-  aHeight = aReflowState.computedHeight;
+  aWidth = aReflowState.mComputedWidth;
+  aHeight = aReflowState.mComputedHeight;
 
   // Get our prinicpal child frame and see if we're scrollable
   nsIFrame* kidFrame = mFrames.FirstChild();
@@ -232,17 +232,17 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
     htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
     // XXX If the child had a fixed height, then make sure it respected it...
-    if (NS_AUTOHEIGHT != kidReflowState.computedHeight) {
-      if (kidDesiredSize.height < kidReflowState.computedHeight) {
-        kidDesiredSize.height = kidReflowState.computedHeight;
+    if (NS_AUTOHEIGHT != kidReflowState.mComputedHeight) {
+      if (kidDesiredSize.height < kidReflowState.mComputedHeight) {
+        kidDesiredSize.height = kidReflowState.mComputedHeight;
         kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
                                  kidReflowState.mComputedBorderPadding.bottom;
       }
     }
 
     // Position the child
-    nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
-                 kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
+    nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.mComputedMargin.left,
+                 kidReflowState.computedOffsets.top + kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
     aKidFrame->SetRect(rect);
     htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
@@ -270,8 +270,8 @@ ViewportFrame::ReflowFixedFrames(nsIPresContext&          aPresContext,
   // to reflect the available space for the fixed items
   // XXX Find a cleaner way to do this...
   nsHTMLReflowState reflowState(aReflowState);
-  reflowState.computedWidth = width;
-  reflowState.computedHeight = height;
+  reflowState.mComputedWidth = width;
+  reflowState.mComputedHeight = height;
 
   nsIFrame* kidFrame;
   for (kidFrame = mFixedFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
@@ -343,8 +343,8 @@ ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
       // to reflect the available space for the fixed items
       // XXX Find a cleaner way to do this...
       nsHTMLReflowState reflowState(aReflowState);
-      reflowState.computedWidth = width;
-      reflowState.computedHeight = height;
+      reflowState.mComputedWidth = width;
+      reflowState.mComputedHeight = height;
 
       nsReflowStatus  status;
       ReflowFixedFrame(aPresContext, reflowState, newFrames, PR_TRUE, status);
@@ -433,7 +433,7 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
         // Reflow the frame
         nsIHTMLReflow* htmlReflow;
         if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-          kidReflowState.computedHeight = aReflowState.availableHeight;
+          kidReflowState.mComputedHeight = aReflowState.availableHeight;
           ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                       aStatus);
 

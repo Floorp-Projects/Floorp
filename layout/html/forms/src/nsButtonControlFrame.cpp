@@ -415,10 +415,10 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
     // if our size is intrinsic. Then we need to return the size we really need
     // so include our inner borders we use for focus.
     nsMargin added = mRenderer.GetAddedButtonBorderAndPadding();
-    if (aReflowState.computedWidth == NS_INTRINSICSIZE)
+    if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
        aDesiredSize.width += added.left + added.right;
  
-    if (aReflowState.computedHeight == NS_INTRINSICSIZE)
+    if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
        aDesiredSize.height += added.top + added.bottom;
 
     nsMargin bp(0,0,0,0);

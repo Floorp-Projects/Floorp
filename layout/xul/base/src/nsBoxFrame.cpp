@@ -208,7 +208,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   if (mSpaceManager) {
     // Modify the reflow state and set the space manager
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-    reflowState.spaceManager = mSpaceManager;
+    reflowState.mSpaceManager = mSpaceManager;
 
     // Clear the spacemanager's regions.
     mSpaceManager->ClearRegions();
@@ -224,7 +224,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   nscoord x = aReflowState.mComputedBorderPadding.left;
   nscoord y = aReflowState.mComputedBorderPadding.top;
 
-  nsRect rect(x,y,aReflowState.computedWidth,aReflowState.computedHeight);
+  nsRect rect(x,y,aReflowState.mComputedWidth,aReflowState.mComputedHeight);
  
   //---------------------------------------------------------
   //------- handle incremental reflow --------------------
@@ -661,15 +661,15 @@ printf("\n");
         reflowState.reason = reason;
 
         // tell the child what size they should be
-        reflowState.computedWidth = mSprings[spring].calculatedSize.width;
-        reflowState.computedHeight = mSprings[spring].calculatedSize.height;
+        reflowState.mComputedWidth = mSprings[spring].calculatedSize.width;
+        reflowState.mComputedHeight = mSprings[spring].calculatedSize.height;
 
         // only subrtact margin and border.
-        if (reflowState.computedWidth != NS_INTRINSICSIZE)
-            reflowState.computedWidth -= (total.left + total.right);
+        if (reflowState.mComputedWidth != NS_INTRINSICSIZE)
+            reflowState.mComputedWidth -= (total.left + total.right);
 
-        if (reflowState.computedHeight != NS_INTRINSICSIZE)
-            reflowState.computedHeight -= (total.top + total.bottom);
+        if (reflowState.mComputedHeight != NS_INTRINSICSIZE)
+            reflowState.mComputedHeight -= (total.top + total.bottom);
 
         // HTML frames do not implement nsIBox so unless they set both their width and height we do not know
         // what there preferred size is. We can assume a preferred width or height of 0 when flexable but when
@@ -678,10 +678,10 @@ printf("\n");
         if (mSprings[spring].flex == CONSTANT) {
           if (mHorizontal) {
             if (mSprings[spring].prefWidthIntrinsic) 
-               reflowState.computedWidth = NS_INTRINSICSIZE;
+               reflowState.mComputedWidth = NS_INTRINSICSIZE;
           } else {
             if (mSprings[spring].prefHeightIntrinsic) 
-               reflowState.computedHeight = NS_INTRINSICSIZE;
+               reflowState.mComputedHeight = NS_INTRINSICSIZE;
           }
         }
 
@@ -691,7 +691,7 @@ printf("\n");
         if (mHorizontal) {
           // if we could not get the height of the child because it did not implement nsIBox and
           // it did not provide a height via css and we are trying to lay it out with a height of 0
-          if (mSprings[spring].prefHeightIntrinsic && reflowState.computedHeight != NS_INTRINSICSIZE) {
+          if (mSprings[spring].prefHeightIntrinsic && reflowState.mComputedHeight != NS_INTRINSICSIZE) {
               nscoord oldHeight = mSprings[spring].calculatedSize.height;
               mSprings[spring].calculatedSize.height = NS_INTRINSICSIZE;
               FlowChildAt(childFrame, aPresContext, desiredSize, aReflowState, aStatus, spring, incrementalChild);
@@ -704,8 +704,8 @@ printf("\n");
               desiredSize.height -= (total.top + total.bottom);
 
               // see if things are ok
-              if (reflowState.computedHeight < desiredSize.height)
-                 reflowState.computedHeight = desiredSize.height;
+              if (reflowState.mComputedHeight < desiredSize.height)
+                 reflowState.mComputedHeight = desiredSize.height;
 
           }
             

@@ -778,9 +778,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Stash copies of some of the computed state away for later
   // (vertical alignment, for example)
   pfd->mFrame = aFrame;
-  pfd->mMargin = reflowState.computedMargin;
+  pfd->mMargin = reflowState.mComputedMargin;
   pfd->mBorderPadding = reflowState.mComputedBorderPadding;
-  pfd->mFrameType = reflowState.frameType;
+  pfd->mFrameType = reflowState.mFrameType;
   pfd->mRelativePos =
     reflowState.mStylePosition->mPosition == NS_STYLE_POSITION_RELATIVE;
   if (pfd->mRelativePos) {
@@ -1284,7 +1284,7 @@ nsLineLayout::VerticalAlignFrames(nsRect& aLineBoxResult,
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
   rootPFD.mFrame = mBlockReflowState->frame;
-  rootPFD.mFrameType = mBlockReflowState->frameType;
+  rootPFD.mFrameType = mBlockReflowState->mFrameType;
   rootPFD.mAscent = 0;
   rootPFD.mDescent = 0;
   mRootSpan->mFrame = &rootPFD;

@@ -490,12 +490,12 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRUint32 width = EMBED_DEF_DIM;
   PRUint32 height = EMBED_DEF_DIM;
 
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
-    aMetrics.width = aReflowState.computedWidth;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+    aMetrics.width = aReflowState.mComputedWidth;
     haveWidth = PR_TRUE;
   }
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
-    aMetrics.height = aReflowState.computedHeight;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+    aMetrics.height = aReflowState.mComputedHeight;
     haveHeight = PR_TRUE;
   }
 
@@ -1372,7 +1372,7 @@ nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
       if(eHTMLUnit_Pixel == val.GetUnit())
       {
         nscoord width = val.GetPixelValue();
-        kidReflowState.computedWidth = NSIntPixelsToTwips(width, p2t);
+        kidReflowState.mComputedWidth = NSIntPixelsToTwips(width, p2t);
       }
     }
     if(NS_CONTENT_ATTR_HAS_VALUE == hc->GetHTMLAttribute(nsHTMLAtoms::height, val))
@@ -1380,7 +1380,7 @@ nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
       if(eHTMLUnit_Pixel == val.GetUnit())
       {
         nscoord height = val.GetPixelValue();
-        kidReflowState.computedHeight = NSIntPixelsToTwips(height, p2t);
+        kidReflowState.mComputedHeight = NSIntPixelsToTwips(height, p2t);
       }
     }
   }

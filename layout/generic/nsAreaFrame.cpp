@@ -278,7 +278,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   if (nsnull != mSpaceManager) {
     // Modify the reflow state and set the space manager
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-    reflowState.spaceManager = mSpaceManager;
+    reflowState.mSpaceManager = mSpaceManager;
 
     // Clear the spacemanager's regions.
     mSpaceManager->ClearRegions();
