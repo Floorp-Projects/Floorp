@@ -3925,7 +3925,7 @@ void nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext) {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   if (nsnull != shell) {
-    shell->FlushPendingNotifications();
+    shell->FlushPendingNotifications(PR_FALSE);
     nsCOMPtr<nsIViewManager> viewManager;
     shell->GetViewManager(getter_AddRefs(viewManager));
     if (viewManager) {

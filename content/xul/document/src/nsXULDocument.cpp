@@ -2013,7 +2013,7 @@ nsXULDocument::FindNext(const nsAReadableString &aSearchStr,
 
 
 NS_IMETHODIMP
-nsXULDocument::FlushPendingNotifications(PRBool aFlushReflows)
+nsXULDocument::FlushPendingNotifications(PRBool aFlushReflows, PRBool aUpdateViews)
 {
   if (aFlushReflows) {
 
@@ -2022,7 +2022,7 @@ nsXULDocument::FlushPendingNotifications(PRBool aFlushReflows)
     for (i = 0; i < count; i++) {
       nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
       if (shell) {
-        shell->FlushPendingNotifications();
+        shell->FlushPendingNotifications(aUpdateViews);
       }
     }
   }

@@ -3869,7 +3869,7 @@ nsGfxListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
       nsCOMPtr<nsIPresShell> presShell;
       mPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->FlushPendingNotifications();
+      presShell->FlushPendingNotifications(PR_FALSE);
     }
     REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
   } else {
