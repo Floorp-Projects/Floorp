@@ -361,21 +361,25 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   if (!mIsMenu)
     return;
 
-  MarkAsGenerated();
-
-  nsIFrame* frame = mPopupFrames.FirstChild();
-  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
-  
-  nsCOMPtr<nsIContent> child;
-  GetMenuChildrenElement(getter_AddRefs(child));
-
   if (aActivateFlag) {
     // Execute the oncreate handler
     if (!OnCreate())
       return;
 
     // Open the menu.
-    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
+    domElement->SetAttribute("open", "true");
+
+    // Now that the menu is opened, we should have a menupopup child built.
+    // Mark it as generated, which ensures a frame gets built.
+    MarkAsGenerated();
+
+    nsIFrame* frame = mPopupFrames.FirstChild();
+    nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  
+    nsCOMPtr<nsIContent> child;
+    GetMenuChildrenElement(getter_AddRefs(child));
+
     if (child) {
       // We've got some children for real.
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
@@ -401,13 +405,22 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     if (!OnDestroy())
       return;
 
+    nsIFrame* frame = mPopupFrames.FirstChild();
+    nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  
+    nsCOMPtr<nsIContent> child;
+    GetMenuChildrenElement(getter_AddRefs(child));
+
     // Make sure we clear out our own items.
     if (menuPopup)
       menuPopup->SetCurrentMenuItem(nsnull);
 
-    mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
     if (child)
       child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+   
+    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
+    domElement->RemoveAttribute("open");
+
     mMenuOpen = PR_FALSE;
 
     // Set the focus back to our view's widget.
@@ -990,6 +1003,9 @@ nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+  if (!aFrameList)
+    return NS_OK;
+
   // need to rebuild all the springs.
   for (int i=0; i < mSpringCount; i++) 
     mSprings[i].clear();
