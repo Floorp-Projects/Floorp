@@ -29,6 +29,7 @@ class nsIHTMLStyleSheet;
 class nsContentList;
 class nsIContentViewerContainer;
 class nsIParser;
+class BlockText;
 
 class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument, public nsIDOMNSHTMLDocument {
 public:
@@ -97,6 +98,49 @@ public:
 
   // From nsIScriptObjectOwner interface, implemented by nsDocument
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+
+  /**
+    * Finds text in content
+   */
+  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+
+protected:
+  // Find/Search Method/Data member
+  PRBool SearchBlock(BlockText    & aBlockText, 
+                     nsString     & aStr);
+
+  PRBool ContentIsBlock(nsIContent * aContent);
+  nsIContent * FindBlockParent(nsIContent * aContent, 
+                               PRBool aSkipThisContent = PR_FALSE);
+
+  PRBool BuildBlockTraversing(nsIContent   * aParent,
+                              BlockText    & aBlockText);
+
+  PRBool BuildBlockFromContent(nsIContent   * aContent,
+                              BlockText    & aBlockText);
+
+  PRBool BuildBlockFromStack(nsIContent * aParent,
+                             BlockText  & aBlockText,
+                             PRInt32      aStackInx);
+  PRBool BuildBlock(nsIContent * aParent,
+                    BlockText  & aBlockText);
+
+  // Search/Find Data Member
+  nsIContent ** mParentStack;
+  nsIContent ** mChildStack;
+  PRInt32       mStackInx;
+
+  nsString     mSearchStr;
+  PRInt32      mSearchDirection;
+
+  PRInt32      mLastBlockSearchOffset;
+  PRBool       mAdjustToEnd;
+
+  nsIContent * mHoldBlockContent;
+  nsIContent * mCurrentBlockContent;
+
+  PRBool       mShouldMatchCase;
+  PRBool       mIsPreTag;
 
 protected:
   static PRIntn RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
