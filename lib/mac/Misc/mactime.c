@@ -39,6 +39,8 @@ _END_C_LIB_DECL
 #endif
 
 #include "xp_mcom.h" /* prototypes for GetTimeMac, Mactime, Macmktime, Macctime, Maclocaltime, Macgmtime */
+#undef ctime
+
 // Because serial port and SLIP conflict with ReadXPram calls,
 // we cache the call here
 // The symptoms are the 
