@@ -88,7 +88,7 @@ sub cmdUserPrefs {
 
     if (not @notifications) {
         # put it all together
-        $app->output->userPrefs(\@userIDs, $userData, $self->populateUserPrefsMetaData($app, $userDataSource));
+        $app->output->userPrefs(\@userIDs, $userData, $self->populateUserPrefsMetaData($app, $userDataSource), $self->populateUserPrefsGroupNames($app, $userDataSource));
     } else {
         $app->output->userPrefsNotification(\@notifications);
     }
@@ -175,7 +175,20 @@ sub populateUserPrefsMetaData {
     my $self = shift;
     my($app, $userDataSource) = @_;
     # get list of registered contact methods, personal details, settings
+    # (also returns state, but outputs can just ignore that)
     return $userDataSource->getFieldsHierarchically($app);
+}
+
+sub populateUserPrefsGroupNames {
+    my $self = shift;
+    my($app, $userDataSource) = @_;
+    # get list of groups
+    my $groupList = $userDataSource->getGroups($app); # XXX should be cached (used above)
+    my $groups = {};
+    foreach my $group (@$groupList) {
+        $groups->{$group->[0]} = $group->[1];
+    }
+    return $groups;
 }
 
 sub cmdUserPrefsSet {
@@ -449,11 +462,12 @@ sub cmdUserPrefsConfirmSet {
 # dispatcher.output.generic
 sub outputUserPrefs {
     my $self = shift;
-    my($app, $output, $userIDs, $userData, $metaData) = @_;
+    my($app, $output, $userIDs, $userData, $metaData, $groupNames) = @_;
     $output->output('userPrefs.index', {
                                         'userIDs' => $userIDs,
                                         'userData' => $userData,
                                         'metaData' => $metaData,
+                                        'groupNames' => $groupNames,
                                        });
 }
 
@@ -496,7 +510,7 @@ sub outputUserPrefsChangeDetails {
 # dispatcher.output
 sub strings {
     return (
-            'userPrefs.index' => 'The user preferences editor. This will be passed a stack of user profiles in a multi-level hash called userData, the array of userIDs in userIDs, and the details of each field in another multi-level hash as meta',
+            'userPrefs.index' => 'The user preferences editor. This will be passed a stack of user profiles in a multi-level hash called userData, the array of userIDs in userIDs, the details of each field in another multi-level hash as metaData, and the mapping of group IDs to group names in groupNames.',
             'userPrefs.notification' => 'If anything needs to be reported after the prefs are submitted then this will be called. Things to notify are reported in notifications, which is an array of arrays containing the userID relatd to the notification, the field related to the notification, and the notification type, which will be one of: contact.confirmationSent (no error occured), contact.cannotRemoveLastContactMethod (user error), password.mismatch.new (user error), password.mismatch.old *user error), user.noSuchUser (internal error), invalid (internal error), field.unknownCategory (internal error), accessDenied (internal error). The internal errors could also be caused by a user attempting to circumvent the security system.',
             'userPrefs.success' => 'If the user preferences are successfully submitted, this will be used. Typically this will simply be the main application command index.',
             'userPrefs.change.overrideDetails' => 'The message that is sent containing the token and password required to override a change of address.',
