@@ -143,7 +143,7 @@ class nsIDTD : public nsISupports {
     NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer)=0;
 
 
-    virtual  nsITokenRecycler* GetTokenRecycler(void)=0;
+    virtual  nsTokenAllocator* GetTokenAllocator(void)=0;
 
     /**
      * If the parse process gets interrupted midway, this method is called by the

@@ -105,7 +105,7 @@ class nsDTDContext;
 class nsEntryStack;
 class nsITokenizer;
 class nsCParserNode;
-class CTokenRecycler;
+class nsTokenAllocator;
 class CNodeRecycler;
 
 /***************************************************************
@@ -232,7 +232,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual  nsITokenRecycler* GetTokenRecycler(void);
+    virtual  nsTokenAllocator* GetTokenAllocator(void);
 
     /**
      * If the parse process gets interrupted, this method gets called
@@ -511,7 +511,7 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
-    CTokenRecycler*     mTokenRecycler;
+    nsTokenAllocator*    mTokenAllocator;
     CNodeRecycler*      mNodeRecycler;
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;

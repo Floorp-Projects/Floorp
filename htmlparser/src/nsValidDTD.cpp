@@ -352,7 +352,7 @@ NS_IMETHODIMP CValidDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
  * @param 
  * @return
  */
-nsITokenRecycler* CValidDTD::GetTokenRecycler(void){
+nsTokenAllocator* CValidDTD::GetTokenAllocator(void){
   return 0;
 }
 

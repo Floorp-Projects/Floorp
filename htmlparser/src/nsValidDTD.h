@@ -216,7 +216,7 @@ class CValidDTD : public nsIDTD {
      * @update	gess8/4/98
      * @return  ptr to recycler (or null)
      */
-    virtual nsITokenRecycler* GetTokenRecycler(void);
+    virtual nsTokenAllocator* GetTokenAllocator(void);
 
     /**
      * Use this id you want to stop the building content model

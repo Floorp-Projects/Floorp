@@ -279,6 +279,7 @@ class CAttributeToken: public CHTMLToken {
                           CAttributeToken();
                           CAttributeToken(const nsString& aString);
                           CAttributeToken(const nsString& aKey, const nsString& aString);
+                           ~CAttributeToken() { mTextKey.SetCapacity(0);}
     virtual nsresult      Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     virtual const char*   GetClassName(void);
     virtual PRInt32       GetTokenType(void);

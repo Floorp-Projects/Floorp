@@ -32,7 +32,7 @@
 
 MOZ_DECL_CTOR_COUNTER(nsEntryStack);
 MOZ_DECL_CTOR_COUNTER(nsDTDContext);
-MOZ_DECL_CTOR_COUNTER(CTokenRecycler);
+MOZ_DECL_CTOR_COUNTER(nsTokenAllocator);
 MOZ_DECL_CTOR_COUNTER(CNodeRecycler);
 MOZ_DECL_CTOR_COUNTER(CObserverService); 
  
@@ -129,7 +129,6 @@ void nsEntryStack::Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack) {
     EnsureCapacityFor(mCount+1);
 
     ((nsCParserNode*)aNode)->mUseCount++;
-    ((nsCParserNode*)aNode)->mToken->mUseCount++;
 
     mEntries[mCount].mTag=(eHTMLTags)aNode->GetNodeType();
     mEntries[mCount].mNode=(nsIParserNode*)aNode;
@@ -157,7 +156,6 @@ void nsEntryStack::PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStac
 
 
     ((nsCParserNode*)aNode)->mUseCount++;
-    ((nsCParserNode*)aNode)->mToken->mUseCount++;
 
     mEntries[0].mTag=(eHTMLTags)aNode->GetNodeType();
     mEntries[0].mNode=(nsIParserNode*)aNode;
@@ -206,7 +204,6 @@ nsIParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
     result=mEntries[anIndex].mNode;
 
     ((nsCParserNode*)result)->mUseCount--;
-    ((nsCParserNode*)result)->mToken->mUseCount--;
 
     PRInt32 theIndex=0;
     mCount-=1;
@@ -250,7 +247,7 @@ nsIParserNode* nsEntryStack::Pop(void) {
     result=mEntries[--mCount].mNode;
 
     ((nsCParserNode*)result)->mUseCount--;
-    ((nsCParserNode*)result)->mToken->mUseCount--;
+
     mEntries[mCount].mNode=0;
     mEntries[mCount].mStyles=0;
 
@@ -359,7 +356,6 @@ eHTMLTags nsEntryStack::Last() const {
  ***************************************************************/
 
 CNodeRecycler   *nsDTDContext::gNodeRecycler=0;
-CTokenRecycler  *nsDTDContext::gTokenRecycler=0;
 
 /**
  * 
@@ -377,6 +373,7 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   ResetCounters();
   mHadDocTypeDecl=PR_FALSE;
   mHasOpenHead=PR_FALSE;
+  mTokenAllocator=0;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -1017,6 +1014,7 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
       // If you're here it means that we have hit the rock bottom
       // ,of the stack, and there's no need to handle anymore styles.
       // Fix for bug 29048
+      gNodeRecycler->RecycleNode((nsCParserNode*)aStyles->Pop());
       delete aStyles;
       aStyles=0;
     }
@@ -1109,23 +1107,6 @@ nsresult nsDTDContext::GetNodeRecycler(CNodeRecycler*& aNodeRecycler){
 }
 
 /**
- * This gets called someone wants to create a token of the given type.
- * 
- * @update  rickg 16June2000
- * @param   aType
- * @param   aTag
- * @param   aString
- * @return  new CToken* or 0.
- */
-CTokenRecycler* nsDTDContext::GetTokenRecycler(void) {
-  if(!gTokenRecycler) {
-    gTokenRecycler = new CTokenRecycler();
-  }
-  return gTokenRecycler;
-}
-
-
-/**
  * 
  * @update  rickg 16June2000
  */
@@ -1137,9 +1118,7 @@ void nsDTDContext::RecycleNode(nsCParserNode* aNode) {
       result=nsDTDContext::GetNodeRecycler(gNodeRecycler);
 
     if(NS_SUCCEEDED(result)) {
-      if(!gTokenRecycler)
-        GetTokenRecycler();
-      gNodeRecycler->RecycleNode(aNode,gTokenRecycler);
+      gNodeRecycler->RecycleNode(aNode);
     }
     else {
       delete aNode;
@@ -1158,29 +1137,31 @@ void nsDTDContext::ReleaseGlobalObjects(){
     delete gNodeRecycler;
     gNodeRecycler=0;
   }
-  if(gTokenRecycler) {
-    delete gTokenRecycler;
-    gTokenRecycler=0;
-  }
 }
 
+
 /**************************************************************
-  Now define the tokenrecycler class...
+  Now define the nsTokenAllocator class...
  **************************************************************/
+
+static const size_t kBucketSizes[]    ={sizeof(CStartToken),sizeof(CAttributeToken),sizeof(CCommentToken),sizeof(CEndToken)};
+static const PRInt32 kNumBuckets      = sizeof(kBucketSizes) / sizeof(size_t);
+static const PRInt32 kInitialPoolSize = NS_SIZE_IN_HEAP(sizeof(CToken)) * 1536;
 
 /**
  * 
  * @update  gess7/25/98
  * @param 
  */
-CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
+nsTokenAllocator::nsTokenAllocator() {
 
-  MOZ_COUNT_CTOR(CTokenRecycler);
+  MOZ_COUNT_CTOR(nsTokenAllocator);
 
+  mArenaPool.Init("TheTokenPool", kBucketSizes, kNumBuckets, kInitialPoolSize);
+
+#ifdef NS_DEBUG
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
-    mTokenCache[i]=new nsDeque(0);
-#ifdef NS_DEBUG
     mTotals[i]=0;
 #endif
   }
@@ -1190,22 +1171,10 @@ CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
  * Destructor for the token factory
  * @update  gess7/25/98
  */
-CTokenRecycler::~CTokenRecycler() {
+nsTokenAllocator::~nsTokenAllocator() {
 
-  MOZ_COUNT_DTOR(CTokenRecycler);
+  MOZ_COUNT_DTOR(nsTokenAllocator);
 
-  //begin by deleting all the known (recycled) tokens...
-  //We're also deleting the cache-deques themselves.
-  int i;
-
-  CTokenDeallocator theDeallocator;
-  for(i=0;i<eToken_last-1;i++) {
-    if(0!=mTokenCache[i]) {
-      mTokenCache[i]->ForEach(theDeallocator);
-      delete mTokenCache[i];
-      mTokenCache[i]=0;
-    }
-  }
 }
 
 class CTokenFinder: public nsDequeFunctor{
@@ -1221,31 +1190,6 @@ public:
 };
 
 /**
- * This method gets called when someone wants to recycle a token
- * @update  gess7/24/98
- * @param   aToken -- token to be recycled.
- * @return  nada
- */
-void CTokenRecycler::RecycleToken(CToken* aToken) {
-  if(aToken) {
-    PRInt32 theType=aToken->GetTokenType();
-
-#if 0
-  //This should be disabled since it's only debug code.
-    CTokenFinder finder(aToken);
-    CToken* theMatch;
-    theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
-    if(theMatch) {
-      printf("dup token: %p\n",theMatch);
-    }
-#endif
-    aToken->mUseCount=1;
-    mTokenCache[theType-1]->Push(aToken);
-  }
-}
-
-
-/**
  * Let's get this code ready to be reused by all the contexts.
  * 
  * @update	rickg 12June2000
@@ -1255,37 +1199,33 @@ void CTokenRecycler::RecycleToken(CToken* aToken) {
  *
  * @return  ptr to new token (or 0).
  */
-CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
+CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
 
-  CToken* result=(CToken*)mTokenCache[aType-1]->Pop();
+  CToken* result=0;
 
-  if(result) {
-    result->Reinitialize(aTag,aString);
-  }
-  else {
 #ifdef  NS_DEBUG
     mTotals[aType-1]++;
 #endif
-    switch(aType){
-      case eToken_start:            result=new CStartToken(aTag); break;
-      case eToken_end:              result=new CEndToken(aTag); break;
-      case eToken_comment:          result=new CCommentToken(); break;
-      case eToken_entity:           result=new CEntityToken(aString); break;
-      case eToken_whitespace:       result=new CWhitespaceToken(); break;
-      case eToken_newline:          result=new CNewlineToken(); break;
-      case eToken_text:             result=new CTextToken(aString); break;
-      case eToken_attribute:        result=new CAttributeToken(); break;
-      case eToken_script:           result=new CScriptToken(); break;
-      case eToken_style:            result=new CStyleToken(); break;
-      case eToken_skippedcontent:   result=new CSkippedContentToken(aString); break;
-      case eToken_instruction:      result=new CInstructionToken(); break;
-      case eToken_cdatasection:     result=new CCDATASectionToken(); break;
-      case eToken_error:            result=new CErrorToken(); break;
-      case eToken_doctypeDecl:      result=new CDoctypeDeclToken(); break;
-        default:
-          break;
-    }
+  switch(aType){
+    case eToken_start:            result=new(mArenaPool) CStartToken(aTag); break;
+    case eToken_end:              result=new(mArenaPool) CEndToken(aTag); break;
+    case eToken_comment:          result=new(mArenaPool) CCommentToken(); break;
+    case eToken_entity:           result=new(mArenaPool) CEntityToken(aString); break;
+    case eToken_whitespace:       result=new(mArenaPool) CWhitespaceToken(); break;
+    case eToken_newline:          result=new(mArenaPool) CNewlineToken(); break;
+    case eToken_text:             result=new(mArenaPool) CTextToken(aString); break;
+    case eToken_attribute:        result=new(mArenaPool) CAttributeToken(aString); break;
+    case eToken_script:           result=new(mArenaPool) CScriptToken(); break;
+    case eToken_style:            result=new(mArenaPool) CStyleToken(); break;
+    case eToken_skippedcontent:   result=new(mArenaPool) CSkippedContentToken(aString); break;
+    case eToken_instruction:      result=new(mArenaPool) CInstructionToken(); break;
+    case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(); break;
+    case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
+    case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(); break;
+      default:
+        break;
   }
+
   return result;
 }
 
@@ -1298,39 +1238,59 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
  *
  * @return  ptr to new token (or 0).
  */
-CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) {
+CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) {
 
-  CToken* result=(CToken*)mTokenCache[aType-1]->Pop();
+  CToken* result=0;
 
-  if(result) {
-    result->Reinitialize(aTag,mEmpty);
-  }
-  else {
 #ifdef  NS_DEBUG
     mTotals[aType-1]++;
 #endif
-    switch(aType){
-      case eToken_start:            result=new CStartToken(aTag); break;
-      case eToken_end:              result=new CEndToken(aTag); break;
-      case eToken_comment:          result=new CCommentToken(); break;
-      case eToken_attribute:        result=new CAttributeToken(); break;
-      case eToken_entity:           result=new CEntityToken(); break;
-      case eToken_whitespace:       result=new CWhitespaceToken(); break;
-      case eToken_newline:          result=new CNewlineToken(); break;
-      case eToken_text:             result=new CTextToken(mEmpty); break;
-      case eToken_script:           result=new CScriptToken(); break;
-      case eToken_style:            result=new CStyleToken(); break;
-      case eToken_skippedcontent:   result=new CSkippedContentToken(mEmpty); break;
-      case eToken_instruction:      result=new CInstructionToken(); break;
-      case eToken_cdatasection:     result=new CCDATASectionToken(); break;
-      case eToken_error:            result=new CErrorToken(); break;
-      case eToken_doctypeDecl:      result=new CDoctypeDeclToken(aTag); break;
-        default:
-          break;
-    }
-  }
+  switch(aType){
+    case eToken_start:            result=new(mArenaPool) CStartToken(aTag); break;
+    case eToken_end:              result=new(mArenaPool) CEndToken(aTag); break;
+    case eToken_comment:          result=new(mArenaPool) CCommentToken(); break;
+    case eToken_attribute:        result=new(mArenaPool) CAttributeToken(); break;
+    case eToken_entity:           result=new(mArenaPool) CEntityToken(); break;
+    case eToken_whitespace:       result=new(mArenaPool) CWhitespaceToken(); break;
+    case eToken_newline:          result=new(mArenaPool) CNewlineToken(); break;
+    case eToken_text:             result=new(mArenaPool) CTextToken(NS_ConvertToString("")); break;
+    case eToken_script:           result=new(mArenaPool) CScriptToken(); break;
+    case eToken_style:            result=new(mArenaPool) CStyleToken(); break;
+    case eToken_skippedcontent:   result=new(mArenaPool) CSkippedContentToken(NS_ConvertToString("")); break;
+    case eToken_instruction:      result=new(mArenaPool) CInstructionToken(); break;
+    case eToken_cdatasection:     result=new(mArenaPool) CCDATASectionToken(); break;
+    case eToken_error:            result=new(mArenaPool) CErrorToken(); break;
+    case eToken_doctypeDecl:      result=new(mArenaPool) CDoctypeDeclToken(aTag); break;
+    default:
+      break;
+   }
+
   return result;
 }
+
+/**
+ * Let's get this code ready to be reused by all the contexts.
+ * 
+ * @update	harishd 08/04/00
+ * @param   aType -- tells you the type of token to create
+ * @param   aTag  -- tells you the type of tag to init with this token
+ *
+ * @return  ptr to new token (or 0).
+ */
+CToken* nsTokenAllocator::CreateRTFTokenOfType(eRTFTokenTypes aType,eRTFTags aTag) {
+
+  CToken* result=0;
+
+  switch(aType){
+    case eRTFToken_controlword:   result=new(mArenaPool) CRTFControlWord(aTag); break;
+    case eRTFToken_content:       result=new(mArenaPool) CRTFContent();         break;
+    default: 
+      break;
+   }
+  
+  return result;
+}
+
 
 CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
 
@@ -1361,24 +1321,15 @@ CNodeRecycler::~CNodeRecycler() {
   }
 }
 
-void CNodeRecycler::RecycleNode(nsCParserNode* aNode,nsITokenRecycler* aTokenRecycler) {
+void CNodeRecycler::RecycleNode(nsCParserNode* aNode) {
   
   if(aNode && (!aNode->mUseCount)) {
+        
+    IF_FREE(aNode->mToken);
 
-    // If the node contains tokens there better me a token recycler..
-    if(aTokenRecycler) {
-      if(aNode->mToken) { 
-        if(!aNode->mToken->mUseCount) { 
-          aTokenRecycler->RecycleToken(aNode->mToken); 
-        }
-      } 
-
-      CToken* theToken=0;
-      while((theToken=(CToken*)aNode->PopAttributeToken())){
-        if(!theToken->mUseCount) { 
-          aTokenRecycler->RecycleToken(theToken); 
-        }
-      }
+    CToken* theToken=0;
+    while((theToken=(CToken*)aNode->PopAttributeToken())){
+      IF_FREE(theToken);
     }
     mSharedNodes.Push(aNode);
   }

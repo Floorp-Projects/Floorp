@@ -61,10 +61,10 @@ public:
 
           NS_DECL_ISUPPORTS
 
-  virtual nsresult          WillTokenize(PRBool aIsFinalChunk);
+  virtual nsresult          WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);
   virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult          DidTokenize(PRBool aIsFinalChunk);
-  virtual nsITokenRecycler* GetTokenRecycler(void);
+  virtual nsTokenAllocator*  GetTokenAllocator(void);
 
   virtual CToken*           PushTokenFront(CToken* theToken);
   virtual CToken*           PushToken(CToken* theToken);
@@ -74,7 +74,6 @@ public:
 	virtual PRInt32           GetCount(void);
 
   virtual void              PrependTokens(nsDeque& aDeque);
-  static  void              FreeTokenRecycler(void);
 
 protected:
 
@@ -93,15 +92,16 @@ protected:
   
   virtual void     RecordTrailingContent(CStartToken* aStartToken,nsScanner& aScanner);
 
-  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,CTokenRecycler* aRecycler);
+  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
 
-  nsDeque         mTokenDeque;
-  PRBool          mDoXMLEmptyTags;
-  PRInt32         mParseMode;
-  eParserDocType  mDocType;
-  PRBool          mRecordTrailingContent;
-  eParserCommands mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
-  nsAutoString    mScratch;
+  nsDeque            mTokenDeque;
+  PRBool             mDoXMLEmptyTags;
+  PRInt32            mParseMode;
+  eParserDocType     mDocType;
+  PRBool             mRecordTrailingContent;
+  eParserCommands    mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
+  nsAutoString       mScratch;
+  nsTokenAllocator*  mTokenAllocator;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,

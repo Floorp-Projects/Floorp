@@ -39,6 +39,7 @@
 #include "nsDeque.h"
 #include "nsToken.h"
 
+
 #define NS_RTF_DTD_IID      \
   {0xa39c6bfc, 0x15f0,  0x11d2,  \
   {0x80, 0x41, 0x00,    0x10, 0x4b, 0x98, 0x3f, 0xd4}}
@@ -303,7 +304,7 @@ class CRtfDTD : public nsIDTD {
      * @update	gess8/4/98
      * @return  ptr to recycler (or null)
      */
-    virtual nsITokenRecycler* GetTokenRecycler(void);
+    virtual nsTokenAllocator* GetTokenAllocator(void);
 
     /**
      * Use this id you want to stop the building content model

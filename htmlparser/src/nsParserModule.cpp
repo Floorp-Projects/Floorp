@@ -208,9 +208,6 @@ nsParserModule::Shutdown()
   if (mInitialized) {
     nsHTMLTags::ReleaseTable();
     nsHTMLEntities::ReleaseTable();
-    nsHTMLTokenizer::FreeTokenRecycler();
-    nsXMLTokenizer::FreeTokenRecycler();
-    nsExpatTokenizer::FreeTokenRecycler();
     nsDTDContext::ReleaseGlobalObjects();
     nsParser::FreeSharedObjects();
     mInitialized = PR_FALSE;

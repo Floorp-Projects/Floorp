@@ -78,11 +78,6 @@ nsresult nsXMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-void 
-nsXMLTokenizer::FreeTokenRecycler(void) {
-  nsHTMLTokenizer::FreeTokenRecycler();
-}
-
 /**
  *  This method is defined in nsIParser. It is used to 
  *  cause the COM-like construction of an nsParser.
@@ -151,8 +146,8 @@ nsresult nsXMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) 
 }
 
 
-nsITokenRecycler* nsXMLTokenizer::GetTokenRecycler(void) {
-  return nsHTMLTokenizer::GetTokenRecycler();
+nsTokenAllocator* nsXMLTokenizer::GetTokenAllocator(void) {
+  return nsHTMLTokenizer::GetTokenAllocator();
 }
 
 /*
@@ -202,14 +197,14 @@ nsresult ConsumeConditional(nsScanner& aScanner,const nsString& aMatchString,PRB
  */
 nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
   nsresult result=NS_OK;
-  CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+  nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   
-  if(theRecycler) {
+  if(theAllocator) {
     nsAutoString  theEmpty;
-    aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
+    aToken=theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     if(aToken) {
       result=aToken->Consume(aChar,aScanner,eDTDMode_strict);
-      AddToken(aToken,result,&mTokenDeque,theRecycler);
+      AddToken(aToken,result,&mTokenDeque,theAllocator);
     }
   }
 
@@ -229,9 +224,9 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanne
  */
 nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
   nsresult result=NS_OK;
-  CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+  nsTokenAllocator* theAllocator=this->GetTokenAllocator();
 
-  if(theRecycler) {
+  if(theAllocator) {
     PRUnichar theChar;
     aScanner.Peek(theChar);
     PRBool isComment=PR_TRUE; 
@@ -242,17 +237,17 @@ nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,ns
       result = ConsumeConditional(aScanner, CDATAString, isCDATA);
       if (NS_OK == result) {
         if (isCDATA) {
-           aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
+           aToken=theAllocator->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
            isComment=PR_FALSE;
         }
       }
     }
     
-    if(isComment) aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
+    if(isComment) aToken = theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
  
     if(aToken) {
       result=aToken->Consume(aChar,aScanner,eDTDMode_strict);
-      AddToken(aToken,result,&mTokenDeque,theRecycler);
+      AddToken(aToken,result,&mTokenDeque,theAllocator);
     }
   }
   return result;

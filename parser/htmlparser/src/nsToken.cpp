@@ -23,7 +23,10 @@
 #include "nsToken.h"
 #include "nsScanner.h"
 
+
+#ifdef MATCH_CTOR_DTOR    
 MOZ_DECL_CTOR_COUNTER(CToken);
+#endif
 
 static int TokenCount=0;
 static int DelTokenCount=0;
@@ -41,13 +44,25 @@ int CToken::GetTokenCount(){return TokenCount-DelTokenCount;}
  *  @update gess 7/21/98
  */
 CToken::CToken(PRInt32 aTag) : mTextValue() {
+  // Tokens are allocated through the arena ( not heap allocated..yay ).
+  // We, therefore, don't need this macro anymore..
+#ifdef MATCH_CTOR_DTOR 
   MOZ_COUNT_CTOR(CToken);
-  mTypeID=aTag;
+#endif 
   mAttrCount=0;
-  TokenCount++;
-  mOrigin=eSource;
-  mUseCount=0;
   mNewlineCount=0;
+  mTypeID=aTag;
+  mOrigin=eSource;
+  // Note that the use count starts with 1 instead of 0. This
+  // is because of the assumption that any token created is in
+  // use and therefore does not require an explicit addref, or
+  // rather IF_HOLD. This, also, will make sure that tokens created 
+  // on the stack do not accidently hit the arena recycler.
+  mUseCount=1;
+
+#ifdef NS_DEBUG
+  TokenCount++;
+#endif
 }
 
 /**
@@ -57,13 +72,26 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
  *  @param  nsString--name of token
  */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
+  // Tokens are allocated through the arena ( not heap allocated..yay ).
+  // We, therefore, don't need this macro anymore..
+#ifdef MATCH_CTOR_DTOR 
   MOZ_COUNT_CTOR(CToken);
+#endif
+  
   mTypeID=0;
   mAttrCount=0;
-  TokenCount++;
-  mOrigin=eSource;
-  mUseCount=0;
   mNewlineCount=0;
+  mOrigin=eSource;
+  // Note that the use count starts with 1 instead of 0. This
+  // is because of the assumption that any token created is in
+  // use and therefore does not require an explicit addref, or
+  // rather IF_HOLD. This, also, will make sure that tokens created 
+  // on the stack do not accidently hit the arena recycler.
+  mUseCount=1;
+
+#ifdef NS_DEBUG
+  TokenCount++;
+#endif
 }
 
 /**
@@ -73,14 +101,27 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
  *  @param  aName--char* containing name of token
  */
 CToken::CToken(const char* aName) {
+  // Tokens are allocated through the arena ( not heap allocated..yay ).
+  // We, therefore, don't need this macro anymore..
+#ifdef MATCH_CTOR_DTOR 
   MOZ_COUNT_CTOR(CToken);
-  mTextValue.AssignWithConversion(aName);
+#endif
+  
   mTypeID=0;
   mAttrCount=0;
-  TokenCount++;
-  mOrigin=eSource;
-  mUseCount=0;
   mNewlineCount=0;
+  mOrigin=eSource;
+  mTextValue.AssignWithConversion(aName);
+  // Note that the use count starts with 1 instead of 0. This
+  // is because of the assumption that any token created is in
+  // use and therefore does not require an explicit addref, or
+  // rather IF_HOLD. This, also, will make sure that tokens created 
+  // on the stack do not accidently hit the arena recycler.
+  mUseCount=1;
+
+#ifdef NS_DEBUG
+  TokenCount++;
+#endif
 }
  
 /**
@@ -89,10 +130,39 @@ CToken::CToken(const char* aName) {
  *  @update gess 3/25/98
  */
 CToken::~CToken() {
+  // Tokens are allocated through the arena ( not heap allocated..yay ).
+  // We, therefore, don't need this macro anymore..
+#ifdef MATCH_CTOR_DTOR 
   MOZ_COUNT_DTOR(CToken);
+#endif
   DelTokenCount++;
+  mUseCount=0;
 }
 
+/**
+ * 
+ * @update	harishd 08/01/00
+ * @param   aSize    - 
+ * @param   aArena   - Allocate memory from this pool.
+ */
+void *
+CToken::operator new (size_t aSize, nsFixedSizeAllocator& anArena)
+{
+  return (CToken*)anArena.Alloc(aSize);
+}
+
+/**
+ *  
+ *
+ * @update	harishd 08/01/00
+ * @param   aPtr     - The memory that should be recycled/freed.
+ * @param   aSize    - The size of memory that needs to be freed.
+ */
+void
+CToken::operator delete (void* aPtr,size_t aSize)
+{
+  nsFixedSizeAllocator::Free(aPtr,aSize);
+}
 
 /**
  * This method gets called when a token is about to be reused
@@ -107,11 +177,16 @@ void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
     mTextValue.Truncate(0);
   else mTextValue=aString;
   mAttrCount=0;
-  mTypeID=aTag;
   mAttrCount=0;
-  mOrigin=eSource;
-  mUseCount=0;
   mNewlineCount=0;
+  mTypeID=aTag;
+  mOrigin=eSource;
+  // Note that the use count starts with 1 instead of 0. This
+  // is because of the assumption that any token created is in
+  // use and therefore does not require an explicit addref, or
+  // rather IF_HOLD. This, also, will make sure that tokens created 
+  // on the stack do not accidently hit the arena recycler.
+  mUseCount=1;
 }
  
 /**

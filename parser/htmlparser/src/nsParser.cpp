@@ -2387,7 +2387,7 @@ PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
   nsITokenizer* theTokenizer=0;
   nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
   if (theTokenizer) {
-    result = theTokenizer->WillTokenize(aIsFinalChunk);
+    result = theTokenizer->WillTokenize(aIsFinalChunk,&mTokenAllocator);
   }  
   return result;
 }

@@ -237,7 +237,7 @@ class nsExpatDTD : public nsIDTD {
      * @update	gess8/4/98
      * @return  ptr to recycler (or null)
      */
-    virtual nsITokenRecycler* GetTokenRecycler(void);
+    virtual nsTokenAllocator* GetTokenAllocator(void);
 
     /**
      * Parse an XML buffer using expat

@@ -26,6 +26,7 @@
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
 #include "nsITokenizer.h"
+#include "nsDTDUtils.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -45,7 +46,7 @@ const nsString& GetEmptyString() {
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): 
+nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator): 
     nsIParserNode() {
   NS_INIT_REFCNT();
   MOZ_COUNT_CTOR(nsCParserNode);
@@ -55,17 +56,18 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
   mAttributes=0;
   mLineNumber=aLineNumber;
   mToken=aToken;
-  mRecycler=aRecycler;
+  IF_HOLD(mToken);
+  mTokenAllocator=aTokenAllocator;
   mUseCount=0;
   mSkippedContent=0;
   mGenericState=PR_FALSE;
 }
 
-static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
+static void RecycleTokens(nsTokenAllocator* aTokenAllocator,nsDeque& aDeque) {
   CToken* theToken=0;
-  if(aRecycler) {
+  if(aTokenAllocator) {
     while((theToken=(CToken*)aDeque.Pop())){
-      aRecycler->RecycleToken(theToken);
+      IF_FREE(theToken);
     }
   }
 }
@@ -79,31 +81,8 @@ static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
  *  @return  
  */
 nsCParserNode::~nsCParserNode() {
-  if(mAttributes) {
-
-    //fixed a bug that patrick found, where the attributes deque existed
-    //but was empty. In that case, the attributes deque itself was leaked.
-    //THANKS PATRICK!
-
-    if(mRecycler) {
-      RecycleTokens(mRecycler,*mAttributes);
-    } 
-    else {
-      CToken* theToken=(CToken*)mAttributes->Pop();
-      while(theToken){
-        delete theToken;
-        theToken=(CToken*)mAttributes->Pop();
-      }
-    }
-    delete mAttributes;
-    mAttributes=0;
-  }
-  if(mSkippedContent) {
-    delete mSkippedContent;
-  }
-  mSkippedContent=0;
-
   MOZ_COUNT_DTOR(nsCParserNode);
+  ReleaseAll();
 }
 
 
@@ -118,12 +97,13 @@ NS_IMPL_RELEASE(nsCParserNode)
  *  @return  
  */
 
-nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler) {
+nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator) {
   mLineNumber=aLineNumber;
-  mRecycler=aRecycler;
+  mTokenAllocator=aTokenAllocator;
   if(mAttributes && (mAttributes->GetSize()))
-    RecycleTokens(mRecycler,*mAttributes);
+    RecycleTokens(mTokenAllocator,*mAttributes);
   mToken=aToken;
+  IF_HOLD(mToken);
   mGenericState=PR_FALSE;
   mUseCount=0;
   if(mSkippedContent) {
@@ -383,6 +363,38 @@ void nsCParserNode::GetSource(nsString& aString) {
   aString.AppendWithConversion(">");
 }
 
+/** Release all the objects you're holding to.
+ * @update	harishd 08/02/00
+ * @return  void
+ */
+nsresult nsCParserNode::ReleaseAll() {
+  if(mAttributes) {
+
+    //fixed a bug that patrick found, where the attributes deque existed
+    //but was empty. In that case, the attributes deque itself was leaked.
+    //THANKS PATRICK!
+
+    if(mTokenAllocator) {
+      RecycleTokens(mTokenAllocator,*mAttributes);
+    } 
+    else {
+      CToken* theToken=(CToken*)mAttributes->Pop();
+      while(theToken){
+        IF_FREE(theToken);
+        theToken=(CToken*)mAttributes->Pop();
+      }
+    }
+    delete mAttributes;
+    mAttributes=0;
+  }
+  if(mSkippedContent) {
+    delete mSkippedContent;
+  }
+  IF_FREE(mToken);
+  mSkippedContent=0;
+  return NS_OK;
+}
+
 nsresult
 nsCParserNode::GetIDAttributeAtom(nsIAtom** aResult) const
 {
@@ -400,3 +412,4 @@ nsCParserNode::SetIDAttributeAtom(nsIAtom* aID)
 
   return NS_OK;
 }
+

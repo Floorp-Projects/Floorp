@@ -153,7 +153,7 @@ class CViewSourceHTML: public nsIDTD {
      * @param 
      * @return
      */
-    virtual  nsITokenRecycler* GetTokenRecycler(void);
+    virtual  nsTokenAllocator* GetTokenAllocator(void);
 
     /**
      * 
@@ -279,6 +279,7 @@ protected:
     nsString            mTags;
     nsString            mErrors;
     PRBool              mShowErrors;
+    PRBool              mHasOpenRoot;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

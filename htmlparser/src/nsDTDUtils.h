@@ -42,6 +42,11 @@
 #include "nsString.h"
 #include "nsIElementObserver.h"
 #include "nsIParserNode.h"
+#include "nsFixedSizeAllocator.h"
+#include "CRtfDTD.h"
+
+#define IF_HOLD(_ptr) if(_ptr) { _ptr->AddRef(); }
+#define IF_FREE(_ptr) if(_ptr) { _ptr->Release(); _ptr=0; } // recycles _ptr
 
 class nsIParserNode;
 class nsCParserNode;
@@ -207,25 +212,27 @@ public:
 };
 
 /************************************************************************
-  CTokenRecycler class implementation.
+  nsTokenAllocator class implementation.
   This class is used to recycle tokens. 
   By using this simple class, we cut WAY down on the number of tokens
   that get created during the run of the system.
- ************************************************************************/
-class CTokenRecycler : public nsITokenRecycler {
-public:
-  
-//      enum {eCacheMaxSize=100}; 
 
-                  CTokenRecycler();
-  virtual         ~CTokenRecycler();
-  virtual void    RecycleToken(CToken* aToken);
+  Note: The allocator is created per document. It's been shared 
+        ( but not ref. counted ) by objects, tokenizer,dtd,and dtd context,
+        that cease to exist when the document is destroyed.
+ ************************************************************************/
+class nsTokenAllocator {
+public: 
+
+                  nsTokenAllocator();
+  virtual         ~nsTokenAllocator();
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
   virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
+  virtual CToken* CreateRTFTokenOfType(eRTFTokenTypes  aType,eRTFTags aTag);
 
 protected:
-    nsDeque*  mTokenCache[eToken_last-1];
-    nsString  mEmpty;
+    nsFixedSizeAllocator mArenaPool;
+
 
 #ifdef  NS_DEBUG
     int       mTotals[eToken_last-1];
@@ -246,7 +253,7 @@ public:
                          CNodeRecycler();
   virtual                ~CNodeRecycler();
   virtual nsCParserNode* CreateNode(void);
-  virtual void           RecycleNode(nsCParserNode* aNode,nsITokenRecycler* aTokenRecycler=0);
+  virtual void           RecycleNode(nsCParserNode* aNode);
 
 protected:
     nsDeque  mSharedNodes;
@@ -291,7 +298,6 @@ public:
 
   nsresult        GetNodeRecycler(CNodeRecycler*& aNodeRecycler);
   void            RecycleNode(nsCParserNode *aNode);
-  CTokenRecycler* GetTokenRecycler(void);
   static  void    ReleaseGlobalObjects(void);
 
   CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
@@ -299,6 +305,8 @@ public:
 
   void            ResetCounters(void);
   PRInt32         IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsString& aResult);
+
+  void            SetTokenAllocator(nsTokenAllocator* aTokenAllocator) { mTokenAllocator=aTokenAllocator; }
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
@@ -310,8 +318,8 @@ public:
   PRBool          mHadDocTypeDecl;
 
   static          CNodeRecycler   *gNodeRecycler;
-  static          CTokenRecycler  *gTokenRecycler;
-
+  
+  nsTokenAllocator *mTokenAllocator;
   CTableState     *mTableStates;
   PRInt32         mCounters[NS_HTML_TAG_MAX];
   nsString        mDefaultEntity;

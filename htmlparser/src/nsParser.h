@@ -411,6 +411,7 @@ protected:
     nsString            mCommandStr;
     
     nsParserBundle*     mBundle;
+    nsTokenAllocator    mTokenAllocator;
 
 public:    
     MOZ_TIMER_DECLARE(mParseTime)
