@@ -651,6 +651,10 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       event.clickCount = 0;
       event.point = aEvent->point;
       event.refPoint = aEvent->refPoint;
+      event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+      event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+      event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+      event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
       // dispatch to the DOM
       nsCOMPtr<nsIContent> lastContent;
@@ -1543,10 +1547,8 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 
     event.eventStructType = NS_MOUSE_EVENT;
     event.widget = aEvent->widget;
-    event.point.x = aEvent->point.x;
-    event.point.y = aEvent->point.y;
-    event.refPoint.x = aEvent->refPoint.x;
-    event.refPoint.y = aEvent->refPoint.y;
+    event.point = aEvent->point;
+    event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
     event.isShift = aEvent->isShift;
     event.isControl = aEvent->isControl;
@@ -1562,40 +1564,6 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
       ret = mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);
     }
   }
-  return ret;
-}
-
-NS_IMETHODIMP
-nsEventStateManager::DispatchKeyPressEvent(nsIPresContext* aPresContext, 
-                                           nsKeyEvent *aEvent,
-                                           nsEventStatus* aStatus)
-{
-  nsresult ret = NS_OK;
-
-  //fire keypress
-  nsKeyEvent event;
-  event.eventStructType = NS_KEY_EVENT;
-  event.message = NS_KEY_PRESS;
-  event.widget = nsnull;
-  event.keyCode = aEvent->keyCode;
-  event.isShift = aEvent->isShift;
-  event.isControl = aEvent->isControl;
-  event.isAlt = aEvent->isAlt;
-  event.isMeta = aEvent->isMeta;
-
-  nsIContent *content;
-  mCurrentTarget->GetContent(&content);
-
-  if (nsnull != content) {
-    ret = content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, aStatus); 
-    NS_RELEASE(content);
-  }
-
-  //Now dispatch to the frame
-  if (nsnull != mCurrentTarget) {
-    mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);   
-  }
-
   return ret;
 }
 
