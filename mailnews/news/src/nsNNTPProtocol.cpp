@@ -456,7 +456,7 @@ void nsNNTPProtocol::Cleanup()  //free char* member variables
   PR_FREEIF(m_cancelID);
   PR_FREEIF(m_messageID);
   PR_FREEIF(m_commandSpecificData);
-  PR_FREEIF(m_searchData);
+
 }
 
 NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
@@ -1070,8 +1070,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		  {
               m_typeWanted = SEARCH_WANTED;
               m_commandSpecificData = ToNewCString(commandSpecificData);
+              nsUnescape(m_commandSpecificData);
               m_searchData = m_commandSpecificData;
-              nsUnescape(m_searchData);
+              
 
               rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
               if (!m_newsFolder) goto FAIL;
