@@ -752,6 +752,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
   }
 
+  int ret;
   nsresult rv;
   nsCOMPtr<nsIURI> nsurl = do_QueryInterface(aURL, &rv);
   if (NS_FAILED(rv)) return 0;
@@ -830,12 +831,10 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     if (NS_FAILED(rv)) goto error;
   }
 
-  { // scope for int ret and goto
-    int ret = mRequests->AppendElement((void *)ic) ? 0 : -1;
-    NS_RELEASE(ic); // if nothing else is holding onto it, it will remove
-                    // itself from mRequests
-    return ret;
-  }
+  ret = mRequests->AppendElement((void *)ic) ? 0 : -1;
+  NS_RELEASE(ic); // if nothing else is holding onto it, it will remove
+                  // itself from mRequests
+  return ret;
 
 error:
   NS_RELEASE(ic);
