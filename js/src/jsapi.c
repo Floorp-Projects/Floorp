@@ -86,7 +86,7 @@
 #endif
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
-#define JS_ADDRESSOF_VA_LIST(ap) (ap)
+#define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
 #else
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
@@ -2258,7 +2258,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
     JSAtom *atom;
 
     if (attrs & JSPROP_INDEX) {
-        id = INT_TO_JSID((jsint)name);
+        id = INT_TO_JSID(JS_PTR_TO_INT32(name));
         atom = NULL;
         attrs &= ~JSPROP_INDEX;
     } else {

@@ -91,7 +91,7 @@ JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry)
 JS_PUBLIC_API(JSDHashNumber)
 JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key)
 {
-    return (JSDHashNumber)key >> 2;
+    return (JSDHashNumber)(unsigned long)key >> 2;
 }
 
 JS_PUBLIC_API(JSBool)

@@ -2588,7 +2588,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag)
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
 js_hash_string_pointer(const void *key)
 {
-    return (JSHashNumber)key >> JSVAL_TAGBITS;
+    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
 }
 
 void

@@ -355,7 +355,7 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return ((JSDHashNumber)key->obj >> JSVAL_TAGBITS) ^ key->id;
+    return ((JSDHashNumber)JS_PTR_TO_UINT32(key->obj) >> JSVAL_TAGBITS) ^ key->id;
 }
 
 JS_PUBLIC_API(JSBool)
