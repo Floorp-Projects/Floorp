@@ -319,7 +319,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDomNode::appendChild(IHTMLDOMNode *newChild, IH
     HRESULT hr = CIEHtmlDomNode::FindOrCreateFromDOMNode(domNode, &pNode);
     if (FAILED(hr))
         return hr;
-    if (FAILED(pNode->QueryInterface(IID_IHTMLDOMNode, (void**)node)))
+    if (FAILED(pNode->QueryInterface(__uuidof(IHTMLDOMNode), (void**)node)))
         return E_UNEXPECTED;
     return S_OK;
 }
