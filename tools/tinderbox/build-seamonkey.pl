@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.84 $ ';
+$::Version = '$Revision: 1.85 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -320,6 +320,18 @@ sub run_tests {
     my $binary_dir = dirname($binary);
     my $test_result = 'success';
 
+	# Setup for tests.
+	my $pref_file = $build_dir . "/.mozilla/$Settings::MozProfileName/prefs.js";
+	$ENV{HOME} = $build_dir;
+
+	# Check for profile, create it if necessary.
+	unless (stat($pref_file)) {
+	  print_log "$pref_file not found, creating profile...\n";
+	  CreateProfile($build_dir, $binary, 45);
+	} else {
+	  print_log "prefs.js found\n";
+	}
+
     # Mozilla alive test
 	#
 	# Note: Bloat & MailNews tests depend this on working.
@@ -358,7 +370,6 @@ sub run_tests {
                   ."http://www.mozilla.org/quality/mailnews/popTest.html";
 
 		# Stuff prefs in here.
-		my $pref_file = $build_dir . "/.mozilla/$Settings::MozProfileName/prefs.js";
 		if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
 		  open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
 		  print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
@@ -626,6 +637,22 @@ sub AliveTest {
         return 'testfailed';
     }
 }
+
+# Create a profile, timeout if needed.
+#
+sub CreateProfile {
+    my ($build_dir, $binary, $timeout_secs) = @_;
+    my $binary_dir = dirname($binary);
+    my $binary_log = "$build_dir/profile.log";
+    local $_;
+
+	my $cmd = $binary . " -CreateProfile" . " " . $Settings::MozProfileName;
+
+	print_log "cmd = $cmd\n";
+    my $result = run_test($build_dir, $binary_dir, $cmd,
+                          $binary_log, $timeout_secs);
+}
+
 
 # Run a generic test that writes output to stdout, save that output to a
 # file, parse the file looking for failure token and report status based
