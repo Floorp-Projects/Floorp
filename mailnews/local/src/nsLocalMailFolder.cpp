@@ -1112,7 +1112,18 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
       PRBool okToDelete = PR_FALSE;
       dialog->Confirm(nsnull, alertString, &okToDelete);
       if (okToDelete)
-        return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+      { 
+        nsCOMPtr<nsIMsgFolder> trashFolder;
+        rv = GetTrashFolder(getter_AddRefs(trashFolder));
+        if (NS_SUCCEEDED(rv))
+        {
+                      // we don't allow multiple folder selection so this is ok.
+          nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(0));
+          nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
+          if (folder)
+             trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
+        }
+      }
     }
   }
   return rv;
