@@ -40,19 +40,21 @@ options {
 	static final int TopLevelScope = 0;
 	static final int ClassScope = 1;
 	static final int BlockScope = 2;
+
+	int currentScope = TopLevelScope;            // stashing here rather than passing all the way down the parser
 }
 
 // ********* Identifiers **********
-identifier returns [ExpressionNode e]
+identifier returns [JSIdentifier e]
     { e = null; }
 	:	opI:IDENT       { e = new JSIdentifier(opI.getText()); }
-	|	"version"       { e = new JSObject("version"); }
-	|	"override"      { e = new JSObject("override"); }
-	|	"method"        { e = new JSObject("method"); }
-	|	"getter"        { e = new JSObject("getter"); }
-	|	"setter"        { e = new JSObject("setter"); }
-	|	"traditional"   { e = new JSObject("traditional"); }
-	|	"constructor"   { e = new JSObject("constructor"); }
+	|	"version"       { e = new JSIdentifier("version"); }
+	|	"override"      { e = new JSIdentifier("override"); }
+	|	"method"        { e = new JSIdentifier("method"); }
+	|	"getter"        { e = new JSIdentifier("getter"); }
+	|	"setter"        { e = new JSIdentifier("setter"); }
+	|	"traditional"   { e = new JSIdentifier("traditional"); }
+	|	"constructor"   { e = new JSIdentifier("constructor"); }
 	;
 
 qualified_identifier returns [ExpressionNode e]
@@ -61,9 +63,9 @@ qualified_identifier returns [ExpressionNode e]
 	|	e = identifier ("::" e2 = identifier { e = new BinaryNode("::", e, e2); } )*
 	;
 
-qualified_identifier_or_parenthesized_expression returns [ExpressionNode e]
-    { e = null; ExpressionNode e2 = null; }
-	:	(e = parenthesized_expression | e = identifier) ("::" e2 = identifier { e = new BinaryNode("::", e, e2); } )*
+qualified_identifier_or_parenthesized_expression[boolean isLeftMostId] returns [ExpressionNode e]
+    { e = null; ExpressionNode e2 = null; JSIdentifier id = null; }
+	:	(e = parenthesized_expression | id = identifier { if (isLeftMostId) e = new JSName(id, currentScope); else e = id; } )  ("::" e2 = identifier { e = new BinaryNode("::", e, e2); } )*
 	;
 
 // ********* Primary Expressions **********
@@ -86,7 +88,7 @@ simple_expression returns [ExpressionNode e]
 	|	opS:STRING  { e = new JSString(opS.getText()); }
 	|	"this"      { e = new JSObject("this"); }
 	|	"super"     { e = new JSObject("super"); }
-	|	e = qualified_identifier_or_parenthesized_expression
+	|	e = qualified_identifier_or_parenthesized_expression[true]
 	|	opR:REGEXP  { e = new JSObject(opR.getText()); }
 	|	e = array_literal
 	;
@@ -177,8 +179,8 @@ new_expression returns [ExpressionNode e]
 member_operator returns [ExpressionNode e]
     { e = null; }
 	:	"[" e = argument_list "]" { e = new UnaryNode("[]", e); }
-	|	DOT e = qualified_identifier_or_parenthesized_expression { e = new UnaryNode(".", e); }
-	|	"@" e = qualified_identifier_or_parenthesized_expression { e = new UnaryNode("@", e); }
+	|	DOT e = qualified_identifier_or_parenthesized_expression[false] { e = new UnaryNode(".", e); }
+	|	"@" e = qualified_identifier_or_parenthesized_expression[false] { e = new UnaryNode("@", e); }
 	;
 
 arguments returns [ExpressionNode e]
@@ -436,11 +438,12 @@ expression_statement[ControlNodeGroup container]
 
 // ********* Block **********
 block[int scope, ControlNodeGroup container]
-    { ControlNodeGroup subContainer = new ControlNodeGroup(); }
+    { ControlNodeGroup subContainer = new ControlNodeGroup(); int oldScope = currentScope; currentScope = scope; }
 	:	"{"
 	        statements[scope, subContainer]
 	        {
 	            container.add(subContainer);    // necessary ?
+	            scope = oldScope;
 	        }
 	    "}"
 	;
