@@ -56,7 +56,7 @@ Searching for first checkin after " . SqlFmtClock($startfrom) . "...<p>\n";
 my $branch = $::TreeInfo{$::TreeID}->{'branch'};
 print "<p> $branch <p> \n";
 
-my $sqlstring = "select type, UNIX_TIMESTAMP(when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid and branches.branch='$branch' and when>='" . SqlFmtClock($startfrom) . "' order by when;";
+my $sqlstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid and branches.branch='$branch' and ci_when>='" . SqlFmtClock($startfrom) . "' order by ci_when;";
 print "<p> $sqlstring <p>\n";
 SendSQL("$sqlstring");
 
