@@ -1700,7 +1700,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           nsAutoString  fullurl;
           nsIURI* baseURL;
 
-          mOwner->GetFullURL(baseURL);
+          nsCOMPtr<nsIDocument> doc;
+          rv = GetDocument(getter_AddRefs(doc));
+          if (NS_SUCCEEDED(rv) && doc)
+          {
+            baseURL = doc->GetDocumentURL(); // gets the document's url
+          }
+          else
+          {
+            mOwner->GetFullURL(baseURL); // gets the plugin's content url
+          }
 
           // Create an absolute URL
           rv = NS_MakeAbsoluteURI(fullurl, uniurl, baseURL);
