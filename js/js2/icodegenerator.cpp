@@ -1613,6 +1613,16 @@ static bool hasAttribute(const IdentifierList* identifiers, Token::Kind tokenKin
     return false;
 }
 
+static bool hasAttribute(const IdentifierList* identifiers, StringAtom &name)
+{
+    while (identifiers) {
+        if (identifiers->name == name)
+            return true;
+        identifiers = identifiers->next;
+    }
+    return false;
+}
+
 JSType *ICodeGenerator::extractType(ExprNode *t)
 {
     JSType* type = &Any_Type;
@@ -1799,7 +1809,10 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     if (isStatic)
                                         thisClass->defineStatic(idExpr->name, type);
                                     else {
-                                        thisClass->defineSlot(idExpr->name, type);
+                                        if (hasAttribute(vs->attributes, mContext->getWorld().identifiers["virtual"]))
+                                            thisClass->defineSlot(idExpr->name, type, JSSlot::kIsVirtual);
+                                        else
+                                            thisClass->defineSlot(idExpr->name, type);
                                         if (v->initializer)
                                             needsInstanceInitializer = true;
                                     }
@@ -1823,12 +1836,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                         thisClass->defineStatic(name, &Function_Type);
                                     else {
                                         switch (f->function.prefix) {
-                                            // XXXX these dummy place holders for the getters/setters are leaking
                                         case FunctionName::Get:
-                                            thisClass->setGetter(name, new JSFunction(), extractType(f->function.resultType));
+                                            thisClass->setGetter(name, NULL, extractType(f->function.resultType));
                                             break;
                                         case FunctionName::Set:
-                                            thisClass->setSetter(name, new JSFunction(), extractType(f->function.resultType));
+                                            thisClass->setSetter(name, NULL, extractType(f->function.resultType));
                                             break;
                                         case FunctionName::normal:
                                             thisClass->defineMethod(name, NULL);
