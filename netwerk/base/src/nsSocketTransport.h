@@ -38,12 +38,6 @@
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
 
 //
-// This is the size of the global buffer used by all nsSocketTransport 
-// instances when reading from or writing to the network.
-//
-#define MAX_IO_BUFFER_SIZE   (8*1024)
-
-//
 // This is the maximum amount of data that will be read into a stream before
 // another transport is processed...
 //
