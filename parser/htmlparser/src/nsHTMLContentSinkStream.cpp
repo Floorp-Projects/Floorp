@@ -1141,6 +1141,21 @@ nsHTMLContentSinkStream::AddProcessingInstruction(const nsIParserNode& aNode){
 }
 
 /**
+ *  This gets called by the parser when it encounters
+ *  a DOCTYPE declaration in the HTML document.
+ */
+
+NS_IMETHODIMP
+nsHTMLContentSinkStream::AddDocTypeDecl(const nsIParserNode& aNode)
+{
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
+/**
  *  This gets called by the parser when you want to add
  *  a comment node to the current container in the content
  *  model.

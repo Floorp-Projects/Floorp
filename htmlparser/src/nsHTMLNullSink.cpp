@@ -47,9 +47,9 @@ public:
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD NotifyError(const nsParserError* aError);
-
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   
   // nsIHTMLContentSink
   NS_IMETHOD SetTitle(const nsString& aValue);
@@ -504,6 +504,21 @@ nsHTMLNullSink::AddLeaf(const nsIParserNode& aNode){
 NS_IMETHODIMP
 nsHTMLNullSink::AddProcessingInstruction(const nsIParserNode& aNode){
 
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
+/**
+ *  This gets called by the parser when it encounters
+ *  a DOCTYPE declaration in the HTML document.
+ */
+
+NS_IMETHODIMP
+nsHTMLNullSink::AddDocTypeDecl(const nsIParserNode& aNode)
+{
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif

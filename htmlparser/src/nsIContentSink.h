@@ -135,12 +135,23 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
 
   /**
+   * This method is called by the parser when it encounters
+   * a document type declaration.
+   *
+   * XXX Should the parser also part the internal subset?
+   *
+   * @param  nsIParserNode reference to parser node interface
+   */
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode)=0;
+
+  /**
    * This gets called by the parser if it hits an unrecoverable
    * error (in XML, if the document is not well-formed or valid).
    *
    * @param aErrorResult the error code
    */
   NS_IMETHOD NotifyError(const nsParserError* aError)=0;
+
 };
 
 #endif /* nsIContentSink_h___ */

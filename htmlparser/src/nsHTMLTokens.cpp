@@ -1907,3 +1907,29 @@ const nsParserError * CErrorToken::GetError(void)
 { 
   return mError; 
 }
+
+// Doctype decl token
+
+CDoctypeDeclToken::CDoctypeDeclToken() : CHTMLToken(eHTMLTag_unknown) {
+}
+
+const char*  CDoctypeDeclToken::GetClassName(void) {
+  return "doctype";
+}
+
+PRInt32 CDoctypeDeclToken::GetTokenType(void) {
+  return eToken_doctypeDecl;
+}
+
+// XML decl token
+
+CXMLDeclToken::CXMLDeclToken() : CHTMLToken(eHTMLTag_unknown) {
+}
+
+const char*  CXMLDeclToken::GetClassName(void) {
+  return "xmldecl";
+}
+
+PRInt32 CXMLDeclToken::GetTokenType(void) {
+  return eToken_xmlDecl;
+}

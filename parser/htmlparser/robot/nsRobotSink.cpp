@@ -74,6 +74,7 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
+  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
@@ -286,6 +287,17 @@ NS_IMETHODIMP RobotSink::AddComment(const nsIParserNode& aNode) {
 NS_IMETHODIMP RobotSink::AddProcessingInstruction(const nsIParserNode& aNode) {
   nsresult result= NS_OK;
   return result;
+}
+
+/**
+ *  This gets called by the parser when it encounters
+ *  a DOCTYPE declaration in the HTML document.
+ */
+
+NS_IMETHODIMP
+RobotSink::AddDocTypeDecl(const nsIParserNode& aNode)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP RobotSink::Init(nsIURI* aDocumentURL)
