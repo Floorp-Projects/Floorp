@@ -19,7 +19,7 @@
  *
  * Original Author: Jean-Francois Ducarroz (ducarroz@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s): Dan Mosedale <dmose@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -34,6 +34,12 @@ interface nsIAutoCompleteStatus {
     const long noMatch          = 0;
     const long matchFound       = 1;
     const long ignored          = 2;
+
+    // like failed, in that no successful matches were found, however,
+    // results should be displayed anyway, because they contain info about  
+    // the failure in question
+    //
+    const long failureItems     = 3;    
 };
 
 [scriptable, uuid(4BA0A181-097C-11d4-A449-CD1A8B47ED7C)]

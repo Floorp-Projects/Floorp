@@ -158,6 +158,7 @@ en-US.jar:
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
     locale/en-US/global/finddialog.properties                          (find/resources/locale/en-US/finddialog.properties)
     locale/en-US/global/replacedialog.dtd                          (find/resources/locale/en-US/replacedialog.dtd)
+    locale/en-US/global/ldapAutoCompErrs.properties             (autocomplete/resources/locale/en-US/ldapAutoCompErrs.properties)
 
 toolkit.jar:
     content/global/console.js                                   (console/resources/content/console.js)
