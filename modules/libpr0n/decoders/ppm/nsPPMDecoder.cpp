@@ -88,17 +88,16 @@ enum {
   PPMRAW = 0x4
 };
 
-nsPPMDecoder::nsPPMDecoder()
+nsPPMDecoder::nsPPMDecoder() :
+  mBuffer(nsnull),
+  mBufferSize(0),
+  mState(F_P),
+  mSkip(NOTHING),
+  mOldSkip(NOTHING),
+  mType(0),
+  mRowData(nsnull)
 {
   NS_INIT_ISUPPORTS();
-
-  mBuffer = nsnull;
-  mBufferSize = 0;
-
-  mState = F_P;
-  mSkip = NOTHING;
-  mOldSkip = NOTHING;
-  mType = 0;
 }
 
 nsPPMDecoder::~nsPPMDecoder()
