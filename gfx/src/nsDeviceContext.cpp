@@ -168,6 +168,12 @@ NS_IMETHODIMP DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) const
   return NS_OK;
 }
 
+NS_IMETHODIMP DeviceContextImpl :: SetCanonicalPixelScale(float aScale)
+{
+  mCPixelScale = aScale;
+  return NS_OK;
+}
+
 static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
 
 NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
