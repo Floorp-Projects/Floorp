@@ -253,7 +253,7 @@ nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
         rv = mURI->GetPath(userHost);
 
         nsAutoString title;
-        title.AssignLiteral("Finger information for ");
+        title.AppendLiteral("Finger information for ");
         AppendUTF8toUTF16(userHost, title);
 
         conv->SetTitle(title.get());

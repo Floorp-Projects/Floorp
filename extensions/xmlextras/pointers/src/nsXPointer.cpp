@@ -71,6 +71,7 @@
 #include "nsIXPointer.h"
 #include "nsFIXptr.h"
 #include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -387,7 +388,8 @@ nsXPointer::Evaluate(nsIDOMDocument *aDocument,
       }
     } else {
       // Add-on schemes
-      nsCAutoString progid(baseSchemeProgID + NS_ConvertUCS2toUTF8(scheme));
+      nsCAutoString progid(baseSchemeProgID);
+      AppendUTF16toUTF8(scheme, progid);
       nsCOMPtr<nsIXPointerSchemeProcessor> p(do_CreateInstance(progid.get()));
       if (p) {
         rv = p->Evaluate(aDocument, contextSchemeDataArray, data, aResult);

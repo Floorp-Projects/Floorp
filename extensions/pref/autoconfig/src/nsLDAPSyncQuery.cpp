@@ -232,12 +232,10 @@ nsLDAPSyncQuery::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         // store  all values of this attribute in the mResults.
         //
         for (PRUint32 j = 0; j < valueCount; j++) {
-        
-            mResults += NS_LITERAL_STRING("\n") +
-                        NS_ConvertASCIItoUCS2(mAttrs[i]) +
-                        NS_LITERAL_STRING("=") +
-                        nsDependentString(vals[j]);
-            
+            mResults.Append(PRUnichar('\n'));
+            mResults.AppendASCII(mAttrs[i]);
+            mResults.Append(PRUnichar('='));
+            mResults.Append(vals[j]);
         }
         
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(valueCount, vals);

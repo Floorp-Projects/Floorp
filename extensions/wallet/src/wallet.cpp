@@ -782,7 +782,7 @@ nsresult
 Wallet_Encrypt (const nsString& textUCS2, nsString& cryptUCS2) {
   nsCAutoString cryptUTF8;
   nsresult rv = wallet_Encrypt(NS_ConvertUCS2toUTF8(textUCS2), cryptUTF8);
-  cryptUCS2 = NS_ConvertUTF8toUCS2(cryptUTF8);
+  CopyUTF8toUTF16(cryptUTF8, cryptUCS2);
   return rv;
 }
 
@@ -790,7 +790,7 @@ nsresult
 Wallet_Decrypt(const nsString& cryptUCS2, nsString& textUCS2) {
   nsCAutoString textUTF8;
   nsresult rv = wallet_Decrypt(NS_ConvertUCS2toUTF8(cryptUCS2), textUTF8);
-  textUCS2 = NS_ConvertUTF8toUCS2(textUTF8);
+  CopyUTF8toUTF16(textUTF8, textUCS2);
   return rv;
 }
 
@@ -1586,7 +1586,7 @@ wallet_GetHostFile(nsIURI * url, nsString& outHostFile)
   if (NS_FAILED(rv)) {
     return;
   }
-  urlName.Append(NS_ConvertUTF8toUCS2(file));
+  AppendUTF8toUTF16(file, urlName);
 
   PRInt32 queryPos = urlName.FindChar('?');
   PRInt32 stringEnd = (queryPos == kNotFound) ? urlName.Length() : queryPos;
@@ -1690,7 +1690,7 @@ FieldToValue(
         wallet_ReadFromList
           (schema, valueUTF8, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form and return */
-      valueUCS2 = NS_ConvertUTF8toUCS2(valueUTF8);
+      CopyUTF8toUTF16(valueUTF8, valueUCS2);
       index = index2;
       return NS_OK;
 
@@ -1780,7 +1780,7 @@ FieldToValue(
 
           /* a new value was found */
           index -= 2;
-          valueUCS2 = NS_ConvertUTF8toUCS2(concatenatedValueUTF8);
+          CopyUTF8toUTF16(concatenatedValueUTF8, valueUCS2);
           return NS_OK;
         }
 
@@ -1800,7 +1800,7 @@ FieldToValue(
     wallet_GetHostFile(wallet_lastUrl, localSchemaUCS2);
     localSchemaUCS2.AppendLiteral(":");
     localSchemaUCS2.Append(field);
-    nsCAutoString localSchemaUTF8 = NS_ConvertUCS2toUTF8(localSchemaUCS2);
+    NS_ConvertUTF16toUTF8 localSchemaUTF8(localSchemaUCS2);
     nsCAutoString valueUTF8;
 
     if (wallet_ReadFromList
@@ -1808,7 +1808,7 @@ FieldToValue(
       /* value found, prefill it into form */
       schema = localSchemaUTF8;
       index = index2;
-      valueUCS2 = NS_ConvertUTF8toUCS2(valueUTF8);
+      CopyUTF8toUTF16(valueUTF8, valueUCS2);
       return NS_OK;
     }
   }
@@ -2390,7 +2390,7 @@ wallet_GetPrefills(
               NS_RELEASE(inputElement);
               return NS_ERROR_FAILURE;
             }
-            value = NS_ConvertUTF8toUCS2(valueCString);
+            CopyUTF8toUTF16(valueCString, value);
           }
           selectElement = nsnull;
           selectIndex = -1;
@@ -2430,7 +2430,7 @@ wallet_GetPrefills(
         } else {
           /* synonym list exists, try each value */
           for (PRInt32 i=0; i<LIST_COUNT(itemList); i++) {
-            value = NS_ConvertUTF8toUCS2(((wallet_Sublist *)itemList->ElementAt(i))->item);
+            CopyUTF8toUTF16(((wallet_Sublist *)itemList->ElementAt(i))->item, value);
             result = wallet_GetSelectIndex(selectElement, value, selectIndex);
             if (NS_SUCCEEDED(result)) {
               /* value matched one of the values in the drop-down list */
@@ -2686,7 +2686,7 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
     buffer.Append(BREAK);
     buffer.AppendInt(prefillElementPtr->count,10);
     buffer.Append(BREAK);
-    buffer.Append(NS_ConvertUTF8toUCS2(prefillElementPtr->schema));
+    AppendUTF8toUTF16(prefillElementPtr->schema, buffer);
     buffer.Append(BREAK);
     buffer.Append(prefillElementPtr->value);
   }
@@ -2828,7 +2828,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
   wallet_Initialize();
   wallet_InitializeCurrentURL(doc);
 
-  nsCAutoString valueCString = NS_ConvertUCS2toUTF8(value);
+  NS_ConvertUTF16toUTF8 valueCString(value);
   nsCAutoString oldValue;
 
   /* is there a mapping from this field name to a schema name */
@@ -2888,7 +2888,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     wallet_GetHostFile(wallet_lastUrl, concatParamUCS2);
     concatParamUCS2.AppendLiteral(":");
     concatParamUCS2.Append(field);
-    nsCAutoString concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
+    NS_ConvertUTF16toUTF8 concatParamUTF8(concatParamUCS2);
     while(wallet_ReadFromList
         (concatParamUTF8, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
       PRBool isNewValue = !oldValue.Equals(valueCString.get());
@@ -2917,7 +2917,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
       wallet_GetHostFile(wallet_lastUrl, concatParamUCS2);
       concatParamUCS2.AppendLiteral(":");
       concatParamUCS2.Append(field);
-      concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
+      CopyUTF16toUTF8(concatParamUCS2, concatParamUTF8);
     }
 
     /* this is a new value so store it */
@@ -2953,7 +2953,7 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (NO_PREVIEW(url->item2) == 'y') {
       buffer.Append(BREAK);
-      buffer += NS_ConvertUTF8toUCS2(url->item1);
+      AppendUTF8toUTF16(url->item1, buffer);
     }
   }
   aNopreviewList = buffer;
@@ -2971,7 +2971,7 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (NO_CAPTURE(url->item2) == 'y') {
       buffer.Append(BREAK);
-      buffer += NS_ConvertUTF8toUCS2(url->item1);
+      AppendUTF8toUTF16(url->item1, buffer);
     }
   }
   aNocaptureList = buffer;
@@ -3041,17 +3041,17 @@ WLLT_PreEdit(nsString& walletList)
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
 
-    walletList += NS_ConvertUTF8toUCS2(mapElementPtr->item1);
+    AppendUTF8toUTF16(mapElementPtr->item1, walletList);
     walletList.Append(BREAK);
     if (!WALLET_NULL(mapElementPtr->item2)) {
-      walletList += NS_ConvertUTF8toUCS2(mapElementPtr->item2);
+      AppendUTF8toUTF16(mapElementPtr->item2, walletList);
       walletList.Append(BREAK);
     } else {
       wallet_Sublist * sublistPtr;
       PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
       for (PRInt32 i2=0; i2<count2; i2++) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
-        walletList += NS_ConvertUTF8toUCS2(sublistPtr->item);
+        AppendUTF8toUTF16(sublistPtr->item, walletList);
         walletList.Append(BREAK);
       }
     }
@@ -3213,7 +3213,7 @@ WLLT_PrefillReturn(const nsString& results)
 
   /* add url to url list if user doesn't want to preview this page in the future */
   if (skip.EqualsLiteral("true")) {
-    nsCAutoString url = NS_ConvertUCS2toUTF8(urlName);
+    NS_ConvertUTF16toUTF8 url(urlName);
     nsVoidArray* dummy;
     nsCAutoString urlPermissions("nn");
     wallet_ReadFromList(url, urlPermissions, dummy, wallet_URL_list, PR_FALSE);
@@ -3825,7 +3825,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
     return;
   }
   wallet_GetHostFile(docURL, strippedURLNameUCS2);
-  nsCAutoString strippedURLNameUTF8 = NS_ConvertUCS2toUTF8(strippedURLNameUCS2);
+  NS_ConvertUTF16toUTF8 strippedURLNameUTF8(strippedURLNameUCS2);
 
   /* get to the form elements */
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));

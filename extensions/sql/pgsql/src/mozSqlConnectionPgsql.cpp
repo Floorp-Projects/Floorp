@@ -128,7 +128,6 @@ mozSqlConnectionPgsql::Setup()
   PGresult* result = PQexec(mConnection, "SET DATESTYLE TO US");
   PRInt32 stat = PQresultStatus(result);
   if (stat != PGRES_COMMAND_OK) {
-    mErrorMessage.Assign(NS_ConvertUTF8toUCS2(PQresultErrorMessage(result)));
     CopyUTF8toUTF16(PQresultErrorMessage(result), mErrorMessage);
     PQfinish(mConnection);
     mConnection = nsnull;

@@ -231,8 +231,8 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
         rv = mURI->GetPath(userHost);
 
         nsAutoString title;
-        title = NS_LITERAL_STRING("DateTime according to ")
-              + NS_ConvertUTF8toUCS2(mHost);
+        title.AppendLiteral("DateTime according to ");
+        AppendUTF8toUTF16(mHost, title);
 
         conv->SetTitle(title.get());
         conv->PreFormatHTML(PR_TRUE);
