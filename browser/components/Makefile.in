@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = bookmarks history prefwindow security sidebar cookieviewer
+DIRS = bookmarks help history prefwindow security sidebar cookieviewer
 
 ifdef MIGRATION_ENABLED
 DIRS += migration
