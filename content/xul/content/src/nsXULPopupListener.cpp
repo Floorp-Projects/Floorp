@@ -300,7 +300,10 @@ XULPopupListenerImpl::Blur(nsIDOMEvent* aMouseEvent)
   }
 
   // Blur events don't bubble, so this means our window lost focus.
-  // Close up, baby.
+  // Let's check just to make sure.
+  nsCOMPtr<nsIDOMNode> eventTarget;
+  aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+  
   // We have some popup content. Obtain our window.
   nsIScriptContextOwner* owner = document->GetScriptContextOwner();
   nsCOMPtr<nsIScriptContext> context;
@@ -309,7 +312,11 @@ XULPopupListenerImpl::Blur(nsIDOMEvent* aMouseEvent)
     if (global) {
       // Get the DOM window
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
-      domWindow->Close();
+  
+      // Close, but only if we are the same target.
+      nsCOMPtr<nsIDOMNode> windowNode = do_QueryInterface(domWindow);
+      if (windowNode.get() == eventTarget.get())
+        domWindow->Close();
     }
   }
 
