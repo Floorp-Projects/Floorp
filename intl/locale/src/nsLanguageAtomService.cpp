@@ -1,0 +1,245 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Erik van der Poel
+ */
+
+#include "nsIComponentManager.h"
+#include "nsLanguageAtomService.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+
+class nsLanguageAtom : public nsILanguageAtom
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSILANGUAGEATOM
+
+  nsLanguageAtom();
+  virtual ~nsLanguageAtom();
+
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  virtual void Init(const nsString& aLanguage, nsIAtom* aLangGroup);
+
+protected:
+  nsAutoString      mLang;
+  nsCOMPtr<nsIAtom> mLangGroup;
+};
+
+NS_IMPL_ISUPPORTS1(nsLanguageAtom, nsILanguageAtom)
+
+nsLanguageAtom::nsLanguageAtom()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsLanguageAtom::~nsLanguageAtom()
+{
+}
+
+void
+nsLanguageAtom::Init(const nsString& aLanguage, nsIAtom* aLangGroup)
+{
+  mLang = aLanguage;
+  mLangGroup = aLangGroup;
+}
+
+NS_IMETHODIMP
+nsLanguageAtom::GetLanguage(PRUnichar** aLanguage)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsLanguageAtom::GetLanguageGroup(nsIAtom** aLanguageGroup)
+{
+  NS_ENSURE_ARG_POINTER(aLanguageGroup);
+
+  *aLanguageGroup = mLangGroup;
+  NS_IF_ADDREF(*aLanguageGroup);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLanguageAtom::LanguageIs(const PRUnichar* aLanguage, PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aLanguage);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = mLang.EqualsWithConversion(aLanguage);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsLanguageAtomService, nsILanguageAtomService)
+
+nsLanguageAtomService::nsLanguageAtomService()
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
+
+nsLanguageAtomService::~nsLanguageAtomService()
+{
+}
+
+NS_IMETHODIMP
+nsLanguageAtomService::InitLangTable()
+{
+  if (!mLangs) {
+    NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mLangs)),
+                      NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLanguageAtomService::InitLangGroupTable()
+{
+  if (!mLangGroups.get()) {
+    nsAutoString uriStr;
+    uriStr.AssignWithConversion("resource:/res/langGroups.properties");
+    nsCOMPtr<nsIURI> uri;
+    NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriStr), NS_ERROR_FAILURE);
+    nsCOMPtr<nsIInputStream> in;
+    NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(in), uri), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(
+      NS_PERSISTENTPROPERTIES_PROGID, nsnull,
+      NS_GET_IID(nsIPersistentProperties), getter_AddRefs(mLangGroups)),
+      NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(mLangGroups->Load(in), NS_ERROR_FAILURE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
+  nsILanguageAtom** aResult)
+{
+  nsresult res;
+  NS_ENSURE_ARG_POINTER(aLanguage);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (!mLangs) {
+    NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
+  }
+  nsAutoString lowered(aLanguage);
+  lowered.ToLowerCase();
+  nsILanguageAtom* lang = nsnull;
+  PRUint32 n;
+  NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);
+  for (PRUint32 i = 0; i < n; i++) {
+    res = mLangs->QueryElementAt(i, NS_GET_IID(nsILanguageAtom), (void**) &lang);
+    if (NS_SUCCEEDED(res)) {
+      PRBool same = PR_FALSE;
+      NS_ENSURE_SUCCESS(lang->LanguageIs(lowered.GetUnicode(), &same),
+        NS_ERROR_FAILURE);
+      if (same) {
+        break;
+      }
+      else {
+        lang = nsnull;
+      }
+    }
+  }
+  if (!lang) {
+    nsLanguageAtom* language = new nsLanguageAtom();
+    NS_ENSURE_TRUE(language, NS_ERROR_OUT_OF_MEMORY);
+    if (!mLangGroups) {
+      NS_ENSURE_SUCCESS(InitLangGroupTable(), NS_ERROR_FAILURE);
+    }
+    nsAutoString langGroup;
+    res = mLangGroups->GetStringProperty(lowered, langGroup);
+    if (NS_FAILED(res)) {
+      PRInt32 hyphen = lowered.FindChar('-');
+      if (hyphen >= 0) {
+        nsAutoString truncated(lowered);
+        truncated.Truncate(hyphen);
+        res = mLangGroups->GetStringProperty(truncated, langGroup);
+        if (NS_FAILED(res)) {
+          langGroup.AssignWithConversion("x-western");
+        }
+      }
+    }
+    language->Init(lowered, NS_NewAtom(langGroup));
+    lang = language;
+    mLangs->AppendElement(lang);
+  }
+  *aResult = lang;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
+  nsILanguageAtom** aResult)
+{
+  nsresult res;
+  NS_ENSURE_ARG_POINTER(aCharSet);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (!mLangs) {
+    NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
+  }
+  if (!mCharSets) {
+    mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
+    NS_ENSURE_TRUE(mCharSets, NS_ERROR_FAILURE);
+  }
+  nsAutoString charset(aCharSet);
+  charset.ToLowerCase();
+  nsCOMPtr<nsIAtom> langGroup;
+  mCharSets->GetCharsetLangGroup(&charset, getter_AddRefs(langGroup));
+  nsCOMPtr<nsILanguageAtom> lang;
+  PRUint32 n;
+  NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);
+  for (PRUint32 i = 0; i < n; i++) {
+    res = mLangs->QueryElementAt(i, NS_GET_IID(nsILanguageAtom),
+                                 getter_AddRefs(lang));
+    if (NS_SUCCEEDED(res)) {
+      PRBool same = PR_FALSE;
+      nsCOMPtr<nsIAtom> group;
+      NS_ENSURE_SUCCESS(lang->GetLanguageGroup(getter_AddRefs(group)),
+        NS_ERROR_FAILURE);
+      if (langGroup.get() == group.get()) {
+        break;
+      }
+      else {
+        lang = nsnull;
+      }
+    }
+  }
+  if (!lang) {
+    nsLanguageAtom* language = new nsLanguageAtom();
+    NS_ENSURE_TRUE(language, NS_ERROR_OUT_OF_MEMORY);
+    nsAutoString empty;
+    language->Init(empty, langGroup);
+    lang = language;
+    mLangs->AppendElement(lang);
+  }
+  *aResult = lang;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
