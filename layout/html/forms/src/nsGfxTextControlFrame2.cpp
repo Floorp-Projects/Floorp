@@ -3402,19 +3402,10 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
   else
   {
     // Otherwise set the value in content.
-    nsCOMPtr<nsIDOMHTMLInputElement> inputControl = do_QueryInterface(mContent);
-    if (inputControl)
+    nsCOMPtr<nsITextControlElement> textControl = do_QueryInterface(mContent);
+    if (textControl)
     {
-      inputControl->SetValue(aValue);
-    }
-    else
-    {
-      nsCOMPtr<nsIDOMHTMLTextAreaElement> textareaControl
-          = do_QueryInterface(mContent);
-      if (textareaControl)
-      {
-        textareaControl->SetValue(aValue);
-      }
+      textControl->SetValueGuaranteed(aValue);
     }
   }
 }
