@@ -51,8 +51,11 @@
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "F">
 
-<!ENTITY closeWindow.label "Close Window">
+<!ENTITY fullScreenMinimize.tooltip "Minimize">
+<!ENTITY fullScreenRestore.tooltip "Restore">
+<!ENTITY fullScreenClose.tooltip "Close">
 
+<!ENTITY closeWindow.label "Close Window">
 
 <!ENTITY findOnCmd.label "Find in This Page...">
 <!ENTITY findOnCmd.accesskey "F">
