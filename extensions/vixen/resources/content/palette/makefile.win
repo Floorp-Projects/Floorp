@@ -19,19 +19,15 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = palette vfd
-
 CHROME_DIR=packages\vixen
-CHROME_CONTENT_DIR=vixen\content
+CHROME_CONTENT_DIR=vixen\content\palette
 
 CHROME_CONTENT = \
-  .\vixen.xul \
-  .\vixen.js \
-  .\vxUtils.js \
-  .\xe_NavOverlay.xul \
+  .\vxPalette.xul \
+  .\vxPalette.js \
   $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

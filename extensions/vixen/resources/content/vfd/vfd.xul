@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+
+<window id="vxVFD" orient="vertical"
+        title="Visual Form Designer [Form1]"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="vxVFD.startup();"
+        onfocus="vxVFD.focusVFD();">
+
+  <!-- utility functions -->
+  <script src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script src="chrome://vixen/content/vxUtils.js"></script>
+  
+  <!-- vfd shell -->
+  <script src="chrome://vixen/content/vfd/vfd.js"></script>
+  
+  <!-- transaction manager -->
+  <script src="chrome://vixen/content/vfd/vxVFDTransactionManager.js"></script>
+  <!-- selection manager -->
+  <script src="chrome://vixen/content/vfd/vxVFDSelectionManager.js"></script>
+  
+  <tabcontrol class="tabbed-edit" flex="1">
+    <tabpanel flex="1">
+      <iframe id="vfdDocument" name="vfdDocument" flex="1"/>
+      <box id="vfdDOMTree" flex="1"/> <!-- from overlay -->
+    </tabpanel>
+    <tabbox>
+      <tab value="Design"/>
+      <tab value="DOM Tree"/>
+    </tabbox>
+  </tabcontrol>
+  
+</window>      
+  
