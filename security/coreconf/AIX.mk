@@ -65,16 +65,30 @@ CPU_ARCH	= rs6000
 RANLIB		= ranlib
 
 OS_CFLAGS	= -DAIX -DSYSV
+OS_LIBS 	+= -blibpath:/usr/lib:/lib -lc -lm
+
+DSO_LDOPTS	= -brtl -bnortllib -bM:SRE -bnoentry
+MKSHLIB 	= $(LD) $(DSO_LDOPTS) -blibpath:/usr/lib:/lib -lc -lm
 
 AIX_WRAP	= $(DIST)/lib/aixwrap.o
 AIX_TMP		= $(OBJDIR)/_aix_tmp.o
+
 ifdef MAPFILE
-EXPORT_RULES = -bexport:$(MAPFILE)
+DSO_LDOPTS	+= -bexport:$(MAPFILE)
+else
+DSO_LDOPTS	+= -bexpall
 endif
+
 PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
                 sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' > $@
 
 ifdef BUILD_OPT
-        OPTIMIZER += -qmaxmem=-1
+	OPTIMIZER += -qmaxmem=-1
+endif
+
+ifeq ($(USE_64), 1)
+	OS_CFLAGS	+= -DAIX_64BIT
+	OBJECT_MODE=64
+	export OBJECT_MODE
 endif
 
