@@ -4164,7 +4164,8 @@ nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
   // is in the selection.  If it's inline, return true if
   // the node or any of its children is in the selection.
   nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent*)aContent));
-  PRBool nodeIsBlock = (tag != nsHTMLAtoms::pre
+  PRBool nodeIsBlock = (NS_SUCCEEDED(rv)
+                        && tag != nsHTMLAtoms::pre
                         && tag != nsHTMLAtoms::h1
                         && tag != nsHTMLAtoms::h2
                         && tag != nsHTMLAtoms::h3
