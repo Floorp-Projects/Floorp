@@ -3038,7 +3038,6 @@ WLLT_DeleteAll() {
   wallet_Clear(&wallet_SchemaToValue_list);
   wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
   SI_DeleteAll();
-  SI_SetBoolPref(pref_Crypto, PR_FALSE);
 }
 
 PUBLIC void
