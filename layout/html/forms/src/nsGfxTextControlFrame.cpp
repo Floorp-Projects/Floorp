@@ -64,6 +64,7 @@
 #include "nsWidgetsCID.h"
 
 #include "nsIHTMLEditor.h"
+#include "nsIEditorIMESupport.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIEditorMailSupport.h"
 #include "nsEditorCID.h"
@@ -734,6 +735,9 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
       {
         if (mEditor)
         {
+          nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
+          if(imeSupport) 
+              imeSupport->ForceCompositionEnd();
           nsString format ("text/plain");
           mEditor->OutputToString(*aText, format, 0);
         }
@@ -763,6 +767,11 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
         result = textArea->GetDefaultValue(*aText);
       }
       else {
+        if(mEditor) {
+          nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
+          if(imeSupport) 
+            imeSupport->ForceCompositionEnd();
+        }
         result = textArea->GetValue(*aText);
       }
       NS_RELEASE(textArea);
