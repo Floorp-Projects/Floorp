@@ -36,6 +36,7 @@ EXPORTS		= \
 		  nsID.h \
 		  nsIID.h \
 		  nsIFactory.h \
+		  nsISimpleEnumerator.h \
 		  nsISupports.h \
 		  nsISupportsUtils.h \
 		  nsIPtr.h \
