@@ -373,6 +373,14 @@ endif
 BASIC_LIBS_2	+= $(DIST)/lib/libldap.a
 endif
 
+ifdef SMART_MAIL
+ifdef MOZ_SECURITY
+BASIC_LIBS	+= \
+	$(DIST)/lib/libns_mime.a \
+	$(NULL)
+endif
+endif
+
 # Do we need libns_mime.a here if MOZ_MAIL_COMPOSE and MOZ_SECURITY?
 #ifdef MOZ_MAIL_COMPOSE
 #ifdef MOZ_SECURITY
@@ -569,7 +577,7 @@ endif
 BASIC_LIBS	+= $(DIST)/lib/libstyle.a
 
 ifdef MOZ_SECURITY
-BASIC_LIBS	+= $(DIST)/lib/libjar.a
+BASIC_LIBS	+= $(DIST)/lib/libjar.a 
 else
 EXPORT_LIB	= $(DIST)/lib/libhtmldlgs.a $(DIST)/lib/libsecfree.a 
 endif
