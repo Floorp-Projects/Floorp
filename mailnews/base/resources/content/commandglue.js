@@ -151,7 +151,9 @@ function setTitleFromFolder(msgfolder, subject)
 
 function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
 {
-  dump('In ChangeFolderByURI\n');
+  dump('In ChangeFolderByURI uri = ' + uri + "\n");
+  if (uri == gCurrentLoadingFolderURI)
+    return;
   var resource = RDF.GetResource(uri);
   var msgfolder =
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
