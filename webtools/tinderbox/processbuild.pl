@@ -27,12 +27,12 @@ umask 0;
 %MAIL_HEADER = ();
 $DONE = 0;
 $building = 0;
+$endsection = 0;
 
 open( LOG, "<$ARGV[0]") || die "cant open $!";
 &parse_mail_header;
 while ($DONE == 0) {
     %tbx = ();
-    $endsection = 0;
     &get_variables;
 
     # run thru if EOF and we haven't hit our section end marker
