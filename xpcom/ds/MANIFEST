@@ -19,6 +19,7 @@ nsQuickSort.h
 nsCharTraits.h
 nsAReadableString.h
 nsAWritableString.h
+nsReadableUtils.h
 nsSharedString.h
 nsStatistics.h
 nsStr.h
