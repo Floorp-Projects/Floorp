@@ -162,6 +162,12 @@ ALL_TRASH += $(MAPFILE)
 MKSHLIB += -c $(MAPFILE)
 endif
 
+ifeq ($(OS_ARCH), OSF1)
+MAPFILE = $(OBJDIR)/nssmap.osf
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -hidden -input $(MAPFILE)
+endif
+
 ifeq ($(OS_ARCH),Linux)
 MAPFILE = $(OBJDIR)/nssmap.linux
 ALL_TRASH += $(MAPFILE)

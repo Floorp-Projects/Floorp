@@ -74,25 +74,31 @@ endif
 
 
 ifeq ($(OS_ARCH),SunOS)
-MAPFILE = $(OBJDIR)/nssmap.sun
+MAPFILE = $(OBJDIR)/sslmap.sun
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -M $(MAPFILE)
 endif
 
 ifeq ($(OS_ARCH),AIX)
-MAPFILE = $(OBJDIR)/nssmap.aix
+MAPFILE = $(OBJDIR)/sslmap.aix
 ALL_TRASH += $(MAPFILE)
 EXPORT_RULES = -bexport:$(MAPFILE)
 endif
 
 ifeq ($(OS_ARCH),HP-UX)
-MAPFILE = $(OBJDIR)/nssmap.hp
+MAPFILE = $(OBJDIR)/sslmap.hp
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -c $(MAPFILE)
 endif
 
+ifeq ($(OS_ARCH), OSF1)
+MAPFILE = $(OBJDIR)/sslmap.osf
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -hidden -input $(MAPFILE)
+endif
+
 ifeq ($(OS_ARCH),Linux)
-MAPFILE = $(OBJDIR)/nssmap.linux
+MAPFILE = $(OBJDIR)/sslmap.linux
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -Wl,--version-script,$(MAPFILE)
 endif
