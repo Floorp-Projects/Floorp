@@ -51,7 +51,6 @@ bin/icons/*
 bin/libcmt.so
 bin/libgtksuperwin.so
 bin/libgtkxtbin.so
-bin/libmozjpeg.so
 bin/libjsj.so
 bin/libprotocol.so
 bin/libgkgfx.so

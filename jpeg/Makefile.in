@@ -97,9 +97,7 @@ CSRCS		+= \
 endif
 
 # need static lib for some of the libimg componentry to link properly
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 FORCE_STATIC_LIB = 1
-endif
 
 include $(topsrcdir)/config/rules.mk
 

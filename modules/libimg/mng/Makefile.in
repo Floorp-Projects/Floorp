@@ -59,11 +59,7 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 LOCAL_INCLUDES	= -I$(srcdir)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LDOPTS = $(JPEG_LIBS) $(ZLIB_LIBS)
-else
 FORCE_STATIC_LIB = 1
-endif
 
 include $(topsrcdir)/config/rules.mk
 
