@@ -144,12 +144,6 @@
             <classpath refid="test.classpath"/>
 
             <formatter type="plain" usefile="false"/>
-            <test name="org.mozilla.webclient.BrowserControlFactoryTest"/>
-            <test name="org.mozilla.webclient.ProfileManagerTest"/>
-            <test name="org.mozilla.webclient.BookmarksTest"/>
-            <test name="org.mozilla.webclient.PreferencesTest"/>
-            <test name="org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImplTest"/>
-            <test name="org.mozilla.webclient.impl.WebclientFactoryImplTest"/>
             <test name="org.mozilla.webclient.NavigationTest"/>
 <!-- non running
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>

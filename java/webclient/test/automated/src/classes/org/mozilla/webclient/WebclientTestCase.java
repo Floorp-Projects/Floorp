@@ -1,8 +1,8 @@
 /*
- * $Id: WebclientTestCase.java,v 1.5 2004/04/23 13:17:51 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.6 2004/06/18 13:53:13 edburns%acm.org Exp $
  */
 
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* 
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -44,7 +44,7 @@ import junit.framework.TestCase;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.5 2004/04/23 13:17:51 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.6 2004/06/18 13:53:13 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo

@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.13 2004/06/16 14:37:34 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.14 2004/06/18 13:53:13 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -25,6 +25,8 @@
  */
 
 package org.mozilla.webclient;
+
+import org.mozilla.util.THTTPD;
 
 import junit.framework.TestSuite;
 import junit.framework.TestResult;
@@ -80,9 +82,7 @@ public class NavigationTest extends WebclientTestCase {
     // Testcases
     // 
 
-    /*************
-
-    public void testLoad() throws Exception {
+    public void testFileAndStreamLoad() throws Exception {
 	BrowserControl firstBrowserControl = null;
 	DocumentListener listener = null;
 	Selection selection = null;
@@ -190,8 +190,6 @@ public class NavigationTest extends WebclientTestCase {
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
     }
 
-    ****************/
-
     public void testStop() throws Exception {
 	DocumentListener listener = null;
 	BrowserControl firstBrowserControl = BrowserControlFactory.newBrowserControl();
@@ -249,6 +247,77 @@ public class NavigationTest extends WebclientTestCase {
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
     }
+
+    /**********
+
+    public void testHttpLoad() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentListener listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	final CurrentPage2 currentPage = (CurrentPage2) 
+          firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	//
+	// try loading a file over HTTP
+	//
+	
+	NavigationTest.keepWaiting = true;
+	
+	final THTTPD.ServerThread serverThread = 
+	    new THTTPD.ServerThread("LocalHTTPD",
+				    new File (getBrowserBinDir()), 1);
+	serverThread.setSoTimeout(15000);
+	serverThread.start();
+	serverThread.P();
+
+	eventRegistration.addDocumentLoadListener(listener = new DocumentListener() {
+		public void doEndCheck() {
+		    currentPage.selectAll();
+		    Selection selection = currentPage.getSelection();
+		    NavigationTest.keepWaiting = false;
+		    serverThread.stopRunning();
+		    assertTrue(-1 != selection.toString().indexOf("This file was downloaded over HTTP."));
+		    System.out.println("Selection is: " + 
+				       selection.toString());
+		}
+	    });
+
+	String url = "http://localhost:5243/HttpNavigationTest.txt";
+	
+	nav.loadURL(url);
+	
+	// keep waiting until the previous load completes
+	while (NavigationTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+	eventRegistration.removeDocumentLoadListener(listener);
+
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
+
+    ****************/
+
 
     public static abstract class DocumentListener implements DocumentLoadListener {
 
