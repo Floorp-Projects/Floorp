@@ -51,15 +51,6 @@
 class nsWindow;
 class nsMacWindow;
 
-#if !TARGET_CARBON
-// On OS9, we can't rely on the mouse location from the OS when we're
-// tracking the scrollwheel. That's because most drivers patch the OS
-// to make everyone think the mouse is hovering over the up/down scroll
-// arrow. As a result, we have to track it ourselves to get the correct
-// local mouse coordinate when determining where the mouse is for
-// scrolling. Luckily, OSX doesn't have this insanity.
-#define TRACK_MOUSE_LOC 1
-#endif
 
 #if UNIVERSAL_INTERFACES_VERSION < 0x0337
 enum {
@@ -69,28 +60,6 @@ enum {
 typedef UInt16                          EventMouseWheelAxis;
 #endif
 
-
-#if !TARGET_CARBON
-//
-// struct PhantomScrollbarData
-//
-// When creating the phantom scrollbar for a Gecko instance, create
-// one of these structures and stick it in the control's refCon. It 
-// is used not only to identify our scrollbar from any others, but
-// also to pass data to the scrollbar's action proc about which
-// widget is the one the mouse is over.
-//
-struct PhantomScrollbarData
-{
-  PhantomScrollbarData ( ) 
-    : mTag(kUniqueTag), mWidgetToGetEvent(nsnull) { }
-  
-  enum ResType { kUniqueTag = 'mozz' };
-  
-  ResType mTag;                     // should always be kUniqueTag
-  nsIWidget* mWidgetToGetEvent;     // for the action proc, the widget to get the event
-}; 
-#endif
 
 
 //-------------------------------------------------------------------------
@@ -207,10 +176,6 @@ protected:
 protected:
 	static PRBool	sMouseInWidgetHit;
   static PRBool	sInBackground;
-
-#if !TARGET_CARBON
-  ControlActionUPP mControlActionProc;
-#endif
   
 	nsMacWindow*	mTopLevelWidget;
 	RgnHandle			mUpdateRgn;

@@ -185,17 +185,7 @@ NS_IMETHODIMP nsAppShell::Spindown(void)
 nsAppShell::nsAppShell()
 {
 
-#if TARGET_CARBON
   mInitializedToolbox = PR_TRUE;
-#else 
-  // The toolbox initialization code has moved to NSStdLib (InitializeToolbox)
-  
-  if (!mInitializedToolbox)
-  {
-    InitializeMacToolbox();
-    mInitializedToolbox = PR_TRUE;
-  }
-#endif
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
 }

@@ -48,9 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
 
-#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
-#endif
 
 #include <Appearance.h>
 #include <TextUtils.h>
@@ -366,9 +364,6 @@ void nsMacControl::SetupMacControlFont()
 	NS_PRECONDITION(mContext != nsnull, "No context metrics in SetupMacControlFont");
 	
 	TextStyle		theStyle;
-#if !TARGET_CARBON
-	nsFontUtils::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
-#endif
 	// if needed, impose a min size of 9pt on the control font
 	if (theStyle.tsSize < 9)
 		theStyle.tsSize = 9;
@@ -472,96 +467,10 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 
 void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString title)
 {	
-#if TARGET_CARBON
-
   // wow, it sure is nice being able to use core foundation ;)
   CFStringRef str = CFStringCreateWithCharacters(NULL, (const UniChar*)title.get(), title.Length());
   SetControlTitleWithCFString(theControl, str);
   CFRelease(str);
-
-#else
-	TextStyle				theStyle;
-	ScriptCode				fontScript;
-	OSErr					err;
-	UnicodeToTextRunInfo	unicodeTextRunInfo;
-	const PRUnichar*		unicodeText;
-	char*					scriptRunText;
-	size_t					unicodeTextLengthInBytes, unicodeTextReadInBytes,
-							scriptRunTextSizeInBytes, scriptRunTextLengthInBytes,
-							scriptCodeRunListLength;
-	ScriptCodeRun			convertedTextScript;
-	
-	NS_PRECONDITION(mFontMetrics != nsnull, "nsMacControl::NSStringSetControlTitle: no Font Metrics");
-	
-	//
-	// determine the script of the font that the control is supposed to be drawn in
-	//
-#if !TARGET_CARBON
-	nsFontUtils::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
-#endif
-	fontScript = ::FontToScript(theStyle.tsFont);
-	
-	//
-	// create a Unicode Conveter object (from Unicode -> font)
-	//
- 	err = ::CreateUnicodeToTextRunInfoByScriptCode(1,&fontScript,&unicodeTextRunInfo);
-  	NS_ASSERTION(err==noErr,"nsMacControl::NSStringSetControlTitle: CreateUnicodeToTextRunInfoByScriptCode failed.");
-  	if (err!=noErr) { return; }
-
-	//
-	// get the Unicode text and prepare buffers
-	//
-	unicodeText = title.get();
-	unicodeTextLengthInBytes = title.Length() * sizeof(PRUnichar);
-	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
-	scriptRunText = new char[scriptRunTextSizeInBytes];
-
-
-  	//
-  	// convert from Unicode to script run
-  	// 
-	err = ::ConvertFromUnicodeToScriptCodeRun(unicodeTextRunInfo,
-				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
-				0, /* no flags */
-				0,NULL,NULL,NULL, /* no offset arrays */
-				scriptRunTextSizeInBytes,&unicodeTextReadInBytes,&scriptRunTextLengthInBytes,
-				scriptRunText,
-				1 /* count of scrip runs*/,&scriptCodeRunListLength,&convertedTextScript);
-  	if (err!=noErr)
-  	{ 
-  		//
-  		// the font script is not capable of rendering this string, we need to find an installed
-  		//	script that can
-  		//
- 		err = ::CreateUnicodeToTextRunInfoByScriptCode(0,NULL,&unicodeTextRunInfo);
-  		NS_ASSERTION(err==noErr,"nsMacControl::NSStringSetControlTitle: CreateUnicodeToTextRunInfoByScriptCode failed.");
-  		if (err!=noErr) { return; }
-
-	  	//
-	  	// convert from Unicode to script run
-	  	// 
-		err = ::ConvertFromUnicodeToScriptCodeRun(unicodeTextRunInfo,
-					unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
-					0, /* no flags */
-					0,NULL,NULL,NULL, /* no offset arrays */
-					scriptRunTextSizeInBytes,&unicodeTextReadInBytes,&scriptRunTextLengthInBytes,
-					scriptRunText,
-					1 /* count of scrip runs*/,&scriptCodeRunListLength,&convertedTextScript);
-  					NS_ASSERTION(err==noErr,"nsMacControl::NSStringSetControlTitle: CreateUnicodeToTextRunInfoByScriptCode failed.");
-  					if (err!=noErr) { delete [] scriptRunText; return;}
-  	}	
-
-	scriptRunText[scriptRunTextLengthInBytes] = 0;	// null terminate
-
-	if (convertedTextScript.script!=fontScript)
-		SetupMacControlFontForScript(convertedTextScript.script);
-
-	//
-	// set the control title
-	//
-	::SetControlTitle(theControl,c2pstr(scriptRunText));
-	delete [] scriptRunText;	
-#endif					
 }
 //-------------------------------------------------------------------------
 //
@@ -578,9 +487,6 @@ void nsMacControl::SetupMacControlFontForScript(short theScript)
 
 	NS_PRECONDITION(mFontMetrics != nsnull, "No font metrics in SetupMacControlFont");
 	NS_PRECONDITION(mContext != nsnull, "No context metrics in SetupMacControlFont");
-#if !TARGET_CARBON
-	nsFontUtils::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
-#endif
 
 	//
 	// take the script and select and override font

@@ -86,7 +86,7 @@
 //#include "nsISocketTransportService.h"
 //include "nsIFileTransportService.h"
 
-#if TARGET_CARBON && !XP_MACOSX
+#if !XP_MACOSX
 #include "MenuSharing.h"
 #endif
 
@@ -158,7 +158,7 @@ extern nsIWidget         * gRollupWidget;
 
 
 #pragma mark -
-#if TARGET_CARBON && !XP_MACOSX
+#if !XP_MACOSX
 #pragma mark MenuSharingToolkitSupport
 //=================================================================
 static pascal void ErrorDialog (Str255 s)
@@ -199,7 +199,7 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
   // startup the watch cursor idle time vbl task
   nsWatchTask::GetTask().Start();
 
-#if TARGET_CARBON && !XP_MACOSX
+#if !XP_MACOSX
   // added to support Menu Sharing API.  Initializes the Menu Sharing API.
   InitSharedMenus (ErrorDialog, EventFilter);
 #endif
@@ -383,11 +383,6 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
   ::SetEventMask(everyEvent); // we need keyUp events
   PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);
   
-#if !TARGET_CARBON
-  if (haveEvent && ::TSMEvent(&theEvent) )
-    haveEvent = PR_FALSE;
-#endif
-
   nsWatchTask::GetTask().EventLoopReached();
   
   return haveEvent;
@@ -698,12 +693,6 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
               Boolean         haveEvent;
               EventRecord     updateEvent;
               haveEvent = ::WaitNextEvent(updateMask, &updateEvent, 0, nil);
-#if !TARGET_CARBON
-              if (haveEvent && TSMEvent(&updateEvent))
-              {
-                haveEvent = PR_FALSE;
-              }
-#endif
               if (haveEvent)
                 DoUpdate(updateEvent);
             }
@@ -772,14 +761,12 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         nsWatchTask::GetTask().Resume();
         break;
 
-#if TARGET_CARBON
       case inToolbarButton:           // Mac OS X only
         nsWatchTask::GetTask().Suspend();       
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         nsWatchTask::GetTask().Resume();        
         break;
-#endif
 
   }
 
@@ -839,13 +826,8 @@ PRBool nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
   /* Disable mouse moved events for windowshaded windows -- this prevents tooltips
      from popping up in empty space.
   */
-#if TARGET_CARBON
   if (whichWindow == nil || !::IsWindowCollapsed(whichWindow))
     handled = DispatchOSEventToRaptor(anEvent, whichWindow);
-#else
-  if (whichWindow == nil || !::EmptyRgn(((WindowRecord *) whichWindow)->contRgn))
-    handled = DispatchOSEventToRaptor(anEvent, whichWindow);
-#endif
   return handled;
 }
 
@@ -888,19 +870,7 @@ PRBool nsMacMessagePump::DoKey(EventRecord &anEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 {
-#if !TARGET_CARBON
-  if (HiWord(anEvent.message) != noErr)
-  {
-    // Error mounting disk. Ask if user wishes to format it.  
-    Point pt = {120, 120};  // System 7 will auto-center dialog
-    ::DILoad();
-    ::DIBadMount(pt, (SInt32) anEvent.message);
-    ::DIUnload();
-  }
-  return PR_TRUE;
-#else
   return PR_FALSE;
-#endif
 }
 
 
@@ -993,7 +963,7 @@ void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
   // send mouseMove event
   static Point  lastWhere = {0, 0};
 
-#if TARGET_CARBON && !XP_MACOSX
+#if !XP_MACOSX
   if ( nsToolkit::IsAppInForeground() )
   {
     // Shared Menu support - note we hardcode first menu ID available as 31000

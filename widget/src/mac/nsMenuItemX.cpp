@@ -41,14 +41,16 @@
 #include "nsPresContext.h"
 
 #include "nsMenuBarX.h"         // for MenuHelpers namespace
+#include "nsMenuX.h"
 #include "nsMenuItemX.h"
+
+#include "nsWidgetAtoms.h"
+
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
 #include "nsIMenuListener.h"
-#include "nsDynamicMDEF.h"
 #include "nsINameSpaceManager.h"
-#include "nsWidgetAtoms.h"
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"

@@ -300,15 +300,12 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	if (err!=noErr) 
 		return err;
 	
-#if TARGET_CARBON
+
 	ScriptLanguageRecord scriptLangRec;
 	err = AEGetDescData(&slr, (void *) &scriptLangRec, sizeof(ScriptLanguageRecord));
 	if (err!=noErr) 
 		return err;
 	textScript = scriptLangRec.fScript;
-#else
-	textScript = ((ScriptLanguageRecord *)(*(slr.dataHandle)))->fScript;
-#endif
 	NS_ASSERTION( (textScript < smUninterp), "Illegal script code");
 	
 	NS_ASSERTION(textScript == (ScriptCode)::GetScriptManagerVariable(smKeyScript) , "wrong script code");
@@ -329,7 +326,6 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
   	if (err==errAEDescNotFound) {
   		hiliteRangePtr=NULL;
   	} else if (err==noErr) { 
-#if TARGET_CARBON
 		Size hiliteRangeSize = ::AEGetDescDataSize(&hiliteRangeArray);
 		hiliteRangePtr = (TextRangeArray *) NewPtr(hiliteRangeSize);
 		if (!hiliteRangePtr)
@@ -339,15 +335,10 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 			DisposePtr((Ptr) hiliteRangePtr);
 			return err;
 		}
-#else
-  		::HLock(hiliteRangeArray.dataHandle); 
-  		hiliteRangePtr=(TextRangeArray*)*(hiliteRangeArray.dataHandle);
-#endif
   	} else { 
   		return err;
   	}
 
-#if TARGET_CARBON
 	nsCAutoString mbcsText;
 	Size text_size = ::AEGetDescDataSize(&text);
 	mbcsText.SetCapacity(text_size+1);
@@ -358,14 +349,6 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 		return err;
 	}
 	mbcsTextPtr[text_size]=0;
-#else
-	nsCAutoString mbcsText;
-	Size text_size = ::GetHandleSize(text.dataHandle);
-	mbcsText.SetCapacity(text_size+1);
-	char* mbcsTextPtr = mbcsText.BeginWriting();
-	strncpy(mbcsTextPtr, *(text.dataHandle), text_size);
-	mbcsTextPtr[text_size]=0;
-#endif
 	
 	//
 	// must pass HandleUpdateInputArea a null-terminated multibyte string, the text size must include the terminator
@@ -379,13 +362,8 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	//
 	// clean up
 	//
-#if TARGET_CARBON
 	if (hiliteRangePtr)
 		DisposePtr((Ptr) hiliteRangePtr);
-#else
-	if (hiliteRangePtr)
-		::HUnlock(hiliteRangeArray.dataHandle);
-#endif
 
 	(void)AEDisposeDesc(&text);
 	(void)AEDisposeDesc(&hiliteRangeArray);
@@ -424,19 +402,13 @@ static OSErr AETextToString(AEDesc &aAEDesc, nsString& aOutString, Size& text_si
   text_size = 0;
   aOutString.Truncate(0);
 
-#if TARGET_CARBON
+
   text_size = ::AEGetDescDataSize(&aAEDesc) / 2;
   aOutString.SetLength(text_size + 1);
   unicodeTextPtr = aOutString.BeginWriting();
   err = AEGetDescData(&aAEDesc, (void *) unicodeTextPtr, text_size * 2);
   if (err!=noErr) 
     return err;
-#else
-  text_size = ::GetHandleSize(aAEDesc.dataHandle) / 2;
-  aOutString.SetLength(text_size + 1);
-  unicodeTextPtr = aOutString.BeginWriting();
-  memcpy(unicodeTextPtr, *(aAEDesc.dataHandle), text_size * 2);
-#endif
 
   unicodeTextPtr[text_size ] = PRUnichar('\0'); // null terminate it.
   return noErr;
@@ -479,7 +451,7 @@ pascal OSErr nsMacTSMMessagePump::UnicodeUpdateHandler(const AppleEvent *theAppl
   } 
   else if (noErr == err)
   { 
-#if TARGET_CARBON
+
     Size hiliteRangeSize = ::AEGetDescDataSize(&hiliteRangeArray);
     hiliteRangePtr = (TextRangeArray *) NewPtr(hiliteRangeSize);
     if (!hiliteRangePtr)
@@ -492,10 +464,6 @@ pascal OSErr nsMacTSMMessagePump::UnicodeUpdateHandler(const AppleEvent *theAppl
     {
       goto err1; 
     }
-#else
-    ::HLock(hiliteRangeArray.dataHandle); 
-    hiliteRangePtr = (TextRangeArray*)*(hiliteRangeArray.dataHandle);
-#endif
   }
   else
   {
@@ -521,13 +489,8 @@ pascal OSErr nsMacTSMMessagePump::UnicodeUpdateHandler(const AppleEvent *theAppl
   // clean up
   //
 err1:
-#if TARGET_CARBON
     if (hiliteRangePtr)
       ::DisposePtr((Ptr)hiliteRangePtr);
-#else
-    if (hiliteRangePtr)
-      ::HUnlock(hiliteRangeArray.dataHandle);
-#endif
 
 err2:
   (void)::AEDisposeDesc(&hiliteRangeArray);

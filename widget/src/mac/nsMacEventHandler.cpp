@@ -95,46 +95,6 @@ static void ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMo
 static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
 
 
-#if !TARGET_CARBON
-//
-// ScrollActionProc
-//
-// Called from ::TrackControl(), this senses which part of the phantom
-// scrollbar the click from the wheelMouse driver was in and sends
-// the correct NS_MOUSE_SCROLL event into Gecko. We have to retrieve the
-// mouse location from the event dispatcher because it will
-// just be the location of the phantom scrollbar, not actually the real
-// mouse position.
-//
-static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode)
-{
-	switch (partCode)
-	{
-		case kControlUpButtonPart:
-		case kControlDownButtonPart:
-		case kControlPageUpPart:
-		case kControlPageDownPart:
-		  PhantomScrollbarData* data = NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(ctrl));
-		  if ( data && (data->mWidgetToGetEvent || gEventDispatchHandler.GetActive()) ) {
-		    WindowRef window = (**ctrl).contrlOwner;
-        StPortSetter portSetter(window);
-        StOriginSetter originSetter(window);
-        PRBool scrollByLine = !(partCode == kControlPageUpPart || partCode == kControlPageDownPart);
-        PRInt32 delta = 
-          (partCode == kControlUpButtonPart || partCode == kControlPageUpPart) ? -1 : 1;
-      	nsIWidget* widget = data->mWidgetToGetEvent ? 
-                              data->mWidgetToGetEvent : gEventDispatchHandler.GetActive();
-        
-        Point thePoint = gEventDispatchHandler.GetGlobalPoint();
-        ::GlobalToLocal(&thePoint);
-        HandleScrollEvent ( kEventMouseWheelAxisY, scrollByLine, delta, thePoint, widget );
-      }
-      break;
-  }
-}
-#endif
-
-
 //
 // HandleScrollEvent
 //
@@ -465,9 +425,6 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
   mIMEIsComposing = PR_FALSE;
   mIMECompositionStr = nsnull;
 
-#if !TARGET_CARBON
-    mControlActionProc = NewControlActionUPP(ScrollActionProc);
-#endif
 }
 
 
@@ -479,12 +436,6 @@ nsMacEventHandler::~nsMacEventHandler()
 		delete mIMECompositionStr;
 		mIMECompositionStr = nsnull;
 	}
-#if !TARGET_CARBON
-	if ( mControlActionProc ) {
-	  DisposeControlActionUPP(mControlActionProc); 
-	  mControlActionProc = nsnull;
-	}
-#endif
 }
 
 
@@ -1597,33 +1548,6 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 
-#if !TARGET_CARBON
-      // Check if the mousedown is in our window's phantom scrollbar. If so, track
-      // the movement of the mouse. The scrolling code is in the action proc.
-      Point local = aOSEvent.where;
-      ::GlobalToLocal ( &local );
-      ControlHandle scrollbar;
-      ControlPartCode partCode = ::FindControl(local, whichWindow, &scrollbar);
-      if ( partCode >= kControlUpButtonPart && partCode <= kControlPageDownPart && scrollbar ) {
-        PhantomScrollbarData* data = NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(scrollbar));
-        if ( data && data->mTag == PhantomScrollbarData::kUniqueTag ) {
-
-#if USEMOUSEPOSITIONFORSCROLLWHEEL
-// Uncomment this in order to set the widget to scroll the widget the mouse is over. However,
-// we end up getting an idle event while scrolling quickly with the wheel, and the end result
-// is that our idle-time mouseMove event kicks in a moves where we think the mouse is to where
-// the scrollwheel driver has convinced the OS the mouse really is. Net result: we lose track
-// of the widget and scrolling stops until you stop the wheel and move it again :(
-       	  data->mWidgetToGetEvent = gEventDispatchHandler.GetWidgetPointed();            // tell action proc which widget to use
-#endif
-
-    	    ::TrackControl(scrollbar, local, mControlActionProc);
-    	    data->mWidgetToGetEvent = nsnull;
-          break;
-        }
-      }
-#endif
-
 			nsCOMPtr<nsIWidget> kungFuDeathGrip ( mouseEvent.widget );            // ensure widget doesn't go away
 			nsWindow* widgetHit = NS_STATIC_CAST(nsWindow*, mouseEvent.widget);   //   while we're processing event
 			if (widgetHit)
@@ -1670,13 +1594,10 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			break;
 		}
 
-#if TARGET_CARBON
     case inToolbarButton:           // we get this part on Mac OS X only
       gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_OS_TOOLBAR);		
       retVal = PR_TRUE;
       break;
-#endif
-    
 	}
 	return retVal;
 }

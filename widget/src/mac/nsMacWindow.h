@@ -49,9 +49,8 @@ using std::auto_ptr;
 #include "nsPIWidgetMac.h"
 #include "nsPIEventSinkStandalone.h"
 
-#if TARGET_CARBON
 #include <CarbonEvents.h>
-#endif
+
 
 class nsMacEventHandler;
 struct PhantomScrollbarData;
@@ -147,12 +146,11 @@ protected:
 	DragTrackingHandlerUPP mDragTrackingHandlerUPP;
 	DragReceiveHandlerUPP mDragReceiveHandlerUPP;
 
-#if TARGET_CARBON
+
   pascal static OSStatus WindowEventHandler ( EventHandlerCallRef inHandlerChain, 
                                                EventRef inEvent, void* userData ) ;
   pascal static OSStatus ScrollEventHandler ( EventHandlerCallRef inHandlerChain, 
                                                EventRef inEvent, void* userData ) ;
-#endif
 
 	PRPackedBool                    mWindowMadeHere; // true if we created the window
 	PRPackedBool                    mIsSheet;        // true if the window is a sheet (Mac OS X)
@@ -167,10 +165,6 @@ protected:
 	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
 	
-#if !TARGET_CARBON
-	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
-	PhantomScrollbarData* mPhantomScrollbarData;
-#endif
 };
 
 #endif // MacWindow_h__

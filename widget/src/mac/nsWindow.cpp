@@ -104,13 +104,9 @@ static const int kSpinCursorFirstFrame = 200;
 
 // Routines for iterating over the rects of a region. Carbon and pre-Carbon
 // do this differently so provide a way to do both.
-#if TARGET_CARBON
 static RegionToRectsUPP sUpdateRectProc = nsnull;
 static RegionToRectsUPP sAddRectToArrayProc = nsnull;
 static RegionToRectsUPP sCountRectProc = nsnull;
-#else
-void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
-#endif
 
 #pragma mark -
 
@@ -142,11 +138,9 @@ static Boolean caps_lock()
 
 static void FlushCurPortBuffer()
 {
-#if TARGET_CARBON
     CGrafPtr    curPort;
     ::GetPort((GrafPtr*)&curPort);
     ::QDFlushPortBuffer(curPort, nil);      // OK to call on 9/carbon (does nothing)
-#endif
 }
 
 static void blinkRect(const Rect* r, PRBool isPaint)
@@ -162,11 +156,8 @@ static void blinkRect(const Rect* r, PRBool isPaint)
     if (isPaint)
     {
         Pattern grayPattern;
-#if TARGET_CARBON
+
         ::GetQDGlobalsGray(&grayPattern);
-#else
-        grayPattern = qd.gray;
-#endif
 
         ::ForeColor(blackColor);
         ::BackColor(whiteColor);
@@ -206,11 +197,8 @@ static void blinkRgn(RgnHandle rgn, PRBool isPaint)
     if (isPaint)
     {
         Pattern grayPattern;
-#if TARGET_CARBON
+
         ::GetQDGlobalsGray(&grayPattern);
-#else
-        grayPattern = qd.gray;
-#endif
 
         ::ForeColor(blackColor);
         ::BackColor(whiteColor);
@@ -294,13 +282,11 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
 
   AcceptFocusOnClick(PR_TRUE);
   
-#if TARGET_CARBON
   if ( !sUpdateRectProc ) {
     sUpdateRectProc = NewRegionToRectsUPP ( PaintUpdateRectProc );
     sAddRectToArrayProc = NewRegionToRectsUPP ( AddRectToArrayProc );
     sCountRectProc = NewRegionToRectsUPP ( CountRectProc );
   }
-#endif
 
 }
 
@@ -1311,7 +1297,6 @@ NS_IMETHODIMP	nsWindow::Update()
 #pragma mark -
 
 
-#if TARGET_CARBON
 
 
 //
@@ -1387,7 +1372,6 @@ nsWindow::CountRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect,
 }
 
 
-#endif
 
 //
 // UpdateRect
@@ -1511,12 +1495,10 @@ else
 	if (!::EmptyRgn(updateRgn))
 	{
 
-#if TARGET_CARBON
     // Ref: http://developer.apple.com/technotes/tn/tn2051.html
     //      short-circuit QD's implicit LockPortBits()
     //      Note: MUST unlock before exiting this scope (see below)
     ::LockPortBits(::GetWindowPort(mWindowPtr));
-#endif
 
 #if DEBUG
 		// measure the time it takes to refresh the window, if the control key is down.
@@ -1534,7 +1516,6 @@ else
 
     int numRects = 0;
 
-#if TARGET_CARBON
     QDRegionToRects ( updateRgn, kQDParseRegionFromTopLeft, sCountRectProc, &numRects );
     if ( numRects <= kMaxUpdateRects ) {
       Rect rectList[kMaxUpdateRects];
@@ -1566,39 +1547,6 @@ else
       ::GetRegionBounds(updateRgn, &boundingBox);
       PaintUpdateRect ( &boundingBox, this );
     }
-#else
-    EachRegionRect ( updateRgn, CountRect, &numRects );
-    if ( numRects <= kMaxUpdateRects ) {
-      Rect rectList[kMaxUpdateRects];
-      TRectArray rectWrapper ( rectList );
-       
-      // compile a list of rectangles 
-      EachRegionRect ( updateRgn, AddRectToArray, &rectWrapper );
-    
-      // amalgamate adjoining rects into a single rect. This 
-      // may over-draw a little, but will prevent us from going down into
-      // the layout engine for lots of little 1-pixel wide rects.
-      if ( numRects > 1 )
-        CombineRects ( rectWrapper );
-    
-      // now paint 'em! (|numRects| may be invalid now, so check count again). If
-      // we're above a certain threshold, just bail and do bounding box
-      if ( rectWrapper.Count() < kRectsBeforeBoundingBox ) {
-        for ( int i = 0; i < rectWrapper.Count(); ++i )
-          PaintUpdateRect ( &rectList[i], this );
-      }
-      else {
-        Rect boundingBox;
-        ::GetRegionBounds(updateRgn, &boundingBox);
-        PaintUpdateRect ( &boundingBox, this );
-      }
-    }
-    else {
-      Rect boundingBox;
-      ::GetRegionBounds(updateRgn, &boundingBox);
-      PaintUpdateRect ( &boundingBox, this );
-    }
-#endif
 
 #if DEBUG
     if (measure_duration) {
@@ -1611,12 +1559,10 @@ else
     if (regionToValidate)
       ::CopyRgn(updateRgn, regionToValidate);
 
-#if TARGET_CARBON
     // Ref: http://developer.apple.com/technotes/tn/tn2051.html
     //      short-circuit QD's implicit LockPortBits()
     //      Note: unlock before exiting (locked above)
     ::UnlockPortBits(::GetWindowPort(mWindowPtr));
-#endif
 
 	}
 
@@ -1804,115 +1750,8 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 void
 nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
 {                        
-#if TARGET_CARBON
   ::ScrollWindowRect ( mWindowPtr, &inRectToScroll, inLeftDelta, inTopDelta, 
                         kScrollWindowInvalidate, NULL );
-#else
-  // Get Frame in local coords from clip rect (there might be a border around view)
-  StRegionFromPool clipRgn;
-  if ( !clipRgn ) return;
-  ::GetClip(clipRgn);
-  ::SectRgn(clipRgn, mVisRegion, clipRgn);
-
-  StRegionFromPool localVisRgn;
-  if ( !localVisRgn ) return;
-
-  Rect frame;
-  ::GetRegionBounds(clipRgn, &frame);
-
-  StRegionFromPool totalVisRgn;
-  if ( !totalVisRgn ) return;
-  ::RectRgn(totalVisRgn, &frame);
-  
-    // compute the source and destination of copybits
-  Rect source = inRectToScroll;
-  SectRect(&source, &frame, &source);
-
-  Rect dest = source;
-  ::OffsetRect(&dest, inLeftDelta, inTopDelta);
-
-  // compute the area that is to be updated by subtracting the dest from the visible area
-  StRegionFromPool destRgn;
-  if ( !destRgn ) return;
-  ::RectRgn(destRgn, &dest);    
-
-  StRegionFromPool updateRgn;
-  if ( !updateRgn ) return;
-  ::RectRgn(updateRgn, &frame);
-  ::DiffRgn (updateRgn, destRgn, updateRgn);
-
-  if(::EmptyRgn(mWindowPtr->visRgn))    
-  {
-    ::CopyBits ( 
-      &mWindowPtr->portBits, 
-      &mWindowPtr->portBits, 
-      &source, 
-      &dest, 
-      srcCopy, 
-      nil);
-  }
-  else
-  {
-    // compute the non-visible region by subtracting what's currently
-    // visible (the window's visRgn) from the whole area we're updating
-    StRegionFromPool nonVisibleRgn;
-    if ( !nonVisibleRgn ) return;
-    ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisibleRgn );
-    
-    // compute the extra area that may need to be updated
-    // scoll the non-visible region to determine what needs updating
-    ::OffsetRgn ( nonVisibleRgn, inLeftDelta, inTopDelta );
-    
-    // calculate a mask region to not copy the non-visble portions of the window from the port
-    StRegionFromPool copyMaskRgn;
-    if ( !copyMaskRgn ) return;
-    ::DiffRgn(totalVisRgn, nonVisibleRgn, copyMaskRgn);
-    
-    // use copybits to simulate a ScrollRect()
-    RGBColor black = { 0, 0, 0 };
-    RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF } ;
-    ::RGBForeColor(&black);
-    ::RGBBackColor(&white);
-    ::PenNormal();  
-    ::CopyBits ( 
-      &mWindowPtr->portBits, 
-      &mWindowPtr->portBits, 
-      &source, 
-      &dest, 
-      srcCopy, 
-      copyMaskRgn);
-
-    // union the update regions together and invalidate them
-    ::UnionRgn(nonVisibleRgn, updateRgn, updateRgn);
-  }
-  
-  // If the region to be scrolled contains regions which are currently dirty,
-  // we must scroll those too, and union them with the updateRgn.
-  // get a copy of the dirty region.
-  ::BeginUpdate(mWindowPtr);
-  ::CopyRgn(mWindowPtr->visRgn, localVisRgn);   // re-use localVisRgn
-  ::EndUpdate(mWindowPtr);
-
-  StRegionFromPool  dirtyRgn;
-  if (!dirtyRgn) return;
-  // get only the part of the dirtyRgn that intersects the frame
-  ::SectRgn(localVisRgn, totalVisRgn, dirtyRgn);
-  // offset by the amount scrolled
-  ::OffsetRgn(dirtyRgn, inLeftDelta, inTopDelta);
-  // now intersect with the frame again
-  ::SectRgn(dirtyRgn, totalVisRgn, dirtyRgn);
-  // and add it to the dirty region
-  ::UnionRgn(updateRgn, dirtyRgn, updateRgn);
-  
-  // we also need to re-dirty the dirty rgn outside out frame,
-  // since BeginUpdate/EndUpdate cleared it.
-  ::DiffRgn(localVisRgn, totalVisRgn, localVisRgn);
-  // and add it to the dirty region
-  ::UnionRgn(updateRgn, localVisRgn, updateRgn);
-  
-  ::InvalWindowRgn(mWindowPtr, updateRgn);
-  
-#endif // !TARGET_CARBON
 }
 
 
@@ -2658,101 +2497,3 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-#if !TARGET_CARBON
-
-void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
-
-//
-// Written by Hugh Fisher, March 1993.
-// Used w/out asking his permission.
-//
-// This can go away when we get an api on nsIRegion to create one from
-// a RgnHandle. Then we can use nsIRegion::GetRects to do the work for us.
-//
-void 
-EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* inData)
-{
-#define EndMark 	32767
-#define MaxY		32767
-#define StackMax	1024
-
-	typedef struct {
-		short	size;
-		Rect	bbox;
-		short	data[];
-		} ** Internal;
-	
-	Internal region;
-	short	 width, xAdjust, y, index, x1, x2, x;
-	Rect	 box;
-	short	 stackStorage[1024];
-	short *	 buffer;
-	
-	region = (Internal)r;
-	
-	/* Check for plain rectangle */
-	if ((**region).size == 10) {
-		proc(&(**region).bbox, inData);
-		return;
-	}
-	/* Got to scale x coordinates into range 0..something */
-	xAdjust = (**region).bbox.left;
-	width = (**region).bbox.right - xAdjust;
-	/* Most regions will be less than 1024 pixels wide */
-	if (width < StackMax)
-		buffer = stackStorage;
-	else {
-		buffer = (short *)PR_Malloc(width * 2);
-		if (buffer == NULL)
-			/* Truly humungous region or very low on memory.
-			   Quietly doing nothing seems to be the
-			   traditional Quickdraw response. */
-			return;
-	}
-	/* Initialise scan line list to bottom edges */
-	for (x = (**region).bbox.left; x < (**region).bbox.right; x++)
-		buffer[x - xAdjust] = MaxY;
-	index = 0;
-	/* Loop until we hit an empty scan line */
-	while ((**region).data[index] != EndMark) {
-		y = (**region).data[index];
-		index ++;
-		/* Loop through horizontal runs on this line */
-		while ((**region).data[index] != EndMark) {
-			x1 = (**region).data[index];
-			index ++;
-			x2 = (**region).data[index];
-			index ++;
-			x = x1;
-			while (x < x2) {
-				if (buffer[x - xAdjust] < y) {
-					/* We have a bottom edge - how long for? */
-					box.left = x;
-					box.top  = buffer[x - xAdjust];
-					while (x < x2 && buffer[x - xAdjust] == box.top) {
-						buffer[x - xAdjust] = MaxY;
-						x ++;
-					}
-					/* Pass to client proc */
-					box.right  = x;
-					box.bottom = y;
-					proc(&box, inData);
-				} else {
-					/* This becomes a top edge */
-					buffer[x - xAdjust] = y;
-					x ++;
-				}
-			}
-		}
-		index ++;
-	}
-	/* Clean up after ourselves */
-	if (width >= StackMax)
-		PR_Free((void *)buffer);
-#undef EndMark
-#undef MaxY
-#undef StackMax
-}
-
-#endif
