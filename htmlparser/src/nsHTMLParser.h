@@ -81,82 +81,427 @@ class nsHTMLParser : public nsIParser {
 friend class CTokenHandler;
 
     NS_DECL_ISUPPORTS
-                                nsHTMLParser();
-                                ~nsHTMLParser();
-    virtual nsIContentSink*     SetContentSink(nsIContentSink* aSink);
-    virtual PRBool              Parse(nsIURL* aURL);
-    virtual PRBool              Parse(nsIURL* aURL,eParseMode aMode);
-    virtual PRBool              ResumeParse();
-    virtual PRInt32             GetStack(PRInt32* aStackPtr);
-    virtual PRBool              HasOpenContainer(PRInt32 aContainer) const;
 
 
-            PRBool              HandleStartToken(CToken* aToken);
-            PRBool              HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
-            PRBool              HandleEndToken(CToken* aToken);
-            PRBool              HandleEntityToken(CToken* aToken);
-            PRBool              HandleCommentToken(CToken* aToken);
-            PRBool              HandleSkippedContentToken(CToken* aToken);
-            PRBool              HandleAttributeToken(CToken* aToken);
-            PRBool              HandleScriptToken(CToken* aToken);
-            PRBool              HandleStyleToken(CToken* aToken);
+    /**
+     * default constructor
+     * @update	gess5/11/98
+     */
+    nsHTMLParser();
 
-            PRBool              IsWithinBody(void) const;
 
-  protected:
-            PRBool              IterateTokens();
-            eHTMLTags           NodeAt(PRInt32 aPos) const;
-            eHTMLTags           GetTopNode() const;
-            PRInt32             GetStackPos() const;
+    /**
+     * Destructor
+     * @update	gess5/11/98
+     */
+    ~nsHTMLParser();
 
-            PRInt32             CollectAttributes(nsCParserNode& aNode);
-            PRInt32             CollectSkippedContent(nsCParserNode& aNode);
-            void                InitializeDefaultTokenHandlers();
-            CTokenHandler*      GetTokenHandler(const nsString& aString) const;
-            CTokenHandler*      GetTokenHandler(eHTMLTokenTypes aType) const;
-            CTokenHandler*      AddTokenHandler(CTokenHandler* aHandler);
-            nsHTMLParser&       DeleteTokenHandlers(void);
+    /**
+     * Select given content sink into parser for parser output
+     * @update	gess5/11/98
+     * @param   aSink is the new sink to be used by parser
+     * @return  old sink, or NULL
+     */
+    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
-  protected:
+    /**
+     * Cause parser to parse input from given URL
+     * @update	gess5/11/98
+     * @param   aURL is a descriptor for source document
+     * @return  TRUE if all went well -- FALSE otherwise
+     */
+    virtual PRBool Parse(nsIURL* aURL);
 
-                    //these cover methods mimic the sink, and are used
-                    //by the parser to manage its context-stack.
+    /**
+     * Cause parser to parse input from given URL in given mode
+     * @update	gess5/11/98
+     * @param   aURL is a descriptor for source document
+     * @param   aMode is the desired parser mode (Nav, other, etc.)
+     * @return  TRUE if all went well -- FALSE otherwise
+     */
+    virtual PRBool Parse(nsIURL* aURL,eParseMode aMode);
 
-            PRBool              OpenHTML(const nsIParserNode& aNode);
-            PRBool              CloseHTML(const nsIParserNode& aNode);
-            PRBool              OpenHead(const nsIParserNode& aNode);
-            PRBool              CloseHead(const nsIParserNode& aNode);
-            PRBool              OpenBody(const nsIParserNode& aNode);
-            PRBool              CloseBody(const nsIParserNode& aNode);
-            PRBool              OpenForm(const nsIParserNode& aNode);
-            PRBool              CloseForm(const nsIParserNode& aNode);
-            PRBool              OpenFrameset(const nsIParserNode& aNode);
-            PRBool              CloseFrameset(const nsIParserNode& aNode);
-            PRBool              OpenContainer(const nsIParserNode& aNode);
-            PRBool              CloseContainer(const nsIParserNode& aNode);
-            PRBool              CloseTopmostContainer();
-            PRBool              CloseContainersTo(eHTMLTags aTag);
-            PRBool              CloseContainersTo(PRInt32 anIndex);
-            PRBool              AddLeaf(const nsIParserNode& aNode);
-            PRBool              IsOpen(eHTMLTags aTag) const;
-            PRInt32             GetTopmostIndex(eHTMLTags aTag) const;
-            PRBool              ReduceContextStackFor(PRInt32 aChildTag);
-            PRBool              CreateContextStackFor(PRInt32 aChildTag);
+    /**
+     * This method gets called (automatically) during incremental parsing
+     * @update	gess5/11/98
+     * @return  TRUE if all went well, otherwise FALSE
+     */
+    virtual PRBool ResumeParse();
 
-            nsIHTMLContentSink* mSink;
-            CTokenizer*         mTokenizer;
+    /**
+     * Retrieve ptr to internal context vector stack
+     * @update	gess5/11/98
+     * @param   stack ptr to be set
+     * @return  count of items on stack (may be 0)
+     */
+    virtual PRInt32 GetStack(PRInt32* aStackPtr);
 
-//            eHTMLTags           mContextStack[50];
-            PRInt32             mContextStack[50];
-            PRInt32             mContextStackPos;
+    /**
+     * Ask parser if a given container is open ANYWHERE on stack
+     * @update	gess5/11/98
+     * @param   id of container you want to test for
+     * @return  TRUE if the given container type is open -- otherwise FALSE
+     */
+    virtual PRBool HasOpenContainer(PRInt32 aContainer) const;
 
-            CTokenHandler*      mTokenHandlers[100];
-            PRInt32             mTokenHandlerCount;
-            nsDequeIterator*    mCurrentPos;
 
-            nsIDTD*             mDTD;
-            eParseMode          mParseMode;
-            PRBool              mHasOpenForm;
+    /**
+     * This method gets called when a start token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the start token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleStartToken(CToken* aToken);
+
+    /**
+     * This method gets called when a start token has been consumed, and
+     * we want to use default start token handling behavior.
+     * This method gets called automatically by handleStartToken.
+     *
+     * @update	gess5/11/98
+     * @param   aToken is the start token to be handled
+     * @param   aChildTag is the tag-type of given token
+     * @param   aNode is a node be updated with info from given token
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+
+    /**
+     * This method gets called when an end token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the end token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleEndToken(CToken* aToken);
+
+    /**
+     * This method gets called when an entity token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the entity token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleEntityToken(CToken* aToken);
+
+    /**
+     * This method gets called when a comment token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the comment token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleCommentToken(CToken* aToken);
+
+    /**
+     * This method gets called when a skipped-content token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the skipped-content token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleSkippedContentToken(CToken* aToken);
+
+    /**
+     * This method gets called when an attribute token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the attribute token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleAttributeToken(CToken* aToken);
+
+    /**
+     * This method gets called when a script token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the script token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleScriptToken(CToken* aToken);
+    
+    /**
+     * This method gets called when a style token has been consumed and needs 
+     * to be handled (possibly added to content model via sink).
+     * @update	gess5/11/98
+     * @param   aToken is the style token to be handled
+     * @return  TRUE if the token was handled.
+     */
+    PRBool HandleStyleToken(CToken* aToken);
+
+
+protected:
+
+    /**
+     * This method gets called when the tokens have been consumed, and it's time
+     * to build the model via the content sink.
+     * @update	gess5/11/98
+     * @return  YES if model building went well -- NO otherwise.
+     */
+    PRBool IterateTokens();
+
+    /**
+     * Retrieves the tag type for the element on the context vector stack at given pos.
+     * @update	gess5/11/98
+     * @param   pos of item you want to retrieve
+     * @return  tag type (may be unknown)
+     */
+    eHTMLTags NodeAt(PRInt32 aPos) const;
+
+    /**
+     * Retrieve the tag type of the topmost item on context vector stack
+     * @update	gess5/11/98
+     * @return  tag type (may be unknown)
+     */
+    eHTMLTags GetTopNode() const;
+
+    /**
+     * Retrieve the number of items on context vector stack
+     * @update	gess5/11/98
+     * @return  count of items on stack -- may be 0
+     */
+    PRInt32 GetStackPos() const;
+
+    /**
+     * Causes the parser to scan foward, collecting nearby (sequential)
+     * attribute tokens into the given node.
+     * @update	gess5/11/98
+     * @param   node to store attributes
+     * @return  number of attributes added to node.
+     */
+    PRInt32 CollectAttributes(nsCParserNode& aNode);
+
+    /**
+     * Causes the next skipped-content token (if any) to
+     * be consumed by this node.
+     * @update	gess5/11/98
+     * @param   node to consume skipped-content
+     * @return  number of skipped-content tokens consumed.
+     */
+    PRInt32 CollectSkippedContent(nsCParserNode& aNode);
+
+    /**
+     * Causes token handlers to be registered for this parser.
+     * DO NOT CALL THIS! IT'S DEPRECATED!
+     * @update	gess5/11/98
+     */
+    void InitializeDefaultTokenHandlers();
+
+    /**
+     * DEPRECATED
+     * @update	gess5/11/98
+     */
+    CTokenHandler* GetTokenHandler(const nsString& aString) const;
+
+    /**
+     * DEPRECATED
+     * @update	gess5/11/98
+     */
+    CTokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
+
+    /**
+     * DEPRECATED
+     * @update	gess5/11/98
+     */
+    CTokenHandler* AddTokenHandler(CTokenHandler* aHandler);
+
+    /**
+     * DEPRECATED
+     * @update	gess5/11/98
+     */
+    nsHTMLParser& DeleteTokenHandlers(void);
+  
+    //*************************************************
+    //these cover methods mimic the sink, and are used
+    //by the parser to manage its context-stack.
+    //*************************************************
+
+    /**
+     * This cover method opens the given node as a HTML item in 
+     * content sink.
+     * @update	gess5/11/98
+     * @param   HTML (node) to be opened in content sink.
+     * @return  TRUE if all went well.
+     */
+    PRBool OpenHTML(const nsIParserNode& aNode);
+
+    /**
+     * 
+     * @update	gess5/11/98
+     * @param 
+     * @return
+     */
+    PRBool CloseHTML(const nsIParserNode& aNode);
+
+    /**
+     * This cover method opens the given node as a head item in 
+     * content sink.
+     * @update	gess5/11/98
+     * @param   HEAD (node) to be opened in content sink.
+     * @return  TRUE if all went well.
+     */
+    PRBool OpenHead(const nsIParserNode& aNode);
+
+    /**
+     * This cover method causes the content-sink head to be closed
+     * @update	gess5/11/98
+     * @param   aNode is the node to be closed in sink (usually ignored)
+     * @return  TRUE if all went well.
+     */
+    PRBool CloseHead(const nsIParserNode& aNode);
+
+    /**
+     * This cover method opens the given node as a body item in 
+     * content sink.
+     * @update	gess5/11/98
+     * @param   BODY (node) to be opened in content sink.
+     * @return  TRUE if all went well.
+     */
+    PRBool OpenBody(const nsIParserNode& aNode);
+
+    /**
+     * This cover method causes the content-sink body to be closed
+     * @update	gess5/11/98
+     * @param   aNode is the body node to be closed in sink (usually ignored)
+     * @return  TRUE if all went well.
+     */
+    PRBool CloseBody(const nsIParserNode& aNode);
+
+    /**
+     * This cover method opens the given node as a form item in 
+     * content sink.
+     * @update	gess5/11/98
+     * @param   FORM (node) to be opened in content sink.
+     * @return  TRUE if all went well.
+     */
+    PRBool OpenForm(const nsIParserNode& aNode);
+
+    /**
+     * This cover method causes the content-sink form to be closed
+     * @update	gess5/11/98
+     * @param   aNode is the form node to be closed in sink (usually ignored)
+     * @return  TRUE if all went well.
+     */
+    PRBool CloseForm(const nsIParserNode& aNode);
+
+    /**
+     * This cover method opens the given node as a frameset item in 
+     * content sink.
+     * @update	gess5/11/98
+     * @param   FRAMESET (node) to be opened in content sink.
+     * @return  TRUE if all went well.
+     */
+    PRBool OpenFrameset(const nsIParserNode& aNode);
+
+    /**
+     * This cover method causes the content-sink frameset to be closed
+     * @update	gess5/11/98
+     * @param   aNode is the frameeset node to be closed in sink (usually ignored)
+     * @return  TRUE if all went well.
+     */
+    PRBool CloseFrameset(const nsIParserNode& aNode);
+
+    /**
+     * This cover method opens the given node as a generic container in 
+     * content sink.
+     * @update	gess5/11/98
+     * @param   generic container (node) to be opened in content sink.
+     * @return  TRUE if all went well.
+     */
+    PRBool OpenContainer(const nsIParserNode& aNode);
+
+    /**
+     * This cover method causes a generic containre in the content-sink to be closed
+     * @update	gess5/11/98
+     * @param   aNode is the node to be closed in sink (usually ignored)
+     * @return  TRUE if all went well.
+     */
+    PRBool CloseContainer(const nsIParserNode& aNode);
+    
+    /**
+     * This cover method causes the topmost container to be closed in sink
+     * @update	gess5/11/98
+     * @return  TRUE if all went well.
+     */
+    PRBool CloseTopmostContainer();
+    
+    /**
+     * Cause all containers down to topmost given tag to be closed
+     * @update	gess5/11/98
+     * @param   aTag is the tag at which auto-closure should stop (inclusive) 
+     * @return  TRUE if all went well -- otherwise FALSE
+     */
+    PRBool CloseContainersTo(eHTMLTags aTag);
+
+    /**
+     * Cause all containers down to given position to be closed
+     * @update	gess5/11/98
+     * @param   anIndex is the stack pos at which auto-closure should stop (inclusive) 
+     * @return  TRUE if all went well -- otherwise FALSE
+     */
+    PRBool CloseContainersTo(PRInt32 anIndex);
+
+    /**
+     * Causes leaf to be added to sink at current vector pos.
+     * @update	gess5/11/98
+     * @param   aNode is leaf node to be added.
+     * @return  TRUE if all went well -- FALSE otherwise.
+     */
+    PRBool AddLeaf(const nsIParserNode& aNode);
+
+    /**
+     * Determine if the given tag is open in the context vector stack.
+     * @update	gess5/11/98
+     * @param   aTag is the type of tag you want to test for openness
+     * @return  TRUE if open, FALSE otherwise.
+     */
+    PRBool IsOpen(eHTMLTags aTag) const;
+
+    /**
+     * Finds the topmost occurance of given tag within context vector stack.
+     * @update	gess5/11/98
+     * @param   tag to be found
+     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
+     */
+    PRInt32 GetTopmostIndex(eHTMLTags aTag) const;
+
+    /**
+     * Causes auto-closures of context vector stack in order to find a 
+     * proper home for the given child. Propagation may also occur as 
+     * a fall out.
+     * @update	gess5/11/98
+     * @param   child to be added (somewhere) to context vector stack.
+     * @return  TRUE if succeeds, otherwise FALSE
+     */
+    PRBool ReduceContextStackFor(PRInt32 aChildTag);
+
+    /**
+     * Attempt forward and/or backward propagation for the given
+     * child within the current context vector stack.
+     * @update	gess5/11/98
+     * @param   type of child to be propagated.
+     * @return  TRUE if succeeds, otherwise FALSE
+     */
+    PRBool CreateContextStackFor(PRInt32 aChildTag);
+
+    //*********************************************
+    // And now, some data members...
+    //*********************************************
+
+    nsIHTMLContentSink* mSink;
+    CTokenizer*         mTokenizer;
+
+    PRInt32             mContextStack[50];
+    PRInt32             mContextStackPos;
+
+    CTokenHandler*      mTokenHandlers[100];
+    PRInt32             mTokenHandlerCount;
+    nsDequeIterator*    mCurrentPos;
+
+    nsIDTD*             mDTD;
+    eParseMode          mParseMode;
+    PRBool              mHasOpenForm;
 };
 
 

@@ -879,7 +879,7 @@ PRBool nsHTMLParser::HandleSkippedContentToken(CToken* aToken) {
 
   PRBool result=PR_TRUE;
 
-  if(IsWithinBody()) {
+  if(HasOpenContainer(eHTMLTag_body)) {
     nsCParserNode aNode((CHTMLToken*)aToken);
     result=AddLeaf(aNode);
   }
@@ -935,22 +935,6 @@ PRBool nsHTMLParser::HandleStyleToken(CToken* aToken){
   CStyleToken*  st = (CStyleToken*)(aToken);
   PRBool result=PR_TRUE;
   return result;
-}
-
-/**
- *  This method gets called to determine whether a given 
- *  tag is itself a container
- *  
- *  @update  gess 3/25/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool nsHTMLParser::IsWithinBody(void) const {
-  for(int i=0;i<mContextStackPos;i++) {
-    if(eHTMLTag_body==mContextStack[i])
-      return PR_TRUE;
-  }
-  return PR_FALSE;
 }
 
 

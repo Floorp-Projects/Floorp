@@ -52,21 +52,72 @@ class nsIParserNode {
             
   public:
 
-    virtual const nsString&     GetName() const =0;  //to get name of tag
-    virtual const nsString&     GetText() const =0;  //get plain text if available
-    virtual const nsString&     GetSkippedContent() const =0;
 
-              //methods for determining the type of parser node...            
-    virtual       PRInt32       GetNodeType()  const =0;
-    virtual       PRInt32       GetTokenType()  const =0;
+    /**
+     * Retrieve the name of the node
+     * @update	gess5/11/98
+     * @return  string containing node name
+     */
+    virtual const nsString& GetName() const =0;  //to get name of tag
 
-              //methods for accessing key/value pairs
-    virtual       PRInt32       GetAttributeCount(void) const =0;
-    virtual const nsString&     GetKeyAt(PRInt32 anIndex) const =0;
-    virtual const nsString&     GetValueAt(PRInt32 anIndex) const =0;
+    /**
+     * Retrieve the text from the given node
+     * @update	gess5/11/98
+     * @return  string containing node text
+     */
+    virtual const nsString& GetText() const =0;  //get plain text if available
 
-  // When the node is an entity, this will translate the entity to
-  // it's unicode value.
+    /**
+     * Retrieve skipped context from node
+     * @update	gess5/11/98
+     * @return  string containing skipped content
+     */
+    virtual const nsString& GetSkippedContent() const =0;
+
+    /**
+     * Retrieve the type of the parser node.
+     * @update	gess5/11/98
+     * @return  node type.
+     */
+    virtual PRInt32 GetNodeType()  const =0;
+
+    /**
+     * Retrieve token type of parser node
+     * @update	gess5/11/98
+     * @return  token type
+     */
+    virtual PRInt32 GetTokenType()  const =0;
+
+    /**
+     * Retrieve the number of attributes in this node.
+     * @update	gess5/11/98
+     * @return  count of attributes (may be 0)
+     */
+    virtual PRInt32 GetAttributeCount(void) const =0;
+
+    /**
+     * Retrieve the key (of key/value pair) at given index
+     * @update	gess5/11/98
+     * @param   anIndex is the index of the key you want
+     * @return  string containing key.
+     */
+    virtual const nsString& GetKeyAt(PRInt32 anIndex) const =0;
+
+    /**
+     * Retrieve the value (of key/value pair) at given index
+     * @update	gess5/11/98
+     * @param   anIndex is the index of the value you want
+     * @return  string containing value.
+     */
+    virtual const nsString& GetValueAt(PRInt32 anIndex) const =0;
+
+    /**
+     * NOTE: When the node is an entity, this will translate the entity
+     *       to it's unicode value, and store it in aString.
+     * @update	gess5/11/98
+     * @param   aString will contain the resulting unicode string value
+     * @return  int (unicode char or unicode index from table)
+     */
   virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
 };
 
