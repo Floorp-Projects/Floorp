@@ -110,7 +110,9 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
 }
 
 NS_IMETHODIMP
-nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt, const char *fileRegEx, PRBool shouldFileExist, char **outFile)
+nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt, 
+                                  const char *fileRegEx, 
+                                  PRBool shouldFileExist, char **outFile)
 {
     NS_ENSURE_ARG_POINTER(outFile);
     nsCOMPtr<nsIFilePicker> fp = do_CreateInstance("component://mozilla/filepicker");
@@ -118,8 +120,11 @@ nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt, const char *fileRegEx
     if (!fp)
         return NS_ERROR_NULL_POINTER;
 
-
-    fp->Init(nsnull, prompt, nsIFilePicker::modeOpen);
+    if (shouldFileExist) {
+        fp->Init(nsnull, prompt, nsIFilePicker::modeOpen);
+    } else {
+        fp->Init(nsnull, prompt, nsIFilePicker::modeSave);
+    }
     fp->AppendFilter(NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode(), NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode());  
     fp->AppendFilters(nsIFilePicker::filterAll);
     PRInt16 mode;
