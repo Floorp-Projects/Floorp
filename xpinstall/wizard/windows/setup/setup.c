@@ -78,10 +78,7 @@ BOOL            gbRestrictedAccess;
 BOOL            gbDownloadTriggered;
 BOOL            gbAllowMultipleInstalls = FALSE;
 BOOL            gbForceInstall = FALSE;
-/* XXX For now, we want to always force the installation of GRE until
- * GRE is appropriately versioned.  See bug 180383
- */
-BOOL            gbForceInstallGre = TRUE;
+BOOL            gbForceInstallGre = FALSE;
 BOOL            gShowBannerImage = TRUE;
 
 setupGen        sgProduct;
