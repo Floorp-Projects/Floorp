@@ -425,7 +425,7 @@ var DefaultController =
 				MsgRenameFolder();
 				return;
 			case "cmd_openMessage":
-				MsgOpenNewWindowForMessage(null, null);
+                MsgOpenSelectedMessages();
 				return;
 			case "cmd_print":
 				PrintEnginePrint();

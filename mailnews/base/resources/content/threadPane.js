@@ -67,11 +67,11 @@ function ThreadPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-		ThreadPaneDoubleClick(t.parentNode.parentNode,true);
+		ThreadPaneDoubleClick();
 	}
 }
 
-function ThreadPaneDoubleClick(treeitem,isClick)
+function ThreadPaneDoubleClick()
 {
 	var loadedFolder;
 	var messageArray;
@@ -90,33 +90,16 @@ function ThreadPaneDoubleClick(treeitem,isClick)
 		messageArray = GetSelectedMessages();
 		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
-	else if(isClick)
-	{
-		messageUri = treeitem.getAttribute("id");
-		MsgOpenNewWindowForMessage(messageUri, null);
-	}
 	else
 	{
-		var threadTree = GetThreadTree();
-		var selectedMessages = threadTree.selectedItems;
-		var numMessages = selectedMessages.length;
-
-		for(var i = 0; i < numMessages; i++)
-		{
-			var messageNode = selectedMessages[i];
-			messageUri = messageNode.getAttribute("id");
-			if(messageUri)
-			{
-				MsgOpenNewWindowForMessage(messageUri, null);
-			}
-		}
+        MsgOpenSelectedMessages();
 	}
 }
 
 function ThreadPaneKeyPress(event)
 {
   if (event.keyCode == 13)
-	ThreadPaneDoubleClick(null,false);
+	ThreadPaneDoubleClick();
   return;
 }
 

@@ -552,6 +552,21 @@ function MsgOpenNewWindowForFolder(folderUri)
 
 }
 
+function MsgOpenSelectedMessages()
+{
+  var threadTree = GetThreadTree();
+  var selectedMessages = threadTree.selectedItems;
+  var numMessages = selectedMessages.length;
+
+  for(var i = 0; i < numMessages; i++) {
+    var messageNode = selectedMessages[i];
+    messageUri = messageNode.getAttribute("id");
+    if(messageUri) {
+      MsgOpenNewWindowForMessage(messageUri, null);
+    }
+  }
+}
+
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
 {
     var message;
