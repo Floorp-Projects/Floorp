@@ -42,6 +42,8 @@ public:
   ImageCache();
   ~ImageCache();
 
+  static void Shutdown(); // for use by the factory
+
   /* additional members */
   static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry);
   static PRBool Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry);
@@ -52,8 +54,9 @@ public:
   ImageCache()  { }
   ~ImageCache() { }
 
-  /* additional members */
+  static void Shutdown() { }
 
+  /* additional members */
   static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry) {
     return PR_FALSE;
   }

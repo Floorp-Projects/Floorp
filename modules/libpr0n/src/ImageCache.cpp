@@ -42,7 +42,7 @@ extern PRLogModuleInfo *gImgLog;
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 
-nsCOMPtr<nsICacheSession> mSession;
+static nsCOMPtr<nsICacheSession> gSession = nsnull;
 
 ImageCache::ImageCache()
 {
@@ -56,17 +56,23 @@ ImageCache::~ImageCache()
 
 void GetCacheSession(nsICacheSession **_retval)
 {
-  static nsCOMPtr<nsICacheSession> session;
-
-  if (!session) {
+  if (!gSession) {
     nsCOMPtr<nsICacheService> cacheService(do_GetService("@mozilla.org/network/cache-service;1"));
-    cacheService->CreateSession("images", nsICache::NOT_STREAM_BASED, PR_FALSE, getter_AddRefs(session));
+    NS_ASSERTION(cacheService, "Unable to get the cache service");
+
+    cacheService->CreateSession("images", nsICache::NOT_STREAM_BASED, PR_FALSE, getter_AddRefs(gSession));
+    NS_ASSERTION(gSession, "Unable to create a cache session");
   }
 
-  *_retval = session;
+  *_retval = gSession;
   NS_IF_ADDREF(*_retval);
 }
 
+
+void ImageCache::Shutdown()
+{
+  gSession = nsnull;
+}
 
 PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry)
 {

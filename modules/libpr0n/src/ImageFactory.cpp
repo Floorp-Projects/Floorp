@@ -29,6 +29,8 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 
+#include "ImageCache.h"
+
 // objects that just require generic constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
@@ -56,5 +58,10 @@ static nsModuleComponentInfo components[] =
     imgRequestProxyConstructor, },
 };
 
-NS_IMPL_NSGETMODULE("nsImageLib2Module", components)
+PR_STATIC_CALLBACK(void)
+ImageModuleDestructor(nsIModule *self)
+{
+  ImageCache::Shutdown();
+}
 
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsImageLib2Module", components, ImageModuleDestructor)
