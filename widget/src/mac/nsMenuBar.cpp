@@ -91,9 +91,7 @@ static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 void InstallDefProc( short dpPath, ResType dpType, short dpID, Ptr dpAddr);
 
 
-#if DEBUG
-nsInstanceCounter   gMenuBarCounter("nsMenuBar");
-#endif
+PRInt32   gMenuBarCounter = 0;
 
 
 NS_IMPL_ISUPPORTS5(nsMenuBar, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, nsIChangeManager, nsISupportsWeakReference)
@@ -138,9 +136,7 @@ nsMenuBar::nsMenuBar()
   OSErr err = ::CreateUnicodeToTextRunInfoByScriptCode(0x80000000, ps, &mUnicodeTextRunConverter);
   NS_ASSERTION(err==noErr,"nsMenu::nsMenu: CreateUnicodeToTextRunInfoByScriptCode failed.");
 
-#if DEBUG
   ++gMenuBarCounter;
-#endif
 }
 
 
@@ -154,12 +150,20 @@ nsMenuBar::~nsMenuBar()
   OSErr err = ::DisposeUnicodeToTextRunInfo(&mUnicodeTextRunConverter);
   NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	 
 
+  // make sure we unregister ourselves as a document observer
+  nsCOMPtr<nsIWebShell> webShell ( do_QueryReferent(mWebShellWeakRef) );
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(webShell, getter_AddRefs(doc));
+  if ( doc ) {
+    nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
+    doc->RemoveObserver(observer);
+  }
+
   ::DisposeHandle(mMacMBarHandle);
   ::DisposeHandle(mOriginalMacMBarHandle);
 
-#if DEBUG
   --gMenuBarCounter;
-#endif
+    
 }
 
 
@@ -237,6 +241,26 @@ nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 }
 
 
+void
+nsMenuBar :: GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument )
+{
+  *outDocument = nsnull;
+  
+  nsCOMPtr<nsIDocShell> docShell ( do_QueryInterface(inWebShell) );
+  nsCOMPtr<nsIContentViewer> cv;
+  if ( docShell ) {
+    docShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) {
+      // get the document
+      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+      if (!docv)
+        return;
+      docv->GetDocument(*outDocument);    // addrefs
+    }
+  }
+}
+
+
 //
 // RegisterAsDocumentObserver
 //
@@ -245,24 +269,14 @@ nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 void
 nsMenuBar :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
 {
-  nsCOMPtr<nsIDocShell> docShell ( do_QueryInterface(inWebShell) );
-  nsCOMPtr<nsIContentViewer> cv;
-  docShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-   
-    // get the document
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (!docv)
-      return;
-    nsCOMPtr<nsIDocument> doc;
-    docv->GetDocument(*getter_AddRefs(doc));
-    if (!doc)
-      return;
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(inWebShell, getter_AddRefs(doc));
+  if (!doc)
+    return;
 
-    // register ourselves
-    nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
-    doc->AddObserver(observer);
-  }
+  // register ourselves
+  nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
+  doc->AddObserver(observer);
 
 } // RegisterAsDocumentObesrver
 
@@ -365,9 +379,9 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 			nsAutoString menuAccessKey; menuAccessKey.AssignWithConversion(" ");
 			
       menuElement->GetNodeName(menuNodeType);
-      if (menuNodeType.EqualsWithConversion("menu")) {
-        menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
-			  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("accesskey"), menuAccessKey);
+      if (menuNodeType == NS_LITERAL_STRING("menu")) {
+        menuElement->GetAttribute(NS_LITERAL_STRING("value"), menuName);
+			  menuElement->GetAttribute(NS_LITERAL_STRING("accesskey"), menuAccessKey);
 			  
         // Don't create the whole menu yet, just add in the top level names
               
@@ -383,8 +397,8 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
           AddMenu(pnsMenu); 
                   
           nsAutoString menuIDstring;
-          menuElement->GetAttribute(NS_ConvertASCIItoUCS2("id"), menuIDstring);
-          if(menuIDstring.EqualsWithConversion("menu_Help")) {
+          menuElement->GetAttribute(NS_LITERAL_STRING("id"), menuIDstring);
+          if(menuIDstring == NS_LITERAL_STRING("menu_Help")) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
 #if !(defined(RHAPSODY) || defined(TARGET_CARBON))
@@ -480,7 +494,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       
       //XXX "aboutStrName" should be less hardcoded
       PRUnichar *ptrv = nsnull;
-      bundle->GetStringFromName(NS_ConvertASCIItoUCS2("aboutStrName").GetUnicode(), &ptrv);
+      bundle->GetStringFromName(NS_LITERAL_STRING("aboutStrName"), &ptrv);
       nsAutoString label(ptrv);
 		  nsCRT::free(ptrv);
 
@@ -504,8 +518,8 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
     aMenu->GetDOMNode(getter_AddRefs(domNode));
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
     nsAutoString menuHidden;
-    domElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), menuHidden);
-    if(! menuHidden.EqualsWithConversion("true"))
+    domElement->GetAttribute(NS_LITERAL_STRING("hidden"), menuHidden);
+    if( menuHidden != NS_LITERAL_STRING("true"))
       ::InsertMenu(menuHandle, 0);
   }
   
