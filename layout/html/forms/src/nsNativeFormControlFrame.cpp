@@ -34,7 +34,7 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 
 nsNativeFormControlFrame::nsNativeFormControlFrame()
-  : Inherited()
+  : nsFormControlFrame()
 {
   mLastMouseState	= eMouseNone;
   mWidget					= nsnull;
