@@ -34,26 +34,31 @@ MODULE=xpconnect
 CFLAGS	+= -DJSFILE -DJS_THREADSAFE
 
 CPPSRCS=		\
-	xpt_cpp.cpp			\
 	nsXPConnect.cpp		\
 	xpcarbitrary.cpp	\
+	xpccomponents.cpp	\
 	xpccontext.cpp		\
 	xpcconvert.cpp		\
+	xpcjsid.cpp	\
 	xpclog.cpp			\
 	xpcmaps.cpp			\
-	xpcnsid.cpp			\
+	xpcmodule.cpp	\
 	xpcthrower.cpp		\
+	xpcutil.cpp	\
 	xpcwrappedjs.cpp	\
 	xpcwrappedjsclass.cpp	\
 	xpcwrappednative.cpp	\
 	xpcwrappednativeclass.cpp	\
+	xpt_cpp.cpp			\
 	$(NULL)
 
 EXPORTS	= \
-    nsIXPCScriptable.h \
     nsIInterfaceInfo.h \
     nsIInterfaceInfoManager.h \
+    nsIXPCScriptable.h \
     nsIXPConnect.h     \
+    xpccomponents.h     \
+    xpcjsid.h     \
     xpclog.h     \
 	$(NULL)
 

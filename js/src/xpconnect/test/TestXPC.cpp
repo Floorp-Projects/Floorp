@@ -26,6 +26,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "jsapi.h"
 #include "xpclog.h"
 
@@ -489,6 +490,28 @@ int main()
     {
         wrapper->GetJSObject(&glob);
         JS_DefineFunctions(jscontext, glob, glob_functions);
+
+        
+        nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
+        if(!comp)
+        {
+            printf("failed to create Components native object");
+            return 1;
+        }
+        nsIXPConnectWrappedNative* comp_wrapper;
+        if(NS_FAILED(xpc->WrapNative(jscontext, comp, 
+                                  nsIXPCComponents::GetIID(), &comp_wrapper)))
+        {
+            printf("failed to build wrapper for Components native object");
+            return 1;
+        }
+        JSObject* comp_jsobj;
+        comp_wrapper->GetJSObject(&comp_jsobj);
+        jsval comp_jsval = OBJECT_TO_JSVAL(comp_jsobj);
+        JS_SetProperty(jscontext, glob, "Components", &comp_jsval);
+        NS_RELEASE(comp_wrapper);
+        NS_RELEASE(comp);
+
 
         nsTestXPCFoo* fool = new nsTestXPCFoo();
         xpc->WrapNative(jscontext, fool, nsITestXPCFoo2::GetIID(), &fool_wrapper);

@@ -238,11 +238,103 @@ XPTInterfaceDescriptor nsIEchoInterfaceDescriptor =
 
 /***************/
 
+XPTParamDescriptor nsIXPCComponents_GetInterfacesParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_INTERFACE_TYPE,0}} // fixup index later
+};
+
+XPTParamDescriptor nsIXPCComponents_GetClassesParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_INTERFACE_TYPE,0}} // fixup index later
+};
+
+XPTMethodDescriptor nsIXPCComponentsMethods[2] = {
+ {XPT_MD_GETTER, "interfaces", 1, nsIXPCComponents_GetInterfacesParams, ResultParam},
+ {XPT_MD_GETTER, "classes",    1, nsIXPCComponents_GetClassesParams,    ResultParam}
+};
+
+XPTInterfaceDescriptor nsIXPCComponentsInterfaceDescriptor =
+    {NULL, 2, nsIXPCComponentsMethods, 0, NULL};
+
+/***************/
+
+XPTInterfaceDescriptor nsIXPCInterfacesInterfaceDescriptor =
+    {NULL, 0, NULL, 0, NULL};
+
+/***************/
+
+XPTInterfaceDescriptor nsIXPCClassesInterfaceDescriptor =
+    {NULL, 0, NULL, 0, NULL};
+
+/***************/
+
+XPTParamDescriptor nsIJSID_GetNameParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_PSTRING  ,0}}
+};
+
+XPTParamDescriptor nsIJSID_GetNumberParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_PSTRING  ,0}}
+};
+
+XPTParamDescriptor nsIJSID_GetIdParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_PNSIID  ,0}}
+};
+
+XPTParamDescriptor nsIJSID_GetValidParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_BOOL  ,0}}
+};
+
+XPTParamDescriptor nsIJSID_EqualsParams[2] = {
+    {XPT_PD_IN, {XPT_TDP_POINTER|TD_INTERFACE_TYPE,0}}, // fixup index later
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_BOOL  ,0}}
+};
+
+XPTParamDescriptor nsIJSID_InitParams[2] = {
+    {XPT_PD_IN, {XPT_TDP_POINTER|TD_PSTRING  ,0}},
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_BOOL  ,0}}
+};
+
+XPTMethodDescriptor nsIJSIDMethods[6] = {
+ {XPT_MD_GETTER,    "name",   1, nsIJSID_GetNameParams,   ResultParam},
+ {XPT_MD_GETTER,    "number", 1, nsIJSID_GetNumberParams, ResultParam},
+ {XPT_MD_GETTER,    "id",     1, nsIJSID_GetIdParams,     ResultParam},
+ {XPT_MD_GETTER,    "valid",  1, nsIJSID_GetValidParams,  ResultParam},
+ {0,                "equals", 2, nsIJSID_EqualsParams,    ResultParam},
+ {0,                "init",   2, nsIJSID_InitParams,      ResultParam}
+};
+
+XPTInterfaceDescriptor nsIJSIDInterfaceDescriptor =
+    {NULL, 6, nsIJSIDMethods, 0, NULL};
+
+/***************/
+
+XPTInterfaceDescriptor nsIJSIIDInterfaceDescriptor =
+    {NULL, 0, NULL, 0, NULL};
+
+/***************/
+
+XPTParamDescriptor nsIJSCID_NewInstanceParams[1] = {
+    {XPT_PD_OUT|XPT_PD_RETVAL, {XPT_TDP_POINTER|TD_INTERFACE_TYPE,0}}// fixup index later
+};
+
+XPTMethodDescriptor nsIJSCIDMethods[1] = {
+ {0,   "newInstance",   1, nsIJSCID_NewInstanceParams, ResultParam}
+};
+
+XPTInterfaceDescriptor nsIJSCIDInterfaceDescriptor =
+    {NULL, 1, nsIJSCIDMethods, 0, NULL};
+
+/***************/
+
 XPTInterfaceDirectoryEntry InterfaceDirectoryEntryTable[] = {
- {NS_ISUPPORTS_IID,     "nsISupports",   "", &nsISupportsInterfaceDescriptor},
- {NS_ITESTXPC_FOO_IID,  "nsITestXPCFoo", "", &nsITestXPCFooInterfaceDescriptor},
- {NS_ITESTXPC_FOO2_IID, "nsITestXPCFoo2","", &nsITestXPCFoo2InterfaceDescriptor},
- {NS_IECHO_IID,         "nsIEcho",       "", &nsIEchoInterfaceDescriptor}
+ {NS_ISUPPORTS_IID,     "nsISupports",     "", &nsISupportsInterfaceDescriptor},
+ {NS_ITESTXPC_FOO_IID,  "nsITestXPCFoo",   "", &nsITestXPCFooInterfaceDescriptor},
+ {NS_ITESTXPC_FOO2_IID, "nsITestXPCFoo2",  "", &nsITestXPCFoo2InterfaceDescriptor},
+ {NS_IECHO_IID,         "nsIEcho",         "", &nsIEchoInterfaceDescriptor},
+ {NS_IXPCCOMPONENTS_IID,"nsIXPCComponents","", &nsIXPCComponentsInterfaceDescriptor},
+ {NS_IXPCINTERFACES_IID,"nsIXPCInterfaces","", &nsIXPCInterfacesInterfaceDescriptor},
+ {NS_IXPCCLASSES_IID,   "nsIXPCClasses",   "", &nsIXPCClassesInterfaceDescriptor},
+ {NS_IJSID_IID,         "nsID",            "", &nsIJSIDInterfaceDescriptor},
+ {NS_IJSIID_IID,        "nsIID",           "", &nsIJSIIDInterfaceDescriptor},
+ {NS_IJSCID_IID,        "nsCID",           "", &nsIJSCIDInterfaceDescriptor},
 };
 
 /***************/
@@ -252,16 +344,23 @@ XPTInterfaceDirectoryEntry InterfaceDirectoryEntryTable[] = {
 
 static void BogusTableInit()
 {
-    nsITestXPCFooInterfaceDescriptor.parent_interface =
-        &InterfaceDirectoryEntryTable[0];
+    // NOTE: reference are all off by 1 - '0' means 'none'
+    nsISupportsInterfaceDescriptor.parent_interface =       0;
+    nsITestXPCFooInterfaceDescriptor.parent_interface =     1;
+    nsITestXPCFoo2InterfaceDescriptor.parent_interface =    2;
+    nsIEchoInterfaceDescriptor.parent_interface =           1;
+    nsIXPCComponentsInterfaceDescriptor.parent_interface =  1;
+    nsIXPCInterfacesInterfaceDescriptor.parent_interface =  1;
+    nsIXPCClassesInterfaceDescriptor.parent_interface =     1;
+    nsIJSIDInterfaceDescriptor.parent_interface =           1;
+    nsIJSIIDInterfaceDescriptor.parent_interface =          8;
+    nsIJSCIDInterfaceDescriptor.parent_interface =          8;
 
-    nsITestXPCFoo2InterfaceDescriptor.parent_interface =
-        &InterfaceDirectoryEntryTable[1];
-
-    nsIEchoInterfaceDescriptor.parent_interface =
-        &InterfaceDirectoryEntryTable[0];
-
-    nsIEcho_SetRecieverParams[0].type.type.interface = 3; // fixup index
+    nsIEcho_SetRecieverParams[0].type.type.interface =            4;
+    nsIXPCComponents_GetInterfacesParams[0].type.type.interface = 6;
+    nsIXPCComponents_GetClassesParams[0].type.type.interface    = 7;
+    nsIJSID_EqualsParams[0].type.type.interface =                 8;
+    nsIJSCID_NewInstanceParams[0].type.type.interface =           1;
 }
 
 /***************************************************************************/
@@ -278,7 +377,7 @@ nsXPTParamInfo::GetInterface() const
 
     nsIInterfaceInfo* info;
     // not optimal!
-    mgr->GetInfoForIID(&InterfaceDirectoryEntryTable[type.type.interface].iid,
+    mgr->GetInfoForIID(&InterfaceDirectoryEntryTable[type.type.interface-1].iid,
                        &info);
     NS_RELEASE(mgr);
     return info;
@@ -288,7 +387,7 @@ const nsIID*
 nsXPTParamInfo::GetInterfaceIID() const
 {
     NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,"not an interface");
-    return &InterfaceDirectoryEntryTable[type.type.interface].iid;
+    return &InterfaceDirectoryEntryTable[type.type.interface-1].iid;
 }
 
 /***************************************************************************/
@@ -362,19 +461,21 @@ InterfaceInfoManagerImpl::~InterfaceInfoManagerImpl()
 PRBool
 InterfaceInfoManagerImpl::BuildInterfaceForEntry(uint16 i)
 {
-    XPTInterfaceDirectoryEntry *parent_interface =
+    uint16 parent_index =
         InterfaceDirectoryEntryTable[i].interface_descriptor->parent_interface;
-    uint16 parent_index = 0;
 
-    if(parent_interface)
+    if(parent_index)
     {
-        parent_index = TABLE_INDEX(parent_interface);
-        if(!mInfoArray[parent_index] && ! BuildInterfaceForEntry(parent_index))
+        if(!mInfoArray[parent_index-1] && ! BuildInterfaceForEntry(parent_index-1))
             return PR_FALSE;
+        mInfoArray[i] = new InterfaceInfoImpl(&InterfaceDirectoryEntryTable[i],
+                                              mInfoArray[parent_index-1]);
     }
-    mInfoArray[i] = new InterfaceInfoImpl(&InterfaceDirectoryEntryTable[i],
-                                          parent_interface ?
-                                              mInfoArray[parent_index] : NULL);
+    else
+    {
+        mInfoArray[i] = new InterfaceInfoImpl(&InterfaceDirectoryEntryTable[i],
+                                              NULL);
+    }
     return (PRBool) mInfoArray[i];
 }
 

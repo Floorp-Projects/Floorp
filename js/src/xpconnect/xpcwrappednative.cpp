@@ -348,20 +348,8 @@ nsXPCWrappedNative::GetIID(nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
 
-    nsIAllocator* al;
-    if(NULL != (al = nsXPConnect::GetAllocator()))
-    {
-        void* p = al->Alloc(sizeof(nsIID));
-        NS_RELEASE(al);
-        if(p)
-        {
-            memcpy(p, &GetIID(), sizeof(nsIID));
-            *iid = (nsIID*)p;
-            return NS_OK;
-        }
-    }
-    *iid = NULL;
-    return NS_ERROR_UNEXPECTED;
+    *iid = (nsIID*) XPCMem::Clone(&GetIID(), sizeof(nsIID));
+    return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP

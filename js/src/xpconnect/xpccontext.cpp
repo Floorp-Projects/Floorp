@@ -92,7 +92,7 @@ XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
 {
     if(aGlobalObj)
         mGlobalObj = aGlobalObj;
-    return xpc_InitIDClass(this)            &&
+    return /* xpc_InitIDClass(this)            && */
            nsXPCWrappedJSClass::InitForContext(this) &&
            nsXPCWrappedNativeClass::InitForContext(this);
 }

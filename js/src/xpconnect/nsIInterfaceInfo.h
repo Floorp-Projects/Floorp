@@ -57,6 +57,9 @@ public:
 // XXX this is here just for testing - pulled from XPConnect...
 // it can go away after nsIInterfaceInfos are being built from typelibs
 
+#include "xpccomponents.h"
+#include "xpcjsid.h"
+
 // {159E36D0-991E-11d2-AC3F-00C09300144B}
 #define NS_ITESTXPC_FOO_IID       \
 { 0x159e36d0, 0x991e, 0x11d2,   \

@@ -310,20 +310,8 @@ nsXPCWrappedJSMethods::GetIID(nsIID** iid)
     NS_PRECONDITION(mWrapper, "bad state");
     NS_PRECONDITION(iid, "bad param");
 
-    nsIAllocator* al;
-    if(NULL != (al = nsXPConnect::GetAllocator()))
-    {
-        void* p = al->Alloc(sizeof(nsIID));
-        NS_RELEASE(al);
-        if(p)
-        {
-            memcpy(p, &mWrapper->GetIID(), sizeof(nsIID));
-            *iid = (nsIID*)p;
-            return NS_OK;
-        }
-    }
-    *iid = NULL;
-    return NS_ERROR_UNEXPECTED;
+    *iid = (nsIID*) XPCMem::Clone(&mWrapper->GetIID(), sizeof(nsIID));
+    return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 /***************************************************************************/
@@ -352,14 +340,10 @@ nsXPCWrappedJS::DebugDump(int depth)
         XPC_LOG_ALWAYS(("%s wrapper around JSObject @ %x", \
                          isRoot ? "ROOT":"non-root", mJSObj));
         char* name;
-        nsIAllocator* al;
         GetClass()->GetInterfaceInfo()->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
-        if(name && NULL != (al = nsXPConnect::GetAllocator()))
-        {
-            al->Free(name);
-            NS_RELEASE(al);
-        }
+        if(name)
+            XPCMem::Free(name);
         char * iid = GetClass()->GetIID().ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;

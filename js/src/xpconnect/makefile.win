@@ -35,26 +35,31 @@ MD_LIBRARY	=	.\md\win32\$(OBJDIR)\xpcmd.lib
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API -DJS_THREADSAFE
 
 OBJS=					\
-	.\$(OBJDIR)\xpt_cpp.obj	\
 	.\$(OBJDIR)\nsXPConnect.obj	\
-	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcarbitrary.obj	\
+	.\$(OBJDIR)\xpccomponents.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
+	.\$(OBJDIR)\xpcjsid.obj	\
+	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
-	.\$(OBJDIR)\xpcnsid.obj	\
+	.\$(OBJDIR)\xpcmodule.obj	\
 	.\$(OBJDIR)\xpcthrower.obj	\
+	.\$(OBJDIR)\xpcutil.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
+	.\$(OBJDIR)\xpt_cpp.obj	\
 	$(NULL)
 
 EXPORTS =					\
-    nsIXPCScriptable.h \
     nsIInterfaceInfo.h \
     nsIInterfaceInfoManager.h \
+    nsIXPCScriptable.h \
     nsIXPConnect.h     \
+    xpccomponents.h     \
+    xpcjsid.h     \
     xpclog.h     \
 	$(NULL)
 
