@@ -119,6 +119,7 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
         ,   App_ProfileDefaultsFolder40    = App_DirectoryBase +   17
         ,   App_ProfileDefaultsFolder50    = App_DirectoryBase +   18
         ,   App_PrefDefaultsFolder50       = App_DirectoryBase +   19
+	,   App_ShrimpDirectory            = App_DirectoryBase +   20
 
         ,   App_DefaultsFolder50           = App_DirectoryBase +   25
 
