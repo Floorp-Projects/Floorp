@@ -66,11 +66,11 @@ extern void COOKIE_DeletePersistentUserData(void);
 extern PRInt32 COOKIE_Count();
 extern nsresult COOKIE_Enumerate
     (PRInt32 count,
-     char **name,
-     char **value,
-     PRBool *isDomain,
-     char ** host,
-     char ** path,
+     nsACString & name,
+     nsACString & value,
+     PRBool * isDomain,
+     nsACString & host,
+     nsACString & path,
      PRBool * isSecure,
      PRUint64 * expires,
      nsCookieStatus * status,

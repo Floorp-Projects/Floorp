@@ -41,6 +41,7 @@
 
 #include "nsICookie.h"
 #include "nsWeakReference.h"
+#include "nsString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,15 +53,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIE
 
-  // Note: following constructor takes ownership of the four strings (name, value
-  //       host, and path) passed to it so the caller of the constructor must not
-  //       free them
   nsCookie
-    (char * name,
-     char * value,
+    (const nsACString &name,
+     const nsACString &value,
      PRBool isDomain,
-     char * host,
-     char * path,
+     const nsACString &host,
+     const nsACString &path,
      PRBool isSecure,
      PRUint64 expires,
      nsCookieStatus status,
@@ -70,15 +68,16 @@ public:
   virtual ~nsCookie(void);
   
 protected:
-  char * cookieName;
-  char * cookieValue;
+  nsCString cookieName;
+  nsCString cookieValue;
   PRBool cookieIsDomain;
-  char * cookieHost;
-  char * cookiePath;
+  nsCString cookieHost;
+  nsCString cookiePath;
   PRBool cookieIsSecure;
   PRUint64 cookieExpires;
   nsCookieStatus cookieStatus;
-  nsCookiePolicy cookiePolicy;  
+  nsCookiePolicy cookiePolicy;
+
 };
 
 // {E9FCB9A4-D376-458f-B720-E65E7DF593BC}

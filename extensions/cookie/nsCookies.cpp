@@ -1513,65 +1513,38 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     CKutil_StrAllocCopy(name_from_header, "");
   }
 
-  /* generate the message for the nag box */
   int count = cookie_Count(host_from_header);
   prev_cookie = cookie_CheckForPrevCookie
     (path_from_header, host_from_header, name_from_header);
-  const char *message_string;
-  if (prev_cookie) {
-    message_string = "PermissionToModifyCookie";
-  } else if (count>1) {
-    message_string = "PermissionToSetAnotherCookie";
-  } else if (count==1){
-    message_string = "PermissionToSetSecondCookie";
-  } else {
-    message_string = "PermissionToSetACookie";
-  }
 
   //TRACEMSG(("mkaccess.c: Setting cookie: %s for host: %s for path: %s",
   //          cookie_from_header, host_from_header, path_from_header));
-
-  /* construct a new (temporary) cookie_struct, for the nag box */
-  cookie_CookieStruct * this_cookie;
-  this_cookie = PR_NEW(cookie_CookieStruct);
-  if (!this_cookie) {
-    PR_FREEIF(path_from_header);
-    PR_FREEIF(host_from_header);
-    PR_FREEIF(name_from_header);
-    PR_FREEIF(cookie_from_header);
-    nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Unable to allocate memory for new cookie");
-#endif
-    return;
-  }
-
-  // put the cookie information into the temporary struct.
-  // just copy pointers to the char * strings (cookie_from_header etc).
-  // we still own the strings, and we must free them if the cookie is
-  // rejected.
-  this_cookie->cookie = cookie_from_header;
-  this_cookie->name = name_from_header;
-  this_cookie->path = path_from_header;
-  this_cookie->host = host_from_header;
-  this_cookie->expires = cookie_TrimLifetime(timeToExpire);
-  this_cookie->isSecure = isSecure;
-  this_cookie->isDomain = isDomain;
-  this_cookie->lastAccessed = get_current_time();
-  this_cookie->status = status;
-  this_cookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
-
+  
   /* use common code to determine if we can set the cookie */
   PRBool permission = PR_TRUE;
   if (NS_SUCCEEDED(PERMISSION_Read())) {
+    PRBool modify = prev_cookie != nsnull;
+
+    // put the cookie information into the cookie structure.
+    nsICookie *thisCookie =
+      new nsCookie(nsDependentCString(name_from_header),
+                   nsDependentCString(cookie_from_header),
+                   isDomain,
+                   nsDependentCString(host_from_header),
+                   nsDependentCString(path_from_header),
+                   isSecure,
+                   cookie_TrimLifetime(timeToExpire),
+                   status,
+                   cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel)));
+
     permission = Permission_Check(aPrompter, host_from_header, COOKIEPERMISSION,
 // I believe this is the right place to eventually add the logic to ask
 // about cookies that have excessive lifetimes, but it shouldn't be done
 // until generalized per-site preferences are available.
                                        //cookie_GetLifetimeAsk(timeToExpire) ||
                                        cookie_GetWarningPref(),
-                                       this_cookie,
-                                       message_string, count);
+                                       thisCookie,
+                                       count, modify);
   }
   if (!permission) {
     PR_FREEIF(path_from_header);
@@ -2060,11 +2033,11 @@ COOKIE_Count() {
 PUBLIC nsresult
 COOKIE_Enumerate
     (PRInt32 count,
-     char **name,
-     char **value,
+     nsACString &name,
+     nsACString &value,
      PRBool *isDomain,
-     char ** host,
-     char ** path,
+     nsACString &host,
+     nsACString &path,
      PRBool * isSecure,
      PRUint64 * expires,
      nsCookieStatus * status,
@@ -2080,11 +2053,11 @@ COOKIE_Enumerate
   cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(count));
   NS_ASSERTION(cookie, "corrupt cookie list");
 
-  *name = cookie_FixQuoted(cookie->name);
-  *value = cookie_FixQuoted(cookie->cookie);
+  name = cookie_FixQuoted(cookie->name);
+  value = cookie_FixQuoted(cookie->cookie);
   *isDomain = cookie->isDomain;
-  *host = cookie_FixQuoted(cookie->host);
-  *path = cookie_FixQuoted(cookie->path);
+  host = cookie_FixQuoted(cookie->host);
+  path = cookie_FixQuoted(cookie->path);
   *isSecure = cookie->isSecure;
   // *expires = cookie->expires; -- no good on mac, using next line instead
   LL_UI2L(*expires, cookie->expires);
@@ -2250,3 +2223,4 @@ cookie_ParseDate(char *date_string, time_t & date) {
   } 
   return NS_ERROR_FAILURE;
 }
+

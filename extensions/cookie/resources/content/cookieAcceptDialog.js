@@ -34,8 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsICookieAcceptDialog = Components.interfaces.nsICookieAcceptDialog;
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsICookie = Components.interfaces.nsICookie;
 
 var params; 
 var cookieBundle;
@@ -76,8 +77,31 @@ function onload()
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
     try {
       params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+      var objects = params.objects;
+      var cookie = params.objects.queryElementAt(0,nsICookie);
+      
+      var cookiesFromHost = params.GetInt(nsICookieAcceptDialog.COOKIESFROMHOST);
 
-      var messageText = params.GetString(nsICookieAcceptDialog.MESSAGETEXT);
+      var messageFormat;
+      if (params.GetInt(nsICookieAcceptDialog.CHANGINGCOOKIE))
+        messageFormat = 'permissionToModifyCookie';
+      else if (cookiesFromHost > 1)
+        messageFormat = 'permissionToSetAnotherCookie';
+      else if (cookiesFromHost == 1)
+        messageFormat = 'permissionToSetSecondCookie';
+      else
+        messageFormat = 'permissionToSetACookie';
+
+      var hostname = params.GetString(nsICookieAcceptDialog.HOSTNAME);
+
+      var messageText;
+      if (cookie)
+        messageText = cookieBundle.getFormattedString(messageFormat,[cookie.host,cookiesFromHost]);
+      else
+        // No cookies means something went wrong. Bring up the dialog anyway
+        // to not make the mess worse.
+        messageText = cookieBundle.getFormattedString(messageFormat,["",cookiesFromHost]);
+
       var messageParent = document.getElementById("info.box");
       var messageParagraphs = messageText.split("\n");
 
@@ -90,23 +114,23 @@ function onload()
 
       document.getElementById('persistDomainAcceptance').checked = params.GetInt(nsICookieAcceptDialog.REMEMBER_DECISION) > 0;
 
-      document.getElementById('ifl_name').setAttribute("value",params.GetString(nsICookieAcceptDialog.COOKIE_NAME));
-      document.getElementById('ifl_value').setAttribute("value",params.GetString(nsICookieAcceptDialog.COOKIE_VALUE));
-      document.getElementById('ifl_host').setAttribute("value",params.GetString(nsICookieAcceptDialog.COOKIE_HOST));
-      document.getElementById('ifl_path').setAttribute("value",params.GetString(nsICookieAcceptDialog.COOKIE_PATH));
-      document.getElementById('ifl_isSecure').setAttribute("value",
-                                                           params.GetInt(nsICookieAcceptDialog.COOKIE_IS_SECURE) ?
-                                                                  cookieBundle.getString("yes") : cookieBundle.getString("no")
+      if (cookie) {
+        document.getElementById('ifl_name').setAttribute("value",cookie.name);
+        document.getElementById('ifl_value').setAttribute("value",cookie.value);
+        document.getElementById('ifl_host').setAttribute("value",cookie.host);
+        document.getElementById('ifl_path').setAttribute("value",cookie.path);
+        document.getElementById('ifl_isSecure').setAttribute("value",
+                                                                 cookie.isSecure ?
+                                                                    cookieBundle.getString("yes") : cookieBundle.getString("no")
                                                           );
-      document.getElementById('ifl_expires').setAttribute("value",GetExpiresString(params.GetInt(nsICookieAcceptDialog.COOKIE_EXPIRES)));
-      document.getElementById('ifl_isDomain').setAttribute("value",
-                                                           params.GetInt(nsICookieAcceptDialog.COOKIE_IS_DOMAIN) ?
-                                                                  cookieBundle.getString("domainColon") : cookieBundle.getString("hostColon")
-                                                          );
-
-      // set default result to cancelled
-      params.SetInt(eAcceptCookie, 0); 
-
+        document.getElementById('ifl_expires').setAttribute("value",GetExpiresString(cookie.expires));
+        document.getElementById('ifl_isDomain').setAttribute("value",
+                                                                 cookie.isDomain ?
+                                                                    cookieBundle.getString("domainColon") : cookieBundle.getString("hostColon")
+                                                            );
+      }
+      // set default result to not accept the cookie
+      params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 0);
     } catch (e) {
     }
   }
