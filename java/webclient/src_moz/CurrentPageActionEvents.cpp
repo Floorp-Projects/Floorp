@@ -45,6 +45,7 @@
 #include "nsIHistoryEntry.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsIFindComponent.h"
 
 wsCopySelectionEvent::wsCopySelectionEvent(WebShellInitContext *yourInitContext) :
         nsActionEvent(),
@@ -101,7 +102,6 @@ wsFindEvent::handleEvent ()
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
     if (mInitContext) {
-#if 0
         //First get the FindComponent object
         nsCOMPtr<nsIFindComponent> findComponent;
         findComponent = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
@@ -195,10 +195,6 @@ wsFindEvent::handleEvent ()
         }
         // Save in initContext struct for future findNextInPage calls
         mInitContext->searchContext = srchcontext;
-
-#else
-        return (void *) rv;
-#endif  
   
     }
     return result;
