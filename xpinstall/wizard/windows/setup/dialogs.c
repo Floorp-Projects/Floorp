@@ -2864,6 +2864,10 @@ void DlgSequenceNext()
             /* DEPEND_REBOOT process file manipulation functions */
             ProcessFileOpsForAll(T_DEPEND_REBOOT);
 
+            // Refresh system icons if necessary
+            if(gSystemInfo.bRefreshIcons)
+              RefreshIcons();
+
             UnsetSetupState(); // clear setup state
             ClearWinRegUninstallFileDeletion();
             if(!gbIgnoreProgramFolderX)
