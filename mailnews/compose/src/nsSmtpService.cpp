@@ -85,6 +85,9 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 				*aURL = urlToRun; // transfer our ref count to the caller....
 			else
 				NS_IF_RELEASE(urlToRun);
+
+			PR_FREEIF(hostName);
+			PR_FREEIF(senderName);
 		} // if we have an identity
 		else
 			NS_ASSERTION(0, "no current identity found for this user....");

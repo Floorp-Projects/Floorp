@@ -488,6 +488,7 @@ nsresult nsMailboxUrl::ParseSearchPart()
 		if (messageKey || m_messageID)
 			// the action for this mailbox must be a display message...
 			m_mailboxAction = nsMailboxActionDisplayMessage;
+		PR_FREEIF(messageKey);
 	}
 
 	return NS_OK;

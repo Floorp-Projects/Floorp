@@ -281,6 +281,7 @@ nsresult nsSmtpUrl::CleanupSmtpState()
 	PR_FREEIF(m_organizationPart);
 	PR_FREEIF(m_replyToPart);
 	PR_FREEIF(m_priorityPart);
+	PR_FREEIF(m_toPart);
 
 	return NS_OK;
 }

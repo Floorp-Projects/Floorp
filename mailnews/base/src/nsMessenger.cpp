@@ -395,6 +395,7 @@ void nsMessenger::InitializeFolderRoot()
         // tack that folder name on to the root path...
         m_folderPath = folderRoot;
         m_folderPath += "Inbox";
+		PR_FREEIF(folderRoot);
     } // if we have a folder root for the current server
     
     // create Undo/Redo Transaction Manager
