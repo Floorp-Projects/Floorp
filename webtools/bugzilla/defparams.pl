@@ -140,6 +140,11 @@ sub check_urlbase {
     return "";
 }
 
+DefParam("cookiepath", 
+  "Directory path under your document root that holds your Bugzilla installation. Make sure to begin with a /.",
+  "t",
+  "/");
+
 DefParam("preferlists",
 	"If this is on, Bugzilla will display most selection options as selection lists. If this is off, Bugzilla will use radio buttons and checkboxes instead.",
 	"b",

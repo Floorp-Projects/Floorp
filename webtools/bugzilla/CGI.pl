@@ -985,23 +985,18 @@ sub confirm_login {
        my $logincookie = FetchOneColumn();
 
        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
-       print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-       print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-
-       # This next one just cleans out any old bugzilla passwords that may
-       # be sitting around in the cookie files, from the bad old days when
-       # we actually stored the password there.
-       print "Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+       my $cookiepath = Param("cookiepath");
+       print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+       print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
-
 
     my $loginok = quietly_check_login();
 
     if ($loginok != 1) {
         if ($::disabledreason) {
-            print "Set-Cookie: Bugzilla_login= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
+            my $cookiepath = Param("cookiepath");
+            print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
+Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
 Content-type: text/html
 
 ";

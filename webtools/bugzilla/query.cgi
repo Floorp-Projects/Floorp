@@ -95,7 +95,7 @@ if ($userid) {
                             "($userid, $qname, " . SqlQuote($value) . ")");
                 }
             }
-            print "Set-Cookie: $cookiename= ; path=/ ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
+            print "Set-Cookie: $cookiename= ; path=" . Param("cookiepath"). "; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
         }
     }
 }

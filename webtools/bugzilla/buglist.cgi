@@ -1329,7 +1329,8 @@ if ($serverpush) {
 my $toolong = 0;
 if ($::FORM{'order'}) {
     my $q = url_quote($::FORM{'order'});
-    print "Set-Cookie: LASTORDER=$q ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+    my $cookiepath = Param("cookiepath");
+    print "Set-Cookie: LASTORDER=$q ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
 }
 if (length($buglist) < 4000) {
     print "Set-Cookie: BUGLIST=$buglist\n\n";
