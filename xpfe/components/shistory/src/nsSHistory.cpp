@@ -551,3 +551,4 @@ nsSHistory::GetRootDocShell(nsIDocShell ** aDocShell)
   // NS_IF_ADDREF(*aDocShell);
    return NS_OK;
 }
+
