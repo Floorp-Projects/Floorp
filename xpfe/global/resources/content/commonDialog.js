@@ -124,6 +124,7 @@ function commonDialogOnLoad()
         {
           containerID = "password1EditField";
           fieldID = "dialog.password1";
+          setElementText("password1.text", ""); // hide the meaningless text
         }
       else
         {
