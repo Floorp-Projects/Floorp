@@ -26,7 +26,7 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IDispatch
 {
 	// Handle to parent window
-	HWND m_hwndParent;
+	HWND m_hWndParent;
 	// Position of the site and the contained object
 	RECT m_rcObjectPos;
 	// Flag indicating if client site should be set early or late
@@ -39,6 +39,8 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	BOOL m_bUIActive;
 	// Flag indicating if control is in-place locked and cannot be deactivated
 	BOOL m_bInPlaceLocked;
+	// Flag indicating if the site allows windowless controls
+	BOOL m_bSupportWindowlessActivation;
 	// Flag indicating if control is windowless
 	BOOL m_bWindowless;
 
@@ -46,9 +48,30 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	CComPtr<IUnknown> m_spObject;
 	// Pointer to objects IViewObject interface
 	CComQIPtr<IViewObject, &IID_IViewObject> m_spIViewObject;
-	// Pointer to objects IOleObject interface
+	// Pointer to object's IOleObject interface
 	CComQIPtr<IOleObject, &IID_IOleObject> m_spIOleObject;
+
+	// Pointer to object's IOleInPlaceObject interface
 	CComQIPtr<IOleInPlaceObject, &IID_IOleInPlaceObject> m_spIOleInPlaceObject;
+	// Pointer to object's IOleInPlaceObjectWindowless interface
+	CComQIPtr<IOleInPlaceObjectWindowless, &IID_IOleInPlaceObjectWindowless> m_spIOleInPlaceObjectWindowless;
+
+
+	// Double buffer drawing variables used for windowless controls
+	
+	// Area of buffer
+	RECT m_rcBuffer;
+	// Bitmap to buffer
+	HBITMAP m_hBMBuffer;
+	// Bitmap to buffer
+	HBITMAP m_hBMBufferOld;
+	// Device context
+	HDC m_hDCBuffer;
+	// Clipping area of site
+	HRGN m_hRgnBuffer;
+	// Flags indicating how the buffer was painted
+	DWORD m_dwBufferFlags;
+
 
 	// Ambient properties
 
@@ -76,8 +99,8 @@ BEGIN_COM_MAP(CControlSite)
 	COM_INTERFACE_ENTRY(IOleClientSite)
 	COM_INTERFACE_ENTRY(IOleInPlaceSite)
 	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSite, IOleInPlaceSiteWindowless)
-//	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteEx, IOleInPlaceSiteWindowless)
-//	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless)
+	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteEx, IOleInPlaceSiteWindowless)
+	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless)
 	COM_INTERFACE_ENTRY(IOleControlSite)
 	COM_INTERFACE_ENTRY(IDispatch)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx)
