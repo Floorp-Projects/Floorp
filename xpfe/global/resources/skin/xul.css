@@ -296,11 +296,20 @@ xpmenuchildren[menuactive="true"] {
 xpmenuchildren xpmenu {
   max-width: 400px;
   min-width: 125px;
+  margin: 1px;
 }
 
 xpmenuchildren xpmenuitem {
   max-width: 400px;
   min-width: 125px;
+  margin: 1px;
+}
+
+xpmenuseparator {
+  display: block;
+  border-bottom: 1px white solid; 
+  border-top: 1px gray solid; 
+  margin: 2px;
 }
 
 progressmeter {
@@ -623,7 +632,10 @@ xpmenuchildren > xpmenuitem[menuactive="true"] {
 }
 
 xpmenuchildren > xpmenu > titledbutton {
-  padding-left: 2px;
+  padding: 0px;
+  border: 0px;
+  width: 6px;
+  margin-left: 8px;
   list-style-image: url(chrome://global/skin/menuArrow.gif);
 }
 
