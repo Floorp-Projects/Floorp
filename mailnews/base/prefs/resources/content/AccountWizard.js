@@ -18,6 +18,8 @@
  * Rights Reserved.
  */
 
+  /* the okCallback is used for sending a callback for the parent window */
+	var okCallback = null;
 /* The account wizard creates new accounts */
 
 /*
@@ -72,9 +74,18 @@ var contentWindow;
 
 var smtpService;
 var am;
+var accountm = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
+
+var accounts = accountm.accounts;
+
+//accountCount indicates presence or absense of accounts
+var accountCount = accounts.Count();
 
 var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
 var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
+var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties"); 
+var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
+commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
 // the current nsIMsgAccount
 var gCurrentAccount;
@@ -93,6 +104,14 @@ function onLoad() {
     wizardManager.URL_PagePrefix = "chrome://messenger/content/aw-";
     wizardManager.URL_PagePostfix = ".xul"; 
     wizardManager.SetHandlers(null, null, onFinish, onCancel, null, null);
+	
+	/* We are checking here for the callback argument */
+	if (window.arguments && window.arguments[0])
+		if(window.arguments[0].okCallback ) 
+		{
+//			dump("There is okCallback");
+			top.okCallback = window.arguments[0].okCallback;
+		}
 
     // load up the SMTP service for later
     if (!smtpService) {
@@ -143,7 +162,23 @@ function onCancel()
 	else {
 		// since this is not an invalid account
 		// really cancel if the user hits the "cancel" button
-    	window.close();
+
+    if (!(accountCount > 0)) {
+        var confirmTitle = Bundle.GetStringFromName("accountWizard");
+        var confirmMsg = Bundle.GetStringFromName("cancelWizard");
+        if (commonDialogsService.Confirm(window,confirmTitle,confirmMsg))
+          window.close();
+        else 
+          return;
+    }
+    else 
+	    window.close();
+    if(top.okCallback)
+    {
+      var state = false;
+      //		dump("cancel callback");
+      top.okCallback(state);
+    }
 	}
 }
 
@@ -186,6 +221,12 @@ function FinishAccount() {
 		dump("ex = " + ex + "\n");
     }
     window.close();
+    if(top.okCallback)
+    {
+        var state = true;
+        //		dump("finish callback");
+        top.okCallback(state);
+    }
 }
 
 

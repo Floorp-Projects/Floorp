@@ -784,6 +784,22 @@ function ComposeStartup()
 		}
 	}
 }
+function WizCallback(state)
+{
+	if (state){
+//		dump("true");
+		ComposeStartup();
+	}
+	else 
+	{
+//		dump("false ");
+		if (msgCompose)
+		  msgCompose.CloseWindow();
+		else
+		  window.close();
+//	window.tryToClose=ComposeCanClose;
+	}
+}
 
 function ComposeLoad()
 {
@@ -791,8 +807,8 @@ function ComposeLoad()
 	
   try {
   	SetupCommandUpdateHandlers();
-
-  	verifyAccounts();	// this will do migration, or create a new account if we need to.
+	var wizardcallback = true;
+	var state =	verifyAccounts(wizardcallback);	// this will do migration, or create a new account if we need to.
 
   	if (other_header != "") {
       var selectNode = document.getElementById('msgRecipientType#1');
@@ -803,8 +819,8 @@ function ComposeLoad()
       opt.setAttribute("value", other_header + ":");
       selectNode.appendChild(opt);
   	}
-
-    ComposeStartup();
+    if(state)
+      ComposeStartup();
   }
   catch (ex) {
     dump("###ERROR WHILE LOADING MESSAGE COMPOSE: " + ex + "\n");

@@ -20,7 +20,8 @@
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
  */
-
+// The returnmycall is used as a global variable that is set during a callback.
+var returnmycall=false;
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 
@@ -60,9 +61,14 @@ function getInvalidAccounts(accounts)
     return invalidAccounts;
 }
 
-function verifyAccounts() {
-    var openWizard = false;
+function verifyAccounts(wizardcallback) {
+//check to see if the function is called with the callback and if so set the global variable returnmycall to true
+    if(wizardcallback)
+		returnmycall = true;
+	var openWizard = false;
     var prefillAccount;
+	var state=true;
+	var ret = true;
     
     try {
         var am = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
@@ -82,24 +88,31 @@ function verifyAccounts() {
         // then kick off the account migration
         if (accountCount == invalidAccounts.length) {
             try {
-                messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator);  
-                dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
-                messengerMigrator.UpgradePrefs();
+                  messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator);  
+                  dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
+                  messengerMigrator.UpgradePrefs();
+                  // if there is a callback mechanism then inform parent window to shut itself down
+                  if (wizardcallback){
+                      state = false;
+                      WizCallback(state);
+                  }
+                  ret = false;
             }
             catch (ex) {
-                // upgrade prefs failed, so open account wizard
-                openWizard = true;
+                  // upgrade prefs failed, so open account wizard
+                  openWizard = true;
             }
         }
 
         if (openWizard || prefillAccount) {
             MsgAccountWizard(prefillAccount);
+		        ret = false;
         }
-
+		return ret;
     }
     catch (ex) {
         dump("error verifying accounts " + ex + "\n");
-        return;
+        return false;
     }
 }
 
@@ -113,8 +126,14 @@ function MsgAccountWizard()
 
 function msgOpenAccountWizard()
 {
-    window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                      "AccountWizard", "chrome,modal,titlebar,resizable");
+// Check to see if the verify accounts function was called with callback or not.
+  if (returnmycall)
+      window.openDialog("chrome://messenger/content/AccountWizard.xul",
+                        "AccountWizard", "chrome,modal,titlebar,resizable", {okCallback:WizCallback});
+  else
+      window.openDialog("chrome://messenger/content/AccountWizard.xul",
+                        "AccountWizard", "chrome,modal,titlebar,resizable");
+
 }
 
 function MsgAccountManager()
