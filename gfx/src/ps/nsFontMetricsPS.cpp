@@ -160,7 +160,7 @@ nsFontMetricsPS::RealizeFont()
 {
   if (mFont && mDeviceContext) {
     float dev2app;
-    mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+    dev2app = mDeviceContext->DevUnitsToAppUnits();
     fontps *font = (fontps*)mFontsPS->ElementAt(0);
 #ifdef MOZ_ENABLE_FREETYPE2
     NS_ASSERTION(font && font->entry, "no font available");
@@ -1137,7 +1137,7 @@ nsFontPSFreeType::Init(nsITrueTypeFontCatalogEntry* aEntry,
   float app2dev;
   nsIDeviceContext* dc = mFontMetrics->GetDeviceContext();
   NS_ENSURE_TRUE(dc, NS_ERROR_NULL_POINTER);
-  dc->GetAppUnitsToDevUnits(app2dev);
+  app2dev = dc->AppUnitsToDevUnits();
   
   mPixelSize = NSToIntRound(app2dev * mFont->size);
 
@@ -1214,7 +1214,7 @@ nsFontPSFreeType::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   NS_ENSURE_TRUE(dc, 0);
 
   float dev2app;
-  dc->GetDevUnitsToAppUnits(dev2app);
+  dev2app = dc->DevUnitsToAppUnits();
   origin_x *= dev2app;
   origin_x /= FT_REG_TO_16_16(1);
 

@@ -196,12 +196,12 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
   mTwipsToPixels = (float)72.0/(float)NSIntPointsToTwips(72);
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-  GetTwipsToDevUnits(newscale);
-  aParentContext->GetTwipsToDevUnits(origscale);
+  newscale = TwipsToDevUnits();
+  origscale = aParentContext->TwipsToDevUnits();
   mCPixelScale = newscale / origscale;
 
-  aParentContext->GetTwipsToDevUnits(t2d);
-  aParentContext->GetAppUnitsToDevUnits(a2d);
+  t2d = aParentContext->TwipsToDevUnits();
+  a2d = aParentContext->AppUnitsToDevUnits();
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;

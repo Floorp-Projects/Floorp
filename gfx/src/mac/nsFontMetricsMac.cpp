@@ -95,7 +95,7 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   GetFontInfo(&fInfo);
   
   float  dev2app;
-  mContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mContext->DevUnitsToAppUnits();
 
   mLeading    = NSToCoordRound(float(fInfo.leading) * dev2app);
   mEmAscent   = NSToCoordRound(float(fInfo.ascent) * dev2app);
@@ -274,7 +274,7 @@ NS_IMETHODIMP
 nsFontMetricsMac :: GetSuperscriptOffset(nscoord& aResult)
 {
   float  dev2app;
-  mContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mContext->DevUnitsToAppUnits();
   aResult = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
   return NS_OK;
 }
@@ -283,7 +283,7 @@ NS_IMETHODIMP
 nsFontMetricsMac :: GetSubscriptOffset(nscoord& aResult)
 {
   float  dev2app;
-  mContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mContext->DevUnitsToAppUnits();
   aResult = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
   return NS_OK;
 }
@@ -292,7 +292,7 @@ NS_IMETHODIMP
 nsFontMetricsMac :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
   float  dev2app;
-  mContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mContext->DevUnitsToAppUnits();
   aOffset = NSToCoordRound(float(mMaxAscent / 2) - dev2app);
   aSize = NSToCoordRound(dev2app);
   return NS_OK;
@@ -302,7 +302,7 @@ NS_IMETHODIMP
 nsFontMetricsMac :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
   float  dev2app;
-  mContext->GetDevUnitsToAppUnits(dev2app);
+  dev2app = mContext->DevUnitsToAppUnits();
   aOffset = -NSToCoordRound( dev2app );
   aSize   = NSToCoordRound( dev2app );
   return NS_OK;

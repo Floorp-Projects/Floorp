@@ -363,7 +363,7 @@ nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize
       float p2t;
       nsCOMPtr<nsIDeviceContext>  dx;
       GetDeviceContext(*getter_AddRefs(dx));
-      dx->GetDevUnitsToAppUnits(p2t);
+      p2t = dx->DevUnitsToAppUnits();
       nsRect bounds = aRequestedSize;
       bounds *= p2t;
 
@@ -442,7 +442,7 @@ void nsRenderingContextImpl::CalculateDiscreteSurfaceSize(const nsRect& aMaxBack
   dx->GetDeviceSurfaceDimensions(width, height);
 
   float devUnits;
-  dx->GetDevUnitsToAppUnits(devUnits);
+  devUnits = dx->DevUnitsToAppUnits();
   PRInt32 screenHeight = NSToIntRound(float( height) / devUnits );
   PRInt32 screenWidth = NSToIntRound(float( width) / devUnits );
 

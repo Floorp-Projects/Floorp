@@ -494,9 +494,9 @@ nsresult nsRenderingContextWin :: CommonInit(void)
 {
   float app2dev;
 
-  mContext->GetAppUnitsToDevUnits(app2dev);
+  app2dev = mContext->AppUnitsToDevUnits();
 	mTranMatrix->AddScale(app2dev, app2dev);
-  mContext->GetDevUnitsToAppUnits(mP2T);
+  mP2T = mContext->DevUnitsToAppUnits();
 
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;

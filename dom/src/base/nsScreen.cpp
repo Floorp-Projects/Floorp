@@ -231,7 +231,7 @@ ScreenImpl::GetRect(nsRect& aRect)
   context->GetRect(aRect);
 
   float devUnits;
-  context->GetDevUnitsToAppUnits(devUnits);
+  devUnits = context->DevUnitsToAppUnits();
 
   aRect.x = NSToIntRound(float(aRect.x) / devUnits);
   aRect.y = NSToIntRound(float(aRect.y) / devUnits);
@@ -256,7 +256,7 @@ ScreenImpl::GetAvailRect(nsRect& aRect)
   context->GetClientRect(aRect);
 
   float devUnits;
-  context->GetDevUnitsToAppUnits(devUnits);
+  devUnits = context->DevUnitsToAppUnits();
 
   aRect.x = NSToIntRound(float(aRect.x) / devUnits);
   aRect.y = NSToIntRound(float(aRect.y) / devUnits);

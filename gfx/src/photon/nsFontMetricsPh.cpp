@@ -184,7 +184,7 @@ printf( "\n\n\t\t\tIn nsFontMetricsPh::Init str=%s\n", str );
 		}
 
 	float app2dev;
-	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+	app2dev = mDeviceContext->AppUnitsToDevUnits();
 
 	PRInt32 sizePoints = NSToIntRound( app2dev * mFont->size * 0.74 );
 	
@@ -239,7 +239,7 @@ printf( "\tCall PfLoadMetrics for NSFullFontName=%s\n", NSFullFontName );
 	double height;
 	nscoord onePixel;
 
-	mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+	dev2app = mDeviceContext->DevUnitsToAppUnits();
 	onePixel = NSToCoordRound(1 * dev2app);
 	height = node->descender - node->ascender + 1.0;
 	PfExtentText(&extent, NULL, NSFullFontName, " ", 1);

@@ -102,11 +102,11 @@ NS_IMETHODIMP nsDeviceContextPh :: Init( nsNativeWidget aWidget ) {
     
   CommonInit(NULL);
  
-  GetTwipsToDevUnits(newscale);
-  GetAppUnitsToDevUnits(origscale);
+  newscale = TwipsToDevUnits();
+  origscale = AppUnitsToDevUnits();
 
-  GetTwipsToDevUnits(t2d);
-  GetAppUnitsToDevUnits(a2d);
+  t2d = TwipsToDevUnits();
+  a2d = AppUnitsToDevUnits();
 
   // Call my base class
   return DeviceContextImpl::Init( aWidget );
@@ -121,13 +121,13 @@ nsresult nsDeviceContextPh :: Init( nsNativeDeviceContext aContext, nsIDeviceCon
 
   CommonInit(mDC);
 
-  GetTwipsToDevUnits(newscale);
-  aOrigContext->GetAppUnitsToDevUnits(origscale);
+  newscale = TwipsToDevUnits();
+  origscale = aOrigContext->AppUnitsToDevUnits();
   
   mPixelScale = newscale / origscale;
 
-  aOrigContext->GetTwipsToDevUnits(t2d);
-  aOrigContext->GetAppUnitsToDevUnits(a2d);
+  t2d = aOrigContext->TwipsToDevUnits();
+  a2d = aOrigContext->AppUnitsToDevUnits();
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;

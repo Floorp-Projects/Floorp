@@ -318,7 +318,7 @@ public:
   PRInt16                mBaselineAdjust;
 
   // these values are not in app units, they need to be scaled with 
-  // nsIDeviceContext::GetDevUnitsToAppUnits()
+  // nsIDeviceContext::DevUnitsToAppUnits()
   PRInt16                mMaxAscent;
   PRInt16                mMaxDescent;
 

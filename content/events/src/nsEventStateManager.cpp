@@ -1411,7 +1411,7 @@ nsEventStateManager::GenerateDragGesture(nsIPresContext* aPresContext,
     // Do we need to do this conversion every time?
     // Will the pres context really change on us or can we cache it?
     float pixelsToTwips;
-    aPresContext->DeviceContext()->GetDevUnitsToTwips(pixelsToTwips);
+    pixelsToTwips = aPresContext->DeviceContext()->DevUnitsToTwips();
 
     nscoord thresholdX = NSIntPixelsToTwips(pixelThresholdX, pixelsToTwips);
     nscoord thresholdY = NSIntPixelsToTwips(pixelThresholdY, pixelsToTwips);

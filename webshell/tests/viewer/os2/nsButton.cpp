@@ -218,8 +218,8 @@ NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
   aRenderingContext.GetDeviceContext(context);
 
   context->GetCanonicalPixelScale(scale);
-  context->GetAppUnitsToDevUnits(devUnits);
-  context->GetDevUnitsToAppUnits(appUnits);
+  devUnits = context->AppUnitsToDevUnits();
+  appUnits = context->DevUnitsToAppUnits();
 
   nsRect rect;
   GetBoundsAppUnits(rect, appUnits);

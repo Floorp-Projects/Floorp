@@ -184,7 +184,7 @@ nsRenderingContextPS::Init(nsIDeviceContext* aContext)
   NS_ENSURE_TRUE(nsnull != aContext, NS_ERROR_NULL_POINTER);
 
   mContext = aContext;
-  mContext->GetDevUnitsToAppUnits(mP2T);
+  mP2T = mContext->DevUnitsToAppUnits();
 
   mPSObj = NS_REINTERPRET_CAST(nsDeviceContextPS *, mContext.get())->GetPrintContext();
 

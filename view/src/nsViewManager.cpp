@@ -544,8 +544,8 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   mContext = aContext;
-  mContext->GetAppUnitsToDevUnits(mTwipsToPixels);
-  mContext->GetDevUnitsToAppUnits(mPixelsToTwips);
+  mTwipsToPixels = mContext->AppUnitsToDevUnits();
+  mPixelsToTwips = mContext->DevUnitsToAppUnits();
 
   mRefreshEnabled = PR_TRUE;
 
@@ -705,7 +705,7 @@ static void ConvertNativeRegionToAppRegion(nsIRegion* aIn, nsRegion* aOut,
     return;
   
   float  p2t;
-  context->GetDevUnitsToAppUnits(p2t);
+  p2t = context->DevUnitsToAppUnits();
 
   PRUint32 i;
   for (i = 0; i < rects->mNumRects; i++) {
@@ -825,7 +825,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   nsRect widgetDamageRectInPixels = damageRect;
   widgetDamageRectInPixels.MoveBy(-viewRect.x, -viewRect.y);
   float t2p;
-  mContext->GetAppUnitsToDevUnits(t2p);
+  t2p = mContext->AppUnitsToDevUnits();
   widgetDamageRectInPixels.ScaleRoundOut(t2p);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
@@ -1817,7 +1817,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
               {
                 // Convert from pixels to twips
                 float p2t;
-                mContext->GetDevUnitsToAppUnits(p2t);
+                p2t = mContext->DevUnitsToAppUnits();
 
                 //printf("resize: (pix) %d, %d\n", width, height);
                 SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
@@ -1862,7 +1862,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           nsRect damRect;
           region->GetBoundingBox(&damRect.x, &damRect.y, &damRect.width, &damRect.height);
           float p2t;
-          mContext->GetDevUnitsToAppUnits(p2t);
+          p2t = mContext->DevUnitsToAppUnits();
           damRect.ScaleRoundOut(p2t);
           DefaultRefresh(view, &damRect);
         
@@ -1964,9 +1964,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
         if (nsnull != view) {
           float t2p;
-          mContext->GetAppUnitsToDevUnits(t2p);
+          t2p = mContext->AppUnitsToDevUnits();
           float p2t;
-          mContext->GetDevUnitsToAppUnits(p2t);
+          p2t = mContext->DevUnitsToAppUnits();
 
           //Calculate the proper offset for the view we're going to
           offset.x = offset.y = 0;
@@ -3840,7 +3840,7 @@ void nsViewManager::ViewToWidget(nsView *aView, nsView* aWidgetView, nsRect &aRe
   
   // finally, convert to device coordinates.
   float t2p;
-  mContext->GetAppUnitsToDevUnits(t2p);
+  t2p = mContext->AppUnitsToDevUnits();
   aRect.ScaleRoundOut(t2p);
 }
 

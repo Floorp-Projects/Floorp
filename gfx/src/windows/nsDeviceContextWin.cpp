@@ -149,13 +149,13 @@ nsresult nsDeviceContextWin :: Init(nsNativeDeviceContext aContext, nsIDeviceCon
   CommonInit(mDC);
 
 
-  GetTwipsToDevUnits(newscale);
-  aOrigContext->GetTwipsToDevUnits(origscale);
+  newscale = TwipsToDevUnits();
+  origscale = aOrigContext->TwipsToDevUnits();
 
   mPixelScale = newscale / origscale;
 
-  aOrigContext->GetTwipsToDevUnits(t2d);
-  aOrigContext->GetAppUnitsToDevUnits(a2d);
+  t2d = aOrigContext->TwipsToDevUnits();
+  a2d = aOrigContext->AppUnitsToDevUnits();
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;

@@ -1608,8 +1608,8 @@ int main(int argc, char** argv)
 
   if (NS_OK == rv) {
     dx->Init(nsull);
-    dx->SetDevUnitsToAppUnits(dx->GetDevUnitsToTwips());
-    dx->SetAppUnitsToDevUnits(dx->GetTwipsToDevUnits());
+     dx->SetDevUnitsToAppUnits(dx->DevUnitsToTwips());
+     dx->SetAppUnitsToDevUnits(dx->TwipsToDevUnits());
   }
 
   NS_NewGalleyContext(&presContext);

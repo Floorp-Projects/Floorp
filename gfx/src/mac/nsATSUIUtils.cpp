@@ -303,7 +303,7 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 	float  dev2app;
 	short fontsize = aSize;
 
-	mContext->GetDevUnitsToAppUnits(dev2app);
+	dev2app = mContext->DevUnitsToAppUnits();
   //	Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
   Fixed size = FloatToFixed( (float) rint(float(fontsize) / dev2app));
 	if( FixRound ( size ) < 9  && !nsFontUtils::DisplayVerySmallFonts())

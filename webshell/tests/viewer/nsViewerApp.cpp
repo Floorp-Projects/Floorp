@@ -920,7 +920,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   nsIDeviceContext* dc = aParent->GetDeviceContext();
   float t2d;
-  dc->GetTwipsToDevUnits(t2d);
+  t2d = dc->TwipsToDevUnits();
   nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
               NS_FONT_WEIGHT_NORMAL, 0,
               nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
@@ -1363,7 +1363,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 
     nsIDeviceContext* dc = aParent->GetDeviceContext();
     float t2d;
-    dc->GetTwipsToDevUnits(t2d);
+    t2d = dc->TwipsToDevUnits();
     nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                 NS_FONT_WEIGHT_NORMAL, 0,
                 nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));

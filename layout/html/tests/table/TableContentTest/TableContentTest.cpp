@@ -449,8 +449,8 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 
   if (NS_OK == rv) {
     dx->Init(nsnull);
-    dx->SetDevUnitsToAppUnits(dx->GetDevUnitsToTwips());
-    dx->SetAppUnitsToDevUnits(dx->GetTwipsToDevUnits());
+    dx->SetDevUnitsToAppUnits(dx->DevUnitsToTwips());
+    dx->SetAppUnitsToDevUnits(dx->TwipsToDevUnits());
   }
 
   nsIPresContext * pc = nsnull;

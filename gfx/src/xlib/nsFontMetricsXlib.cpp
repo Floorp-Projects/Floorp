@@ -1809,7 +1809,7 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mLangGroup = aLangGroup;
 
   float app2dev;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+  app2dev = mDeviceContext->AppUnitsToDevUnits();
 
   mPixelSize = NSToIntRound(app2dev * mFont->size);
   // Make sure to clamp the pixel size to something reasonable so we
@@ -1908,7 +1908,7 @@ NS_IMETHODIMP  nsFontMetricsXlib::Destroy()
 void nsFontMetricsXlib::RealizeFont()
 {
   float f;
-  mDeviceContext->GetDevUnitsToAppUnits(f);
+  f = mDeviceContext->DevUnitsToAppUnits();
 
 #ifdef USE_FREETYPE
   if (mWesternFont->IsFreeTypeFont()) {
@@ -1996,7 +1996,7 @@ void nsFontMetricsXlib::RealizeFont()
 #endif /* USE_FREETYPE */
   nsXFont *xFont = mWesternFont->GetXFont();
   XFontStruct *fontInfo = xFont->GetXFontStruct();
-  mDeviceContext->GetDevUnitsToAppUnits(f);
+  f = mDeviceContext->DevUnitsToAppUnits();
 
   nscoord lineSpacing = nscoord((fontInfo->ascent + fontInfo->descent) * f);
   mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));

@@ -113,42 +113,6 @@ void DeviceContextImpl::CommonInit(void)
     obs->AddObserver(this, "memory-pressure", PR_TRUE);
 }
 
-NS_IMETHODIMP DeviceContextImpl::GetTwipsToDevUnits(float &aTwipsToDevUnits) const
-{
-  aTwipsToDevUnits = mTwipsToPixels;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetDevUnitsToTwips(float &aDevUnitsToTwips) const
-{
-  aDevUnitsToTwips = mPixelsToTwips;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::SetAppUnitsToDevUnits(float aAppUnits)
-{
-  mAppUnitsToDevUnits = aAppUnits;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::SetDevUnitsToAppUnits(float aDevUnits)
-{
-  mDevUnitsToAppUnits = aDevUnits;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetAppUnitsToDevUnits(float &aAppUnits) const
-{
-  aAppUnits = mAppUnitsToDevUnits;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetDevUnitsToAppUnits(float &aDevUnits) const
-{
-  aDevUnits = mDevUnitsToAppUnits;
-  return NS_OK;
-}
-
 NS_IMETHODIMP DeviceContextImpl::GetCanonicalPixelScale(float &aScale) const
 {
   aScale = mCPixelScale;

@@ -257,7 +257,7 @@ NS_METHOD nsCheckButton::Paint(nsIRenderingContext& aRenderingContext,
   aRenderingContext.GetDeviceContext(context);
 
   context->GetCanonicalPixelScale(scale);
-  context->GetDevUnitsToAppUnits(appUnits);
+  appUnits = context->DevUnitsToAppUnits();
 
   GetBoundsAppUnits(rect, appUnits);
 

@@ -183,7 +183,7 @@ PrintPreviewContext::GetScaledPixelsToTwips(float* aResult) const
   if (mDeviceContext)
   {
     float p2t;
-    mDeviceContext->GetDevUnitsToAppUnits(p2t);
+    p2t = mDeviceContext->DevUnitsToAppUnits();
     if (mDoScaledTwips) {
       mDeviceContext->GetCanonicalPixelScale(scale);
       scale = p2t * scale;

@@ -238,12 +238,12 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 	((nsDeviceContextMac *)mContext)->InstallColormap();
 #endif
 
-	mContext->GetDevUnitsToAppUnits(mP2T);
+	mP2T = mContext->DevUnitsToAppUnits();
 
 	if (mGS->mTMatrix.GetType() == MG_2DIDENTITY) {
 		// apply the new scaling
 		float app2dev;
-		mContext->GetAppUnitsToDevUnits(app2dev);
+		app2dev = mContext->AppUnitsToDevUnits();
 		mGS->mTMatrix.AddScale(app2dev, app2dev);
 	}
 
