@@ -269,7 +269,12 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           PRUint32 amt;
-          mStatus = mBuffer->Write(NS_STATIC_CAST(nsIInputStream*, mFileStream), &amt);
+		  PRUint32 len;
+		  mBufferStream->GetLength(&len);
+          mStatus = mBuffer->WriteFrom(
+		  		NS_STATIC_CAST(nsIInputStream*, mFileStream), 
+				len, 
+				&amt);
           if (mStatus == NS_BASE_STREAM_EOF) goto error; 
           if (NS_FAILED(mStatus)) goto error;
 
