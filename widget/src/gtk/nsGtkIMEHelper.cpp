@@ -31,7 +31,6 @@
 #include "nsIPref.h"
 #include <X11/Xatom.h>
 
-#include "nsWidget.h"
 #include "nsWindow.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -817,14 +816,14 @@ nsIMEGtkIC::preedit_start_cbproc(XIC xic, XPointer client_data,
 {
   nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
   if (!thisXIC) return 0;
-  nsWidget *widget = thisXIC->mFocusWidget;
-  if (!widget) return 0;
+  nsWindow *fwin = thisXIC->mFocusWindow;
+  if (!fwin) return 0;
 
   if (!thisXIC->mPreedit) {
     thisXIC->mPreedit = new nsIMEPreedit();
   }
   thisXIC->mPreedit->Reset();
-  widget->ime_preedit_start();
+  fwin->ime_preedit_start();
   return 0;
 }
 
@@ -834,8 +833,8 @@ nsIMEGtkIC::preedit_draw_cbproc(XIC xic, XPointer client_data,
 {
   nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
   if (!thisXIC) return 0;
-  nsWidget *widget = thisXIC->mFocusWidget;
-  if (!widget) return 0;
+  nsWindow *fwin = thisXIC->mFocusWindow;
+  if (!fwin) return 0;
 
   XIMPreeditDrawCallbackStruct *call_data =
     (XIMPreeditDrawCallbackStruct *) call_data_p;
@@ -847,7 +846,7 @@ nsIMEGtkIC::preedit_draw_cbproc(XIC xic, XPointer client_data,
   thisXIC->mPreedit->SetPreeditString(text,
                                       call_data->chg_first,
                                       call_data->chg_length);
-  widget->ime_preedit_draw();
+  fwin->ime_preedit_draw(thisXIC);
   return 0;
 }
 
@@ -864,10 +863,10 @@ nsIMEGtkIC::preedit_done_cbproc(XIC xic, XPointer client_data,
 {
   nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
   if (!thisXIC) return 0;
-  nsWidget *widget = thisXIC->mFocusWidget;
-  if (!widget) return 0;
+  nsWindow *fwin = thisXIC->mFocusWindow;
+  if (!fwin) return 0;
 
-  widget->ime_preedit_done();
+  fwin->ime_preedit_done();
   return 0;
 }
 
@@ -877,8 +876,8 @@ nsIMEGtkIC::status_start_cbproc(XIC xic, XPointer client_data,
 {
   nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
   if (!thisXIC) return 0;
-  nsWidget *widget = thisXIC->mFocusWidget;
-  if (!widget) return 0;
+  nsWindow *fwin = thisXIC->mFocusWindow;
+  if (!fwin) return 0;
   if (!gStatus) return 0;
 
   // focus_window is changed
@@ -893,8 +892,8 @@ nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
 {
   nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
   if (!thisXIC) return 0;
-  nsWidget *widget = thisXIC->mFocusWidget;
-  if (!widget) return 0;
+  nsWindow *fwin = thisXIC->mFocusWindow;
+  if (!fwin) return 0;
 
   if (!gStatus) return 0;
 
@@ -939,10 +938,10 @@ nsIMEGtkIC::status_done_cbproc(XIC xic, XPointer client_data,
   return 0;
 }
 
-nsWidget *
-nsIMEGtkIC::GetFocusWidget()
+nsWindow *
+nsIMEGtkIC::GetFocusWindow()
 {
-  return mFocusWidget;
+  return mFocusWindow;
 }
 
 // workaround for kinput2/over-the-spot/ic-per-shell
@@ -965,10 +964,10 @@ nsIMEGtkIC::GetFocusWidget()
 //   *OverTheSpotConversion.modeLocation: bottomleft
 
 void
-nsIMEGtkIC::SetFocusWidget(nsWidget * aFocusWidget)
+nsIMEGtkIC::SetFocusWindow(nsWindow * aFocusWindow)
 {
-  mFocusWidget = aFocusWidget;
-  GdkWindow *gdkWindow = (GdkWindow*)aFocusWidget->GetNativeData(NS_NATIVE_WINDOW);
+  mFocusWindow = aFocusWindow;
+  GdkWindow *gdkWindow = (GdkWindow*)aFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) return;
 
   gdk_im_begin((GdkIC *) mIC, gdkWindow);
@@ -987,20 +986,20 @@ nsIMEGtkIC::SetFocusWidget(nsWidget * aFocusWidget)
 }
 
 void
-nsIMEGtkIC::UnsetFocusWidget()
+nsIMEGtkIC::UnsetFocusWindow()
 {
   gdk_im_end();
 }
 
-nsIMEGtkIC *nsIMEGtkIC::GetXIC(nsWidget * aFocusWidget, GdkFont *aFontSet)
+nsIMEGtkIC *nsIMEGtkIC::GetXIC(nsWindow * aFocusWindow, GdkFont *aFontSet)
 {
-  return nsIMEGtkIC::GetXIC(aFocusWidget, aFontSet, 0);
+  return nsIMEGtkIC::GetXIC(aFocusWindow, aFontSet, 0);
 }
 
-nsIMEGtkIC *nsIMEGtkIC::GetXIC(nsWidget * aFocusWidget,
+nsIMEGtkIC *nsIMEGtkIC::GetXIC(nsWindow * aFocusWindow,
                                GdkFont *aFontSet, GdkFont *aStatusFontSet)
 {
-  nsIMEGtkIC *newic = new nsIMEGtkIC(aFocusWidget, aFontSet, aStatusFontSet);
+  nsIMEGtkIC *newic = new nsIMEGtkIC(aFocusWindow, aFontSet, aStatusFontSet);
   if (!newic->mIC || !newic->mIC->xic) {
     delete newic;
     return nsnull;
@@ -1032,7 +1031,7 @@ nsIMEGtkIC::~nsIMEGtkIC()
   mIC = 0;
   mIC_backup = 0;
   mPreedit = 0;
-  mFocusWidget = 0;
+  mFocusWindow = 0;
 }
 
 // xim.input_policy:
@@ -1393,20 +1392,20 @@ nsIMEGtkIC::SetPreeditArea(int aX, int aY, int aW, int aH) {
   }
 }
 
-nsIMEGtkIC::nsIMEGtkIC(nsWidget *aFocusWidget, GdkFont *aFontSet)
+nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet)
 {
-  ::nsIMEGtkIC(aFocusWidget, aFontSet, 0);
+  ::nsIMEGtkIC(aFocusWindow, aFontSet, 0);
 }
 
-nsIMEGtkIC::nsIMEGtkIC(nsWidget *aFocusWidget, GdkFont *aFontSet,
+nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
 						GdkFont *aStatusFontSet)
 {
-  mFocusWidget = 0;
+  mFocusWindow = 0;
   mIC = 0;
   mIC_backup = 0;
   mPreedit = 0;
 
-  GdkWindow *gdkWindow = (GdkWindow *) aFocusWidget->GetNativeData(NS_NATIVE_WINDOW);
+  GdkWindow *gdkWindow = (GdkWindow *) aFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) {
     return;
   }

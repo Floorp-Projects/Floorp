@@ -36,10 +36,6 @@
 class nsILookAndFeel;
 class nsIAppShell;
 class nsIToolkit;
-#ifdef USE_XIM
-class nsIMEGtkIC;
-class nsIMEPreedit;
-#endif // USE_XIM 
 
 #include <gtk/gtk.h>
 
@@ -48,6 +44,7 @@ class nsIMEPreedit;
 #include "gtkmozbox.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
@@ -309,52 +306,8 @@ protected:
   PRBool HandlePopup(PRInt32 inMouseX, PRInt32 inMouseY, PRBool isWheel);
   PRBool IsMouseInWindow ( GdkWindow* inWindow, PRInt32 inMouseX, PRInt32 inMouseY ) ;
 
-#ifdef USE_XIM
-protected:
-  PRBool            mIMEEnable;
-  void		    GetXIC();
-  static GdkFont    *gPreeditFontset;
-  static GdkFont    *gStatusFontset;
-  static GdkIMStyle gInputStyle;
-  nsIMEGtkIC        *mXIC;
-  PRBool	    mIMECallComposeStart;
-  PRBool	    mIMECallComposeEnd;
-  PRBool	    mIMEIsBeingActivate;
-  nsWidget*         mIMEShellWidget;
-  void              SetXICSpotLocation(nsPoint aPoint);
-  void              SetXICBaseFontSize(int height);
-
-  void              GetXYFromPosition(unsigned long *aX, unsigned long *aY);
-  nsCOMPtr<nsITimer> mICSpotTimer;
-  static void       ICSpotCallback(nsITimer* aTimer, void* aClosure);
-  nsresult          KillICSpotTimer();
-  nsresult          PrimeICSpotTimer();
-  nsresult          UpdateICSpot();
-  int               mXICFontSize;
-
 public:
-  void		    ime_preedit_start();
-  void 		    ime_preedit_draw();
-  void		    ime_preedit_done();
-  void		    ime_status_draw();
-
-  void 		    IMEUnsetFocusWidget();
-  void 		    IMESetFocusWidget();
-  void 		    IMEGetShellWidget();
-  void 		    IMEDestroyIC();
-  void 		    IMEBeingActivate(PRBool aActive);
-#endif // USE_XIM 
-protected:
-  void              IMEComposeStart(guint aTime);
-  void		    IMEComposeText(GdkEventKey*,
-                             const PRUnichar *aText,
-                             const PRInt32 aLen,
-                             const char *aFeedback);
-  void              IMEComposeEnd(guint aTime);
-  PRUnichar*        mIMECompositionUniString;
-  PRInt32           mIMECompositionUniStringSize;
-public:
-  void              IMECommitEvent(GdkEventKey *aEvent);
+  virtual void IMECommitEvent(GdkEventKey *aEvent);
 
 protected:
 

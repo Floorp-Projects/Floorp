@@ -33,6 +33,12 @@
 #include "gtkmozarea.h"
 #include "gdksuperwin.h"
 
+#ifdef USE_XIM
+#include "pldhash.h"
+class nsIMEGtkIC;
+class nsIMEPreedit;
+#endif // USE_XIM
+
 class nsFont;
 class nsIAppShell;
 
@@ -88,6 +94,11 @@ public:
   NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
+
+  virtual void         LoseFocus(void);
+
+  // nsIKBStateControl
+  NS_IMETHOD           ResetInputState();
 
   void                 QueueDraw();
   void                 UnqueueDraw();
@@ -309,7 +320,56 @@ protected:
   static void dumpWindowChildren(Window aWindow, unsigned int depth);
 #endif
 
+#ifdef USE_XIM
+protected:
+  nsIMEGtkIC*	      IMEGetInputContext(PRBool aCreate);
+  PRBool              mIMEEnable;
+  static GdkFont      *gPreeditFontset;
+  static GdkFont      *gStatusFontset;
+  static GdkIMStyle   gInputStyle;
+  static PLDHashTable gXICLookupTable;
+  PRBool	      mIMECallComposeStart;
+  PRBool	      mIMECallComposeEnd;
+  PRBool	      mIMEIsBeingActivate;
+  nsWindow*           mIMEShellWindow;
+  void                SetXICSpotLocation(nsIMEGtkIC* aXIC, nsPoint aPoint);
+  void                SetXICBaseFontSize(nsIMEGtkIC* aXIC, int height);
+  void                GetXYFromPosition(nsIMEGtkIC* aXIC, unsigned long *aX, unsigned long *aY);
+  nsCOMPtr<nsITimer>  mICSpotTimer;
+  static void         ICSpotCallback(nsITimer* aTimer, void* aClosure);
+  nsresult            KillICSpotTimer();
+  nsresult            PrimeICSpotTimer();
+  nsresult            UpdateICSpot(nsIMEGtkIC* aXIC);
+  int                 mXICFontSize;
+
+public:
+  void		    ime_preedit_start();
+  void 		    ime_preedit_draw(nsIMEGtkIC* aXIC);
+  void		    ime_preedit_done();
+  void		    ime_status_draw();
+
+  void 		    IMEUnsetFocusWindow();
+  void 		    IMESetFocusWindow();
+  void 		    IMEGetShellWindow();
+  void 		    IMEDestroyIC();
+  void 		    IMEBeingActivate(PRBool aActive);
+#endif // USE_XIM 
+
+protected:
+  void              IMEComposeStart(guint aTime);
+  void              IMEComposeText(GdkEventKey*,
+                             const PRUnichar *aText,
+                             const PRInt32 aLen,
+                             const char *aFeedback);
+  void              IMEComposeEnd(guint aTime);
+
+public:
+  virtual void IMECommitEvent(GdkEventKey *aEvent);
+
 private:
+  PRUnichar*   mIMECompositionUniString;
+  PRInt32      mIMECompositionUniStringSize;
+
   nsresult     SetMiniIcon(GdkPixmap *window_pixmap,
                            GdkBitmap *window_mask);
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
