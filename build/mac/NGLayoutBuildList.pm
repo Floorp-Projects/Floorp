@@ -453,7 +453,6 @@ sub BuildClientDist()
    		_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",			"$distdirectory:netwerk:");
    		_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
    		_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
-		_InstallFromManifest(":mozilla:netwerk:util:public:MANIFEST",					"$distdirectory:netwerk:");
 		_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
 		
 	} else {
@@ -1271,6 +1270,10 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",        "$chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:locale:MANIFEST",				"$global_chrome_dir:locale:en-US:", 0);
 	_InstallResources(":mozilla:xpfe:global:resources:locale:mac:MANIFEST",			"$global_chrome_dir:locale:en-US:", 0);
+
+	_InstallResources(":mozilla:docshell:base:MANIFEST",							"$global_chrome_dir:locale:en-US:", 0);
+
+	
 
 
 	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
