@@ -1317,7 +1317,10 @@ void nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 void nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  mStyleSheets.RemoveElement(aSheet);
+  if (!mStyleSheets.RemoveElement(aSheet)) {
+    NS_NOTREACHED("stylesheet not found");
+    return;
+  }
   
   PRBool enabled = PR_TRUE;
   aSheet->GetEnabled(enabled);
@@ -1352,16 +1355,19 @@ nsDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aN
     aOldSheets->GetElementAt(i, getter_AddRefs(supp));
     sheet = do_QueryInterface(supp);
     if (sheet) {
-      mStyleSheets.RemoveElement(sheet);
-      PRBool enabled = PR_TRUE;
-      sheet->GetEnabled(enabled);
-      if (enabled) {
-        RemoveStyleSheetFromStyleSets(sheet);
-      }
+      PRBool found = mStyleSheets.RemoveElement(sheet);
+      NS_ASSERTION(found, "stylesheet not found");
+      if (found) {
+        PRBool enabled = PR_TRUE;
+        sheet->GetEnabled(enabled);
+        if (enabled) {
+          RemoveStyleSheetFromStyleSets(sheet);
+        }
 
-      sheet->SetOwningDocument(nsnull);
-      nsIStyleSheet* sheetPtr = sheet.get();
-      NS_RELEASE(sheetPtr);
+        sheet->SetOwningDocument(nsnull);
+        nsIStyleSheet* sheetPtr = sheet.get();
+        NS_RELEASE(sheetPtr);
+      }
     }
   }
 
