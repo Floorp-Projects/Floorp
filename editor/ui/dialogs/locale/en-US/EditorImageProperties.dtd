@@ -31,33 +31,29 @@
 <!-- These are in the location box. -->
 <!ENTITY locationBox.label "Image Information">
 <!ENTITY locationEditField.label "Image URL">
-<!ENTITY locationEditField.tooltip "Image URL label tooltip">
-<!ENTITY ChooseFile.tooltip "Image URL label tooltip">
+<!ENTITY locationEditField.tooltip "Type the image's filename or location">
 <!ENTITY altTextEditField.label "Alternative Text">
-<!ENTITY altTextEditField.tooltip "Alternative Text tooltip">
+<!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
 
-<!ENTITY MoreFewerButton.tooltip "Display more or fewer properties for this image tooltip">
-<!ENTITY AdvancedEditButton.tooltip "Edit additional properties for this image tooltip">
+<!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
+<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">
 
 <!-- These controls are in the Dimensions box of the expanded area -->
 <!ENTITY dimensionsBox.label "Dimensions">
 <!ENTITY originalSizeRadio.label "Original Size">
-<!ENTITY originalSizeRadio.tooltip "Original Size tooltip">
+<!ENTITY originalSizeRadio.tooltip "Revert to the image's original size">
 <!ENTITY customSizeRadio.label "Custom Size">
-<!ENTITY customSizeRadio.tooltip "Custom Size tooltip">
+<!ENTITY customSizeRadio.tooltip "Change the image's original size">
 <!ENTITY heightEditField.label "Height">
-<!ENTITY heightEditField.tooltip "Height tooltip">
 <!ENTITY widthEditField.label "Width">
-<!ENTITY widthEditField.tooltip "Width tooltip">
 <!ENTITY constrainCheckbox.label "Constrain">
-<!ENTITY constrainCheckbox.tooltip "Constrain tooltip">
+<!ENTITY constrainCheckbox.tooltip "Maintain the image's aspect ratio">
 
 <!-- These controls are in the Image Map box of the expanded area -->
 <!ENTITY imagemapBox.label "Image Map">
 <!ENTITY removeImageMapButton.label "Remove Image Map">
-<!ENTITY removeImageMapButton.tooltip "Remove Image Map tooltip">
 <!ENTITY editImageMapButton.label "Edit Image Map...">
-<!ENTITY editImageMapButton.tooltip "Edit Image Map tooltip">
+<!ENTITY editImageMapButton.tooltip "Create clickable hotspots for this image">
 
 <!-- These are the options for image alignment -->
 <!ENTITY alignment.label "Align Text to Image">
@@ -69,15 +65,12 @@
 
 <!-- These controls are in the Spacing Box of the expanded area -->
 <!ENTITY spacingBox.label "Spacing">
-<!ENTITY spacingBox.tooltip "Spacing tooltip">
+<!ENTITY spacingBox.tooltip "Type a number for the amount of space around image">
 <!ENTITY leftRightEditField.label "Left and Right">
-<!ENTITY leftRightEditField.tooltip "Left and Right tooltip">
 <!ENTITY topBottomEditField.label "Top and Bottom">
-<!ENTITY topBottomEditField.tooltip "Top and Bottom tooltip">
 <!ENTITY borderEditField.label "Solid Border">
-<!ENTITY borderEditField.tooltip "Solid Border tooltip">
 
-<!ENTITY AdvancedEditButton2.tooltip "Edit additional properties of this image tooltip">
+<!ENTITY AdvancedEditButton2.tooltip "Add or modify HTML elements, style attributes, and JavaScript">
 
 <!-- These controls may be added some day; currently not used -->
 <!ENTITY leaveAtLocationCheckbox.label "Leave">
