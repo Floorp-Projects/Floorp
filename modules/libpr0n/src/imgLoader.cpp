@@ -175,7 +175,8 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                                 nsIURI *aURI,
                                 nsIURI *aInitialDocumentURI,
                                 nsIURI *aReferringURI,
-                                nsILoadGroup *aLoadGroup, nsLoadFlags aLoadFlags)
+                                nsILoadGroup *aLoadGroup,
+                                nsLoadFlags aLoadFlags)
 {
   nsresult rv;
   nsCOMPtr<nsIChannel> newChannel;
@@ -220,6 +221,17 @@ static nsresult NewImageChannel(nsIChannel **aResult,
     NS_ENSURE_TRUE(httpChannelInternal, NS_ERROR_UNEXPECTED);
     httpChannelInternal->SetDocumentURI(aInitialDocumentURI);
     newHttpChannel->SetReferrer(aReferringURI);
+  }
+
+  // Image channels are loaded by default with reduced priority.
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(*aResult);
+  if (p) {
+    PRUint32 priority = nsISupportsPriority::PRIORITY_LOW;
+
+    if (aLoadFlags & nsIRequest::LOAD_BACKGROUND)
+      ++priority; // further reduce priority for background loads
+
+    p->BumpPriority(priority);
   }
 
   return NS_OK;
@@ -914,7 +926,7 @@ void imgCacheValidator::AddProxy(imgRequestProxy *aProxy)
   // the network.
   aProxy->AddToLoadGroup();
 
-  mProxies.AppendElement(aProxy);
+  mProxies.AppendElement(NS_STATIC_CAST(imgIRequest *, aProxy));
 }
 
 /** nsIRequestObserver methods **/

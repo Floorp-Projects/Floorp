@@ -71,6 +71,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsIPrompt.h"
 #include "nsIResumableChannel.h"
+#include "nsISupportsPriority.h"
 
 class nsHttpResponseHead;
 class nsAHttpConnection;
@@ -90,6 +91,7 @@ class nsHttpChannel : public nsIHttpChannel
                     , public nsIEncodedChannel
                     , public nsITransportEventSink
                     , public nsIResumableChannel
+                    , public nsISupportsPriority
 {
 public:
     NS_DECL_ISUPPORTS
@@ -105,6 +107,7 @@ public:
     NS_DECL_NSIHTTPCHANNELINTERNAL
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIRESUMABLECHANNEL
+    NS_DECL_NSISUPPORTSPRIORITY
 
     nsHttpChannel();
     virtual ~nsHttpChannel();

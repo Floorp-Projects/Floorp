@@ -56,6 +56,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
 #include "nsISecurityEventSink.h"
+#include "nsISupportsPriority.h"
 #include "nsInt64.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
@@ -82,7 +83,8 @@ class nsDocLoader : public nsIDocumentLoader,
                     public nsIWebProgress,
                     public nsIInterfaceRequestor,
                     public nsIHttpEventSink,
-                    public nsISecurityEventSink
+                    public nsISecurityEventSink,
+                    public nsISupportsPriority
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID);
@@ -114,6 +116,7 @@ public:
 
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSISUPPORTSPRIORITY
 
     // Implementation specific methods...
 

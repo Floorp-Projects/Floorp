@@ -326,6 +326,32 @@ PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
   return PR_FALSE;
 }
 
+PRInt32 imgRequest::Priority() const
+{
+  PRInt32 priority = nsISupportsPriority::PRIORITY_NORMAL;
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+  if (p)
+    p->GetPriority(&priority);
+  return priority;
+}
+
+void imgRequest::BumpPriority(imgRequestProxy *proxy, PRInt32 delta)
+{
+  // only the first proxy is allowed to modify the priority of this image load.
+  //
+  // XXX(darin): this is probably not the most optimal algorithm as we may want
+  // to increase the priority of requests that have a lot of proxies.  the key
+  // concern though is that image loads remain lower priority than other pieces
+  // of content such as link clicks, CSS, and JS.
+  //
+  if (mObservers[0] != proxy)
+    return;
+
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+  if (p)
+    p->BumpPriority(delta);
+}
+
 /** imgILoad methods **/
 
 NS_IMETHODIMP imgRequest::SetImage(imgIContainer *aImage)

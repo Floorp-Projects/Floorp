@@ -96,7 +96,7 @@ nsHttpChannel::nsHttpChannel()
     , mStatus(NS_OK)
     , mLogicalOffset(0)
     , mCaps(0)
-    , mPriority(0)
+    , mPriority(PRIORITY_NORMAL)
     , mCachedResponseHead(nsnull)
     , mCacheAccess(0)
     , mPostID(0)
@@ -2811,6 +2811,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
     NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
     if (aIID.Equals(NS_GET_IID(nsIProperties))) {
         if (!mProperties) {
             mProperties =
@@ -3640,18 +3641,32 @@ nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
     return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsISupportsPriority
+//-----------------------------------------------------------------------------
+
 NS_IMETHODIMP
-nsHttpChannel::GetPriority(PRInt16 *value)
+nsHttpChannel::GetPriority(PRInt32 *value)
 {
     *value = mPriority;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetPriority(PRInt16 value)
+nsHttpChannel::SetPriority(PRInt32 value)
 {
-    mPriority = value;
-    return NS_OK;
+    PRInt16 newValue = CLAMP(value, PR_INT16_MIN, PR_INT16_MAX);
+    if (mPriority == newValue)
+        return NS_OK;
+    mPriority = newValue;
+    if (mTransaction)
+        gHttpHandler->RescheduleTransaction(mTransaction, mPriority);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::BumpPriority(PRInt32 delta)
+{
+    return SetPriority(mPriority + delta);
 }
 
 //-----------------------------------------------------------------------------
