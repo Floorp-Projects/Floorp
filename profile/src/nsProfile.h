@@ -81,9 +81,6 @@ public:
     nsProfile();
     virtual ~nsProfile();
 
-    // Creates associated user directories on the creation of a new profile
-    nsresult CreateUserDirectories(nsIFile *profileDir);
-
     // Deletes associated user directories
     nsresult DeleteUserDirectories(nsIFile *profileDir);
 
