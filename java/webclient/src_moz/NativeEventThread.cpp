@@ -427,12 +427,19 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     GtkMozArea * mozarea;
     mozarea = (GtkMozArea *) initContext->gtkWinPtr;
     superwin = mozarea->superwin;
+    if (prLogModuleInfo) {
+      PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - before Init Call...\n", initContext));
+    }
     rv = initContext->webShell->Init((nsNativeWidget *)superwin, initContext->x, initContext->y, initContext->w, initContext->h);
+    if (prLogModuleInfo) {
+      PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - after Init Call...\n", initContext));
+    }
 #else    
     rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
                                      initContext->x, initContext->y, initContext->w, initContext->h);
 #endif
 
+    
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kInitWebShellError;
         return rv;

@@ -157,8 +157,7 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         rdf_printArcLabels(currentResource);
 
         // see if it has a name target
-	// Ashu
-	// used 1 instead of true
+
         rv = gBookmarksDataSource->GetTarget(currentResource,
                                                     kNC_Name, PR_TRUE, 
                                                     getter_AddRefs(node));
@@ -265,8 +264,7 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         rdf_printArcLabels(currentResource);
 
         // see if it has a URL target
-	// Ashu
-	// used 1 instead of true
+
         rv = gBookmarksDataSource->GetTarget(currentResource,
                                                     kNC_URL, PR_TRUE, 
                                                     getter_AddRefs(node));

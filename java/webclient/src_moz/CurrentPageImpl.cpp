@@ -32,10 +32,18 @@
 #include "CurrentPageImpl.h"
 
 #include "jni_util.h"
+#include "jni_util_export.h"
+#include "rdf_util.h"
 #include "nsActions.h"
 
 #include "nsCRT.h"
 #include "nsIPresShell.h"
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
+#include "nsIFindComponent.h"
+#include "nsISearchContext.h"
+#include "nsIServiceManager.h"
+
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
 (JNIEnv *env, jobject obj, jint webShellPtr)
@@ -72,18 +80,56 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: (Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindInPage
-(JNIEnv *, jobject, jstring, jboolean, jboolean)
+(JNIEnv *env, jobject obj, jint webShellPtr, jstring searchString, jboolean forward, jboolean matchCase)
 {
 
-    /****
-    
-    As of 01/13/00, Find is blocked on this post to n.p.m.embedding:
+  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
-    Message-ID: <85ln9l$p97$1@nnrp1.deja.com>
+  //First get the FindComponent object
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
+  if (NS_FAILED(rv))  {
+        initContext->initFailCode = kFindComponentError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");
+        return;
+  }
 
+  // Create a Search Context for the FindComponent
+  nsCOMPtr<nsISupports> searchContext;
+  rv = findComponent->CreateContext(initContext->webShell, nsnull, getter_AddRefs(searchContext));
+  if (NS_FAILED(rv))  {
+        initContext->initFailCode = kSearchContextError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't create SearchContext for Find");
+        return;
+  }
 
-     ***/
+    nsCOMPtr<nsISearchContext> srchcontext;
+  rv = searchContext->QueryInterface(NS_GET_IID(nsISearchContext), getter_AddRefs(srchcontext));
+  if (NS_FAILED(rv))  {
+        initContext->initFailCode = kSearchContextError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't create SearchContext for Find");
+        return;
+  }
+
+  PRUnichar * aString;
+  srchcontext->GetSearchString(& aString);
+
+  PRUnichar * srchString = (PRUnichar *) ::util_GetStringChars(env, searchString);
+
+  srchcontext->SetSearchString(srchString);
+  srchcontext->SetSearchBackwards(!forward);
+  srchcontext->SetCaseSensitive(matchCase);
+
+  // Pass searchContext to findComponent for the actual find call
+  PRBool found = PR_TRUE;
+  findComponent->FindNext(srchcontext, &found);
+
+  // Save in initContext struct for future findNextInPage calls
+  initContext->searchContext = srchcontext;
 }
+
+
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
@@ -91,8 +137,32 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
-(JNIEnv *, jobject, jboolean)
+(JNIEnv *env, jobject obj, jint webShellPtr, jboolean forward)
 {
+
+  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+  //First get the FindComponent object
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
+  if (NS_FAILED(rv))  {
+        initContext->initFailCode = kFindComponentError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");
+        return;
+  }
+
+  // Get the searchContext from the initContext struct
+  nsCOMPtr<nsISearchContext> searchContext = initContext->searchContext;
+
+  if (nsnull == searchContext) {
+     initContext->initFailCode = kSearchContextError;
+        ::util_ThrowExceptionToJava(env, "Exception: NULL SearchContext received for FindNext");
+        return;
+  }
+
+  // Pass searchContext to findComponent for the actual find call
+  PRBool found = PR_TRUE;
+  findComponent->FindNext(searchContext, &found);
 
 }
 
@@ -152,7 +222,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
  * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
-(JNIEnv *, jobject)
+(JNIEnv * env, jobject jobj)
 {
     jstring result = nsnull;
     
@@ -165,8 +235,9 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
  * Signature: ()[B
  */
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv *, jobject)
+(JNIEnv * env, jobject jobj)
 {
+ 
     jbyteArray result = nsnull;
 
     return result;
@@ -178,9 +249,10 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentP
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeResetFind
-(JNIEnv *, jobject)
+(JNIEnv * env, jobject obj, jint webShellPtr)
 {
-
+  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+  initContext->searchContext = nsnull;
 }
 
 /*
