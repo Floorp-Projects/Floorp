@@ -200,9 +200,13 @@ sub CheckOutModule($$$$)
     
     my($checkout_err) = $session->getLastError();
     if ($checkout_err == 708) {
-        die "Checkout was cancelled";
+        die "Error: Checkout was cancelled.\n";
+    } elsif ($checkout_err == 911) {
+        die "Error: CVS session settings are incorrect. Check your password, and the CVS root settings.\n";
+    } elsif ($checkout_err == 703) {
+        die "Error: CVS checkout failed. Unknown module, unknown tag, bad username, or other CVS error.\n";
     } elsif ($checkout_err == 711) {
-        print "Checkout of '$module' failed\n";
+        print "Checkout of '$module' failed.\n";
     }
 }
 
@@ -222,7 +226,7 @@ sub Checkout($)
 {
     my($checkout_list) = @_;
     
-    unless ( $main::pull{all} ) { return; }
+    unless ( $main::build{pull} ) { return; }
 
     my($start_time) = TimeStart();
 
@@ -231,9 +235,10 @@ sub Checkout($)
     my($session) = Moz::MacCVS->new( $cvsfile );
     unless (defined($session)) { die "Error: Checkout aborted. Cannot create session file: $session" }
 
-    # activate MacCVS
-    ActivateApplication('Mcvs');
+    StartBuildModule("pull");
 
+    my(@cvs_co_list);
+    
     my($checkout_file) = getScriptFolder().":".$checkout_list;
     local(*CHECKOUT_FILE);  
     open(CHECKOUT_FILE, "< $checkout_file") || die "Error: failed to open checkout list $checkout_file\n";
@@ -247,38 +252,56 @@ sub Checkout($)
             next;
         }
     
-        my($module) = "";
-        my($revision) = "";
-        my($date) = "";
+        my(@cvs_co) = ["", "", ""];
         
-        if ($line =~ /\s*([^\s]+)\s*\,\s*([^\s]+)\s*\,\s*(.+)\s*/)
+        my($module, $revision, $date) = (0, 1, 2);
+        
+        if ($line =~ /\s*([^#,\s]+)\s*\,\s*([^#,\s]+)\s*\,\s*([^#]+)/)
         {
-            $module = $1;
-            $revision = $2;
-            $date = $3;
+            @cvs_co[$module] = $1;
+            @cvs_co[$revision] = $2;
+            @cvs_co[$date] = $3;
         }
-        elsif ($line =~ /\s*([\/\w]+)\s*\,\s*(\w+)\s*/)
+        elsif ($line =~ /\s*([^#,\s]+)\s*\,\s*([^#,\s]+)\s*(#.+)?/)
         {
-            $module = $1;
-            $revision = $2;
+            @cvs_co[$module] = $1;
+            @cvs_co[$revision] = $2;
         }
-        elsif ($line =~ /\s*([^\s]+)\s*\,\s*,\s*(.+)\s*/)       
+        elsif ($line =~ /\s*([^#,\s]+)\s*\,\s*,\s*([^#,]+)/)       
         {
-            $module = $1;
-            $date = $2;
+            @cvs_co[$module] = $1;
+            @cvs_co[$date] = $2;
         }
-        elsif ($line =~ /\s*([\/\w]+)/)
+        elsif ($line =~ /\s*([^#,\s]+)/)
         {
-            $module = $1;
+            @cvs_co[$module] = $1;
+        }
+        else
+        {
+            die "Error: unrecognized line '$line' in $checkout_list\n";
         }
         
-        # print "Checking out '$module', '$revision', '$date'\n";
-        CheckOutModule($session, $module, $revision, $date);
+        # strip surrounding space from date
+        @cvs_co[$date] =~ s/^\s*|\s*$//g;
+        
+        # print "Going to check out '@cvs_co[$module]', '@cvs_co[$revision]', '@cvs_co[$date]'\n";
+        push(@cvs_co_list, \@cvs_co);
     }
 
     close(CHECKOUT_FILE);
 
+    # activate MacCVS
+    ActivateApplication('Mcvs');
+
+    my($this_co);
+    foreach $this_co (@cvs_co_list)
+    {
+        my($module, $revision, $date) = ($this_co->[0], $this_co->[1], $this_co->[2]);        
+        CheckOutModule($session, $module, $revision, $date);
+    }
+
     TimeEnd($start_time, "Checkout");
+    EndBuildModule("pull");
 }
 
 
@@ -297,18 +320,17 @@ sub RunBuild($$$$)
     }
     
     # read local prefs, and the build progress file, and set flags to say what to build
-    SetupBuildParams(\%main::pull,
-                     \%main::build,
+    SetupBuildParams(\%main::build,
                      \%main::options,
                      \%main::optiondefines,
                      \%main::filepaths,
                      $input_files->{"buildflags"},
                      $build_prefs);
-
+    
     # If we were told to pull, make sure we do, overriding prefs etc.
     if ($do_pull)
     {
-        $main::pull{"all"} = 1;
+        $main::build{"pull"} = 1;
     }
     
     # setup the build log
@@ -344,9 +366,7 @@ sub RunBuild($$$$)
         $package_name =~ s/\.pm$//;
         
         chdir($main::MOZ_SRC);
-        my($dist_time) = TimeStart();
         &{$package_name."::BuildDist"}();
-        TimeEnd($dist_time, "Building dist");
         
         chdir($main::MOZ_SRC);
         &{$package_name."::BuildProjects"}();

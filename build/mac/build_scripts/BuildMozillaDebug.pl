@@ -48,7 +48,6 @@ my($prefs_file_name) = "Mozilla debug build prefs";
 #-------------------------------------------------------------
 # hashes to hold build options
 #-------------------------------------------------------------
-my(%pull);
 my(%build);
 my(%options);
 my(%filepaths);
@@ -73,7 +72,7 @@ SetupBuildRootDir(":mozilla:build:mac:build_scripts");
 # Override the defaults using the preferences files.
 SetupDefaultBuildOptions(1, ":mozilla:dist:viewer_debug:");
 
-my($do_checkout)    = 0;
+my($do_pull)        = 0;    # overridden by flags and prefs
 my($do_build)       = 1;
 
-RunBuild($do_checkout, $do_build, \%inputfiles, $prefs_file_name);
+RunBuild($do_pull, $do_build, \%inputfiles, $prefs_file_name);

@@ -48,7 +48,6 @@ my($prefs_file_name) = "Mozilla pull prefs";
 #-------------------------------------------------------------
 # hashes to hold build options
 #-------------------------------------------------------------
-my(%pull);
 my(%build);
 my(%options);
 my(%filepaths);
