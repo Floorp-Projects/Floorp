@@ -60,10 +60,7 @@ var FolderPaneController =
                                 // don't bother sending to the thread pane
                                 // this can happen when we've selected a server
                                 // and account central is displayed
-                                if (!gDBView) 
-                                  return false;
-				else
-                                  return true;  
+                                return (gDBView != null);
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
