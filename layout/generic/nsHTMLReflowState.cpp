@@ -333,7 +333,7 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   mStylePadding = frame->GetStylePadding();
   mStyleText = frame->GetStyleText();
 
-  mFrameType = DetermineFrameType(frame, mStyleDisplay);
+  InitFrameType();
   InitCBReflowState();
   InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight, aBorder, aPadding);
 }
@@ -375,34 +375,29 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aPare
   return rs->mComputedWidth;
 }
 
-nsCSSFrameType
-nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame)
+void
+nsHTMLReflowState::InitFrameType()
 {
-  const nsStyleDisplay* styleDisplay = aFrame->GetStyleDisplay();
-  return DetermineFrameType(aFrame, styleDisplay);
-}
-
-nsCSSFrameType
-nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
-                                      const nsStyleDisplay* aDisplay)
-{
+  const nsStyleDisplay *disp = mStyleDisplay;
   nsCSSFrameType frameType;
 
   // Section 9.7 of the CSS2 spec indicates that absolute position
   // takes precedence over float which takes precedence over display.
   // Make sure the frame was actually moved out of the flow, and don't
   // just assume what the style says
-  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    if (aDisplay->IsAbsolutelyPositioned()) {
+  // XXXldb nsRuleNode::ComputeDisplayData should take care of this, right?
+  if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    if (disp->IsAbsolutelyPositioned()) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
     }
-    else if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+    else {
+      NS_ASSERTION(NS_STYLE_FLOAT_NONE != disp->mFloats,
+                   "unknown out of flow frame type");
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
     }
-    // XXXldb UMR in this case (else, else) we don't initialize frameType
   }
   else {
-    switch (aDisplay->mDisplay) {
+    switch (disp->mDisplay) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
@@ -443,11 +438,11 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
   }
 
   // See if the frame is replaced
-  if (aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT) {
+  if (frame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT) {
     frameType = NS_FRAME_REPLACED(frameType);
   }
 
-  return frameType;
+  mFrameType = frameType;
 }
 
 void
@@ -2149,6 +2144,7 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   nscoord availMarginSpace = aAvailWidth - aComputedWidth -
     mComputedBorderPadding.left - mComputedBorderPadding.right;
 
+  // XXXldb Why are tables special?
   if ((mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) ||
       (mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION))  {
     // Special rules for tables. In general, tables will stick to the
