@@ -41,7 +41,7 @@
 # Double-Colon rules for utilizing the binary release model.          #
 #######################################################################
 
-all:: export libs program install
+all:: export libs 
 
 ifeq ($(AUTOCLEAN),1)
 autobuild:: clean export private_export libs program install
@@ -745,8 +745,12 @@ $(PUBLIC_EXPORT_DIR)::
 		$(NSINSTALL) -D $@; \
 	fi
 
-export:: $(EXPORTS) $(PUBLIC_EXPORT_DIR) $(BUILT_SRCS)
-	$(INSTALL) -m 444 $(EXPORTS) $(PUBLIC_EXPORT_DIR)
+export:: $(PUBLIC_EXPORT_DIR) 
+
+export:: $(EXPORTS) 
+	$(INSTALL) -m 444 $^ $(PUBLIC_EXPORT_DIR)
+
+export:: $(BUILT_SRCS)
 endif
 
 # Duplicate export rule for private exports, with different directories
@@ -760,8 +764,10 @@ $(PRIVATE_EXPORT_DIR)::
 		$(NSINSTALL) -D $@; \
 	fi
 
-private_export:: $(PRIVATE_EXPORTS) $(PRIVATE_EXPORT_DIR)
-	$(INSTALL) -m 444 $(PRIVATE_EXPORTS) $(PRIVATE_EXPORT_DIR)
+private_export:: $(PRIVATE_EXPORT_DIR)
+
+private_export:: $(PRIVATE_EXPORTS) 
+	$(INSTALL) -m 444 $^ $(PRIVATE_EXPORT_DIR)
 else
 private_export:: 
 	@echo There are no private exports.;

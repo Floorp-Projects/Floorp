@@ -35,6 +35,7 @@
 DEFINES += -DMEMMOVE -D__DBINTERFACE_PRIVATE $(SECURITY_FLAG) -DNSPR20=1
 
 INCLUDES += -I../include
+INCLUDES += -I$(CORE_DEPTH)/../dbm/include
 
 #
 #  Currently, override TARGETS variable so that only static libraries
