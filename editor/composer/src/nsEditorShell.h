@@ -206,12 +206,6 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsISupports>         mSearchContext;  // context used for search and replace. Owned by the appshell.
     nsCOMPtr<nsISpellChecker>     mSpellChecker;
 
-    // Let UI detect and process double click on elements for AdvancedProperties
-    //  (see nsEditorShellMouseEventListener)
-    nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
-    // We need this to add mMouseListenerP to document
-    nsresult GetDocumentEventReceiver(nsIDOMEventReceiver **aEventReceiver);
-
     nsresult GetDocShellFromContentWindow(nsIDocShell **aDocShell);
     PRBool mMailCompose;
 

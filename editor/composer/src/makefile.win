@@ -28,7 +28,6 @@ MODULE_NAME=nsComposerModule
 CPP_OBJS =                                            \
           .\$(OBJDIR)\nsEditorShell.obj              \
           .\$(OBJDIR)\nsEditingSession.obj              \
-          .\$(OBJDIR)\nsEditorShellMouseListener.obj \
           .\$(OBJDIR)\nsInterfaceState.obj           \
           .\$(OBJDIR)\nsComposerController.obj       \
           .\$(OBJDIR)\nsComposerCommands.obj         \
