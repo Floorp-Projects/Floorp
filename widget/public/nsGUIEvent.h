@@ -87,17 +87,20 @@ struct nsScrollbarEvent : public nsGUIEvent {
 };
 
 
-/**
- * Mouse event
- */
-
-struct nsMouseEvent : public nsGUIEvent {
+struct nsInputEvent : public nsGUIEvent {
                 /// PR_TRUE indicates the shift key in down
     PRBool          isShift;        
                 /// PR_TRUE indicates the control key in down
     PRBool          isControl;      
                 /// PR_TRUE indicates the alt key in down
     PRBool          isAlt;          
+};
+
+/**
+ * Mouse event
+ */
+
+struct nsMouseEvent : public nsInputEvent {
                 /// The number of mouse clicks
     PRUint32        clickCount;          
 };
@@ -106,15 +109,9 @@ struct nsMouseEvent : public nsGUIEvent {
  * Keyboard event
  */
 
-struct nsKeyEvent : public nsGUIEvent {
+struct nsKeyEvent : public nsInputEvent {
                 /// see NS_VK codes
     PRUint32        keyCode;   
-                /// PR_TRUE indicates the shift key in down
-    PRBool          isShift;        
-                /// PR_TRUE indicates the control key in down
-    PRBool          isControl;      
-                /// PR_TRUE indicates the alt key in down
-    PRBool          isAlt;          
 };
 
 /**
