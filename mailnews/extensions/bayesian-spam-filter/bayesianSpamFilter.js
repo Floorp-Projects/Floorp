@@ -292,6 +292,26 @@ nsBaseStatsTable.prototype =
     mSpamCount: 0,
     mHash: {},
     mBatchUpdateLevel: 0,
+    mDirty: false,
+
+    get batchUpdate()
+    {
+        return (this.mBatchUpdateLevel > 0);
+    },
+    set batchUpdate(aBatchUpdate)
+    {
+        if (aBatchUpdate) {
+            ++this.mBatchUpdateLevel;
+        }
+        else {
+            --this.mBatchUpdateLevel;
+            if (this.mBatchUpdateLevel == 0 && this.mDirty) {
+                this.writeHash();
+                this.updateProbabilities();
+                this.mDirty = false;
+            }
+        }
+    },
 
     ensureHashIsLoaded: function _ensureHashIsLoaded()
     {
@@ -376,6 +396,7 @@ nsBaseStatsTable.prototype =
 
     addTokenToHash: function _addTokenToHash(aToken, aAction)
     {
+        this.mDirty = true;
         if (!(aToken in this.mHash)) {
             this.mHash[aToken] = [0, 0, null];
 //            this.mHash[aToken] = [0, 0, null, Date.now()];
@@ -693,20 +714,11 @@ nsJunkmail.prototype =
 
     get batchUpdate()
     {
-        return (this.mTable.mBatchUpdateLevel > 0);
+        return this.mTable.batchUpdate;
     },
     set batchUpdate(aBatchUpdate)
     {
-        if (aBatchUpdate) {
-            ++this.mTable.mBatchUpdateLevel;
-        }
-        else {
-            --this.mTable.mBatchUpdateLevel;
-            if (this.mTable.mBatchUpdateLevel == 0) {
-                this.mTable.writeHash();
-                this.mTable.updateProbabilities();
-            }
-        }
+        this.mTable.batchUpdate = aBatchUpdate;
     },
     
     initComponent: function _initComponent()
@@ -1062,7 +1074,9 @@ nsJunkmail.prototype =
                     ++caller.mTable.mSpamCount;
                     break;
             }
-            aEndCallback();
+            if ( aEndCallback ) { 
+                aEndCallback();
+            }
         }
 
         this.mTable.ensureHashIsLoaded();
@@ -1075,7 +1089,7 @@ nsJunkmail.prototype =
     {
         function token(aToken)
         {
-            words.push(aToken);
+//            words.push(aToken);
             caller.mTable.calculateToken(aToken, extrema, null);
 //            caller.mTable.calculateToken(aToken, extrema, time);
         }
@@ -1098,17 +1112,19 @@ nsJunkmail.prototype =
 
             score = caller.mTable.calculate(extrema);
             if (score <= 0.5) {
-                for (counter = 0; counter < words.length; ++counter) {
+/*                for (counter = 0; counter < words.length; ++counter) {
                     caller.mTable.addTokenToHash(words[counter], kUnknownToHam);
                 }
                 ++caller.mTable.mHamCount;
+*/
                 aEndCallback.onMessageScored(0);
             }
             else {
-                for (counter = 0; counter < words.length; ++counter) {
+/*                for (counter = 0; counter < words.length; ++counter) {
                     caller.mTable.addTokenToHash(words[counter], kUnknownToSpam);
                 }
                 ++caller.mTable.mSpamCount;
+*/
                 aEndCallback.onMessageScored(1);
             }
         }
