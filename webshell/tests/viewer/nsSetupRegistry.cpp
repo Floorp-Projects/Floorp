@@ -63,7 +63,7 @@
 #define LAYOUT_DLL		"LAYOUT_DLL"
 #define NETLIB_DLL		"NETLIB_DLL"
 //#define EDITOR_DLL	"EDITOR_DLL"	// temporary
-//#define RDF_DLL		"RDF_DLL"		// temporary
+#define RDF_DLL			"RDF_DLL"
 #else
 /* let CFLAGS override these */
 #ifndef WIDGET_DLL
@@ -188,14 +188,12 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 #endif	//XP_MAC
 
-#ifndef XP_MAC    // temporary
   nsRepository::RegisterFactory(kRDFDocumentCID,           RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFRegistryCID,           RDF_DLL, PR_FALSE, PR_FALSE);
-#endif
 
   nsRepository::RegisterFactory(kCSSParserCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 }
