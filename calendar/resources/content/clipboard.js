@@ -51,47 +51,16 @@ function getClipboard()
    return Components.classes[kClipboardContractID].getService(kClipboardIID);
 }
 
-
-function createTransferable()
-{
-   const kTransferableContractID = "@mozilla.org/widget/transferable;1";
-   const kTransferableIID = Components.interfaces.nsITransferable
-   return Components.classes[kTransferableContractID].createInstance(kTransferableIID);
-}
-
-
-function createSupportsArray()
-{
-   const kSuppArrayContractID = "@mozilla.org/supports-array;1";
-   const kSuppArrayIID = Components.interfaces.nsISupportsArray;
-   return Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-}
-
-
-// Should we use (wide)String only, or no (wide)Strings for compatibility?
-function createSupportsCString()
-{
-   const kSuppStringContractID = "@mozilla.org/supports-cstring;1";
-   const kSuppStringIID = Components.interfaces.nsISupportsCString;
-   return Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
-}
-
-
-function createSupportsString()
-{
-   const kSuppStringContractID = "@mozilla.org/supports-string;1";
-   const kSuppStringIID = Components.interfaces.nsISupportsString;
-   return Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
-}
-
-
-function createSupportsWString()
-{
-   const kSuppStringContractID = "@mozilla.org/supports-wstring;1";
-   const kSuppStringIID = Components.interfaces.nsISupportsWString;
-   return Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
-}
-
+var Transferable = Components.Constructor("@mozilla.org/widget/transferable;1", Components.interfaces.nsITransferable);
+var SupportsArray = Components.Constructor("@mozilla.org/supports-array;1", Components.interfaces.nsISupportsArray);
+var SupportsCString = (("nsISupportsCString" in Components.interfaces)
+                       ? Components.Constructor("@mozilla.org/supports-cstring;1", Components.interfaces.nsISupportsCString)
+                       : Components.Constructor("@mozilla.org/supports-string;1", Components.interfaces.nsISupportsString)
+                      );
+var SupportsString = (("nsISupportsWString" in Components.interfaces)
+                      ? Components.Constructor("@mozilla.org/supports-wstring;1", Components.interfaces.nsISupportsWString)
+                      : Components.Constructor("@mozilla.org/supports-string;1", Components.interfaces.nsISupportsString)
+                     );
 
 /** 
 * Test if the clipboard has items that can be pasted into Calendar.
@@ -103,12 +72,12 @@ function canPaste()
    const kClipboardIID = Components.interfaces.nsIClipboard;
 
    var clipboard = getClipboard();
-   var flavourArray = createSupportsArray();   
+  var flavourArray = new SupportsArray;
    var flavours = ["text/calendar", "text/unicode"];
    
    for (var i = 0; i < flavours.length; ++i)
    {
-      const kSuppString = createSupportsCString();
+    var kSuppString = new SupportsCString;
       kSuppString.data = flavours[i];
       flavourArray.AppendElement(kSuppString);
    }
@@ -164,7 +133,7 @@ function copyToClipboard( calendarEventArray )
    var clipboard = getClipboard();
 
    // 2. create the transferable
-   var trans = createTransferable(); 
+  var trans = new Transferable;
 
    if ( trans && clipboard) {
 
@@ -174,9 +143,9 @@ function copyToClipboard( calendarEventArray )
       trans.addDataFlavor("text/html");
 
       // 4. create the data objects
-      var icalWrapper = createSupportsString();
-      var textWrapper = createSupportsString();
-      var htmlWrapper = createSupportsString();
+    var icalWrapper = new SupportsString;
+    var textWrapper = new SupportsString;
+    var htmlWrapper = new SupportsString;
 
       if ( icalWrapper && textWrapper && htmlWrapper ) {
          // get the data
@@ -213,7 +182,7 @@ function pasteFromClipboard()
       var clipboard = getClipboard();
 
       // 2. create the transferable
-      var trans = createTransferable();
+    var trans = new Transferable;
   
       if ( trans && clipboard) {
                      
