@@ -71,6 +71,7 @@ pk11_FindPubKeyByAnyCert(CERTCertificate *cert, PK11SlotInfo **slot, void *wincx
 
 struct nss3_cert_cbstr {
     SECStatus(* callback)(CERTCertificate*, void *);
+    nssList *cached;
     void *arg;
 };
 
@@ -82,11 +83,26 @@ static PRStatus convert_cert(NSSCertificate *c, void *arg)
     CERTCertificate *nss3cert;
     SECStatus secrv;
     struct nss3_cert_cbstr *nss3cb = (struct nss3_cert_cbstr *)arg;
-    nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
     nss3cert = STAN_GetCERTCertificate(c);
     if (!nss3cert) return PR_FAILURE;
     secrv = (*nss3cb->callback)(nss3cert, nss3cb->arg);
     return (secrv) ? PR_FAILURE : PR_SUCCESS;
+}
+
+static PRStatus convert_and_cache_cert(NSSCertificate *c, void *arg)
+{
+    PRStatus nssrv;
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    struct nss3_cert_cbstr *nss3cb = (struct nss3_cert_cbstr *)arg;
+    nssrv = convert_cert(c, arg);
+    if (nssrv == PR_SUCCESS) {
+	nssTrustDomain_AddCertsToCache(td, &c, 1);
+	if (!nssList_Get(nss3cb->cached, c)) {
+	    nssCertificate_AddRef(c);
+	    nssList_Add(nss3cb->cached, c);
+	}
+    }
+    return nssrv;
 }
 
 /* this is redeclared from trustdomain.c, but this code is just 3.4 glue
@@ -2393,10 +2409,11 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     subjectList = nssList_Create(NULL, PR_FALSE);
     (void)nssTrustDomain_GetCertsForSubjectFromCache(td, &subject, subjectList);
     /* set the search criteria */
-    search.callback = convert_cert;
+    search.callback = convert_and_cache_cert;
     search.cbarg = &pk11cb;
     search.cached = subjectList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    pk11cb.cached = subjectList;
     token = PK11Slot_GetNSSToken(slot);
     nssrv = nssToken_TraverseCertificatesBySubject(token, NULL, 
                                                    &subject, &search);
@@ -2464,10 +2481,11 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     nameList = nssList_Create(NULL, PR_FALSE);
     (void)nssTrustDomain_GetCertsForNicknameFromCache(td, nick, nameList);
     /* set the search criteria */
-    search.callback = convert_cert;
+    search.callback = convert_and_cache_cert;
     search.cbarg = &pk11cb;
     search.cached = nameList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    pk11cb.cached = nameList;
     token = PK11Slot_GetNSSToken(slot);
     nssrv = nssToken_TraverseCertificatesByNickname(token, NULL, 
                                                     nick, &search);
@@ -2518,10 +2536,11 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     pk11cb.arg = arg;
     (void *)nssTrustDomain_GetCertsFromCache(td, certList);
     /* set the search criteria */
-    search.callback = convert_cert;
+    search.callback = convert_and_cache_cert;
     search.cbarg = &pk11cb;
     search.cached = certList;
     search.searchType = nssTokenSearchType_TokenOnly;
+    pk11cb.cached = certList;
     tok = PK11Slot_GetNSSToken(slot);
     if (tok) {
 	nssrv = nssToken_TraverseCertificates(tok, NULL, &search);
