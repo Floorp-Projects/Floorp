@@ -118,13 +118,13 @@ var folderListener = {
 						gCurrentLoadingFolderSortDirection = null;
                         gCurrentLoadingFolderViewType = "";
 
+                        SetFocusThreadPane();
                         if (gNextMessageAfterLoad) {
                             gNextMessageAfterLoad = false;
 
                             GoNextMessage(navigateUnread, true); 
 
 				            msgNavigationService.EnsureDocumentIsLoaded(document);
-	                        SetFocusThreadPane();
                             PositionThreadPane();
                         }
 					}
