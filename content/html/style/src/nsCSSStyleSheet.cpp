@@ -2295,12 +2295,19 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 {
   PRBool  result = PR_FALSE;
   nsIAtom*  contentTag;
-  aContent->GetTag(contentTag);
-  PRInt32 nameSpaceID;
-  aContent->GetNameSpaceID(nameSpaceID);
 
-  if (((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag)) && 
-      ((kNameSpaceID_Unknown == aSelector->mNameSpace) || (nameSpaceID == aSelector->mNameSpace))) {
+  // Bail out early if we can
+  if(kNameSpaceID_Unknown != aSelector->mNameSpace) {
+    PRInt32 nameSpaceID;
+    aContent->GetNameSpaceID(nameSpaceID);
+    if(nameSpaceID != aSelector->mNameSpace) {
+      return result;
+    }
+  }
+
+  aContent->GetTag(contentTag);
+
+  if (((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag))) {
     result = PR_TRUE;
     // namespace/tag match
     if (nsnull != aSelector->mAttrList) { // test for attribute match
