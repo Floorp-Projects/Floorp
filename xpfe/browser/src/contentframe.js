@@ -1,86 +1,66 @@
 // -*- Mode: Java -*-
 
-var sidebarURI = 'resource:/res/rdf/sidebar-browser.xul';
-var isSidebarOpen = false;
+var sidebar_name    = '';   // Name for preferences (e.g. 'sidebar.<name>.foo')
+var sidebar_uri     = '';   // Content to load in sidebar frame
+var sidebar_width   = 0;    // Desired width of sidebar
+var sidebar_pref    = '';   // Base for preferences (e.g. 'sidebar.browser')
+var is_sidebar_open = false; 
+var prefs           = null; // Handle to preference interface
 
-function Init() {
-  var pref = Components.classes['component://netscape/preferences'];
-  if (pref) {
-    pref = pref.getService();
+function init_sidebar(name, uri, width) {
+  sidebar_name  = name;
+  sidebar_uri   = uri;
+  sidebar_width = width;
+  sidebar_pref  = 'sidebar.' + name;
+
+  // Open/close sidebar based on saved pref.
+  // This may be replaced by another system by hyatt.
+  pref = Components.classes['component://netscape/preferences'];
+  if (prefs) {
+    prefs = prefs.getService();
   }
-  if (pref) {
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+  if (prefs) {
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   }
-  if (pref) {
-    pref.SetDefaultIntPref('sidebar.width', 170);
-    //    pref.SetIntPref(pref.GetIntPref('sidebar.width'));
-    pref.SetDefaultBoolPref('sidebar.open', false);
-    if (pref.GetBoolPref('sidebar.open')) {
-      toggleOpenClose();
+  if (prefs) {
+    prefs.SetDefaultBoolPref(sidebar_pref + '.open', false);
+
+    // The sidebar is closed by default, so open it only if the
+    //    preference is set to true.
+    if (pref.GetBoolPref(sidebar_pref + '.open')) {
+      toggle_open_close();
     }
   }
 }
 
-function toggleOpenClose() {
-  // Get the open width and update the pref state
-  var pref = Components.classes['component://netscape/preferences'];
-  if (pref) {
-   pref = pref.getService();
-  }
-  if (pref) {
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-  }
-  var width = 0;
+function toggle_open_close() {
 
-  if (pref) {
-    pref.SetBoolPref('sidebar.open', !isSidebarOpen);
-    width = pref.GetIntPref('sidebar.width');
-  }
+  var sidebar = document.getElementById('sidebarframe');
+  var grippy = document.getElementById('grippy');
 
-  if (isSidebarOpen)
+  if (is_sidebar_open)
   {
     // Close it
-    var container = document.getElementById('container');
-    var sidebar = container.firstChild;
-    sidebar.setAttribute('style','width:0px; visibility:hidden');
+    sidebar.setAttribute('style','width: 0px');
     sidebar.setAttribute('src','about:blank');
-    //dump("*** Removing Sidebar: " + container.firstChild);
-    //container.removeChild(container.firstChild);	
 
-    var grippy = document.getElementById('grippy');
     grippy.setAttribute('open','');
 
-    isSidebarOpen = false;
+    is_sidebar_open = false;
   }
   else
   {
     // Open it
-    var container = document.getElementById('container');
-    var sidebar = container.firstChild;
-    //var sidebar = document.createElement('html:iframe');
-    sidebar.setAttribute('style', 'width:' + width + 'px; visibility:visible');
-    sidebar.setAttribute('src',   sidebarURI);
-    sidebar.setAttribute('class', 'sidebarframe');
-    sidebar.setAttribute('id',    'sidebarframe');
-    //dump("*** Inserting sidebar before: " + container.firstChild);
-    //container.insertBefore(sidebar,container.firstChild);	
+    sidebar.setAttribute('style', 'width:' + sidebar_width + 'px');
+    sidebar.setAttribute('src',   sidebar_uri);
 
-    var grippy = document.getElementById('grippy');
     grippy.setAttribute('open','true');
 
-    isSidebarOpen = true;
+    is_sidebar_open = true;
   }  
-}
 
-// To get around "window.onload" not working in viewer.
-function Boot()
-{
-  var root = document.documentElement;
-  if (root == null) {
-    setTimeout(Boot, 0);
-  } else {
-    Init();
+  // Save new open/close state in prefs
+  if (prefs) {
+    prefs.SetBoolPref(sidebar_pref + '.open', is_sidebar_open);
   }
 }
-
-setTimeout('Boot()', 0);
