@@ -681,22 +681,24 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, nsISupports 
       nsLoadCookie * newLoadCookie = new nsLoadCookie();
       if (newLoadCookie)
       {
-        newLoadCookie->Init(loadCookie);
-        
-        // bind the web progress listener (if there is one) to the web progress
-        // instance of the doc loader..
-        nsCOMPtr<nsIDocumentLoader> docLoader (do_GetInterface(loadCookie));
-        nsCOMPtr<nsIWebProgress> webProgress (do_QueryInterface(docLoader));
-        nsCOMPtr<nsIWebProgressListener> webProgressListener (do_GetInterface(aWindowContext));
-        if (webProgress && webProgressListener)
-          webProgress->AddProgressListener(webProgressListener);
-
+        newLoadCookie->Init(loadCookie);        
         rv = cntListener->SetLoadCookie (NS_STATIC_CAST(nsISupports *, (nsIInterfaceRequestor *) newLoadCookie));
         newLoadCookie->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(loadCookie)); 
       } // if we created a new cookie
     } // if we don't have  a load cookie already
   } // if we have a cntListener
 
+  // every time we do a load, we should reset the progress listener on it...
+  if (loadCookie)
+  {
+    // bind the web progress listener (if there is one) to the web progress
+    // instance of the doc loader..
+    nsCOMPtr<nsIDocumentLoader> docLoader (do_GetInterface(loadCookie));
+    nsCOMPtr<nsIWebProgress> webProgress (do_QueryInterface(docLoader));
+    nsCOMPtr<nsIWebProgressListener> webProgressListener (do_GetInterface(aWindowContext));
+    if (webProgress && webProgressListener)
+      webProgress->AddProgressListener(webProgressListener);
+  }
   
   *aLoadCookie = loadCookie;
   NS_IF_ADDREF(*aLoadCookie);

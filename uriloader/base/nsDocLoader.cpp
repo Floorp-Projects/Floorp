@@ -653,6 +653,9 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   if (mParent) {
     mParent->FireOnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
   }
+
+  // now forget about our progress listener...
+  mProgressListener = nsnull;
 }
 
 
