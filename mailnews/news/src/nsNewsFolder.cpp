@@ -187,10 +187,8 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsCString uri("");
-	uri.Append(mURI);
+	nsCString uri(mURI);
 	uri.Append('/');
-
 	uri.Append(name);
 
 	nsCOMPtr<nsIRDFResource> res;
