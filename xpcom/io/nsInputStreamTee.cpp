@@ -183,6 +183,14 @@ nsInputStreamTee::GetSource(nsIInputStream **source)
 NS_IMETHODIMP
 nsInputStreamTee::SetSink(nsIOutputStream *sink)
 {
+#ifdef DEBUG
+    if (sink) {
+        PRBool nonBlocking;
+        nsresult rv = sink->IsNonBlocking(&nonBlocking);
+        if (NS_FAILED(rv) || nonBlocking)
+            NS_ERROR("sink should be a blocking stream");
+    }
+#endif
     mSink = sink;
     return NS_OK;
 }

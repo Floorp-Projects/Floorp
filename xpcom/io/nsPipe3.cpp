@@ -319,7 +319,6 @@ nsPipe::nsPipe()
     , mWriteLimit(nsnull)
     , mStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsPipe::~nsPipe()
@@ -760,7 +759,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
 
             rv = writer(this, closure, segment, *readCount, segmentLen, &writeCount);
 
-            if (NS_FAILED(rv) || (writeCount == 0)) {
+            if (NS_FAILED(rv) || writeCount == 0) {
                 count = 0;
                 // any errors returned from the writer end here: do not
                 // propogate to the caller of ReadSegments.
@@ -768,6 +767,7 @@ nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
                 break;
             }
 
+            NS_ASSERTION(writeCount <= segmentLen, "wrote more than expected");
             segment += writeCount;
             segmentLen -= writeCount;
             count -= writeCount;
@@ -1095,7 +1095,7 @@ nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
 
             rv = reader(this, closure, segment, *writeCount, segmentLen, &readCount);
 
-            if (NS_FAILED(rv) || (readCount == 0)) {
+            if (NS_FAILED(rv) || readCount == 0) {
                 count = 0;
                 // any errors returned from the reader end here: do not
                 // propogate to the caller of WriteSegments.
@@ -1103,6 +1103,7 @@ nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 break;
             }
 
+            NS_ASSERTION(readCount <= segmentLen, "read more than expected");
             segment += readCount;
             segmentLen -= readCount;
             count -= readCount;

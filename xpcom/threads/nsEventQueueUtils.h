@@ -45,14 +45,8 @@
 inline nsresult
 NS_GetEventQueueService(nsIEventQueueService **result)
 {
-  nsresult rv;
-
   static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-  nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  NS_ADDREF(*result = eqs);
-  return NS_OK;
+  return CallGetService(kEventQueueServiceCID, result);
 }
 
 inline nsresult

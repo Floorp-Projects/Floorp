@@ -81,7 +81,7 @@ interface nsIAsyncStreamCopier : nsIRequest
      * @param aObserver
      *        receives notifications.
      * @param aObserverContext
-     *        passed to listener methods.
+     *        passed to observer methods.
      */
     void asyncCopy(in nsIRequestObserver   aObserver,
                    in nsISupports          aObserverContext);

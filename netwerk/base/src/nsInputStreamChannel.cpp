@@ -283,6 +283,8 @@ nsInputStreamChannel::Open(nsIInputStream **result)
     NS_ENSURE_TRUE(mContentStream, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(!mPump, NS_ERROR_IN_PROGRESS);
 
+    // XXX this won't work if mContentStream is non-blocking.
+
     NS_ADDREF(*result = mContentStream);
     return NS_OK;
 }
@@ -293,6 +295,11 @@ nsInputStreamChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     NS_ENSURE_TRUE(mContentStream, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(!mPump, NS_ERROR_IN_PROGRESS);
 
+    // if content length is unknown, then we must guess... in this case, we
+    // assume the stream can tell us.  if the stream is a pipe, then this will
+    // not work.  in that case, we hope that the user of this interface would
+    // have set our content length to PR_UINT32_MAX to cause us to read until
+    // end of stream.
     if (mContentLength == -1)
         mContentStream->Available((PRUint32 *) &mContentLength);
 
