@@ -47,16 +47,13 @@ XPIDLSRCS =				  \
 
 EXPORTS =				\
 		msgCore.h		\
+		nsIMsgMailNewsUrl.h	\
+		nsIUrlListenerManager.h \
 		nsMsgFolderFlags.h	\
 		nsMsgHeaderMasks.h	\
 		nsMsgMessageFlags.h	\
 		nsMsgLocalFolderHdrs.h  \
 		nsMsgMD5.h	\
-		nsIMsgMailNewsUrl.h	\
-		nsIUrlListenerManager.h \
-		nsICopyMessageListener.h \
-		nsIMessageView.h	\
-		nsIMessage.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

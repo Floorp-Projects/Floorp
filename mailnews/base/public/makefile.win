@@ -46,32 +46,13 @@ XPIDLSRCS =								\
 
 EXPORTS =                           \
 			msgCore.h               \
-			nsMsgFolderFlags.h      \
-			nsMsgLocalFolderHdrs.h  \
-			nsMsgHeaderMasks.h      \
-			nsMsgMessageFlags.h     \
-			nsIMsgHost.h            \
-			nsIFolder.h             \
-			nsIMsgFolder.h          \
 			nsIMsgMailNewsUrl.h		\
 			nsIUrlListenerManager.h \
-			nsIUrlListener.h		\
-			nsIFolderListener.h		\
-			nsIMsgMailSession.h		\
-			nsIMsgIdentity.h		\
-			nsIMsgGroupRecord.h		\
-			nsICopyMessageListener.h \
-			nsIMessageView.h		\
-			nsIMsgSignature.h		\
-			nsIMsgVCard.h			\
-			nsIMsgAccount.h			\
-			nsIMsgAccountManager.h	\
-			nsIMsgIdentity.h		\
-			nsIMsgIncomingServer.h	\
-			nsIMsgThread.h			\
-			nsIMsgMessageService.h	\
-			nsIMessage.h			\
-			nsIMsgBiffManager.idl	\
+			nsMsgFolderFlags.h      \
+			nsMsgHeaderMasks.h      \
+			nsMsgLocalFolderHdrs.h  \
+			nsMsgMessageFlags.h     \
+			nsMsgMD5.h	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
