@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.41 $ ';
+$::UtilsVersion = '$Revision: 1.42 $ ';
 
 package TinderUtils;
 
@@ -786,16 +786,16 @@ sub run_all_tests {
 	  # Settle OS.
 	  run_system_cmd("sync; sleep 30", 35);
 
-	  # Generate URL of form file:///<cwd>/startup.html?begin=986869495000
+	  # Generate URL of form file:///<cwd>/startup-test.html?begin=986869495000
 	  # Where begin value is current time.
 	  my ($time, $url, $cwd, $cmd);
 	  $time = time() . "000"; # looks stupid, but 'time()*1000' returns a negative
 	  $cwd = Cwd::getcwd();
 	  print "cwd = $cwd\n";
-	  $url  = "\"file:$binary_dir/startup.html?begin=$time\"";
+	  $url  = "\"file:$binary_dir/startup-test.html?begin=$time\"";
 	  print "url = $url\n";
 
-	  # Then load startup.html, which will pull off the begin argument
+	  # Then load startup-test.html, which will pull off the begin argument
 	  # and compare it to the current time to compute startup time.
 	  $test_result = AliveTest("StartupPerformanceTest", $build_dir,
 							   $binary, 
