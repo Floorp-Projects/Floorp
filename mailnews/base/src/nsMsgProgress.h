@@ -44,14 +44,17 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsString.h"
 #include "nsIMsgWindow.h"
+#include "nsIProgressEventSink.h"
+#include "nsIStringBundle.h"
 
-class nsMsgProgress : public nsIMsgProgress, public nsIMsgStatusFeedback
+class nsMsgProgress : public nsIMsgProgress, public nsIMsgStatusFeedback, public nsIProgressEventSink
 {
 public: 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIMSGSTATUSFEEDBACK
+  NS_DECL_NSIPROGRESSEVENTSINK
 
   nsMsgProgress();
   virtual ~nsMsgProgress();

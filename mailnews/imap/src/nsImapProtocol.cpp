@@ -2264,7 +2264,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
               (m_imapAction == nsIImapUrl::nsImapOnlineMove) &&
               !GetServerStateParser().ServerIsAOLServer())
             {
-              Store(messageIdString, "+FLAGS (\\Deleted)",
+              Store(messageIdString, "+FLAGS (\\Deleted \\Seen)",
                 bMessageIdsAreUids); 
               PRBool storeSuccessful = GetServerStateParser().LastCommandSuccessful();
               
@@ -2307,7 +2307,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
               if (GetServerStateParser().LastCommandSuccessful() &&
                 (m_imapAction == nsIImapUrl::nsImapOnlineToOfflineMove))
               {
-                Store(messageIdString, "+FLAGS (\\Deleted)",bMessageIdsAreUids); 
+                Store(messageIdString, "+FLAGS (\\Deleted \\Seen)",bMessageIdsAreUids); 
                 if (GetServerStateParser().LastCommandSuccessful())
                   copyStatus = ImapOnlineCopyStateType::kSuccessfulDelete;
                 else
@@ -4362,26 +4362,26 @@ void nsImapProtocol::SetProgressString(PRInt32 stringId)
 void
 nsImapProtocol::ShowProgress()
 {
-    if (m_progressString && m_progressStringId)
+  if (m_progressString && m_progressStringId)
+  {
+    PRUnichar *progressString = NULL;
+    nsCAutoString cProgressString; cProgressString.AssignWithConversion(m_progressString);
+    const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
+    
+    nsXPIDLString unicodeMailboxName;
+    
+    nsresult rv = CreateUnicodeStringFromUtf7(mailboxName, getter_Copies(unicodeMailboxName));
+    if (NS_SUCCEEDED(rv))
     {
-      PRUnichar *progressString = NULL;
-      nsCAutoString cProgressString; cProgressString.AssignWithConversion(m_progressString);
-      const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
-
-	    nsXPIDLString unicodeMailboxName;
-
-	    nsresult rv = CreateUnicodeStringFromUtf7(mailboxName, getter_Copies(unicodeMailboxName));
-	    if (NS_SUCCEEDED(rv))
-	    {
-		    // ### should convert mailboxName to PRUnichar and change %s to %S in msg text
-		    progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
-		    if (progressString)
-		    {
-			    PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
-			    nsTextFormatter::smprintf_free(progressString);
-		    }
-	    }
+      // ### should convert mailboxName to PRUnichar and change %s to %S in msg text
+      progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
+      if (progressString)
+      {
+        PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
+        nsTextFormatter::smprintf_free(progressString);
+      }
     }
+  }
 }
 
 void
@@ -4399,14 +4399,14 @@ void
 nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
                                                        char * aExtraInfo)
 {
-    if (m_imapMiscellaneousSink)
+  if (m_imapMiscellaneousSink)
   {
 
-	    nsXPIDLString unicodeStr;
+    nsXPIDLString unicodeStr;
 
-	    nsresult rv = CreateUnicodeStringFromUtf7(aExtraInfo, getter_Copies(unicodeStr));
-	    if (NS_SUCCEEDED(rv))
-        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, unicodeStr);
+    nsresult rv = CreateUnicodeStringFromUtf7(aExtraInfo, getter_Copies(unicodeStr));
+    if (NS_SUCCEEDED(rv))
+      m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, unicodeStr);
   }
 }
 
@@ -4980,6 +4980,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         dataBuffer[readCount] = 0;
         rv = SendData(dataBuffer);
         totalSize -= readCount;
+        PercentProgressUpdateEvent(nsnull, fileSize - totalSize, fileSize);
         rv = fileSpec->Eof(&eof);
       }
     }
