@@ -33,6 +33,7 @@
 #include "nsTransform2D.h"
 #include "nscoord.h"
 #include "nsDrawingSurfaceOS2.h"
+#include "nsImageOS2.h"
 #include "nsRenderingContextImpl.h"
 
 class nsIDeviceContext;

@@ -80,9 +80,8 @@ public:
    * @param aHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-#if 0 // OS2TODO
+// OS2TODO
   PRBool  DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
-#endif
 
   /** 
    * Return the header size of the Device Independent Bitmap(DIB).

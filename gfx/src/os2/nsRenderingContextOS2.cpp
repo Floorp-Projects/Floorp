@@ -1379,6 +1379,28 @@ NS_IMETHODIMP
 nsRenderingContextOS2::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                                     nscoord aWidth,nscoord aHeight)
 {
+  nscoord     orgX,orgY,orgWidth,orgHeight;
+  PRBool      didtile = FALSE;
+
+  // convert output platform, but no translation.. just scale
+  orgX = aX0;
+  orgY = aY0;
+  orgWidth = aX1 - aX0;
+  orgHeight = aY1 - aY0;
+  mTMatrix.TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+  mTMatrix.TransformCoord(&orgX,&orgY,&orgWidth,&orgHeight);
+  aX1 = aX0 + orgWidth;
+  aY1 = aY0 + orgHeight;
+
+//  if ( PR_TRUE==CanTile(aWidth,aHeight) ) {    
+//    didtile = ((nsImageOS2*)aImage)->PatBltTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
+//  }
+      
+//  if (PR_FALSE ==didtile){
+    // rely on the slower tiler supported in nsRenderingContextWin.. don't have 
+    // to use xplatform which is really slow (slowest is the only one that supports transparency
+    didtile = ((nsImageOS2*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
+//  }
 
   return NS_OK;
 }
