@@ -91,7 +91,8 @@
 #define MAX_PATH PATH_MAX
 #endif
 
-/* NOTE! It is EXREMELY important that node names be in UTF-8; otherwise
+ 
+ /* NOTE! It is EXREMELY important that node names be in UTF-8; otherwise
  * backwards path search for delim char will fail for multi-byte/Unicode names
  */
 
