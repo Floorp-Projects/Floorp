@@ -192,7 +192,7 @@ NS_IMETHODIMP TimerThread::Run()
     if (mTimers.Count() > 0) {
       timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[0]);
 
-      if (now >= timer->mTimeout + mTimeoutAdjustment) {
+      if (!TIMER_LESS_THAN(now, timer->mTimeout + mTimeoutAdjustment)) {
   next:
         // NB: AddRef before the Release under RemoveTimerInternal to avoid
         // mRefCnt passing through zero, in case all other refs than the one
@@ -242,7 +242,7 @@ NS_IMETHODIMP TimerThread::Run()
 
       // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer is
       // due now or overdue.
-      if (now >= timeout)
+      if (!TIMER_LESS_THAN(now, timeout))
         goto next;
       waitFor = timeout - now;
     }
@@ -270,11 +270,12 @@ nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
 {
   nsAutoLock lock(mLock);
 
-  /* add the timer from our list */
+  // Add the timer to our list.
   PRInt32 i = AddTimerInternal(aTimer);
   if (i < 0)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  // Awaken the timer thread.
   if (mCondVar && mWaiting && i == 0)
     PR_NotifyCondVar(mCondVar);
 
@@ -287,10 +288,15 @@ nsresult TimerThread::TimerDelayChanged(nsTimerImpl *aTimer)
 
   // Our caller has a strong ref to aTimer, so it can't go away here under
   // ReleaseTimerInternal.
-
   RemoveTimerInternal(aTimer);
-  if (AddTimerInternal(aTimer) < 0)
+
+  PRInt32 i = AddTimerInternal(aTimer);
+  if (i < 0)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  // Awaken the timer thread.
+  if (mCondVar && mWaiting && i == 0)
+    PR_NotifyCondVar(mCondVar);
 
   return NS_OK;
 }
@@ -309,6 +315,10 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
   if (!RemoveTimerInternal(aTimer))
     return NS_ERROR_NOT_AVAILABLE;
 
+  // Awaken the timer thread.
+  if (mCondVar && mWaiting)
+    PR_NotifyCondVar(mCondVar);
+
   return NS_OK;
 }
 
@@ -320,7 +330,7 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   for (; i < count; i++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[i]);
 
-    if (aTimer->mTimeout < timer->mTimeout) {
+    if (TIMER_LESS_THAN(aTimer->mTimeout, timer->mTimeout)) {
       break;
     }
   }

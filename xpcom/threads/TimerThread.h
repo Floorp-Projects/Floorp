@@ -75,7 +75,9 @@ public:
   nsCOMPtr<nsIEventQueueService> mEventQueueService;
 
 private:
-  // These two internal functions must be called from within a lock
+  // These two internal helper methods must be called while mLock is held.
+  // AddTimerInternal returns the position where the timer was added in the
+  // list, or -1 if it failed.
   PRInt32 AddTimerInternal(nsTimerImpl *aTimer);
   PRBool  RemoveTimerInternal(nsTimerImpl *aTimer);
 
