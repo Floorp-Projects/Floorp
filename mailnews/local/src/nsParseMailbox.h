@@ -212,7 +212,6 @@ protected:
 
 	// data
 
-	nsMailDatabase			*m_mailDB;
 	char			*m_mailboxName;
 	nsByteArray		m_inputStream;
 	PRInt32			m_obuffer_size;
