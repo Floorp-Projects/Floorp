@@ -729,7 +729,6 @@ PRInt32 nsPrincipal::computeHashCode(void)
 
 char * nsPrincipal::saveCert(void)
 {
-  int result;
   if (itsType == nsPrincipalType_CertChain) {
     return NULL;
   }
@@ -738,6 +737,7 @@ char * nsPrincipal::saveCert(void)
   }
 
 #ifdef MOZ_SECURITY
+  int result;
   result = SOB_stash_cert((ZIG *)itsZig, itsKeyLen, itsKey);
   if (result < 0) {
     return SOB_get_error(result);
@@ -751,8 +751,6 @@ char * nsPrincipal::saveCert(void)
 char *
 nsPrincipal::getCertAttribute(int attrib)
 {
-    void *result;
-    unsigned long length;
     char *attrStr = "Untrusted certificate (unknown attributes)";
     ZIG *zig = NULL;
 
@@ -799,6 +797,8 @@ nsPrincipal::getCertAttribute(int attrib)
     }
     
 #ifdef MOZ_SECURITY
+    void *result;
+    unsigned long length;
     if (SOB_cert_attribute(attrib, zig, 
                            itsKeyLen, itsKey, 
                            &result, &length) < 0) {
