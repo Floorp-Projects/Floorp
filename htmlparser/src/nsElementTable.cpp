@@ -338,7 +338,7 @@ nsHTMLElement gHTMLElements[] = {
     /*requiredAncestor*/                eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
     /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,
-    /*parent,incl,exclgroups*/          kHTMLContent, kFlow, kNone,	
+    /*parent,incl,exclgroups*/          kHTMLContent,(kFlow|kSelf), kNone,	
     /*special properties*/              kOmitEndTag|kLegalOpen,
     /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown},
 
