@@ -15,7 +15,9 @@
 
 #include <stddef.h>
 #include <stdio.h>
+
 #include <string>
+#include <locale>
 
 #include <crtdbg.h>
 #include <atlconv.h>
