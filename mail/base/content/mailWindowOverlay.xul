@@ -1857,7 +1857,11 @@
            fullscreentoolbar="true" mode="full"
            customizable="true"
            context="toolbar-context-menu"
+#ifdef XP_MACOSX
            defaultset="button-getmsg,button-newmsg,button-address,spacer,button-reply,button-replyall,button-forward,spacer,button-delete,button-junk,spacer,button-print,button-stop,spring,throbber-box">
+#else
+           defaultset="button-getmsg,button-newmsg,button-address,separator,button-reply,button-replyall,button-forward,separator,button-delete,button-junk,separator,button-print,button-stop,spring,throbber-box">
+#endif
   </toolbar>
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>

@@ -513,7 +513,11 @@
            fullscreentoolbar="true" mode="full"
            customizable="true"
            context="toolbar-context-menu"
+#ifdef XP_MACOSX
            defaultset="button-newcard,button-newlist,spacer,button-editcard,button-newmessage,spacer,button-abdelete,spring,throbber-box">
+#else
+           defaultset="button-newcard,button-newlist,separator,button-editcard,button-newmessage,separator,button-abdelete,spring,throbber-box">
+#endif
    </toolbar>
    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
   </toolbox>
