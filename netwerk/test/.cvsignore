@@ -7,4 +7,5 @@ TestProtocols
 TestFileInput
 TestFileInput2
 TestRes
+TestSyncHTTP
 urltest
