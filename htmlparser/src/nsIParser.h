@@ -40,6 +40,7 @@
 
 
 class nsIContentSink;
+class nsString;
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -52,10 +53,14 @@ class nsIParser : public nsISupports {
   public:
 
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
-    virtual PRBool          Parse(nsIURL* aURL)=0;
-    virtual PRBool          ResumeParse()=0;
-    virtual PRInt32         GetStack(PRInt32* aStackPtr)=0;
-    virtual PRBool          HasOpenContainer(PRInt32 aContainer) const=0;
+
+    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_FALSE)=0;
+    virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental)=0;
+    virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
+
+    virtual PRInt32 ResumeParse(PRInt32 anIterator)=0;
+    virtual PRInt32 GetStack(PRInt32* aStackPtr)=0;
+    virtual PRBool  HasOpenContainer(PRInt32 aContainer) const=0;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult);

@@ -81,42 +81,49 @@ nsIDTD* CNavDelegate::GetDTD(void) const{
  *  and we know we're at the start of some kind of tagged 
  *  element. We don't know yet if it's a tag or a comment.
  *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
+ *  @update  gess 5/12/98
+ *  @param   aChar is the last char read
+ *  @param   aScanner is represents our input source
+ *  @param   aToken is the out arg holding our new token
+ *  @return  error code (may return kInterrupted).
  */
 PRInt32 CNavDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
   nsAutoString empty("");
   PRInt32 result=aScanner.GetChar(aChar);
 
-  switch(aChar) {
-    case kForwardSlash:
-      PRUnichar ch; 
-      result=aScanner.Peek(ch);
-      if(nsString::IsAlpha(ch))
-        aToken=new CEndToken(empty);
-      else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
-      break;
-    case kExclamation:
-      aToken=new CCommentToken(empty);
-      break;
-    default:
-      if(nsString::IsAlpha(aChar))
-        return ConsumeStartTag(aChar,aScanner,aToken);
-      else if(kEOF!=aChar) {
-        nsAutoString temp("<");
-        return ConsumeText(temp,aScanner,aToken);
-      }
-  } //switch
+  if(kNoError==result) {
 
-  if(0!=aToken) {
-    result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(result) {
-      delete aToken;
-      aToken=0;
-    }
-  }
+    switch(aChar) {
+      case kForwardSlash:
+        PRUnichar ch; 
+        result=aScanner.Peek(ch);
+        if(kNoError==result) {
+          if(nsString::IsAlpha(ch))
+            aToken=new CEndToken(empty);
+          else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
+        }//if
+        break;
+      case kExclamation:
+        aToken=new CCommentToken(empty);
+        break;
+      default:
+        if(nsString::IsAlpha(aChar))
+          return ConsumeStartTag(aChar,aScanner,aToken);
+        else if(kEOF!=aChar) {
+          nsAutoString temp("<");
+          return ConsumeText(temp,aScanner,aToken);
+        }
+    } //switch
+
+    if((0!=aToken) && (kNoError==result)) {
+      result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+      if(result) {
+        delete aToken;
+        aToken=0;
+      }
+    } //if
+  } //if
   return result;
 }
 
@@ -131,20 +138,26 @@ PRInt32 CNavDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  */
 PRInt32 CNavDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner) {
   PRBool done=PR_FALSE;
-  nsAutoString as("");
   PRInt32 result=kNoError;
+  nsAutoString as("");
+
   while((!done) && (result==kNoError)) {
-     CToken* theToken= new CAttributeToken(as);
-      if(theToken){
-        result= theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+    CToken* theToken= new CAttributeToken(as);
+    if(theToken){
+      result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+      if(kNoError==result){
         mTokenDeque.Push(theToken);
-      }
-    aScanner.Peek(aChar);
-    if(aChar==kGreaterThan) { //you just ate the '>'
-      aScanner.GetChar(aChar); //skip the '>'
-      done=PR_TRUE;
-    }
-  }
+      }//if
+    }//if
+    
+    if(kNoError==result){
+      result=aScanner.Peek(aChar);
+      if(aChar==kGreaterThan) { //you just ate the '>'
+        aScanner.GetChar(aChar); //skip the '>'
+        done=PR_TRUE;
+      }//if
+    }//if
+  }//while
   return result;
 }
 
@@ -166,8 +179,7 @@ PRInt32 CNavDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar a
   endTag.Append(aString);
   endTag.Append(">");
   aToken=new CSkippedContentToken(endTag);
-  PRInt32 result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-  return result;
+  return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
 }
 
 /**
@@ -183,38 +195,43 @@ PRInt32 CNavDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar a
 PRInt32 CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   aToken=new CStartToken(nsAutoString(""));
   PRInt32 result=kNoError;
+
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(((CStartToken*)aToken)->IsAttributed()) {
-      result=ConsumeAttributes(aChar,aScanner);
-    }
-    //now that that's over with, we have one more problem to solve.
-    //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
-    //consume all the content itself.
-    nsString& str=aToken->GetText();
-    CToken*   skippedToken=0;
-    if(str.EqualsIgnoreCase("SCRIPT") ||
-       str.EqualsIgnoreCase("STYLE") ||
-       str.EqualsIgnoreCase("TITLE") ||
-       str.EqualsIgnoreCase("TEXTAREA")) {
-      result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
-      
-      if(skippedToken){
-          //now we strip the ending sequence from our new SkippedContent token...
-        PRInt32 slen=str.Length()+3;
-        nsString& skippedText=skippedToken->GetText();
-      
-        skippedText.Cut(skippedText.Length()-slen,slen);
-        mTokenDeque.Push(skippedToken);
+    if(kNoError==result) {
+      if(((CStartToken*)aToken)->IsAttributed()) {
+        result=ConsumeAttributes(aChar,aScanner);
+      }
+      //now that that's over with, we have one more problem to solve.
+      //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
+      //consume all the content itself.
+      if(kNoError==result) {
+        nsString& str=aToken->GetText();
+        CToken*   skippedToken=0;
+        if(str.EqualsIgnoreCase("SCRIPT") ||
+           str.EqualsIgnoreCase("STYLE") ||
+           str.EqualsIgnoreCase("TITLE") ||
+           str.EqualsIgnoreCase("TEXTAREA")) {
+          result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
     
-        //In the case that we just read a given tag, we should go and
-        //consume all the tag content itself (and throw it all away).
+          if((kNoError==result) && skippedToken){
+              //now we strip the ending sequence from our new SkippedContent token...
+            PRInt32 slen=str.Length()+3;
+            nsString& skippedText=skippedToken->GetText();
+    
+            skippedText.Cut(skippedText.Length()-slen,slen);
+            mTokenDeque.Push(skippedToken);
+  
+            //In the case that we just read a given tag, we should go and
+            //consume all the tag content itself (and throw it all away).
 
-        CEndToken* endtoken=new CEndToken(str);
-        mTokenDeque.Push(endtoken);
+            CEndToken* endtoken=new CEndToken(str);
+            mTokenDeque.Push(endtoken);
+          } //if
+        } //if
       } //if
     } //if
-  }
+  } //if
   return result;
 }
 
@@ -231,19 +248,22 @@ PRInt32 CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*
 PRInt32 CNavDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
    PRUnichar  ch;
    PRInt32 result=aScanner.GetChar(ch);
-   if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-     aToken = new CEntityToken(nsAutoString(""));
-     result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
-   }
-   else if(kHashsign==ch) {
-     aToken = new CEntityToken(nsAutoString(""));
-     result=aToken->Consume(0,aScanner);
-   }
-   else {
-     //oops, we're actually looking at plain text...
-     nsAutoString temp("&");
-     result=ConsumeText(temp,aScanner,aToken);
-   }
+
+   if(kNoError==result) {
+     if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
+       aToken = new CEntityToken(nsAutoString(""));
+       result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
+     }
+     else if(kHashsign==ch) {
+       aToken = new CEntityToken(nsAutoString(""));
+       result=aToken->Consume(0,aScanner);
+     }
+     else {
+       //oops, we're actually looking at plain text...
+       nsAutoString temp("&");
+       result=ConsumeText(temp,aScanner,aToken);
+     }
+   }//if
    return result;
 }
 
@@ -336,36 +356,54 @@ PRInt32 CNavDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*&
  *  @return new token or null 
  */
 PRInt32 CNavDelegate::GetToken(CScanner& aScanner,CToken*& aToken){
-  PRInt32   result=kNoError;
-  PRUnichar aChar;
-
+  
+  aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
-    return result;
+    return kNoError;
   }
-  aToken=0;
-  while(!aScanner.Eof()) {
+
+  PRInt32 result=kNoError;
+  if(kNoError==result){
+    
+    PRUnichar aChar;
     result=aScanner.GetChar(aChar);
-    switch(aChar) {
-      case kAmpersand:
-        return ConsumeEntity(aChar,aScanner,aToken);
-      case kLessThan:
-        return ConsumeTag(aChar,aScanner,aToken);
-      case kCR: case kLF:
-        return ConsumeNewline(aChar,aScanner,aToken);
-      case kNotFound:
+    switch(result) {
+      case kEOF:
         break;
+
+      case kInterrupted:
+        aScanner.RewindToMark();
+        break; 
+
+      case kNoError:
       default:
-        if(!nsString::IsSpace(aChar)) {
-          nsAutoString temp(aChar);
-          return ConsumeText(temp,aScanner,aToken);
-        }
-        else return ConsumeWhitespace(aChar,aScanner,aToken);
-        break;
+        switch(aChar) {
+          case kLessThan:
+            return ConsumeTag(aChar,aScanner,aToken);
+
+          case kAmpersand:
+            return ConsumeEntity(aChar,aScanner,aToken);
+          
+          case kCR: case kLF:
+            return ConsumeNewline(aChar,aScanner,aToken);
+          
+          case kNotFound:
+            break;
+          
+          default:
+            if(!nsString::IsSpace(aChar)) {
+              nsAutoString temp(aChar);
+              return ConsumeText(temp,aScanner,aToken);
+            }
+            else return ConsumeWhitespace(aChar,aScanner,aToken);
+            break;
+        } //switch
+        break; 
     } //switch
-    if(result==kEOF)
-      result=0;
-   } //while
+    if(kNoError==result)
+      result=aScanner.Eof();
+  } //while
   return result;
 }
 

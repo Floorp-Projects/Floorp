@@ -31,6 +31,7 @@
 #include "CNavDTD.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "plstr.h"
+#include <fstream.h>
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
 #endif
@@ -40,11 +41,13 @@ static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID);
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
+static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 
-static char* gVerificationOutputDir=0;
+static char*  gVerificationOutputDir=0;
+static int    rickGDebug=0;
 
 /**
  *  This method is defined in nsIParser. It is used to 
@@ -456,92 +459,198 @@ PRBool nsHTMLParser::IterateTokens() {
   return result;
 }
 
-
 /**
- *  This is the main controlling routine in the parsing process. 
- *  Note that it may get called multiple times for the same scanner, 
- *  since this is a pushed based system, and all the tokens may 
- *  not have been consumed by the scanner during a given invocation 
- *  of this method. 
- *
- *  @update  gess 3/25/98
- *  @param   aFilename -- const char* containing file to be parsed.
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ *  
+ *  
+ *  @update  gess 5/13/98
+ *  @param   
+ *  @return  
  */
-PRBool nsHTMLParser::Parse(nsIURL* aURL){
-  eParseMode  theMode=eParseMode_navigator;
+eParseMode DetermineParseMode() {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
   const char* other="other";
+  eParseMode  result=eParseMode_navigator;
 
   if(theModeStr) 
     if(0==nsCRT::strcasecmp(other,theModeStr))
-      theMode=eParseMode_other;
-
-  return Parse(aURL,theMode);
+      result=eParseMode_other;    
+  return result;
 }
 
+
 /**
- *  This is the main controlling routine in the parsing process. 
- *  Note that it may get called multiple times for the same scanner, 
- *  since this is a pushed based system, and all the tokens may 
- *  not have been consumed by the scanner during a given invocation 
- *  of this method. 
- *
- *  @update  gess 3/25/98
- *  @param   aFilename -- const char* containing file to be parsed.
- *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ *  
+ *  
+ *  @update  gess 5/13/98
+ *  @param   
+ *  @return  
  */
-PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
-  NS_PRECONDITION(0!=aURL,kNullURL);
-  
-  PRBool result=PR_FALSE;
-  if(aURL) {
+void GetDelegateAndDTD(eParseMode aMode,ITokenizerDelegate*& aDelegate,nsIDTD*& aDTD) {
+  switch(aMode) {
+    case eParseMode_navigator:
+      aDelegate=new CNavDelegate(); break;
+    case eParseMode_other:
+      aDelegate=new COtherDelegate(); break;
+    default:
+      break;
+  }
+  if(aDelegate)
+    aDTD=aDelegate->GetDTD();
+}
 
-    result=PR_TRUE;
-    mParseMode=aMode;
-    ITokenizerDelegate* theDelegate=0;
-    
-    mDTD=0;
-    switch(mParseMode) {
-      case eParseMode_navigator:
-        theDelegate=new CNavDelegate();
-        if(theDelegate)
-          mDTD=theDelegate->GetDTD();
-        break;
-      case eParseMode_other:
-        theDelegate=new COtherDelegate();
-        if(theDelegate)
-          mDTD=theDelegate->GetDTD();
-        break;
-      default:
-        break;
-    }
-    if(!theDelegate) {
-      NS_ERROR(kNullTokenizer);
-      return PR_FALSE;
-    }
 
-    if(mDTD)
-      mDTD->SetParser(this);
-    mTokenizer=new CTokenizer(aURL, theDelegate, mParseMode);
+/**
+ *  This DEBUG ONLY method is used to simulate a network-based
+ *  i/o model where data comes in incrementally.
+ *  
+ *  @update  gess 5/13/98
+ *  @param   aFilename is the name of the disk file to use for testing.
+ *  @return  error code (kNoError means ok)
+ */
+PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
+  PRInt32   result=kBadFilename;
+  fstream*  mFileStream;
+  nsString  theBuffer;
+  PRInt32   iter=-1;
+  const int kBufSize=10;
 
-    mSink->WillBuildModel();
-#ifdef __INCREMENTAL 
-    int iter=-1;
-    for(;;){
-      mSink->WillResume();
-      mTokenizer->TokenizeAvailable(++iter);
-      mSink->WillInterrupt();
+  mFileStream=new fstream(aFilename,ios::in|ios::binary);
+  if(mFileStream) {
+    result=kNoError;
+    while((kNoError==result) || (kInterrupted==result)) {
+      //read some data from the file...
+
+      char buf[kBufSize];
+      buf[kBufSize]=0;
+
+      if(mFileStream) {
+        mFileStream->read(buf,kBufSize);
+        PRInt32 numread=mFileStream->gcount();
+        if(numread>0) {
+          theBuffer.Truncate();
+          theBuffer.Append(buf);
+          mTokenizer->Append(theBuffer);
+          result=ResumeParse(++iter);
+        }
+      }
+
     }
-#else
-    mTokenizer->Tokenize();
-#endif
-    result=IterateTokens();
-    mSink->DidBuildModel();
+    mFileStream->close();
+    delete mFileStream;
   }
   return result;
 }
 
+/**
+ *  This is the main controlling routine in the parsing process. 
+ *  Note that it may get called multiple times for the same scanner, 
+ *  since this is a pushed based system, and all the tokens may 
+ *  not have been consumed by the scanner during a given invocation 
+ *  of this method. 
+ *
+ *  @update  gess 3/25/98
+ *  @param   aFilename -- const char* containing file to be parsed.
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ */
+PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental){
+  NS_PRECONDITION(0!=aFilename,kNullFilename);
+
+  PRInt32 status=kBadFilename;
+
+  mIncremental=aIncremental;
+  mParseMode=DetermineParseMode();  
+
+  if(aFilename) {
+
+    GetDelegateAndDTD(mParseMode,mDelegate,mDTD);
+    if(mDelegate) {
+
+      if(mDTD)
+        mDTD->SetParser(this);
+
+      mSink->WillBuildModel();
+
+      //ok, time to create our tokenizer and begin the process
+      if(aIncremental) {
+        mTokenizer=new CTokenizer(mDelegate,mParseMode);
+        status=ParseFileIncrementally(aFilename);
+      }
+      else {
+        //ok, time to create our tokenizer and begin the process
+        mTokenizer=new CTokenizer(aFilename,mDelegate,mParseMode);
+        status=ResumeParse(0);
+      }
+      mSink->DidBuildModel();
+    }//if
+  }
+  return status;
+}
+
+/**
+ *  This is the main controlling routine in the parsing process. 
+ *  Note that it may get called multiple times for the same scanner, 
+ *  since this is a pushed based system, and all the tokens may 
+ *  not have been consumed by the scanner during a given invocation 
+ *  of this method. 
+ *
+ *  @update  gess 3/25/98
+ *  @param   aFilename -- const char* containing file to be parsed.
+ *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
+ */
+PRInt32 nsHTMLParser::Parse(nsIURL* aURL,PRBool aIncremental ){
+  NS_PRECONDITION(0!=aURL,kNullURL);
+
+  PRInt32 status=kBadURL;
+
+  if(rickGDebug)
+    status=Parse("c:/temp/temp.html",PR_TRUE);
+
+  mIncremental=aIncremental;
+  mParseMode=DetermineParseMode();  
+
+  if(aURL) {
+
+    GetDelegateAndDTD(mParseMode,mDelegate,mDTD);
+    if(mDelegate) {
+
+      if(mDTD)
+        mDTD->SetParser(this);
+
+      mSink->WillBuildModel();
+
+      //ok, time to create our tokenizer and begin the process
+      if(aIncremental) {
+        mTokenizer=new CTokenizer(mDelegate,mParseMode);
+        status=aURL->Open(this);
+      }
+      else {
+        mTokenizer=new CTokenizer(aURL,mDelegate,mParseMode);
+        status=ResumeParse(0);
+        mSink->DidBuildModel();
+      }
+    }//if
+  }
+  return status;
+}
+
+/**
+ * Call this method if all you want to do is parse 1 string full of HTML text.
+ *
+ * @update	gess5/11/98
+ * @param   anHTMLString contains a string-full of real HTML
+ * @param   appendTokens tells us whether we should insert tokens inline, or append them.
+ * @return  TRUE if all went well -- FALSE otherwise
+ */
+PRInt32 nsHTMLParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
+  PRInt32 result=kNoError;
+  
+  mSink->WillBuildModel();
+  mTokenizer->Append(aSourceBuffer);
+  result=ResumeParse(0);
+  mSink->DidBuildModel();
+  
+  return result;
+}
 
 /**
  *  This routine is called to cause the parser to continue
@@ -553,16 +662,20 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL,eParseMode aMode){
  *  @param   
  *  @return  PR_TRUE if parsing concluded successfully.
  */
-PRBool nsHTMLParser::ResumeParse() {
+PRInt32 nsHTMLParser::ResumeParse(PRInt32 anIteration) {
+  PRInt32 result=kNoError;
+
   mSink->WillResume();
-  int iter=0;
-  PRInt32 errcode=mTokenizer->TokenizeAvailable(iter);
-  if(kInterrupted==errcode)
-    mSink->WillInterrupt();
-  PRBool result=IterateTokens();
+  if(kNoError==result) {
+    result=mTokenizer->Tokenize(anIteration);
+    if(kInterrupted==result)
+      mSink->WillInterrupt();
+
+    if(!rickGDebug)
+      IterateTokens();
+  }
   return result;
 }
-
 
 /**
  * 
@@ -1388,5 +1501,64 @@ PRBool nsHTMLParser::ReduceContextStackFor(PRInt32 aChildTag){
 }
 
 
+/**
+ *  
+ *  
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+nsresult nsHTMLParser::GetBindInfo(void){
+  nsresult result=0;
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+nsresult nsHTMLParser::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg){
+  nsresult result=0;
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+nsresult nsHTMLParser::OnStartBinding(void){
+  nsresult result=0;
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
+  nsresult result=0;
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+nsresult nsHTMLParser::OnStopBinding(void){
+  nsresult result=0;
+  return result;
+}
 
 

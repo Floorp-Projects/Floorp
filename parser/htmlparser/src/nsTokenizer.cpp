@@ -39,6 +39,35 @@ CTokenizer::CTokenizer(nsIURL* aURL,ITokenizerDelegate* aDelegate,eParseMode aMo
   mParseMode=aMode;
 }
 
+/**
+ *  Default constructor
+ *  
+ *  @update gess 3/25/98
+ *  @param  aFilename -- name of file to be tokenized
+ *  @param  aDelegate -- ref to delegate to be used to tokenize
+ *  @return 
+ */
+CTokenizer::CTokenizer(const char* aFilename,ITokenizerDelegate* aDelegate,eParseMode aMode) :
+  mTokenDeque() {
+  mDelegate=aDelegate;
+  mScanner=new CScanner(aFilename,aMode);
+  mParseMode=aMode;
+}
+
+/**
+ *  Default constructor
+ *  
+ *  @update gess 3/25/98
+ *  @param  aFilename -- name of file to be tokenized
+ *  @param  aDelegate -- ref to delegate to be used to tokenize
+ *  @return 
+ */
+CTokenizer::CTokenizer(ITokenizerDelegate* aDelegate,eParseMode aMode) :
+  mTokenDeque() {
+  mDelegate=aDelegate;
+  mScanner=new CScanner(aMode);
+  mParseMode=aMode;
+}
 
 /**
  *  default destructor
@@ -53,6 +82,19 @@ CTokenizer::~CTokenizer() {
   mScanner=0;
 }
 
+
+/**
+ *  
+ *  
+ *  @update  gess 5/13/98
+ *  @param   
+ *  @return  
+ */
+PRBool CTokenizer::Append(nsString& aBuffer) {
+  if(mScanner)
+    return mScanner->Append(aBuffer);
+  return PR_FALSE;
+}
 
 /**
  * Retrieve a reference to the internal token deque.
@@ -105,31 +147,31 @@ PRBool CTokenizer::WillTokenize(PRBool aIncremental){
 }
 
 /**
- *  This is the primary control routine. It iteratively
- *  consumes tokens until an error occurs or you run out
- *  of data.
  *  
  *  @update  gess 3/25/98
- *  @return  error code 
+ *  @return  TRUE if it's ok to proceed
  */
-PRInt32 CTokenizer::Tokenize(void) {
+PRInt32 CTokenizer::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
   CToken* theToken=0;
   PRInt32 result=kNoError;
+  
+  WillTokenize(PR_TRUE);
 
-  if(WillTokenize(PR_FALSE)) {
-    do {
-      result=GetToken(theToken);
-      if(theToken) {
+  while(kNoError==result) {
+    result=GetToken(theToken);
+    if(theToken && (kNoError==result)) {
+
 #ifdef VERBOSE_DEBUG
         theToken->DebugDumpToken(cout);
 #endif
-        if(mDelegate->WillAddToken(*theToken)) {
-          mTokenDeque.Push(theToken);
-        }
+      if(mDelegate->WillAddToken(*theToken)) {
+        mTokenDeque.Push(theToken);
       }
-    } while(0!=theToken);
-    result=DidTokenize(PR_FALSE);
-  }
+    }
+  } 
+  if(kEOF==result)
+    result=kNoError;
+  DidTokenize(PR_TRUE);
   return result;
 }
 
@@ -141,20 +183,33 @@ PRInt32 CTokenizer::Tokenize(void) {
  *  @update  gess 3/25/98
  *  @return  error code 
  */
-PRInt32 CTokenizer::TokenizeAvailable(int anIteration) {
+PRInt32 CTokenizer::Tokenize(int anIteration) {
   CToken* theToken=0;
   PRInt32 result=kNoError;
   PRBool  done=(0==anIteration) ? (!WillTokenize(PR_TRUE)) : PR_FALSE;
   
 
-  while((PR_FALSE==done) && (kInterrupted!=kInterrupted)) {
+  while((PR_FALSE==done) && (kNoError==result)) {
+    mScanner->Mark();
     result=GetToken(theToken);
-    if(theToken) {
-      if(mDelegate->WillAddToken(*theToken)) {
-        mTokenDeque.Push(theToken);
+    if(kNoError==result) {
+      if(theToken) {
+
+  #ifdef VERBOSE_DEBUG
+          theToken->DebugDumpToken(cout);
+  #endif
+
+        if(mDelegate->WillAddToken(*theToken)) {
+          mTokenDeque.Push(theToken);
+        }
       }
+
     }
-    else done=PR_TRUE;
+    else {
+      if(theToken)
+        delete theToken;
+      mScanner->RewindToMark();
+    }
   } 
   if((PR_TRUE==done)  && (kInterrupted!=result))
     DidTokenize(PR_TRUE);

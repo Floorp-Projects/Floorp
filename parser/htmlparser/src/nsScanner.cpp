@@ -22,9 +22,8 @@
 #include "nsIURL.h" 
 #include "nsDebug.h"
 
-const char* gURLRef;
-const char* kBadHTMLText1="<HTML><BODY><H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
-const char* kBadHTMLText2="</BODY></HTML>";
+const char* gURLRef=0;
+const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
 
 #ifdef __INCREMENTAL
 const int   kBufsize=1;
@@ -33,30 +32,62 @@ const int   kBufsize=64;
 #endif
 
 /**
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aURL -- pointer to URL to be loaded
+ *  Use this constructor if you want an incremental (callback)
+ *  based input stream.
+ *
+ *  @update  gess 5/12/98
+ *  @param   aMode represents the parser mode (nav, other)
+ *  @return  
+ */
+CScanner::CScanner(eParseMode aMode) : mBuffer("") {
+  mOffset=0;
+  mMarkPos=-1;
+  mTotalRead=0;
+  mParseMode=aMode;
+  mNetStream=0;
+  mFileStream=0;
+  mIncremental=PR_TRUE;
+}
+
+/**
+ *  Use this constructor if you want i/o to be file based.
+ *
+ *  @update  gess 5/12/98
+ *  @param   aMode represents the parser mode (nav, other)
+ *  @return  
+ */
+CScanner::CScanner(const char* aFilename,eParseMode aMode) : mBuffer("") {
+  NS_ASSERTION(0!=aFilename,"Error: Null filename!");
+  mOffset=0;
+  mMarkPos=-1;
+  mTotalRead=0;
+  mParseMode=aMode;
+  mNetStream=0;
+  mIncremental=PR_FALSE;
+  mFileStream=new fstream(aFilename,ios::in|ios::binary);
+}
+
+/**
+ *  Use this constructor if you want i/o to be based on a
+ *  non-incremental netstream.
+ *
+ *  @update  gess 5/12/98
+ *  @param   aMode represents the parser mode (nav, other)
  *  @return  
  */
 CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
   NS_ASSERTION(0!=aURL,"Error: Null URL!");
   mOffset=0;
-  mStream=0;
+  mMarkPos=-1;
   mTotalRead=0;
   mParseMode=aMode;
-  if(aURL) {
-
-    gURLRef=aURL->GetSpec();
-
-#ifdef  __INCREMENTAL
-    mStream=new fstream("c:/temp/temp.html",ios::in|ios::binary);
-#else
-    int error;
-    mStream=aURL->Open(&error);
-#endif
-  }
+  mFileStream=0;
+  PRInt32 error=0;
+  mIncremental=PR_FALSE;
+  mNetStream=aURL->Open(&error);
+  gURLRef=aURL->GetSpec();
 }
+
 
 /**
  *  default destructor
@@ -66,19 +97,107 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
  *  @return  
  */
 CScanner::~CScanner() {
-#ifdef __INCREMENTAL
-  mStream->close();
-  delete mStream;
-  mStream=0;
-#else
-  if(mStream) {
-    mStream->Close();
-    mStream->Release();
-    mStream=0;
+  if(mFileStream) {
+    mFileStream->close();
+    delete mFileStream;
   }
-#endif
+  else if(mNetStream) {
+    mNetStream->Close();
+    mNetStream->Release();
+  }
+  mFileStream=0;
+  mNetStream=0;
+  gURLRef=0;
 }
 
+/**
+ *  Resets current offset position of input stream to marked position. 
+ *  This allows us to back up to this point if the need should arise, 
+ *  such as when tokenization gets interrupted.
+ *  NOTE: IT IS REALLY BAD FORM TO CALL RELEASE WITHOUT CALLING MARK FIRST!
+ *
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+PRInt32 CScanner::RewindToMark(void){
+  mOffset=mMarkPos;
+  return mOffset;
+}
+
+/**
+ *  Records current offset position in input stream. This allows us
+ *  to back up to this point if the need should arise, such as when
+ *  tokenization gets interrupted.
+ *
+ *  @update  gess 5/12/98
+ *  @param   
+ *  @return  
+ */
+PRInt32 CScanner::Mark(void){
+  mMarkPos=mOffset;
+  return mMarkPos;
+}
+
+
+/**
+ *  
+ *  @update  gess 5/12/98
+ */
+void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
+  //To determine how much of our internal buffer to truncate, 
+  //we should check mMarkPos. That represents the point at which
+  //we've guaranteed the client we can back up to, so make sure
+  //you don't lose any of the data beyond that point.
+  if((anOffset!=aMarkPos) && (0<=aMarkPos)) {
+    if(aMarkPos>0) {
+      aBuffer.Cut(0,aMarkPos);
+      if(anOffset>aMarkPos)
+        anOffset-=aMarkPos;
+    }
+  }
+  else aBuffer.Truncate();
+  aMarkPos=0;
+}
+
+
+/**
+ *  This method should only be called by the parser when
+ *  we're doing incremental i/o over the net.
+ *  
+ *  @update  gess 5/12/98
+ *  @param   aBuffer contains next blob of i/o data
+ *  @param   aSize contains size of buffer
+ *  @return  0 if all went well, otherwise error code.
+ */
+PRInt32 CScanner::IncrementalAppend(const char* aBuffer,PRInt32 aSize){
+  NS_ASSERTION(((!mFileStream) && (!mNetStream)),"Error: Should only be called during incremental net i/o!");
+
+  PRInt32 result=0;
+  if((!mFileStream) && (!mNetStream)) {
+
+    _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
+
+    //now that the buffer is (possibly) shortened, let's append the new data.
+    if(0<aSize) {
+      mBuffer.Append(aBuffer,aSize);
+      mTotalRead+=aSize;
+    }
+  }
+  return result;
+}
+
+/** 
+ * Grab data from underlying stream.
+ *
+ * @update  gess4/3/98
+ * @return  error code
+ */
+PRBool CScanner::Append(nsString& aBuffer) {
+  _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
+  mBuffer.Append(aBuffer);
+  return PR_TRUE;
+}
 
 /** 
  * Grab data from underlying stream.
@@ -89,55 +208,63 @@ CScanner::~CScanner() {
 PRInt32 CScanner::FillBuffer(void) {
   PRInt32 anError=0;
 
-  mBuffer.Truncate();
-  if(!mStream) {
+  _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
+
+  if((!mIncremental) && (!mNetStream) && (!mFileStream)) {
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
     //If you're here, it means someone tried to load a
     //non-existent document. So as a favor, we emit a
     //little bit of HTML explaining the error.
     if(0==mTotalRead) {
-      mBuffer.Append((const char*)kBadHTMLText1);
+      mBuffer.Append((const char*)kBadHTMLText);
       mBuffer.Append((const char*)gURLRef);
-      mBuffer.Append((const char*)kBadHTMLText2);
     }
     else return 0;
   }
-  else {
+  else if(!mIncremental) {
     PRInt32 numread=0;
     char buf[kBufsize+1];
     buf[kBufsize]=0;
 
-#ifdef __INCREMENTAL 
-    mStream->read(buf,kBufsize);
-    numread=mStream->gcount();
-#else
-    numread=mStream->Read(&anError,buf,0,kBufsize);
-#endif
+    if(mFileStream) {
+      mFileStream->read(buf,kBufsize);
+      numread=mFileStream->gcount();
+    }
+    else if(mNetStream) {
+      numread=mNetStream->Read(&anError,buf,0,kBufsize);
+      if(1==anError)
+        anError=kEOF;
+    }
+    mOffset=mBuffer.Length();
     if((0<numread) && (0==anError))
       mBuffer.Append((const char*)buf,numread);
+    mTotalRead+=mBuffer.Length();
   }
-  mTotalRead+=mBuffer.Length();
+  else anError=kInterrupted;
+
   return anError;
 }
 
 /**
  *  determine if the scanner has reached EOF
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 5/12/98
  *  @param   
- *  @return  PR_TRUE upon eof condition
+ *  @return  0=!eof 1=eof kInterrupted=interrupted
  */
-PRBool CScanner::Eof() {
+PRInt32 CScanner::Eof() {
   PRInt32 theError=0;
+
   if(mOffset>=mBuffer.Length()) {
-    theError=FillBuffer();
-    mOffset=0;
+    if(!mIncremental)
+      theError=FillBuffer();  
+    else return kInterrupted;
   }
-  PRBool result=PR_TRUE;
-  if(0==theError) {
-    result=PRBool(0==mBuffer.Length());
-  }
-  return result;
+  
+  if(0==theError) 
+    return (0==mBuffer.Length());
+
+  return theError;
 }
 
 /**
@@ -148,11 +275,12 @@ PRBool CScanner::Eof() {
  *  @return  error code reflecting read status
  */
 PRInt32 CScanner::GetChar(PRUnichar& aChar) {
-  if(!Eof()) {
+  PRInt32 result=Eof();
+  if(!result) {
     aChar=mBuffer[mOffset++];
-    return kNoError;
+    result=kNoError;
   }
-  return kEOF;
+  return result;
 }
 
 
@@ -165,11 +293,12 @@ PRInt32 CScanner::GetChar(PRUnichar& aChar) {
  *  @return  
  */
 PRInt32 CScanner::Peek(PRUnichar& aChar){
-  if(!Eof()) {
+  PRInt32 result=Eof();
+  if(!result) {
     aChar=mBuffer[mOffset];        
-    return kNoError;
+    result=kNoError;
   }
-  return kEOF;
+  return result;
 }
 
 
@@ -181,7 +310,9 @@ PRInt32 CScanner::Peek(PRUnichar& aChar){
  *  @return  error code
  */
 PRInt32 CScanner::PutBack(PRUnichar aChar) {
-  mOffset--;
+  if(mOffset>0)
+    mOffset--;
+  else mBuffer.Insert(aChar,0);
   return kNoError;
 }
 
@@ -301,8 +432,8 @@ PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addT
   PRUnichar ch=0;
   PRInt32   result=kNoError;
 
-  while(!Eof()) {
-     result=GetChar(ch);
+  while(!result) {
+    result=GetChar(ch);
     if(kNoError==result) {
       PRInt32 pos=aTerminalSet.Find(ch);
       if(kNotFound!=pos) {

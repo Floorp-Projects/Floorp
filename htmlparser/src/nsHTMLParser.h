@@ -61,6 +61,9 @@
 #include "nsParserNode.h"
 #include "nsTokenHandler.h"
 #include "nsParserTypes.h"
+#include "nsIURL.h"
+#include "nsIStreamListener.h"
+#include "nsITokenizerDelegate.h"
 
 
 #define NS_IHTML_PARSER_IID      \
@@ -75,7 +78,7 @@ class nsIURL;
 class nsIDTD;
 
 
-class nsHTMLParser : public nsIParser {
+class nsHTMLParser : public nsIParser, public nsIStreamListener {
             
   public:
 friend class CTokenHandler;
@@ -105,28 +108,37 @@ friend class CTokenHandler;
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
     /**
-     * Cause parser to parse input from given URL
-     * @update	gess5/11/98
-     * @param   aURL is a descriptor for source document
-     * @return  TRUE if all went well -- FALSE otherwise
-     */
-    virtual PRBool Parse(nsIURL* aURL);
-
-    /**
      * Cause parser to parse input from given URL in given mode
      * @update	gess5/11/98
      * @param   aURL is a descriptor for source document
      * @param   aMode is the desired parser mode (Nav, other, etc.)
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRBool Parse(nsIURL* aURL,eParseMode aMode);
+    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_FALSE);
+
+    /**
+     * Cause parser to parse input from given file in given mode
+     * @update	gess5/11/98
+     * @param   aFilename is a path for file document
+     * @param   aMode is the desired parser mode (Nav, other, etc.)
+     * @return  TRUE if all went well -- FALSE otherwise
+     */
+    virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental);
+
+    /**
+     * @update	gess5/11/98
+     * @param   anHTMLString contains a string-full of real HTML
+     * @param   appendTokens tells us whether we should insert tokens inline, or append them.
+     * @return  TRUE if all went well -- FALSE otherwise
+     */
+    virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens);
 
     /**
      * This method gets called (automatically) during incremental parsing
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual PRBool ResumeParse();
+    virtual PRInt32 ResumeParse(PRInt32 anIteration);
 
     /**
      * Retrieve ptr to internal context vector stack
@@ -230,6 +242,15 @@ friend class CTokenHandler;
      */
     PRBool HandleStyleToken(CToken* aToken);
 
+      //*********************************************
+      // These methods are callback methods used by
+      // net lib to let us know about our inputstream.
+      //*********************************************
+    NS_IMETHOD GetBindInfo(void);
+    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg);
+    NS_IMETHOD OnStartBinding(void);
+    NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
+    NS_IMETHOD OnStopBinding(void);
 
 protected:
 
@@ -485,6 +506,10 @@ protected:
      */
     PRBool CreateContextStackFor(PRInt32 aChildTag);
 
+private:
+    PRInt32 ParseFileIncrementally(const char* aFilename);  //XXX ONLY FOR DEBUG PURPOSES...
+
+protected:
     //*********************************************
     // And now, some data members...
     //*********************************************
@@ -502,6 +527,8 @@ protected:
     nsIDTD*             mDTD;
     eParseMode          mParseMode;
     PRBool              mHasOpenForm;
+    PRBool              mIncremental;
+    ITokenizerDelegate* mDelegate;
 };
 
 

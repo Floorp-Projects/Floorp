@@ -43,7 +43,36 @@ class ifstream;
 
 class CScanner {
   public:
+
+      /**
+       *  Use this constructor if you want an incremental (callback)
+       *  based input stream.
+       *
+       *  @update  gess 5/12/98
+       *  @param   aMode represents the parser mode (nav, other)
+       *  @return  
+       */
+      CScanner(eParseMode aMode=eParseMode_navigator);
+      
+      /**
+       *  Use this constructor if you want i/o to be based on a
+       *  non-incremental netstream.
+       *
+       *  @update  gess 5/12/98
+       *  @param   aMode represents the parser mode (nav, other)
+       *  @return  
+       */
       CScanner(nsIURL* aURL,eParseMode aMode=eParseMode_navigator);
+
+      /**
+       *  Use this constructor if you want i/o to be file based.
+       *
+       *  @update  gess 5/12/98
+       *  @param   aMode represents the parser mode (nav, other)
+       *  @return  
+       */
+      CScanner(const char* aFilename,eParseMode aMode=eParseMode_navigator);
+
       ~CScanner();
 
       /**
@@ -117,7 +146,7 @@ class CScanner {
        *  @update  gess 3/25/98
        *  @return  PR_TRUE upon eof condition
        */
-      PRBool Eof(void);
+      PRInt32 Eof(void);
 
       /**
        *  Consume characters until you find the terminal char
@@ -153,6 +182,48 @@ class CScanner {
        */
       PRInt32 ReadWhile(nsString& aString,nsString& anInputSet,PRBool addTerminal);
 
+      /**
+       *  Records current offset position in input stream. This allows us
+       *  to back up to this point if the need should arise, such as when
+       *  tokenization gets interrupted.
+       *  
+       *  @update  gess 5/12/98
+       *  @param   
+       *  @return  
+       */
+      PRInt32 Mark(void);
+
+      /**
+       *  Resets current offset position of input stream to marked position. 
+       *  This allows us to back up to this point if the need should arise, 
+       *  such as when tokenization gets interrupted.
+       *  NOTE: IT IS REALLY BAD FORM TO CALL RELEASE WITHOUT CALLING MARK FIRST!
+       *  
+       *  @update  gess 5/12/98
+       *  @param   
+       *  @return  
+       */
+      PRInt32 RewindToMark(void);
+
+
+      /**
+       *  
+       *  
+       *  @update  gess 5/13/98
+       *  @param   
+       *  @return  
+       */
+      PRBool Append(nsString& aBuffer);
+
+      /**
+       *  
+       *  
+       *  @update  gess 5/12/98
+       *  @param   
+       *  @return  
+       */
+      PRInt32 IncrementalAppend(const char* aBuffer,PRInt32 aSize);
+
       static void SelfTest();
 
   protected:
@@ -167,15 +238,15 @@ class CScanner {
        */
       PRInt32 FillBuffer(void);
 
-#ifdef __INCREMENTAL
-      fstream*        mStream;
-#else
-      nsIInputStream* mStream;
-#endif
+
+      fstream*        mFileStream;
+      nsIInputStream* mNetStream;
       nsString        mBuffer;
       PRInt32         mOffset;
+      PRInt32         mMarkPos;
       PRInt32         mTotalRead;
       eParseMode      mParseMode;
+      PRBool          mIncremental;
 };
 
 #endif
