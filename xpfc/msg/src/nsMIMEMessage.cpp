@@ -26,6 +26,7 @@ static NS_DEFINE_IID(kIMIMEMessageIID,   NS_IMIME_MESSAGE_IID);
 nsMIMEMessage :: nsMIMEMessage() : nsMessage()
 {
   NS_INIT_REFCNT();
+  mBodyType = nsMIMEBodyType_empty;
 }
 
 nsMIMEMessage :: ~nsMIMEMessage()  
@@ -88,6 +89,12 @@ nsresult nsMIMEMessage::AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding)
 
 nsresult nsMIMEMessage::AddBodyPart(nsIMIMEBodyPart& aBodyPart)
 {
+  return (NS_OK);
+}
+
+nsresult nsMIMEMessage::GetBodyType(nsMIMEBodyType& aBodyType)
+{
+  aBodyType = mBodyType;
   return (NS_OK);
 }
 

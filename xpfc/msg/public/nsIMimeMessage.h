@@ -28,6 +28,15 @@
 { 0xd69d9a40, 0x7027, 0x11d2,    \
 { 0x8d, 0xbc, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
 
+typedef enum
+{
+  nsMIMEBodyType_empty = 0,
+  nsMIMEBodyType_basicpart = 1,
+  nsMIMEBodyType_multipart = 2,
+  nsMIMEBodyType_messagepart = 3
+} nsMIMEBodyType;
+
+
 class nsIMIMEMessage : public nsISupports
 {
 
@@ -43,6 +52,8 @@ public:
   NS_IMETHOD AddText(nsString& aText, nsMIMEEncoding aMIMEEncoding = nsMIMEEncoding_default) = 0;
 
   NS_IMETHOD AddBodyPart(nsIMIMEBodyPart& aBodyPart) = 0;
+
+  NS_IMETHOD GetBodyType(nsMIMEBodyType& aBodyType) = 0;
 
 };
 
