@@ -33,6 +33,7 @@
 #include "ToolboxItem.h"
 
 class XFE_PersonalDrop;
+class XFE_PersonalTabDrop;
 class XFE_Logo;
 class XFE_PopupMenu;
 
@@ -50,6 +51,7 @@ public:
 
 	// Access methods
 	Widget			getToolBarWidget	();
+	Widget			getFirstItem		();
 	Widget			getLastItem			();
 	Widget			getIndicatorItem	();
 
@@ -91,9 +93,13 @@ protected:
 
 private:
 
-	Widget				m_toolBar;			// The toolbar 
-	XFE_PersonalDrop *  m_dropSite;			// The proxy icon drop site
-	BM_Entry *			m_toolBarFolder;	// The toolbar folder
+	Widget				m_toolBar;				// The toolbar 
+	BM_Entry *			m_toolBarFolder;		// The toolbar folder
+
+	// Drop sites
+    XFE_PersonalDrop *		m_toolBarDropSite;	// For toolbar widget
+    XFE_PersonalTabDrop *	m_openedTabDropSite;// For ToolBox's opened tab
+    XFE_PersonalTabDrop *	m_closedTabDropSite;// For ToolBox's closed tab
 
 	// DND feedback members
 	Widget				m_dropTargetItem;		// The drop target item

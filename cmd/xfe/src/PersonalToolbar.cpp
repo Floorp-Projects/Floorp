@@ -71,6 +71,11 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 	XFE_ToolboxItem(frame,parent_toolbox),
 	XFE_BookmarkBase(bookmarkContext,frame,False,True),
 	m_toolBarFolder(NULL),
+
+    m_toolBarDropSite(NULL),
+    m_openedTabDropSite(NULL),
+    m_closedTabDropSite(NULL),
+    
 	m_dropTargetItem(NULL),
 	m_dropTargetLocation(XmINDICATOR_LOCATION_NONE),
 	m_popup(NULL)
@@ -99,7 +104,6 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 								XmNchildForceHeight,		True,
 								XmNchildUsePreferredWidth,	True,
 								XmNchildUsePreferredHeight,	False,
-//								XmNminHeight,				MIN_TOOLBAR_HEIGHT,
 								NULL);
 	
 	// Create the logo
@@ -116,17 +120,33 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 	// Make sure the toolbar is not highlighted first
 	setRaised(False);
 	
-	// register and enable the drop site
-	m_dropSite = new XFE_PersonalDrop(m_toolBar,this);
-	m_dropSite->enable();
+	// Register and enable the toolbar drop site
+	m_toolBarDropSite = new XFE_PersonalDrop(m_toolBar,this);
+	m_toolBarDropSite->enable();
 
-	// Configure the drop site
+	// Get the toolbox parent tabs
+	Widget opened_tab = parent_toolbox->tabOfItem(m_widget,True);
+	Widget closed_tab = parent_toolbox->tabOfItem(m_widget,False);
+
+	XP_ASSERT( XfeIsAlive(opened_tab) );
+	XP_ASSERT( XfeIsAlive(closed_tab) );
+
+	// Register and enable the tab drop sites
+	m_openedTabDropSite = new XFE_PersonalTabDrop(opened_tab,this);
+	m_closedTabDropSite = new XFE_PersonalTabDrop(closed_tab,this);
+
+	m_openedTabDropSite->enable();
+	m_closedTabDropSite->enable();
+
+	// Configure the drop sites
 	Arg			xargs[1];
 	Cardinal	n = 0;
 
 	XtSetArg(xargs[n],XmNanimationStyle,	XmDRAG_UNDER_NONE);		n++;
 	
-	m_dropSite->update(xargs,n);
+	m_toolBarDropSite->update(xargs,n);
+	m_openedTabDropSite->update(xargs,n);
+	m_closedTabDropSite->update(xargs,n);
 
 	// Register personal toolbar widgets for dragging
 	addDragWidget(getBaseWidget());
@@ -162,9 +182,19 @@ XFE_PersonalToolbar::XFE_PersonalToolbar(MWContext *	bookmarkContext,
 //////////////////////////////////////////////////////////////////////////
 XFE_PersonalToolbar::~XFE_PersonalToolbar()
 {
-	if (m_dropSite)
+	if (m_toolBarDropSite)
 	{
-		delete m_dropSite;
+		delete m_toolBarDropSite;
+	}
+
+	if (m_openedTabDropSite)
+	{
+		delete m_openedTabDropSite;
+	}
+
+	if (m_closedTabDropSite)
+	{
+		delete m_closedTabDropSite;
 	}
 
 	if (m_popup)
@@ -428,6 +458,12 @@ XFE_PersonalToolbar::getToolBarWidget()
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
+XFE_PersonalToolbar::getFirstItem()
+{
+	return XfeToolBarGetFirstItem(m_toolBar);
+}
+//////////////////////////////////////////////////////////////////////////
+Widget
 XFE_PersonalToolbar::getLastItem()
 {
 	return XfeToolBarGetLastItem(m_toolBar);
@@ -440,7 +476,7 @@ XFE_PersonalToolbar::getIndicatorItem()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_PersonalToolbar::configureIndicatorItem(BM_Entry * entry)
+XFE_PersonalToolbar::configureIndicatorItem(BM_Entry * /* entry */)
 {
 	Widget indicator = getIndicatorItem();
 
@@ -451,20 +487,20 @@ XFE_PersonalToolbar::configureIndicatorItem(BM_Entry * entry)
 			XtVaSetValues(indicator,
 						  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
 						  XmNpixmapMask,		XmUNSPECIFIED_PIXMAP,
-						  //XmNbuttonLayout,		XmBUTTON_LABEL_ONLY,
+						  XmNbuttonLayout,		XmBUTTON_LABEL_ONLY,
 						  NULL);
 		}
 		else
 		{		
 			Pixmap pixmap;
 			Pixmap pixmapMask;
-			
-			getPixmapsForEntry(entry,&pixmap,&pixmapMask,NULL,NULL);
+
+			XFE_BookmarkBase::getBookmarkPixmaps(pixmap,pixmapMask);
 			
 			XtVaSetValues(indicator,
 						  XmNpixmap,		pixmap,
 						  XmNpixmapMask,	pixmapMask,
-						  //XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
+						  XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
 						  NULL);
 		}
 	}

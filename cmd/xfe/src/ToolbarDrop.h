@@ -77,10 +77,32 @@ protected:
     virtual void	dragMotion		();
     virtual void	dropComplete	();
 
-private:
+protected:
 
     XFE_PersonalToolbar *	_personalToolbar;
 	Widget					_dropWidget;
+};
+
+//
+// XFE_PersonalTabDrop class
+//
+
+class XFE_PersonalTabDrop : public XFE_PersonalDrop
+{
+public:
+
+    XFE_PersonalTabDrop		(Widget					dropWidget,
+							 XFE_PersonalToolbar *	toolbar);
+
+    ~XFE_PersonalTabDrop	();
+
+protected:
+
+	virtual void	addEntry		(const char * address,const char * title);
+    virtual void	dragIn			();
+	virtual void	dragOut			();
+    virtual void	dragMotion		();
+    virtual void	dropComplete	();
 };
 
 //

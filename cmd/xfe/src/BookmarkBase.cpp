@@ -748,6 +748,13 @@ XFE_BookmarkBase::getPixmapsForEntry(BM_Entry *	entry,
 
 }
 //////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_BookmarkBase::getBookmarkPixmaps(Pixmap & pixmap_out,Pixmap & mask_out)
+{
+	pixmap_out = _bookmarkPixmap;
+	mask_out = _bookmarkMask;
+}
+//////////////////////////////////////////////////////////////////////////
 BM_Entry *
 XFE_BookmarkBase::getFirstEntry()
 {

@@ -162,6 +162,8 @@ protected:
  	/* static */ Pixmap bookmarkMaskFromEntry(BM_Entry *entry);
 #endif
 
+	static void getBookmarkPixmaps(Pixmap & pixmap_out,Pixmap & mask_out);
+
 	// Access bookmark entries
 	BM_Entry *		getFirstEntry			();
 	BM_Entry *		getTopLevelFolder		(const char * name);

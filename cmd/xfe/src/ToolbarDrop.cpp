@@ -33,6 +33,7 @@
 #include <Xfe/Cascade.h>
 #include <Xfe/Button.h>
 #include <Xfe/ToolBar.h>
+#include <Xfe/Tab.h>
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
 
@@ -409,6 +410,110 @@ XFE_PersonalDrop::dragMotion()
 
 	// Assign the drop widget so that addEntry() can do its magic
     _dropWidget = _personalToolbar->getDropTargetItem();
+}
+//////////////////////////////////////////////////////////////////////////
+
+
+//
+// XFE_PersonalTabDrop class
+//
+
+//////////////////////////////////////////////////////////////////////////
+XFE_PersonalTabDrop::XFE_PersonalTabDrop(Widget					dropWidget, 
+										 XFE_PersonalToolbar *	toolbar) :
+    XFE_PersonalDrop(dropWidget,toolbar)
+{
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_PersonalTabDrop::~XFE_PersonalTabDrop()
+{
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_PersonalTabDrop::addEntry(const char * address,const char * title)
+{
+	XP_ASSERT( address != NULL );
+
+	XP_ASSERT( _personalToolbar != NULL );
+
+	char *		guessed_title = (char *) title;
+	BM_Date		lastAccess = 0;
+
+	// If no title is given, try to guess a decent one
+	if (!guessed_title)
+	{
+		XFE_BookmarkBase::guessTitle(_personalToolbar->getFrame(),
+									 _personalToolbar->getBookmarkContext(),
+									 address,
+									 isFromSameShell(),
+									 &guessed_title,
+									 &lastAccess);
+	}
+
+	XP_ASSERT( guessed_title != NULL );
+
+	BM_Entry * personal_folder = XFE_PersonalToolbar::getToolbarFolder();
+
+	if (personal_folder)
+	{
+		// Access the first entry in the personal toolbar folder
+		BM_Entry * entry = BM_GetChildren(personal_folder);
+
+		// If the first entry exists, add the new entry before it
+		if (entry)
+		{
+			_personalToolbar->addEntryBefore(address,
+											 guessed_title,
+											 lastAccess,
+											 entry);
+		}
+		// Otherwise add the entry to the personal toolbar folder
+		else
+		{
+			_personalToolbar->addEntry(address,guessed_title,lastAccess);
+		}
+	}
+
+	// Clear the drop widget so that dropComplete() does not get hosed
+	_dropWidget = NULL;
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_PersonalTabDrop::dropComplete()
+{
+	// Nothing
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_PersonalTabDrop::dragIn()
+{
+
+	Widget first = _personalToolbar->getFirstItem();
+	
+	// The 0 forces the position to be at the first
+ 	if (XfeIsAlive(first))
+ 	{
+		_personalToolbar->setDropTargetItem(first,0);
+		
+		// The argument should really be a (BM_Entry *) 
+		_personalToolbar->configureIndicatorItem(NULL);
+	}
+
+	XfeTabDrawRaised(_widget,True);
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_PersonalTabDrop::dragOut()
+{
+	XfeTabDrawRaised(_widget,False);
+
+	_personalToolbar->clearDropTargetItem();
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_PersonalTabDrop::dragMotion()
+{
+	// Nothing
 }
 //////////////////////////////////////////////////////////////////////////
 
