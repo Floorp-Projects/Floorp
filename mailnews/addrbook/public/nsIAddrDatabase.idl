@@ -121,6 +121,11 @@ interface nsIMdbRow;
 #define kMailListTotalAddresses   "ListTotalAddresses"
 // not shown in the UI
 #define kLowerPriEmailColumn      "LowercasePrimaryEmail"
+
+// Palm Integration
+#define  CARD_ATTRIB_PALMID "PalmRecId"
+#define  CARD_ATTRIB_DISPLAY "DisplayName"
+
 %}
 
 [scriptable, uuid(ca536e0e-1dd1-11b2-951a-e02b86e4f60e)]
