@@ -177,7 +177,7 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
   PLHashEntry *he = *hep;
-  if (he && aOldValue) {
+  if (he && aOldValue.Length()) {
     // XXX fix me
   }
   PL_HashTableRawAdd(mTable, hep, hashValue, aKey.ToNewUnicode(),
@@ -205,7 +205,7 @@ nsProperties::Subclass(nsIProperties* aSubclass)
 NS_IMETHODIMP
 nsProperties::GetProperty(const nsString& aKey, nsString& aValue)
 {
-  const PRUnichar *key = aKey;
+  const PRUnichar *key = aKey.GetUnicode();
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
