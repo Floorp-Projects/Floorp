@@ -171,25 +171,29 @@ fips_140_1()
   certutil -d ${P_R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "List the FIPS module keys (certutil -K)"
 
-  echo "$SCRIPTNAME: Detect mangled database --------------------------"
-  SOFTOKEN=${DIST}/${OBJDIR}/lib/${DLL_PREFIX}softokn3.${DLL_SUFFIX}
-  echo "cp ${SOFTOKEN} ${TMP}/softokn3.sav"
-  cp ${SOFTOKEN} ${TMP}/softokn3.sav
-  echo "mangling ${SOFTOKEN}"
-  echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
-  mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
-  if [ $? -eq 0 ]; then
-    echo "dbtest -r  -d ${P_R_FIPSDIR} "
+#
+# This test was interfering with QA running on more than one machine pointing
+# to the same binary file. Turn it off for now.
+#
+#  echo "$SCRIPTNAME: Detect mangled database --------------------------"
+#  SOFTOKEN=${DIST}/${OBJDIR}/lib/${DLL_PREFIX}softokn3.${DLL_SUFFIX}
+#  echo "cp ${SOFTOKEN} ${TMP}/softokn3.sav"
+#  cp ${SOFTOKEN} ${TMP}/softokn3.sav
+#  echo "mangling ${SOFTOKEN}"
+#  echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
+#  mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
+#  if [ $? -eq 0 ]; then
+#    echo "dbtest -r  -d ${P_R_FIPSDIR} "
 # suppress the expected failure message
-    dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
-    html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
-    echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
-    cp ${TMP}/softokn3.sav ${SOFTOKEN}
-  else
-    html_msg 0 0 "Skipping corruption test, can't open ${DLL_PREFIX}softokn3.${DLL_SUFFIX}"
-  fi
-  echo "rm ${TMP}/softokn3.sav"
-  rm ${TMP}/softokn3.sav
+#    dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
+#    html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
+#    echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
+#    cp ${TMP}/softokn3.sav ${SOFTOKEN}
+#  else
+#    html_msg 0 0 "Skipping corruption test, can't open ${DLL_PREFIX}softokn3.${DLL_SUFFIX}"
+#  fi
+#  echo "rm ${TMP}/softokn3.sav"
+#  rm ${TMP}/softokn3.sav
 }
 
 ############################## fips_cleanup ############################
