@@ -31,14 +31,13 @@ CPPSRCS =				\
 	nsChromeFactory.cpp	\
 	$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
 MODULE = chrome
 
 REQUIRES = xpcom
 
-INCLUDES += -I$(srcdir)/../src		\
-	    $(NULL)
+LOCAL_INCLUDES =			\
+		-I$(srcdir)/../src	\
+	    	$(NULL)
 
 SHARED_LIBRARY_LIBS =			 \
 	$(DIST)/lib/libchrome_s.a	 \
