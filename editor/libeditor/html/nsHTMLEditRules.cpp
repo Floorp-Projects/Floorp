@@ -560,8 +560,10 @@ NS_IMETHODIMP
 nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
 {
   // for now, just return first alignment.  we'll lie about
-  // if it's mixed.  This is for efficiency, given that our
-  // current ui doesn't care if it's mixed.
+  // if it's mixed.  This is for efficiency
+  // given that our current ui doesn't care if it's mixed.
+  // cmanske: NOT TRUE! We would like to pay attention to mixed state
+  //  in Format | Align submenu!
 
   // this routine assumes that alignment is done ONLY via divs
   
