@@ -77,27 +77,6 @@ function Startup() {
   // 1: enabled for originating website only
   // 2: disabled
   var cookieBehavior = document.getElementById("cookieBehavior").getAttribute("value");
-
-  // migrate and delete old firebird cookie prefs, if they exist.
-  // to be removed after the 0.9 release
-  var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-  try {
-    pref.clearUserPref("network.cookie.enable");
-    // No error: it means this pref was not the default one, cookie were disabled.
-    cookieBehavior = 2;
-    document.getElementById("cookieBehavior").setAttribute("value", 2)
-  } catch (e) {
-    try {
-      pref.clearUserPref("network.cookie.enableForOriginatingWebsiteOnly");
-      // No error: it means that enableForOriginatingWebsiteOnly was true.
-      cookieBehavior = 1;
-      document.getElementById("cookieBehavior").setAttribute("value", 1)
-    } catch (e) {
-    // here, either we already have migrated the cookie pref
-    // or the new and old behavior are the same (0). In any case: nothing to do.
-    }
-  }
-  
   document.getElementById("enableCookies").checked = cookieBehavior != 2;
   document.getElementById("enableCookiesForOriginatingSiteOnly").checked = cookieBehavior == 1;
   updateCookieBroadcaster();
