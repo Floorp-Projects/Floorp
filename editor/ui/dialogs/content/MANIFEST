@@ -2,7 +2,8 @@
 #dialogs:content directory
 
 EdCharacterProps.xul
+EdCharacterProps.js
 EdImageProps.xul
+EdImageProps.js
 EdLinkProps.js
 EdLinkProps.xul
-
