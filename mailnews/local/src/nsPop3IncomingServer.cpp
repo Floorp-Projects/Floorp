@@ -185,7 +185,7 @@ NS_IMETHODIMP nsPop3IncomingServer::SetDeferredToAccount(const char *aAccountKey
           acctMgr->NotifyServerLoaded(this);
           // check if this newly deferred to account is the local folders account
           // and needs to have a newly created INBOX.
-          if (aAccountKey)
+          if (aAccountKey && *aAccountKey)
           {
             nsCOMPtr <nsIMsgAccount> account;
             acctMgr->GetAccount(aAccountKey, getter_AddRefs(account));
@@ -461,7 +461,7 @@ NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlL
 
 // user has clicked get new messages on this server. If other servers defer to this server,
 // we need to get new mail for them. But if this server defers to an other server,
-// I think we only get new mail for that other server.
+// I think we only get new mail for this server.
 NS_IMETHODIMP
 nsPop3IncomingServer::GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow, 
                       nsIUrlListener *aUrlListener)
@@ -477,11 +477,16 @@ nsPop3IncomingServer::GetNewMessages(nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWi
   nsCOMPtr <nsIURI> url;
   nsCOMPtr <nsIMsgIncomingServer> server;
   nsCOMPtr <nsISupportsArray> deferredServers;
+  nsXPIDLCString deferredToAccount;
+  GetDeferredToAccount(getter_Copies(deferredToAccount));
 
-  aFolder->GetServer(getter_AddRefs(server));
-  GetDeferredServers(server, getter_AddRefs(deferredServers));
+  if (deferredToAccount.IsEmpty())
+  {
+    aFolder->GetServer(getter_AddRefs(server));
+    GetDeferredServers(server, getter_AddRefs(deferredServers));
+  }
   PRUint32 numDeferredServers;
-  if (deferredServers && NS_SUCCEEDED(deferredServers->Count(&numDeferredServers))
+  if (deferredToAccount.IsEmpty() && deferredServers && NS_SUCCEEDED(deferredServers->Count(&numDeferredServers))
     && numDeferredServers > 0)
   {
     nsPop3GetMailChainer *getMailChainer = new nsPop3GetMailChainer;
