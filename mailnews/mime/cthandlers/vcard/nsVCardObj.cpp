@@ -76,9 +76,10 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 static const char** fieldedProp;
 
 static VObject* newVObject_(const char *id);
+#if 0
 static int vObjectValueType(VObject *o);
 static void initVObjectIterator(VObjectIterator *i, VObject *o);
-
+#endif
 /*----------------------------------------------------------------------
    The following functions involve with memory allocation:
 	newVObject
@@ -261,11 +262,12 @@ void setVObjectVObjectValue(VObject *o, VObject *p)
     VALUE_TYPE(o) = VCVT_VOBJECT;
 }
 
+#if 0
 int vObjectValueType(VObject *o)
 {
     return VALUE_TYPE(o);
 }
-
+#endif
 
 /*----------------------------------------------------------------------
   The following functions can be used to build VObject.
@@ -360,11 +362,13 @@ void initPropIterator(VObjectIterator *i, VObject *o)
     i->next = 0;
 }
 
+#if 0
 void initVObjectIterator(VObjectIterator *i, VObject *o)
 {
     i->start = o->next; 
     i->next = 0;
 }
+#endif
 
 int moreIteration(VObjectIterator *i)
 { 
@@ -1384,7 +1388,6 @@ static int inList(const char **list, const char *s)
 static void writeProp(OFile *fp, VObject *o)
 {
 	int length = -1;
-	int ilen = 0;
 
     if (NAME_OF(o)) {
 	struct PreDefProp *pi;
@@ -1440,7 +1443,6 @@ static void writeProp(OFile *fp, VObject *o)
 
 void writeVObject_(OFile *fp, VObject *o)
 {
-	int ilen = 0;
     if (NAME_OF(o)) {
 	struct PreDefProp *pi;
 	pi = lookupPropInfo(NAME_OF(o));

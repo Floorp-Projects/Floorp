@@ -119,8 +119,7 @@ COM_MimeObject_write(void *mimeObject, char *data, PRInt32 length,
                      PRBool user_visible_p)
 {
   nsCOMPtr<nsIMimeObjectClassAccess>  objAccess;
-  void                                *ptr = NULL;
-  PRInt32                             rc;
+  PRInt32                             rc=-1;
 
   nsresult res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                                     NULL, nsIMimeObjectClassAccess::GetIID(), 

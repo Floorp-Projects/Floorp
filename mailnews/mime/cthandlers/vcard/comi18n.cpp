@@ -322,12 +322,15 @@ static char *   intlmime_encode_qp_buf(char *subject);
 
 
 static PRBool intlmime_is_mime_part2_header(const char *header);
+#if 0
 static  char *  intl_decode_mime_part2_str(const char *, int , char* );
+#endif
 
-
+#if 0
 /*      We probably should change these into private instead of PUBLIC */
 static char *DecodeBase64Buffer(char *subject);
 static char *EncodeBase64Buffer(char *subject, size_t size);
+#endif
 
 static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
                                     const char* inBuffer, const PRInt32 inLength,
@@ -348,6 +351,7 @@ static PRBool NeedCharsetConversion(const char* from_charset, const char* to_cha
   return PR_TRUE;
 }
 
+#if 0
 /* 4.0: Made Encode & Decode public for use by libpref; added size param.
  */
 static char *EncodeBase64Buffer(char *subject, size_t size)
@@ -365,6 +369,7 @@ static char *DecodeBase64Buffer(char *subject)
   /* We should use the new Base64 Decoder wrote by jwz in libmime */
   return intlmime_decode_base64_buf(subject);
 }
+#endif
 
 static char basis_64[] =
    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

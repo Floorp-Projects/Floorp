@@ -485,7 +485,7 @@ static void enterProps(const char *s)
 
 static void enterAttr(const char *s1, const char *s2)
     {
-    const char *p1, *p2;
+    const char *p1, *p2=nsnull;
     p1 = lookupProp_(s1);
     if (s2) {
 	VObject *a;
@@ -805,7 +805,7 @@ static char* lexGet1Value() {
     }
 #endif
 
-
+#if 0
 static char* lexGetStrUntil(char *termset) {
     int c = lexLookahead();
     lexClearToken();
@@ -817,6 +817,7 @@ static char* lexGetStrUntil(char *termset) {
     lexAppendc(0);
     return c==EOF?0:lexStr();
     }
+#endif
 
 static int match_begin_name(int end) {
     char *n = lexLookaheadWord();
@@ -1293,7 +1294,7 @@ yyparse()
     *yyssp = yystate = 0;
 
 yyloop:
-    if (yyn = yydefred[yystate]) goto yyreduce;
+    if ((yyn = yydefred[yystate])) goto yyreduce;
     if (yychar < 0)
     {
         if ((yychar = yylex()) < 0) yychar = 0;
