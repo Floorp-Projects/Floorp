@@ -52,11 +52,12 @@ extern CBrowseModule _Module;
 
 #include "..\..\src\control\ActiveXTypes.h"
 #include "..\..\src\control\BrowserDiagnostics.h"
-#include "..\..\src\control\PropertyList.h"
-#include "..\..\src\control\PropertyBag.h"
-#include "..\..\src\control\ControlSiteIPFrame.h"
-#include "..\..\src\control\ControlSite.h"
 #include "..\..\src\control\ActiveScriptSite.h"
+
+#include "..\..\src\common\PropertyList.h"
+#include "..\..\src\common\PropertyBag.h"
+#include "..\..\src\common\ControlSiteIPFrame.h"
+#include "..\..\src\common\ControlSite.h"
 
 #include "CBrowserCtlSite.h"
 #include "Tests.h"
@@ -67,6 +68,8 @@ extern CBrowseModule _Module;
 #define KEY_TESTURL_DEFAULTVALUE _T("http://www.mozilla.org")
 #define KEY_TESTCGI_DEFAULTVALUE _T("http://www.mozilla.org")
 
+#define NS_ASSERTION(x,y)
+#define TRACE_METHOD(x)
 
 
 //{{AFX_INSERT_LOCATION}}

@@ -1,4 +1,4 @@
-// ControlEventSink.h : Declaration of the CControlEventSink
+// ControlEventSink.h : Declaration of the CBrowseEventSink
 
 #ifndef __CONTROLEVENTSINK_H_
 #define __CONTROLEVENTSINK_H_
@@ -7,14 +7,14 @@
 #include "resource.h"       // main symbols
 
 /////////////////////////////////////////////////////////////////////////////
-// CControlEventSink
-class ATL_NO_VTABLE CControlEventSink : 
+// CBrowseEventSink
+class ATL_NO_VTABLE CBrowseEventSink : 
 	public CComObjectRootEx<CComSingleThreadModel>,
-	public CComCoClass<CControlEventSink, &CLSID_ControlEventSink>,
+	public CComCoClass<CBrowseEventSink, &CLSID_ControlEventSink>,
 	public IDispatch
 {
 public:
-	CControlEventSink()
+	CBrowseEventSink()
 	{
 		m_pBrowseDlg = NULL;
 	}
@@ -25,7 +25,7 @@ DECLARE_REGISTRY_RESOURCEID(IDR_CONTROLEVENTSINK)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CControlEventSink)
+BEGIN_COM_MAP(CBrowseEventSink)
 	COM_INTERFACE_ENTRY(IDispatch)
 	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, IDispatch)
 END_COM_MAP()
@@ -55,6 +55,6 @@ public:
         /* [out] */ UINT __RPC_FAR *puArgErr);
 };
 
-typedef CComObject<CControlEventSink> CControlEventSinkInstance;
+typedef CComObject<CBrowseEventSink> CBrowseEventSinkInstance;
 
 #endif //__CONTROLEVENTSINK_H_
