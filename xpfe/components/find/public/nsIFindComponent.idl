@@ -74,7 +74,7 @@ interface nsIFindComponent : nsIAppShellComponent
     | Clients do have to call Release() when they're no longer interested in   |
     | this search context.                                                     |
     --------------------------------------------------------------------------*/
-    nsISupports CreateContext(in nsIDOMWindowInternal aWindow, in nsIEditorShell aEditor);
+    nsISupports createContext(in nsIDOMWindowInternal aWindow, in nsIEditorShell aEditor);
 
     /*--------------------------------- Find -----------------------------------
     | Finds the "first" occurrence of a string in the given search context     |
@@ -87,7 +87,7 @@ interface nsIFindComponent : nsIAppShellComponent
     | case" and "search backward") is up to the implementation of this         |
     | component.                                                               |
     --------------------------------------------------------------------------*/
-    boolean Find( in nsISupports aContext );
+    boolean find( in nsISupports aContext );
 
     /*--------------------------------- Replace -----------------------------------
     | Replace the currently selected text. It is intended that the string used |
@@ -96,7 +96,7 @@ interface nsIFindComponent : nsIAppShellComponent
     |                                                                          |
     | Returns an error if the current context does not allow replacement.      |
     --------------------------------------------------------------------------*/
-    void Replace( in nsISupports aContext );
+    void replace( in nsISupports aContext );
 
     /*------------------------------- FindNext ---------------------------------
     | Finds the next occurrence (of the previously searched for string) in     |
@@ -105,14 +105,14 @@ interface nsIFindComponent : nsIAppShellComponent
     | If no previous Find has been performed with this context, then the       |
     | find component will use the last find performed for any context.         |
     --------------------------------------------------------------------------*/
-    boolean FindNext( in nsISupports aContext );
+    boolean findNext( in nsISupports aContext );
 
     /*----------------------------- ResetContext -------------------------------
     | Reset the given search context to search a new web shell.  Generally,    |
     | this will be the equivalent of calling Release() on the old context and  |
     | then creating a new one for aNewWebShell.                                |
     --------------------------------------------------------------------------*/
-    void ResetContext(in nsISupports aContext, in nsIDOMWindowInternal aWindow,
+    void resetContext(in nsISupports aContext, in nsIDOMWindowInternal aWindow,
                                   in nsIEditorShell aEditor );
 };
 
