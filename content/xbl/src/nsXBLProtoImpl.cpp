@@ -62,7 +62,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
   if (!global) return NS_OK;
 
-  nsIScriptContext *context = global->GetContext();
+  nsCOMPtr<nsIScriptContext> context = global->GetContext();
   if (!context) return NS_OK;
 
   // InitTarget objects gives us back the JS object that represents the bound element and the

@@ -202,7 +202,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return NS_ERROR_FAILURE;
     }
 
-    nsIScriptContext *scriptContext = global->GetContext();
+    nsCOMPtr<nsIScriptContext> scriptContext = global->GetContext();
     if (!scriptContext)
         return NS_ERROR_FAILURE;
 

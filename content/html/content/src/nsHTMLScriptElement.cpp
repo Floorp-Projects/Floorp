@@ -206,7 +206,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
 
   // Get the script context...
   nsCOMPtr<nsIDOMDocument> domdoc;
-  nsIScriptContext *scriptContext = nsnull;
+  nsCOMPtr<nsIScriptContext> scriptContext;
 
   mOuter->GetOwnerDocument(getter_AddRefs(domdoc));
 

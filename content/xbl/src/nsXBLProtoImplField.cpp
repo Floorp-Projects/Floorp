@@ -117,12 +117,13 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
   jsval result = nsnull;
   PRBool undefined;
   // XXX Need a URI here!
-  nsresult rv = aContext->EvaluateStringWithValue(nsDependentString(mFieldText,
-                                                                    mFieldTextLength), 
-                                                  scriptObject,
-                                                  nsnull, bindingURI.get(),
-                                                  mLineNumber, nsnull,
-                                                  (void*) &result, &undefined);
+  nsCOMPtr<nsIScriptContext> context = aContext;
+  nsresult rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
+                                                                   mFieldTextLength), 
+                                                 scriptObject,
+                                                 nsnull, bindingURI.get(),
+                                                 mLineNumber, nsnull,
+                                                 (void*) &result, &undefined);
   if (NS_FAILED(rv))
     return rv;
 
