@@ -540,11 +540,15 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             PRInt32  pcount=0, ccount=0;
             prev->GetChildCount(pcount);
             ccount = cur->GetChildCnt();
+
             nsCOMPtr<nsISupports>  historyObject;
-            GetHistoryState(getter_AddRefs(historyObject));
             nsLoadType   loadType = (nsLoadType)nsIChannel::LOAD_NORMAL;
-            if (!aIsReload)
-              loadType = (nsLoadType) nsISessionHistory::LOAD_HISTORY;
+            if (!aIsReload) {
+              loadType = (nsLoadType) nsISessionHistory::LOAD_HISTORY;			  
+              GetHistoryState(getter_AddRefs(historyObject));
+			}
+
+
 			PRUnichar * uniURL = cSURL.ToNewUnicode();
 			prev->SetURL(uniURL);
 	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject);
