@@ -23,7 +23,8 @@
 
 class CWebShellContainer :
 		public nsIWebShellContainer,
-		public nsIStreamObserver
+		public nsIStreamObserver,
+		public nsIDocumentLoaderObserver
 {
 public:
 	CWebShellContainer(CMozillaBrowser *pOwner);
@@ -53,12 +54,26 @@ public:
                          nsIWebShell *&aNewWebShell);
 	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
+	NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
+    NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+							nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
+							nsIWebShell** aNewShell, nsIWebShell** anInnerShell);
+    NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
     NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+
+	// nsIDocumentLoaderObserver 
+	NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
+	NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus); 
+	NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);   
+	NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax); 
+	NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg); 
+	NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus); 
+	NS_IMETHOD HandleUnknownContentType( nsIURL *aURL,const char *aContentType,const char *aCommand );		
 };
 
 #endif
