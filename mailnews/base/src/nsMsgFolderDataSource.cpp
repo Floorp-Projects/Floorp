@@ -461,7 +461,10 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     supports = getter_AddRefs(aSources->ElementAt(0));
     transactionManager = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv) && transactionManager)
-        i = 1;
+    {
+        aSources->RemoveElementAt(0);
+        cnt--;
+    }
   }
 
   for ( ; i < cnt; i++) {
