@@ -100,7 +100,7 @@ static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 const size_t gStackSize = 8192;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* gJSDiagnostics = nsnull;
+static PRLogModuleInfo* gJSDiagnostics;
 #endif
 
 // Thank you Microsoft!
@@ -111,28 +111,28 @@ static PRLogModuleInfo* gJSDiagnostics = nsnull;
 #define NS_GC_DELAY                2000 // ms
 #define NS_FIRST_GC_DELAY          10000 // ms
 
-static nsITimer *sGCTimer = nsnull;
-static PRBool sReadyForGC = PR_FALSE;
+static nsITimer *sGCTimer;
+static PRBool sReadyForGC;
 
 nsScriptNameSpaceManager *gNameSpaceManager;
 
-static nsIJSRuntimeService *sRuntimeService = nsnull;
-JSRuntime *nsJSEnvironment::sRuntime = nsnull;
+static nsIJSRuntimeService *sRuntimeService;
+JSRuntime *nsJSEnvironment::sRuntime;
 
 static const char kJSRuntimeServiceContractID[] =
   "@mozilla.org/js/xpc/RuntimeService;1";
 
-static PRThread *gDOMThread = nsnull;
+static PRThread *gDOMThread;
 
-static JSGCCallback gOldJSGCCallback = nsnull;
+static JSGCCallback gOldJSGCCallback;
 
-static PRBool sDidShutdown = nsnull;
+static PRBool sDidShutdown;
 
-static PRInt32 sContextCount = 0;
+static PRInt32 sContextCount;
 
-static nsIScriptSecurityManager *sSecurityManager = nsnull;
+static nsIScriptSecurityManager *sSecurityManager;
 
-static nsICollation *gCollation = nsnull;
+static nsICollation *gCollation;
 
 
 void JS_DLL_CALLBACK
@@ -178,7 +178,7 @@ NS_ScriptErrorReporter(JSContext *cx,
       nsCOMPtr<nsIDocShell> docShell;
       globalObject->GetDocShell(getter_AddRefs(docShell));
       if (docShell) {
-        static PRInt32 errorDepth = 0; // Recursion prevention
+        static PRInt32 errorDepth; // Recursion prevention
         errorDepth++;
 
         nsCOMPtr<nsIPresContext> presContext;
@@ -1826,7 +1826,7 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
 // static
 nsresult nsJSEnvironment::Init()
 {
-  static PRBool isInitialized = PR_FALSE;
+  static PRBool isInitialized;
 
   if (isInitialized) {
     return NS_OK;
