@@ -313,7 +313,7 @@
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" label="&openFileCmd.label;"/>
       <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;"
-            onpopupshowing="BuildRecentMenu()">
+            onpopupshowing="BuildRecentPagesMenu();">
         <menupopup id="menupopup_RecentFiles" oncommand="editPage(event.target.getAttribute('value'), window, false);"/>
           <!-- menuitems appended at runtime -->
       </menu>
