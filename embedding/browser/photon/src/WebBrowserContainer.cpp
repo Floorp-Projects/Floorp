@@ -1038,14 +1038,6 @@ CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
-{
-/* ATENTIE */ printf( "CreateBrowserWindow!!!!!!!!!!!\n\n\n" );
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
 CWebBrowserContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
 /* ATENTIE */ printf( "SizeBrowserTo!!!!!!!!!!!\n\n\n" );
