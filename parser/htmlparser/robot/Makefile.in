@@ -54,6 +54,7 @@ LIBS = \
 	-lxp \
 	-ljs \
 	-lxpcom \
+	-lreg \
 	$(TK_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
