@@ -418,15 +418,18 @@ nsScrollingViewFrame::ListTag(FILE* out) const
 //----------------------------------------------------------------------
 
 /**
- * The scroll frame basically acts as a border frame. It leaves room for and
- * renders the border. It creates a nsScrollingViewFrame as its only child
- * frame
+ * The scroll frame creates and manages the scrolling view. It creates
+ * a nsScrollingViewFrame which handles padding and rendering of the
+ * background.
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
   nsScrollFrame(nsIContent* aContent, nsIFrame* aParent);
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
+  NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
+                       nsDidReflowStatus aStatus);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -441,6 +444,9 @@ public:
 
 protected:
   virtual PRIntn GetSkipSides() const;
+
+private:
+  nsresult CreateScrollingView();
 };
 
 nsScrollFrame::nsScrollFrame(nsIContent* aContent, nsIFrame* aParent)
@@ -453,8 +459,8 @@ nsScrollFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   NS_PRECONDITION(nsnull != aChildList, "no child frame");
 
-  // Create a scrolling view frame
-  mFirstChild = new nsScrollingViewFrame(mContent, this);
+  // Create a scroll view frame
+  mFirstChild = new nsScrollViewFrame(mContent, this);
   if (nsnull == mFirstChild) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -462,7 +468,7 @@ nsScrollFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   mFirstChild->SetStyleContext(&aPresContext, mStyleContext);
 
   // Reset the child frame's geometric and content parent to be
-  // the scrolling view frame
+  // the scroll view frame
 #ifdef NS_DEBUG
   // Verify that there's only one child frame
   nsIFrame* nextSibling;
@@ -472,8 +478,125 @@ nsScrollFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   aChildList->SetGeometricParent(mFirstChild);
   aChildList->SetContentParent(mFirstChild);
 
-  // Init the scrollable view frame passing it the child list
+  // Init the scroll view frame passing it the child list
   return mFirstChild->Init(aPresContext, aChildList);
+}
+
+NS_IMETHODIMP
+nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
+                         nsDidReflowStatus aStatus)
+{
+  nsresult  rv = NS_OK;
+
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    // Let the default nsFrame implementation clear the state flags
+    // and size and position our view
+    rv = nsFrame::DidReflow(aPresContext, aStatus);
+    
+    // Send the DidReflow notification to the scroll view frame
+    nsIHTMLReflow*  htmlReflow;
+    
+    mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+    htmlReflow->DidReflow(aPresContext, aStatus);
+
+    // Size the scroll view frame's view. Don't change its position
+    nsSize          size;
+    nsIViewManager* vm;
+    nsIView*        scrolledView;
+
+    mFirstChild->GetSize(size);
+    mFirstChild->GetView(scrolledView);
+    scrolledView->GetViewManager(vm);
+    vm->ResizeView(scrolledView, size.width, size.height);
+    NS_RELEASE(vm);
+  }
+
+  return rv;
+}
+
+nsresult
+nsScrollFrame::CreateScrollingView()
+{
+  nsIView*  view;
+
+  // Get parent view
+  nsIFrame* parent;
+  GetParentWithView(parent);
+  NS_ASSERTION(parent, "GetParentWithView failed");
+  nsIView* parentView;
+  parent->GetView(parentView);
+  NS_ASSERTION(parentView, "GetParentWithView failed");
+
+  // Get the view manager
+  nsIViewManager* viewManager;
+  parentView->GetViewManager(viewManager);
+
+  // Create the scrolling view
+  nsresult rv = nsRepository::CreateInstance(kScrollingViewCID, 
+                                             nsnull, 
+                                             kIViewIID, 
+                                             (void **)&view);
+
+  if (NS_OK == rv) {
+    // Initialize the scrolling view
+    // XXX Check for opacity...
+    view->Init(viewManager, mRect, parentView, &kWidgetCID, nsnull, nsnull);
+  
+    // Insert the view into the view hierarchy
+    viewManager->InsertChild(parentView, view, 0);
+  
+    // If the background is transparent then inform the view manager
+    const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+
+    PRBool  isTransparent = (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags);
+    if (isTransparent) {
+      viewManager->SetViewContentTransparency(view, PR_TRUE);
+    }
+
+    // Get the nsIScrollableView interface
+    nsIScrollableView* scrollingView;
+    view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+
+    // Set the scrolling view's insets to whatever our border is
+    const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+      mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin border;
+    spacing->CalcBorderFor(this, border);
+    scrollingView->SetControlInsets(border);
+
+    // Remember our view
+    SetView(view);
+
+    // Create a view for the scroll view frame
+    nsIView*  scrolledView;
+    rv = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&scrolledView);
+    if (NS_OK == rv) {
+      // Bind the view to the frame
+      mFirstChild->SetView(scrolledView);
+  
+      // Initialize the view
+      scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView);
+  
+      // Set it as the scrolling view's scrolled view
+      scrollingView->SetScrolledView(scrolledView);
+  
+      // If the background is transparent then inform the view manager
+      if (isTransparent) {
+        viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
+      }
+  
+      // We need to allow the view's position to be different than the
+      // frame's position
+      nsFrameState  state;
+      mFirstChild->GetFrameState(state);
+      state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
+      mFirstChild->SetFrameState(state);
+    }
+  }
+
+  NS_RELEASE(viewManager);
+  return rv;
 }
 
 //XXX incremental reflow pass through
@@ -488,7 +611,11 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                       aReflowState.maxSize.width,
                       aReflowState.maxSize.height));
 
-  // We handle the border only
+  // If it's out initial reflow then create a scrolling view
+  if (eReflowReason_Initial == aReflowState.reason) {
+    CreateScrollingView();
+  }
+
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin border;
@@ -496,7 +623,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   nscoord lr = border.left + border.right;
   nscoord tb = border.top + border.bottom;
 
-  // Compute the scrolling view frame's max size taking into account our
+  // Compute the scroll view frame's max size taking into account our
   // borders
   nsSize kidMaxSize;
   if (aReflowState.HaveConstrainedWidth()) {
@@ -522,19 +649,31 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // Reflow the child and get its desired size
-  nsHTMLReflowState  kidReflowState(aPresContext, mFirstChild, aReflowState, kidMaxSize);
+  // Reflow the child and get its desired size. Let it be as high as it
+  // wants
+  nsHTMLReflowState  kidReflowState(aPresContext, mFirstChild, aReflowState,
+                                    nsSize(kidMaxSize.width, NS_UNCONSTRAINEDSIZE));
 
+  // XXX Don't use aDesiredSize...
   ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
-  // Place and size the child
+  // Place and size the child.
+  // XXX Make sure it's at least as big as we are...
   nsRect rect(border.left, border.top, aDesiredSize.width, aDesiredSize.height);
   mFirstChild->SetRect(rect);
 
-  // Compute our desired size by adding in space for the borders
-  aDesiredSize.width += lr;
-  aDesiredSize.height += tb;
+  // Compute our desired size
+  aDesiredSize.width = kidMaxSize.width + lr;
+  if (NS_UNCONSTRAINEDSIZE == kidMaxSize.height) {
+    // Use the scroll view's desired height plus any borders
+    aDesiredSize.height += tb;
+  } else {
+    // XXX This isn't correct. If our height is fixed, then use the fixed height;
+    // otherwise use the MIN of the constrained height and the scroll view's height
+    // plus borders...
+    aDesiredSize.height = kidMaxSize.height + tb;
+  }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
