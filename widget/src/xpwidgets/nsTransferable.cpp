@@ -116,12 +116,20 @@ DataStruct::GetData ( nsISupports** aData, PRUint32 *aDataLen )
       printf("->>>>>>>>>>>>>> Read Clipboard from cache file\n");
       return;
     }
+    else {
+      // oh shit, something went horribly wrong here.
+      NS_WARNING("Oh no, couldn't read data in from the cache file");
+      *aData = nsnull;
+      *aDataLen = 0;
+      return;
+    }
   } else {
     printf("->>>>>>>>>>>>>> Read Clipboard from memory\n");
   }
   
   *aData = mData;
-  NS_ADDREF(*aData); 
+  if ( mData )
+    NS_ADDREF(*aData); 
   *aDataLen = mDataLen;
 }
 
