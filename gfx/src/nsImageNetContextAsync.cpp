@@ -483,7 +483,9 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
 NS_IMETHODIMP
 ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 {
-  if (mTimer != nsnull) {
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
   }
 
   if (NS_BINDING_SUCCEEDED != status) {

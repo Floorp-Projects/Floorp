@@ -3232,7 +3232,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   nsTimeoutImpl dummy_timeout;
   JSContext *cx;
   PRInt64 now;
-  nsITimer *timer;
+  nsCOMPtr<nsITimer> timer;
   nsresult rv;
   PRUint32 firingDepth = mTimeoutFiringDepth+1;
 
@@ -3489,6 +3489,10 @@ void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
             }
          }
       }
+   if (aTimeout->timer) {
+     aTimeout->timer->Cancel();
+     aTimeout->timer = nsnull;
+   }
    PR_FREEIF(aTimeout->filename);
    NS_IF_RELEASE(aTimeout->window);
    NS_IF_RELEASE(aTimeout->principal);
