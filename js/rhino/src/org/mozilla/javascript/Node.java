@@ -169,10 +169,6 @@ public class Node implements Cloneable {
         return n;
     }
 
-    public PreorderNodeIterator getPreorderIterator() {
-        return new PreorderNodeIterator(this);
-    }
-
     public void addChildToFront(Node child) {
         child.next = first;
         first = child;

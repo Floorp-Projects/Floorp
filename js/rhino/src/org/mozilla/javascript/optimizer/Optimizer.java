@@ -137,11 +137,11 @@ public class Optimizer {
     {
         itsOptLevel = optLevel;
         //  run on one function at a time for now
-        PreorderNodeIterator iterator = tree.getPreorderIterator();
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
-                                // should be able to do this more cheaply ?
-                               // - run through initial block children ?
+        PreorderNodeIterator iter = new PreorderNodeIterator();
+        for (iter.start(tree); !iter.done(); iter.next()) {
+            // should be able to do this more cheaply ?
+            // - run through initial block children ?
+            Node node = iter.getCurrent();
             if (node.getType() == TokenStream.FUNCTION) {
                 OptFunctionNode theFunction = (OptFunctionNode)
                     node.getProp(Node.FUNCTION_PROP);
@@ -1029,48 +1029,28 @@ public class Optimizer {
         }
     }
 
-    private Node[] buildStatementList(FunctionNode theFunction)
+    private static Node[] buildStatementList(FunctionNode theFunction)
     {
         ObjArray statements = new ObjArray();
-        ObjArray blockStack = new ObjArray();
 
-        Node node = theFunction;
-        for (;;) {
-            node = findNextStatementNode(node, blockStack);
-            if (node == null) { break; }
-            statements.add(node);
-            node = node.getNext();
-            if (node == null) {
-                if (blockStack.isEmpty()) { break; }
-                node = (Node)(blockStack.pop());
+        PreorderNodeIterator iter = new PreorderNodeIterator();
+        for (iter.start(theFunction); !iter.done(); ) {
+            Node node = iter.getCurrent();
+            int type = node.getType();
+            if (type == TokenStream.BLOCK
+                || type == TokenStream.LOOP
+                || type == TokenStream.FUNCTION)
+            {
+                iter.next();
+            } else {
+                statements.add(node);
+                iter.nextSkipSubtree();
             }
         }
 
         Node[] result = new Node[statements.size()];
         statements.toArray(result);
         return result;
-    }
-
-    private static Node findNextStatementNode(Node node, ObjArray blockStack)
-    {
-        for (;;) {
-            int type = node.getType();
-            boolean blockType = (type == TokenStream.BLOCK
-                                 || type == TokenStream.LOOP
-                                 || type == TokenStream.FUNCTION);
-            if (!blockType) { return node; }
-            Node first = node.getFirstChild();
-            Node next = node.getNext();
-            if (first == null) {
-                if (next == null) { return null; }
-                node = next;
-            } else {
-                if (next != null) {
-                    blockStack.push(next);
-                }
-                node = first;
-            }
-        }
     }
 
     int itsOptLevel;

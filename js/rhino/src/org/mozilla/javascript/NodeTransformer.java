@@ -72,9 +72,9 @@ public class NodeTransformer {
         // to save against upchecks if no finally blocks are used.
         boolean hasFinally = false;
 
-        PreorderNodeIterator iterator = tree.getPreorderIterator();
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
+        PreorderNodeIterator iter = new PreorderNodeIterator();
+        for (iter.start(tree); !iter.done(); iter.next()) {
+            Node node = iter.getCurrent();
             int type = node.getType();
 
           typeswitch:
@@ -151,7 +151,7 @@ public class NodeTransformer {
                  * right target.
                  */
                 Node breakTarget = new Node(TokenStream.TARGET);
-                Node parent = iterator.getCurrentParent();
+                Node parent = iter.getCurrentParent();
                 Node next = node.getNext();
                 while (next != null &&
                        (next.getType() == TokenStream.LABEL ||
@@ -176,7 +176,7 @@ public class NodeTransformer {
               case TokenStream.SWITCH:
               {
                 Node breakTarget = new Node(TokenStream.TARGET);
-                Node parent = iterator.getCurrentParent();
+                Node parent = iter.getCurrentParent();
                 parent.addChildAfter(breakTarget, node);
 
                 // make all children siblings except for selector
@@ -276,10 +276,10 @@ public class NodeTransformer {
                         Node jsrnode = new Node(TokenStream.JSR);
                         Object jsrtarget = n.getProp(Node.FINALLY_PROP);
                         jsrnode.putProp(Node.TARGET_PROP, jsrtarget);
-                        iterator.addBeforeCurrent(jsrnode);
+                        iter.addBeforeCurrent(jsrnode);
                     } else if (elemtype == TokenStream.WITH) {
                         Node leave = new Node(TokenStream.LEAVEWITH);
-                        iterator.addBeforeCurrent(leave);
+                        iter.addBeforeCurrent(leave);
                     }
                 }
                 break;
@@ -304,12 +304,12 @@ public class NodeTransformer {
                     int elemtype = n.getType();
                     if (elemtype == TokenStream.WITH) {
                         Node leave = new Node(TokenStream.LEAVEWITH);
-                        iterator.addBeforeCurrent(leave);
+                        iter.addBeforeCurrent(leave);
                     } else if (elemtype == TokenStream.TRY) {
                         Node jsrFinally = new Node(TokenStream.JSR);
                         Object jsrTarget = n.getProp(Node.FINALLY_PROP);
                         jsrFinally.putProp(Node.TARGET_PROP, jsrTarget);
-                        iterator.addBeforeCurrent(jsrFinally);
+                        iter.addBeforeCurrent(jsrFinally);
                     } else if (!labelled &&
                                (elemtype == TokenStream.LOOP ||
                                 (elemtype == TokenStream.SWITCH &&
@@ -394,7 +394,7 @@ public class NodeTransformer {
                 }
                 regexps.add(node);
                 Node n = new Node(TokenStream.REGEXP);
-                iterator.replaceCurrent(n);
+                iter.replaceCurrent(n);
                 n.putProp(Node.REGEXP_PROP, node);
                 break;
               }
@@ -417,7 +417,7 @@ public class NodeTransformer {
                     Node pop = new Node(TokenStream.POP, asn, node.getLineno());
                     result.addChildToBack(pop);
                 }
-                iterator.replaceCurrent(result);
+                iter.replaceCurrent(result);
                 break;
               }
 
@@ -444,7 +444,7 @@ public class NodeTransformer {
                         // Local variables are by definition permanent
                         Node n = new Node(TokenStream.PRIMARY,
                                           TokenStream.FALSE);
-                        iterator.replaceCurrent(n);
+                        iter.replaceCurrent(n);
                     }
                 }
                 break;
@@ -492,11 +492,11 @@ public class NodeTransformer {
     protected void addVariables(Node tree, VariableTable vars) {
         // OPT: a whole pass to collect variables seems expensive.
         // Could special case to go into statements only.
-        boolean inFunction = tree.getType() == TokenStream.FUNCTION;
-        PreorderNodeIterator iterator = tree.getPreorderIterator();
+        boolean inFunction = (tree.getType() == TokenStream.FUNCTION);
         ObjToIntMap fNames = null;
-        Node node;
-        while ((node = iterator.nextNode()) != null) {
+        PreorderNodeIterator iter = new PreorderNodeIterator();
+        for (iter.start(tree); !iter.done(); iter.next()) {
+            Node node = iter.getCurrent();
             int nodeType = node.getType();
             if (inFunction && nodeType == TokenStream.FUNCTION &&
                 node != tree &&

@@ -41,15 +41,13 @@ package org.mozilla.javascript;
  * This class implements a preorder tree iterator for the Node class.
  *
  * @see Node
- * @author Norris Boyd
+ * @author Igor Bukanov
  */
 public final class PreorderNodeIterator {
 
-    public PreorderNodeIterator(Node n) {
-        start = n;
-    }
+    public PreorderNodeIterator() { }
 
-    public Node currentNode() {
+    public Node getCurrent() {
         return current;
     }
 
@@ -59,32 +57,44 @@ public final class PreorderNodeIterator {
         return stack[stackTop - 1];
     }
 
-    public Node nextNode() {
-        if (current == null) {
-            current = start;
-        } else {
-            Node first = current.getFirstChild();
-            if (first != null) {
-                stackPush(current);
-                cachedPrev = null;
-                current = first;
-            } else {
-                for (;;) {
-                    cachedPrev = current;
-                    current = current.next;
-                    if (current != null) { break; }
-                    if (stackTop == 0) {
-                        // Iteration end: clear cachedPrev that currently
-                        // points to the last sibling of start
-                        cachedPrev = null; break;
-                    }
-                    --stackTop;
-                    current = stack[stackTop];
-                    stack[stackTop] = null;
-                }
-            }
+    public void start(Node tree) {
+        current = tree;
+        cachedPrev = null;
+        while (stackTop != 0) {
+            --stackTop;
+            stack[stackTop] = null;
         }
-        return current;
+    }
+
+    public boolean done() {
+        return current == null;
+    }
+
+    public void next() {
+        Node first = current.getFirstChild();
+        if (first != null) {
+            stackPush(current);
+            cachedPrev = null;
+            current = first;
+        } else {
+            nextSkipSubtree();
+        }
+    }
+
+    public void nextSkipSubtree() {
+        for (;;) {
+            cachedPrev = current;
+            current = current.next;
+            if (current != null) { break; }
+            if (stackTop == 0) {
+                // Iteration end: clear cachedPrev that currently
+                // points to the last sibling of start
+                cachedPrev = null; break;
+            }
+            --stackTop;
+            current = stack[stackTop];
+            stack[stackTop] = null;
+        }
     }
 
     public void replaceCurrent(Node newNode) {
@@ -129,7 +139,6 @@ public final class PreorderNodeIterator {
         stackTop = N + 1;
     }
 
-    private Node start;
     private Node[] stack;
     private int stackTop;
 
