@@ -1378,7 +1378,7 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
   return INTL_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring);
 }
 
-PRInt32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+PRInt32 MIME_ConvertCharset(PRBool autodetectCharset, const char* from_charset, const char* to_charset,
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
 {
   if (!NeedCharsetConversion(from_charset, to_charset)) {

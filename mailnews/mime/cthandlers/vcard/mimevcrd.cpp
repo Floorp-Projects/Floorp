@@ -934,7 +934,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_COMPLETE_VCARD);
 
 		// convert from the resource charset. 
-    res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+    res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
@@ -945,7 +945,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	else 
 	{
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_CONDENSED_VCARD);
-    res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+    res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
@@ -965,7 +965,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
 
-  res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+  res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
 		converted = rsrcString;
@@ -1700,7 +1700,7 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
   PRInt32 res;
 
   // convert from the resource charset. 
-  res = MIME_ConvertCharset(charset, "UTF-8", line, PL_strlen(line), 
+  res = MIME_ConvertCharset(PR_TRUE, charset, "UTF-8", line, PL_strlen(line), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
     converted = (char *)line;
