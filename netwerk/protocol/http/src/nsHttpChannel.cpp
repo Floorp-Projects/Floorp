@@ -757,11 +757,12 @@ nsHttpChannel::ProcessNormal()
 nsresult
 nsHttpChannel::GetCallback(const nsIID &aIID, void **aResult)
 {
-    nsresult rv;
     NS_ASSERTION(aResult, "Invalid argument in GetCallback!");
-    *aResult = nsnull;
-    NS_ENSURE_TRUE(mCallbacks, NS_ERROR_NOT_INITIALIZED);
-    rv = mCallbacks->GetInterface(aIID, aResult);
+    nsresult rv;
+    if (mCallbacks)
+        rv = mCallbacks->GetInterface(aIID, aResult);
+    else
+        rv = NS_ERROR_NO_INTERFACE;
     if (NS_FAILED(rv)) {
         if (mLoadGroup) {
             nsCOMPtr<nsIInterfaceRequestor> cbs;
