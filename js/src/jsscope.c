@@ -1091,10 +1091,10 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                  * Callers should therefore pass SPROP_INVALID_SLOT for all
                  * non-alias, unshared property adds.
                  */
-                if (slot != SPROP_INVALID_SLOT)
-                    JS_ASSERT(overwriting);
-                else if (!js_AllocSlot(cx, scope->object, &slot))
+                if (slot == SPROP_INVALID_SLOT &&
+                    !js_AllocSlot(cx, scope->object, &slot)) {
                     goto fail_overwrite;
+                }
             }
         }
 
