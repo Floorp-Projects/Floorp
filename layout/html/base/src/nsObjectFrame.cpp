@@ -85,6 +85,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMContextMenuListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -178,7 +179,8 @@ class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIDOMMouseMotionListener,
                               public nsIDOMKeyListener,
                               public nsIDOMFocusListener,
-                              public nsIScrollPositionListener
+                              public nsIScrollPositionListener,
+                              public nsIDOMDragListener
 
 {
 public:
@@ -289,6 +291,14 @@ public:
   // nsIDOMFocuListener interfaces
   NS_IMETHOD Focus(nsIDOMEvent * aFocusEvent);
   NS_IMETHOD Blur(nsIDOMEvent * aFocusEvent);
+  
+  // nsIDOMDragListener interfaces
+  NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent);
+  
 
   nsresult Destroy();  
 
@@ -2146,6 +2156,7 @@ NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDragListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPluginInstanceOwner)
 NS_INTERFACE_MAP_END
 
@@ -3215,6 +3226,92 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   return NS_OK;
 }    
 
+/*=============== nsIDOMDragListener ======================*/
+nsresult nsPluginInstanceOwner::DragEnter(nsIDOMEvent* aMouseEvent)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending drag events to the plugin, since we didn't before.
+    aMouseEvent->PreventDefault();
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+    if (nsevent) {
+      nsevent->PreventBubble();
+    }
+    return NS_ERROR_FAILURE; // means consume event                             
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::DragOver(nsIDOMEvent* aMouseEvent)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending drag events to the plugin, since we didn't before.
+    aMouseEvent->PreventDefault();
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+    if (nsevent) {
+      nsevent->PreventBubble();
+    }
+    return NS_ERROR_FAILURE; // means consume event                             
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::DragExit(nsIDOMEvent* aMouseEvent)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending drag events to the plugin, since we didn't before.
+    aMouseEvent->PreventDefault();
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+    if (nsevent) {
+      nsevent->PreventBubble();
+    }
+    return NS_ERROR_FAILURE; // means consume event                             
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::DragDrop(nsIDOMEvent* aMouseEvent)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending drag events to the plugin, since we didn't before.
+    aMouseEvent->PreventDefault();
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+    if (nsevent) {
+      nsevent->PreventBubble();
+    }
+    return NS_ERROR_FAILURE; // means consume event                             
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::DragGesture(nsIDOMEvent* aMouseEvent)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending drag events to the plugin, since we didn't before.
+    aMouseEvent->PreventDefault();
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+    if (nsevent) {
+      nsevent->PreventBubble();
+    }
+    return NS_ERROR_FAILURE; // means consume event                             
+  }
+#endif
+  return NS_OK;
+}
+
 
 
 /*=============== nsIKeyListener ======================*/
@@ -3536,6 +3633,25 @@ nsPluginInstanceOwner::Destroy()
   }
   else NS_ASSERTION(PR_FALSE, "plugin had no content");
 
+  // Unregister drag event listener;
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMDragListener> dragListener;
+      QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListener));
+      if (dragListener) { 
+        receiver->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), dragListener, PR_TRUE);
+        receiver->RemoveEventListener(NS_LITERAL_STRING("dragover"), dragListener, PR_TRUE);
+        receiver->RemoveEventListener(NS_LITERAL_STRING("dragexit"), dragListener, PR_TRUE);
+        receiver->RemoveEventListener(NS_LITERAL_STRING("dragenter"), dragListener, PR_TRUE);
+        receiver->RemoveEventListener(NS_LITERAL_STRING("draggesture"), dragListener, PR_TRUE);
+      }
+      else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
+    }
+    else NS_ASSERTION(PR_FALSE, "plugin was not an event listener");
+  }
+  else NS_ASSERTION(PR_FALSE, "plugin had no content");
+
   // Unregister scroll position listener
   if (mContext) {
     nsCOMPtr<nsIPresShell> presShell;
@@ -3737,6 +3853,22 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
         receiver->AddEventListener(NS_LITERAL_STRING("keypress"), keyListener, PR_TRUE);
         receiver->AddEventListener(NS_LITERAL_STRING("keydown"), keyListener, PR_TRUE);
         receiver->AddEventListener(NS_LITERAL_STRING("keyup"), keyListener, PR_TRUE);
+      }
+    }
+  }
+
+  // Register drag listener
+  if (content) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    if (receiver) {
+      nsCOMPtr<nsIDOMDragListener> dragListener;
+      QueryInterface(NS_GET_IID(nsIDOMDragListener), getter_AddRefs(dragListener));
+      if (dragListener) {
+        receiver->AddEventListener(NS_LITERAL_STRING("dragdrop"), dragListener, PR_TRUE);
+        receiver->AddEventListener(NS_LITERAL_STRING("dragover"), dragListener, PR_TRUE);
+        receiver->AddEventListener(NS_LITERAL_STRING("dragexit"), dragListener, PR_TRUE);
+        receiver->AddEventListener(NS_LITERAL_STRING("dragenter"), dragListener, PR_TRUE);
+        receiver->AddEventListener(NS_LITERAL_STRING("draggesture"), dragListener, PR_TRUE);
       }
     }
   }
