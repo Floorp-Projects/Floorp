@@ -20,13 +20,6 @@
  * Contributor(s): 
  */
 
-@import url(chrome://global/skin/global.css);
-
-box#reorder
-{
-	text-align: center;
-}
-
 .up
 {
 	list-style-image:url("chrome://global/skin/scroll-up.gif");
@@ -48,3 +41,13 @@ box#reorder
 {
 	list-style-image:url("chrome://global/skin/scroll-down-disabled.gif");
 }
+
+#add-button
+  {
+    list-style-image      : url("chrome://global/skin/scroll-left.gif");
+  }
+  
+#remove-button
+  {
+    list-style-iamge      : url("chrome://global/skin/scroll-right.gif");
+  }

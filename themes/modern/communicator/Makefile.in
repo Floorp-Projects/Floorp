@@ -41,7 +41,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/navbar-endbox.gif \
 		$(NULL)
 
-DIRS = search xpinstall pref sidebar bookmarks directory profile regviewer related wallet 
+DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 
 
 include $(topsrcdir)/config/rules.mk
 
