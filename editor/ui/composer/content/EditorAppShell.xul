@@ -73,15 +73,28 @@
       <menuitem name=".Line Break" onclick=""/>
       <menuitem name=".Break Below Image(s)" onclick=""/>
     </menu>
-
     <menu name="Format">
-      <menuitem name=".Font" onclick=""/>
-      <menuitem name=".Size" onclick=""/>
+      <menu name="Font">
+        <menuitem name="Default Variable Width" onclick="SetFontFace('')"/>
+        <menuitem name="Default Fixed Width" onclick="SetFontFace('tt')"/>
+        <menuitem name="Arial, Helvetica" onclick="SetFontFace('Arial, Helvetica, sans-serif')"/>
+        <menuitem name="Times" onclick="SetFontFace('Times New Roman, Times, serif')"/>
+        <menuitem name="Courier" onclick="SetFontFace('Courier New, Courier, mono')"/>
+      </menu>
+      <menu name="Size">
+        <menuitem name="-2" onclick="SetFontSize('-2')"/>
+        <menuitem name="-1" onclick="SetFontSize('-1')"/>
+        <menuitem name=" 0" onclick="SetFontSize(' 0')"/>
+        <menuitem name="+1" onclick="SetFontSize('+1')"/>
+        <menuitem name="+2" onclick="SetFontSize('+2')"/>
+        <menuitem name="+3" onclick="SetFontSize('+3')"/>
+        <menuitem name="+4" onclick="SetFontSize('+4')"/>
+      </menu>
       <menuitem name=".Style" onclick=""/>
       <menuitem name=".Color..." onclick=""/>
       <menuitem name=".Remove All Style(s)" onclick=""/>
       <separator />
-      <menu name="Paragraph/Heading">
+      <menu name="Paragraph / Heading">
         <menuitem name="Normal"    onclick="SetParagraphFormat('normal')"/>
         <menuitem name="Heading 1" onclick="SetParagraphFormat('h1')"/>
         <menuitem name="Heading 2" onclick="SetParagraphFormat('h2')"/>
@@ -126,28 +139,29 @@
       <!-- Most of the message handlers don't work! -->
       <html:select class="combobox" size="1" id="paraFormat" onchange="OnChangeParaFormat()">
         <html:optgroup>
-          <html:option onclick="SetParagraphFormat('normal')">Normal</html:option>
-          <html:option onclick="SetParagraphFormat('h1')">Heading 1</html:option>
-          <html:option onclick="SetParagraphFormat('h2')">Heading 2</html:option>
-          <html:option onclick="SetParagraphFormat('h3')">Heading 3</html:option>
-          <html:option onclick="SetParagraphFormat('h4')">Heading 4</html:option>
-          <html:option onclick="SetParagraphFormat('h5')">Heading 5</html:option>
-          <html:option onclick="SetParagraphFormat('h6')">Heading 6</html:option>
-          <html:option onclick="SetParagraphFormat('address')">Address</html:option>
+          <html:option onclick="SetParagraphFormat('normal')">Normal </html:option>
+          <html:option onclick="SetParagraphFormat('h1')">Heading 1 </html:option>
+          <html:option onclick="SetParagraphFormat('h2')">Heading 2 </html:option>
+          <html:option onclick="SetParagraphFormat('h3')">Heading 3 </html:option>
+          <html:option onclick="SetParagraphFormat('h4')">Heading 4 </html:option>
+          <html:option onclick="SetParagraphFormat('h5')">Heading 5 </html:option>
+          <html:option onclick="SetParagraphFormat('h6')">Heading 6 </html:option>
+          <html:option onclick="SetParagraphFormat('address')">Address </html:option>
           <html:option onclick="SetParagraphFormat('li')">List Item</html:option>
-          <html:option onclick="SetParagraphFormat('dt')">Definition Term</html:option>
-          <html:option onclick="SetParagraphFormat('dd')">Definition Description</html:option>
+          <html:option onclick="SetParagraphFormat('dt')">Definition Term </html:option>
+          <html:option onclick="SetParagraphFormat('dd')">Definition Description </html:option>
         </html:optgroup>
       </html:select>
       <html:select class="combobox" size="1" id="fontSize" onchange="OnChangeFontSize()">
         <html:optgroup label="fontSize">
-          <html:option>-2</html:option>
-          <html:option>-1</html:option>
-          <html:option>0</html:option>
-          <html:option>1</html:option>
-          <html:option>2</html:option>
-          <html:option>3</html:option>
-          <html:option>4</html:option>
+          <!-- The ... after number compensates for input width bug -->
+          <html:option>-2...</html:option>
+          <html:option>-1...</html:option>
+          <html:option> 0...</html:option>
+          <html:option>+1...</html:option>
+          <html:option>+2...</html:option>
+          <html:option>+3...</html:option>
+          <html:option>+4...</html:option>
         </html:optgroup>
       </html:select>
 		  <titledbutton align="left" class="popup" value="Color"/>
