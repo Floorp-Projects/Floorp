@@ -593,7 +593,7 @@ MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
 
 MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
 DYNAMIC_XPCOM_LIBS='-L$(DIST)/bin -lxpcom -lxpcom_core'
-LIBXUL_LIBS='-L$(DIST)/bin -lxpcom -lxul'
+LIBXUL_LIBS='-L$(DIST)/bin -lxpcom -Wl,-rpath-link,$(DIST)/bin -lxul'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
