@@ -569,6 +569,8 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
       }
     }
 
+    mContext->GC();
+
     mContext = nsnull;          // force release now
     mControllers = nsnull;      // force release now
     mChromeEventHandler = nsnull; // force release now
