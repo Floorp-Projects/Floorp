@@ -8,6 +8,6 @@ href="http://www.hixie.ch/bugzilla/">report this bug</a>, including
 the date and time of the error along with the information included
 below:</p>
 
-<pre>[% error %]</pre>
+<pre>[% error | html %]</pre>
 
 [% INCLUDE template.footer %]
