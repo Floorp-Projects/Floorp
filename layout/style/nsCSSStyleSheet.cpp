@@ -53,6 +53,7 @@
 
 //#define DEBUG_REFS
 //#define DEBUG_RULES
+#define DEBUG_CASCADE
 
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -365,6 +366,7 @@ public:
   virtual void RemoveSheet(nsICSSStyleSheet* aParentSheet);
 
   virtual void ClearRuleCascades(void);
+  virtual void RebuildNameSpaces(void);
 
   nsVoidArray           mSheets;
 
@@ -374,6 +376,7 @@ public:
   nsHashtable*          mMediumCascadeTable;
 
   nsINameSpace*         mNameSpace;
+  PRInt32               mDefaultNameSpaceID;
 };
 
 
@@ -427,6 +430,7 @@ public:
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
+  NS_IMETHOD UseForMedium(nsIAtom* aMedium) const;
   NS_IMETHOD AppendMedium(nsIAtom* aMedium);
   NS_IMETHOD ClearMedia(void);
 
@@ -470,6 +474,7 @@ public:
   NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
 
   NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const;
+  NS_IMETHOD  SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID);
 
   NS_IMETHOD Clone(nsICSSStyleSheet*& aClone) const;
 
@@ -509,6 +514,10 @@ protected:
   virtual ~CSSStyleSheetImpl();
 
   void ClearRuleCascades(void);
+#ifdef DEBUG_CASCADE
+  nsresult SlowCascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules);
+#endif
+  nsresult GatherRulesFor(nsIAtom* aMedium, nsISupportsArray* aRules);
   nsresult CascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules);
   RuleCascadeData* GetRuleCascade(nsIAtom* aMedium);
 
@@ -836,7 +845,8 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
     mURL(nsnull),
     mOrderedRules(nsnull),
     mMediumCascadeTable(nsnull),
-    mNameSpace(nsnull)
+    mNameSpace(nsnull),
+    mDefaultNameSpaceID(kNameSpaceID_None)
 {
   mSheets.AppendElement(aParentSheet);
 }
@@ -855,42 +865,13 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
-static PRBool
-CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
-{
-  nsICSSRule* rule = (nsICSSRule*)aRule;
-  PRInt32 type;
-  rule->GetType(type);
-  if (nsICSSRule::NAMESPACE_RULE == type) {
-    nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)rule;
-    nsINameSpace** nameSpacePtr = (nsINameSpace**)aNameSpacePtr;
-    nsINameSpace* lastNameSpace = *nameSpacePtr;
-    nsINameSpace* newNameSpace;
-
-    nsIAtom*      prefix = nsnull;
-    nsAutoString  urlSpec;
-    nameSpaceRule->GetPrefix(prefix);
-    nameSpaceRule->GetURLSpec(urlSpec);
-    lastNameSpace->CreateChildNameSpace(prefix, urlSpec, newNameSpace);
-    NS_IF_RELEASE(prefix);
-    if (newNameSpace) {
-      NS_RELEASE(lastNameSpace);
-      (*nameSpacePtr) = newNameSpace; // takes ref
-    }
-
-    return PR_TRUE;
-  }
-  // stop if not namespace, import or charset because namespace can't follow anything else
-  return (((nsICSSRule::CHARSET_RULE == type) || 
-           (nsICSSRule::IMPORT_RULE)) ? PR_TRUE : PR_FALSE); 
-}
-
 CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
                                        nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mURL(aCopy.mURL),
     mMediumCascadeTable(nsnull),
-    mNameSpace(nsnull)
+    mNameSpace(nsnull),
+    mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID)
 {
   mSheets.AppendElement(aParentSheet);
   NS_IF_ADDREF(mURL);
@@ -899,21 +880,12 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
     if (mOrderedRules) {
       aCopy.mOrderedRules->EnumerateForwards(CloneRuleInto, mOrderedRules);
       mOrderedRules->EnumerateForwards(SetStyleSheetReference, aParentSheet);
-
-      if (aCopy.mNameSpace) {
-        nsINameSpaceManager*  nameSpaceMgr;
-        NS_NewNameSpaceManager(&nameSpaceMgr);
-        if (nameSpaceMgr) {
-          nameSpaceMgr->CreateRootNameSpace(mNameSpace);
-          NS_RELEASE(nameSpaceMgr);
-          mOrderedRules->EnumerateForwards(CreateNameSpace, &mNameSpace);
-        }
-      }
     }
   }
   else {
     mOrderedRules = nsnull;
   }
+  RebuildNameSpaces();
 }
 
 CSSStyleSheetInner::~CSSStyleSheetInner(void)
@@ -924,6 +896,7 @@ CSSStyleSheetInner::~CSSStyleSheetInner(void)
     NS_RELEASE(mOrderedRules);
   }
   ClearRuleCascades();
+  NS_IF_RELEASE(mNameSpace);
 }
 
 CSSStyleSheetInner* 
@@ -972,6 +945,65 @@ CSSStyleSheetInner::ClearRuleCascades(void)
     mMediumCascadeTable->Enumerate(DeleteRuleCascade, nsnull);
     delete mMediumCascadeTable;
     mMediumCascadeTable = nsnull;
+  }
+}
+
+
+static PRBool
+CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
+{
+  nsICSSRule* rule = (nsICSSRule*)aRule;
+  PRInt32 type;
+  rule->GetType(type);
+  if (nsICSSRule::NAMESPACE_RULE == type) {
+    nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)rule;
+    nsINameSpace** nameSpacePtr = (nsINameSpace**)aNameSpacePtr;
+    nsINameSpace* lastNameSpace = *nameSpacePtr;
+    nsINameSpace* newNameSpace;
+
+    nsIAtom*      prefix = nsnull;
+    nsAutoString  urlSpec;
+    nameSpaceRule->GetPrefix(prefix);
+    nameSpaceRule->GetURLSpec(urlSpec);
+    lastNameSpace->CreateChildNameSpace(prefix, urlSpec, newNameSpace);
+    NS_IF_RELEASE(prefix);
+    if (newNameSpace) {
+      NS_RELEASE(lastNameSpace);
+      (*nameSpacePtr) = newNameSpace; // takes ref
+    }
+
+    return PR_TRUE;
+  }
+  // stop if not namespace, import or charset because namespace can't follow anything else
+  return (((nsICSSRule::CHARSET_RULE == type) || 
+           (nsICSSRule::IMPORT_RULE)) ? PR_TRUE : PR_FALSE); 
+}
+
+void 
+CSSStyleSheetInner::RebuildNameSpaces(void)
+{
+  nsINameSpaceManager*  nameSpaceMgr;
+  if (mNameSpace) {
+    mNameSpace->GetNameSpaceManager(nameSpaceMgr);
+    NS_RELEASE(mNameSpace);
+  }
+  else {
+    NS_NewNameSpaceManager(&nameSpaceMgr);
+  }
+  if (nameSpaceMgr) {
+    nameSpaceMgr->CreateRootNameSpace(mNameSpace);
+    if (kNameSpaceID_Unknown != mDefaultNameSpaceID) {
+      nsINameSpace* defaultNameSpace;
+      mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID, defaultNameSpace);
+      if (defaultNameSpace) {
+        NS_RELEASE(mNameSpace);
+        mNameSpace = defaultNameSpace;
+      }
+    }
+    NS_RELEASE(nameSpaceMgr);
+    if (mOrderedRules) {
+      mOrderedRules->EnumerateForwards(CreateNameSpace, &mNameSpace);
+    }
   }
 }
 
@@ -1879,6 +1911,23 @@ CSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
 }
 
 NS_IMETHODIMP
+CSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
+{
+  if (mMedia) {
+    if (-1 != mMedia->IndexOf(aMedium)) {
+      return NS_OK;
+    }
+    if (-1 != mMedia->IndexOf(nsLayoutAtoms::all)) {
+      return NS_OK;
+    }
+    return NS_COMFALSE;
+  }
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
 CSSStyleSheetImpl::AppendMedium(nsIAtom* aMedium)
 {
   nsresult result = NS_OK;
@@ -2051,19 +2100,7 @@ CSSStyleSheetImpl::PrependStyleRule(nsICSSRule* aRule)
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
         // no api to prepend a namespace (ugh), release old ones and re-create them all
-        nsINameSpaceManager*  nameSpaceMgr;
-        if (mInner->mNameSpace) {
-          mInner->mNameSpace->GetNameSpaceManager(nameSpaceMgr);
-          NS_RELEASE(mInner->mNameSpace);
-        }
-        else {
-          NS_NewNameSpaceManager(&nameSpaceMgr);
-        }
-        if (nameSpaceMgr) {
-          nameSpaceMgr->CreateRootNameSpace(mInner->mNameSpace);
-          NS_RELEASE(nameSpaceMgr);
-          mInner->mOrderedRules->EnumerateForwards(CreateNameSpace, &(mInner->mNameSpace));
-        }
+        mInner->RebuildNameSpaces();
       }
     }
   }
@@ -2152,6 +2189,16 @@ CSSStyleSheetImpl::GetNameSpace(nsINameSpace*& aNameSpace) const
 {
   aNameSpace = ((mInner) ? mInner->mNameSpace : nsnull);
   NS_IF_ADDREF(aNameSpace);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::SetDefaultNameSpaceID(PRInt32 aDefaultNameSpaceID)
+{
+  if (mInner) {
+    mInner->mDefaultNameSpaceID = aDefaultNameSpaceID;
+    mInner->RebuildNameSpaces();
+  }
   return NS_OK;
 }
 
@@ -2416,6 +2463,49 @@ struct CascadeEnumData {
   nsISupportsArray* mRules;
 };
 
+static PRBool
+GatherStyleRulesForMedium(nsISupports* aRule, void* aData)
+{
+  nsICSSRule* rule = (nsICSSRule*)aRule;
+  CascadeEnumData* data = (CascadeEnumData*)aData;
+  PRInt32 type;
+  rule->GetType(type);
+
+  if (nsICSSRule::STYLE_RULE == type) {
+    nsICSSStyleRule* styleRule = (nsICSSStyleRule*)rule;
+    data->mRules->AppendElement(styleRule);
+  }
+  else if (nsICSSRule::MEDIA_RULE == type) {
+    nsICSSMediaRule* mediaRule = (nsICSSMediaRule*)rule;
+    if (NS_OK == mediaRule->UseForMedium(data->mMedium)) {
+      mediaRule->EnumerateRulesForwards(GatherStyleRulesForMedium, aData);
+    }
+  }
+  return PR_TRUE;
+}
+
+nsresult
+CSSStyleSheetImpl::GatherRulesFor(nsIAtom* aMedium, nsISupportsArray* aRules)
+{
+  if (aRules) {
+    CSSStyleSheetImpl*  child = mFirstChild;
+    while (nsnull != child) {
+      if (NS_OK == child->UseForMedium(aMedium)) {
+        child->GatherRulesFor(aMedium, aRules);
+      }
+      child = child->mNext;
+    }
+
+    if (mInner && mInner->mOrderedRules) {
+      CascadeEnumData data(aMedium, aRules);
+      mInner->mOrderedRules->EnumerateForwards(GatherStyleRulesForMedium, &data);
+    }
+  }
+  return NS_OK;
+}
+
+#ifdef DEBUG_CASCADE
+
 struct WeightEnumData {
   WeightEnumData(PRInt32 aWeight)
     : mWeight(aWeight),
@@ -2456,7 +2546,7 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
   }
   else if (nsICSSRule::MEDIA_RULE == type) {
     nsICSSMediaRule* mediaRule = (nsICSSMediaRule*)rule;
-    if (NS_OK == mediaRule->HasMedium(data->mMedium)) {
+    if (NS_OK == mediaRule->UseForMedium(data->mMedium)) {
       mediaRule->EnumerateRulesForwards(InsertRuleByWeight, aData);
     }
   }
@@ -2464,43 +2554,59 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
 }
 
 nsresult
-CSSStyleSheetImpl::CascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules)
+CSSStyleSheetImpl::SlowCascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules)
 {
   if (aRules) {
     // get child rules first
     CSSStyleSheetImpl*  child = mFirstChild;
     while (nsnull != child) {
-      PRBool mediumOK = PR_FALSE;
-      PRInt32 mediumCount;
-      child->GetMediumCount(mediumCount);
-      if (0 < mediumCount) {
-        PRInt32 index = 0;
-        nsIAtom* medium;
-        while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
-          child->GetMediumAt(index++, medium);
-          if ((medium == nsLayoutAtoms::all) || (medium == aMedium)) {
-            mediumOK = PR_TRUE;
-          }
-          NS_RELEASE(medium);
-        }
-      }
-      else {
-        mediumOK = PR_TRUE;
-      }
-      if (mediumOK) {
-        child->CascadeRulesInto(aMedium, aRules);
+      if (NS_OK == child->UseForMedium(aMedium)) {
+        child->SlowCascadeRulesInto(aMedium, aRules);
       }
       child = child->mNext;
     }
-    
+  
     if (mInner && mInner->mOrderedRules) {
       CascadeEnumData data(aMedium, aRules);
-      // XXX much better to append and do non-destructive sort at end
       mInner->mOrderedRules->EnumerateForwards(InsertRuleByWeight, &data);
     }
   }
   return NS_OK;
 }
+#endif
+
+static PRInt32
+CompareStyleRuleWeight(nsISupports* aRule1, nsISupports* aRule2, void* aData)
+{
+  nsICSSStyleRule* rule1 = (nsICSSStyleRule*)aRule1;
+  nsICSSStyleRule* rule2 = (nsICSSStyleRule*)aRule2;
+  return (rule2->GetWeight() - rule1->GetWeight());
+}
+
+nsresult
+CSSStyleSheetImpl::CascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules)
+{
+#ifdef FAST_CASCADE
+  if (aRules) {
+    GatherRulesFor(aMedium, aRules);
+    aRules->ShellSort(CompareStyleRuleWeight, nsnull);
+
+#ifdef DEBUG_CASCADE
+    nsISupportsArray* verifyArray = nsnull;
+    NS_NewISupportsArray(&verifyArray);
+    if (verifyArray) {
+      SlowCascadeRulesInto(aMedium, verifyArray);
+      NS_ASSERTION(verifyArray->Equals(aRules), "fast cascade failed");
+      NS_RELEASE(verifyArray);
+    }
+#endif
+  }
+  return NS_OK;
+#else
+  return SlowCascadeRulesInto(aMedium, aRules);
+#endif
+}
+
 
 RuleCascadeData* 
 CSSStyleSheetImpl::GetRuleCascade(nsIAtom* aMedium)
