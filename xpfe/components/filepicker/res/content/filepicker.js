@@ -571,3 +571,6 @@ function gotoDirectory(directory) {
   sfile = directory;
 }
 
+function toggleShowHidden(event) {
+  outlinerView.showHiddenFiles = !outlinerView.showHiddenFiles;
+}
