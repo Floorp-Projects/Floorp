@@ -42,7 +42,7 @@ nsCapiCallbackReader::AddBuffer(nsCapiBufferStruct * cBuf)
 //---------------------------------------------------------------------
 
 nsCapiCallbackReader::nsCapiCallbackReader(PRMonitor * monitor,
-                               JulianUtility::MimeEncoding encoding)
+                               nsCalUtility::MimeEncoding encoding)
 { 
     m_Monitor = monitor;
     m_bFinished = FALSE;
@@ -113,7 +113,7 @@ t_int8 nsCapiCallbackReader::read(ErrorCode & status)
             char c;
             if ((size_t) m_Pos < cbBuf->m_pBufSize)
             {
-                if (JulianUtility::MimeEncoding_QuotedPrintable == m_Encoding)
+                if (nsCalUtility::MimeEncoding_QuotedPrintable == m_Encoding)
                 {
                     char * buf = cbBuf->m_pBuf;            
                     c = buf[m_Pos];

@@ -75,7 +75,7 @@ private:
    
 
     /** encoding of stream */
-    JulianUtility::MimeEncoding m_Encoding;
+    nsCalUtility::MimeEncoding m_Encoding;
 
     /** need to deallocate */
     JulianPtrArray * m_Chunks;
@@ -103,7 +103,7 @@ public:
     ** CONSTRUCTORS and DESTRUCTORS
     **---------------------------*/
     nsCapiCallbackReader(PRMonitor * monitor,
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit);
     ~nsCapiCallbackReader();
 
     /*-----------------------------
@@ -113,7 +113,7 @@ public:
     virtual void * getMonitor() { return m_Monitor; }
 
     void setFinished() { m_bFinished = TRUE; }
-    void setEncoding(JulianUtility::MimeEncoding encoding) { m_Encoding = encoding; }
+    void setEncoding(nsCalUtility::MimeEncoding encoding) { m_Encoding = encoding; }
     t_bool isFinished() const { return m_bFinished; }
 
     /**

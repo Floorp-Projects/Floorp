@@ -35,7 +35,7 @@
 CLASS_EXPORT_CAPI nsCalStreamReader
 {
 private:
-    static JulianUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
+    static nsCalUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
 
 
     /* dont deallocate these */
