@@ -1,3 +1,20 @@
+Add a sample /etc/rc.d/init.d file for the RedHat Build machines.
+
+Mail processing programs were not writing error files correctly.  
+This has been broken since I separated out the mail processing module.
+
+Add script to cull old builds from a directory of completed builds.
+
+Let the VC and BT headers be configurable.  Too many companies find
+this an important feature.
+
+Allow Tinderbox to run via suid wrappers.  This is needed for some
+times of mail delivery systems
+	
+No longer exclude 'priveledged id's from running Tinderbox. 
+Now we require tinderbox to run as the id which the user specifies 
+is the tinderbox id.
+
 Better errors for failures in Storable.pm
 
 BasicTxtHeader.pm had a bug which prevented it from working when using Storable
@@ -26,8 +43,8 @@ Allow users to define a display order for the buildnames on a per tree basis.
 This adds a new function into TreeData.pm check your local files.
 	
 Fix computation of 'deadtime' for eazel.com's build setup,
-	this will improve their estimate of when the next build 
-	will be complete.
+	this will improve their estimate of when the next build will be
+	complete.
 
 Develop portable client build scripts.
 
