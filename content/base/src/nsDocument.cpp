@@ -472,8 +472,9 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
 // =
 // ==================================================================
 
-nsDocument::nsDocument() : mIsGoingAway(PR_FALSE),
-                           mCSSLoader(nsnull), mSubDocuments(nsnull),
+nsDocument::nsDocument() : mSubDocuments(nsnull),
+                           mIsGoingAway(PR_FALSE),
+                           mCSSLoader(nsnull),
                            mXPathDocument(nsnull)
 {
   NS_INIT_REFCNT();
@@ -3333,6 +3334,48 @@ nsDocument::GetBaseURI(nsAString &aURI)
     mDocumentBaseURL->GetSpec(spec);
     aURI = NS_ConvertUTF8toUCS2(spec);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::CompareTreePosition(nsIDOMNode* aOther,
+                                PRUint16* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aOther);
+  PRUint16 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+
+  PRBool sameNode = PR_FALSE;
+  IsSameNode(aOther, &sameNode);
+  if (sameNode) {
+    mask |= (nsIDOMNode::TREE_POSITION_SAME_NODE |
+             nsIDOMNode::TREE_POSITION_EQUIVALENT);
+  }
+  else {
+    nsCOMPtr<nsIDOMDocument> otherDoc;
+    aOther->GetOwnerDocument(getter_AddRefs(otherDoc));
+    nsCOMPtr<nsIDOMNode> other(do_QueryInterface(otherDoc));
+    IsSameNode(other, &sameNode);
+    if (sameNode) {
+      mask |= (nsIDOMNode::TREE_POSITION_DESCENDANT |
+               nsIDOMNode::TREE_POSITION_FOLLOWING);
+    }
+  }
+
+  *aReturn = mask;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::IsSameNode(nsIDOMNode* aOther,
+                       PRBool* aReturn)
+{
+  PRBool sameNode = PR_FALSE;
+
+  if (this == aOther) {
+    sameNode = PR_TRUE;
+  }
+
+  *aReturn = sameNode;
   return NS_OK;
 }
 

@@ -1859,6 +1859,20 @@ nsHTMLDocument::GetBaseURI(nsAString &aURI)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::CompareTreePosition(nsIDOMNode* aOther,
+                                    PRUint16* aReturn)
+{
+  return nsDocument::CompareTreePosition(aOther, aReturn);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::IsSameNode(nsIDOMNode* aOther,
+                           PRBool* aReturn)
+{
+  return nsDocument::IsSameNode(aOther, aReturn);
+}
+
 
 NS_IMETHODIMP    
 nsHTMLDocument::LookupNamespacePrefix(const nsAString& aNamespaceURI,

@@ -125,6 +125,8 @@ public:
   // nsIDOM3Node
   NS_IMETHOD    GetBaseURI(nsAString& aURI)
   { aURI.Truncate(); return NS_OK; }
+  NS_IMETHOD    CompareTreePosition(nsIDOMNode *aOther, PRUint16* aReturn);
+  NS_IMETHOD    IsSameNode(nsIDOMNode *aOther, PRBool* aReturn);
   NS_IMETHOD    LookupNamespacePrefix(const nsAString& aNamespaceURI,
                                       nsAString& aPrefix) {
     aPrefix.Truncate(); return NS_OK;
@@ -382,3 +384,62 @@ nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   return CallQueryInterface(newFragment, aReturn);
 }
+
+NS_IMETHODIMP
+nsDocumentFragment::CompareTreePosition(nsIDOMNode* aOther,
+                                        PRUint16* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aOther);
+  PRUint32 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+
+  PRBool sameNode = PR_FALSE;
+  IsSameNode(aOther, &sameNode);
+  if (sameNode) {
+    mask |= nsIDOMNode::TREE_POSITION_SAME_NODE;
+  }
+  else {
+    nsCOMPtr<nsIDOMNode> other(aOther);
+    while (other) {
+      IsSameNode(other, &sameNode);
+      if (sameNode) {
+        mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
+        break;
+      }
+
+      nsCOMPtr<nsIDOMNode> tmp(other);
+      tmp->GetParentNode(getter_AddRefs(other));
+      if (!other) {
+        // No parent.  Check to see if we're at an attribute node.
+        PRUint16 nodeType = 0;
+        tmp->GetNodeType(&nodeType);
+        if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+          // If we are, let's get the owner element and continue up the tree
+          nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(tmp));
+          nsCOMPtr<nsIDOMElement> owner;
+          attr->GetOwnerElement(getter_AddRefs(owner));
+          other = do_QueryInterface(owner);
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  *aReturn = mask;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::IsSameNode(nsIDOMNode* aOther,
+                               PRBool* aReturn)
+{
+  PRBool sameNode = PR_FALSE;
+
+  if (this == aOther) {
+    sameNode = PR_TRUE;
+  }
+
+  *aReturn = sameNode;
+  return NS_OK;
+}
+

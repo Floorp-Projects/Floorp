@@ -109,4 +109,13 @@ interface nsIDOMNode : nsISupports
   readonly attribute DOMString        localName;
   // Introduced in DOM Level 2:
   boolean            hasAttributes();
+
+  // Introduced in DOM Level 3:
+  const unsigned short      TREE_POSITION_PRECEDING        = 0x01;
+  const unsigned short      TREE_POSITION_FOLLOWING        = 0x02;
+  const unsigned short      TREE_POSITION_ANCESTOR         = 0x04;
+  const unsigned short      TREE_POSITION_DESCENDANT       = 0x08;
+  const unsigned short      TREE_POSITION_EQUIVALENT       = 0x10;
+  const unsigned short      TREE_POSITION_SAME_NODE        = 0x20;
+  const unsigned short      TREE_POSITION_DISCONNECTED     = 0x00;
 };

@@ -247,6 +247,177 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 }
 
 NS_IMETHODIMP
+nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
+                                    PRUint16* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aOther);
+  PRUint16 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+
+  PRBool sameNode = PR_FALSE;
+  IsSameNode(aOther, &sameNode);
+  if (sameNode) {
+    mask |= nsIDOMNode::TREE_POSITION_SAME_NODE;
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+    // Loose nodes without an owner document are not equivalent
+    // in tree position since they are not in any tree.
+    // Add the 'equivalent' flag only if we have an owner document.
+    if (doc) {
+      mask |= nsIDOMNode::TREE_POSITION_EQUIVALENT;
+    }
+    *aReturn = mask;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+
+  // If the other node is an attribute, document, or document fragment,
+  // we can find the position easier by comparing this node relative to
+  // the other node, and then reversing positions.
+  PRUint16 otherType = 0;
+  aOther->GetNodeType(&otherType);
+  if (otherType == nsIDOMNode::ATTRIBUTE_NODE ||
+      otherType == nsIDOMNode::DOCUMENT_NODE  ||
+      otherType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    PRUint16 otherMask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+    nsCOMPtr<nsIDOM3Node> other(do_QueryInterface(aOther));
+    other->CompareTreePosition(node, &otherMask);
+    if (otherMask & nsIDOMNode::TREE_POSITION_FOLLOWING) {
+      mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
+    } else if (otherMask & nsIDOMNode::TREE_POSITION_PRECEDING) {
+      mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
+    }
+
+    if (otherMask & nsIDOMNode::TREE_POSITION_ANCESTOR) {
+      mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
+    } else if (otherMask & nsIDOMNode::TREE_POSITION_DESCENDANT) {
+      mask |= nsIDOMNode::TREE_POSITION_ANCESTOR;
+    }
+
+    *aReturn = mask;
+    return NS_OK;
+  }
+
+#ifdef DEBUG
+  {
+    PRUint16 nodeType = 0;
+    node->GetNodeType(&nodeType);
+    NS_ASSERTION((nodeType == nsIDOMNode::ELEMENT_NODE ||
+                  nodeType == nsIDOMNode::TEXT_NODE ||
+                  nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
+                  nodeType == nsIDOMNode::ENTITY_REFERENCE_NODE ||
+                  nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
+                  nodeType == nsIDOMNode::COMMENT_NODE),
+                 "Invalid node type!");
+  }
+#endif
+
+  nsAutoVoidArray nodeAncestorList;
+  nsAutoVoidArray otherAncestorList;
+  PRInt32 nodeAncestorIdx = 0;
+  PRInt32 otherAncestorIdx = 0;
+
+  nodeAncestorIdx  = nsRange::FillArrayWithAncestors(&nodeAncestorList,  node);
+  otherAncestorIdx = nsRange::FillArrayWithAncestors(&otherAncestorList, aOther);
+
+  NS_ASSERTION(nodeAncestorIdx >= 0 && otherAncestorIdx >= 0,
+               "nsRange::FillArrayWithAncestors() failed!");
+
+  nsIDOMNode* nodeRoot =
+    NS_STATIC_CAST(nsIDOMNode*, nodeAncestorList.ElementAt(nodeAncestorIdx));
+
+  nsIDOMNode* otherRoot =
+    NS_STATIC_CAST(nsIDOMNode*, otherAncestorList.ElementAt(otherAncestorIdx));
+
+  if (nodeRoot == otherRoot) {
+    // There is at least one common ancestor (the root node)
+    //
+    // First, let's find the common ancestor closest to both nodes
+    // Go back through the array starting with the root until the
+    // first different ancestor is found.  When the loop finishes
+    // iterating, the indices will both be 1 below the common ancestor.
+    while (nodeAncestorIdx >= 0 && otherAncestorIdx >= 0 &&
+           nodeAncestorList.ElementAt(nodeAncestorIdx) ==
+           otherAncestorList.ElementAt(otherAncestorIdx)) {
+      --nodeAncestorIdx;
+      --otherAncestorIdx;
+    }
+    // Check that the root element is a document node.  If it is, we can have
+    // preceding and following flags.
+    PRUint16 rootType = 0;
+    nodeRoot->GetNodeType(&rootType);
+    if (nodeAncestorIdx < 0) {
+      // If we went below this node to find the common ancestor before
+      // exiting, then this node must be the common ancestor.
+      mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
+      if (rootType == nsIDOMNode::DOCUMENT_NODE) {
+        mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
+      }
+    }
+    else if (otherAncestorIdx < 0) {
+      // If we went below the other node to find the common ancestor before
+      // exiting, then the other node must be the common ancestor.
+      mask |= nsIDOMNode::TREE_POSITION_ANCESTOR;
+      if (rootType == nsIDOMNode::DOCUMENT_NODE) {
+        mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
+      }
+    }
+    else if (rootType == nsIDOMNode::DOCUMENT_NODE) {
+      // These were the first different ancestors,
+      // so grab these two, and then the parent for the common ancestor.
+
+      nsIDOMNode* nodeAncestor =
+        NS_STATIC_CAST(nsIDOMNode*, nodeAncestorList.ElementAt(nodeAncestorIdx));
+
+      nsIDOMNode* otherAncestor =
+        NS_STATIC_CAST(nsIDOMNode*, otherAncestorList.ElementAt(otherAncestorIdx));
+
+      nsIDOMNode* commonAncestor = 
+        NS_STATIC_CAST(nsIDOMNode*, nodeAncestorList.ElementAt(nodeAncestorIdx + 1));
+
+      // Find out which of the two nodes comes first in the document order.
+      // First get the children of the common ancestor.
+      nsCOMPtr<nsIDOMNodeList> children;
+      commonAncestor->GetChildNodes(getter_AddRefs(children));
+      PRUint32 numKids;
+      children->GetLength(&numKids);
+      for (PRUint32 i = 0; i < numKids; ++i) {
+        // Then go through the children one at a time to see which we hit first.
+        nsCOMPtr<nsIDOMNode> childNode;
+        children->Item(i, getter_AddRefs(childNode));
+        if (childNode == nodeAncestor) {
+          mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
+          break;
+        }
+
+        if (childNode == otherAncestor) {
+          mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
+          break;
+        }
+      }
+    }
+  }
+
+  *aReturn = mask;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNode3Tearoff::IsSameNode(nsIDOMNode* aOther,
+                           PRBool* aReturn)
+{
+  PRBool sameNode = PR_FALSE;
+
+  nsCOMPtr<nsIContent> other(do_QueryInterface(aOther));
+  if (mContent == other) {
+    sameNode = PR_TRUE;
+  }
+
+  *aReturn = sameNode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespacePrefix(const nsAString& aNamespaceURI,
                                       nsAString& aPrefix)
 {

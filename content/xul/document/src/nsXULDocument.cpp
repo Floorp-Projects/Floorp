@@ -4288,6 +4288,11 @@ nsXULDocument::IsSupported(const nsAString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//----------------------------------------------------------------------
+//
+// nsIDOM3Node interface
+//
+
 NS_IMETHODIMP
 nsXULDocument::GetBaseURI(nsAString &aURI)
 {
@@ -4300,6 +4305,21 @@ nsXULDocument::GetBaseURI(nsAString &aURI)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::CompareTreePosition(nsIDOMNode* aOther,
+                                   PRUint16* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::IsSameNode(nsIDOMNode* aOther,
+                          PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsXULDocument::LookupNamespacePrefix(const nsAString& aNamespaceURI,

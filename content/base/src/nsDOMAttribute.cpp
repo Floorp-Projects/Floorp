@@ -43,6 +43,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
+#include "nsUnicharUtils.h"
 
 
 //----------------------------------------------------------------------
@@ -492,6 +493,104 @@ nsDOMAttribute::GetBaseURI(nsAString &aURI)
   if (node)
     rv = node->GetBaseURI(aURI);
   return rv;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::CompareTreePosition(nsIDOMNode* aOther,
+                                    PRUint16* aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aOther);
+  PRUint16 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
+
+  nsCOMPtr<nsIDOMElement> el;
+  GetOwnerElement(getter_AddRefs(el));
+  if (el) {
+    // Check to see if the other node is also an attribute
+    PRUint16 nodeType = 0;
+    aOther->GetNodeType(&nodeType);
+    if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+      nsCOMPtr<nsIDOMAttr> otherAttr(do_QueryInterface(aOther));
+      nsCOMPtr<nsIDOMElement> otherEl;
+      otherAttr->GetOwnerElement(getter_AddRefs(otherEl));
+      if (el == otherEl) {
+        // same parent node, the two attributes have equivalent position
+        mask |= nsIDOMNode::TREE_POSITION_EQUIVALENT;
+        PRBool sameNode = PR_FALSE;
+        IsSameNode(aOther, &sameNode);
+        if (sameNode) {
+          mask |= nsIDOMNode::TREE_POSITION_SAME_NODE;
+        }
+      }
+    }
+    else {
+      // The other node isn't an attribute.
+      // Compare position relative to this attribute's owner element.
+      nsCOMPtr<nsIDOM3Node> parent(do_QueryInterface(el));
+      PRUint16 parentMask;
+      parent->CompareTreePosition(aOther, &parentMask);
+      if (parentMask & nsIDOMNode::TREE_POSITION_SAME_NODE) {
+        mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
+      }
+      else {
+        mask |= parentMask & (nsIDOMNode::TREE_POSITION_FOLLOWING |
+                              nsIDOMNode::TREE_POSITION_PRECEDING);
+      }
+    }
+  }
+
+  *aReturn = mask;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
+                           PRBool* aReturn)
+{
+  PRBool sameNode = PR_FALSE;
+
+  // XXXcaa Comparing pointers on two attributes is not yet reliable.
+  // When bug 93614 is fixed, this should be changed to simple pointer
+  // comparisons. But for now, check owner elements and node names.
+  PRUint16 otherType = 0;
+  aOther->GetNodeType(&otherType);
+  if (nsIDOMNode::ATTRIBUTE_NODE == otherType) {
+    nsCOMPtr<nsIDOMElement> nodeOwner;
+    GetOwnerElement(getter_AddRefs(nodeOwner));
+    nsCOMPtr<nsIDOMAttr> other(do_QueryInterface(aOther));
+    nsCOMPtr<nsIDOMElement> otherOwner;
+    other->GetOwnerElement(getter_AddRefs(otherOwner));
+    nsCOMPtr<nsIDOM3Node> owner(do_QueryInterface(nodeOwner));
+    PRBool sameOwners = PR_FALSE;
+    owner->IsSameNode(otherOwner, &sameOwners);
+
+    // Do these attributes belong to the same element?
+    if (sameOwners) {
+      PRBool ci = PR_FALSE;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(nodeOwner));
+      // Check to see if we're in HTML.
+      if (content->IsContentOfType(nsIContent::eHTML)) {
+        nsCOMPtr<nsINodeInfo> ni;
+        content->GetNodeInfo(*getter_AddRefs(ni));
+        if (ni) {
+          // If there is no namespace, we're in HTML (as opposed to XHTML)
+          // and we'll need to compare node names case insensitively.
+          ci = ni->NamespaceEquals(kNameSpaceID_None);
+        }
+      }
+
+      nsAutoString nodeName;
+      nsAutoString otherName;
+      GetNodeName(nodeName);
+      aOther->GetNodeName(otherName);
+      // Compare node names
+      sameNode = ci ? nodeName.Equals(otherName,
+                                      nsCaseInsensitiveStringComparator())
+                    : nodeName.Equals(otherName);
+    }
+  }
+
+  *aReturn = sameNode;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
