@@ -252,6 +252,7 @@ set_d2()
 
 tbx_dirs()
 {
+    Debug "Set directories for tinderbox"
     TBX_D2=`cd ../../../../..;pwd`
     D1="${TBX_D2}/../.." 
     set_d2
@@ -263,8 +264,22 @@ tbx_dirs()
     NTDIST=${UXDIST}
 
     if [ -z "${RESULTDIR}" ] ; then #FIXME, needs to be different for tinderbox
-        RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
+        Debug "Setting RESULTDIR for tinderbox"
+        RESULTDIR="/h/hs-sca15c/export/builds/mccrel/nss/nsstip/tinderbox/tests_results/security/${HOST}-`date +%Y%m%d-%H:%M`"
+        #RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
     fi
+    if [ -z "${TESTDIR}" ] ; then 
+        Debug "Setting TESTDIR for tinderbox"
+        TESTDIR=${RESULTDIR}
+    fi
+    if [ -n "$TESTDIR" ] ; then
+        if [ ! -d $TESTDIR ] ; then
+            Debug "Making TESTDIR for tinderbox"
+            mkdir -p $TESTDIR
+        fi
+    fi
+    export TESTDIR
+    Debug "RESULTDIR $RESULTDIR TESTDIR $TESTDIR"
 
     TESTSCRIPTDIR=`pwd`
     COMMON=${TESTSCRIPTDIR}/common
