@@ -587,9 +587,9 @@ sub MakeResourceAliases()
 
 
     # install manifest RDF files
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "content");
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "locale");
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "skin");
+    #_InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "content");
+    #_InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "locale");
+    #_InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "skin");
     
     _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
     _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf",  $dist_dir, $chrome_subdir, "locales:en-US:", "locale");
@@ -1968,22 +1968,22 @@ sub BuildExtensionsProjects()
         my($chrome_dir) = "$dist_dir"."Chrome:";
 
         # Chatzilla
-        my($packages_chrome_dir) = "$chrome_dir" . "packages:";
-        my($chatzilla_packages_chrome_dir) = "$packages_chrome_dir"."chatzilla:";
-        my($chatzilla_chatzilla_packages_chrome_dir) = "$chatzilla_packages_chrome_dir"."chatzilla:";
+        #my($packages_chrome_dir) = "$chrome_dir" . "packages:";
+        #my($chatzilla_packages_chrome_dir) = "$packages_chrome_dir"."chatzilla:";
+        #my($chatzilla_chatzilla_packages_chrome_dir) = "$chatzilla_packages_chrome_dir"."chatzilla:";
         
-        my($chatzillaContent) = "$chatzilla_chatzilla_packages_chrome_dir"."content:";
+        #my($chatzillaContent) = "$chatzilla_chatzilla_packages_chrome_dir"."content:";
         
-        my($chatzillaLocale) = "$chatzilla_chatzilla_packages_chrome_dir"."locale:";
+        #my($chatzillaLocale) = "$chatzilla_chatzilla_packages_chrome_dir"."locale:";
         
-        my($chatzillaSkin) = "$chatzilla_chatzilla_packages_chrome_dir"."skin:";
+        #my($chatzillaSkin) = "$chatzilla_chatzilla_packages_chrome_dir"."skin:";
         
-        _InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",                      "$chatzillaContent:lib:js");
-        _InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",   "${dist_dir}Components");
-        _InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",                     "$chatzillaContent:lib:xul");
-        _InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",                 "$chatzillaContent");
-        _InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",                    "$chatzillaSkin");
-        _InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",     "$chatzillaSkin:images");
+        #_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",                      "$chatzillaContent:lib:js");
+        #_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",   "${dist_dir}Components");
+        #_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",                     "$chatzillaContent:lib:xul");
+        #_InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",                 "$chatzillaContent");
+        #_InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",                    "$chatzillaSkin");
+        #_InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",     "$chatzillaSkin:images");
 
   # XML-RPC (whatever that is)
         _InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS",     "${dist_dir}Components");
