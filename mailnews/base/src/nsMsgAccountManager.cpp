@@ -41,6 +41,7 @@
 #include "nsMsgUtils.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFileLocator.h" 
+#include "nsIFileSpec.h" 
 #include "nsFileLocations.h" 
 #include "nsIURL.h"
 #include "nsISmtpService.h"
@@ -1522,9 +1523,45 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
 #endif
+
+    // turn a native path into a unix style path.
+    // unix is already correct, so just skip over the schema
+#ifdef XP_UNIX
+    // the extra -1 is because in 4.x, we had this:
+    // mailbox:<PATH> instead of mailbox:/<PATH> 
+    char *old_uri_unix_style = old_uri + MAILBOX_SCHEMA_LENGTH -1;
+    char *mail_directory_value_unix_style = mail_directory_value;
+#else
+    nsCOMPtr <nsIFileSpec> spec;
+    char *old_uri_unix_style = nsnull;
+    char *mail_directory_value_unix_style = nsnull;
+
+    rv = NS_NewFileSpec(getter_AddRefs(spec));
+    if (NS_FAILED(rv)) return rv;
+
     // the extra -1 is because in 4.x, we had this:
     // mailbox:<PATH> instead of mailbox:/<PATH>
-    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value) -1);
+    rv=spec->SetNativePath(old_uri + MAILBOX_SCHEMA_LENGTH -1);
+    if (NS_FAILED(rv)) return rv;
+
+    rv=spec->GetUnixStyleFilePath(&old_uri_unix_style);
+    if (NS_FAILED(rv)) return rv;
+
+    rv=spec->SetNativePath(mail_directory_value);
+    if (NS_FAILED(rv)) return rv;
+ 
+    rv=spec->GetUnixStyleFilePath(&mail_directory_value_unix_style);
+    if (NS_FAILED(rv)) return rv;
+#endif /* XP_UNIX */
+
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf ("uri: %s -> %s\n", old_uri, old_uri_unix_style);
+    printf ("mail_directory: %s -> %s\n", mail_directory_value, mail_directory_value_unix_style);
+#endif
+
+    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri_unix_style + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value_unix_style) -1);
+    PR_FREEIF(old_uri_unix_style);
+    PR_FREEIF(mail_directory_value_unix_style);
   }
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
