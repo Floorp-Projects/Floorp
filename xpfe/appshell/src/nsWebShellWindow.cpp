@@ -36,6 +36,7 @@
 #include "nsIXULCommand.h"
 #include "nsXULCommand.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMNodeList.h"
 
 #include "nsIMenuBar.h"
 #include "nsIMenu.h"
@@ -240,9 +241,6 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
   if (nsnull != aUrl)  {
     mWebShell->LoadURL(urlString);
   }
-  mWebShell->Show();
-
-  mWindow->Show(PR_TRUE);
 
   // Create the IWidgetController for the document...
   mController = nsnull; 
@@ -408,6 +406,7 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * a
   return node;
 }
 
+#if 0
 //----------------------------------------
 void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc) 
 {
@@ -529,28 +528,37 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
   }
   
 }
+#endif
 
 //----------------------------------------
-void nsWebShellWindow::ConnectCommandToOneGUINode(
-  nsIDOMNode* aNode,
-  nsIDOMElement * theNodeAsElement,
-  const nsString& theGuiNodeType)
+void nsWebShellWindow::ConnectCommandToOneGUINode(nsIDOMNode* aGUINode)
 {
+  nsCOMPtr<nsIDOMElement> domElement(aGUINode);
+  if (!domElement)
+    return;
+
   nsAutoString cmdAtom("cmd");
-  nsString nodeCmdName;
-  theNodeAsElement->GetAttribute(cmdAtom, nodeCmdName);
-  nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(nodeCmdName)); 
+  nsString cmdName;
+
+  domElement->GetAttribute(cmdAtom, cmdName);
+  nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(cmdName));
   if (cmd) {
-    nsString guiDisplayName; // ok, this doesn't work.  How do I get the button text? jrm
-    theNodeAsElement->GetAttribute(nsAutoString("name"), guiDisplayName);
+    cmd->AddUINode(aGUINode);
+#ifdef DEBUGCMDS
+    nsString nodeName, nodeType;
+    char *cmdNameString, *nodeNameString, *nodeTypeString;
 
-    if (DEBUGCMDS) printf("Linking cmd [%s] to %s [%s]\n",
-                          nodeCmdName.ToNewCString(),
-                          theGuiNodeType.ToNewCString(),
-                          guiDisplayName.ToNewCString()
-                          );
-
-    cmd->AddUINode(aNode);
+    cmdNameString = cmdName.ToNewCString();
+    domElement->GetNodeName(nodeType);
+    nodeTypeString = nodeType.ToNewCString();
+    domElement->GetAttribute(nsAutoString("name"), nodeName);
+    nodeNameString = nodeName.ToNewCString();
+    printf("Linkind cmd [%s] to %s [%s]\n",
+           cmdNameString, nodeTypeString, nodeNameString);
+    delete [] nodeNameString;
+    delete [] nodeTypeString;
+    delete [] cmdNameString;
+#endif
   }
 } // nsWebShellWindow::ConnectCommandToOneGUINode
 
@@ -630,7 +638,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                       pnsMenuItem->SetLabel(menuitemName);
                       // Make nsMenuItem a child of nsMenu
                       //pnsMenu->AddMenuItem(pnsMenuItem); // XXX adds an additional item
-                      ConnectCommandToOneGUINode(menuitemNode, menuitemElement, "menuitem");
+                      ConnectCommandToOneGUINode(menuitemNode);
     
                     }
                   }
@@ -703,6 +711,14 @@ nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
 //----------------------------------------
 // nsIWebShellWindow methods...
 //----------------------------------------
+NS_IMETHODIMP
+nsWebShellWindow::Show(PRBool aShow)
+{
+  mWebShell->Show(); // crimminy -- it doesn't take a parameter!
+  mWindow->Show(aShow);
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
 {
@@ -838,6 +854,10 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
   if (DEBUGCMDS) printf("OnConnectionsComplete\n");
+
+  LoadCommandsInWebShell(mWebShell);
+  ConnectCommandsToWidgetsByType(mWebShell, nsAutoString("button"));
+
   nsCOMPtr<nsIWebShell> contentWebShell;
   mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), *getter_AddRefs(contentWebShell));
 
@@ -853,8 +873,10 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     nsCOMPtr<nsIDOMNode> parent(GetParentNodeFromDOMDoc(toolbarDOMDoc));
     if (!parent)
       return NS_ERROR_FAILURE;
-    LoadCommands(toolbarWebShell, toolbarDOMDoc);
-          
+
+    LoadCommandsInWebShell(toolbarWebShell);
+    ConnectCommandsToWidgetsByType(toolbarWebShell, nsAutoString("button"));
+
     PRInt32 count = 0;
     nsCOMPtr<nsIDOMNode> imgNode(FindNamedDOMNode(nsAutoString("img"), parent, count, 7));
     if (!imgNode)
@@ -868,7 +890,7 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     nsCOMPtr<nsIDOMNode> node(FindNamedDOMNode(nsAutoString("input"), parent, count, 1));
     if (node) {
       if (NS_OK == node->QueryInterface(kIDOMHTMLInputElementIID, (void**) &mURLBarText)) {
-        PRUnichar * urlStr = nsnull;
+        const PRUnichar * urlStr = nsnull;
         contentWebShell->GetURL(0, &urlStr);
         if (nsnull != urlStr) {
           nsString url(urlStr);
@@ -884,6 +906,11 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     if (menubarDOMDoc)
       LoadMenus(menubarDOMDoc, mWindow);
   }
+
+  // look for a special startup command and execute it -- hackery or permanent feature?
+  nsCOMPtr<nsIXULCommand> startupCmd(FindCommandByName(nsAutoString("nsCmd:StartUp")));
+  if (startupCmd)
+    startupCmd->DoCommand();
 
   ///////////////////////////////
   // Find the Status Text DOM Node.  EVIL ASSUMPTION THAT ALL SUCH WINDOWS HAVE ONE.
@@ -948,3 +975,172 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 } // nsWebShellWindow::OnConnectionsComplete 
 
 
+/**
+ * Get nsIDOMElement corresponding to a given webshell
+ * @param aShell the given webshell
+ * @return the corresponding DOM element, null if for some reason there is none
+ */
+nsCOMPtr<nsIDOMNode>
+nsWebShellWindow::GetDOMNodeFromWebShell(nsIWebShell *aShell)
+{
+  nsCOMPtr<nsIDOMNode> node;
+
+  nsCOMPtr<nsIContentViewer> cv;
+  aShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+    nsCOMPtr<nsIDocumentViewer> docv(cv);
+    if (docv) {
+      nsCOMPtr<nsIDocument> doc;
+      docv->GetDocument(*getter_AddRefs(doc));
+      if (doc) {
+        nsCOMPtr<nsIDOMDocument> domdoc(doc);
+        if (domdoc) {
+          nsCOMPtr<nsIDOMElement> element;
+          domdoc->GetDocumentElement(getter_AddRefs(element));
+          if (element)
+            node = element;
+        }
+      }
+    }
+  }
+
+  return node;
+}
+
+
+/**
+ * Wire up any commands found in the given DOM element.  This is hackery
+ * to be replaced by the new command structure when available, but it's
+ * a more general hackery than LoadCommands().
+ * @param aNode the DOM node inside which we suspect commands
+ */
+void nsWebShellWindow::LoadCommandsInWebShell(nsIWebShell *aShell)
+{
+//  NS_PRECONDITION(aNode, "null argument to LoadCommandsInElement");
+
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(aShell);
+  if (!webshellNode)
+    return;
+  nsCOMPtr<nsIDOMElement> webshellElement(webshellNode);
+  if (!webshellElement)
+    return;
+
+  // process all child <commands...> nodes
+  nsCOMPtr<nsIDOMNodeList> commandRootList;
+  webshellElement->GetElementsByTagName(nsAutoString("commands"), getter_AddRefs(commandRootList));
+  if (commandRootList) {
+    PRUint32 rootCtr, rootCount;
+    commandRootList->GetLength(&rootCount);
+    for (rootCtr = 0; rootCtr < rootCount; rootCtr++) {
+      nsCOMPtr<nsIDOMNode> commandRoot;
+      if (NS_FAILED(commandRootList->Item(rootCtr, getter_AddRefs(commandRoot))))
+        break;
+      nsCOMPtr<nsIDOMElement> commandRootElement(commandRoot);
+      if (!commandRootElement)
+        break;
+
+      // process all child <command...> nodes of each <commands...> node
+      nsCOMPtr<nsIDOMNodeList> commandList;
+      commandRootElement->GetElementsByTagName(nsAutoString("command"), getter_AddRefs(commandList));
+      if (commandList) {
+        PRUint32 cmdCtr, cmdCount;
+        commandList->GetLength(&cmdCount);
+        for (cmdCtr = 0; cmdCtr < cmdCount; cmdCtr++) {
+
+          nsCOMPtr<nsIDOMNode> command;
+          if (NS_SUCCEEDED(commandList->Item(cmdCtr, getter_AddRefs(command))))
+            MakeOneCommand(aShell, command);          
+        }
+      }
+    }
+  }
+
+  // XXX hack until Command DOM is available
+  // Enable All Command
+  PRInt32 i, n = mCommands.Count();
+  for (i = 0; i < n; i++) {
+    nsXULCommand* cmd = (nsXULCommand*) mCommands.ElementAt(i);
+    cmd->SetEnabled(PR_TRUE);
+  }
+}
+
+
+/**
+ * Create an nsXULCommand, add it to our list of commands.
+ * @param aShell the webshell to which the command belongs, in which it is found in the XUL
+ * @param aCommand the DOM command node describing the command
+ */
+void
+nsWebShellWindow::MakeOneCommand(nsIWebShell *aShell, nsCOMPtr<nsIDOMNode> aCommand)
+{
+  nsCOMPtr<nsIDOMElement> cmdElement(aCommand);
+  if (!cmdElement)
+    return;
+
+  nsString  name,
+            value;
+
+  cmdElement->GetAttribute(nsAutoString("name"), name);
+  cmdElement->GetAttribute(nsAutoString("onCommand"), value);
+
+  // create command object and add it to the webshell's list
+
+  if (DEBUGCMDS) printf("Creating cmd [%s]\n",name.ToNewCString());
+
+  nsXULCommand * xulCmd = new nsXULCommand();
+  xulCmd->SetName(name);
+  xulCmd->SetCommand(value);
+  xulCmd->SetWebShell(aShell);
+  xulCmd->SetDOMElement(cmdElement);
+
+  nsIXULCommand *iCmd;
+  if (NS_SUCCEEDED(xulCmd->QueryInterface(nsIXULCommand::IID(), (void**) &iCmd)))
+    mCommands.AppendElement(iCmd);
+}
+
+
+/**
+ * Search for widgets with the given type. Wire them to the command list in mCommands.
+ * Assumes mCommands has already been built.
+ * @param aShell the webshell in which to search for widgets
+ * @param aType all widgets of this type (XML element tag) will be considered
+ */
+void
+nsWebShellWindow::ConnectCommandsToWidgetsByType(nsIWebShell *aShell, nsString &aType)
+{
+  // hook it up to any toolbars you may find in the webshell
+  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(aShell);
+  if (!webshellNode)
+    return;
+  nsCOMPtr<nsIDOMElement> webshellElement(webshellNode);
+  if (!webshellElement)
+    return;
+
+  nsCOMPtr<nsIDOMNodeList> widgetList;
+  webshellElement->GetElementsByTagName(aType, getter_AddRefs(widgetList));
+  if (widgetList)
+    ConnectWidgetCommands(widgetList);
+}
+
+
+/**
+ * Look for the "cmd" attribute in a list of widgets, and hook up the corresponding
+ * commands.  Assumes the list of commands in mCommands has already been built.
+ * @param aNodes a list of DOM nodes, presumably widgets, which may contain commands
+ */
+void
+nsWebShellWindow::ConnectWidgetCommands(nsIDOMNodeList *aNodes)
+{
+  PRUint32 listCount, listCtr;
+
+  if (!aNodes)
+    return;
+
+  aNodes->GetLength(&listCount);
+  for (listCtr = 0; listCtr < listCount; listCtr++) {
+
+    nsCOMPtr<nsIDOMNode> domNode;
+    if (NS_SUCCEEDED(aNodes->Item(listCtr, getter_AddRefs(domNode))))
+      ConnectCommandToOneGUINode(domNode);
+  }
+}

@@ -31,6 +31,7 @@
 static nsIDOMAppCores *gAppCores = NULL;
 static NS_DEFINE_IID(kIAppCoresIID,      NS_IDOMAPPCORES_IID);
 static NS_DEFINE_IID(kAppCoresCID,       NS_AppCores_CID);
+static NS_DEFINE_IID(kToolkitCoreCID,    NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kMailCoreCID,       NS_MailCore_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,    NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID, NS_BROWSERAPPCORE_CID);
@@ -91,6 +92,7 @@ NS_SetupRegistry_1()
 
 //#if defined(XP_PC) || defined(XP_MAC)
   nsRepository::RegisterFactory(kAppCoresCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kToolkitCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kMailCoreCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kToolbarCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kBrowserAppCoreCID, APPCORES_DLL, PR_FALSE, PR_FALSE);

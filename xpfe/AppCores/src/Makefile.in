@@ -32,10 +32,12 @@ CPPSRCS= \
 	nsMailCore.cpp       \
 	nsAppCoresNameSet.cpp       \
 	nsToolbarCore.cpp       \
+	nsToolkitCore.cpp	\
 	nsBrowserAppCore.cpp       \
 	nsThrobberGlue.cpp       \
 	nsMailCoreFactory.cpp       \
 	nsToolbarCoreFactory.cpp       \
+	nsToolkitCoreFactory.cpp	\
 	nsBrowserAppCoreFactory.cpp       \
 	nsAppCoresManager.cpp       \
 	nsAppCoresManagerFactory.cpp       \
@@ -43,6 +45,7 @@ CPPSRCS= \
 	nsJSAppCores.cpp       \
 	nsJSMailCore.cpp   \
 	nsJSToolbarCore.cpp   \
+	nsJSToolkitCore.cpp     \
 	nsJSBrowserAppCore.cpp   \
 	nsAppCores.cpp         \
 	$(NULL)

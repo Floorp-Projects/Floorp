@@ -70,6 +70,8 @@ public:
                                 nsString& aControllerIID,
                                 nsIWidget*& aResult, nsIStreamObserver* anObserver);
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow);
+  NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow);
+  NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow);
 
 
 protected:
@@ -184,9 +186,24 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
   } else {
     rv = window->Initialize(mAppShell, aUrl, aControllerIID, anObserver);
     if (NS_SUCCEEDED(rv)) {
-      mWindowList->AppendElement((nsIWebShellContainer*)window);
       aResult = window->GetWidget();
+      RegisterTopLevelWindow(aResult);
+      window->Show(PR_TRUE);
     }
+  }
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
+{
+  nsresult rv;
+
+  rv = UnregisterTopLevelWindow(aWindow);
+  if (0 == mWindowList->Count()) {
+    mAppShell->Exit();
   }
 
   return rv;
@@ -222,33 +239,52 @@ nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
   return rv;
 }
 
-NS_IMETHODIMP
-nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
-{
-  nsresult rv = NS_OK;
 
-  nsWebShellWindow* window;
+/*
+ * Register a new top level window (created elsewhere)
+ */
+static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
+NS_IMETHODIMP
+nsAppShellService::RegisterTopLevelWindow(nsIWidget* aWindow)
+{
+  nsresult rv;
   void* data;
 
-  // Get the nsWebShellWindow from the nsIWidget...
   aWindow->GetClientData(data);
-  if (nsnull != data) {
-    window = (nsWebShellWindow*)data;
+  if (data == nsnull)
+    rv = NS_ERROR_NULL_POINTER;
+  else {
+    nsWebShellWindow* window = (nsWebShellWindow *) data;
+//    nsCOMPtr<nsIWebShellContainer> wsc(window); DRaM
+    nsIWebShellContainer* wsc;
+    rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
+    if (NS_SUCCEEDED(rv))
+      mWindowList->AppendElement(wsc);
   }
-
-  if (nsnull != data) {
-    PRBool bFound;
-
-    bFound = mWindowList->RemoveElement((nsIWebShellContainer*)window);
-
-  }
-
-  if (0 == mWindowList->Count()) {
-    mAppShell->Exit();
-  }
-
   return rv;
 }
+
+
+NS_IMETHODIMP
+nsAppShellService::UnregisterTopLevelWindow(nsIWidget* aWindow)
+{
+  nsresult rv;
+  void* data;
+
+  aWindow->GetClientData(data);
+  if (data == nsnull)
+    rv = NS_ERROR_NULL_POINTER;
+  else {
+    nsWebShellWindow* window = (nsWebShellWindow *) data;
+//    nsCOMPtr<nsIWebShellContainer> wsc(window); DRaM
+    nsIWebShellContainer* wsc;
+    rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
+    if (NS_SUCCEEDED(rv))
+      mWindowList->RemoveElement(wsc);
+  }
+  return rv;
+}
+
 
 NS_EXPORT nsresult NS_NewAppShellService(nsIAppShellService** aResult)
 {

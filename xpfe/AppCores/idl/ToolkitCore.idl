@@ -1,0 +1,8 @@
+interface ToolkitCore : BaseAppCore
+{
+/* IID: { 0x1cab9340, 0xc122, 0x11d2, \
+    {0x81, 0xb2, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf}} *\
+
+	void ToolkitCore();
+	void ShowWindow(in wstring url, in Window parent);
+};

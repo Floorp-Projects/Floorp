@@ -41,6 +41,8 @@ class nsIFactory;
 class nsIXULCommand : public nsISupports {
 public:
 
+  static const nsIID& IID() { static nsIID iid = NS_IXULCOMMAND_IID; return iid; }
+
   /**
    * Adds a source widget/DOMNode to the command
    * @param aNode the DOM node to be added

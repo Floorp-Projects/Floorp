@@ -62,6 +62,8 @@ OBJS = \
     .\$(OBJDIR)\nsMailCore.obj       \
     .\$(OBJDIR)\nsAppCoresNameSet.obj       \
     .\$(OBJDIR)\nsToolbarCore.obj       \
+    .\$(OBJDIR)\nsToolkitCore.obj        \
+    .\$(OBJDIR)\nsToolkitCoreFactory.obj \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
     .\$(OBJDIR)\nsMailCoreFactory.obj       \
     .\$(OBJDIR)\nsToolbarCoreFactory.obj       \
@@ -73,6 +75,7 @@ OBJS = \
     .\$(OBJDIR)\nsJSAppCores.obj       \
     .\$(OBJDIR)\nsJSMailCore.obj   \
     .\$(OBJDIR)\nsJSToolbarCore.obj   \
+    .\$(OBJDIR)\nsJSToolkitCore.obj     \
     .\$(OBJDIR)\nsJSBrowserAppCore.obj   \
     .\$(OBJDIR)\nsAppCores.obj         \
     $(NULL)

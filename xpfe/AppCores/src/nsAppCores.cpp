@@ -22,6 +22,7 @@
 #include "nsMailCoreFactory.h"
 #include "nsToolbarCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
+#include "nsToolkitCoreFactory.h"
 #include "nsIFactory.h"
 #include "nsRepository.h"
 
@@ -33,6 +34,7 @@ static PRInt32 gInstanceCnt = 0;
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kMailCoreCID,        NS_MailCore_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,     NS_TOOLBARCORE_CID);
+static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,  NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kAppCoresCID,        NS_AppCores_CID);
 
@@ -54,6 +56,7 @@ NSRegisterSelf(const char *path)
     nsRepository::RegisterFactory(kAppCoresCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kMailCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kToolbarCoreCID, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterFactory(kToolkitCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kBrowserAppCoreCID, path, PR_TRUE, PR_TRUE);
     return NS_OK;
 }
@@ -66,6 +69,7 @@ NSUnregisterSelf(const char *path)
     nsRepository::UnregisterFactory(kAppCoresCID, path);
     nsRepository::UnregisterFactory(kMailCoreCID, path);
     nsRepository::UnregisterFactory(kToolbarCoreCID, path);
+    nsRepository::UnregisterFactory(kToolkitCoreCID, path);
     nsRepository::UnregisterFactory(kBrowserAppCoreCID, path);
     
     return NS_OK;
@@ -85,7 +89,6 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
     *aFactory = NULL;
     nsISupports *inst;
 
-
     if ( aClass.Equals(kAppCoresCID) )
     {
         inst = new nsAppCoresManagerFactory();        
@@ -97,6 +100,10 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
     else if ( aClass.Equals(kToolbarCoreCID) )
     {
         inst = new nsToolbarCoreFactory();      
+    }
+    else if ( aClass.Equals(kToolkitCoreCID) )
+    {
+        inst = new nsToolkitCoreFactory();
     }
     else if ( aClass.Equals(kBrowserAppCoreCID) )
     {
