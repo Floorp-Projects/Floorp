@@ -83,7 +83,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks || !npp->pdata || !mInst->IsStarted())
+  if(!callbacks || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
   PRBool seekable;
@@ -161,7 +161,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks || !npp->pdata)
+  if(!callbacks)
     return NS_ERROR_FAILURE;
 
   PRUint32  numtowrite = 0;
@@ -283,7 +283,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks || !npp->pdata)
+  if(!callbacks)
     return NS_ERROR_FAILURE;
 
   PRUint32  numtowrite = 0;
@@ -424,7 +424,7 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks || !npp->pdata)
+  if(!callbacks)
     return NS_ERROR_FAILURE;
 
   pluginInfo->GetURL(&mNPStream.url);
@@ -456,7 +456,7 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   mInst->GetCallbacks(&callbacks);
   mInst->GetNPP(&npp);
 
-  if(!callbacks || !npp->pdata)
+  if(!callbacks)
     return NS_ERROR_FAILURE;
 
   NPError error;
@@ -590,9 +590,6 @@ NS_IMETHODIMP ns4xPluginInstance::Start(void)
 
 NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 {
-  if (fNPP.pdata == nsnull)
-    return NS_ERROR_FAILURE;
-
   NPError error;
 
 #ifdef NS_DEBUG
@@ -676,9 +673,6 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
-  if (fNPP.pdata == nsnull)
-    return NS_ERROR_FAILURE;
-
 #ifdef MOZ_WIDGET_GTK
   NPSetWindowCallbackStruct *ws;
 #endif
@@ -828,7 +822,7 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
   if(!mStarted)
     return NS_OK;
 
-  if (fNPP.pdata == nsnull || event == nsnull)
+  if (event == nsnull)
     return NS_ERROR_FAILURE;
 
   PRInt16 res = 0;
