@@ -32,10 +32,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**********************************************************************************
+ * nsMsgContentPolicy enforces the specified content policy on images, js, plugins, etc.
+ * This is the class used to determine what elements in a message should be loaded
+ ***********************************************************************************/
+
 #ifndef _nsMsgContentPolicy_H_
 #define _nsMsgContentPolicy_H_
 
 #include "nsIContentPolicy.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+
 
 /* DBFCFDF0-4489-4faa-8122-190FD1EFA16C */
 #define NS_MSGCONTENTPOLICY_CID \
@@ -43,14 +51,22 @@
 
 #define NS_MSGCONTENTPOLICY_CONTRACTID "@mozilla.org/messenger/content-policy;1"
 
-class nsMsgContentPolicy : public nsIContentPolicy
+class nsMsgContentPolicy : public nsIContentPolicy,
+                           public nsIObserver,
+                           public nsSupportsWeakReference
 {
 public:
-    nsMsgContentPolicy();
-    virtual ~nsMsgContentPolicy();
+  nsMsgContentPolicy();
+  virtual ~nsMsgContentPolicy();
+
+  nsresult Init();
     
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICONTENTPOLICY
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPOLICY
+  NS_DECL_NSIOBSERVER
+
+protected:
+  PRBool   mBlockRemoteImages;
 };
 
 #endif // _nsMsgContentPolicy_H_

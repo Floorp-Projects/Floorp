@@ -33,11 +33,26 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgContentPolicy.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDocShell.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
+#include "nsIServiceManager.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIURI.h"
+#include "nsCOMPtr.h"
+#include "nsCRT.h"
+#include "nsString.h"
+
+static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
+
+NS_IMPL_ADDREF(nsMsgContentPolicy)
+NS_IMPL_RELEASE(nsMsgContentPolicy)
+
+NS_INTERFACE_MAP_BEGIN(nsMsgContentPolicy)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPolicy)
+   NS_INTERFACE_MAP_ENTRY(nsIContentPolicy)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 nsMsgContentPolicy::nsMsgContentPolicy()
 {
@@ -45,9 +60,33 @@ nsMsgContentPolicy::nsMsgContentPolicy()
 
 nsMsgContentPolicy::~nsMsgContentPolicy()
 {
+  // hey, we are going away...clean up after ourself....unregister our observer
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
+    if (NS_SUCCEEDED(rv))
+      prefInternal->RemoveObserver(kBlockRemoteImages, this);
+  }
 }
 
-NS_IMPL_ISUPPORTS1(nsMsgContentPolicy, nsIContentPolicy)
+nsresult nsMsgContentPolicy::Init()
+{
+  nsresult rv;
+
+  // register ourself as an observer on the mail preference to block remote images
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  prefInternal->AddObserver(kBlockRemoteImages, this, PR_TRUE);
+
+  rv = prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+  
+  return rv;
+}
 
 NS_IMETHODIMP
 nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, nsISupports *aContext,
@@ -63,6 +102,7 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
   {
       // currently, mozilla thunderbird does not allow plugins at all. If someone later writes an extension to enable plugins,
       // we can read a pref here to figure out if we should allow the plugin to load or not.
+      *shouldLoad = PR_FALSE;
   }
   else if (aContentType == nsIContentPolicy::IMAGE)
   {
@@ -76,7 +116,7 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
       // as the anonymous password
       *shouldLoad = PR_FALSE;
     }
-    else
+    else // check for http and https urls...block those if necessary
     {
       PRBool needToCheck = PR_FALSE;
       rv = aContentLocation->SchemeIs("http", &needToCheck);
@@ -87,41 +127,14 @@ nsMsgContentPolicy::ShouldLoad(PRInt32 aContentType, nsIURI *aContentLocation, n
         NS_ENSURE_SUCCESS(rv,rv);
       }
 
-      if (needToCheck)
+      if (needToCheck) // http or https ? 
       {
         // check the 'disable remote images pref' and block the image if appropriate
-        *shouldLoad = PR_FALSE;
-
-        
-        // optionally, if the message is junk, and the user does not want images to load for messages that are junk, then 
-        // block the load.
+        *shouldLoad = !mBlockRemoteImages;
       }
     }
   }
 
-/*
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = 
-        do_QueryInterface(window);
-    if (!scriptGlobal)
-        return NS_OK;
-
-    nsCOMPtr<nsIDocShell> shell;
-    if (NS_FAILED(scriptGlobal->GetDocShell(getter_AddRefs(shell))))
-        return NS_OK;
-    
-    switch (contentType) {
-      case nsIContentPolicy::OBJECT:
-        return shell->GetAllowPlugins(shouldLoad);
-      case nsIContentPolicy::SCRIPT:
-        return shell->GetAllowJavascript(shouldLoad);
-      case nsIContentPolicy::SUBDOCUMENT:
-        return shell->GetAllowSubframes(shouldLoad);
-      case nsIContentPolicy::IMAGE:
-        return shell->GetAllowImages(shouldLoad);
-      default:
-        return NS_OK;
-    }
-*/
   return rv;
 }
 
@@ -134,3 +147,20 @@ NS_IMETHODIMP nsMsgContentPolicy::ShouldProcess(PRInt32 contentType,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  nsresult rv;
+   
+  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) 
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_LossyConvertUCS2toASCII pref(aData);
+
+    if (pref.Equals(kBlockRemoteImages))
+      rv = prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+  }
+  
+  return NS_OK;
+}
