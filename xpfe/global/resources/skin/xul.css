@@ -641,8 +641,6 @@ tree {
  background-color: white;
  border: none;
  border-spacing: 0px;
- width: 100px;
- height: 100px;
  table-layout: fixed;
  font: inherit;
 }
