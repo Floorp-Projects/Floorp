@@ -4227,14 +4227,16 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState)
   nsLineBox* lastLine = aState.mPrevLine;
   nsLineBox* nextLine = lastLine->mNext;
 
-  lastLine->mNext = nsnull;
-  SetOverflowLines(aState.mPresContext, nextLine);
-
-  // Mark all the overflow lines dirty so that they get reflowed when
-  // they are pulled up by our next-in-flow.
-  while (nsnull != nextLine) {
-    nextLine->MarkDirty();
-    nextLine = nextLine->mNext;
+  if (nextLine) {
+    lastLine->mNext = nsnull;
+    SetOverflowLines(aState.mPresContext, nextLine);
+  
+    // Mark all the overflow lines dirty so that they get reflowed when
+    // they are pulled up by our next-in-flow.
+    while (nsnull != nextLine) {
+      nextLine->MarkDirty();
+      nextLine = nextLine->mNext;
+    }
   }
 
   // Break frame sibling list
@@ -6291,15 +6293,12 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
 void
 nsBlockFrame::VerifyOverflowSituation(nsIPresContext* aPresContext)
 {
-  PRBool haveOverflow = PR_FALSE;
   nsBlockFrame* flow = (nsBlockFrame*) GetFirstInFlow();
   while (nsnull != flow) {
     nsLineBox* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
     if (nsnull != overflowLines) {
       NS_ASSERTION(nsnull != overflowLines->mFirstChild,
                    "bad overflow list");
-      NS_ASSERTION(!haveOverflow, "two frames with overflow lists");
-      haveOverflow = PR_TRUE;
     }
     flow = (nsBlockFrame*) flow->mNextInFlow;
   }
