@@ -23,7 +23,9 @@
 #include "nsFileWidget.h"
 #include "nsStringUtil.h"
 #include <StandardFile.h>
-#include <ICAPI.h>
+#if USE_IC
+# include <ICAPI.h>
+#endif
 #include "nsMacControl.h"
 #include "nsCarbonHelpers.h"
 
@@ -470,7 +472,7 @@ NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsStri
 	mTitles           = aTitles;
 	mFilters          = aFilters;
 	
-#if 0  // FOR NOW JUST BYPASS ALL THIS CODE
+#if USE_IC  // FOR NOW JUST BYPASS ALL THIS CODE
 
 	unsigned char	typeTemp[256];
 	unsigned char	tempChar;
