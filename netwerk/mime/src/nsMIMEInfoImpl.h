@@ -50,7 +50,9 @@ protected:
     nsCOMPtr<nsIFile>      mPreferredApplication; // preferred application associated with this type.
     nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
     nsString               mPreferredAppDescription;
-    PRBool                 mAlwaysAskBeforeHandling; 
+
+    void CheckPrefForMimeType(const char * prefName, PRBool * aMimeTypeIsPresent);
+    void SetRememberPrefForMimeType(const char * prefName);
 };
 
 #endif //__nsmimeinfoimpl_h___
