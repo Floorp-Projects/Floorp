@@ -70,6 +70,10 @@ var gOpenLabel;
 var gOpenLabelAccesskey;
 var gSaveLabel;
 var gSaveLabelAccesskey;
+var gDetachLabel;
+var gDetachLabelAccesskey;
+var gDeleteLabel;
+var gDeleteLabelAccesskey;
 var gMessengerBundle;
 var gProfileDirURL;
 var gIOService;
@@ -907,6 +911,7 @@ function createNewAttachmentInfo(contentType, url, displayName, uri, isExternalA
   this.displayName = displayName;
   this.uri = uri;
   this.isExternalAttachment = isExternalAttachment;
+  this.attachment = this;
 }
 
 createNewAttachmentInfo.prototype.saveAttachment = function saveAttachment()
@@ -935,6 +940,30 @@ createNewAttachmentInfo.prototype.printAttachment = function printAttachment()
   */
 }
 
+createNewAttachmentInfo.prototype.deleteAttachment = function deleteAttachment()
+{
+  messenger.detachAttachment(this.contentType,
+                             this.url,
+                             encodeURIComponent(this.displayName),
+                             this.uri,
+                             false);
+}
+
+createNewAttachmentInfo.prototype.detachAttachment = function detachAttachment()
+{
+  messenger.detachAttachment(this.contentType,
+                             this.url,
+                             encodeURIComponent(this.displayName),
+                             this.uri,
+                             true);
+}
+
+function CanDetachAttachments()
+{
+  var uri = GetLoadedMessage();
+  return !IsNewsMessage(uri) && (!IsImapMessage(uri) || CheckOnline());
+}
+
 function onShowAttachmentContextMenu()
 {
   // if no attachments are selected, disable the Open and Save...
@@ -942,15 +971,49 @@ function onShowAttachmentContextMenu()
   var selectedAttachments = attachmentList.selectedItems;
   var openMenu = document.getElementById('context-openAttachment');
   var saveMenu = document.getElementById('context-saveAttachment');
-  if (selectedAttachments.length > 0)
+  var detachMenu = document.getElementById('context-detachAttachment');
+  var deleteMenu = document.getElementById('context-deleteAttachment');
+  var detachAllMenu = document.getElementById('context-detachAllAttachments');
+  var deleteAllMenu = document.getElementById('context-deleteAllAttachments');
+  var canDetach = CanDetachAttachments();
+  var canOpen = false;
+  for (var i = 0; i < selectedAttachments.length && !canOpen; i++)
+    canOpen = selectedAttachments[i].attachment.contentType != 'text/x-moz-deleted';
+  if (canOpen && selectedAttachments.length == 1)
   {
     openMenu.removeAttribute('disabled');
-    saveMenu.removeAttribute('disabled');
   }
   else
   {
     openMenu.setAttribute('disabled', true);
+  }
+  if (canOpen)
+  {
+    saveMenu.removeAttribute('disabled');
+  }
+  else
+  {
     saveMenu.setAttribute('disabled', true);
+  }
+  if (canDetach && canOpen)
+  {
+    detachMenu.removeAttribute('disabled');
+    deleteMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    detachMenu.setAttribute('disabled', 'true');
+    deleteMenu.setAttribute('disabled', 'true');
+  }
+  if (canDetach)
+  {
+    detachAllMenu.removeAttribute('disabled');
+    deleteAllMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    detachAllMenu.setAttribute('disabled', 'true');
+    deleteAllMenu.setAttribute('disabled', 'true');
   }
 }
 
@@ -978,9 +1041,10 @@ function handleAttachmentSelection(commandPrefix)
 {
   var attachmentList = document.getElementById('attachmentList');
   var selectedAttachments = attachmentList.selectedItems;
-  var listItem = selectedAttachments[0];
-
-  listItem.attachment[commandPrefix]();
+  if (selectedAttachments.length > 1)
+    HandleMultipleAttachments(commandPrefix, selectedAttachments);
+  else
+    selectedAttachments[0].attachment[commandPrefix]();
 }
 
 function displayAttachmentsForExpandedView()
@@ -997,13 +1061,16 @@ function displayAttachmentsForExpandedView()
       // we need to create a listitem to insert the attachment
       // into the attachment list..
       var item = attachmentList.appendItem(attachment.displayName,"");
-      item.setAttribute("class", "listitem-iconic"); 
+      item.setAttribute("class", "listitem-iconic attachment-item"); 
       item.setAttribute("tooltip", "attachmentListTooltip");
       item.attachment = attachment;
       item.setAttribute("attachmentUrl", attachment.url);
       item.setAttribute("attachmentContentType", attachment.contentType);
       item.setAttribute("attachmentUri", attachment.uri);
-      setApplicationIconForAttachment(attachment, item);
+      if (attachment.contentType == "text/x-moz-deleted")
+        item.setAttribute('disabled', 'true');
+      else
+        setApplicationIconForAttachment(attachment, item);
     } // for each attachment   
 
     gBuildAttachmentsForCurrentMsg = true;
@@ -1059,6 +1126,18 @@ function FillAttachmentListPopup(popup)
 
   gBuildAttachmentPopupForCurrentMsg = false;
 
+  var detachAllMenu = document.getElementById('file-detachAllAttachments');
+  var deleteAllMenu = document.getElementById('file-deleteAllAttachments');
+  if (CanDetachAttachments())
+  {
+    detachAllMenu.removeAttribute('disabled');
+    deleteAllMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    detachAllMenu.setAttribute('disabled', 'true');
+    deleteAllMenu.setAttribute('disabled', 'true');
+  }
 }
 
 // Public method used to clear the file attachment menu
@@ -1066,7 +1145,7 @@ function ClearAttachmentMenu(popup)
 { 
   if ( popup ) 
   { 
-     while ( popup.childNodes.length > 2 ) 
+     while ( popup.childNodes[0].localName == 'menu' )
        popup.removeChild(popup.childNodes[0]); 
   } 
 }
@@ -1088,17 +1167,21 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       if (!gMessengerBundle)
         gMessengerBundle = document.getElementById("bundle_messenger");
 
-      // insert the item just before the separator...the separator is the 2nd to last element in the popup.
-      item.setAttribute('class', 'menu-iconic');
-      setApplicationIconForAttachment(attachment,item);
-      var numItemsInPopup = popup.childNodes.length;
-      item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-2]);
+      // insert the item just before the separator
+      item = popup.insertBefore(item, popup.childNodes[attachmentIndex - 1]);
+      item.setAttribute('class', 'menu-iconic attachment-item');
 
       var formattedDisplayNameString = gMessengerBundle.getFormattedString("attachmentDisplayNameFormat",
                                        [attachmentIndex, attachment.displayName]);
 
       item.setAttribute('label', formattedDisplayNameString); 
       item.setAttribute('accesskey', attachmentIndex); 
+      if (attachment.contentType == "text/x-moz-deleted") {
+        item.setAttribute('disabled', 'true');
+        return;
+      }
+      setApplicationIconForAttachment(attachment, item);
+      var canDetach = CanDetachAttachments();
 
       var openpopup = document.createElement('menupopup');
       openpopup = item.appendChild(openpopup);
@@ -1108,6 +1191,14 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry.attachment = attachment;
       menuitementry.setAttribute('oncommand', 'this.attachment.openAttachment()'); 
 
+      if (!gDeleteLabel)
+        gDeleteLabel = gMessengerBundle.getString("deleteLabel");
+      if (!gDeleteLabelAccesskey)
+        gDeleteLabelAccesskey = gMessengerBundle.getString("deleteLabelAccesskey");
+      if (!gDetachLabel)
+        gDetachLabel = gMessengerBundle.getString("detachLabel");
+      if (!gDetachLabelAccesskey)
+        gDetachLabelAccesskey = gMessengerBundle.getString("detachLabelAccesskey");
       if (!gSaveLabel)
         gSaveLabel = gMessengerBundle.getString("saveLabel");
       if (!gSaveLabelAccesskey)
@@ -1121,20 +1212,38 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
 
-      var menuseparator = document.createElement('menuseparator');
-      openpopup.appendChild(menuseparator);
-      
       menuitementry = document.createElement('menuitem');
       menuitementry.attachment = attachment;
       menuitementry.setAttribute('oncommand', 'this.attachment.saveAttachment()'); 
       menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
+
+      var menuseparator = document.createElement('menuseparator');
+      openpopup.appendChild(menuseparator);
+
+      menuitementry = document.createElement('menuitem');
+      menuitementry.attachment = attachment;
+      menuitementry.setAttribute('oncommand', 'this.attachment.detachAttachment()'); 
+      menuitementry.setAttribute('label', gDetachLabel); 
+      menuitementry.setAttribute('accesskey', gDetachLabelAccesskey); 
+      if (!canDetach)
+        menuitementry.setAttribute('disabled', 'true');
+      menuitementry = openpopup.appendChild(menuitementry);
+
+      menuitementry = document.createElement('menuitem');
+      menuitementry.attachment = attachment;
+      menuitementry.setAttribute('oncommand', 'this.attachment.deleteAttachment()'); 
+      menuitementry.setAttribute('label', gDeleteLabel); 
+      menuitementry.setAttribute('accesskey', gDeleteLabelAccesskey); 
+      if (!canDetach)
+        menuitementry.setAttribute('disabled', 'true');
+      menuitementry = openpopup.appendChild(menuitementry);
     }  // if we created a menu item for this attachment...
   } // if we have a popup
 } 
 
-function SaveAllAttachments()
+function HandleMultipleAttachments(commandPrefix, selectedAttachments)
 {
  try 
  {
@@ -1145,23 +1254,48 @@ function SaveAllAttachments()
    var attachmentMessageUriArray = new Array();
 
    // populate these arrays..
-   for (index in currentAttachments)
+   for (index in selectedAttachments)
    {
-     var attachment = currentAttachments[index];
+     var attachment = selectedAttachments[index].attachment;
      attachmentContentTypeArray[index] = attachment.contentType;
      attachmentUrlArray[index] = attachment.url;
      attachmentDisplayNameArray[index] = encodeURI(attachment.displayName);
      attachmentMessageUriArray[index] = attachment.uri;
    }
 
-   // okay the list has been built...now call our save all attachments code...
-   messenger.saveAllAttachments(attachmentContentTypeArray.length,
-                                attachmentContentTypeArray, attachmentUrlArray,
-                                attachmentDisplayNameArray, attachmentMessageUriArray);
+   // okay the list has been built...now call our action code...
+   switch (commandPrefix)
+   {
+     case "saveAttachment":
+       messenger.saveAllAttachments(attachmentContentTypeArray.length,
+                                    attachmentContentTypeArray,
+                                    attachmentUrlArray,
+                                    attachmentDisplayNameArray,
+                                    attachmentMessageUriArray);
+       break;
+     case "detachAttachment":
+       messenger.detachAllAttachments(attachmentContentTypeArray.length,
+                                      attachmentContentTypeArray,
+                                      attachmentUrlArray,
+                                      attachmentDisplayNameArray,
+                                      attachmentMessageUriArray,
+                                      true /* save */);
+       break;
+     case "deleteAttachment":
+       messenger.detachAllAttachments(attachmentContentTypeArray.length,
+                                      attachmentContentTypeArray,
+                                      attachmentUrlArray,
+                                      attachmentDisplayNameArray,
+                                      attachmentMessageUriArray,
+                                      false /* don't save */);
+       break;
+     default:
+       dump (commandPrefix + "** unknown handle all attachments action **\n");
+   }
  }
  catch (ex)
  {
-   dump ("** failed to save all attachments **\n");
+   dump ("** failed to handle all attachments **\n");
  }
 }
 
