@@ -210,7 +210,21 @@ nsresult nsAddrDatabase::RemoveAnonymousList(nsVoidArray* pArray)
 }
 
 NS_IMPL_ADDREF(nsAddrDatabase)
-NS_IMPL_RELEASE(nsAddrDatabase)
+
+NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)                    
+{                                                      
+	NS_PRECONDITION(0 != mRefCnt, "dup release");     
+	if (--mRefCnt == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
+	{						// after removing it from the cache.
+		RemoveFromCache(this);
+		if (m_mdbStore)
+			m_mdbStore->CloseMdbObject(m_mdbEnv);
+		NS_DELETEXPCOM(this);                              
+		return 0;                                          
+	}
+	NS_LOG_RELEASE(this, mRefCnt,"nsAddrDatabase"); 
+	return mRefCnt;                                      
+}
 
 NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 {   
@@ -706,12 +720,8 @@ NS_IMETHODIMP nsAddrDatabase::CloseMDB(PRBool commit)
 {
 	if (commit)
 		Commit(kSessionCommit);
-	if (m_mdbStore)
-	{
-		m_mdbStore->CloseMdbObject(m_mdbEnv);
-		m_mdbStore = nsnull;
-	}
-	return NS_OK;
+//???    RemoveFromCache(this);  // if we've closed it, better not leave it in the cache.
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrDatabase::OpenAnonymousDB(nsIAddrDatabase **pCardDB)
@@ -755,6 +765,11 @@ NS_IMETHODIMP nsAddrDatabase::ForceClosed()
 	RemoveFromCache(this);
 
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
+	if (m_mdbStore)
+	{
+		m_mdbStore->CloseMdbObject(m_mdbEnv);
+		m_mdbStore = nsnull;
+	}
 	Release();
 	return err;
 }
@@ -2677,7 +2692,10 @@ NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, 
 
 	nsIMdbRow	*cardRow;
 	mdbOid		outRowId;
-	mdb_err result = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken,
+	nsIMdbStore* store = GetStore();
+	nsIMdbEnv* env = GetEnv();
+	
+	mdb_err result = store->FindRow(env, m_CardRowScopeToken,
 		m_PriEmailColumnToken, &emailAddressYarn,  &outRowId, 
 		&cardRow);
 	if (NS_SUCCEEDED(result) && cardRow)
