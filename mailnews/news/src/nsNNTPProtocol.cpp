@@ -974,7 +974,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 	s = PL_strchr (group, '@');
     if (s)
 	{
-	  message_id = group;
+      message_id = nsUnescape(group);
 	  group = 0;
 	}
     else if (!*group)
