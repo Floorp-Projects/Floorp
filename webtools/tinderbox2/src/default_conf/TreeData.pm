@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.17 $ 
-# $Date: 2002/05/10 21:21:07 $ 
+# $Revision: 1.18 $ 
+# $Date: 2002/12/10 19:49:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -204,6 +204,42 @@ $VERSION = '#tinder_version#';
 
 
 	   );
+
+
+sub TreeName2Root {
+    my ($treename) = @_;
+
+    my $root = $VC_TREE{$treename}{'root'};
+
+    return $root;
+}
+
+sub TreeName2Module {
+    my ($treename) = @_;
+
+    my $module = $VC_TREE{$treename}{'module'};
+
+    return $module;
+}
+
+sub TreeName2Branch {
+    my ($treename) = @_;
+
+    my $branch = $VC_TREE{$treename}{'branch'};
+
+    return $branch;
+}
+
+sub TreeName2DirPattern {
+    my ($treename) = @_;
+
+    my $dir_pattern = $VC_TREE{$treename}{'dir_pattern'};
+
+    return $dir_pattern;
+}
+
+sub TreeName2is_bonsai_default {
+}
 
 
 # We group trees into sets so that individual managers can get a page
