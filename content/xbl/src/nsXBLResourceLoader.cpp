@@ -120,7 +120,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       // Passing NULL for pretty much everything -- cause we don't care!
       // XXX: initialDocumentURI is NULL! 
       nsCOMPtr<imgIRequest> req;
-      nsContentUtils::LoadImage(url, doc, doc->GetDocumentURI(), nsnull,
+      nsContentUtils::LoadImage(url, doc, docURL, nsnull,
                                 nsIRequest::LOAD_BACKGROUND,
                                 getter_AddRefs(req));
     }
