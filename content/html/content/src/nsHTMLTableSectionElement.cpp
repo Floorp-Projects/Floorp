@@ -168,16 +168,17 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfo->NameChanged(nsHTMLAtoms::tr, getter_AddRefs(nodeInfo));
 
-  nsCOMPtr<nsIHTMLContent> rowContent;
-  nsresult rv = NS_NewHTMLTableRowElement(getter_AddRefs(rowContent),
-                                          nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIHTMLContent> rowContent = NS_NewHTMLTableRowElement(nodeInfo);
+  if (!nodeInfo) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsCOMPtr<nsIDOMNode> rowNode(do_QueryInterface(rowContent));
   NS_ASSERTION(rowNode, "Should implement nsIDOMNode!");
 
   nsCOMPtr<nsIDOMNode> retChild;
 
+  nsresult rv;
   if (doInsert) {
     nsCOMPtr<nsIDOMNode> refRow;
     rows->Item(aIndex, getter_AddRefs(refRow));

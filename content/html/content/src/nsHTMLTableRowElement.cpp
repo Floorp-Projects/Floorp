@@ -305,16 +305,17 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfo->NameChanged(nsHTMLAtoms::td, getter_AddRefs(nodeInfo));
 
-  nsCOMPtr<nsIHTMLContent> cellContent;
-  nsresult rv = NS_NewHTMLTableCellElement(getter_AddRefs(cellContent),
-                                           nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIHTMLContent> cellContent = NS_NewHTMLTableCellElement(nodeInfo);
+  if (!cellContent) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsCOMPtr<nsIDOMNode> cellNode(do_QueryInterface(cellContent));
   NS_ASSERTION(cellNode, "Should implement nsIDOMNode!");
 
   nsCOMPtr<nsIDOMNode> retChild;
 
+  nsresult rv;
   if (doInsert) {
     nsCOMPtr<nsIDOMNode> refCell;
     cells->Item(aIndex, getter_AddRefs(refCell));

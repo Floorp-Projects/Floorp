@@ -179,15 +179,13 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 // sampling the clock too often.
 #define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200
 
-typedef nsresult (*contentCreatorCallback)(nsIHTMLContent**, nsINodeInfo*,
-                                           PRBool aFromParser);
+typedef nsIHTMLContent* (*contentCreatorCallback)(nsINodeInfo*, PRBool aFromParser);
 
-nsresult
-NS_NewHTMLNOTUSEDElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
-                         PRBool aFromParser)
+nsIHTMLContent*
+NS_NewHTMLNOTUSEDElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 #define HTML_TAG(_tag, _classname) NS_NewHTML##_classname##Element,
@@ -286,10 +284,10 @@ protected:
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
                          PRBool aNotify = PR_FALSE,
                          PRBool aCheckIfPresent = PR_FALSE);
-  nsresult CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
-                               nsIDOMHTMLFormElement* aForm,
-                               nsIDocShell* aDocShell,
-                               nsIHTMLContent** aResult);
+  already_AddRefed<nsIHTMLContent>
+  CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
+                      nsIDOMHTMLFormElement* aForm,
+                      nsIDocShell* aDocShell);
 
   inline PRInt32 GetNotificationInterval()
   {
@@ -859,20 +857,19 @@ SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
   formControl->SetForm(aForm);
 }
 
-static nsresult
+static already_AddRefed<nsIHTMLContent>
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm, nsIHTMLContent** aResult,
+                  nsIDOMHTMLFormElement* aForm,
                   PRBool aInsideNoXXXTag, PRBool aFromParser);
 
 /**
  * Factory subroutine to create all of the html content objects.
  */
-nsresult
+already_AddRefed<nsIHTMLContent>
 HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
                                      nsHTMLTag aNodeType,
                                      nsIDOMHTMLFormElement* aForm,
-                                     nsIDocShell* aDocShell,
-                                     nsIHTMLContent** aResult)
+                                     nsIDocShell* aDocShell)
 {
   nsresult rv = NS_OK;
 
@@ -897,7 +894,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     }
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   // XXX if the parser treated the text in a textarea like a normal
   // textnode we wouldn't need to do this.
@@ -905,7 +902,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   if (aNodeType == eHTMLTag_textarea) {
     nsCOMPtr<nsIDTD> dtd;
     mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(dtd, nsnull);
 
     PRInt32 lineNo = 0;
 
@@ -913,8 +910,11 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   }
 
   // Make the content object
-  rv = MakeContentObject(aNodeType, nodeInfo, aForm, aResult,
-                         !!mInsideNoXXXTag, PR_TRUE);
+  nsIHTMLContent* result = MakeContentObject(aNodeType, nodeInfo, aForm,
+                                             !!mInsideNoXXXTag, PR_TRUE).get();
+  if (!result) {
+    return nsnull;
+  }
 
   if (aNodeType == eHTMLTag_textarea && !mSkippedContent.IsEmpty()) {
     // XXX: if the parser treated the text in a textarea like a normal
@@ -936,7 +936,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
       ++start;
     }
 
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> ta(do_QueryInterface(*aResult));
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> ta(do_QueryInterface(result));
     NS_ASSERTION(ta, "Huh? text area doesn't implement "
                  "nsIDOMHTMLTextAreaElement?");
 
@@ -947,17 +947,14 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     mSkippedContent.Truncate();
   }
 
-  (*aResult)->SetContentID(mDocument->GetAndIncrementContentID());
+  result->SetContentID(mDocument->GetAndIncrementContentID());
 
-  return rv;
+  return result;
 }
 
 nsresult
-NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
-                     PRBool aCaseSensitive)
+NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aCaseSensitive)
 {
-  nsresult rv = NS_OK;
-
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
   if (!parserService)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -974,8 +971,8 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
   }
 
   if (aCaseSensitive) {
-    rv = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
-                           aResult, PR_FALSE, PR_FALSE);
+    *aResult = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
+                                 PR_FALSE, PR_FALSE).get();
   } else {
     // Revese map id to name to get the correct character case in
     // the tag name.
@@ -991,18 +988,18 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
       if (!name->Equals(nsDependentString(tag))) {
         nsCOMPtr<nsIAtom> atom = do_GetAtom(tag);
 
-        rv = aNodeInfo->NameChanged(atom, getter_AddRefs(kungFuDeathGrip));
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsresult rv = aNodeInfo->NameChanged(atom, getter_AddRefs(kungFuDeathGrip));
+        NS_ENSURE_SUCCESS(rv, nsnull);
 
         nodeInfo = kungFuDeathGrip;
       }
     }
 
-    rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, aResult,
-                           PR_FALSE, PR_FALSE);
+    *aResult = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull,
+                                 PR_FALSE, PR_FALSE).get();
   }
 
-  return rv;
+  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------
@@ -1063,29 +1060,37 @@ nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
   return rv;
 }
 
-nsresult
+already_AddRefed<nsIHTMLContent>
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm, nsIHTMLContent** aResult,
+                  nsIDOMHTMLFormElement* aForm,
                   PRBool aInsideNoXXXTag, PRBool aFromParser)
 {
 
   if (aNodeType == eHTMLTag_form) {
     if (aForm) {
       // the form was already created
-      return CallQueryInterface(aForm, aResult);
+      nsIHTMLContent* result;
+      CallQueryInterface(aForm, &result);
+      return result;
     }
-    return NS_NewHTMLFormElement(aResult, aNodeInfo);
+    nsIHTMLContent* result = NS_NewHTMLFormElement(aNodeInfo);
+    NS_IF_ADDREF(result);
+    return result;
   }
 
-  nsresult rv;
   contentCreatorCallback cb = sContentCreatorCallbacks[aNodeType];
 
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
 
-  rv = cb(aResult, aNodeInfo, aFromParser);
+  nsIHTMLContent* result = cb(aNodeInfo, aFromParser);
+  if (!result) {
+    return nsnull;
+  }
 
-  if (NS_SUCCEEDED(rv) && !aInsideNoXXXTag) {
+  NS_ADDREF(result);
+
+  if (!aInsideNoXXXTag) {
     switch (aNodeType) {
     case eHTMLTag_button:
     case eHTMLTag_fieldset:
@@ -1095,14 +1100,14 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
     case eHTMLTag_input:
     case eHTMLTag_select:
     case eHTMLTag_textarea:
-      SetForm(*aResult, aForm);
+      SetForm(result, aForm);
       break;
     default:
       break;
     }
   }
 
-  return rv;
+  return result;
 }
 
 //----------------------------------------------------------------------
@@ -1258,12 +1263,14 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 
   // Create new container content object
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-  nsIHTMLContent* content;
   nsIDocShell *docshell = nsnull;
   if (mSink->mFrameset) docshell = (nsIDocShell *) mSink->mDocShell;
-  rv = mSink->CreateContentObject(aNode, nodeType, mSink->mCurrentForm,
-                                  docshell, &content);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIHTMLContent* content =
+    mSink->CreateContentObject(aNode, nodeType, mSink->mCurrentForm,
+                               docshell).get();
+  if (!content) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mStack[mStackPos].mType = nodeType;
   mStack[mStackPos].mContent = content;
@@ -1505,11 +1512,10 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 
       // Create new leaf content object
       nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-      nsCOMPtr<nsIHTMLContent> content;
-      rv = mSink->CreateContentObject(aNode, nodeType,
-                                      mSink->mCurrentForm, mSink->mDocShell,
-                                      getter_AddRefs(content));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIHTMLContent> content =
+        mSink->CreateContentObject(aNode, nodeType,
+                                   mSink->mCurrentForm, mSink->mDocShell);
+      NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
       // Set the content's document
       content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
@@ -2202,12 +2208,13 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
     CallQueryInterface(doc_root, &mRoot);
   } else {
-    rv = NS_NewHTMLHtmlElement(&mRoot, nodeInfo);
-    if (NS_FAILED(rv)) {
+    mRoot = NS_NewHTMLHtmlElement(nodeInfo);
+    if (!mRoot) {
       MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
       MOZ_TIMER_STOP(mWatch);
-      return rv;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    NS_ADDREF(mRoot);
 
     mRoot->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     mDocument->SetRootContent(mRoot);
@@ -2219,12 +2226,13 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewHTMLHeadElement(&mHead, nodeInfo);
+  mHead = NS_NewHTMLHeadElement(nodeInfo);
   if (NS_FAILED(rv)) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
-    return rv;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+  NS_ADDREF(mHead);
 
   mRoot->AppendChildTo(mHead, PR_FALSE, PR_FALSE);
 
@@ -2874,9 +2882,10 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
                                            getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(result, result);
 
-    nsCOMPtr<nsIHTMLContent> content;
-    result = NS_NewHTMLFormElement(getter_AddRefs(content), nodeInfo);
-    NS_ENSURE_SUCCESS(result, result);
+    nsCOMPtr<nsIHTMLContent> content = NS_NewHTMLFormElement(nodeInfo);
+    if (!content) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mCurrentForm = do_QueryInterface(content);
 
@@ -3206,9 +3215,10 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
                                               getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> it;
-  rv = NS_NewHTMLTitleElement(getter_AddRefs(it), nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIHTMLContent> it = NS_NewHTMLTitleElement(nodeInfo);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsCOMPtr<nsITextContent> text;
   rv = NS_NewTextNode(getter_AddRefs(text));
@@ -3748,11 +3758,10 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-  nsCOMPtr<nsIHTMLContent> area;
-  nsresult rv = CreateContentObject(aNode, nodeType, nsnull, nsnull,
-                                    getter_AddRefs(area));
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIHTMLContent> area =
+    CreateContentObject(aNode, nodeType, nsnull, nsnull);
+  if (!area) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Set the content's document
@@ -3765,7 +3774,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
   AddBaseTagInfo(area);
 
   // Set the content's attributes
-  rv = AddAttributes(aNode, area);
+  nsresult rv = AddAttributes(aNode, area);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add AREA object to the current map
@@ -4037,9 +4046,10 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> it;
-  rv = NS_NewHTMLMetaElement(getter_AddRefs(it), nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIHTMLContent> it = NS_NewHTMLMetaElement(nodeInfo);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   it->SetContentID(mDocument->GetAndIncrementContentID());
 

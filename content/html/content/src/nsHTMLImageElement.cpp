@@ -153,9 +153,8 @@ protected:
   nsSize GetWidthHeight();
 };
 
-nsresult
-NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
-                       PRBool aFromParser)
+nsIHTMLContent*
+NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   /*
    * nsHTMLImageElement's will be created without a nsINodeInfo passed in
@@ -167,25 +166,18 @@ NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(doc, nsnull);
 
     nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-    NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(nodeInfoManager, nsnull);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
                                       kNameSpaceID_None,
                                       getter_AddRefs(nodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
-  nsHTMLImageElement* it = new nsHTMLImageElement(nodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult = it);
-
-  return NS_OK;
+  return new nsHTMLImageElement(nodeInfo);
 }
 
 nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)

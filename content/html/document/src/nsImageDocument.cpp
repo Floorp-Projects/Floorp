@@ -485,10 +485,9 @@ nsImageDocument::CreateSyntheticDocument()
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> image;
-  rv = NS_NewHTMLImageElement(getter_AddRefs(image), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIHTMLContent> image = NS_NewHTMLImageElement(nodeInfo);
+  if (!image) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   image->SetDocument(this, PR_FALSE, PR_TRUE);
   mImageElement = do_QueryInterface(image);
