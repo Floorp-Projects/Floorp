@@ -83,17 +83,22 @@ class nsWritingIterator
       // nsWritingIterator( const nsWritingIterator<CharT>& ); ...use default copy-constructor
       // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& ); ...use default copy-assignment operator
 
+      pointer
+      get() const
+        {
+          return mPosition;
+        }
       
       reference
       operator*() const
         {
-          return *mPosition;
+          return *get();
         }
 
       pointer
       operator->() const
         {
-          return mPosition;
+          return get();
         }
 
       nsWritingIterator<CharT>&
@@ -407,7 +412,7 @@ inline
 PRBool
 operator==( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
   {
-    return lhs.operator->() == rhs.operator->();
+    return lhs.get() == rhs.get();
   }
 
 template <class CharT>
@@ -415,7 +420,7 @@ inline
 PRBool
 operator!=( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
   {
-    return lhs.operator->() != rhs.operator->();
+    return lhs.get() != rhs.get();
   }
 
 
