@@ -1675,6 +1675,14 @@ sub BuildAccessiblityProjects()
     
     if ($main::options{accessible})
     {
+      if ($main::options{moz_xul})
+      {
+          BuildProject(":mozilla:accessible:macbuild:accessible_xul.xml",           "accessible_xul$D.o");
+      }
+      else
+      {
+          BuildProject(":mozilla:accessible:macbuild:accessible_xul.xml",           "accessible_xul$D.o stub");
+      }
       BuildOneProject(":mozilla:accessible:macbuild:accessible.xml",   "accessible$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
