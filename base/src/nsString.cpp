@@ -944,7 +944,7 @@ PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) const {
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return number of chars inserted into this.
  */
-PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsString::Insert(const nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   aCount=(aCount>aCopy.mLength) ? aCopy.mLength : aCount; //don't try to copy more than you are given
   if (aCount < 0) aCount = aCopy.mLength;
   if(0<=anOffset) {
