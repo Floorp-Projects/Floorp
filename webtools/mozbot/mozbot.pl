@@ -64,6 +64,8 @@ my %cmds =
     "url"   =>      "bot_urls",
     );
 
+@::origargv = @ARGV;
+
 my $server = shift;
 my $port = shift;
 my $nick = shift;
@@ -132,6 +134,7 @@ $bot->add_handler ('msg', \&on_msg);
 $bot->add_handler('public', \&on_public);
 
 $bot->schedule (0, \&tinderbox);
+$bot->schedule (0, \&checksourcechange);
 
 &debug ("connecting to $server $port as $nick on $channel");
 $irc->start;
@@ -242,9 +245,12 @@ sub on_public
         }
     }
 
+$::dontQuitOnSignal = 0;
 sub on_boot
     {
-    die "$0: disconnected from network";
+		if (!$::dontQuitOnSignal) {
+			die "$0: disconnected from network";
+		}
     }
 
 ################
@@ -421,3 +427,31 @@ sub tinderbox
     $bot->schedule (360, \&tinderbox);
     }
 
+
+# See if someone has changed our source.
+
+$::ourdate = 0;
+$::tinderboxdate = 0;
+
+sub checksourcechange {
+	my ($self) = @_;
+	my $lastourdate = $::ourdate;
+	my $lasttinderboxdate = $::tinderboxdate;
+    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks)
+        = stat("./mozbot.pl");
+	$::ourdate = $mtime;
+    ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks)
+        = stat("./Tinderbox.pm");
+	$::tinderboxdate = $mtime;
+	if ($lastourdate > 0 && ($::ourdate > $lastourdate ||
+							 $::tinderboxdate > $lasttinderboxdate)) {
+		$self->privmsg($channel, "Whoops; someone seems to have changed my source code.  Be right back...");
+		$::dontQuitOnSignal = 1;
+		$self->quit();
+		&debug ("restarting self");
+		exec "$0 @::origargv";
+	}
+    $bot->schedule (60, \&checksourcechange);
+}
