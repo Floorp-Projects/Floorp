@@ -1085,6 +1085,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                 break;
               }
             }
+            
+            iter->Next();
           }
           if (!bNodeFound)
             printf("No nodes of tag name = %s were found in selection\n", aTagName);
