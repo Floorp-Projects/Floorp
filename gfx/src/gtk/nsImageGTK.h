@@ -152,38 +152,36 @@ private:
   inline void DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 validWidth, PRInt32 validHeight);
   inline void SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY);
 
-  PRInt32    mWidth;
-  PRInt32    mHeight;
-  PRInt32    mDepth;       // bits per pixel
-  PRInt32    mRowBytes;
-  PRUint8    *mImageBits;
-  PRUint8    *mConvertedBits;
-  PRInt32    mSizeImage;
-  PRBool     mIsTopToBottom;
+  PRUint8      *mImageBits;
+  GdkPixmap    *mImagePixmap;
+  GdkGC        *mGC;
+  PRUint8      *mAlphaBits;
+  GdkPixmap    *mAlphaPixmap;
 
-  PRInt8     mNumBytesPixel;
+  PRInt32       mWidth;
+  PRInt32       mHeight;
+  PRInt32       mRowBytes;
+  PRInt32       mSizeImage;
 
-  PRInt32		mNaturalWidth;
-  PRInt32		mNaturalHeight;
+  PRInt32       mNaturalWidth;
+  PRInt32       mNaturalHeight;
 
-  PRInt32             mDecodedX1;       //Keeps track of what part of image
-  PRInt32             mDecodedY1;       // has been decoded.
-  PRInt32             mDecodedX2;
-  PRInt32             mDecodedY2;
+  PRInt32       mDecodedX1;         // Keeps track of what part of image
+  PRInt32       mDecodedY1;         // has been decoded.
+  PRInt32       mDecodedX2;
+  PRInt32       mDecodedY2;
 
   // alpha layer members
-  PRUint8    *mAlphaBits;
-  GdkPixmap  *mAlphaPixmap;
-  PRInt8     mAlphaDepth;        // alpha layer depth
-  PRInt16    mAlphaRowBytes;     // alpha bytes per row
-  PRInt16    mAlphaWidth;        // alpha layer width
-  PRInt16    mAlphaHeight;       // alpha layer height
-  nsPoint    mLocation;          // alpha mask location
-  GdkPixmap  *mImagePixmap;
+  PRInt16       mAlphaRowBytes;     // alpha bytes per row
+  PRInt16       mAlphaWidth;        // alpha layer width
+  PRInt16       mAlphaHeight;       // alpha layer height
+  PRInt8        mAlphaDepth;        // alpha layer depth
+  PRPackedBool  mAlphaValid;
 
-  GdkGC      *mGC;
-
-  PRUint8    mFlags;             // flags set by ImageUpdated
+  PRPackedBool  mIsTopToBottom;
+  PRInt8        mNumBytesPixel;
+  PRUint8       mFlags;             // flags set by ImageUpdated
+  PRInt8        mDepth;             // bits per pixel
 };
 
 #endif

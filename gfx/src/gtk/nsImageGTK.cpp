@@ -67,10 +67,10 @@ nsImageGTK::nsImageGTK()
   mSizeImage = 0;
   mAlphaHeight = 0;
   mAlphaWidth = 0;
-  mConvertedBits = nsnull;
   mGC = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
+  mAlphaValid = PR_FALSE;
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
@@ -295,6 +295,18 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 #endif
 
   mFlags = aFlags; // this should be 0'd out by Draw()
+
+  // check if the image has an all-opaque 8-bit alpha mask
+  if ((mAlphaDepth==8) && !mAlphaValid) {
+    for (int y=mDecodedY1; y<mDecodedY2; y++) {
+      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + mDecodedX1;
+      for (int x=mDecodedX1; x<mDecodedX2; x++)
+        if (*(alpha++)!=255) {
+          mAlphaValid=PR_TRUE;
+          return;
+        }
+    }
+  }
 
 }
 
@@ -898,7 +910,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
-  if (mAlphaDepth==8) {
+  if ((mAlphaDepth==8) && mAlphaValid) {
     DrawComposited(aContext, aSurface, aX, aY, aWidth, aHeight);
     return NS_OK;
   }
@@ -940,17 +952,17 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
   // limit the image rectangle to the size of the image data which
   // has been validated.
-  if ((mDecodedY2 < aHeight)) {
+  if (mDecodedY2 < aHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
   }
-  if ((mDecodedX2 < aWidth)) {
+  if (mDecodedX2 < aWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
   }
-  if ((mDecodedY1 > 0)) {
+  if (mDecodedY1 > 0) {
     validHeight -= mDecodedY1;
     validY = mDecodedY1;
   }
-  if ((mDecodedX1 > 0)) {
+  if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
     validX = mDecodedX1;
   }
@@ -1098,26 +1110,28 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   
   // limit the image rectangle to the size of the image data which
   // has been validated.
-  if ((mDecodedY2 < mHeight)) {
+  if (mDecodedY2 < mHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
     partial = PR_TRUE;
   }
-  if ((mDecodedX2 < mWidth)) {
+  if (mDecodedX2 < mWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
     partial = PR_TRUE;
   }
-  if ((mDecodedY1 > 0)) {   
+  if (mDecodedY1 > 0) {   
     validHeight -= mDecodedY1;
     validY = mDecodedY1;
     partial = PR_TRUE;
   }
-  if ((mDecodedX1 > 0)) {
+  if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
     validX = mDecodedX1; 
     partial = PR_TRUE;
   }
 
-  if ((partial) || (drawing->GetDepth() == 8) || (mAlphaDepth == 8)) {
+  if (partial || 
+      (drawing->GetDepth() == 8) ||
+      ((mAlphaDepth == 8) && mAlphaValid)) {
 #ifdef DEBUG_TILING
     printf("Warning: using slow tiling\n");
 #endif
@@ -1208,26 +1222,26 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   
   // limit the image rectangle to the size of the image data which
   // has been validated.
-  if ((mDecodedY2 < mHeight)) {
+  if (mDecodedY2 < mHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
     partial = PR_TRUE;
   }
-  if ((mDecodedX2 < mWidth)) {
+  if (mDecodedX2 < mWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
     partial = PR_TRUE;
   }
-  if ((mDecodedY1 > 0)) {   
+  if (mDecodedY1 > 0) {   
     validHeight -= mDecodedY1;
     validY = mDecodedY1;
     partial = PR_TRUE;
   }
-  if ((mDecodedX1 > 0)) {
+  if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
     validX = mDecodedX1; 
     partial = PR_TRUE;
   }
 
-  if ((partial) || (mAlphaDepth == 8)) {
+  if (partial || ((mAlphaDepth == 8) && mAlphaValid)) {
 #ifdef DEBUG_TILING
     printf("Warning: using slow tiling\n");
 #endif
