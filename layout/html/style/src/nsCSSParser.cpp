@@ -482,7 +482,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
 
   ParseDeclaration(&errorCode, aDeclaration, PR_FALSE, aHint);  
   // XXX 
-  aHint = NS_STYLE_HINT_UNKNOWN;
+  *aHint = NS_STYLE_HINT_REFLOW;
 
   delete mScanner;
   mScanner = nsnull;
