@@ -76,6 +76,7 @@
 #include "nsXPIDLString.h"
 #include "nsIViewManager.h"
 #include "nsIWebProgress.h"
+#include "nsIWebBrowserSetup.h"
 
 #include "nsCWebBrowser.h"
 
@@ -1398,6 +1399,12 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 
   webBrowserWin->Create();
+
+  // Disable global history because we don't have profile-relative file locations
+  nsCOMPtr<nsIWebBrowserSetup> setup(do_QueryInterface(mWebBrowser));
+  if (setup)
+    setup->SetProperty(nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY, PR_FALSE);
+
   mDocShell = do_GetInterface(mWebBrowser);
   mDocShell->SetAllowPlugins(aAllowPlugins);
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
