@@ -32,7 +32,7 @@ class nsProperties : public nsIProperties
 {
 public:
   nsProperties();
-  ~nsProperties();
+  virtual ~nsProperties();
 
   NS_DECL_ISUPPORTS
 

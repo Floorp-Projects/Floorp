@@ -22,7 +22,7 @@
 #include "nsProperties.h"
 #include "nsRepository.h"
 
-extern "C" PRInt32 gLockCount = 0;
+PRInt32 gLockCount = 0;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
