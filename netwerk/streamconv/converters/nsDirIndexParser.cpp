@@ -42,6 +42,8 @@
 
 /* This parsing code originally lived in xpfe/components/directory/ - bbaetz */
 
+#include "prprf.h"
+
 #include "nsDirIndexParser.h"
 #include "nsReadableUtils.h"
 #include "nsDirIndex.h"
@@ -327,8 +329,12 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       break;
     case FIELD_CONTENTLENGTH:
       {
-        unsigned long len = strtoul(value,NULL,10);
-        aIdx->SetSize(len);
+        PRInt64 len;
+        PRInt32 status = PR_sscanf(value, "%lld", &len);
+        if (status == 1)
+          aIdx->SetSize(len);
+        else
+          aIdx->SetSize(LL_INIT(0, -1)); // -1 means unknown
       }
       break;
     case FIELD_LASTMODIFIED:

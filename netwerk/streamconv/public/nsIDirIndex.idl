@@ -92,14 +92,14 @@ interface nsIDirIndex : nsISupports
     /**
      * File size, with -1 meaning "unknown"
      */
-    attribute unsigned long size;
+    attribute long long size;
     
     /**
      * Last-modified time in seconds-since-epoch.
      * -1 means unknown - this is valid, because there were no
      * ftp servers in 1969
      */
-    attribute long long lastModified;
+    attribute PRTime lastModified;
 };
 
 %{C++

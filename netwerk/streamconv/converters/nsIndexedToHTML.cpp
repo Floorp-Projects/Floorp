@@ -47,6 +47,7 @@
 #include "nsURLHelper.h"
 #include "nsCRT.h"
 #include "nsIPlatformCharset.h"
+#include "nsInt64.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
                               nsIDirIndexListener,
@@ -546,10 +547,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     pushBuffer.Append(NS_LITERAL_STRING("</a></td>\n <td>"));
 
-    PRUint32 size;
+    PRInt64 size;
     aIndex->GetSize(&size);
     
-    if (size != PRUint32(-1) &&
+    if (size != LL_INIT(0, -1) &&
         type != nsIDirIndex::TYPE_DIRECTORY &&
         type != nsIDirIndex::TYPE_SYMLINK) {
         nsAutoString  sizeString;
@@ -596,12 +597,13 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     return FormatInputStream(aRequest, aCtxt, pushBuffer);
 }
 
-void nsIndexedToHTML::FormatSizeString(PRUint32 inSize, nsString& outSizeString)
+void nsIndexedToHTML::FormatSizeString(PRInt64 inSize, nsString& outSizeString)
 {
+    nsInt64 size(inSize);
     outSizeString.Truncate();
-    if (inSize > 0) {
+    if (size > nsInt64(0)) {
         // round up to the nearest Kilobyte
-        PRUint32  upperSize = (inSize + 1023) / 1024;
+        PRInt64  upperSize = (size + nsInt64(1023)) / nsInt64(1024);
         outSizeString.AppendInt(upperSize);
         outSizeString.Append(NS_LITERAL_STRING(" KB"));
     }
