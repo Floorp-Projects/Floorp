@@ -133,3 +133,23 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
 
     return NS_OK;
 }
+
+nsresult
+rdf_MakeAbsoluteURI(nsIURI* aURL, nsCString& aURI)
+{
+    nsresult rv;
+    nsXPIDLCString result;
+
+    rv = NS_MakeAbsoluteURI(aURI.GetBuffer(), aURL, getter_Copies(result));
+
+    if (NS_SUCCEEDED(rv)) {
+        aURI = result;
+    }
+    else {
+        // There are some ugly URIs (e.g., "NC:Foo") that netlib can't
+        // parse. If NS_MakeAbsoluteURL fails, then just punt and
+        // assume that aURI was already absolute.
+    }
+
+    return NS_OK;
+}
