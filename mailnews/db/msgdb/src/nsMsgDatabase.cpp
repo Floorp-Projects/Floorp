@@ -2333,18 +2333,13 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token columnToken, nsString &resultStr)
 {
 	nsresult	err = NS_OK;
-	nsIMdbCell	*hdrCell;
 
 	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
-		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-		if (err == NS_OK && hdrCell)
-		{
-			struct mdbYarn yarn;
-			hdrCell->AliasYarn(GetEnv(), &yarn);
+		struct mdbYarn yarn;
+		err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
+		if (err == NS_OK)
 			YarnTonsString(&yarn, &resultStr);
-			hdrCell->CutStrongRef(GetEnv()); // always release ref
-		}
 	}
 	return err;
 }
@@ -2352,18 +2347,13 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token columnToken, nsCString &resultStr)
 {
 	nsresult	err = NS_OK;
-	nsIMdbCell	*hdrCell;
 
 	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
-		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-		if (err == NS_OK && hdrCell)
-		{
-			struct mdbYarn yarn;
-			hdrCell->AliasYarn(GetEnv(), &yarn);
+		struct mdbYarn yarn;
+		err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
+		if (err == NS_OK)
 			YarnTonsCString(&yarn, &resultStr);
-			hdrCell->CutStrongRef(GetEnv()); // always release ref
-		}
 	}
 	return err;
 }
@@ -2474,20 +2464,15 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue)
 {
 	nsresult	err = NS_OK;
-	nsIMdbCell	*hdrCell;
 
 	if (uint32Result)
 		*uint32Result = defaultValue;
 	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
-		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-		if (err == NS_OK && hdrCell)
-		{
-			struct mdbYarn yarn;
-			hdrCell->AliasYarn(GetEnv(), &yarn);
+		struct mdbYarn yarn;
+		err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
+		if (err == NS_OK)
 			YarnToUInt32(&yarn, uint32Result);
-			hdrCell->CutStrongRef(GetEnv()); // always release ref
-		}
 	}
 	return err;
 }
@@ -2520,15 +2505,13 @@ nsresult nsMsgDatabase::CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnT
 nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result)
 {
 	nsresult	err = NS_ERROR_NULL_POINTER;
-	nsIMdbCell	*hdrCell;
 
 	if (row && result)
 	{
-		err = row->GetCell(GetEnv(), columnToken, &hdrCell);
-		if (err == NS_OK && hdrCell)
+		struct mdbYarn yarn;
+		err = row->AliasCellYarn(GetEnv(), columnToken, &yarn);
+		if (err == NS_OK)
 		{
-			struct mdbYarn yarn;
-			hdrCell->AliasYarn(GetEnv(), &yarn);
 			*result = (char *) PR_CALLOC(yarn.mYarn_Fill + 1);
 			if (*result)
 			{
@@ -2540,7 +2523,6 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 			else
 				err = NS_ERROR_OUT_OF_MEMORY;
 
-			hdrCell->CutStrongRef(GetEnv()); // always release ref
 		}
 		else if (err == NS_OK)	// guarantee a non-null result
 			*result = nsCRT::strdup("");
