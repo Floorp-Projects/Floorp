@@ -821,6 +821,25 @@ struct MessageWindow {
         return NS_OK;
     }
 
+    // Destory:  Get rid of window and reset mHandle.
+    NS_IMETHOD Destroy() {
+        nsresult retval = NS_OK;
+
+        if ( mHandle ) {
+            // DestroyWindow can only destroy windows created from
+            //  the same thread.
+            BOOL desRes = DestroyWindow( mHandle );
+            if ( FALSE != desRes ) {
+                mHandle = NULL;
+            }
+            else {
+                retval = NS_ERROR_FAILURE;
+            }
+        }
+
+        return retval;
+    }
+
     // SendRequest: Pass string via WM_COPYDATA to message window.
     NS_IMETHOD SendRequest( const char *cmd ) {
         COPYDATASTRUCT cds = { 0, ::strlen( cmd ) + 1, (void*)cmd };
@@ -1220,6 +1239,20 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
 // Terminate DDE regardless.
 NS_IMETHODIMP
 nsNativeAppSupportWin::Quit() {
+    // If another process wants to look for the message window, they need
+    // to wait to hold the lock, in which case they will not find the
+    // window as we will destroy ours under our lock.
+    // When the mutex goes off the stack, it is unlocked via destructor.
+    Mutex mutexLock(mMutexName);
+    NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
+
+    // If we've got a message window to receive IPC or new window requests,
+    // get rid of it as we are shutting down.
+    // Note:  Destroy calls DestroyWindow, which will only work on a window
+    //  created by the same thread.
+    MessageWindow mw;
+    mw.Destroy();
+    
     if ( mInstance ) {
         // Undo registry setting if we need to.
         if ( mSupportingDDEExec && handlingHTTP() ) {
@@ -2587,7 +2620,8 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
 
         // Turn off MessageWindow so the other process can't see us.
-        DWORD rc = ::DestroyWindow( (HWND)MessageWindow() );
+        MessageWindow mw;
+        mw.Destroy();
     
         // Launch another instance.
         char buffer[ _MAX_PATH ];
@@ -2603,7 +2637,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         STARTUPINFO startupInfo;
         ::GetStartupInfo( &startupInfo );
         PROCESS_INFORMATION processInfo;
-        rc = ::CreateProcess( 0,
+        DWORD rc = ::CreateProcess( 0,
                               (LPTSTR)cmdLine.get(),
                               0,
                               0,
