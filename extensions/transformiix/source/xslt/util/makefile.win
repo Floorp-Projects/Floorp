@@ -27,6 +27,7 @@ REQUIRES	= string \
 		  widget \
 		  content \
 		  locale \
+		  unicharutil \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

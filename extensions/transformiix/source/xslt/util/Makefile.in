@@ -35,6 +35,7 @@ REQUIRES	= string \
 		  content \
 		  widget \
 		  locale \
+		  unicharutil \
 		  $(NULL)
 endif
 
