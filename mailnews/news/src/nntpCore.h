@@ -21,19 +21,22 @@
 
 #include "rosetta.h"
 
-#if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
+#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
 #define DEBUG_NEWS 1
 #endif
 
+#define BUG_7770_FIXED 1
+
 // The following string constants are protocol strings. I'm defining them as macros here
 // so I don't have to sprinkle all of the strings throughout the protocol. 
-#define NNTP_CMD_LIST_EXTENSIONS	"LIST EXTENSIONS" CRLF
-#define NNTP_CMD_MODE_READER		"MODE READER" CRLF
-#define NNTP_CMD_LIST_SEARCHES		"LIST SEARCHES" CRLF
-#define NNTP_CMD_LIST_SEARCH_FIELDS "LIST SRCHFIELDS" CRLF
-#define NNTP_CMD_GET_PROPERTIES     "GET" CRLF
-#define NNTP_CMD_LIST_SUBSCRIPTIONS "LIST SUBSCRIPTIONS" CRLF
+#define NNTP_CMD_LIST_EXTENSIONS		"LIST EXTENSIONS" CRLF
+#define NNTP_CMD_MODE_READER			"MODE READER" CRLF
+#define NNTP_CMD_LIST_SEARCHES			"LIST SEARCHES" CRLF
+#define NNTP_CMD_LIST_SEARCH_FIELDS 		"LIST SRCHFIELDS" CRLF
+#define NNTP_CMD_GET_PROPERTIES     		"GET" CRLF
+#define NNTP_CMD_LIST_SUBSCRIPTIONS 		"LIST SUBSCRIPTIONS" CRLF
 #define NNTP_CMD_POST				"POST" CRLF
+#define NNTP_CMD_QUIT				"QUIT" CRLF
 
 // end of protocol strings
 
