@@ -52,13 +52,13 @@ public:
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIToolkit *aToolkit = nsnull,
-                                     void *aInitData = nsnull);
+                                     nsWidgetInitData *aInitData = nsnull);
     virtual void            Create(nsNativeWindow aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIToolkit *aToolkit = nsnull,
-                                     void *aInitData = nsnull);
+                                     nsWidgetInitData *aInitData = nsnull);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -92,9 +92,10 @@ public:
     virtual nsIToolkit*     GetToolkit();  
     virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
     virtual void            SetTitle(const nsString& aTitle); 
-    virtual void            SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas);
+    virtual void            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
+
     virtual void            RemoveTooltips();
-    virtual void            UpdateTooltips(const nsRect* aNewTips);
+    virtual void            UpdateTooltips(nsRect* aNewTips[]);
     virtual void            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     virtual void            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
     virtual void            AddMouseListener(nsIMouseListener * aListener);
@@ -103,9 +104,11 @@ public:
     PRBool DispatchEvent(nsGUIEvent* event);
     static PRBool ConvertStatus(nsEventStatus aStatus);
 
+    virtual void BeginResizingChildren(void);
+    virtual void EndResizingChildren(void);
+
 private:
   Widget mWidget;
-  GC mGC ;
   EVENT_CALLBACK mEventCallback;
   nsIDeviceContext *mContext;
   nsIFontMetrics *mFontMetrics;
