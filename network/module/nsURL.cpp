@@ -255,6 +255,14 @@ PRInt32 URLImpl::GetReloadType() const
 
 void URLImpl::ToString(nsString& aString) const
 {
+  // XXX Special-case javascript: URLs for the moment.
+  // This code will go away when we actually start doing
+  // protocol-specific parsing.
+  if (PL_strcmp(mProtocol, "javascript") == 0) {
+    aString.SetString(mSpec);
+    return;
+  }
+
   aString.SetLength(0);
   aString.Append(mProtocol);
   aString.Append("://");

@@ -24,12 +24,12 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
-
+#include "nsIConnectionInfo.h"
 
 /* Forward declaration... */
 class nsNetlibStream;
 
-class nsConnectionInfo : public nsISupports 
+class nsConnectionInfo : public nsIConnectionInfo 
 {
 public:
     NS_DECL_ISUPPORTS
@@ -37,6 +37,11 @@ public:
     nsConnectionInfo(nsIURL *aURL, 
                      nsNetlibStream *aStream, 
                      nsIStreamListener *aNotify);
+
+    NS_IMETHOD GetURL(nsIURL **aURL);
+    NS_IMETHOD GetInputStream(nsIInputStream **aStream);
+    NS_IMETHOD GetOutputStream(nsIOutputStream **aStream);
+    NS_IMETHOD GetConsumer(nsIStreamListener **aConsumer);
 
 protected:
     virtual ~nsConnectionInfo();

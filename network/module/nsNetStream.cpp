@@ -28,6 +28,7 @@ extern "C" {
 
 
 NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+NS_DEFINE_IID(kIConnectionInfoIID, NS_ICONNECTIONINFO_IID);
 
 #define BUFFER_BLOCK_SIZE   8192
 
@@ -59,7 +60,7 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
 }
 
 
-NS_IMPL_ISUPPORTS(nsConnectionInfo,kISupportsIID);
+NS_IMPL_ISUPPORTS(nsConnectionInfo, kIConnectionInfoIID);
 
 
 nsConnectionInfo::~nsConnectionInfo()
@@ -89,7 +90,41 @@ nsConnectionInfo::~nsConnectionInfo()
     pContainer = nsnull;
 }
 
+NS_IMETHODIMP 
+nsConnectionInfo::GetURL(nsIURL **aURL)
+{
+    *aURL = pURL;
+    NS_IF_ADDREF(pURL);    
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsConnectionInfo::GetInputStream(nsIInputStream **aStream)
+{
+    *aStream = (nsIInputStream *)pNetStream;
+    NS_IF_ADDREF(pNetStream);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsConnectionInfo::GetOutputStream(nsIOutputStream **aStream)
+{
+    *aStream = (nsIOutputStream *)pNetStream;
+    NS_IF_ADDREF(pNetStream);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsConnectionInfo::GetConsumer(nsIStreamListener **aConsumer)
+{
+    *aConsumer = pConsumer;
+    NS_IF_ADDREF(pConsumer);
+
+    return NS_OK;
+}
 
 nsNetlibStream::nsNetlibStream(void)
 {
