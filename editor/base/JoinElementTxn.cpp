@@ -90,7 +90,7 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
             result = editor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
             if (NS_SUCCEEDED(result))
             {
-              if (gNoisy) { printf("  left node = %p removed\n", this, mLeftNode.get()); }
+              if (gNoisy) { printf("  left node = %p removed\n", mLeftNode.get()); }
               nsCOMPtr<nsIDOMSelection>selection;
               mEditor->GetSelection(getter_AddRefs(selection));
               if (selection)

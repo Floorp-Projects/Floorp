@@ -97,7 +97,7 @@ static NS_DEFINE_IID(kIContentIteratorIID,   NS_ICONTENTITERTOR_IID);
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -1350,6 +1350,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
     }
   }
 
+  // create a style node for the text in the start parent
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
   nodeAsChar = do_QueryInterface(aStartNode);
   if (!nodeAsChar)
@@ -1381,106 +1382,81 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
   nsresult result=NS_OK;
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
   nodeAsChar =  do_QueryInterface(aNode);
-  if (!nodeAsChar)
-    return NS_ERROR_FAILURE;
-
+  PRBool insertAfter=PR_FALSE;
   PRBool textPropertySet;
   IsTextPropertySetByContent(aNode, aPropName, textPropertySet);
   if (PR_TRUE==textPropertySet)
   {
+    nsCOMPtr<nsIDOMNode>parent; // initially set to first interior parent node to process
+    nsCOMPtr<nsIDOMNode>newMiddleNode; // this will be the middle node after any required splits
+    nsCOMPtr<nsIDOMNode>newLeftNode;   // this will be the leftmost node, 
+                                       // the node being split will be rightmost
     PRUint32 count;
-    nodeAsChar->GetLength(&count);
-    // split the node, and all parent nodes up to the style node
-    // then promote the selected content to the parent of the style node
-    nsCOMPtr<nsIDOMNode>newLeftNode;  // this will be the leftmost node, 
-                                      // the node being split will be rightmost
-    if (0!=aStartOffset) {
-      printf("* splitting text node %p at %d\n", aNode, aStartOffset);
-      result = nsEditor::SplitNode(aNode, aStartOffset, getter_AddRefs(newLeftNode));
-      printf("* split created left node %p\n", newLeftNode.get());
-      if (gNoisy) {DebugDumpContent(); } // DEBUG
-    }
-    if (NS_SUCCEEDED(result))
+    // if aNode is a text node, treat is specially
+    if (nodeAsChar)
     {
-      nsCOMPtr<nsIDOMNode>newMiddleNode;  // this will be the middle node
-      if ((PRInt32)count!=aEndOffset) {
-        printf("* splitting text node (right node) %p at %d\n", aNode, aEndOffset-aStartOffset);
-        result = nsEditor::SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newMiddleNode));
-        printf("* split created middle node %p\n", newMiddleNode.get());
+      nodeAsChar->GetLength(&count);
+      // split the node, and all parent nodes up to the style node
+      // then promote the selected content to the parent of the style node
+      if (0!=aStartOffset) {
+        printf("* splitting text node %p at %d\n", aNode, aStartOffset);
+        result = nsEditor::SplitNode(aNode, aStartOffset, getter_AddRefs(newLeftNode));
+        printf("* split created left node %p\n", newLeftNode.get());
         if (gNoisy) {DebugDumpContent(); } // DEBUG
       }
-      else {
-        printf("* no need to split text node\n");
-        newMiddleNode = do_QueryInterface(aNode);
-      }
-      NS_ASSERTION(newMiddleNode, "no middle node created");
-      // now that the text node is split, split parent nodes until we get to the style node
-      nsCOMPtr<nsIDOMNode>parent;
-      parent = do_QueryInterface(aParent);  // we know this has to succeed, no need to check
-      if (NS_SUCCEEDED(result) && newMiddleNode)
+      if (NS_SUCCEEDED(result))
       {
-        // split every ancestor until we find the node that is giving us the style we want to remove
-        // then split the style node and promote the selected content to the style node's parent
-        while (NS_SUCCEEDED(result) && parent)
+        if ((PRInt32)count!=aEndOffset) {
+          printf("* splitting text node (right node) %p at %d\n", aNode, aEndOffset-aStartOffset);
+          result = nsEditor::SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newMiddleNode));
+          printf("* split created middle node %p\n", newMiddleNode.get());
+          if (gNoisy) {DebugDumpContent(); } // DEBUG
+        }
+        else {
+          printf("* no need to split text node\n");
+          newMiddleNode = do_QueryInterface(aNode);
+          insertAfter = PR_TRUE;
+        }
+        NS_ASSERTION(newMiddleNode, "no middle node created");
+        // now that the text node is split, split parent nodes until we get to the style node
+        parent = do_QueryInterface(aParent);  // we know this has to succeed, no need to check
+      }
+    }
+    else {
+      newMiddleNode = do_QueryInterface(aNode);
+      parent = do_QueryInterface(aParent); 
+    }
+    if (NS_SUCCEEDED(result) && newMiddleNode)
+    {
+      // split every ancestor until we find the node that is giving us the style we want to remove
+      // then split the style node and promote the selected content to the style node's parent
+      while (NS_SUCCEEDED(result) && parent)
+      {
+        printf("* looking at parent %p\n", parent);
+        // get the tag from parent and see if we're done
+        nsCOMPtr<nsIDOMNode>temp;
+        nsCOMPtr<nsIDOMElement>element;
+        element = do_QueryInterface(parent);
+        if (element)
         {
-          printf("* looking at parent %p\n", parent);
-          // get the tag from parent and see if we're done
-          nsCOMPtr<nsIDOMNode>temp;
-          nsCOMPtr<nsIDOMElement>element;
-          element = do_QueryInterface(parent);
-          if (element)
+          nsAutoString tag;
+          result = element->GetTagName(tag);
+          printf("* parent has tag %s\n", tag.ToNewCString());  // leak!
+          if (NS_SUCCEEDED(result))
           {
-            nsAutoString tag;
-            result = element->GetTagName(tag);
-            printf("* parent has tag %s\n", tag.ToNewCString());  // leak!
-            if (NS_SUCCEEDED(result))
+            if (PR_FALSE==tag.Equals(aPropName))
             {
-              if (PR_FALSE==tag.Equals(aPropName))
+              printf("* this is not the style node\n");
+              PRInt32 offsetInParent;
+              result = nsIEditorSupport::GetChildOffset(newMiddleNode, parent, offsetInParent);
+              if (NS_SUCCEEDED(result))
               {
-                printf("* this is not the style node\n");
-                PRInt32 offsetInParent;
-                result = nsIEditorSupport::GetChildOffset(newMiddleNode, parent, offsetInParent);
-                if (NS_SUCCEEDED(result))
-                {
-                  if (0!=offsetInParent) {
-                    printf("* splitting parent %p at offset %d\n", parent, offsetInParent);
-                    result = nsEditor::SplitNode(parent, offsetInParent, getter_AddRefs(newLeftNode));
-                    printf("* split created left node %p sibling of parent\n", newLeftNode.get());
-                    if (gNoisy) {DebugDumpContent(); } // DEBUG
-                  }
-                  if (NS_SUCCEEDED(result))
-                  {
-                    nsCOMPtr<nsIDOMNodeList>childNodes;
-                    result = parent->GetChildNodes(getter_AddRefs(childNodes));
-                    if (NS_SUCCEEDED(result) && childNodes)
-                    {
-                      childNodes->GetLength(&count);
-                      NS_ASSERTION(count>0, "bad child count in newly split node");
-                      if ((PRInt32)count!=1) 
-                      {
-                        printf("* splitting parent %p at offset %d\n", parent, 1);
-                        result = nsEditor::SplitNode(parent, 1, getter_AddRefs(newMiddleNode));
-                        printf("* split created middle node %p sibling of parent\n", newMiddleNode.get());
-                        if (gNoisy) {DebugDumpContent(); } // DEBUG
-                      }
-                      else {
-                        printf("* no need to split parent, newMiddleNode=parent\n");
-                        newMiddleNode = do_QueryInterface(parent);
-                      }
-                      NS_ASSERTION(newMiddleNode, "no middle node created");
-                      parent->GetParentNode(getter_AddRefs(temp));
-                      parent = do_QueryInterface(temp);
-                    }
-                  }
+                if (0!=offsetInParent) {
+                  printf("* splitting parent %p at offset %d\n", parent, offsetInParent);
+                  result = nsEditor::SplitNode(parent, offsetInParent, getter_AddRefs(newLeftNode));
+                  printf("* split created left node %p sibling of parent\n", newLeftNode.get());
+                  if (gNoisy) {DebugDumpContent(); } // DEBUG
                 }
-              }
-              // else we've found the style tag (referred to by "parent")
-              // nwMiddleNode is the node that is an ancestor to the selection
-              else
-              {
-                printf("* this is the style node\n");
-                PRInt32 offsetInParent;
-                result = nsIEditorSupport::GetChildOffset(newMiddleNode, parent, offsetInParent);
                 if (NS_SUCCEEDED(result))
                 {
                   nsCOMPtr<nsIDOMNodeList>childNodes;
@@ -1488,40 +1464,78 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                   if (NS_SUCCEEDED(result) && childNodes)
                   {
                     childNodes->GetLength(&count);
-                    if (0!=offsetInParent && ((PRInt32)count!=offsetInParent+1)) {
-                      printf("* splitting parent %p at offset %d\n", parent, offsetInParent);
-                      result = nsEditor::SplitNode(parent, offsetInParent, getter_AddRefs(newLeftNode));
-                      printf("* split created left node %p sibling of parent\n", newLeftNode.get());
+                    NS_ASSERTION(count>0, "bad child count in newly split node");
+                    if ((PRInt32)count!=1) 
+                    {
+                      printf("* splitting parent %p at offset %d\n", parent, 1);
+                      result = nsEditor::SplitNode(parent, 1, getter_AddRefs(newMiddleNode));
+                      printf("* split created middle node %p sibling of parent\n", newMiddleNode.get());
                       if (gNoisy) {DebugDumpContent(); } // DEBUG
                     }
-                    if (NS_SUCCEEDED(result))
-                    { // promote the selection to the grandparent
-                      nsCOMPtr<nsIDOMNode>grandParent;
-                      result = parent->GetParentNode(getter_AddRefs(grandParent));
-                      if (NS_SUCCEEDED(result) && grandParent)
+                    else {
+                      printf("* no need to split parent, newMiddleNode=parent\n");
+                      newMiddleNode = do_QueryInterface(parent);
+                    }
+                    NS_ASSERTION(newMiddleNode, "no middle node created");
+                    parent->GetParentNode(getter_AddRefs(temp));
+                    parent = do_QueryInterface(temp);
+                  }
+                }
+              }
+            }
+            // else we've found the style tag (referred to by "parent")
+            // nwMiddleNode is the node that is an ancestor to the selection
+            else
+            {
+              printf("* this is the style node\n");
+              PRInt32 offsetInParent;
+              result = nsIEditorSupport::GetChildOffset(newMiddleNode, parent, offsetInParent);
+              if (NS_SUCCEEDED(result))
+              {
+                nsCOMPtr<nsIDOMNodeList>childNodes;
+                result = parent->GetChildNodes(getter_AddRefs(childNodes));
+                if (NS_SUCCEEDED(result) && childNodes)
+                {
+                  childNodes->GetLength(&count);
+                  if (0!=offsetInParent && ((PRInt32)count!=offsetInParent+1)) {
+                    printf("* splitting parent %p at offset %d\n", parent, offsetInParent);
+                    result = nsEditor::SplitNode(parent, offsetInParent, getter_AddRefs(newLeftNode));
+                    printf("* split created left node %p sibling of parent\n", newLeftNode.get());
+                    if (gNoisy) {DebugDumpContent(); } // DEBUG
+                  }
+                  if (NS_SUCCEEDED(result))
+                  { // promote the selection to the grandparent
+                    nsCOMPtr<nsIDOMNode>grandParent;
+                    result = parent->GetParentNode(getter_AddRefs(grandParent));
+                    if (NS_SUCCEEDED(result) && grandParent)
+                    {
+                      printf("* deleting middle node %p\n", newMiddleNode.get());
+                      result = nsEditor::DeleteNode(newMiddleNode);
+                      if (gNoisy) {DebugDumpContent(); } // DEBUG
+                      if (NS_SUCCEEDED(result))
                       {
-                        printf("* deleting middle node %p\n", newMiddleNode.get());
-                        result = nsEditor::DeleteNode(newMiddleNode);
-                        if (gNoisy) {DebugDumpContent(); } // DEBUG
-                        if (NS_SUCCEEDED(result))
+                        PRInt32 position;
+                        result = nsIEditorSupport::GetChildOffset(parent, grandParent, position);
+                        if (NS_SUCCEEDED(result)) 
                         {
-                          PRInt32 position;
-                          result = nsIEditorSupport::GetChildOffset(parent, grandParent, position);
+                          if (PR_TRUE==insertAfter)
+                          {
+                            if (gNoisy) {printf("insertAfter=PR_TRUE, incr. position\n"); }
+                            position++;
+                            insertAfter = PR_FALSE;
+                          }
+                          printf("* inserting node %p in grandparent %p at offset %d\n", 
+                                  newMiddleNode.get(), grandParent.get(), position);
+                          result = nsEditor::InsertNode(newMiddleNode, grandParent, position);
+                          if (gNoisy) {DebugDumpContent(); } // DEBUG
                           if (NS_SUCCEEDED(result)) 
                           {
-                            printf("* inserting node %p in grandparent %p at offset %d\n", 
-                                    newMiddleNode.get(), grandParent.get(), position);
-                            result = nsEditor::InsertNode(newMiddleNode, grandParent, position);
-                            if (gNoisy) {DebugDumpContent(); } // DEBUG
-                            if (NS_SUCCEEDED(result)) 
-                            {
-                              PRBool hasChildren=PR_TRUE;
-                              parent->HasChildNodes(&hasChildren);
-                              if (PR_FALSE==hasChildren) {
-                                printf("* deleting empty style node %p\n", parent.get());
-                                result = nsEditor::DeleteNode(parent);
-                                if (gNoisy) {DebugDumpContent(); } // DEBUG
-                              }
+                            PRBool hasChildren=PR_TRUE;
+                            parent->HasChildNodes(&hasChildren);
+                            if (PR_FALSE==hasChildren) {
+                              printf("* deleting empty style node %p\n", parent.get());
+                              result = nsEditor::DeleteNode(parent);
+                              if (gNoisy) {DebugDumpContent(); } // DEBUG
                             }
                           }
                         }
@@ -1529,8 +1543,8 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
                     }
                   }
                 }
-                break;
               }
+              break;
             }
           }
         }
@@ -1549,93 +1563,76 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
                                                          nsIDOMNode *aParent,
                                                          nsIAtom    *aPropName)
 {
-  printf("not yet implemented\n");
-  return NS_OK;
   nsresult result=NS_OK;
-  PRBool textPropertySet;
-  IsTextPropertySetByContent(aStartNode, aPropName, textPropertySet);
-  if (PR_FALSE==textPropertySet)
+  PRInt32 startOffset = aStartOffset;
+  PRInt32 endOffset;
+  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+  nsCOMPtr<nsIDOMNode>parentNode = do_QueryInterface(aParent);
+  
+  // remove aPropName from all intermediate nodes
+  nsCOMPtr<nsIDOMNode>siblingNode;
+  nsCOMPtr<nsIDOMNode>nextSiblingNode;  // temp to hold the next node in the list
+  result = aStartNode->GetNextSibling(getter_AddRefs(siblingNode));
+  while (siblingNode && NS_SUCCEEDED(result))
   {
-    nsCOMPtr<nsIDOMNode>newLeftTextNode;  // this will be the middle text node
-    if (0!=aStartOffset) {
-      result = nsEditor::SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
+    // get next sibling right away, before we move siblingNode!
+    siblingNode->GetNextSibling(getter_AddRefs(nextSiblingNode));
+    if (aEndNode==siblingNode.get()) {  // found the end node, handle that below
+      break;
     }
-    if (NS_SUCCEEDED(result))
-    {
-      nsCOMPtr<nsIDOMCharacterData>endNodeAsChar;
-      endNodeAsChar = do_QueryInterface(aEndNode);
-      if (!endNodeAsChar)
-        return NS_ERROR_FAILURE;
-      PRUint32 count;
-      endNodeAsChar->GetLength(&count);
-      nsCOMPtr<nsIDOMNode>newRightTextNode;  // this will be the middle text node
-      if ((PRInt32)count!=aEndOffset) {
-        result = nsEditor::SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
+    else
+    { // found a sibling node between aStartNode and aEndNode
+      PRUint32 childCount=0;
+      nodeAsChar =  do_QueryInterface(siblingNode);
+      if (nodeAsChar) {
+        nodeAsChar->GetLength(&childCount);
       }
-      else {
-        newRightTextNode = do_QueryInterface(aEndNode);
-      }
-      if (NS_SUCCEEDED(result))
+      else
       {
-        PRInt32 offsetInParent;
-        if (newLeftTextNode) {
-          result = nsIEditorSupport::GetChildOffset(newLeftTextNode, aParent, offsetInParent);
+        nsCOMPtr<nsIDOMNodeList>grandChildNodes;
+        result = siblingNode->GetChildNodes(getter_AddRefs(grandChildNodes));
+        if (NS_SUCCEEDED(result) && grandChildNodes) {
+          grandChildNodes->GetLength(&childCount);
         }
-        else {
-          offsetInParent = -1; // relies on +1 below in call to CreateNode
-        }
-        if (NS_SUCCEEDED(result))
-        {
-          nsAutoString tag;
-          aPropName->ToString(tag);
-          // create the new style node, which will be the new parent for the selected nodes
-          nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = nsEditor::CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
-          if (NS_SUCCEEDED(result))
-          { // move the right half of the start node into the new style node
-            nsCOMPtr<nsIDOMNode>intermediateNode;
-            result = aStartNode->GetNextSibling(getter_AddRefs(intermediateNode));
-            if (NS_SUCCEEDED(result))
-            {
-              result = nsEditor::DeleteNode(aStartNode);
-              if (NS_SUCCEEDED(result)) 
-              { 
-                PRInt32 childIndex=0;
-                result = nsEditor::InsertNode(aStartNode, newStyleNode, childIndex);
-                childIndex++;
-                if (NS_SUCCEEDED(result))
-                { // move all the intermediate nodes into the new style node
-                  nsCOMPtr<nsIDOMNode>nextSibling;
-                  while (intermediateNode.get() != aEndNode)
-                  {
-                    if (!intermediateNode)
-                      result = NS_ERROR_NULL_POINTER;
-                    if (NS_FAILED(result)) {
-                      break;
-                    }
-                    // get the next sibling before moving the current child!!!
-                    intermediateNode->GetNextSibling(getter_AddRefs(nextSibling));
-                    result = nsEditor::DeleteNode(intermediateNode);
-                    if (NS_SUCCEEDED(result)) {
-                      result = nsEditor::InsertNode(intermediateNode, newStyleNode, childIndex);
-                      childIndex++;
-                    }
-                    intermediateNode = do_QueryInterface(nextSibling);
-                  }
-                  if (NS_SUCCEEDED(result))
-                  { // move the left half of the end node into the new style node
-                    result = nsEditor::DeleteNode(newRightTextNode);
-                    if (NS_SUCCEEDED(result)) 
-                    {
-                      result = nsEditor::InsertNode(newRightTextNode, newStyleNode, childIndex);
-                    }
-                  }
-                }
-              }
-            }
-          }
+        if (0==childCount)
+        { // node has no children
+          // XXX: for now, I think that's ok.  just pass in 0
         }
       }
+      if (NS_SUCCEEDED(result)) {
+        siblingNode->GetParentNode(getter_AddRefs(parentNode));
+        result = RemoveTextPropertiesForNode(siblingNode, parentNode, 0, childCount, aPropName);
+      }
+    }
+    siblingNode = do_QueryInterface(nextSiblingNode);
+    
+  }
+  if (NS_SUCCEEDED(result))
+  {
+    // remove aPropName from aStartNode
+    nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+    nodeAsChar =  do_QueryInterface(aStartNode);
+    if (nodeAsChar) {
+      nodeAsChar->GetLength((PRUint32 *)&endOffset);
+    }
+    else
+    {
+      printf("not yet supported\n");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    result = aStartNode->GetParentNode(getter_AddRefs(parentNode));
+    if (NS_SUCCEEDED(result)) {
+      result = RemoveTextPropertiesForNode(aStartNode, parentNode, startOffset, endOffset, aPropName);
+    }
+  }
+  if (NS_SUCCEEDED(result))
+  {
+    // remove aPropName from the end node
+    startOffset = 0;
+    endOffset = aEndOffset;
+    result = aEndNode->GetParentNode(getter_AddRefs(parentNode));
+    if (NS_SUCCEEDED(result)) {
+      result = RemoveTextPropertiesForNode(aEndNode, parentNode, startOffset, endOffset, aPropName);
     }
   }
   return result;

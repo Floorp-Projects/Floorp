@@ -113,8 +113,8 @@ public:
    * @param aValue      the value to set aAttribute to
    */
   NS_IMETHOD SetAttribute(nsIDOMElement * aElement, 
-                                const nsString& aAttribute, 
-                                const nsString& aValue)=0;
+                          const nsString& aAttribute, 
+                          const nsString& aValue)=0;
 
   /**
    * GetAttributeValue() retrieves the attribute's value for aElement.
@@ -158,6 +158,8 @@ public:
    * @param aNode     The DOM Node to insert.
    * @param aParent   The node to insert the new object into
    * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
    */
   NS_IMETHOD InsertNode(nsIDOMNode * aNode,
                         nsIDOMNode * aParent,
@@ -203,8 +205,8 @@ public:
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    */
   NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset,
-                             nsIDOMNode ** aNewLeftNode)=0;
+                       PRInt32      aOffset,
+                       nsIDOMNode ** aNewLeftNode)=0;
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
