@@ -1530,8 +1530,14 @@ nsPlaintextEditor::OutputToString(nsAWritableString& aOutputString,
     return rv;
   }
 
+  nsAutoString charsetStr;
+  rv = GetDocumentCharacterSet(charsetStr);
+  if(NS_FAILED(rv) || charsetStr.IsEmpty())
+    charsetStr = NS_LITERAL_STRING("ISO-8859-1");
+
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = GetAndInitDocEncoder(aFormatType, aFlags, NS_LITERAL_STRING(""), getter_AddRefs(encoder));
+  rv = GetAndInitDocEncoder(aFormatType, aFlags, charsetStr, getter_AddRefs(encoder));
+
   if (NS_FAILED(rv))
     return rv;
   rv = encoder->EncodeToString(aOutputString);
