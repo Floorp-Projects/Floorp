@@ -632,7 +632,7 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame) {
-      mTextFrame->SetTextControlFrameState(aValue);                                         
+      mTextFrame->SetValue(aValue);
     } else {
       if (mCachedState) delete mCachedState;
       mCachedState = new nsString(aValue);
@@ -648,7 +648,7 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame) {
-      mTextFrame->GetTextControlFrameState(aValue);
+      mTextFrame->GetValue(aValue, PR_FALSE);
     }
     else if (mCachedState) {
       aValue.Assign(*mCachedState);

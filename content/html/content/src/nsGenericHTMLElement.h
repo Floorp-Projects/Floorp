@@ -208,13 +208,35 @@ public:
   PRUint32 BaseSizeOf(nsISizeOfHandler* aSizer) const;
 #endif
 
-  nsIFormControlFrame *GetFormControlFrame(PRBool aFlushContent)
+  /**
+   * Get the primary form control frame for this content (see
+   * GetFormControlFrameFor)
+   *
+   * @param aFlushContent whether to flush the content sink
+   * @return the primary form control frame
+   */
+  nsIFormControlFrame* GetFormControlFrame(PRBool aFlushContent)
   {
-    if (!mDocument || !mParent) {
+    if (!mDocument) {
       return nsnull;
     }
 
     return GetFormControlFrameFor(this, mDocument, aFlushContent);
+  }
+
+  /**
+   * Get the primary frame for this content (see GetPrimaryFrameFor)
+   *
+   * @param aFlushContent whether to flush the content sink
+   * @return the primary frame
+   */
+  nsIFrame* GetPrimaryFrame(PRBool aFlushContent)
+  {
+    if (!mDocument) {
+      return nsnull;
+    }
+
+    return GetPrimaryFrameFor(this, mDocument, aFlushContent);
   }
 
   //----------------------------------------
@@ -354,6 +376,29 @@ public:
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
+  /**
+   * Get the primary frame for a piece of content.
+   *
+   * @param aContent the content to get the primary frame for
+   * @param aDocument the document for this content
+   * @param aFlushContent whether to flush the content sink, which creates
+   *        frames for content that do not already have it.  EXPENSIVE.
+   * @return the primary frame
+   */
+  static nsIFrame* GetPrimaryFrameFor(nsIContent* aContent,
+                                      nsIDocument* aDocument,
+                                      PRBool aFlushContent);
+
+  /**
+   * Get the primary form control frame for a piece of content.  Same as
+   * GetPrimaryFrameFor, except it QI's to nsIFormControlFrame.
+   *
+   * @param aContent the content to get the primary frame for
+   * @param aDocument the document for this content
+   * @param aFlushContent whether to flush the content sink, which creates
+   *        frames for content that do not already have it.  EXPENSIVE.
+   * @return the primary frame as nsIFormControlFrame
+   */
   static nsIFormControlFrame* GetFormControlFrameFor(nsIContent* aContent,
                                                      nsIDocument* aDocument,
                                                      PRBool aFlushContent);

@@ -193,7 +193,7 @@ nsIsIndexFrame::GetInputValue(nsIPresContext* aPresContext,
   nsIFormControlFrame* frame = nsnull;
   GetInputFrame(aPresContext, &frame);
   if (frame) {
-    ((nsNewFrame*)frame)->GetTextControlFrameState(oString);
+    ((nsNewFrame*)frame)->GetValue(oString, PR_FALSE);
   }
   return NS_OK;
 }
@@ -205,7 +205,7 @@ nsIsIndexFrame::SetInputValue(nsIPresContext* aPresContext,
   nsIFormControlFrame* frame = nsnull;
   GetInputFrame(aPresContext, &frame);
   if (frame) {
-    ((nsNewFrame*)frame)->SetTextControlFrameState(aString);
+    ((nsNewFrame*)frame)->SetValue(aString);
   }
   return NS_OK;
 }

@@ -146,10 +146,20 @@ public:
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
+  /** The current value.  This is null if the frame owns the value. */
   char*                    mValue;
+  /** Whether or not the value has changed since its default value was given. */
   PRPackedBool             mValueChanged;
 
   NS_IMETHOD SelectAll(nsIPresContext* aPresContext);
+  /**
+   * Get the value, whether it is from the content or the frame.
+   * @param aValue the value [out]
+   * @param aIgnoreWrap whether to ignore the wrap attribute when getting the
+   *        value.  If this is true, linebreaks will not be inserted even if
+   *        wrap=hard.
+   */
+  void GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap);
 };
 
 nsresult
@@ -181,7 +191,7 @@ NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLTextAreaElement::nsHTMLTextAreaElement()
 {
-  mValue = 0;
+  mValue = nsnull;
   mValueChanged = PR_FALSE;
 }
 
@@ -409,23 +419,29 @@ nsHTMLTextAreaElement::GetType(nsAString& aType)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetValue(nsAString& aValue)
 {
+  GetValueInternal(aValue, PR_TRUE);
+  return NS_OK;
+}
+
+void
+nsHTMLTextAreaElement::GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap)
+{
+  // Get the frame.
   // No need to flush here, if there is no frame yet for this textarea
   // there won't be a value in it we don't already have even if we
   // force the frame to be created.
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-
+  nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
   nsIGfxTextControlFrame2* textControlFrame = nsnull;
-  if (formControlFrame) {
-    CallQueryInterface(formControlFrame, &textControlFrame);
-  }
+  CallQueryInterface(primaryFrame, &textControlFrame);
 
+  // If the frame exists and owns the value, get it from the frame.  Otherwise
+  // get it from content.
   PRBool frameOwnsValue = PR_FALSE;
   if (textControlFrame) {
     textControlFrame->OwnsValue(&frameOwnsValue);
   }
   if (frameOwnsValue) {
-    formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
-    return NS_OK;
+    textControlFrame->GetValue(aValue, aIgnoreWrap);
   } else {
     if (!mValueChanged || !mValue) {
       GetDefaultValue(aValue);
@@ -433,7 +449,6 @@ nsHTMLTextAreaElement::GetValue(nsAString& aValue)
       aValue = NS_ConvertUTF8toUCS2(mValue);
     }
   }
-  return NS_OK;
 }
 
 
@@ -913,10 +928,7 @@ nsHTMLTextAreaElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the value
   //
   nsAutoString value;
-  rv = GetValue(value);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  GetValueInternal(value, PR_FALSE);
 
   //
   // Submit
@@ -938,7 +950,7 @@ nsHTMLTextAreaElement::SaveState()
     rv = GetPrimaryPresState(this, getter_AddRefs(state));
     if (state) {
       nsAutoString value;
-      GetValue(value);
+      GetValueInternal(value, PR_TRUE);
 
       rv = nsLinebreakConverter::ConvertStringLineBreaks(
                value,

@@ -287,35 +287,7 @@ nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
   NS_ENSURE_ARG_POINTER(aImageFrame);
   *aImageFrame = nsnull;
 
-  if (!mDocument) {
-    return NS_OK;
-  }
-
-  // Make sure the presentation is up-to-date
-  nsresult rv = mDocument->FlushPendingNotifications();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIPresShell> shell;
-  mDocument->GetShellAt(0, getter_AddRefs(shell));
-
-  if (!shell) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPresContext> context;
-  rv = shell->GetPresContext(getter_AddRefs(context));
-  if (!context) {
-    return NS_OK;
-  }
-
-  nsIFrame* frame = nsnull;
-  rv = shell->GetPrimaryFrameFor(this, &frame);
-  if (!frame || NS_FAILED(rv)) {
-    return rv;
-  }
-
+  nsIFrame* frame = GetPrimaryFrame(PR_TRUE);
   CallQueryInterface(frame, aImageFrame);
 
   return NS_OK;
