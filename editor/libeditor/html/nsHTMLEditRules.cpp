@@ -652,12 +652,19 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     
     if (citeNode)
     {
+      nsCOMPtr<nsIDOMNode> brNode;
       res = mEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset);
       if (NS_FAILED(res)) return res;
       res = citeNode->GetParentNode(getter_AddRefs(selNode));
       if (NS_FAILED(res)) return res;
+      res = mEditor->CreateBR(selNode, newOffset, &brNode);
+      if (NS_FAILED(res)) return res;
+      // want selection before the break, and on same line
+      aSelection->SetHint(PR_TRUE);
       res = aSelection->Collapse(selNode, newOffset);
       if (NS_FAILED(res)) return res;
+      *aHandled = PR_TRUE;
+      return NS_OK;
     }
   }
 
@@ -709,11 +716,19 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     if (NS_FAILED(res)) return res;
     res = nsEditor::GetNodeLocation(brNode, &node, &offset);
     if (NS_FAILED(res)) return res;
-  // SetHint(PR_TRUE) means we want the caret to stick to the content on the "right".
-  // We want the caret to stick to whatever is past the break.  This is
-  // because the break is on the same line we were on, but the next content
-  // will be on the following line.
-    aSelection->SetHint(PR_TRUE);
+    // SetHint(PR_TRUE) means we want the caret to stick to the content on the "right".
+    // We want the caret to stick to whatever is past the break.  This is
+    // because the break is on the same line we were on, but the next content
+    // will be on the following line.
+    
+    // An exception to this is if the break has a next sibling that is a block node.
+    // Then we stick to the left to aviod an uber caret.
+    nsCOMPtr<nsIDOMNode> siblingNode;
+    brNode->GetNextSibling(getter_AddRefs(siblingNode));
+    if (siblingNode && mEditor->IsBlockNode(siblingNode))
+      aSelection->SetHint(PR_FALSE);
+    else 
+      aSelection->SetHint(PR_TRUE);
     res = aSelection->Collapse(node, offset+1);
     if (NS_FAILED(res)) return res;
     *aHandled = PR_TRUE;
