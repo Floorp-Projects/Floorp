@@ -117,6 +117,13 @@ private:
                            const nsAString & aProperty,
                            const nsAString & aValues);
 
+  /** If the boolean is true and if the value is not the empty string,
+    * set the property in the transaction to that value; if the value
+    * is empty, remove the property from element's styles. If the boolean
+    * is false, just remove the style attribute.
+    */
+  nsresult SetStyle(PRBool aAttributeWasSet, nsAString & aValue);
+
 public:
 
   NS_IMETHOD DoTransaction(void);
@@ -143,15 +150,14 @@ protected:
   /** the value to set the property to (ignored if mRemoveProperty==PR_TRUE) */
   nsString mValue;
 
-  /** the value to set the attribute to for undo */
+  /** the value to set the property to for undo */
   nsString mUndoValue;
+  /** true if the style attribute was present and not empty before DoTransaction */
   PRBool   mUndoAttributeWasSet;
-  /** the value to set the attribute to for redo */
+  /** the value to set the property to for redo */
   nsString mRedoValue;
+  /** true if the style attribute is present and not empty after DoTransaction */
   PRBool   mRedoAttributeWasSet;
-
-  /** PR_TRUE if the mProperty was explicitely set on mElement at the time of execution */
-  PRBool   mPropertyWasSet;
 
   /** PR_TRUE if the operation is to remove mProperty from mElement */
   PRBool   mRemoveProperty;
