@@ -82,6 +82,7 @@
 #include "nsTextServicesCID.h"
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
+#include "nsInterfaceState.h"
 
 ///////////////////////////////////////
 
@@ -137,6 +138,7 @@ nsEditorShell::nsEditorShell()
 ,  mContentAreaWebShell(nsnull)
 ,  mEditorType(eUninitializedEditorType)
 ,  mWrapColumn(0)
+,  mStateMaintainer(nsnull)
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
 {
@@ -149,7 +151,9 @@ nsEditorShell::nsEditorShell()
 
 nsEditorShell::~nsEditorShell()
 {
-  // the only references we hold are in nsCOMPtrs, so they'll take
+  NS_IF_RELEASE(mStateMaintainer);
+  
+  // the only other references we hold are in nsCOMPtrs, so they'll take
   // care of themselves.
 }
 
@@ -706,21 +710,27 @@ nsEditorShell::PrepareDocumentForEditing()
   if (NS_FAILED(rv))
     return rv;
   
-#if 0
-	// work in progress
   // make the UI state maintainer
-  rv = NS_NewInterfaceState(mEditor, getter_AddRefs(mStateMaintainer));
-  if (NS_FAILED(rv))
-    return rv;
-
+  mStateMaintainer = new nsInterfaceState;
+  if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
+  mStateMaintainer->AddRef();			// the owning reference
+  rv = mStateMaintainer->Init(mEditor, mWebShell);
+  if (NS_FAILED(rv)) return rv;
+  
+  // set it up as a selection listener
   nsCOMPtr<nsIDOMSelection> domSelection;
   rv = GetEditorSelection(getter_AddRefs(domSelection));
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
-  domSelection->AddSelectionListener(mStateMaintainer);
-#endif
+  rv = domSelection->AddSelectionListener(mStateMaintainer);
+  if (NS_FAILED(rv)) return rv;
 
+  // and set it up as a doc state listener
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = editor->AddDocumentStateListener(mStateMaintainer);
+  if (NS_FAILED(rv)) return rv;
+  
   // Force initial focus to the content window -- HOW?
 //  mWebShellWin->SetFocus();
   return NS_OK;
@@ -1722,23 +1732,13 @@ nsEditorShell::GetEditorSelection(nsIDOMSelection** aEditorSelection)
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetDocumentStatus(PRInt32 *aDocumentStatus)
+nsEditorShell::GetDocumentModified(PRBool *aDocumentModified)
 {
-  if (!aDocumentStatus)
-    return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIDOMDocument>  theDoc;
-  nsresult  rv = GetEditorDocument(getter_AddRefs(theDoc));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (editor)
+    return editor->GetDocumentModified(aDocumentModified);
 
-  PRInt32  modCount = 0;
-  diskDoc->GetModCount(&modCount);
-
-  *aDocumentStatus = (modCount == 0) ? eDocumentStatusUnmodified : eDocumentStatusModified;
-  return NS_OK;
+  return NS_NOINTERFACE;
 }
 
 
