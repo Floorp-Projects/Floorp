@@ -352,27 +352,54 @@ struct nsTimeoutImpl
   void Release(nsIScriptContext* aContext);
   void AddRef();
 
-  GlobalWindowImpl    *window;        /* window for which this timeout fires */
-  JSString            *expr;          /* the JS expression to evaluate */
-  JSObject            *funobj;        /* or function to call, if !expr */
-  nsCOMPtr<nsITimer>  timer;          /* The actual timer object */
-  jsval               *argv;          /* function actual arguments */
-  PRUint16            argc;           /* and argument count */
-  PRPackedBool        cleared;        /* True if the timeout was cleared */
-  PRPackedBool        spare;          /* alignment padding */
-  PRUint32            public_id;      /* Returned as value of setTimeout() */
-  PRInt32             interval;       /* Non-zero if repetitive timeout */
-  PRInt64             when;           /* nominal time to run this timeout */
-  nsCOMPtr<nsIPrincipal> principal;   /* principals with which to execute */
-  char                *filename;      /* filename of setTimeout call */
-  PRUint32            lineno;         /* line number of setTimeout call */
-  const char          *version;       /* JS language version string constant */
-  PRUint32            firingDepth;    /* stack depth at which timeout is
-                                         firing */
-  nsTimeoutImpl       *next;
+  // Window for which this timeout fires
+  GlobalWindowImpl *mWindow;
+
+  // The JS expression to evaluate or function to call, if !mExpr
+  JSString *mExpr;
+  JSObject *mFunObj;
+
+  // The actual timer object
+  nsCOMPtr<nsITimer> mTimer;
+
+  // Function actual arguments and argument count
+  jsval *mArgv;
+  PRUint16 mArgc;
+
+  // True if the timeout was cleared
+  PRPackedBool mCleared;
+
+  // Alignment padding, unused
+  PRPackedBool mSpareAndUnused;
+
+  // Returned as value of setTimeout()
+  PRUint32 mPublicId;
+
+  // Non-zero if repetitive timeout
+  PRInt32 mInterval;
+
+  // Nominal time to run this timeout
+  PRInt64 mWhen;
+
+  // Principal with which to execute
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  // filename, line number and JS language version string of the
+  // caller of setTimeout()
+  char *mFileName;
+  PRUint32 mLineNo;
+  const char *mVersion;
+
+  // stack depth at which timeout is firing
+  PRUint32 mFiringDepth;
+
+  // Pointer to the next timeout in the linked list of scheduled
+  // timeouts
+  nsTimeoutImpl *mNext;
 
 private:
-  PRInt32             mRefCnt;        /* reference count for shared usage */
+  // reference count for shared usage
+  PRInt32 mRefCnt;
 };
 
 //*****************************************************************************
