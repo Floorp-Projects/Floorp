@@ -26,6 +26,7 @@
     </content>
 
     <implementation>
+      <field name="_mStrBundle">null</field>
       <field name="_closeHandler">(function(event) {
         if (!document.documentElement.cancelDialog())
           event.preventDefault();
@@ -63,6 +64,8 @@
 
       <constructor>
       <![CDATA[
+        this._useAnonButton = {};
+        
         this._initDialogButton("accept");
         this._initDialogButton("cancel");
         this._initDialogButton("help");
@@ -109,8 +112,17 @@
       <method name="_initDialogButton">
         <parameter name="aDlgType"/>
         <body><![CDATA[
+          // determine if button is going to be anonymous or explicit
+          var btn;
           var btns = this.getElementsByAttribute("dlgtype", aDlgType);
-          var btn = btns.length > 0 ? btns[0] : document.getAnonymousElementByAttribute(this, "dlgtype", aDlgType);
+          if (btns.length > 0) {
+            btn = btns[0];
+            this._useAnonButton[aDlgType] = false;
+          } else {
+            btn = document.getAnonymousElementByAttribute(this, "dlgtype", aDlgType);
+            this._useAnonButton[aDlgType] = true;
+          }
+          
           if (btn) {
             btn.addEventListener("command", this._handleButtonCommand, true);
             // don't set pre-defined labels on explicit buttons
@@ -139,14 +151,15 @@
           for (var i = 0; i < list.length; ++i)
             shown[list[i].replace(/ /g, "")] = true;
 
-          // hide or show the buttons
+          // hide anonymous buttons that aren't mentioned in the buttons attribute, and are not
+          // supplied via explicit content
           for (var dlgtype in shown) {
-            var button = document.getAnonymousElementByAttribute(this, "dlgtype", dlgtype);
-            if (button) {
-              if (shown[dlgtype])
-                button.removeAttribute("hidden");
-              else
-                button.setAttribute("hidden", "true");
+            var anonBtn = document.getAnonymousElementByAttribute(this, "dlgtype", dlgtype);
+            if (anonBtn) {
+              if (this._useAnonButton[dlgtype] && shown[dlgtype])
+                anonBtn.removeAttribute("hidden");
+              else 
+                anonBtn.setAttribute("hidden", "true");
             }
           }
         ]]>
