@@ -3147,7 +3147,7 @@ void CEditBuffer::ClearMailQuote(){
 //
 // Break current container into two containers.
 //
-EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
+EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
     ClearTableAndCellSelection();
     EDT_ClipboardResult result = EDT_COP_OK;
     if ( bTyping ) {
@@ -3183,32 +3183,39 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
             }
         }
         else {
-            // Fix for bug 80092 - force dirty flag on after Enter key alone is pressed
-            StartTyping(TRUE);
             if( m_pCurrent && m_iCurrentOffset == 0 &&
                 m_pCurrent->IsText() && m_pCurrent->GetLen() == 0 &&
                 m_pCurrent->GetNextSibling() == 0 &&
                 m_pCurrent->PreviousLeafInContainer() == 0 )
             {
-                CEditContainerElement *pContainer = m_pCurrent->FindContainer();
-                if( pContainer && pContainer->GetParent() )
+                CEditContainerElement *pContainer;
+                CEditListElement* pList;
+                m_pCurrent->FindList(pContainer, pList);
+                if( pContainer && pList )
                 {
-                    TagType tagType = pContainer->GetType();
-                    if( tagType == P_LIST_ITEM )
-                    {
-                        // We are at the begining of an empty element in a list item container,
-                        //  so just outdent to next higher list level
+                    // We are at the begining of an empty element in a list item container,
+                    // If we were going to Indent, just do that to current container,
+                    if( bIndent )
+                        Indent();
+                    else                            
+                        // Outdent to next higher list level
                         Outdent();
-                        return EDT_COP_OK;
-                    }
+
+                    return EDT_COP_OK;
                 }
             }
+            // Fix for bug 80092 - force dirty flag on after Enter key alone is pressed
+            StartTyping(TRUE);
             result = InternalReturnKey(TRUE);
 //          Include this to set the end of current UNDO at the end of a paragraph (return key)
 //            so Undo will only remove the last paragraph typed.
 //          By not including this, multiple paragraphs typed without setting caret with mouse 
 //            will all be undone together.
 //            DoneTyping();
+
+            // Indent the newly-created container one level if requested
+            if( bIndent )
+                Indent();
         }
     }
     else {
@@ -3306,10 +3313,12 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
 
 EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
 {
+    EDT_ClipboardResult result = EDT_COP_CLIPBOARD_BAD;
     if( IsSelected() )
     {
-        EDT_ClipboardResult result = DeleteSelection();
-        if ( result != EDT_COP_OK ) return result;
+        result = DeleteSelection();
+        if ( result != EDT_COP_OK )
+            return result;
     }
 
     CEditElement *pChangedElement;
@@ -3339,10 +3348,10 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
         m_pCurrent = pNewText;
         m_iCurrentOffset = 0;
 #endif
-        return EDT_COP_OK;
+        result = EDT_COP_OK;
     }
 
-    return EDT_COP_CLIPBOARD_BAD;
+    return result;
 }
 
 //TODO: Should this be a preference?
@@ -3461,65 +3470,156 @@ void CEditBuffer::Indent()
     CEditContainerElement* pContainer;
     CEditListElement* pList;
     m_pCurrent->FindList( pContainer, pList );
+    if( !pContainer )
+        return;
+
     IndentContainer( pContainer, pList );
-    Relayout( pContainer, 0, pContainer->GetLastMostChild() );
+
+    // Get the list elemement again - it might have changed
+    m_pCurrent->FindList( pContainer, pList );
+    CEditElement *pStart = pContainer;
+    CEditElement *pEnd = pContainer;
+    XP_ASSERT(pContainer);
+    CEditElement *pPrev;
+    if( pList )
+    {
+        pStart = pList;
+    } else if( (pPrev = pContainer->GetPreviousSibling()) != NULL )
+    {
+        pStart = pPrev;
+    }
+    Relayout( pStart, 0, pEnd->GetLastMostChild() );
 }
 
 void CEditBuffer::IndentContainer( CEditContainerElement *pContainer,
-        CEditListElement *pList ){
+        CEditListElement *pList )
+{
     VALIDATE_TREE(this);
 
     CEditElement *pPrev = pContainer->GetPreviousSibling();
     CEditElement *pNext = pContainer->GetNextSibling();
+    XP_Bool bDone = FALSE;
 
+    // Consider context (whether we are just after or before an existing list)
+    //   only if we are indenting a list item
+    if( pList )
+    {
+        //
+        // case 1
+        //
+        //     UL:
+        //         LI:
+        //     LI:         <- Indenting this guy
+        //     LI:
+        //     LI:
+        //
+        //  should result in
+        //
+        //     UL:
+        //         LI:
+        //         LI:     <-end up here
+        //     LI:
+        //     LI:
+        //
+        //
+        //  We also need to handle the case
+        //
+        //      UL:
+        //          LI:
+        //      LI:         <- indent this guy
+        //      UL:
+        //          LI:
+        //          LI:
+        //
+        //  and the second UL becomes redundant so we eliminate it.
+        //
+        //      UL:
+        //          LI:
+        //          LI:     <-Ends up here
+        //          LI:     <-frm the redundant container
+        //          LI:
+        //
+        if( pPrev && pList->IsCompatableList(pPrev) )
+        {
+            CEditElement *pChild = pPrev->GetLastChild();
+            if( pChild )
+            {
+                pContainer->Unlink();
+                pContainer->InsertAfter( pChild );
+            }
+            else
+            {
+                pContainer->Unlink();
+                pContainer->InsertAsFirstChild( pPrev );
+            }
 
-    //
-    // case 1
-    //
-    //     UL:
-    //         LI:
-    //     LI:         <- Indenting this guy
-    //     LI:
-    //     LI:
-    //
-    //  should result in
-    //
-    //     UL:
-    //         LI:
-    //         LI:     <-end up here
-    //     LI:
-    //     LI:
-    //
-    //
-    //  We also need to handle the case
-    //
-    //      UL:
-    //          LI:
-    //      LI:         <- indent this guy
-    //      UL:
-    //          LI:
-    //          LI:
-    //
-    //  and the second UL becomes redundant so we eliminate it.
-    //
-    //      UL:
-    //          LI:
-    //          LI:     <-Ends up here
-    //          LI:     <-frm the redundant container
-    //          LI:
-    //
-    if( pPrev && pPrev->IsList() ){
-        CEditElement *pChild = pPrev->GetLastChild();
-        if( pChild ){
-            pContainer->Unlink();
-            pContainer->InsertAfter( pChild );
+            if( pNext && pNext->IsList() )
+                pPrev->Merge( pNext );
+
+            bDone = TRUE;
         }
-        else {
-            pContainer->Unlink();
-            pContainer->InsertAsFirstChild( pPrev );
+        //
+        // case 2
+        //
+        //     UL:
+        //          LI:
+        //          LI:         <- Indenting this guy
+        //          UL:
+        //              LI:
+        //          LI:
+        //          LI:
+        //
+        //  should result in
+        //
+        //     UL:
+        //          LI:
+        //          UL:
+        //              LI:     <- Ends up here.
+        //              LI:
+        //          LI:
+        //          LI:
+        //
+        else if( pNext && pList->IsCompatableList(pNext) )
+        {
+            CEditElement *pChild = pNext->GetChild();
+            if( pChild ){
+                pContainer->Unlink();
+                pContainer->InsertBefore( pChild );
+            }
+            else {
+                pContainer->Unlink();
+                pContainer->InsertAsFirstChild( pPrev );
+            }
+            bDone = TRUE;
         }
-        if( pNext && pNext->IsList() ){
-            pPrev->Merge( pNext );
+        //
+        // case 3
+        //
+        //     UL:
+        //          LI:
+        //          LI:         <- Indenting this guy
+        //          LI:
+        //          LI:
+        //
+        //  should result in
+        //
+        //     UL:
+        //          LI:
+        //          UL:
+        //              LI:     <- Ends up here.
+        //          LI:
+        //          LI:
+        //
+        else
+        {
+            CEditElement *pNewList;
+            pNewList = pList->Clone(0);
+
+            // insert the new cont-cont between the old one and the cont
+            pNewList->InsertBefore( pContainer );
+            pContainer->Unlink();
+            pContainer->InsertAsFirstChild( pNewList);
+            bDone = TRUE;
         }
     }
     //
@@ -3533,10 +3633,30 @@ void CEditBuffer::IndentContainer( CEditContainerElement *pContainer,
     //          LI:
     //
     //
-    else if( pList == 0 ){
+    if( !bDone && pList == 0 )
+    {
         PA_Tag *pTag = XP_NEW( PA_Tag );
         XP_BZERO( pTag, sizeof( PA_Tag ) );
-        pTag->type = P_UNUM_LIST;
+        // Set appropriate list type for the given list item
+        // (E.g., only list items should exist inside of UL, OL)
+        // Use blockquote instead (like MS FrontPage)
+        // Note: We pass through here when creating UL and OL
+        //  lists as well, but the list type is changed 
+        //  correctly later on, so this works fine
+        TagType t = pContainer->GetType();
+        switch ( t )
+        {
+            case P_LIST_ITEM:
+                pTag->type = P_UNUM_LIST;
+                break;
+            case P_DESC_TITLE:
+            case P_DESC_TEXT:
+                pTag->type = P_DESC_LIST;
+                break;
+            default:
+                pTag->type = P_BLOCKQUOTE;
+                break;
+        }
         CEditElement *pEle = new CEditListElement( 0, pTag, GetRAMCharSetID() );
         PA_FreeTag( pTag );
 
@@ -3544,66 +3664,6 @@ void CEditBuffer::IndentContainer( CEditContainerElement *pContainer,
         pContainer->Unlink();
         pContainer->InsertAsFirstChild( pEle );
         return;
-    }
-    //
-    // case 2
-    //
-    //     UL:
-    //          LI:
-    //          LI:         <- Indenting this guy
-    //          UL:
-    //              LI:
-    //          LI:
-    //          LI:
-    //
-    //  should result in
-    //
-    //     UL:
-    //          LI:
-    //          UL:
-    //              LI:     <- Ends up here.
-    //              LI:
-    //          LI:
-    //          LI:
-    //
-    else if( pNext && pNext->IsList() ){
-        CEditElement *pChild = pNext->GetChild();
-        if( pChild ){
-            pContainer->Unlink();
-            pContainer->InsertBefore( pChild );
-        }
-        else {
-            pContainer->Unlink();
-            pContainer->InsertAsFirstChild( pPrev );
-        }
-    }
-    //
-    // case 3
-    //
-    //     UL:
-    //          LI:
-    //          LI:         <- Indenting this guy
-    //          LI:
-    //          LI:
-    //
-    //  should result in
-    //
-    //     UL:
-    //          LI:
-    //          UL:
-    //              LI:     <- Ends up here.
-    //          LI:
-    //          LI:
-    //
-    else {
-        CEditElement *pNewList;
-        pNewList = pList->Clone(0);
-
-
-        // insert the new cont-cont between the old one and the cont
-        pNewList->InsertBefore( pContainer );
-        pContainer->Unlink();
-        pContainer->InsertAsFirstChild( pNewList);
     }
 }
 
@@ -3681,25 +3741,38 @@ XP_Bool CEditBuffer::Outdent()
     CEditContainerElement* pContainer = NULL;
     CEditListElement* pList = NULL;
     m_pCurrent->FindList( pContainer, pList );
-    if ( ! pContainer || !pList ) {
+    if( !pContainer )
         return FALSE;
-    }
+
     OutdentContainer( pContainer, pList );
-    Relayout( pContainer, 0, pContainer->GetLastMostChild() );
+    // Get the list elemement again - it might have changed
+    m_pCurrent->FindList( pContainer, pList );
+    CEditElement *pStart = pContainer;
+    CEditElement *pEnd = pContainer;
+    XP_ASSERT(pContainer);
+    CEditElement *pPrev;
+    if( pList )
+    {
+        pStart = pList;
+    } else if( (pPrev = pContainer->GetPreviousSibling()) != NULL )
+    {
+        pStart = pPrev;
+    }
+    Relayout( pStart, 0, pEnd->GetLastMostChild() );
     return TRUE;
 }
 
 void CEditBuffer::OutdentContainer( CEditContainerElement *pContainer,
-        CEditListElement *pList ){
+        CEditListElement *pList )
+{
 
     //
     // case 0
     //
     //      LI:     <-- outdent this guy.
     //
-    if( pList == 0 ){
+    if( pList == 0 )
         return;                         // no work to do
-    }
 
     CEditElement *pPrev = pContainer->GetPreviousSibling();
     CEditElement *pNext = pContainer->GetNextSibling();
@@ -3717,7 +3790,8 @@ void CEditBuffer::OutdentContainer( CEditContainerElement *pContainer,
     // No previous or next siblings.  Just remove the List and
     //  put its container in its place.
     //
-    if( pPrev == 0 && pNext == 0 ){
+    if( pPrev == 0 && pNext == 0 )
+    {
         pContainer->Unlink();
         pContainer->InsertAfter( pList );
         pList->Unlink();
@@ -3739,7 +3813,8 @@ void CEditBuffer::OutdentContainer( CEditContainerElement *pContainer,
     //      UL:
     //          LI:
     //
-    else if( pPrev == 0 ){
+    else if( pPrev == 0 )
+    {
         pContainer->Unlink();
         pContainer->InsertBefore( pList );
     }
@@ -3757,7 +3832,8 @@ void CEditBuffer::OutdentContainer( CEditContainerElement *pContainer,
     //          LI:
     //      LI:         <-Outdenting this guy
     //
-    else if( pNext == 0 ){
+    else if( pNext == 0 )
+    {
         pContainer->Unlink();
         pContainer->InsertAfter( pList );
     }
@@ -3777,15 +3853,29 @@ void CEditBuffer::OutdentContainer( CEditContainerElement *pContainer,
     //      LI:         <-Outdenting this guy
     //      UL:
     //          LI:
-    else {
+    else 
+    {
+        // Clone the list to put following elements in it
         CEditElement *pNewList = pList->Clone(0);
-        while( (pNext = pContainer->GetNextSibling()) != 0 ){
+        while( (pNext = pContainer->GetNextSibling()) != 0 )
+        {
             pNext->Unlink();
             pNext->InsertAsLastChild( pNewList );
         }
         pContainer->Unlink();
         pContainer->InsertAfter( pList );
         pNewList->InsertAfter( pContainer );
+    }
+    // If we outdented so that we are no longer in the list,
+    //   we must change container types that are only allowed 
+    //   in a list to our "normal" container type
+    TagType t = pContainer->GetType();
+    if( !pContainer->GetParent()->IsList() && 
+         ( t == P_LIST_ITEM ||
+           t == P_DESC_TITLE ||
+           t == P_DESC_TEXT ) )
+    {
+        pContainer->SetType(P_NSDT);
     }
 }
 
@@ -3838,6 +3928,24 @@ ED_ElementType CEditBuffer::GetCurrentElementType(){
     return ED_ELEMENT_TEXT;     // so the compiler doesn't complain.
 }
 
+// Outdent the container until we don't have a list
+void CEditBuffer::TerminateList(CEditContainerElement *pContainer)
+{
+    CEditElement *pParent;
+    
+    if( !pContainer || !(pParent = pContainer->GetParent())->IsList() )
+        return;
+    do {
+        // Move container up one level,
+        //  this will also change container type to "normal" (P_NSDT)
+        //  when we outdent from the top list level
+        OutdentContainer(pContainer, pParent->List() );
+        pParent = pContainer->GetParent();
+    }
+    while( pParent && pParent->IsList() );
+}
+
+
 void CEditBuffer::MorphContainer( TagType t )
 {
     VALIDATE_TREE(this);
@@ -3878,9 +3986,35 @@ void CEditBuffer::MorphContainer( TagType t )
         }
     } 
     else {
-        CEditElement *pContainer = m_pCurrent->FindContainer();
+        CEditContainerElement *pContainer;
+        CEditListElement *pList;
+        // Get the container and list 
+        m_pCurrent->FindList(pContainer, pList);
         // HACKOLA: just poke in a new tag type.
         pContainer->SetType( t );
+        if( pList )
+        {
+            TagType tList = pList->GetType();
+            // Assure that list-type items are only contained in their proper parents. 
+            // If not the right type, terminate the list
+            if( ((tList == P_UNUM_LIST || tList == P_NUM_LIST || tList == P_MENU || tList == P_DIRECTORY) && 
+                  t != P_LIST_ITEM) ||
+                (tList == P_DESC_LIST && !(t == P_DESC_TITLE || t == P_DESC_TEXT)) )
+            {
+                TerminateList(pContainer);
+                // Clear this -- we may have to change to a different list type below
+                pList = NULL;
+            }
+        }
+        if( !pList && (t == P_LIST_ITEM || t == P_DESC_TITLE || t == P_DESC_TEXT ) )
+        {
+            // We are changing to a list item that must be in a list container,
+            //  but we are not currently in a list, so indent to create appropriate list
+            // First reset container type to requested, since TerminateList probably changed it
+            pContainer->SetType( t );
+            IndentContainer(pContainer, NULL);   
+        }
+
         // Need to relayout from previous line.  Line break distance is wrong.
         Relayout( pContainer, 0, 0 );
     }
@@ -3904,7 +4038,20 @@ void CEditBuffer::MorphContainerSelection( TagType t, CEditSelection& selection 
     do {
         pContainer = pCurrent->FindContainer();
         pContainer->SetType( t );
-
+        // TODO: CHECK THE EFFECTS OF <BR> AFTER A LIST ITEM
+        if( pContainer->GetParent()->IsList() )
+        {
+            // We are changing an item in a list to something other than
+            //   a listitem - this means terminate the list
+            if( t != P_LIST_ITEM )
+                TerminateList(pContainer);
+        }
+        else if( t == P_LIST_ITEM )
+        {
+            // We are changing to a list item but
+            //  we are not in a list, so create a default UNUM list
+            IndentContainer(pContainer, NULL);   
+        }
         bDone = (pEnd == pCurrent );    // For most cases
         pCurrent = pCurrent->NextLeafAll();
         bDone = bDone || (iEndPos == 0 && pEnd == pCurrent ); // Pesky edge conditions!
@@ -7937,12 +8084,18 @@ void CEditBuffer::SetListData( EDT_ListData* pData ){
 #endif
 
         CEditElement *pLast = pEnd;
+        CEditElement *pFirst = pBegin->FindContainer();
+        if( pBegin )
+        {
+            pBegin->FindList( pContainer, pList);
+            if( pList ) pFirst = pList;
+        }
         if( pEnd ){
             pEnd->FindList( pContainer, pList );
             if( pList ) pLast = pList->GetLastMostChild();
         }
 
-        Relayout( pBegin->FindContainer(), 0, pLast, RELAYOUT_NOCARET );
+        Relayout( pFirst, 0, pLast, RELAYOUT_NOCARET );
         // Need to force selection.
         SelectRegion(pBegin, iBeginPos, pEnd, iEndPos, bFromStart );
     }
@@ -10576,9 +10729,12 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
     return TRUE;
 }
 
-void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y ) {
+void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y )
+{
+    XP_Bool bTableSelected = IsTableOrCellSelected();
+    if( bTableSelected && !IsSelected() )
+    {
     // Nothing selected - nothing to delete
-    if( !IsSelected() ){
         PositionCaret(x,y);    
         return;
     }
@@ -10586,7 +10742,8 @@ void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y ) {
     // Get where we would drop if not deleting anything
     int32 position;
     LO_Element * pLoElement = lo_PositionDropCaret(m_pContext, x, y, &position );
-    if( pLoElement ){
+    if( pLoElement )
+    {
         // Get the CEditObject at drop point and use it to create new insert point
         CPersistentEditSelection PSel;
         GetSelection(PSel);
@@ -10597,12 +10754,51 @@ void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y ) {
 
         // Check if new insert point will be after the selection
         //  we will delete and adjust the index by the amount deleted
-        if( Insert.m_index > PSel.m_start.m_index ){
+        // (Table elements are handled below)
+        if( !bTableSelected && Insert.m_index > PSel.m_start.m_index )
 		    Insert.m_index -= PSel.m_end.m_index - PSel.m_start.m_index;
-	    }
-	    // Delete the selection
-	    DeleteSelection();
-	    SetInsertPoint(Insert);
+#if 0
+//TODO: This needs more work
+        if( bTableSelected )
+        {
+            CEditTableElement *pTable = NULL;
+            if( m_pSelectedEdTable )
+                pTable = m_pSelectedEdTable;
+            else
+                pTable = m_SelectedEdCells[0]->GetParentTable();
+
+            if( pTable )
+            {
+                if( m_pSelectedEdTable )
+                {
+            	    SetInsertPoint(Insert);
+                    CEditElement *pStart = m_pRoot;
+                    CEditElement *pPrev = pTable->GetPreviousSibling();
+                    if( pPrev )
+                        pStart = pPrev->FindNextElement(&CEditElement::FindLeafAll,0 );
+                    CEditElement *pEnd = pTable->GetLastMostChild()->NextLeaf();
+                    // First unselect the table
+                    ClearTableAndCellSelection();
+                    // Delete the entire table
+                    // Assumes current insert point is NOT inside the selected table
+    	            pTable->Unlink();
+                    delete pTable;
+                    //Relayout(pStart, 0,  pEnd);
+                } else
+                {
+                    // Delete all selected cells (this will call Relayout())
+                    DeleteSelectedCells();
+            	    SetInsertPoint(Insert);
+                }
+            }
+        }
+        else
+#endif
+        {
+    	    // Delete the selection and set new insert position
+    	    DeleteSelection();
+            SetInsertPoint(Insert);
+        }
     }
 }
  

@@ -1372,7 +1372,15 @@ void EDT_WindowScrolled( MWContext *pContext ){
 
 EDT_ClipboardResult EDT_ReturnKey( MWContext *pContext ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
-    return pEditBuffer->ReturnKey(TRUE);
+    // TRUE = user is typing, FALSE = don't indent after return action
+    return pEditBuffer->ReturnKey(TRUE, FALSE);
+}
+
+/* Do normal Return (Enter) key processing, then indent one level */
+EDT_ClipboardResult EDT_ReturnKeyAndIndent( MWContext *pContext ){
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) EDT_COP_DOCUMENT_BUSY;
+    // 2nd TRUE = indent after return action
+    return pEditBuffer->ReturnKey(TRUE, TRUE);
 }
 
 EDT_ClipboardResult EDT_TabKey( MWContext *pContext, XP_Bool bForward, XP_Bool bForceTabChar ){

@@ -7192,6 +7192,19 @@ CEditElement* CEditListElement::Clone( CEditElement *pParent ){
     return pNew;
 }
 
+XP_Bool CEditListElement::IsCompatableList(CEditElement *pElement)
+{
+    if( pElement && pElement->IsList() )
+    {
+        TagType t = pElement->GetType();
+        if( t == m_tagType ||
+            ((t == P_UNUM_LIST && m_tagType == P_NUM_LIST) ||
+             (m_tagType == P_UNUM_LIST && t == P_NUM_LIST)) )
+            return TRUE;
+    }
+    return FALSE;
+}
+
 // Property Getting and Setting Stuff.
 
 EDT_ListData* CEditListElement::NewData(){

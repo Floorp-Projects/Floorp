@@ -541,13 +541,13 @@ enum EEditCopyType {
 //
 class CEditElement {
 private:
-    TagType m_tagType;
     CEditElement* m_pParent;
     CEditElement* m_pNext;
     CEditElement* m_pChild;
     char *m_pTagData;               // hack! remainder of tag data for regen.
 
 protected:
+    TagType m_tagType;
     char* GetTagData(){ return m_pTagData; };
     void SetTagData(char* tagData);
 
@@ -1630,6 +1630,8 @@ public:
     CEditListElement(IStreamIn *pStreamIn, CEditBuffer *pBuffer);
     virtual ~CEditListElement();
 
+    /* Test if supplied element is a list of compatable type */
+    XP_Bool IsCompatableList(CEditElement *pElement);
     XP_Bool IsList(){ return TRUE; }
     static CEditListElement* Cast(CEditElement* pElement) {
         return pElement && pElement->IsList() ? (CEditListElement*) pElement : 0; }
@@ -3242,7 +3244,7 @@ public:
     //void BeginOfDocument( XP_Bool bSelect );
     //void EndOfDocument( XP_Bool bSelect );
     void ClearMailQuote();
-    EDT_ClipboardResult ReturnKey(XP_Bool bTyping);
+    EDT_ClipboardResult ReturnKey(XP_Bool bTyping, XP_Bool bIndent = FALSE);
     EDT_ClipboardResult TabKey(XP_Bool bForward, XP_Bool bForceTabChar);
 
     EDT_ClipboardResult InternalReturnKey(XP_Bool bUserTyped);
@@ -3258,6 +3260,8 @@ public:
             CEditListElement *pList );
     void MorphContainer( TagType t );
     void MorphListContainer( TagType t );
+    // Outdent the container until we don't have a list
+    void TerminateList(CEditContainerElement *pContainer);
 
     // Added to use for selected regions and table cells
     void MorphContainerSelection( TagType t, CEditSelection& selection  );
