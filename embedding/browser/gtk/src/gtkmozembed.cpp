@@ -74,12 +74,18 @@ private:
 class GtkMozEmbedPrivate
 {
 public:
+  GtkMozEmbedPrivate();
   nsCOMPtr<nsIWebBrowser>     webBrowser;
   nsCOMPtr<nsIWebNavigation>  navigation;
   nsCOMPtr<nsIGtkEmbed>       embed;
   nsCString		      currentURI;
   GtkMozEmbedListenerImpl     listener;
+  GdkWindow                  *mozWindow;
 };
+
+GtkMozEmbedPrivate::GtkMozEmbedPrivate() : mozWindow(0)
+{
+}
 
 /* signals */
 
@@ -378,7 +384,6 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   // get our hands on a copy of the nsIWebNavigation interface for later
   embed_private->navigation = do_QueryInterface(embed_private->webBrowser);
   g_return_if_fail(embed_private->navigation);
-
 }
 
 GtkWidget *
@@ -711,6 +716,7 @@ gtk_moz_embed_realize(GtkWidget *widget)
   }
 
   embed = GTK_MOZ_EMBED(widget);
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
 
   GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
 
@@ -733,9 +739,16 @@ gtk_moz_embed_realize(GtkWidget *widget)
   widget->style = gtk_style_attach (widget->style, widget->window);
   gtk_style_set_background (widget->style, widget->window, GTK_STATE_NORMAL);
 
-  // now that we're realized, set up the nsIWebBrowser and nsIBaseWindow stuff
-  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  // if mozWindow is set then we've already been realized once.
+  // reparent the window to our widget->window and return.
+  if (embed_private->mozWindow)
+  {
+    gdk_window_reparent(embed_private->mozWindow, widget->window,
+			widget->allocation.x, widget->allocation.y);
+    return;
+  }
 
+  // now that we're realized, set up the nsIWebBrowser and nsIBaseWindow stuff
   // init our window
   nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow =
     do_QueryInterface(embed_private->webBrowser);
@@ -744,6 +757,15 @@ gtk_moz_embed_realize(GtkWidget *widget)
 				   widget->allocation.width,
 				   widget->allocation.height);
   webBrowserBaseWindow->Create();
+  // save the id of the mozilla window for later if we need it.
+  nsCOMPtr<nsIWidget> mozWindow;
+  webBrowserBaseWindow->GetMainWidget(getter_AddRefs(mozWindow));
+  // get the native drawing area
+  GdkWindow *tmp_window = (GdkWindow *)
+    mozWindow->GetNativeData(NS_NATIVE_WINDOW);
+  // and, thanks to superwin we actually need the parent of that.
+  tmp_window = gdk_window_get_parent(tmp_window);
+  embed_private->mozWindow = tmp_window;
   // set our webBrowser object as the content listener object
   nsCOMPtr<nsIURIContentListener> uriListener;
   uriListener = do_QueryInterface(embed_private->embed);
@@ -774,15 +796,10 @@ gtk_moz_embed_unrealize(GtkWidget *widget)
   embed = GTK_MOZ_EMBED(widget);
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  if (embed_private)
-  {
-    embed_private->webBrowser = nsnull;
-    embed_private->embed = nsnull;
-    // XXX XXX delete all the members of the topLevelWindows
-    // nsVoidArray and then delete the array
-    delete embed_private;
-    embed->data = NULL;
-  }
+  GTK_WIDGET_UNSET_FLAGS(widget, GTK_REALIZED);
+  
+  gdk_window_reparent(embed_private->mozWindow,
+		      offscreen_window, 0, 0);
 }
 
 void
@@ -882,6 +899,7 @@ gtk_moz_embed_destroy(GtkObject *object)
       do_QueryInterface(embed_private->webBrowser);
     g_return_if_fail(webBrowserBaseWindow);
     webBrowserBaseWindow->Destroy();
+    embed_private->mozWindow = 0;
     embed_private->webBrowser = nsnull;
     embed_private->embed = nsnull;
     // XXX XXX delete all the members of the topLevelWindows
@@ -895,7 +913,8 @@ gtk_moz_embed_destroy(GtkObject *object)
   // see if we need to shutdown XPCOM
   if (num_widgets == 0)
   {
-    gtk_moz_embed_destroy_offscreen_window();
+    if (offscreen_window)
+      gtk_moz_embed_destroy_offscreen_window();
     gtk_moz_embed_shutdown_xpcom();
   }
 }
