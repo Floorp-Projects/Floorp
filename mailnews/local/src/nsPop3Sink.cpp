@@ -122,7 +122,7 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     m_newMailParser = new nsParseNewMailState;
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = m_newMailParser->Init(nsnull, fileSpec);
+    nsresult rv = m_newMailParser->Init(fileSpec);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
