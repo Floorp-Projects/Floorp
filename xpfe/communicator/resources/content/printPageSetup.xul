@@ -203,11 +203,11 @@ Contributor(s):
         <rows>
           <row>
             <hbox align="center">
-              <label id="scalingLabel" control="scalingInput" value="&scalingInput.label;" disabled="true"/>
+              <label id="scalingLabel" control="scalingInput" value="&scalingInput.label;" />
             </hbox>
-            <textbox id="scalingInput" style="width:4em;" onkeyup="checkDouble(this)" disabled="true"/>
+            <textbox id="scalingInput" style="width:4em;" onkeyup="checkDouble(this)" />
             <hbox align="center">
-              <label id="scalingLabelPost" control="scalingInputPost" value="&scalingInputPost.label;" disabled="true"/>
+              <label id="scalingLabelPost" control="scalingInputPost" value="&scalingInputPost.label;" />
             </hbox>
           </row>
         </rows>
