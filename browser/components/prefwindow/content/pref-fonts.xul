@@ -160,28 +160,6 @@
         </row>
         <row align="center">
           <hbox align="center" pack="end">
-            <label value="&cursive.label;" 
-                   accesskey="&cursive.accesskey;" 
-                   control="cursive"/>
-          </hbox>
-          <menulist id="cursive">
-            <menupopup/>
-          </menulist>
-          <spacer/>
-        </row>
-        <row align="center">
-          <hbox align="center" pack="end">
-            <label value="&fantasy.label;" 
-                   accesskey="&fantasy.accesskey;" 
-                   control="fantasy"/>
-          </hbox>
-          <menulist id="fantasy">
-            <menupopup/>
-          </menulist>
-          <spacer/>
-        </row>
-        <row align="center">
-          <hbox align="center" pack="end">
             <label value="&monospace.label;" 
                    accesskey="&monospace.accesskey;" 
                    control="monospace"/>

@@ -59,7 +59,7 @@ var gPrefutilitiesBundle;
 // manual data retrieval function for PrefWindow
 function GetFields()
   {
-    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"];
+    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
 
     // store data for language independent widgets
     var lists = ["selectLangs", "proportionalFont"];
@@ -280,11 +280,11 @@ function saveFontPrefs()
     if( top.hPrefWindow.wsm.contentArea.saveState )
       {
         saveState();
-        parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"] = GetFields();
+        parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"] = GetFields();
       }
 
     // saving font prefs
-    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"];
+    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
     var pref = parent.hPrefWindow.pref;
     for( var language in dataObject.languageData )
       {
@@ -525,7 +525,7 @@ function changeScreenResolution()
       {
         // If the user selects "Other..." we bring up the calibrate screen dialog
         var rv = { newdpi : 0 };
-        var calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
+        var calscreen = window.openDialog("chrome://browser/content/pref/pref-calibrate-screen.xul", 
                                       "_blank", 
                                       "modal,chrome,centerscreen,resizable=no,titlebar",
                                       rv);
