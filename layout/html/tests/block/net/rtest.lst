@@ -340,9 +340,6 @@ http://www.hixie.ch/tests/adhoc/css/background/block/001.html
 http://www.hixie.ch/tests/adhoc/css/background/block/002.html
 http://www.hixie.ch/tests/adhoc/css/background/block/003.html
 http://www.hixie.ch/tests/adhoc/css/background/block/004.html
-http://www.hixie.ch/tests/adhoc/css/background/dynamic/001.html
-http://www.hixie.ch/tests/adhoc/css/background/dynamic/002.html
-http://www.hixie.ch/tests/adhoc/css/background/dynamic/003.html
 http://www.hixie.ch/tests/adhoc/css/background/iframes/001.html
 http://www.hixie.ch/tests/adhoc/css/background/inline/policy/bounding-box/001.html
 http://www.hixie.ch/tests/adhoc/css/background/inline/policy/bounding-box/002.html
@@ -368,7 +365,6 @@ http://www.hixie.ch/tests/adhoc/css/background/inline/policy/continuous/016.html
 http://www.hixie.ch/tests/adhoc/css/background/inline/policy/each-box/001.html
 http://www.hixie.ch/tests/adhoc/css/background/inline/policy/each-box/002.html
 http://www.hixie.ch/tests/adhoc/css/background/inline/policy/each-box/003.html
-http://www.hixie.ch/tests/adhoc/css/background/inline/policy/each-box/004.html
 http://www.hixie.ch/tests/adhoc/css/background/inline/policy/fixed/001.html
 http://www.hixie.ch/tests/adhoc/css/background/position/001.html
 http://www.hixie.ch/tests/adhoc/css/border/color/001.html
@@ -716,8 +712,6 @@ http://www.hixie.ch/tests/adhoc/css/box/table/016.xml
 http://www.hixie.ch/tests/adhoc/css/box/table/border-collapse/collapse/evil/001-demo.html
 http://www.hixie.ch/tests/adhoc/css/box/table/caption/001.html
 http://www.hixie.ch/tests/adhoc/css/box/table/caption/002.html
-http://www.hixie.ch/tests/adhoc/css/box/table/dynamic/001.html
-http://www.hixie.ch/tests/adhoc/css/box/table/dynamic/002.html
 http://www.hixie.ch/tests/adhoc/css/box/table/floats/001-demo.html
 http://www.hixie.ch/tests/adhoc/css/box/table/floats/002-demo.html
 http://www.hixie.ch/tests/adhoc/css/box/table/floats/003-demo.html
@@ -1068,15 +1062,6 @@ http://www.hixie.ch/tests/adhoc/dom/core/004.html
 http://www.hixie.ch/tests/adhoc/dom/core/attr/001.html
 http://www.hixie.ch/tests/adhoc/dom/css/RGBColor/001.xml
 http://www.hixie.ch/tests/adhoc/dom/css/StyleSheet/001-demo.html
-http://www.hixie.ch/tests/adhoc/dom/css/animation/001.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/002.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/003.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/004.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/005.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/006.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/007.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/008.xml
-http://www.hixie.ch/tests/adhoc/dom/css/animation/009.xml
 http://www.hixie.ch/tests/adhoc/dom/css/canonicalization/001.html
 http://www.hixie.ch/tests/adhoc/dom/css/computed/001.xml
 http://www.hixie.ch/tests/adhoc/dom/css/computed/002.xml
@@ -1099,9 +1084,6 @@ http://www.hixie.ch/tests/adhoc/dom/css/rematching/002.xml
 http://www.hixie.ch/tests/adhoc/dom/css/rematching/003.xml
 http://www.hixie.ch/tests/adhoc/dom/css/rematching/004.xml
 http://www.hixie.ch/tests/adhoc/dom/css/rules/001.xml
-http://www.hixie.ch/tests/adhoc/dom/events/load/001.html
-http://www.hixie.ch/tests/adhoc/dom/events/load/002.html
-http://www.hixie.ch/tests/adhoc/dom/events/load/003.html
 http://www.hixie.ch/tests/adhoc/dom/html/attributes/001.xml
 http://www.hixie.ch/tests/adhoc/dom/html/attributes/002.xml
 http://www.hixie.ch/tests/adhoc/dom/html/attributes/compatibility/001.html
