@@ -79,7 +79,7 @@ var historyDNDObserver = {
         if (isContainer(gHistoryTree, currentIndex))
             return false;
         var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-        var url = builder.getResourceAtIndex(currentIndex).Value;
+        var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
         var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
 
         var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
@@ -238,7 +238,7 @@ function historyAddBookmarks()
   
   var currentIndex = gHistoryTree.currentIndex;
   var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-  var url = builder.getResourceAtIndex(currentIndex).Value;
+  var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
   
   //XXXBlake don't use getCellText
   var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
@@ -248,7 +248,7 @@ function historyAddBookmarks()
 function historyCopyLink()
 {
   var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-  var url = builder.getResourceAtIndex(gHistoryTree.currentIndex).Value;
+  var url = builder.getResourceAtIndex(gHistoryTree.currentIndex).ValueUTF8;
   var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                             .getService(Components.interfaces.nsIClipboardHelper );
   clipboard.copyString(url);
