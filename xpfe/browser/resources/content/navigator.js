@@ -1200,7 +1200,6 @@ function checkForDirectoryListing()
   if ( "HTTPIndex" in _content &&
        _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
     _content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
-    _content.parentWindow = window;
   }
 }
 

@@ -223,11 +223,7 @@ function Init()
     }
 
     // set window title
-    var theWindow = window._content.parentWindow;
-    if (theWindow)
-    {
-        theWindow.title = baseURI;
-    }
+    document.title = baseURI;
 
     tree.database.AddObserver(RDF_observer);
     debug("Directory: added observer\n");
@@ -263,9 +259,7 @@ function OnClick(event, node)
         window._content.location.href = url;
         
         // set window title
-        var theWindow = window._content.parentWindow;
-        if (theWindow)
-            theWindow.title = url;
+        document.title = url;
     }
 }
 
