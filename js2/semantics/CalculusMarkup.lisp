@@ -113,11 +113,16 @@
         (error "Bad command: ~S" command)))))
 
 
+; Emit markup paragraphs for a list of commands.
+(defun depict-commands (markup-stream world depict-env commands)
+  (dolist (command commands)
+    (depict-command markup-stream world depict-env command)))
+
+
 ; Emit markup paragraphs for the world's commands.
 (defun depict-world-commands (markup-stream world &key (visible-semantics t))
   (let ((depict-env (make-depict-env visible-semantics)))
-    (dolist (command (world-commands-source world))
-      (depict-command markup-stream world depict-env command))
+    (depict-commands markup-stream world depict-env (world-commands-source world))
     (depict-clear-grammar markup-stream world depict-env)))
 
 
@@ -861,6 +866,14 @@
        ,@body)))
 
 
+; (%highlight <highlight> <command> ... <command>)
+; Depict the commands highlighted with the <highlight> block style.
+(defun depict-%highlight (markup-stream world depict-env highlight &rest commands)
+  (when commands
+    (depict-block-style (markup-stream highlight t)
+      (depict-commands markup-stream world depict-env commands))))
+
+
 ; (%section "section-name")
 (defun depict-%section (markup-stream world depict-env section-name)
   (declare (ignore world))
@@ -936,7 +949,7 @@
                 (when (some #'seen-nonterminal? rule-lhs-nonterminals)
                   (warn "General rule for ~S listed before specific ones; use %rule to disambiguate" general-nonterminal))
                 (when visible
-                  (depict-general-rule markup-stream general-rule))
+                  (depict-general-rule markup-stream general-rule (grammar-highlights grammar)))
                 (dolist (nonterminal rule-lhs-nonterminals)
                   (setf (gethash nonterminal seen-nonterminals) t))))))))))
 ;******** May still have a problem when a specific rule precedes a general one.

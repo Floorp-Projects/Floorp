@@ -450,6 +450,8 @@
     ((:zeta 1) (:script "document.write(U_zeta)"))
     
     ;Block Styles
+    (:js2 (div (class "js2")))
+    (:es4 (div (class "es4")))
     (:body-text p)
     (:section-heading h2)
     (:subsection-heading h3)
@@ -509,9 +511,10 @@
 ;;; HTML STREAMS
 
 (defstruct (html-stream (:include markup-stream)
-                        (:constructor allocate-html-stream (env head tail level logical-position anchors))
+                        (:constructor allocate-html-stream (env head tail level logical-position enclosing-styles anchors))
                         (:copier nil)
                         (:predicate html-stream?))
+  (enclosing-styles nil :type list :read-only t) ;A list of enclosing styles
   (anchors nil :type list :read-only t))  ;A mutable cons cell for accumulating anchors at the beginning of a paragraph
 ;                                         ;or nil if not inside a paragraph.
 
@@ -522,9 +525,9 @@
 
 
 ; Make a new, empty, open html-stream with the given definitions for its markup-env.
-(defun make-html-stream (markup-env level logical-position anchors)
+(defun make-html-stream (markup-env level logical-position enclosing-styles anchors)
   (let ((head (list nil)))
-    (allocate-html-stream markup-env head head level logical-position anchors)))
+    (allocate-html-stream markup-env head head level logical-position enclosing-styles anchors)))
 
 
 ; Make a new, empty, open, top-level html-stream with the given definitions
@@ -533,7 +536,7 @@
   (let ((head (list nil))
         (markup-env (make-markup-env links)))
     (markup-env-define-alist markup-env html-definitions)
-    (allocate-html-stream markup-env head head *markup-stream-top-level* nil nil)))
+    (allocate-html-stream markup-env head head *markup-stream-top-level* nil nil nil)))
 
 
 ; Return the approximate width of the html item; return t if it is a line break.
@@ -585,14 +588,23 @@
 
 
 
-(defmethod depict-block-style-f ((html-stream html-stream) block-style emitter)
+(defmethod depict-block-style-f ((html-stream html-stream) block-style flatten emitter)
   (assert-true (<= (markup-stream-level html-stream) *markup-stream-paragraph-level*))
-  (assert-true (and block-style (symbolp block-style)))
-  (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream) *markup-stream-paragraph-level* nil nil)))
-    (markup-stream-append1 inner-html-stream block-style)
-    (prog1
-      (funcall emitter inner-html-stream)
-      (markup-stream-append1 html-stream (markup-stream-unexpanded-output inner-html-stream)))))
+  (assert-true (symbolp block-style))
+  (if (or (null block-style)
+          (and flatten (member block-style (html-stream-enclosing-styles html-stream))))
+    (funcall emitter html-stream)
+    (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
+                                               *markup-stream-paragraph-level*
+                                               nil
+                                               (cons block-style (html-stream-enclosing-styles html-stream))
+                                               nil)))
+      (markup-stream-append1 inner-html-stream block-style)
+      (prog1
+        (funcall emitter inner-html-stream)
+        (let ((inner-output (markup-stream-unexpanded-output inner-html-stream)))
+          (when (or (not flatten) (cdr inner-output))
+            (markup-stream-append1 html-stream inner-output)))))))
 
 
 (defmethod depict-paragraph-f ((html-stream html-stream) paragraph-style emitter)
@@ -602,6 +614,7 @@
          (inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                               *markup-stream-content-level*
                                               (make-logical-position)
+                                              (cons paragraph-style (html-stream-enclosing-styles html-stream))
                                               anchors)))
     (prog1
       (funcall emitter inner-html-stream)
@@ -616,11 +629,17 @@
   (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                              *markup-stream-content-level*
                                              (markup-stream-logical-position html-stream)
+                                             (cons char-style (html-stream-enclosing-styles html-stream))
                                              (html-stream-anchors html-stream))))
     (markup-stream-append1 inner-html-stream char-style)
     (prog1
       (funcall emitter inner-html-stream)
       (markup-stream-append1 html-stream (markup-stream-unexpanded-output inner-html-stream)))))
+
+
+(defmethod ensure-no-enclosing-style ((html-stream html-stream) style)
+  (when (member style (html-stream-enclosing-styles html-stream))
+    (cerror "Ignore" "Style ~S should not be in effect" style)))
 
 
 (defmethod depict-anchor ((html-stream html-stream) link-prefix link-name duplicate)
@@ -639,6 +658,7 @@
       (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
                                                  *markup-stream-content-level*
                                                  (markup-stream-logical-position html-stream)
+                                                 (html-stream-enclosing-styles html-stream)
                                                  (html-stream-anchors html-stream))))
         (markup-stream-append1 inner-html-stream (list 'a (list 'href href)))
         (prog1

@@ -757,8 +757,8 @@
   (markup-env-expand (markup-stream-env rtf-stream) (markup-stream-unexpanded-output rtf-stream) nil))
 
 
-(defmethod depict-block-style-f ((rtf-stream rtf-stream) block-style emitter)
-  (declare (ignore block-style))
+(defmethod depict-block-style-f ((rtf-stream rtf-stream) block-style flatten emitter)
+  (declare (ignore block-style flatten))
   (assert-true (= (markup-stream-level rtf-stream) *markup-stream-paragraph-level*))
   (funcall emitter rtf-stream))
 
@@ -788,6 +788,10 @@
     (prog1
       (funcall emitter inner-rtf-stream)
       (rtf-stream-append-or-inline-block rtf-stream (markup-stream-unexpanded-output inner-rtf-stream)))))
+
+
+(defmethod ensure-no-enclosing-style ((rtf-stream rtf-stream) style)
+  (declare (ignore style)))
 
 
 (defmethod depict-anchor ((rtf-stream rtf-stream) link-prefix link-name duplicate)

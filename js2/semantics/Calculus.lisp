@@ -26,7 +26,7 @@
 (defvar *trace-variables* nil)
 
 
-#+mcl (dolist (indent-spec '((apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 1) (letexc . 1) (deftype . 1) (tuple . 1) (%text . 1)))
+#+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 1) (letexc . 1) (deftype . 1) (tuple . 1) (%text . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -426,6 +426,7 @@
 (defstruct (world (:constructor allocate-world)
                   (:copier nil)
                   (:predicate world?))
+  (conditionals nil :type list)                      ;Assoc list of (conditional . highlight), where highlight can be a style keyword, nil (no style), or 'delete
   (package nil :type package)                        ;The package in which this world's identifiers are interned
   (n-type-names 0 :type integer)                     ;Number of type names defined so far
   (types-reverse nil :type (or null hash-table))     ;Hash table of (kind tags parameters) -> type; nil if invalid
@@ -575,6 +576,25 @@
 (defun world-lexer (world name)
   (let ((grammar-info (world-grammar-info world name)))
     (and grammar-info (grammar-info-lexer grammar-info))))
+
+
+; Return a list of highlights allowed in this world.
+(defun world-highlights (world)
+  (let ((highlights nil))
+    (dolist (c (world-conditionals world))
+      (let ((highlight (cdr c)))
+        (unless (or (null highlight) (eq highlight 'delete))
+          (pushnew highlight highlights))))
+    (nreverse highlights)))
+
+
+; Return the highlight to which the given conditional maps.
+; Return 'delete if the conditional should be omitted.
+(defun resolve-conditional (world conditional)
+  (let ((h (assoc conditional (world-conditionals world))))
+    (if h
+      (cdr h)
+      (error "Bad conditional ~S" conditional))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -2327,6 +2347,13 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; COMMANDS
 
+; (%highlight <highlight> <command> ... <command>)
+; Evaluate the given commands.  <highlight> is a hint for printing.
+(defun scan-%highlight (world grammar-info-var highlight &rest commands)
+  (declare (ignore highlight))
+  (scan-commands world grammar-info-var commands))
+
+
 ; (%... ...)
 ; Ignore any command that starts with a %.  These commands are hints for printing.
 (defun scan-% (world grammar-info-var &rest rest)
@@ -2415,6 +2442,7 @@
 
 (defparameter *default-specials*
   '((:preprocess
+     (? preprocess-?)
      (define preprocess-define)
      (action preprocess-action)
      (grammar preprocess-grammar)
@@ -2431,6 +2459,7 @@
      (set-of expand-set-of nil))
     
     (:command
+     (%highlight scan-%highlight depict-%highlight) ;For internal use only; use ? instead.
      (%section scan-% depict-%section)
      (%subsection scan-% depict-%subsection)
      (%text scan-% depict-%text)
@@ -2636,8 +2665,15 @@
 
 
 ; Create a world with the given name and set up the built-in properties of its symbols.
-(defun init-world (name)
+; conditionals is an association list of (conditional . highlight), where conditional is a symbol
+; and highlight is either:
+;   a style keyword:   Use that style to highlight the contents of any (? conditional ...) commands
+;   nil:               Include the contents of any (? conditional ...) commands without highlighting them
+;   delete:            Don't include the contents of (? conditional ...) commands
+(defun init-world (name conditionals)
+  (assert-type conditionals (list (cons symbol (or null keyword (eql delete)))))
   (let ((world (make-world name)))
+    (setf (world-conditionals world) conditionals)
     (dolist (specials-list *default-specials*)
       (let ((property (car specials-list)))
         (dolist (special-spec (cdr specials-list))
@@ -2753,10 +2789,8 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; EVALUATION
 
-; Scan a command.  Create types and variables in the world
-; but do not evaluate variables' types or values yet.
-; grammar-info-var is a cons cell whose car is either nil
-; or a grammar-info for the grammar currently being defined.
+; Scan a command.  Create types and variables in the world but do not evaluate variables' types or values yet.
+; grammar-info-var is a cons cell whose car is either nil or a grammar-info for the grammar currently being defined.
 (defun scan-command (world grammar-info-var command)
   (handler-bind ((error #'(lambda (condition)
                             (declare (ignore condition))
@@ -2767,6 +2801,12 @@
       (if handler
         (apply handler world grammar-info-var (rest command))
         (error "Bad command")))))
+
+
+; Scan a list of commands.  See scan-command above.
+(defun scan-commands (world grammar-info-var commands)
+  (dolist (command commands)
+    (scan-command world grammar-info-var command)))
 
 
 ; Compute the primitives' types from their type-exprs.
@@ -2864,8 +2904,7 @@
   (assert-true (null (world-commands-source world)))
   (setf (world-commands-source world) commands)
   (let ((grammar-info-var (list nil)))
-    (dolist (command commands)
-      (scan-command world grammar-info-var command)))
+    (scan-commands world grammar-info-var commands))
   (unite-types world)
   (setf (world-bottom-type world) (make-type world :bottom nil nil))
   (setf (world-void-type world) (make-type world :void nil nil))
@@ -2884,7 +2923,9 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; PREPROCESSING
 
-(defstruct preprocessor-state
+(defstruct (preprocessor-state (:constructor make-preprocessor-state (world)))
+  (world nil :type world :read-only t)                ;The world into which preprocessed symbols are interned
+  (highlight nil :type symbol)                        ;The current highlight style or nil if none
   (kind nil :type (member nil :grammar :lexer))       ;The kind of grammar being accumulated or nil if none
   (kind2 nil :type (member nil :lalr-1 :lr-1 :canonical-lr-1)) ;The kind of parser
   (name nil :type symbol)                             ;Name of the grammar being accumulated or nil if none
@@ -2914,7 +2955,8 @@
                (start-symbol (preprocessor-state-start-symbol preprocessor-state))
                (grammar-source (nreverse (preprocessor-state-grammar-source-reverse preprocessor-state)))
                (excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state))
-               (grammar-options (preprocessor-state-grammar-options preprocessor-state)))
+               (grammar-options (preprocessor-state-grammar-options preprocessor-state))
+               (highlights (world-highlights (preprocessor-state-world preprocessor-state))))
            (multiple-value-bind (grammar lexer extra-commands)
                                 (ecase kind
                                   (:grammar
@@ -2924,6 +2966,7 @@
                                              start-symbol
                                              grammar-source
                                              :excluded-nonterminals excluded-nonterminals-source
+                                             :highlights highlights
                                              grammar-options)
                                            nil
                                            nil))
@@ -2937,6 +2980,7 @@
                                                           start-symbol
                                                           grammar-source
                                                           :excluded-nonterminals excluded-nonterminals-source
+                                                          :highlights highlights
                                                           grammar-options)
                                      (values (lexer-grammar lexer) lexer extra-commands))))
              (let ((grammar-info (make-grammar-info (preprocessor-state-name preprocessor-state) grammar lexer)))
@@ -2954,19 +2998,17 @@
                (append extra-commands (list '(clear-grammar)))))))))
 
 
+; Helper function for preprocess-source.
 ; source is a list of preprocessor directives and commands.  Preprocess these commands
-; and return the following results:
-;   a list of preprocessed commands;
-;   a list of grammar-infos extracted from preprocessor directives.
-(defun preprocess-source (world source)
-  (let ((preprocessor-state (make-preprocessor-state)))
-    (labels
+; using the given preprocessor-state and return the resulting list of commands.
+(defun preprocess-list (preprocessor-state source)
+  (let ((world (preprocessor-state-world preprocessor-state)))
+    (flet
       ((preprocess-one (form)
          (when (consp form)
            (let ((first (car form)))
              (when (identifier? first)
-               (let* ((symbol (world-intern world first))
-                      (action (symbol-preprocessor-function symbol)))
+               (let ((action (symbol-preprocessor-function (world-intern world first))))
                  (when action
                    (handler-bind ((error #'(lambda (condition)
                                              (declare (ignore condition))
@@ -2974,19 +3016,33 @@
                      (multiple-value-bind (preprocessed-form re-preprocess) (apply action preprocessor-state form)
                        (return-from preprocess-one
                          (if re-preprocess
-                           (mapcan #'preprocess-one preprocessed-form)
+                           (preprocess-list preprocessor-state preprocessed-form)
                            preprocessed-form)))))))))
          (list form)))
       
-      (let* ((commands (mapcan #'preprocess-one source))
-             (commands (nconc commands (preprocessor-state-finish-grammar preprocessor-state))))
-        (values commands (nreverse (preprocessor-state-grammar-infos-reverse preprocessor-state)))))))
+      (mapcan #'preprocess-one source))))
+
+
+; source is a list of preprocessor directives and commands.  Preprocess these commands
+; and return the following results:
+;   a list of preprocessed commands;
+;   a list of grammar-infos extracted from preprocessor directives.
+(defun preprocess-source (world source)
+  (let* ((preprocessor-state (make-preprocessor-state world))
+         (commands (preprocess-list preprocessor-state source))
+         (commands (nconc commands (preprocessor-state-finish-grammar preprocessor-state))))
+    (values commands (nreverse (preprocessor-state-grammar-infos-reverse preprocessor-state)))))
 
 
 ; Create a new world with the given name and preprocess and evaluate the given
 ; source commands in it.
-(defun generate-world (name source)
-  (let ((world (init-world name)))
+; conditionals is an association list of (conditional . highlight), where conditional is a symbol
+; and highlight is either:
+;   a style keyword:   Use that style to highlight the contents of any (? conditional ...) commands
+;   nil:               Include the contents of any (? conditional ...) commands without highlighting them
+;   delete:            Don't include the contents of (? conditional ...) commands
+(defun generate-world (name source &optional conditionals)
+  (let ((world (init-world name conditionals)))
     (multiple-value-bind (commands grammar-infos) (preprocess-source world source)
       (dolist (grammar-info grammar-infos)
         (clear-actions (grammar-info-grammar grammar-info)))
@@ -2997,6 +3053,27 @@
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; PREPROCESSOR ACTIONS
+
+
+; (? <conditional> <command> ... <command>)
+;   ==>
+; (%highlight <highlight> <command> ... <command>)
+;   or
+; <empty>
+(defun preprocess-? (preprocessor-state command conditional &rest commands)
+  (declare (ignore command))
+  (let ((highlight (resolve-conditional (preprocessor-state-world preprocessor-state) conditional))
+        (saved-highlight (preprocessor-state-highlight preprocessor-state)))
+    (cond
+     ((eq highlight 'delete) (values nil nil))
+     ((eq highlight saved-highlight) (values commands t))
+     (t (values
+         (unwind-protect
+           (progn
+             (setf (preprocessor-state-highlight preprocessor-state) highlight)
+             (list (list* '%highlight highlight (preprocess-list preprocessor-state commands))))
+           (setf (preprocessor-state-highlight preprocessor-state) saved-highlight))
+         nil)))))
 
 
 ; (define <name> <type> <value>)
@@ -3123,7 +3200,7 @@
 ; (production <lhs> <rhs> <name> (<action-spec-1> <body-1>) ... (<action-spec-n> <body-n>))
 ;   ==>
 ; grammar:
-;   (<lhs> <rhs> <name>)
+;   (<lhs> <rhs> <name> <current-highlight>)
 ; commands:
 ;   (%rule <lhs>)
 ;   (action <action-spec-1> <name> <body-1>)
@@ -3133,7 +3210,8 @@
   (declare (ignore command))
   (assert-type actions (list (tuple t t)))
   (preprocess-ensure-grammar preprocessor-state)
-  (push (list lhs rhs name) (preprocessor-state-grammar-source-reverse preprocessor-state))
+  (push (list lhs rhs name (preprocessor-state-highlight preprocessor-state))
+        (preprocessor-state-grammar-source-reverse preprocessor-state))
   (values
    (cons (list '%rule lhs)
          (mapcar #'(lambda (action)
@@ -3149,9 +3227,9 @@
 ;   (production <lhs-m> <rhs-m> <name-m> (<action-spec-m-1> <body-m-1>) ... (<action-spec-m-n> <body-m-n>)))
 ;   ==>
 ; grammar:
-;   (<lhs-1> <rhs-1> <name-1>)
+;   (<lhs-1> <rhs-1> <name-1> <current-highlight>)
 ;   ...
-;   (<lhs-m> <rhs-m> <name-m>)
+;   (<lhs-m> <rhs-m> <name-m> <current-highlight>)
 ; commands:
 ;   (%rule <lhs-1>)
 ;   ...
@@ -3188,7 +3266,8 @@
               (actions (assert-type (cddddr production) (list (tuple t t)))))
           (unless (actions-match action-declarations actions)
             (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
-          (push (list lhs rhs name) (preprocessor-state-grammar-source-reverse preprocessor-state))
+          (push (list lhs rhs name (preprocessor-state-highlight preprocessor-state))
+                (preprocessor-state-grammar-source-reverse preprocessor-state))
           (push (list '%rule lhs) commands-reverse)))
       (dotimes (i (length action-declarations))
         (let ((action-declaration (nth i action-declarations)))

@@ -337,14 +337,16 @@
 
 ; markup-stream must be a variable that names a markup-stream that is currently
 ; accepting paragraphs.  Execute body with markup-stream bound to a markup-stream
-; to which the body can emit contents.  The given block-style is applied to all
+; to which the body can emit contents.  If non-null, the given block-style is applied to all
 ; paragraphs emitted by body (in the HTML emitter only; RTF has no block styles).
+; If flatten is true, do not emit the style if it is already in effect from a surrounding block
+; or if its contents are empty.
 ; Return the result value of body.
-(defmacro depict-block-style ((markup-stream block-style) &body body)
-  `(depict-block-style-f ,markup-stream ,block-style
+(defmacro depict-block-style ((markup-stream block-style &optional flatten) &body body)
+  `(depict-block-style-f ,markup-stream ,block-style ,flatten
                          #'(lambda (,markup-stream) ,@body)))
 
-(defgeneric depict-block-style-f (markup-stream block-style emitter))
+(defgeneric depict-block-style-f (markup-stream block-style flatten emitter))
 
 
 ; markup-stream must be a variable that names a markup-stream that is currently
@@ -369,6 +371,11 @@
                         #'(lambda (,markup-stream) ,@body)))
 
 (defgeneric depict-char-style-f (markup-stream char-style emitter))
+
+
+; Ensure that the given style is not currently in effect in the markup-stream.
+; RTF streams don't currently keep track of styles, so this function does nothing for RTF streams.
+(defgeneric ensure-no-enclosing-style (markup-stream style))
 
 
 ; Depict an anchor.  The concatenation of link-prefix and link-name must be a string
