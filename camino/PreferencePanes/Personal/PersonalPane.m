@@ -1,6 +1,6 @@
 #import "PersonalPane.h"
 
-@implementation PersonalPane
+@implementation OrgMozillaChimeraPreferencePersonal
 
 
 - (id) initWithBundle:(NSBundle *) bundle {

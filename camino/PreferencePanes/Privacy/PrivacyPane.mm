@@ -6,7 +6,7 @@
 #include "nsCCookieManager.h"
 #include "nsICacheService.h"
 
-@implementation PrivacyPane
+@implementation OrgMozillaChimeraPreferencePrivacy
 
 - (void) dealloc
 {
