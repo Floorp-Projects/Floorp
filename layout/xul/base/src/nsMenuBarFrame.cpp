@@ -79,16 +79,20 @@ NS_IMETHODIMP nsMenuBarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }   
 
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
+  return nsToolbarFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 //
 // nsMenuBarFrame cntr
 //
 nsMenuBarFrame::nsMenuBarFrame()
-:mIsActive(PR_FALSE)
+:mIsActive(PR_FALSE), mTarget(nsnull)
 {
 
 } // cntr
+
+nsMenuBarFrame::~nsMenuBarFrame()
+{
+}
 
 NS_IMETHODIMP
 nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
@@ -97,7 +101,7 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
                      nsIStyleContext* aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsToolbarFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
@@ -108,6 +112,8 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
   aContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
   nsIDOMEventListener* domEventListener = (nsIDOMKeyListener*)mMenuBarListener;
+
+  mTarget = target;
 
   target->AddEventListener("keypress", domEventListener, PR_TRUE); 
 	target->AddEventListener("keydown", domEventListener, PR_TRUE);  
@@ -458,4 +464,17 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
   if (disabled == "true")
     return PR_TRUE;
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsMenuBarFrame::Destroy(nsIPresContext& aPresContext)
+{
+  mTarget->RemoveEventListener("keypress", mMenuBarListener, PR_TRUE); 
+	mTarget->RemoveEventListener("keydown", mMenuBarListener, PR_TRUE);  
+  mTarget->RemoveEventListener("keyup", mMenuBarListener, PR_TRUE);
+
+  delete mMenuBarListener;
+  mMenuBarListener = nsnull;
+
+  return nsToolbarFrame::Destroy(aPresContext);
 }
