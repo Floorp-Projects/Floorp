@@ -1529,13 +1529,16 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       nsLineBox* line = FindLineFor(state.mNextRCFrame, &prevLine, &isFloater); 
       if (line && (PR_FALSE==line->IsBlock())) 
       { 
-        nsBlockReflowState incrState(aReflowState, aPresContext, this, aMetrics, 
-                                     NS_BLOCK_MARGIN_ROOT & mState); 
-        incrState.mNextRCFrame = state.mNextRCFrame; 
-        PRBool keepGoing; 
-        rv = ReflowLine(incrState, line, &keepGoing, PR_TRUE); 
-        state.mNextRCFrame = nsnull; 
-      } 
+        if (!isFloater) // punt if isFloater!  
+        {
+          nsBlockReflowState incrState(aReflowState, aPresContext, this, aMetrics, 
+                                       NS_BLOCK_MARGIN_ROOT & mState); 
+          incrState.mNextRCFrame = state.mNextRCFrame; 
+          PRBool keepGoing; 
+          rv = ReflowLine(incrState, line, &keepGoing, PR_TRUE); 
+          state.mNextRCFrame = nsnull; 
+        } 
+      }
       // XXX To Do: we need to check some metrics here to see if anything changed
       // if nothing changed, we're done
       // otherwise, we should mark the line and the previous line both dirty
