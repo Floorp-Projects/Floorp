@@ -4251,18 +4251,15 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
     return rv;
   }
 
-  rv = cookieService->GetCookieString(uriIn, cookieString);
+  rv = cookieService->GetCookieString(uriIn, &bufPtr);
   
-  if (NS_FAILED(rv) || 
-      (inOutCookieSize < cookieString.Length())) {
+  if (NS_FAILED(rv) || (nsnull == bufPtr) ||
+      (inOutCookieSize < PL_strlen(bufPtr))) {
     return NS_ERROR_FAILURE;
   }
   bufPtr = cookieString.ToCString((char *) inOutCookieBuffer, 
                                   inOutCookieSize);
-  if (nsnull == bufPtr) {
-    return NS_ERROR_FAILURE;
-  }
-  inOutCookieSize = cookieString.Length();
+  inOutCookieSize = PL_strlen(bufPtr);
   rv = NS_OK;
   
   return rv;
@@ -4271,7 +4268,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
 NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize)
 {
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-  nsString cookieString;
   nsCOMPtr<nsIURI> uriIn;
   
   if ((nsnull == inCookieURL) || (nsnull == inCookieBuffer) || 
@@ -4296,10 +4292,12 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
-  
-  cookieString.AssignWithConversion((const char *) inCookieBuffer,(PRInt32) inCookieSize);
-  
-  rv = cookieService->SetCookieString(uriIn, nsnull, cookieString); // needs an nsHTMLDocument parameter
+
+  char * cookie = (char *)inCookieBuffer;
+  char c = cookie[inCookieSize];
+  cookie[inCookieSize] = '\0';
+  rv = cookieService->SetCookieString(uriIn, nsnull, cookie); // needs an nsIPrompt parameter
+  cookie[inCookieSize] = c;
   
   return rv;
 }

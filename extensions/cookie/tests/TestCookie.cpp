@@ -40,10 +40,8 @@ void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* 
     (void)NS_NewURI(getter_AddRefs(uri), aSpec);
     NS_ASSERTION(uri, "malformed uri");   
     
-    nsString cookie;
-    cookie.AssignWithConversion(aCookieString);
     printf("setting cookie for \"%s\" : ", aSpec);
-    nsresult rv = cookieService->SetCookieString(uri, nsnull, cookie);
+    nsresult rv = cookieService->SetCookieString(uri, nsnull, (char *)aCookieString);
     if (NS_FAILED(rv)) {
         printf("NOT-SET\n");
     } else {
@@ -57,16 +55,15 @@ void GetACookie(nsICookieService *cookieService, const char* aSpec, char* *aCook
     (void)NS_NewURI(getter_AddRefs(uri), aSpec);
     NS_ASSERTION(uri, "malformed uri");   
 
-    nsString cookie;
+    char * cookieString;
     printf("retrieving cookie(s) for \"%s\" : ", aSpec);
-    nsresult rv = cookieService->GetCookieString(uri, cookie);
+    nsresult rv = cookieService->GetCookieString(uri, &cookieString);
     if (NS_FAILED(rv)) printf("XXX GetCookieString() failed!\n");
 
-    if (cookie.IsEmpty()) {
+    if (!cookieString) {
         printf("NOT-FOUND\n");
     } else {
         printf("FOUND: ");
-        char *cookieString = cookie.ToNewCString();
         printf("%s\n", cookieString);
         nsCRT::free(cookieString);
     }

@@ -20,32 +20,24 @@
  * Contributor(s): 
  */
 
-#ifndef nsCookieService_h__
-#define nsCookieService_h__
+#ifndef nsImgManager_h__
+#define nsImgManager_h__
 
-#include "nsICookieService.h"
-#include "nsIObserver.h"
-#include "nsIDocumentLoaderObserver.h"
-#include "nsWeakReference.h"
+#include "nsIImgManager.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieService : public nsICookieService,
-                        public nsIObserver,
-                        public nsIDocumentLoaderObserver,
-                        public nsSupportsWeakReference {
+class nsImgManager : public nsIImgManager {
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
-  NS_DECL_NSICOOKIESERVICE
+  NS_DECL_NSIIMGMANAGER
 
-  nsCookieService();
-  virtual ~nsCookieService(void);
+  nsImgManager();
+  virtual ~nsImgManager(void);
   nsresult Init();
   
 };
 
-#endif /* nsCookieService_h__ */
+#endif /* nsImgManager_h__ */

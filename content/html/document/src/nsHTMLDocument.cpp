@@ -112,6 +112,7 @@
 #include "nsHTMLParts.h" //for createelementNS
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
+#include "nsIPrompt.h"
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -2043,8 +2044,16 @@ nsHTMLDocument::GetCookie(nsAWritableString& aCookie)
   nsresult result = NS_OK;
   nsAutoString str;
   NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
+  char * cookie;
   if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    result = service->GetCookieString(mDocumentURL, str);
+    result = service->GetCookieString(mDocumentURL, &cookie);
+  }
+  if (nsnull != cookie) {
+    str.AssignWithConversion(cookie);
+    nsCRT::free(cookie);
+  } else {
+    // No Cookie isn't an error condition.
+    aCookie.Truncate();
   }
   aCookie.Assign(str);
   return result;
@@ -2056,7 +2065,18 @@ nsHTMLDocument::SetCookie(const nsAReadableString& aCookie)
   nsresult result = NS_OK;
   NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
   if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    result = service->SetCookieString(mDocumentURL, this, nsAutoString(aCookie));
+    char *cookie = nsString(aCookie).ToNewCString();
+    nsCOMPtr<nsIScriptGlobalObject> globalObj;
+    nsCOMPtr<nsIPrompt> prompt;
+    this->GetScriptGlobalObject(getter_AddRefs(globalObj));
+    if (globalObj) {
+      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
+      if (window) {
+        window->GetPrompter(getter_AddRefs(prompt));
+      }
+    }
+    result = service->SetCookieString(mDocumentURL, prompt, cookie);
+    nsCRT::free(cookie);
   }
   return result;
 }

@@ -38,9 +38,10 @@
 #include "nsCRT.h"
 
 #include "nsIPresContext.h"
-#include "nsICookieService.h"
+#include "nsIImgManager.h"
 #include "nsIServiceManager.h"
-
+#include "nsIURL.h"
+#include "nsString.h"
 
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
@@ -55,7 +56,7 @@ PRLogModuleInfo *il_log_module = NULL;
 /* Global list of image group contexts. */
 static IL_GroupContext *il_global_img_cx_list = NULL;
 
-static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
+static NS_DEFINE_IID(kImgManagerCID, NS_IMGMANAGER_CID);
 
 /*-----------------------------------------*/
 NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
@@ -1738,7 +1739,6 @@ il_hash(const char *ubuf)
     }
     return h;
 }
- 
 
 /* block certain hosts from loading images */
 PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver) {
@@ -1798,14 +1798,14 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     }
 
     /* check to see if we need to block image from loading */
-    NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
+    NS_WITH_SERVICE(nsIImgManager, imgmanager, kImgManagerCID, &rv);
     if (NS_FAILED(rv)) {
         Recycle(host);
         Recycle(firstHost);
         return PR_TRUE;
     }
     PRBool permission;
-    rv = cookieservice->Image_CheckForPermission(host, firstHost, permission);
+    rv = imgmanager->CheckForPermission(host, firstHost, &permission);
     Recycle(host);
     Recycle(firstHost);
     if (NS_FAILED(rv)) {

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #endif 
 
+#include "nsCookieService.h" /* don't remove -- needed for mac build */
 #include "nsCookieHTTPNotify.h"
 #include "nsIGenericFactory.h"
 #include "nsIHTTPChannel.h"
@@ -64,7 +65,7 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
 {
     // Register ourselves into the NS_CATEGORY_HTTP_STARTUP
     nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv);
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;
@@ -81,7 +82,7 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
                                              const nsModuleComponentInfo *info)
 {
     nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv);
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;
@@ -182,19 +183,14 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     rv = SetupCookieService();
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString cookie;
-    rv = mCookieService->GetCookieStringFromHTTP(pURL, pFirstURL, cookie);
+    char * cookie;
+    rv = mCookieService->GetCookieStringFromHttp(pURL, pFirstURL, &cookie);
     if (NS_FAILED(rv)) return rv;
 
     // Set the cookie into the request headers
-    // XXX useless convertion from nsString to char * again
-    const char *cookieRaw = cookie.ToNewCString();
-    if (!cookieRaw) return NS_ERROR_OUT_OF_MEMORY;
-
-    // only set a cookie header if we have a value to send
-    if (*cookieRaw)
-        rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookieRaw);
-    nsMemory::Free((void *)cookieRaw);
+    if (cookie && *cookie)
+        rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookie);
+    nsMemory::Free((void *)cookie);
 
     return rv;
 }

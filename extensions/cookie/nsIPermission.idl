@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ 
+ * The Original Code is mozilla.org code.
+ 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ 
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(28F16D80-157B-11d5-A542-0010A401EB10)]
+
+/**
+  This interface represents a "permission" object.
+*/
+
+interface nsIPermission : nsISupports {
+
+    /* the name of the host */
+    readonly attribute string host;
+
+    /* the type of permission (e.g., cookie, image, etc) */
+    readonly attribute PRInt32 type;
+
+    /* the permission */
+    readonly attribute boolean capability;
+};
+
+%{ C++
+// {28F16D80-157B-11d5-A542-0010A401EB10}
+#define NS_PERMISSION_CID \
+{ 0x28f16d80, 0x157b, 0x11d5, { 0xa5, 0x42, 0x0, 0x10, 0xa4, 0x1, 0xeb, 0x10 } }
+#define NS_PERMISSION_CONTRACTID "@mozilla.org/permission;1"
+%}
