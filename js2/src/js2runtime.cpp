@@ -2229,7 +2229,7 @@ JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
     return thatValue;
 }
 
-JSValue RegExp_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue RegExp_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     if (argc > 0) {
 	if ((argv[0].isObject() && (argv[0].object->mType == RegExp_Type))
@@ -2239,7 +2239,7 @@ JSValue RegExp_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, ui
     return RegExp_Constructor(cx, thisValue, argv, argc);
 }
 
-JSValue RegExp_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue RegExp_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     ContextStackReplacement csr(cx);
     ASSERT(thisValue.isObject());
@@ -2290,7 +2290,7 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
             String *parenStr = &cx->Empty_StringAtom;
             for (uint32 i = 0; i < regexp_result->n; i++) {
                 if (regexp_result->parens[i].index != -1) {
-                    String *parenStr = new String(str->substr(regexp_result->parens[i].index, regexp_result->parens[i].length));
+                    String *parenStr = new String(str->substr((uint32)(regexp_result->parens[i].index), (uint32)(regexp_result->parens[i].length)));
                     resultArray->setProperty(cx, *numberToString(i + 1), NULL, JSValue(parenStr));
                 }
             }
@@ -2314,7 +2314,7 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
     return result;
 }
 
-JSValue RegExp_test(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static JSValue RegExp_test(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     ASSERT(thisValue.isObject());
     JSObject *thisObj = thisValue.object;

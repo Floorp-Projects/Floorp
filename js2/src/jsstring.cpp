@@ -141,7 +141,7 @@ static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv
     }
 }
 
-const String interpretDollar(Context *cx, const String *replaceStr, uint32 dollarPos, const String *searchStr, REState *regexp_result, uint32 &skip)
+static const String interpretDollar(Context *cx, const String *replaceStr, uint32 dollarPos, const String *searchStr, REState *regexp_result, uint32 &skip)
 {
     skip = 2;
     const char16 *dollarValue = replaceStr->c_str() + dollarPos + 1;
@@ -168,7 +168,7 @@ const String interpretDollar(Context *cx, const String *replaceStr, uint32 dolla
     case '8':
     case '9':
 	{
-	    uint32 num = *dollarValue - '0';
+	    uint32 num = (uint32)(*dollarValue - '0');
 	    if (num <= regexp_result->n) {
 		if ((dollarPos < (replaceStr->length() - 2))
 			&& (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
@@ -178,7 +178,7 @@ const String interpretDollar(Context *cx, const String *replaceStr, uint32 dolla
 			skip = 3;
 		    }
 		}
-		return searchStr->substr(regexp_result->parens[num - 1].index, regexp_result->parens[num - 1].length);
+		return searchStr->substr((uint32)(regexp_result->parens[num - 1].index), (uint32)(regexp_result->parens[num - 1].length));
 	    }
 	}
 	// fall thru
@@ -209,7 +209,7 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 
 	while (true) {
 	    if (parseResult->flags & GLOBAL)
-		parseResult->lastIndex = index;
+		parseResult->lastIndex = (int32)index;
             regexp_result = REExecute(parseResult, S.string->c_str(), S.string->length());
 	    if (regexp_result) {
 		String insertString;

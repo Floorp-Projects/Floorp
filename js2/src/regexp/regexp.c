@@ -114,8 +114,8 @@ typedef struct REContinuationData {
     REOp op;            /* not necessarily the same as node->kind */
     RENode *node;
 
-    REuint32 min;         /* for quantifiers, record the current limits */
-    REuint32 max;
+    REint32 min;         /* for quantifiers, record the current limits */
+    REint32 max;
 
     REuint32 index;       /* for assertions, record the match start */
     REuint32 stackTop;    /* for assertions, record the backTrackStack */
@@ -177,7 +177,7 @@ REuint32 backTrackStackTop;
 /*
     Allocate space for a state and copy x into it.
 */
-REState *copyState(REState *x)
+static REState *copyState(REState *x)
 {
     REState *result = (REState *)malloc(sizeof(REState) 
                                             + (x->n * sizeof(RECapture)));
@@ -188,7 +188,7 @@ REState *copyState(REState *x)
 /*
     Copy state.
 */
-void recoverState(REState *into, REState *from)
+static void recoverState(REState *into, REState *from)
 {
     memcpy(into, from, sizeof(REState) + (from->n * sizeof(RECapture)));
 }
@@ -196,7 +196,7 @@ void recoverState(REState *into, REState *from)
 /*
     Bottleneck for any errors.
 */
-void reportRegExpError(REError *errP, REError err) 
+static void reportRegExpError(REError *errP, REError err) 
 {
     *errP = err;
 }
@@ -204,7 +204,7 @@ void reportRegExpError(REError *errP, REError err)
 /*
     Push the back track data, growing the stack as necessary.
 */
-REBackTrackData *pushBackTrack(REGlobalData *gData, REOp op, RENode *node, 
+static REBackTrackData *pushBackTrack(REGlobalData *gData, REOp op, RENode *node, 
                                REState *x)
 {
     if (backTrackStackTop == maxBackTrack) {
@@ -242,12 +242,12 @@ REbool parseTerm(REParseState *parseState);
 
 #define TOUPPER(c) (c & ~0x20)
 
-REchar canonicalize(REchar ch)
+static REchar canonicalize(REchar ch)
 {
-    return TOUPPER(ch); 
+    return (REchar)(TOUPPER(ch)); 
 }
 
-REbool isASCIIHexDigit(REchar c, REuint32 *digit)
+static REbool isASCIIHexDigit(REchar c, REuint32 *digit)
 {
     REuint32 cv = c;
 
@@ -269,7 +269,7 @@ REbool isASCIIHexDigit(REchar c, REuint32 *digit)
 /*
     Allocate & initialize a new node.
 */
-RENode *newRENode(REParseState *parseState, REOp kind)
+static RENode *newRENode(REParseState *parseState, REOp kind)
 {
     RENode *result = (RENode *)malloc(sizeof(RENode));
     if (result == NULL) {
@@ -384,9 +384,9 @@ REbool parseAlternative(REParseState *parseState)
     }
 }
 
-REuint32 getDecimalValue(REchar c, REParseState *parseState)
+static REint32 getDecimalValue(REchar c, REParseState *parseState)
 {
-    REuint32 value = RE_UNDEC(c);
+    REint32 value = RE_UNDEC(c);
     c = *parseState->src; 
     while (RE_ISDEC(c) && (parseState->src < parseState->srcEnd)) { 
         value = (10 * value) + RE_UNDEC(c); 
@@ -442,7 +442,7 @@ REbool parseTerm(REParseState *parseState)
                     parseState->src--;
                     parseState->result = newRENode(parseState, REOP_FLAT1);
                     if (!parseState->result) return false;
-                    parseState->result->data.ch = num;
+                    parseState->result->data.ch = (REchar)(num);
                 }
                 else {
                     parseState->result = newRENode(parseState, REOP_FLAT1);
@@ -463,7 +463,7 @@ REbool parseTerm(REParseState *parseState)
                 parseState->result = newRENode(parseState, REOP_BACKREF);
                 if (!parseState->result) return false;
                 parseState->result->parenIndex
-                                        = getDecimalValue(c, parseState) - 1;
+                              = (REuint32)(getDecimalValue(c, parseState) - 1);
                 break;
             /* Control escape */
             case 'f':
@@ -497,7 +497,7 @@ REbool parseTerm(REParseState *parseState)
                 if (!parseState->result) return false;
                 if (((parseState->src + 1) < parseState->srcEnd) &&
                                     RE_ISLETTER(parseState->src[1]))
-                    parseState->result->data.ch = *parseState->src++ & 0x1F;
+                    parseState->result->data.ch = (REchar)(*parseState->src++ & 0x1F);
                 else {
                     /* back off to accepting the original '\' as a literal */
                     --parseState->src;
@@ -532,7 +532,7 @@ lexHex:
                         }
                         n = (n << 4) | digit;
                     }
-                    parseState->result->data.ch = n;
+                    parseState->result->data.ch = (REchar)(n);
                 }
                 break;
             /* Character class escapes */
@@ -743,7 +743,7 @@ quantifier:
    <CR>, <LS>, or <PS>, return true.
 5. Return false.
 */
-REState *bolMatcher(REGlobalData *globalData, REState *x)
+static REState *bolMatcher(REGlobalData *globalData, REState *x)
 {
     REuint32 e = x->endIndex;
     if (e != 0) {
@@ -765,7 +765,7 @@ REState *bolMatcher(REGlobalData *globalData, REState *x)
    <CR>, <LS>, or <PS>, return true.
 5. Return false.
 */
-REState *eolMatcher(REGlobalData *globalData, REState *x)
+static REState *eolMatcher(REGlobalData *globalData, REState *x)
 {
     REuint32 e = x->endIndex;
     if (e != globalData->length) {
@@ -788,7 +788,7 @@ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
 0 1 2 3 4 5 6 7 8 9 _
 4. Return false.
 */
-REbool isWordChar(REint32 e, REGlobalData *globalData)
+static REbool isWordChar(REint32 e, REGlobalData *globalData)
 {
     REchar c;
     if ((e == -1) || (e == (REint32)(globalData->length)))
@@ -813,7 +813,7 @@ for '\B'
 5. If a is false and b is true, return false.
 6. Return true.
 */
-REState *wbndMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *wbndMatcher(REGlobalData *globalData, REState *x, REbool sense)
 {
     REint32 e = (REint32)(x->endIndex);
 
@@ -839,7 +839,7 @@ REState *wbndMatcher(REGlobalData *globalData, REState *x, REbool sense)
    characters <LF>, <CR>, <LS>, or <PS>.
 2. Call CharacterSetMatcher(A, false) and return its Matcher result.
 */
-REState *dotMatcher(REGlobalData *globalData, REState *x)
+static REState *dotMatcher(REGlobalData *globalData, REState *x)
 {
     REchar ch;
     REuint32 e = x->endIndex;
@@ -858,7 +858,7 @@ REState *dotMatcher(REGlobalData *globalData, REState *x)
     \D evaluates by returning the set of all characters not included in the set
     returned by \d.
 */
-REState *decMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *decMatcher(REGlobalData *globalData, REState *x, REbool sense)
 {
     REchar ch;
     REuint32 e = x->endIndex;
@@ -878,7 +878,7 @@ REState *decMatcher(REGlobalData *globalData, REState *x, REbool sense)
     \S evaluates by returning the set of all characters not 
     included in the set returned by \s.
 */
-REState *wsMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *wsMatcher(REGlobalData *globalData, REState *x, REbool sense)
 {
     REchar ch;
     REuint32 e = x->endIndex;
@@ -900,7 +900,7 @@ REState *wsMatcher(REGlobalData *globalData, REState *x, REbool sense)
     \W evaluates by returning the set of all characters not included in the set
     returned by \w.
 */
-REState *letdigMatcher(REGlobalData *globalData, REState *x, REbool sense)
+static REState *letdigMatcher(REGlobalData *globalData, REState *x, REbool sense)
 {
     REchar ch;
     REuint32 e = x->endIndex;
@@ -930,7 +930,7 @@ and a Continuation c, and performs the following:
     10. Let y be the State (e+1, cap).
     11. Call c(y) and return its result.
 */
-REState *flatMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
+static REState *flatMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
 {
     REchar ch;
     REuint32 e = x->endIndex;
@@ -944,7 +944,7 @@ REState *flatMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
     return x;
 }
 
-REState *flatIMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
+static REState *flatIMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
 {
     REchar ch;
     REuint32 e = x->endIndex;
@@ -961,7 +961,7 @@ REState *flatIMatcher(REGlobalData *globalData, REState *x, REchar matchCh)
 /*
     Consecutive literal characters.
 */
-REState *flatNMatcher(REGlobalData *globalData, REState *x, REchar *matchChars,
+static REState *flatNMatcher(REGlobalData *globalData, REState *x, REchar *matchChars,
                       REuint32 length)
 {
     REuint32 e = x->endIndex;
@@ -978,7 +978,7 @@ REState *flatNMatcher(REGlobalData *globalData, REState *x, REchar *matchChars,
     return x;
 }
 
-REState *flatNIMatcher(REGlobalData *globalData, REState *x, REchar *matchChars,
+static REState *flatNIMatcher(REGlobalData *globalData, REState *x, REchar *matchChars,
                       REuint32 length)
 {
     REuint32 e = x->endIndex;
@@ -997,20 +997,20 @@ REState *flatNIMatcher(REGlobalData *globalData, REState *x, REchar *matchChars,
 }
 
 /* Add a single character to the CharSet */
-void addCharacterToCharSet(CharSet *cs, REchar c)
+static void addCharacterToCharSet(CharSet *cs, REchar c)
 {
-    REuint32 byteIndex = (c / 8);
+    REuint32 byteIndex = (REuint32)(c / 8);
     ASSERT(c < cs->length);
     cs->bits[byteIndex] |= 1 << (c & 0x7);
 }
 
 /* Add a character range, c1 to c2 (inclusive) to the CharSet */
-void addCharacterRangeToCharSet(CharSet *cs, REchar c1, REchar c2)
+static void addCharacterRangeToCharSet(CharSet *cs, REchar c1, REchar c2)
 {
     REuint32 i;
 
-    REuint32 byteIndex1 = (c1 / 8);
-    REuint32 byteIndex2 = (c2 / 8);
+    REuint32 byteIndex1 = (REuint32)(c1 / 8);
+    REuint32 byteIndex2 = (REuint32)(c2 / 8);
 
     ASSERT((c2 <= cs->length) && (c1 <= c2));
 
@@ -1021,7 +1021,7 @@ void addCharacterRangeToCharSet(CharSet *cs, REchar c1, REchar c2)
 }
 
 /* calculate the total size of the bitmap required for a class expression */
-REbool calculateBitmapSize(RENode *target)
+static REbool calculateBitmapSize(RENode *target)
 {
     const REchar *rangeStart;
     const REchar *src = (const REchar *)(target->child);
@@ -1070,7 +1070,7 @@ REbool calculateBitmapSize(RENode *target)
                 break;
             case 'c':
                 if (((src + 1) < end) && RE_ISLETTER(src[1]))
-                    localMax = *src++ & 0x1F;
+                    localMax = (REchar)(*src++ & 0x1F);
                 else
                     localMax = '\\';
                 break;
@@ -1131,7 +1131,7 @@ lexHex:
 }
 
 /* Compile the source of the class into a CharSet */
-REbool processCharSet(RENode *target)
+static REbool processCharSet(RENode *target)
 {
     const REchar *rangeStart;
     const REchar *src = (const REchar *)(target->child);
@@ -1140,16 +1140,17 @@ REbool processCharSet(RENode *target)
     REchar c;
     REint32 nDigits;
     REint32 i;
+    REuint32 length;
     CharSet *charSet;
 
     if (!calculateBitmapSize(target))
         return false;
     charSet = target->data.chclass.charSet;
-    i = (charSet->length / 8) + 1;
-    charSet->bits = (uint8 *)malloc(i);
+    length = (charSet->length / 8) + 1;
+    charSet->bits = (uint8 *)malloc(length);
     if (!charSet->bits)
         return false;
-    memset(charSet->bits, 0, i);
+    memset(charSet->bits, 0, length);
 
     target->data.chclass.sense = true;
 
@@ -1225,22 +1226,22 @@ lexHex:
                                             (REchar)(charSet->length));
                 break;
             case 's':
-                for (i = charSet->length; i >= 0; i--)
+                for (i = (REint32)(charSet->length); i >= 0; i--)
                     if (RE_ISWS(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
             case 'S':
-                for (i = charSet->length; i >= 0; i--)
+                for (i = (REint32)(charSet->length); i >= 0; i--)
                     if (!RE_ISWS(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
             case 'w':
-                for (i = charSet->length; i >= 0; i--)
+                for (i = (REint32)(charSet->length); i >= 0; i--)
                     if (RE_ISLETDIG(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
             case 'W':
-                for (i = charSet->length; i >= 0; i--)
+                for (i = (REint32)(charSet->length); i >= 0; i--)
                     if (!RE_ISLETDIG(i))
                         addCharacterToCharSet(charSet, (REchar)(i));
                 break;
@@ -1267,7 +1268,7 @@ lexHex:
     Initialize the character set if it this is the first call.
     Test the bit - if the ^ flag was specified, non-inclusion is a success
 */
-REState *classMatcher(REGlobalData *globalData, REState *x, RENode *target)
+static REState *classMatcher(REGlobalData *globalData, REState *x, RENode *target)
 {
     REchar ch;
     CharSet *charSet;
@@ -1281,7 +1282,7 @@ REState *classMatcher(REGlobalData *globalData, REState *x, RENode *target)
     }
     charSet = target->data.chclass.charSet;
     ch = globalData->input[e];
-    byteIndex = (ch / 8) + 1;
+    byteIndex = (REuint32)((ch / 8) + 1);
     if (target->data.chclass.sense) {
         if ( (ch > charSet->length)
                 || ((charSet->bits[byteIndex - 1] & (1 << (ch & 0x7))) == 0) )
@@ -1324,7 +1325,7 @@ REState *classMatcher(REGlobalData *globalData, REState *x, RENode *target)
     10. Call c(y) and return its result.
 */
 
-REState *backrefMatcher(REGlobalData *globalData, REState *x, RENode *child)
+static REState *backrefMatcher(REGlobalData *globalData, REState *x, RENode *child)
 {
     REuint32 e;
     REuint32 len;
@@ -1362,7 +1363,7 @@ REState *backrefMatcher(REGlobalData *globalData, REState *x, RENode *child)
 /*
     free memory the RENode t and it's children, plus any attached memory
 */
-void freeRENode(RENode *t)
+static void freeRENode(RENode *t)
 {
     RENode *n;
     while (t) {
@@ -1411,7 +1412,7 @@ void freeRegExp(REParseState *pState)
  *  a match fails the state on the top of the stack is re-instated.
  *
  */
-REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
+static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
 {
     REOp op = t->kind;
     REContinuationData currentContinuation;
@@ -1508,7 +1509,7 @@ REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
             t->continuation = currentContinuation;
             currentContinuation.op = REOP_CLOSEPAREN;
             currentContinuation.node = t;
-            x->parens[t->parenIndex].index = x->endIndex;
+            x->parens[t->parenIndex].index = (REint32)(x->endIndex);
             x->parens[t->parenIndex].length = 0;
             t = (RENode *)(t->child);
             ASSERT(t);
@@ -1852,9 +1853,9 @@ REState *REExecute(REParseState *parseState, const REchar *text,
 	REchar matchCh = parseState->result->data.ch;
         if (parseState->result->kind == REOP_FLATN)
             matchCh = *((REchar *)parseState->result->child);
-	for (j = i; j < length; j++) {
+	for (j = (REuint32)i; j < length; j++) {
 	    if (text[j] == matchCh) {
-		i = j;
+		i = (REint32)j;
 		break;
 	    }
 	}
@@ -1866,7 +1867,7 @@ REState *REExecute(REParseState *parseState, const REchar *text,
     }
 
     while (true) {
-        x->endIndex = i;
+        x->endIndex = (REuint32)i;
         backTrackStackTop = 0;
         result = executeRENode(parseState->result, &gData, x);
 	for (j = 0; j < backTrackStackTop; j++)
@@ -1883,9 +1884,9 @@ REState *REExecute(REParseState *parseState, const REchar *text,
         }
         else {
             if (parseState->flags & GLOBAL)
-                parseState->lastIndex = result->endIndex;
+                parseState->lastIndex = (REint32)(result->endIndex);
             result->length = result->endIndex - i;
-            result->endIndex = i;
+            result->endIndex = (REuint32)(i);
             break;
         }
     }
