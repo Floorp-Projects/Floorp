@@ -188,7 +188,7 @@
 <!ENTITY replyButton.label "Reply">  
 <!ENTITY forwardButton.img "chrome://messenger/skin/forward.gif">
 <!ENTITY forwardButton.label "Forward">  
-<!ENTITY deleteButton.img "chrome://messenger/skin/delmsg.gif">
+<!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
 <!ENTITY getNewsButton.img "chrome://messenger/skin/getmsg.gif">
 <!ENTITY getNewsButton.label "Load News">  
