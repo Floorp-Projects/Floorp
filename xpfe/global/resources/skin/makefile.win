@@ -37,6 +37,7 @@ install::
 	$(MAKE_INSTALL) menubutton.css $(DISTBROWSER)
 	$(MAKE_INSTALL) menulist.css $(DISTBROWSER)
 	$(MAKE_INSTALL) radio.css $(DISTBROWSER)
+	$(MAKE_INSTALL) tree.css $(DISTBROWSER)
   $(MAKE_INSTALL) scrollbars.css $(DISTBROWSER)
 	$(MAKE_INSTALL) htmlBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) xulBindings.xml $(DISTXUL)
@@ -134,6 +135,8 @@ install::
 	$(MAKE_INSTALL) tab-rightedge.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) sortAscending.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) sortDescending.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) check-check.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) check-radio.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

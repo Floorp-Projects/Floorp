@@ -11,6 +11,7 @@
 @import url(chrome://global/skin/button.css);
 @import url(chrome://global/skin/checkbox.css);
 @import url(chrome://global/skin/radio.css);
+@import url(chrome://global/skin/tree.css);
 @import url(chrome://global/skin/menubutton.css);
 @import url(chrome://global/skin/menulist.css);
 
@@ -123,7 +124,6 @@ toolbar.decorated {
 	background-position: 0% 0%;
 	background-color: #CCCCCC;
 	padding: 0px;
-	padding-bottom: 4px;
 }
 
 toolbar.decorated > #toolbar_throbber_box { 
@@ -729,7 +729,7 @@ titledbox
   border: 2px groove white;
   padding: 5px;
   padding-bottom: 2px;
-  margin: 2px;
+  margin: 5px;
 }
 
 title
@@ -1247,142 +1247,7 @@ titledbutton.borderless[disabled]:active {
   padding: 2px;
 }
 
-/******** Tree widget **********/
-
-tree {
-  background-color: white;
-  border: none;
-  border-spacing: 0px;
-}
-
-tree.inset {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-}
-
-treeitem[selected="true"] > treerow { 
-  color: white;
-  background-color: #336699;
-}
-
-treecell { 
-  white-space: nowrap;
-  vertical-align: middle;
-  padding: 1px 0px 1px 2px;
-} 
-
-treehead > treerow > treecell { 
-  background-color: #CCCCCC; 
-  color: black;
-  border-right: 1px solid white;
-  vertical-align: middle;
-  padding: 0px 0px 0px 5px;
-} 
-
-tree.inset > treehead > treerow > treecell {
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-}
-
-tree.inset > treehead > treerow > treecell.sortable:active {
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-}
-
-treecell.image > titledbutton {
-  text-decoration: none;
-  margin: 0px;
-  padding: 0px;
-}
-
-treecell.image > titledbutton:hover {
-  text-decoration: none;
-  margin: 0px;
-  padding: 0px;
-}
- 
-treecell.image > titledbutton:active {
-  text-decoration: none;
-  margin: 0px;
-  padding: 0px;
-}
-
-.tree-icon {
-  width: 100%;
-}
-
-.tree-button {
- margin: 0px;
- padding: 0px;
- border: none;
- list-style-image: inherit;
- width: 100%;
-}
-
-/* BEN: make rule for property list cells  */
-treecell.propertylist {
-  padding-left: 5px;
-  border-right: 1px solid #CCCCCC;
-  border-bottom: 1px solid #CCCCCC;
-}
-
-treeitem > treerow > treecell > .twisty {
- border: none;
- padding: 0px;
- margin: 0px;
- width: 16px;
- list-style-image: url("chrome://global/skin/closedtwisty.gif");
- user-focus:ignore;
-}
-
-treeitem[selected="true"] > treerow > treecell > .twisty {
-  list-style-image: url("chrome://global/skin/closedtwisty-selected.gif");
-}
-
-.twisty:hover {
- text-decoration: none;
-}
-
-.twisty:active {
- text-decoration: none;
-}
-
-treeitem[empty="true"] > treerow > treecell > titledbutton.twisty {
- list-style-image: none;
-}
-
-treeitem > treerow > treecell > .twisty[disabled="true"] {
- list-style-image: none;
-}
-
-treeitem[container="true"][open="true"] > treerow > treecell > .twisty {
- list-style-image: url("chrome://global/skin/opentwisty.gif");
-}
-
-treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .twisty {
-  list-style-image: url("chrome://global/skin/opentwisty-selected.gif");
-}
-
-
-/* tree header with sort direction indicators */
-treecell.sortDirectionIndicator[sortDirection="ascending"]  > .treeheader-sortdirection {
-  list-style-image: url("chrome://global/skin/sortAscending.gif");
-  margin-right: 3px;
-}
-
-treecell.sortDirectionIndicator[sortDirection="descending"] > .treeheader-sortdirection {
-  list-style-image: url("chrome://global/skin/sortDescending.gif");
-  margin-right: 3px;
-}
-
 /********** Tab widget *********/
-
 tab { 
   border-top: 1px solid white;
   border-bottom: 1px solid #666666;
@@ -2044,7 +1909,7 @@ separator[type="groove"][orient="vertical"] {
 }
 
 html {
-  padding: 5px 3px 5px 4px;
+  margin: 5px;
   cursor: default;
 }
 
@@ -2063,10 +1928,20 @@ box[autostretch="never"], box[autostretch="never"][orient="horizontal"] {
 
 /* NEW WIDGET LANDING: <text> rules */
 text.label {
-  margin: 0px;
-  padding: 5px 3px 5px 4px;
+  margin: 1px 5px 2px 5px;
 }
 
 progressmeter {
   margin: 0px 4px 0px 4px;
 }
+
+/* NEW WIDGETS <box> formatting */
+box[autostretch="never"] {
+  vertical-align: middle;
+}
+
+box[autostretch="never"][orient="vertical"] {
+  text-align: center;
+}
+
+

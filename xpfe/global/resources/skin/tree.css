@@ -1,0 +1,145 @@
+
+/******** Tree widget **********/
+
+/** basic tree ****************************************************
+ *  basic tree widget for use in main windows where no decoration
+ *  is required.
+ **/
+tree {
+  background-color: white;
+  border: none;
+  border-spacing: 0px;
+}
+
+/** class="inset" *************************************************
+ *  this is the tree class used by dialogs to create treeviews with 
+ *  inset borders, and default dialog spacing.
+ **/
+tree.inset {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  margin: 1px 5px 2px 5px;
+}
+
+treeitem[selected="true"] > treerow { 
+  color: white;
+  background-color: #336699;
+}
+
+treecell { 
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 1px 0px 1px 2px;
+} 
+
+treehead > treerow > treecell { 
+  background-color: #CCCCCC; 
+  color: black;
+  border-right: 1px solid white;
+  vertical-align: middle;
+  padding: 0px 0px 0px 5px;
+} 
+
+tree.inset > treehead > treerow > treecell {
+  border-top: 1px solid white;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+}
+
+tree.inset > treehead > treerow > treecell.sortable:active {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+}
+
+treecell.image > titledbutton {
+  text-decoration: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+treecell.image > titledbutton:hover {
+  text-decoration: none;
+  margin: 0px;
+  padding: 0px;
+}
+ 
+treecell.image > titledbutton:active {
+  text-decoration: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.tree-icon {
+  width: 100%;
+}
+
+.tree-button {
+ margin: 0px;
+ padding: 0px;
+ border: none;
+ list-style-image: inherit;
+ width: 100%;
+}
+
+/** class="propertylist" ******************************************
+ *  class for cells in grid-formatted property lists.
+ **/
+treecell.propertylist {
+  padding-left: 5px;
+  border-right: 1px solid #CCCCCC;
+  border-bottom: 1px solid #CCCCCC;
+}
+
+treeitem > treerow > treecell > .twisty {
+ border: none;
+ padding: 0px;
+ margin: 0px;
+ width: 16px;
+ list-style-image: url("chrome://global/skin/closedtwisty.gif");
+ user-focus:ignore;
+}
+
+treeitem[selected="true"] > treerow > treecell > .twisty {
+  list-style-image: url("chrome://global/skin/closedtwisty-selected.gif");
+}
+
+.twisty:hover {
+ text-decoration: none;
+}
+
+.twisty:active {
+ text-decoration: none;
+}
+
+treeitem[empty="true"] > treerow > treecell > titledbutton.twisty {
+ list-style-image: none;
+}
+
+treeitem > treerow > treecell > .twisty[disabled="true"] {
+ list-style-image: none;
+}
+
+treeitem[container="true"][open="true"] > treerow > treecell > .twisty {
+ list-style-image: url("chrome://global/skin/opentwisty.gif");
+}
+
+treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .twisty {
+  list-style-image: url("chrome://global/skin/opentwisty-selected.gif");
+}
+
+
+/* tree header with sort direction indicators */
+treecell.sortDirectionIndicator[sortDirection="ascending"]  > .treeheader-sortdirection {
+  list-style-image: url("chrome://global/skin/sortAscending.gif");
+  margin-right: 3px;
+}
+
+treecell.sortDirectionIndicator[sortDirection="descending"] > .treeheader-sortdirection {
+  list-style-image: url("chrome://global/skin/sortDescending.gif");
+  margin-right: 3px;
+}
