@@ -104,3 +104,11 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
   }
   return nsBoxFrame::GetAdditionalChildListName(aIndex, aListName);
 }
+
+NS_IMETHODIMP
+nsMenuFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+   // Cleanup frames in popup child list
+  mPopupFrames.DeleteFrames(aPresContext);
+  return nsBoxFrame::DeleteFrame(aPresContext);
+}
