@@ -2043,7 +2043,7 @@ nsTextServicesDocument::DeleteSelection()
       // The range has changed, so we need to create a new content
       // iterator based on the new range.
 
-      nsIContent *curContent;
+      nsIContent *curContent = nsnull;
 
       if (mIteratorStatus != nsTextServicesDocument::eIsDone)
       {
