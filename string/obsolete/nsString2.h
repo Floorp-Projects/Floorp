@@ -57,8 +57,8 @@ class nsISizeOfHandler;
 #define nsString2     nsString
 #define nsAutoString2 nsAutoString
 
-
 class NS_COM nsSubsumeStr;
+
 class NS_COM nsString :
 #ifdef NEW_STRING_APIS
   public nsAWritableString,
@@ -74,14 +74,9 @@ public:
   nsString( const nsAReadableString& );
 
 #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
-  using nsAWritableString::Assign;
   using nsAWritableString::Append;
   using nsAWritableString::Insert;
 #else
-  virtual void Assign( const nsAReadableString& aReadable ) {
-    nsAWritableString::Assign(aReadable);
-  }
-
   virtual void Append( const nsAReadableString& aReadable ) {
     nsAWritableString::Append(aReadable);
   }
@@ -438,20 +433,6 @@ public:
    *********************************************************************/
 
   /**
-   * Functionally equivalent to assign or operator=
-   * 
-   */
-#ifdef NEW_STRING_APIS
-  nsString& SetString(const char* aString,PRInt32 aLength=-1) {Assign(aString); return *this;}
-  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {Assign(aString); return *this;}
-  nsString& SetString(const nsString& aString,PRInt32 aLength=-1) {Assign(aString); return *this;}
-#else
-  nsString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString, aLength);}
-  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {return Assign(aString, aLength);}
-  nsString& SetString(const nsString& aString,PRInt32 aLength=-1) {return Assign(aString, aLength);}
-#endif
-
-  /**
    * assign given string to this string
    * @param   aStr: buffer to be assigned to this 
    * @param   aCount is the length of the given str (or -1) if you want me to determine its length
@@ -459,13 +440,42 @@ public:
 
    * @return  this
    */
+#ifdef NEW_STRING_APIS
+#ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
+  using nsAWritableString::Assign;
+#else
+  virtual void Assign( const nsAReadableString& aReadable ) {
+    nsAWritableString::Assign(aReadable);
+  }
+#endif
+#endif
+  nsString& Assign(const PRUnichar* aString,PRInt32 aCount=-1);
+  nsString& Assign(PRUnichar aChar);
+
+  void AssignWithConversion(const char*, PRInt32=-1);
+  void AssignWithConversion(char);
+
 #ifndef NEW_STRING_APIS
   nsString& Assign(const nsStr& aString,PRInt32 aCount=-1);
+  nsString& Assign(const char* aString,PRInt32 aCount=-1) { AssignWithConversion(aString, aCount); return *this; }
+  nsString& Assign(char aChar)                            { AssignWithConversion(aChar); return *this; }
 #endif
-  nsString& Assign(const char* aString,PRInt32 aCount=-1);
-  nsString& Assign(const PRUnichar* aString,PRInt32 aCount=-1);
-  nsString& Assign(char aChar);
-  nsString& Assign(PRUnichar aChar);
+
+
+  /**
+   * Functionally equivalent to assign or operator=
+   * 
+   */
+  nsString& SetString(const char* aString,PRInt32 aLength=-1)       {AssignWithConversion(aString, aLength); return *this;}
+#ifdef NEW_STRING_APIS
+  nsString& SetString(const nsString& aString,PRInt32 aLength=-1)   {Assign(aString); return *this;}
+  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1)  {Assign(aString); return *this;}
+#else
+  nsString& SetString(const nsString& aString,PRInt32 aLength=-1)   {return Assign(aString, aLength);}
+  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1)  {return Assign(aString, aLength);}
+#endif
+
+  
 
   /**
    * here come a bunch of assignment operators...
@@ -479,20 +489,20 @@ public:
     nsString& operator=( const nsAReadableString& aReadable ) { nsAWritableString::operator=(aReadable); return *this; }
   #endif
 #endif
-  nsString& operator=(char aChar) {return Assign(aChar);}
-  nsString& operator=(PRUnichar aChar) {return Assign(aChar);}
-  nsString& operator=(const char* aCString) {return Assign(aCString);}
+  nsString& operator=(PRUnichar aChar)      {return Assign(aChar);}
+  nsString& operator=(char aChar)           {AssignWithConversion(aChar); return *this;}
+  nsString& operator=(const char* aCString) {AssignWithConversion(aCString); return *this;}
 
 #ifndef NEW_STRING_APIS
   nsString& operator=(const nsString& aString) {return Assign(aString);}
   nsString& operator=(const nsStr& aString) {return Assign(aString);}
   nsString& operator=(const PRUnichar* aString) {return Assign(aString);}
+#endif
   #ifdef AIX
   nsString& operator=(const nsSubsumeStr& aSubsumeString);  // AIX requires a const here
   #else
   nsString& operator=(nsSubsumeStr& aSubsumeString);
   #endif
-#endif
 
   /**
    * Here's a bunch of methods that append varying types...
@@ -873,11 +883,13 @@ public:
     nsAutoString(const CBufDescriptor& aBuffer);    
     nsAutoString(const nsStr& aString);
     nsAutoString(const nsAutoString& aString);
+
 #ifdef AIX
     nsAutoString(const nsSubsumeStr& aSubsumeStr);  // AIX requires a const
 #else
     nsAutoString(nsSubsumeStr& aSubsumeStr);
 #endif // AIX
+
     nsAutoString(PRUnichar aChar);
     virtual ~nsAutoString();
 
@@ -922,7 +934,6 @@ public:
   nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 };
-
 
 
 #endif

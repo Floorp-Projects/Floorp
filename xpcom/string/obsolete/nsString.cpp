@@ -86,7 +86,7 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength) {
  */
 nsCString::nsCString(const PRUnichar* aString,PRInt32 aLength)  {  
   nsStr::Initialize(*this,eOneByte);
-  Assign(aString,aLength);
+  AssignWithConversion(aString,aLength);
 }
 
 /**
@@ -826,7 +826,7 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   String manipulation methods...                
  *********************************************************************/
 
-
+#ifndef NEW_STRING_APIS
 /**
  * assign given nsStr (or derivative) to this one
  * @update  gess 01/04/99
@@ -845,6 +845,7 @@ nsCString& nsCString::Assign(const nsStr& aString,PRInt32 aCount) {
   }
   return *this;
 }
+#endif
   
 /**
  * assign given char* to this string
@@ -872,7 +873,7 @@ nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
  *
  * @return  this
  */
-nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
+void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
   nsStr::Truncate(*this,0);
 
   if(aString && aCount){
@@ -898,7 +899,6 @@ nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
     if(0<aCount)
       nsStr::Append(*this,temp,0,aCount);
   }
-  return *this;
 }
 
 
@@ -908,9 +908,9 @@ nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
  * @param   aChar: char to be assignd to this
  * @return  this
  */
-nsCString& nsCString::Assign(PRUnichar aChar) {
+void nsCString::AssignWithConversion(PRUnichar aChar) {
   nsStr::Truncate(*this,0);
-  return Append(aChar);
+  Append(aChar);
 }
 
 /**
@@ -924,7 +924,6 @@ nsCString& nsCString::Assign(char aChar) {
   return Append(aChar);
 }
 
-#ifndef NEW_STRING_APIS
 /**
  * WARNING! THIS IS A VERY SPECIAL METHOD. 
  * This method "steals" the contents of aSource and hands it to aDest.
@@ -943,7 +942,6 @@ nsCString& nsCString::operator=(nsSubsumeCStr& aSubsumeString) {
 #endif // AIX
   return *this;
 }
-#endif
 
 /**
  * append given string to this string
@@ -1927,5 +1925,6 @@ nsSubsumeCStr::nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLengt
   mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength;
   mOwnsBuffer=assumeOwnership;
 }
+
 
 

@@ -39,7 +39,6 @@ static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
 
 
-
 static void Subsume(nsStr& aDest,nsStr& aSource){
   if(aSource.mStr && aSource.mLength) {
     if(aSource.mOwnsBuffer){
@@ -75,7 +74,7 @@ nsString::nsString() {
  */
 nsString::nsString(const char* aCString,PRInt32 aCount){  
   nsStr::Initialize(*this,eTwoByte);
-  Assign(aCString,aCount);
+  AssignWithConversion(aCString,aCount);
 }
 
 /**
@@ -834,7 +833,7 @@ char* nsString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) con
 
     CBufDescriptor theDescr(aBuf,PR_TRUE,aBufLength,0);
     nsCAutoString temp(theDescr);
-    temp.Assign(*this,aBufLength-1);
+    nsStr::Assign(temp, *this, anOffset, aBufLength-1);
     temp.mStr=0;
   }
   return aBuf;
@@ -1008,12 +1007,11 @@ nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
  *
  * @return  this
  */
-nsString& nsString::Assign(const char* aCString,PRInt32 aCount) {
+void nsString::AssignWithConversion(const char* aCString,PRInt32 aCount) {
   nsStr::Truncate(*this,0);
   if(aCString){
     Append(aCString,aCount);
   }
-  return *this;
 }
 
 /**
@@ -1039,9 +1037,9 @@ nsString& nsString::Assign(const PRUnichar* aString,PRInt32 aCount) {
  * @param   aChar: char to be assignd to this
  * @return  this
  */
-nsString& nsString::Assign(char aChar) {
+void nsString::AssignWithConversion(char aChar) {
   nsStr::Truncate(*this,0);
-  return Append(aChar);
+  Append(aChar);
 }
 
 /**
@@ -1055,7 +1053,6 @@ nsString& nsString::Assign(PRUnichar aChar) {
   return Append(aChar);
 }
 
-#ifndef NEW_STRING_APIS
 /**
  * WARNING! THIS IS A VERY SPECIAL METHOD. 
  * This method "steals" the contents of aSource and hands it to aDest.
@@ -1074,7 +1071,6 @@ nsString& nsString::operator=(const nsSubsumeStr& aSubsumeString) {
 #endif // AIX
   return *this;
 }
-#endif
 
 /**
  * append given string to this string; 
@@ -2227,8 +2223,8 @@ void nsString::DebugDump(void) const {
   const char* theBuffer=mStr;
   nsCAutoString temp;
 
-  if(eTwoByte==mCharSize) {    
-    temp.Assign(*this);
+  if(eTwoByte==mCharSize) {  
+    nsStr::Assign(temp, *this, 0, mLength);  
     theBuffer=temp.GetBuffer();
   }
 
@@ -2377,3 +2373,4 @@ int nsSubsumeStr::Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLen
   mOwnsBuffer=assumeOwnership;
   return 0;
 }
+
