@@ -705,451 +705,451 @@ PRBool nsXULKeyListenerImpl::IsMatchingKeyCode(const PRUint32 theChar, const nsS
 
   switch ( theChar ) {
     case VK_CANCEL:
-      if(keyName.EqualsWithConversion("VK_CANCEL"))
+      if(keyName == NS_LITERAL_STRING("VK_CANCEL"))
         ret = PR_TRUE;
         break;
     case VK_BACK:
-      if(keyName.EqualsWithConversion("VK_BACK"))
+      if(keyName == NS_LITERAL_STRING("VK_BACK"))
         ret = PR_TRUE;
         break;
     case VK_TAB:
-      if(keyName.EqualsWithConversion("VK_TAB"))
+      if(keyName == NS_LITERAL_STRING("VK_TAB"))
         ret = PR_TRUE;
         break;
     case VK_CLEAR:
-      if(keyName.EqualsWithConversion("VK_CLEAR"))
+      if(keyName == NS_LITERAL_STRING("VK_CLEAR"))
         ret = PR_TRUE;
         break;
     case VK_RETURN:
-      if(keyName.EqualsWithConversion("VK_RETURN"))
+      if(keyName == NS_LITERAL_STRING("VK_RETURN"))
         ret = PR_TRUE;
         break;
     case VK_ENTER:
-      if(keyName.EqualsWithConversion("VK_ENTER"))
+      if(keyName == NS_LITERAL_STRING("VK_ENTER"))
         ret = PR_TRUE;
         break;
     case VK_SHIFT:
-      if(keyName.EqualsWithConversion("VK_SHIFT"))
+      if(keyName == NS_LITERAL_STRING("VK_SHIFT"))
         ret = PR_TRUE;
         break;
     case VK_CONTROL:
-      if(keyName.EqualsWithConversion("VK_CONTROL"))
+      if(keyName == NS_LITERAL_STRING("VK_CONTROL"))
         ret = PR_TRUE;
         break;
     case VK_ALT:
-      if(keyName.EqualsWithConversion("VK_ALT"))
+      if(keyName == NS_LITERAL_STRING("VK_ALT"))
         ret = PR_TRUE;
         break;
     case VK_PAUSE:
-      if(keyName.EqualsWithConversion("VK_PAUSE"))
+      if(keyName == NS_LITERAL_STRING("VK_PAUSE"))
         ret = PR_TRUE;
         break;
     case VK_CAPS_LOCK:
-      if(keyName.EqualsWithConversion("VK_CAPS_LOCK"))
+      if(keyName == NS_LITERAL_STRING("VK_CAPS_LOCK"))
         ret = PR_TRUE;
         break;
     case VK_ESCAPE:
-      if(keyName.EqualsWithConversion("VK_ESCAPE"))
+      if(keyName == NS_LITERAL_STRING("VK_ESCAPE"))
         ret = PR_TRUE;
         break;
     case VK_SPACE:
-      if(keyName.EqualsWithConversion("VK_SPACE"))
+      if(keyName == NS_LITERAL_STRING("VK_SPACE"))
         ret = PR_TRUE;
         break;
     case VK_PAGE_UP:
-      if(keyName.EqualsWithConversion("VK_PAGE_UP"))
+      if(keyName == NS_LITERAL_STRING("VK_PAGE_UP"))
         ret = PR_TRUE;
         break;
     case VK_PAGE_DOWN:
-      if(keyName.EqualsWithConversion("VK_PAGE_DOWN"))
+      if(keyName == NS_LITERAL_STRING("VK_PAGE_DOWN"))
         ret = PR_TRUE;
         break;
     case VK_END:
-      if(keyName.EqualsWithConversion("VK_END"))
+      if(keyName == NS_LITERAL_STRING("VK_END"))
         ret = PR_TRUE;
         break;
     case VK_HOME:
-      if(keyName.EqualsWithConversion("VK_HOME"))
+      if(keyName == NS_LITERAL_STRING("VK_HOME"))
         ret = PR_TRUE;
         break;
     case VK_LEFT:
-      if(keyName.EqualsWithConversion("VK_LEFT"))
+      if(keyName == NS_LITERAL_STRING("VK_LEFT"))
         ret = PR_TRUE;
         break;
     case VK_UP:
-      if(keyName.EqualsWithConversion("VK_UP"))
+      if(keyName == NS_LITERAL_STRING("VK_UP"))
         ret = PR_TRUE;
         break;
     case VK_RIGHT:
-      if(keyName.EqualsWithConversion("VK_RIGHT"))
+      if(keyName == NS_LITERAL_STRING("VK_RIGHT"))
         ret = PR_TRUE;
         break;
     case VK_DOWN:
-      if(keyName.EqualsWithConversion("VK_DOWN"))
+      if(keyName == NS_LITERAL_STRING("VK_DOWN"))
         ret = PR_TRUE;
         break;
     case VK_PRINTSCREEN:
-      if(keyName.EqualsWithConversion("VK_PRINTSCREEN"))
+      if(keyName == NS_LITERAL_STRING("VK_PRINTSCREEN"))
         ret = PR_TRUE;
         break;
     case VK_INSERT:
-      if(keyName.EqualsWithConversion("VK_INSERT"))
+      if(keyName == NS_LITERAL_STRING("VK_INSERT"))
         ret = PR_TRUE;
         break;
     case VK_DELETE:
-      if(keyName.EqualsWithConversion("VK_DELETE"))
+      if(keyName == NS_LITERAL_STRING("VK_DELETE"))
         ret = PR_TRUE;
         break;
     case VK_0:
-      if(keyName.EqualsWithConversion("VK_0"))
+      if(keyName == NS_LITERAL_STRING("VK_0"))
         ret = PR_TRUE;
         break;
     case VK_1:
-      if(keyName.EqualsWithConversion("VK_1"))
+      if(keyName == NS_LITERAL_STRING("VK_1"))
         ret = PR_TRUE;
         break;
     case VK_2:
-      if(keyName.EqualsWithConversion("VK_2"))
+      if(keyName == NS_LITERAL_STRING("VK_2"))
         ret = PR_TRUE;
         break;
     case VK_3:
-      if(keyName.EqualsWithConversion("VK_3"))
+      if(keyName == NS_LITERAL_STRING("VK_3"))
         ret = PR_TRUE;
         break;
     case VK_4:
-      if(keyName.EqualsWithConversion("VK_4"))
+      if(keyName == NS_LITERAL_STRING("VK_4"))
         ret = PR_TRUE;
         break;
     case VK_5:
-      if(keyName.EqualsWithConversion("VK_5"))
+      if(keyName == NS_LITERAL_STRING("VK_5"))
         ret = PR_TRUE;
         break;
     case VK_6:
-      if(keyName.EqualsWithConversion("VK_6"))
+      if(keyName == NS_LITERAL_STRING("VK_6"))
         ret = PR_TRUE;
         break;
     case VK_7:
-      if(keyName.EqualsWithConversion("VK_7"))
+      if(keyName == NS_LITERAL_STRING("VK_7"))
         ret = PR_TRUE;
         break;
     case VK_8:
-      if(keyName.EqualsWithConversion("VK_8"))
+      if(keyName == NS_LITERAL_STRING("VK_8"))
         ret = PR_TRUE;
         break;
     case VK_9:
-      if(keyName.EqualsWithConversion("VK_9"))
+      if(keyName == NS_LITERAL_STRING("VK_9"))
         ret = PR_TRUE;
         break;
     case VK_SEMICOLON:
-      if(keyName.EqualsWithConversion("VK_SEMICOLON"))
+      if(keyName == NS_LITERAL_STRING("VK_SEMICOLON"))
         ret = PR_TRUE;
         break;
     case VK_EQUALS:
-      if(keyName.EqualsWithConversion("VK_EQUALS"))
+      if(keyName == NS_LITERAL_STRING("VK_EQUALS"))
         ret = PR_TRUE;
         break;
     case VK_A:
-      if(keyName.EqualsWithConversion("VK_A")  || keyName.EqualsWithConversion("A") || keyName.EqualsWithConversion("a"))
+      if(keyName == NS_LITERAL_STRING("VK_A")  || keyName == NS_LITERAL_STRING("A") || keyName == NS_LITERAL_STRING("a"))
         ret = PR_TRUE;
         break;
     case VK_B:
-      if(keyName.EqualsWithConversion("VK_B") || keyName.EqualsWithConversion("B") || keyName.EqualsWithConversion("b"))
+      if(keyName == NS_LITERAL_STRING("VK_B") || keyName == NS_LITERAL_STRING("B") || keyName == NS_LITERAL_STRING("b"))
         ret = PR_TRUE;
     break;
     case VK_C:
-      if(keyName.EqualsWithConversion("VK_C")  || keyName.EqualsWithConversion("C") || keyName.EqualsWithConversion("c"))
+      if(keyName == NS_LITERAL_STRING("VK_C")  || keyName == NS_LITERAL_STRING("C") || keyName == NS_LITERAL_STRING("c"))
         ret = PR_TRUE;
         break;
     case VK_D:
-      if(keyName.EqualsWithConversion("VK_D")  || keyName.EqualsWithConversion("D") || keyName.EqualsWithConversion("d"))
+      if(keyName == NS_LITERAL_STRING("VK_D")  || keyName == NS_LITERAL_STRING("D") || keyName == NS_LITERAL_STRING("d"))
         ret = PR_TRUE;
         break;
     case VK_E:
-      if(keyName.EqualsWithConversion("VK_E")  || keyName.EqualsWithConversion("E") || keyName.EqualsWithConversion("e"))
+      if(keyName == NS_LITERAL_STRING("VK_E")  || keyName == NS_LITERAL_STRING("E") || keyName == NS_LITERAL_STRING("e"))
         ret = PR_TRUE;
         break;
     case VK_F:
-      if(keyName.EqualsWithConversion("VK_F")  || keyName.EqualsWithConversion("F") || keyName.EqualsWithConversion("f"))
+      if(keyName == NS_LITERAL_STRING("VK_F")  || keyName == NS_LITERAL_STRING("F") || keyName == NS_LITERAL_STRING("f"))
         ret = PR_TRUE;
         break;
     case VK_G:
-      if(keyName.EqualsWithConversion("VK_G")  || keyName.EqualsWithConversion("G") || keyName.EqualsWithConversion("g"))
+      if(keyName == NS_LITERAL_STRING("VK_G")  || keyName == NS_LITERAL_STRING("G") || keyName == NS_LITERAL_STRING("g"))
         ret = PR_TRUE;
         break;
     case VK_H:
-      if(keyName.EqualsWithConversion("VK_H")  || keyName.EqualsWithConversion("H") || keyName.EqualsWithConversion("h"))
+      if(keyName == NS_LITERAL_STRING("VK_H")  || keyName == NS_LITERAL_STRING("H") || keyName == NS_LITERAL_STRING("h"))
         ret = PR_TRUE;
         break;
     case VK_I:
-      if(keyName.EqualsWithConversion("VK_I")  || keyName.EqualsWithConversion("I") || keyName.EqualsWithConversion("i"))
+      if(keyName == NS_LITERAL_STRING("VK_I")  || keyName == NS_LITERAL_STRING("I") || keyName == NS_LITERAL_STRING("i"))
         ret = PR_TRUE;
         break;
     case VK_J:
-      if(keyName.EqualsWithConversion("VK_J")  || keyName.EqualsWithConversion("J") || keyName.EqualsWithConversion("j"))
+      if(keyName == NS_LITERAL_STRING("VK_J")  || keyName == NS_LITERAL_STRING("J") || keyName == NS_LITERAL_STRING("j"))
         ret = PR_TRUE;
         break;
     case VK_K:
-      if(keyName.EqualsWithConversion("VK_K")  || keyName.EqualsWithConversion("K") || keyName.EqualsWithConversion("k"))
+      if(keyName == NS_LITERAL_STRING("VK_K")  || keyName == NS_LITERAL_STRING("K") || keyName == NS_LITERAL_STRING("k"))
         ret = PR_TRUE;
         break;
     case VK_L:
-      if(keyName.EqualsWithConversion("VK_L")  || keyName.EqualsWithConversion("L") || keyName.EqualsWithConversion("l"))
+      if(keyName == NS_LITERAL_STRING("VK_L")  || keyName == NS_LITERAL_STRING("L") || keyName == NS_LITERAL_STRING("l"))
         ret = PR_TRUE;
         break;
     case VK_M:
-      if(keyName.EqualsWithConversion("VK_M")  || keyName.EqualsWithConversion("M") || keyName.EqualsWithConversion("m"))
+      if(keyName == NS_LITERAL_STRING("VK_M")  || keyName == NS_LITERAL_STRING("M") || keyName == NS_LITERAL_STRING("m"))
         ret = PR_TRUE;
         break;
     case VK_N:
-      if(keyName.EqualsWithConversion("VK_N")  || keyName.EqualsWithConversion("N") || keyName.EqualsWithConversion("n"))
+      if(keyName == NS_LITERAL_STRING("VK_N")  || keyName == NS_LITERAL_STRING("N") || keyName == NS_LITERAL_STRING("n"))
         ret = PR_TRUE;
         break;
     case VK_O:
-      if(keyName.EqualsWithConversion("VK_O")  || keyName.EqualsWithConversion("O") || keyName.EqualsWithConversion("o"))
+      if(keyName == NS_LITERAL_STRING("VK_O")  || keyName == NS_LITERAL_STRING("O") || keyName == NS_LITERAL_STRING("o"))
         ret = PR_TRUE;
         break;
     case VK_P:
-      if(keyName.EqualsWithConversion("VK_P")  || keyName.EqualsWithConversion("P") || keyName.EqualsWithConversion("p"))
+      if(keyName == NS_LITERAL_STRING("VK_P")  || keyName == NS_LITERAL_STRING("P") || keyName == NS_LITERAL_STRING("p"))
         ret = PR_TRUE;
         break;
     case VK_Q:
-      if(keyName.EqualsWithConversion("VK_Q")  || keyName.EqualsWithConversion("Q") || keyName.EqualsWithConversion("q"))
+      if(keyName == NS_LITERAL_STRING("VK_Q")  || keyName == NS_LITERAL_STRING("Q") || keyName == NS_LITERAL_STRING("q"))
         ret = PR_TRUE;
         break;
     case VK_R:
-      if(keyName.EqualsWithConversion("VK_R")  || keyName.EqualsWithConversion("R") || keyName.EqualsWithConversion("r"))
+      if(keyName == NS_LITERAL_STRING("VK_R")  || keyName == NS_LITERAL_STRING("R") || keyName == NS_LITERAL_STRING("r"))
         ret = PR_TRUE;
         break;
     case VK_S:
-      if(keyName.EqualsWithConversion("VK_S")  || keyName.EqualsWithConversion("S") || keyName.EqualsWithConversion("s"))
+      if(keyName == NS_LITERAL_STRING("VK_S")  || keyName == NS_LITERAL_STRING("S") || keyName == NS_LITERAL_STRING("s"))
         ret = PR_TRUE;
         break;
     case VK_T:
-      if(keyName.EqualsWithConversion("VK_T")  || keyName.EqualsWithConversion("T") || keyName.EqualsWithConversion("t"))
+      if(keyName == NS_LITERAL_STRING("VK_T")  || keyName == NS_LITERAL_STRING("T") || keyName == NS_LITERAL_STRING("t"))
         ret = PR_TRUE;
         break;
     case VK_U:
-      if(keyName.EqualsWithConversion("VK_U")  || keyName.EqualsWithConversion("U") || keyName.EqualsWithConversion("u"))
+      if(keyName == NS_LITERAL_STRING("VK_U")  || keyName == NS_LITERAL_STRING("U") || keyName == NS_LITERAL_STRING("u"))
         ret = PR_TRUE;
         break;
     case VK_V:
-      if(keyName.EqualsWithConversion("VK_V")  || keyName.EqualsWithConversion("V") || keyName.EqualsWithConversion("v"))
+      if(keyName == NS_LITERAL_STRING("VK_V")  || keyName == NS_LITERAL_STRING("V") || keyName == NS_LITERAL_STRING("v"))
         ret = PR_TRUE;
         break;
     case VK_W:
-      if(keyName.EqualsWithConversion("VK_W")  || keyName.EqualsWithConversion("W") || keyName.EqualsWithConversion("w"))
+      if(keyName == NS_LITERAL_STRING("VK_W")  || keyName == NS_LITERAL_STRING("W") || keyName == NS_LITERAL_STRING("w"))
         ret = PR_TRUE;
         break;
     case VK_X:
-      if(keyName.EqualsWithConversion("VK_X")  || keyName.EqualsWithConversion("X") || keyName.EqualsWithConversion("x"))
+      if(keyName == NS_LITERAL_STRING("VK_X")  || keyName == NS_LITERAL_STRING("X") || keyName == NS_LITERAL_STRING("x"))
         ret = PR_TRUE;
         break;
     case VK_Y:
-      if(keyName.EqualsWithConversion("VK_Y")  || keyName.EqualsWithConversion("Y") || keyName.EqualsWithConversion("y"))
+      if(keyName == NS_LITERAL_STRING("VK_Y")  || keyName == NS_LITERAL_STRING("Y") || keyName == NS_LITERAL_STRING("y"))
         ret = PR_TRUE;
         break;
     case VK_Z:
-      if(keyName.EqualsWithConversion("VK_Z")  || keyName.EqualsWithConversion("Z") || keyName.EqualsWithConversion("z"))
+      if(keyName == NS_LITERAL_STRING("VK_Z")  || keyName == NS_LITERAL_STRING("Z") || keyName == NS_LITERAL_STRING("z"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD0:
-      if(keyName.EqualsWithConversion("VK_NUMPAD0"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD0"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD1:
-      if(keyName.EqualsWithConversion("VK_NUMPAD1"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD1"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD2:
-      if(keyName.EqualsWithConversion("VK_NUMPAD2"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD2"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD3:
-      if(keyName.EqualsWithConversion("VK_NUMPAD3"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD3"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD4:
-      if(keyName.EqualsWithConversion("VK_NUMPAD4"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD4"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD5:
-      if(keyName.EqualsWithConversion("VK_NUMPAD5"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD5"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD6:
-      if(keyName.EqualsWithConversion("VK_NUMPAD6"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD6"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD7:
-      if(keyName.EqualsWithConversion("VK_NUMPAD7"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD7"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD8:
-      if(keyName.EqualsWithConversion("VK_NUMPAD8"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD8"))
         ret = PR_TRUE;
         break;
     case VK_NUMPAD9:
-      if(keyName.EqualsWithConversion("VK_NUMPAD9"))
+      if(keyName == NS_LITERAL_STRING("VK_NUMPAD9"))
         ret = PR_TRUE;
         break;
     case VK_MULTIPLY:
-      if(keyName.EqualsWithConversion("VK_MULTIPLY"))
+      if(keyName == NS_LITERAL_STRING("VK_MULTIPLY"))
         ret = PR_TRUE;
         break;
     case VK_ADD:
-      if(keyName.EqualsWithConversion("VK_ADD"))
+      if(keyName == NS_LITERAL_STRING("VK_ADD"))
         ret = PR_TRUE;
         break;
     case VK_SEPARATOR:
-      if(keyName.EqualsWithConversion("VK_SEPARATOR"))
+      if(keyName == NS_LITERAL_STRING("VK_SEPARATOR"))
         ret = PR_TRUE;
         break;
     case VK_SUBTRACT:
-      if(keyName.EqualsWithConversion("VK_SUBTRACT"))
+      if(keyName == NS_LITERAL_STRING("VK_SUBTRACT"))
         ret = PR_TRUE;
         break;
     case VK_DECIMAL:
-      if(keyName.EqualsWithConversion("VK_DECIMAL"))
+      if(keyName == NS_LITERAL_STRING("VK_DECIMAL"))
         ret = PR_TRUE;
         break;
     case VK_DIVIDE:
-      if(keyName.EqualsWithConversion("VK_DIVIDE"))
+      if(keyName == NS_LITERAL_STRING("VK_DIVIDE"))
         ret = PR_TRUE;
         break;
     case VK_F1:
-      if(keyName.EqualsWithConversion("VK_F1"))
+      if(keyName == NS_LITERAL_STRING("VK_F1"))
         ret = PR_TRUE;
         break;
     case VK_F2:
-      if(keyName.EqualsWithConversion("VK_F2"))
+      if(keyName == NS_LITERAL_STRING("VK_F2"))
         ret = PR_TRUE;
         break;
     case VK_F3:
-      if(keyName.EqualsWithConversion("VK_F3"))
+      if(keyName == NS_LITERAL_STRING("VK_F3"))
         ret = PR_TRUE;
         break;
     case VK_F4:
-      if(keyName.EqualsWithConversion("VK_F4"))
+      if(keyName == NS_LITERAL_STRING("VK_F4"))
         ret = PR_TRUE;
         break;
     case VK_F5:
-      if(keyName.EqualsWithConversion("VK_F5"))
+      if(keyName == NS_LITERAL_STRING("VK_F5"))
         ret = PR_TRUE;
         break;
     case VK_F6:
-      if(keyName.EqualsWithConversion("VK_F6"))
+      if(keyName == NS_LITERAL_STRING("VK_F6"))
         ret = PR_TRUE;
         break;
     case VK_F7:
-      if(keyName.EqualsWithConversion("VK_F7"))
+      if(keyName == NS_LITERAL_STRING("VK_F7"))
         ret = PR_TRUE;
         break;
     case VK_F8:
-      if(keyName.EqualsWithConversion("VK_F8"))
+      if(keyName == NS_LITERAL_STRING("VK_F8"))
         ret = PR_TRUE;
         break;
     case VK_F9:
-      if(keyName.EqualsWithConversion("VK_F9"))
+      if(keyName == NS_LITERAL_STRING("VK_F9"))
         ret = PR_TRUE;
         break;
     case VK_F10:
-      if(keyName.EqualsWithConversion("VK_F10"))
+      if(keyName == NS_LITERAL_STRING("VK_F10"))
         ret = PR_TRUE;
         break;
     case VK_F11:
-      if(keyName.EqualsWithConversion("VK_F11"))
+      if(keyName == NS_LITERAL_STRING("VK_F11"))
         ret = PR_TRUE;
         break;
     case VK_F12:
-      if(keyName.EqualsWithConversion("VK_F12"))
+      if(keyName == NS_LITERAL_STRING("VK_F12"))
         ret = PR_TRUE;
         break;
     case VK_F13:
-      if(keyName.EqualsWithConversion("VK_F13"))
+      if(keyName == NS_LITERAL_STRING("VK_F13"))
         ret = PR_TRUE;
         break;
     case VK_F14:
-      if(keyName.EqualsWithConversion("VK_F14"))
+      if(keyName == NS_LITERAL_STRING("VK_F14"))
         ret = PR_TRUE;
         break;
     case VK_F15:
-      if(keyName.EqualsWithConversion("VK_F15"))
+      if(keyName == NS_LITERAL_STRING("VK_F15"))
         ret = PR_TRUE;
         break;
     case VK_F16:
-      if(keyName.EqualsWithConversion("VK_F16"))
+      if(keyName == NS_LITERAL_STRING("VK_F16"))
         ret = PR_TRUE;
         break;
     case VK_F17:
-      if(keyName.EqualsWithConversion("VK_F17"))
+      if(keyName == NS_LITERAL_STRING("VK_F17"))
         ret = PR_TRUE;
         break;
     case VK_F18:
-      if(keyName.EqualsWithConversion("VK_F18"))
+      if(keyName == NS_LITERAL_STRING("VK_F18"))
         ret = PR_TRUE;
         break;
     case VK_F19:
-      if(keyName.EqualsWithConversion("VK_F19"))
+      if(keyName == NS_LITERAL_STRING("VK_F19"))
         ret = PR_TRUE;
         break;
     case VK_F20:
-      if(keyName.EqualsWithConversion("VK_F20"))
+      if(keyName == NS_LITERAL_STRING("VK_F20"))
         ret = PR_TRUE;
         break;
     case VK_F21:
-      if(keyName.EqualsWithConversion("VK_F21"))
+      if(keyName == NS_LITERAL_STRING("VK_F21"))
         ret = PR_TRUE;
         break;
     case VK_F22:
-      if(keyName.EqualsWithConversion("VK_F22"))
+      if(keyName == NS_LITERAL_STRING("VK_F22"))
         ret = PR_TRUE;
         break;
     case VK_F23:
-      if(keyName.EqualsWithConversion("VK_F23"))
+      if(keyName == NS_LITERAL_STRING("VK_F23"))
         ret = PR_TRUE;
         break;
     case VK_F24:
-      if(keyName.EqualsWithConversion("VK_F24"))
+      if(keyName == NS_LITERAL_STRING("VK_F24"))
         ret = PR_TRUE;
         break;
     case VK_NUM_LOCK:
-      if(keyName.EqualsWithConversion("VK_NUM_LOCK"))
+      if(keyName == NS_LITERAL_STRING("VK_NUM_LOCK"))
         ret = PR_TRUE;
         break;
     case VK_SCROLL_LOCK:
-      if(keyName.EqualsWithConversion("VK_SCROLL_LOCK"))
+      if(keyName == NS_LITERAL_STRING("VK_SCROLL_LOCK"))
         ret = PR_TRUE;
         break;
     case VK_COMMA:
-      if(keyName.EqualsWithConversion("VK_COMMA"))
+      if(keyName == NS_LITERAL_STRING("VK_COMMA"))
         ret = PR_TRUE;
         break;
     case VK_PERIOD:
-      if(keyName.EqualsWithConversion("VK_PERIOD"))
+      if(keyName == NS_LITERAL_STRING("VK_PERIOD"))
         ret = PR_TRUE;
         break;
     case VK_SLASH:
-      if(keyName.EqualsWithConversion("VK_SLASH"))
+      if(keyName == NS_LITERAL_STRING("VK_SLASH"))
         ret = PR_TRUE;
         break;
     case VK_BACK_QUOTE:
-      if(keyName.EqualsWithConversion("VK_BACK_QUOTE"))
+      if(keyName == NS_LITERAL_STRING("VK_BACK_QUOTE"))
         ret = PR_TRUE;
         break;
     case VK_OPEN_BRACKET:
-      if(keyName.EqualsWithConversion("VK_OPEN_BRACKET"))
+      if(keyName == NS_LITERAL_STRING("VK_OPEN_BRACKET"))
         ret = PR_TRUE;
         break;
     case VK_BACK_SLASH:
-      if(keyName.EqualsWithConversion("VK_BACK_SLASH"))
+      if(keyName == NS_LITERAL_STRING("VK_BACK_SLASH"))
         ret = PR_TRUE;
         break;
     case VK_CLOSE_BRACKET:
-      if(keyName.EqualsWithConversion("VK_CLOSE_BRACKET"))
+      if(keyName == NS_LITERAL_STRING("VK_CLOSE_BRACKET"))
         ret = PR_TRUE;
         break;
     case VK_QUOTE:
-      if(keyName.EqualsWithConversion("VK_QUOTE"))
+      if(keyName == NS_LITERAL_STRING("VK_QUOTE"))
         ret = PR_TRUE;
         break;
   }
@@ -1273,7 +1273,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
 
   parser->SetCommand(eViewNormal);
 
-  nsAutoString charset(NS_ConvertASCIItoUCS2("UTF-8"));
+  nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
   parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
   parser->SetContentSink(sink); // grabs a reference to the parser
 
@@ -1354,7 +1354,7 @@ nsXULKeyListenerImpl::LocateAndExecuteKeyBinding(nsIDOMKeyEvent* aEvent, eEventT
     nsCOMPtr<nsIDOMElement> currElement(do_QueryInterface(currNode));
     if (currElement) {
       currElement->GetNodeName(currNodeType);
-      if (currNodeType.EqualsWithConversion("keyset"))
+      if (currNodeType == NS_LITERAL_STRING("keyset"))
         return HandleEventUsingKeyset(currElement, aEvent, aEventType, aDocument, aHandledFlag);
     }
 
@@ -1418,11 +1418,11 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
     keyElement->GetNodeName(property);
     //printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
 
-    if (property.EqualsWithConversion("key")) {
+    if (property == NS_LITERAL_STRING("key")) {
       //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
       do {
         property = falseString;
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), property);
+        keyElement->GetAttribute(NS_LITERAL_STRING("disabled"), property);
         if (property == trueString) {
           break;
         }
@@ -1430,7 +1430,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         PRUint32 theChar;
         
         nsAutoString keyName; // This should be phased out for keycode and charcode
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("key"), keyName);
+        keyElement->GetAttribute(NS_LITERAL_STRING("key"), keyName);
         if ( !keyName.IsEmpty() ) {
             if (aEventType != eKeyPress)
                 break;
@@ -1442,9 +1442,9 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         
         if ( keyName.IsEmpty() )
         {
-	        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("charcode"), keyName);
+	        keyElement->GetAttribute(NS_LITERAL_STRING("charcode"), keyName);
 	        if(keyName.IsEmpty()) {
-	          keyElement->GetAttribute(NS_ConvertASCIItoUCS2("keycode"), keyName);
+	          keyElement->GetAttribute(NS_LITERAL_STRING("keycode"), keyName);
 	          if(keyName.IsEmpty()) {
 	            // HACK for temporary compatibility
 	            if(aEventType == eKeyPress)
@@ -1502,7 +1502,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
         // Get the attribute for the "xulkey" modifier.
         nsAutoString xproperty;
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("xulkey"),
+        keyElement->GetAttribute(NS_LITERAL_STRING("xulkey"),
                                  xproperty);
 
         // Is the modifier key set in the event?
@@ -1511,7 +1511,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
                   // Check whether the shift key fails to match:
         aKeyEvent->GetShiftKey(&isModKey);
         property.SetLength(0);
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("shift"), property);
+        keyElement->GetAttribute(NS_LITERAL_STRING("shift"), property);
         if ((property == trueString && !isModKey)
             || (property == falseString && isModKey))
             break;
@@ -1524,7 +1524,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         // and the control key:
         aKeyEvent->GetCtrlKey(&isModKey);
             property.SetLength(0);
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("control"), property);
+        keyElement->GetAttribute(NS_LITERAL_STRING("control"), property);
         if ((property == trueString && !isModKey)
           || (property == falseString && isModKey))
           break;
@@ -1537,7 +1537,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         // and the alt key
         aKeyEvent->GetAltKey(&isModKey);
         property.SetLength(0);
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("alt"), property);
+        keyElement->GetAttribute(NS_LITERAL_STRING("alt"), property);
         if ((property == trueString && !isModKey)
           || (property == falseString && isModKey))
           break;
@@ -1550,7 +1550,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         // and the meta key
         aKeyEvent->GetMetaKey(&isModKey);
         property.SetLength(0);
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("meta"), property);
+        keyElement->GetAttribute(NS_LITERAL_STRING("meta"), property);
         if ((property == trueString && !isModKey)
           || (property == falseString && isModKey))
           break;
@@ -1565,8 +1565,8 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
         // Get the cancel attribute.
         nsAutoString cancelValue;
-        keyElement->GetAttribute(NS_ConvertASCIItoUCS2("cancel"), cancelValue);
-        if (cancelValue.EqualsWithConversion("true")) {
+        keyElement->GetAttribute(NS_LITERAL_STRING("cancel"), cancelValue);
+        if (cancelValue == NS_LITERAL_STRING("true")) {
           return NS_OK;
         }
 
@@ -1575,22 +1575,22 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         nsAutoString oncommand;
         switch(aEventType) {
           case eKeyPress:
-            keyElement->GetAttribute(NS_ConvertASCIItoUCS2("onkeypress"), cmdToExecute);
+            keyElement->GetAttribute(NS_LITERAL_STRING("onkeypress"), cmdToExecute);
 #if defined(DEBUG_saari)
             printf("onkeypress = %s\n",
                                cmdToExecute.ToNewCString());
 #endif
 
-            keyElement->GetAttribute(NS_ConvertASCIItoUCS2("oncommand"), oncommand);
+            keyElement->GetAttribute(NS_LITERAL_STRING("oncommand"), oncommand);
 #if defined(DEBUG_saari)
             printf("oncommand = %s\n", oncommand.ToNewCString());
 #endif
           break;
           case eKeyDown:
-            keyElement->GetAttribute(NS_ConvertASCIItoUCS2("onkeydown"), cmdToExecute);
+            keyElement->GetAttribute(NS_LITERAL_STRING("onkeydown"), cmdToExecute);
           break;
           case eKeyUp:
-            keyElement->GetAttribute(NS_ConvertASCIItoUCS2("onkeyup"), cmdToExecute);
+            keyElement->GetAttribute(NS_LITERAL_STRING("onkeyup"), cmdToExecute);
           break;
         }
 
