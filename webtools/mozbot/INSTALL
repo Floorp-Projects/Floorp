@@ -399,7 +399,7 @@ BTW, is the hash in which all the username/password pairs are kept):
 
    /msg mozbot vars Admin users '+*arah|li*a'
 
-..., I.e. the username added would be "arah|li" and the password would
+..., i.e. the username added would be "arah|li" and the password would
 be "a". This is not a bug, it's a feature. It means you can include
 any character, including "'", "|", and so on, in the key, without fear
 of it being interpreted as a delimiter.
@@ -410,6 +410,8 @@ syntax:
    /msg mozbot vars Admin users '-admin'
 
 That's it. No need to say what the value is, since each key in a hash
-has to be unique.
+has to be unique. (Although, in this particular case, it should be
+noted that the preferred way to remove users is actually the
+'deleteuser' command.)
 
 -- end --

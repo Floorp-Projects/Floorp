@@ -2380,6 +2380,7 @@ sub Help {
         $result->{'shutup'} = 'Clears the output queue (you actually have to say \'shutup please\' or nothing will happen).';
         $result->{'restart'} = 'Shuts the bot down completely then restarts it, so that any source changes take effect.';
         $result->{'cycle'} = 'Makes the bot disconnect from the server then try to reconnect.';
+        $result->{'changepassword'} = 'Change a user\'s password: changepassword <user> <newpassword> <newpassword>',
         $result->{'vars'} = 'Manage variables: vars [<module> [<variable> [\'<value>\']]], say \'vars\' for more details.';
         $result->{'join'} = 'Makes the bot attempt to join a channel. The same effect can be achieved using /invite. Syntax: join <channel>';
         $result->{'part'} = 'Makes the bot leave a channel. The same effect can be achieved using /kick. Syntax: part <channel>';
@@ -2388,6 +2389,7 @@ sub Help {
         $result->{'reload'} = 'Unloads and then loads a module: reload <module>';
         $result->{'bless'} = 'Sets the \'admin\' flag on a registered user. Syntax: bless <user>';
         $result->{'unbless'} = 'Resets the \'admin\' flag on a registered user. Syntax: unbless <user>';
+        $result->{'deleteuser'} = 'Deletes a user from the bot. Syntax: deleteuser <username>',
     }
     return $result;
 }
@@ -2412,23 +2414,28 @@ sub Told {
                 $self->directSay($event, "You have not been added as a user yet. Try the \'newuser\' command (see \'help newuser\' for details).");
             }
         }
-    } elsif ($message =~ /^\s*password\s+($variablepattern)\s+($variablepattern)\s+\2\s*$/osi) {
+    } elsif ($message =~ /^\s*password\s+($variablepattern)\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
         if (not $event->{'channel'}) {
             if ($authenticatedUsers{$event->{'user'}}) { 
-                if (&::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
+                if ($2 ne $3) {
+                    $self->say($event, 'New passwords did not match. Try again.');
+                } elsif (&::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
                     $users{$authenticatedUsers{$event->{'user'}}} = &::newPassword($2);
+                    delete($authenticatedUsers{$event->{'user'}});
                     $self->say($event, 'Password changed. Please reauthenticate.');
                     $self->saveConfig();
                 } else {
+                    delete($authenticatedUsers{$event->{'user'}});
                     $self->say($event, 'That is not your current password. Please reauthenticate.');
                 }
-                delete($authenticatedUsers{$event->{'user'}});
             }
         }
-    } elsif ($message =~ /^\s*new\s*user\s+($variablepattern)\s+($variablepattern)\s+\2\s*$/osi) {
+    } elsif ($message =~ /^\s*new\s*user\s+($variablepattern)\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
         if (not $event->{'channel'}) {
             if (defined($users{$1})) {
                 $self->say($event, 'That user already exists in my list, you can\'t add them again!');
+            } elsif ( $2 ne $3 ) {
+                $self->say($event, 'New passwords did not match. Try again.');
             } elsif ($1) {
                 $users{$1} = &::newPassword($2);
                 $userFlags{$1} = 0;
@@ -2451,6 +2458,53 @@ sub Told {
         } elsif ($message =~ /^\s*restart/osi) {
             $self->say($event, 'If you really want me to restart, use the magic word.');
             $self->schedule($event, 7, 1, 'i.e., please.');
+        } elsif ($message =~ /^\s*delete\s*user\s+($variablepattern)\s*$/osi) {
+            if (not defined($users{$1})) {
+                $self->say($event, "I don't know of a user called '$1', sorry.");
+            } else {
+                # check user is not last admin
+                my $doomedUser = $1;
+                my $count;
+                if (($userFlags{$doomedUser} & 1) == 1) {
+                    # deleting an admin. Count how many are left.
+                    $count = 0;
+                    foreach my $user (keys %users) {
+                        ++$count if ($user ne $doomedUser and 
+                                     ($userFlags{$user} & 1) == 1);
+                    }
+                } else {
+                    # not deleting an admin. We know there is an admin in there, it's
+                    # the user doing the deleting. So we're safe.
+                    $count = 1;
+                }
+                if ($count) {
+                    $self->deleteUser($doomedUser);
+                    $self->say($event, "User '$doomedUser' deleted.");
+                } else {
+                    $self->say($event, "Can't delete user '$doomedUser', that would leave you with no admins!");
+                }
+            }
+        } elsif ($message =~ /^\s*change\s*password\s+($variablepattern)\s+($variablepattern)\s+($variablepattern)\s*$/osi) {
+            if (not defined($users{$1})) {
+                $self->say($event, "I don't know of a user called '$1', sorry.");
+            } elsif ($2 ne $3) {
+                $self->say($event, 'New passwords did not match. Try again.');
+            } else {
+                $users{$1} = &::newPassword($2);
+                my $count = 0;
+                foreach my $user (keys %authenticatedUsers) {
+                    if ($authenticatedUsers{$user} eq $1) {
+                        delete($authenticatedUsers{$user});
+                        ++$count;
+                    }
+                }
+                if ($count) {
+                    $self->say($event, "Password changed for user '$1'. They must reauthenticate.");
+                } else {
+                    $self->say($event, "Password changed for user '$1'.");
+                }
+                $self->saveConfig();
+            }
         } elsif ($message =~ /^\s*(?:shutup,?\s+please)\s*[?!.]*\s*$/osi) {
             my $lost = @msgqueue;
             @msgqueue = ();
@@ -2518,16 +2572,8 @@ sub Authed {
     if ($self->isAdmin($event)) {
         foreach (keys %userFlags) {
             if ((($userFlags{$_} & 2) == 2) and ($authenticatedUsers{$event->{'user'}} ne $_)) {
-                delete($userFlags{$_});
-                delete($users{$_});
-                # if they authenticated, remove the entry to prevent dangling links
-                foreach my $user (keys %authenticatedUsers) {
-                    if ($authenticatedUsers{$user} eq $_) {
-                        delete($authenticatedUsers{$user});
-                    }
-                }
+                $self->deleteUser($_);
                 $self->directSay($event, "Temporary administrator '$_' removed from user list.");
-                $self->saveConfig();
             }
         }
     }
@@ -2583,7 +2629,6 @@ sub Restart {
     my $self = shift;
     my ($event, $reason) = @_;
     $event->{'bot'}->quit($reason);
-    sleep 1; # wait one second to give the quit message a chance
     # Note that `exec' will not call our `END' blocks, nor will it
     # call any `DESTROY' methods in our objects. So we fork a child to
     # do that first.
@@ -2819,6 +2864,20 @@ sub ReloadModule {
     # then it is also a good time to remove this comment... ;-)
     $self->UnloadModule(@_);
     $self->LoadModule(@_);
+}
+
+sub deleteUser {
+    my $self = shift;
+    my ($who) = @_;
+    delete($userFlags{$who});
+    delete($users{$who});
+    # if they authenticated, remove the entry to prevent dangling links
+    foreach my $user (keys %authenticatedUsers) {
+        if ($authenticatedUsers{$user} eq $who) {
+            delete($authenticatedUsers{$user});
+        }
+    }
+    $self->saveConfig();
 }
 
 
