@@ -367,6 +367,18 @@
 			settings = {
 			};
 		};
+		F6901D3F01B70DB301A962F7 = {
+			isa = PBXFileReference;
+			name = "installed-chrome.txt";
+			path = "../../config/installed-chrome.txt";
+			refType = 2;
+		};
+		F6901D4001B70DB301A962F7 = {
+			fileRef = F6901D3F01B70DB301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F6BA6D4E01B2F8A601A962F7 = {
 			isa = PBXFileReference;
 			path = MyBrowserView.mm;
@@ -2172,6 +2184,7 @@
 		F6BD64FF01B3184301A962F7 = {
 			children = (
 				F6BD650001B3184301A962F7,
+				F6901D3F01B70DB301A962F7,
 			);
 			isa = PBXGroup;
 			name = "Gecko Chrome";
@@ -2406,6 +2419,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F6BD652401B3184301A962F7,
+				F6901D4001B70DB301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
