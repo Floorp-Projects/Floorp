@@ -172,6 +172,7 @@
 <!ENTITY minimizeWindow.label "Minimize Window">
 <!ENTITY bringAllToFront.label "Bring All to Front">
 <!ENTITY zoomWindow.label "Zoom Window"> 
+<!ENTITY windowMenu.label "Window"> 
 
 <!-- Help Menu -->
 <!ENTITY helpMenu.label "Help">
