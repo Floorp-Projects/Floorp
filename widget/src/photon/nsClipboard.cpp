@@ -483,30 +483,6 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 	return NS_OK;
 }
 
-/**
- * Some platforms support deferred notification for putting data on the clipboard
- * This method forces the data onto the clipboard in its various formats
- * This may be used if the application going away.
- *
- * @result NS_OK if successful.
- */
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
-{
-	if (aWhichClipboard == kSelectionClipboard)
-		return (NS_ERROR_FAILURE);
-#ifdef DEBUG_CLIPBOARD
-	printf("  nsClipboard::ForceDataToClipboard()\n");
-#endif /* DEBUG_CLIPBOARD */
-
-  	// make sure we have a good transferable
-		nsITransferable *transferable = GetTransferable(aWhichClipboard);
-
-		if (!transferable)
- 		return NS_ERROR_FAILURE;
-
-  	return NS_OK;
-}
-
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, 
                                     PRInt32 aWhichClipboard, 

@@ -334,20 +334,3 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWh
 
   return rv;
 }
-
-//
-// No-op.
-//
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
-{
-#ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::ForceDataToClipboard()\n");
-#endif /* DEBUG_CLIPBOARD */
-
-  // make sure we have a good transferable
-  if (nsnull == mTransferable) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}

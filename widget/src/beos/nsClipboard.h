@@ -55,9 +55,6 @@ public:
   nsClipboard();
   virtual ~nsClipboard();
 
-  // nsIClipboard  
-  NS_IMETHOD ForceDataToClipboard();
-
   static void SetTopLevelView(BView *v);
 
 

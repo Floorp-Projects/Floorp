@@ -72,7 +72,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIClipboard.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICmdLineHandler.h"
@@ -784,18 +783,6 @@ static nsresult DoOnShutdown()
     if (NS_SUCCEEDED(rv)) {
       profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
     }
-  }
-
-  // at this point, all that is on the clipboard is a proxy object, but that object
-  // won't be valid once the app goes away. As a result, we need to force the data
-  // out of that proxy and properly onto the clipboard. This can't be done in the
-  // clipboard service's shutdown routine because it requires the parser/etc which
-  // has already been shutdown by the time the clipboard is shut down.
-  {
-    // scoping this in a block to force release
-    nsCOMPtr<nsIClipboard> clipService(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-    if (NS_SUCCEEDED(rv))
-      clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
   }
 
   return rv;
