@@ -363,7 +363,7 @@
 
 ; markup-stream must be a variable that names a markup-stream that is currently
 ; accepting paragraph contents.  Execute body with markup-stream bound to a markup-stream
-; to which the body can emit contents.  The given char-style is applied to all such
+; to which the body can emit contents.  If non-null, the given char-style is applied to all such
 ; contents emitted by body.
 ; Return the result value of body.
 (defmacro depict-char-style ((markup-stream char-style) &body body)
@@ -376,6 +376,24 @@
 ; Ensure that the given style is not currently in effect in the markup-stream.
 ; RTF streams don't currently keep track of styles, so this function does nothing for RTF streams.
 (defgeneric ensure-no-enclosing-style (markup-stream style))
+
+
+; Return a value that captures the current sequence of enclosing block styles.
+(defgeneric save-block-style (markup-stream))
+
+; markup-stream must be a variable that names a markup-stream that is currently
+; accepting paragraphs.  Execute body with markup-stream bound to a markup-stream
+; to which the body can emit contents.  The given saved-block-style is applied to all
+; paragraphs emitted by body (in the HTML emitter only; RTF has no block styles).
+; saved-block-style should have been obtained from a past call to save-block-style.
+; If flatten is true, do not emit the style if it is already in effect from a surrounding block
+; or if its contents are empty.
+; Return the result value of body.
+(defmacro with-saved-block-style ((markup-stream saved-block-style &optional flatten) &body body)
+  `(with-saved-block-style-f ,markup-stream ,saved-block-style ,flatten
+     #'(lambda (,markup-stream) ,@body)))
+
+(defgeneric with-saved-block-style-f (markup-stream saved-block-style flatten emitter))
 
 
 ; Depict an anchor.  The concatenation of link-prefix and link-name must be a string

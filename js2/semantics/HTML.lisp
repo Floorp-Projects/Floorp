@@ -183,7 +183,7 @@
 ;;   (<symbol>)                                                ;Attribute name with omitted value
 
 
-(defparameter *html-right-margin* 100)
+(defparameter *html-right-margin* 120)
 (defparameter *allow-line-breaks-in-tags* nil) ;Allow line breaks in tags between attributes?
 
 (defvar *current-html-pos*)          ;Number of characters written to the current line of the stream; nil if *current-html-newlines* is nonzero
@@ -462,9 +462,9 @@
     (:grammar-rhs (:nest :nowrap (div (class "grammar-rhs"))))
     (:grammar-rhs-last :grammar-rhs)
     (:grammar-argument (:nest :nowrap (div (class "grammar-argument"))))
-    (:semantics (:nest :nowrap (p (class "semantics"))))
-    (:semantics-next (:nest :nowrap (p (class "semantics-next"))))
-    (:semantic-comment (:nest :nowrap (p (class "semantic-comment"))))
+    (:semantics (:nest :nowrap (div (class "semantics"))))
+    (:semantics-next (:nest :nowrap (div (class "semantics-next"))))
+    (:semantic-comment (div (class "semantic-comment")))
     
     ;Inline Styles
     (:script (script (type "text/javascript")))
@@ -628,21 +628,37 @@
 
 (defmethod depict-char-style-f ((html-stream html-stream) char-style emitter)
   (assert-true (>= (markup-stream-level html-stream) *markup-stream-content-level*))
-  (assert-true (and char-style (symbolp char-style)))
-  (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
-                                             *markup-stream-content-level*
-                                             (markup-stream-logical-position html-stream)
-                                             (cons char-style (html-stream-enclosing-styles html-stream))
-                                             (html-stream-anchors html-stream))))
-    (markup-stream-append1 inner-html-stream char-style)
-    (prog1
-      (funcall emitter inner-html-stream)
-      (markup-stream-append1 html-stream (markup-stream-unexpanded-output inner-html-stream)))))
+  (if char-style
+    (progn
+      (assert-true (symbolp char-style))
+      (let ((inner-html-stream (make-html-stream (markup-stream-env html-stream)
+                                                 *markup-stream-content-level*
+                                                 (markup-stream-logical-position html-stream)
+                                                 (cons char-style (html-stream-enclosing-styles html-stream))
+                                                 (html-stream-anchors html-stream))))
+        (markup-stream-append1 inner-html-stream char-style)
+        (prog1
+          (funcall emitter inner-html-stream)
+          (markup-stream-append1 html-stream (markup-stream-unexpanded-output inner-html-stream)))))
+    (funcall emitter html-stream)))
 
 
 (defmethod ensure-no-enclosing-style ((html-stream html-stream) style)
   (when (member style (html-stream-enclosing-styles html-stream))
     (cerror "Ignore" "Style ~S should not be in effect" style)))
+
+
+(defmethod save-block-style ((html-stream html-stream))
+  (reverse (html-stream-enclosing-styles html-stream)))
+
+
+(defmethod with-saved-block-style-f ((html-stream html-stream) saved-block-style flatten emitter)
+  (assert-true (<= (markup-stream-level html-stream) *markup-stream-paragraph-level*))
+  (if (endp saved-block-style)
+    (funcall emitter html-stream)
+    (depict-block-style-f html-stream (first saved-block-style) flatten
+                          #'(lambda (html-stream)
+                              (with-saved-block-style-f html-stream (rest saved-block-style) flatten emitter)))))
 
 
 (defmethod depict-anchor ((html-stream html-stream) link-prefix link-name duplicate)
