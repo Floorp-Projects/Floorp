@@ -42,6 +42,13 @@ class nsICaret;
 { 0x76e79c60, 0x944e, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
+#define NS_PRESSHELL_SCROLL_TOP      0x00000001
+#define NS_PRESSHELL_SCROLL_BOTTOM   0x00000002
+#define NS_PRESSHELL_SCROLL_LEFT     0x00000004
+#define NS_PRESSHELL_SCROLL_RIGHT    0x00000008
+#define NS_PRESSHELL_SCROLL_ANYWHERE 0x00000010
+#define NS_PRESSHELL_SCROLL_ENTIRE   0x00000020
+
 /**
  * Presentation shell interface. Presentation shells are the
  * controlling point for managing the presentation of a document. The
@@ -188,6 +195,57 @@ public:
    * name is displayed at the top of the window
    */
   NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const = 0;
+
+  /**
+   * Scrolls the view of the document so that the frame is displayed at the 
+   * top of the window.
+   * @param aFrame           The frame to scroll into view
+   * @param aVOffsetPercent  The percentage to offset aFrame from the view vertically.  
+   *                         Interpretation of aVOffsetPercent is controlled by aVFlags, see below.
+   *                         Legal values are 0..100, with 0 
+   *                         being flush to the (eTop|eBottom) edge, 100 being flush to the other edge.
+   * @param aVFlags          The control flags for vertical scrolling.  
+   *                         Legal values are an OR combination of:
+   *                         NS_PRESSHELL_SCROLL_TOP
+   *                                      position the top of the frame aVOffsetPercent
+   *                                      from the top of the view
+   *                         NS_PRESSHELL_SCROLL_BOTTOM
+   *                                      position the bottom of the frame aVOffsetPercent
+   *                                      from the bottom of the view
+   *                         NS_PRESSHELL_SCROLL_ANYWHERE
+   *                                      if the (eTop|eBottom) of the frame is visible, do nothing 
+   *                                      else scroll the frame according to the other bits 
+   *                         NS_PRESSHELL_SCROLL_ENTIRE
+   *                                      Force the entire frame to be visible, using aVOffsetPercent 
+   *                                      as a starting point, but scrolling the (eTop|eBottom)
+   *                                      of the frame enough for the entire frame to fit in the view, 
+   *                                      if possible 
+   * @param aHOffsetPercent  The percentage to offset aFrame from the view horizontally.  
+   *                         Interpretation of aHOffsetPercent is controlled by aHFlags, see below.
+   *                         Legal values are 0..100, with 0 
+   *                         being flush to the (eLeft|eRight) edge, 100 being flush to the other edge.
+   * @param aHFlags          The control flags for vertical scrolling.  
+   *                         Legal values are an OR combination of:
+   *                         NS_PRESSHELL_SCROLL_LEFT
+   *                                      position the left of the frame aHOffsetPercent
+   *                                      from the left of the view
+   *                         NS_PRESSHELL_SCROLL_RIGHT
+   *                                      Position the right of the frame aHOffsetPercent
+   *                                      from the right of the view
+   *                         NS_PRESSHELL_SCROLL_ANYWHERE
+   *                                      If the (eLeft|eRight) of the frame is visible, do nothing 
+   *                                      else scroll the frame according to the other bits 
+   *                         NS_PRESSHELL_SCROLL_ENTIRE
+   *                                      Force the entire frame to be visible, using aVOffsetPercent 
+   *                                      as a starting point, but scrolling the (eLeft|eRight)
+   *                                      of the frame enough for the entire frame to fit in the view, 
+   *                                      if possible 
+   */
+  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
+                                 PRInt32   aVOffsetPercent, 
+                                 PRUint32  aVFlags,
+                                 PRInt32   aHOffsetPercent, 
+                                 PRUint32  aHFlags) const = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.
