@@ -40,7 +40,6 @@
 #include "meditdlg.h"	// CTabbedDialog
 #include "meditor.h"	// HandleModalDialog
 #include "CEditView.h"
-#include "ufilemgr.h"
 
 	// Netscape
 #include "net.h"	// NET_cinfo_find_type
@@ -167,12 +166,6 @@ CEditorWindow* CEditorWindow::MakeEditWindow( MWContext* old_context, URL_Struct
 			}
 		}
 		// if we don't have a history entry, we're kind of screwed-->just load a blank page
-		else if ( CPrefs::GetBoolean( CPrefs::LoadHomePage ) )
-		{
-			CStr255 home = CPrefs::GetString( CPrefs::HomePage );
-			if ( home.Length() > 0 )
-				url = NET_CreateURLStruct( home, NET_NORMAL_RELOAD );
-		}
 	}
 
 	// we want to open a new blank edit window
@@ -368,10 +361,7 @@ void CEditorWindow::NoteDocTitleChanged( const char* inNewTitle )
 		EDT_FreePageData( pageData );
 	
 	// add file path to end
-	if (csBaseURL.Length())
-	{
-		netscapeTitle += csBaseURL;
-	}
+	netscapeTitle += csBaseURL;
 	netscapeTitle += "]";
 
 	SetDescriptor( netscapeTitle );
