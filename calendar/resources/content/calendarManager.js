@@ -501,6 +501,16 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
 
 function onResponseAndRefresh( )
 {
+   //check to make sure this is a real calendar file first.
+   //if its not, it causes Mozilla to crash.
+   if( request.responseText.indexOf( "BEGIN:VCALENDAR" ) == -1 )
+   {
+      alert( "The calendar "+calendarToGet.name+" is not a valid iCalendar file." );
+      gCalendarWindow.calendarManager.deleteCalendar( calendarToGet );
+      saveDataToFile( calendarToGet.path, "", "UTF-8" );
+      return;
+   }
+
    //save the stream to a file.
    saveDataToFile( calendarToGet.path, request.responseText, "UTF-8" );
    
