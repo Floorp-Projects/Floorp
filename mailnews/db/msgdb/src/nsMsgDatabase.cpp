@@ -163,6 +163,11 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
   return PL_DHASH_NEXT;
 }
 
+NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
+{
+  return ClearHdrCache(PR_FALSE); // don't re-init, hope db gets closed.
+}
+
 nsresult nsMsgDatabase::ClearHdrCache(PRBool reInit)
 {
 	if (m_cachedHeaders)

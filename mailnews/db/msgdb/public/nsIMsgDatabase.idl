@@ -116,6 +116,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // Force closed is evil, and we should see if we can do without it.
   // In 4.x, it was mainly used to remove corrupted databases.
   void ForceClosed();
+  void clearCachedHdrs();
 
   readonly attribute nsIDBFolderInfo  dBFolderInfo;
 
