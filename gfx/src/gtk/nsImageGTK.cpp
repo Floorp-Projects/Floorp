@@ -122,6 +122,7 @@ nsresult
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
+  mIsTopToBottom = PR_TRUE;
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::Init(this=%p,%d,%d,%d,%d)\n",
@@ -174,13 +175,6 @@ void nsImageGTK::ComputMetrics()
 {
   mRowBytes = CalcBytesSpan(mWidth);
   mSizeImage = mRowBytes * mHeight;
-}
-
-PRInt32
-nsImageGTK::GetBytesPix()
-{
-  NS_NOTYETIMPLEMENTED("somebody called this thang");
-  return 0;/* XXX */
 }
 
 PRInt32
