@@ -225,6 +225,7 @@ var trashObserver = {
       }
       toolbarItem = toolbarItem.nextSibling;
     }
+    gToolbarChanged = true;
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
