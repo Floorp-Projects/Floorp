@@ -19,6 +19,7 @@
    Rights Reserved.
    
    Contributor(s): 
+     Jason Eager <jce2@po.cwru.edu>
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -32,11 +33,6 @@
         orient="vertical" title="&title.label;"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-history.xul');">
 
-  <!-- XXX: Replace strres.js when prefutilities is converted -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-
   <script type="application/x-javascript">
 
   <![CDATA[
@@ -48,7 +44,8 @@
 
     var button = document.getElementById("ClearUrlBarHistoryButton");
     try {
-      var urlBarHist = nsJSComponentManager.getService("@mozilla.org/browser/urlbarhistory;1","nsIUrlbarHistory");
+      var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
+                                 .getService(Components.interfaces.nsIUrlbarHistory);
       button.disabled = urlBarHist.count == 0;
     }
     catch(ex) {
@@ -65,11 +62,28 @@
       return;
     }
     try {
-      var SHistory = nsJSComponentManager.getService("@mozilla.org/browser/shistory;1", "nsISHistory");
+      var SHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                               .getService(Components.interfaces.nsISHistory);
       SHistory.maxLength = maxSize;
     }
     catch (ex) {
     }
+  }
+
+  function prefClearGlobalHistory()
+  {
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIBrowserHistory);
+    globalHistory.removeAllPages();
+  }
+
+  function prefClearUrlbarHistory()
+  {
+    var button = document.getElementById("ClearUrlBarHistoryButton");
+    var urlBarHistory = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
+                                  .getService(Components.interfaces.nsIUrlbarHistory);
+    urlBarHistory.clearHistory();
+    button.setAttribute("disabled","true");
   }
   ]]>
   </script>

@@ -33,10 +33,8 @@
         orient="vertical" title="&title.label;"
         onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');">
 
-  <!-- XXX: Replace strres.js when prefutilities is converted -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-navigator.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["startupPage", "browserStartupHomepage",
@@ -75,9 +73,9 @@
     </box>
     <box autostretch="never" halign="right">
       <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
-              oncommand="setHomePageToCurrentPage('browserStartupHomepage');"/>
+              oncommand="setHomePageToCurrentPage();"/>
       <button class="dialog" label="&browseFile.label;" accesskey="&browseFile.accesskey;"
-              oncommand="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false );"/>
+              oncommand="selectFile();"/>
     </box>
   </titledbox>
   
