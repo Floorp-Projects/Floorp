@@ -131,7 +131,7 @@ TagList  gFormKids={1,{eHTMLTag_keygen}};
 TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
 TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
-TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
+TagList  gHeadKids={9,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript}};
 
 TagList  gLabelKids={1,{eHTMLTag_span}};
 TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
@@ -911,7 +911,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kNone,	
       /*special props, prop-range*/       0, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+      /*special parents,kids,skip*/       0,0,eHTMLTag_noscript);
 
     Initialize( 
       /*tag*/                             eHTMLTag_object,
