@@ -33,7 +33,7 @@ class nsDrawingSurfaceMac : public nsIDrawingSurface,
 {
 public:
   nsDrawingSurfaceMac();
-  ~nsDrawingSurfaceMac();
+  virtual ~nsDrawingSurfaceMac();
 
   NS_DECL_ISUPPORTS
 
