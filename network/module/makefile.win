@@ -24,14 +24,14 @@ IGNORE_MANIFEST = 1
 MODULE  = netlib
 EXPORTS = nsIStreamListener.h           \
           nsINetService.h               \
-          nsINetSupport.h		        \
+          nsINetSupport.h               \
           nsIURL.h                      \
           nsIPostToServer.h             \
           nsIHttpUrl.h                  \
           nsIRelatedLinks.h             \
           nsINetContainerApplication.h  \
           nsIRefreshUrl.h               \
-    	  nsIConnectionInfo.h		    \
+          nsIConnectionInfo.h           \
           nsINetFile.h                  \
           nsILoadAttribs.h              \
           $(NULL)
@@ -63,13 +63,14 @@ DEFFILE=net.def
 #//------------------------------------------------------------------------
 OBJS=                                   \
         .\$(OBJDIR)\nsNetService.obj    \
+        .\$(OBJDIR)\nsNetThread.obj     \
         .\$(OBJDIR)\nsNetStream.obj     \
-        .\$(OBJDIR)\nsRelatedLinks.obj     \
+        .\$(OBJDIR)\nsRelatedLinks.obj  \
         .\$(OBJDIR)\nsURL.obj           \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \
         .\$(OBJDIR)\nsNetStubs.obj      \
-	    .\$(OBJDIR)\nsNetIDs.obj	    \
+        .\$(OBJDIR)\nsNetIDs.obj        \
         .\$(OBJDIR)\nsNetFile.obj       \
         .\$(OBJDIR)\nsLoadAttribs.obj   \
         .\$(OBJDIR)\nsNetFactory.obj    \
@@ -90,7 +91,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME)
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LCFLAGS=-DNETSCAPE -D_IMPL_NS_NET
+LCFLAGS=-DNETSCAPE -D_IMPL_NS_NET -DNETLIB_THREAD
 
 NETLIBS=\
 		$(DIST)\lib\abouturl.lib    \
