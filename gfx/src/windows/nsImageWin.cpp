@@ -536,8 +536,12 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       
       if (PR_FALSE == didComposite){
         if (8==mAlphaDepth) {              
-           DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
+           nsresult rv = DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
              aSX, srcy, aSWidth, aSHeight);
+           if (NS_FAILED(rv)) {
+             ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
+             return rv;
+           }
         } else {
           ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mImageBits,
             (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
@@ -669,10 +673,12 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
  *  Blend the image into a 24 bit buffer.. using an 8 bit alpha mask 
  *  @update 1/04/02 dwc
  */
-void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
+nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
                     int aSX, int aSY, int aSWidth, int aSHeight)
 {
   HDC memDC = ::CreateCompatibleDC(TheHDC);
+  if (!memDC)
+    return NS_ERROR_OUT_OF_MEMORY;
   unsigned char *screenBits;
   ALPHA24BITMAPINFO bmi(aSWidth, aSHeight);
   HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
@@ -680,28 +686,46 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
   if (!tmpBitmap) {
     ::DeleteDC(memDC);
     NS_WARNING("nsImageWin::DrawComposited failed to create tmpBitmap\n");
-    return;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
+  if (!oldBitmap || oldBitmap == (HBITMAP)GDI_ERROR) {
+    ::DeleteObject(tmpBitmap);
+    ::DeleteDC(memDC);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
 
   /* Copy from the HDC */
-  ::StretchBlt(memDC, 0, 0, aSWidth, aSHeight,
-               TheHDC, aDX, aDY, aDWidth, aDHeight, SRCCOPY);
-
+  BOOL retval = ::StretchBlt(memDC, 0, 0, aSWidth, aSHeight,
+                             TheHDC, aDX, aDY, aDWidth, aDHeight, SRCCOPY);
+  if (!retval) {
+    /* select the old object again... */
+    ::SelectObject(memDC, oldBitmap);
+    ::DeleteObject(tmpBitmap);
+    ::DeleteDC(memDC);
+    return NS_ERROR_FAILURE;
+  }
 
   /* Do composite */
   DrawComposited24(screenBits, aSX, aSY, aSWidth, aSHeight);
 
 
   /* Copy back to the HDC */
-  ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
-               memDC, 0, 0, aSWidth, aSHeight, SRCCOPY);
+  retval = ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
+                        memDC, 0, 0, aSWidth, aSHeight, SRCCOPY);
+  if (!retval) {
+    ::SelectObject(memDC, oldBitmap);
+    ::DeleteObject(tmpBitmap);
+    ::DeleteDC(memDC);
+    return NS_ERROR_FAILURE;
+  }
 
-
+  /* we're done, ignore possible further errors */
   ::SelectObject(memDC, oldBitmap);
   ::DeleteObject(tmpBitmap);
   ::DeleteDC(memDC);
+  return NS_OK;
 }
 
 
@@ -1657,7 +1681,12 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
 
 
     if (8==mAlphaDepth) {
-      DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight, 0, 0, mNaturalHeight, mNaturalWidth);
+      nsresult rv = DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight, 0, 0, mNaturalHeight, mNaturalWidth);
+      if (NS_FAILED(rv)) {
+        ::SelectObject(dstMemDC, oldDstBits);
+        ::DeleteDC(dstMemDC);
+        return rv;
+      }
     } 
     
     // Copy/Paint our rgb to dest
