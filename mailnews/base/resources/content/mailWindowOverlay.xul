@@ -935,7 +935,7 @@ Rights Reserved.
 
       <menu label="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
         <menupopup>
-           <menuitem observes="Communicator:WorkMode"/>
+           <menuitem id="offlineGoOfflineCmd"/>
        <menuseparator/>
        <menuitem label="&synchronizeOfflineCmd.label;"  accesskey="&synchronizeOfflineCmd.accesskey;" observes="cmd_synchronizeOffline"/>
        <menuitem label="&settingsOfflineCmd.label;"     accesskey="&settingsOfflineCmd.accesskey;"    observes="cmd_settingsOffline"/>
