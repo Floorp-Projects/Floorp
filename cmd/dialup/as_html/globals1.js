@@ -257,6 +257,16 @@ function loadUserInput()
 
 function loadGlobalData()
 {
+	if (document.vars.debugMode.value.toLowerCase() != "yes")
+	{
+		debug ("debugMode Flag is OFF");
+	}
+	else
+	{
+		debug ("debugMode Flag is ON");
+		top.debugFlag = true;
+	}
+
 	netscape.security.PrivilegeManager.enablePrivilege("AccountSetup");
 
 	if ( document.setupPlugin == null )
@@ -308,6 +318,8 @@ function loadGlobalData()
 				document.vars.path.value = "New Path";
 			else if ( existingPathFlag == "yes" && newPathFlag != "yes" )
 				document.vars.path.value = "Existing Path";
+
+			// debug("***PATH VALUE = " + document.vars.path.value);
 
 			document.vars.oneStepMode.value = "";
 			var oneStepModeFlag = parent.parent.globals.GetNameValuePair( acctSetupFile, "Mode Selection", "OneStepMode" );
