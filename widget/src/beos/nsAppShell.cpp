@@ -23,6 +23,7 @@
  *   Duncan Wilcox <duncan@be.com>
  *   Yannick Koehler <ykoehler@mythrium.com>
  *   Makoto Hamanaka <VYA04230@nifty.com>
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -123,17 +124,32 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
   PR_snprintf(semname, sizeof(semname), "sync%lx", 
               (long unsigned) PR_GetCurrentThread());
 
-  if((eventport = find_port(portname)) < 0)
+  /* 
+   * Set up the port for communicating. As restarts thru execv may occur
+   * and ports survive those (with faulty events as result). Combined with the fact
+   * that plevent.c can setup the port ahead of us we need to take extra
+   * care that the port is created for this launch, otherwise we need to reopen it
+   * so that faulty messages gets lost.
+   *
+   * We do this by checking if the sem has been created. If it is we can reuse the port (if it exists).
+   * Otherwise we need to create the sem and the port, deleting any open ports before.
+   */
+  syncsem = my_find_sem(semname);
+  eventport = find_port(portname);
+  if(B_ERROR != syncsem) 
   {
-    // we're here first
-    eventport = create_port(100, portname);
-    syncsem = create_sem(0, semname);
+    if(eventport < 0)
+    {
+      eventport = create_port(200, portname);
   }
-  else
+    return NS_OK;
+  } 
+  if(eventport >= 0)
   {
-    // the PLEventQueue stuff (in plevent.c) created the queue before we started
-    syncsem = my_find_sem(semname);
+    delete_port(eventport);
   }
+  eventport = create_port(200, portname);
+  syncsem = create_sem(0, semname);
 
   return NS_OK;
 }

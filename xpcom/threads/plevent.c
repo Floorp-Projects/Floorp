@@ -903,7 +903,20 @@ failed:
     /* hook up to the nsToolkit queue, however the appshell
      * isn't necessairly started, so we might have to create
      * the queue ourselves
+     *
+     * Set up the port for communicating. As restarts thru execv may occur
+     * and ports survive those (with faulty events as result). Combined with the fact
+     * that nsAppShell.cpp may or may not have created the port we need to take extra
+     * care that the port is created for this launch, otherwise we need to reopen it
+     * so that faulty messages gets lost.
+     *
+     * We do this by checking if the sem has been created. If it is we can reuse the port (if it exists).
+     * Otherwise we need to create the sem and the port, deleting any open ports before.
      */
+     
+    sem_info info;
+    int32 cookie = 0;
+
     char portname[64];
     char semname[64];
     PR_snprintf(portname, sizeof(portname), "event%lx", 
@@ -911,17 +924,28 @@ failed:
     PR_snprintf(semname, sizeof(semname), "sync%lx", 
                 (long unsigned) self->handlerThread);
 
-    if((self->eventport = find_port(portname)) < 0)
+    self->eventport = find_port(portname);
+    while(get_next_sem_info(0, &cookie, &info) == B_OK)
     {
-        /* create port
-         */
-        self->eventport = create_port(500, portname);
+      if(strcmp(semname, info.name) != 0) {
+        continue;
+      }
 
+      //found semaphore
+      if(self->eventport < 0) {
+        self->eventport = create_port(200, portname);
+      }
+      return PR_SUCCESS;
+    }
+    //setup the port and semaphore
+    if(self->eventport >= 0) 
+    {
+      delete_port( self->eventport );
+    }
+    self->eventport = create_port(200, portname);
         /* We don't use the sem, but it has to be there
          */
         create_sem(0, semname);
-    }
-
     return PR_SUCCESS;
 #else
     return PR_SUCCESS;
