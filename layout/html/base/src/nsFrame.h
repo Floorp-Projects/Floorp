@@ -430,6 +430,9 @@ protected:
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
+  // Helper routine for determining whether to print selection
+  nsresult GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** aSelection);
+
   //return the line number of the aFrame
   static PRInt32 GetLineNumber(nsIFrame *aFrame);
   //given a frame five me the first/last leaf available

@@ -58,6 +58,9 @@
 #include "prenv.h"
 #include "plstr.h"
 
+#include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLHtmlElement.h"
+
 #ifdef DEBUG
 
 static PRBool gLamePaintMetrics;
@@ -6240,6 +6243,43 @@ static void ComputeCombinedArea(nsLineBox* aLine,
 #endif
 
 NS_IMETHODIMP
+nsBlockFrame::IsVisibleForPainting(nsIPresContext *     aPresContext, 
+                                   nsIRenderingContext& aRenderingContext,
+                                   PRBool               aCheckVis,
+                                   PRBool*              aIsVisible)
+{
+  // first check to see if we are visible
+  if (aCheckVis) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Display);
+    if (!disp->IsVisible()) {
+      *aIsVisible = PR_FALSE;
+      return NS_OK;
+    }
+  }
+
+  // Start by assuming we are visible and need to be painted
+  *aIsVisible = PR_TRUE;
+
+  // NOTE: GetSelectionforVisCheck checks the pagination to make sure we are printing
+  // In otherwords, the selection will ALWAYS be null if we are not printing, meaning
+  // the visibility will be TRUE in that case
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetSelectionForVisCheck(aPresContext, getter_AddRefs(selection));
+  if (NS_SUCCEEDED(rv) && selection) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+
+    nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(mContent));
+    nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(mContent));
+
+    if (!html && !body) {
+      rv = selection->ContainsNode(node, PR_TRUE, aIsVisible);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsBlockFrame::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
@@ -6265,24 +6305,13 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif  
 
-  // Check to see if we are an absolutely positioned block (div)
-  // then then check to see if we need to paint.
-  const nsStylePosition* postionStyle = (const nsStylePosition*)
-                                        mStyleContext->GetStyleData(eStyleStruct_Position);
-  if (NS_STYLE_POSITION_RELATIVE == postionStyle->mPosition ||
-      NS_STYLE_POSITION_ABSOLUTE == postionStyle->mPosition ||
-      NS_STYLE_POSITION_FIXED    == postionStyle->mPosition) {
-    PRBool isVisible;
-    if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
-      return NS_OK;
-    }
+  PRBool isVisible;
+  if (NS_FAILED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible))) {
+    return NS_ERROR_FAILURE;
   }
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-
   // Only paint the border and background if we're visible
-  if (disp->IsVisible() && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
+  if (isVisible && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
       (0 != mRect.width) && (0 != mRect.height)) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
@@ -6302,6 +6331,9 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
     nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                  aDirtyRect, rect, *border, *outline, mStyleContext, 0);
   }
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // If overflow is hidden then set the clip rect so that children don't
   // leak out of us. Note that because overflow'-clip' only applies to
