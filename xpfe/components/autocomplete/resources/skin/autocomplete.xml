@@ -7,36 +7,34 @@
 
 <binding id="autocomplete" extends="resource:/chrome/xulBindings.xml#textfield">
     <content excludes="template,observes,menupopup">
-        <xul:box flex="1"
-            onkeydown=" me = this.parentNode;
-                        me.callListener(me, 'stopLookup'); 
-                        if (me.autoCompleteTimer) {
-                            clearTimeout(me.autoCompleteTimer);
-                            me.autoCompleteTimer = 0;
-                        }"
-            onkeyup="   me = this.parentNode;
-                        if (me.autoCompleteTimer)
-                            clearTimeout(me.autoCompleteTimer);
-                        if (event.which != 13) {
-                            me.needToAutocomplete = true;
-                            me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, me, 'startLookup');
-                        }"
-        >
+        <xul:box flex="1">
             <html:input flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
-            <xul:popupset>
-                <xul:popup ignorekeys="true">
+            <xul:popupset ignorekeys="true"
+				oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);"
+			>
+                <xul:popup id="ac_menupopup">
                 </xul:popup>
             </xul:popupset>
         </xul:box>
     </content>
 
     <interface>
+        <property name="value"
+            onset="return this.anonymousContent[0].firstChild.value = val;"
+            onget="this.privatefunc.cleanupInputField(this); return this.anonymousContent[0].firstChild.value;"
+		/>
+
         <property name="timeout"
             onset="return this.setAttribute('timeout', val);"
             onget="return this.getAttribute('timeout');"
-        />
+		/>
 
-        <property name="autoCompleteSession">
+        <property name="displayMenu"
+            onset="return this.setAttribute('displayMenu', val);"
+            onget="return this.getAttribute('displayMenu');"
+		/>
+
+		<property name="autoCompleteSession">
         <![CDATA[
             if (this.getAttribute('searchSessionType') != "") {
                 searchSession = unescape('component:%2F%2Fnetscape%2FautocompleteSession%26type=');
@@ -72,13 +70,14 @@
         <![CDATA[
         ({
             onAutoComplete: function(result, status) {
+				var me = this.param;
                 if (status == Components.interfaces.nsIAutoCompleteStatus.failed)
                     return;
                 
-                if (this.param.disableAutocomplete == "true")
+                if (me.disableAutocomplete == "true")
                     return;
 
-                this.param.lastResults = result;
+                me.lastResults = result;
                 if (status == Components.interfaces.nsIAutoCompleteStatus.ignored || 
                     status == Components.interfaces.nsIAutoCompleteStatus.noMatch)
                     return;
@@ -89,50 +88,54 @@
                 if (result.defaultItemIndex > result.items.Count())
                     result.defaultItemIndex = 0;
                 
-                item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
+                var inputElement = me.anonymousContent[0].firstChild;
+                var item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
                 
                 //Time to build the new edit field value
                 //First, check if the search string correspond to the current value of the field, else ignore it
-                if (result.searchString != this.param.value)
+                if (result.searchString != inputElement.value)
                     return;
 
-                match = item.value.toLowerCase();
-                entry = this.param.value.toLowerCase();
-                inputElement = this.param.anonymousContent[0].firstChild;
+                var match = item.value.toLowerCase();
+                var entry = inputElement.value.toLowerCase();
                 
                 if (entry != match)
                 {
                     if (match.substring(0, entry.length) == entry)
                     {
-                        this.param.value = this.param.value + item.value.substring(entry.length, match.length);
+                        inputElement.value = inputElement.value + item.value.substring(entry.length, match.length);
                         inputElement.setSelectionRange(entry.length, match.length);
-                        this.param.noDirectMatch = false;
+                        me.noDirectMatch = false;
                     }
                     else
-                   {
-                        this.param.value = this.param.value + " >> " + item.value;
-                        inputElement.setSelectionRange(entry.length, this.param.value.length);
-                        this.param.noDirectMatch = true;
-                   }
+                    {
+                        inputElement.value = inputElement.value + " >> " + item.value;
+                        inputElement.setSelectionRange(entry.length, inputElement.value.length);
+                        me.noDirectMatch = true;
+                    }
                 }
-
-                popupset = this.param.anonymousContent[0].childNodes[1];
                 
                 //Now, build the popup content
+				if (me.displayMenu == "false")
+					return;
+
+                popupset = me.anonymousContent[0].childNodes[1];
                 popupElement = popupset.firstChild.cloneNode(false);
                 for (i = 0; i < result.items.Count(); i ++)
                 {
                     item = result.items.QueryElementAt(i, Components.interfaces.nsIAutoCompleteItem);
                     menuitem = document.createElement("menuitem");
-                    menuitem.setAttribute('id', i);
+                    menuitem.setAttribute('data', i);
                     menuitem.setAttribute('value', item.value);
                     popupElement.appendChild(menuitem);
-                    dump("  match=" + item.value + "\n");
+//                    dump("  match=" + item.value + "\n");
                 }
                 popupset.replaceChild(popupElement, popupset.firstChild);
 //TODO: Select the default item
-//                popupset.selectedItem = result.defaultItemIndex;                
-//                popupset.firstChild.openPopup(this.param.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
+//                popupset.selectedItem = result.defaultItemIndex;
+				me.privatefunc.selectedItemIndex = result.defaultItemIndex;
+                popupset.firstChild.openPopup(me.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
+dump("OPEN POPUP\n");
             },
 
             param: this
@@ -140,21 +143,39 @@
         ]]>
         </property>
 
-        <method name="callListener">
-            <argument name="me"/>
-            <argument name="action"/>
-            <body>
-            <![CDATA[
+        <property name="privatefunc">
+        <![CDATA[
+        ({
+            onMenuCommand: function(me, popupSetElem) {
+				var inputElement = me.anonymousContent[0].firstChild;
+				var popupElem = popupSetElem.firstChild;
+				for (var i = 0; i < popupElem.childNodes.length; i ++)
+				{
+					var menuitem = popupElem.childNodes[i];
+					if (menuitem.getAttribute("menuactive") == "true")
+					{
+						inputElement.value = menuitem.getAttribute("value");
+						var inputElement = me.anonymousContent[0].firstChild;
+                        inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
+						needToAutocomplete = false;
+						me.privatefunc.selectedItemIndex = i;
+						return;
+					}
+				}
+            },
+
+			callListener: function(me, action) {
                 switch (action) {
                     case 'startLookup':
                         if (me.disableAutocomplete == "true")
                             return;
-                        if (!me.lastResults || me.value != me.lastResults.searchString)
-                            me.autoCompleteSession.onStartLookup(me.value, me.lastResults, me.autoCompleteListener);
+						var inputElement = me.anonymousContent[0].firstChild;
+                        if (!me.lastResults || inputElement.value != me.lastResults.searchString)
+                            me.autoCompleteSession.onStartLookup(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;
 
                     case 'stopLookup':
-                        //TODO: hide the popup menu now. How do we to that?
+//						me.privatefunc.closePopupMenu(me);
                         me.autoCompleteSession.onStopLookup();
                         break;
 
@@ -166,50 +187,175 @@
                         me.needToAutocomplete = false;
                         if (this.disableAutocomplete == "true")
                             return;
-                        me.autoCompleteSession.onAutoComplete(me.value, me.lastResults, me.autoCompleteListener);
+						var inputElement = me.anonymousContent[0].firstChild;
+                        me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;
                 }
-            ]]>
-            </body>
-        </method>
-        
-        <method name="finishAutoComplete">
-            <argument name="event"/>
-            <body>
-            <![CDATA[
-                if (this.disableAutocomplete == "true")
+			},
+
+			finishAutoComplete: function(me, event) {
+                if (me.disableAutocomplete == "true")
                     return;
 
-                inputElement = this.anonymousContent[0].firstChild;
-                entry = this.value.substring(0, inputElement.selectionStart) + this.value.substring(inputElement.selectionEnd, this.value.length);
+                var inputElement = me.anonymousContent[0].firstChild;
+				var value = inputElement.value;
+                var entry = value.substring(0, inputElement.selectionStart) + value.substring(inputElement.selectionEnd, value.length);
 
-                if (this.lastResults)
+                if (me.lastResults)
                 {
-                    if (this.lastResults.searchString == entry)
+                    if (me.lastResults.searchString == entry)
                     {
                         try {
-                            this.value = this.lastResults.items.QueryElementAt(this.lastResults.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
+                            inputElement.value = me.lastResults.items.QueryElementAt(me.lastResults.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
                         } catch(e) {};
                         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
-                        return;
+						me.privatefunc.closePopupMenu(me);
+						return;
                     }
                 }
                 
-                this.callListener(this, 'autoComplete');
-            ]]>
-            </body>
-        </method>
+                me.privatefunc.callListener(me, 'autoComplete');
+			},
+
+			closePopupMenu: function(me) {
+				popup = document.getElementById("ac_menupopup");
+				if (popup /*&& popup.getAttribute("menuactive") == "true"*/) //TODO: need to now if menu is open or not
+				{
+dump("CLOSE POPUP\n");
+					popup.closePopup();
+				}
+			},
+
+			cleanupInputField: function(me) {
+				if (me.noDirectMatch)
+				{
+					var inputElement = me.anonymousContent[0].firstChild;
+					var value = inputElement.value;
+					var index = value.indexOf(">> ");
+					if (index >= 0)
+					{
+						inputElement.value = value.substr(index + 3);
+						inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
+					}
+				}
+			},
+
+			keyNavigation: function(me, event, popup) {
+				var inputElement = me.anonymousContent[0].firstChild;
+				if (event.keyCode == 38 || event.keyCode == 40)
+				{
+					if (event.keyCode == 38)
+					{
+						if (me.privatefunc.selectedItemIndex <= -1)
+							me.privatefunc.selectedItemIndex = me.lastResults.items.Count() - 1;
+						else
+							me.privatefunc.selectedItemIndex --;
+					}
+					else
+					{
+						me.privatefunc.selectedItemIndex ++;
+						if (me.privatefunc.selectedItemIndex >= me.lastResults.items.Count())
+							me.privatefunc.selectedItemIndex = -1
+					}
+
+					if (me.privatefunc.selectedItemIndex == -1)
+						inputElement.value = me.lastResults.searchString;
+					else
+						inputElement.value = me.lastResults.items.QueryElementAt(me.privatefunc.selectedItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
+					inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
+					noDirectMatch = false;
+					needToAutocomplete = false;
+
+					//TODO: Need to change the menu selection
+					if (popup)
+					{
+					}
+					return;
+				}
+			},
+
+			processKeyUp: function(me, event) {
+				if (me.disableAutocomplete == "true")
+					return;
+
+				switch (event.keyCode)
+				{
+					case 8: /*vk_back*/
+					case 46: /*vk_delete*/
+						me.privatefunc.closePopupMenu(me);
+						break;
+				}
+			},
+
+			processKeyPress: function(me, event) {
+				if (me.disableAutocomplete == "true")
+					return;
+
+				//Stop current lookup in case it's async.
+				me.privatefunc.callListener(me, 'stopLookup'); 
+				if (me.autoCompleteTimer) {
+					clearTimeout(me.autoCompleteTimer);
+					me.autoCompleteTimer = 0;
+				}
+
+				var popup = document.getElementById("ac_menupopup");
+				//TODO: need to now if menu is open or not
+// 				if (popup && popup.getAttribute("menuactive") != "true")
+//					popup = null;
+
+				switch (event.keyCode)
+				{
+					case 13 /*vk_return*/:
+						me.privatefunc.finishAutoComplete(me, event);
+						return;
+
+					case 27 /*vk_escape*/:
+						if (popup) {
+							me.privatefunc.closePopupMenu(me);
+							event.preventDefault();
+							event.preventBubble();
+							return;
+						}
+						break;
+
+					case 37 /*vk_left*/:
+					case 39 /*vk_right*/:
+						me.privatefunc.cleanupInputField(me);
+						break;
+
+					case 38 /*vk_up*/:
+					case 40 /*vk_down*/:
+						me.privatefunc.keyNavigation(me, event, popup);
+						event.preventDefault();
+						event.preventBubble();
+						me.privatefunc.cleanupInputField(me);
+						break;
+
+					default:
+						me.needToAutocomplete = true;
+						me.autoCompleteTimer = setTimeout(me.privatefunc.callListener, me.timeout, me, 'startLookup');
+				}
+			},
+
+			selectedItemIndex: 0
+
+        })
+        ]]>
+        </property>
         
-    </interface>
+	</interface>
 
-    <handlers>
-        <handler type="keydown" keycode="vk_return" value="this.finishAutoComplete(event);"/>
-
-        <handler type="focus" value="this.needToAutocomplete = false;"/>
-
+	<handlers>
+		<handler type="click" value="this.privatefunc.cleanupInputField(this); //TODO: try to catch menu click here"/>
+		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
+        <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
+        <handler type="keyup" value="this.privatefunc.processKeyUp(this, event);"/>
+        <handler type="focus" value="dump('FOCUS\n'); this.needToAutocomplete = false;"/>
         <handler type="blur" value="
+			dump('BLURR\n');
             if (this.needToAutocomplete)
-                this.finishAutoComplete(event);
+                this.privatefunc.finishAutoComplete(this, event);
+			this.privatefunc.cleanupInputField(this);
             "/>
     </handlers>
 
