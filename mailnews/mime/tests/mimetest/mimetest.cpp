@@ -449,10 +449,9 @@ NewChannel(nsIChannel **aInstancePtrResult, nsIURI *aURI)
   NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
   if (NS_FAILED(res)) 
     return NS_ERROR_FAILURE;
-  res = pService->NewChannelFromURI(nsnull, aURI, (nsILoadGroup *)nsnull,
-                                    (nsIInterfaceRequestor *)nsnull,
-                                    0, (nsIURI *)nsnull, 0, 0, 
-                                    aInstancePtrResult);
+
+  res = pService->NewChannelFromURI(aURI, aInstancePtrResult);
+
   if (NS_FAILED(res))
     return NS_ERROR_FAILURE;
   else
