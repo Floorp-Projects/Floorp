@@ -41,7 +41,16 @@
 // in the current logical palette. This has no effect on a non-palette device
 #define PALETTERGB_COLORREF(c)  (0x02000000 | (c))
 
+/*
+ * This is actually real fun.  Windows does not draw dotted lines with Pen's
+ * directly (Go ahead, try it, you'll get dashes).
+ *
+ * the trick is to install a callback and actually put the pixels in
+ * directly. This function will get called for each pixel in the line.
+ *
+ */
 
+static PRBool gFastDDASupport = PR_FALSE;
 
 typedef struct lineddastructtag
 {
@@ -58,24 +67,10 @@ void CALLBACK LineDDAFunc(int x,int y,LONG lData)
   if (dda_struct->nDottedPixel == 1) 
   {
     dda_struct->nDottedPixel = 0;
-    
-    if (GetDeviceCaps(dda_struct->dc, RASTERCAPS) & (RC_BITBLT)) 
-    {   
-      RECT    rcClip ;
-      
-      if (GetClipBox(dda_struct->dc, &rcClip) != ERROR)
-      {
-        POINT pt ;
-        
-        pt.x = x ;
-        pt.y = y ;
-        
-        if (PtInRect(&rcClip, pt))       
-        {
-          SetPixel(dda_struct->dc,x,y,dda_struct->crColor);
-        }
-      }    
-    }    
+
+    SetPixel(dda_struct->dc,
+             x,y,
+             dda_struct->crColor);
   }
   else
   {
@@ -307,7 +302,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
 {
   NS_INIT_REFCNT();
 
-  // The first time in we initialize gIsWIN95 flag
+  // The first time in we initialize gIsWIN95 flag & gFastDDASupport flag
   if (NOT_SETUP == gIsWIN95) {
     OSVERSIONINFO os;
     os.dwOSVersionInfoSize = sizeof(os);
@@ -471,6 +466,7 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
     NS_ADDREF(mSurface);
     mSurface->Init(aWindow);
     mDC = mSurface->mDC;
+
   }
 
   mDCOwner = aWindow;
@@ -540,6 +536,9 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
     }
   }
 
+  if (GetDeviceCaps(aNewDC, RASTERCAPS) & (RC_BITBLT))
+    gFastDDASupport = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -591,6 +590,7 @@ nsRenderingContextWin::GetHints(PRUint32& aResult)
   if (gIsWIN95) {
     result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
   }
+
   aResult = result;
   return NS_OK;
 }
@@ -967,7 +967,7 @@ void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
 
   SetupPen();
 
-  if (nsLineStyle_kDotted == mCurrLineStyle)
+  if ((nsLineStyle_kDotted == mCurrLineStyle) && (PR_TRUE == gFastDDASupport))
   {
     lineddastruct dda_struct;
 
@@ -1532,17 +1532,6 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
 
     mStates->mDottedPen = mCurrPen = tpen;
     mStates->mPenColor = mCurrPenColor = mCurrentColor;
-
-    /*
-     * This is actually real fun.  Windows does not draw dotted lines with Pen's
-     * directly (Go ahead, try it, you'll get dashes).
-     *
-     * the trick is to install a callback and actually put the pixels in
-     * directly. This function will get called for each pixel in the line.
-     *
-     */
-
-
 
 //printf("pens: %d\n", ++numpen);
   }
