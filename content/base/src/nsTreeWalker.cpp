@@ -408,7 +408,8 @@ nsTreeWalker::NextInDocumentOrderOf(nsIDOMNode* aNode,
         if (*_retval)
             return NS_OK;
     }
-    else if (aNode == mRoot){
+
+    if (aNode == mRoot){
         *_retval = nsnull;
         return NS_OK;
     }
