@@ -64,11 +64,12 @@ union UStrPtr {
  **************************************************************************/
 
 struct nsBufDescriptor {
-  nsBufDescriptor(char* aBuffer,PRUint32 aBufferSize,eCharSize aCharSize,PRBool aOwnsBuffer) {
+  nsBufDescriptor(char* aBuffer,PRUint32 aBufferSize,eCharSize aCharSize,PRBool aOwnsBuffer) :
+    mCapacity((aBufferSize>>aCharSize)-1),
+  mOwnsBuffer(aOwnsBuffer),
+  mMultibyte(aCharSize)
+{
     mStr=aBuffer;
-    mMultibyte=aCharSize;
-    mCapacity=(aBufferSize>>mMultibyte)-1;
-    mOwnsBuffer=aOwnsBuffer;
   }
 
   PRUint32        mCapacity;
