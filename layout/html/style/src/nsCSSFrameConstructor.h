@@ -944,8 +944,6 @@ protected:
   // Cached Prefs
   PRBool              mGotGfxPrefs;
   PRBool              mHasGfxScrollbars;
-  PRBool              mDoGfxListbox;     // XXX temporary
-  PRBool              mDoGfxCombobox;    // XXX temporary
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 };

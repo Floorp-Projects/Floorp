@@ -40,7 +40,6 @@ CPPSRCS		= \
 		nsFormFrame.cpp \
 		nsGfxButtonControlFrame.cpp \
 		nsGfxCheckboxControlFrame.cpp \
-		nsGfxListControlFrame.cpp \
 		nsGfxRadioControlFrame.cpp \
 		nsHTMLButtonControlFrame.cpp \
 		nsImageControlFrame.cpp \
