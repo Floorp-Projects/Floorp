@@ -61,6 +61,10 @@ int np_debug = 0;
 static XP_Bool gForcingRedraw = FALSE;
 #endif /* XP_MAC */
 
+#ifdef XP_MAC
+XP_Bool gForcingRedraw = FALSE;
+#endif /* XP_MAC */
+
 NPNetscapeFuncs npp_funcs;
 
 /*
@@ -1638,7 +1642,15 @@ npn_setvalue(NPP npp, NPPVariable variable, void *r_value)
         	break; 
 
         case NPPVpluginWindowSize:
+        {
+          NPSize * pnpsz = (NPSize *)r_value;
+          np_data * ndata = (np_data *)instance->app->np_data;
+          LO_EmbedStruct * pes = ndata->lo_struct;
+
+          LO_SetEmbedSize(instance->cx, pes, pnpsz->width, pnpsz->height);
+          LO_RelayoutFromElement(instance->cx, (LO_Element *)pes);
           break;
+        }
 	    default:
 		  break;
     }
