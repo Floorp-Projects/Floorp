@@ -35,6 +35,7 @@ class nsIStreamListener;
 class nsIStreamObserver;
 class nsIStyleSet;
 class nsIStyleSheet;
+class nsIStyleRule;
 class nsIURL;
 class nsIURLGroup;
 class nsIViewManager;
@@ -187,6 +188,16 @@ public:
   NS_IMETHOD ContentRemoved(nsIContent* aContainer,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer) = 0;
+
+  // Observation hooks for style data to propogate notifications
+  // to document observers
+  NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+  NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) = 0;
+  NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) = 0;
 
   /**
     * Returns the Selection Object

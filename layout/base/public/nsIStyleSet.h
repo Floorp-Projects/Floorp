@@ -132,7 +132,17 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
 
-  // xxx style rules enumeration
+  // Style change notifications
+  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) = 0;
+  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) = 0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
