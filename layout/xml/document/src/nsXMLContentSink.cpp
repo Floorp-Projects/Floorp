@@ -1184,36 +1184,37 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   return result;
 }
 
-static const char* kWhitespace = "\b\t\r\n ";
-static const char* kDelimiter = "\b\t\r\n >";
-static const char* kDoubleQuote = "\"";
-static const char* kSingleQuote = "'";
 
-static PRBool
+/**
+ * DOCTYPE declaration is covered with very strict rules, which
+ * makes our life here simpler because the XML parser has already
+ * detected errors. The only slightly problematic case is whitespace
+ * between the tokens. There MUST be whitespace between the tokens
+ * EXCEPT right before > and [.
+ */
+static const char* kWhitespace = " \r\n\t\b"; // Optimized for typical cases
+
+static void
 GetDocTypeToken(nsString& aStr,
                 nsString& aToken,
-                PRBool aStripQuotes)
+                PRBool aQuotedString)
 {
-  aStr.Trim(kWhitespace, PR_TRUE, PR_FALSE);
-  PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
-  if (tokenEnd > 0) {
-    aStr.Left(aToken, tokenEnd);
-    aStr.Cut(0, tokenEnd);
-    aToken.CompressWhitespace();
-    if (aStripQuotes) {
-      if (0 == aToken.Find(kDoubleQuote)) {
-        aToken.Trim(kDoubleQuote);
-      }
-      else {
-        aToken.Trim(kSingleQuote);
-      }
+  aStr.Trim(kWhitespace,PR_TRUE,PR_FALSE); // If we don't do this we must look ahead
+                                           // before Cut() and adjust the cut amount.
+  
+  if (aQuotedString) {    
+    PRInt32 endQuote = aStr.FindChar(aStr[0],PR_FALSE,1);
+    aStr.Mid(aToken,1,endQuote-1);
+    aStr.Cut(0,endQuote+1);
+  } else {    
+    static const char* kDelimiter = " >[\r\n\t\b"; // Optimized for typical cases
+    PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
+    if (tokenEnd > 0) {
+      aStr.Left(aToken, tokenEnd);
+      aStr.Cut(0, tokenEnd);
     }
-    return PR_TRUE;
   }
-
-  return PR_FALSE;
 }
-
 
 NS_IMETHODIMP
 nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
@@ -1227,25 +1228,26 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   const nsString& docTypeStr = aNode.GetText(); 
   nsAutoString str, name, publicId, systemId;
 
-  if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_TRUE, 9)) {
+  if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_FALSE, 9)) {
     docTypeStr.Right(str, docTypeStr.Length()-9);
   }
 
-  if (GetDocTypeToken(str, name, PR_FALSE)) {
-    nsAutoString token;
+  GetDocTypeToken(str, name, PR_FALSE);
 
-    GetDocTypeToken(str, token, PR_FALSE);
-    if (token.EqualsWithConversion("PUBLIC")) {
-      GetDocTypeToken(str, publicId, PR_TRUE);
-      GetDocTypeToken(str, systemId, PR_TRUE);
-    }
-    else if (token.EqualsWithConversion("SYSTEM")) {
-      GetDocTypeToken(str, systemId, PR_TRUE);
-    }
+  nsAutoString token;
 
-    // The rest is the internal subset (minus the trailing >)
-    str.Trim(">");
+  GetDocTypeToken(str, token, PR_FALSE);
+  if (token.Equals(NS_LITERAL_STRING("PUBLIC"))) {
+    GetDocTypeToken(str, publicId, PR_TRUE);
+    GetDocTypeToken(str, systemId, PR_TRUE);
   }
+  else if (token.Equals(NS_LITERAL_STRING("SYSTEM"))) {
+    GetDocTypeToken(str, systemId, PR_TRUE);
+  }
+
+  // The rest is the internal subset (minus whitespace and the trailing >)
+  str.Truncate(str.Length()-1); // Delete the trailing >
+  str.Trim(kWhitespace);
 
   nsCOMPtr<nsIDOMDocumentType> oldDocType;
   nsCOMPtr<nsIDOMDocumentType> docType;
