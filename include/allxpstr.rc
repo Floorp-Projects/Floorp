@@ -6511,8 +6511,10 @@ ResDef(XP_EDT_DELETE_OR_COPY_CAPTION, (XP_MSG_BASE + 848),"Delete/Copy/Cut Selec
 ResDef(XP_EDT_SELECTION_CROSSES_NESTED_TABLE, (XP_MSG_BASE + 849),
 "The selection includes a nested table boundary.\nCopying and deleting are not allowed.")
 ResDef(XP_EDT_DOCUMENT_BUSY, (XP_MSG_BASE + 850),
-"Cannot delete, copy or cut at this time.\nPlease try again later.")
-
+"Cannot edit the page at this time.\nPlease try again later.")
+ResDef(XP_EDT_TARGET_NAME, (XP_MSG_BASE + 851), "Target Name: ")
+ResDef(XP_EDT_LINK_HINT, (XP_MSG_BASE + 852), " [Press Ctrl and click to edit link or jump to target]")
+ResDef(XP_EDT_LINK_HINT_MAC, (XP_MSG_BASE + 853), " [Press Cmd and click to edit link or jump to target]")
 
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
 ResDef(MK_ADDR_IMPORT_CARDS, XP_MSG_BASE+861, "Adding cards to %s") /* line text for progress window on importing an address book */
@@ -6841,19 +6843,24 @@ ResDef(MK_MSG_PURGING_NEWSGROUP_DONE,   XP_MSG_BASE + 991,
  "Purging newsgroup %s...Done")
 
 ResDef (XP_EDT_PUBLISH_ERROR_BODY, XP_MSG_BASE + 992,
-  "Make sure you specify the entire destination URL.\n\
-e.g. http://somemachine/somedirectory/somefile.html\n\n\
+  "Make sure you specify the location without the filename:\n\
+e.g. http://hostmachine/myfolder/\n\n\
 Try to publish to this URL anyway?")
+
 ResDef (XP_EDT_PUBLISH_BAD_URL, XP_MSG_BASE + 993,
   "Publish destination is invalid.")
 ResDef (XP_EDT_PUBLISH_BAD_CHAR, XP_MSG_BASE + 994,
-  "Publish destination contains at least one illegal character.")
+  "Publish destination contains at least one illegal character, such as a space.\n\n\
+Replace illegal characters with underscore ('_') ?")
+
 ResDef (XP_EDT_PUBLISH_BAD_PROTOCOL, XP_MSG_BASE + 995,
   "Publish destination must begin with ftp:// or http://")
 ResDef (XP_EDT_PUBLISH_NO_FILE, XP_MSG_BASE + 996,
   "Publish destination ends in a slash.")
 ResDef (XP_EDT_PUBLISH_NO_EXTENSION, XP_MSG_BASE + 997,
-  "Publish destination has no file extension.")
+  "Publish destination has no file extension.\n\
+Allowable extensions are: '.html, .htm, and '.shtml'\n\n\
+Append '.html' to your filename?")
 
 ResDef (MK_CVCOLOR_SOURCE_OF, XP_MSG_BASE + 998,
     "Source of: ")
