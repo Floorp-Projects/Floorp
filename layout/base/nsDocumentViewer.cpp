@@ -1105,6 +1105,7 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 
 // Note: operator new zeros our memory
 DocumentViewerImpl::DocumentViewerImpl()
+  : mIsSticky(PR_TRUE)
 {
   NS_INIT_ISUPPORTS();
   PrepareToStartLoad();
@@ -1135,7 +1136,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
-  : mPresContext(aPresContext), mAllowPlugins(PR_TRUE), mIsSticky(PR_FALSE)
+  : mPresContext(aPresContext), mAllowPlugins(PR_TRUE), mIsSticky(PR_TRUE)
 {
   NS_INIT_ISUPPORTS();
   mHintCharsetSource = kCharsetUninitialized;
