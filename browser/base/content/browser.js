@@ -343,8 +343,10 @@ function delayedStartup(aElt)
   checkForDefaultBrowser();
 
   // now load bookmarks after a delay
+  BMSVC.ReadBookmarks();
   var bt = document.getElementById("bookmarks-toolbar");
-  bt.loadBookmarksCallback();
+  if ("toolbar" in bt)
+    bt.toolbar.builder.rebuild();       
 
   WindowFocusTimerCallback(aElt);
 
