@@ -112,6 +112,7 @@ public:
 
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
+  NS_IMETHOD GetNewMessages();
 
 	// nsIMsgNewsFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);

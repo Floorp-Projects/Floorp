@@ -46,6 +46,7 @@
 #include "nsString2.h"
 
 #include "nsNNTPNewsgroup.h"
+#include "nsCOMPtr.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -351,3 +352,43 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 
 
 
+nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
+                                   nsINntpIncomingServer *nntpServer,
+                                   nsIURL ** aURL)
+{
+#if DEBUG_sspitzer
+  printf("nsNntpService::GetNewNews()\n");
+#endif
+  
+  NS_LOCK_INSTANCE();
+  nsresult rv = NS_OK;
+  char * nntpHostName = nsnull;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsINntpUrl> nntpUrl;
+  
+  server = do_QueryInterface(nntpServer);
+  
+  // convert normal host to nntp host.
+  // XXX - this doesn't handle QI failing very well
+  if (server) 
+	{
+#ifdef DEBUG_sspitzer
+      printf("server != nsnull\n");
+#endif
+      // load up required server information
+      server->GetHostName(&nntpHostName);
+    }
+
+#ifdef DEBUG_sspitzer
+  if (nntpHostName) {
+    printf("get news from news://%s\n", nntpHostName);
+  }
+  else {
+    printf("nntpHostName is null\n");
+  }
+#endif
+	
+  NS_UNLOCK_INSTANCE();
+  return rv;
+}

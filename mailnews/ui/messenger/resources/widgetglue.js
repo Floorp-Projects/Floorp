@@ -42,7 +42,7 @@ function MsgNewMessage()
 
 function MsgGetMessage() 
 {
-  GetNewMail();
+  GetNewMessages();
 }
 
 function MsgDeleteMessage()

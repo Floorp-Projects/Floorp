@@ -21,6 +21,7 @@
 
 #include "nsINntpService.h"
 #include "nsIMsgMessageService.h"
+#include "nsINntpIncomingServer.h"
 
 class nsIURL;
 class nsIUrlListener;
@@ -35,6 +36,8 @@ public:
                          nsIUrlListener * aUrlListener, nsIURL ** aURL);
   
   NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL);
+
+  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener, nsINntpIncomingServer *nntpServer, nsIURL ** aURL);
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsIMsgMessageService Interface 

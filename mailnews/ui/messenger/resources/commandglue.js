@@ -55,7 +55,7 @@ function NewMessage()
   ComposeMessage(null, null, null, 0);
 }
 
-function GetNewMail()
+function GetNewMessages()
 {
 	var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
 	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
@@ -70,7 +70,9 @@ function GetNewMail()
 			appCore.GetNewMessages(folderTree.database, selectedFolder);
 		}
 	}
-	dump("Nothing was selected\n");
+	else {
+		dump("Nothing was selected\n");
+	}
 }
 
 function MsgAccountManager()

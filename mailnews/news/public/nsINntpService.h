@@ -22,6 +22,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsFileSpec.h"
+#include "nsINntpIncomingServer.h"
 
 /* 4C9F90E0-E19B-11d2-806E-006008128C4E} */
 #define NS_INNTPSERVICE_IID                         \
@@ -61,6 +62,10 @@ public:
 
   NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
 						   nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+
+  NS_IMETHOD GetNewNews(nsIUrlListener * aUrlListener,
+                                   nsINntpIncomingServer *nntpServer,
+                                   nsIURL ** aURL) = 0;
 };
 
 #endif /* nsINntpService_h___ */

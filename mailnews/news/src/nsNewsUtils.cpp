@@ -22,7 +22,6 @@
 #include "prsystem.h"
 #include "nsCOMPtr.h"
 
-// stuff for temporary root folder hack
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"

@@ -40,6 +40,11 @@
 #include "nsMsgUtils.h"
 #include "nsNewsUtils.h"
 
+#include "nsCOMPtr.h"
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsINntpIncomingServer.h"
+
 #ifdef DEBUG_sspitzer
 #define DEBUG_NOISY_NEWS 1
 #endif
@@ -54,6 +59,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID,	NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1058,6 +1064,38 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessage(nsIMessage *message)
 #endif  
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
+{
+  nsresult rv = NS_OK;
+
+#ifdef DEBUG_sspitzer
+  printf("GetNewMessages (for news)\n");
+#endif
+  
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  //Are we assured this is the server for this folder?
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = mailSession->GetCurrentServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsINntpIncomingServer> nntpServer;
+  rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+                              (void **)&nntpServer);
+  if (NS_SUCCEEDED(rv)) {
+#ifdef DEBUG_sspitzer
+    printf("Getting new news articles....\n");
+#endif
+    rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull);
+  }
+ 
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)
