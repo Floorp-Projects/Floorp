@@ -116,7 +116,11 @@ function onOk()
 function onCancel()
 {
   window.arguments[0].result = false;
-  smtpService.defaultServer = gOldDefaultSmtpServer;
+
+  // there might not be an old one.  see bug #176056
+  if (gOldDefaultSmtpServer)
+    smtpService.defaultServer = gOldDefaultSmtpServer;
+
   window.opener.onExitAdvancedDialog(gAddedSmtpServers,false);
   return true;
 }

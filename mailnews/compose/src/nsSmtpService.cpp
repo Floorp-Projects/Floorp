@@ -906,12 +906,13 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
 NS_IMETHODIMP
 nsSmtpService::SetDefaultServer(nsISmtpServer *aServer)
 {
-    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aServer);
+
     mDefaultSmtpServer = aServer;
 
     nsXPIDLCString serverKey;
-    rv = aServer->GetKey(getter_Copies(serverKey));
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = aServer->GetKey(getter_Copies(serverKey));
+    NS_ENSURE_SUCCESS(rv,rv);
     
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
     pref->SetCharPref("mail.smtp.defaultserver", serverKey);
