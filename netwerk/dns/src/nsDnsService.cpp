@@ -800,15 +800,16 @@ nsDNSService::Shutdown()
     rv = mThread->GetPRThread(&dnsServiceThread);
     if (dnsServiceThread)
         PR_Mac_PostAsyncNotify(dnsServiceThread);
+    rv = mThread->Join();
 
 #elif defined(XP_PC)
 
     SendMessage(mDNSWindow, WM_DNS_SHUTDOWN, 0, 0);
+    rv = mThread->Join();
 
 #elif defined(XP_UNIX)
     // XXXX - ?
 #endif
 
-    rv = mThread->Join();
     return rv;
 }
