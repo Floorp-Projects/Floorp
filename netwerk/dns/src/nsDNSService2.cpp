@@ -396,10 +396,6 @@ nsDNSService::AsyncResolve(const nsACString &hostname,
 
     PRUint16 af = GetAFForLookup(req->mHost);
 
-#ifdef DEBUG_darinf
-    printf(">>> using af=%hu for %s\n", af, req->mHost.get());
-#endif
-
     // addref for resolver; will be released when OnLookupComplete is called.
     NS_ADDREF(req);
     rv = res->ResolveHost(req->mHost.get(), bypassCache, req, af); 
