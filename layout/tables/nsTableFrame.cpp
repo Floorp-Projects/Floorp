@@ -4496,7 +4496,7 @@ CELL_FOUND:
           col = 0;
         }
       }
-      return NS_ERROR_FAILURE; // Some other error 
+      return NS_TABLELAYOUT_CELL_NOT_FOUND; // We didn't find a cell
     }
   }
 
