@@ -17,7 +17,7 @@
 
 
 
-MODULE=uconv
+MODULE=unicharutil
 
 DEPTH=..\..\..
 
