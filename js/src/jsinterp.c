@@ -1997,9 +1997,12 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
           case JSOP_ENTERWITH:
             FETCH_OBJECT(cx, -1, rval, obj);
+            SAVE_SP(fp);
             withobj = js_NewObject(cx, &js_WithClass, obj, fp->scopeChain);
             if (!withobj)
                 goto out;
+            rval = INT_TO_JSVAL(sp - fp->spbase);
+            OBJ_SET_SLOT(cx, withobj, JSSLOT_PRIVATE, rval);
             fp->scopeChain = withobj;
             STORE_OPND(-1, OBJECT_TO_JSVAL(withobj));
             break;
@@ -4820,6 +4823,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             i = (jsint) GET_ATOM_INDEX(pc);
             JS_ASSERT(i >= 0);
             sp = fp->spbase + i;
+
+            obj = fp->scopeChain;
+            while (OBJ_GET_CLASS(cx, obj) == &js_WithClass &&
+                   JSVAL_TO_INT(OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE)) > i) {
+                obj = OBJ_GET_PARENT(cx, obj);
+            }
+            fp->scopeChain = obj;
             break;
 
           case JSOP_GOSUB:
