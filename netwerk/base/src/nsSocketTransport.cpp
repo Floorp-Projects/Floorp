@@ -89,6 +89,10 @@ ErrorAccordingToNSPR()
             LOG(("mapping to NS_ERROR_NET_RESET\n"));
             rv = NS_ERROR_NET_RESET;
             break;
+        case PR_END_OF_FILE_ERROR:
+            LOG(("mapping to NS_ERROR_NET_INTERRUPT\n"));
+            rv = NS_ERROR_NET_INTERRUPT;
+            break;
         }
     }
     return rv;

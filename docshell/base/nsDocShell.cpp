@@ -2514,6 +2514,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("connectionFailure"));
     }
+    else if(NS_ERROR_NET_INTERRUPT == aError) {
+        NS_ENSURE_ARG_POINTER(aURI);
+        // Build up the host:port string.
+        nsCAutoString hostport;
+        aURI->GetHostPort(hostport);
+        formatStrs[0].AssignWithConversion(hostport.get());
+        formatStrCount = 1;
+        error.Assign(NS_LITERAL_STRING("netInterrupt"));
+    }
     else if (NS_ERROR_NET_TIMEOUT == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
         // Get the host
