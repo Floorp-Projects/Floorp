@@ -40,7 +40,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger-newsblog/skin/feed-subscriptions.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://messenger-newsblog/locale/feed-subscriptions.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger-newsblog/locale/feed-subscriptions.dtd">
 
 <window id="subscriptionsDialog"
         title="&newsBlogSubscriptions.label;"

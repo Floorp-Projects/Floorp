@@ -892,6 +892,7 @@ function refreshSubscriptionView()
 {
   gFeedSubscriptionsWindow.loadSubscriptions();
   gFeedSubscriptionsWindow.mTree.treeBoxObject.invalidate();
+  gFeedSubscriptionsWindow.mTree.treeBoxObject.view = gFeedSubscriptionsWindow.mView;
   if (gFeedSubscriptionsWindow.mView.rowCount > 0) 
     gFeedSubscriptionsWindow.mTree.view.selection.select(0);
 }

@@ -203,7 +203,7 @@ Feed.prototype =
     {
       if (aFeed.downloadCallback)
         aFeed.downloadCallback.downloaded(aFeed, kNewsBlogInvalidFeed);
-      FeedCache.removeFeed(url);
+      FeedCache.removeFeed(aFeed.url);
     }
   },
 
