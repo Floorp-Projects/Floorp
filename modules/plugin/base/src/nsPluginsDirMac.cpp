@@ -39,6 +39,63 @@
 #include <Aliases.h>
 #include <string.h>
 
+#if TARGET_CARBON
+#include <CFURL.h>
+#include <CFBundle.h>
+#include <CFString.h>
+#include <CodeFragments.h>
+
+/*
+** Returns a CFBundleRef if the FSSpec refers to a Mac OS X bundle directory.
+** The caller is responsible for calling CFRelease() to deallocate.
+*/
+static CFBundleRef getPluginBundle(const FSSpec& spec)
+{
+    CFBundleRef bundle = NULL;
+    FSRef ref;
+    OSErr err = FSpMakeFSRef(&spec, &ref);
+    char path[512];
+    if (err == noErr && (UInt32(FSRefMakePath) != kUnresolvedCFragSymbolAddress)) {
+        err = FSRefMakePath(&ref, (UInt8*)path, sizeof(path) - 1);
+        if (err == noErr) {
+            CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
+            if (pathRef) {
+            	CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+            	if (bundleURL != NULL) {
+                    bundle = CFBundleCreate(NULL, bundleURL);
+                    CFRelease(bundleURL);
+            	}
+            	CFRelease(pathRef);
+            }
+        }
+    }
+    return bundle;
+}
+
+extern "C" {
+// Not yet in Universal Interfaces that I'm using.
+EXTERN_API_C( SInt16 )
+CFBundleOpenBundleResourceMap(CFBundleRef bundle);
+
+EXTERN_API_C( void )
+CFBundleGetPackageInfo(CFBundleRef bundle, UInt32 * packageType, UInt32 * packageCreator);
+}
+
+#endif
+
+static nsresult getApplicationSpec(FSSpec& outAppSpec)
+{
+	// Use the process manager to get the application's FSSpec,
+	// then construct an nsFileSpec that encapsulates it.
+	ProcessInfoRec info;
+	info.processInfoLength = sizeof(info);
+	info.processName = NULL;
+	info.processAppSpec = &outAppSpec;
+	ProcessSerialNumber psn = { 0, kCurrentProcess };
+	OSErr result = GetProcessInformation(&psn, &info);
+	return (result == noErr ? NS_OK : NS_ERROR_FAILURE);
+}
+
 nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
 	PRBool wasAliased;
@@ -71,9 +128,29 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 	FInfo info;
 	const FSSpec& spec = fileSpec;
 	OSErr result = FSpGetFInfo(&spec, &info);
-	if (result == noErr)
-		return ((info.fdType == 'shlb' && info.fdCreator == 'MOSS')  || info.fdType == 'NSPL');
-	return false;
+	if (result == noErr && ((info.fdType == 'shlb' && info.fdCreator == 'MOSS') ||
+	                         info.fdType == 'NSPL' || info.fdType == 'BRPL'))
+	    return PR_TRUE;
+
+#if TARGET_CARBON
+  if (info.fdFlags & kHasBundle) {
+    // for Mac OS X bundles.
+    CFBundleRef bundle = getPluginBundle(spec);
+    if (bundle) {
+      UInt32 packageType, packageCreator;
+      CFBundleGetPackageInfo(bundle, &packageType, &packageCreator);
+      CFRelease(bundle);
+      switch (packageType) {
+      case 'BRPL':
+      case 'IEPL':
+      case 'NSPL':
+        return PR_TRUE;
+      }
+    }
+  }
+#endif
+
+	return PR_FALSE;
 }
 
 nsPluginFile::nsPluginFile(const nsFileSpec& spec)
@@ -125,6 +202,17 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 	Boolean targetIsFolder, wasAliased;
 	OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
 	short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
+
+#if TARGET_CARBON
+    if (refNum == -1) {
+        CFBundleRef bundle = getPluginBundle(spec);
+        if (bundle) {
+            refNum = CFBundleOpenBundleResourceMap(bundle);
+            CFRelease(bundle);
+        }
+    }
+#endif
+
 	if (refNum != -1) {
 		if (info.fPluginInfoSize >= sizeof(nsPluginInfo)) {
 			// 'STR#', 126, 2 => plugin name.
