@@ -100,6 +100,10 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
   gWebShell_UnixEventQueue = aEventQueue;
 }
 #endif
+#if XP_MAC
+// This has all the same problems as the above
+extern "C" PLEventQueue* GetMacPLEventQueue();
+#endif
 
 //----------------------------------------------------------------------
 
@@ -1542,7 +1546,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   NS_IF_ADDREF(mContent);
   mVerb = aVerb;
   
-#ifdef XP_PC
+#ifdef XP_PC 
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
@@ -1558,7 +1562,13 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
 
   PL_PostEvent(gWebShell_UnixEventQueue, this);
 #endif
-
+#ifdef XP_MAC 
+	PL_InitEvent(this, nsnull,
+               (PLHandleEventProc) ::HandlePLEvent,
+               (PLDestroyEventProc) ::DestroyPLEvent);
+	PLEventQueue* eventQueue = GetMacPLEventQueue();
+  	PL_PostEvent(eventQueue, this);
+#endif
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
