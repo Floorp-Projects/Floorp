@@ -2295,8 +2295,8 @@ nsNativeAppSupportOS2::StartServerMode() {
 
     // arg1 is the url to load.
     // arg2 is the string that tells navigator.js to auto-close.
-    arg1->SetData( NS_LITERAL_STRING( "about:blank" ).get() );
-    arg2->SetData( NS_LITERAL_STRING( "turbo=yes" ).get() );
+    arg1->SetData( NS_LITERAL_STRING( "about:blank" ) );
+    arg2->SetData( NS_LITERAL_STRING( "turbo=yes" ) );
 
     // Put args into array.
     if ( NS_FAILED( argArray->AppendElement( arg1 ) ) ||
