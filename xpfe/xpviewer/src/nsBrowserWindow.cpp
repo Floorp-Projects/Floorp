@@ -398,6 +398,37 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+// XXX
+// Temporary way to execute JavaScript. Later the javascript
+// will come through the content model.
+
+void nsBrowserWindow::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript)
+{
+  jsval retval;
+
+  NS_ASSERTION(nsnull != aWebShell, "null webshell passed to EvaluateJavaScriptString");
+//  NS_ASSERTION(nsnull != aJavaScript, "null javascript string passed to EvaluateJavaScriptString");
+  static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
+
+    // Get nsIScriptContextOwner
+  nsIScriptContextOwner* scriptContextOwner;
+	if (NS_OK == aWebShell->QueryInterface(kIScriptContextOwnerIID,(void**)&scriptContextOwner))
+	{
+    const char* url = "";
+      // Get nsIScriptContext
+    nsIScriptContext* scriptContext;
+    nsresult res = scriptContextOwner->GetScriptContext(&scriptContext);
+    if (NS_OK == res) {
+        // Ask the script context to evalute the javascript string
+      scriptContext->EvaluateString(aJavaScript, 
+      url, 0, &retval);
+
+      NS_RELEASE(scriptContext);
+    }
+		NS_RELEASE(scriptContextOwner);
+	}
+}
+
 
 //----------------------------------------------------------------------
 nsresult
@@ -724,14 +755,17 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 void
 nsBrowserWindow::Back()
 {
-  mWebShell->Back();
+   //XXX use javascript instead of mWebShell->Back();
+  ExecuteJavaScriptString(mWebShell, nsString("window.back();"));
+  printf("Back executed using JavaScript");
 }
 
 //---------------------------------------------------------------
 void
 nsBrowserWindow::Forward()
 {
-  mWebShell->Forward();
+   //XXX use javascript instead  of mWebShell->Forward();
+  ExecuteJavaScriptString(mWebShell, nsString("window.forward();"));
 }
 
 //---------------------------------------------------------------
@@ -1523,12 +1557,6 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nsString throbberURL("resource:/res/throbber/LargeAnimation%02d.gif");
   mThrobber->Init(toolbarWidget, r, throbberURL, 38);
 
-  // Get the ToolbarItem interface for adding it to the toolbar
-  nsIWidget * w;
-  if (NS_OK != mThrobber->QueryInterface(kIWidgetIID,(void**)&w)) {
-    return NS_OK;
-  }
-
   nsIToolbarItem * toolbarItem;
   if (NS_OK != mThrobber->QueryInterface(kIToolbarItemIID,(void**)&toolbarItem)) {
     return NS_OK;
@@ -1970,8 +1998,11 @@ nsBrowserWindow::NotifyImageButtonEvent(nsIImageButton * aImgBtn, nsGUIEvent* an
       break;
 
     case kHomeCmd : {
-      nsString homeURL("http://www.netscape.com");
-      mWebShell->LoadURL(homeURL);
+        //XXX This test using javascript instead of calling directly
+      ExecuteJavaScriptString(mWebShell, nsString("window.home();"));
+     
+      // nsString homeURL("http://www.netscape.com");
+     // mWebShell->LoadURL(homeURL);
       } break;
 
     case kMiniNavCmd :
