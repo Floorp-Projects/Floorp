@@ -1192,7 +1192,6 @@ nsDownload::GetPercentComplete(PRInt32* aPercentComplete)
 NS_IMETHODIMP
 nsDownload::SetListener(nsIWebProgressListener* aListener)
 {
-  printf("SET LISTENER...\n");
   mListener = aListener;
   return NS_OK;
 }
