@@ -25,8 +25,12 @@
 extern PRInt32 g_InstanceCount;
 extern PRInt32 g_LockCount;
 
-extern PRUint16 g_0201Mapping[];
-extern PRUint16 g_0208Mapping[];
-extern PRUint16 g_0212Mapping[];
+extern PRUint16 g_ut0201Mapping[];
+extern PRUint16 g_ut0208Mapping[];
+extern PRUint16 g_ut0212Mapping[];
+
+extern PRUint16 g_uf0201Mapping[];
+extern PRUint16 g_uf0208Mapping[];
+extern PRUint16 g_uf0212Mapping[];
 
 #endif /* nsUCVJA2Dll_h___ */

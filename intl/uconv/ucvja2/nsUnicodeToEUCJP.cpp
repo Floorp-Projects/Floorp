@@ -46,10 +46,10 @@ static PRInt16 *gShiftTables[4] =  {
 };
 
 static PRUint16 *gMappingTables[4] = {
-    g_0208Mapping,
-    g_0201Mapping,
-    g_0201Mapping,
-    g_0212Mapping
+    g_uf0208Mapping,
+    g_uf0201Mapping,
+    g_uf0201Mapping,
+    g_uf0212Mapping
 };
 
 //----------------------------------------------------------------------

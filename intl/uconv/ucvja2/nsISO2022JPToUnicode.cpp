@@ -106,7 +106,7 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
     } else res = NS_OK;
 
     res = mHelper->Convert(dest, 0, &destLen, src, 0, &srcLen, kOnError_Signal, 
-        (uShiftTable*) &cs0201ShiftTable, (uMappingTable*)&g_0201Mapping);
+        (uShiftTable*) &cs0201ShiftTable, (uMappingTable*)&g_ut0201Mapping);
     *aSrc = src + srcLen;
     *aDest = dest + destLen;
     return res;
@@ -122,7 +122,7 @@ nsresult nsISO2022JPToUnicode::ConvertBuffer(const char ** aSrc,
     } else res = NS_OK;
 
     res = mHelper->Convert(dest, 0, &destLen, src, 0, &srcLen, kOnError_Signal, 
-        (uShiftTable*) &cs0208ShiftTable, (uMappingTable*)&g_0208Mapping);
+        (uShiftTable*) &cs0208ShiftTable, (uMappingTable*)&g_ut0208Mapping);
     *aSrc = src + srcLen;
     *aDest = dest + destLen;
     return res;
