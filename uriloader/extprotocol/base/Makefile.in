@@ -36,9 +36,9 @@ CPPSRCS		= 	nsExternalFactory.cpp 			\
         		nsExternalProtocol.cpp			\
 				$(NULL)
 			
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/extprotocolunix_s.$(LIB_SUFFIX) \
-		$(NULL)
+# SHARED_LIBRARY_LIBS = \
+#		$(DIST)/lib/extprotocolunix_s.$(LIB_SUFFIX) \
+#		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib	\
