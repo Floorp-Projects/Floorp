@@ -783,9 +783,9 @@ JS_Unlock(JSRuntime *rt)
 }
 
 JS_PUBLIC_API(JSContext *)
-JS_NewContext(JSRuntime *rt, size_t stacksize)
+JS_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
-    return js_NewContext(rt, stacksize);
+    return js_NewContext(rt, stackChunkSize);
 }
 
 JS_PUBLIC_API(void)
@@ -1477,6 +1477,8 @@ JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    if (!clasp)
+        clasp = &js_ObjectClass;    /* default class is Object */
     return js_NewObject(cx, clasp, proto, parent);
 }
 
@@ -1485,6 +1487,8 @@ JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 		   JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    if (!clasp)
+        clasp = &js_ObjectClass;    /* default class is Object */
     return js_ConstructObject(cx, clasp, proto, parent);
 }
 
@@ -1533,6 +1537,8 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     JSObject *nobj;
 
     CHECK_REQUEST(cx);
+    if (!clasp)
+        clasp = &js_ObjectClass;    /* default class is Object */
     nobj = js_NewObject(cx, clasp, proto, obj);
     if (!nobj)
 	return NULL;
@@ -1967,7 +1973,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 {
     CHECK_REQUEST(cx);
-    /* jsuint cast does ToUint32 */
+    /* NB: jsuint cast does ToUint32. */
     return js_NewArrayObject(cx, (jsuint)length, vector);
 }
 
@@ -2179,7 +2185,7 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
 	       JSObject *parent, const char *name)
 {
     JSAtom *atom;
@@ -2193,7 +2199,7 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
 	if (!atom)
 	    return NULL;
     }
-    return js_NewFunction(cx, NULL, call, nargs, flags, parent, atom);
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2201,7 +2207,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
-        /* Indicate we cannot clone this object */
+        /* Indicate we cannot clone this object. */
 	return funobj;
     }
     return js_CloneFunctionObject(cx, funobj, parent);
@@ -2662,9 +2668,9 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
 {
     JSScript tmp = *script;
 
-    if (part == JSEXEC_PROLOG)
+    if (part == JSEXEC_PROLOG) {
         tmp.length = PTRDIFF(tmp.main, tmp.code, jsbytecode);
-    else {
+    } else {
         tmp.length -= PTRDIFF(tmp.main, tmp.code, jsbytecode);
         tmp.code = tmp.main;
     }
