@@ -61,7 +61,7 @@
 #define NETSCAPE_OID	          0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42
 #define NETSCAPE_CERT_EXT 	  NETSCAPE_OID, 0x01
 #define NETSCAPE_DATA_TYPE 	  NETSCAPE_OID, 0x02
-/* netscape directory oid - owned by Tim Howes(howes@netscape.com) */
+/* netscape directory oid - owned by Mark Smith (mcs@netscape.com) */
 #define NETSCAPE_DIRECTORY 	  NETSCAPE_OID, 0x03
 #define NETSCAPE_POLICY 	  NETSCAPE_OID, 0x04
 #define NETSCAPE_CERT_SERVER 	  NETSCAPE_OID, 0x05
@@ -264,6 +264,9 @@ CONST_OID nsExtCertRenewalTime[] 		= { NETSCAPE_CERT_EXT, 0x0f };
 
 CONST_OID nsExtAIACertRenewal[]    	= { NETSCAPE_CERT_EXT_AIA, 0x01 };
 CONST_OID nsExtCertScopeOfUse[]    	= { NETSCAPE_CERT_EXT, 0x11 };
+/* Reserved Netscape (2 16 840 1 113730 1 18) = { NETSCAPE_CERT_EXT, 0x12 }; */
+
+/* Netscape policy values */
 CONST_OID nsKeyUsageGovtApproved[] 	= { NETSCAPE_POLICY, 0x01 };
 
 /* Netscape other name types */
