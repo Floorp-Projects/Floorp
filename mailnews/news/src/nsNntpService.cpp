@@ -585,10 +585,10 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
   return NS_OK;
 }
 
-nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIURI **_retval)
+nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
-  printf("nsNntpService::PostMessage(%s,%s,??,??)\n",(const char *)pathToFile,newsgroupsNames);
+  printf("nsNntpService::PostMessage(??,%s,??,??)\n",newsgroupsNames);
 #endif
   if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
   if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
@@ -640,11 +640,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
   if (NS_FAILED(rv) || !post) return rv;
 
-#ifdef DEBUG_NEWS
-  printf("set file to post to %s\n",(const char *)pathToFile);
-#endif
-  
-  rv = post->SetPostMessageFile(pathToFile);
+  rv = post->SetPostMessageFile(fileToPost);
   if (NS_FAILED(rv)) return rv;
   
   rv = nntpUrl->SetMessageToPost(post);

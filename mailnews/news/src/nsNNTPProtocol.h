@@ -245,7 +245,7 @@ private:
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
-    PRInt32 PostMessageInFile(const nsFilePath &filePath);
+    PRInt32 PostMessageInFile(nsIFileSpec * filePath);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol

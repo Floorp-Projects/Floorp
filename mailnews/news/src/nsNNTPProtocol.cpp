@@ -72,8 +72,7 @@
 #include "nsIPrompt.h"
 #include "nsIMsgStatusFeedback.h" 
 
-#define PREF_NEWS_MAX_ARTICLES "news.max_articles"
-#define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
+#include "nsINntpIncomingServer.h"
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
@@ -463,17 +462,27 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 		return NS_ERROR_NULL_POINTER;
 
 	SetUrl(aURL);
-    
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-    if (NS_SUCCEEDED(rv) && prefs) {
-        rv = prefs->GetIntPref(PREF_NEWS_MAX_ARTICLES, &net_NewsChunkSize);
-        if (NS_FAILED(rv)) {
-            net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
-        }
-    }
-    else {
-        return rv;
-    }
+ 
+        net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
+
+	rv = aURL->GetHost(getter_Copies(m_hostName));
+	if (NS_FAILED(rv)) return rv;
+	rv = aURL->GetPreHost(getter_Copies(m_userName));
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr <nsIMsgIncomingServer> server;
+	
+	rv = nsGetNewsServer((const char *)m_userName, (const char *)m_hostName, getter_AddRefs(server));   
+	if (NS_SUCCEEDED(rv) && server) {
+		nsCOMPtr <nsINntpIncomingServer> nntpServer = do_QueryInterface(server, &rv);
+		if (NS_SUCCEEDED(rv) && nntpServer) {
+			PRInt32 max_articles;
+			rv = nntpServer->GetMaxArticles(&max_articles);
+			if (NS_SUCCEEDED(rv)) {
+				net_NewsChunkSize = max_articles;
+			}
+		}
+	}
 
 	NS_PRECONDITION(aURL, "invalid URL passed into NNTP Protocol");
 
@@ -483,7 +492,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 	
 	// query the URL for a nsINNTPUrl
    
-	rv = aURL->QueryInterface(nsINntpUrl::GetIID(), getter_AddRefs(m_runningURL));
+	m_runningURL = do_QueryInterface(aURL);
 	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -498,10 +507,6 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
       return rv;
     }
 	
-	rv = aURL->GetHost(getter_Copies(m_hostName));
-    if (NS_FAILED(rv)) return rv;
-    rv = aURL->GetPreHost(getter_Copies(m_userName));
-    if (NS_FAILED(rv)) return rv;
     
 	// call base class to set up the transport
 	rv = OpenNetworkSocket(aURL);
@@ -2030,7 +2035,9 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   {
 	  // create a pipe to pump the message into...the output will go to whoever
 	  // is consuming the message display
-	  nsresult rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
+	  nsresult rv;
+	rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
+	// TODO: check rv for failure?
   }
 
   if (m_newsAction == nsINntpUrl::ActionSaveMessageToDisk)
@@ -2061,7 +2068,6 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 {
 	char *line;
 	PRUint32 status = 0;
-	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	
 	PRBool pauseForMoreData = PR_FALSE;
 	if (m_channelListener)
@@ -3254,19 +3260,23 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   return !NS_SUCCEEDED(rv);
 }
 
-// sspitzer:  PostMessageInFile is copied from nsSmtpProtocol::SendMessageInFile()
+// sspitzer:  PostMessageInFile is derived from nsSmtpProtocol::SendMessageInFile()
 // 
 // mscott: after dogfood, make a note to move this type of function into a base
 // utility class....
 #define POST_DATA_BUFFER_SIZE 2048
 
-PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
+PRInt32 nsNNTPProtocol::PostMessageInFile(nsIFileSpec *aPostMessageFile)
 {
+    nsFileSpec fileToPost;
+
+    aPostMessageFile->GetFileSpec(&fileToPost);
+    
 #ifdef DEBUG_NEWS
-        printf("post this file: %s\n",(const char *)nsFileSpec(filePath));
+        printf("post this file: %s\n",(const char *)fileToPost);
 #endif /* DEBUG_NEWS */
         
-		nsInputFileStream * fileStream = new nsInputFileStream(nsFileSpec(filePath), PR_RDONLY, 00700);
+		nsInputFileStream * fileStream = new nsInputFileStream(fileToPost, PR_RDONLY, 00700);
 		if (fileStream)
 		{
 			PRInt32 amtInBuffer = 0; 
@@ -3387,10 +3397,10 @@ PRInt32 nsNNTPProtocol::PostData()
     nsCOMPtr <nsINNTPNewsgroupPost> message;
     rv = m_runningURL->GetMessageToPost(getter_AddRefs(message));
     if (NS_SUCCEEDED(rv)) {
-        nsFilePath *filePath;
-        rv = message->GetPostMessageFile(&filePath);
+        nsCOMPtr<nsIFileSpec> filePath;
+        rv = message->GetPostMessageFile(getter_AddRefs(filePath));
         if (NS_SUCCEEDED(rv)) {
-            PostMessageInFile(*filePath);
+            PostMessageInFile(filePath);
         }
      }
 

@@ -2532,10 +2532,13 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
     // using callbacks for notification
     // 
-    nsFilePath    filePath (*mTempFileSpec);
 	NS_ADDREF_THIS();
   	AddRef();
-    rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), mSendListener, nsnull);
+	nsCOMPtr<nsIFileSpec>fileToPost;
+	
+	rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
+	if (NS_FAILED(rv)) return rv;
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mSendListener, nsnull);
   }
 
   return rv;

@@ -34,7 +34,7 @@
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-static nsresult
+nsresult
 nsGetNewsServer(const char* username, const char *hostname,
                 nsIMsgIncomingServer** aResult)
 {

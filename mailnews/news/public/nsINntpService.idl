@@ -23,19 +23,14 @@
 interface nsIURI;
 interface nsIStreamListener;  
 interface nsISupportsArray;
-
-[ref] native nsFilePath(nsFilePath);
-
-%{ C++
-#include "nsFileSpec.h"
-%}
+interface nsIFileSpec;
 
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
   
   string ConvertNewsgroupsString(in string newsgroupsStr);
 
-  [noscript] nsIURI PostMessage (in nsFilePath pathToFile, in string newsgroupNames, in nsIUrlListener aUrlListener);
+  nsIURI PostMessage (in nsIFileSpec fileToPost, in string newsgroupNames, in nsIUrlListener aUrlListener);
 
   nsIURI GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
 

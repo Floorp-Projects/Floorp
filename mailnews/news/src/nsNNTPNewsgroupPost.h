@@ -21,6 +21,8 @@
 
 #include "msgCore.h"
 #include "nsINNTPNewsgroupPost.h"
+#include "nsCOMPtr.h"
+#include "nsIFileSpec.h"
 
 
 #define HEADER_FROM				0
@@ -99,14 +101,14 @@ public:
 
     // the message can be stored in a file....allow accessors for getting and setting
 	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(nsFilePath& aFileName);
-	NS_IMETHOD GetPostMessageFile(nsFilePath ** aFileName);
+	NS_IMETHOD SetPostMessageFile(nsIFileSpec * aFileName);
+	NS_IMETHOD GetPostMessageFile(nsIFileSpec ** aFileName);
     
     // helper routines
     static char *AppendAndAlloc(char *string, const char *newSubstring,
                                 PRBool withComma);
 private:
-    nsFilePath  m_fileName;
+    nsCOMPtr<nsIFileSpec>  m_postMessageFile;
     char *m_header[HEADER_LAST+1];
     static const char *m_headerName[HEADER_LAST+1];
     

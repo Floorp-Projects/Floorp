@@ -24,6 +24,16 @@ interface nsINntpIncomingServer : nsISupports {
 	/* the on-disk path to the newsrc file for this server */
 	attribute nsIFileSpec newsrcFilePath;
 
-    /* the newsrc root path (the directories all the newsrc files live) */
-    attribute nsIFileSpec newsrcRootPath;
+	/* the newsrc root path (the directories all the newsrc files live) */
+	attribute nsIFileSpec newsrcRootPath;
+	
+	/* ask the user before downloading more than maxArticles? */
+	attribute boolean notifyOn;
+
+	/* the max articles to download */
+	attribute long maxArticles;
+
+        /* when we don't download all, do we mark the rest read? */
+	attribute boolean markOldRead;
+
 };

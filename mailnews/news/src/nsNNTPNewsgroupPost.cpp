@@ -53,8 +53,7 @@ const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
     
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost::GetIID());
 
-nsNNTPNewsgroupPost::nsNNTPNewsgroupPost():
-    m_fileName("")
+nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {
 	NS_INIT_REFCNT();
 
@@ -215,28 +214,22 @@ nsNNTPNewsgroupPost::GetMessageID(char **messageID)
 // the message can be stored in a file....allow accessors for getting and setting
 // the file name to post...
 nsresult
-nsNNTPNewsgroupPost::SetPostMessageFile(nsFilePath& aFileName)
+nsNNTPNewsgroupPost::SetPostMessageFile(nsIFileSpec * aPostMessageFile)
 {
-    if (aFileName) {
+    if (!aPostMessageFile) return NS_ERROR_NULL_POINTER;
+    
 #ifdef DEBUG_NEWS
-        printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
+    printf("SetPostMessageFile(%s)\n",(const char *)aPostMessageFile);
 #endif
-        m_fileName = aFileName;
-        return NS_OK;
-    }
-    else {
-        return NS_ERROR_FAILURE;
-    }
+    m_postMessageFile = aPostMessageFile;
+    return NS_OK;
 }
 
 nsresult 
-nsNNTPNewsgroupPost::GetPostMessageFile(nsFilePath ** aFileName)
+nsNNTPNewsgroupPost::GetPostMessageFile(nsIFileSpec ** aPostMessageFile)
 {
-	if (aFileName) {
-		*aFileName = &m_fileName;
-		return NS_OK;
-	}
-	else {
-		return NS_ERROR_NULL_POINTER;
-	}
+    if (!aPostMessageFile) return NS_ERROR_NULL_POINTER;
+    
+    *aPostMessageFile = m_postMessageFile;
+    return NS_OK;
 }
