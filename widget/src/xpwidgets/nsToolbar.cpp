@@ -88,7 +88,7 @@ static CNavTokenDeallocator gItemInfoKiller;*/
 //--------------------------------------------------------------------
 //-- nsToolbar Constructor
 //--------------------------------------------------------------------
-nsToolbar::nsToolbar() : ChildWindow(), nsIToolbar()
+nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar()
 {
   NS_INIT_REFCNT();
 
@@ -819,6 +819,14 @@ nsEventStatus nsToolbar::HandleEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
   
 }
+
+
+//-------------------------------------------------------------------
+void nsToolbar::HandleDataModelEvent(int anEvent, nsHierarchicalDataItem* pItem)
+{
+	Invalidate(PR_FALSE);
+}
+
 
 //-------------------------------------------------------------------
 NS_METHOD nsToolbar::SetWrapping(PRBool aDoWrap)
