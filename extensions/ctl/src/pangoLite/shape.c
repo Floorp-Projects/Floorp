@@ -47,7 +47,7 @@
  * convert the characters into glyphs. You may also pass
  * in only a substring of the item from pango_itemize().
  */
-void pango_shape(const gchar      *text, 
+void pango_shape(const gunichar2  *text, 
                  gint             length, 
                  PangoAnalysis    *analysis,
                  PangoGlyphString *glyphs)

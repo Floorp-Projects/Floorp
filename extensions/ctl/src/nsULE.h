@@ -32,6 +32,22 @@
 #include "nsCtlCIID.h"
 #include "nsILE.h"
 
+#include "pango-types.h"
+#include "pango-glyph.h"
+
+struct textRun {
+  PRInt32         length; /* Length of a chunk */  
+  PRBool          isOther; /* Outside the range */
+  const PRUnichar *start; /* Address of start offset */
+  struct textRun  *next;
+};
+
+struct textRunList {
+  struct textRun *head;
+  struct textRun *cur;
+  PRInt32        numRuns;
+};
+
 /* Class nsULE : Declaration */
 class nsULE : public nsILE {  
 public:
@@ -48,22 +64,29 @@ public:
   // A> API used to generate Presentation Forms based on supported fonts
   // B> API used by common text operations such as cursor positioning 
   //    and selection
-  NS_IMETHOD GetPresentationForm(const PRUnichar  *aString, 
-                                 PRUint32         aLength,
-                                 PangoAnalysis    *aAnalysis,
-                                 PangoGlyphString *aGlyphs);
 
   NS_IMETHOD GetPresentationForm(const PRUnichar *aString,
-                                 PRUint32        aLength,                           
+                                 PRUint32        aLength,
                                  const char      *fontCharset,
                                  char            *aGlyphs,
                                  PRSize          *aOutLength);
 
-  NS_IMETHOD GetPresentationForm(const PRUnichar *aString,
-                                 PRUint32        aLength,                           
-                                 const char      *fontCharset,
-                                 PRUint32        *aGlyphs,
-                                 PRSize          *aOutLength);
+  NS_IMETHOD PrevCluster(const PRUnichar         *aString,
+                         PRUint32                aLength,
+                         const PRInt32           aIndex,
+                         PRInt32                 *prevOffset);
+
+  NS_IMETHOD NextCluster(const PRUnichar         *aString,
+                         PRUint32                aLength,
+                         const PRInt32           aIndex,
+                         PRInt32                 *nextOffset);
+
+  NS_IMETHOD GetRangeOfCluster(const PRUnichar *aString,
+                               PRUint32        aLength,
+                               const PRInt32   aIndex,
+                               PRInt32         *aStart,
+                               PRInt32         *aEnd);
+
  private:
 
   // Housekeeping Members
@@ -71,5 +94,9 @@ public:
   void CleanUp(void);
 
   PangoEngineShape* GetShaper(const PRUnichar *, PRUint32, const char *);
+  
+  PRInt32 GetRawCtlData(const PRUnichar*, PRUint32, PangoGlyphString*);
+
+  PRInt32 SeparateScript(const PRUnichar*, PRInt32, textRunList*);
 };
 #endif /* nsULE_H */

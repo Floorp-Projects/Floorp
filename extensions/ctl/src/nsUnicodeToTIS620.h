@@ -35,18 +35,9 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsICharRepresentable.h"
 
-struct textRun {
-  PRInt32         length; /* Length of a chunk */  
-  PRBool          isOther; /* Outside the range */
-  const PRUnichar *start; /* Address of start offset */
-  struct textRun  *next;
-};
+#include "nsILE.h"
 
-typedef struct {
-  struct textRun *head;
-  struct textRun *cur;
-  PRInt32        numRuns;
-} textRunList;
+struct textRunList;
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToTIS620 [declaration]
@@ -80,12 +71,14 @@ public:
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 
 private:
-  PRUint8 state;
-  PRInt32 byteOff;
-  PRInt32 charOff;
+  PRUint8 mState;
+  PRInt32 mByteOff;
+  PRInt32 mCharOff;
+
+  nsCOMPtr<nsILE> mCtlObj;
 
   // beg and end denote ranges and may need to be expanded in the future to
   // handle discontinous ranges
-  int Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList);
+  PRInt32 Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList);
 };
 #endif /* nsUnicodeToTIS620_h___ */

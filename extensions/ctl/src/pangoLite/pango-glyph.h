@@ -102,7 +102,7 @@ void pango_glyph_string_x_to_index(PangoGlyphString *glyphs,
                                    int              *trailing);
 
 /* Turn a string of characters into a string of glyphs */
-void pango_shape(const char       *text,
+void pango_shape(const gunichar2  *text,
                  gint             length,
                  PangoAnalysis    *analysis,
                  PangoGlyphString *glyphs);

@@ -23,9 +23,6 @@
  * Contributor(s): 
  */
 
-#include <stdio.h>
-#include <ctype.h> /* isspace */
-
 #include "nsULE.h"
 #include "nsString.h"
 
@@ -33,6 +30,14 @@
 #include "pango-glyph.h"
 #include "pango-modules.h"
 #include "pango-utils.h"
+
+#define CLEAN_RUN \
+  aPtr = aRun.head; \
+  for (int ct=0; (ct < aRun.numRuns); ct++) { \
+    aTmpPtr = aPtr; \
+    aPtr = aPtr->next; \
+    delete(aTmpPtr); \
+  }
 
 /*
  * Start of nsULE Public Functions
@@ -55,7 +60,7 @@ nsULE::GetShaper(const PRUnichar *inBuf,
 {
   PangoEngineShape *aEngine = NULL;
   PangoMap         *aMap = NULL;
-   guint           engine_type_id = 0, render_type_id = 0;
+  guint            engine_type_id = 0, render_type_id = 0;
   PRUnichar        wc = inBuf[0];
 
   if ((inBuf == (PRUnichar*)NULL) || (aLength <= 0)) {
@@ -75,38 +80,93 @@ nsULE::GetShaper(const PRUnichar *inBuf,
   return aEngine;
 }
 
-// Analysis needs to have valid direction and font charset
-NS_IMETHODIMP 
-nsULE::GetPresentationForm(const PRUnichar  *aString,
-                           PRUint32         aLength,
-                           PangoAnalysis    *aAnalysis,
-                           PangoGlyphString *aGlyphs)
+PRInt32
+nsULE::SeparateScript(const PRUnichar* aSrcBuf, 
+                      PRInt32 aSrcLen, 
+                      textRunList *aRunList)
 {
-  PangoEngineShape *aShaper = aAnalysis->shape_engine;
-  PRSize           inLen = 0;
-  char             *utf8Str = NULL;
+  int              ct = 0, start = 0;
+  PRBool           isCtl = PR_FALSE;
+  struct textRun   *tmpChunk;
+  PangoEngineShape *aEngine = NULL;
+  PangoMap         *aMap = NULL;
+  guint            engine_type_id = 0, render_type_id = 0;
 
-  if (aShaper != NULL) {
+  engine_type_id = g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
+  render_type_id = g_quark_from_static_string(PANGO_RENDER_TYPE_X);
+  aMap = pango_find_map("en_US", engine_type_id, render_type_id);
+
+  for (ct = 0; ct < aSrcLen;) {
+    tmpChunk = new textRun;
+
+    if (aRunList->numRuns == 0)
+      aRunList->head = tmpChunk;
+    else
+      aRunList->cur->next = tmpChunk;
+    aRunList->cur = tmpChunk;
+    aRunList->numRuns++;
     
-    nsAutoString strBuf(aString);
+    tmpChunk->start = &aSrcBuf[ct];
+    start = ct;
+    aEngine = (PangoEngineShape*)
+      pango_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
+    isCtl = (aEngine != NULL);
 
-    // Convert Unicode string to UTF8 and store in buffer
-    utf8Str = strBuf.ToNewUTF8String();
-    inLen = strlen(utf8Str);
+    if (isCtl) {
+      while (isCtl && ct < aSrcLen) {
+        aEngine = (PangoEngineShape*)
+          pango_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
+        isCtl = (aEngine != NULL);
+        if (isCtl)
+          ct++;
+      }
+      tmpChunk->isOther = PR_FALSE;
+    }
+    else {
+      while (!isCtl && ct < aSrcLen) {
+        aEngine = (PangoEngineShape*)
+          pango_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
+        isCtl = (aEngine != NULL);       
+        if (!isCtl)
+          ct++;
+      }
+      tmpChunk->isOther = PR_TRUE;
+    }
+    
+    tmpChunk->length = ct - start;
+  }
+  return (PRInt32)aRunList->numRuns;
+}
 
-    aShaper->script_shape(aAnalysis->fontCharset, utf8Str, inLen, 
-                          aAnalysis, aGlyphs);
-    nsMemory::Free(utf8Str);
+// Analysis needs to have valid direction and font charset
+PRInt32
+nsULE::GetRawCtlData(const PRUnichar  *aString,
+                     PRUint32         aLength,
+                     PangoGlyphString *aGlyphs)
+{
+  PangoEngineShape *aShaper = GetShaper(aString, aLength, (const char*)NULL);
+  PangoAnalysis    aAnalysis;  
+
+  aAnalysis.shape_engine = aShaper;
+  aAnalysis.aDir = PANGO_DIRECTION_LTR;
+  // In future fontCharset hard-coding should be removed
+  aAnalysis.fontCharset = strdup("tis620-2");
+
+  if (aShaper != NULL) {    
+    aShaper->script_shape(aAnalysis.fontCharset, aString, aLength,
+                          &aAnalysis, aGlyphs);    
+    nsMemory::Free(aAnalysis.fontCharset);
   }
   else {
     /* No Shaper - Copy Input to output */
+    return 0;
   }
-  return NS_OK;
+  return aGlyphs->num_glyphs;
 }
 
 NS_IMETHODIMP 
 nsULE::GetPresentationForm(const PRUnichar *aString,
-                           PRUint32        aLength,                           
+                           PRUint32        aLength,
                            const char      *fontCharset,
                            char            *aGlyphs,
                            PRSize          *aOutLength)
@@ -114,27 +174,15 @@ nsULE::GetPresentationForm(const PRUnichar *aString,
   PangoEngineShape *aShaper = GetShaper(aString, aLength, (const char*)NULL);
   PangoAnalysis    aAnalysis;
   PangoGlyphString *tmpGlyphs = pango_glyph_string_new();
-  PRSize           inLen = 0;
   int              aSize = 0;
-  char             *utf8Str = NULL;
 
   aAnalysis.shape_engine = aShaper;
   aAnalysis.aDir = PANGO_DIRECTION_LTR;
   aAnalysis.fontCharset = (char*)fontCharset;
 
-  if (aShaper != NULL) {
-    
-    nsAutoString strBuf;
-    strBuf.Assign(aString, aLength);
-
-    // Convert Unicode string to UTF8 and store in buffer
-    utf8Str = NULL;
-    utf8Str = strBuf.ToNewUTF8String();
-    inLen = strlen(utf8Str);
-
-    aShaper->script_shape(fontCharset, utf8Str, inLen, 
-                          &aAnalysis, tmpGlyphs);
-    nsMemory::Free(utf8Str);
+  if (aShaper != NULL) {        
+    aShaper->script_shape(fontCharset, aString, aLength,
+                          &aAnalysis, tmpGlyphs);    
     if (tmpGlyphs->num_glyphs > 0) {
       // Note : Does NOT handle 2 byte fonts
       aSize = tmpGlyphs->num_glyphs;
@@ -151,50 +199,246 @@ nsULE::GetPresentationForm(const PRUnichar *aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsULE::GetPresentationForm(const PRUnichar *aString,
-                           PRUint32        aLength,                           
-                           const char      *fontCharset,
-                           PRUint32        *aGlyphs,
-                           PRSize          *aOutLength)
+// This routine returns the string index of the next cluster
+// corresponding to the cluster at string index 'aIndex'
+// Note : Index returned is the end-offset
+// Cursor position iterates between 0 and (position - 1)
+NS_IMETHODIMP
+nsULE::NextCluster(const PRUnichar *aString,
+                   PRUint32        aLength,
+                   const PRInt32   aIndex,
+                   PRInt32         *nextOffset)
 {
-  PangoEngineShape *aShaper = GetShaper(aString, aLength, (const char*)NULL);
-  PangoAnalysis    aAnalysis;
-  PangoGlyphString *tmpGlyphs = pango_glyph_string_new();
-  PRSize           inLen = 0;
-  int              aSize = 0;
-  char             *utf8Str = NULL;
+  textRunList      aRun;
+  textRun          *aPtr, *aTmpPtr;
+  PRInt32          aStrCt=0;
+  PRBool           isBoundary=PR_FALSE;
+  PangoGlyphString *aGlyphData=pango_glyph_string_new();
+ 
+  if (aIndex >= aLength-1) {
+    *nextOffset = aLength; // End
+    return NS_OK;
+  }
 
-  aAnalysis.shape_engine = aShaper;
-  aAnalysis.aDir = PANGO_DIRECTION_LTR;
-  aAnalysis.fontCharset = (char*)fontCharset;
+  aRun.numRuns = 0;
+  SeparateScript(aString, aLength, &aRun);
 
-  if (aShaper != NULL) {
+  aPtr = aRun.head;
+  for (int i=0; (i < aRun.numRuns); i++) {
+    PRInt32 runLen=0;
+
+    runLen = aPtr->length;    
     
-    nsAutoString strBuf;
-    strBuf.Assign(aString, aLength);
+    if ((aStrCt+runLen) < aIndex) /* Skip Run and continue */
+      aStrCt += runLen;
 
-    // Convert Unicode string to UTF8 and store in buffer
-    utf8Str = NULL;
-    utf8Str = strBuf.ToNewUTF8String();
-    inLen = strlen(utf8Str);
-
-    aShaper->script_shape(fontCharset, utf8Str, inLen,
-                          &aAnalysis, tmpGlyphs);
-    nsMemory::Free(utf8Str);
-    if (tmpGlyphs->num_glyphs > 0) {
-      aSize = tmpGlyphs->num_glyphs;
-      // if (*aOutLength < aSize)
-      //    trouble
-      for (int i = 0; i < aSize; i++) 
-        aGlyphs[i] = tmpGlyphs->glyphs[i].glyph;
+    else if ((aStrCt+runLen) == aIndex) {
+      isBoundary = PR_TRUE;/* Script Boundary - Skip a cell in next iteration */
+      aStrCt += runLen;
     }
-    *aOutLength = (PRSize)aSize;
+
+    else {
+      if (aPtr->isOther) {
+        *nextOffset = aIndex+1;
+        CLEAN_RUN
+        return NS_OK;
+      }
+      else {  /* CTL Cell Movement */
+        PRInt32 j, startCt, beg, end, numCur;
+        
+        startCt=aStrCt;
+        GetRawCtlData(aPtr->start, runLen, aGlyphData);
+        
+        numCur=beg=0;
+        for (j=0; j<aGlyphData->num_glyphs; j++) {
+          while ((!aGlyphData->glyphs[j].attr.is_cluster_start) &&
+                 j<aGlyphData->num_glyphs)
+            j++;
+          if (j>=aGlyphData->num_glyphs)
+            end=runLen;
+          else
+            end=aGlyphData->log_clusters[j];
+          numCur += end-beg;
+          if (startCt+numCur > aIndex)
+            break;
+          else
+            beg=end;
+        }
+
+        // Found Cluster - Start of Next == End Of Current
+        *nextOffset = startCt+numCur;
+        CLEAN_RUN
+        return NS_OK;
+      }
+    }
+    aPtr = aPtr->next;
   }
-  else {
-    // Should not reach here are checks are set
-    // in upper layers
-    /* Alternately, if no Shaper - Copy Input to output */
+  /* UNUSED */
+  CLEAN_RUN
+}
+
+// This routine returns the end-offset of the previous block
+// corresponding to string index 'aIndex'
+NS_IMETHODIMP 
+nsULE::PrevCluster(const PRUnichar *aString,
+                   PRUint32        aLength,
+                   const PRInt32   aIndex,
+                   PRInt32         *prevOffset)
+{
+  textRunList      aRun;
+  textRun          *aPtr, *aTmpPtr;
+  PRInt32          aStrCt=0, startCt=0, glyphct=0;
+  PangoGlyphString *aGlyphData=pango_glyph_string_new();
+ 
+  if (aIndex<=1) {
+    *prevOffset=0; // End
+    return NS_OK;
   }
-  return NS_OK;
+
+  aRun.numRuns=0;
+  SeparateScript(aString, aLength, &aRun);
+
+  // Get the index of current cluster  
+  aPtr=aRun.head;
+  for (int i=0; i<aRun.numRuns; i++) {
+    PRInt32 runLen=aPtr->length;
+    
+    if ((aStrCt+runLen) < aIndex) /* Skip Run */
+      aStrCt += runLen;
+    
+    else if ((aStrCt+runLen) == aIndex) {
+      if (aPtr->isOther) {
+        *prevOffset=aIndex-1;
+        CLEAN_RUN
+        return NS_OK;
+      }
+      else { /* Move back a cluster */
+        startCt=aStrCt;
+        GetRawCtlData(aPtr->start, runLen, aGlyphData); 
+
+        glyphct=aGlyphData->num_glyphs-1;
+        while (glyphct > 0) {
+          if (aGlyphData->glyphs[glyphct].attr.is_cluster_start) {
+            *prevOffset=startCt+aGlyphData->log_clusters[glyphct];
+            CLEAN_RUN
+            return NS_OK;
+          }
+          --glyphct;
+        }
+        *prevOffset=startCt;
+        CLEAN_RUN
+        return NS_OK;
+      }
+    }
+    else {
+      if (aPtr->isOther) {
+        *prevOffset=aIndex-1;
+        CLEAN_RUN
+        return NS_OK;
+      }
+      else {
+        PRInt32 j,beg,end,numPrev,numCur;
+
+        startCt=aStrCt;
+        GetRawCtlData(aPtr->start, runLen, aGlyphData);
+        
+        numPrev=numCur=beg=0;
+        for (j=1; j<aGlyphData->num_glyphs; j++) {
+          while ((!aGlyphData->glyphs[j].attr.is_cluster_start) &&
+                 j<aGlyphData->num_glyphs)
+            j++;
+          if (j>=aGlyphData->num_glyphs)
+            end=runLen;
+          else
+            end=aGlyphData->log_clusters[j];
+          numCur += end-beg;
+          if (numCur+startCt >= aIndex)
+            break;
+          else {
+            beg=end;
+            numPrev=numCur;
+          }
+        }
+        *prevOffset=startCt+numPrev;
+        CLEAN_RUN
+        return NS_OK;
+      }
+    }
+    aPtr=aPtr->next;
+  }
+  /* UNUSED */
+  CLEAN_RUN
+}
+
+// This routine returns the end-offset of the previous block
+// corresponding to string index 'aIndex'
+NS_IMETHODIMP 
+nsULE::GetRangeOfCluster(const PRUnichar *aString,
+                         PRUint32        aLength,
+                         const PRInt32   aIndex,
+                         PRInt32         *aStart,
+                         PRInt32         *aEnd)
+{
+  textRunList      aRun;
+  textRun          *aPtr, *aTmpPtr;
+  PRInt32          aStrCt=0, startCt=0,j;
+  PangoGlyphString *aGlyphData=pango_glyph_string_new();
+
+  *aStart = *aEnd = 0;
+  aRun.numRuns=0;
+  SeparateScript(aString, aLength, &aRun);
+
+  // Get the index of current cluster  
+  aPtr=aRun.head;
+  for (int i=0; i<aRun.numRuns; i++) {
+    PRInt32 runLen=aPtr->length;
+    
+    if ((aStrCt+runLen) < aIndex) /* Skip Run */
+      aStrCt += runLen;        
+    else {
+      if (aPtr->isOther) {
+        *aStart = *aEnd = aIndex;
+        CLEAN_RUN
+        return NS_OK;
+      }
+      else {
+        PRInt32 beg,end,numCur;
+
+        startCt=aStrCt;
+        GetRawCtlData(aPtr->start, runLen, aGlyphData);
+        
+        numCur=beg=0;
+        for (j=1; j<aGlyphData->num_glyphs; j++) {
+          while ((!aGlyphData->glyphs[j].attr.is_cluster_start) &&
+                 j<aGlyphData->num_glyphs)
+            j++;
+          if (j>=aGlyphData->num_glyphs)
+            end=runLen;
+          else
+            end=aGlyphData->log_clusters[j];
+         
+          numCur += end-beg;
+          if (numCur+startCt >= aIndex)
+            break;
+          else
+            beg=end;
+        }
+
+        *aEnd = startCt+numCur;
+        if (beg == 0)
+          *aStart = beg;
+        else {
+          if ((end-beg) == 1) /* n=n Condition */
+            *aStart = *aEnd;
+          else
+            *aStart = startCt+beg+1; /* Maintain Mozilla Convention */
+        }
+        CLEAN_RUN
+        return NS_OK;
+      }
+    }
+    aPtr=aPtr->next;
+  }
+  CLEAN_RUN
+    /* UNUSED */
 }
