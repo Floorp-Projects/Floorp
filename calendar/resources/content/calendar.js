@@ -568,7 +568,7 @@ function getPreviewText( calendarEventDisplay )
 
 function alertCalendarVersion()
 {
-   window.openDialog("chrome://calendar/content/about.xul", "&calendar.about.title;", "chrome,resizable=yes,height=400,width=600");
+   window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://calendar/content/about.html' );
 }
 
 function reloadApplication()
