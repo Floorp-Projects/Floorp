@@ -22,7 +22,13 @@ var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService(
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
 function loadUrl() {
-    var url = document.getElementById("url").value;
+    var urlwidget = document.getElementById("url");
+    
+    if (!urlwidget)
+        url = "http://www.mozillazine.org/";
+    else
+        url = urlwidget.value;
+    
     dump("Loading " + url + " into " + parent.window.frames["srcdoc"] +"\n");
 
     var win = window.frames["srcdoc"];
@@ -39,7 +45,7 @@ function refreshTree() {
 
     var treeframe = window.frames["treeframe"];
     var tree = treeframe.document.getElementById("dataSourceTree");
-    tree.childNodes[4].setAttribute("id","dom:/");
+    tree.setAttribute("ref","NC:DOMRoot");
 }
 
 function onSrcLoaded() {
