@@ -1286,7 +1286,7 @@ nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 
   if (mFontMetrics)
   {
-    nsFont *font
+    nsFont *font;
     mFontMetrics->GetFont(font);
     PRUint8 deco = font->decorations;
 
