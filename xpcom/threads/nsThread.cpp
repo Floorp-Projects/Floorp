@@ -749,11 +749,12 @@ nsThreadPool::AddThread()
 {
     nsresult rv;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FORCE_PR_LOG)
     PRUint32 cnt;
     rv = mThreads->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
-
+#endif
+#ifdef DEBUG
     if (cnt >= mMaxThreads)
         return NS_ERROR_FAILURE;
 #endif

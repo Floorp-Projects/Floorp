@@ -26,7 +26,9 @@ LIBRARY_NAME=nkftp_s
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 !ifndef MOZ_DEBUG
+!ifndef NO_LOGGING
 LCFLAGS = $(LCFLAGS) -DFORCE_PR_LOG
+!endif
 !endif
 
 CPP_OBJS =                                        \

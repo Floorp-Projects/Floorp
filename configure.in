@@ -2977,12 +2977,13 @@ MOZ_ARG_DISABLE_BOOL(async-dns,
   NO_UNIX_ASYNC_DNS=1)
 
 MOZ_ARG_DISABLE_BOOL(logging,
-[  --disable-logging       Disable nsLogging facilities],
+[  --disable-logging       Disable logging facilities],
   NS_DISABLE_LOGGING=1)
 if test "$NS_DISABLE_LOGGING"; then
-  AC_DEFINE(NS_DISABLE_LOGGING)
+    AC_DEFINE(NS_DISABLE_LOGGING)
+else
+    AC_DEFINE(MOZ_LOGGING)
 fi
-AC_SUBST(NS_DISABLE_LOGGING)
 
 dnl build mozilla/xpfe by default
 MOZ_BUILD_XPFE=1

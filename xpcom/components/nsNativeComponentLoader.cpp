@@ -55,7 +55,9 @@
 #define XPCOM_USE_NSGETFACTORY 1
 
 // Logging of debug output
+#ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 #include "prlog.h"
 extern PRLogModuleInfo *nsComponentManagerLog;
 
