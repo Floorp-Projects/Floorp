@@ -545,6 +545,9 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 	OSErr	err = noErr;
 	size_t	inLength = strlen(filePath);
 	Boolean isRelative = (inSpec && (strchr(filePath, ':') == 0 || *filePath == ':'));
+	FSSpec  tempSpec;
+	Str255  ppath;
+    Boolean isDirectory;
 	
 	if (isRelative && inSpec)
 	{
@@ -554,7 +557,6 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 		if (inSpec->name[0] != 0)
 		{
 		    long theDirID;
-		    Boolean isDirectory;
 		    
 			err = FSpGetDirectoryID(inSpec, &theDirID, &isDirectory);
 		
@@ -572,9 +574,13 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 	// Try making an FSSpec from the path
 	if (inLength < 255)
 	{
-		Str255 pascalpath;
-		myPLstrcpy(pascalpath, filePath);
-		err = ::FSMakeFSSpec(outSpec->vRefNum, outSpec->parID, pascalpath, outSpec);
+		// Use tempSpec as dest because if FSMakeFSSpec returns dirNFErr, it
+		// will reset the dest spec and we'll lose what we determined above.
+		
+		myPLstrcpy(ppath, filePath);
+		err = ::FSMakeFSSpec(outSpec->vRefNum, outSpec->parID, ppath, &tempSpec);
+		if (err == noErr || err == fnfErr)
+		    *outSpec = tempSpec;
 	}
 	else if (!isRelative)
 	{
@@ -596,8 +602,12 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 	if (err == dirNFErr || err == bdNamErr)
 	{
 		const char* path = filePath;
-		outSpec->vRefNum = 0;
-		outSpec->parID = 0;
+		
+		if (!isRelative)    // If path is relative, we still need vRefNum & parID.
+		{
+		    outSpec->vRefNum = 0;
+		    outSpec->parID = 0;
+		}
 
 		do
 		{
@@ -610,7 +620,6 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 
 			// Make a pascal string out of this node.  Include initial
 			// and final colon, if any!
-			Str255 ppath;
 			myPLstrncpy(ppath, path, nextColon - path + 1);
 			
 			// Use this string as a relative path using the directory created
@@ -627,7 +636,6 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 			{
 				// The directory (or perhaps a file) exists. Find its dirID.
 				long dirID;
-				Boolean isDirectory;
 				err = ::FSpGetDirectoryID(outSpec, &dirID, &isDirectory);
 				if (!isDirectory)
 					err = dupFNErr; // oops! a file exists with that name.
@@ -1367,6 +1375,8 @@ nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBo
 	Str255 newPascalName;
 	if ( newName )
 		myPLstrncpy( newPascalName, newName, 255);
+	else
+	    memcpy(newPascalName, srcSpec.name, srcSpec.name[0] + 1);
 	if ( isCopy )
 	{
 		if ( mResolvedWasFolder )
