@@ -408,7 +408,9 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
 	usage.anyUsage = PR_TRUE;
 	c = NSSTrustDomain_FindCertificateByEmail(handle, name,
 	                                          NULL, &usage, NULL);
-	cc = STAN_GetCERTCertificate(c);
+	if (c) {
+	    cc = STAN_GetCERTCertificate(c);
+	}
     }
     return cc;
 }
