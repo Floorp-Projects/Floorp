@@ -21,21 +21,34 @@
 
 CIEHtmlElementCollection::CIEHtmlElementCollection()
 {
+	m_pParent = NULL;
 }
 
 CIEHtmlElementCollection::~CIEHtmlElementCollection()
 {
 }
 
+HRESULT CIEHtmlElementCollection::SetParentNode(CIEHtmlNode *pParent)
+{
+	m_pParent = pParent;
+	return S_OK;
+}
 
-HRESULT CIEHtmlElementCollection::CreateFromParentNode(nsIDOMNode *pParentNode, CIEHtmlElementCollection **pInstance)
+HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance)
 {
 	if (pInstance == NULL)
 	{
 		return E_INVALIDARG;
 	}
 	
-	if (pParentNode == nsnull)
+	if (pParentNode == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	nsIDOMNode *pIDOMNode = nsnull;
+	pParentNode->GetDOMNode(&pIDOMNode);
+	if (pIDOMNode == nsnull)
 	{
 		return E_INVALIDARG;
 	}
@@ -45,9 +58,11 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(nsIDOMNode *pParentNode, 
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
 	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
 
+	pCollection->SetParentNode(pParentNode);
+
 	// Get elements
 	nsIDOMNodeList *pIDOMNodeList = nsnull;
-	pParentNode->GetChildNodes(&pIDOMNodeList);
+	pIDOMNode->GetChildNodes(&pIDOMNodeList);
 	if (pIDOMNodeList)
 	{
 		PRUint32 aLength = 0;
@@ -63,6 +78,7 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(nsIDOMNode *pParentNode, 
 			if (pElement)
 			{
 				pElement->SetDOMNode(pChildNode);
+				pElement->SetParentNode(pCollection->m_pParent);
 				pCollection->AddNode(pElement);
 			}
 
@@ -75,6 +91,8 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(nsIDOMNode *pParentNode, 
 	}
 
 	*pInstance = pCollection;
+
+	pIDOMNode->Release();
 
 	return S_OK;
 }
