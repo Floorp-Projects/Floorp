@@ -19,12 +19,14 @@
 #include "nsIFactory.h"
 #include "nscore.h"
 #include "nsAppShellCIDs.h"
+#include "nsICmdLineService.h"
 
 /* extern the factory entry points... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
 
 
 #if defined(XP_MAC) && defined(MAC_STATIC)
@@ -41,6 +43,9 @@ extern "C" NS_APPSHELL nsresult NSGetFactory(const nsCID& aClass, nsIFactory** a
 
   if (aClass.Equals(kAppShellServiceCID)) {
     rv = NS_NewAppShellServiceFactory(aFactory);
+  }
+  else if (aClass.Equals(kCmdLineServiceCID)) {
+     rv = NS_NewCmdLineServiceFactory(aFactory);
   }
 
   return rv;
