@@ -217,7 +217,6 @@ res\language.properties
 res\langGroups.properties
 res\charsetData.properties
 res\charsetalias.properties
-res\acceptlanguage.properties
 res\wincharset.properties
 ; res\strres.properties 
 
