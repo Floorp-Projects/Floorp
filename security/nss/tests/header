@@ -119,6 +119,10 @@ then
 	exit 1
 fi
 
+KILLPIDS="$TMP/killpids.$$"
+export KILLERPIDS
+TMPFILES="$TMPFILES $KILLPIDS"
+
 KILL_SELFSERV=OFF	# if sourcing script sets this to on cleanup will also 
 					# kill the running selfserv processes
 
@@ -152,6 +156,9 @@ then				# want the init to wait forever for directories to
 					# appear (windows only) if OFF exit, if ON wait forever
 	WIN_WAIT_FOREVER=OFF
 fi
+
+EARLY_EXIT=TRUE		#before the report file has been created, causes Exit to 
+					#create it
 
 ################################### glob_init ##########################
 # global shell function, main initialisation function
@@ -636,6 +643,36 @@ kill_by_name()
 	done
 }
 
+############################### early_exit ###################################
+# global shell function , attempts a little more usefull user notification
+# of a complete failure
+########################################################################
+
+early_exit()
+{
+	if [ -z "$DOCDIR" ]
+	then
+		DOCDIR=`dirname $0`/../doc
+	fi
+	if [ -f $DOCDIR/QAerror.html ]
+	then
+		Debug "Found QA errorheader"
+		rm ${FILENAME}.err 2>/dev/null
+		cp $DOCDIR/QAerror.html ${FILENAME}.err
+		echo "$1" >>${FILENAME}.err
+		echo '</font></b></h1>' >>${FILENAME}.err
+		if [ -n "$FILENAME" -a -f "$FILENAME" ]
+		then
+			cat $FILENAME | sed -e "s/^/<br>/" >>${FILENAME}.err
+		fi
+		echo '</body></html>' >>${FILENAME}.err
+		cat ${FILENAME}.err | rmail $MAILINGLIST
+		
+		rm ${FILENAME}.err 2>/dev/null
+		#echo "cat ${FILENAME}.err | rmail $MAILINGLIST "
+	fi
+}
+
 ############################### Exit ###################################
 # global shell function , central exiting point
 # cleanup: temporary files, kill the remaining selfservers if sourcing
@@ -647,6 +684,13 @@ Exit()
 	if [ "$O_CRON" = "OFF" ] 
 	then
 		echo $1 >&2
+	fi
+	if [ -f "${KILLPIDS}" ]
+	then
+		Debug "Attempting to kill background processes...`cat ${KILLPIDS}`"
+		kill `cat "${KILLPIDS}"` 
+		sleep 1
+		kill -9  `cat "${KILLPIDS}"`
 	fi
 	if [ -n "${TMPFILES}" ]
 	then
@@ -660,7 +704,18 @@ Exit()
 	fi
 	if [ $O_MAIL = "ON" -a $O_FILE = "ON" ]
 	then
-		cat $FILENAME | rmail $MAILINGLIST
+		if [ $EARLY_EXIT = TRUE ]	#before the report file has been created
+		then
+			early_exit "$1"
+		elif [ -n "$FILENAME" -a -f "$FILENAME" ]
+		then
+			cat $FILENAME | rmail $MAILINGLIST
+		fi
+		rm $FILENAME 2>/dev/null
+	elif  [ $O_MAIL = "ON" -a $EARLY_EXIT = TRUE ]
+	then
+		early_exit "$1"
+		rm $FILENAME 2>/dev/null
 	fi
 	#chmod a+rw ${RESULTDIR} ${RESULTDIR}/* ${RESULTDIR}/*/* &
 	exit
@@ -910,7 +965,7 @@ glob_usage()
 	Echo "	 $0 31 1002"
 	opt_usage
 	Echo
-	Exit
+	Exit "$1"
 }
 
 tell()
@@ -974,3 +1029,4 @@ if [ $O_INIT = "ON" ]
 then
 	glob_init $*
 fi
+EARLY_EXIT=FALSE
