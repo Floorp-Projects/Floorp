@@ -402,7 +402,7 @@ main(int argc, char **argv)
         }
     }
 
-    header = XPT_NewHeader(trueNumberOfInterfaces);
+    header = XPT_NewHeader((PRUint16)trueNumberOfInterfaces);
     header->annotations = first_ann;
     for (i=0; i<trueNumberOfInterfaces; i++) {
         if (!copy_IDE(&IDE_array[i], &header->interface_directory[i])) {
@@ -444,7 +444,7 @@ main(int argc, char **argv)
     if (ferror(out) != 0 || fclose(out) != 0) {
         fprintf(stderr, "Error writing file: %s\n", argv[1]);
     } else {
-        fprintf(stderr, "File written: %s\n", argv[1]);
+/*        fprintf(stderr, "File written: %s\n", argv[1]); */
     }
  
     if (state)
