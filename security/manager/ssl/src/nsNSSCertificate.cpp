@@ -683,6 +683,7 @@ nsNSSCertificate::~nsNSSCertificate()
     if (mCertType == nsNSSCertificate::USER_CERT) {
       nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
       PK11_DeleteTokenCertAndKey(mCert, cxt);
+      CERT_DestroyCertificate(mCert);
     } else 
 #ifdef NSS_3_4
            if (!PK11_IsReadOnly(mCert->slot))
@@ -718,6 +719,16 @@ nsNSSCertificate::GetCertType(PRUint32 *aCertType)
 nsresult
 nsNSSCertificate::MarkForPermDeletion()
 {
+  // make sure user is logged in to the token
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
+  if (!PK11_IsLoggedIn(mCert->slot, ctx))
+  {
+    if (SECSuccess != PK11_Authenticate(mCert->slot, PR_TRUE, ctx))
+    {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   mPermDelete = PR_TRUE;
   return NS_OK;
 }
@@ -3477,7 +3488,10 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
 
   PRUint32 certType = getCertType(cert);
   nssCert->SetCertType(certType);
-  nssCert->MarkForPermDeletion();
+  if (NS_FAILED(nssCert->MarkForPermDeletion()))
+  {
+    return NS_ERROR_FAILURE;
+  }
 
   if (cert->slot && certType != nsIX509Cert::USER_CERT) {
     // To delete a cert of a slot (builtin, most likely), mark it as

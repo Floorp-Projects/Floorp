@@ -78,12 +78,17 @@ nsCertTree::FreeCertArray()
   if (mCertArray) {
     PRUint32 count;
     nsresult rv = mCertArray->Count(&count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    if (NS_FAILED(rv))
+    {
+      NS_ASSERTION(0, "Count failed");
+      return;
+    }
     PRInt32 i;
     for (i = count - 1; i >= 0; i--)
+    {
       mCertArray->RemoveElementAt(i);
+    }
   }
-  mCertArray = nsnull;
 }
 
 // CmpByToken
@@ -248,14 +253,10 @@ NS_IMETHODIMP
 nsCertTree::LoadCerts(PRUint32 aType)
 {
   nsresult rv;
-  PRBool rowsChanged = PR_FALSE;
-  PRInt32 numChanged = 0;
   if (mTreeArray) {
     FreeCertArray();
     nsMemory::Free(mTreeArray);
     mTreeArray = NULL;
-    rowsChanged = PR_TRUE;
-    numChanged = mNumRows;
     mNumRows = 0;
   }
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
@@ -264,8 +265,14 @@ nsCertTree::LoadCerts(PRUint32 aType)
                               CmpByTok_IssuerOrg_Name,
                               getter_AddRefs(mCertArray));
   if (NS_FAILED(rv)) return rv;
+  return UpdateUIContents();
+}
+
+nsresult
+nsCertTree::UpdateUIContents()
+{
   PRUint32 count;
-  rv = mCertArray->Count(&count);
+  nsresult rv = mCertArray->Count(&count);
   if (NS_FAILED(rv)) return rv;
   mNumOrgs = CountOrganizations();
   mTreeArray = (treeArrayEl *)nsMemory::Alloc(
@@ -290,12 +297,40 @@ nsCertTree::LoadCerts(PRUint32 aType)
     orgCert = nextCert;
   }
   mNumRows = count + mNumOrgs;
-  if (rowsChanged) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%d,%d]", mNumRows, numChanged));
-    numChanged = mNumRows - numChanged;
-    if (mTree) mTree->RowCountChanged(0, numChanged);
-  }
+  if (mTree)
+    mTree->Invalidate();
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsCertTree::RemoveCert(PRUint32 index)
+{
+  if (!mCertArray || !mTreeArray || index < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int i, idx = 0, cIndex = 0, nc;
+  nsIX509Cert *rawPtr = nsnull;
+  // Loop over the threads
+  for (i=0; i<mNumOrgs; i++) {
+    if (index == idx)
+      return NS_OK; // index is for thread
+    idx++; // get past the thread
+    nc = (mTreeArray[i].open) ? mTreeArray[i].numChildren : 0;
+    if (index < idx + nc) { // cert is within range of this thread
+      PRInt32 certIndex = cIndex + index - idx;
+      mCertArray->RemoveElementAt(certIndex);
+      nsMemory::Free(mTreeArray);
+      mTreeArray = NULL;
+      return UpdateUIContents();
+    }
+    if (mTreeArray[i].open)
+      idx += mTreeArray[i].numChildren;
+    cIndex += mTreeArray[i].numChildren;
+    if (idx > index)
+      break;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //////////////////////////////////////////////////////////////////////////////

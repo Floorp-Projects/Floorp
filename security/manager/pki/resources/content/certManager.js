@@ -37,6 +37,7 @@ const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 var key;
 
 var selected_certs = [];
+var selected_cert_index = [];
 var certdb;
 
 var caTreeView;
@@ -90,14 +91,6 @@ function LoadCerts()
   }
   var verifiedCol = document.getElementById('verifiedcol');
   verifiedCol.setAttribute('label', verifiedColText);
-}
-
-function ReloadCerts()
-{
-  caTreeView.loadCerts(nsIX509Cert.CA_CERT);
-  serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
-  emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
-  userTreeView.loadCerts(nsIX509Cert.USER_CERT);
 }
 
 function getSelectedTab()
@@ -160,8 +153,11 @@ function getSelectedCerts()
         } else if (websites_tab.selected) {
           cert = serverTreeView.getCert(j);
         }
-        if (cert)
-          selected_certs[selected_certs.length] = cert;
+        if (cert) {
+          var sc = selected_certs.length;
+          selected_certs[sc] = cert;
+          selected_cert_index[sc] = j;
+        }
       }
     }
   }
@@ -252,6 +248,8 @@ function backupCerts()
 {
   getSelectedCerts();
   var numcerts = selected_certs.length;
+  if (!numcerts)
+    return;
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
@@ -277,6 +275,8 @@ function editCerts()
 {
   getSelectedCerts();
   var numcerts = selected_certs.length;
+  if (!numcerts)
+    return;
   for (var t=0; t<numcerts; t++) {
     var cert = selected_certs[t];
     var certkey = cert.dbKey;
@@ -305,18 +305,21 @@ function restoreCerts()
     certdb.importPKCS12File(null, fp.file);
   }
   userTreeView.loadCerts(nsIX509Cert.USER_CERT);
+  userTreeView.selection.clearSelection();
 }
 
 function deleteCerts()
 {
   getSelectedCerts();
+  var numcerts = selected_certs.length;
+  if (!numcerts)
+    return;
 
   var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
-  var numcerts = selected_certs.length;
 
   params.SetNumberStrings(numcerts+1);
 
@@ -347,16 +350,56 @@ function deleteCerts()
     var cert = selected_certs[t];
     params.SetString(t+1, cert.dbKey);  
   }
-   
+  
+  // The dialog will modify the params.
+  // Every param item where the corresponding cert could get deleted,
+  // will still contain the db key.
+  // Certs which could not get deleted, will have their corrensponding
+  // param string erased.
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
                 'chrome,resizable=1,modal',params);
  
-  ReloadCerts();
+  if (params.GetInt(1) == 1) {
+    // user closed dialog with OK
+    var treeView = null;
+    var loadParam = null;
+
+    var selTab = document.getElementById('certMgrTabbox').selectedItem;
+    var selTabID = selTab.getAttribute('id');
+    if (selTabID == 'mine_tab') {
+      treeView = userTreeView;
+      loadParam = nsIX509Cert.USER_CERT;
+    } else if (selTabID == "others_tab") {
+      treeView = emailTreeView;
+      loadParam = nsIX509Cert.EMAIL_CERT;
+    } else if (selTabID == "websites_tab") {
+      treeView = serverTreeView;
+      loadParam = nsIX509Cert.SERVER_CERT;
+    } else if (selTabID == "ca_tab") {
+      treeView = caTreeView;
+      loadParam = nsIX509Cert.CA_CERT;
+    }
+
+    for (var t=numcerts-1; t>=0; t--)
+    {
+      var s = params.GetString(t+1);
+      if (s.length) {
+        // This cert was deleted.
+        treeView.removeCert(selected_cert_index[t]);
+      }
+    }
+
+    treeView.selection.clearSelection();
+  }
 }
 
 function viewCerts()
 {
   getSelectedCerts();
+  var numcerts = selected_certs.length;
+  if (!numcerts)
+    return;
+
   var numcerts = selected_certs.length;
   for (var t=0; t<numcerts; t++) {
     selected_certs[t].view();
