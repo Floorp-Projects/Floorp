@@ -857,12 +857,16 @@ public:
     void FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
 
     void FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
-    //    void AreAllConnectionsComplete(void);
+
     void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
     void SetParent(nsDocLoaderImpl* aParent);
     void SetDocumentUrl(nsIURL* aUrl);
+
 protected:
     virtual ~nsDocLoaderImpl();
+
+    void ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
+                                            PRInt32 aStatus);
 
 private:
     static PRBool StopBindInfoEnumerator (nsISupports* aElement, void* aData);
@@ -925,7 +929,7 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader - DocLoader [%p] created.\n", this));
+           ("DocLoader:%p: created.\n", this));
 }
 
 
@@ -945,7 +949,7 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   NS_IF_RELEASE(mDocumentUrl);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - DocLoader [%p] deleted.\n", this));
+         ("DocLoader:%p: deleted.\n", this));
 
   NS_PRECONDITION((0 == mChildGroupList.Count()), "Document loader has children...");
 }
@@ -1046,8 +1050,8 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
 
   aURLSpec.ToCString(buffer, sizeof(buffer));
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - LoadDocument(...) called for %s.", 
-          buffer));
+         ("DocLoader:%p: LoadDocument(...) called for %s.", 
+          this, buffer));
 #endif /* DEBUG */
 
   /* Check for initial error conditions... */
@@ -1121,8 +1125,8 @@ nsDocLoaderImpl::LoadSubDocument(const nsString& aURLSpec,
 
   aURLSpec.ToCString(buffer, sizeof(buffer));
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - LoadSubDocument(...) called for %s.", 
-          buffer));
+         ("DocLoader:%p: LoadSubDocument(...) called for %s.",
+          this, buffer));
 #endif /* DEBUG */
 
   NS_NEWXPCOM(loader, nsDocumentBindInfo);
@@ -1152,7 +1156,7 @@ NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
 {
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - Stop() called\n"));
+         ("DocLoader:%p: Stop() called\n", this));
 
   m_LoadingDocsList->EnumerateForwards(nsDocLoaderImpl::StopBindInfoEnumerator, nsnull);
 
@@ -1290,11 +1294,10 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
 
 #if defined(DEBUG)
   const char* buffer;
-
   aUrl->GetSpec(&buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - OpenStream(...) called for %s.", 
-          buffer));
+         ("DocLoader:%p: OpenStream(...) called for %s.", 
+          this, buffer));
 #endif /* DEBUG */
 
 
@@ -1408,23 +1411,39 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIURL* aURL,
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
 {
-  PRInt32 count = mDocObservers.Count();
-  PRInt32 index;
+    PRInt32 count = mDocObservers.Count();
+    PRInt32 index;
 
-  /*
-   * First notify any observers that the URL load has begun...
-   */
-  for (index = 0; index < count; index++) {
-    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnEndDocumentLoad((nsIDocumentLoader*) this, mDocumentUrl, aStatus);
-  }
+    /*
+     * First notify any observers that the document load has finished...
+     */
+    for (index = 0; index < count; index++) {
+        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)
+            mDocObservers.ElementAt(index);
+        observer->OnEndDocumentLoad((nsIDocumentLoader*)this, mDocumentUrl,
+                                    aStatus);
+    }
 
-  /*
-   * Finally notify the parent...
-   */
-  if (nsnull != mParent) {
-    mParent->FireOnEndDocumentLoad(aStatus);
-  }
+    /*
+     * Finally notify the parent...
+     */
+    if (nsnull != mParent) {
+        mParent->ChildDocLoaderFiredEndDocumentLoad(this, aStatus);
+    }
+}
+
+void
+nsDocLoaderImpl::ChildDocLoaderFiredEndDocumentLoad(nsDocLoaderImpl* aChild,
+                                                    PRInt32 aStatus)
+{
+    PRBool busy;
+    IsBusy(busy);
+    if (!busy) {
+        // If the parent is no longer busy because a child document
+        // loader finished, then its time for the parent to fire its
+        // on-end-document-load notification.
+        FireOnEndDocumentLoad(aStatus);
+    }
 }
 
 void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType, 
@@ -1517,108 +1536,67 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
 
 void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
 {
-  PRBool rv;
-  PRBool bIsForegroundURL = PR_FALSE;
-  PRBool bIsBusy = PR_TRUE;
+    PRBool isForegroundURL = PR_FALSE;
 
-  /*
-   * If the entry is not found in the list, then it must have been cancelled
-   * via Stop(...). So ignore just it... 
-   */
-  rv = m_LoadingDocsList->RemoveElement(aBindInfo);
-  if (PR_FALSE != rv) {
-    nsILoadAttribs* loadAttributes;
-    nsURLLoadType loadType = nsURLLoadNormal;
+    /*
+     * If the entry is not found in the list, then it must have been cancelled
+     * via Stop(...). So ignore just it... 
+     */
+    PRBool removed = m_LoadingDocsList->RemoveElement(aBindInfo);
+    if (removed) {
+        nsILoadAttribs* loadAttributes;
+        nsURLLoadType loadType = nsURLLoadNormal;
 
-    rv = aURL->GetLoadAttribs(&loadAttributes);
-    if (NS_SUCCEEDED(rv)) {
-      rv = loadAttributes->GetLoadType(&loadType);
-      if (NS_FAILED(rv)) {
-        loadType = nsURLLoadNormal;
-      }
-      NS_RELEASE(loadAttributes);
-    }
-    if (nsURLLoadBackground != loadType) {
-      mForegroundURLs -= 1;
-      bIsForegroundURL = PR_TRUE;
-    }
-    mTotalURLs -= 1;
+        nsresult rv = aURL->GetLoadAttribs(&loadAttributes);
+        if (NS_SUCCEEDED(rv) && loadAttributes) {
+            rv = loadAttributes->GetLoadType(&loadType);
+            if (NS_FAILED(rv)) {
+                loadType = nsURLLoadNormal;
+            }
+            NS_RELEASE(loadAttributes);
+        }
+        if (nsURLLoadBackground != loadType) {
+            mForegroundURLs--;
+            isForegroundURL = PR_TRUE;
+        }
+        mTotalURLs -= 1;
 
-    NS_ASSERTION((mTotalURLs >= mForegroundURLs), "Foreground URL count is wrong.");
+        NS_ASSERTION(mTotalURLs >= mForegroundURLs,
+                     "Foreground URL count is wrong.");
 
 #if defined(DEBUG)
-  const char* buffer;
+        const char* buffer;
 
-  aURL->GetSpec(&buffer);
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader - LoadURLComplete(...) called for %s.\nForeground URLs: %d\nTotal URLs: %d\n", 
-            buffer, mForegroundURLs, mTotalURLs));
+        aURL->GetSpec(&buffer);
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader:%p: LoadURLComplete(...) called for %s; Foreground URLs: %d; Total URLs: %d\n", 
+                this, buffer, mForegroundURLs, mTotalURLs));
 #endif /* DEBUG */
-  }
-  /*
-   * Fire the OnEndURLLoad notification to any observers...
-   */
-   FireOnEndURLLoad(aURL, aStatus);
-
-  /*
-   * Fire the OnEndDocumentLoad notification to any observers...
-   */
-   IsBusy(bIsBusy);
-
-  if (bIsForegroundURL && !bIsBusy) {
-#if defined(DEBUG)
-    const char* buffer;
-
-    mDocumentUrl->GetSpec(&buffer);
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-          ("DocLoader - OnEndDocumentLoad(...) called for %s.\n", buffer));
-#endif /* DEBUG */
-
-    FireOnEndDocumentLoad(aStatus);
-  }
-
-}
-
-#if 0
-void nsDocLoaderImpl::AreAllConnectionsComplete(void)
-{
-  PRBool bIsBusy = PR_TRUE;
-
-  /*
-   * Fire an OnConnectionsComplete(...) notification if the document loader 
-   * is looading a document, but all of the document URLs have been completed.
-   */
-  if (mIsLoadingDocument) {
-    IsBusy(bIsBusy);
-
-    if (!bIsBusy) {
-      PRInt32 count = mDocObservers.Count();
-      PRInt32 index;
-
-      PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-             ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
-      /*
-       * Clear the flag indicating that the document loader is still loading a 
-       * document...
-       */
-      mIsLoadingDocument = PR_FALSE;
-
-      /* Notify all observers that all connections have been loaded... */
-      for (index = 0; index < count; index++) {
-        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-        observer->OnConnectionsComplete();
-      }
     }
-  }
-  /*
-   * See if the parent document loader has finished all of its connections 
-   * too..
-   */
-  if ((!bIsBusy) && (nsnull != mParent)) {
-    mParent->AreAllConnectionsComplete();
-  }
+
+    /*
+     * Fire the OnEndURLLoad notification to any observers...
+     */
+    FireOnEndURLLoad(aURL, aStatus);
+
+    /*
+     * Fire the OnEndDocumentLoad notification to any observers...
+     */
+    PRBool busy;
+    IsBusy(busy);
+    if (isForegroundURL && !busy) {
+#if defined(DEBUG)
+        const char* buffer;
+
+        mDocumentUrl->GetSpec(&buffer);
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader:%p: OnEndDocumentLoad(...) called for %s.\n",
+                this, buffer));
+#endif /* DEBUG */
+
+        FireOnEndDocumentLoad(aStatus);
+    }
 }
-#endif  /* 0 */
 
 void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
 {
@@ -1847,7 +1825,8 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
 
   aURL->GetSpec(&buffer);
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - OnStartDocumentLoad(...) called for %s.\n", buffer));
+         ("DocumentBindInfo:%p: OnStartDocumentLoad(...) called for %s.\n",
+          this, buffer));
 #endif /* DEBUG */
 
   //  m_DocLoader->FireOnStartDocumentLoad(aURL, m_Command);
@@ -1879,11 +1858,11 @@ nsresult nsDocumentBindInfo::Stop(void)
 
 #if defined(DEBUG)
   const char* spec;
-
   rv = m_Url->GetSpec(&spec);
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-             ("DocLoader - Stop(...) called for %s.\n", spec));
+             ("DocumentBindInfo:%p: Stop(...) called for %s.\n", this, spec));
+  }
 #endif /* DEBUG */
 
   /* 
@@ -1927,10 +1906,9 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRUint32 aProgress,
 #if defined(DEBUG)
     const char* spec;
     (void)aURL->GetSpec(&spec);
-
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader - OnProgress(...) called for %s.  Progress: %d.  ProgressMax: %d\n", 
-            spec, aProgress, aProgressMax));
+           ("DocumentBindInfo:%p: OnProgress(...) called for %s.  Progress: %d.  ProgressMax: %d\n", 
+            this, spec, aProgress, aProgressMax));
 #endif /* DEBUG */
 
     /* Pass the notification out to the next stream listener... */
@@ -1984,8 +1962,8 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader - OnStartBinding(...) called for %s.  Content-type is %s\n",
-            spec, aContentType));
+           ("DocumentBindInfo:%p OnStartBinding(...) called for %s.  Content-type is %s\n",
+            this, spec, aContentType));
 #endif /* DEBUG */
 
     /* If the binding has been canceled via Stop() then abort the load... */
@@ -2077,8 +2055,8 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL,
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader - OnDataAvailable(...) called for %s.  Bytes available: %d.\n", 
-            spec, aLength));
+           ("DocumentBindInfo:%p: OnDataAvailable(...) called for %s.  Bytes available: %d.\n", 
+            this, spec, aLength));
 #endif /* DEBUG */
 
     /* If the binding has been canceled via Stop() then abort the load... */
@@ -2118,10 +2096,9 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus,
 #if defined(DEBUG)
     const char* spec;
     (void)aURL->GetSpec(&spec);
-
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader - OnStopBinding(...) called for %s.  Status: %d.\n", 
-            spec, aStatus));
+           ("DocumentBindInfo:%p: OnStopBinding(...) called for %s.  Status: %d.\n", 
+            this, spec, aStatus));
 #endif /* DEBUG */
 
     if (nsnull != m_NextStream) {
