@@ -49,7 +49,7 @@ typedef uint32    jsuint;
 typedef float64   jsdouble;
 typedef jsword    jsval;
 typedef jsword    jsid;
-typedef jsword    jsrefcount;
+typedef int32     jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
 
 typedef enum JSVersion {
     JSVERSION_1_0     = 100,
