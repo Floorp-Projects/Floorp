@@ -1209,9 +1209,9 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	                                                          nickname, 
 	                                                          certList);
 		search.cached = certList;
-		nssToken_TraverseCertificatesByNickname(token, NULL, 
-		                                        (NSSASCII7 *)nickname,
-		                                        &search);
+		nssToken_TraverseCertificatesByEmail(token, NULL, 
+		                                     (NSSASCII7 *)nickname,
+		                                     &search);
 		nssList_Destroy(certList);
 	    }
 	}
