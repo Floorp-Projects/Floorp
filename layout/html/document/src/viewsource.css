@@ -26,7 +26,7 @@ html {
   background-color: white;
 }
 .viewsource {
-  font-family: -moz-fixed, monospace;
+  font-family: -moz-fixed;
   font-weight: normal;
   font-size: normal;
   color: black;
