@@ -23,44 +23,7 @@
 
 class nsIFactory;
 
-#ifndef NECKO
-// XXX In Necko, all this is subsumed by the nsIPrompt interface.
-
-#include  "nsString.h"
-// {05650683-eb9f-11d2-8e19-9ac64aca4d3c}
-#define NS_INETSUPPORTDIALOGSERVICE_IID \
-{ 0x05650683, 0xeb9f, 0x11d2, { 0x8e, 0x19, 0x9a, 0xc6, 0x4a, 0xca, 0x4d, 0x3c } }
-
-class nsINetSupportDialogService  : public nsISupports
-{
-public:
-	static const nsIID& GetIID() { static nsIID iid = NS_INETSUPPORTDIALOGSERVICE_IID; return iid; }
-			
-  NS_IMETHOD 	Alert( const nsString &aText ) =0 ;
-  NS_IMETHOD 	Confirm( const nsString &aText, PRInt32* returnValue ) =0;
-  NS_IMETHOD 	ConfirmYN( const nsString &aText, PRInt32* returnValue ) =0;
-  NS_IMETHOD	ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue ) =0;
-  NS_IMETHOD	ConfirmCheckYN( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue ) =0;
-  NS_IMETHOD 	Prompt(	const nsString &aText,
-                      const nsString &aDefault,
-                      nsString &aResult
-                      ,PRInt32* returnValue ) =0 ;
-
-  NS_IMETHOD 	PromptUserAndPassword(  const nsString &aText,
-                                      nsString &aUser,
-                                      nsString &aPassword
-                                      ,PRInt32* returnValue ) =0 ;
-
-  NS_IMETHOD PromptPassword( const nsString &aText, 
-                             nsString &aPassword,
-                             PRInt32* returnValue ) = 0;
-};
-
-#else
-
 #include "nsIPrompt.h"
-
-#endif // NECKO
 
 // {05650684-eb9f-11d2-8e19-9ac64aca4d3c}
 #define NS_NETSUPPORTDIALOG_CID \

@@ -392,11 +392,7 @@ nsBrowsingProfileReader::GetCategory(PRInt32 aCategoryID, nsXPIDLCString& aCateg
 
 //#include "nsDOMCID.h"    // for NS_SCRIPT_NAMESET_REGISTRY_CID
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
-#endif // NECKO
 
 #include "nsLayoutCID.h"   // for NS_NAMESPACEMANAGER_CID
 #include "nsParserCIID.h"
@@ -428,14 +424,8 @@ static nsresult
 SetupRegistry()
 {
     // netlib
-#ifndef NECKO
-    static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-
-    nsComponentManager::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#else
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
     nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#endif // NECKO
 
     // parser
     static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);

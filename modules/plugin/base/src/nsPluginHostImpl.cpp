@@ -31,9 +31,6 @@
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIBufferInputStream.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -43,8 +40,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
 #include "nsNeckoUtil.h"
-
-#endif // NECKO
 
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"
@@ -86,12 +81,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
@@ -392,9 +382,7 @@ nsPluginStreamInfo::SetURL(const char* url)
 class nsPluginCacheListener;
 
 class nsPluginStreamListenerPeer : public nsIStreamListener
-#ifdef NECKO
                                  , public nsIProgressEventSink
-#endif
 {
 public:
   nsPluginStreamListenerPeer();
@@ -402,7 +390,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-#ifdef NECKO
   // nsIProgressEventSink methods:
   NS_DECL_NSIPROGRESSEVENTSINK
 
@@ -411,25 +398,6 @@ public:
 
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
-
-#else
-  //nsIStreamObserver interface
-
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
-  //nsIStreamListener interface
-
-  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-
-  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-
-#endif // Necko
 
   //locals
 
@@ -443,9 +411,7 @@ public:
 
   nsresult OnFileAvailable(const char* aFilename);
 
-#ifdef NECKO
   nsILoadGroup* GetLoadGroup();
-#endif
 
 private:
 
@@ -490,27 +456,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-#ifdef NECKO
   NS_DECL_NSISTREAMOBSERVER
   NS_DECL_NSISTREAMLISTENER
-#else
-  //nsIStreamObserver interface
-
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
-  //nsIStreamListener interface
-
-  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-
-  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-
-#endif // NECKO
 
 private:
 
@@ -564,7 +511,6 @@ nsPluginCacheListener::~nsPluginCacheListener()
 
 NS_IMPL_ISUPPORTS(nsPluginCacheListener, kIStreamListenerIID);
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsPluginCacheListener::OnStartRequest(nsIChannel* channel, nsISupports* ctxt)
 {
@@ -584,90 +530,12 @@ nsPluginCacheListener::OnStartRequest(nsIChannel* channel, nsISupports* ctxt)
 
 	return rv;
 }
-#else
-NS_IMETHODIMP 
-nsPluginCacheListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
-{
-#ifdef USE_CACHE
-	nsString urlString;
-	char* cString;
-	char* fileName;
-
-	aURL->ToString(urlString);
-	cString = urlString.ToNewCString();
-	mCachedFile = new nsCacheObject(cString);
-	delete [] cString;
-	
-	if(mCachedFile == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	// use the actual filename of the net-based file as the cache filename
-	aURL->GetFile(fileName);
-	mCachedFile->Filename(fileName);
-
-	nsCacheManager* cacheManager = nsCacheManager::GetInstance();
-	nsDiskModule* diskCache = cacheManager->GetDiskModule();
-	diskCache->AddObject(mCachedFile);
-#else // USE_CACHE
-	char buf[400], tpath[300];
-#ifdef XP_PC
-	::GetTempPath(sizeof(tpath), tpath);
-	PRInt32 len = PL_strlen(tpath);
-
-	if((len > 0) && (tpath[len-1] != '\\'))
-	{
-		tpath[len] = '\\';
-		tpath[len+1] = 0;
-	}
-#elif defined (XP_UNIX) || defined(XP_BEOS)
-	PL_strcpy(tpath, "/tmp/");
-#else
-	tpath[0] = 0;
-#endif // XP_PC
-	const char* pathName;
-	char* fileName;
-	aURL->GetFile(&pathName);
-
-	// since GetFile actually returns us the full path, move to the last \ and skip it
-	fileName = PL_strrchr(pathName, '/');
-	if(fileName)
-		++fileName;
-
-	// if we don't get a filename for some reason, just make one up using the address of this
-	// object to ensure uniqueness of the filename per stream
-	if(!fileName)
-		PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, this);
-	else
-		PR_snprintf(buf, sizeof(buf), "%s%s", tpath, fileName);
-
-	mStreamFile = fopen(buf, "wb");
-	//setbuf(mStreamFile, NULL);
-
-	mFileName = PL_strdup(buf);
-#endif // USE_CACHE
-	return NS_OK;
-
-}
-#endif // NECKO
-
-#ifndef NECKO
-NS_IMETHODIMP 
-nsPluginCacheListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-	return NS_OK;
-}
-#endif
-
 
 NS_IMETHODIMP 
-#ifdef NECKO
 nsPluginCacheListener::OnDataAvailable(nsIChannel* channel, nsISupports* ctxt, 
                                        nsIInputStream* aIStream, 
                                        PRUint32 sourceOffset, 
                                        PRUint32 aLength)
-#else
-nsPluginCacheListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
-#endif
 {
 
 	PRUint32 readlen;
@@ -692,12 +560,8 @@ nsPluginCacheListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, P
 }
 
 NS_IMETHODIMP 
-#ifdef NECKO
 nsPluginCacheListener::OnStopRequest(nsIChannel* channel, nsISupports* aContext, 
                                      nsresult aStatus, const PRUnichar* aMsg)
-#else
-nsPluginCacheListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
-#endif // NECKO
 {
 #ifdef USE_CACHE
 	if (nsnull != mCachedFile)
@@ -733,22 +597,6 @@ nsPluginCacheListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUni
 	return NS_OK;
 }
 
-#ifndef NECKO
-NS_IMETHODIMP 
-nsPluginCacheListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-	// not used
-	return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPluginCacheListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-	// not used
-	return NS_OK;
-}
-#endif  // !NECKO
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
@@ -776,16 +624,10 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 #ifdef NS_DEBUG
   if(mURL != nsnull)
   {
-#ifdef NECKO
     char* spec;
-#else
-	const char* spec;
-#endif
 	(void)mURL->GetSpec(&spec);
 	printf("killing stream for %s\n", mURL ? spec : "(unknown URL)");
-#ifdef NECKO
 	nsCRT::free(spec);
-#endif
   }
 #endif
 
@@ -837,16 +679,10 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL, nsIPluginInstance 
 											  nsIPluginStreamListener* aListener)
 {
 #ifdef NS_DEBUG
-#ifdef NECKO
   char* spec;
-#else
-  const char* spec;
-#endif
   (void)aURL->GetSpec(&spec);
   printf("created stream for %s\n", spec);
-#ifdef NECKO
   nsCRT::free(spec);
-#endif
 #endif
 
   mURL = aURL;
@@ -874,16 +710,10 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL, nsIPluginIn
 														 nsIPluginHost *aHost)
 {
 #ifdef NS_DEBUG
-#ifdef NECKO
   char* spec;
-#else
-  const char* spec;
-#endif
   (void)aURL->GetSpec(&spec);
   printf("created stream for %s\n", spec);
-#ifdef NECKO
   nsCRT::free(spec);
-#endif
 #endif
 
   mURL = aURL;
@@ -925,23 +755,17 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
 }
 
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
-#else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartRequest(nsIURI* aURL, const char *aContentType)
-#endif
 {
   nsresult  rv = NS_OK;
 
-#ifdef NECKO
   char* aContentType = nsnull;
   rv = channel->GetContentType(&aContentType);
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif
 
   if (nsnull != aContentType)
 	  mPluginStreamInfo->SetContentType(aContentType);
@@ -977,9 +801,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartRequest(nsIURI* aURL, const cha
     }
   }
 
-#ifdef NECKO
   nsCRT::free(aContentType);
-#endif //NECKO
 
   //
   // Set up the stream listener...
@@ -998,81 +820,42 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartRequest(nsIURI* aURL, const cha
 }
 
 
-#ifdef NECKO
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIChannel* channel, 
                                                      nsISupports* aContext, 
                                                      PRUint32 aProgress, 
                                                      PRUint32 aProgressMax)
-#else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-#endif
 {
   nsresult rv = NS_OK;
-
-#ifndef NECKO
-  mPluginStreamInfo->SetLength(aProgressMax);
-  if(mOnStartRequest == PR_TRUE && mSetUpListener == PR_FALSE)
-	rv = SetUpStreamListener(aURL);
-
-  mGotProgress = PR_TRUE;
-#endif
 
   return rv;
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIChannel* channel, 
                                                    nsISupports* aContext, const PRUnichar* aMsg)
-#else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-#endif
 {
   return NS_OK;
 }
 
-#ifndef NECKO
-NS_IMETHODIMP nsPluginStreamListenerPeer::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-  return NS_OK;
-}
-#endif
-
-
-#ifdef NECKO
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIChannel* channel, 
                                                           nsISupports* aContext, 
                                                           nsIInputStream *aIStream, 
                                                           PRUint32 sourceOffset, 
                                                           PRUint32 aLength)
-#else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-       PRUint32 aLength)
-#endif
 {
   nsresult rv = NS_OK;
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
   char* url;
-#else
-  const char* url;
-#endif
 
   if(!mPStreamListener)
 	  return NS_ERROR_FAILURE;
 
-#ifdef NECKO
   char* urlString;
-#else
-  const char* urlString;
-#endif
   aURL->GetSpec(&urlString);
   mPluginStreamInfo->SetURL(urlString);
-#ifdef NECKO
   nsCRT::free(urlString);
-#endif
 
   // if the plugin has requested an AsFileOnly stream, then don't call OnDataAvailable
   if(mStreamType != nsPluginStreamType_AsFileOnly)
@@ -1093,35 +876,23 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
   return rv;
 }
 
-#ifdef NECKO
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel, 
                                                         nsISupports* aContext,
                                                         nsresult aStatus, 
                                                         const PRUnichar* aMsg)
-#else
-NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
-#endif // NECKO
 {
   nsresult rv = NS_OK;
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif // NECKO
   // nsPluginReason  reason = nsPluginReason_NoReason;
 
   if(nsnull != mPStreamListener)
   {
-#ifdef NECKO
     char* urlString;
-#else
-	const char* urlString;
-#endif
 	aURL->GetSpec(&urlString);
 	mPluginStreamInfo->SetURL(urlString);
-#ifdef NECKO
     nsCRT::free(urlString);
-#endif
 
 	// tell the plugin that the stream has ended only if the cache is done
 	if(mCacheDone)
@@ -1141,12 +912,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIURI* aURL, nsresult a
 nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURI* aURL)
 {
 	nsPluginCacheListener* cacheListener = new nsPluginCacheListener(this);
-#ifdef NECKO
     // XXX: Null LoadGroup?
 	return NS_OpenURI(cacheListener, nsnull, aURL, nsnull);
-#else
-	return NS_OpenURL(aURL, cacheListener);
-#endif
 }
 
 nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
@@ -1170,16 +937,10 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
   mPluginStreamInfo->SetSeekable(PR_FALSE);
   //mPluginStreamInfo->SetModified(??);
 
-#ifdef NECKO
   char* urlString;
   aURL->GetSpec(&urlString);
   mPluginStreamInfo->SetURL(urlString);
   nsCRT::free(urlString);
-#else
-  const char* urlString;
-  aURL->GetSpec(&urlString);
-  mPluginStreamInfo->SetURL(urlString);
-#endif
 
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
@@ -1213,7 +974,6 @@ nsPluginStreamListenerPeer::OnFileAvailable(const char* aFilename)
 	return rv;
 }
 
-#ifdef NECKO
 nsILoadGroup*
 nsPluginStreamListenerPeer::GetLoadGroup()
 {
@@ -1226,7 +986,6 @@ nsPluginStreamListenerPeer::GetLoadGroup()
   }
   return loadGroup;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1340,13 +1099,7 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   nsString ua;
   nsINetService *service = nsnull;
 
-#ifndef NECKO
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
 
   if ((NS_OK == res) && (nsnull != service))
   {
@@ -1535,7 +1288,6 @@ printf("plugin manager2 notifystatuschange called\n");
 NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
 {
   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
-#ifdef NECKO
   const PRInt32 bufLen = 80;
 
   nsIURI *uriIn = nsnull;
@@ -1607,7 +1359,6 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   NS_RELEASE(uriIn);
 
   
-#endif // NECKO
   return res;
 }
 
@@ -1677,11 +1428,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 /* Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embeded case) */
 
 NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType, 
-#ifdef NECKO
                                                          nsIURI* aURL,
-#else
-                                                         nsIURI* aURL,
-#endif
                                                          nsIPluginInstanceOwner *aOwner)
 {
   nsresult  rv;
@@ -1766,11 +1513,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   //create a URL so that the instantiator can do file ext.
   //based plugin lookups...
-#ifndef NECKO  
-  rv = NS_NewURL(&url, aURLSpec);
-#else
   rv = NS_NewURI(&url, aURLSpec);
-#endif // NECKO
 
   if (rv != NS_OK)
     url = nsnull;
@@ -1823,11 +1566,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner)
 {
   PRUint32 i;
-#ifdef NECKO
   char* url;
-#else
-  const char* url;
-#endif
   if(!aURL)
   	return NS_ERROR_FAILURE;
   	
@@ -1852,25 +1591,18 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstan
       instance->SetWindow(window);
 
       mActivePluginList[i].mStopped = PR_FALSE;
-#ifdef NECKO
       nsCRT::free(url);
-#endif
       return NS_OK;
     }
   }
-#ifdef NECKO
   nsCRT::free(url);
-#endif
   return NS_ERROR_FAILURE;
 }
 
 void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL)
 {
-#ifdef NECKO
   char* url;
-#else
-  const char* url;
-#endif
+
   if(!aURL)
   	return;
   	
@@ -1906,9 +1638,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, nsI
     if(mOldestActivePlugin == MAX_ACTIVE_PLUGINS)
       mOldestActivePlugin = 0;
   }
-#ifdef NECKO
   nsCRT::free(url);
-#endif
 }
 
 NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
@@ -1930,13 +1660,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	{
 		char* extension;
 			
-#ifdef NECKO
         char* filename;
 		aURL->GetPath(&filename);
-#else
-		const char* filename;
-		aURL->GetFile(&filename);
-#endif
 		extension = PL_strrchr(filename, '.');
 		if(extension)
 			++extension;
@@ -1945,9 +1670,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 
 		if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
 			return NS_ERROR_FAILURE;
-#ifdef NECKO
         nsCRT::free(filename);
-#endif
 	}
 	else
 		mimetype = aMimeType;
@@ -2411,23 +2134,15 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   if (aURL.Length() <= 0)
     return NS_OK;
 
-#ifndef NECKO
-  rv = NS_NewURL(&url, aURL);
-#else
   rv = NS_NewURI(&url, aURL);
-#endif // NECKO
 
   if (NS_OK == rv)
   {
     rv = listenerPeer->Initialize(url, aInstance, aListener);
 
     if (NS_OK == rv) {
-#ifdef NECKO
       // XXX: Null LoadGroup?
       rv = NS_OpenURI(listenerPeer, nsnull, url, nsnull);
-#else
-      rv = NS_OpenURL(url, listenerPeer);
-#endif
     }
 
     NS_RELEASE(url);
@@ -2480,12 +2195,8 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
 		rv = NS_ERROR_ILLEGAL_VALUE;
 
 	if (NS_OK == rv) {
-#ifdef NECKO
       // XXX: Null LoadGroup?
       rv = NS_OpenURI(listener, nsnull, aURL, nsnull);
-#else
-	  rv = NS_OpenURL(aURL, listener);
-#endif
 	}
 
 	//NS_RELEASE(aURL);

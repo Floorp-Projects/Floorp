@@ -48,12 +48,8 @@ public:
   NS_IMETHOD GetContentType(nsString& aContentType) const;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
-#ifdef NECKO
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-#else
-                               nsIURI *aUrl, 
-#endif
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener);
 
@@ -84,11 +80,7 @@ public:
 protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-#ifdef NECKO
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
-#else
-  virtual nsresult Reset(nsIURI* aUrl);
-#endif
 
   // For HTML elements in our content model
   nsIHTMLStyleSheet*    mAttrStyleSheet;

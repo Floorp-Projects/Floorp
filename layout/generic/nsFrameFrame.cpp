@@ -26,9 +26,7 @@
 #include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsIDocument.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -637,12 +635,8 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   }
 
   nsString empty;
-#ifndef NECKO
-  NS_MakeAbsoluteURL(baseURL, empty, aRelURL, aAbsURL);
-#else
   nsresult rv = NS_MakeAbsoluteURI(aRelURL, baseURL, aAbsURL);
   NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
-#endif // NECKO
   NS_IF_RELEASE(baseURL);
 }
 

@@ -24,10 +24,8 @@
 #include "nsIPluginInstance.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIChannel.h"
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsILinkHandler.h"
@@ -62,23 +60,11 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-#ifdef NECKO
   // nsIStreamObserver methods:
   NS_DECL_NSISTREAMOBSERVER
 
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
-#else
-  // nsIStreamListener
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus,
-                           const PRUnichar* aMsg);
-  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
-                             PRUint32 aCount);
-#endif
 
   PluginViewerImpl* mViewer;
   nsIStreamListener* mNextStream;
@@ -160,32 +146,18 @@ public:
                       nsIDeviceContext* aDeviceContext,
                       const nsRect& aBounds);
 
-#ifdef NECKO
   nsresult StartLoad(nsIChannel* channel, nsIStreamListener*& aResult);
-#else
-  nsresult StartLoad(nsIURI* aURL, const char* aContentType,
-                     nsIStreamListener*& aResult);
-#endif
 
   void ForceRefresh(void);
 
-#ifdef NECKO
   nsresult GetURI(nsIURI* *aURI);
-#else
-  nsresult GetURL(nsIURI *&aURL);
-#endif
 
   nsresult GetDocument(nsIDocument* *aDocument);
 
   nsIWidget* mWindow;
   nsIDocument* mDocument;
   nsIContentViewerContainer* mContainer;
-#ifdef NECKO
   nsIChannel* mChannel;
-#else
-  nsIURI* mURL;
-  nsString mContentType;
-#endif
   pluginInstanceOwner *mOwner;
   PRBool mEnableRendering;
 };
@@ -262,11 +234,7 @@ PluginViewerImpl::~PluginViewerImpl()
   }
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mContainer);
-#ifdef NECKO
   NS_IF_RELEASE(mChannel);
-#else
-  NS_IF_RELEASE(mURL);
-#endif
 }
 
 /*
@@ -321,14 +289,8 @@ PluginViewerImpl::Init(nsNativeWidget aNativeParent,
 }
 
 nsresult
-#ifdef NECKO
 PluginViewerImpl::StartLoad(nsIChannel* channel, nsIStreamListener*& aResult)
-#else
-PluginViewerImpl::StartLoad(nsIURI* aURL, const char* aContentType,
-                            nsIStreamListener*& aResult)
-#endif
 {
-#ifdef NECKO
   NS_IF_RELEASE(mChannel);
   mChannel = channel;
   NS_ADDREF(mChannel);
@@ -338,15 +300,6 @@ PluginViewerImpl::StartLoad(nsIURI* aURL, const char* aContentType,
   mChannel->GetContentType(&contentType);
   printf("PluginViewerImpl::StartLoad: content-type=%s\n", contentType);
   nsCRT::free(contentType);
-#endif
-
-#else
-  printf("PluginViewerImpl::StartLoad: content-type=%s\n", aContentType);
-
-  NS_IF_RELEASE(mURL);
-  mURL = aURL;
-  NS_IF_ADDREF(aURL);
-  mContentType = aContentType;
 #endif
 
   aResult = nsnull;
@@ -387,7 +340,6 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
     win->ws_info = nsnull;   //XXX need to figure out what this is. MMP
   #endif
 
-#ifdef NECKO
     nsIURI* uri;
     rv = mChannel->GetURI(&uri);
     if (NS_FAILED(rv)) return rv;
@@ -403,14 +355,6 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
     rv = mChannel->GetContentType(&ct);
     if (NS_FAILED(rv)) return rv;
     rv = aHost->InstantiateFullPagePlugin(ct, str, aResult, mOwner);
-#else
-    PRUnichar* fullurl;
-    mURL->ToString(&fullurl);
-    char* ct = mContentType.ToNewCString();
-    nsAutoString str = fullurl;
-    rv = aHost->InstantiateFullPagePlugin(ct, str, aResult, mOwner);
-    delete fullurl;
-#endif
     delete[] ct;
   }
 
@@ -578,19 +522,10 @@ PluginViewerImpl::ForceRefresh()
   mWindow->Invalidate(PR_TRUE);
 }
 
-#ifdef NECKO
 nsresult PluginViewerImpl::GetURI(nsIURI* *aURI)
 {
   return mChannel->GetURI(aURI);
 }
-#else
-nsresult PluginViewerImpl::GetURL(nsIURI *&aURL)
-{
-  NS_IF_ADDREF(mURL);
-  aURL = mURL;
-  return NS_OK;
-}
-#endif
 
 nsresult PluginViewerImpl::GetDocument(nsIDocument* *aDocument)
 {
@@ -617,13 +552,8 @@ PluginListener::~PluginListener()
 NS_IMPL_ISUPPORTS(PluginListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
-#ifdef NECKO
 PluginListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-PluginListener::OnStartRequest(nsIURI* aURL, const char *contentType)
-#endif
 {
-#ifdef NECKO
   nsresult rv;
   char* contentType = nsnull;
 
@@ -636,86 +566,29 @@ PluginListener::OnStartRequest(nsIURI* aURL, const char *contentType)
   if (NS_FAILED(rv)) {
     return rv;
   }
-#else
-  mViewer->StartLoad(aURL, contentType, mNextStream);
-#endif
   if (nsnull == mNextStream) 
     return NS_ERROR_FAILURE;
-#ifdef NECKO
   return mNextStream->OnStartRequest(channel, ctxt);
-#else
-  return mNextStream->OnStartRequest(aURL, contentType);
-#endif
-}
-
-#ifndef NECKO
-NS_IMETHODIMP
-PluginListener::OnProgress(nsIURI* aURL, PRUint32 aProgress,
-                           PRUint32 aProgressMax)
-{
-  if (nsnull == mNextStream) {
-    return NS_ERROR_FAILURE;
-  }
-  return mNextStream->OnProgress(aURL, aProgress, aProgressMax);
 }
 
 NS_IMETHODIMP
-PluginListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-  if (nsnull == mNextStream) {
-    return NS_ERROR_FAILURE;
-  }
-  return mNextStream->OnStatus(aURL, aMsg);
-}
-#endif
-
-NS_IMETHODIMP
-#ifdef NECKO
 PluginListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                               nsresult status, const PRUnichar *errorMsg)
-#else
-PluginListener::OnStopRequest(nsIURI* aURL, nsresult aStatus,
-                              const PRUnichar* aMsg)
-#endif
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-#ifdef NECKO
   return mNextStream->OnStopRequest(channel, ctxt, status, errorMsg);
-#else
-  return mNextStream->OnStopRequest(aURL, aStatus, aMsg);
-#endif
 }
 
-#ifndef NECKO
 NS_IMETHODIMP
-PluginListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-  if (nsnull == mNextStream) {
-    return NS_ERROR_FAILURE;
-  }
-  return mNextStream->GetBindInfo(aURL, aInfo);
-}
-#endif
-
-NS_IMETHODIMP
-#ifdef NECKO
 PluginListener::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
                                 nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
-#else
-PluginListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
-                                PRUint32 aCount)
-#endif
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-#ifdef NECKO
   return mNextStream->OnDataAvailable(channel, ctxt, inStr, sourceOffset, count);
-#else
-  return mNextStream->OnDataAvailable(aURL, aStream, aCount);
-#endif
 }
 
 //----------------------------------------------------------------------
@@ -819,32 +692,17 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
 
       if (NS_OK == rv)
       {
-#ifdef NECKO
         nsIURI  *uri;
         rv = mViewer->GetURI(&uri);
-#else
-        nsIURI  *url;
-        rv = mViewer->GetURL(url);
-#endif
 
         if (NS_OK == rv)
         {
           // Create an absolute URL
-#ifdef NECKO
           char* absURIStr;
           rv = NS_MakeAbsoluteURI(aURL, uri, &absURIStr);
           NS_RELEASE(uri);
           nsAutoString fullurl(absURIStr);
           nsCRT::free(absURIStr);
-#else
-          nsAutoString  uniurl = nsAutoString(aURL);
-          const char* spec;
-          (void)url->GetSpec(&spec);
-          nsAutoString  base = nsAutoString(spec);
-          nsAutoString  fullurl;
-          rv = NS_MakeAbsoluteURL(url, base, uniurl, fullurl);
-          NS_RELEASE(url);
-#endif
 
           if (NS_OK == rv) {
             nsAutoString  unitarget = nsAutoString(aTarget);

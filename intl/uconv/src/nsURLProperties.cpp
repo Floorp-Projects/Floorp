@@ -21,18 +21,9 @@
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsNeckoUtil.h"
-#endif // NECKO
 
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
-
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#endif // NECKO
 
 nsURLProperties::nsURLProperties(nsString& aUrl)
 {
@@ -41,26 +32,12 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
   nsIURI* url = nsnull;
   nsIInputStream* in = nsnull;
 
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  if(NS_SUCCEEDED(res)) 
-     res = nsServiceManager::GetService( kNetServiceCID,
-                                         kINetServiceIID,
-                                        (nsISupports**) &pNetService);
-
-  if(NS_SUCCEEDED(res)) 
-    res = pNetService->CreateURL(&url, aUrl, nsnull, nsnull, nsnull);
- 
-  if(NS_SUCCEEDED(res)) 
-    res = pNetService->OpenBlockingStream(url, nsnull, &in);
-#else
   res = NS_NewURI(&url, aUrl, nsnull);
   if (NS_FAILED(res)) return;
 
   res = NS_OpenURI(&in, url);
   NS_RELEASE(url);
   if (NS_FAILED(res)) return;
-#endif // NECKO
 
   if(NS_SUCCEEDED(res))
     res = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
@@ -80,11 +57,6 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
     NS_IF_RELEASE(mDelegate);
     mDelegate=nsnull;
   }
-#ifndef NECKO
-  if(pNetService)
-     res = nsServiceManager::ReleaseService( kNetServiceCID,
-                                             pNetService);
-#endif // NECKO
   NS_IF_RELEASE(in);
 }
 

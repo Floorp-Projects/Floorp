@@ -87,9 +87,7 @@ typedef long int32;
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
-#ifdef NECKO
 #include "nsIHTTPChannel.h"
-#endif
 
 #include "nsIPref.h"
 #include "nsIURL.h"

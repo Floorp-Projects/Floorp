@@ -54,11 +54,9 @@
 #include "nsICacheObject.h"
 #endif
 
-#ifdef NECKO
 // this test app handles cookies.
 #include "nsICookieService.h"
 static NS_DEFINE_CID(nsCookieServiceCID, NS_COOKIESERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);

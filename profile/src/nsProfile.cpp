@@ -1891,32 +1891,9 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName, PRBool showProg
 
 NS_IMETHODIMP nsProfile::GetCookie(char **cookie)
 {
-#ifndef NECKO
-  nsINetService *service;
-  nsIURI	*aURL;
-
-// this is an internal url!
-#define PREG_URL		"http://seaspace.mcom.com/"
-
-  nsresult rv = NS_NewURL(&aURL, PREG_URL);
-  if (NS_FAILED(rv)) return rv;
-
-  nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service) && (nsnull != aURL)) {
-
-    res = service->GetCookieString(aURL, aCookie);
-
-    NS_RELEASE(service);
-  }
-
-  return res;
-#else
   // XXX NECKO we need to use the cookie module for this info instead of 
   // XXX the IOService
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif // NECKO
 }
 
 NS_IMETHODIMP nsProfile::ProcessPRegCookie()

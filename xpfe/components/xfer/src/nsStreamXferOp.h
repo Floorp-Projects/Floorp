@@ -21,9 +21,7 @@
 #include "nsString.h"
 #include "nsIStreamTransferOperation.h"
 #include "nsIStreamListener.h"
-#ifdef NECKO
 #include "nsIProgressEventSink.h"
-#endif
 
 class nsIDOMWindow;
 class nsOutputFileStream;
@@ -36,9 +34,7 @@ class nsOutputFileStream;
 // the object (and the creator releases it immediately).  The object's dtor
 // should get called when the dialog closes.
 class nsStreamXferOp : public nsIStreamTransferOperation,
-#ifdef NECKO
                        public nsIProgressEventSink,
-#endif
                        public nsIStreamListener {
 public:
     // ctor/dtor
@@ -52,7 +48,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMTRANSFEROPERATION
 
-#ifdef NECKO
     // nsIProgressEventSink methods:
     NS_DECL_NSIPROGRESSEVENTSINK
 
@@ -61,14 +56,6 @@ public:
 
     // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
-#else
-    NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-    NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-    NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-    NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-#endif
 
 private:
     nsCString           mSource;

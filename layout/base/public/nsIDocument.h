@@ -90,12 +90,8 @@ public:
   virtual nsIArena* GetArena() = 0;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
-#ifdef NECKO
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
-#else
-                               nsIURI *aUrl, 
-#endif
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener **aDocListener) = 0;
 

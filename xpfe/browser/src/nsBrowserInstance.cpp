@@ -46,13 +46,9 @@
 
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIWidget.h"
 #include "plevent.h"
 
@@ -118,10 +114,6 @@ static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
-#ifdef NECKO
-#else
-static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
-#endif
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
@@ -301,19 +293,10 @@ nsBrowserAppCore::GetSessionHistory(nsISessionHistory ** aResult)
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::Reload(nsLoadFlags flags)
-#else
-nsBrowserAppCore::Reload(PRInt32  aType)
-#endif
 {
-#ifdef  NECKO
 	if (mContentAreaWebShell)
 	   Reload(mContentAreaWebShell, flags);
-#else
-	if (mContentAreaWebShell)
-	   Reload(mContentAreaWebShell, (nsURLReloadType) aType);
-#endif /* NECKO */
 	return NS_OK;
 }   
 
@@ -848,9 +831,6 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 
     nsCOMPtr<nsIURI> urlObj;
     char * urlstr = "chrome://wallet/content/WalletPreview.xul";
-#ifndef NECKO
-    rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -860,7 +840,6 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
-#endif // NECKO
     if (NS_FAILED(rv))
         return rv;
 
@@ -1404,11 +1383,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef NECKO
   char* url;
-#else
-  const char* url;
-#endif
   rv = aURL->GetSpec(&url);
   if (NS_FAILED(rv)) return rv;
 
@@ -1477,9 +1452,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
-#ifdef NECKO
   nsCRT::free(url);
-#endif
 
   //Set the "at-work" protocol icon.
 
@@ -1668,17 +1641,10 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIChannel* channel,
                                            const char *aContentType,
                                            const char *aCommand )
-#else
-nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIURI *aURL,
-                                           const char *aContentType,
-                                           const char *aCommand )
-#endif
 {
     nsresult rv = NS_OK;
 
@@ -1698,11 +1664,7 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
         rv = mWebShellWin->ConvertWebShellToDOMWindow( mWebShell,
                                                        getter_AddRefs( domWindow ) );
         if ( NS_SUCCEEDED( rv ) && domWindow ) {
-#ifdef NECKO
             rv = handler->HandleUnknownContentType( channel, aContentType, domWindow );
-#else
-            rv = handler->HandleUnknownContentType( aURL, aContentType, domWindow );
-#endif
         } else {
             #ifdef NS_DEBUG
             printf( "%s %d: ConvertWebShellToDOMWindow failed, rv=0x%08X\n",
@@ -1723,55 +1685,32 @@ nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIChannel* channel,
                                  nsIContentViewer* aViewer)
-#else
-nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIURI* aURL, const char* aContentType,
-                                 nsIContentViewer* aViewer)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                     nsIChannel* channel, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
-#else
-nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIURI* aURL, PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-#endif
 {
   nsresult rv = NS_OK;
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
   char *urlString = 0;
-#else
-  const char *urlString = 0;
-#endif
   aURL->GetSpec( &urlString );
-#ifdef NECKO
   nsCRT::free(urlString);
-#endif
   return rv;
 }
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
-#else
-nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIURI* aURL, nsString& aMsg)
-#endif
 {
   nsresult rv = setAttribute( mWebShell, "Browser:Status", "value", aMsg );
    return rv;
@@ -1779,13 +1718,8 @@ nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIChannel* channel, nsresult aStatus)
-#else
-nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, PRInt32 aStatus)
-#endif
 {
   return NS_OK;
 }
@@ -1824,11 +1758,7 @@ nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 }
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
-#else
 nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
-#endif // NECKO
 {
   if (mIsLoadingHistory) {
      SetLoadingFlag(PR_FALSE);

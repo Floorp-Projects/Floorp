@@ -44,11 +44,7 @@
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#else
-#include "nsIURLGroup.h"
-#endif // NECKO
 #include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
 #include "nsFrame.h"
@@ -1071,21 +1067,8 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
     aBaseHref.GetStringValue(baseHref);
 
     nsIURI* url = nsnull;
-#ifndef NECKO
-    nsILoadGroup* LoadGroup = nsnull;
-    docBaseURL->GetLoadGroup(&LoadGroup);
-    if (LoadGroup) {
-      result = LoadGroup->CreateURL(&url, docBaseURL, baseHref, nsnull);
-      NS_RELEASE(LoadGroup);
-    }
-    else
-#endif
     {
-#ifndef NECKO
-      result = NS_NewURL(&url, baseHref, docBaseURL);
-#else
       result = NS_NewURI(&url, baseHref, docBaseURL);
-#endif // NECKO
     }
     NS_IF_RELEASE(docBaseURL);
     *aBaseURL = url;
@@ -2272,11 +2255,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
             aAttributes->GetAttribute(nsHTMLAtoms::_baseHref, baseHref);
             nsGenericHTMLElement::GetBaseURL(baseHref, doc,
                                              getter_AddRefs(docURL));
-#ifndef NECKO
-            rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
-#else
             rv = NS_MakeAbsoluteURI(spec, docURL, absURLSpec);
-#endif // NECKO
             if (NS_SUCCEEDED(rv)) {
               nsStyleColor* color = (nsStyleColor*)
                 aContext->GetMutableStyleData(eStyleStruct_Color);

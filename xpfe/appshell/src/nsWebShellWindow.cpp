@@ -27,11 +27,9 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIPref.h"
 
 #include "nsINameSpaceManager.h"
@@ -123,13 +121,6 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
-
-#ifndef NECKO
-#ifdef MOZ_MAIL_NEWS
-static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
-#endif /* MOZ_MAIL_NEWS */
-#endif   /* NECKO  */
-
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -428,18 +419,12 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   NS_IF_ADDREF(mCallbacks);
 
   if (nsnull != aUrl)  {
-#ifdef NECKO
     char *tmpStr = NULL;
-#else
-    const char *tmpStr = NULL;
-#endif
     nsAutoString urlString;
 
     aUrl->GetSpec(&tmpStr);
     urlString = tmpStr;
-#ifdef NECKO
     nsCRT::free(tmpStr);
-#endif
     mWebShell->LoadURL(urlString.GetUnicode());
   }
                      
@@ -1577,9 +1562,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   nsCOMPtr<nsIURI> urlObj;
   char * urlStr = "chrome://navigator/content/";
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -1589,7 +1571,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
   NS_RELEASE(uri);
-#endif // NECKO
 
   if (NS_SUCCEEDED(rv)) {
     rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, PR_FALSE,
@@ -1934,15 +1915,9 @@ nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
                                     nsIChannel* channel, nsresult aStatus,
                                     nsIDocumentLoaderObserver * aDocObserver)
-#else
-nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                                    nsIURI* aURL, PRInt32 aStatus,
-                                    nsIDocumentLoaderObserver * aDocObserver)
-#endif
 {
 #ifdef DEBUG_MENUSDEL
   printf("OnEndDocumentLoad\n");
@@ -2022,72 +1997,41 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP 
-#ifdef NECKO
 nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIChannel* channel, 
                                  nsIContentViewer* aViewer)
-#else
-nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIURI* aURL, 
-                                 const char* aContentType, 
-                                 nsIContentViewer* aViewer)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebShellWindow::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                     nsIChannel* channel, 
                                     PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
-#else
-nsWebShellWindow::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIURI* aURL, 
-                                    PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
-#else
-nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIURI* aURL, nsString& aMsg)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIChannel* channel, nsresult aStatus)
-#else
-nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, PRInt32 aStatus)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIChannel* channel, 
                                            const char *aContentType,
                                            const char *aCommand )
-#else
-nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIURI* aURL,
-                                           const char *aContentType,
-                                           const char *aCommand )
-#endif
 {
   return NS_OK;
 }
@@ -2417,19 +2361,12 @@ void nsWebShellWindow::LoadContentAreas() {
       docViewer->GetDocument(*getter_AddRefs(doc));
       nsCOMPtr<nsIURI> mainURL = getter_AddRefs(doc->GetDocumentURL());
       if (mainURL) {
-#ifdef NECKO
         char *search = nsnull;
         nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);
         if (url)
           url->GetQuery(&search);
-#else
-        const char *search;
-        mainURL->GetSearch(&search);
-#endif
         searchSpec = search;
-#ifdef NECKO
         nsCRT::free(search);
-#endif
       }
     }
   }
@@ -2663,9 +2600,6 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    nsCOMPtr<nsIURI> urlObj;
    char * urlStr = "chrome://navigator/content/";
  
-#ifndef NECKO
-   rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
-#else
    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
    if (NS_FAILED(rv)) return rv;
 
@@ -2675,7 +2609,6 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
 
    rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
    NS_RELEASE(uri);
-#endif // NECKO
    if (NS_FAILED(rv))
      return rv;
  

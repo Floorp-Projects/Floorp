@@ -22,15 +22,9 @@
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#ifndef NECKO
-#include "nsINetService.h"
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-#else
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include <iostream.h>  //BAD DOG -- no biscuit!
@@ -74,11 +68,7 @@ NS_SetupRegistry()
 
 	// startup netlib:	
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-#ifndef NECKO
-    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#else
     nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#endif // NECKO
 
     // Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
@@ -110,29 +100,6 @@ main(int argc, char* argv[])
 
   nsIInputStream* in = nsnull;
 
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, 
-                                     kINetServiceIID,
-                                     (nsISupports**) &pNetService);
-  if (NS_FAILED(ret) || (!pNetService)) {
-    printf("cannot get net service\n");
-    return 1;
-  }
-  nsIURI *url = nsnull;
-  ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
-    nsnull);
-  if (NS_FAILED(ret) || (!url)) {
-    printf("cannot create URL\n");
-    return 1;
-  }
-
-  ret = pNetService->OpenBlockingStream(url, nsnull, &in);
-  if (NS_FAILED(ret) || (!in)) {
-    printf("cannot open stream\n");
-    return 1;
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
   if (NS_FAILED(ret)) return ret;
 
@@ -150,7 +117,6 @@ main(int argc, char* argv[])
 
   ret = channel->OpenInputStream(0, -1, &in);
   if (NS_FAILED(ret)) return ret;
-#endif // NECKO
 
   nsIPersistentProperties* props = nsnull;
   ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,

@@ -59,11 +59,7 @@
 #include "nsIStringStream.h"
 #include "nsITextContent.h"
 
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#else
-#include "nsIURL.h"
-#endif // NECKO
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"

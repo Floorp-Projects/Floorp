@@ -28,11 +28,7 @@
 #include "nsIRenderingContext.h"
 #include "nsEventStateManager.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsILoadGroup.h"
-#else
-#include "nsIURLGroup.h"
-#endif
 #include "nsIDocument.h"
 #include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
@@ -759,7 +755,6 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
 
     // Initialize the image group
     nsCOMPtr<nsILoadGroup> loadGroup;
-#ifdef NECKO
     nsCOMPtr<nsIDocument> doc;
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
@@ -767,9 +762,6 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
         doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
       }
     }
-#else
-    rv = mBaseURL->GetLoadGroup(getter_AddRefs(loadGroup));
-#endif
     if (rv == NS_OK)
       rv = mImageGroup->Init(mDeviceContext, loadGroup);
     if (NS_OK != rv) {

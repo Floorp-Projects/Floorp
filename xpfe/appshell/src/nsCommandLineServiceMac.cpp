@@ -29,12 +29,10 @@
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
@@ -929,9 +927,6 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
         const PRInt32 windowHeight = 650;
         nsCOMPtr<nsIURI> urlObj;
     char * urlStr = "chrome://navigator/content";
-#ifndef NECKO
-        rv = NS_NewURL(getter_AddRefs(urlObj), urlStr);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return nsnull;
 
@@ -941,7 +936,6 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);
     NS_RELEASE(uri);
-#endif // NECKO
         if (NS_FAILED(rv))
                 return nsnull;
 

@@ -21,13 +21,11 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsICSSStyleRuleProcessor.h"
@@ -1290,14 +1288,10 @@ CSSStyleSheetImpl::Init(nsIURI* aURL)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   if (mInner->mURL) {
-#ifdef NECKO
 #ifdef DEBUG
     PRBool eq;
     nsresult rv = mInner->mURL->Equals(aURL, &eq);
     NS_ASSERTION(NS_SUCCEEDED(rv) && eq, "bad inner");
-#endif
-#else
-    NS_ASSERTION(mInner->mURL->Equals(aURL), "bad inner");
 #endif
   }
   else {
@@ -1469,13 +1463,9 @@ CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL) const
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
-#ifdef NECKO
   PRBool result;
   nsresult rv = mInner->mURL->Equals(aURL, &result);
   if (NS_FAILED(rv)) result = PR_FALSE;
-#else
-  PRBool result = mInner->mURL->Equals(aURL);
-#endif
 
   const CSSStyleSheetImpl*  child = mFirstChild;
   while ((PR_FALSE == result) && (nsnull != child)) {
@@ -1794,22 +1784,12 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   }
 
   fputs("CSS Style Sheet: ", out);
-#ifdef NECKO
   char* urlSpec = nsnull;
   nsresult rv = mInner->mURL->GetSpec(&urlSpec);
   if (NS_SUCCEEDED(rv) && urlSpec) {
     fputs(urlSpec, out);
     nsCRT::free(urlSpec);
   }
-#else
-  PRUnichar* urlSpec = nsnull;
-  mInner->mURL->ToString(&urlSpec);
-  if (urlSpec) {
-    nsAutoString buffer(urlSpec);
-    delete [] urlSpec;
-    fputs(buffer, out);
-  }
-#endif
 
   if (mMedia) {
     fputs(" media: ", out);
@@ -1946,19 +1926,12 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::GetHref(nsString& aHref)
 {
   if (mInner && mInner->mURL) {
-#ifdef NECKO
     char* str = nsnull;
     mInner->mURL->GetSpec(&str);
     aHref = str;
     if (str) {
       nsCRT::free(str);
     }
-#else
-    PRUnichar* str;
-    mInner->mURL->ToString(&str);
-    aHref = str;
-    delete [] str;
-#endif
   }
   else {
     aHref.SetLength(0);
@@ -2532,9 +2505,6 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     }
 
                     nsAutoString absURLSpec;
-#ifndef NECKO
-                    NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-#else
                     nsresult rv;
                     nsIURI *baseUri = nsnull;
                     rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
@@ -2542,7 +2512,6 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 
                     NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
                     NS_RELEASE(baseUri);
-#endif // NECKO
                     NS_IF_RELEASE(docURL);
 
                     linkHandler->GetLinkState(absURLSpec.GetUnicode(), linkState);

@@ -651,22 +651,12 @@ void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML CSS Style Sheet: ", out);
-#ifdef NECKO
   char* urlSpec = nsnull;
   mURL->GetSpec(&urlSpec);
   if (urlSpec) {
     fputs(urlSpec, out);
     nsCRT::free(urlSpec);
   }
-#else
-  PRUnichar* urlSpec = nsnull;
-  mURL->ToString(&urlSpec);
-  if (urlSpec) {
-    nsAutoString buffer(urlSpec);
-    fputs(buffer, out);
-    delete [] urlSpec;
-  }
-#endif
   fputs("\n", out);
 }
 

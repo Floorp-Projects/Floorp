@@ -27,11 +27,7 @@
 #include "nsIAllocator.h"
 #include "plstr.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsNeckoUtil.h"
-#endif // NECKO
 
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
@@ -52,11 +48,6 @@ NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kIStringBundleIID, NS_ISTRINGBUNDLE_IID);
 NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 
@@ -275,44 +266,12 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   }
 #endif
   nsresult ret;
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-
-  ret = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID, (nsISupports**) &pNetService);
-  /* get the url
-   */
-  nsIURI    *url = nsnull;
-
-  ret = pNetService->CreateURL(&url, aURLStr, nsnull, nsnull,
-                               nsnull);
-  if (NS_FAILED(ret)) {
-#ifdef DEBUG_tao
-    char *s = aURLStr.ToNewCString();
-    printf("\n** cannot create URL for %s\n", s?s:"null");
-    delete s;
-#endif
-    return ret;
-  }
-  //
-  ret = pNetService->OpenBlockingStream(url, nsnull, &in);
-  NS_RELEASE(url);
-#ifdef DEBUG_tao
-  if (NS_FAILED(ret) || !in) {
-    char *s = aURLStr.ToNewCString();
-    printf("\n** cannot open stream: %s\n", s?s:"null");
-    delete s;
-  }
-#endif
-
-#else // NECKO
   nsIURI* uri;
   ret = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(ret)) return ret;
 
   ret = NS_OpenURI(&in, uri);
   NS_RELEASE(uri);
-#endif // NECKO
   return ret;
 }
 

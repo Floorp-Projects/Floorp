@@ -21,12 +21,8 @@
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
-#else
-#include "nsIURLGroup.h"
-#endif
 #include "nsString.h"
 #include "nsIContent.h"
 #include "nsIDocumentObserver.h"
@@ -769,11 +765,7 @@ nsIArena* nsDocument::GetArena()
 }
 
 nsresult
-#ifdef NECKO
 nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
-#else
-nsDocument::Reset(nsIURI *aURL)
-#endif
 {
   nsresult rv = NS_OK;
 
@@ -846,20 +838,12 @@ nsDocument::Reset(nsIURI *aURL)
 
 nsresult
 nsDocument::StartDocumentLoad(const char* aCommand,
-#ifdef NECKO
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
-#else
-                              nsIURI *aURL, 
-#endif
                               nsIContentViewerContainer* aContainer,
                               nsIStreamListener **aDocListener)
 {
-#ifdef NECKO
   return Reset(aChannel, aLoadGroup);
-#else
-  return Reset(aURL);
-#endif
 }
 
 const nsString* nsDocument::GetDocumentTitle() const

@@ -130,11 +130,7 @@ public:
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
   NS_IMETHOD
-#ifdef NECKO
   InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
-#else
-  InstantiateEmbededPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
-#endif
 
   NS_IMETHOD
   InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner);

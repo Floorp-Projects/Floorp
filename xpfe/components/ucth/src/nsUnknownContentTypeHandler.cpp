@@ -24,9 +24,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 
-#ifdef NECKO
 #include "nsIChannel.h"
-#endif
 
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
@@ -73,13 +71,6 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
     // Note that the "parent" browser window will be window.opener within the
     // new dialog.
 
-#ifndef NECKO
-    // nsIChannel is really an nsIURI, I guess.
-    nsIChannel *channelUri = aChannel;
-
-    // url string is const in this case.
-    const char *urlStr = 0;
-#else  // NECKO
     // Extract URI from channel.
     nsCOMPtr<nsIURI> channelUri = nsnull;
     rv = aChannel->GetURI(getter_AddRefs(channelUri));
@@ -91,7 +82,6 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
 
     // url string non-const in this case.
     char *urlStr = 0;
-#endif // NECKO
 
     // Get url string from channel.
     channelUri->GetSpec( &urlStr );
@@ -113,10 +103,8 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
                                                 "chrome",
                                                 urlStr,
                                                 aContentType );
-#ifdef NECKO
                 // Free url string.
                 nsCRT::free(urlStr);
-#endif // NECKO
                 if ( argv ) {
                     nsIDOMWindow *newWindow;
                     rv = aWindow->OpenDialog( jsContext, argv, 5, &newWindow );

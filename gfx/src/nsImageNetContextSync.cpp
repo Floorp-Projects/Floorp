@@ -27,26 +27,17 @@
 #include "plstr.h"
 //#include "il_strm.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#endif // NECKO
 
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 class ImageNetContextSyncImpl : public ilINetContext {
 public:
@@ -188,22 +179,11 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
   nsresult res;
 
   // Get a network service interface which we'll use to create a stream
-#ifndef NECKO
-  NS_WITH_SERVICE(nsINetService, service, kNetServiceCID, &res)
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
 
   if (NS_SUCCEEDED(res)) {
     nsIInputStream* stream = nsnull;
 
-#ifndef NECKO
-    // Initiate a synchronous URL load
-
- 
-    if (NS_SUCCEEDED(service->OpenBlockingStream(url, nsnull, &stream)) &&
-        (aReader->StreamCreated(aURL, "unknown") == PR_TRUE)) {
-#else
 
     nsIURI *uri = nsnull;
     nsresult rv;
@@ -238,8 +218,6 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
         return -1;
 
     if (aReader->StreamCreated(aURL, aContentType) == PR_TRUE) {
-
-#endif // NECKO
 
       // Read the URL data
       char      buf[2048];

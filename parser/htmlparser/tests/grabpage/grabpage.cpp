@@ -20,13 +20,9 @@
 #include "nsIInputStream.h"
 #include "nsIURL.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 #include "nsString.h"
 #include "nsCRT.h"
@@ -225,12 +221,6 @@ PageGrabber::Grab(const nsString& aURL)
   nsIURI* url = NULL;
   nsresult rv;
 
-#ifndef NECKO
-  rv = NS_NewURL(&url, aURL);
-  if (NS_OK != rv) {
-    return rv;
-  }
-#else
   rv = NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -238,18 +228,13 @@ PageGrabber::Grab(const nsString& aURL)
   // XXX NECKO what verb? what eventSinkGetter?
   rv = ioService->NewChannel("load", aURL, nsnull, nsnull, &channel);
   if (NS_FAILED(rv)) return rv;
-#endif // NECKO
 
   // Start the URL load...
   StreamToFile* copier = new StreamToFile(fp);
   if(copier) {
     NS_ADDREF(copier);
 
-  #ifndef NECKO
-    rv = url->Open(copier);
-  #else
     rv = channel->AsyncRead(0, -1, nsnull, copier);
-  #endif // NECKO
 
     if (NS_OK != rv) {
       NS_RELEASE(copier);

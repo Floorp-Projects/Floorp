@@ -33,11 +33,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#else
-#include "nsIURLGroup.h"
-#endif // NECKO
 #include "nsIPluginInstanceOwner.h"
 #include "nsIHTMLContent.h"
 #include "nsISupportsArray.h"
@@ -637,22 +633,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       if((rv = GetBaseURL(baseURL)) != NS_OK)
 	return rv;
 
-#ifndef NECKO
-        nsILoadGroup* group = nsnull;
-        if (nsnull != baseURL)
-          baseURL->GetLoadGroup(&group);
-#endif
-
         nsAutoString codeBase;
         if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase) &&
            !bJavaPluginClsid) 
 		    {
           nsIURI* codeBaseURL = nsnull;
-#ifdef NECKO
           rv = NS_NewURI(&codeBaseURL, codeBase, baseURL);
-#else
-          rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
-#endif
           if(rv == NS_OK)
           {
             NS_IF_RELEASE(baseURL);
@@ -660,27 +646,15 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           }
         }
 
-#ifndef NECKO   // unused urlxxx?
-        const char* urlxxx;
-        (void)baseURL->GetSpec(&urlxxx);
-#endif
-
         // Create an absolute URL
         if(bJavaPluginClsid) {
-#ifdef NECKO
           rv = NS_NewURI(&fullURL, classid, baseURL);
-#else
-          rv = NS_NewURL(&fullURL, classid, baseURL, nsnull, group);
-#endif
         }
         else
         {
           fullURL = baseURL;
           NS_IF_ADDREF(fullURL);
         }
-#ifndef NECKO
-        NS_IF_RELEASE(group);
-#endif
 
         // get the nsIPluginHost interface
         if((rv = aPresContext.GetContainer(&container)) != NS_OK)
@@ -716,22 +690,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	        if((rv = GetBaseURL(baseURL)) != NS_OK)
 	          return rv;
 
-#ifndef NECKO
-	        nsILoadGroup* group = nsnull;
-          if(nsnull != baseURL)
-            baseURL->GetLoadGroup(&group);
-#endif
-
 	        // if we have a codebase, add it to the fullURL
 	        nsAutoString codeBase;
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
 	        {
             nsIURI* codeBaseURL = nsnull;
-#ifdef NECKO
             rv = NS_NewURI(&fullURL, codeBase, baseURL);
-#else
-            rv = NS_NewURL(&fullURL, codeBase, baseURL, nsnull, group);
-#endif
             if(rv == NS_OK)
             {
               NS_IF_RELEASE(baseURL);
@@ -741,10 +705,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	          fullURL = baseURL;
               NS_IF_ADDREF(fullURL);
 	      }
-
-#ifndef NECKO
-	        NS_IF_RELEASE(group);
-#endif
 
           // get the nsIPluginHost interface
           if((rv = aPresContext.GetContainer(&container)) != NS_OK)
@@ -827,21 +787,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) 
 	    {
-#ifndef NECKO
-        nsILoadGroup* group = nsnull;
-        if (nsnull != baseURL)
-          baseURL->GetLoadGroup(&group);
-#endif
 
         nsAutoString codeBase;
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
 		    {
           nsIURI* codeBaseURL = nsnull;
-#ifdef NECKO
           rv = NS_NewURI(&codeBaseURL, codeBase, baseURL);
-#else
-          rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
-#endif
           if(rv == NS_OK)
           {
             NS_IF_RELEASE(baseURL);
@@ -850,12 +801,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         }
 
         // Create an absolute URL
-#ifdef NECKO
         rv = NS_NewURI(&fullURL, src, baseURL);
-#else
-        rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
-        NS_IF_RELEASE(group);
-#endif
       }
 
       rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
@@ -876,33 +822,13 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       //stream in the object source if there is one...
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) 
 	    {
-#ifdef NECKO
         // Create an absolute URL
         rv = NS_NewURI(&fullURL, src, baseURL);
-#else
-        nsILoadGroup* group = nsnull;
-        if (nsnull != baseURL)
-          baseURL->GetLoadGroup(&group);
-
-        // Create an absolute URL
-        rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
-        NS_IF_RELEASE(group);
-#endif
 	    }
 	    else if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) 
 	    {
-#ifdef NECKO
         // Create an absolute URL
         rv = NS_NewURI(&fullURL, src, baseURL);
-#else
-        nsILoadGroup* group = nsnull;
-        if (nsnull != baseURL)
-          baseURL->GetLoadGroup(&group);
-
-        // Create an absolute URL
-        rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
-        NS_IF_RELEASE(group);
-#endif
 	    } else {// we didn't find a src or data param, so just set the url to the base
 		  fullURL = baseURL;
 		  NS_IF_ADDREF(fullURL);
@@ -1789,11 +1715,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           mOwner->GetFullURL(baseURL);
 
           // Create an absolute URL
-#ifndef NECKO
-          rv = NS_MakeAbsoluteURL(baseURL, nsString(), uniurl, fullurl);
-#else
           rv = NS_MakeAbsoluteURI(uniurl, baseURL, fullurl);
-#endif // NECKO
 
           NS_IF_RELEASE(baseURL);
 
@@ -2104,17 +2026,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 
     nsCOMPtr<nsIURI> docURL( dont_AddRef(doc->GetDocumentURL()) );
 
-#ifdef NECKO
     rv = docURL->GetSpec(&mDocumentBase);
-#else
-    const char* spec;
-    rv = docURL->GetSpec(&spec);
-    if (rv == NS_OK) {
-      mDocumentBase = nsCRT::strdup(spec);
-      if (*result == nsnull)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-#endif
   }
   if (rv == NS_OK)
     *result = mDocumentBase;

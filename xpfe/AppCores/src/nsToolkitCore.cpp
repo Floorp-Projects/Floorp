@@ -28,11 +28,9 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
@@ -150,14 +148,10 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   window = nsnull;
 
   nsCOMPtr<nsIURI> urlObj;
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-#endif // NECKO
   if (NS_FAILED(rv))
     return rv;
 
@@ -185,16 +179,10 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIURI> urlObj;
 
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-#endif // NECKO
-  if (NS_FAILED(rv))
-    return rv;
 
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
@@ -300,16 +288,10 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   nsresult           rv;
 
   nsCOMPtr<nsIURI> urlObj;
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-#endif // NECKO
-  if (NS_FAILED(rv))
-    return rv;
 
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
@@ -335,16 +317,10 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsresult           rv;
 
   nsCOMPtr<nsIURI> urlObj;
-#ifndef NECKO
-  rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   rv = service->NewURI(nsCAutoString(aUrl), nsnull, getter_AddRefs(urlObj));
   if (NS_FAILED(rv)) return rv;
-#endif // NECKO
-  if (NS_FAILED(rv))
-    return rv;
 
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))

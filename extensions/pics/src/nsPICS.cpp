@@ -26,10 +26,8 @@
 #include "nsIPICS.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
 #include "nsCOMPtr.h"
-#endif // NECKO
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsIHTMLContentSink.h"
@@ -147,7 +145,6 @@ public:
   virtual ~nsPICS(void);
 
    // nsIDocumentLoaderObserver
-#ifdef NECKO
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus, nsIDocumentLoaderObserver* aObserver);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer);
@@ -155,29 +152,6 @@ public:
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );
-#else
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                 nsIURI* aURL, 
-                                 const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, 
-                               PRInt32 aStatus,
-                               nsIDocumentLoaderObserver * aObserver);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-                            nsIURI* aURL, const char* aContentType, 
-                            nsIContentViewer* aViewer);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, PRUint32 aProgress, 
-                               PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
-                             nsIURI* aURL, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
-                          nsIURI* aURL, PRInt32 aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                      nsIURI* aURL,
-                                      const char *aContentType,
-                                      const char *aCommand );
-#endif
 //  NS_IMETHOD OnConnectionsComplete();
 
 
@@ -769,17 +743,10 @@ nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader, 
                           nsIChannel* channel, 
                           nsresult aStatus, 
                           nsIDocumentLoaderObserver* aObserver)
-#else
-nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                              nsIURI* aURL, 
-                              PRInt32 aStatus,
-                              nsIDocumentLoaderObserver * aObserver)
-#endif
 {
   nsresult rv = NS_OK;
 
@@ -805,20 +772,12 @@ nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
                        nsIChannel* channel, 
                        nsIContentViewer* aViewer)
-#else
-nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, 
-                           nsIURI* aURL, 
-                           const char* aContentType, 
-                           nsIContentViewer* aViewer)
-#endif
 {
   nsresult rv = NS_OK;
 
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
@@ -826,7 +785,6 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
   char* aContentType;
   rv = channel->GetContentType(&aContentType);
   if (NS_FAILED(rv)) return rv;
-#endif
 
   nsIContentViewerContainer *cont;
 
@@ -893,24 +851,15 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
   
   }
   done:
-#ifdef NECKO
   nsCRT::free(aContentType);
-#endif
   return rv;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader, 
                           nsIChannel* channel, 
                           PRUint32 aProgress, 
                           PRUint32 aProgressMax)
-#else
-nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                              nsIURI* aURL, 
-                              PRUint32 aProgress, 
-                              PRUint32 aProgressMax)
-#endif
 {
   if(!mPICSRatingsEnabled)
     return NS_OK;
@@ -918,15 +867,9 @@ nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader, 
                         nsIChannel* channel, 
                         nsString& aMsg)
-#else
-nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                            nsIURI* aURL, 
-                            nsString& aMsg)
-#endif
 {
   if(!mPICSRatingsEnabled)
     return NS_OK;
@@ -934,34 +877,20 @@ nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsPICS::OnEndURLLoad(nsIDocumentLoader* loader, 
                      nsIChannel* channel, 
                      nsresult aStatus)
-#else
-nsPICS::OnEndURLLoad(nsIDocumentLoader* loader, 
-                         nsIURI* aURL, 
-                         PRInt32 aStatus)
-#endif
 {
   nsresult rv;
 
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif
 
   nsIContentViewerContainer *cont;
-#ifdef NECKO
   char* uProtocol;
   char* uHost;
   char* uFile;
-#else
-  const char* uProtocol;
-  const char* uHost;
-  const char* uFile;
-#endif
   nsIURI* rootURL;
   nsIWebShellServices  *ws;
 
@@ -999,13 +928,8 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
         PICS_URLData* urlData = (PICS_URLData*)currentURLList->ElementAt(i);
         if(urlData == nsnull)
           continue;
-#ifdef NECKO
         char* spec1;
         char* spec2;
-#else
-        const char* spec1;
-        const char* spec2;
-#endif
         
         if(aURL == nsnull)
           continue;
@@ -1015,17 +939,13 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
           continue;
 
         if(urlData->url == nsnull) {
-#ifdef NECKO
           nsCRT::free(spec1);
-#endif
           continue;
         }
         (urlData->url)->GetSpec(&spec2);
 
         if(spec2 == nsnull) {
-#ifdef NECKO
           nsCRT::free(spec1);
-#endif
           continue;
         }
 
@@ -1033,15 +953,9 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
           if(!urlData->notified) {
             currentURLList->RemoveElementAt(i);
             if (nsnull != aURL) {
-#ifdef NECKO
               aURL->GetScheme(&uProtocol);
               aURL->GetHost(&uHost);
               aURL->GetPath(&uFile);
-#else
-              aURL->GetProtocol(&uProtocol);
-              aURL->GetHost(&uHost);
-              aURL->GetFile(&uFile);
-#endif
               if ((0 != PL_strcmp("/", uFile)) && (0 != PL_strcmp("/index.html", uFile))) {
                 if (0 != PL_strcmp("file", uProtocol)) {
                   nsAutoString protocolStr(uProtocol);
@@ -1051,26 +965,18 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
                   nsAutoString rootStr = protocolStr + "://" + hostStr + "/";
                 
                   // XXX if we're no longer calling GetRootURL, these calls can go away
-#ifndef NECKO
-                  // rv = NS_NewURL(&rootURL, rootStr);
-#else
                   // rv = NS_NewURI(&rootURL, rootStr);
-#endif // NECKO
                //   rv = GetRootURL(rootURL);
                 }
               }
-#ifdef NECKO
               nsCRT::free(uProtocol);
               nsCRT::free(uHost);
               nsCRT::free(uFile);
-#endif
             }
           }
         }
-#ifdef NECKO
         nsCRT::free(spec1);
         nsCRT::free(spec2);
-#endif
       }
     }
   }
@@ -1080,17 +986,10 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsPICS::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                  nsIChannel* channel, 
                                  const char *aContentType,
                                  const char *aCommand )
-#else
-nsPICS::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                     nsIURI* aURL,
-                                     const char *aContentType,
-                                     const char *aCommand )
-#endif
 {
     // If we have a doc loader observer, let it respond to this.
 //    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, aURL, aContentType, aCommand )
@@ -1564,14 +1463,10 @@ nsPICS::GetRootURL(nsIURI* aURL)
         if (NS_FAILED(rv = mParser->QueryInterface(kIStreamListenerIID, (void**) &lsnr)))
             return rv;
         mParser->Parse(aURL);
-#ifdef NECKO
         rv = NS_OpenURI(lsnr, 
                         nsnull,     // null context 
                         aURL,       // nsIURI
                         nsnull);    // null load group
-#else
-        rv = NS_OpenURL(aURL, lsnr);
-#endif
 	  }
 	  NS_RELEASE(sink);
 	}

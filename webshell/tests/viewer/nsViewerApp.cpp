@@ -33,9 +33,6 @@
 #include "nsIFormProcessor.h"
 
 
-#ifndef NECKO
-#include "nsINetService.h"
-#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -191,13 +188,6 @@ nsViewerApp::Destroy()
     rv = metacharset->End();
   }
   
-#ifndef NECKO
-  // Only shutdown if Initialize has been called...
-  if (PR_TRUE == mIsInitialized) {
-    NS_ShutdownINetService();
-    mIsInitialized = PR_FALSE;
-  }
-#endif // NECKO
   if (nsnull != mPrefs) {
     mPrefs->ShutDown();
     NS_RELEASE(mPrefs);
@@ -389,14 +379,6 @@ nsViewerApp::Initialize(int argc, char** argv)
 	  }
   }
 #endif
-
-  // Setup networking library
-#ifndef NECKO
-  rv = NS_InitINetService();
-  if (NS_OK != rv) {
-    return rv;
-  }
-#endif // NECKO
 
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);
@@ -1113,11 +1095,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-#ifdef NECKO
         char * str;
-#else
-        const char * str;
-#endif
         nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
         nsresult rv = uri->GetSpec(&str);
         if (NS_FAILED(rv)) {
@@ -1133,9 +1111,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
           PL_strdup(gVerifyDir),
           yieldProc);
 #endif
-#ifdef NECKO
         nsCRT::free(str);
-#endif
       }
     }
   }

@@ -33,12 +33,10 @@
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsFileSpec.h"
 #include "nsIFactory.h"
 #include "pratom.h"

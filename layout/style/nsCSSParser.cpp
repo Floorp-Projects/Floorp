@@ -31,12 +31,8 @@
 #include "nsICSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
 #include "nsCOMPtr.h"
-#else
-#include "nsIURLGroup.h"
-#endif // NECKO
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
@@ -849,20 +845,8 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     // XXX probably need a way to encode unicode junk for the part of
     // the url that follows a "?"
     nsIURI* url;
-#ifdef NECKO
     // XXX need to have nsILoadGroup passed in here
     aErrorCode = NS_NewURI(&url, aURLSpec, mURL/*, group*/);
-#else
-    nsILoadGroup* loadGroup = nsnull;
-    mURL->GetLoadGroup(&loadGroup);
-    if (loadGroup) {
-      aErrorCode = loadGroup->CreateURL(&url, mURL, aURLSpec, nsnull);
-      NS_RELEASE(loadGroup);
-    }
-    else {
-      aErrorCode = NS_NewURL(&url, aURLSpec, mURL);
-    }
-#endif
 
     if (NS_FAILED(aErrorCode)) {
       // import url is bad
@@ -2489,15 +2473,11 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       if (nsnull != mURL) {
         nsAutoString baseURL;
         nsresult rv;
-#ifdef NECKO
         nsCOMPtr<nsIURI> base;
         rv = mURL->Clone(getter_AddRefs(base));
         if (NS_SUCCEEDED(rv)) {
           rv = NS_MakeAbsoluteURI(tk->mIdent, base, absURL);
         }
-#else
-        rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
-#endif // NECKO
         if (NS_FAILED(rv)) {
           absURL = tk->mIdent;
         }

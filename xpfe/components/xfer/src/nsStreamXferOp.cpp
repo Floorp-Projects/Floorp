@@ -25,18 +25,12 @@
 #include "nsIObserver.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#ifndef NECKO
-#include "nsIServiceManager.h"
-#include "nsINetService.h"
-static NS_DEFINE_IID( kNetServiceCID,      NS_NETSERVICE_CID );
-#else
 #include "nsNeckoUtil.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIEventQueueService.h"
 #include "nsIBufferInputStream.h"
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-#endif // NECKO
 #include "jsapi.h"
 #include "prprf.h"
 
@@ -131,29 +125,6 @@ nsStreamXferOp::Start( void ) {
         if ( mOutput ) {
             if ( !mOutput->failed() ) {
                 nsIURI *url = 0;
-#ifndef NECKO
-                rv = NS_NewURL( &url, mSource.GetBuffer() );
-                if ( NS_SUCCEEDED( rv ) && url ) {
-                    nsINetService *inet = 0;
-                    nsresult rv = nsServiceManager::GetService( kNetServiceCID,
-                                                                nsCOMTypeInfo<nsINetService>::GetIID(),
-                                                                (nsISupports**)&inet );
-                    if ( NS_SUCCEEDED( rv ) && inet ) {
-                        rv = inet->OpenStream( url, this );
-                        if ( NS_FAILED( rv ) ) {
-                            DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenStream failed, rv=0x%08X\n",
-                                          (char*)__FILE__, (int)__LINE__, (int)rv );
-                        }
-                        nsServiceManager::ReleaseService( kNetServiceCID, inet );
-                    } else {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: Error getting Net Service, rv=0x%X\n",
-                                      __FILE__, (int)__LINE__, (int)rv );
-                    }
-                } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: NS_NewURL failed, rv=0x%X\n",
-                                  __FILE__, (int)__LINE__, (int)rv );
-                }
-#else
                 rv = NS_NewURI( &url, mSource.GetBuffer() );
                 if ( NS_SUCCEEDED( rv ) && url ) {
                     // XXX: Should there be a LoadGroup?
@@ -169,7 +140,6 @@ nsStreamXferOp::Start( void ) {
                     DEBUG_PRINTF( PR_STDOUT, "%s %d: NS_NewURI failed, rv=0x%X\n",
                                   __FILE__, (int)__LINE__, (int)rv );
                 }
-#endif // NECKO
         
             } else {
                 DEBUG_PRINTF( PR_STDOUT, "%s %d: error opening output file, rv=0x%08X\n",
@@ -203,17 +173,11 @@ nsStreamXferOp::Stop( void ) {
 
 // Process the data by reading it and then writing it to the output file.
 NS_IMETHODIMP
-#ifdef NECKO
 nsStreamXferOp::OnDataAvailable( nsIChannel     *channel,
                                  nsISupports    *aContext,
                                  nsIInputStream *aIStream,
                                  PRUint32        offset,
                                  PRUint32        aLength ) {
-#else
-nsStreamXferOp::OnDataAvailable( nsIURI         *aURL,
-                                 nsIInputStream *aIStream,
-                                 PRUint32        aLength ) {
-#endif
     nsresult rv = NS_OK;
 
     // Check for download cancelled by user.
@@ -266,11 +230,7 @@ nsStreamXferOp::OnDataAvailable( nsIURI         *aURL,
 
 // We aren't interested in this notification; simply return NS_OK.
 NS_IMETHODIMP
-#ifdef NECKO
 nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
-#else
-nsStreamXferOp::OnStartRequest(nsIURI* aURL, const char *aContentType) {
-#endif
     nsresult rv = NS_OK;
 
     return rv;
@@ -282,12 +242,8 @@ nsStreamXferOp::OnStartRequest(nsIURI* aURL, const char *aContentType) {
 // value is the number of bytes processed, the second the total number
 // expected.
 NS_IMETHODIMP
-#ifdef NECKO
 nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
                                      PRUint32 aProgress, PRUint32 aProgressMax) {
-#else
-nsStreamXferOp::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) {
-#endif
     nsresult rv = NS_OK;
 
     if ( mObserver ) {
@@ -309,14 +265,9 @@ nsStreamXferOp::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressM
 // "subject", the topic is the component progid (plus ";onStatus"), and
 // the data is the status text.
 NS_IMETHODIMP
-#ifdef NECKO
 nsStreamXferOp::OnStatus( nsIChannel      *channel,
                           nsISupports     *aContext,
                           const PRUnichar *aMsg ) {
-#else
-nsStreamXferOp::OnStatus( nsIURI          *aURL,
-                          const PRUnichar *aMsg ) {
-#endif
     nsresult rv = NS_OK;
 
     if ( mObserver ) {
@@ -336,16 +287,10 @@ nsStreamXferOp::OnStatus( nsIURI          *aURL,
 // Close the output stream. In addition, notify our observer
 // (if we have one).
 NS_IMETHODIMP
-#ifdef NECKO
 nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
                                nsISupports     *aContext,
                                nsresult         aStatus,
                                const PRUnichar *aMsg ) {
-#else
-nsStreamXferOp::OnStopRequest( nsIURI          *aURL,
-                               nsresult         aStatus,
-                               const PRUnichar *aMsg ) {
-#endif
     nsresult rv = NS_OK;
 
     // Close the output file.
@@ -441,13 +386,11 @@ nsStreamXferOp::QueryInterface( REFNSIID aIID, void** aInstancePtr ) {
     // Always NULL result, in case of failure
     *aInstancePtr = NULL;
     
-    #ifdef NECKO
     if (aIID.Equals(nsCOMTypeInfo<nsIProgressEventSink>::GetIID())) {
         *aInstancePtr = (void*) ((nsIProgressEventSink*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    #endif
     if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (void*) ((nsIStreamObserver*)this);
         NS_ADDREF_THIS();

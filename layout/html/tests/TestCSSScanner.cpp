@@ -18,13 +18,11 @@
 #include <stdio.h>
 #include "nsCSSScanner.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"
@@ -40,9 +38,6 @@ int main(int argc, char** argv)
   char* urlName = argv[1];
   nsIURI* url;
   nsresult rv;
-#ifndef NECKO
-  rv = NS_NewURL(&url, urlName);
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return -1;
 
@@ -52,7 +47,6 @@ int main(int argc, char** argv)
 
   rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
   NS_RELEASE(uri);
-#endif // NECKO
   if (NS_OK != rv) {
     printf("invalid URL: '%s'\n", urlName);
     return -1;
@@ -60,11 +54,7 @@ int main(int argc, char** argv)
 
   // Get an input stream from the url
   nsIInputStream* in;
-#ifndef NECKO
-  rv = NS_OpenURL(url, &in);
-#else
   rv = NS_OpenURI(&in, url);
-#endif // NECKO
   if (rv != NS_OK) {
     printf("open of url('%s') failed: error=%x\n", urlName, rv);
     return -1;

@@ -26,33 +26,14 @@
 class nsIWebShell;
 class nsIWebShellWindow;
 class nsIDOMElement;
-#ifdef NECKO
 class nsNetSupportDialog  : public nsIPrompt, public nsIXULWindowCallbacks , public nsIDOMMouseListener
-#else
-class nsNetSupportDialog  : public nsINetSupportDialogService, public nsIXULWindowCallbacks , public nsIDOMMouseListener
-#endif
 {
 public:
   nsNetSupportDialog();
   virtual ~nsNetSupportDialog();
 
-#ifdef NECKO
   // nsIPrompt
   NS_DECL_NSIPROMPT
-#else
-	NS_IMETHOD 	Alert( const nsString &aText );
-  NS_IMETHOD 	Confirm( const nsString &aText,PRInt32* returnValue );
-	NS_IMETHOD	ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue );
-  NS_IMETHOD 	Prompt(	const nsString &aText,
-                      const nsString &aDefault,
-                      nsString &aResult,PRInt32* returnValue );
-
-  NS_IMETHOD 	PromptUserAndPassword(  const nsString &aText,
-                                      nsString &aUser,
-                                      nsString &aPassword, PRInt32* returnValue );
-
-  NS_IMETHOD PromptPassword( 	const nsString &aText, nsString &aPassword,PRInt32* returnValue );
-#endif
 
   // COM
 	NS_DECL_ISUPPORTS

@@ -42,14 +42,9 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
-#else
-#include "nsIPostToServer.h"  
-#include "nsIURLGroup.h"
-#endif // NECKO
 #include "nsIContentViewerContainer.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellServices.h"
@@ -61,12 +56,8 @@
 #include "nsICodebasePrincipal.h"
 #include "nsIScriptSecurityManager.h"
 
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsICookieService.h"
-#endif // NECKO
 
 #include "nsIParserService.h"
 #include "nsIServiceManager.h"
@@ -100,9 +91,7 @@ static PRBool gPlugDetector = PR_FALSE;
 #include "net.h"
 #endif
 
-#ifdef NECKO
 #include "prmem.h"
-#endif
 
 // Find/Serach Includes
 const PRInt32 kForward  = 0;
@@ -125,14 +114,9 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
 
-#ifndef NECKO
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-#endif // NECKO
 
 
 
@@ -312,20 +296,12 @@ nsrefcnt nsHTMLDocument::Release()
 }
 
 nsresult 
-#ifdef NECKO
 nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
-#else
-nsHTMLDocument::Reset(nsIURI *aURL)
-#endif
 {
-#ifdef NECKO
   nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
   nsCOMPtr<nsIURI> aURL;
   result = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(result)) return result;
-#else
-  nsresult result = nsDocument::Reset(aURL);
-#endif
   if (NS_FAILED(result)) {
     return result;
   }
@@ -397,21 +373,13 @@ nsHTMLDocument::CreateShell(nsIPresContext* aContext,
 
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
-#ifdef NECKO
                                   nsIChannel* aChannel,
                                   nsILoadGroup* aLoadGroup,
-#else
-                                  nsIURI *aURL, 
-#endif
                                   nsIContentViewerContainer* aContainer,
                                   nsIStreamListener **aDocListener)
 {
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
-#ifdef NECKO
                                               aChannel, aLoadGroup,
-#else
-                                              aURL, 
-#endif
                                               aContainer, 
                                               aDocListener);
   if (NS_FAILED(rv)) {
@@ -422,7 +390,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
   nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
@@ -498,7 +465,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // could just be that the response header wasn't found.
     rv = NS_OK;
   }
-#endif
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -827,21 +793,8 @@ nsHTMLDocument:: SetBaseURL(const nsString& aURLSpec)
 
   NS_IF_RELEASE(mBaseURL);
   if (0 < aURLSpec.Length()) {
-#ifndef NECKO
-    nsILoadGroup* LoadGroup = nsnull;
-    (void)mDocumentURL->GetLoadGroup(&LoadGroup);
-    if (LoadGroup) {
-      result = LoadGroup->CreateURL(&mBaseURL, mDocumentURL, aURLSpec, nsnull);
-      NS_RELEASE(LoadGroup);
-    }
-    else
-#endif
     {
-#ifndef NECKO
-        result = NS_NewURL(&mBaseURL, aURLSpec, mDocumentURL);
-#else
         result = NS_NewURI(&mBaseURL, aURLSpec, mDocumentURL);
-#endif // NECKO
     }
   }
   return result;
@@ -1416,19 +1369,10 @@ NS_IMETHODIMP
 nsHTMLDocument::GetURL(nsString& aURL)
 {
   if (nsnull != mDocumentURL) {
-#ifdef NECKO
     char* str;
     mDocumentURL->GetSpec(&str);
-#else
-    PRUnichar* str;
-    mDocumentURL->ToString(&str);
-#endif
     aURL = str;
-#ifdef NECKO
     nsCRT::free(str);
-#else
-    delete[] str;
-#endif
   }
   return NS_OK;
 }
@@ -1591,41 +1535,23 @@ nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 NS_IMETHODIMP    
 nsHTMLDocument::GetCookie(nsString& aCookie)
 {
-#ifndef NECKO
-  nsresult result = NS_OK;
-  NS_WITH_SERVICE(nsINetService, service, kNetServiceCID, &result);
-  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    result = service->GetCookieString(mDocumentURL, aCookie);
-  }
-  return result;
-#else
   nsresult result = NS_OK;
   NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
   if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
     result = service->GetCookieString(mDocumentURL, aCookie);
   }
   return result;
-#endif // NECKO
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::SetCookie(const nsString& aCookie)
 {
-#ifndef NECKO
-  nsresult result = NS_OK;
-  NS_WITH_SERVICE(nsINetService, service, kNetServiceCID, &result);
-  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    result = service->SetCookieString(mDocumentURL, aCookie);
-  }
-  return result;
-#else
   nsresult result = NS_OK;
   NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
   if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
     result = service->SetCookieString(mDocumentURL, aCookie);
   }
   return result;
-#endif // NECKO
 }
 
 nsresult
@@ -1676,7 +1602,6 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
-#ifdef NECKO
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
@@ -1684,9 +1609,6 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     if (NS_FAILED(result)) return result;
     result = Reset(channel, group);
     if (NS_FAILED(result)) return result;
-#else
-    result = Reset(aSourceURL);
-#endif
     if (NS_OK == result) {
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -1739,11 +1661,7 @@ nsHTMLDocument::Open()
 
   // XXX For the non-script Open case, we have to make
   // up a URL.
-#ifdef NECKO
   result = NS_NewURI(&sourceURL, "about:blank");
-#else
-  result = NS_NewURL(&sourceURL, "about:blank");
-#endif // NECKO
 
   if (NS_SUCCEEDED(result)) {
     result = OpenCommon(sourceURL);
@@ -1764,11 +1682,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
   result = GetSourceDocumentURL(cx, &sourceURL);
   // Recover if we had a problem obtaining the source URL
   if (nsnull == sourceURL) {
-#ifndef NECKO
-      result = NS_NewURL(&sourceURL, "about:blank");
-#else
       result = NS_NewURI(&sourceURL, "about:blank");
-#endif // NECKO
   }
 
   if (NS_SUCCEEDED(result)) {

@@ -21,12 +21,10 @@
 #include "nsIParser.h"
 #include "nsString.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 class nsIDocument;
@@ -337,9 +335,6 @@ void RobotSink::ProcessLink(const nsString& aLink)
   if (nsnull != docURL) {
     nsIURI* absurl;
     nsresult rv;
-#ifndef NECKO
-    rv = NS_NewURL(&absurl, aLink, docURL);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return;
 
@@ -357,22 +352,13 @@ void RobotSink::ProcessLink(const nsString& aLink)
 
     rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&absurl);
     NS_RELEASE(uri);
-#endif // NECKO
 
     if (NS_OK == rv) {
       absURLSpec.Truncate();
-#ifdef NECKO
       char* str;
       absurl->GetSpec(&str);
       absURLSpec = str;
       nsCRT::free(str);
-#else
-      PRUnichar* str;
-      absurl->ToString(&str);
-      absURLSpec = str;
-      NS_RELEASE(absurl);
-      delete str;
-#endif
     }
   }
 

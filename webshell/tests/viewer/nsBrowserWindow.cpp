@@ -96,13 +96,7 @@
 
 #ifdef CookieManagement
 
-#ifndef NECKO
-#include "nsINetService.h"
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
 #include "nsIURL.h"
-#endif // NECKO
 
 #endif
 #include "nsIIOService.h"
@@ -686,9 +680,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURI * url;
-#ifndef NECKO
-    res = NS_NewURL(&url, WALLET_EDITOR_URL);
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
     if (NS_FAILED(res)) return nsEventStatus_eIgnore;
 
@@ -698,7 +689,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
     res = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
-#endif // NECKO
     if (!NS_FAILED(res)) {
 //      res = walletservice->WALLET_PreEdit(url);
       NS_RELEASE(walletservice);
@@ -714,16 +704,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 #if defined(CookieManagement)
   case PRVCY_DISPLAY_COOKIES:
   {
-#ifndef NECKO
-      nsINetService *netservice;
-      res = nsServiceManager::GetService(kNetServiceCID,
-                                         kINetServiceIID,
-                                         (nsISupports **)&netservice);
-      if ((NS_OK == res) && (nsnull != netservice)) {
-//        res = netservice->Cookie_DisplayCookieInfoAsHTML();
-        NS_RELEASE(netservice);
-      }
-#endif // NECKO
       break;
   }
 #endif
@@ -1059,9 +1039,6 @@ GetTitleSuffix(void)
     return suffix;
   }
   nsIURI* url = nsnull;
-#ifndef NECKO
-  ret = NS_NewURL(&url, nsString(VIEWER_BUNDLE_URL));
-#else
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
     if (NS_FAILED(ret)) return ret;
 
@@ -1071,7 +1048,6 @@ GetTitleSuffix(void)
 
     ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
     NS_RELEASE(uri);
-#endif // NECKO
   if (NS_FAILED(ret)) {
     NS_RELEASE(service);
     return suffix;
@@ -2111,39 +2087,22 @@ nsBrowserWindow::HandleUnknownContentType(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserWindow::OnProgress(nsIChannel* channel, nsISupports *ctxt,
                             PRUint32 aProgress, PRUint32 aProgressMax)
-#else
-nsBrowserWindow::OnProgress(nsIURI* aURL,
-                            PRUint32 aProgress,
-                            PRUint32 aProgressMax)
-#endif
 {
   nsresult rv;
 
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif
   
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
-#ifdef NECKO
       char* str;
       aURL->GetSpec(&str);
-#else
-      PRUnichar* str;
-      aURL->ToString(&str);
-#endif
       url = str;
-#ifdef NECKO
       nsCRT::free(str);
-#else
-      delete[] str;
-#endif
     }
     url.Append(": progress ");
     url.Append(aProgress, 10);
@@ -2159,11 +2118,7 @@ nsBrowserWindow::OnProgress(nsIURI* aURL,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg)
-#else
-nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-#endif
 {
   if (mStatus) {
     PRUint32 size;

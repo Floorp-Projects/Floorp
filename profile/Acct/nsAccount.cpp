@@ -44,15 +44,9 @@
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#ifndef NECKO
-#include "nsINetService.h"
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-#else
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include <iostream.h>  //BAD DOG -- no biscuit!
@@ -83,11 +77,7 @@ static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 
 
 #ifdef XP_MAC
-#ifdef NECKO
 //#include "nsIPrompt.h"
-#else
-//#include "nsINetSupport.h"
-#endif
 //#include "nsIStreamListener.h"
 #endif
 #include "nsIServiceManager.h"
@@ -351,29 +341,6 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 	nsString Trial = "resource:/res/acct/NCI_Dir/";
 	Trial = Trial + MiddleValue;
 	printf("this is the trial value %s \n", Trial.ToNewCString());
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, 
-                                     kINetServiceIID,
-                                     (nsISupports**) &pNetService);
-  if (NS_FAILED(ret) || (!pNetService)) {
-    printf("cannot get net service\n");
-    return 1;
-  }
-  nsIURI *url = nsnull;
-  ret = pNetService->CreateURL(&url, Trial, nsnull, nsnull,
-    nsnull);
-  if (NS_FAILED(ret) || (!url)) {
-    printf("cannot create URL\n");
-    return 1;
-  }
-
-  ret = pNetService->OpenBlockingStream(url, nsnull, &in);
-  if (NS_FAILED(ret) || (!in)) {
-    printf("cannot open stream\n");
-    return 1;
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
   if (NS_FAILED(ret)) return ret;
 
@@ -396,8 +363,6 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
   ret = channel->OpenInputStream(0, -1, &in);
   if (NS_FAILED(ret)) return ret;
 
-
-#endif // NECKO
 	nsIPersistentProperties* props = nsnull;
 
   ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
@@ -465,29 +430,6 @@ int nsAccount::GetConfigValues(nsString fileName)
 	nsString Trial = "resource:/res/acct/NCI_Dir/";
 	Trial = Trial + fileName;
 	printf("this is the trial value %s \n", Trial.ToNewCString());
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, 
-                                     kINetServiceIID,
-                                     (nsISupports**) &pNetService);
-  if (NS_FAILED(ret) || (!pNetService)) {
-    printf("cannot get net service\n");
-    return 1;
-  }
-  nsIURI *url = nsnull;
-  ret = pNetService->CreateURL(&url, Trial, nsnull, nsnull,
-    nsnull);
-  if (NS_FAILED(ret) || (!url)) {
-    printf("cannot create URL\n");
-    return 1;
-  }
-
-  ret = pNetService->OpenBlockingStream(url, nsnull, &in);
-  if (NS_FAILED(ret) || (!in)) {
-    printf("cannot open stream\n");
-    return 1;
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
   if (NS_FAILED(ret)) return ret;
 
@@ -510,8 +452,6 @@ int nsAccount::GetConfigValues(nsString fileName)
   ret = channel->OpenInputStream(0, -1, &in);
   if (NS_FAILED(ret)) return ret;
 
-
-#endif // NECKO
 	nsIPersistentProperties* props = nsnull;
 
   ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,

@@ -998,15 +998,9 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 
     FREE_IF_NOT_NULL(ic->fetch_url);
 
-#ifdef NECKO
     if (ic->url){
 	    ic->fetch_url = ic->url->GetAddress();
     }
-#else
-    if((ic->url)&& ic->url->GetAddress()){
-	    ic->fetch_url = PL_strdup(ic->url->GetAddress());
-    }
-#endif
     else{
 	if(ic->url_address) /* check needed because of mkicons.c */
         	ic->fetch_url = PL_strdup(ic->url_address);
@@ -1612,14 +1606,9 @@ IL_StreamCreated(il_container *ic,
 	
     ic->type = nsCRT::strdup(type); //mime string
 	ic->content_length = url->GetContentLength();
-#ifdef NECKO
     char* addr = url->GetAddress();
 	ILTRACE(4,("il: new stream, type %s, %s", ic->type, addr));
     nsCRT::free(addr);
-#else
-    ILTRACE(4,("il: new stream, type %s, %s", ic->type, 
- 			   url->GetAddress()));
-#endif
 	ic->state = IC_STREAM;
 
 #ifndef M12N                    /* XXXM12N Fix me. */

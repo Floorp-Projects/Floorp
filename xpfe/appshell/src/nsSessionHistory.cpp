@@ -1134,11 +1134,7 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsSessionHistory::Reload(nsIWebShell * aPrev, nsLoadFlags aReloadFlags)
-#else
-nsSessionHistory::Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType)
-#endif
 {
 
   // Call goto with the Reload flag set to true

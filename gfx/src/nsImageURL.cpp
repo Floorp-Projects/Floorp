@@ -22,13 +22,8 @@
 #include "ilINetReader.h"
 #include "ilIURL.h"
 #include "nsIURL.h"
-#ifndef NECKO
-#include "nsIURLGroup.h"
-#include "nsILoadAttribs.h"
-#else
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsString.h"
 
 
@@ -42,11 +37,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-#ifdef NECKO
   nsresult Init(const char *aURL);
-#else
-  nsresult Init(const char *aURL, nsILoadGroup* aLoadGroup);
-#endif
 
   virtual void SetReader(ilINetReader *aReader);
 
@@ -54,11 +45,7 @@ public:
 
   virtual int GetContentLength();
 
-#ifdef NECKO
   virtual char* GetAddress();
-#else
-  virtual const char* GetAddress();
-#endif
 
   virtual time_t GetExpires();
 
@@ -70,11 +57,7 @@ public:
   virtual void SetOwnerId(int aOwnderId);
 
 private:
-#ifdef NECKO
   nsIURI *mURL;
-#else
-  nsIURI *mURL;
-#endif
   ilINetReader *mReader;
   PRBool mBackgroundLoad;
 };
@@ -87,25 +70,11 @@ ImageURLImpl::ImageURLImpl(void)
 }
 
 nsresult 
-#ifdef NECKO
 ImageURLImpl::Init(const char *aURL)
-#else
-ImageURLImpl::Init(const char *aURL, nsILoadGroup* aLoadGroup)
-#endif
 {
   nsresult rv;
-#ifndef NECKO
-  if (nsnull != aLoadGroup) {
-    rv = aLoadGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
-  }
-  else
-#endif
   {
-#ifdef NECKO
     rv = NS_NewURI(&mURL, aURL);
-#else
-    rv = NS_NewURL(&mURL, aURL);
-#endif
   }
   return rv;
 }
@@ -184,19 +153,11 @@ ImageURLImpl::GetContentLength()
     return 0;
 }
 
-#ifdef NECKO
 char* 
-#else
-const char* 
-#endif
 ImageURLImpl::GetAddress()
 {
     if (mURL != nsnull) {
-#ifdef NECKO
         char* spec;
-#else
-        const char* spec;
-#endif
         mURL->GetSpec(&spec);
         return spec;
     }
@@ -219,24 +180,8 @@ PRBool ImageURLImpl::GetBackgroundLoad()
 void 
 ImageURLImpl::SetBackgroundLoad(PRBool aBgload)
 {
-#ifdef NECKO
   // XXX help!
   mBackgroundLoad = aBgload;
-#else
-  nsILoadAttribs* loadAttributes;
-
-  if (nsnull != mURL) {
-    nsresult rv = mURL->GetLoadAttribs(&loadAttributes);
-    if (rv == NS_OK && nsnull != loadAttributes) {
-      if (aBgload) {
-        loadAttributes->SetLoadType(nsURLLoadBackground);
-      } else {
-        loadAttributes->SetLoadType(nsURLLoadNormal);
-      }
-      NS_RELEASE(loadAttributes);
-    }
-  }
-#endif
 }
 
 int
@@ -263,11 +208,7 @@ NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL,
   if (url == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-#ifdef NECKO
   nsresult rv = url->Init(aURL);
-#else
-  nsresult rv = url->Init(aURL, aLoadGroup);
-#endif
   if (rv != NS_OK) {
     delete url;
     return rv;

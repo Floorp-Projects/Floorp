@@ -27,11 +27,7 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #ifdef XP_MAC
-#ifdef NECKO
 #include "nsIPrompt.h"
-#else
-#include "nsINetSupport.h"
-#endif
 #include "nsIStreamListener.h"
 #endif /* XP_MAC */
 #include "nsIServiceManager.h"

@@ -1290,11 +1290,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-#ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                     nsURLReloadType aType=nsURLReload,
-#endif
                      const PRUint32 aLocalIP=0) = 0;
 */
 	return res;
@@ -1346,11 +1342,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	}
 
 	// Turn the IE refresh type into the nearest NG equivalent
-#ifdef NECKO
 	nsLoadFlags type = nsIChannel::LOAD_NORMAL;
-#else
-	nsURLReloadType type = nsURLReload;
-#endif
 	switch (iRefreshLevel & OLECMDIDF_REFRESH_LEVELMASK)
 	{
 	case OLECMDIDF_REFRESH_NORMAL:
@@ -1358,18 +1350,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	case OLECMDIDF_REFRESH_CONTINUE:
 	case OLECMDIDF_REFRESH_NO_CACHE:
 	case OLECMDIDF_REFRESH_RELOAD:
-#ifdef NECKO
 	    type = nsIChannel::LOAD_NORMAL;
-#else
-		type = nsURLReload;
-#endif
 		break;
 	case OLECMDIDF_REFRESH_COMPLETELY:
-#ifdef NECKO
         type = nsIHTTPChannel::BYPASS_CACHE | nsIHTTPChannel::BYPASS_PROXY;
-#else
-		type = nsURLReloadBypassCacheAndProxy;
-#endif
 		break;
 	default:
 		// No idea what refresh type this is supposed to be
