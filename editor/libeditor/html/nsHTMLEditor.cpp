@@ -1511,6 +1511,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  nsAutoRules beginRulesSniffing(this, kOpInsertBreak, nsIEditor::eNext);
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel, handled;
 
