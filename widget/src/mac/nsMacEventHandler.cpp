@@ -94,6 +94,8 @@ nsMacEventDispatchHandler	gEventDispatchHandler;
 
 static nsEventStatus HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
                                           Point inMouseLoc, nsIWidget* inWidget ) ;
+static void ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMouseEvent* outCMEvent);
+static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
 
 #if !TARGET_CARBON
 //
@@ -1150,11 +1152,20 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 			if (checkFocusedWidget != focusedWidget)
 				return result;
 
-			//if (result == PR_FALSE) // continue processing???  talk to Tague about this (key event spec)
-			{
-				InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
-				result = focusedWidget->DispatchWindowEvent(keyEvent);
-			}
+      InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
+
+      // before we dispatch this key, check if it's the contextmenu key.
+      // If so, send a context menu event instead.
+      if ( IsContextMenuKey(keyEvent) ) {
+        nsMouseEvent contextMenuEvent;
+        ConvertKeyEventToContextMenuEvent(&keyEvent, &contextMenuEvent);
+        result = focusedWidget->DispatchWindowEvent(contextMenuEvent);
+        NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
+      }
+      else {
+        result = focusedWidget->DispatchWindowEvent(keyEvent);
+        NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
+      }
 			break;
 		
 		case autoKey:
@@ -1165,6 +1176,45 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 
 	return result;
 }
+
+
+
+//
+// ConvertKeyEventToContextMenuEvent
+//
+// Take a key event and all of its attributes at convert it into
+// a context menu event. We want just about everything (focused
+// widget, etc) but a few things need to bt tweaked.
+//
+static void
+ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMouseEvent* outCMEvent)
+{
+  *(nsInputEvent*)outCMEvent = *(nsInputEvent*)inKeyEvent;
+  
+  outCMEvent->eventStructType = NS_MOUSE_EVENT;
+  outCMEvent->message = NS_CONTEXTMENU_KEY;
+  outCMEvent->isShift = outCMEvent->isControl = outCMEvent->isAlt = outCMEvent->isMeta = PR_FALSE;
+  
+  outCMEvent->clickCount = 0;
+  outCMEvent->acceptActivation = PR_FALSE;
+}
+
+
+//
+// IsContextMenuKey
+//
+// Check if the event should be a context menu event instead. Currently,
+// that is a control-space.
+//
+static inline PRBool
+IsContextMenuKey(const nsKeyEvent& inKeyEvent)
+{
+  enum { kContextMenuKey = ' ' } ;
+
+  return ( inKeyEvent.charCode == kContextMenuKey && inKeyEvent.isControl &&
+            !inKeyEvent.isShift && !inKeyEvent.isMeta && !inKeyEvent.isAlt );
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -1193,10 +1243,22 @@ PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, Event
       if (keyEvent.isShift && keyEvent.charCode <= 'z' && keyEvent.charCode >= 'a') 
         keyEvent.charCode -= 32;
 
-      result = focusedWidget->DispatchWindowEvent(keyEvent);
-      NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
+      // before we dispatch a key, check if it's the context menu key.
+      // If so, send a context menu event instead.
+      if ( IsContextMenuKey(keyEvent) ) {
+        nsMouseEvent contextMenuEvent;
+        ConvertKeyEventToContextMenuEvent(&keyEvent, &contextMenuEvent);
+        result = focusedWidget->DispatchWindowEvent(contextMenuEvent);
+        NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
+      }
+      else {
+        // command / shift keys, etc. only send once
+        result = focusedWidget->DispatchWindowEvent(keyEvent);
+        NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
+      }
     }
-  } else {
+  }
+  else {
     // command / shift keys, etc. only send once
     result = focusedWidget->DispatchWindowEvent(keyEvent);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
