@@ -35,4 +35,5 @@ interface nsINetModRegEntry : nsISupports {
     readonly attribute nsINetNotify      mNotify;
     readonly attribute nsIEventQueue     mEventQ;
     readonly attribute string            mTopic;
+	readonly attribute nsCIDPtr			 mCID;
 };
