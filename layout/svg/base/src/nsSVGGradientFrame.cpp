@@ -166,6 +166,10 @@ nsSVGGradientFrame::GetStopOffset(PRInt32 aIndex, float *aOffset)
   nsCOMPtr<nsIDOMSVGAnimatedNumber> aNum;
   stopElement->GetOffset(getter_AddRefs(aNum));
   aNum->GetBaseVal(aOffset);
+  if (*aOffset < 0.0f)
+    *aOffset = 0.0f;
+  if (*aOffset > 1.0f)
+    *aOffset = 1.0f;
   return NS_OK;
 }
 

@@ -71,10 +71,23 @@ static void
 GDIPlusGetStops(nsISVGGradient *aGrad, Color **aColors, REAL **aPositions,
                 PRUint32 *aStops, PRBool aInvert)
 {
-  aGrad->GetStopCount(aStops);
+  PRUint32 num;
+  aGrad->GetStopCount(&num);
+  *aStops = num;
+
+  float offset;
+  aGrad->GetStopOffset(0, &offset);
+  if (offset != 0.0)
+    *aStops += 1;
+  aGrad->GetStopOffset(num-1, &offset);
+  if (offset != 1.0)
+    *aStops += 1;
+
   *aColors = new Color[*aStops];
   *aPositions = new REAL[*aStops];
-  for (PRUint32 i = 0; i < *aStops; i++) {
+
+  float lastOffset = 0.0f;
+  for (PRUint32 i = 0, idx = 0; i < num; i++) {
     nscolor rgba;
     float offset;
     float opacity;
@@ -82,16 +95,42 @@ GDIPlusGetStops(nsISVGGradient *aGrad, Color **aColors, REAL **aPositions,
     aGrad->GetStopOffset(i, &offset);
     aGrad->GetStopColor(i, &rgba);
     aGrad->GetStopOpacity(i, &opacity);
+    ARGB argb = Color::MakeARGB(BYTE(255*opacity),
+                                NS_GET_R(rgba),
+                                NS_GET_G(rgba),
+                                NS_GET_B(rgba));
+    if (idx == 0 && offset != 0.0) {
+      (*aColors)[idx].SetValue(argb);
+      (*aPositions)[idx] = (REAL)0.0f;
+      idx++;
+    }
 
-#ifdef DEBUG_tor
-    fprintf(stderr, "stop %f %08X opacity %f\n", offset, rgba, opacity);
-#endif
+    if (offset < lastOffset)
+      offset = lastOffset;
 
-    (*aColors)[aInvert ? (*aStops - 1 - i) : i].SetValue(Color::MakeARGB(BYTE(255*opacity),
-									 NS_GET_R(rgba),
-									 NS_GET_G(rgba),
-									 NS_GET_B(rgba)));
-    (*aPositions)[i] = (REAL)offset;
+    (*aColors)[idx].SetValue(argb);
+    (*aPositions)[idx] = (REAL)offset;
+    idx++;
+
+    if (i == num-1 && offset != 1.0) {
+      (*aColors)[idx].SetValue(argb);
+      (*aPositions)[idx] = (REAL)1.0f;
+    }
+  }
+
+  if (aInvert) {
+    for (PRUint32 i=0; i < *aStops / 2; i++) {
+      Color tmpColor;
+      REAL tmpOffset;
+
+      tmpColor = (*aColors)[i];
+      (*aColors)[i] = (*aColors)[*aStops - 1 - i];
+      (*aColors)[*aStops - 1 - i] = tmpColor;
+
+      tmpOffset = (*aPositions)[i];
+      (*aPositions)[i] = 1.0f - (*aPositions)[*aStops - 1 - i];
+      (*aPositions)[*aStops - 1 - i] = 1.0f - tmpOffset;
+    }
   }
 }
 
