@@ -54,6 +54,7 @@
 #include "nsISOAPEncoder.h"
 #include "nsISOAPDecoder.h"
 #include "nsISOAPMessage.h"
+#include "nsSOAPException.h"
 #include "prprf.h"
 #include "prdtoa.h"
 #include "nsReadableUtils.h"
@@ -177,7 +178,7 @@ ns##name##Encoder::~ns##name##Encoder() {}
   SetDecoder(encodingKey, handler); \
 }
 #define REGISTER_SCHEMA_ENCODER(name) REGISTER_ENCODER(name,Schema,nsSOAPUtils::kXSURI)
-#define REGISTER_SOAP_ENCODER(name) REGISTER_ENCODER(name,SOAP,*nsSOAPUtils::kSOAPEncURI[version])
+#define REGISTER_SOAP_ENCODER(name) REGISTER_ENCODER(name,SOAP,nsSOAPUtils::kSOAPEncURI)
 
 #define REGISTER_ENCODERS \
   {\
@@ -202,7 +203,7 @@ ns##name##Encoder::~ns##name##Encoder() {}
   REGISTER_SCHEMA_ENCODER(UnsignedShort)\
   REGISTER_SCHEMA_ENCODER(UnsignedByte)\
 
-nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1():nsSOAPEncoding(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1],
+nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1():nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI11,
                nsnull,
                nsnull)
 {
@@ -210,10 +211,11 @@ nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1():nsSOAPEncoding(*nsSOAPUtils
   PRBool result;
   MapSchemaURI(nsSOAPUtils::kXSURI1999,nsSOAPUtils::kXSURI,PR_TRUE,&result);
   MapSchemaURI(nsSOAPUtils::kXSIURI1999,nsSOAPUtils::kXSIURI,PR_TRUE,&result);
+  MapSchemaURI(nsSOAPUtils::kSOAPEncURI11,nsSOAPUtils::kSOAPEncURI,PR_TRUE,&result);
   REGISTER_ENCODERS
 }
 
-nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2():nsSOAPEncoding(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_2],
+nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2():nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI,
                nsnull,
                nsnull)
 {
@@ -221,6 +223,7 @@ nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2():nsSOAPEncoding(*nsSOAPUtils
   PRBool result;
   MapSchemaURI(nsSOAPUtils::kXSURI1999,nsSOAPUtils::kXSURI,PR_FALSE,&result);
   MapSchemaURI(nsSOAPUtils::kXSIURI1999,nsSOAPUtils::kXSIURI,PR_FALSE,&result);
+  MapSchemaURI(nsSOAPUtils::kSOAPEncURI11,nsSOAPUtils::kSOAPEncURI,PR_FALSE,&result);
   REGISTER_ENCODERS
 }
 
@@ -385,10 +388,10 @@ NS_IMETHODIMP
                            aSchemaType, aAttachments, aDestination,
                            aReturnValue);
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_NO_ENCODER_FOR_TYPE","The default encoder finds no encoder for specific type");
 }
 
-static nsresult GetNativeType(PRUint16 aType, PRUint16 aSOAPVersion, nsAString & aSchemaNamespaceURI, nsAString & aSchemaType)
+static nsresult GetNativeType(PRUint16 aType, nsAString & aSchemaNamespaceURI, nsAString & aSchemaType)
 {
   aSchemaNamespaceURI.Assign(nsSOAPUtils::kXSURI);
   switch (aType) {
@@ -436,7 +439,7 @@ static nsresult GetNativeType(PRUint16 aType, PRUint16 aSOAPVersion, nsAString &
     break;
   case nsIDataType::VTYPE_ARRAY:
     aSchemaType.Assign(kArraySOAPType);
-    aSchemaNamespaceURI.Assign(*nsSOAPUtils::kSOAPEncURI[aSOAPVersion]);
+    aSchemaNamespaceURI.Assign(nsSOAPUtils::kSOAPEncURI);
     break;
   case nsIDataType::VTYPE_VOID:
   case nsIDataType::VTYPE_EMPTY:
@@ -445,7 +448,7 @@ static nsresult GetNativeType(PRUint16 aType, PRUint16 aSOAPVersion, nsAString &
   case nsIDataType::VTYPE_INTERFACE_IS:
   case nsIDataType::VTYPE_INTERFACE:
     aSchemaType.Assign(kStructSOAPType);
-    aSchemaNamespaceURI.Assign(*nsSOAPUtils::kSOAPEncURI[aSOAPVersion]);
+    aSchemaNamespaceURI.Assign(nsSOAPUtils::kSOAPEncURI);
     break;
   default:
     aSchemaType.Assign(kAnySimpleTypeSchemaType);
@@ -490,11 +493,11 @@ NS_IMETHODIMP
     }
     else {
       nativeSchemaType.Assign(kStructSOAPType);
-      nativeSchemaURI.Assign(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion]);
+      nativeSchemaURI.Assign(nsSOAPUtils::kSOAPEncURI);
     }
   }
   else {
-    rc = GetNativeType(typevalue, mSOAPVersion, nativeSchemaURI, nativeSchemaType);
+    rc = GetNativeType(typevalue, nativeSchemaURI, nativeSchemaType);
     if (NS_FAILED(rc))
       return rc;
   }
@@ -526,7 +529,7 @@ NS_IMETHODIMP
                            type, aAttachments, aDestination,
                            aReturnValue);
   }
-  return NS_ERROR_FAILURE;
+  return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_NO_ENCODER_FOR_TYPE","The any type encoder finds no encoder for specific data");
 }
 
 static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag* aPropertyBag, 
@@ -615,7 +618,7 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
             }
           }
           else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
-            rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
+            return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_AMBIGUOUS_ENCODING","Cannot proceed due to ambiguity or error in content model");
           }
           if (NS_FAILED(rc))
             break;
@@ -692,7 +695,7 @@ NS_IMETHODIMP
     }
     if (aName.IsEmpty()) {
       rc = EncodeSimpleValue(aEncoding, kEmpty,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kStructSOAPType, aSchemaType, aDestination,
                              aReturnValue);
     }
@@ -705,7 +708,7 @@ NS_IMETHODIMP
       return rc;
     return EncodeStructParticle(aEncoding, pbptr, modelGroup, aAttachments, *aReturnValue);
   }
-  return NS_ERROR_FAILURE;
+  return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_PROPERTYBAG_REQUIRED","When encoding as a struct, an object with properties is required");
 }
 
 //  AnySimpleType
@@ -727,7 +730,7 @@ NS_IMETHODIMP
     return rc;
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kAnySimpleTypeSchemaType,
                              aSchemaType, aDestination, aReturnValue);
   }
@@ -763,7 +766,8 @@ static nsresult GetArrayType(nsIVariant* aSource, PRUint32 aDimensionCount, PRUi
   if (aDimensionCount > 1) {
     if (type != nsIDataType::VTYPE_INTERFACE_IS
       || !iid.Equals(NS_GET_IID(nsIVariant))) {
-      rc = NS_ERROR_FAILURE;  //  All nested arrays (which is what multi-dimensional arrays are) are variants.
+      rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_OBJECTS","When encoding as an array, an array of array objects is required");
+                                  //  All nested arrays (which is what multi-dimensional arrays are) are variants.
     }
     else {
       nsIVariant** a = NS_STATIC_CAST(nsIVariant**,array);
@@ -810,7 +814,7 @@ static nsresult GetArrayType(nsIVariant* aSource, PRUint32 aDimensionCount, PRUi
     for (i = 0; i < aDimensionCount; i++) {
       tot = tot * aDimensionSizes[i];
       if (tot > 4294967295U) {
-        return NS_ERROR_FAILURE;
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When encoding an object as an array, the items exceeded 4294967295");
       }
     }
   }
@@ -917,7 +921,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
       case nsIDataType::VTYPE_CHAR_STR:
         freeptrs = PR_TRUE;
       default:
-        rc = NS_ERROR_FAILURE;
+        rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_OBJECTS","When encoding as an array, an array of array objects is required");
     }
   } else switch (type) {
     case nsIDataType::VTYPE_INT8:
@@ -1000,7 +1004,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_ARRAY:
-      rc = NS_ERROR_ILLEGAL_VALUE;
+      rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TYPES","When encoding an array, unable to handle array elements");
   }
   if (freeptrs) {
     void** ptrs = NS_STATIC_CAST(void**,array);
@@ -1058,7 +1062,7 @@ NS_IMETHODIMP
   nsAutoString arrayTypeSchemaURI;
   nsAutoString arrayTypeSchemaName;
   if (!schemaArrayType) {
-    rc = GetNativeType(arrayNativeType, mSOAPVersion, arrayTypeSchemaURI, arrayTypeSchemaName);
+    rc = GetNativeType(arrayNativeType, arrayTypeSchemaURI, arrayTypeSchemaName);
     if (NS_FAILED(rc))
       return rc;
     nsCOMPtr < nsISchemaCollection > collection;
@@ -1081,7 +1085,7 @@ NS_IMETHODIMP
   }
   if (aName.IsEmpty()) {        //  Now create the element to hold the array
     rc = EncodeSimpleValue(aEncoding, kEmpty,
-                           *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                           nsSOAPUtils::kSOAPEncURI,
                            kArraySOAPType, aSchemaType, aDestination, aReturnValue);
   } else {
     rc = EncodeSimpleValue(aEncoding, kEmpty,
@@ -1108,7 +1112,7 @@ NS_IMETHODIMP
     }
     value.Append(NS_LITERAL_STRING("]"));
     nsAutoString encURI;
-    rc = aEncoding->GetExternalSchemaURI(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],encURI);
+    rc = aEncoding->GetExternalSchemaURI(nsSOAPUtils::kSOAPEncURI,encURI);
     if (NS_FAILED(rc))
       return rc;
 
@@ -1141,7 +1145,7 @@ NS_IMETHODIMP
     return rc;
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kStringSchemaType,
                              aSchemaType, aDestination, aReturnValue);
   }
@@ -1170,7 +1174,7 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, b ? nsSOAPUtils::kTrueA : nsSOAPUtils::
                              kFalseA,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kBooleanSchemaType, aSchemaType, aDestination,
                              aReturnValue);
   }
@@ -1204,7 +1208,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kDoubleSchemaType,
                              aSchemaType, aDestination, aReturnValue);
   }
@@ -1238,7 +1242,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kFloatSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1271,7 +1275,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kLongSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1304,7 +1308,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kIntSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1337,7 +1341,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kShortSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1370,7 +1374,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kByteSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1403,7 +1407,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kLongSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1436,7 +1440,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kIntSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1469,7 +1473,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kShortSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1502,7 +1506,7 @@ NS_IMETHODIMP
   PR_smprintf_free(ptr);
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(aEncoding, value,
-                             *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+                             nsSOAPUtils::kSOAPEncURI,
                              kByteSchemaType, aSchemaType, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(aEncoding, value,
@@ -1544,7 +1548,7 @@ NS_IMETHODIMP
         if (NS_FAILED(rv))
           return rv;
         if (newencoding) {
-	  return newencoding->Decode(aSource, aSchemaType, aAttachments, _retval);
+          return newencoding->Decode(aSource, aSchemaType, aAttachments, _retval);
         }
       }
     }
@@ -1555,13 +1559,13 @@ NS_IMETHODIMP
   nsAutoString nullstr;
   if (nsSOAPUtils::GetAttribute(aEncoding, aSource, nsSOAPUtils::kXSIURI, kNull, nullstr)) {
     if (nullstr.Equals(nsSOAPUtils::kTrue)
-	     || nullstr.Equals(nsSOAPUtils::kTrueA)) {
+             || nullstr.Equals(nsSOAPUtils::kTrueA)) {
       *_retval = nsnull;
       return NS_OK;
     }
     else if (!(nullstr.Equals(nsSOAPUtils::kFalse)
-	     || nullstr.Equals(nsSOAPUtils::kFalseA)))
-      return NS_ERROR_ILLEGAL_VALUE;
+             || nullstr.Equals(nsSOAPUtils::kFalseA)))
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_NILL_VALUE","The value of the nill attribute must be true or false.");
   }
 
   nsCOMPtr < nsISchemaType > type = aSchemaType;
@@ -1592,14 +1596,20 @@ NS_IMETHODIMP
       rc = element->GetType(getter_AddRefs(subType));
       if (NS_FAILED(rc))
         return rc;
-    } else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {        //  Last-ditch hack to get undeclared types from SOAP namespace
-      if (name.Equals(kArraySOAPType)
-          || name.Equals(kStructSOAPType)) {        //  This should not be needed if schema has these declarations
-        rc = collection->GetType(name, ns, getter_AddRefs(subType));
-      } else {
-        rc = collection->GetType(name,
-                                 nsSOAPUtils::kXSURI,
-                                 getter_AddRefs(subType));
+    } else {
+      nsAutoString internal;
+      rc = aEncoding->GetInternalSchemaURI(ns, internal);
+      if (NS_FAILED(rc))
+        return rc;
+      if (internal.Equals(nsSOAPUtils::kSOAPEncURI)) {        //  Last-ditch hack to get undeclared types from SOAP namespace
+        if (name.Equals(kArraySOAPType)
+            || name.Equals(kStructSOAPType)) {        //  This should not be needed if schema has these declarations
+          rc = collection->GetType(name, internal, getter_AddRefs(subType));
+        } else {
+          rc = collection->GetType(name,
+                                   nsSOAPUtils::kXSURI,
+                                   getter_AddRefs(subType));
+        }
       }
 //        if (NS_FAILED(rc)) return rc;
     }
@@ -1671,7 +1681,7 @@ NS_IMETHODIMP
         }
       } while (lookupType);
       if (type || subType)  //  If the proper subclass relationships didn't exist, then error return.
-        return NS_ERROR_FAILURE;
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_TYPE_SUBCLASS","The type of the element or xsi:type must be a subclass of the required type.");
       type = subsubType;    //  If they did, then we now have a new, better type.
     }
   }
@@ -1689,7 +1699,7 @@ NS_IMETHODIMP
     }
     nsAutoString decodingKey;
     if (!simple) {
-      SOAPEncodingKey(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+      SOAPEncodingKey(nsSOAPUtils::kSOAPEncURI,
                       kStructSOAPType, decodingKey);
     } else {
       SOAPEncodingKey(nsSOAPUtils::kXSURI,
@@ -1704,7 +1714,7 @@ NS_IMETHODIMP
     return decoder->Decode(aEncoding, aSource, type, aAttachments,
                            _retval);
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_NO_DECODER_FOR_TYPE","The default decoder finds no decoder for specific type");
 }
 
 NS_IMETHODIMP
@@ -1727,7 +1737,7 @@ NS_IMETHODIMP
   }
   nsAutoString decodingKey;
   if (!simple) {
-    SOAPEncodingKey(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+    SOAPEncodingKey(nsSOAPUtils::kSOAPEncURI,
                     kStructSOAPType, decodingKey);
   } else {
     SOAPEncodingKey(nsSOAPUtils::kXSURI,
@@ -1743,7 +1753,7 @@ NS_IMETHODIMP
                          aSchemaType, aAttachments, _retval);
     return rc;
   }
-  return NS_ERROR_FAILURE;
+  return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_NO_DECODER_FOR_TYPE","The any type decoder finds no decoder for specific element");
 }
 
 static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* aElement, 
@@ -1867,7 +1877,8 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
               }
             }
             if (mangled && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
-              rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
+              rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_AMBIGUOUS_DECODING","Cannot proceed due to ambiguity or error in content model");
+              //  Error is not considered recoverable due to partially-created output.
             }
             if (NS_FAILED(rc))
               break;
@@ -1908,7 +1919,8 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
               }
             }
             else if (i > 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
-              rc = NS_ERROR_ILLEGAL_VALUE;                  //  Error is not considered recoverable due to partially-created output.
+              rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_AMBIGUOUS_DECODING","Cannot proceed due to ambiguity or error in content model");
+              //  Error is not considered recoverable due to partially-created output.
             }
             if (NS_FAILED(rc))
               break;
@@ -1947,7 +1959,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
     if (NS_FAILED(rc))
       return rc;
     if (!namespaceURI.IsEmpty()) {    //  If we ever figure out what to do with namespaces, get an internal one
-      return NS_ERROR_ILLEGAL_VALUE;  //  We only know how to put local values into structures.
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_GLOBAL_ACCESSOR","Decoded struct contained global accessor, which does not map well into a property name.");
     }
     rc = aEncoding->Decode(child, nsnull, aAttachments, getter_AddRefs(value));
     if (NS_FAILED(rc))
@@ -1990,7 +2002,7 @@ NS_IMETHODIMP
   rc =  DecodeStructParticle(aEncoding, child, modelGroup, aAttachments, mutator, getter_AddRefs(result));
   if (!NS_FAILED(rc)  //  If there were elements left over, then we failed to decode everything.
       && result)
-    rc = NS_ERROR_FAILURE;
+    rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_LEFTOVERS","Decoded struct contained extra items not mentioned in the content model.");
   if (NS_FAILED(rc))
     return rc;
   nsCOMPtr < nsIPropertyBag > bag;
@@ -2254,7 +2266,7 @@ NS_IMETHODIMP
         return rc;
     }
   }
-  if (nsSOAPUtils::GetAttribute(aEncoding, aSource, *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+  if (nsSOAPUtils::GetAttribute(aEncoding, aSource, nsSOAPUtils::kSOAPEncURI,
                                 kSOAPArrayTypeAttribute, value)) {
     nsAutoString dst;
     PRUint32 n = DecodeArrayDimensions(value, dimensionSizes, dst);
@@ -2264,7 +2276,8 @@ NS_IMETHODIMP
         dimensionCount = n;
       }
       else {
-        return NS_ERROR_FAILURE;  //  We cannot get conflicting information from schema and content.
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_WRONG_ARRAY_SIZE","Array declares different number of dimensions from what schema declared.");
+        //  We cannot get conflicting information from schema and content.
       }
     }
     value.Assign(dst);
@@ -2279,13 +2292,14 @@ NS_IMETHODIMP
         }
         tot = tot * next;
         if (tot > 2147483647) {
-          return NS_ERROR_FAILURE;
+          return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","When encoding an object as an array, the items exceeded 2147483647");
         }
       }
       size = (PRInt32)tot;
     }
     else {
-      return NS_ERROR_FAILURE;  //  A dimension count must be part of the arrayType
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_UNDECLARED","Array type did not end with proper array dimensions.");
+      //  A dimension count must be part of the arrayType
     }
 
     //  The array type is either array if ']' or other specific type.
@@ -2294,7 +2308,7 @@ NS_IMETHODIMP
     if (NS_FAILED(rc))
       return rc;
     if (value.Last() ==']') {
-      ns.Assign(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion]);
+      ns.Assign(nsSOAPUtils::kSOAPEncURI);
       name.Assign(kArraySOAPType);
     }
     else {
@@ -2320,7 +2334,7 @@ NS_IMETHODIMP
             break;
           }
           PRUint16 typevalue;
-        rc = lookupType->GetSchemaType(&typevalue);
+          rc = lookupType->GetSchemaType(&typevalue);
           if (NS_FAILED(rc))
             return rc;
           if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
@@ -2344,12 +2358,12 @@ NS_IMETHODIMP
         } while (lookupType);
       }
       if (schemaArrayType)  //  If the proper subclass relationship didn't exist, then error return.
-        return NS_ERROR_FAILURE;
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TYPE","The type of the array must be a subclass of the declared type.");
       schemaArrayType = subtype;    //  If they did, then we now have a new, better type.
     }
   }
   PRUint32 offset;           //  Computing offset trickier, because size may be unspecified.
-  if (nsSOAPUtils::GetAttribute(aEncoding, aSource, *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+  if (nsSOAPUtils::GetAttribute(aEncoding, aSource, nsSOAPUtils::kSOAPEncURI,
                                 kSOAPArrayOffsetAttribute, value)) {
     PRInt32 pos[MAX_ARRAY_DIMENSIONS];
     nsAutoString leftover;
@@ -2359,7 +2373,7 @@ NS_IMETHODIMP
     if (offset == 0        //  We have to understand this or report an error
         || offset != dimensionCount      //  But the offset does not need to be understood
         || !leftover.IsEmpty())
-      return NS_ERROR_ILLEGAL_VALUE;
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_OFFSET","Illegal value given for array offset");
     PRInt32 old0 = dimensionSizes[0];
     if (dimensionSizes[0] == -1) {    //  It is OK to have a offset where dimension 0 is unspecified
        dimensionSizes[0] = 2147483647;
@@ -2368,22 +2382,31 @@ NS_IMETHODIMP
     for (i = 0;;) {
       PRInt64 next = pos[i];
       if (next == -1
-        || next >= dimensionSizes[i])
-        return NS_ERROR_ILLEGAL_VALUE;
+        || next >= dimensionSizes[i]) {
+        rc = NS_ERROR_ILLEGAL_VALUE;
+        break;
+      }
       next = (offset + next);
-      if (next > 2147483647)
-        return NS_ERROR_ILLEGAL_VALUE;
+      if (next > 2147483647) {
+        rc = NS_ERROR_ILLEGAL_VALUE;
+        break;
+      }
       offset = (PRInt32)next;
       if (++i < dimensionCount) {
         next = offset * dimensionSizes[i];
-        if (next > 2147483647)
-          return NS_ERROR_ILLEGAL_VALUE;
+        if (next > 2147483647) {
+          rc = NS_ERROR_ILLEGAL_VALUE;
+          break;
+        }
         offset = (PRInt32)next;
       }
       else {
+        rc = NS_OK;
         break;
       }
     }
+    if (NS_FAILED(rc))
+      return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_OFFSET","Illegal value given for array offset");
     dimensionSizes[0] = old0;
   }
   else {
@@ -2402,7 +2425,7 @@ NS_IMETHODIMP
     PRInt32 next = offset;
     while (child) {
       nsAutoString pos;
-      if (nsSOAPUtils::GetAttribute(aEncoding, aSource, *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+      if (nsSOAPUtils::GetAttribute(aEncoding, aSource, nsSOAPUtils::kSOAPEncURI,
                                     kSOAPArrayPositionAttribute, pos)) {
         nsAutoString leftover;
         PRInt32 inc[MAX_ARRAY_DIMENSIONS];
@@ -2411,7 +2434,7 @@ NS_IMETHODIMP
             || !leftover.IsEmpty()
             || (dimensionCount !=0 
                && dimensionCount != i))
-          return NS_ERROR_ILLEGAL_VALUE;
+          return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_POSITION","Illegal value given for array element position");
         if (dimensionCount == 0) {
           dimensionCount = i;             //  If we never had dimension count before, we do now.
           for (i = dimensionCount; i-- != 0;) {
@@ -2421,7 +2444,7 @@ NS_IMETHODIMP
         for (i = 0; i < dimensionCount; i++) {
           PRInt32 n = inc[i];
           if (n == -1) {  //  Positions must be concrete
-            return NS_ERROR_ILLEGAL_VALUE;
+            return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_POSITION","Illegal value given for array element position");
           }
           if (n >= pp[i])
             pp[i] = n + 1;
@@ -2451,7 +2474,7 @@ NS_IMETHODIMP
       }
       tot = tot * next;
       if (tot > 2147483647) {
-        return NS_ERROR_FAILURE;
+        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_TOO_BIG","More than 2147483647 items found to go in array.");
       }
     }
     size = (PRInt32)tot;  //  At last, we know the dimensions of the array.
@@ -2471,7 +2494,7 @@ NS_IMETHODIMP
       while (child) {\
         nsAutoString pos;\
         PRInt32 p;\
-        if (nsSOAPUtils::GetAttribute(aEncoding, aSource, *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],\
+        if (nsSOAPUtils::GetAttribute(aEncoding, aSource, nsSOAPUtils::kSOAPEncURI,\
                                       kSOAPArrayPositionAttribute, pos)) {\
           PRInt32 p = DecodeArrayPosition(pos, dimensionCount, dimensionSizes);\
           if (p == -1) {\
@@ -2507,6 +2530,8 @@ NS_IMETHODIMP
 #define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE) \
   DECODE_ARRAY(XPType, VTYPE, nsnull, rc = v->GetAs##VType(a + p);if(NS_FAILED(rc))break;,do{}while(0);)
 
+  if (rc == NS_ERROR_ILLEGAL_VALUE)
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ARRAY_POSITIONS","Colliding array positions discovered.");
   if (NS_FAILED(rc))
     return rc;
   PRBool unhandled = PR_FALSE;
@@ -2595,7 +2620,7 @@ NS_IMETHODIMP
              || value.Equals(nsSOAPUtils::kFalseA)) {
     b = PR_FALSE;
   } else
-    return NS_ERROR_ILLEGAL_VALUE;
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BOOLEAN","Illegal value discovered for boolean");
 
   nsCOMPtr < nsIWritableVariant > p =
       do_CreateInstance(NS_VARIANT_CONTRACTID);
@@ -2620,7 +2645,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lf %n", &f, &n);
   if (r == 0 || n < value.Length())
-    return NS_ERROR_ILLEGAL_VALUE;
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_DOUBLE","Illegal value discovered for double");
 
   nsCOMPtr < nsIWritableVariant > p =
       do_CreateInstance(NS_VARIANT_CONTRACTID);
@@ -2645,6 +2670,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %f %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_FLOAT","Illegal value discovered for float");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2670,6 +2696,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lld %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_LONG","Illegal value discovered for long");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2695,6 +2722,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %ld %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_INT","Illegal value discovered for int");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2720,6 +2748,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_SHORT","Illegal value discovered for short");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2745,6 +2774,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length() || f < -128 || f > 127)
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BYTE","Illegal value discovered for byte");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2770,6 +2800,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %llu %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_ULONG","Illegal value discovered for unsigned long");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2795,6 +2826,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lu %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UINT","Illegal value discovered for unsigned int");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2820,6 +2852,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length())
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_USHORT","Illegal value discovered for unsigned short");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
@@ -2845,6 +2878,7 @@ NS_IMETHODIMP
   unsigned int n;
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length() || f > 255)
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UBYTE","Illegal value discovered for unsigned byte");
     return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =

@@ -49,6 +49,7 @@
 #include "nsString.h"
 #include "nsSOAPUtils.h"
 #include "nsSOAPCall.h"
+#include "nsSOAPException.h"
 #include "nsSOAPResponse.h"
 #include "nsISOAPCallCompletion.h"
 #include "nsIDOMEventTarget.h"
@@ -115,11 +116,11 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
     return rc;
   if (!safe) {
     if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invoke")))
-      return NS_ERROR_FAILURE;
+      return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_DISABLED", "SOAPCall.invoke not enabled by client");
   }
   else {
     if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invokeVerifySourceHeader")))
-      return NS_ERROR_FAILURE;
+      return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_DISABLED", "SOAPCall.invokeVerifySourceHeader not enabled by client");
 
     nsAutoString sourceURI;
 
@@ -186,13 +187,16 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
     //  Proper schema to use for types
     nsAutoString XSURI;
     nsAutoString XSIURI;
+    nsAutoString SOAPEncURI;
     if (version == nsISOAPMessage::VERSION_1_1) {
       XSURI.Assign(nsSOAPUtils::kXSURI1999);
       XSIURI.Assign(nsSOAPUtils::kXSIURI1999);
+      SOAPEncURI.Assign(nsSOAPUtils::kSOAPEncURI11);
     }
     else {
       XSURI.Assign(nsSOAPUtils::kXSURI);
       XSIURI.Assign(nsSOAPUtils::kXSIURI);
+      SOAPEncURI.Assign(nsSOAPUtils::kSOAPEncURI);
     }
     //  Create the header and append it with mustUnderstand and normal encoding.
     rc = document->CreateElementNS(nsSOAPUtils::kVerifySourceNamespaceURI, 
@@ -208,8 +212,7 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
     if (NS_FAILED(rc)) 
       return rc;
     rc = verifySource->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[version], 
-      nsSOAPUtils::kEncodingStyleAttribute,
-      *nsSOAPUtils::kSOAPEncURI[version]);// 1.2 encoding
+      nsSOAPUtils::kEncodingStyleAttribute, SOAPEncURI);// 1.2 encoding
     if (NS_FAILED(rc)) 
       return rc;
 

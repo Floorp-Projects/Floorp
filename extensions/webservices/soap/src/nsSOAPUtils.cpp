@@ -51,14 +51,12 @@ const nsAString *nsSOAPUtils::kSOAPEnvURI[] =
     { &realSOAPEnvURI1, &realSOAPEnvURI2
 };
 
-NS_NAMED_LITERAL_STRING(realSOAPEncURI1,
-                        "http://schemas.xmlsoap.org/soap/encoding/");
-NS_NAMED_LITERAL_STRING(realSOAPEncURI2,
+NS_NAMED_LITERAL_STRING(realSOAPEncURI,
                         "http://www.w3.org/2001/09/soap-encoding");
-const nsAString *nsSOAPUtils::kSOAPEncURI[] =
-    { &realSOAPEncURI1, &realSOAPEncURI2
-};
-
+const nsAString & nsSOAPUtils::kSOAPEncURI = realSOAPEncURI;
+NS_NAMED_LITERAL_STRING(realSOAPEncURI11,
+                        "http://schemas.xmlsoap.org/soap/encoding/");
+const nsAString & nsSOAPUtils::kSOAPEncURI11 = realSOAPEncURI11;
 NS_NAMED_LITERAL_STRING(realXSIURI, "http://www.w3.org/2001/XMLSchema-instance");
 const nsAString & nsSOAPUtils::kXSIURI = realXSIURI;
 NS_NAMED_LITERAL_STRING(realXSURI, "http://www.w3.org/2001/XMLSchema");
@@ -435,9 +433,13 @@ nsresult
     if (NS_FAILED(rc))
       return rc;
     if (attrs) {
-      PRUint32 i = 0;
-      for (;;) {
-        attrs->Item(i++, getter_AddRefs(temp));
+      PRUint32 i;
+      PRUint32 count;
+      rc = attrs->GetLength(&count);
+      if (NS_FAILED(rc))
+        return PR_FALSE;
+      for (i = 0;i < count;i++) {
+        attrs->Item(i, getter_AddRefs(temp));
         if (!temp)
           break;
         temp->GetNamespaceURI(tstr);

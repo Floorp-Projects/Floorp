@@ -717,9 +717,16 @@ NS_IMETHODIMP nsSOAPMessage::GetEncoding(nsISOAPEncoding * *aEncoding)
           do_CreateInstance(NS_SOAPENCODING_CONTRACTID);
       if (!encoding)
         return NS_ERROR_OUT_OF_MEMORY;
-      rc = encoding->
-          GetAssociatedEncoding(*nsSOAPUtils::kSOAPEncURI[version],
-                                PR_FALSE, getter_AddRefs(mEncoding));
+      if (version == nsISOAPMessage::VERSION_1_1) {
+        rc = encoding->
+            GetAssociatedEncoding(nsSOAPUtils::kSOAPEncURI11,
+                                  PR_FALSE, getter_AddRefs(mEncoding));
+      }
+      else {
+        rc = encoding->
+            GetAssociatedEncoding(nsSOAPUtils::kSOAPEncURI,
+                                  PR_FALSE, getter_AddRefs(mEncoding));
+      }
       if (NS_FAILED(rc))
         return rc;
     }

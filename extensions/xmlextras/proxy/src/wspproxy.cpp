@@ -574,8 +574,8 @@ WSPProxy::IsArray(nsIWSDLPart* aPart)
   complexType->GetTargetNamespace(ns);
 
   if (name.Equals(NS_LITERAL_STRING("Array")) &&
-      (ns.Equals(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1]) ||
-       ns.Equals(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_2]))) {
+      (ns.Equals(nsSOAPUtils::kSOAPEncURI11) ||
+       ns.Equals(nsSOAPUtils::kSOAPEncURI))) {
     return PR_TRUE;
   }
 

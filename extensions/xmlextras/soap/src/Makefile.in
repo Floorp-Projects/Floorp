@@ -52,6 +52,7 @@ CPPSRCS	= 				\
 		nsSOAPBlock.cpp	        \
 		nsSOAPCall.cpp	        \
 		nsSOAPEncoding.cpp	\
+		nsSOAPException.cpp	\
 		nsSOAPFault.cpp	        \
 		nsSOAPHeaderBlock.cpp	\
 		nsSOAPMessage.cpp	\

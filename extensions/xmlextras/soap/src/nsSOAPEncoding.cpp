@@ -250,7 +250,7 @@ mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable())
 
   /* member initializers and constructor code */
 
-  mStyleURI.Assign(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1]);
+  mStyleURI.Assign(nsSOAPUtils::kSOAPEncURI11);
   mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
   mRegistry = new nsSOAPEncodingRegistry(this);
 }

@@ -44,6 +44,9 @@
 #include "nsISOAPEncoding.h"
 
 class nsSOAPUtils {
+private:
+  nsSOAPUtils() {}  //  Never create a member of this class
+  ~nsSOAPUtils() {}
 public:
   static void GetSpecificChildElement(nsISOAPEncoding * aEncoding,
                                       nsIDOMElement * aParent,
@@ -86,8 +89,9 @@ public:
   static PRBool StartsWith(nsAString & aSuper, nsAString & aSub);
 
   static const nsAString *kSOAPEnvURI[];
-  static const nsAString *kSOAPEncURI[];
 
+  static const nsAString & kSOAPEncURI;
+  static const nsAString & kSOAPEncURI11;
   static const nsAString & kXSIURI;
   static const nsAString & kXSURI;
   static const nsAString & kXSIURI1999;

@@ -59,6 +59,7 @@ OBJS=	\
 	.\$(OBJDIR)\nsSOAPBlock.obj          \
 	.\$(OBJDIR)\nsSOAPCall.obj           \
 	.\$(OBJDIR)\nsSOAPEncoding.obj       \
+	.\$(OBJDIR)\nsSOAPException.obj       \
 	.\$(OBJDIR)\nsSOAPFault.obj          \
 	.\$(OBJDIR)\nsSOAPHeaderBlock.obj    \
 	.\$(OBJDIR)\nsSOAPMessage.obj        \

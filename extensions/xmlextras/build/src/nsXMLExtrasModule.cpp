@@ -57,6 +57,7 @@
 #include "nsSOAPResponse.h"
 #include "nsSOAPEncoding.h"
 #include "nsSOAPFault.h"
+#include "nsSOAPException.h"
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
 #include "nsSOAPPropertyBag.h"
@@ -105,6 +106,7 @@ NS_DECL_CLASSINFO(nsSOAPPropertyBagMutator)
 NS_DECL_CLASSINFO(nsSOAPProperty)
 NS_DECL_CLASSINFO(nsSOAPPropertyBag)
 NS_DECL_CLASSINFO(nsSOAPPropertyBagEnumerator)
+NS_DECL_CLASSINFO(nsSOAPException)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBuiltinSchemaCollection)
@@ -394,6 +396,11 @@ static const nsModuleComponentInfo components[] = {
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPPropertyBagEnumerator), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPPropertyBagEnumerator), 
     nsIClassInfo::DOM_OBJECT },
+  { "SOAP Exception", NS_SOAPEXCEPTION_CLASSID, 
+    NS_SOAPEXCEPTION_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPException), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPException), nsIClassInfo::DOM_OBJECT },
   { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
     nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSchemaLoader), nsnull,
