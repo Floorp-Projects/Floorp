@@ -36,6 +36,7 @@
 #define USE_DLFCN
 #define HAVE_BSD_FLOCK
 #define NEED_TIME_R
+#define _PR_HAVE_SOCKADDR_LEN
 
 #if defined(BSDI_2)
 #define PROT_NONE 0x0
