@@ -107,6 +107,7 @@ if ($aBuildWizard eq "buildwizard")
 #// deliver wizard to staging area (mozilla/installer/stage)
 copy("$WIZARD/mozilla-installer", $RAW);
 copy("$WIZARD/mozilla-installer-bin", $RAW);
+copy("$WIZARD/installer.prop", $RAW);
 copy("$WIZARD/README", $RAW);
 copy("$WIZARD/MPL-1.1.txt", $RAW);
 chmod(0755, "$RAW/mozilla-installer"); #// ensure shell script is executable
@@ -137,15 +138,15 @@ spew("Completed making .xpis");
 #   Package stub and sea
 #-------------------------------------------------------------------------
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
-#// config.ini into stub
+#// config.ini, installer.prop into stub
 chdir("$RAW/..");
 system("mv $RAW $ROOT/$SUBDIR");
-system("tar cvf $STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
+system("tar cvf $STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/installer.prop ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
 system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $STUB/$aStubName.tar");
 
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
-#// config.ini, and .xpis into sea
+#// config.ini, installer.prop and .xpis into sea
 system("mv $RAW $ROOT/$SUBDIR");
 system("tar cvf $BLOB/$aBlobName.tar ./$SUBDIR/"); 
 system("mv $ROOT/$SUBDIR $RAW");
