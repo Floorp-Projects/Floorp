@@ -9,16 +9,8 @@ titledbutton#back-button {
 	list-style-image:url(resource:/res/toolbar/TB_Back.gif);
 }
 
-titledbutton#back-button[disable="true"] {
-	list-style-image:url(resource:/res/toolbar/TB_Stop.gif);
-}
-
 titledbutton#forward-button {
 	list-style-image:url(resource:/res/toolbar/TB_Forward.gif);
-}
-
-titledbutton#forward-button[disable="true"] {
-	list-style-image:url(resource:/res/toolbar/TB_Stop.gif);
 }
 
 titledbutton#stop-button {
