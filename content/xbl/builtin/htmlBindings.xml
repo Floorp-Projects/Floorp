@@ -48,6 +48,8 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
       <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
+
+      <handler event="keypress" key="k" command="cmd_toggleBrowseWithCaret" modifiers="accel,shift"/>
     </handlers>
   </binding>
 
