@@ -27,7 +27,6 @@
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
-#include "nsMailDatabase.h"
 #include "nsIMailboxService.h"
 #include "nsParseMailbox.h"
 #include "nsIFolderListener.h"
@@ -151,54 +150,69 @@ nsShouldIgnoreFile(nsString& name)
 nsresult
 nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
-  nsresult rv = NS_OK;
-  nsAutoString currentFolderName;
+	nsresult rv = NS_OK;
+	nsAutoString currentFolderName;
+	nsIMsgFolder *child;
 
-  nsIRDFService* rdf;
-  rv = nsServiceManager::GetService(kRDFServiceCID,
+	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
+		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
+
+		currentFolderName = currentFolderPath.GetLeafName();
+		if (nsShouldIgnoreFile(currentFolderName))
+			continue;
+
+		AddSubfolder(currentFolderName, &child);
+		NS_IF_RELEASE(child);
+    }
+	return rv;
+}
+
+nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
+{
+	if(!child)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
+	nsIRDFService* rdf;
+	rv = nsServiceManager::GetService(kRDFServiceCID,
                                     nsIRDFService::GetIID(),
                                     (nsISupports**)&rdf);
-  if (NS_SUCCEEDED(rv)) {
 
-    for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
-      nsFileSpec currentFolderPath = (nsFileSpec&)dir;
+	if(NS_FAILED(rv))
+		return rv;
 
-      currentFolderName = currentFolderPath.GetLeafName();
-      if (nsShouldIgnoreFile(currentFolderName))
-        continue;
+	nsAutoString uri;
+	uri.Append(mURI);
+	uri.Append('/');
 
-      nsAutoString uri;
-      uri.Append(mURI);
-      uri.Append('/');
+	uri.Append(name);
+	char* uriStr = uri.ToNewCString();
+	if (uriStr == nsnull) 
+		return NS_ERROR_OUT_OF_MEMORY;
 
-      uri.Append(currentFolderName);
-      char* uriStr = uri.ToNewCString();
-      if (uriStr == nsnull) 
-        return NS_ERROR_OUT_OF_MEMORY;
-	
-      // XXX trim off .sbd from uriStr
-      nsIRDFResource* res;
-      rv = rdf->GetResource(uriStr, &res);
-      if (NS_FAILED(rv))
-        return rv;
-      nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-      if (NS_FAILED(rv))
-        return rv;        // continue?
-      delete[] uriStr;
-      folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
+	nsIRDFResource* res;
+	rv = rdf->GetResource(uriStr, &res);
+	if (NS_FAILED(rv))
+		return rv;
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+	if (NS_FAILED(rv))
+		return rv;        
+	delete[] uriStr;
+	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
-	  if(currentFolderName == "Inbox")
+	if(name == "Inbox")
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
-	  else if(currentFolderName == "Trash")
+	else if(name == "Trash")
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-	  else if(currentFolderName == "Unsent Messages" || currentFolderName == "Outbox")
+	else if(name == "Unsent Messages" || name == "Outbox")
 		folder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
-	  
-      mSubFolders->AppendElement(folder);
-    }
+  
+	mSubFolders->AppendElement(folder);
+	*child = folder;
+	NS_ADDREF(*child);
     (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-  }
-  return rv;
+
+	return rv;
 }
 
 
@@ -254,7 +268,7 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
       // here because of the way nsFileSpec concatenates
       nsAutoString str((nsFilePath)path);
       str += sep;
-      path = str;
+      path = nsFilePath(str);
     }
 
 	return rv;
@@ -426,107 +440,115 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(char *leafNameFromUser,
-                                                    nsIMsgFolder **outFolder,
-                                                    PRUint32 *outPos)
+/* Finds the directory associated with this folder.  That is if the path is
+   c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
+   currently exist then it will create it
+  */
+nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 {
-#ifdef HAVE_PORT
-  nsresult status = NS_OK;
-  *ppOutFolder = NULL;
-  *pOutPos = 0;
-  XP_StatStruct stat;
-    
-    
-  // Only create a .sbd pathname if we're not in the root folder. The root folder
-  // e.g. c:\netscape\mail has to behave differently than subfolders.
-  if (m_depth > 1)
-  {
-    // Look around in our directory to get a subdirectory, creating it 
-    // if necessary
-        XP_BZERO (&stat, sizeof(stat));
-        if (0 == XP_Stat (m_pathName, &stat, xpMailSubdirectory))
-        {
-            if (!S_ISDIR(stat.st_mode))
-                status = MK_COULD_NOT_CREATE_DIRECTORY; // a file .sbd already exists
-        }
-        else {
-            status = XP_MakeDirectory (m_pathName, xpMailSubdirectory);
-      if (status == -1)
-        status = MK_COULD_NOT_CREATE_DIRECTORY;
-    }
-    }
-    
-  char *leafNameForDisk = CreatePlatformLeafNameForDisk(leafNameFromUser,m_master, this);
-  if (!leafNameForDisk)
-    status = MK_OUT_OF_MEMORY;
+	nsresult rv = NS_OK;
 
-    if (0 == status) //ok so far
-    {
-        // Now that we have a suitable parent directory created/identified, 
-        // we can create the new mail folder inside the parent dir. Again,
+	rv = GetPath(path);
+	if(NS_FAILED(rv))
+		return rv;
 
-        char *newFolderPath = (char*) XP_ALLOC(XP_STRLEN(m_pathName) + XP_STRLEN(leafNameForDisk) + XP_STRLEN(".sbd/") + 1);
-        if (newFolderPath)
-        {
-            XP_STRCPY (newFolderPath, m_pathName);
-            if (m_depth == 1)
-                XP_STRCAT (newFolderPath, "/");
-            else
-                XP_STRCAT (newFolderPath, ".sbd/");
-            XP_STRCAT (newFolderPath, leafNameForDisk);
+	if(!path.IsDirectory())
+	{
+		//If the current path isn't a directory, add directory separator
+		//and test it out.
+		rv = AddDirectorySeparator(path);
+		if(NS_FAILED(rv))
+			return rv;
 
-          if (0 != XP_Stat (newFolderPath, &stat, xpMailFolder))
-      {
-        XP_File file = XP_FileOpen(newFolderPath, xpMailFolder, XP_FILE_WRITE_BIN);
-        if (file)
+		//If that doesn't exist, then we have to create this directory
+		if(!path.IsDirectory())
+		{
+			//If for some reason there's a file with the directory separator
+			//then we are going to fail.
+			if(path.Exists())
+			{
+				return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+			}
+			//otherwise we need to create a new directory.
+			else
+			{
+				path.CreateDirectory();
+				//Above doesn't return an error value so let's see if
+				//it was created.
+				if(!path.IsDirectory())
+					return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+			}
+		}
+	}
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
+{
+	nsresult rv = NS_OK;
+    
+	nsFileSpec path;
+    nsIMsgFolder *child = nsnull;
+	//Get a directory based on our current path.
+	rv = CreateDirectoryForFolder(path);
+	if(NS_FAILED(rv))
+		return rv;
+
+
+	//Now we have a valid directory or we have returned.
+	//Make sure the new folder name is valid
+	path += folderName;
+	path.MakeUnique();
+
+	nsOutputFileStream outputStream(path);	
+   
+	// Create an empty database for this mail folder, set its name from the user  
+	nsIMsgDatabase * mailDBFactory = nsnull;
+
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+        nsIMsgDatabase *unusedDB = NULL;
+		rv = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
+
+        if (NS_SUCCEEDED(rv) && unusedDB)
         {
-           // Create an empty database for this mail folder, set its name from the user  
-            MailDB *unusedDb = NULL;
-           MailDB::Open(newFolderPath, TRUE, &unusedDb, TRUE);
-            if (unusedDb)
-            {
-             //need to set the folder name
-           
-            MSG_FolderInfoMail *newFolder = BuildFolderTree (newFolderPath, m_depth + 1, m_subFolders, m_master);
-             if (newFolder)
-             {
-               // so we don't show ??? in totals
-               newFolder->SummaryChanged();
-               *ppOutFolder = newFolder;
-               *pOutPos = m_subFolders->FindIndex (0, newFolder);
-             }
-             else
-               status = MK_OUT_OF_MEMORY;
-             unusedDb->SetFolderInfoValid(newFolderPath,0,0);
-              unusedDb->Close();
-            }
-          else
-          {
-            XP_FileClose(file);
-            file = NULL;
-            XP_FileRemove (newFolderPath, xpMailFolder);
-            status = MK_MSG_CANT_CREATE_FOLDER;
-          }
-          if (file)
-          {
-            XP_FileClose(file);
-            file = NULL;
-          }
-        }
-        else
-          status = MK_MSG_CANT_CREATE_FOLDER;
-      }
-      else
-        status = MK_MSG_FOLDER_ALREADY_EXISTS;
-      FREEIF(newFolderPath);
+			//need to set the folder name
+			nsIDBFolderInfo *folderInfo;
+			rv = unusedDB->GetDBFolderInfo(&folderInfo);
+			if(NS_SUCCEEDED(rv))
+			{
+				//folderInfo->SetMailboxName(leafNameFromUser);
+				NS_IF_RELEASE(folderInfo);
+			}
+
+			//Now let's create the actual new folder
+			nsAutoString folderNameStr(folderName);
+			rv = AddSubfolder(folderName, &child);
+            unusedDB->SetSummaryValid(PR_TRUE);
+            unusedDB->Close(PR_TRUE);
         }
         else
-            status = MK_OUT_OF_MEMORY;
-    }
-    FREEIF(leafNameForDisk);
-    return status;
-#endif //HAVE_PORT
-  return NS_OK;
+        {
+			path.Delete(PR_FALSE);
+            rv = NS_MSG_CANT_CREATE_FOLDER;
+        }
+		NS_IF_RELEASE(mailDBFactory);
+	}
+	if(rv == NS_OK && child)
+	{
+		nsISupports *folderSupports;
+
+		rv = child->QueryInterface(kISupportsIID, (void**)&folderSupports);
+		if(NS_SUCCEEDED(rv))
+		{
+			NotifyItemAdded(folderSupports);
+			NS_IF_RELEASE(folderSupports);
+		}
+	}
+	NS_IF_RELEASE(child);
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder(nsIMsgFolder *which)
@@ -813,20 +835,20 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
 	//Need to notify listeners that total count changed.
 	if(oldTotalMessages != mNumTotalMessages)
 	{
-		char *oldTotalMessages = PR_smprintf("%d", oldTotalMessages);
-		char *totalMessages = PR_smprintf("%d",mNumTotalMessages);
-		NotifyPropertyChanged("TotalMessages", oldTotalMessages, totalMessages);
-		PR_smprintf_free(totalMessages);
-		PR_smprintf_free(oldTotalMessages);
+		char *oldTotalMessagesStr = PR_smprintf("%d", oldTotalMessages);
+		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages);
+		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
+		PR_smprintf_free(totalMessagesStr);
+		PR_smprintf_free(oldTotalMessagesStr);
 	}
 
 	if(oldUnreadMessages != mNumUnreadMessages)
 	{
-		char *oldUnreadMessages = PR_smprintf("%d", oldUnreadMessages);
+		char *oldUnreadMessagesStr = PR_smprintf("%d", oldUnreadMessages);
 		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
-		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessages, totalUnreadMessages);
+		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, totalUnreadMessages);
 		PR_smprintf_free(totalUnreadMessages);
-		PR_smprintf_free(oldUnreadMessages);
+		PR_smprintf_free(oldUnreadMessagesStr);
 	}
 
 	return NS_OK;
@@ -1068,6 +1090,21 @@ nsresult nsMsgLocalMailFolder::NotifyPropertyChanged(char *property, char *oldVa
 
 }
 
+nsresult nsMsgLocalMailFolder::NotifyItemAdded(nsISupports *item)
+{
+
+	PRUint32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemAdded(this, item);
+		NS_RELEASE(listener);
+	}
+
+	return NS_OK;
+
+}
+
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
                          nsIDBChangeListener * aInstigator)
 {
@@ -1106,13 +1143,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
 	nsISupports *msgSupports;
 	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
 	{
-		PRUint32 i;
-		for(i = 0; i < mListeners->Count(); i++)
-		{
-			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-			listener->OnItemAdded(this, msgSupports);
-			NS_RELEASE(listener);
-		}
+		NotifyItemAdded(msgSupports);
 	}
 	UpdateSummaryTotals();
 	NS_RELEASE(msgSupports);

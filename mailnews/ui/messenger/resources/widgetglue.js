@@ -209,7 +209,22 @@ function MsgSortBySubject()
 	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');
 }
 
-function MsgNewFolder() {}
+function MsgNewFolder()
+{
+    var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
+	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolder = selectedFolderList[0];
+
+	var appCore = FindMsgAppCore();
+	if (appCore != null) {
+	    appCore.SetWindow(window);
+		//Note this is temporary hardcoding until I can get this from a dialog
+		appCore.NewFolder(folderTree.database, selectedFolder, "New Folder");
+	}
+
+}
+
+
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
 function MsgSaveAsTemplate() {}

@@ -26,7 +26,6 @@
 #define nsMsgLocalMailFolder_h__
 
 #include "nsMsgFolder.h" /* include the interface we are going to support */
-#include "nsMailDatabase.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
 #include "nsICopyMessageListener.h"
@@ -63,7 +62,7 @@ public:
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 
 
-	NS_IMETHOD CreateSubfolder(char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
+	NS_IMETHOD CreateSubfolder(const char *folderName);
 
 	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
 	NS_IMETHOD Delete ();
@@ -122,7 +121,17 @@ protected:
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+	nsresult NotifyItemAdded(nsISupports *item);
 
+	/* Finds the directory associated with this folder.  That is if the path is
+	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
+	currently exist then it will create it
+	*/
+	nsresult CreateDirectoryForFolder(nsFileSpec &path);
+
+	//Creates a subfolder with the name 'name' and adds it to the list of children.
+	//Returns the child as well.
+	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
 
 protected:

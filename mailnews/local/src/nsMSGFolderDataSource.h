@@ -148,6 +148,12 @@ protected:
   nsresult createMessageStatusNode(nsIMessage *message,
                                    nsIRDFNode **target);
   
+  nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
+							  nsISupportsArray *arguments);
+
+  nsresult DoNewFolder(nsIMsgFolder *folder,
+							  nsISupportsArray *arguments);
+
   static PRBool assertEnumFunc(void *aElement, void *aData);
   static PRBool unassertEnumFunc(void *aElement, void *aData);
 
@@ -170,6 +176,7 @@ protected:
   static nsIRDFResource* kNC_Delete;
   static nsIRDFResource* kNC_Reply;
   static nsIRDFResource* kNC_Forward;
+  static nsIRDFResource* kNC_NewFolder;
 
 };
 

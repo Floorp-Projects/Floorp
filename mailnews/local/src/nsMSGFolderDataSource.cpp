@@ -83,6 +83,7 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_Status;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Delete;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Reply;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Forward;
+nsIRDFResource* nsMSGFolderDataSource::kNC_NewFolder;
 
 static const char kURINC_MSGFolderRoot[]  = "mailbox:/";
 
@@ -103,6 +104,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Delete);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Reply);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Forward);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewFolder);
 
 ////////////////////////////////////////////////////////////////////////
 // The cached service managers
@@ -263,6 +265,7 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Delete, refcnt);
   NS_RELEASE2(kNC_Reply, refcnt);
   NS_RELEASE2(kNC_Forward, refcnt);
+  NS_RELEASE2(kNC_NewFolder, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService); // XXX probably need shutdown listener here
 	if(gRFC822Parser)		
@@ -327,6 +330,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 	gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
     gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
     gRDFService->GetResource(kURINC_Forward, &kNC_Forward);
+    gRDFService->GetResource(kURINC_NewFolder, &kNC_NewFolder);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -671,6 +675,7 @@ nsMSGFolderDataSource::GetAllCommands(nsIRDFResource* source,
     rv = NS_NewISupportsArray(&cmds);
     if (NS_FAILED(rv)) return rv;
     cmds->AppendElement(kNC_Delete);
+    cmds->AppendElement(kNC_NewFolder);
   }
   else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
     NS_RELEASE(message);       // release now that we know it's a message
@@ -702,7 +707,8 @@ nsMSGFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
       NS_RELEASE(folder);       // release now that we know it's a folder
 
       // we don't care about the arguments -- folder commands are always enabled
-      if (!(peq(aCommand, kNC_Delete))) {
+      if (!(peq(aCommand, kNC_Delete) ||
+		    peq(aCommand, kNC_NewFolder))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -738,22 +744,12 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     nsIMsgFolder* folder;
     nsIMessage* message;
     if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
-		PRUint32 itemCount = aArguments->Count();
       if (peq(aCommand, kNC_Delete)) {
-        for(PRUint32 item = 0; item < itemCount; item++)
-		{
-			nsIMessage* deletedMessage;
-			nsISupports* argument = (*aArguments)[item];
-      rv = argument->QueryInterface(nsIMessage::GetIID(),
-                                    (void**)&deletedMessage);
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = folder->DeleteMessage(deletedMessage);
-				NS_RELEASE(deletedMessage);
-			}
-			NS_RELEASE(argument);
-		}
+		rv = DoDeleteFromFolder(folder, aArguments);
       }
+	  else if(peq(aCommand, kNC_NewFolder)) {
+		rv = DoNewFolder(folder, aArguments);
+	  }
 
       NS_RELEASE(folder);
     }
@@ -783,6 +779,7 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 NS_IMETHODIMP nsMSGFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
 {
 	nsIMessage *message;
+	nsIMsgFolder *folder;
 	nsIRDFResource *parentResource;
 
 	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)&parentResource)))
@@ -798,6 +795,18 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISup
 				NS_RELEASE(itemNode);
 			}
 			NS_RELEASE(message);
+		}
+		//If we are adding a folder
+		else if(NS_SUCCEEDED(item->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		{
+			nsIRDFNode *itemNode;
+			if(NS_SUCCEEDED(item->QueryInterface(nsIRDFNode::GetIID(), (void**)&itemNode)))
+			{
+				//Notify folders that a message was added.
+				NotifyObservers(parentResource, kNC_Child, itemNode, PR_TRUE);
+				NS_RELEASE(itemNode);
+			}
+			NS_RELEASE(folder);
 		}
 		NS_RELEASE(parentResource);
 	}
@@ -839,6 +848,10 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 		if(PL_strcmp("TotalMessages", property) == 0)
 		{
 			NotifyPropertyChanged(resource, kNC_TotalMessages, oldValue, newValue);
+		}
+		else if(PL_strcmp("TotalUnreadMessages", property) == 0)
+		{
+			NotifyPropertyChanged(resource, kNC_TotalUnreadMessages, oldValue, newValue);
 		}
 		NS_IF_RELEASE(resource);
 	}
@@ -1061,3 +1074,41 @@ nsMSGFolderDataSource::createMessageStatusNode(nsIMessage *message,
   return NS_OK;
 }
   
+nsresult nsMSGFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
+{
+	nsresult rv = NS_OK;
+	PRUint32 itemCount = arguments->Count();
+	for(PRUint32 item = 0; item < itemCount; item++)
+	{
+		nsIMessage* deletedMessage;
+		nsISupports* argument = (*arguments)[item];
+		rv = argument->QueryInterface(nsIMessage::GetIID(),
+                                   (void**)&deletedMessage);
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = folder->DeleteMessage(deletedMessage);
+			NS_RELEASE(deletedMessage);
+		}
+		NS_RELEASE(argument);
+	}
+
+	return rv;
+}
+
+nsresult nsMSGFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
+{
+	nsresult rv = NS_OK;
+	nsISupports *argument =(*arguments)[0];
+	nsIRDFLiteral *literal;
+	rv = argument->QueryInterface(nsIRDFLiteral::GetIID(), (void**)&literal);
+	if(NS_SUCCEEDED(rv))
+	{
+		PRUnichar *name;
+		literal->GetValue(&name);
+		nsString tempStr = name;
+		nsAutoCString nameStr(tempStr);
+
+		rv = folder->CreateSubfolder(nameStr);
+	}
+	return rv;
+}
