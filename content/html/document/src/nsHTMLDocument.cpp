@@ -2240,23 +2240,34 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  ++mWriteLevel;
-
   static NS_NAMED_LITERAL_STRING(new_line, "\n");
-  static NS_NAMED_LITERAL_STRING(empty, "");
-  const nsAString  *term = aNewlineTerminate ? &new_line : &empty;
-
-  const nsAutoString text = aText + *term;
 
   // Save the data in cache
   if (mWyciwygChannel) {
-    mWyciwygChannel->WriteToCacheEntry(text);
+    mWyciwygChannel->WriteToCacheEntry(aText);
+
+    if (aNewlineTerminate) {
+      mWyciwygChannel->WriteToCacheEntry(new_line);
+    }
   }
 
-  rv = mParser->Parse(text ,
-                      NS_GENERATE_PARSER_KEY(),
-                      NS_LITERAL_CSTRING("text/html"), PR_FALSE,
-                      (!mIsWriting || (mWriteLevel > 1)));
+  ++mWriteLevel;
+
+  // This could be done with less code, but for performance reasons it
+  // makes sense to have the code for two separate Parse() calls here
+  // since the concatenation of strings costs more than we like. And
+  // why pay that price when we don't need to?
+  if (aNewlineTerminate) {
+    rv = mParser->Parse(aText + new_line,
+                        NS_GENERATE_PARSER_KEY(),
+                        NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+                        (!mIsWriting || (mWriteLevel > 1)));
+  } else {
+    rv = mParser->Parse(aText,
+                        NS_GENERATE_PARSER_KEY(),
+                        NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+                        (!mIsWriting || (mWriteLevel > 1)));
+  }
 
   --mWriteLevel;
 
