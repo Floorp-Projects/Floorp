@@ -1,5 +1,5 @@
 /*
- * $Id: CompareFiles.java,v 1.3 2004/02/26 02:37:00 edburns%acm.org Exp $
+ * $Id: CompareFiles.java,v 1.4 2004/04/23 14:52:20 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -59,6 +59,7 @@ public class CompareFiles {
 	LineNumberReader expectedReader = new LineNumberReader(expectedFileReader);
 
 	String actualLine, expectedLine;
+	boolean swallowedLine = false;
 
 	actualLine = actualReader.readLine().trim();
 	expectedLine = expectedReader.readLine().trim();
@@ -79,23 +80,53 @@ public class CompareFiles {
 		    expectedLine = expectedLine.substring(bracketColon + 3);
 		}
 	    }
-	    
-	    if (ignoreWarnings && actualLine.startsWith("WARNING:")) {
+
+	    swallowedLine = false;
+	    // while the actual lines start with a warning condition
+	    // keep reading them until we get a non-warning line or end
+	    // of stream.
+	    while (null != actualLine && ignoreWarnings && 
+		   (-1 != actualLine.indexOf("WARNING:") || 
+		    -1 != actualLine.indexOf("###!!! ASSERTION:") || 
+		    -1 != actualLine.indexOf("###!!! Break:"))) {
 		// we're ignoring warnings, no-op
 		actualLine = actualReader.readLine(); // swallow WARNING
 						      // line
-		continue;
-		
+		swallowedLine = true;
 	    }
-	    else if (ignoreWarnings && expectedLine.startsWith("WARNING:")) {
+	    if (null != actualLine && swallowedLine) {
+		continue;
+	    }
+
+	    swallowedLine = false;
+	    // while the expected lines start with a warning condition,
+	    // keep reading them until we get a non-warning line or end
+	    // of stream.
+	    while (null != expectedLine && ignoreWarnings && 
+		   (-1 != expectedLine.indexOf("WARNING:") || 
+		    -1 != expectedLine.indexOf("###!!! ASSERTION:") || 
+		    -1 != expectedLine.indexOf("###!!! Break:"))) {
 		// we're ignoring warnings, no-op
 		expectedLine = expectedReader.readLine(); // swallow
-							  // WARNING
-							  // line
-		continue;
-		
+		                                          // WARNING
+		                                          // line
+		swallowedLine = true;
 	    }
-	    else if (!actualLine.equals(expectedLine)) {
+	    if (null != actualLine && swallowedLine) {
+		continue;
+	    }
+
+	    if (null == actualLine && null == expectedLine) {
+		same = true;
+		continue;
+	    }
+	    // if one of the lines is null, but not the other
+	    if (((null == actualLine) && (null != expectedLine)) ||
+		((null != actualLine) && (null == expectedLine))) {
+		same = false;
+		break;
+	    }
+	    if (!actualLine.equals(expectedLine)) {
 		if (null != expectedLinesToIgnore) {
 		    // go thru the list of expectedLinesToIgnore and see if
 		    // the current expectedLine matches any of them.
@@ -141,12 +172,6 @@ public class CompareFiles {
 	    actualLine = actualReader.readLine();
 	    expectedLine = expectedReader.readLine();
 
-	    // if one of the lines is null, but not the other
-	    if (((null == actualLine) && (null != expectedLine)) ||
-		((null != actualLine) && (null == expectedLine))) {
-		same = false;
-		break;
-	    }
 	    if (null != actualLine) {
 		actualLine = actualLine.trim();
 	    }

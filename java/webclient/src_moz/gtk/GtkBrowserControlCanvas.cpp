@@ -28,7 +28,7 @@
 #include <jni.h>
 #include <jawt_md.h>
 #include <jawt.h>
-#include "org_mozilla_webclient_impl_wrapper_0005fnative_gtk_GtkBrowserControlCanvas.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_GtkBrowserControlCanvas.h"
 
 #include <X11/Xlib.h>
 
@@ -55,7 +55,7 @@ extern "C" {
  * Method:    createTopLevelWindow
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_createTopLevelWindow
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_createTopLevelWindow
 (JNIEnv * env, jobject obj) {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("GtkBrowserControlCanvas_createTopLevelWindow: entering\n"));
@@ -99,7 +99,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBr
  * Method:    createContainerWindow
  * Signature: (III)I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_createContainerWindow
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_createContainerWindow
     (JNIEnv * env, jobject obj, jint parent, jint screenWidth, jint screenHeight) {
 	
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
@@ -136,7 +136,7 @@ int getWinID(GtkWidget * gtkWidgetPtr) {
  * Method:    getGTKWinID
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_getGTKWinID
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_getGTKWinID
 (JNIEnv * env, jobject obj, jint gtkWinPtr) {
     GtkWidget * gtkWidgetPtr = (GtkWidget *) gtkWinPtr;
 
@@ -149,7 +149,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBr
  * Method:    reparentWindow
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_reparentWindow (JNIEnv * env, jobject obj, jint childID, jint parentID) {
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_reparentWindow (JNIEnv * env, jobject obj, jint childID, jint parentID) {
     XReparentWindow(GDK_DISPLAY(), childID, parentID, 0, 0);
 }
 
@@ -158,7 +158,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBr
  * Method:    processEvents
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_processEvents
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_processEvents
     (JNIEnv * env, jobject obj) {
     //printf("process events....\n");
     //processEventLoopIntelligently();
@@ -169,7 +169,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBr
  * Method:    setGTKWindowSize
  * Signature: (III)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_setGTKWindowSize
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_setGTKWindowSize
     (JNIEnv * env, jobject obj, jint gtkWinPtr, jint width, jint height) {
     if (gtkWinPtr != 0) {
         GtkWidget * gtkWidgetPtr = (GtkWidget *) gtkWinPtr;
@@ -186,7 +186,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBr
  * Method:    getHandleToPeer
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_getHandleToPeer
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_getHandleToPeer
   (JNIEnv *env, jobject canvas) {
     JAWT awt;
     JAWT_DrawingSurface* ds;
@@ -278,7 +278,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBr
  * Method:    loadMainDll
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_gtk_GtkBrowserControlCanvas_loadMainDll
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_GtkBrowserControlCanvas_loadMainDll
   (JNIEnv *, jclass)
 {
     PR_LOG(prLogModuleInfo, PR_LOG_ERROR, 

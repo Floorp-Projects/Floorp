@@ -88,13 +88,11 @@
       <classpath refid="compile.classpath"/>
       <src path="${source.home}"/>
       <patternset>
-            <include name="org/mozilla/webclient/impl/wrapper_native/gtk/*" 
-                     if="build.unix.classes"/>
+            <exclude name="**/Win32*.java" if="build.unix.classes"/>
       </patternset>
 
       <patternset>
-            <include name="org/mozilla/webclient/impl/wrapper_native/Win32*" 
-                     if="build.win32.classes"/>
+            <exclude name="**/Gtk*.java" if="build.win32.classes"/>
       </patternset>
 
       <!-- PENDING(edburns): include additional patternsets for ICE,
@@ -137,7 +135,7 @@
   <target name="compile.unix.canvas.headers" if="build.unix.classes">
 
     <javah destdir="${basedir}/src_moz/gtk"
-      class="org.mozilla.webclient.impl.wrapper_native.gtk.GtkBrowserControlCanvas">
+      class="org.mozilla.webclient.impl.wrapper_native.GtkBrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
 

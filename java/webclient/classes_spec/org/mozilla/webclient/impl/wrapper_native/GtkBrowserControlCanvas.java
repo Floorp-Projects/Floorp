@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -19,7 +18,7 @@
  *
  * Contributor(s): 
  */
-package org.mozilla.webclient.impl.wrapper_native.gtk;
+package org.mozilla.webclient.impl.wrapper_native;
 
 // GtkBrowserControlCanvas.java
 
@@ -42,7 +41,7 @@ import java.awt.Dimension;
 
  * There is one instance of GtkBrowserControlCanvas per top level awt Frame.
 
- * @version $Id: GtkBrowserControlCanvas.java,v 1.1 2003/09/28 06:29:09 edburns%acm.org Exp $
+ * @version $Id: GtkBrowserControlCanvas.java,v 1.1 2004/04/23 14:52:20 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -87,20 +86,41 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
             synchronized(getTreeLock()) {
                 //Use the AWT Native Peer interface to get the handle
                 //of this Canvas's native peer
-                canvasWinID = this.getHandleToPeer();
+                Integer canvasWin = (Integer)
+		    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+			    public Object run() {
+				Integer result = 
+				    new Integer(GtkBrowserControlCanvas.this.getHandleToPeer());
+				return result;
+			    }
+			});
+                canvasWinID = canvasWin.intValue();
                 //Set our canvas as a parent of the top-level gtk widget
                 //which contains Mozilla.
-                this.reparentWindow(this.gtkWinID, this.canvasWinID);
-                firstTime = false;
+		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+			public Object run() {
+			    GtkBrowserControlCanvas.this.reparentWindow(GtkBrowserControlCanvas.this.gtkWinID, GtkBrowserControlCanvas.this.canvasWinID);
+			    return null;
+			}
+		    });
+		firstTime = false;
             }
         }
     }
 
     public void setBounds(int x, int y, int width, int height) {
         super.setBounds(x, y, width, height);
+	final int finalWidth = width;
+	final int finalHeight = height;
 
         synchronized(getTreeLock()) {
-            this.setGTKWindowSize(this.gtkTopWindow, width, height);
+	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		    public Object run() {
+			GtkBrowserControlCanvas.this.setGTKWindowSize(GtkBrowserControlCanvas.this.gtkTopWindow, 
+					      finalWidth, finalHeight);
+			return null;
+		    }
+		});
         }
     }
 
@@ -118,21 +138,42 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
 	 * @returns The native window handle. 
 	 */
     
-	protected int getWindow() {
+    protected int getWindow() {
         synchronized(getTreeLock()) {
-            this.gtkTopWindow = this.createTopLevelWindow();
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	    Integer topWindow = (Integer)
+		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+			public Object run() {
+			    Integer result = 
+				new Integer(GtkBrowserControlCanvas.this.createTopLevelWindow());
+			    return result;
+			}
+		    });
+            this.gtkTopWindow = topWindow.intValue();
+	    
+            final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	    Integer winPtr = (Integer)
+		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+			public Object run() {
+			    Integer result = 
+				new Integer(GtkBrowserControlCanvas.this.createContainerWindow(GtkBrowserControlCanvas.this.gtkTopWindow, screenSize.width, screenSize.height));
+			    return result;
+			}
+		    });
+            this.gtkWinPtr = winPtr.intValue();
+	    
+	    Integer winId = (Integer)
+		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+			public Object run() {
+			    Integer result = new Integer(GtkBrowserControlCanvas.this.getGTKWinID(GtkBrowserControlCanvas.this.gtkWinPtr));
+			    return result;
+			}
+		    });
             
-            this.gtkWinPtr = 
-                this.createContainerWindow(this.gtkTopWindow, screenSize.width,
-                                           screenSize.height);
-            
-            this.gtkWinID = this.getGTKWinID(gtkWinPtr);
-
-        }
-
-		return this.gtkWinPtr;
+            this.gtkWinID = winId.intValue();
 	}
+	
+	return this.gtkWinPtr;
+    }
 
     // The test for this class is TestGtkBrowserControlCanvas
     
