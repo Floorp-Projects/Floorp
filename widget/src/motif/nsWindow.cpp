@@ -383,7 +383,7 @@ void nsWindow::InitCallbacks(char * aName)
 
   XtAddEventHandler(mWidget, 
 		    ExposureMask, 
-		    PR_TRUE, 
+		    PR_FALSE, 
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
 
@@ -578,8 +578,6 @@ void nsWindow::SetBounds(const nsRect &aRect)
 //-------------------------------------------------------------------------
 void nsWindow::GetBounds(nsRect &aRect)
 {
-printf("IN get bounds %d %d \n", mBounds.width, mBounds.height);
-
 
   /*XWindowAttributes attrs ;
   Window w = nsnull;
@@ -1040,7 +1038,6 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-
     nsRect* size = aEvent.windowSize;
   /*if (mWidget) {
     Arg arg[3];

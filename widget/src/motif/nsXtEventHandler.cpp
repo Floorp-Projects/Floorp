@@ -145,7 +145,6 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   pevent.rect = (nsRect *)&rect;
   XEvent xev;
 
-#if 0
   int count = 0;
   while (XPeekEvent(XtDisplay(w), &xev))
   {
@@ -158,7 +157,6 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
        break;
      }
   }
-#endif
 
   widgetWindow->OnPaint(pevent);
 
@@ -516,12 +514,13 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
              //attrs.x, attrs.y, attrs.width, attrs.height, rect.width, rect.height);
 
         // NOTE: THIS May not be needed when embedded in chrome
-      printf("Adding timeout\n");
 
 extern XtAppContext gAppContext;
 
-      if (! gResized)
+      if (! gResized) {
+        printf("Adding timeout\n");
         XtAppAddTimeOut(gAppContext, 1000, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
+      }
 
       gResizeRect.x = rect.x;
       gResizeRect.y = rect.y;
