@@ -35,17 +35,26 @@
 #ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
 #endif
-#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
+//#define FONT_HAS_GLYPH(map, g) (((map)[(g) >> 3] >> ((g) & 7)) & 1)
+#define FONT_HAS_GLYPH(map, g) IS_REPRESENTABLE(map, g)
 
 #ifdef ADD_GLYPH
 #undef ADD_GLYPH
 #endif
-#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
+//#define ADD_GLYPH(map, g) (map)[(g) >> 3] |= (1 << ((g) & 7))
+#define ADD_GLYPH(map, g) SET_REPRESENTABLE(map, g)
+
+#ifdef MOZ_MATHML
+struct nsCharacterMap {
+  PRUint8* mData;
+  PRInt32  mLength;
+};
+#endif
 
 class nsFontWin
 {
 public:
-  nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint8* aMap);
+  nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap);
   virtual ~nsFontWin();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -61,18 +70,24 @@ public:
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo() = 0;
+#endif // NS_DEBUG
 #endif
 
-  char     mName[LF_FACESIZE];
-  HFONT    mFont;
-  PRUint8* mMap;
+  char      mName[LF_FACESIZE];
+  HFONT     mFont;
+  PRUint32* mMap;
+#ifdef MOZ_MATHML
+  nsCharacterMap* mCMAP;
+#endif
 };
 
 typedef struct nsGlobalFont
 {
   nsString*     name;
   LOGFONT       logFont;
-  PRUint8*      map;
+  PRUint32*     map;
   PRUint8       skip;
   FONTSIGNATURE signature;
 } nsGlobalFont;
@@ -117,11 +132,16 @@ public:
   virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName);
   virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
 
+  virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
+  virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
+
   int SameAsPreviousMap(int aIndex);
 
   nsFontWin           **mLoadedFonts;
   PRUint16            mLoadedFontsAlloc;
   PRUint16            mLoadedFontsCount;
+
+  PRInt32             mIndexOfSubstituteFont;
 
   nsString            *mFonts;
   PRUint16            mFontsAlloc;
@@ -134,6 +154,7 @@ public:
 
   nscoord             mSpaceWidth;
 
+  static PLHashTable* gFontMaps;
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
 
@@ -194,7 +215,7 @@ protected:
   static PLHashTable* gFamilyNames;
   static PLHashTable* gFontWeights;
 
-  static PRUint8* GetCMAP(HDC aDC, const char* aShortName, int* aIsUnicode);
+  static PRUint32* GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset);
 };
 
 
@@ -227,6 +248,9 @@ public:
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo();
+#endif // NS_DEBUG
 #endif
 
   int Load(nsFontWinA* aFont);
@@ -238,7 +262,7 @@ public:
 class nsFontWinA : public nsFontWin
 {
 public:
-  nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint8* aMap);
+  nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap);
   virtual ~nsFontWinA();
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength);
@@ -251,6 +275,9 @@ public:
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo();
+#endif // NS_DEBUG
 #endif
 
   int GetSubsets(HDC aDC);
@@ -267,6 +294,9 @@ public:
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName);
   virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
+
+  virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
+  virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
 };
 
 #endif /* nsFontMetricsWin_h__ */
