@@ -98,10 +98,10 @@ protected:
   nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
   nsresult      UnsetNodeAttribute(const char* nodeID, const char* attributeName);
 
-  nsresult      UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat);
+  nsresult      UpdateParagraphState(const char* observerName, const char* attributeName);
   nsresult      UpdateListState(const char* observerName);
   nsresult      UpdateTextState(const char* tagName, const char* observerName, const char* attributeName, PRInt8& ioState);
-  nsresult      UpdateFontFace(const char* observerName, const char* attributeName, nsString& ioFontString);
+  nsresult      UpdateFontFace(const char* observerName, const char* attributeName);
   nsresult      UpdateDirtyState(PRBool aNowDirty);
   
   nsresult      CallUpdateCommands(const nsString& aCommand);

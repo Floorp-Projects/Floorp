@@ -321,14 +321,14 @@ nsInterfaceState::ForceUpdate()
   // update the paragraph format popup
   if (mUpdateParagraph)
   {
-    rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
+    rv = UpdateParagraphState("Editor:Paragraph:Format", "format");
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
 
   // udpate the font face
   if (mUpdateFont)
   {
-    rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
+    rv = UpdateFontFace("Editor:Font:Face", "font");
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
   
@@ -365,7 +365,7 @@ nsInterfaceState::SelectionIsCollapsed()
 }
 
 nsresult
-nsInterfaceState::UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat)
+nsInterfaceState::UpdateParagraphState(const char* observerName, const char* attributeName)
 {
   nsCOMPtr<nsIDOMSelection> domSelection;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
@@ -496,7 +496,7 @@ nsInterfaceState::UpdateListState(const char* observerName)
 }
 
 nsresult
-nsInterfaceState::UpdateFontFace(const char* observerName, const char* attributeName, nsString& ioFontString)
+nsInterfaceState::UpdateFontFace(const char* observerName, const char* attributeName)
 {
   nsresult  rv;
   
