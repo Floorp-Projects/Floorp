@@ -564,7 +564,7 @@ nsTableCellMap::InsertCells(nsVoidArray&          aCellFrames,
       cellMap->InsertCells(*this, aCellFrames, rowIndex, aColIndexBefore, aDamageArea);
       nsTableRowGroupFrame* rg = cellMap->GetRowGroup();
       aDamageArea.y += (rg) ? rg->GetStartRowIndex() : 0;
-      aDamageArea.width = PR_MAX(0, GetColCount() - aColIndexBefore);
+      aDamageArea.width = PR_MAX(0, GetColCount() - aColIndexBefore - 1);
       break;
     }
     rowIndex -= cellMap->GetRowCount();
@@ -591,7 +591,7 @@ nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
       aDamageArea.y += (rg) ? rg->GetStartRowIndex() : 0;
       PRInt32 colIndex;
       aCellFrame->GetColIndex(colIndex);
-      aDamageArea.width = PR_MAX(0, GetColCount() - colIndex);
+      aDamageArea.width = PR_MAX(0, GetColCount() - colIndex - 1);
       break;
     }
     rowIndex -= cellMap->GetRowCount();

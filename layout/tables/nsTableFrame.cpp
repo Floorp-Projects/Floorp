@@ -4824,6 +4824,22 @@ PRInt32 nsTableFrame::GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const
     return 0;
 }
 
+static void
+CheckFixDamageArea(PRInt32 aNumRows,
+                   PRInt32 aNumCols,
+                   nsRect& aDamageArea)
+{
+  if (((aDamageArea.XMost() > aNumCols) && (aDamageArea.width  != 1) & (aNumCols != 0)) || 
+      ((aDamageArea.YMost() > aNumRows) && (aDamageArea.height != 1) & (aNumRows != 0))) {
+    // the damage area was set incorrectly, just be safe and make it the entire table
+    NS_ASSERTION(PR_FALSE, "invalid BC damage area");
+    aDamageArea.x      = 0;
+    aDamageArea.y      = 0;
+    aDamageArea.width  = aNumCols;
+    aDamageArea.height = aNumRows;
+  }
+}
+
 /********************************************************************************
  * Collapsing Borders
  *
@@ -4855,6 +4871,7 @@ nsTableFrame::SetBCDamageArea(nsIPresContext& aPresContext,
   if (value) {
     // for now just construct a union of the new and old damage areas
     value->mDamageArea.UnionRect(value->mDamageArea, newRect);
+    CheckFixDamageArea(GetRowCount(), GetColCount(), value->mDamageArea);
   }
 }
 /*****************************************************************
@@ -5926,6 +5943,8 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
   BCPropertyData* propData = 
     (BCPropertyData*)nsTableFrame::GetProperty(&aPresContext, this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
   if (!propData) ABORT0();
+
+  CheckFixDamageArea(numRows, numCols, propData->mDamageArea);
   // calculate an expanded damage area 
   nsRect damageArea(propData->mDamageArea);
   ExpandBCDamageArea(damageArea);
