@@ -28,6 +28,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
+#include "nsIColorPicker.h"
 
 class nsString;
 
@@ -39,21 +40,34 @@ class nsColorPickerFrame : public nsLeafFrame
 {
 public:
   nsColorPickerFrame();
+  virtual ~nsColorPickerFrame();
 
-    // nsIFrame overrides
+  // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ColorPickerFrame", aResult);
   }
+
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+  nsresult HandleMouseDownEvent(nsIPresContext& aPresContext,
+                                nsGUIEvent*     aEvent,
+                                nsEventStatus&  aEventStatus);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
   
 protected:
-
+  
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) ;
+
+
+private:
+  nsIColorPicker *mColorPicker;
 
 }; // class nsColorPickerFrame
 

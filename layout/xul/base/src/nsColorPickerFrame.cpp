@@ -19,6 +19,7 @@
 
 #include "nsColorPickerFrame.h"
 
+#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -26,8 +27,10 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-
-
+#include "nsColor.h"
+#include "nsIServiceManager.h"
+#include "nsStdColorPicker.h"
+#include "nsColorPickerCID.h"
 //
 // NS_NewColorPickerFrame
 //
@@ -47,28 +50,96 @@ NS_NewColorPickerFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+static NS_DEFINE_IID(kDefColorPickerCID, NS_DEFCOLORPICKER_CID);
 
 //
 // nsColorPickerFrame cntr
 //
 nsColorPickerFrame::nsColorPickerFrame()
 {
+  mColorPicker = new nsStdColorPicker();
+}
 
-} // cntr
+nsColorPickerFrame::~nsColorPickerFrame()
+{
 
+}
+
+
+NS_IMETHODIMP
+nsColorPickerFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                nsGUIEvent*     aEvent,
+                                nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
+		HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
+
+  return NS_OK;
+}
+
+nsresult
+nsColorPickerFrame::HandleMouseDownEvent(nsIPresContext& aPresContext, 
+                                         nsGUIEvent*     aEvent,
+                                         nsEventStatus&  aEventStatus)
+{
+  int x,y;
+  char *color;
+  // figure out what color we just picked
+
+  printf("got mouse down.. x = %i, y = %i\n", aEvent->refPoint.x, aEvent->refPoint.y);
+
+  x = aEvent->refPoint.x;
+  y = aEvent->refPoint.y;
+
+  nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
+
+  mColorPicker->GetColor(x, y, &color);
+
+  if (!color)
+    node->RemoveAttribute("color");
+  else
+    node->SetAttribute("color", color);
+
+  return NS_OK;
+}
 
 //
 // Paint
 //
-// Overidden to handle ???
 //
 NS_METHOD 
 nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              const nsRect& aDirtyRect,
-                              nsFramePaintLayer aWhichLayer)
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect,
+                          nsFramePaintLayer aWhichLayer)
 {
-  return nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+  mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  // if we aren't visible then we are done.
+  if (!disp->mVisible) 
+	   return NS_OK;  
+
+  // if we are visible then tell our superclass to paint
+  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       aWhichLayer);
+
+  // get our border
+	const nsStyleSpacing* spacing =
+		(const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	nsMargin border(0,0,0,0);
+	spacing->CalcBorderFor(this, border);
+
+	const nsStyleColor* colorStyle =
+		(const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+
+  nscolor color = colorStyle->mColor;
+
+  mColorPicker->Paint(&aPresContext, &aRenderingContext);
+
+  return NS_OK;
 }
 
 
@@ -78,12 +149,16 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
 // For now, be as big as CSS wants us to be, or some small default size.
 //
 void
-nsColorPickerFrame :: GetDesiredSize(nsIPresContext* aPresContext,
-                                           const nsHTMLReflowState& aReflowState,
-                                           nsHTMLReflowMetrics& aDesiredLayoutSize)
+nsColorPickerFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsHTMLReflowMetrics& aDesiredLayoutSize)
 {
+  float p2t;
+
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
   const int CSS_NOTSET = -1;
-  const int ATTR_NOTSET = -1;
+  //  const int ATTR_NOTSET = -1;
 
   nsSize styleSize;
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
@@ -100,6 +175,8 @@ nsColorPickerFrame :: GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   // subclasses should always override this method, but if not and no css, make it small
+  // XXX ???
+  /*
   aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 200;
   aDesiredLayoutSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 200;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
@@ -108,5 +185,18 @@ nsColorPickerFrame :: GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
     aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
   }
+  */
+
+  PRInt32 width, height;
+
+  mColorPicker->GetSize(&width, &height);
+
+  // convert to twips
+
+  aDesiredLayoutSize.width = nscoord(width * p2t);
+  aDesiredLayoutSize.height = nscoord(height * p2t);
+  aDesiredLayoutSize.ascent = nscoord(height * p2t);
+  aDesiredLayoutSize.descent = 0;
+
 
 } // GetDesiredSize
