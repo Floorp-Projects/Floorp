@@ -857,7 +857,7 @@
               <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
               <menuseparator/>
               <menuitem label="&bringAllToFront.label;" disabled="true"/>
-              <menuseparator/>
+              <menuseparator id="sep-window-list"/>
             </menupopup>
         </menu>
 #endif
