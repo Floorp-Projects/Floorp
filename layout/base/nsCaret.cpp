@@ -221,16 +221,16 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	if (!contentNode)
 		return NS_ERROR_FAILURE;
 
-	// find the frame that contains the content node that has focus
-	nsIFrame*	theFrame = nsnull;
-
   //get frame selection and find out what frame to use...
   nsCOMPtr<nsIFrameSelection> frameSelection;
   err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
 	if (NS_FAILED(err) || !frameSelection)
 		return err;  
+
+	// find the frame that contains the content node that has focus
+	nsIFrame*       theFrame = nsnull;
   err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, &theFrame);
-	if (NS_FAILED(err))
+	if (NS_FAILED(err) || !theFrame)
 		return err;
 	
 	nsPoint		viewOffset(0, 0);
@@ -266,6 +266,11 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 	nsPoint		framePos(0, 0);
 	theFrame->GetPointFromOffset(presContext, rendContext, focusOffset, &framePos);
 
+	nsRect          frameRect;
+	theFrame->GetRect(frameRect);
+	
+	// add the frame height, to get the bottom of the frame
+	framePos.y += frameRect.height;	
 	// now add the frame offset to the view offset, and we're done
 	viewOffset += framePos;
 	outCoordinates = viewOffset;
