@@ -71,16 +71,6 @@
   <groupbox>
     <caption label="&walletHeader.label;"/>
     <description>&walletDescription.label;</description>
-<!--
-    <hbox align="center">
-      <label control="walletServer"
-            value="&walletServer.label;"
-            accesskey="&walletServer.accesskey;"/>
-      <textbox id="walletServer"
-               preftype="localizedstring"
-               prefstring="wallet.Server"/>
-    </hbox>
--->
     <hbox align="center">
       <checkbox id="walletCaptureForms"
               label="&walletEnabled.label;"

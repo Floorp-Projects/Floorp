@@ -65,7 +65,6 @@ pref("offline.news.download.use_days",          0);
 pref("network.http.accept-encoding" ,"gzip,deflate,compress;q=0.9");
 
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
-pref("wallet.TutorialFromMenu",             "chrome://navigator/locale/navigator.properties");
 pref("intl.menuitems.alwaysappendacceskeys","chrome://navigator/locale/navigator.properties");
 
 // ------------------
