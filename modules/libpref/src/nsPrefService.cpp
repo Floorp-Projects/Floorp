@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrefService.h"
-#include "nsSafeSaveFile.h"
 #include "jsapi.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -46,6 +45,7 @@
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsISafeOutputStream.h"
 #include "nsIObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
@@ -89,11 +89,9 @@ static nsresult pref_InitInitialObjects(void);
  */
 
 nsPrefService::nsPrefService()
-: mCurrentFile(nsnull),
-  mErrorOpeningUserPrefs(PR_FALSE)
+: mErrorOpeningUserPrefs(PR_FALSE)
 #if MOZ_PROFILESHARING
   , mErrorOpeningSharedUserPrefs(PR_FALSE)
-  , mCurrentSharedFile(nsnull)
 #endif
 {
 }
@@ -101,10 +99,8 @@ nsPrefService::nsPrefService()
 nsPrefService::~nsPrefService()
 {
   PREF_Cleanup();
-  NS_IF_RELEASE(mCurrentFile);
 
 #ifdef MOZ_PROFILESHARING
-  NS_IF_RELEASE(mCurrentSharedFile);
   NS_IF_RELEASE(gSharedPrefHandler);
 #endif
 }
@@ -186,7 +182,7 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, 
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       if (mCurrentFile) {
         mCurrentFile->Remove(PR_FALSE);
-        NS_RELEASE(mCurrentFile);
+        mCurrentFile = nsnull;
       }
     } else {
       rv = SavePrefFile(nsnull);
@@ -368,9 +364,7 @@ nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
   
   if (mCurrentFile == aFile)
     return NS_OK;
-  NS_IF_RELEASE(mCurrentFile);
   mCurrentFile = aFile;
-  NS_ADDREF(mCurrentFile);
 
 #ifdef MOZ_PROFILESHARING
   // We don't want prefs set here to cause transactions
@@ -397,9 +391,7 @@ nsresult nsPrefService::ReadAndOwnSharedUserPrefFile(nsIFile *aFile)
 
   if (mCurrentSharedFile == aFile)
     return NS_OK;
-  NS_IF_RELEASE(mCurrentSharedFile);
   mCurrentSharedFile = aFile;
-  NS_ADDREF(mCurrentSharedFile);
 
 #ifdef MOZ_PROFILESHARING
   // We don't want prefs set here to cause transactions
@@ -488,25 +480,11 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
 #endif
 
   // execute a "safe" save by saving through a tempfile
-  nsSafeSaveFile safeSave;
-  nsCOMPtr<nsIFile> tempFile;
-  rv = safeSave.Init(aFile, getter_AddRefs(tempFile));
-  if (NS_FAILED(rv))
-    return rv;
-
-  // this clone of tempFile exists to defeat the stat caching "feature" of
-  // nsLocalFile.  when tempFileClone is opened, nsLocalFile will stat the
-  // file and cache the results.  it will return those cached results when
-  // we later ask tempFile for its size.  as a result we will think that 
-  // we didn't write anything to the file, and our logic here will fail
-  // miserably.  nsLocalFile should probably be fixed to not cache stat
-  // results when returning a writable file descriptor.  see bug 132517.
-  nsCOMPtr<nsIFile> tempFileClone;
-  rv = tempFile->Clone(getter_AddRefs(tempFileClone));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStreamSink), tempFileClone);
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStreamSink),
+                                       aFile,
+                                       PR_WRONLY,
+                                       /*octal*/ 0600,
+                                       0);
   if (NS_FAILED(rv)) 
       return rv;
   rv = NS_NewBufferedOutputStream(getter_AddRefs(outStream), outStreamSink, 4096);
@@ -537,40 +515,31 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
   NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char *), pref_CompareStrings, NULL);
   
   // write out the file header
-  rv = outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
+  outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
 
   char** walker = valueArray;
   for (PRUint32 valueIdx = 0; valueIdx < gHashTable.entryCount; valueIdx++, walker++) {
     if (*walker) {
-      // skip writing if an has error occurred
-      if (NS_SUCCEEDED(rv)) {
-        rv = outStream->Write(*walker, strlen(*walker), &writeAmount);
-        if (NS_SUCCEEDED(rv))
-          rv = outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
-      }
-      // always free though...
+      outStream->Write(*walker, strlen(*walker), &writeAmount);
+      outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
       PR_Free(*walker);
     }
   }
   PR_Free(valueArray);
-  outStream->Close();
 
-  PRInt64 tempLL;
-  PRUint32 oldFileSize, newFileSize;
-  (void)aFile->GetFileSize(&tempLL); // All impls return 0 for size on failure.
-  LL_L2UI(oldFileSize, tempLL);
-  (void)tempFile->GetFileSize(&tempLL);
-  LL_L2UI(newFileSize, tempLL);
-  
-  // As long as we have succeeded, move the temp file to the actual file.
-  // But, if the new file is only 1/2 the size of the old file (dataloss),
-  // pass TRUE for aBackupTarget, leaving the old file on disk.
-  safeSave.OnSaveFinished(NS_SUCCEEDED(rv),
-                          oldFileSize && ((newFileSize << 1) <= oldFileSize));
-  
-  if (NS_SUCCEEDED(rv))
-    gDirty = PR_FALSE;
-  return rv;
+  // tell the safe output stream to overwrite the real prefs file
+  // (it'll abort if there were any errors during writing)
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outStream);
+  if (safeStream) {
+    rv = safeStream->Finish();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("failed to save prefs file! possible dataloss");
+      return rv;
+    }
+  }
+
+  gDirty = PR_FALSE;
+  return NS_OK;
 }
 
 #ifdef MOZ_PROFILESHARING
