@@ -408,23 +408,24 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
   // check to see if we have a rollup listener registered
   if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-    if (msg == WM_ACTIVATE || msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN || msg == WM_NCMBUTTONDOWN || msg == WM_NCRBUTTONDOWN) {
+    if (msg == WM_ACTIVATE || msg == WM_NCLBUTTONDOWN || 
+        msg == WM_NCMBUTTONDOWN || msg == WM_NCRBUTTONDOWN) {
+      gRollupListener->Rollup();
+    } else if (msg == WM_LBUTTONDOWN) {
       // check to see if the window the event happened 
       // in is not the rollup window
-      //if (hWnd != ((nsWindow *)gRollupWidget)->mWnd) {
-        RECT r;
-        ::GetWindowRect(((nsWindow *)gRollupWidget)->mWnd, &r);
-        DWORD pos = ::GetMessagePos();
-        POINT mp;
-        mp.x      = LOWORD(pos);
-        mp.y      = HIWORD(pos);
-        // now make sure that it wasn't one of our children
-        if (mp.x < r.left || mp.x > r.right ||
-          mp.y < r.top || mp.y > r.bottom) {
-          gRollupListener->Rollup();
-          return TRUE;
-        } 
-      //}
+      RECT r;
+      ::GetWindowRect(((nsWindow *)gRollupWidget)->mWnd, &r);
+      DWORD pos = ::GetMessagePos();
+      POINT mp;
+      mp.x      = LOWORD(pos);
+      mp.y      = HIWORD(pos);
+      // now make sure that it wasn't one of our children
+      if (mp.x < r.left || mp.x > r.right ||
+        mp.y < r.top || mp.y > r.bottom) {
+        gRollupListener->Rollup();
+        return TRUE;
+      } 
     }
   }
 
