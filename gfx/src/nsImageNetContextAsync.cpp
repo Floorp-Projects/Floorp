@@ -697,26 +697,31 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     if (bIsBackground) {
       (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
     }
+
+    nsLoadFlags flags;
+    rv = channel->GetLoadAttributes(&flags);
+    if (NS_FAILED(rv)) return rv;
+
     switch(aLoadMethod){
-        case IMG_CACHE_ONLY:
-            /* should never get here, but don't fail if you do. */
-        case IMG_NTWK_SERVER:
-            (void)channel->SetLoadAttributes(nsIChannel::VALIDATE_NEVER); 
-            break;
+            case IMG_CACHE_ONLY:
+                 /* shouldn't get here, but don't fail if you do. Just fall to the next case. */
+            case IMG_NTWK_SERVER:
+                  (void)channel->SetLoadAttributes((nsIChannel::VALIDATE_NEVER) | flags); 
+                   break;
 
-        case TV_IMG_NTWK_SERVER:
-        case TV_NTWK_SERVER_ONLY:
-            (void)channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION);
-            break;
+            case TV_IMG_NTWK_SERVER:
+            case TV_NTWK_SERVER_ONLY:
+                  (void)channel->SetLoadAttributes((nsIChannel::FORCE_VALIDATION) | flags);
+                  break;
 
-        case SERVER_ONLY:
-           (void)channel->SetLoadAttributes(nsIChannel::FORCE_RELOAD);
-            break;
-        
-        default:
-            break;
-    }
+            case SERVER_ONLY:
+                  (void)channel->SetLoadAttributes((nsIChannel::FORCE_RELOAD) | flags);
+                  break;
    
+            default:
+                  break;
+    }
+  
     nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
