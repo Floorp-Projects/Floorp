@@ -67,5 +67,6 @@ interface nsIMsgMailSession : nsISupports {
   void AddMsgWindow(in nsIMsgWindow msgWindow);
   void RemoveMsgWindow(in nsIMsgWindow msgWindow);
   readonly attribute nsISupportsArray msgWindowsArray;
+  boolean IsFolderOpenInWindow(in nsIMsgFolder folder);
 };
 

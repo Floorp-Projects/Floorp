@@ -28,6 +28,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIMsgWindow.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
 
@@ -36,10 +37,6 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
  
-//static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
-//static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
-//static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-    
 
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0),
@@ -317,6 +314,35 @@ NS_IMETHODIMP nsMsgMailSession::GetMsgWindowsArray(nsISupportsArray * *aWindowsA
 
 	*aWindowsArray = mWindows;
 	NS_IF_ADDREF(*aWindowsArray);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailSession::IsFolderOpenInWindow(nsIMsgFolder *folder, PRBool *aResult)
+{
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+	*aResult = PR_FALSE;
+
+	PRUint32 count;
+	nsresult rv = mWindows->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	if (mWindows)
+	{
+		for(PRUint32 i = 0; i < count; i++)
+		{
+			nsCOMPtr<nsIMsgWindow> openWindow = getter_AddRefs((nsIMsgWindow*)mWindows->ElementAt(i));
+			nsCOMPtr<nsIMsgFolder> openFolder;
+			if (openWindow)
+				openWindow->GetOpenFolder(getter_AddRefs(openFolder));
+			if (folder == openFolder.get())
+			{
+				*aResult = PR_TRUE;
+				break;
+			}
+		}
+	}
+
 	return NS_OK;
 }
 
