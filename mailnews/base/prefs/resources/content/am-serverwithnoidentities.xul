@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-serverwithnoidentities.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        class="dialog"
+        align="vertical">
+
+  <html:script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
+
+  <html:div class="pageTitle">&accountTitle.label;</html:div>
+  <box align="vertical">
+      <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
+      <box align="horizontal">
+        <html:div>&accountName.label;</html:div>
+        <html:spacer/>
+        <html:input type="text" name="server.prettyName" flex="100%"/>
+      </box>
+  </box>
+
+  <box align="vertical">
+    <html:div>&localPath.label;</html:div>
+    <html:input type="text" name="server.localPath" datatype="nsIFileSpec"/>
+  </box>
+</window>

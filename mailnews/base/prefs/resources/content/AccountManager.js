@@ -61,6 +61,7 @@ var setDefaultButton;
 // called when the whole document loads
 // perform initialization here
 function onLoad() {
+  dump("accountmanager on load\n");
   accountArray = new Array;
   RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 
@@ -356,16 +357,17 @@ function showDeckPage(deckBoxId) {
 
   /* bring the deck to the front */
   var deckBox = top.document.getElementById(deckBoxId);
-  var deck = deckBox.parentNode;
-  var children = deck.childNodes;
+  if (deckBox) {
+      var deck = deckBox.parentNode;
+      var children = deck.childNodes;
 
-  // search through deck children, and find the index to load
-  for (var i=0; i<children.length; i++) {
-    if (children[i] == deckBox) break;
+      // search through deck children, and find the index to load
+      for (var i=0; i<children.length; i++) {
+        if (children[i] == deckBox) break;
+      }
+
+      deck.setAttribute("index", i);
   }
-
-  deck.setAttribute("index", i);
-
 }
 
 //

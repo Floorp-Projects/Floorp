@@ -24,6 +24,7 @@ AccountManager.xul
 AccountManager.js
 am-main.xul
 am-server.xul
+am-serverwithnoidentities.xul
 am-server.js
 am-server-top.xul
 am-copies.xul

@@ -259,8 +259,20 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = "am-advanced.xul";
     else if (source == kNC_PageTitleSMTP) 
       str = "am-smtp.xul";
-    else
+    else {
       str = "am-main.xul";
+
+      /* if this is a server, with no identities, then we show a special panel */
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = getServerForFolderNode(source, getter_AddRefs(server));
+      if (server) {
+          PRBool hasIdentities;
+          rv = serverHasIdentities(server, &hasIdentities);
+          if (NS_SUCCEEDED(rv) && !hasIdentities) {
+            str = "am-serverwithnoidentities.xul";
+          }
+      }
+    }
   }
 
   // handle sorting of servers

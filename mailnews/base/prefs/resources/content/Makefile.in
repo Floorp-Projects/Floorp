@@ -33,6 +33,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		AccountManager.js \
 		am-main.xul \
 		am-server.xul \
+        am-serverwithnoidentities.xul \
+        am-serverwithnoidentities.js \
 		am-server.js \
 		am-server-top.xul \
 		am-copies.xul \
@@ -54,6 +56,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		aw-identity.xul \
 		aw-identity.js \
 		aw-server.xul \
+        am-serverwithnoidentity.xul \
 		aw-server.js \
 		aw-login.xul \
 		aw-login.js \

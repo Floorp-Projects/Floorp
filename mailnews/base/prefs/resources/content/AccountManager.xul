@@ -70,6 +70,10 @@
                      <html:iframe src="chrome://messenger/content/am-smtp.xul" name="am-smtp.xul"
                           style="border: none" flex="100%"/>
                 </box>
+                <box id="am-serverwithnoidentities.xul" flex="100%">
+                     <html:iframe src="chrome://messenger/content/am-serverwithnoidentities.xul" name="am-serverwithnoidentities.xul"
+                          style="border: none" flex="100%"/>
+                </box>
               </deck>
            </tabcontrol>
         </box>
