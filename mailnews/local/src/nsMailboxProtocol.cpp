@@ -106,8 +106,11 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
                                               (nsISupports**)&pNetService);
 			if (NS_SUCCEEDED(rv) && pNetService)
 			{
-				m_runningUrl->GetFile(&fileName);
-				rv = pNetService->CreateFileSocketTransport(&m_transport, fileName);
+				const nsFileSpec * fileSpec = nsnull;
+				m_runningUrl->GetFilePath(&fileSpec);
+
+				nsFilePath filePath(*fileSpec);
+				rv = pNetService->CreateFileSocketTransport(&m_transport, filePath);
                 (void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
 			}
 		}
@@ -320,7 +323,7 @@ PRInt32 nsMailboxProtocol::SetupReadMessage()
 				msgHdr->GetMessageSize(&messageSize);
 				msgHdr->Release();
 			}
-			NS_RELEASE(mailDb);
+			mailDb->Close(PR_TRUE);
 		}
 	}
 	m_runningUrl->SetMessageSize(messageSize);
