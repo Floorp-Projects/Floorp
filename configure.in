@@ -218,7 +218,7 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth"
 
 	dnl The following warning breaks Qt
-	if ! test "$QTDIR"; then
+	if test ! "$QTDIR"; then
     	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wshadow"
 	fi
 
@@ -472,6 +472,7 @@ dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     if test ! "$GNU_CC"; then
+       AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKCSHLIB='$(CC) $(DSO_LDOPTS)'
