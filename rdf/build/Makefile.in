@@ -31,7 +31,7 @@ LIBRARY_NAME	= rdf
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= 
-REQUIRES	= xpcom string layout htmlparser
+REQUIRES	= xpcom string layout htmlparser necko
 
 CPPSRCS		= \
 		nsRDFModule.cpp \
