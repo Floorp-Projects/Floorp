@@ -604,21 +604,16 @@ class nsLineList_iterator {
       return --copy;
     }
 
-    PRBool operator==(const iterator_self_type& aOther) const
+    // Passing by value rather than by reference and reference to const
+    // to keep AIX happy.
+    // XXX Should add assertions that |mListLink| is the same for both.
+    PRBool operator==(const iterator_self_type aOther) const
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther) const
+    PRBool operator!=(const iterator_self_type aOther) const
         { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(const iterator_self_type& aOther)
+    PRBool operator==(const iterator_self_type aOther)
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther)
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther) const
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther) const
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther)
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther)
+    PRBool operator!=(const iterator_self_type aOther)
         { return mCurrent != aOther.mCurrent; }
 
   private:
@@ -743,21 +738,15 @@ class nsLineList_reverse_iterator {
     }
 #endif /* !__MWERKS__ */
 
-    PRBool operator==(const iterator_self_type& aOther) const
+    // Passing by value rather than by reference and reference to const
+    // to keep AIX happy.
+    PRBool operator==(const iterator_self_type aOther) const
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther) const
+    PRBool operator!=(const iterator_self_type aOther) const
         { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(const iterator_self_type& aOther)
+    PRBool operator==(const iterator_self_type aOther)
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther)
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther) const
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther) const
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther)
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther)
+    PRBool operator!=(const iterator_self_type aOther)
         { return mCurrent != aOther.mCurrent; }
 
   private:
@@ -875,21 +864,15 @@ class nsLineList_const_iterator {
       return --copy;
     }
 
-    PRBool operator==(const iterator_self_type& aOther) const
+    // Passing by value rather than by reference and reference to const
+    // to keep AIX happy.
+    PRBool operator==(const iterator_self_type aOther) const
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther) const
+    PRBool operator!=(const iterator_self_type aOther) const
         { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(const iterator_self_type& aOther)
+    PRBool operator==(const iterator_self_type aOther)
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther)
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther) const
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther) const
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther)
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther)
+    PRBool operator!=(const iterator_self_type aOther)
         { return mCurrent != aOther.mCurrent; }
 
   private:
@@ -995,21 +978,15 @@ class nsLineList_const_reverse_iterator {
     }
 #endif /* !__MWERKS__ */
 
-    PRBool operator==(const iterator_self_type& aOther) const
+    // Passing by value rather than by reference and reference to const
+    // to keep AIX happy.
+    PRBool operator==(const iterator_self_type aOther) const
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther) const
+    PRBool operator!=(const iterator_self_type aOther) const
         { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(const iterator_self_type& aOther)
+    PRBool operator==(const iterator_self_type aOther)
         { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(const iterator_self_type& aOther)
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther) const
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther) const
-        { return mCurrent != aOther.mCurrent; }
-    PRBool operator==(iterator_self_type& aOther)
-        { return mCurrent == aOther.mCurrent; }
-    PRBool operator!=(iterator_self_type& aOther)
+    PRBool operator!=(const iterator_self_type aOther)
         { return mCurrent != aOther.mCurrent; }
 
 //private:
