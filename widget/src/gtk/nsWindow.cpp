@@ -144,6 +144,7 @@ nsWindow::nsWindow()
 
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
+  mTransientParent = nsnull;
   // init the hash table if it hasn't happened already
   if (mWindowLookupTable == NULL) {
     mWindowLookupTable = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -833,7 +834,12 @@ void nsWindow::NativeGrab(PRBool aGrab)
     if (retval != 0)
       mLastGrabFailed = PR_TRUE;
 
-    retval = gdk_keyboard_grab(mSuperWin->bin_window, PR_TRUE, GDK_CURRENT_TIME);
+    if (mTransientParent)
+      retval = gdk_keyboard_grab(GTK_WIDGET(mTransientParent)->window,
+                                 PR_TRUE, GDK_CURRENT_TIME);
+    else 
+      retval = gdk_keyboard_grab(mSuperWin->bin_window,
+                                 PR_TRUE, GDK_CURRENT_TIME);
 #ifdef DEBUG_GRAB
     printf("nsWindow::NativeGrab %p keyboard_grab %d\n", this, retval);
 #endif
@@ -1613,13 +1619,24 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   GdkEventMask  mask;
   PRBool        parentIsContainer = PR_FALSE;
   GtkContainer *parentContainer = NULL;
+  GtkWindow    *topLevelParent  = NULL;
 
   if (parentWidget) {
-    if (GDK_IS_SUPERWIN(parentWidget))
+    if (GDK_IS_SUPERWIN(parentWidget)) {
       superwin = GDK_SUPERWIN(parentWidget);
+      GdkWindow *topGDKWindow =
+        gdk_window_get_toplevel(GDK_SUPERWIN(parentWidget)->shell_window);
+        gpointer data;
+        gdk_window_get_user_data(topGDKWindow, &data);
+        if (GTK_IS_WINDOW(data)) {
+          topLevelParent = GTK_WINDOW(data);
+        }
+    }
     else if (GTK_IS_CONTAINER(parentWidget)) {
       parentContainer = GTK_CONTAINER(parentWidget);
       parentIsContainer = PR_TRUE;
+      topLevelParent =
+        GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentWidget)));
     }
     else
       g_print("warning: attempted to CreateNative() width a non-superwin and non gtk container parent\n");
@@ -1630,6 +1647,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   case eWindowType_dialog:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_DIALOG);
+    if (topLevelParent) {
+      gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+      mTransientParent = topLevelParent;
+    }
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
     //    gtk_widget_set_app_paintable(mShell, PR_TRUE);
     InstallRealizeSignal(mShell);
@@ -1653,6 +1674,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   case eWindowType_popup:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
+    if (topLevelParent) {
+      gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+      mTransientParent = topLevelParent;
+    }
     // create the mozarea.  this will be the single child of the
     // toplevel window
     mMozArea = gtk_mozarea_new();
@@ -1789,18 +1814,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
   if (mShell) {
-    if (parentWidget) {
-      GdkWindow *topLevelParent = nsnull;
-      if (GTK_IS_WIDGET(parentWidget)) {
-        topLevelParent = gdk_window_get_toplevel(GTK_WIDGET(parentWidget)->window);
-      }
-      else if (GDK_IS_SUPERWIN(parentWidget)) {
-        topLevelParent = gdk_window_get_toplevel(GDK_SUPERWIN(parentWidget)->shell_window);
-      }
-      if (topLevelParent)
-        gdk_window_set_transient_for(mShell->window, topLevelParent);
-    }
-
     // set up our drag and drop for the shell
     gtk_drag_dest_set(mShell,
                       (GtkDestDefaults)0,
