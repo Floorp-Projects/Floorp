@@ -520,7 +520,7 @@ nsXULPDGlobalObject::SetDocShell(nsIDocShell *aDocShell)
 NS_IMETHODIMP
 nsXULPDGlobalObject::GetDocShell(nsIDocShell **aDocShell)
 {
-    NS_NOTREACHED("waaah!");
+    NS_WARNING("waaah!");
     return NS_ERROR_UNEXPECTED;
 }
 

@@ -304,7 +304,11 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   NS_INIT_REFCNT();
   mRootedScriptObject = nsnull;
+#ifdef DEBUG
+  mDefaultJSOptions = JSOPTION_STRICT; // lint catching for development
+#else
   mDefaultJSOptions = 0;
+#endif
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, (void *)this);
