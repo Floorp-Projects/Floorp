@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.18 1999/04/26 19:42:35 endico%mozilla.org Exp $
+# $Id: Common.pm,v 1.19 1999/08/07 09:28:37 mccabe%netscape.com Exp $
 
 package LXR::Common;
 
@@ -544,7 +544,7 @@ sub titleexpand {
 
     } elsif ($who eq 'ident') {
 	my $i = $HTTP->{'param'}->{'i'};
-	return($Conf->sourcerootname.' identfier search'.
+	return($Conf->sourcerootname.' identifier search'.
 	       ($i ? " \"$i\"" : ''));
 
     } elsif ($who eq 'search') {
