@@ -87,8 +87,20 @@ nsXULTreeElement::GetSelectedCells(nsIDOMNodeList** aSelectedCells)
 NS_IMETHODIMP
 nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
 {
+  // Sanity check. If we're the only item, just bail.
+  PRUint32 length;
+  mSelectedItems->GetLength(&length);
+  if (length == 1) {
+    // See if the single item already selected is us.
+    nsCOMPtr<nsIDOMNode> domNode;
+    mSelectedItems->Item(0, getter_AddRefs(domNode));
+    nsCOMPtr<nsIDOMXULElement> treeItem = do_QueryInterface(domNode);
+    if (treeItem.get() == aTreeItem)
+      return NS_OK;
+  }
+
   // First clear our selection.
-  ClearSelection();
+  ClearItemSelection();
 
   // Now add ourselves to the selection by setting our selected attribute.
   AddItemToSelection(aTreeItem);
@@ -99,8 +111,20 @@ nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
 NS_IMETHODIMP
 nsXULTreeElement::SelectCell(nsIDOMXULElement* aTreeCell)
 {
+  // Sanity check. If we're the only item, just bail.
+  PRUint32 length;
+  mSelectedCells->GetLength(&length);
+  if (length == 1) {
+    // See if the single item already selected is us.
+    nsCOMPtr<nsIDOMNode> domNode;
+    mSelectedCells->Item(0, getter_AddRefs(domNode));
+    nsCOMPtr<nsIDOMXULElement> treeCell = do_QueryInterface(domNode);
+    if (treeCell.get() == aTreeCell)
+      return NS_OK;
+  }
+
   // First clear our selection.
-  ClearSelection();
+  ClearCellSelection();
 
   // Now add ourselves to the selection by setting our selected attribute.
   AddCellToSelection(aTreeCell);
@@ -109,21 +133,26 @@ nsXULTreeElement::SelectCell(nsIDOMXULElement* aTreeCell)
 }
 
 NS_IMETHODIMP    
-nsXULTreeElement::ClearSelection()
+nsXULTreeElement::ClearItemSelection()
 {
   // Enumerate the elements and remove them from the selection.
   PRUint32 length;
   mSelectedItems->GetLength(&length);
-  PRUint32 i;
-  for (i = 0; i < length; i++) {
+  for (PRUint32 i = 0; i < length; i++) {
     nsCOMPtr<nsIDOMNode> node;
     mSelectedItems->Item(0, getter_AddRefs(node));
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
   }
-  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsXULTreeElement::ClearCellSelection()
+{
+  PRUint32 length;
   mSelectedCells->GetLength(&length);
-  for (i = 0; i < length; i++) {
+  for (PRUint32 i = 0; i < length; i++) {
     nsCOMPtr<nsIDOMNode> node;
     mSelectedCells->Item(0, getter_AddRefs(node));
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
@@ -188,8 +217,8 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
   nsAutoString isSelected;
   aTreeCell->GetAttribute("selected", isSelected);
   if (isSelected == "true")
-    RemoveItemFromSelection(aTreeCell);
-  else AddItemToSelection(aTreeCell);
+    RemoveCellFromSelection(aTreeCell);
+  else AddCellToSelection(aTreeCell);
 
   return NS_OK;
 }
@@ -213,7 +242,8 @@ NS_IMETHODIMP
 nsXULTreeElement::SelectAll()
 {
   // Do a clear.
-  ClearSelection();
+  ClearItemSelection();
+  ClearCellSelection();
 
   // Now do an invert. That will select everything.
   InvertSelection();
