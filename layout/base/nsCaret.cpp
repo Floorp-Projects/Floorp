@@ -317,7 +317,7 @@ void nsCaret::DrawCaret()
 							nsCOMPtr<nsIRenderingContext>	aContext;
 							nsCOMPtr<nsIDeviceContext> 		dx;
 
-							if (NS_SUCCEEDED(presContext->GetDeviceContext(getter_AddRefs(dx)) && dx))
+							if (NS_SUCCEEDED(presContext->GetDeviceContext(getter_AddRefs(dx))) && dx)
 							{
 								if (nextView)
 									dx->CreateRenderingContext(nextView, *getter_AddRefs(aContext));
