@@ -62,120 +62,20 @@
 
 nsCachedStyleData::StyleStructInfo
 nsCachedStyleData::gInfo[] = {
-  // Note that these must line up _exactly_ with the numeric values of
-  // the nsStyleStructID enum.
-  { 0, 0, 0 },
 
-  /* eStyleStruct_Font */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mFontData),
-    PR_FALSE
-  },
-  /* eStyleStruct_Color */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mColorData),
-    PR_FALSE
-  },
-  /* eStyleStruct_Background */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mBackgroundData),
-    PR_TRUE
-  },
-  /* eStyleStruct_List */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mListData),
-    PR_FALSE
-  },
-  /* eStyleStruct_Position */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mPositionData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Text */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mTextData),
-    PR_FALSE
-  },
-  /* eStyleStruct_TextReset */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mTextData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Display */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mDisplayData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Visibility */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mVisibilityData),
-    PR_FALSE
-  },
-  /* eStyleStruct_Content */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mContentData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Quotes */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mQuotesData),
-    PR_FALSE
-  },
-  /* eStyleStruct_UserInterface */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mUIData),
-    PR_FALSE
-  },
-  /* eStyleStruct_UIReset */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mUIData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Table */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mTableData),
-    PR_TRUE
-  },
-  /* eStyleStruct_TableBorder */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mTableData),
-    PR_FALSE
-  },
-  /* eStyleStruct_Margin */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mMarginData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Padding */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mPaddingData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Border */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mBorderData),
-    PR_TRUE
-  },
-  /* eStyleStruct_Outline */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mOutlineData),
-    PR_TRUE
-  },
-#ifdef INCLUDE_XUL
-  /* eStyleStruct_XUL */
-  { offsetof(nsCachedStyleData, mResetData),
-    offsetof(nsResetStyleData, mXULData),
-    PR_TRUE
-  },
-#endif
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+  { offsetof(nsCachedStyleData, mInheritedData), \
+    offsetof(nsInheritedStyleData, m##name##Data), \
+    PR_FALSE },
+#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+  { offsetof(nsCachedStyleData, mResetData), \
+    offsetof(nsResetStyleData, m##name##Data), \
+    PR_TRUE },
 
-#ifdef MOZ_SVG
-  /* eStyleStruct_SVG */
-  { offsetof(nsCachedStyleData, mInheritedData),
-    offsetof(nsInheritedStyleData, mSVGData),
-    PR_FALSE
-  },
-#endif
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
 
   { 0, 0, 0 }
 };

@@ -56,17 +56,15 @@ typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData
 
 struct nsInheritedStyleData
 {
-  nsStyleVisibility* mVisibilityData;
-  nsStyleFont* mFontData;
-  nsStyleList* mListData;
-  nsStyleTableBorder* mTableData;
-  nsStyleColor* mColorData;
-  nsStyleQuotes* mQuotesData;
-  nsStyleText* mTextData;
-  nsStyleUserInterface* mUIData;
-#ifdef MOZ_SVG
-  nsStyleSVG* mSVGData;
-#endif
+
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+  nsStyle##name * m##name##Data;
+#define STYLE_STRUCT_RESET(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
 
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
     void* result = nsnull;
@@ -75,71 +73,56 @@ struct nsInheritedStyleData
   };
 
   void ClearInheritedData(PRUint32 aBits) {
-    if (mVisibilityData && (aBits & NS_STYLE_INHERIT_VISIBILITY))
-      mVisibilityData = nsnull;
-    if (mFontData && (aBits & NS_STYLE_INHERIT_FONT))
-      mFontData = nsnull;
-    if (mListData && (aBits & NS_STYLE_INHERIT_LIST))
-      mListData = nsnull;
-    if (mTableData && (aBits & NS_STYLE_INHERIT_TABLE_BORDER))
-      mTableData = nsnull;
-    if (mColorData && (aBits & NS_STYLE_INHERIT_COLOR))
-      mColorData = nsnull;
-    if (mQuotesData && (aBits & NS_STYLE_INHERIT_QUOTES))
-      mQuotesData = nsnull;
-    if (mTextData && (aBits & NS_STYLE_INHERIT_TEXT))
-      mTextData = nsnull;
-    if (mUIData && (aBits & NS_STYLE_INHERIT_UI))
-      mUIData = nsnull;
-#ifdef MOZ_SVG
-    if (mSVGData && (aBits & NS_STYLE_INHERIT_SVG))
-      mSVGData = nsnull;
-#endif 
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+    if (m##name##Data && (aBits & NS_STYLE_INHERIT_BIT(name))) \
+      m##name##Data = nsnull;
+#define STYLE_STRUCT_RESET(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
   };
 
   void Destroy(PRUint32 aBits, nsIPresContext* aContext) {
-    if (mVisibilityData && !(aBits & NS_STYLE_INHERIT_VISIBILITY))
-      mVisibilityData->Destroy(aContext);
-    if (mFontData && !(aBits & NS_STYLE_INHERIT_FONT))
-      mFontData->Destroy(aContext);
-    if (mListData && !(aBits & NS_STYLE_INHERIT_LIST))
-      mListData->Destroy(aContext);
-    if (mTableData && !(aBits & NS_STYLE_INHERIT_TABLE_BORDER))
-      mTableData->Destroy(aContext);
-    if (mColorData && !(aBits & NS_STYLE_INHERIT_COLOR))
-      mColorData->Destroy(aContext);
-    if (mQuotesData && !(aBits & NS_STYLE_INHERIT_QUOTES))
-      mQuotesData->Destroy(aContext);
-    if (mTextData && !(aBits & NS_STYLE_INHERIT_TEXT))
-      mTextData->Destroy(aContext);
-    if (mUIData && !(aBits & NS_STYLE_INHERIT_UI))
-      mUIData->Destroy(aContext);
-#ifdef MOZ_SVG
-    if (mSVGData && !(aBits & NS_STYLE_INHERIT_SVG))
-      mSVGData->Destroy(aContext);
-#endif
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+    if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
+      m##name##Data->Destroy(aContext);
+#define STYLE_STRUCT_RESET(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+
     aContext->FreeToShell(sizeof(nsInheritedStyleData), this);
   };
 
-  nsInheritedStyleData() 
-    :mVisibilityData(nsnull), mFontData(nsnull), mListData(nsnull), 
-     mTableData(nsnull), mColorData(nsnull), mQuotesData(nsnull), mTextData(nsnull), mUIData(nsnull)
-#ifdef MOZ_SVG
-    , mSVGData(nsnull)
-#endif
-  {};
+  nsInheritedStyleData() {
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+    m##name##Data = nsnull;
+#define STYLE_STRUCT_RESET(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+
+  };
 };
 
 struct nsResetStyleData
 {
   nsResetStyleData()
-    :mDisplayData(nsnull), mMarginData(nsnull), mBorderData(nsnull), mPaddingData(nsnull), 
-     mOutlineData(nsnull), mPositionData(nsnull), mTableData(nsnull), mBackgroundData(nsnull),
-     mContentData(nsnull), mTextData(nsnull), mUIData(nsnull)
   {
-#ifdef INCLUDE_XUL
-    mXULData = nsnull;
-#endif
+#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+    m##name##Data = nsnull;
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_RESET
+#undef STYLE_STRUCT_INHERITED
   };
 
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
@@ -149,78 +132,40 @@ struct nsResetStyleData
   }
 
   void ClearInheritedData(PRUint32 aBits) {
-    if (mDisplayData && (aBits & NS_STYLE_INHERIT_DISPLAY))
-      mDisplayData = nsnull;
-    if (mMarginData && (aBits & NS_STYLE_INHERIT_MARGIN))
-      mMarginData = nsnull;
-    if (mBorderData && (aBits & NS_STYLE_INHERIT_BORDER))
-      mBorderData = nsnull;
-    if (mPaddingData && (aBits & NS_STYLE_INHERIT_PADDING))
-      mPaddingData = nsnull;
-    if (mOutlineData && (aBits & NS_STYLE_INHERIT_OUTLINE))
-      mOutlineData = nsnull;
-    if (mPositionData && (aBits & NS_STYLE_INHERIT_POSITION))
-      mPositionData = nsnull;
-    if (mTableData && (aBits & NS_STYLE_INHERIT_TABLE))
-      mTableData = nsnull;
-    if (mBackgroundData && (aBits & NS_STYLE_INHERIT_BACKGROUND))
-      mBackgroundData = nsnull;
-    if (mContentData && (aBits & NS_STYLE_INHERIT_CONTENT))
-      mContentData = nsnull;
-    if (mTextData && (aBits & NS_STYLE_INHERIT_TEXT_RESET))
-      mTextData = nsnull;
-    if (mUIData && (aBits & NS_STYLE_INHERIT_UI_RESET))
-      mUIData = nsnull;
-#ifdef INCLUDE_XUL
-    if (mXULData && (aBits & NS_STYLE_INHERIT_XUL))
-      mXULData = nsnull;
-#endif
+#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+    if (m##name##Data && (aBits & NS_STYLE_INHERIT_BIT(name))) \
+      m##name##Data = nsnull;
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_RESET
+#undef STYLE_STRUCT_INHERITED
   };
 
   void Destroy(PRUint32 aBits, nsIPresContext* aContext) {
-    if (mDisplayData && !(aBits & NS_STYLE_INHERIT_DISPLAY))
-      mDisplayData->Destroy(aContext);
-    if (mMarginData && !(aBits & NS_STYLE_INHERIT_MARGIN))
-      mMarginData->Destroy(aContext);
-    if (mBorderData && !(aBits & NS_STYLE_INHERIT_BORDER))
-      mBorderData->Destroy(aContext);
-    if (mPaddingData && !(aBits & NS_STYLE_INHERIT_PADDING))
-      mPaddingData->Destroy(aContext);
-    if (mOutlineData && !(aBits & NS_STYLE_INHERIT_OUTLINE))
-      mOutlineData->Destroy(aContext);
-    if (mPositionData && !(aBits & NS_STYLE_INHERIT_POSITION))
-      mPositionData->Destroy(aContext);
-    if (mTableData && !(aBits & NS_STYLE_INHERIT_TABLE))
-      mTableData->Destroy(aContext);
-    if (mBackgroundData && !(aBits & NS_STYLE_INHERIT_BACKGROUND))
-      mBackgroundData->Destroy(aContext);
-    if (mContentData && !(aBits & NS_STYLE_INHERIT_CONTENT))
-      mContentData->Destroy(aContext);
-    if (mTextData && !(aBits & NS_STYLE_INHERIT_TEXT_RESET))
-      mTextData->Destroy(aContext);
-    if (mUIData && !(aBits & NS_STYLE_INHERIT_UI_RESET))
-      mUIData->Destroy(aContext);
-#ifdef INCLUDE_XUL
-    if (mXULData && !(aBits & NS_STYLE_INHERIT_XUL))
-      mXULData->Destroy(aContext);
-#endif
+#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+    if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
+      m##name##Data->Destroy(aContext);
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_RESET
+#undef STYLE_STRUCT_INHERITED
+
     aContext->FreeToShell(sizeof(nsResetStyleData), this);
   };
 
-  nsStyleDisplay* mDisplayData;
-  nsStyleMargin* mMarginData;
-  nsStyleBorder* mBorderData;
-  nsStylePadding* mPaddingData;
-  nsStyleOutline* mOutlineData;
-  nsStylePosition* mPositionData;
-  nsStyleTable* mTableData;
-  nsStyleBackground* mBackgroundData;
-  nsStyleContent* mContentData;
-  nsStyleTextReset* mTextData;
-  nsStyleUIReset* mUIData;
-#ifdef INCLUDE_XUL
-  nsStyleXUL* mXULData;
-#endif
+#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+  nsStyle##name * m##name##Data;
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_RESET
+#undef STYLE_STRUCT_INHERITED
+
 };
 
 struct nsCachedStyleData
@@ -241,10 +186,11 @@ struct nsCachedStyleData
   };
 
   static PRUint32 GetBitForSID(const nsStyleStructID& aSID) {
-    return 1 << (aSID - 1);
+    return 1 << aSID;
   };
 
   nsStyleStruct* GetStyleData(const nsStyleStructID& aSID) {
+    // NOTE:  nsStyleContext::SetStyle works roughly the same way.
     const StyleStructInfo& info = gInfo[aSID];
     char* resetOrInheritSlot = NS_REINTERPRET_CAST(char*, this) + info.mCachedStyleDataOffset;
     char* resetOrInherit = NS_REINTERPRET_CAST(char*, *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
@@ -508,10 +454,12 @@ protected:
                                             nsIStyleContext* aContext,  
                                             nsRuleNode* aHighestNode,
                                             const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
-                                     nsIStyleContext* aContext,  
-                                     nsRuleNode* aHighestNode,
-                                     const RuleDetail& aRuleDetail, PRBool aInherited);
+  const nsStyleStruct* ComputeUserInterfaceData(nsStyleStruct* aStartData,
+                                                const nsCSSStruct& aData, 
+                                                nsIStyleContext* aContext,  
+                                                nsRuleNode* aHighestNode,
+                                                const RuleDetail& aRuleDetail,
+                                                PRBool aInherited);
   const nsStyleStruct* ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
                                           nsIStyleContext* aContext,  
                                           nsRuleNode* aHighestNode,
@@ -560,7 +508,7 @@ protected:
   const nsStyleStruct* GetQuotesData(nsIStyleContext* aContext, PRBool aComputeData);
   const nsStyleStruct* GetTextData(nsIStyleContext* aContext, PRBool aComputeData);
   const nsStyleStruct* GetTextResetData(nsIStyleContext* aContext, PRBool aComputeData);
-  const nsStyleStruct* GetUIData(nsIStyleContext* aContext, PRBool aComputeData);
+  const nsStyleStruct* GetUserInterfaceData(nsIStyleContext* aContext, PRBool aComputeData);
   const nsStyleStruct* GetUIResetData(nsIStyleContext* aContext, PRBool aComputeData);
 #ifdef INCLUDE_XUL
   const nsStyleStruct* GetXULData(nsIStyleContext* aContext, PRBool aComputeData);
