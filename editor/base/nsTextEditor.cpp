@@ -146,6 +146,7 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged()
 nsTextEditor::nsTextEditor()
 :  mTypeInState(nsnull)
 ,  mRules(nsnull)
+,  mKeyListenerP(nsnull)
 ,  mIsComposing(PR_FALSE)
 {
 // Done in nsEditor
@@ -163,8 +164,8 @@ nsTextEditor::~nsTextEditor()
   nsEditor::GetDocument(getter_AddRefs(doc));
   if (doc)
   {
-    nsCOMPtr<nsIDOMEventReceiver> erP;
-    nsresult result = doc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
+    nsresult result;
+    nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(doc, &result);
     if (NS_SUCCEEDED(result) && erP) 
     {
       if (mKeyListenerP) {
@@ -1039,6 +1040,12 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 NS_IMETHODIMP nsTextEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
 {
   mMaxTextLength = aMaxTextLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextEditor::GetMaxTextLength(PRInt32& aMaxTextLength)
+{
+  aMaxTextLength = mMaxTextLength;
   return NS_OK;
 }
 
