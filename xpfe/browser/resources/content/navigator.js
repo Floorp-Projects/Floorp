@@ -297,6 +297,7 @@ function UpdateBookmarksLastVisitedDate(event)
         // Load it using yet another psuedo-onload handler.
         onLoadViaOpenDialog();
     }
+    sidebarOverlayInit();
   }
 
   function Shutdown() {
@@ -842,7 +843,7 @@ function OpenSearch(tabName, searchStr)
   }
 
   function BrowserEditBookmarks()
-  {
+  { 
     window.open("chrome://bookmarks/content/", "BookmarksWindow", "chrome,menubar,resizable,scrollbars");
   }
 
