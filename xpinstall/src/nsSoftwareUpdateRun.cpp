@@ -50,17 +50,17 @@
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, const nsFileSpec& jarfile, const PRUnichar* url, const PRUnichar* args);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, const nsFileSpec& jarfile, const PRUnichar* url, const PRUnichar* args, nsIZipReader* hZip);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-static PRInt32  GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(const nsFileSpec& jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength);
+static nsresult SetupInstallContext(nsIZipReader* hZip, const nsFileSpec& jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name    : XPInstallErrorReporter
@@ -121,23 +121,15 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static PRInt32
-GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength)
+GetInstallScriptFromJarfile(nsIZipReader* hZip, nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength)
 {
-    nsCOMPtr<nsIZipReader> hZip;
     PRInt32 result = NS_OK;
     
     *scriptBuffer = nsnull;
     *scriptLength = 0;
 
-    static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
-    static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
-    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID, 
-                                                     getter_AddRefs(hZip));
-    if (NS_FAILED(rv))
-        return nsInstall::CANT_READ_ARCHIVE;
-
     nsCOMPtr<nsILocalFile> jFile;
-    rv = NS_NewLocalFile(jarFile, getter_AddRefs(jFile));
+    nsresult rv = NS_NewLocalFile(jarFile, getter_AddRefs(jFile));
     if (NS_SUCCEEDED(rv))
       rv = hZip->Init(jFile);
 
@@ -207,6 +199,7 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
 // Function name    : SetupInstallContext
 // Description      : Creates a Javascript context and adds our xpinstall objects to it.
 // Return type      : static nsresult
+// Argument         : nsIZipReader hZip - the handle to the open archive file
 // Argument         : const char* jarFile - native filepath to where jar exists on disk 
 // Argument         : const PRUnichar* url  - URL of where this package came from
 // Argument         : const PRUnichar* args    - any arguments passed into the javascript context
@@ -214,7 +207,8 @@ GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *
 // Argument         : JSContext **jsCX   - Created context, destroy via JS_DestroyContext
 // Argument         : JSObject **jsGlob  - created global object
 ///////////////////////////////////////////////////////////////////////////////////////////////
-static nsresult SetupInstallContext(const nsFileSpec& jarFile,
+static nsresult SetupInstallContext(nsIZipReader* hZip,
+                                    const nsFileSpec& jarFile,
                                     const PRUnichar* url,
                                     const PRUnichar* args, 
                                     JSRuntime *rt, 
@@ -239,7 +233,7 @@ static nsresult SetupInstallContext(const nsFileSpec& jarFile,
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
 
-    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args);
+    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, hZip);
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
 
@@ -298,8 +292,18 @@ extern "C" void RunInstallOnThread(void *data)
     PRUint32    scriptLength;
 
     JSRuntime   *rt;
-	JSContext   *cx;
+    JSContext   *cx;
     JSObject    *glob;
+
+    nsCOMPtr<nsIZipReader> hZip;
+
+    static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
+    static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
+    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID, 
+                                                     getter_AddRefs(hZip));
+
+    if (NS_FAILED(rv))
+        return;
 
     // we will plan on sending a failure status back from here unless we
     // find positive acknowledgement that the script sent the status
@@ -307,8 +311,6 @@ extern "C" void RunInstallOnThread(void *data)
     PRBool      sendStatus = PR_TRUE;
 
     nsIXPINotifier *notifier;
-    nsresult    rv;
-
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
     nsCOMPtr<nsIEventQueue> eventQ;
@@ -343,7 +345,8 @@ extern "C" void RunInstallOnThread(void *data)
     rv = installInfo->GetLocalFile(jarpath);
     if (NS_SUCCEEDED(rv))
 	{
-        finalStatus = GetInstallScriptFromJarfile( jarpath, 
+        finalStatus = GetInstallScriptFromJarfile( hZip,
+                                                   jarpath,
                                                    &scriptBuffer, 
                                                    &scriptLength);
 
@@ -360,7 +363,7 @@ extern "C" void RunInstallOnThread(void *data)
 	            rt = JS_Init(4L * 1024L * 1024L);
             }
 
-            rv = SetupInstallContext( jarpath, 
+            rv = SetupInstallContext( hZip, jarpath, 
                                       url.GetUnicode(),
                                       args.GetUnicode(), 
                                       rt, &cx, &glob);

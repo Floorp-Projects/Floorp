@@ -148,6 +148,7 @@ class nsInstall
             SOURCE_IS_DIRECTORY         = -233,
             SOURCE_IS_FILE              = -234,
             INSUFFICIENT_DISK_SPACE     = -235,
+            FILENAME_TOO_LONG           = -236,
             
             OUT_OF_MEMORY               = -299,
 
@@ -168,7 +169,7 @@ class nsInstall
         };
 
 
-        nsInstall();
+        nsInstall(nsIZipReader * theJARFile);
         virtual ~nsInstall();
         
         PRInt32    SetScriptObject(void* aScriptObject);
@@ -314,8 +315,6 @@ class nsInstall
 
         void        CleanUp();
 
-        PRInt32     OpenJARFile(void);
-        void        CloseJARFile(void);
         PRInt32     ExtractDirEntries(const nsString& directory, nsVoidArray *paths);
 
         PRInt32     ScheduleForInstall(nsInstallObject* ob);

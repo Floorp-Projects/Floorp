@@ -1793,6 +1793,7 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::SOURCE_IS_DIRECTORY,        "SOURCE_IS_DIRECTORY"          },
     { nsInstall::SOURCE_IS_FILE,             "SOURCE_IS_FILE"               },
     { nsInstall::INSUFFICIENT_DISK_SPACE,    "INSUFFICIENT_DISK_SPACE"      },
+    { nsInstall::FILENAME_TOO_LONG,          "FILENAME_TOO_LONG"            },
 
     { nsInstall::GESTALT_UNKNOWN_ERR,        "GESTALT_UNKNOWN_ERR"          },
     { nsInstall::GESTALT_INVALID_ARGUMENT,   "GESTALT_INVALID_ARGUMENT"     },
@@ -1912,7 +1913,8 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                              JSObject *global, 
                              const nsFileSpec& jarfile, 
                              const PRUnichar* url,
-                             const PRUnichar* args)
+                             const PRUnichar* args,
+                             nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;
   nsInstall *nativeInstallObject;
@@ -1943,7 +1945,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
             return nsnull;
   
-  nativeInstallObject = new nsInstall();
+  nativeInstallObject = new nsInstall(theJARFile);
 
   nativeInstallObject->SetJarFileLocation(jarfile);
   nativeInstallObject->SetInstallArguments(args);

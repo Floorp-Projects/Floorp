@@ -86,6 +86,15 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
+// filename length maximums
+#ifdef XP_MAC
+#define MAX_NAME_LENGTH 31
+#elif defined (XP_PC)
+#define MAX_NAME_LENGTH 128
+#elif defined (XP_UNIX)
+#define MAX_NAME_LENGTH 1024 //got this one from nsComponentManager.h
+#endif
+
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo);
 
 nsInstallInfo::nsInstallInfo(nsIFileSpec*     aFile, 
@@ -107,7 +116,7 @@ nsInstallInfo::nsInstallInfo(nsIFileSpec*     aFile,
 
 nsInstallInfo::~nsInstallInfo()
 {
-    MOZ_COUNT_DTOR(nsInstallInfo);
+  MOZ_COUNT_DTOR(nsInstallInfo);
 }
 
 nsresult
@@ -130,7 +139,7 @@ static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsInstall);
 
-nsInstall::nsInstall()
+nsInstall::nsInstall(nsIZipReader * theJARFile)
 {
     MOZ_COUNT_CTOR(nsInstall);
 
@@ -147,12 +156,12 @@ nsInstall::nsInstall()
     mJarFileLocation        = "";
     mInstallArguments       = "";
 
+
     // mJarFileData is an opaque handle to the jarfile.
-    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID, 
-                                                     (void**) &mJarFileData);
+    mJarFileData = theJARFile;
 
     nsISoftwareUpdate *su;
-    rv = nsServiceManager::GetService(kSoftwareUpdateCID, 
+    nsresult rv = nsServiceManager::GetService(kSoftwareUpdateCID, 
                                                kISoftwareUpdateIID,
                                                (nsISupports**) &su);
     
@@ -473,6 +482,12 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     {
         *aReturn = SaveError( nsInstall::INVALID_ARGUMENTS );
         return NS_OK;
+    }
+
+    if(aTargetName.Length() > MAX_NAME_LENGTH)
+    {
+      *aReturn = SaveError( nsInstall::FILENAME_TOO_LONG );
+      return NS_OK;
     }
     
     PRInt32 result = SanityCheck();
@@ -1313,7 +1328,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     if (szRegPackageName == nsnull)
     {
         *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-        return PR_FALSE;
+        return nsInstall::OUT_OF_MEMORY;
     }
 
     *szRegPackagePath = '0';
@@ -1351,7 +1366,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     if (mVersionInfo == nsnull)
     {
         *aReturn = nsInstall::OUT_OF_MEMORY;
-        return nsInstall::OUT_OF_MEMORY;
+        return SaveError(nsInstall::OUT_OF_MEMORY);
     }
 
     mVersionInfo->Init(aVersion);
@@ -1361,20 +1376,9 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     if (mInstalledFiles == nsnull)
     {
         *aReturn = nsInstall::OUT_OF_MEMORY;
-        return nsInstall::OUT_OF_MEMORY;
+        return SaveError(nsInstall::OUT_OF_MEMORY);
     }
 
-    /* this function should also check security!!! */
-    *aReturn = OpenJARFile();
-
-    if (*aReturn != nsInstall::SUCCESS) // XXX must use NS_SUCCEEDED macro!
-    {
-        /* if we can not continue with the javascript return a JAR error*/
-        return -1;  /* FIX: need real error code */
-    }
- 
-    SaveError(*aReturn);
-    
     if (mNotifier)
             mNotifier->InstallStarted(mInstallURL.GetUnicode(), mUIName.GetUnicode());
 
@@ -2079,7 +2083,6 @@ void
 nsInstall::CleanUp(void)
 {
     nsInstallObject* ie;
-    CloseJARFile();
     
     if ( mInstalledFiles != NULL ) 
     {
@@ -2162,33 +2165,6 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
         return res;
     
     return dialog->Confirm(string.GetUnicode(), aReturn);
-}
-
-
-
-PRInt32 
-nsInstall::OpenJARFile(void)
-{
-    nsresult rv;
-    nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(mJarFileLocation, getter_AddRefs(file));       // XXX until mJarFileLocation is an nsIFile
-    if (NS_FAILED(rv))
-        return UNEXPECTED_ERROR;
-    rv = mJarFileData->Init(file);
-    if (NS_FAILED(rv))
-        return UNEXPECTED_ERROR;
-
-    rv = mJarFileData->Open();
-    if (NS_FAILED(rv))
-        return UNEXPECTED_ERROR;
-
-    return SUCCESS;
-}
-
-void
-nsInstall::CloseJARFile(void)
-{
-    NS_IF_RELEASE(mJarFileData);
 }
 
 

@@ -104,7 +104,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         
         nsInstallVersion* oldVersion = new nsInstallVersion();
         
-        if (newVersion == nsnull)
+        if (oldVersion == nsnull)
         {
             Recycle(qualifiedRegNameString);
             delete oldVersion;
@@ -127,9 +127,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         {
             // the file to be installed is OLDER than what is on disk.
             // Don't install it.
-            Recycle(qualifiedRegNameString);
             mSkipInstall = PR_TRUE;
-            return;
         }
     }
 
@@ -238,11 +236,11 @@ nsInstallFile::~nsInstallFile()
  */
 PRInt32 nsInstallFile::Prepare()
 {
-    if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull )
-        return nsInstall::INVALID_ARGUMENTS;
-
     if (mSkipInstall)
         return nsInstall::SUCCESS;
+
+    if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull )
+        return nsInstall::INVALID_ARGUMENTS;
 
     return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, &mExtractedFile);
 }
