@@ -64,7 +64,6 @@
 
     + finish `User Manual'
     + better comments
-    + a special macro for |QueryInterface|, a la "Essential COM"?
 */
 
 
@@ -75,14 +74,15 @@
     |COM_auto_ptr| is a `smart-pointer'.  It is a template class that acts, syntactically,
     just like an ordinary pointer in C or C++, i.e., you can apply |*| or |->| to it to
     `get to' what it points at.  |COM_auto_ptr| is smart in that, unlike a raw COM
-    interface pointer, |COM_auto_ptr| manages |AddRef| and |Release| _for_ you.
+    interface pointer, |COM_auto_ptr| manages |AddRef|, |Release|, and |QueryInterface|
+    _for_ you.
 
     For instance, here is a typical snippet of code (at its most compact) where you assign
     a COM interface pointer into a member variable:
 
       NS_IF_RELEASE(mFoop);  // If I have one already, I must release it before over-writing it.
       if ( mFooP = aPtr )    // Now it's safe to assign it in, and, if it's not NULL
-        mFooP->AddRef();    // I must |AddRef| it, since I'll be holding on to it.
+        mFooP->AddRef();     // I must |AddRef| it, since I'll be holding on to it.
 
     If our member variable |mFooP| were a |COM_auto_ptr|, however, the snippet above
     would look like this:
@@ -185,6 +185,7 @@
 
     Don't worry.  It's a compile-time error if you forget to wrap it.
 
+		Compare the raw-pointer way...
 
       IFoo* foo = 0;
       nsresult status = CreateIFoo(&foo);
@@ -205,18 +206,18 @@
         }
 
 
-    COM_auto_ptr<IFoo> fooP;
-    nsresult status = CreateIFoo( getter_AddRefs(fooP) );
-    if ( NS_SUCCEEDED(status) )
-      {
-        COM_auto_ptr<IBar> barP;
-        if ( NS_SUCCEEDED(status = foo->QueryInterface(riid, getter_AddRefs(barP))) )
-          {
-            COM_auto_ptr<IFooBar> fooBarP;
-            if ( NS_SUCCEEDED(status = CreateIFooBar(fooP, barP, getter_AddRefs(fooBarP))) )
-              fooBarP->DoTheReallyHardThing();
-          }
-      }
+
+		To the smart-pointer way...
+
+			COM_auto_ptr<IFoo> fooP;
+			nsresult status = CreateIFoo( getter_AddRefs(fooP) );
+			if ( NS_SUCCEEDED(status) )
+				if ( COM_auto_ptr<IBar> barP = fooP )
+					{
+						COM_auto_ptr<IFooBar> fooBarP;
+						if ( NS_SUCCEEDED(status = CreateIFooBar(fooP, barP, getter_AddRefs(fooBarP))) )
+							fooBarP->DoTheReallyHardThing();
+					}
 
     
   Is there an easy way to convert my current code?
@@ -267,8 +268,10 @@
 
 #ifndef NSCAP_NO_NEW_CASTS
   #define NSCAP_REINTERPRET_CAST(T,x)  reinterpret_cast<T>(x)
+  #define NSCAP_STATIC_CAST(T,x)  static_cast<T>(x)
 #else
   #define NSCAP_REINTERPRET_CAST(T,x)  ((T)(x))
+  #define NSCAP_STATIC_CAST(T,x)  ((T)(x))
 #endif
 
 #ifndef NSCAP_NO_BOOL
@@ -296,6 +299,8 @@ class nsDerivedSafe : public T
       nsrefcnt AddRef();
       nsrefcnt Release();
 #endif
+
+			void operator delete(void*); // NOT TO BE IMPELEMENTED
   };
 
 #if defined(NSCAP_NO_MEMBER_USING_DECLARATIONS) && defined(NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
@@ -318,7 +323,7 @@ nsDerivedSafe<T>::Release()
 
 
 
-#ifdef NASCAP_FEATURE_DONT_ADDREF
+#ifdef NSCAP_FEATURE_DONT_ADDREF
 template <class T>
 struct nsDontAddRef
     /*
@@ -368,14 +373,21 @@ class COM_auto_ptr
       typedef T element_type;
 
       explicit
-      COM_auto_ptr( T* aRawPtr = 0 )
-          : mRawPtr(aRawPtr),
-            mIsAwaitingAddRef(0)
-        {
-          NS_IF_ADDREF(mRawPtr);
-        }
+      COM_auto_ptr( nsISupports* aRawPtr = 0 )
+      		: mRawPtr(0),
+      			mIsAwaitingAddRef(0)
+					/*
+						...it's unfortunate, but negligable, that this does a |QueryInterface| even
+						when constructed from a |T*| but we can't tell the difference between a |T*|
+						and a pointer to some object derived from |class T|.
+					*/
+      	{
+      		if ( aRawPtr )
+	      		aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void **,&mRawPtr));
+	      		// ...and |QueryInterface| does the |AddRef| for us
+      	}
 
-#ifdef NASCAP_FEATURE_DONT_ADDREF
+#ifdef NSCAP_FEATURE_DONT_ADDREF
       explicit
       COM_auto_ptr( const nsDontAddRef<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
@@ -389,40 +401,61 @@ class COM_auto_ptr
           : mRawPtr(aSmartPtr.mRawPtr),
             mIsAwaitingAddRef(0)
         {
-          NS_IF_ADDREF(mRawPtr);
+          if ( mRawPtr )
+          	mRawPtr->AddRef();
         }
 
      ~COM_auto_ptr()
         {
           if ( mRawPtr && !mIsAwaitingAddRef )
-            NS_RELEASE(mRawPtr);
+            mRawPtr->Release();
         }
 
-      COM_auto_ptr&
-      operator=( T* rhs )
-        {
-          reset(rhs);
-          return *this;
-        }
+			COM_auto_ptr&
+			operator=( nsISupports* rhs )
+				{
+      		T* rawPtr = 0;
+      		if ( rhs )
+      			rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void **,&rawPtr));
 
-#ifdef NASCAP_FEATURE_DONT_ADDREF
+					if ( mIsAwaitingAddRef )
+						mIsAwaitingAddRef = 0;
+					else if ( mRawPtr )
+      			mRawPtr->Release();
+
+      		mRawPtr = rawPtr;
+      		return *this;
+				}
+
+#ifdef NSCAP_FEATURE_DONT_ADDREF
       COM_auto_ptr&
       operator=( const nsDontAddRef<T>& rhs )
         {
-          if ( mRawPtr && !mIsAwaitingAddRef )
-            NS_RELEASE(mRawPtr);
-          mIsAwaitingAddRef = 0;
+        	if ( mIsAwaitingAddRef )
+         	 mIsAwaitingAddRef = 0;
+          else if ( mRawPtr )
+            mRawPtr->Release();
           mRawPtr = rhs.mRawPtr;
           return *this;
         }
 #endif
 
-      COM_auto_ptr&
-      operator=( const COM_auto_ptr& rhs )
-        {
-          reset(rhs.mRawPtr);
-          return *this;
-        }
+			COM_auto_ptr&
+			operator=( const COM_auto_ptr& rhs )
+				{
+					T* rawPtr = rhs.mRawPtr;
+
+					if ( rawPtr )
+						rawPtr->AddRef();
+
+					if ( mIsAwaitingAddRef )
+						mIsAwaitingAddRef = 0;
+					else if ( mRawPtr )
+						mRawPtr->Release();
+
+					mRawPtr = rawPtr;
+					return *this;
+				}
 
       nsDerivedSafe<T>*
       operator->() const
@@ -452,16 +485,6 @@ class COM_auto_ptr
           return NSCAP_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
         }
 
-      void
-      reset( T* aRawPtr = 0 )
-        {
-          NS_IF_ADDREF(aRawPtr);
-          if ( mRawPtr && !mIsAwaitingAddRef )
-            NS_RELEASE(mRawPtr);
-          mIsAwaitingAddRef = 0;
-          mRawPtr = aRawPtr;
-        }
-
 #if 0
     private:
       friend class nsGetterAddRefs<T>;
@@ -483,7 +506,7 @@ class COM_auto_ptr
       StartAssignment( NSCAP_BOOL awaiting_AddRef )
         {
           if ( mRawPtr && !mIsAwaitingAddRef )
-            NS_RELEASE(mRawPtr);
+            mRawPtr->Release();
           mIsAwaitingAddRef = awaiting_AddRef;
           mRawPtr = 0;
           return &mRawPtr;
@@ -494,7 +517,7 @@ class COM_auto_ptr
         {
           if ( mIsAwaitingAddRef )
             {
-              NS_IF_ADDREF(mRawPtr);
+              mRawPtr->AddRef();
               mIsAwaitingAddRef = 0;
             }
         }
@@ -506,7 +529,6 @@ class COM_auto_ptr
 
 
 
-
   /*
     The following functions make comparing |COM_auto_ptr|s and raw pointers
     more convenient.
@@ -515,33 +537,33 @@ class COM_auto_ptr
 template <class T>
 inline
 NSCAP_BOOL
-operator==( const COM_auto_ptr<T>& aLeft, const T*const aRight )
+operator==( const COM_auto_ptr<T>& lhs, const T*const rhs )
   {
-    return aLeft.get() == aRight;
+    return lhs.get() == rhs;
   }
 
 template <class T>
 inline
 NSCAP_BOOL
-operator!=( const COM_auto_ptr<T>& aLeft, const T*const aRight )
+operator!=( const COM_auto_ptr<T>& lhs, const T*const rhs )
   {
-    return aLeft.get() != aRight;
+    return lhs.get() != rhs;
   }
 
 template <class T>
 inline
 NSCAP_BOOL
-operator==( const T*const aLeft, const COM_auto_ptr<T>& aRight )
+operator==( const T*const lhs, const COM_auto_ptr<T>& rhs )
   {
-    return aLeft == aRight.get();
+    return lhs == rhs.get();
   }
 
 template <class T>
 inline
 NSCAP_BOOL
-operator!=( const T*const aLeft, const COM_auto_ptr<T>& aRight )
+operator!=( const T*const lhs, const COM_auto_ptr<T>& rhs )
   {
-    return aLeft != aRight.get();
+    return lhs != rhs.get();
   }
 
 
