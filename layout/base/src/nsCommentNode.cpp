@@ -149,6 +149,9 @@ public:
     return mInner.GetAttributeCount(aResult);
   }
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const {
+    return NS_OK;
+  }
   NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const {
     return mInner.BeginConvertToXIF(aConverter);
   }

@@ -202,6 +202,11 @@ nsDOMDocumentType::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
+nsDOMDocumentType::DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMDocumentType::HandleDOMEvent(nsIPresContext* aPresContext,
                                            nsEvent* aEvent,
                                            nsIDOMEvent** aDOMEvent,

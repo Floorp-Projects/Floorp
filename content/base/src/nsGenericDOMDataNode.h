@@ -200,6 +200,7 @@ struct nsGenericDOMDataNode {
     return NS_OK;
   }
   nsresult List(FILE* out, PRInt32 aIndent) const;
+  nsresult DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
   nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -524,7 +525,10 @@ struct nsGenericDOMDataNode {
     return _g.GetAttributeCount(aResult);                                  \
   }                                                                        \
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
+  NS_IMETHOD DumpContent(FILE* out,                                        \
+                         PRInt32 aIndent,                                  \
+                         PRBool aDumpAll) const;                           \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
   NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \

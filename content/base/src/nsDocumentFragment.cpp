@@ -198,6 +198,10 @@ public:
     }
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const
     { return mInner.List(out, aIndent); }
+  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const 
+  {
+    return mInner.DumpContent(out, aIndent,aDumpAll); 
+  }
   NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const
     { return NS_OK; }
   NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const
