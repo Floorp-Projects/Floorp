@@ -36,6 +36,7 @@ am-advanced.xul
 am-imap-advanced.xul
 am-imap-advanced.js
 am-smtp.xul
+am-smtp.js
 pref-mailnews.xul
 pref-mailnews.js
 pref-winsetting.xul

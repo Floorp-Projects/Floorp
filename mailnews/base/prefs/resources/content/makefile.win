@@ -38,6 +38,7 @@ install::
 	$(MAKE_INSTALL) am-imap-advanced.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-imap-advanced.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-smtp.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-smtp.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-winsetting.xul $(DIST)\bin\chrome\messenger\content\default
@@ -84,6 +85,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\am-imap-advanced.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-imap-advanced.js
 	rm -f $(DIST)\chrome\messenger\content\default\am-smtp.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-smtp.js
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.js
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accounttype.xul
