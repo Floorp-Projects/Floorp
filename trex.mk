@@ -44,9 +44,9 @@ pull_all: pull_platform pull_trex
 
 pull_platform:
 	cd $(MOZ_SRC); \
-    -$(CVS) mozilla/config mozilla/raptor.mk; \
+    -$(CVS) mozilla/config mozilla/nglayout.mk; \
     cd $(MOZ_SRC)/mozilla ; \
-    nmake -f raptor.mk pull_all ;\
+    nmake -f nglayout.mk pull_all ;\
     cd $(MOZ_SRC)
 
 pull_trex:
@@ -61,7 +61,7 @@ build_all: build_platform build_trex
 
 build_platform:
 	cd $(MOZ_SRC)/mozilla; \
-    gmake -f raptor.mk real_all; \
+    gmake -f nglayout.mk real_all; \
     cd $(MOZ_SRC)
 
 
