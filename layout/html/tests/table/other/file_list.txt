@@ -1,5 +1,5 @@
-file://s:/table_tests/other/nestedTables.html
-file://s:/table_tests/other/slashlogo.html
-file://s:/table_tests/other/wa_table_thtd_rowspan.html
-file://s:/table_tests/other/wa_table_tr_align.html
-file://s:/table_tests/other/wf_table_index.html
+file://s:/mozilla/layout/html/tests/table/other/nestedTables.html
+file://s:/mozilla/layout/html/tests/table/other/slashlogo.html
+file://s:/mozilla/layout/html/tests/table/other/wa_table_thtd_rowspan.html
+file://s:/mozilla/layout/html/tests/table/other/wa_table_tr_align.html
+file://s:/mozilla/layout/html/tests/table/other/wf_table_index.html
