@@ -98,59 +98,58 @@ public class Interpreter
         Icode_RETUNDEF                  = -21,
 
     // Exception handling implementation
-        Icode_CATCH                     = -22,
-        Icode_GOSUB                     = -23,
-        Icode_RETSUB                    = -24,
+        Icode_GOSUB                     = -22,
+        Icode_RETSUB                    = -23,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -25,
+        Icode_LINE                      = -24,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -26,
-        Icode_INTNUMBER                 = -27,
+        Icode_SHORTNUMBER               = -25,
+        Icode_INTNUMBER                 = -26,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -28,
-        Icode_LITERAL_SET               = -29,
+        Icode_LITERAL_NEW               = -27,
+        Icode_LITERAL_SET               = -28,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -30,
+        Icode_SPARE_ARRAYLIT            = -29,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -31,
-        Icode_REG_IND_C1                = -32,
-        Icode_REG_IND_C2                = -33,
-        Icode_REG_IND_C3                = -34,
-        Icode_REG_IND_C4                = -35,
-        Icode_REG_IND_C5                = -36,
-        Icode_REG_IND1                  = -37,
-        Icode_REG_IND2                  = -38,
-        Icode_REG_IND4                  = -39,
+        Icode_REG_IND_C0                = -30,
+        Icode_REG_IND_C1                = -31,
+        Icode_REG_IND_C2                = -32,
+        Icode_REG_IND_C3                = -33,
+        Icode_REG_IND_C4                = -34,
+        Icode_REG_IND_C5                = -35,
+        Icode_REG_IND1                  = -36,
+        Icode_REG_IND2                  = -37,
+        Icode_REG_IND4                  = -38,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -40,
-        Icode_REG_STR_C1                = -41,
-        Icode_REG_STR_C2                = -42,
-        Icode_REG_STR_C3                = -43,
-        Icode_REG_STR1                  = -44,
-        Icode_REG_STR2                  = -45,
-        Icode_REG_STR4                  = -46,
+        Icode_REG_STR_C0                = -39,
+        Icode_REG_STR_C1                = -40,
+        Icode_REG_STR_C2                = -41,
+        Icode_REG_STR_C3                = -42,
+        Icode_REG_STR1                  = -43,
+        Icode_REG_STR2                  = -44,
+        Icode_REG_STR4                  = -45,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -47,
-        Icode_SETVAR1                   = -48,
+        Icode_GETVAR1                   = -46,
+        Icode_SETVAR1                   = -47,
 
     // Load unefined
-        Icode_UNDEF                     = -49,
-        Icode_ZERO                      = -50,
-        Icode_ONE                       = -51,
+        Icode_UNDEF                     = -48,
+        Icode_ZERO                      = -49,
+        Icode_ONE                       = -50,
 
     // entrance and exit from .()
-       Icode_ENTERDQ                    = -52,
-       Icode_LEAVEDQ                    = -53,
+       Icode_ENTERDQ                    = -51,
+       Icode_LEAVEDQ                    = -52,
 
     // Last icode
-        MIN_ICODE                       = -53;
+        MIN_ICODE                       = -52;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -203,7 +202,6 @@ public class Interpreter
           case Icode_CLOSURE_STMT:     return "CLOSURE_STMT";
           case Icode_CALLSPECIAL:      return "CALLSPECIAL";
           case Icode_RETUNDEF:         return "RETUNDEF";
-          case Icode_CATCH:            return "CATCH";
           case Icode_GOSUB:            return "GOSUB";
           case Icode_RETSUB:           return "RETSUB";
           case Icode_LINE:             return "LINE";
@@ -335,9 +333,6 @@ public class Interpreter
         if (itsData.itsFunctionType == 0) {
             addToken(Token.RETURN_RESULT);
         }
-        // Add special CATCH to simplify Interpreter.interpret logic
-        // and workaround lack of goto in Java
-        addIcode(Icode_CATCH);
 
         if (itsData.itsICode.length != itsICodeTop) {
             // Make itsData.itsICode length exactly itsICodeTop to save memory
@@ -1047,8 +1042,6 @@ public class Interpreter
         } else {
             generateCallFunAndThis(child);
         }
-        // To get better debugging output for undefined or null calls.
-        int debugNameIndex = itsLastStringIndex;
         int argCount = 0;
         while ((child = child.getNext()) != null) {
             visitExpression(child);
@@ -1064,16 +1057,6 @@ public class Interpreter
             addUint16(itsLineNumber);
         } else {
             addIndexOp(type, argCount);
-            if (type == Token.NEW) {
-                // Code for generateCallFunAndThis takes care about debugging
-                // for Token.CALL abd Token.REF_CALL;
-                if (debugNameIndex < 0xFFFF) {
-                    // Use only 2 bytes to store debug index
-                    addUint16(debugNameIndex);
-                } else {
-                    addUint16(0xFFFF);
-                }
-            }
         }
         // adjust stack
         if (type == Token.NEW) {
@@ -1504,7 +1487,6 @@ public class Interpreter
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
-        itsLastStringIndex = index;
         if (index < 4) {
             addIcode(Icode_REG_STR_C0 - index);
         } else if (index <= 0xFF) {
@@ -1705,11 +1687,8 @@ public class Interpreter
                 break;
               case Token.CALL :
               case Token.REF_CALL :
-                out.println(tname+' '+indexReg);
-                break;
               case Token.NEW :
                 out.println(tname+' '+indexReg);
-                pc += 2;
                 break;
               case Token.THROW : {
                 int line = getShort(iCode, pc);
@@ -1833,10 +1812,6 @@ public class Interpreter
                 // line number
                 return 1 + 1 + 1 + 2;
 
-            case Token.NEW :
-                // index of potential function name for debugging
-                return 1 + 2;
-
             case Icode_VAR_INC_DEC:
             case Icode_NAME_INC_DEC:
             case Icode_PROP_INC_DEC:
@@ -1912,9 +1887,10 @@ public class Interpreter
 
     static String getSourcePositionFromStack(Context cx, int[] linep)
     {
-        InterpreterData idata = cx.interpreterData;
-        if (cx.interpreterLineIndex >= 0) {
-            linep[0] = getShort(idata.itsICode, cx.interpreterLineIndex);
+        State state = (State)cx.interpreterLineCounting;
+        InterpreterData idata = state.idata;
+        if (state.pcSourceLineStart >= 0) {
+            linep[0] = getShort(idata.itsICode, state.pcSourceLineStart);
         } else {
             linep[0] = 0;
         }
@@ -1939,263 +1915,127 @@ public class Interpreter
                                    parent.evalScriptFlag);
     }
 
-    static Object interpret(Context cx, Scriptable scope, Scriptable thisObj,
-                            Object[] args, double[] argsDbl,
-                            int argShift, int argCount,
-                            InterpretedFunction fnOrScript)
+    static class State
     {
-        if (cx.interpreterSecurityDomain != fnOrScript.securityDomain) {
-            if (argsDbl != null) {
-                args = getArgsArray(args, argsDbl, argShift, argCount);
-            }
-            SecurityController sc = fnOrScript.securityController;
+        State callerState;
+
+        InterpretedFunction fnOrScript;
+        InterpreterData idata;
+
+// Stack structure
+// stack[0 <= i < localShift]: variables
+// stack[localShift <= i <= emptyStackTop]: used for local temporaries
+// stack[emptyStackTop < i < stack.length]: stack data
+// sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
+
+        Object[] stack;
+        double[] sDbl;
+        int localShift;
+        int emptyStackTop;
+
+        DebugFrame debuggerFrame;
+        boolean useActivation;
+        Scriptable thisObj;
+
+        Scriptable[] scriptRegExps;
+
+        State savedInterpreterLineCounting;
+
+// The values that change during interpretation
+
+        Object result;
+        int pc;
+        int pcPrevBranch;
+        int pcSourceLineStart;
+        int withDepth;
+        Scriptable scope;
+
+        int savedStackTop;
+        int savedCallOp;
+    }
+
+    static Object interpret(InterpretedFunction ifun,
+                            Context cx, Scriptable scope,
+                            Scriptable thisObj, Object[] args)
+    {
+        if (!ScriptRuntime.hasTopCall(cx)) {
+            return ScriptRuntime.doTopCall(ifun, cx, scope, thisObj, args);
+        }
+        if (cx.interpreterSecurityDomain != ifun.securityDomain) {
             Object savedDomain = cx.interpreterSecurityDomain;
-            cx.interpreterSecurityDomain = fnOrScript.securityDomain;
+            cx.interpreterSecurityDomain = ifun.securityDomain;
             try {
-                return fnOrScript.securityController.callWithDomain(
-                        fnOrScript.securityDomain, cx, fnOrScript, scope,
-                        thisObj, args);
+                return ifun.securityController.callWithDomain(
+                    ifun.securityDomain, cx, ifun, scope, thisObj, args);
             } finally {
                 cx.interpreterSecurityDomain = savedDomain;
             }
         }
 
-        InterpreterData idata = fnOrScript.idata;
+        State state = new State();
+        initState(cx, scope, thisObj, args, null, 0, args.length,
+                  ifun, state);
+        interpret(cx, state);
+        return state.result;
+    }
 
+    private static void interpret(Context cx, State state)
+    {
         final Object DBL_MRK = Interpreter.DBL_MRK;
         final Scriptable undefined = Undefined.instance;
-
-        final int LOCAL_SHFT = idata.itsMaxVars;
-        final int STACK_SHFT = LOCAL_SHFT + idata.itsMaxLocals;
-
-// stack[0 <= i < LOCAL_SHFT]: variables
-// stack[LOCAL_SHFT <= i < TRY_STACK_SHFT]: used for local temporaries
-// stack[STACK_SHFT <= i < STACK_SHFT + idata.itsMaxStack]: stack data
-
-// sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
-
-        int maxFrameArray = idata.itsMaxFrameArray;
-        if (maxFrameArray != STACK_SHFT + idata.itsMaxStack)
-            Kit.codeBug();
-
-        Object[] stack = new Object[maxFrameArray];
-        double[] sDbl = new double[maxFrameArray];
-
-        int stackTop = STACK_SHFT - 1;
-
-        int withDepth = 0;
-
-        int definedArgs = fnOrScript.argCount;
-        if (definedArgs > argCount) { definedArgs = argCount; }
-        for (int i = 0; i != definedArgs; ++i) {
-            Object arg = args[argShift + i];
-            stack[i] = arg;
-            if (arg == DBL_MRK) {
-                sDbl[i] = argsDbl[argShift + i];
-            }
-        }
-        for (int i = definedArgs; i != idata.itsMaxVars; ++i) {
-            stack[i] = undefined;
-        }
-
-        DebugFrame debuggerFrame = null;
-        boolean useActivationVars = false;
-        if (cx.debugger != null) {
-            debuggerFrame = cx.debugger.getFrame(cx, idata);
-            useActivationVars = (debuggerFrame != null);
-        }
-
-        if (idata.itsNeedsActivation || useActivationVars) {
-            if (argsDbl != null) {
-                args = getArgsArray(args, argsDbl, argShift, argCount);
-                argShift = 0;
-                argsDbl = null;
-            }
-        }
-
-        if (idata.itsFunctionType != 0) {
-            if (!idata.useDynamicScope) {
-                scope = fnOrScript.getParentScope();
-            }
-
-            if (idata.itsCheckThis) {
-                thisObj = ScriptRuntime.getThis(thisObj);
-            }
-
-            if (idata.itsNeedsActivation || useActivationVars) {
-                scope = ScriptRuntime.enterActivationFunction(cx, scope,
-                                                              fnOrScript,
-                                                              thisObj, args);
-            }
-        } else {
-            ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
-                                     fnOrScript.evalScriptFlag);
-        }
-
-        if (idata.itsNestedFunctions != null) {
-            if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
-                Kit.codeBug();
-            for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
-                InterpreterData fdata = idata.itsNestedFunctions[i];
-                if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
-                    initFunction(cx, scope, fnOrScript, i);
-                }
-            }
-        }
-
-        Scriptable[] scriptRegExps = null;
-        if (idata.itsRegExpLiterals != null) {
-            // Wrapped regexps for functions are stored in InterpretedFunction
-            // but for script which should not contain references to scope
-            // the regexps re-wrapped during each script execution
-            if (idata.itsFunctionType != 0) {
-                scriptRegExps = fnOrScript.functionRegExps;
-            } else {
-                scriptRegExps = fnOrScript.createRegExpWraps(cx, scope);
-            }
-        }
-
-        if (debuggerFrame != null) {
-            debuggerFrame.onEnter(cx, scope, thisObj, args);
-        }
-
-        InterpreterData savedData = cx.interpreterData;
-        int savedLineIndex = cx.interpreterLineIndex;
-        cx.interpreterData = idata;
-        cx.interpreterLineIndex = idata.firstLinePC;
-
-        Object result = undefined;
-        // If javaException != null on exit, it will be throw instead of
-        // normal return
-        Throwable javaException = null;
-        int exceptionPC = -1;
-
-        byte[] iCode = idata.itsICode;
-        int pc = 0;
-        int pcPrevBranch = 0;
-        final boolean instructionCounting = (cx.instructionThreshold != 0);
         // arbitrary number to add to instructionCount when calling
         // other functions
         final int INVOCATION_COST = 100;
+        // arbitrary exception cost
+        final int EXCEPTION_COST = 100;
 
-        String[] strings = idata.itsStringTable;
         String stringReg = null;
         int indexReg = 0;
+        final boolean instructionCounting = (cx.instructionThreshold != 0);
 
-        Loop: for (;;) {
-            try {
-                int op = iCode[pc++];
-              jumplessRun:
-                {
+        StateLoop: for (;;) {
+            // Use local variables for constant values in state
+            // for faster access
+            Object[] stack = state.stack;
+            double[] sDbl = state.sDbl;
+            byte[] iCode = state.idata.itsICode;
+            String[] strings = state.idata.itsStringTable;
+            boolean useActivation = state.useActivation;
+
+            // Use local for stackTop as well. Since execption handlers
+            // can only exist at statement level where stack is empty,
+            // it is necessary to save/restore stackTop only accross
+            // function calls and normal returns.
+            int stackTop = state.savedStackTop;
+
+            Loop: for (;;) {
+
+                // Exception object to rethrow or catch
+                Throwable throwable;
+
+                withoutExceptions: try {
+                    int op = iCode[state.pc++];
+                    jumplessRun: {
+
     // Back indent to ease imlementation reading
 switch (op) {
-
-    case Icode_CATCH: {
-        // The following code should be executed inside try/catch inside main
-        // loop, not in the loop catch block itself to deal with exceptions
-        // from observeInstructionCount. A special bytecode is used only to
-        // simplify logic.
-        if (javaException == null) Kit.codeBug();
-
-        pc = -1;
-        boolean doCatch = false;
-        int handlerOffset = getExceptionHandler(idata.itsExceptionTable,
-                                                exceptionPC);
-
-        if (handlerOffset >= 0) {
-
-            final int SCRIPT_CAN_CATCH = 0, ONLY_FINALLY = 1, OTHER = 2;
-            int exType;
-            if (javaException instanceof JavaScriptException) {
-                exType = SCRIPT_CAN_CATCH;
-            } else if (javaException instanceof EcmaError) {
-                // an offical ECMA error object,
-                exType = SCRIPT_CAN_CATCH;
-            } else if (javaException instanceof EvaluatorException) {
-                exType = SCRIPT_CAN_CATCH;
-            } else if (javaException instanceof RuntimeException) {
-                exType = ONLY_FINALLY;
-            } else {
-                // Error instance
-                exType = OTHER;
-            }
-
-            if (exType != OTHER) {
-                // Do not allow for JS to interfere with Error instances
-                // (exType == OTHER), as they can be used to terminate
-                // long running script
-                if (exType == SCRIPT_CAN_CATCH) {
-                    // Allow JS to catch only JavaScriptException and
-                    // EcmaError
-                    pc = idata.itsExceptionTable[handlerOffset
-                                                 + EXCEPTION_CATCH_SLOT];
-                    if (pc >= 0) {
-                        // Has catch block
-                        doCatch = true;
-                    }
-                }
-                if (pc < 0) {
-                    pc = idata.itsExceptionTable[handlerOffset
-                                                 + EXCEPTION_FINALLY_SLOT];
-                }
-            }
-        }
-
-        if (debuggerFrame != null && !(javaException instanceof Error)) {
-            debuggerFrame.onExceptionThrown(cx, javaException);
-        }
-
-        if (pc < 0) {
-            break Loop;
-        }
-
-        // We caught an exception
-
-        // restore scope at try point
-        int tryWithDepth = idata.itsExceptionTable[
-                               handlerOffset + EXCEPTION_WITH_DEPTH_SLOT];
-        while (tryWithDepth != withDepth) {
-            if (scope == null) Kit.codeBug();
-            scope = ScriptRuntime.leaveWith(scope);
-            --withDepth;
-        }
-
-        if (doCatch) {
-            stackTop = STACK_SHFT - 1;
-            int exLocal = idata.itsExceptionTable[
-                              handlerOffset + EXCEPTION_LOCAL_SLOT];
-            stack[LOCAL_SHFT + exLocal] = ScriptRuntime.getCatchObject(
-                                              cx, scope, javaException);
-        } else {
-            stackTop = STACK_SHFT;
-            // Call finally handler with javaException on stack top to
-            // distinguish from normal invocation through GOSUB
-            // which would contain DBL_MRK on the stack
-            stack[stackTop] = javaException;
-        }
-        // clear exception
-        javaException = null;
-
-        if (instructionCounting) {
-            // 500: catch cost
-            cx.addInstructionCount(500);
-            pcPrevBranch = pc;
-        }
-        continue Loop;
-    }
     case Token.THROW: {
         Object value = stack[stackTop];
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         --stackTop;
 
-        int sourceLine = getShort(iCode, pc);
-        throw new JavaScriptException(value, idata.itsSourceFile, sourceLine);
+        int sourceLine = getShort(iCode, state.pc);
+        throwable = new JavaScriptException(value,
+                                            state.idata.itsSourceFile,
+                                            sourceLine);
+        break withoutExceptions;
     }
     case Token.GE :
     case Token.LE :
     case Token.GT :
     case Token.LT :
-        stackTop = do_cmp(stack, sDbl, stackTop, op);
+        --stackTop;
+        do_cmp(state, stackTop, op);
         continue Loop;
     case Token.IN : {
         Object rhs = stack[stackTop];
@@ -2203,7 +2043,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.in(lhs, rhs, cx, scope);
+        boolean valBln = ScriptRuntime.in(lhs, rhs, cx, state.scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
@@ -2213,33 +2053,35 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, scope);
+        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, state.scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
     case Token.EQ :
     case Token.NE :
-        stackTop = do_eq(stack, sDbl, stackTop, op);
+        --stackTop;
+        do_eq(state, stackTop, op);
         continue Loop;
     case Token.SHEQ :
     case Token.SHNE :
-        stackTop = do_sheq(stack, sDbl, stackTop, op);
+        --stackTop;
+        do_sheq(state, stackTop, op);
         continue Loop;
     case Token.IFNE :
-        if (stack_boolean(stack, sDbl, stackTop--)) {
-            pc += 2;
+        if (stack_boolean(state, stackTop--)) {
+            state.pc += 2;
             continue Loop;
         }
         break jumplessRun;
     case Token.IFEQ :
-        if (!stack_boolean(stack, sDbl, stackTop--)) {
-            pc += 2;
+        if (!stack_boolean(state, stackTop--)) {
+            state.pc += 2;
             continue Loop;
         }
         break jumplessRun;
     case Icode_IFEQ_POP :
-        if (!stack_boolean(stack, sDbl, stackTop--)) {
-            pc += 2;
+        if (!stack_boolean(state, stackTop--)) {
+            state.pc += 2;
             continue Loop;
         }
         stack[stackTop--] = null;
@@ -2249,23 +2091,24 @@ switch (op) {
     case Icode_GOSUB :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = pc + 2;
+        sDbl[stackTop] = state.pc + 2;
         break jumplessRun;
     case Icode_RETSUB : {
         // indexReg: local to store return address
         if (instructionCounting) {
-            cx.addInstructionCount(pc - pcPrevBranch);
+            addInstructionCount(cx, state, 0);
         }
-        Object value = stack[LOCAL_SHFT + indexReg];
+        indexReg += state.localShift;
+        Object value = stack[indexReg];
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
-            javaException = (Throwable)value;
-            exceptionPC = pc - 1;
-            pc = getJavaCatchPC(iCode);
-        } else {
-            // Normal return from GOSUB
-            pc = (int)sDbl[LOCAL_SHFT + indexReg];
-            pcPrevBranch = pc;
+            throwable = (Throwable)value;
+            break withoutExceptions;
+        }
+        // Normal return from GOSUB
+        state.pc = (int)sDbl[indexReg];
+        if (instructionCounting) {
+            state.pcPrevBranch = state.pc;
         }
         continue Loop;
     }
@@ -2274,8 +2117,8 @@ switch (op) {
         stackTop--;
         continue Loop;
     case Icode_POP_RESULT :
-        result = stack[stackTop];
-        if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
+        state.result = stack[stackTop];
+        if (state.result == DBL_MRK) state.result = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = null;
         --stackTop;
         continue Loop;
@@ -2301,14 +2144,14 @@ switch (op) {
         continue Loop;
     }
     case Token.RETURN :
-        result = stack[stackTop];
-        if (result == DBL_MRK) result = doubleWrap(sDbl[stackTop]);
+        state.result = stack[stackTop];
+        if (state.result == DBL_MRK) state.result = doubleWrap(sDbl[stackTop]);
         --stackTop;
         break Loop;
     case Token.RETURN_RESULT :
         break Loop;
     case Icode_RETUNDEF :
-        result = undefined;
+        state.result = undefined;
         break Loop;
     case Token.BITNOT : {
         int rIntValue = stack_int32(stack, sDbl, stackTop);
@@ -2359,19 +2202,19 @@ switch (op) {
     case Token.URSH : {
         int rIntValue = stack_int32(stack, sDbl, stackTop) & 0x1F;
         --stackTop;
-        double lDbl = stack_double(stack, sDbl, stackTop);
+        double lDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = ScriptRuntime.toUint32(lDbl) >>> rIntValue;
         continue Loop;
     }
     case Token.NEG : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
+        double rDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = -rDbl;
         continue Loop;
     }
     case Token.POS : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
+        double rDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = rDbl;
         continue Loop;
@@ -2380,51 +2223,52 @@ switch (op) {
         stackTop = do_add(stack, sDbl, stackTop, cx);
         continue Loop;
     case Token.SUB : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
+        double rDbl = stack_double(state, stackTop);
         --stackTop;
-        double lDbl = stack_double(stack, sDbl, stackTop);
+        double lDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl - rDbl;
         continue Loop;
     }
     case Token.MUL : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
+        double rDbl = stack_double(state, stackTop);
         --stackTop;
-        double lDbl = stack_double(stack, sDbl, stackTop);
+        double lDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl * rDbl;
         continue Loop;
     }
     case Token.DIV : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
+        double rDbl = stack_double(state, stackTop);
         --stackTop;
-        double lDbl = stack_double(stack, sDbl, stackTop);
+        double lDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         // Detect the divide by zero or let Java do it ?
         sDbl[stackTop] = lDbl / rDbl;
         continue Loop;
     }
     case Token.MOD : {
-        double rDbl = stack_double(stack, sDbl, stackTop);
+        double rDbl = stack_double(state, stackTop);
         --stackTop;
-        double lDbl = stack_double(stack, sDbl, stackTop);
+        double lDbl = stack_double(state, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lDbl % rDbl;
         continue Loop;
     }
     case Token.NOT :
-        stack[stackTop] = stack_boolean(stack, sDbl, stackTop)
+        stack[stackTop] = stack_boolean(state, stackTop)
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
     case Token.BINDNAME :
-        stack[++stackTop] = ScriptRuntime.bind(cx, scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.bind(cx, state.scope, stringReg);
         continue Loop;
     case Token.SETNAME : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Scriptable lhs = (Scriptable)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx, scope, stringReg);
+        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx,
+                                                state.scope, stringReg);
         continue Loop;
     }
     case Token.DELPROP : {
@@ -2433,14 +2277,14 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.delete(cx, scope, lhs, rhs);
+        stack[stackTop] = ScriptRuntime.delete(cx, state.scope, lhs, rhs);
         continue Loop;
     }
     case Token.GETPROP : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getObjectProp(lhs, stringReg,
-                                                      cx, scope);
+                                                      cx, state.scope);
         continue Loop;
     }
     case Token.SETPROP : {
@@ -2450,22 +2294,25 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs,
-                                                      cx, scope);
+                                                      cx, state.scope);
         continue Loop;
     }
     case Icode_PROP_INC_DEC : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.propIncrDecr(lhs, stringReg, scope,
-                                                     iCode[pc]);
-        ++pc;
+        stack[stackTop] = ScriptRuntime.propIncrDecr(lhs, stringReg,
+                                                     state.scope,
+                                                     iCode[state.pc]);
+        ++state.pc;
         continue Loop;
     }
     case Token.GETELEM :
-        stackTop = do_getElem(stack, sDbl, stackTop, cx, scope);
+        --stackTop;
+        do_getElem(state, stackTop, cx);
         continue Loop;
     case Token.SETELEM :
-        stackTop = do_setElem(stack, sDbl, stackTop, cx, scope);
+        stackTop -= 2;
+        do_setElem(state, stackTop, cx);
         continue Loop;
     case Icode_ELEM_INC_DEC: {
         Object rhs = stack[stackTop];
@@ -2473,9 +2320,9 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, scope,
-                                                     iCode[pc]);
-        ++pc;
+        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, state.scope,
+                                                     iCode[state.pc]);
+        ++state.pc;
         continue Loop;
     }
     case Token.GET_REF : {
@@ -2502,25 +2349,27 @@ switch (op) {
     case Icode_REF_INC_DEC : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[pc]);
-        ++pc;
+        stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[state.pc]);
+        ++state.pc;
         continue Loop;
     }
     case Token.LOCAL_SAVE :
-        stack[LOCAL_SHFT + indexReg] = stack[stackTop];
-        sDbl[LOCAL_SHFT + indexReg] = sDbl[stackTop];
+        indexReg += state.localShift;
+        stack[indexReg] = stack[stackTop];
+        sDbl[indexReg] = sDbl[stackTop];
         --stackTop;
         continue Loop;
     case Token.LOCAL_LOAD :
         ++stackTop;
-        stack[stackTop] = stack[LOCAL_SHFT + indexReg];
-        sDbl[stackTop] = sDbl[LOCAL_SHFT + indexReg];
+        indexReg += state.localShift;
+        stack[stackTop] = stack[indexReg];
+        sDbl[stackTop] = sDbl[indexReg];
         continue Loop;
     case Icode_NAME_AND_THIS :
         // stringReg: name
         ++stackTop;
         stack[stackTop] = ScriptRuntime.getNameFunctionAndThis(stringReg,
-                                                               cx, scope);
+                                                               cx, state.scope);
         ++stackTop;
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
@@ -2529,7 +2378,7 @@ switch (op) {
         if (obj == DBL_MRK) obj = doubleWrap(sDbl[stackTop]);
         // stringReg: property
         stack[stackTop] = ScriptRuntime.getPropFunctionAndThis(obj, stringReg,
-                                                               cx, scope);
+                                                               cx, state.scope);
         ++stackTop;
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
@@ -2540,7 +2389,8 @@ switch (op) {
         Object id = stack[stackTop];
         if (id == DBL_MRK) id = doubleWrap(sDbl[stackTop]);
         stack[stackTop - 1] = ScriptRuntime.getElemFunctionAndThis(obj, id,
-                                                                   cx, scope);
+                                                                   cx,
+                                                                   state.scope);
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
         continue Loop;
     }
@@ -2556,82 +2406,95 @@ switch (op) {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
+        int callType = iCode[state.pc] & 0xFF;
+        boolean isNew =  (iCode[state.pc + 1] != 0);
+        int sourceLine = getShort(iCode, state.pc + 2);
+
         // indexReg: number of arguments
-        int callType = iCode[pc] & 0xFF;
-        boolean isNew =  (iCode[pc + 1] != 0);
-        int sourceLine = getShort(iCode, pc + 2);
-        stackTop -= indexReg;
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
         if (isNew) {
+            // stack change: function arg0 .. argN -> newResult
+            stackTop -= indexReg;
+
             Object function = stack[stackTop];
             if (function == DBL_MRK) function = doubleWrap(sDbl[stackTop]);
+            Object[] outArgs = getArgsArray(
+                                   stack, sDbl, stackTop + 1, indexReg);
             stack[stackTop] = ScriptRuntime.newSpecial(
-                                  cx, function, outArgs, scope, callType);
+                                  cx, function, outArgs, state.scope, callType);
         } else {
+            // stack change: function thisObj arg0 .. argN -> result
+            stackTop -= 1 + indexReg;
+
             // Call code generation ensure that stack here
             // is ... Function Scriptable
-            Scriptable functionThis = (Scriptable)stack[stackTop];
-            --stackTop;
+            Scriptable functionThis = (Scriptable)stack[stackTop + 1];
             Function function = (Function)stack[stackTop];
+            Object[] outArgs = getArgsArray(
+                                   stack, sDbl, stackTop + 2, indexReg);
             stack[stackTop] = ScriptRuntime.callSpecial(
                                   cx, function, functionThis, outArgs,
-                                  scope, thisObj, callType,
-                                  idata.itsSourceFile, sourceLine);
+                                  state.scope, state.thisObj, callType,
+                                  state.idata.itsSourceFile, sourceLine);
         }
-        pc += 4;
+        state.pc += 4;
         continue Loop;
     }
     case Token.CALL : {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
+        // stack change: function thisObj arg0 .. argN -> result
         // indexReg: number of arguments
-        stackTop -= indexReg;
-        int calleeArgShft = stackTop + 1;
+        stackTop -= 1 + indexReg;
 
         // CALL generation ensures that funThisObj and fun
         // are already Scriptable and Function objects respectively
-        Scriptable funThisObj = (Scriptable)stack[stackTop];
-        --stackTop;
+        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
         Function fun = (Function)stack[stackTop];
 
-        Scriptable funScope = scope;
-        if (idata.itsNeedsActivation) {
-            funScope = ScriptableObject.getTopLevelScope(scope);
+        Scriptable funScope = state.scope;
+        if (useActivation) {
+            funScope = ScriptableObject.getTopLevelScope(state.scope);
         }
 
         if (fun instanceof InterpretedFunction) {
             // Inlining of InterpretedFunction.call not to create
             // argument array
             InterpretedFunction ifun = (InterpretedFunction)fun;
-            stack[stackTop] = interpret(cx, funScope, funThisObj, stack, sDbl,
-                                        calleeArgShft, indexReg, ifun);
-        } else {
-            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft,
-                                            indexReg);
-            stack[stackTop] = fun.call(cx, funScope, funThisObj, outArgs);
+            if (state.fnOrScript.securityDomain == ifun.securityDomain) {
+                State calleeState = new State();
+                initState(cx, funScope, funThisObj, stack, sDbl,
+                          stackTop + 2, indexReg, ifun, calleeState);
+
+                state.savedStackTop = stackTop;
+                state.savedCallOp = op;
+                calleeState.callerState = state;
+                state = calleeState;
+                continue StateLoop;
+            }
         }
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2, indexReg);
+        stack[stackTop] = fun.call(cx, funScope, funThisObj, outArgs);
         continue Loop;
     }
     case Token.REF_CALL : {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
+        // stack change: function thisObj arg0 .. argN -> reference
         // indexReg: number of arguments
-        stackTop -= indexReg;
-        int calleeArgShft = stackTop + 1;
+        stackTop -= indexReg + 1;
 
         // REF_CALL generation ensures that funThisObj and fun
         // are already Scriptable and Function objects respectively
-        Scriptable funThisObj = (Scriptable)stack[stackTop];
-        --stackTop;
+        Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
         Function fun = (Function)stack[stackTop];
 
-        Scriptable funScope = scope;
-        if (idata.itsNeedsActivation) {
-            funScope = ScriptableObject.getTopLevelScope(scope);
+        Scriptable funScope = state.scope;
+        if (useActivation) {
+            funScope = ScriptableObject.getTopLevelScope(state.scope);
         }
-        Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, indexReg);
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2, indexReg);
         stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj, outArgs,
                                                       cx, funScope);
         continue Loop;
@@ -2640,33 +2503,36 @@ switch (op) {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
         }
+        // stack change: function arg0 .. argN -> newResult
         // indexReg: number of arguments
         stackTop -= indexReg;
-        int calleeArgShft = stackTop + 1;
         Object lhs = stack[stackTop];
 
         if (lhs instanceof InterpretedFunction) {
             // Inlining of InterpretedFunction.construct not to create
             // argument array
             InterpretedFunction f = (InterpretedFunction)lhs;
-            Scriptable newInstance = f.createObject(cx, scope);
-            Object callResult = interpret(cx, scope, newInstance, stack, sDbl,
-                                          calleeArgShft, indexReg, f);
-            if (callResult instanceof Scriptable && callResult != undefined) {
-                stack[stackTop] = callResult;
-            } else {
+            if (state.fnOrScript.securityDomain == f.securityDomain) {
+                Scriptable newInstance = f.createObject(cx, state.scope);
+                State calleeState = new State();
+                initState(cx, state.scope, newInstance, stack, sDbl,
+                          stackTop + 1, indexReg, f, calleeState);
+
                 stack[stackTop] = newInstance;
+                state.savedStackTop = stackTop;
+                state.savedCallOp = op;
+                calleeState.callerState = state;
+                state = calleeState;
+                continue StateLoop;
             }
-        } else if (lhs instanceof Function) {
-            Function f = (Function)lhs;
-            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft,
-                                            indexReg);
-            stack[stackTop] = f.construct(cx, scope, outArgs);
-        } else {
-            if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-            throw notAFunction(lhs, idata, pc);
         }
-        pc += 2; // skip debug name index
+        if (!(lhs instanceof Function)) {
+            if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+            throw ScriptRuntime.notFunctionError(lhs);
+        }
+        Function f = (Function)lhs;
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
+        stack[stackTop] = f.construct(cx, state.scope, outArgs);
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2676,7 +2542,7 @@ switch (op) {
         continue Loop;
     }
     case Icode_TYPEOFNAME :
-        stack[++stackTop] = ScriptRuntime.typeofName(scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.typeofName(state.scope, stringReg);
         continue Loop;
     case Token.STRING :
         stack[++stackTop] = stringReg;
@@ -2684,58 +2550,58 @@ switch (op) {
     case Icode_SHORTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = getShort(iCode, pc);
-        pc += 2;
+        sDbl[stackTop] = getShort(iCode, state.pc);
+        state.pc += 2;
         continue Loop;
     case Icode_INTNUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = getInt(iCode, pc);
-        pc += 4;
+        sDbl[stackTop] = getInt(iCode, state.pc);
+        state.pc += 4;
         continue Loop;
     case Token.NUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = idata.itsDoubleTable[indexReg];
+        sDbl[stackTop] = state.idata.itsDoubleTable[indexReg];
         continue Loop;
     case Token.NAME :
-        stack[++stackTop] = ScriptRuntime.name(cx, scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.name(cx, state.scope, stringReg);
         continue Loop;
     case Icode_NAME_INC_DEC :
-        stack[++stackTop] = ScriptRuntime.nameIncrDecr(scope, stringReg,
-                                                       iCode[pc]);
-        ++pc;
+        stack[++stackTop] = ScriptRuntime.nameIncrDecr(state.scope, stringReg,
+                                                       iCode[state.pc]);
+        ++state.pc;
         continue Loop;
     case Icode_SETVAR1:
-        indexReg = iCode[pc++];
+        indexReg = iCode[state.pc++];
         // fallthrough
     case Token.SETVAR :
-        if (!useActivationVars) {
+        if (!useActivation) {
             stack[indexReg] = stack[stackTop];
             sDbl[indexReg] = sDbl[stackTop];
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
-            activationPut(fnOrScript, scope, indexReg, val);
+            activationPut(state, indexReg, val);
         }
         continue Loop;
     case Icode_GETVAR1:
-        indexReg = iCode[pc++];
+        indexReg = iCode[state.pc++];
         // fallthrough
     case Token.GETVAR :
         ++stackTop;
-        if (!useActivationVars) {
+        if (!useActivation) {
             stack[stackTop] = stack[indexReg];
             sDbl[stackTop] = sDbl[indexReg];
         } else {
-            stack[stackTop] = activationGet(fnOrScript, scope, indexReg);
+            stack[stackTop] = activationGet(state, indexReg);
         }
         continue Loop;
     case Icode_VAR_INC_DEC : {
         // indexReg : varindex
         ++stackTop;
-        int incrDecrMask = iCode[pc];
-        if (!useActivationVars) {
+        int incrDecrMask = iCode[state.pc];
+        if (!useActivation) {
             stack[stackTop] = DBL_MRK;
             Object varValue = stack[indexReg];
             double d;
@@ -2750,11 +2616,11 @@ switch (op) {
             sDbl[indexReg] = d2;
             sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
         } else {
-            String varName = fnOrScript.argNames[indexReg];
-            stack[stackTop] = ScriptRuntime.nameIncrDecr(scope, varName,
+            String varName = state.fnOrScript.argNames[indexReg];
+            stack[stackTop] = ScriptRuntime.nameIncrDecr(state.scope, varName,
                                                          incrDecrMask);
         }
-        ++pc;
+        ++state.pc;
         continue Loop;
     }
     case Icode_ZERO :
@@ -2771,10 +2637,10 @@ switch (op) {
         stack[++stackTop] = null;
         continue Loop;
     case Token.THIS :
-        stack[++stackTop] = thisObj;
+        stack[++stackTop] = state.thisObj;
         continue Loop;
     case Token.THISFN :
-        stack[++stackTop] = fnOrScript;
+        stack[++stackTop] = state.fnOrScript;
         continue Loop;
     case Token.FALSE :
         stack[++stackTop] = Boolean.FALSE;
@@ -2789,13 +2655,13 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        scope = ScriptRuntime.enterWith(lhs, scope);
-        ++withDepth;
+        state.scope = ScriptRuntime.enterWith(lhs, state.scope);
+        ++state.withDepth;
         continue Loop;
     }
     case Token.LEAVEWITH :
-        scope = ScriptRuntime.leaveWith(scope);
-        --withDepth;
+        state.scope = ScriptRuntime.leaveWith(state.scope);
+        --state.withDepth;
         continue Loop;
     case Token.CATCH_SCOPE :
         stack[stackTop] = ScriptRuntime.newCatchScope(stringReg,
@@ -2805,19 +2671,22 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        stack[LOCAL_SHFT + indexReg] = ScriptRuntime.enumInit(lhs, scope);
+        indexReg += state.localShift;
+        stack[indexReg] = ScriptRuntime.enumInit(lhs, state.scope);
         continue Loop;
     }
     case Token.ENUM_INIT_VALUES : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        stack[LOCAL_SHFT + indexReg] = ScriptRuntime.enumValuesInit(lhs, scope);
+        indexReg += state.localShift;
+        stack[indexReg] = ScriptRuntime.enumValuesInit(lhs, state.scope);
         continue Loop;
     }
     case Token.ENUM_NEXT :
     case Token.ENUM_ID : {
-        Object val = stack[LOCAL_SHFT + indexReg];
+        indexReg += state.localShift;
+        Object val = stack[indexReg];
         ++stackTop;
         stack[stackTop] = (op == Token.ENUM_NEXT)
                           ? (Object)ScriptRuntime.enumNext(val)
@@ -2829,28 +2698,28 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.specialReference(lhs, stringReg,
-                                                         cx, scope);
+                                                         cx, state.scope);
         continue Loop;
     }
     case Token.XML_REF : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, scope);
+        stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, state.scope);
         continue Loop;
     }
     case Icode_SCOPE :
-        stack[++stackTop] = scope;
+        stack[++stackTop] = state.scope;
         continue Loop;
     case Icode_CLOSURE_EXPR :
-        stack[++stackTop] = InterpretedFunction.createFunction(cx, scope,
-                                                               fnOrScript,
+        stack[++stackTop] = InterpretedFunction.createFunction(cx, state.scope,
+                                                               state.fnOrScript,
                                                                indexReg);
         continue Loop;
     case Icode_CLOSURE_STMT :
-        initFunction(cx, scope, fnOrScript, indexReg);
+        initFunction(cx, state.scope, state.fnOrScript, indexReg);
         continue Loop;
     case Token.REGEXP :
-        stack[++stackTop] = scriptRegExps[indexReg];
+        stack[++stackTop] = state.scriptRegExps[indexReg];
         continue Loop;
     case Icode_LITERAL_NEW :
         // indexReg: number of values in the literal
@@ -2873,14 +2742,15 @@ switch (op) {
         Object[] data = (Object[])stack[stackTop];
         Object val;
         if (op == Token.OBJECTLIT) {
-            Object[] ids = (Object[])idata.literalIds[indexReg];
-            val = ScriptRuntime.newObjectLiteral(ids, data, cx, scope);
+            Object[] ids = (Object[])state.idata.literalIds[indexReg];
+            val = ScriptRuntime.newObjectLiteral(ids, data, cx, state.scope);
         } else {
             int[] skipIndexces = null;
             if (op == Icode_SPARE_ARRAYLIT) {
-                skipIndexces = (int[])idata.literalIds[indexReg];
+                skipIndexces = (int[])state.idata.literalIds[indexReg];
             }
-            val = ScriptRuntime.newArrayLiteral(data, skipIndexces, cx, scope);
+            val = ScriptRuntime.newArrayLiteral(data, skipIndexces, cx,
+                                                state.scope);
         }
         stack[stackTop] = val;
         continue Loop;
@@ -2889,18 +2759,18 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        scope = ScriptRuntime.enterDotQuery(lhs, scope);
-        ++withDepth;
+        state.scope = ScriptRuntime.enterDotQuery(lhs, state.scope);
+        ++state.withDepth;
         continue Loop;
     }
     case Icode_LEAVEDQ : {
-        boolean valBln = stack_boolean(stack, sDbl, stackTop);
-        Object x = ScriptRuntime.updateDotQuery(valBln, scope);
+        boolean valBln = stack_boolean(state, stackTop);
+        Object x = ScriptRuntime.updateDotQuery(valBln, state.scope);
         if (x != null) {
             stack[stackTop] = x;
-            scope = ScriptRuntime.leaveDotQuery(scope);
-            --withDepth;
-            pc += 2;
+            state.scope = ScriptRuntime.leaveDotQuery(state.scope);
+            --state.withDepth;
+            state.pc += 2;
             continue Loop;
         }
         // reset stack and PC to code after ENTERDQ
@@ -2944,16 +2814,16 @@ switch (op) {
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         // stringReg contains namespace
         stack[stackTop] = ScriptRuntime.toQualifiedName(stringReg, value,
-                                                        cx, scope);
+                                                        cx, state.scope);
         continue Loop;
     }
     case Icode_LINE :
-        cx.interpreterLineIndex = pc;
-        if (debuggerFrame != null) {
-            int line = getShort(iCode, pc);
-            debuggerFrame.onLineChange(cx, line);
+        state.pcSourceLineStart = state.pc;
+        if (state.debuggerFrame != null) {
+            int line = getShort(iCode, state.pc);
+            state.debuggerFrame.onLineChange(cx, line);
         }
-        pc += 2;
+        state.pc += 2;
         continue Loop;
     case Icode_REG_IND_C0:
         indexReg = 0;
@@ -2974,16 +2844,16 @@ switch (op) {
         indexReg = 5;
         continue Loop;
     case Icode_REG_IND1:
-        indexReg = 0xFF & iCode[pc];
-        ++pc;
+        indexReg = 0xFF & iCode[state.pc];
+        ++state.pc;
         continue Loop;
     case Icode_REG_IND2:
-        indexReg = getIndex(iCode, pc);
-        pc += 2;
+        indexReg = getIndex(iCode, state.pc);
+        state.pc += 2;
         continue Loop;
     case Icode_REG_IND4:
-        indexReg = getInt(iCode, pc);
-        pc += 4;
+        indexReg = getInt(iCode, state.pc);
+        state.pc += 4;
         continue Loop;
     case Icode_REG_STR_C0:
         stringReg = strings[0];
@@ -2998,79 +2868,346 @@ switch (op) {
         stringReg = strings[3];
         continue Loop;
     case Icode_REG_STR1:
-        stringReg = strings[0xFF & iCode[pc]];
-        ++pc;
+        stringReg = strings[0xFF & iCode[state.pc]];
+        ++state.pc;
         continue Loop;
     case Icode_REG_STR2:
-        stringReg = strings[getIndex(iCode, pc)];
-        pc += 2;
+        stringReg = strings[getIndex(iCode, state.pc)];
+        state.pc += 2;
         continue Loop;
     case Icode_REG_STR4:
-        stringReg = strings[getInt(iCode, pc)];
-        pc += 4;
+        stringReg = strings[getInt(iCode, state.pc)];
+        state.pc += 4;
         continue Loop;
     default :
-        dumpICode(idata);
-        throw new RuntimeException("Unknown icode : "+op+" @ pc : "+(pc-1));
+        dumpICode(state.idata);
+        throw new RuntimeException(
+            "Unknown icode : "+op+" @ pc : "+(state.pc-1));
 }  // end of interpreter switch
 
-                } // end of jumplessRun label block
+                    } // end of jumplessRun label block
 
-                // This should be reachable only for jump implementation
-                // when pc points to encoded target offset
-                if (instructionCounting) {
-                    cx.addInstructionCount(pc + 2 - pcPrevBranch);
+                    // This should be reachable only for jump implementation
+                    // when pc points to encoded target offset
+                    if (instructionCounting) {
+                        addInstructionCount(cx, state, 2);
+                    }
+                    int offset = getShort(iCode, state.pc);
+                    if (offset != 0) {
+                        // -1 accounts for pc pointing to jump opcode + 1
+                        state.pc += offset - 1;
+                    } else {
+                        state.pc = state.idata.longJumps.
+                                       getExistingInt(state.pc);
+                    }
+                    if (instructionCounting) {
+                        state.pcPrevBranch = state.pc;
+                    }
+                    continue Loop;
+
+                }  // end of interpreter withoutExceptions: try
+                catch (Throwable ex) {
+                    throwable = ex;
                 }
-                int offset = getShort(iCode, pc);
-                if (offset != 0) {
-                    // -1 accounts for pc pointing to jump opcode + 1
-                    pc += offset - 1;
+
+                // This should be reachable only after above catch or from
+                // finally when it needs to propagate exception or from
+                // explicit throw
+
+                if (throwable == null) Kit.codeBug();
+
+                final int EX_CATCH_STATE = 2; // Can execute JS catch
+                final int EX_FINALLY_STATE = 1; // Can execute JS finally
+                final int EX_NO_JS_STATE = 0; // Terminate JS execution
+
+                int exState;
+
+                if (throwable instanceof JavaScriptException) {
+                    exState = EX_CATCH_STATE;
+                } else if (throwable instanceof EcmaError) {
+                    // an offical ECMA error object,
+                    exState = EX_CATCH_STATE;
+                } else if (throwable instanceof EvaluatorException) {
+                    exState = EX_CATCH_STATE;
+                } else if (throwable instanceof RuntimeException) {
+                    exState = EX_FINALLY_STATE;
                 } else {
-                    pc = idata.longJumps.getExistingInt(pc);
+                    // Error instance
+                    exState = EX_NO_JS_STATE;
                 }
-                pcPrevBranch = pc;
-                continue Loop;
 
-            }  // end of interpreter try
-            catch (Throwable ex) {
                 if (instructionCounting) {
-                    // Can not call addInstructionCount as it may trigger
-                    // exception
-                    cx.instructionCount += pc - pcPrevBranch;
+                    try {
+                        addInstructionCount(cx, state, EXCEPTION_COST);
+                    } catch (RuntimeException ex) {
+                        throwable = ex;
+                        exState = EX_FINALLY_STATE;
+                    } catch (Error ex) {
+                        // Error from instruction counting
+                        //     => unconditionally terminate JS
+                        throwable = ex;
+                        exState = EX_NO_JS_STATE;
+                    }
                 }
-                javaException = ex;
-                exceptionPC = pc - 1;
-                pc = getJavaCatchPC(iCode);
-                continue Loop;
+                if (state.debuggerFrame != null
+                    && !(throwable instanceof Error))
+                {
+                    try {
+                        state.debuggerFrame.onExceptionThrown(
+                            cx, throwable);
+                    } catch (Throwable ex) {
+                        // Any exception from debugger
+                        //     => unconditionally terminate JS
+                        throwable = ex;
+                        exState = EX_NO_JS_STATE;
+                    }
+                }
+
+                int[] table;
+                int handler;
+                for (;;) {
+                    if (exState != EX_NO_JS_STATE) {
+                        table = state.idata.itsExceptionTable;
+                        handler = getExceptionHandler(table, state.pc);
+                        if (handler >= 0) {
+                            if (table[handler + EXCEPTION_CATCH_SLOT] >= 0) {
+                                // Found catch handler, check if it is allowed
+                                // to run
+                                if (exState == EX_CATCH_STATE) {
+                                    break;
+                                }
+                            }
+                            if (table[handler + EXCEPTION_FINALLY_SLOT] >= 0) {
+                                // Found finally handler, make state
+                                // to match always handle type
+                                exState = EX_FINALLY_STATE;
+                                break;
+                            }
+                        }
+                    }
+                    // No allowed execption handlers in this frame, unwind
+                    // to parent and try to look there
+
+                    while (state.withDepth != 0) {
+                        state.scope = ScriptRuntime.leaveWith(state.scope);
+                        --state.withDepth;
+                    }
+                    releaseState(cx, state, throwable);
+
+                    if (state.callerState == null) {
+                        // No more parent state frames, rethrow the exception
+                        if (throwable instanceof RuntimeException) {
+                            throw (RuntimeException)throwable;
+                        } else {
+                            // Must be instance of Error or code bug
+                            throw (Error)throwable;
+                        }
+                    }
+
+                    state = state.callerState;
+                }
+
+                // We caught an exception, since the loop above
+                // can unwind accross frame boundary, always use
+                // stack.something instead of something that were cached
+                // at the beginning of StateLoop and refer to values in the
+                // original frame
+
+                int tryWithDepth = table[handler + EXCEPTION_WITH_DEPTH_SLOT];
+                while (state.withDepth != tryWithDepth) {
+                    if (state.scope == null) Kit.codeBug();
+                    state.scope = ScriptRuntime.leaveWith(state.scope);
+                    --state.withDepth;
+                }
+
+                state.savedStackTop = state.emptyStackTop;
+                if (exState == EX_CATCH_STATE) {
+                    int exLocal = table[handler + EXCEPTION_LOCAL_SLOT];
+                    state.stack[state.localShift + exLocal]
+                        = ScriptRuntime.getCatchObject(cx, state.scope,
+                                                       throwable);
+                    state.pc = table[handler + EXCEPTION_CATCH_SLOT];
+                } else {
+                    ++state.savedStackTop;
+                    // Call finally handler with throwable on stack top to
+                    // distinguish from normal invocation through GOSUB
+                    // which would contain DBL_MRK on the stack
+                    state.stack[state.savedStackTop] = throwable;
+                    state.pc = table[handler + EXCEPTION_FINALLY_SLOT];
+                }
+
+                if (instructionCounting) {
+                    state.pcPrevBranch = state.pc;
+                }
+                continue StateLoop;
+            } // end of Loop: for
+
+            releaseState(cx, state, null);
+            if (state.callerState != null) {
+                Object calleeResult = state.result;
+                state = state.callerState;
+
+                if (state.savedCallOp == Token.CALL) {
+                    state.stack[state.savedStackTop] = calleeResult;
+                } else if (state.savedCallOp == Token.NEW) {
+                    // If construct returns scriptable,
+                    // then it replaces on stack top saved original instance
+                    // of the object.
+                    if (calleeResult instanceof Scriptable
+                        && calleeResult != undefined)
+                    {
+                        state.stack[state.savedStackTop] = calleeResult;
+                    }
+                } else {
+                    Kit.codeBug();
+                }
+                continue StateLoop;
             }
-        } // end of interpreter loop
 
-        cx.interpreterData = savedData;
-        cx.interpreterLineIndex = savedLineIndex;
+            return;
 
-        if (debuggerFrame != null) {
-            if (javaException != null) {
-                debuggerFrame.onExit(cx, true, javaException);
-            } else {
-                debuggerFrame.onExit(cx, false, result);
+        } // end of StateLoop: for(;;)
+    }
+
+    private static void initState(Context cx, Scriptable callerScope,
+                                  Scriptable origThisObj,
+                                  Object[] args, double[] argsDbl,
+                                  int argShift, int argCount,
+                                  InterpretedFunction fnOrScript,
+                                  State state)
+    {
+        InterpreterData idata = fnOrScript.idata;
+
+        state.fnOrScript = fnOrScript;
+        state.idata = idata;
+
+        state.localShift = idata.itsMaxVars;
+        state.emptyStackTop = state.localShift + idata.itsMaxLocals - 1;
+        int maxFrameArray = idata.itsMaxFrameArray;
+        if (maxFrameArray != state.emptyStackTop + idata.itsMaxStack + 1)
+            Kit.codeBug();
+        state.stack = new Object[maxFrameArray];
+        state.sDbl = new double[maxFrameArray];
+
+        int definedArgs = fnOrScript.argCount;
+        if (definedArgs > argCount) { definedArgs = argCount; }
+        for (int i = 0; i != definedArgs; ++i) {
+            Object arg = args[argShift + i];
+            state.stack[i] = arg;
+            if (arg == DBL_MRK) {
+                state.sDbl[i] = argsDbl[argShift + i];
+            }
+        }
+        for (int i = definedArgs; i != idata.itsMaxVars; ++i) {
+            state.stack[i] = Undefined.instance;
+        }
+
+        state.useActivation = idata.itsNeedsActivation;
+        if (cx.debugger != null) {
+            state.debuggerFrame = cx.debugger.getFrame(cx, idata);
+            if (state.debuggerFrame != null) {
+                state.useActivation = true;
             }
         }
 
+        if (state.useActivation) {
+            if (argsDbl != null) {
+                args = getArgsArray(args, argsDbl, argShift, argCount);
+            }
+        }
+
+        Scriptable scope;
+        Scriptable thisObj = origThisObj;
         if (idata.itsFunctionType != 0) {
-            if (idata.itsNeedsActivation || useActivationVars) {
+            if (!idata.useDynamicScope) {
+                scope = fnOrScript.getParentScope();
+            } else {
+                scope = callerScope;
+            }
+
+            if (idata.itsCheckThis) {
+                thisObj = ScriptRuntime.getThis(thisObj);
+            }
+
+            if (state.useActivation) {
+                scope = ScriptRuntime.enterActivationFunction(cx, scope,
+                                                              fnOrScript,
+                                                              thisObj, args);
+            }
+        } else {
+            scope = callerScope;
+            ScriptRuntime.initScript(fnOrScript, thisObj, cx, scope,
+                                     fnOrScript.evalScriptFlag);
+        }
+        state.thisObj = thisObj;
+
+        if (idata.itsNestedFunctions != null) {
+            if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
+                Kit.codeBug();
+            for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
+                InterpreterData fdata = idata.itsNestedFunctions[i];
+                if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
+                    initFunction(cx, scope, fnOrScript, i);
+                }
+            }
+        }
+
+        state.scriptRegExps = null;
+        if (idata.itsRegExpLiterals != null) {
+            // Wrapped regexps for functions are stored in InterpretedFunction
+            // but for script which should not contain references to scope
+            // the regexps re-wrapped during each script execution
+            if (idata.itsFunctionType != 0) {
+                state.scriptRegExps = fnOrScript.functionRegExps;
+            } else {
+                state.scriptRegExps = fnOrScript.createRegExpWraps(cx, scope);
+            }
+        }
+
+        if (state.debuggerFrame != null) {
+            state.debuggerFrame.onEnter(cx, scope, thisObj, args);
+        }
+
+        state.savedInterpreterLineCounting = (State)cx.interpreterLineCounting;
+        cx.interpreterLineCounting = state;
+
+        // Initialize initial values of variables that change during
+        // interpretation.
+        state.result = Undefined.instance;
+        state.pc = 0;
+        state.pcPrevBranch = 0;
+        state.pcSourceLineStart = idata.firstLinePC;
+        state.withDepth = 0;
+        state.scope = scope;
+
+        state.savedStackTop = state.emptyStackTop;
+        state.savedCallOp = 0;
+    }
+
+    private static void releaseState(Context cx, State state,
+                                     Throwable throwable)
+    {
+        cx.interpreterLineCounting = state.savedInterpreterLineCounting;
+
+        if (state.debuggerFrame != null) {
+            try {
+                if (throwable != null) {
+                    state.debuggerFrame.onExit(cx, true, throwable);
+                } else {
+                    state.debuggerFrame.onExit(cx, false, state.result);
+                }
+            } catch (Throwable ex) {
+                System.err.println(
+"RHINO USAGE WARNING: onExit terminated with exception");
+                ex.printStackTrace(System.err);
+            }
+        }
+
+        if (state.idata.itsFunctionType != 0) {
+            if (state.useActivation) {
                 ScriptRuntime.exitActivationFunction(cx);
             }
         }
-
-        if (javaException != null) {
-            if (javaException instanceof RuntimeException) {
-                throw (RuntimeException)javaException;
-            } else {
-                // Must be instance of Error or code bug
-                throw (Error)javaException;
-            }
-        }
-        return result;
     }
 
     private static Object doubleWrap(double x)
@@ -3090,23 +3227,21 @@ switch (op) {
         return ScriptRuntime.toInt32(value);
     }
 
-    private static double stack_double(Object[] stack, double[] stackDbl,
-                                       int i)
+    private static double stack_double(State state, int i)
     {
-        Object x = stack[i];
-        return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : stackDbl[i];
+        Object x = state.stack[i];
+        return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : state.sDbl[i];
     }
 
-    private static boolean stack_boolean(Object[] stack, double[] stackDbl,
-                                         int i)
+    private static boolean stack_boolean(State state, int i)
     {
-        Object x = stack[i];
+        Object x = state.stack[i];
         if (x == Boolean.TRUE) {
             return true;
         } else if (x == Boolean.FALSE) {
             return false;
         } else if (x == DBL_MRK) {
-            double d = stackDbl[i];
+            double d = state.sDbl[i];
             return d == d && d != 0.0;
         } else if (x == null || x == Undefined.instance) {
             return false;
@@ -3192,12 +3327,10 @@ switch (op) {
         }
     }
 
-    private static int do_cmp(Object[] stack, double[] sDbl, int stackTop,
-                              int op)
+    private static void do_cmp(State state, int i, int op)
     {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
+        Object rhs = state.stack[i + 1];
+        Object lhs = state.stack[i];
         boolean result;
       object_compare:
         {
@@ -3205,11 +3338,11 @@ switch (op) {
             {
                 double rDbl, lDbl;
                 if (rhs == DBL_MRK) {
-                    rDbl = sDbl[stackTop + 1];
-                    lDbl = stack_double(stack, sDbl, stackTop);
+                    rDbl = state.sDbl[i + 1];
+                    lDbl = stack_double(state, i);
                 } else if (lhs == DBL_MRK) {
                     rDbl = ScriptRuntime.toNumber(rhs);
-                    lDbl = sDbl[stackTop];
+                    lDbl = state.sDbl[i];
                 } else {
                     break number_compare;
                 }
@@ -3247,48 +3380,42 @@ switch (op) {
                 throw Kit.codeBug();
             }
         }
-        stack[stackTop] = result ? Boolean.TRUE : Boolean.FALSE;
-        return stackTop;
+        state.stack[i] = result ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private static int do_eq(Object[] stack, double[] sDbl, int stackTop,
-                             int op)
+    private static void do_eq(State state, int i, int op)
     {
-        --stackTop;
         boolean result;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
+        Object rhs = state.stack[i + 1];
+        Object lhs = state.stack[i];
         if (rhs == DBL_MRK) {
             if (lhs == DBL_MRK) {
-                result = (sDbl[stackTop] == sDbl[stackTop + 1]);
+                result = (state.sDbl[i] == state.sDbl[i + 1]);
             } else {
-                result = ScriptRuntime.eqNumber(sDbl[stackTop + 1], lhs);
+                result = ScriptRuntime.eqNumber(state.sDbl[i + 1], lhs);
             }
         } else {
             if (lhs == DBL_MRK) {
-                result = ScriptRuntime.eqNumber(sDbl[stackTop], rhs);
+                result = ScriptRuntime.eqNumber(state.sDbl[i], rhs);
             } else {
                 result = ScriptRuntime.eq(lhs, rhs);
             }
         }
         result ^= (op == Token.NE);
-        stack[stackTop] = (result) ? Boolean.TRUE : Boolean.FALSE;
-        return stackTop;
+        state.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private static int do_sheq(Object[] stack, double[] sDbl, int stackTop,
-                               int op)
+    private static void do_sheq(State state, int i, int op)
     {
-        --stackTop;
-        Object rhs = stack[stackTop + 1];
-        Object lhs = stack[stackTop];
+        Object rhs = state.stack[i + 1];
+        Object lhs = state.stack[i];
         boolean result;
       double_compare: {
             double rdbl, ldbl;
             if (rhs == DBL_MRK) {
-                rdbl = sDbl[stackTop + 1];
+                rdbl = state.sDbl[i + 1];
                 if (lhs == DBL_MRK) {
-                    ldbl = sDbl[stackTop];
+                    ldbl = state.sDbl[i];
                 } else if (lhs instanceof Number) {
                     ldbl = ((Number)lhs).doubleValue();
                 } else {
@@ -3296,9 +3423,9 @@ switch (op) {
                     break double_compare;
                 }
             } else if (lhs == DBL_MRK) {
-                ldbl = sDbl[stackTop];
+                ldbl = state.sDbl[i];
                 if (rhs == DBL_MRK) {
-                    rdbl = sDbl[stackTop + 1];
+                    rdbl = state.sDbl[i + 1];
                 } else if (rhs instanceof Number) {
                     rdbl = ((Number)rhs).doubleValue();
                 } else {
@@ -3312,29 +3439,27 @@ switch (op) {
             result = ldbl == rdbl;
         }
         result ^= (op == Token.SHNE);
-        stack[stackTop] = (result) ? Boolean.TRUE : Boolean.FALSE;
-        return stackTop;
+        state.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private static int do_getElem(Object[] stack, double[] sDbl, int stackTop,
-                                  Context cx, Scriptable scope)
+    private static void do_getElem(State state, int i, Context cx)
     {
-        Object lhs = stack[stackTop - 1];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop - 1]);
+        Object lhs = state.stack[i];
+        if (lhs == DBL_MRK) lhs = doubleWrap(state.sDbl[i]);
 
         Object result;
-        Object id = stack[stackTop];
+        Object id = state.stack[i + 1];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.getObjectElem(lhs, id, cx, scope);
+            result = ScriptRuntime.getObjectElem(lhs, id, cx, state.scope);
         } else {
-            double val = sDbl[stackTop];
+            double val = state.sDbl[i + 1];
             if (lhs == null || lhs == Undefined.instance) {
                 throw ScriptRuntime.undefReadError(
                           lhs, ScriptRuntime.toString(val));
             }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(cx, scope, lhs);
+                             : ScriptRuntime.toObject(cx, state.scope, lhs);
             int index = (int)val;
             if (index == val) {
                 result = ScriptRuntime.getObjectIndex(obj, index, cx);
@@ -3343,32 +3468,29 @@ switch (op) {
                 result = ScriptRuntime.getObjectProp(obj, s, cx);
             }
         }
-        --stackTop;
-        stack[stackTop] = result;
-        return stackTop;
+        state.stack[i] = result;
     }
 
-    private static int do_setElem(Object[] stack, double[] sDbl, int stackTop,
-                                  Context cx, Scriptable scope)
+    private static void do_setElem(State state, int i, Context cx)
     {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-        Object lhs = stack[stackTop - 2];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop - 2]);
+        Object rhs = state.stack[i + 2];
+        if (rhs == DBL_MRK) rhs = doubleWrap(state.sDbl[i + 2]);
+        Object lhs = state.stack[i];
+        if (lhs == DBL_MRK) lhs = doubleWrap(state.sDbl[i]);
 
         Object result;
-        Object id = stack[stackTop - 1];
+        Object id = state.stack[i + 1];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, scope);
+            result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, state.scope);
         } else {
-            double val = sDbl[stackTop - 1];
+            double val = state.sDbl[i + 1];
             if (lhs == null || lhs == Undefined.instance) {
                 throw ScriptRuntime.undefWriteError(
                           lhs, ScriptRuntime.toString(val), rhs);
             }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(cx, scope, lhs);
+                             : ScriptRuntime.toObject(cx, state.scope, lhs);
             int index = (int)val;
             if (index == val) {
                 result = ScriptRuntime.setObjectIndex(obj, index, rhs, cx);
@@ -3377,28 +3499,7 @@ switch (op) {
                 result = ScriptRuntime.setObjectProp(obj, s, rhs, cx);
             }
         }
-        stackTop -= 2;
-        stack[stackTop] = result;
-        return stackTop;
-    }
-
-    static RuntimeException notAFunction(Object notAFunction,
-                                         InterpreterData idata, int namePC)
-    {
-        String debugName;
-        if (notAFunction == Undefined.instance || notAFunction == null) {
-            // special code for better error message for call
-            // to undefined or null
-            int index = getIndex(idata.itsICode, namePC);
-            if (index == 0xFFFF) {
-                debugName = "<unknown>";
-            } else {
-                debugName = idata.itsStringTable[index];
-            }
-        } else {
-            debugName = ScriptRuntime.toString(notAFunction);
-        }
-        throw ScriptRuntime.notFunctionError(notAFunction, debugName);
+        state.stack[i] = result;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
@@ -3416,29 +3517,30 @@ switch (op) {
         return args;
     }
 
-    private static Object activationGet(NativeFunction f,
-                                        Scriptable activation, int slot)
+    private static Object activationGet(State state, int slot)
     {
-        String name = f.argNames[slot];
-        Object val = activation.get(name, activation);
+        String name = state.fnOrScript.argNames[slot];
+        Scriptable scope = state.scope;
+        Object val = scope.get(name, scope);
     // Activation parameter or var is permanent
         if (val == Scriptable.NOT_FOUND) Kit.codeBug();
         return val;
     }
 
-    private static void activationPut(NativeFunction f,
-                                      Scriptable activation, int slot,
-                                      Object value)
+    private static void activationPut(State state, int slot, Object value)
     {
-        String name = f.argNames[slot];
-        activation.put(name, activation, value);
+        String name = state.fnOrScript.argNames[slot];
+        Scriptable scope = state.scope;
+        scope.put(name, scope, value);
     }
 
-    private static int getJavaCatchPC(byte[] iCode)
+    private static void addInstructionCount(Context cx, State state, int extra)
     {
-        int pc = iCode.length - 1;
-        if (iCode[pc] != Icode_CATCH) Kit.codeBug();
-        return pc;
+        cx.instructionCount += state.pc - state.pcPrevBranch + extra;
+        if (cx.instructionCount > cx.instructionThreshold) {
+            cx.observeInstructionCount(cx.instructionCount);
+            cx.instructionCount = 0;
+        }
     }
 
     private CompilerEnvirons compilerEnv;
@@ -3453,7 +3555,6 @@ switch (op) {
     private int itsLineNumber;
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
-    private int itsLastStringIndex;
     private int itsLocalTop;
 
     private static final int MIN_LABEL_TABLE_SIZE = 32;

@@ -2163,15 +2163,6 @@ public class Context
     {
     }
 
-    final void addInstructionCount(int n)
-    {
-        instructionCount += n;
-        if (instructionCount > instructionThreshold) {
-            observeInstructionCount(instructionCount);
-            instructionCount = 0;
-        }
-    }
-
     public GeneratedClassLoader createClassLoader(ClassLoader parent)
     {
         return new DefiningClassLoader(parent);
@@ -2428,7 +2419,7 @@ public class Context
         Context cx = getCurrentContext();
         if (cx == null)
             return null;
-        if (cx.interpreterData != null) {
+        if (cx.interpreterLineCounting != null) {
             return Interpreter.getSourcePositionFromStack(cx, linep);
         }
         /**
@@ -2636,8 +2627,7 @@ public class Context
     Hashtable activationNames;
 
     // For the interpreter to indicate line/source for error reports.
-    int interpreterLineIndex;
-    InterpreterData interpreterData;
+    Object interpreterLineCounting;
 
     // For instruction counting (interpreter only)
     int instructionCount;

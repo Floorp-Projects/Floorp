@@ -137,11 +137,7 @@ final class InterpretedFunction extends NativeFunction implements Script
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
     {
-        if (!ScriptRuntime.hasTopCall(cx)) {
-            return ScriptRuntime.doTopCall(this, cx, scope, thisObj, args);
-        }
-        return Interpreter.interpret(cx, scope, thisObj, args, null,
-                                     0, args.length, this);
+        return Interpreter.interpret(this, cx, scope, thisObj, args);
     }
 
     public Object exec(Context cx, Scriptable scope)
