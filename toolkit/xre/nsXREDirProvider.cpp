@@ -78,6 +78,14 @@
 #include <os2.h>
 #endif
 
+#if defined(XP_MACOSX)
+#define APP_REGISTRY_NAME "Application Registry"
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define APP_REGISTRY_NAME "registry.dat"
+#else
+#define APP_REGISTRY_NAME "appreg"
+#endif
+
 nsXREDirProvider* gDirServiceProvider = nsnull;
 
 nsXREDirProvider::nsXREDirProvider() :
@@ -237,6 +245,13 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       if (NS_SUCCEEDED(rv))
         rv = file->AppendNative(nsDependentCString("pref"));
     }
+  }
+  else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_DIR)) {
+    rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+  }
+  else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
+    rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+    rv |= file->AppendNative(NS_LITERAL_CSTRING(APP_REGISTRY_NAME));
   }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_ROOT_DIR)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
