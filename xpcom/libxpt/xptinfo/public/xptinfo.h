@@ -139,6 +139,7 @@ public:
     PRBool IsIn()  const    {return (PRBool) (XPT_PD_IS_IN(flags));}
     PRBool IsOut() const    {return (PRBool) (XPT_PD_IS_OUT(flags));}
     PRBool IsRetval() const {return (PRBool) (XPT_PD_IS_RETVAL(flags));}
+    PRBool IsShared() const {return (PRBool) (XPT_PD_IS_SHARED(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
     uint8 GetInterfaceIsArgNumber() const

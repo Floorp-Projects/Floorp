@@ -324,11 +324,13 @@ struct XPTParamDescriptor {
 #define XPT_PD_IN       0x80
 #define XPT_PD_OUT      0x40
 #define XPT_PD_RETVAL   0x20
-#define XPT_PD_FLAGMASK 0x70
+#define XPT_PD_SHARED   0x10
+#define XPT_PD_FLAGMASK 0xf0
 
 #define XPT_PD_IS_IN(flags)     (flags & XPT_PD_IN)
 #define XPT_PD_IS_OUT(flags)    (flags & XPT_PD_OUT)
 #define XPT_PD_IS_RETVAL(flags) (flags & XPT_PD_RETVAL)
+#define XPT_PD_IS_SHARED(flags) (flags & XPT_PD_SHARED)
 
 #define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
 
