@@ -55,9 +55,6 @@ imgContainerGIF::~imgContainerGIF()
 {
   if (mTimer)
     mTimer->Cancel();
-
-  /* destructor code */
-  mFrames.Clear();
 }
 
 //******************************************************************************
@@ -106,14 +103,19 @@ NS_IMETHODIMP imgContainerGIF::GetHeight(nscoord *aHeight)
 /* readonly attribute gfxIImageFrame currentFrame; */
 NS_IMETHODIMP imgContainerGIF::GetCurrentFrame(gfxIImageFrame * *aCurrentFrame)
 {
-  return inlinedGetCurrentFrame(aCurrentFrame);
+  if (!(*aCurrentFrame = inlinedGetCurrentFrame()))
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*aCurrentFrame);
+  return NS_OK;
 }
 
 //******************************************************************************
 /* readonly attribute unsigned long numFrames; */
 NS_IMETHODIMP imgContainerGIF::GetNumFrames(PRUint32 *aNumFrames)
 {
-  return mFrames.Count(aNumFrames);
+  *aNumFrames = mFrames.Count();
+  return NS_OK;
 }
 
 //******************************************************************************
@@ -121,7 +123,11 @@ NS_IMETHODIMP imgContainerGIF::GetNumFrames(PRUint32 *aNumFrames)
 NS_IMETHODIMP imgContainerGIF::GetFrameAt(PRUint32 index,
                                           gfxIImageFrame **_retval)
 {
-  return inlinedGetFrameAt(index, _retval);
+  if (!(*_retval = mFrames[index]))
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 //******************************************************************************
@@ -132,7 +138,7 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
   if (!item)
     return NS_ERROR_NULL_POINTER;
 
-  PRUint32 numFrames = inlinedGetNumFrames();
+  PRInt32 numFrames = mFrames.Count();
   if (numFrames == 0) {
     // First Frame
     // If we dispose of the first frame by clearing it, then the
@@ -152,7 +158,7 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
     mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, itemRect);
   }
 
-  mFrames.AppendElement(NS_STATIC_CAST(nsISupports*, item));
+  mFrames.AppendObject(item);
 
   // If this is our second frame, start the animation.
   // Must be called after AppendElement because StartAnimation checks for > 1
@@ -188,19 +194,16 @@ NS_IMETHODIMP imgContainerGIF::DecodingComplete(void)
   mDoneDecoding = PR_TRUE;
   // If there's only 1 frame, optimize it.
   // Optimizing animated gifs is not supported
-  PRUint32 numFrames = inlinedGetNumFrames();
-  if (numFrames == 1) {
-    nsCOMPtr<gfxIImageFrame> currentFrame;
-    inlinedGetFrameAt(0, getter_AddRefs(currentFrame));
-    currentFrame->SetMutable(PR_FALSE);
-  }
+  if (mFrames.Count() == 1)
+    mFrames[0]->SetMutable(PR_FALSE);
   return NS_OK;
 }
 
 /* void clear (); */
 NS_IMETHODIMP imgContainerGIF::Clear()
 {
-  return mFrames.Clear();
+  mFrames.Clear();
+  return NS_OK;
 }
 
 //******************************************************************************
@@ -243,12 +246,9 @@ NS_IMETHODIMP imgContainerGIF::StartAnimation()
   if (mAnimationMode == kDontAnimMode || mAnimating || mTimer)
     return NS_OK;
 
-  PRUint32 numFrames = inlinedGetNumFrames();
-  if (numFrames > 1) {
+  if (mFrames.Count() > 1) {
     PRInt32 timeout;
-    nsCOMPtr<gfxIImageFrame> currentFrame;
-
-    inlinedGetCurrentFrame(getter_AddRefs(currentFrame));
+    gfxIImageFrame *currentFrame = inlinedGetCurrentFrame();
     if (currentFrame) {
       currentFrame->GetTimeout(&timeout);
       if (timeout <= 0) // -1 means display this frame forever
@@ -304,11 +304,8 @@ NS_IMETHODIMP imgContainerGIF::ResetAnimation()
   mCurrentAnimationFrameIndex = 0;
   // Update display
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
-  if (observer) {
-    nsCOMPtr<gfxIImageFrame> firstFrame;
-    inlinedGetFrameAt(0, getter_AddRefs(firstFrame));
-    observer->FrameChanged(this, firstFrame, &mFirstFrameRefreshArea);
-  }
+  if (observer)
+    observer->FrameChanged(this, mFrames[0], &mFirstFrameRefreshArea);
 
   if (oldAnimating)
     return StartAnimation();
@@ -353,11 +350,11 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
     return NS_OK;
   }
 
-  PRInt32 numFrames = inlinedGetNumFrames();
+  PRInt32 numFrames = mFrames.Count();
   if (!numFrames)
     return NS_OK;
 
-  nsCOMPtr<gfxIImageFrame> nextFrame;
+  gfxIImageFrame *nextFrame = nsnull;
   PRInt32 previousFrameIndex = mCurrentAnimationFrameIndex;
   PRInt32 nextFrameIndex = mCurrentAnimationFrameIndex + 1;
   PRInt32 timeout = 0;
@@ -384,8 +381,7 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
         mLoopCount--;
     }
 
-    if (NS_FAILED(inlinedGetFrameAt(nextFrameIndex,
-                                    getter_AddRefs(nextFrame)))) {
+    if (!(nextFrame = mFrames[nextFrameIndex])) {
       // something wrong with the next frame, skip it
       mCurrentAnimationFrameIndex = nextFrameIndex;
       mTimer->SetDelay(100);
@@ -403,8 +399,7 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
     // that hasn't been decoded yet, go back to the last frame decoded
     NS_WARNING("imgContainerGIF::Notify()  Frame is passed decoded frame");
     nextFrameIndex = mCurrentDecodingFrameIndex;
-    if (NS_FAILED(inlinedGetFrameAt(nextFrameIndex,
-                                    getter_AddRefs(nextFrame)))) {
+    if (!(nextFrame = mFrames[nextFrameIndex])) {
       // something wrong with the next frame, skip it
       mCurrentAnimationFrameIndex = nextFrameIndex;
       mTimer->SetDelay(100);
@@ -419,20 +414,19 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
     StopAnimation();
 
   nsRect dirtyRect;
-  nsCOMPtr<gfxIImageFrame> frameToUse;
+  gfxIImageFrame *frameToUse = nsnull;
 
   if (nextFrameIndex == 0) {
     frameToUse = nextFrame;
     dirtyRect = mFirstFrameRefreshArea;
   } else {
-    nsCOMPtr<gfxIImageFrame> prevFrame;
-    if (NS_FAILED(inlinedGetFrameAt(previousFrameIndex,
-                                    getter_AddRefs(prevFrame))))
+    gfxIImageFrame *prevFrame = mFrames[previousFrameIndex];
+    if (!prevFrame)
       return NS_OK;
 
     // Change frame and announce it
-    if (NS_FAILED(DoComposite(getter_AddRefs(frameToUse), &dirtyRect,
-                              prevFrame, nextFrame, nextFrameIndex))) {
+    if (NS_FAILED(DoComposite(&frameToUse, &dirtyRect, prevFrame,
+                              nextFrame, nextFrameIndex))) {
       // something went wrong, move on to next
       NS_WARNING("imgContainerGIF: Composing Frame Failed\n");
       mCurrentAnimationFrameIndex = nextFrameIndex;
@@ -449,11 +443,11 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
 //******************************************************************************
 // DoComposite gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
-NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
-                                           nsRect* aDirtyRect,
-                                           gfxIImageFrame* aPrevFrame,
-                                           gfxIImageFrame* aNextFrame,
-                                           PRInt32 aNextFrameIndex)
+nsresult imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
+                                      nsRect* aDirtyRect,
+                                      gfxIImageFrame* aPrevFrame,
+                                      gfxIImageFrame* aNextFrame,
+                                      PRInt32 aNextFrameIndex)
 {
   NS_ASSERTION(aDirtyRect, "imgContainerGIF::DoComposite aDirtyRect is null");
   NS_ASSERTION(aPrevFrame, "imgContainerGIF::DoComposite aPrevFrame is null");
@@ -472,7 +466,6 @@ NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
   if (prevFrameDisposalMethod == DISPOSE_CLEAR_ALL) {
     aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
     *aFrameToUse = aNextFrame;
-    NS_ADDREF(*aFrameToUse);
     return NS_OK;
   }
 
@@ -487,7 +480,6 @@ NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
   if (isFullPrevFrame && prevFrameDisposalMethod == DISPOSE_CLEAR) {
     aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
     *aFrameToUse = aNextFrame;
-    NS_ADDREF(*aFrameToUse);
     return NS_OK;
   }
 
@@ -511,7 +503,6 @@ NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
 
     aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
     *aFrameToUse = aNextFrame;
-    NS_ADDREF(*aFrameToUse);
     return NS_OK;
   }
 
@@ -547,7 +538,6 @@ NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
   //    since it's still sitting in mCompositingFrame)
   if (mLastCompositedFrameIndex == aNextFrameIndex) {
     *aFrameToUse = mCompositingFrame;
-    NS_ADDREF(*aFrameToUse);
     return NS_OK;
   }
 
@@ -670,14 +660,12 @@ NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
       aPrevFrame->SetFrameDisposalMethod(DISPOSE_CLEAR_ALL);
       mLastCompositedFrameIndex = -1;
       *aFrameToUse = aNextFrame;
-      NS_ADDREF(*aFrameToUse);
       return NS_OK;
     }
   }
 
   mLastCompositedFrameIndex = aNextFrameIndex;
   *aFrameToUse = mCompositingFrame;
-  NS_ADDREF(*aFrameToUse);
 
   return NS_OK;
 }

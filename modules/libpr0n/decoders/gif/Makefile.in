@@ -32,6 +32,7 @@ FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsGIFModule2
 
 REQUIRES	= xpcom \
+		  string \
 		  gfx \
 		  imglib2 \
 		  $(NULL)
