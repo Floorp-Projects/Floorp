@@ -582,30 +582,6 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
         writeTrainingData();
 }
 
-/*
-        var profileMgr = do_GetService(PROFILEMGR_CTRID, nsIProfileInternal);
-        var outFile = profileMgr.getProfileDir(profileMgr.currentProfile);
-        outFile.append("spam.db");
-        var fileTransportService = do_GetService(FILETPTSVC_CTRID, nsIFileTransportService);
-        const ioFlags = NS_WRONLY | NS_CREATE_FILE | NS_TRUNCATE;
-        var trans = fileTransportService.createTransport(outFile, ioFlags, 'w', true);
-        var out = trans.openOutputStream(0, -1, 0);
-
-        var totals = this.mHamCount.toString() + "\t" +
-                     this.mSpamCount.toString() + "\n";
-        out.write(totals, totals.length);
-        for (token in this.mHash) {
-            var record = this.mHash[token];
-            var tokenString = token + "\t" + record[kHamCount].toString() +
-                              "\t" + record[kSpamCount].toString() +
-                              "\n";
-//                              "\t" + record[kTime].toString() + "\n";
-            out.write(tokenString, tokenString.length);
-        }
-
-        out.close();
-*/
-
 static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
 {
     // should we cache the profile manager's directory?
@@ -620,51 +596,87 @@ static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
     rv = profileManager->GetProfileDir(currentProfile.get(), getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     
-    return file->Append(NS_LITERAL_STRING("training.txt"));
+    return file->Append(NS_LITERAL_STRING("training.dat"));
 }
 
-static void writeTokens(FILE* stream, Tokenizer& tokenizer)
-{
-    Token ** tokens = tokenizer.getTokens();
-    if (tokens) {
-        // compute the maximum word length, so we can use a fixed buffer size when reading back in.
-        PRUint32 i, count = tokenizer.countTokens(), maxWordLength = 0;
-        for (i = 0; i < count; ++i) {
-            PRUint32 wordLength = tokens[i]->mWord.Length();
-            if (wordLength > maxWordLength)
-                maxWordLength = wordLength;
-        }
+/*
+    Format of the training file for version 1:
+    [0xFEEDFACE]
+    [number good messages][number bad messages]
+    [number good tokens]
+    [count][length of word]word
+    ...
+    [number bad tokens]
+    [count][length of word]word
+    ...
+ */
 
-        fprintf(stream, "count = %lu, maxWordLength = %lu\n", count, maxWordLength);
-    
-        for (PRUint32 i = 0; i < count; ++i) {
+static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
+{
+    PRUint32 tokenCount = tokenizer.countTokens();
+    if (fwrite(&tokenCount, sizeof(tokenCount), 1, stream) != 1)
+        return false;
+
+    if (tokenCount > 0) {
+        Token ** tokens = tokenizer.getTokens();
+        if (!tokens) return false;
+        
+        for (PRUint32 i = 0; i < tokenCount; ++i) {
             Token* token = tokens[i];
-            fprintf(stream, "%s : %lu\n", token->mWord.get(), token->mCount);
+            PRUint32 count = token->mCount;
+            if (fwrite(&count, sizeof(count), 1, stream) != 1)
+                break;
+            PRUint32 size = token->mWord.Length();
+            if (fwrite(&size, sizeof(size), 1, stream) != 1)
+                break;
+            if (fwrite(token->mWord.get(), size, 1, stream) != 1)
+                break;
         }
         
         delete[] tokens;
-    } else {
-        fprintf(stream, "count = 0, maxWordLength = 0\n");
     }
+    
+    return true;
 }
 
-static void readTokens(FILE* stream, Tokenizer& tokenizer)
+static bool readTokens(FILE* stream, Tokenizer& tokenizer)
 {
-    PRUint32 count, maxWordLength;
-    fscanf(stream, "count = %lu, maxWordLength = %lu\n", &count, &maxWordLength);
+    PRUint32 tokenCount;
+    if (fread(&tokenCount, sizeof(tokenCount), 1, stream) != 1)
+        return false;
 
-    char* wordBuffer = new char[maxWordLength + 1];
-    if (!wordBuffer) return;
+    PRUint32 bufferSize = 4096;
+    char* buffer = new char[bufferSize];
+    if (!buffer) return false;
 
-    PRUint32 wordCount;
-    
-    for (PRUint32 i = 0; i < count; ++i) {
-        if (fscanf(stream, "%s : %lu\n", wordBuffer, &wordCount) > 0)
-            tokenizer.add(wordBuffer, wordCount);
+    for (PRUint32 i = 0; i < tokenCount; ++i) {
+        PRUint32 count;
+        if (fread(&count, sizeof(count), 1, stream) != 1)
+            break;
+        PRUint32 size;
+        if (fread(&size, sizeof(size), 1, stream) != 1)
+            break;
+        if (size > (bufferSize - 1)) {
+            delete[] buffer;
+            PRUint32 newBufferSize = 2 * bufferSize;
+            while (size > (newBufferSize - 1))
+                newBufferSize *= 2;
+            buffer = new char[newBufferSize];
+            if (!buffer) return false;
+            bufferSize = newBufferSize;
+        }
+        if (fread(buffer, size, 1, stream) != 1)
+            break;
+        buffer[size] = '\0';
+        tokenizer.add(buffer, count);
     }
     
-    delete[] wordBuffer;
+    delete[] buffer;
+    
+    return true;
 }
+
+static const char kMagicCookie[] = { 0xFE, 0xED, 0xFA, 0xCE };
 
 void nsBayesianFilter::writeTrainingData()
 {
@@ -680,9 +692,13 @@ void nsBayesianFilter::writeTrainingData()
     rv = localFile->OpenANSIFileDesc("w", &stream);
     if (NS_FAILED(rv)) return;
 
-    fprintf(stream, "ngood = %lu, nbad = %lu\n", mGoodCount, mBadCount);
-    writeTokens(stream, mGoodTokens);
-    writeTokens(stream, mBadTokens);
+    if (!((fwrite(kMagicCookie, sizeof(kMagicCookie), 1, stream) == 1) &&
+          (fwrite(&mGoodCount, sizeof(mGoodCount), 1, stream) == 1) &&
+          (fwrite(&mBadCount, sizeof(mBadCount), 1, stream) == 1) &&
+           writeTokens(stream, mGoodTokens) &&
+           writeTokens(stream, mBadTokens))) {
+        NS_WARNING("failed to write training data.");
+    }
     
     fclose(stream);
     
@@ -704,9 +720,15 @@ void nsBayesianFilter::readTrainingData()
     if (NS_FAILED(rv)) return;
 
     // FIXME:  should make sure that the tokenizers are empty.
-    fscanf(stream, "ngood = %lu, nbad = %lu\n", &mGoodCount, &mBadCount);
-    readTokens(stream, mGoodTokens);
-    readTokens(stream, mBadTokens);
+    char cookie[4];
+    if (!((fread(cookie, sizeof(cookie), 1, stream) == 1) &&
+          (memcmp(cookie, kMagicCookie, sizeof(cookie)) == 0) &&
+          (fread(&mGoodCount, sizeof(mGoodCount), 1, stream) == 1) &&
+          (fread(&mBadCount, sizeof(mBadCount), 1, stream) == 1) &&
+           readTokens(stream, mGoodTokens) &&
+           readTokens(stream, mBadTokens))) {
+        NS_WARNING("failed to read training data.");
+    }
     
     fclose(stream);
 }
