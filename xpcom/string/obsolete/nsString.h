@@ -43,6 +43,9 @@ class NS_BASE nsString {
                           nsString(const char* anISOLatin1="");
                           nsString(const nsString&);
                           nsString(const PRUnichar* aUnicode);    
+  protected:
+                          nsString(PRBool aSubclassBuffer); // special subclas constructor
+  public:
   virtual                 ~nsString();
 
             PRInt32       Length() const { return mLength; }
