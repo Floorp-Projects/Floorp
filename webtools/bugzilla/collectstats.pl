@@ -34,6 +34,7 @@ GetVersionTable();
 foreach (@::legal_product)
 	{
 	my $dir = "data/mining";
+
 	&check_data_dir ($dir);
 	&collect_stats ($dir, $_);
 	}
@@ -60,7 +61,7 @@ select count(bug_status) from bugs where
 (bug_status='NEW' or  bug_status='ASSIGNED' or bug_status='REOPENED')
 and product='$product' group by bug_status
 FIN
-	
+        $product =~ s/\//-/gs;
 	my $file = join '/', $dir, $product;
 	my $exists = -f $file;
 

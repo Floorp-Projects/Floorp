@@ -409,7 +409,11 @@ FIN
 	my @dates;
 	my @open; my @assigned; my @reopened;
 
-	my $file = join '/', $dir, $::FORM{'product'};
+        my $prodname = $::FORM{'product'};
+
+        $prodname =~ s/\//-/gs;
+
+        my $file = join '/', $dir, $prodname;
 	my $image = "$file.gif";
 
 	if (! open FILE, $file)
