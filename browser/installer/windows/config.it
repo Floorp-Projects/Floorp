@@ -235,9 +235,10 @@ C2=Component Uninstaller
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
 C5=Component US region pack
+C6=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-; C6=Component QFA
+; C7=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -256,9 +257,10 @@ C4=Component Uninstaller
 C5=Component US English Profile Defaults
 C6=Component En US lang pack
 C7=Component US region pack
+C8=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-; C8=Component QFA
+; C9=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -640,6 +642,17 @@ $InstallSizeArchive$:adt.xpi
 Attributes=FORCE_UPGRADE|VISIBLE
 ;Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
 Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
+FileCount=$FileCount$
+
+[Component Help]
+Description Short=$ProductName$ Help
+;*** LOCALIZE ME BABY ***
+Description Long=Offline Help for learning about and using $ProductName$.
+Archive=help.xpi
+$InstallSize$:help
+$InstallSizeArchive$:help.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\help.jar
 FileCount=$FileCount$
 
 [Component Uninstaller]
