@@ -65,10 +65,11 @@ NS_NewTreeRowGroupFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeRowGroupFrame::nsTreeRowGroupFrame()
-:nsTableRowGroupFrame(), mScrollbar(nsnull), mFrameConstructor(nsnull),
- mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), 
- mContentChain(nsnull), mLinkupFrame(nsnull), mShouldHaveScrollbar(PR_FALSE),
- mRowGroupHeight(0), mRowCount(0), mCurrentIndex(0)
+: nsTableRowGroupFrame(), mTopFrame(nsnull), mBottomFrame(nsnull),
+  mLinkupFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE),
+  mScrollbar(nsnull), mShouldHaveScrollbar(PR_FALSE),
+  mContentChain(nsnull), mFrameConstructor(nsnull),
+  mRowGroupHeight(0), mCurrentIndex(0), mRowCount(0)
 { }
 
 // Destructor
@@ -1296,7 +1297,6 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
 
   nsCellMap * cellMap = tableFrame->GetCellMap();
   CellData* cellData = cellMap->GetCellAt(screenIndex, aColIndex);
-  nsRect cellRect;
   if (cellData) {
     cellFrame = cellData->mOrigCell;
     if (cellFrame) { // the cell originates at (rowX, colX)

@@ -116,8 +116,9 @@ private:
 ////////////////////////////////////////////////////////////////////////
 
 XULPopupListenerImpl::XULPopupListenerImpl(void)
-  : mElement(nsnull), mPopupContent(nsnull), mPossibleTooltipNode(nsnull), mMouseClientX(0),
-     mMouseClientY(0)
+  : mElement(nsnull), mPopupContent(nsnull),
+    mMouseClientX(0), mMouseClientY(0),
+    mPossibleTooltipNode(nsnull)
 {
 	NS_INIT_REFCNT();
 	
@@ -233,8 +234,6 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  nsresult rv = NS_OK;
- 
   // make sure we're a tooltip. if not, bail.
   if ( popupType != eXULPopupType_tooltip )
     return NS_OK;
