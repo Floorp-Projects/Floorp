@@ -20,8 +20,21 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+// Local Includes
 #include "nsChromeTreeOwner.h"
 #include "nsXULWindow.h"
+
+// Helper Classes
+#include "nsString.h"
+#include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
+#include "nsIDocShellTreeItem.h"
+
+// Interfaces needed to include
+#include "nsIWindowMediator.h"
+
+// CIDs
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
 //***    nsChromeTreeOwner: Object Management
@@ -56,22 +69,56 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
+   NS_ENSURE_ARG_POINTER(aFoundItem);
 
-	/*
-	Return the child DocShellTreeItem with the specified name.
-	name - This is the name of the item that is trying to be found.
-	aRequestor - This is the docshellTreeItem that is requesting the find.  This
-		parameter is used to identify when the child is asking it's parent to find
-		a child with the specific name.  The parent uses this parameter to ensure
-		a resursive state does not occur by not again asking the requestor for find
-		a shell by the specified name.  Inversely the child uses it to ensure it
-		does not ask it's parent to do the search if it's parent is the one that
-		asked it to search.
-	*/
+   *aFoundItem = nsnull;
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   nsAutoString   name(aName);
+
+   /* Special Cases */
+   if(name.Length() == 0)
+      return NS_OK;
+   if(name.EqualsIgnoreCase("_blank"))
+      return NS_OK;
+   if(name.EqualsIgnoreCase("_content"))
+      return mXULWindow->GetPrimaryContentShell(aFoundItem);
+
+   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+   NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+   NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nsnull, 
+      getter_AddRefs(windowEnumerator)), NS_ERROR_FAILURE);
+   
+   PRBool more;
+   
+   windowEnumerator->HasMoreElements(&more);
+   while(more)
+      {
+      nsCOMPtr<nsISupports> nextWindow = nsnull;
+      windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+      nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
+      NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDocShell> shell;
+      xulWindow->GetDocShell(getter_AddRefs(shell));
+
+      nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem(do_QueryInterface(shell));
+      if(shellAsTreeItem)
+         {
+         // Do this so we can pass in the tree owner as the requestor so the child knows not
+         // to call back up.
+         nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
+         shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
+         nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
+
+         shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
+         if(*aFoundItem)
+            return NS_OK;   
+         }
+      windowEnumerator->HasMoreElements(&more);
+      }
+   return NS_OK;      
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
