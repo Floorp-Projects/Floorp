@@ -142,6 +142,7 @@ protected:
   nsIFontMetrics         *mFontMetrics;
   nsIFontCache           *mFontCache;
   Region                 mRegion;
+  Font                   mCurrFontHandle;
 
   //state management
   nsVoidArray       *mStateCache;

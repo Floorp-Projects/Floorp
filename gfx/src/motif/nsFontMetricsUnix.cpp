@@ -24,15 +24,24 @@
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
+#define NOISY_FONTS
+
 nsFontMetricsUnix :: nsFontMetricsUnix()
 {
   NS_INIT_REFCNT();
   mFont = nsnull;
   mFontHandle = nsnull;
+  hackyfontnamething = nsnull;
 }
   
 nsFontMetricsUnix :: ~nsFontMetricsUnix()
 {
+  if (nsnull != hackyfontnamething)
+  {
+    PR_Free(hackyfontnamething);
+    hackyfontnamething = nsnull;
+  }
+
   if (nsnull != mFont)
   {
     delete mFont;
@@ -44,19 +53,173 @@ NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
 
 nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
+  char        **fnames = nsnull;
+  PRInt32     namelen = aFont.name.Length() + 1;
+  char	      *wildstring = (char *)PR_Malloc((namelen << 1) + 200);
+  int         numnames = 0;
+  char        altitalicization = 0;
+  XFontStruct *fonts;
+  PRInt32     dpi = NS_TO_INT_ROUND(aCX->GetTwipsToDevUnits() * 1440);
+
+  if (nsnull == wildstring)
+    return NS_ERROR_NOT_INITIALIZED;
+
   mFont = new nsFont(aFont);
-  mContext = aCX ;
+  mContext = aCX;
+  mFontHandle = nsnull;
+
+  aFont.name.ToCString(wildstring, namelen);
+
+  if (abs(dpi - 75) < abs(dpi - 100))
+    dpi = 75;
+  else
+    dpi = 100;
+
+#ifdef NOISY_FONTS
+  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
+#endif
+
+  //font properties we care about:
+  //name
+  //weight (bold, medium)
+  //slant (r = normal, i = italic, o = oblique)
+  //size in nscoords >> 1
+
+  PR_snprintf(&wildstring[namelen + 1], namelen + 200,
+             "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
+	     wildstring,
+             (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+             (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
+             ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
+
+  fnames = XListFontsWithInfo((Display *)mContext->GetNativeDeviceContext(),
+                              &wildstring[namelen + 1], 200, &numnames, &fonts);
+
+  if (aFont.style == NS_FONT_STYLE_ITALIC)
+    altitalicization = 'o';
+  else if (aFont.style == NS_FONT_STYLE_OBLIQUE)
+    altitalicization = 'i';
+
+  if ((numnames <= 0) && altitalicization)
+  {
+    PR_snprintf(&wildstring[namelen + 1], namelen + 200,
+               "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
+	       wildstring,
+               (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+               altitalicization, dpi, dpi);
+
+    fnames = XListFontsWithInfo((Display *)mContext->GetNativeDeviceContext(),
+                                &wildstring[namelen + 1], 200, &numnames, &fonts);
+  }
+
+  if (numnames <= 0)
+  {
+    //we were not able to match the font name at all...
+
+    const char *newname = MapFamilyToFont(aFont.name);
+
+    PR_snprintf(&wildstring[namelen + 1], namelen + 200,
+               "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
+               newname,
+               (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+               (aFont.style == NS_FONT_STYLE_NORMAL) ? 'r' :
+               ((aFont.style == NS_FONT_STYLE_ITALIC) ? 'i' : 'o'), dpi, dpi);
+
+    fnames = XListFontsWithInfo((Display *)mContext->GetNativeDeviceContext(),
+                                &wildstring[namelen + 1], 200, &numnames, &fonts);
+
+    if ((numnames <= 0) && altitalicization)
+    {
+      PR_snprintf(&wildstring[namelen + 1], namelen + 200,
+                 "*-%s-%s-%c-normal--*-*-%d-%d-*-*-*",
+	         newname,
+                 (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? "medium" : "bold",
+                 altitalicization, dpi, dpi);
+
+      fnames = XListFontsWithInfo((Display *)mContext->GetNativeDeviceContext(),
+                                  &wildstring[namelen + 1], 200, &numnames, &fonts);
+    }
+  }
+
+  if (numnames > 0)
+  {
+    char *nametouse = PickAppropriateSize(fnames, fonts, numnames, aFont.size);
+    
+    mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), nametouse);
+
+    hackyfontnamething = (char *)PR_Malloc(nsCRT::strlen(nametouse) + 1);
+    strcpy(hackyfontnamething, nametouse);
+    
+    XFreeFontInfo(fnames, fonts, numnames);
+  }
+  else
+  {
+    //ack. we're in real trouble, go for fixed...
+
+    hackyfontnamething = (char *)PR_Malloc(nsCRT::strlen("fixed") + 1);
+    strcpy(hackyfontnamething, "fixed");
+    mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
+  }
+
+#ifdef NOISY_FONTS
+  fprintf(stderr, " is: %s\n", hackyfontnamething);
+#endif
 
   RealizeFont();
+
+  PR_Free(wildstring);
 
   return NS_OK;
 }
 
+char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
+{
+  int         idx;
+  PRInt32     desiredpix = NS_TO_INT_ROUND(mContext->GetAppUnitsToDevUnits() * desired);
+  XFontStruct *curfont;
+  PRInt32     closestmin = -1, minidx;
+
+  //first try an exact or closest smaller match...
+
+  for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
+  {
+    PRInt32 height = curfont->ascent + curfont->descent;
+
+    if (height == desiredpix)
+      break;
+
+    if ((height < desiredpix) && (height > closestmin))
+    {
+      closestmin = height;
+      minidx = idx;
+    }
+  }
+
+  if (idx < cnt)
+    return names[idx];
+  else if (closestmin >= 0)
+    return names[minidx];
+  else
+  {
+    closestmin = 2000000;
+
+    for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
+    {
+      PRInt32 height = curfont->ascent + curfont->descent;
+
+      if ((height > desiredpix) && (height < closestmin))
+      {
+        closestmin = height;
+        minidx = idx;
+      }
+    }
+
+    return names[minidx];
+  }
+}
+
 void nsFontMetricsUnix::RealizeFont()
 {
-
-  mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
-
   XFontStruct * fs = ::XQueryFont((Display *)mContext->GetNativeDeviceContext(), mFontHandle);
 
   float f  = mContext->GetDevUnitsToAppUnits();
@@ -66,37 +229,36 @@ void nsFontMetricsUnix::RealizeFont()
   mMaxAscent = nscoord(fs->ascent * f) ;
   mMaxDescent = nscoord(fs->descent * f);
   
-  //  ::XSetFont(aRenderingSurface->display, aRenderingSurface->gc, mFontHandle);
-
-  // XXX Temp hardcodes
-  mHeight = nscoord((fs->ascent+fs->descent)*f) ;
+  mHeight = nscoord((fs->ascent + fs->descent) * f) ;
   mMaxAdvance = nscoord(fs->max_bounds.width * f);
 
   PRUint32 i;
-  for (i=0;i<256;i++) {
-    if (i < fs->min_char_or_byte2 || i > fs->max_char_or_byte2)
+
+  for (i = 0; i < 256; i++)
+  {
+    if ((i < fs->min_char_or_byte2) || (i > fs->max_char_or_byte2))
       mCharWidths[i] = mMaxAdvance;
     else
-      mCharWidths[i] = nscoord((fs->per_char[i-fs->min_char_or_byte2].width) * f);
+      mCharWidths[i] = nscoord((fs->per_char[i - fs->min_char_or_byte2].width) * f);
   }
 
-  
   mLeading = 0;
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(char ch)
 {
-  if (ch < 256) {
+  if (ch < 256)
     return mCharWidths[ch];
-  }
+  else
+    return 0; //XXX
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(PRUnichar ch)
 {
   if (ch < 256)
     return mCharWidths[PRUint8(ch)];
-  
-  return 0;/* XXX */
+  else
+    return 0;/* XXX */
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
@@ -106,17 +268,15 @@ nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
 
 nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
-
   PRInt32 rc = 0 ;
 
-  mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
+  mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), hackyfontnamething);
   
   XFontStruct * fs = ::XQueryFont((Display *)mContext->GetNativeDeviceContext(), mFontHandle);
   
   rc = (PRInt32) ::XTextWidth(fs, aString, nsCRT::strlen(aString));
 
   return (nscoord(rc * mContext->GetDevUnitsToAppUnits()));
-  
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
@@ -137,7 +297,7 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
     thischar->byte1 = (aunichar & 0xff00) >> 8;      
   }
 
-  mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
+  mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), hackyfontnamething);
   
   XFontStruct * fs = ::XQueryFont((Display *)mContext->GetNativeDeviceContext(), mFontHandle);
   
@@ -185,7 +345,8 @@ const nsFont& nsFontMetricsUnix :: GetFont()
 
 nsFontHandle nsFontMetricsUnix :: GetFontHandle()
 {
-  return ((nsFontHandle)mFontHandle);
+  return ((nsFontHandle)hackyfontnamething);
+//  return ((nsFontHandle)mFontHandle);
 }
 
 
@@ -194,24 +355,27 @@ nsFontHandle nsFontMetricsUnix :: GetFontHandle()
 const char* nsFontMetricsUnix::MapFamilyToFont(const nsString& aLogicalFontName)
 {
   if (aLogicalFontName.EqualsIgnoreCase("Times Roman")) {
-    return "Times New Roman";
+    return "times";
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Times")) {
-    return "Times New Roman";
+  if (aLogicalFontName.EqualsIgnoreCase("Times New Roman")) {
+    return "times";
   }
   if (aLogicalFontName.EqualsIgnoreCase("Unicode")) {
     return "Bitstream Cyberbit";
   }
-  if (aLogicalFontName.EqualsIgnoreCase("Courier")) {
-    return "Courier New";
+  if (aLogicalFontName.EqualsIgnoreCase("Courier New")) {
+    return "courier";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("Arial")) {
+    return "helvetica";
   }
 
   // the CSS generic names
   if (aLogicalFontName.EqualsIgnoreCase("serif")) {
-    return "Times New Roman";
+    return "times";
   }
   if (aLogicalFontName.EqualsIgnoreCase("sans-serif")) {
-    return "Arial";
+    return "helvetica";
   }
   if (aLogicalFontName.EqualsIgnoreCase("cursive")) {
 //    return "XXX";
@@ -220,9 +384,9 @@ const char* nsFontMetricsUnix::MapFamilyToFont(const nsString& aLogicalFontName)
 //    return "XXX";
   }
   if (aLogicalFontName.EqualsIgnoreCase("monospace")) {
-    return "Courier New";
+    return "fixed";
   }
-  return "Arial";/* XXX for now */
+  return "helvetica";/* XXX for now */
 }
 
 
