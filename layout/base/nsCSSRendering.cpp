@@ -1686,11 +1686,13 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsIFrameImageLoader* loader = nsnull;
     PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
       (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+    nsSize loadSize(0, 0);
     nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage,
                                               transparentBG
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
-                                              aForFrame, nsnull,
+                                              aForFrame, loadSize,
+                                              nsnull,
                                               PR_FALSE, PR_FALSE, &loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
@@ -1744,7 +1746,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     // on the dirty rect before accounting for the background-position.
     PRIntn repeat = aColor.mBackgroundRepeat;
     nscoord xDistance, yDistance;
-    switch (aColor.mBackgroundRepeat) {
+    switch (repeat) {
     case NS_STYLE_BG_REPEAT_OFF:
     default:
       xDistance = tileWidth;
@@ -1790,7 +1792,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 
     // Compute the x and y starting points and limits for tiling
     nscoord x0, x1;
-    if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
+    if (NS_STYLE_BG_REPEAT_X & repeat) {
       // When tiling in the x direction, adjust the starting position of the
       // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
       // will be a negative value used to adjust the starting coordinate.
@@ -1807,7 +1809,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     }
 
     nscoord y0, y1;
-    if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
+    if (NS_STYLE_BG_REPEAT_Y & repeat) {
       // When tiling in the y direction, adjust the starting position of the
       // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
       // will be a negative value used to adjust the starting coordinate.
