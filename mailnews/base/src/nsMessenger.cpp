@@ -140,6 +140,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIMIMEService.h"
+#include "nsIDownload.h"
 
 #include "nsILinkHandler.h"                                                                              
 
@@ -244,7 +245,8 @@ class nsSaveAllAttachmentsState;
 
 class nsSaveMsgListener : public nsIUrlListener,
                           public nsIMsgCopyServiceListener,
-                          public nsIStreamListener
+                          public nsIStreamListener,
+                          public nsIObserver
 {
 public:
     nsSaveMsgListener(nsIFileSpec* fileSpec, nsMessenger* aMessenger);
@@ -256,6 +258,7 @@ public:
     NS_DECL_NSIMSGCOPYSERVICELISTENER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIOBSERVER
 
     nsCOMPtr<nsIFileSpec> m_fileSpec;
     nsCOMPtr<nsIOutputStream> m_outputStream;
@@ -272,6 +275,13 @@ public:
     nsString      m_msgBuffer;
 
     nsCString     m_contentType;    // used only when saving attachment
+
+    nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
+    PRInt32 mProgress;
+    PRInt32 mContentLength; 
+    PRBool  mCanceled;
+    PRBool  mInitialized;
+    nsresult InitializeDownload(nsIRequest * aRequest, PRInt32 aBytesDownloaded);
 };
 
 class nsSaveAllAttachmentsState
@@ -1664,6 +1674,10 @@ nsSaveMsgListener::nsSaveMsgListener(nsIFileSpec* aSpec, nsMessenger *aMessenger
     // rhp: for charset handling
     m_doCharsetConversion = PR_FALSE;
     m_saveAllAttachmentsState = nsnull;
+    mProgress = 0;
+    mContentLength = -1;
+    mCanceled = PR_FALSE;
+    mInitialized = PR_FALSE;
 }
 
 nsSaveMsgListener::~nsSaveMsgListener()
@@ -1673,7 +1687,17 @@ nsSaveMsgListener::~nsSaveMsgListener()
 // 
 // nsISupports
 //
-NS_IMPL_ISUPPORTS3(nsSaveMsgListener, nsIUrlListener, nsIMsgCopyServiceListener, nsIStreamListener)
+NS_IMPL_ISUPPORTS4(nsSaveMsgListener, nsIUrlListener, nsIMsgCopyServiceListener, nsIStreamListener, nsIObserver)
+
+
+NS_IMETHODIMP
+nsSaveMsgListener::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, "oncancel"))
+      mCanceled = PR_TRUE;
+
+  return NS_OK;
+}
 
 // 
 // nsIUrlListener
@@ -1768,70 +1792,104 @@ nsSaveMsgListener::OnStopCopy(nsresult aStatus)
   return aStatus;
 }
 
+// initializes the progress window if we are going to show one
+// and for OSX, sets creator flags on the output file
+nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aBytesDownloaded)
+{
+  nsresult rv = NS_OK;
+
+  mInitialized = PR_TRUE;
+  nsCOMPtr<nsIChannel> channel (do_QueryInterface(aRequest));
+
+  if (!channel)
+    return rv;
+
+  // Set content length if we haven't already got it.
+  if (mContentLength == -1)
+      channel->GetContentLength(&mContentLength);
+
+  if (!m_contentType.IsEmpty())
+  {
+      nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID));
+      nsCOMPtr<nsIMIMEInfo> mimeinfo;
+
+      mimeService->GetFromTypeAndExtension(m_contentType.get(), nsnull, getter_AddRefs(mimeinfo)); 
+      nsFileSpec realSpec;
+      m_fileSpec->GetFileSpec(&realSpec);
+
+      // Create nsILocalFile from a nsFileSpec.
+      nsCOMPtr<nsILocalFile> outputFile;
+      NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile)); 
+
+      // create a download progress window
+      // XXX: we don't want to show the progress dialog if the download is really small.
+      // but what is a small download? Well that's kind of arbitrary
+      // so make an arbitrary decision based on the content length of the attachment
+      if (mContentLength != -1 && mContentLength > aBytesDownloaded * 2)
+      {
+        nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
+        if (dl && outputFile)
+        {
+          PRTime timeDownloadStarted = PR_Now();
+
+          nsCOMPtr<nsIURI> url;
+          channel->GetURI(getter_AddRefs(url));
+          rv = dl->Init(url, outputFile, nsnull, mimeinfo, timeDownloadStarted, nsnull);
+
+          dl->SetObserver(this);
+          // now store the web progresslistener 
+          mWebProgressListener = do_QueryInterface(dl);
+        }
+      }
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      /* if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
+      if ((nsCRT::strcasecmp(m_contentType.get(), APPLICATION_APPLEFILE) == 0) ||
+          (nsCRT::strcasecmp(m_contentType.get(), MULTIPART_APPLEDOUBLE) == 0))
+      {        
+
+        nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv) && appleFileDecoder)
+        {
+          rv = appleFileDecoder->Initialize(m_outputStream, outputFile);
+          if (NS_SUCCEEDED(rv))
+            m_outputStream = do_QueryInterface(appleFileDecoder, &rv);
+        }
+      }
+      else
+      {
+          if (mimeinfo)
+          {
+            PRUint32 aMacType;
+            PRUint32 aMacCreator;
+            if (NS_SUCCEEDED(mimeinfo->GetMacType(&aMacType)) && NS_SUCCEEDED(mimeinfo->GetMacCreator(&aMacCreator)))
+            {
+              nsCOMPtr<nsILocalFileMac> macFile =  do_QueryInterface(outputFile, &rv);
+              if (NS_SUCCEEDED(rv) && macFile)
+              {
+                macFile->SetFileCreator((OSType)aMacCreator);
+                macFile->SetFileType((OSType)aMacType);
+              }
+            }
+          }
+      }
+#endif // XP_MACOSX
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
 {
     nsresult rv = NS_OK;
+
     if (m_fileSpec)
         rv = m_fileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
     if (NS_FAILED(rv) && m_messenger)
-    {
         m_messenger->Alert("saveAttachmentFailed");
-    }
     else if (!m_dataBuffer)
-    {
         m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
-    }
-    
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  if (!m_contentType.IsEmpty())
-  {
-    nsFileSpec realSpec;
-    m_fileSpec->GetFileSpec(&realSpec);
-
-    // Create nsILocalFile from a nsFileSpec.
-    nsCOMPtr<nsILocalFile> outputFile;
-    NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile));
-
-  	/* if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
-    if ((nsCRT::strcasecmp(m_contentType.get(), APPLICATION_APPLEFILE) == 0) ||
-        (nsCRT::strcasecmp(m_contentType.get(), MULTIPART_APPLEDOUBLE) == 0))
-    {        
-      
-      nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv) && appleFileDecoder)
-      {
-        rv = appleFileDecoder->Initialize(m_outputStream, outputFile);
-        if (NS_SUCCEEDED(rv))
-          m_outputStream = do_QueryInterface(appleFileDecoder, &rv);
-      }
-    }
-    else
-    {
-      /* we need to set the correct application type and creator base on the content-type */
-      nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID));
-      if (mimeService)
-      {
-        nsCOMPtr<nsIMIMEInfo> mimeinfo;
-        if (NS_SUCCEEDED(mimeService->GetFromTypeAndExtension(m_contentType.get(), nsnull, getter_AddRefs(mimeinfo))))
-        {
-          PRUint32 aMacType;
-          PRUint32 aMacCreator;
-          if (NS_SUCCEEDED(mimeinfo->GetMacType(&aMacType)) && NS_SUCCEEDED(mimeinfo->GetMacCreator(&aMacCreator)))
-          {
-            nsCOMPtr<nsILocalFileMac> macFile =  do_QueryInterface(outputFile, &rv);
-            if (NS_SUCCEEDED(rv) && macFile)
-            {
-              macFile->SetFileCreator((OSType)aMacCreator);
-              macFile->SetFileType((OSType)aMacType);
-            }
-          }
-        }
-      }
-      
-    }
-  }
-#endif
 
     return rv;
 }
@@ -1926,6 +1984,14 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
           m_saveAllAttachmentsState = nsnull;
       }
   }
+
+  if(mWebProgressListener)
+  {
+    mWebProgressListener->OnProgressChange(nsnull, nsnull, mContentLength, mContentLength, mContentLength, mContentLength);
+    mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
+    mWebProgressListener = nsnull; // break any circular dependencies between the progress dialog and use
+  }
+
   Release(); // all done kill ourself
   return NS_OK;
 }
@@ -1938,8 +2004,17 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
                                   PRUint32 count)
 {
   nsresult rv = NS_ERROR_FAILURE;
+  // first, check to see if we've been canceled....
+  if (mCanceled) // then go cancel our underlying channel too
+    return request->Cancel(NS_BINDING_ABORTED);
+
+  if (!mInitialized)
+    InitializeDownload(request, count);
+
+
   if (m_dataBuffer && m_outputStream)
   {
+    mProgress += count;
     PRUint32 available, readCount, maxReadCount = FOUR_K;
     PRUint32 writeCount;
     rv = inStream->Available(&available);
@@ -1967,6 +2042,9 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
         available -= readCount;
       }
     }
+
+    if (NS_SUCCEEDED(rv) && mWebProgressListener) // Send progress notification.
+        mWebProgressListener->OnProgressChange(nsnull, request, mProgress, mContentLength, mProgress, mContentLength);
   }
   return rv;
 }
