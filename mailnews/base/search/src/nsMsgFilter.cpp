@@ -216,7 +216,8 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 
 	GetFilterName(&filterName);
 	GetAction(&actionType, &value);
-	nsresult res = msgHdr->GetDate(&date);
+	nsresult res;
+    res = msgHdr->GetDate(&date);
 	struct tm* tmTime = localtime(&date);
 	strftime(dateStr, 100, "%m/%d/%Y %I:%M %p", tmTime);
 

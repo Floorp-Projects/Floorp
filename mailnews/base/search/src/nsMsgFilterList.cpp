@@ -382,7 +382,9 @@ nsresult nsMsgFilterList::LoadTextFilters()
 		nsString2	value(eOneByte);
 		PRInt32 intToStringResult;
 
-		char curChar = LoadAttrib(attrib);
+		char curChar;
+
+        curChar = LoadAttrib(attrib);
 		if (attrib == nsMsgFilterAttribNone)
 			break;
 		err = LoadValue(value);

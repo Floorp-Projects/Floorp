@@ -1104,7 +1104,7 @@ nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
 }
 
 // ### purely temporary
-static NET_IsOffline()
+static PRBool NET_IsOffline()
 {
 	return PR_FALSE;
 }

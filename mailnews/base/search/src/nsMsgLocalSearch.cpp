@@ -602,7 +602,7 @@ nsresult nsMsgSearchOfflineMail::Search ()
 {
     nsresult err = NS_OK;
     nsIMsgDBHdr *pHeaders = nsnull;
-    nsresult dbErr = 0;
+    nsresult dbErr = NS_OK;
 
 #ifdef HAVE_SEARCH_PORT
     // If we need to parse the mailbox before searching it, give another time
