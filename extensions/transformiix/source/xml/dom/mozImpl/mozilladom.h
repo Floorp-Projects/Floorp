@@ -159,7 +159,7 @@ class Node : public MozillaObjectWrapper
         Node(nsIDOMNode* aNode, Document* aOwner);
         virtual ~Node();
 
-        virtual void setNSObj(nsIDOMNode* aNode);
+        void setNSObj(nsIDOMNode* aNode);
         void setNSObj(nsIDOMNode* aNode, Document* aOwner);
         nsIDOMNode* getNSObj();
 
@@ -246,7 +246,7 @@ class DocumentFragment : public Node
                     Document* aOwner);
         ~DocumentFragment();
 
-        virtual void setNSObj(nsIDOMDocumentFragment* aDocFragment);
+        void setNSObj(nsIDOMDocumentFragment* aDocFragment);
 
     private:
         nsIDOMDocumentFragment* nsDocumentFragment;
@@ -262,7 +262,7 @@ class Document : public Node
         Document(nsIDOMDocument* aDocument);
         ~Document();
 
-        virtual void setNSObj(nsIDOMDocument* aNode);
+        void setNSObj(nsIDOMDocument* aNode);
 
         PRBool inHashTableDeletion();
 
@@ -344,7 +344,7 @@ class Element : public Node
         Element(nsIDOMElement* aElement, Document* aOwner);
         ~Element();
 
-        virtual void setNSObj(nsIDOMElement* aElement);
+        void setNSObj(nsIDOMElement* aElement);
 
         const String& getTagName();
         const String& getAttribute(const String& aName);
@@ -372,7 +372,7 @@ class Attr : public Node
         ~Attr();
 
         nsIDOMAttr* getNSAttr();
-        virtual void setNSObj(nsIDOMAttr* aAttr);
+        void setNSObj(nsIDOMAttr* aAttr);
 
         const String& getName();
         MBool getSpecified() const;
@@ -392,7 +392,7 @@ class CharacterData : public Node
         CharacterData(nsIDOMCharacterData* aCharData, Document* aOwner);
         ~CharacterData();
 
-        virtual void setNSObj(nsIDOMCharacterData* aCharData);
+        void setNSObj(nsIDOMCharacterData* aCharData);
 
         const String& getData();
         void setData(const String& aSource);
@@ -417,7 +417,7 @@ class Text : public CharacterData
         Text(nsIDOMText* aText, Document* aOwner);
         ~Text();
 
-        virtual void setNSObj(nsIDOMText* aText);
+        void setNSObj(nsIDOMText* aText);
 
         Text* splitText(Int32 aOffset);
 
@@ -434,7 +434,7 @@ class Comment : public CharacterData
         Comment(nsIDOMComment* aComment, Document* aOwner);
         ~Comment();
 
-        virtual void setNSObj(nsIDOMComment* aComment);
+        void setNSObj(nsIDOMComment* aComment);
 
     private:
         nsIDOMComment* nsComment;
@@ -449,7 +449,7 @@ class CDATASection : public Text
         CDATASection(nsIDOMCDATASection* aCdataSection, Document* aOwner);
         ~CDATASection();
 
-        virtual void setNSObj(nsIDOMCDATASection* aCdataSection);
+        void setNSObj(nsIDOMCDATASection* aCdataSection);
 
     private:
         nsIDOMCDATASection* nsCDATASection;
@@ -465,7 +465,7 @@ class ProcessingInstruction : public Node
                    Document* aOwner);
         ~ProcessingInstruction();
 
-        virtual void setNSObj(nsIDOMProcessingInstruction* aProcInstr);
+        void setNSObj(nsIDOMProcessingInstruction* aProcInstr);
 
         const String& getTarget();
         const String& getData();
@@ -488,7 +488,7 @@ class Notation : public Node
         Notation(nsIDOMNotation* aNotation, Document* aOwner);
         ~Notation();
 
-        virtual void setNSObj(nsIDOMNotation* aNotation);
+        void setNSObj(nsIDOMNotation* aNotation);
 
         const String& getPublicId();
         const String& getSystemId();
@@ -509,7 +509,7 @@ class Entity : public Node
         Entity(nsIDOMEntity* aEntity, Document* aOwner);
         ~Entity();
 
-        virtual void setNSObj(nsIDOMEntity* aEntity);
+        void setNSObj(nsIDOMEntity* aEntity);
 
         const String& getPublicId();
         const String& getSystemId();
@@ -533,7 +533,7 @@ class EntityReference : public Node
                     Document* aOwner);
         ~EntityReference();
 
-        virtual void setNSObj(nsIDOMEntityReference* aEntityReference);
+        void setNSObj(nsIDOMEntityReference* aEntityReference);
 
     private:
         nsIDOMEntityReference* nsEntityReference;
@@ -549,7 +549,7 @@ class DocumentType : public Node
         DocumentType(nsIDOMDocumentType* aDocumentType, Document* aOwner);
         ~DocumentType();
 
-        virtual void setNSObj(nsIDOMDocumentType* aDocumentType);
+        void setNSObj(nsIDOMDocumentType* aDocumentType);
 
         const String& getName();
         NamedNodeMap* getEntities();
