@@ -295,10 +295,9 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                        const nsAString& aStatus)
 {
   nsXPIDLString fileStr;
-  nsCOMPtr<nsIURI> uri = do_QueryInterface(mDocumentURI);
-  if (uri) {
+  if (mDocumentURI) {
     nsCAutoString fileName;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURI);
     if (url)
       url->GetFileName(fileName);
 
@@ -315,7 +314,7 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     }
     else {  
       // resort to |originCharset|
-      uri->GetOriginCharset(docCharset);
+      mDocumentURI->GetOriginCharset(docCharset);
       SetDocumentCharacterSet(docCharset);
     }
     if (!fileName.IsEmpty()) {
