@@ -133,6 +133,7 @@
 #include "nsIWebBrowserChromeFocus.h"
 
 #include "nsPluginError.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
@@ -4329,6 +4330,29 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
                                 nsIStreamListener ** aContentHandler,
                                 nsIContentViewer ** aViewer)
 {
+    nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID));
+    nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
+
+    // check plugins to see if there is an override mime type for this extension
+    if (pluginHost &&
+        NS_FAILED(pluginHost->IsPluginEnabledForType(aContentType))) {      
+      // get the extension from the url which we get from the channel
+      nsCOMPtr<nsIURI> uri;
+      if (NS_SUCCEEDED(aOpenedChannel->GetURI(getter_AddRefs(uri)))) {
+        nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+        if (url) {
+          nsCAutoString fileExtension;
+          url->GetFileExtension(fileExtension);
+          if (!fileExtension.IsEmpty()) {            
+            // ask the plugin host for a mime type for this extension
+            const char* pluginMimeType;
+            if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(fileExtension.get(), pluginMimeType)))
+              aContentType = pluginMimeType;
+          }
+        }
+      }
+    }
+
     //XXX This should probably be some category thing....
     nsCAutoString contractId(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX
                              "view"
@@ -4344,7 +4368,7 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
         docLoaderFactory(do_CreateInstance(contractId.get()));
     if (!docLoaderFactory) {
         // try again after loading plugins
-        nsCOMPtr<nsIPluginManager> pluginManager = do_GetService(kPluginManagerCID);
+        nsCOMPtr<nsIPluginManager> pluginManager = do_QueryInterface(pluginHost);
         if (!pluginManager)
             return NS_ERROR_FAILURE;
 
@@ -4359,8 +4383,6 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
         if (!docLoaderFactory)
             return NS_ERROR_FAILURE;
     }
-
-    nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
     // Now create an instance of the content viewer
     NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance("view",

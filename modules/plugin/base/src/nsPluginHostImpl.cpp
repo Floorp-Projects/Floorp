@@ -3859,20 +3859,19 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   if(!aURL)
     return NS_ERROR_FAILURE;
 
-  // if don't have a mimetype, check by file extension
-  if(!aMimeType)
-  {
-    char* extension;
-
-    nsCAutoString filename;
-    aURL->GetPath(filename);
-    extension = PL_strrchr(filename.get(), '.');
-    if(extension)
-      ++extension;
-    else
-      return NS_ERROR_FAILURE;
-
-    if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
+  // if don't have a mimetype or no plugin can handle this mimetype
+  // check by file extension
+  if(!aMimeType || NS_FAILED(IsPluginEnabledForType(aMimeType))) {
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
+    if (!url) return NS_ERROR_FAILURE;
+    
+    nsCAutoString fileExtension;
+    url->GetFileExtension(fileExtension);
+    
+    // if we don't have an extension or no plugin for this extension,
+    // return failure as there is nothing more we can do
+    if (fileExtension.IsEmpty() || 
+        NS_FAILED(IsPluginEnabledForExtension(fileExtension.get(), mimetype)))
       return NS_ERROR_FAILURE;
   }
   else
