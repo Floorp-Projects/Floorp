@@ -70,7 +70,9 @@ foreach $deps (@alldeps) {
     }
     if ($dep_mtime eq '' or $dep_mtime > $mtime) {
       print "$obj ";
+      $haveObjects = 1;
       last;
     }
   }
 }
+print ": FORCE\n" if $haveObjects;
