@@ -24,26 +24,34 @@ interface nsISimpleEnumerator : nsISupports {
   nsISupports GetNext();
 };
 
-[uuid(ad385286-cbc4-11d2-8cca-0060b0fc14a3)]
+/*
+ * DO NOT USE THIS INTERFACE.  IT IS HORRIBLY BROKEN, USES NS_COMFALSE
+ * AND IS BASICALLY IMPOSSIBLE TO USE CORRECTLY THROUGH PROXIES OR
+ * XPCONNECT.  IF YOU SEE NEW USES OF THIS INTERFACE IN CODE YOU ARE
+ * REVIEWING, YOU SHOULD INSIST ON nsISimpleEnumerator.
+ *
+ * DON'T MAKE ME COME OVER THERE.
+ */
+[scriptable, uuid(ad385286-cbc4-11d2-8cca-0060b0fc14a3)]
 interface nsIEnumerator : nsISupports {
 
   /** First will reset the list. will return NS_FAILED if no items
    */
-  void First();
+  void first();
 
   /** Next will advance the list. will return failed if already at end
    */
-  void Next();
+  void next();
 
   /** CurrentItem will return the CurrentItem item it will fail if the 
    *  list is empty
    */
-  nsISupports CurrentItem();
+  nsISupports currentItem();
 
   /** return if the collection is at the end.  that is the beginning following 
    *  a call to Prev and it is the end of the list following a call to next
    */
-  void IsDone();
+  void isDone();
 };
 
 [uuid(75f158a0-cadd-11d2-8cca-0060b0fc14a3)]
