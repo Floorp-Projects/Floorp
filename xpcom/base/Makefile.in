@@ -40,6 +40,7 @@ CPPSRCS		= \
 
 ifdef GC_LEAK_DETECTOR
 CSRCS += nsGarbageCollector.c
+CPPSRCS += nsLeakDetector.cpp
 endif
 
 EXPORTS		= \
@@ -66,6 +67,10 @@ XPIDLSRCS	= \
 		nsIInterfaceRequestor.idl \
 		nsIWeakReference.idl \
 		$(NULL)
+
+ifdef GC_LEAK_DETECTOR
+XPIDLSRCS       = nsILeakDetector.idl
+endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
