@@ -436,6 +436,20 @@ dump_dsakey(DSAPrivateKey *key)
 	SECU_PrintInteger(stdout, &key->privateValue, "PRIVATE VALUE:", 0);
 }
 
+static void
+dump_rsakey(RSAPrivateKey *key)
+{
+	SECU_PrintInteger(stdout, &key->version, "Version", 0);
+	SECU_PrintInteger(stdout, &key->modulus, "Modulus", 0);
+	SECU_PrintInteger(stdout, &key->publicExponent, "Public Exponent", 0);
+	SECU_PrintInteger(stdout, &key->privateExponent, "Private Exponent", 0);
+	SECU_PrintInteger(stdout, &key->prime1, "Prime 1", 0);
+	SECU_PrintInteger(stdout, &key->prime2, "Prime 2", 0);
+	SECU_PrintInteger(stdout, &key->exponent1, "Exponent 1", 0);
+	SECU_PrintInteger(stdout, &key->exponent2, "Exponent 2", 0);
+	SECU_PrintInteger(stdout, &key->coefficient, "Coefficient", 0);
+}
+
 /*  Multi-purpose crypto information */
 typedef struct 
 {
@@ -1643,6 +1657,10 @@ dump_file(char *mode, char *filename)
 {
 	SECItem item;
 	if (PL_strcmp(mode, "rsa") == 0) {
+		RSAPrivateKey *key;
+		get_file_data(filename, &item, PR_TRUE);
+		key = rsakey_from_filedata(&item);
+		dump_rsakey(key);
 	} else if (PL_strcmp(mode, "pqg") == 0) {
 		PQGParams *pqg;
 		get_file_data(filename, &item, PR_TRUE);
