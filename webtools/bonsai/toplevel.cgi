@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -19,6 +19,18 @@
 
 require 'CGI.pl';
 
+use diagnostics;
+use strict;
+
+sub StupidFuncToShutUpWarningsByUsingVarsAgain {
+    my $z;
+    $z = $::CloseTimeStamp;
+    $z = $::LastGoodTimeStamp;
+    $z = $::MOTD;
+    $z = $::WhiteBoard;
+    $z = $::TreeList;
+}
+
 print "Content-type: text/html\nRefresh: 300\n\n";
 
 PutsHeader("Bonsai -- the art of effectively controlling trees",
@@ -35,6 +47,7 @@ LoadTreeConfig();
 Unlock();
 
 
+my $openword;
 if ($::TreeOpen) {
     $openword = '<b><FONT SIZE=+2>OPEN</FONT></B>';
 } else {
@@ -50,10 +63,9 @@ print "
 ";
 
 
-foreach $tree (@::TreeList) {
+foreach my $tree (@::TreeList) {
      unless (exists $::TreeInfo{$tree}{nobonsai}) {
-          $c = '';
-          $c = "SELECTED" if ($tree eq $::TreeID);
+          my $c = ($tree eq $::TreeID) ? 'Selected' : '';
           print "<OPTION VALUE=\"$tree\" $c>$::TreeInfo{$tree}{description}\n";
     }
 }
@@ -78,32 +90,41 @@ print time2str("%D %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
 print "<hr><pre variable>$::MOTD</pre><hr>";
 print "<br clear=all>";
 
-$bid_part = BatchIdPart('?');
+my $bid_part = BatchIdPart('?');
 print "<b><a href=editwhiteboard.cgi$bid_part>
 Free-for-all whiteboard:</a></b>
 <pre>" . html_quote($::WhiteBoard) . "</pre><hr>\n";
 
 
-foreach $checkin (@::CheckInList) {
-     my $info = eval("\\\%$checkin");
-     my $addr = EmailFromUsername($$info{'person'});
-     
-     $username{$addr} = $$info{'person'};
-     $people{$addr} .= " " if $people{$addr};
-     $people{$addr} .= "$checkin";
-     if (!$$info{'treeopen'}) {
-         if (!defined $closedcheckin{$addr}) {
-             $closedcheckin{$addr} = 1;
-         } else {
-             $closedcheckin{$addr}++;
-         }
-     }
+my %username;
+my %checkincount;
+my %closedcheckin;
+my %fullname;
+my %curcontact;
+
+foreach my $checkin (@::CheckInList) {
+    my $info = eval("\\\%$checkin");
+    my $addr = EmailFromUsername($info->{'person'});
+
+    $username{$addr} = $info->{'person'};
+    if (!exists $checkincount{$addr}) {
+        $checkincount{$addr} = 1;
+    } else {
+        $checkincount{$addr}++;
+    }
+    if (!$info->{'treeopen'}) {
+        if (!defined $closedcheckin{$addr}) {
+            $closedcheckin{$addr} = 1;
+        } else {
+            $closedcheckin{$addr}++;
+        }
+    }
 }
 
 
-$ldaperror = 0;
+my $ldaperror = 0;
 
-if (%people) {
+if (%checkincount) {
      my (@peoplelist, @list, $p, $i, $end, $checkins);
      my $ldapserver = Param('ldapserver');
      my $ldapport = Param('ldapport');
@@ -112,7 +133,7 @@ if (%people) {
 The following people are on \"the hook\", since they have made
 checkins to the tree since it last opened: <p>\n";
 
-     @peoplelist = sort(keys %people);
+     @peoplelist = sort(keys %checkincount);
      
      @list = @peoplelist;
      while (1) {
@@ -122,9 +143,10 @@ checkins to the tree since it last opened: <p>\n";
           GetInfoForPeople(splice(@list, 0, $end + 1));
      }
 
-     print "<font color=red>
-Can't contact the directory server at $ldapserver:$ldapport -- $errvar
-</font>\n" if ($ldaperror);
+     if ($ldaperror) {
+         print "<font color=red>
+Can't contact the directory server at $ldapserver:$ldapport</font>\n";
+     }
 
      print "
 <table border cellspacing=2>
@@ -140,7 +162,7 @@ Can't contact the directory server at $ldapserver:$ldapport -- $errvar
 
           $uname = $username{$p};
           ($namepart = $p) =~ s/\@.*//;
-          $checkins = split(/\s+/, $people{$p});
+          $checkins = $checkincount{$p};
 
           print "<tr>\n";
           print "<td>$fullname{$p}</td>\n";
@@ -158,7 +180,8 @@ Can't contact the directory server at $ldapserver:$ldapport -- $errvar
      $checkins = @::CheckInList;
      print Pluralize("$checkins checkin", $checkins) . ".<p>\n";
 
-     $mailaddr = join(',', @peoplelist) . "?subject=Hook%3a%20Build%20Problem";
+     my $mailaddr =
+         join(',', @peoplelist) . "?subject=Hook%3a%20Build%20Problem";
      $mailaddr .= "&cc=$::TreeInfo{$::TreeID}{cchookmail}"
           if (exists($::TreeInfo{$::TreeID}{cchookmail}));
 
@@ -172,18 +195,18 @@ Can't contact the directory server at $ldapserver:$ldapport -- $errvar
 }
 
 
-$cvsqueryurl = "cvsqueryform.cgi?" .
-               "cvsroot=$::TreeInfo{$::TreeID}{repository}" .
-               "&module=$::TreeID";
+my $cvsqueryurl = "cvsqueryform.cgi?" .
+    "cvsroot=$::TreeInfo{$::TreeID}{repository}" .
+    "&module=$::TreeID";
 $cvsqueryurl.= "&branch=$::TreeInfo{$::TreeID}{branch}"
      if ($::TreeInfo{$::TreeID}{branch});
-$bip = BatchIdPart('?');
-$tinderboxbase = Param('tinderboxbase');
-$tinderboxlink = '';
+my $bip = BatchIdPart('?');
+my $tinderboxbase = Param('tinderboxbase');
+my $tinderboxlink = '';
 $tinderboxlink = "<a href=\"$tinderboxbase/showbuilds.cgi\">Tinderbox
         continuous builds</a><br>" if ($tinderboxbase);
 
-$otherrefs = Param('other_ref_urls');
+my $otherrefs = Param('other_ref_urls');
 
 print "
 <hr>
