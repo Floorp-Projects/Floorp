@@ -84,6 +84,7 @@ nsXPIDLString::StartAssignmentByValue()
     if (mBufOwner && mBuf)
         XPIDL_FREE(mBuf);
 
+    mBuf = 0;
     mBufOwner = PR_TRUE;
     return &mBuf;
 }
@@ -95,6 +96,7 @@ nsXPIDLString::StartAssignmentByReference()
     if (mBufOwner && mBuf)
         XPIDL_FREE(mBuf);
 
+    mBuf = 0;
     mBufOwner = PR_FALSE;
     return (const PRUnichar**) &mBuf;
 }
@@ -145,6 +147,7 @@ nsXPIDLCString::StartAssignmentByValue()
     if (mBufOwner && mBuf)
         XPIDL_FREE(mBuf);
 
+    mBuf = 0;
     mBufOwner = PR_TRUE;
     return &mBuf;
 }
@@ -156,6 +159,7 @@ nsXPIDLCString::StartAssignmentByReference()
     if (mBufOwner && mBuf)
         XPIDL_FREE(mBuf);
 
+    mBuf = 0;
     mBufOwner = PR_FALSE;
     return (const char**) &mBuf;
 }
