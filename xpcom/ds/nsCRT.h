@@ -31,6 +31,21 @@
 #define TAB '\011'
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
+#ifdef XP_MAC
+#  define NS_LINEBREAK             "\015"
+#  define NS_LINEBREAK_LEN 1
+#else
+#  ifdef XP_PC
+#    define NS_LINEBREAK           "\015\012"
+#    define NS_LINEBREAK_LEN       2
+#  else
+#    ifdef XP_UNIX
+#      define NS_LINEBREAK         "\012"
+#      define NS_LINEBREAK_LEN     1
+#    endif /* XP_UNIX */
+#  endif /* XP_PC */
+#endif /* XP_MAC */
+
 
 extern const PRUnichar kIsoLatin1ToUCS2[256];
 
