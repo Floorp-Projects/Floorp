@@ -20,6 +20,7 @@
 #[installed by xpidl] nsIMsgCompFields.h
 
 nsIMsgSend.h
+nsIMsgSendLater.h
 nsMsgComposeFact.h
 nsMsgCompFieldsFact.h
 nsMsgSendFact.h
