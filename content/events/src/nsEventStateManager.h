@@ -246,7 +246,7 @@ protected:
   void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
   void StopTrackingDragGesture ( ) ;
   void GenerateDragGesture ( nsPresContext* aPresContext, nsGUIEvent *aEvent ) ;
-  PRBool IsTrackingDragGesture ( ) const { return mIsTrackingDragGesture; }
+  PRBool IsTrackingDragGesture ( ) const { return mGestureDownContent != nsnull; }
 
   PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
 
@@ -276,10 +276,8 @@ protected:
   nsIFrame* mLastDragOverFrame;
 
   // member variables for the d&d gesture state machine
-  PRBool mIsTrackingDragGesture;
-  nsPoint mGestureDownPoint;
-  nsPoint mGestureDownRefPoint;
-  nsIFrame* mGestureDownFrame;
+  nsPoint mGestureDownPoint; // screen coordinates
+  nsCOMPtr<nsIContent> mGestureDownContent;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
   nsCOMPtr<nsIContent> mLastMiddleMouseDownContent;
@@ -344,7 +342,8 @@ protected:
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   enum { kClickHoldDelay = 500 } ;        // 500ms == 1/2 second
 
-  void CreateClickHoldTimer ( nsPresContext* aPresContext, nsGUIEvent* inMouseDownEvent ) ;
+  void CreateClickHoldTimer ( nsPresContext* aPresContext, nsIFrame* inDownFrame,
+                              nsGUIEvent* inMouseDownEvent ) ;
   void KillClickHoldTimer ( ) ;
   void FireContextClick ( ) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
@@ -353,6 +352,7 @@ protected:
     // isn't guaranteed to be there later. We don't want to hold strong refs to
     // things because we're alerted to when they are going away in ClearFrameRefs().
   nsPoint mEventPoint, mEventRefPoint;
+  nsIFrame* mEventDownFrame;
   nsIWidget* mEventDownWidget; // [WEAK]
   nsPresContext* mEventPresContext; // [WEAK]
   nsCOMPtr<nsITimer> mClickHoldTimer;
