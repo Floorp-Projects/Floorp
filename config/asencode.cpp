@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
   EXIT_IF_FALSE(fwrite(&header, sizeof(header), 1, output) == 1);
 
-  short entry_count = 2;
+  short entry_count = 3;
   EXIT_IF_FALSE(fwrite(&entry_count, sizeof(entry_count), 1, output) == 1);
 
   struct entry {
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
     unsigned int length;
   };
 
-  entry entries[2];
+  entry entries[entry_count];
 
   int header_end = sizeof(header) + sizeof(entry_count) + sizeof(entries);
 
@@ -143,10 +143,17 @@ int main(int argc, char** argv)
   entries[1].offset = header_end + input_st.st_size;
   entries[1].length = rez_st.st_size;
 
-  EXIT_IF_FALSE(fwrite(entries, sizeof(entry), 2, output) == 2);
+  entries[2].id = 3; // file name
+  entries[2].offset = header_end + input_st.st_size + rez_st.st_size;
+  entries[2].length = strlen(input_name);
+
+  EXIT_IF_FALSE(fwrite(entries, sizeof(entry), entry_count, output) ==
+                entry_count);
 
   append_file(output, input_name);
   append_file(output, rez_name);
+
+  fwrite(input_name, 1, entries[2].length, output);
 
   fclose(output);
 
