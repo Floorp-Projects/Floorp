@@ -30,11 +30,13 @@
 
 #include "nsIComponentManager.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
+#include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIEnumerator.h"
 #include "nsIDocShellTreeItem.h"
@@ -87,13 +89,12 @@ NS_IMPL_ISUPPORTS2(nsWebBrowserFind, nsIWebBrowserFind, nsIWebBrowserFindInFrame
 /* boolean findNext (); */
 NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 {
-    nsresult rv;
-
     NS_ENSURE_ARG_POINTER(outDidFind);
     *outDidFind = PR_FALSE;
 
     NS_ENSURE_TRUE(CanFindNext(), NS_ERROR_NOT_INITIALIZED);
 
+    nsresult rv = NS_OK;
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
 
@@ -624,13 +625,28 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
 
     *aDidFind = PR_FALSE;
 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPresShell> presShell;
-
     nsCOMPtr<nsIDOMDocument> domDoc;    
-    rv = aWindow->GetDocument(getter_AddRefs(domDoc));
+    nsresult rv = aWindow->GetDocument(getter_AddRefs(domDoc));
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_ARG_POINTER(domDoc);
+    if (!domDoc) return NS_ERROR_FAILURE;
+
+    // Do security check, to ensure that the frame we're searching
+    // is from the same origin as the frame from which the Find is
+    // being run.
+
+    // get a uri for the window
+    nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(domDoc);
+    if (!theDoc) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIURI> docURI;
+    rv = theDoc->GetDocumentURL(getter_AddRefs(docURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // Get the security manager and do the same-origin check
+    nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = secMan->CheckSameOrigin(nsnull, docURI);
+    if (NS_FAILED(rv)) return rv;
 
     // if this is a different frame to last time, throw away the mTSFind
     // and make a new one. The nsIFindAndReplace is *not* stateless;
@@ -642,6 +658,8 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(docShell);
+
+    nsCOMPtr<nsIPresShell> presShell;
     docShell->GetPresShell(getter_AddRefs(presShell));
     NS_ENSURE_ARG_POINTER(presShell);
 
