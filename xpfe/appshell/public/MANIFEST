@@ -14,3 +14,4 @@ nsIXULWindowCallbacks.h
 nsIDOMXPConnectFactory.h
 nsINetSupportDialogService.h
 nsIWindowMediator.h
+nsISessionHistory.h
