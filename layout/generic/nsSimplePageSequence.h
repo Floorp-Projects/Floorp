@@ -67,6 +67,9 @@ public:
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
+
+  nscoord      mPageContextSizeUC;     // unconstrained size (width)
+  nscoord      mPageContextSize;       // constrained size   (width)
 };
 
 // Simple page sequence frame class. Used when we're in paginated mode
@@ -98,6 +101,8 @@ public:
   // Gets the dead space (the gray area) around the Print Preview Page
   NS_IMETHOD GetDeadSpaceValue(nscoord* aValue) { *aValue = NS_INCHES_TO_TWIPS(0.25); return NS_OK; };
   
+  // For Shrink To Fit
+  NS_IMETHOD GetSTFPercent(float& aSTFPercent);
 
   // Async Printing
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,

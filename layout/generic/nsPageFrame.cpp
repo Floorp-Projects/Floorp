@@ -756,6 +756,18 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
   }
 }
 
+void
+nsPageFrame::SetSharedPageData(nsSharedPageData* aPD) 
+{ 
+  mPD = aPD;
+  // Set the shared data into the page frame before reflow
+  nsPageContentFrame * pcf = NS_STATIC_CAST(nsPageContentFrame*, mFrames.FirstChild());
+  if (pcf) {
+    pcf->SetSharedPageData(mPD);
+  }
+
+}
+
 nsresult
 NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
