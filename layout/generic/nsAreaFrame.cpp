@@ -55,11 +55,6 @@ nsAreaFrame::nsAreaFrame()
 {
 }
 
-nsAreaFrame::~nsAreaFrame()
-{
-  NS_IF_RELEASE(mSpaceManager);
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
@@ -79,30 +74,6 @@ nsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
-
-NS_IMETHODIMP
-nsAreaFrame::Init(nsIPresContext&  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
-                  nsIFrame*        aPrevInFlow)
-{
-  nsresult  rv;
-
-  // Let the block frame do its initialization
-  rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-  // Create a space manager if requested
-  if (0 == (mFlags & NS_AREA_NO_SPACE_MGR)) {
-    mSpaceManager = new nsSpaceManager(this);
-    if (!mSpaceManager) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mSpaceManager);
-  }
-
-  return rv;
-}
 
 NS_IMETHODIMP
 nsAreaFrame::Destroy(nsIPresContext& aPresContext)
@@ -223,6 +194,7 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
   nsresult rv = nsBlockFrame::Paint(aPresContext, aRenderingContext,
                                     aDirtyRect, aWhichLayer);
 
+#if 0
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     // Render the bands in the spacemanager
     nsISpaceManager* sm = mSpaceManager;
@@ -266,6 +238,9 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   return rv;
+#else
+  return NS_OK;
+#endif
 }
 #endif
 
@@ -293,18 +268,6 @@ nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsAreaFrame::GetSpaceManager(nsISpaceManager** aSpaceManagerResult)
-{
-  if (!aSpaceManagerResult) {
-    NS_WARNING("null ptr");
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aSpaceManagerResult = mSpaceManager;
-  NS_IF_ADDREF(mSpaceManager);
-  return NS_OK;
 }
 
 static void
@@ -378,16 +341,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // If we have a space manager, then set it in the reflow state
-  if (nsnull != mSpaceManager) {
-    // Modify the existing reflow state
-    nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-    reflowState.mSpaceManager = mSpaceManager;
-
-    // Clear the spacemanager's regions
-    mSpaceManager->ClearRegions();
-  }
-
+#if 0
 #ifdef NOISY_SPACEMANAGER
   if (eReflowReason_Incremental == aReflowState.reason) {
     if (mSpaceManager) {
@@ -397,10 +351,12 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 #endif
+#endif
 
   // Let the block frame do its reflow first
   rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
+#if 0
 #ifdef NOISY_SPACEMANAGER
   if (eReflowReason_Incremental == aReflowState.reason) {
     if (mSpaceManager) {
@@ -409,6 +365,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
       mSpaceManager->List(stdout);
     }
   }
+#endif
 #endif
 
   if (mFlags & NS_AREA_WRAP_SIZE) {
@@ -546,14 +503,6 @@ nsAreaFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   }
   nsBlockFrame::SizeOf(aHandler, aResult);
   *aResult += sizeof(*this) - sizeof(nsBlockFrame);
-
-  // Add in space taken up by the space manager
-  if (mSpaceManager) {
-    PRUint32  spaceManagerSize;
-
-    mSpaceManager->SizeOf(aHandler, &spaceManagerSize);
-    aHandler->AddSize(nsLayoutAtoms::spaceManager, spaceManagerSize);
-  }
 
   return NS_OK;
 }

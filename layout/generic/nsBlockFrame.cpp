@@ -47,7 +47,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
-#include "nsIAreaFrame.h"
+#include "nsSpaceManager.h"
 
 #define MAX_LINE_COUNT 50000
 
@@ -1224,6 +1224,21 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 #endif
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
+  }
+
+  // Should we create a space manager?
+  nsCOMPtr<nsISpaceManager> spaceManager;
+  if (mFlags & NS_BLOCK_SPACE_MGR) {
+    nsSpaceManager* rawPtr = new nsSpaceManager(this);
+    if (!rawPtr) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    spaceManager = do_QueryInterface(rawPtr);
+
+    // Set the space manager in the existing reflow state
+    nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+    reflowState.mSpaceManager = spaceManager.get();
   }
 
   nsBlockReflowState state(aReflowState, &aPresContext, this, aMetrics);
