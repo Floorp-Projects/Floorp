@@ -1573,6 +1573,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
             event.isControl = ((nsMouseEvent*)aEvent)->isControl;
             event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
             event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+            event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
 
             mCurrentTargetContent = mLastMouseOverContent;
             NS_IF_ADDREF(mCurrentTargetContent);
@@ -1617,6 +1618,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           event.isControl = ((nsMouseEvent*)aEvent)->isControl;
           event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
           event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+          event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
 
           mCurrentTargetContent = targetContent;
           NS_IF_ADDREF(mCurrentTargetContent);
@@ -1671,6 +1673,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
           event.isControl = ((nsMouseEvent*)aEvent)->isControl;
           event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
           event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+          event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
 
           mCurrentTargetContent = mLastMouseOverContent;
           NS_IF_ADDREF(mCurrentTargetContent);
