@@ -56,7 +56,6 @@ class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
 class nsIFocusController;
-class CurrentEventShepherd;
 
 // mac uses click-hold context menus, a holdover from 4.x
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -105,11 +104,6 @@ public:
                              nsIFrame* aTargetFrame,
                              nsEventStatus* aStatus,
                              nsIView* aView);
-
-  NS_IMETHOD GetCurrentEvent(nsEvent **aEvent)
-               { *aEvent = mCurrentEvent; return NS_OK; }
-  NS_IMETHOD SetCurrentEvent(nsEvent *aEvent)
-               { mCurrentEvent = aEvent; return NS_OK; }
 
   NS_IMETHOD SetPresContext(nsPresContext* aPresContext);
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
@@ -162,8 +156,6 @@ public:
   }
 
 protected:
-  friend class CurrentEventShepherd;
-
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
@@ -289,7 +281,6 @@ protected:
   nsIFrame* mCurrentFocusFrame;
   PRInt32 mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
-  nsEvent *mCurrentEvent;
 
   // DocShell Traversal Data Memebers
   nsCOMPtr<nsIContent> mLastContentFocus;
