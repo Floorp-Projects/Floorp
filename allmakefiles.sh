@@ -685,6 +685,33 @@ security/psm/lib/client/Makefile
 security/psm/lib/protocol/Makefile
 "
 
+MAKEFILES_psm_glue="
+extensions/psm-glue/public/Makefile
+extensions/psm-glue/Makefile
+extensions/psm-glue/src/Makefile
+netwerk/base/public/Makefile
+netwerk/socket/base/Makefile
+dom/public/Makefile
+uriloader/base/Makefile
+modules/libpref/public/Makefile
+profile/public/Makefile
+caps/idl/Makefile
+caps/include/Makefile
+modules/appfilelocprovider/public/Makefile
+netwerk/protocol/http/public/Makefile
+widget/public/Makefile
+rdf/base/idl/Makefile
+xpfe/appshell/public/Makefile
+gfx/idl/Makefile
+gfx/public/Makefile
+docshell/base/Makefile
+layout/html/forms/public/Makefile
+layout/base/public/Makefile
+rdf/content/public/Makefile
+dom/src/base/Makefile
+modules/oji/public/Makefile
+"
+
 MAKEFILES_transformiix="
 extensions/transformiix/source/base/Makefile
 extensions/transformiix/source/main/Makefile
@@ -836,11 +863,6 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/cookie/Makefile
 	    extensions/cookie/tests/Makefile
             " ;;
-        psm-glue ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/psm-glue/public/Makefile
-	    extensions/psm-glue/Makefile
-	    extensions/psm-glue/src/Makefile
-            " ;;
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/irc/Makefile
 	    extensions/irc/xul/Makefile
@@ -955,6 +977,8 @@ else
 		;;
 	    necko) add_makefiles "
                  $MAKEFILES_netwerk $MAKEFILES_xpcom $MAKEFILES_libreg"
+		;;
+	    psm) add_makefiles "$MAKEFILES_dbm $MAKEFILES_xpcom $MAKEFILES_libreg $MAKEFILES_intl $MAKEFILES_libjar $MAKEFILES_security $MAKEFILES_js $MAKEFILES_psm_glue"
 		;;
 	    transformiix) add_makefiles "$MAKEFILES_transformiix"
 		;;

@@ -3280,14 +3280,14 @@ dnl ========================================================
 dnl Need cookie and wallet to build mozilla, this should
 dnl not be the case, 18352 has been filed.
 dnl http://bugzilla.mozilla.org/show_bug.cgi?id=18352
-MOZ_EXTENSIONS_DEFAULT="cookie wallet psm-glue xml-rpc xmlextras"
+MOZ_EXTENSIONS_DEFAULT="cookie wallet xml-rpc xmlextras"
 
 MOZ_ARG_WITH_STRING(extensions,
 [  --with-extensions       Enable extensions (dirs in extensions/)],
   [ MOZ_EXTENSIONS=""
     for option in `echo $withval | sed 's/,/ /g'`; do
       if test "$option" = "yes" || test "$option" = "all"; then
-        MOZ_EXTENSIONS="$MOZ_EXTENSIONS cookie irc wallet xmlextras xmlterm psm-glue xml-rpc"
+        MOZ_EXTENSIONS="$MOZ_EXTENSIONS $MOZ_EXTENSIONS_DEFAULT irc xmlterm"
       elif test "$option" = "no" || test "$option" = "none"; then
         MOZ_EXTENSIONS=""
       elif test "$option" = "default"; then
