@@ -434,7 +434,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
   if (nsnull != mFontAliasTable) {
     if (aForceAlias || (NS_OK != CheckFontExistence(aFont))) {
       if (NS_OK == CheckFontExistence(aAlias)) {
-        nsString* entry = aAlias.ToNewString();
+        nsString* entry = new nsString(aAlias);
         if (nsnull != entry) {
           FontAliasKey key(aFont);
           mFontAliasTable->Put(&key, entry);
@@ -444,7 +444,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
         }
       }
       else if ((0 < aAltAlias.Length()) && (NS_OK == CheckFontExistence(aAltAlias))) {
-        nsString* entry = aAltAlias.ToNewString();
+        nsString* entry = new nsString(aAltAlias);
         if (nsnull != entry) {
           FontAliasKey key(aFont);
           mFontAliasTable->Put(&key, entry);
