@@ -28,6 +28,9 @@ DIRS = wallet \
 !if defined(BUILD_PSM)
 	psm-glue \
 !endif 
+!if defined(MOZ_XSL)
+	transformiix \
+!endif 
 	xml-rpc \
 	xmlextras \
 	$(NULL)
