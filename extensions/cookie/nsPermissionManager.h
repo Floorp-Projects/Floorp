@@ -44,11 +44,87 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsIIOService.h"
 #include "nsVoidArray.h"
 #include "nsIFile.h"
+#include "nsTHashtable.h"
+#include "nsString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// This allow us 8 types of permissions, with 256 values for each
+// permission. (Some types might want to prompt, block 3rd party etc)
+// Note: When changing NUMBER_OF_TYPES, also update PermissionsAreEmpty()
+// This should be a multiple of 4, to make PermissionsAreEmpty() fast
+#define NUMBER_OF_TYPES      (8)
+
+class nsHostEntry : protected PLDHashEntryHdr
+{
+public:
+  // Hash methods
+  typedef const char* KeyType;
+  typedef const char* KeyTypePointer;
+
+  inline nsHostEntry(const char* aHost);
+  inline nsHostEntry(const nsHostEntry& toCopy);
+
+  ~nsHostEntry()
+  {
+  }
+
+  KeyType GetKey() const
+  {
+    return mHost;
+  }
+
+  KeyTypePointer GetKeyPointer() const
+  {
+    return mHost;
+  }
+
+  PRBool KeyEquals(KeyTypePointer aKey) const
+  {
+    return !strcmp(mHost, aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey)
+  {
+    return aKey;
+  }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    // PL_DHashStringKey doesn't use the table parameter, so we can safely
+    // pass nsnull
+    return PL_DHashStringKey(nsnull, aKey);
+  }
+
+  static PRBool AllowMemMove()
+  {
+    return PR_TRUE;
+  }
+
+  // Permissions methods
+  inline const nsDependentCString GetHost() const
+  {
+    return nsDependentCString(mHost);
+  }
+
+  // Callers must do boundary checks
+  void SetPermission(PRUint32 aType, PRUint32 aPermission);
+  PRUint32 GetPermission(PRUint32 aType) const;
+  PRBool PermissionsAreEmpty() const;
+
+private:
+  const char *mHost;
+
+  // This will contain the permissions for different types, in a bitmasked
+  // form. The type itself defines the position.
+  // One byte per permission. This is a small loss of memory (as 255 types
+  // of action per type is a lot, 16 would be enough), but will improve speed
+  // Bytemasking is around twice as fast (on one arch at least) than bitmasking
+  PRUint8 mPermissions[NUMBER_OF_TYPES];
+};
+
 
 class nsPermissionManager : public nsIPermissionManager,
                             public nsIObserver,
@@ -67,19 +143,21 @@ public:
 
 private:
 
-  nsresult AddInternal(const nsACString &aHost,
-                       PRUint32 aType,
-                       PRUint32 aPermission);
+  inline nsresult AddInternal(const nsAFlatCString &aHost,
+                              PRUint32 aType,
+                              PRUint32 aPermission);
 
   nsresult Read();
   nsresult Write();
   nsresult NotifyObservers(const nsACString &aHost);
   nsresult RemoveAllFromMemory();
+  inline nsVoidArray* GetHostList();
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIFile>            mPermissionsFile;
-  nsVoidArray                  mPermissionList;
   PRBool                       mChangedList;
+  nsTHashtable<nsHostEntry>    mHostTable;
+  PRUint32                     mHostCount;
  
 };
 
