@@ -51,14 +51,9 @@ public class Foo implements IFoo {
   }
 
   // nsISupports implementation
-  public nsISupports queryInterface(String riid)
+  public nsISupports queryInterface(String aIID)
   {
-    Class[] interfaces = this.getClass().getInterfaces();
-    for (int i = 0; i < interfaces.length; i++ ) {
-      if (riid.equals(XPCOM.getInterfaceIID(interfaces[i])))
-        return this;
-    }
-    return null;
+    return XPCOM.queryInterface(this, aIID);
   }
 
   // IFoo implementation
