@@ -1238,9 +1238,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     wind->GetDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
     if ( doc ) {
-      nsCAutoString charset;
-      doc->GetDocumentCharacterSet(charset);
-      return [NSString stringWithCString:charset.get()];
+      const nsACString & charset = doc->GetDocumentCharacterSet();
+      return [NSString stringWithCString:PromiseFlatCString(charset).get()];
     }
   }
   return nil;
