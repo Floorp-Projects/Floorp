@@ -239,19 +239,22 @@ public:
     static guint32     mLastButtonPressTime;
 
 #ifdef USE_XIM
-    void               IMEComposeStart(void);
-    void               IMEComposeText(const PRUnichar *aText,
-                                      const PRInt32 aLen,
-                                      const gchar *aPreeditString,
-                                      const PangoAttrList *aFeedback);
-    void               IMEComposeEnd(void);
+    void               IMEDestroyContext (void);
+    void               IMESetFocus       (void);
+    void               IMELoseFocus      (void);
+    void               IMEComposeStart   (void);
+    void               IMEComposeText    (const PRUnichar *aText,
+                                          const PRInt32 aLen,
+                                          const gchar *aPreeditString,
+                                          const PangoAttrList *aFeedback);
+    void               IMEComposeEnd     (void);
+    GtkIMContext*      IMEGetContext     (void);
+    void               IMECreateContext  (void);
+    PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
 
-    void               IMEGetShellWindow(void);
-    GtkIMContext*      IMEGetContext(void);
-    void               IMECreateContext(GdkWindow* aGdkWindow);
- 
-    nsWindow*          mIMEShellWindow;
-    static PLDHashTable gXICLookupTable;
+    GtkIMContext       *mIMContext;
+    PRBool             mComposingText;
+
 #endif
 
 private:
