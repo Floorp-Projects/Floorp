@@ -26,7 +26,7 @@ DEFINES =
 
 EXPORTS =               \
     nsIEditGuiManager.h \
-    nsIGuiMgrFactory.h  \
+    nsIGuiManagerFactory.h  \
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
