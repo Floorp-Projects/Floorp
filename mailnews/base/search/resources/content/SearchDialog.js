@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -30,12 +30,14 @@ var gFolderPicker;
 
 var RDF;
 
-function searchOnLoad() {
+function searchOnLoad()
+{
     initializeSearchWidgets();
     initializeSearchWindowWidgets();
     setSearchScope(0);
 
     setupDatasource();
+    onMore(null);
 }
 
 function initializeSearchWindowWidgets()
@@ -53,11 +55,19 @@ function onChooseFolder(event) {
     gCurrentFolder =
         RDF.GetResource(event.target.id).QueryInterface(nsIMsgFolder);
 
+}
+
+function onSearch(event)
+{
     // tell the search session what the new scope is
-    gSearchSession.AddScopeTerm(GetScopeForFolder(gCurrentFolder),
+    gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
                                 gCurrentFolder)
     
+    saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
+
+    gSearchSession.search(null);
 }
+
 
 function GetScopeForFolder(folder) {
     if (folder.server.type == "nntp")
@@ -72,7 +82,9 @@ function setupDatasource() {
     
     gSearchDatasource = Components.classes[rdfDatasourcePrefix + "msgsearch"].createInstance(Components.interfaces.nsIRDFDataSource);
 
-
+    dump("The root is " + gSearchDatasource.URI + "\n");
+    gResultsTree.setAttribute("ref", gSearchDatasource.URI);
+    
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any
     // attributes about each message)
@@ -80,9 +92,13 @@ function setupDatasource() {
     
     gResultsTree.database.AddDataSource(gSearchDatasource);
 
+    var messageDatasource = Components.classes[rdfDatasourcePrefix + "mailnewsmessages"].createInstance(Components.interfaces.nsIRDFDataSource);
+    gResultsTree.database.AddDataSource(messageDatasource);
+    
     // the datasource is a listener on the search results
     searchListener = gSearchDatasource.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
-    gSearchSession.RegisterListener(searchListener);
+    gSearchSession.registerListener(searchListener);
+
 }
 
 

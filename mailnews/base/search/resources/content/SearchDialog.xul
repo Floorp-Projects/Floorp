@@ -37,7 +37,6 @@ Rights Reserved.
 
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
-  <script src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
 
   <text value="This dialog is a work in progress! Please don't file any bugs against it."/>
   <box>
@@ -51,8 +50,8 @@ Rights Reserved.
   <box>
     <titledbox id="searchTermListBox" flex="1"/>
     <box orient="vertical">
-      <button value="&searchButton.label;"/>
-      <button value="&resetButton.label;"/>
+      <button value="&searchButton.label;" onclick="onSearch(event)"/>
+      <button value="&resetButton.label;" onclick="onReset(event)"/>
     </box>
   </box>
 

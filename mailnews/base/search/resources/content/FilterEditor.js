@@ -191,6 +191,12 @@ function saveFilter() {
     return true;
 }
 
+function onTargetFolderSelected(event)
+{
+    SetFolderPicker(event.target.id, gActionTargetElement.id);
+}
+
+
 function onActionChanged(event)
 {
     var menuitem = event.target;
