@@ -81,6 +81,8 @@ nsresult nsShellInstance::Run()
   }
   return ((nsresult)msg.wParam);
 #elif NS_UNIX
+  extern   XtAppContext app_context ;
+
   XtAppMainLoop(app_context) ;
 #else
   return NS_OK;
@@ -191,7 +193,7 @@ nsIWidget * nsShellInstance::CreateApplicationWindow(const nsRect &aRect,
   mApplicationWindow->Create((nsIWidget*)NULL, 
                   aRect, 
                   aHandleEventFunction, 
-                  NULL);
+                  nsnull, nsnull, GetNativeInstance());
 
   return (mApplicationWindow);
 }
@@ -200,6 +202,10 @@ nsIWidget * nsShellInstance::CreateApplicationWindow(const nsRect &aRect,
 nsresult nsShellInstance::ShowApplicationWindow(PRBool show)
 {
   mApplicationWindow->Show(show);
+
+#ifdef NS_UNIX
+  XtRealizeWidget((Widget)GetNativeInstance());
+#endif
 
   return NS_OK;
 }
