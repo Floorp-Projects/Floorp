@@ -60,7 +60,7 @@ nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( )
 }
 
 
-NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext, PRBool aForced )
+NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext, PRUint32 aReason )
 {
 	return aLauncher->SaveToDisk( nsnull, PR_FALSE );
 }

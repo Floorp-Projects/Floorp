@@ -436,9 +436,9 @@ CHelperAppLauncherDlg::~CHelperAppLauncherDlg()
 {
 }
 
-/* void show (in nsIHelperAppLauncher aLauncher, in nsISupports aContext, in boolean aForced); */
+/* void show (in nsIHelperAppLauncher aLauncher, in nsISupports aContext, in unsigned long aReason); */
 NS_IMETHODIMP
-CHelperAppLauncherDlg::Show(nsIHelperAppLauncher *aLauncher, nsISupports *aContext, PRBool aForced)
+CHelperAppLauncherDlg::Show(nsIHelperAppLauncher *aLauncher, nsISupports *aContext, PRUint32 aReason)
 {
     NS_ENSURE_ARG_POINTER(aLauncher);
     

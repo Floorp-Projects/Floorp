@@ -15,6 +15,9 @@
 <!ENTITY intro.attachment.label "The site has suggested that &quot;#3&quot; be handled as an attachment. It is of type #2 (#1) and located at:">
 <!ENTITY intro.attachment.noDesc.label "The site has suggested that &quot;#3&quot; be handled as an attachment. It is of type #2 and located at:">
 
+<!ENTITY intro.sniffed.label "#4 has detected that the file &quot;#3&quot; is likely to be of type #2 (#1). The file is located at:">
+<!ENTITY intro.sniffed.noDesc.label "#4 has detected that the file &quot;#3&quot; is likely to be of type #2. The file is located at:">
+
 <!ENTITY prompt.label          "What should #1 do with this file?">
 
 <!ENTITY alwaysHandle.label     "Always perform this action when handling files of this type">

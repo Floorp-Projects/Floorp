@@ -48,6 +48,11 @@
  * nsHelperAppDialog component.
  */
 
+const nsIHelperAppLauncherDialog = Components.interfaces.nsIHelperAppLauncherDialog;
+const REASON_CANTHANDLE = nsIHelperAppLauncherDialog.REASON_CANTHANDLE;
+const REASON_SERVERREQUEST = nsIHelperAppLauncherDialog.REASON_SERVERREQUEST;
+const REASON_TYPESNIFFED = nsIHelperAppLauncherDialog.REASON_TYPESNIFFED;
+
 
 /* ctor
  */
@@ -93,10 +98,10 @@ nsHelperAppDialog.prototype = {
     // show: Open XUL dialog using window watcher.  Since the dialog is not
     //       modal, it needs to be a top level window and the way to open
     //       one of those is via that route).
-    show: function(aLauncher, aContext, aForced)  {
+    show: function(aLauncher, aContext, aReason)  {
          this.mLauncher = aLauncher;
          this.mContext  = aContext;
-         this.mForced   = aForced;
+         this.mReason   = aReason;
          // Display the dialog using the Window Watcher interface.
          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                     .getService( Components.interfaces.nsIWindowWatcher );
@@ -281,9 +286,10 @@ nsHelperAppDialog.prototype = {
 
          // Initialize "always ask me" box. This should always be disabled
          // and set to true for the ambiguous type application/octet-stream.
-         // Same if this dialog was forced
+         // Same if this dialog was forced due to a server request or type
+         // sniffing
          var alwaysHandleCheckbox = this.dialogElement( "alwaysHandle" );
-         if (this.mForced ||
+         if (this.mReason != REASON_CANTHANDLE ||
              this.mLauncher.MIMEInfo.MIMEType == "application/octet-stream"){
             alwaysHandleCheckbox.checked = false;
             alwaysHandleCheckbox.disabled = true;
@@ -314,25 +320,20 @@ nsHelperAppDialog.prototype = {
     initIntro: function(url, filename) {
         var intro = this.dialogElement( "intro" );
         var desc = this.mLauncher.MIMEInfo.description;
+
+        var text;
+        if ( this.mReason == REASON_CANTHANDLE )
+          text = "intro.";
+        else if (this.mReason == REASON_SERVERREQUEST )
+          text = "intro.attachment.";
+        else if (this.mReason == REASON_TYPESNIFFED )
+          text = "intro.sniffed.";
+
         var modified;
-        if ( this.mForced && desc )
-        {
-          modified = this.replaceInsert( this.getString( "intro.attachment.label" ), 1, desc );
-        }
-        else if ( this.mForced && !desc )
-        {
-          modified = this.getString( "intro.attachment.noDesc.label" );
-        }
-        else if ( desc )
-        {
-          // Use intro with descriptive text.
-          modified = this.replaceInsert( this.getString( "intro.withDesc" ), 1, desc );
-        }
+        if (desc)
+          modified = this.replaceInsert( this.getString( text + "label" ), 1, desc );
         else
-        {
-          // Use intro without descriptive text.
-          modified = this.getString( "intro.noDesc" );
-        }
+          modified = this.getString( text + "noDesc.label" );
 
         modified = this.replaceInsert( modified, 2, this.mLauncher.MIMEInfo.MIMEType );
         modified = this.replaceInsert( modified, 3, filename);
@@ -454,10 +455,12 @@ nsHelperAppDialog.prototype = {
         }
 
         var useDefault = this.dialogElement( "useSystemDefault" );;
-        if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault && !this.mForced) {
+        if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault &&
+            this.mReason != REASON_SERVERREQUEST) {
             // Open (using system default).
             useDefault.radioGroup.selectedItem = useDefault;
-        } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp && !this.mForced) {
+        } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp &&
+                   this.mReason != REASON_SERVERREQUEST) {
             // Open with given helper app.
             var openUsing = this.dialogElement( "openUsing" );
             openUsing.radioGroup.selectedItem = openUsing;
@@ -556,8 +559,9 @@ nsHelperAppDialog.prototype = {
         // If current selection differs from what's in the mime info object,
         // then we need to update.
         // However, we don't want to change the action all nsIMIMEInfo objects to
-        // saveToDisk if mForced is true.
-        if ( this.dialogElement( "saveToDisk" ).selected && !this.mForced ) {
+        // saveToDisk if mReason is REASON_SERVERREQUEST.
+        if ( this.dialogElement( "saveToDisk" ).selected &&
+             this.mReason != REASON_SERVERREQUEST ) {
             needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk;
             if ( needUpdate )
                 this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.saveToDisk;
@@ -578,7 +582,7 @@ nsHelperAppDialog.prototype = {
             }
         }
         // Only care about the state of "always ask" if this dialog wasn't forced
-        if ( !this.mForced )
+        if ( this.mReason == REASON_CANTHANDLE )
         {
           // We will also need to update if the "always ask" flag has changed.
           needUpdate = needUpdate || this.mLauncher.MIMEInfo.alwaysAskBeforeHandling == this.dialogElement( "alwaysHandle" ).checked;

@@ -222,9 +222,9 @@ CHBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
 }
 
 
-//    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext, in boolean aForced );
+//    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext, in unsigned long aReason );
 NS_IMETHODIMP
-CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext, PRBool aForced)
+CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext, PRUint32 aReason)
 {
   PRBool autoDownload = PR_FALSE;
   

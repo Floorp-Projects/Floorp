@@ -41,8 +41,6 @@ interface nsIHelperAppLauncher;
 interface nsILocalFile;
 
 /**
- * nsIHelperAppLauncherDialog
- * ==========================
  * This interface is used to display a confirmatino dialog before
  * launching a "helper app" to handle content not handled by
  * Mozilla.
@@ -54,22 +52,34 @@ interface nsILocalFile;
  * The dialog is shown non-modally.  The implementation of the dialog
  * will access methods of the nsIHelperAppLauncher passed in to show()
  * in order to cause a "save to disk" or "open using" action.
- *
- * Note: The promptForSaveToFile method is
- *       obsolescent.  Caller(s) will be converted to use specific
- *       file-picker and progress-dialog interfaces.
  */
-
-[scriptable, uuid(d7ebddf0-4c84-11d4-807a-00600811a9c3)]
+[scriptable, uuid(64355793-988d-40a5-ba8e-fcde78cac631)]
 interface nsIHelperAppLauncherDialog : nsISupports {
+  /**
+   * This request is passed to the helper app dialog because Gecko can not
+   * handle content of this type.
+   */
+  const unsigned long REASON_CANTHANDLE = 0;
+
+  /**
+   * The server requested external handling.
+   */
+  const unsigned long REASON_SERVERREQUEST = 1;
+
+  /**
+   * Gecko detected that the type sent by the server (e.g. text/plain) does
+   * not match the actual type.
+   */
+  const unsigned long REASON_TYPESNIFFED = 2;
+
   // Show confirmation dialog for launching application (or "save to
   // disk") for content specified by aLauncher.
-  // aForced is used to indicate whether this dialog was shown even though
-  // the content could have been handled by mozilla; this is used if
-  // an HTTP Server sends Content-Disposition: attachment
+  // aReason is one of the constants from above. It indicates why the dialog is
+  // shown.
+  // Implementors should treat unknown reasons like REASON_CANTHANDLE.
   void show(in nsIHelperAppLauncher aLauncher,
             in nsISupports aContext,
-            in boolean aForced);
+            in unsigned long aReason);
 	
 	// invoke a save to file dialog instead of the full fledged helper app dialog.
 	// aDefaultFileName --> default file name to provide (can be null)
