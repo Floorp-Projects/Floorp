@@ -1,17 +1,11 @@
 toolbox
   {
-    background-color      : appworkspace;
+    background-color      : threedface;
     border-left           : 1px solid threedshadow;
     border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
   }
 
-.toolbox-top  
-  {
-    margin-bottom         : 3px;
-  }
-  
 toolbar
   {
     background-color      : threedface;
@@ -28,7 +22,6 @@ toolbar
 toolbargrippy
   {
     behavior              : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
-    background-color      : threedface;
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
     border-right          : 1px solid threedshadow;
@@ -62,8 +55,11 @@ toolbar[collapsed="true"] > toolbargrippy
   }
   
 toolbarseparator 
-  { 
-    width                 : 2em; 
+  {
+    width                 : 1px;
+    border-left           : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight; 
+    margin                : 2px 0.2em 2px 0.2em;
   }
   
    

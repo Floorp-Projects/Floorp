@@ -13,7 +13,7 @@
     </content>
   </binding>
 
-  <binding id="toolbargrippy" extends="xul:box">
+  <binding id="toolbargrippy" extends="xul:button">
     <content orient="vertical">
       <xul:box autostretch="never" halign="center">
         <xul:image class="toolbargrippy-twisty"/>
@@ -94,4 +94,12 @@
     </content>
   </binding>
   
+  <binding id="double-box">
+    <content>
+      <xul:box class="db-internal-box" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+
 </bindings>

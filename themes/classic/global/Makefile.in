@@ -46,8 +46,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	check-check.gif \
 	check-radio-disabled.gif \
 	check-radio.gif \
-	closedtwisty-selected.gif \
-	closedtwisty.gif \
 	columnselect.gif \
 	dir-closed.gif \
 	dir-open.gif \
@@ -75,8 +73,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	navbar-bg-begincap.gif \
 	navbar-bg.gif \
 	navbar-endcap.gif \
-	opentwisty-selected.gif \
-	opentwisty.gif \
 	otherbutton28-bg-active.gif \
 	otherbutton28-bg-hover.gif \
 	print-disabled.gif \
@@ -151,6 +147,12 @@ EXPORT_RESOURCE_SAMPLES = \
 	dropmarker-down-on.gif \
 	dropmarker-up-on.gif \
 	menubuttonBindings.xml \
+	twisty-closed-active.gif \
+	twisty-closed.gif \
+	twisty-closed-selected.gif \
+	twisty-open-active.gif \
+	twisty-open.gif \
+	twisty-open-selected.gif \
 	$(NULL)
 
 DIRS = unix

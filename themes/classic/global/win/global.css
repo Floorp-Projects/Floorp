@@ -55,7 +55,7 @@
       background-color    : threedface;
       color               : windowtext;
       padding             : 0px;
-      font                : dialog;
+      font                : dialog, sans-serif;
     }
   
   window[wait-cursor] 
@@ -121,18 +121,25 @@
       background-color    : threedface;
       overflow            : hidden;
       min-width           : 1px;
-    }
-  
-  statusbarpanel  
-    {
       border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
-      padding             : 1px 1px 0px 1px;
-      margin              : 1px;
+    }
+  
+  statusbarpanel 
+    {
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+      padding             : 0px 4px 0px 4px;
     }
 
+  .statusbarpanel-icononly
+    {
+      padding             : 0px;
+    }    
+    
   .statusbar-panel-icon
     {
       list-style-image    : inherit;
@@ -175,14 +182,17 @@
   progressmeter 
     {
       min-width           : 100px;
-      margin              : 1px;
-      border-left         : 1px solid threedshadow;
-      border-top          : 1px solid threedshadow;
-      border-right        : 1px solid threedhighlight;
-      border-bottom       : 1px solid threedhighlight;
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
       background-color    : threedface;
-      color               : highlighttext;
     }
+    
+  .progress-text 
+    {
+      visibility          : collapse;
+    }    
 
   .progressmeter-internal-box
     {
@@ -206,7 +216,7 @@
 /* progress indicators */
   .progress-bar 
     {
-	    background-color    : highlight;
+	    background-color    : threedshadow;
     }
   
 /** XUL <scrollbar> element **/

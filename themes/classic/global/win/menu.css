@@ -49,15 +49,6 @@ menupopup > menuitem, popup > menuitem
     margin                : 0px;
   }
 
-/* Don't display grayed items in the contextual popup menus */
-/* BUGGY: DON'T UNCOMMENT UNTIL BUG #46005 IS RESOLVED (7/20/00)
-popup > menuitem[disabled="true"], popup > menu[disabled="true"] 
-  {
-  	display				  : none;
-  }
-*/
-
-
 menuseparator 
   {
     border-top            : 1px solid threedshadow;
@@ -69,7 +60,7 @@ menubar > menu
   {
     padding               : 2px 3px 2px 3px;
     margin                : 2px 0px 2px 0px;
-    border                : 1px solid threedface;
+    border                : 1px solid transparent;
   }
 
 menubar > menu[menuactive="true"] 
@@ -186,10 +177,11 @@ menuitem[checked="true"][disabled="true"]
 .tooltip
   {
     background-color      : infobackground;
-    border                : 1px solid windowframe;
+    border                : 1px outset infobackground;
     color                 : infotext;
     font                  : smaller;
     padding               : 2px;
+    max-width             : 40em;
   }
 
 .tooltip > .popup-internal-box

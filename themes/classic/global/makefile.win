@@ -46,8 +46,6 @@ install::
 	$(MAKE_INSTALL) check-check.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) check-radio-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) check-radio.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) closedtwisty-selected.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) closedtwisty.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) columnselect.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) dir-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) dir-open.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -75,8 +73,6 @@ install::
 	$(MAKE_INSTALL) navbar-bg-begincap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) navbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) navbar-endcap.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) opentwisty-selected.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) opentwisty.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) otherbutton28-bg-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) otherbutton28-bg-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) print-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -151,3 +147,10 @@ install::
 	$(MAKE_INSTALL) dropmarker-down-on.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) dropmarker-up-on.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menubuttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) twisty-closed-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) twisty-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) twisty-closed-selected.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) twisty-open-active.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) twisty-open.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) twisty-open-selected.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+

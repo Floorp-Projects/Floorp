@@ -5,7 +5,7 @@
 .menubutton-dual[buttonover="true"][disabled="true"]
   {
     behavior              : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
-    border                : 1px solid threedface;
+    border                : 1px solid transparent;
   }
 
 .menubutton-dual:hover,
@@ -21,7 +21,7 @@
 .menubutton-dual:hover:active > .classic-dropmarker-box[disabled="true"],
 .menubutton-dual[disabled="true"][buttonover="true"] > .classic-dropmarker-box
   {
-    border                : 1px solid threedface;
+    border                : 1px solid transparent;
   }
   
 .menubutton-dual:hover > .classic-dropmarker-box 
@@ -50,7 +50,7 @@
   {
     behavior              : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
     margin                : 0px;
-    border                : 1px solid threedface;
+    border                : 1px solid transparent;
     min-width             : 0px;
     padding               : 2px 8px 2px 7px;
     text-align            : center;
@@ -110,3 +110,8 @@
   {
     list-style-image      : url("chrome://global/skin/dropmarker-down-disabled.gif");
   }  
+
+.menubutton-toolbar
+  {
+    margin                : 0px;
+  }
