@@ -105,7 +105,7 @@ function onload()
 
       var messageText;
       if (cookie)
-        messageText = cookieBundle.getFormattedString(messageFormat,[cookie.host,cookiesFromHost]);
+        messageText = cookieBundle.getFormattedString(messageFormat,[hostname, cookiesFromHost]);
       else
         // No cookies means something went wrong. Bring up the dialog anyway
         // to not make the mess worse.
@@ -118,7 +118,7 @@ function onload()
       var headerNode = document.getElementById("dialog-header");
       headerNode.setAttribute("value",messageParagraphs[0]);
 
-      // use childnodes here, the tekst can wrap
+      // use childnodes here, the text can wrap
       for (var i = 1; i < messageParagraphs.length; i++) {
         var descriptionNode = document.createElement("description");
         text = document.createTextNode(messageParagraphs[i]);
