@@ -45,7 +45,7 @@ interface nsIChannel;
  * associated with a MultiPartChannel.
  */
 
-[scriptable, uuid(62d77f66-8ad0-4a7f-91a1-bb048b136490)]
+[scriptable, uuid(c1284456-652d-4130-a1a4-48a652af2330)]
 interface nsIMultiPartChannel : nsISupports
 {
     /**
@@ -59,4 +59,10 @@ interface nsIMultiPartChannel : nsISupports
      * handling method, preferred filename, etc.  See RFC 2183.
      */
     attribute ACString contentDisposition;
+
+    /**
+     * Attribute guaranteed to be different for different parts of
+     * the same multipart document.
+     */
+    readonly attribute PRUint32 partID;
 };

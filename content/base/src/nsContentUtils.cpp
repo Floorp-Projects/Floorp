@@ -1387,14 +1387,18 @@ static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
 
 /*static*/ nsresult
 nsContentUtils::GenerateStateKey(nsIContent* aContent,
+                                 nsIDocument* aDocument,
                                  nsIStatefulFrame::SpecialStateID aID,
                                  nsACString& aKey)
 {
   aKey.Truncate();
 
+  PRUint32 partID = aDocument ? aDocument->GetPartID() : 0;
+
   // SpecialStateID case - e.g. scrollbars around the content window
   // The key in this case is the special state id (always < min(contentID))
   if (nsIStatefulFrame::eNoID != aID) {
+    KeyAppendInt(partID, aKey);  // first append a partID
     KeyAppendInt(aID, aKey);
     return NS_OK;
   }
@@ -1415,6 +1419,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
   nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetDocument()));
 
+  KeyAppendInt(partID, aKey);  // first append a partID
   PRBool generatedUniqueKey = PR_FALSE;
 
   if (htmlDocument) {

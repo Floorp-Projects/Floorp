@@ -2320,7 +2320,7 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
   //
   // Get the state key
   //
-  rv = nsContentUtils::GenerateStateKey(aContent, nsIStatefulFrame::eNoID, aKey);
+  rv = nsContentUtils::GenerateStateKey(aContent, doc, nsIStatefulFrame::eNoID, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If the state key is blank, this is anonymous content or for

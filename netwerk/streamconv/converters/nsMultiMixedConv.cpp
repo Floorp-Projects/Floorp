@@ -79,7 +79,7 @@ class nsPartChannel : public nsIChannel,
                       public nsIMultiPartChannel
 {
 public:
-  nsPartChannel(nsIChannel *aMultipartChannel);
+  nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID);
 
   void InitializeByteRange(PRInt64 aStart, PRInt64 aEnd);
 
@@ -108,14 +108,18 @@ protected:
   PRBool                  mIsByteRangeRequest;
   nsInt64                 mByteRangeStart;
   nsInt64                 mByteRangeEnd;
+
+  PRUint32                mPartID; // unique ID that can be used to identify
+                                   // this part of the multipart document
 };
 
-nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel) :
+nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID) :
   mStatus(NS_OK),
   mContentLength(LL_MAXUINT),
   mIsByteRangeRequest(PR_FALSE),
   mByteRangeStart(0),
-  mByteRangeEnd(0)
+  mByteRangeEnd(0),
+  mPartID(aPartID)
 {
     mMultipartChannel = aMultipartChannel;
 
@@ -364,6 +368,13 @@ NS_IMETHODIMP
 nsPartChannel::SetContentDisposition(const nsACString &aContentDisposition)
 {
     mContentDisposition = aContentDisposition;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetPartID(PRUint32 *aPartID)
+{
+    *aPartID = mPartID;
     return NS_OK;
 }
 
@@ -717,7 +728,9 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 
 // nsMultiMixedConv methods
-nsMultiMixedConv::nsMultiMixedConv() {
+nsMultiMixedConv::nsMultiMixedConv() :
+  mCurrentPartID(0)
+{
     mTokenLen           = 0;
     mNewPart            = PR_TRUE;
     mContentLength      = LL_MAXUINT;
@@ -764,7 +777,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     NS_ASSERTION(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
     nsPartChannel *newChannel;
-    newChannel = new nsPartChannel(aChannel);
+    newChannel = new nsPartChannel(aChannel, mCurrentPartID++);
     if (!newChannel)
         return NS_ERROR_OUT_OF_MEMORY;
 

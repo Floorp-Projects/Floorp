@@ -137,6 +137,8 @@ protected:
     nsInt64             mByteRangeStart;
     nsInt64             mByteRangeEnd;
     PRBool              mIsByteRangeRequest;
+
+    PRUint32            mCurrentPartID;
 };
 
 #endif /* __nsmultimixedconv__h__ */

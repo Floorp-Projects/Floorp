@@ -88,10 +88,10 @@ class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
-// c59c70e5-28d1-494b-9f8e-c18368d09ebc
+// c76fbc2d-2dca-4ce1-b6e9-7f7030b01e17
 #define NS_IDOCUMENT_IID      \
-{ 0x9f670164, 0xc446, 0x11d8, \
-  { 0x84, 0xe1, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
+{ 0xc76fbc2d, 0x2dca, 0x4ce1, \
+  { 0xb6, 0xe9, 0x7f, 0x70, 0x30, 0xb0, 0x1e, 0x17 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -116,7 +116,8 @@ public:
   nsIDocument()
     : mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
-      mNodeInfoManager(nsnull)
+      mNodeInfoManager(nsnull),
+      mPartID(0)
   {
   }
 
@@ -635,6 +636,20 @@ public:
 
   nsPropertyTable* PropertyTable() { return &mPropertyTable; }
 
+  /**
+   * Sets the ID used to identify this part of the multipart document
+   */
+  void SetPartID(PRUint32 aID) {
+    mPartID = aID;
+  }
+
+  /**
+   * Return the ID used to identify this part of the multipart document
+   */
+  PRUint32 GetPartID() const {
+    return mPartID;
+  }
+
 protected:
   ~nsIDocument()
   {
@@ -680,6 +695,10 @@ protected:
 
   // The document's security info
   nsCOMPtr<nsISupports> mSecurityInfo;
+
+  // if this document is part of a multipart document,
+  // the ID can be used to distinguish it from the other parts.
+  PRUint32 mPartID;
 };
 
 
