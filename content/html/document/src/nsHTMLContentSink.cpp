@@ -4884,8 +4884,20 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   MOZ_TIMER_STOP(mWatch);
 
   // Don't process scripts that aren't JavaScript and don't process
-  // scripts that are inside iframes, noframe, or noscript tags.
-  if (isJavaScript && !mNumOpenIFRAMES && !mInsideNoXXXTag) {
+  // scripts that are inside iframes, noframe, or noscript tags,
+  // or if the script context has script evaluation disabled:
+  PRBool scriptsEnabled = PR_TRUE;
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  if (globalObject)
+  {
+    nsCOMPtr<nsIScriptContext> context;
+    if (NS_SUCCEEDED(globalObject->GetContext(getter_AddRefs(context)))
+        && context)
+      context->GetScriptsEnabled(&scriptsEnabled);
+  }
+
+  if (scriptsEnabled && isJavaScript && !mNumOpenIFRAMES && !mInsideNoXXXTag) {
     mScriptLanguageVersion = jsVersionString;
 
     // If there is a SRC attribute...
