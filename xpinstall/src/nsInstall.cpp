@@ -2234,10 +2234,10 @@ nsInstall::FileOpWinRegisterServer(nsInstallFolder& aTarget, PRInt32* aReturn)
 }
 
 void
-nsInstall::LogComment(nsString& aComment)
+nsInstall::LogComment(const nsAString& aComment)
 {
   if(mListener)
-    mListener->OnLogComment(aComment.get());
+    mListener->OnLogComment(PromiseFlatString(aComment).get());
 }
 
 /////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsNativeCharsetUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsRegisterItem)
 
@@ -124,6 +125,25 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
     return rv;
 }
 
+void nsRegisterItem::LogErrorWithFilename(const nsAString& aMessage, nsresult code, nsILocalFile* localFile)
+{
+    nsCAutoString path;
+    nsAutoString unipath;
+
+    LogError(aMessage, code);
+    localFile->GetNativePath(path);
+    if(NS_SUCCEEDED(NS_CopyNativeToUnicode(path, unipath)))
+        mInstall->LogComment(unipath);
+}
+
+void nsRegisterItem::LogError(const nsAString& aMessage, nsresult code)
+{
+    char resultString[12];
+
+    PR_snprintf(resultString, 12, "0x%lx", code);
+    mInstall->LogComment(aMessage + NS_LITERAL_STRING(" - nsresult code: ") +
+                         NS_ConvertASCIItoUTF16(resultString));
+}
 
 PRInt32 nsRegisterItem::Prepare()
 {
@@ -246,12 +266,21 @@ PRInt32 nsRegisterItem::Complete()
         // We can register right away
         if (mChromeType & CHROME_SKIN)
             rv = reg->InstallSkin(mURL.get(), isProfile, PR_TRUE);
+        if (NS_FAILED(rv)) {
+            LogError(NS_LITERAL_STRING("InstallSkin() failed."), rv);
+        }
 
         if (NS_SUCCEEDED(rv) && (mChromeType & CHROME_LOCALE))
             rv = reg->InstallLocale(mURL.get(), isProfile);
+        if (NS_FAILED(rv)) {
+            LogError(NS_LITERAL_STRING("InstallLocale() failed."), rv);
+        }
 
         if (NS_SUCCEEDED(rv) && (mChromeType & CHROME_CONTENT))
             rv = reg->InstallPackage(mURL.get(), isProfile);
+        if (NS_FAILED(rv)) {
+            LogError(NS_LITERAL_STRING("InstallPackage() failed."), rv);
+        }
     }
     else
     {
@@ -266,6 +295,9 @@ PRInt32 nsRegisterItem::Complete()
         { 
             nsCOMPtr<nsIProperties> directoryService = 
                      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) {
+                LogError(NS_LITERAL_STRING("failed to get directory service."), rv);
+            }
             if (NS_SUCCEEDED(rv) && directoryService) 
             {
                 rv = directoryService->Get(NS_APP_CHROME_DIR, 
@@ -273,6 +305,7 @@ PRInt32 nsRegisterItem::Complete()
                                        getter_AddRefs(tmp));
                 if(NS_FAILED(rv))
                 {
+                    LogError(NS_LITERAL_STRING("failed get application chrome directory."), rv);
                     result = nsInstall::CHROME_REGISTRY_ERROR;
                     return result;
                 }
@@ -285,6 +318,8 @@ PRInt32 nsRegisterItem::Complete()
             if (NS_SUCCEEDED(rv))
             {
                 tmp->AppendNative(INSTALL_CHROME_DIR);
+            } else {
+                LogError(NS_LITERAL_STRING("failed to clone program directory. (not critical)"), rv);
             }
         }
         nsCOMPtr<nsILocalFile> startupFile( do_QueryInterface(tmp, &rv) );
@@ -292,6 +327,10 @@ PRInt32 nsRegisterItem::Complete()
         if (NS_SUCCEEDED(rv))
         {
             rv = startupFile->Exists(&bExists);
+            if(NS_FAILED(rv))
+            {
+                LogErrorWithFilename(NS_LITERAL_STRING("directory existance check failed."), rv, startupFile);
+            }
             if (NS_SUCCEEDED(rv) && !bExists)
                 rv = startupFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
             if (NS_SUCCEEDED(rv))
@@ -303,7 +342,15 @@ PRInt32 nsRegisterItem::Complete()
                                     PR_CREATE_FILE | PR_WRONLY,
                                     0744,
                                     &fd);
+                    if(NS_FAILED(rv))
+                    {
+                        LogErrorWithFilename(NS_LITERAL_STRING("opening of installed-chrome.txt failed."), rv, startupFile);
+                    }
+                } else {
+                    LogError(NS_LITERAL_STRING("String append failed."), rv);
                 }
+            } else {
+                LogErrorWithFilename(NS_LITERAL_STRING("startup directory creation failed."), rv, startupFile);
             }
         }
 
@@ -329,6 +376,7 @@ PRInt32 nsRegisterItem::Complete()
                         written = PR_Write(fd, installStr, actual);
                         if ( written != actual ) 
                         {
+                            LogErrorWithFilename(NS_LITERAL_STRING("writing to installed-chrome.txt failed."), rv, startupFile);
                             result = nsInstall::CHROME_REGISTRY_ERROR;
                         }
                         PR_smprintf_free(installStr);
@@ -347,6 +395,7 @@ PRInt32 nsRegisterItem::Complete()
                         written = PR_Write(fd, installStr, actual);
                         if ( written != actual ) 
                         {
+                            LogErrorWithFilename(NS_LITERAL_STRING("writing to installed-chrome.txt failed."), rv, startupFile);
                             result = nsInstall::CHROME_REGISTRY_ERROR;
                         }
                         PR_smprintf_free(installStr);
@@ -365,6 +414,7 @@ PRInt32 nsRegisterItem::Complete()
                         written = PR_Write(fd, installStr, actual);
                         if ( written != actual ) 
                         {
+                            LogErrorWithFilename(NS_LITERAL_STRING("writing to installed-chrome.txt failed."), rv, startupFile);
                             result = nsInstall::CHROME_REGISTRY_ERROR;
                         }
                         PR_smprintf_free(installStr);
@@ -377,12 +427,16 @@ PRInt32 nsRegisterItem::Complete()
         }
         else
         {
+            LogError(NS_LITERAL_STRING("opening of installed-chrome.txt failed."), rv);
             result = nsInstall::CHROME_REGISTRY_ERROR;
         }
     }
 
     if (NS_FAILED(rv))
+    {
+        LogError(NS_LITERAL_STRING("Failed to register chrome."), rv);
         result = nsInstall::CHROME_REGISTRY_ERROR;
+    }
 
     return result;
 }
