@@ -35,9 +35,7 @@ CPPSRCS		= \
 		nsAboutBlank.cpp \
 		nsAboutBloat.cpp \
 		nsAboutCache.cpp \
-		nsAboutCredits.cpp \
-		nsAboutPlugins.cpp \
-		mzAboutMozilla.cpp \
+        nsAboutRedirector.cpp \
 		$(NULL)
 
 ifdef MOZ_NEW_CACHE

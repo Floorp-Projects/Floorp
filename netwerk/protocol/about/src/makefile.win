@@ -32,9 +32,7 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutProtocolHandler.obj \
 	.\$(OBJDIR)\nsAboutBlank.obj           \
 	.\$(OBJDIR)\nsAboutBloat.obj           \
-	.\$(OBJDIR)\nsAboutCredits.obj		 	\
-	.\$(OBJDIR)\mzAboutMozilla.obj		\
-	.\$(OBJDIR)\nsAboutPlugins.obj \
+	.\$(OBJDIR)\nsAboutRedirector.obj		 	\
 	.\$(OBJDIR)\nsAboutCache.obj		\
 !ifdef MOZ_NEW_CACHE
     .\$(OBJDIR)\nsAboutCacheEntry.obj \
