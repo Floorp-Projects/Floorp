@@ -45,12 +45,12 @@ template <class T>
 class nsFastLoadPtr : public nsCOMPtr<T> {
   public:
     nsDerivedSafe<T>* get() const {
-        if (!mRawPtr) {
+        if (!this->mRawPtr) {
             gFastLoadService_->GetFastLoadReferent(
-                                            NS_REINTERPRET_CAST(nsISupports**,
-                                                                &mRawPtr));
+                                         NS_REINTERPRET_CAST(nsISupports**,
+                                                             &this->mRawPtr));
         }
-        return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+        return NS_REINTERPRET_CAST(nsDerivedSafe<T>*, this->mRawPtr);
     }
 
     /**
@@ -62,8 +62,8 @@ class nsFastLoadPtr : public nsCOMPtr<T> {
      */
     nsresult read(nsIObjectInputStream* aInputStream) {
         return gFastLoadService_->ReadFastLoadPtr(aInputStream,
-                                            NS_REINTERPRET_CAST(nsISupports**,
-                                                                &mRawPtr));
+                                         NS_REINTERPRET_CAST(nsISupports**,
+                                                             &this->mRawPtr));
     }
 
     /**
@@ -75,8 +75,8 @@ class nsFastLoadPtr : public nsCOMPtr<T> {
      */
     nsresult write(nsIObjectOutputStream* aOutputStream) {
         return gFastLoadService_->WriteFastLoadPtr(aOutputStream,
-                                            NS_REINTERPRET_CAST(nsISupports*,
-                                                                mRawPtr));
+                                          NS_REINTERPRET_CAST(nsISupports*,
+                                                              this->mRawPtr));
     }
 };
 
