@@ -150,6 +150,10 @@ typedef PRUcs2 PRUnichar;
 #if defined(__sgi) && !defined(__GNUC__)
 #undef HAS_C_PLUS_PLUS_CASTS
 #endif
+/* this really needs to be autoconf'ed */
+#if defined(HPUX)
+#undef HAS_C_PLUS_PLUS_CASTS
+#endif
 
 #if defined(HAS_C_PLUS_PLUS_CASTS)
 #define NS_STATIC_CAST(__type, __ptr)      static_cast<__type>(__ptr)
