@@ -200,6 +200,9 @@ enum nsSpread {
 
 //----------------------------------------------------------------------
 
+// Option flags
+#define NS_REFLOW_CALC_MAX_WIDTH  0x0001
+
 /**
  * Reflow metrics used to return the frame's desired size and alignment
  * information.
@@ -211,7 +214,11 @@ struct nsHTMLReflowMetrics {
   nscoord ascent, descent;      // [OUT] ascent and descent information
 
   // Set this to null if you don't need to compute the max element size
-  nsSize* maxElementSize;       // [IN OUT]
+  nsSize* maxElementSize;       // [OUT]
+
+  // Used for incremental reflow. If the NS_REFLOW_CALC_MAX_WIDTH flag is set,
+  // then the caller is requesting that you update and return your maximum width
+  nscoord mMaximumWidth;        // [OUT]
 
   // Carried out bottom margin values. This is the collapsed
   // (generational) bottom margin value.
@@ -226,9 +233,13 @@ struct nsHTMLReflowMetrics {
   // then the overflow area is identical to the desired size and should be
   // {0, 0, mWidth, mHeight}.
   nsRect mOverflowArea;
+
+  PRUint32 mFlags;
   
-  nsHTMLReflowMetrics(nsSize* aMaxElementSize) {
+  nsHTMLReflowMetrics(nsSize* aMaxElementSize, PRUint32 aFlags = 0) {
     maxElementSize = aMaxElementSize;
+    mMaximumWidth = 0;
+    mFlags = aFlags;
     mCarriedOutBottomMargin = 0;
     mOverflowArea.x = 0;
     mOverflowArea.y = 0;

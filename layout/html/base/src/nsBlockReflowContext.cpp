@@ -45,11 +45,13 @@
 
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
                                            const nsHTMLReflowState& aParentRS,
-                                           PRBool aComputeMaxElementSize)
+                                           PRBool aComputeMaxElementSize,
+                                           PRBool aComputeMaximumWidth)
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
     mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull),
-    mMaxElementSize(0, 0)
+    mMaxElementSize(0, 0),
+    mComputeMaximumWidth(aComputeMaximumWidth)
 {
   mStyleSpacing = nsnull;
 }
@@ -144,6 +146,11 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
     mNextRCFrame = nsnull;
+
+    // If we should compute the maximum width, then let the block know
+    if (mComputeMaximumWidth) {
+      mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
+    }
   }
   else if (mOuterReflowState.reason == eReflowReason_StyleChange) {
     reason = eReflowReason_StyleChange;

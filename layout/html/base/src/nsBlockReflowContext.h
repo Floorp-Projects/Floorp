@@ -38,7 +38,8 @@ class nsBlockReflowContext {
 public:
   nsBlockReflowContext(nsIPresContext* aPresContext,
                        const nsHTMLReflowState& aParentRS,
-                       PRBool aComputeMaxElementSize);
+                       PRBool aComputeMaxElementSize,
+                       PRBool aComputeMaximumWidth);
   ~nsBlockReflowContext() { }
 
   void SetNextRCFrame(nsIFrame* aNextRCFrame) {
@@ -81,6 +82,10 @@ public:
 
   const nsSize& GetMaxElementSize() const {
     return mMaxElementSize;
+  }
+  
+  nscoord GetMaximumWidth() const {
+    return mMetrics.mMaximumWidth;
   }
 
   // Compute the largest of two adjacent vertical margins, as per the
@@ -126,6 +131,7 @@ protected:
   nscoord mTopMargin;
   nsSize mMaxElementSize;
   PRBool mIsTable;
+  PRPackedBool mComputeMaximumWidth;
 };
 
 #endif /* nsBlockReflowContext_h___ */

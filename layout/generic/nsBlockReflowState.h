@@ -382,6 +382,12 @@ public:
 #endif
   }
 
+  void UpdateMaximumWidth(nscoord aMaximumWidth) {
+    if (aMaximumWidth > mMaximumWidth) {
+      mMaximumWidth = aMaximumWidth;
+    }
+  }
+
   void RecoverVerticalMargins(nsLineBox* aLine,
                               PRBool aApplyTopMargin,
                               nscoord* aTopMarginResult,
@@ -531,8 +537,10 @@ public:
   nsFloaterCacheFreeList mBelowCurrentLineFloaters;
 
   PRBool mComputeMaxElementSize;
+  PRBool mComputeMaximumWidth;
 
   nsSize mMaxElementSize;
+  nscoord mMaximumWidth;
 
   nscoord mMinLineHeight;
 
@@ -643,6 +651,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   mComputeMaxElementSize = nsnull != aMetrics.maxElementSize;
   mMaxElementSize.SizeTo(0, 0);
+  mComputeMaximumWidth = NS_REFLOW_CALC_MAX_WIDTH == (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH);
+  mMaximumWidth = 0;
 
   if (0 != borderPadding.top) {
     mIsTopMarginRoot = PR_TRUE;
@@ -921,7 +931,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   // in this line.
   mPrevChild = aLine->LastChild();
 
-  // Recover mKidXMost and max element width
+  // Recover mKidXMost and mMaxElementSize
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > mKidXMost) {
 #ifdef DEBUG
@@ -934,6 +944,11 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   }
   if (mComputeMaxElementSize) {
     UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
+  }
+
+  // If computing the maximum width, then update mMaximumWidth
+  if (mComputeMaximumWidth) {
+    UpdateMaximumWidth(aLine->mMaximumWidth);
   }
 
   // The line may have clear before semantics.
@@ -1917,6 +1932,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
              aState.mReflowState.availableHeight);
     }
 #endif
+  }
+
+  // If we're requested to update our maximum width, then compute it
+  if (aState.mComputeMaximumWidth) {
+    // We need to add in for the right border/padding
+    aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
   }
 
   // Compute the combined area of our children
@@ -3159,7 +3180,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   frame->GetStyleData(eStyleStruct_Display,
                       (const nsStyleStruct*&) display);
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
-                           aState.mComputeMaxElementSize);
+                           aState.mComputeMaxElementSize,
+                           aState.mComputeMaximumWidth);
   brc.SetNextRCFrame(aState.mNextRCFrame);
 
   // See if we should apply the top margin. If the block frame being
@@ -3365,6 +3387,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           // floater impacts will be counted twice).
           ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
         }
+      }
+      // If we asked the block to update its maximum width, then record the
+      // updated value in the line, and update the current maximum width
+      if (aState.mComputeMaximumWidth) {
+        aLine->mMaximumWidth = brc.GetMaximumWidth();
+        aState.UpdateMaximumWidth(aLine->mMaximumWidth);
+
       }
       PostPlaceLine(aState, aLine, maxElementSize);
 
@@ -4195,6 +4224,13 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     aLine->mMaxElementWidth = aMaxElementSize.width;
   }
 
+  // If this is an unconstrained reflow, then cache the line width in the
+  // line. We'll need this during incremental reflow if we're asked to
+  // calculate the maximum width
+  if (aState.mUnconstrainedWidth) {
+    aLine->mMaximumWidth = aLine->mBounds.XMost();
+  }
+
   // Update xmost
   nscoord xmost = aLine->mBounds.XMost();
 #ifdef DEBUG
@@ -4847,7 +4883,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Setup block reflow state to reflow the floater
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState,
-                           aState.mComputeMaxElementSize);
+                           aState.mComputeMaxElementSize,
+                           aState.mComputeMaximumWidth);
   brc.SetNextRCFrame(aState.mNextRCFrame);
 
   // Reflow the floater
