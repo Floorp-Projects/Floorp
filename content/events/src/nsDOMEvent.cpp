@@ -551,7 +551,7 @@ NS_METHOD nsDOMEvent::GetClickCount(PRUint16* aClickCount)
 NS_METHOD nsDOMEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
 {
   nsIEventStateManager *manager;
-  nsIContent *relatedContent;
+  nsIContent *relatedContent = nsnull;
   nsresult ret = NS_OK;
 
   if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
