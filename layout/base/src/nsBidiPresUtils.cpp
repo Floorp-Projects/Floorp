@@ -1081,8 +1081,6 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   PRUint8 charType;
   PRUint8 prevType = eCharType_LeftToRight;
   nsBidiLevel level;
-  PRInt32 lineOffset     = 0;
-  PRInt32 runLength      = 0;
 
   PRUint32 hints = 0;
   aRenderingContext.GetHints(hints);
@@ -1097,26 +1095,38 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
     if (NS_FAILED(rv))
       return rv;
 
-    runLength = limit - start;
-    lineOffset = start;
+    PRInt32 subRunLength = limit - start;
+    PRInt32 lineOffset = start;
     PRInt32 typeLimit = PR_MIN(limit, aLength);
-    CalculateCharType(lineOffset, typeLimit, limit, runLength, runCount, charType, prevType);
+    PRInt32 subRunCount = 1;
+    PRInt32 subRunLimit = typeLimit;
 
-    if (eCharType_RightToLeftArabic == charType) {
-      isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
-    }
-    if (isBidiSystem && (CHARTYPE_IS_RTL(charType) ^ isRTL) ) {
-      // set reading order into DC
-      isRTL = !isRTL;
-      aRenderingContext.SetRightToLeftText(isRTL);
-    }
-    FormatUnicodeText(aPresContext, aText + start, length,
-                      (nsCharType)charType, level & 1,
-                      isBidiSystem);
+    while (subRunCount > 0) {
+      // CalculateCharType can increment subRunCount if the run
+      // contains mixed character types
+      CalculateCharType(lineOffset, typeLimit, subRunLimit, subRunLength, subRunCount, charType, prevType);
 
-    aRenderingContext.GetWidth(aText + start, length, width, nsnull);
-    aRenderingContext.DrawString(aText + start, length, aX, aY, width);
-    aX += width;
+      if (eCharType_RightToLeftArabic == charType) {
+        isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+      }
+      if (isBidiSystem && (CHARTYPE_IS_RTL(charType) ^ isRTL) ) {
+        // set reading order into DC
+        isRTL = !isRTL;
+        aRenderingContext.SetRightToLeftText(isRTL);
+      }
+      FormatUnicodeText(aPresContext, aText + start, subRunLength,
+                        (nsCharType)charType, level & 1,
+                        isBidiSystem);
+
+      aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
+      aRenderingContext.DrawString(aText + start, subRunLength, aX, aY, width);
+      aX += width;
+
+      --subRunCount;
+      start = lineOffset;
+      subRunLimit = typeLimit;
+      subRunLength = typeLimit - lineOffset;
+    } // while
   } // for
 
   // Restore original reading order
