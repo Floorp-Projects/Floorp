@@ -114,7 +114,6 @@ class nsMsgCompose : public nsIMsgCompose
 	// tell the doc state listeners that the doc state has changed
 	nsresult NotifyStateListeners(TStateListenerNotification aNotificationType);
 
-	nsMsgComposeSendListener      *m_sendListener;
 	nsIEditorShell                *m_editor;
 	nsIDOMWindowInternal                  *m_window;
   nsCOMPtr<nsIBaseWindow>        m_baseWindow;

@@ -111,7 +111,6 @@ nsMsgCompose::nsMsgCompose()
 	mWhatHolder = 1;
 	mDocumentListener = nsnull;
 	mMsgSend = nsnull;
-	m_sendListener = nsnull;
 	m_window = nsnull;
 	m_editor = nsnull;
 	mQuoteStreamListener=nsnull;
@@ -145,7 +144,6 @@ nsMsgCompose::~nsMsgCompose()
 		mDocumentListener->SetComposeObj(nsnull);      
 		NS_RELEASE(mDocumentListener);
 	}
-	NS_IF_RELEASE(m_sendListener);
 	NS_IF_RELEASE(m_compFields);
 	NS_IF_RELEASE(mQuoteStreamListener);
 }
@@ -568,16 +566,17 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       bodyLength = PL_strlen(bodyString);
       
       // Create the listener for the send operation...
-      m_sendListener = new nsMsgComposeSendListener();
-      if (!m_sendListener)
-        return NS_ERROR_FAILURE;
+      nsMsgComposeSendListener *sendListener = new nsMsgComposeSendListener();
+      if (!sendListener)
+        return NS_ERROR_OUT_OF_MEMORY;
       
-      NS_ADDREF(m_sendListener);
+      // We must hold a reference to it as long as we have tArray (below)
+      nsCOMPtr<nsIMsgSendListener> kungFuDeathGrip(sendListener);
       // set this object for use on completion...
-      m_sendListener->SetComposeObj(this);
-      m_sendListener->SetDeliverMode(deliverMode);
+      sendListener->SetComposeObj(this);
+      sendListener->SetDeliverMode(deliverMode);
       PRUint32 listeners;
-      nsIMsgSendListener **tArray = m_sendListener->CreateListenerArray(&listeners);
+      nsIMsgSendListener **tArray = sendListener->CreateListenerArray(&listeners);
       if (!tArray)
       {
 #ifdef DEBUG
