@@ -226,6 +226,8 @@ RunAllXPIs(short vRefNum, long dirID)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
+				// if LAUNCHAPP attr wasn't set
+			 	if (!gControls->cfg->comp[i].launchapp)
 				HLock(gControls->cfg->comp[i].archive);
 				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
 				HUnlock(gControls->cfg->comp[i].archive);

@@ -163,10 +163,13 @@ pascal void* Install(void* unused)
 			if (err!=noErr) SysBeep(10); 
 #endif
 		}
-	
+		
 		if (coreFile)
 			DisposePtr((Ptr)coreFile);
 	}
+	
+	/* launch the downloaded apps who had the LAUNCHAPP attr set */
+	LaunchApps(vRefNum, dirID);
 	 
 	/* wind down app */
 	gDone = true;
@@ -231,6 +234,8 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
 				HUnlock(gControls->cfg->comp[i].archive);				
 				err = FSMakeFSSpec(vRefNum, dirID, pcurrArchive, &fsExists);
+				
+				// if file doesn't exist
 				if (err == fnfErr)
 				{
 					// get file number from STR# resource
@@ -373,6 +378,67 @@ AddKeyToIDI(short key, Handle val, char *ostream)
 	
 	if (keybuf)
 		DisposePtr(keybuf);
+}
+
+void 
+LaunchApps(short vRefNum, long dirID)
+{
+	int 				compsDone = 0, i;
+	int 				instChoice = gControls->opt->instChoice-1;
+	FSSpec 				fsCurrArchive, fsCurrApp;
+	OSErr 				err = noErr;
+	StringPtr 			pArchiveName;
+	LaunchParamBlockRec	launchPB;
+	
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected, or not custom setup type
+			// add file to buffer
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{
+				// if the LAUNCHAPP attr was set
+				if (gControls->cfg->comp[i].launchapp)
+				{
+					// AppleSingle decode the app
+					HLock(gControls->cfg->comp[i].archive);
+					pArchiveName = CToPascal(*gControls->cfg->comp[i].archive);
+					HUnlock(gControls->cfg->comp[i].archive);
+					
+					err = FSMakeFSSpec(vRefNum, dirID, pArchiveName, &fsCurrArchive);
+					if (err == noErr) /* archive exists */
+					{
+						err = AppleSingleDecode(&fsCurrArchive, &fsCurrApp);
+						if (err == noErr) /* AppleSingle decoded successfully */
+						{	
+							// launch the decoded app
+							launchPB.launchAppSpec = & fsCurrApp;
+							launchPB.launchAppParameters = NULL;
+							launchPB.launchBlockID = extendedBlock;
+							launchPB.launchEPBLength = extendedBlockLen;
+							launchPB.launchFileFlags = NULL;
+							launchPB.launchControlFlags = launchContinue + launchNoFileFlags + launchUseMinimum;
+							launchPB.launchControlFlags += launchDontSwitch;
+
+							err = LaunchApplication( &launchPB );
+#ifdef MIW_DEBUG
+							if (err!=noErr) SysBeep(10);
+#endif
+							
+						}
+					}
+				}	
+			}
+		}
+		
+		compsDone++;
+	}
 }
 
 void
