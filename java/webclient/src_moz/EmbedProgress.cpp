@@ -164,6 +164,14 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_REQUEST)) {
 	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	       ("EmbedProgress::OnStateChange: START_URL_LOAD\n"));
+	if (channel && mCapturePageInfo) {
+	    HttpHeaderVisitorImpl *visitor = 
+		new HttpHeaderVisitorImpl(env, 
+					  properties, (jobject)
+					  &(mOwner->GetWrapperFactory()->shareContext));
+	    channel->VisitRequestHeaders(visitor);
+	    delete visitor;
+	}
 
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 

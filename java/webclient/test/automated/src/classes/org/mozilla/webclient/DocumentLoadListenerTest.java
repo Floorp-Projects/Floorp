@@ -1,5 +1,5 @@
 /*
- * $Id: DocumentLoadListenerTest.java,v 1.1 2004/09/09 20:17:17 edburns%acm.org Exp $
+ * $Id: DocumentLoadListenerTest.java,v 1.2 2004/10/20 02:50:44 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -164,21 +164,48 @@ public class DocumentLoadListenerTest extends WebclientTestCase {
 
 	eventRegistration.addDocumentLoadListener(listener = new PageInfoListener() {
 		public void eventDispatched(WebclientEvent event) {
+		    Map map = null;
+		    Iterator iter = null;
 		    if (event instanceof DocumentLoadEvent) {
 			switch ((int) event.getType()) {
-			case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
+			case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
 			    assertNotNull(event.getEventData());
 			    assertTrue(event.getEventData() instanceof Map);
-			    Map map = (Map) event.getEventData();
+			    map = (Map) event.getEventData();
 			    assertEquals(url, map.get("URI"));
 			    assertNotNull(map.get("headers"));
 			    assertTrue(map.get("headers") instanceof Map);
-			    Iterator iter = (map = (Map) map.get("headers")).keySet().iterator();
+			    iter = (map = (Map) map.get("headers")).keySet().iterator();
+			    boolean hadCorrectUserAgentHeader = false;
+			    while (iter.hasNext()) {
+				String curName = iter.next().toString();
+				if (curName.equals("Host")) {
+				    if (-1 != map.get(curName).toString().indexOf("localhost")) {
+					hadCorrectUserAgentHeader = true;
+				    }
+				}
+				System.out.println("\t" + curName + 
+						   ": " + 
+						   map.get(curName));
+			    }
+			    assertTrue(hadCorrectUserAgentHeader);
+			    break;
+
+			case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
+			    assertNotNull(event.getEventData());
+			    assertTrue(event.getEventData() instanceof Map);
+			    map = (Map) event.getEventData();
+			    assertEquals(url, map.get("URI"));
+			    assertNotNull(map.get("headers"));
+			    assertTrue(map.get("headers") instanceof Map);
+			    iter = (map = (Map) map.get("headers")).keySet().iterator();
 			    boolean hadCorrectServerHeader = false;
 			    while (iter.hasNext()) {
 				String curName = iter.next().toString();
 				if (curName.equals("Server")) {
-				    hadCorrectServerHeader = true;
+				    if (-1 != map.get(curName).toString().indexOf("THTTPD")) {
+					hadCorrectServerHeader = true;
+				    }
 				}
 				System.out.println("\t" + curName + 
 						   ": " + 

@@ -223,6 +223,18 @@ public class TestBrowser extends JPanel {
 		    Map map = (Map) event.getEventData();
 		    if (event instanceof DocumentLoadEvent) {
 			switch ((int) event.getType()) {
+			case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
+			    if (map.get("headers") instanceof Map) {
+				Iterator iter = (map = (Map) map.get("headers")).keySet().iterator();
+				while (iter.hasNext()) {
+				    String curName = iter.next().toString();
+				    System.out.println("\t" + curName + 
+						       ": " + 
+						       map.get(curName));
+				}
+			    }
+
+			    break;
 			case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
 			    updateStatusInfo("Loading started.");
 			    break;
