@@ -980,13 +980,29 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
         PRInt32 index;
         for (index=0; index < portListArray.Count(); index++) {
             portListArray[index]->StripWhitespace();
+            PRInt32 aErrorCode, portBegin, portEnd;
 
-            PRInt32 aErrorCode;
-            PRInt32 value = portListArray[index]->ToInteger(&aErrorCode);
-            if (remove)
-                mRestrictedPortList.RemoveElement((void*)value);
-            else
-                mRestrictedPortList.AppendElement((void*)value);
+            if (PR_sscanf(portListArray[index]->get(), "%d-%d", &portBegin, &portEnd) == 2) {
+               if ((portBegin < 65536) && (portEnd < 65536)) {
+                   PRInt32 curPort;
+                   if (remove) {
+                        for (curPort=portBegin; curPort <= portEnd; curPort++)
+                            mRestrictedPortList.RemoveElement((void*)curPort);
+                   } else {
+                        for (curPort=portBegin; curPort <= portEnd; curPort++)
+                            mRestrictedPortList.AppendElement((void*)curPort);
+                   }
+               }
+            } else {
+               PRInt32 port = portListArray[index]->ToInteger(&aErrorCode);
+               if (NS_SUCCEEDED(aErrorCode) && port < 65536) {
+                   if (remove)
+                       mRestrictedPortList.RemoveElement((void*)port);
+                   else
+                       mRestrictedPortList.AppendElement((void*)port);
+               }
+            }
+
         }
     }
 }
