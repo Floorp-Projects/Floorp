@@ -351,6 +351,34 @@ nsresult CScanner::SkipOver(nsString& aSkipSet){
   return result;
 }
 
+
+/**
+ *  Skip over chars until they're in aValidSet
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aValid set contains chars you're looking for
+ *  @return  error code
+ */
+nsresult CScanner::SkipTo(nsString& aValidSet){
+  PRUnichar ch=0;
+  nsresult  result=NS_OK;
+
+  while(NS_OK==result) {
+    result=GetChar(ch);
+    if(NS_OK == result) {
+      PRInt32 pos=aValidSet.Find(ch);
+      if(kNotFound!=pos) {
+        PutBack(ch);
+        break;
+      }
+    } 
+    else break;
+  } //while
+  return result;
+}
+
+
+
 /**
  *  Skip over chars as long as they're in aValidSet
  *  

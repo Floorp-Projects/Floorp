@@ -121,6 +121,15 @@ class CScanner {
       nsresult SkipOver(PRUnichar aSkipChar);
 
       /**
+       *  Skip over chars until they're in aValidSet
+       *  
+       *  @update  gess 3/25/98
+       *  @param   aValid set contains chars you're looking for
+       *  @return  error code
+       */
+      nsresult SkipTo(nsString& aValidSet);
+
+      /**
        *  Skip over chars as long as they're in aSequence
        *  
        *  @update  gess 3/25/98
