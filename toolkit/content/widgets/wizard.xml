@@ -12,7 +12,7 @@
   </binding>
   
   <binding id="wizard" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
-    <content width="500" height="380" persist="x y width height">
+    <content>
       <xul:hbox class="wizard-header" anonid="Header"/>
       
       <xul:deck class="wizard-page-box" flex="1" anonid="Deck">
