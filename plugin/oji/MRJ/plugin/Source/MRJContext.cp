@@ -32,6 +32,7 @@
 #include "MRJContext.h"
 #include "MRJPlugin.h"
 #include "MRJPage.h"
+#include "MRJMonitor.h"
 #include "AsyncMessage.h"
 #include "TopLevelFrame.h"
 #include "EmbeddedFrame.h"
@@ -901,6 +902,52 @@ void MRJContext::drawApplet()
 		// OSStatus status = ::JMFrameUpdate(mViewerFrame, framePort->clipRgn);
 		OSStatus status = ::JMFrameUpdate(mViewerFrame, mPluginClipping);
 	}
+}
+
+void MRJContext::printApplet(GrafPtr printingPort, Point frameOrigin)
+{
+	nsPluginWindow* originalPluginWindow = mPluginWindow;
+	JNIEnv* env = ::JMGetCurrentEnv(mSessionRef); 
+	jclass utilsClass = NULL;
+	jobject frameObject = NULL;
+	OSStatus status = noErr;
+	
+	do {
+		// call the print methods of the applet viewer's frame.
+		jclass utilsClass = env->FindClass("netscape/oji/AWTUtils");
+		if (utilsClass == NULL) break;
+		jmethodID printContainerMethod = env->GetStaticMethodID(utilsClass, "printContainer", "(Ljava/awt/Container;Ljava/lang/Object;)V");
+		if (printContainerMethod == NULL) break;
+		
+		// temporarily switch drawing to the printing port.
+		status = ::JMSetFrameVisibility(mViewerFrame, printingPort,
+										frameOrigin, printingPort->clipRgn);
+		if (status != noErr) break;
+		
+		// get the frame object to print.
+		frameObject = JMGetAWTFrameJNIObject(mViewerFrame, env);
+		if (frameObject == NULL) break;
+
+		// create a monitor to synchronize with.
+		MRJMonitor notifier(mSession);
+
+		// start the asynchronous print call.
+		jvalue args[2];
+		args[0].l = frameObject;
+		args[1].l = notifier.getObject();
+		OSStatus status = JMExecJNIStaticMethodInContext(mContext, env, utilsClass, printContainerMethod, 2, args);
+
+		// now, wait for the print method to complete.
+		if (status == noErr)
+			notifier.wait();
+	} while (0);
+
+	if (frameObject != NULL)
+		env->DeleteLocalRef(frameObject);
+	if (utilsClass != NULL)
+		env->DeleteLocalRef(utilsClass);
+	if (originalPluginWindow != NULL)
+		setWindow(originalPluginWindow);
 }
 
 void MRJContext::activate(Boolean active)
