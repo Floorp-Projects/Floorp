@@ -589,12 +589,14 @@ endif
 endif
 else
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
+ifndef IS_COMPONENT
 	@if test ! -f VMSuni.opt; then \
 	    echo "Creating universal symbol option file VMSuni.opt"; \
 	    for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done; \
 	    create_opt_uni $(OBJS) $(SUB_LOBJS); \
 	fi
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
+endif
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) VMSuni.opt;
 	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
 endif
