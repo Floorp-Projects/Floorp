@@ -172,13 +172,13 @@ sub JarIt
     if (!($overrides eq "")) {
 	my $err = 0; 
         print "+++ overriding $overrides\n";
-
-	while (length($args) > $maxCmdline) {
-	    #print "Exceeding POSIX cmdline limit: " . length($args) . "\n";
-	    my $subargs = substr($args, 0, $maxCmdline-1);
+          
+	while (length($overrides) > $maxCmdline) {
+	    #print "Exceeding POSIX cmdline limit: " . length($overrides) . "\n";
+	    my $subargs = substr($overrides, 0, $maxCmdline-1);
 	    my $pos = rindex($subargs, " ");
-	    $subargs = substr($args, 0, $pos);
-	    $args = substr($args, $pos);
+	    $subargs = substr($overrides, 0, $pos);
+	    $overrides = substr($overrides, $pos);
 	    
 	    #print "zip $zipmoveopt ../$jarfile.jar $subargs\n";	    
 	    #print "Length of subargs: " . length($subargs) . "\n";
@@ -186,6 +186,7 @@ sub JarIt
 		$err = $? >> 8;
 	    zipErrorCheck($err,$lockfile);
 	}
+	#print "Length of args: " . length($overrides) . "\n";
         #print "zip $zipmoveopt ../$jarfile.jar $overrides\n";
         system("zip $zipmoveopt ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
