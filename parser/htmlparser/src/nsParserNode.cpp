@@ -400,6 +400,7 @@ nsCParserNode::GetIDAttributeAtom(nsIAtom** aResult) const
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mIDAttributeAtom;
+  NS_IF_ADDREF(*aResult);
 
   return NS_OK;
 }

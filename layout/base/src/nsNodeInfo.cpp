@@ -196,6 +196,7 @@ nsNodeInfo::GetIDAttributeAtom(nsIAtom** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mInner.mIDAttributeAtom;
+  NS_IF_ADDREF(*aResult);
 
   return NS_OK;
 }
