@@ -77,8 +77,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint64 methodIndex, PRUint64* args)
         case nsXPTType::T_I16    : dp->val.i16 = *((PRInt32*) ap);       break;
         case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*) ap);        break;
-        case nsXPTType::T_U64    : dp->val.u64 = *((PRUint648) ap);      break;
-        case nsXPTType::T_I64    : dp->val.i64 = *((PRInt648) ap);       break;
+        case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*) ap);      break;
+        case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap);       break;
         case nsXPTType::T_U8     : dp->val.u8  = *((PRUint32*) ap);      break;
         case nsXPTType::T_U16    : dp->val.u16 = *((PRUint32*)ap);       break;
         case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
