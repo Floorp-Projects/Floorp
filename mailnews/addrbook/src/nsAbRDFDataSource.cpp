@@ -81,6 +81,19 @@ nsresult nsAbRDFDataSource::createNode(const PRUnichar *str, nsIRDFNode **node)
 	return rv;
 }
 
+nsresult nsAbRDFDataSource::createBlobNode(PRUint8 *value, PRUint32 &length, nsIRDFNode **node, nsIRDFService *rdfService)
+{
+  NS_ENSURE_ARG_POINTER(node);
+  NS_ENSURE_ARG_POINTER(rdfService);
+
+  *node = nsnull;
+  nsCOMPtr<nsIRDFBlob> blob;
+  nsresult rv = rdfService->GetBlobLiteral(value, length, getter_AddRefs(blob));
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_IF_ADDREF(*node = blob);
+  return rv;
+}
+
 PRBool nsAbRDFDataSource::changeEnumFunc(nsISupports *aElement, void *aData)
 {
   nsAbRDFNotification* note = (nsAbRDFNotification *)aData;

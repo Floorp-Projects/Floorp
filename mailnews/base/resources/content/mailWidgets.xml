@@ -680,7 +680,11 @@
       </xul:menulist>
       <xul:textbox flex="1" class="search-value-textbox"/>
       <xul:menulist flex="1" class="search-value-menulist">
-        <xul:menupopup ref="moz-abdirectory://" class="search-value-popup" datasources="rdf:addressdirectory">
+        <xul:menupopup class="search-value-popup" ref="moz-abdirectory://" 
+                 datasources="rdf:addressdirectory"
+                 sortActive="true"
+                 sortDirection="ascending"
+                 sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
           <xul:template>
             <xul:rule nc:IsRemote="true"/>
             <xul:rule nc:IsMailList="false">

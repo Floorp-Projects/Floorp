@@ -48,7 +48,7 @@
 #include "nsISupportsArray.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-
+#include "nsICollation.h"
 
 /**
  * The addressbook data source.
@@ -125,6 +125,8 @@ protected:
     nsIRDFNode **target);
 	nsresult createDirectoryIsWriteableNode(nsIAbDirectory *directory,
                                             nsIRDFNode **target);
+  nsresult createDirectoryTreeNameSortNode(nsIAbDirectory *directory,
+                                            nsIRDFNode **target);
 	nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
@@ -143,6 +145,7 @@ protected:
 
 	nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* dirResource,
 							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion);
+  nsresult CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength);
 
   nsCOMPtr<nsIRDFResource> kNC_Child;
   nsCOMPtr<nsIRDFResource> kNC_DirName;
@@ -152,6 +155,8 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_IsRemote;
   nsCOMPtr<nsIRDFResource> kNC_IsSecure;
   nsCOMPtr<nsIRDFResource> kNC_IsWriteable;
+  nsCOMPtr<nsIRDFResource> kNC_DirTreeNameSort;
+  nsCOMPtr<nsICollation> mCollationKeyGenerator;
   
   // commands
   nsCOMPtr<nsIRDFResource> kNC_Modify;

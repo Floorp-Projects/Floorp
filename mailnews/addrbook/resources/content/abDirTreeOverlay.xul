@@ -42,9 +42,11 @@ Contributors:
       onclick="DirPaneClick(event);"
       ondblclick="DirPaneDoubleClick(event);"
       onblur="goOnEvent(this,'blur')">
-      
+
     <treecols>
-      <treecol id="DirCol" flex="1" primary="true" label="&dirTreeHeader.label;"/>
+      <treecol id="DirCol" flex="1" primary="true" label="&dirTreeHeader.label;"
+               crop="center" persist="width" ignoreincolumnpicker="true"
+               sort="?DirTreeNameSort" sortActive="true" sortDirection="ascending"/>
     </treecols>
     
     <template>
@@ -58,6 +60,9 @@ Contributors:
           <binding subject="?member"
                    predicate="http://home.netscape.com/NC-rdf#DirName"
                    object="?DirName"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#DirTreeNameSort"
+                   object="?DirTreeNameSort"/>
           <binding subject="?member"
                    predicate="http://home.netscape.com/NC-rdf#IsMailList"
                    object="?IsMailList"/>

@@ -54,19 +54,24 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-                                                
-#define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
+
+#include "nsMsgRDFUtils.h"
+#include "nsILocaleService.h"
+#include "nsCollationCID.h"
+#include "prmem.h"
+                
+static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+                                
 #define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
 #define NC_RDF_CARDCHILD			"http://home.netscape.com/NC-rdf#CardChild"
 #define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
 #define NC_RDF_ISMAILLIST			"http://home.netscape.com/NC-rdf#IsMailList"
 #define NC_RDF_ISREMOTE				"http://home.netscape.com/NC-rdf#IsRemote"
-#define NC_RDF_ISSECURE			"http://home.netscape.com/NC-rdf#IsSecure"
 #define NC_RDF_ISWRITEABLE			"http://home.netscape.com/NC-rdf#IsWriteable"
+#define NC_RDF_DIRTREENAMESORT  "http://home.netscape.com/NC-rdf#DirTreeNameSort"
 
 //Directory Commands
 #define NC_RDF_MODIFY				"http://home.netscape.com/NC-rdf#Modify"
-#define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 #define NC_RDF_DELETECARDS			"http://home.netscape.com/NC-rdf#DeleteCards"
 
 ////////////////////////////////////////////////////////////////////////
@@ -159,6 +164,8 @@ nsAbDirectoryDataSource::Init()
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_ISWRITEABLE),
                         getter_AddRefs(kNC_IsWriteable));
   NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DIRTREENAMESORT), getter_AddRefs(kNC_DirTreeNameSort));
+  NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_MODIFY), getter_AddRefs(kNC_Modify));  
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_DELETE),
@@ -246,7 +253,8 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
             (kNC_IsMailList == property) ||
             (kNC_IsRemote == property) ||
             (kNC_IsSecure == property) ||
-            (kNC_IsWriteable == property)) 
+            (kNC_IsWriteable == property) ||
+            (kNC_DirTreeNameSort == property)) 
 	{ 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -318,7 +326,8 @@ nsAbDirectoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc
                aArc == kNC_IsMailList ||
                aArc == kNC_IsRemote ||
                aArc == kNC_IsSecure ||
-               aArc == kNC_IsWriteable);
+               aArc == kNC_IsWriteable ||
+               aArc == kNC_DirTreeNameSort);
   }
   else {
     *result = PR_FALSE;
@@ -369,6 +378,7 @@ nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
   (*arcs)->AppendElement(kNC_IsRemote);
   (*arcs)->AppendElement(kNC_IsSecure);
   (*arcs)->AppendElement(kNC_IsWriteable);
+  (*arcs)->AppendElement(kNC_DirTreeNameSort);
   return NS_OK;
 }
 
@@ -564,6 +574,8 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 	rv = createDirectoryIsSecureNode(directory, target);
   if ((kNC_IsWriteable == property))
 	rv = createDirectoryIsWriteableNode(directory, target);
+  if ((kNC_DirTreeNameSort == property))
+  rv = createDirectoryTreeNameSortNode(directory, target);
   return rv;
 }
 
@@ -681,6 +693,116 @@ nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory
   
   NS_IF_ADDREF(*target = (isMailList ? kTrueLiteral : kFalseLiteral));
   return NS_OK;
+}
+ 
+nsresult
+nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directory, nsIRDFNode **target)
+{
+  nsXPIDLString name;
+  nsresult rv = directory->GetDirName(getter_Copies(name));
+	NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(directory);
+  const char *uri = nsnull;
+  rv = resource->GetValueConst(&uri);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // Get directory type.
+  nsCOMPtr <nsIAbDirectoryProperties> properties;
+  rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+  NS_ENSURE_SUCCESS(rv,rv);
+  PRUint32 dirType;
+  rv = properties->GetDirType(&dirType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Get isMailList
+  PRBool isMailList = PR_FALSE;
+  directory->GetIsMailList(&isMailList);
+
+  /* sort addressbooks in this order - Personal Addressbook, Collected Addresses, MDB, LDAP -
+   * by prefixing address book names with numbers and using the xul sort service.
+   *
+   *  0Personal Address Book
+   *  1Collected Address Book
+   *  2MAB1
+   *    5MAB1LIST1
+   *    5MAB1LIST2
+   *  2MAB2
+   *    5MAB2LIST1
+   *    5MAB2LIST2
+   *  3LDAP1
+   *  3LDAP2
+   *  4MAPI1
+   *  4MAPI2
+   */
+
+  nsAutoString sortString;
+  if (isMailList)
+    sortString.AppendInt(5);    // mailing lists
+  else
+  if (dirType == PABDirectory)
+  {
+    if (strcmp(uri, kPersonalAddressbookUri) == 0)
+      sortString.AppendInt(0);  // Personal addrbook
+    else if (strcmp(uri, kCollectedAddressbookUri) == 0)
+      sortString.AppendInt(1);  // Collected addrbook
+    else
+      sortString.AppendInt(2);  // Normal addrbook 
+  }
+  else if (dirType == LDAPDirectory)
+    sortString.AppendInt(3);    // LDAP addrbook
+  else if (dirType == MAPIDirectory)
+    sortString.AppendInt(4);    // MAPI addrbook
+  else
+    sortString.AppendInt(6);    // everything else comes last
+
+  sortString += name;
+  PRUint8 *sortKey=nsnull;
+  PRUint32 sortKeyLength;
+  rv = CreateCollationKey(sortString, &sortKey, &sortKeyLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  createBlobNode(sortKey, sortKeyLength, target, rdfService);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PR_Free(sortKey);
+
+  return NS_OK;
+
+}
+
+nsresult nsAbDirectoryDataSource::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength)
+{
+  NS_ENSURE_ARG_POINTER(aKey);
+  NS_ENSURE_ARG_POINTER(aLength);
+
+  nsresult rv;
+  if (!mCollationKeyGenerator)
+  {
+    nsCOMPtr<nsILocaleService> localeSvc = do_GetService(NS_LOCALESERVICE_CONTRACTID,&rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILocale> locale; 
+    rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = factory->CreateCollation(locale, getter_AddRefs(mCollationKeyGenerator));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, aSource, aLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (*aLength == 0)
+    return NS_ERROR_FAILURE;
+
+  *aKey = (PRUint8 *) PR_Malloc(*aLength);
+  if (!aKey)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, aSource, *aKey, aLength);
 }
 
 nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parentDirs, nsISupportsArray *delDirs)

@@ -57,7 +57,7 @@ const kDisplayName = 0;
 const kLastNameFirst = 1;
 const kFirstNameFirst = 2;
 const kLDAPDirectory = 0; // defined in nsDirPrefs.h
-const kPABDirectory = 2; // defined in nsDirPrefs.h
+const kPABDirectory  = 2; // defined in nsDirPrefs.h
 
 var gAddressBookAbListener = {
   onItemAdded: function(parentDir, item) {

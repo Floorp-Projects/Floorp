@@ -60,6 +60,7 @@ public:
 protected:
 
 	nsresult createNode(const PRUnichar *str, nsIRDFNode **node);
+  nsresult createBlobNode(PRUint8 *value, PRUint32 &length, nsIRDFNode **node, nsIRDFService *rdfService);
 
 	nsresult NotifyPropertyChanged(
 		nsIRDFResource *resource,

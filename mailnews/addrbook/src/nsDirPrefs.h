@@ -185,6 +185,7 @@ typedef enum
 
 
 typedef struct _DIR_ReplicationInfo
+
 {
 	char *description;           /* Human readable description of replica                */
 	char *fileName;              /* File name of replication database                    */
@@ -309,7 +310,6 @@ nsresult DIR_DeleteServerList(nsVoidArray *wholeList);
 
 #define DIR_POS_APPEND                     0x80000000
 #define DIR_POS_DELETE                     0x80000001
-PRBool	DIR_SortServersByPosition(nsVoidArray *wholeList);
 PRBool	DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position);
 
 /* These two routines should be called to initialize and save 

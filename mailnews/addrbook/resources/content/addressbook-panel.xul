@@ -68,7 +68,10 @@
                 persist="selectedAB">
         <menupopup id="addressbookList-menupopup" 
           datasources="rdf:addressdirectory" 
-          ref="moz-abdirectory://">
+                   ref="moz-abdirectory://"
+                   sortActive="true"
+                   sortDirection="ascending"
+                   sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
           <template>
             <rule nc:IsMailList="false">
               <menuitem uri="..."

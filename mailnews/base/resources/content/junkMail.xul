@@ -97,8 +97,11 @@
     <hbox>
       <spacer width="20px"/>
       <menulist id="whiteListAbURI">
-       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
-          datasources="rdf:addressdirectory">
+       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
+                 datasources="rdf:addressdirectory"
+                 sortActive="true"
+                 sortDirection="ascending"
+                 sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
           <template>
           <rule nc:IsWriteable="false"/>
             <rule nc:IsMailList="false">

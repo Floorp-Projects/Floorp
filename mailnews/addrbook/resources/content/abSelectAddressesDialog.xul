@@ -65,6 +65,9 @@ Contributor(s):
 	            ref="moz-abdirectory://" 
                 datasources="rdf:addressdirectory"
                 containment="http://home.netscape.com/NC-rdf#child"
+                sortActive="true"
+                sortDirection="ascending"
+                sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort"
 				oncommand="DirPaneSelectionChangeMenulist(); document.commandDispatcher.updateCommands('addrbook-select');">
         <template>
           <rule nc:IsMailList="false">
