@@ -680,7 +680,7 @@ const char gPrintfFmtAttr[] = "id0x%08p-%010i";
 #define kFmtSize 21
 #define kFmtSizeAttr 32
 const char gPrintfFmt[] = "id0x%016p";
-const char grintfFmtAttr[] = "id0x%016p-%010i";
+const char gPrintfFmtAttr[] = "id0x%016p-%010i";
 #endif
 
 /* static */
