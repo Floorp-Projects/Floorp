@@ -380,10 +380,30 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             }
             
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
-            if (!mCurrentFocus && gLastFocusedContent)// must send it to the element that is loosing focus. since SendFocusBlur wont be called
+            if (!mCurrentFocus && gLastFocusedContent) {// must send it to the element that is loosing focus. since SendFocusBlur wont be called
               gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
-              
 
+              nsCOMPtr<nsIDocument> doc;
+              gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+              if (doc) {
+                nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+                if (shell) {
+                  nsCOMPtr<nsIPresContext> oldPresContext;
+                  shell->GetPresContext(getter_AddRefs(oldPresContext));
+
+                  nsEventStatus status = nsEventStatus_eIgnore;
+                  nsEvent event;
+                  event.eventStructType = NS_EVENT;
+                  event.message = NS_BLUR_CONTENT;
+                  nsCOMPtr<nsIEventStateManager> esm;
+                  oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+                  esm->SetFocusedContent(gLastFocusedContent);
+                  gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+                  esm->SetFocusedContent(nsnull);
+                  NS_IF_RELEASE(gLastFocusedContent);
+                }
+              }
+            }
             if (focusController) {
               focusController->SetSuppressFocus(PR_FALSE, "NS_GOTFOCUS ESM Suppression");
             }
