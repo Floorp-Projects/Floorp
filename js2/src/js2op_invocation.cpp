@@ -39,12 +39,12 @@
             pc += sizeof(uint16);
             PrototypeInstance *pInst = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
             for (uint16 i = 0; i < argCount; i++) {
-                js2val nameVal = pop();
-                ASSERT(JS2VAL_IS_STRING(nameVal));
-                String *name = JS2VAL_TO_STRING(nameVal);
+                a = pop();
+                ASSERT(JS2VAL_IS_STRING(a));
+                String *name = JS2VAL_TO_STRING(a);
                 const StringAtom &nameAtom = meta->world.identifiers[*name];
-                js2val fieldVal = pop();
-                const DynamicPropertyMap::value_type e(nameAtom, fieldVal);
+                b = pop();
+                const DynamicPropertyMap::value_type e(nameAtom, b);
                 pInst->dynamicProperties.insert(e);
             }
             push(OBJECT_TO_JS2VAL(pInst));
@@ -55,9 +55,9 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            js2val v = top();
-            ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
-            JS2Object *obj = JS2VAL_TO_OBJECT(v);
+            a = top();
+            ASSERT(JS2VAL_IS_OBJECT(a) && !JS2VAL_IS_NULL(a));
+            JS2Object *obj = JS2VAL_TO_OBJECT(a);
             ASSERT(obj->kind == ClassKind);
             JS2Class *c = checked_cast<JS2Class *>(obj);
             push(c->construct(meta, JS2VAL_NULL, NULL, argCount));
@@ -68,35 +68,33 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            js2val thisVal = top(argCount + 1);
-            js2val fVal = top(argCount);
-            if (JS2VAL_IS_PRIMITIVE(fVal))
+            a = top(argCount + 1);                  // 'this'
+            b = top(argCount);                      // target function
+            if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
-            JS2Object *fObj = JS2VAL_TO_OBJECT(fVal);
+            JS2Object *fObj = JS2VAL_TO_OBJECT(b);
             if (fObj->kind == FixedInstanceKind) {
                 FixedInstance *fInst = checked_cast<FixedInstance *>(fObj);
                 FunctionWrapper *fWrap = fInst->fWrap;
                 js2val compileThis = fWrap->compileFrame->thisObject;
-                js2val runtimeThis;
                 if (JS2VAL_IS_VOID(compileThis))
-                    runtimeThis = JS2VAL_VOID;
+                    a = JS2VAL_VOID;
                 else {
                     if (JS2VAL_IS_INACCESSIBLE(compileThis)) {
-                        runtimeThis = thisVal;
                         Frame *g = meta->env.getPackageOrGlobalFrame();
-                        if (fWrap->compileFrame->prototype && (JS2VAL_IS_NULL(runtimeThis) || JS2VAL_IS_VOID(runtimeThis)) && (g->kind == GlobalObjectKind))
-                            runtimeThis = OBJECT_TO_JS2VAL(g);
+                        if (fWrap->compileFrame->prototype && (JS2VAL_IS_NULL(a) || JS2VAL_IS_VOID(a)) && (g->kind == GlobalObjectKind))
+                            a = OBJECT_TO_JS2VAL(g);
                     }
                 }
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(&meta->env);
-                runtimeFrame->thisObject = runtimeThis;
+                runtimeFrame->thisObject = a;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                 if (!fWrap->code)
                     jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
-                    push(fWrap->code(meta, runtimeThis, base(argCount - 1), argCount));
+                    push(fWrap->code(meta, a, base(argCount - 1), argCount));
                     meta->env.removeTopFrame();
                 }
             }
@@ -119,6 +117,7 @@
                     meta->env.removeTopFrame();
                 }
             }
+            // XXX Remove the arguments from the stack (important that they're tracked for gc in any mechanism)
         }
         break;
 
@@ -162,48 +161,47 @@
 
     case eTypeof:
         {
-            js2val a = pop();
-            js2val rval;
+            a = pop();
             if (JS2VAL_IS_UNDEFINED(a))
-                rval = STRING_TO_JS2VAL(&undefined_StringAtom);
+                a = STRING_TO_JS2VAL(&undefined_StringAtom);
             else
             if (JS2VAL_IS_BOOLEAN(a))
-                rval = STRING_TO_JS2VAL(&meta->world.identifiers["boolean"]);
+                a = STRING_TO_JS2VAL(&meta->world.identifiers["boolean"]);
             else
             if (JS2VAL_IS_NUMBER(a))
-                rval = STRING_TO_JS2VAL(&meta->world.identifiers["number"]);
+                a = STRING_TO_JS2VAL(&meta->world.identifiers["number"]);
             else
             if (JS2VAL_IS_STRING(a))
-                rval = STRING_TO_JS2VAL(&meta->world.identifiers["string"]);
+                a = STRING_TO_JS2VAL(&meta->world.identifiers["string"]);
             else {
                 ASSERT(JS2VAL_IS_OBJECT(a));
                 if (JS2VAL_IS_NULL(a))
-                    rval = STRING_TO_JS2VAL(&object_StringAtom);
+                    a = STRING_TO_JS2VAL(&object_StringAtom);
                 JS2Object *obj = JS2VAL_TO_OBJECT(a);
                 switch (obj->kind) {
                 case MultinameKind:
-                    rval = STRING_TO_JS2VAL(&meta->world.identifiers["namespace"]); 
+                    a = STRING_TO_JS2VAL(&meta->world.identifiers["namespace"]); 
                     break;
                 case AttributeObjectKind:
-                    rval = STRING_TO_JS2VAL(&meta->world.identifiers["attribute"]); 
+                    a = STRING_TO_JS2VAL(&meta->world.identifiers["attribute"]); 
                     break;
                 case ClassKind:
                 case MethodClosureKind:
-                    rval = STRING_TO_JS2VAL(&function_StringAtom); 
+                    a = STRING_TO_JS2VAL(&function_StringAtom); 
                     break;
                 case PrototypeInstanceKind:
                 case PackageKind:
                 case GlobalObjectKind:
-                    rval = STRING_TO_JS2VAL(&object_StringAtom);
+                    a = STRING_TO_JS2VAL(&object_StringAtom);
                     break;
                 case FixedInstanceKind:
-                    rval = STRING_TO_JS2VAL(&checked_cast<FixedInstance *>(obj)->typeofString);
+                    a = STRING_TO_JS2VAL(&checked_cast<FixedInstance *>(obj)->typeofString);
                     break;
                 case DynamicInstanceKind:
-                    rval = STRING_TO_JS2VAL(&checked_cast<DynamicInstance *>(obj)->typeofString);
+                    a = STRING_TO_JS2VAL(&checked_cast<DynamicInstance *>(obj)->typeofString);
                     break;
                 }
             }
-            push(rval);
+            push(a);
         }
         break;

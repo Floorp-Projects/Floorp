@@ -34,74 +34,74 @@
 
     case eMinus:
         {
-	    js2val a = pop();
+	    a = pop();
             pushNumber(-toNumber(a));
         }
         break;
 
     case ePlus:
         {
-	    js2val a = pop();
+	    a = pop();
             pushNumber(toNumber(a));
         }
         break;
 
     case eComplement:
         {
-	    js2val a = pop();
+	    a = pop();
             pushNumber(~toInteger(a));
         }
         break;    
     case eLeftShift:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             int32 count = toInteger(b) & 0x1F;
             pushNumber(toInteger(a) << count);
         }
         break;
     case eRightShift:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             int32 count = toInteger(b) & 0x1F;
             pushNumber(toInteger(a) >> count);
         }
         break;
     case eLogicalRightShift:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             int32 count = toInteger(b) & 0x1F;
             pushNumber(toUInt32(toInteger(a)) >> count);
         }
         break;
     case eBitwiseAnd:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             pushNumber(toInteger(a) & toInteger(b));
         }
         break;
     case eBitwiseXor:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             pushNumber(toInteger(a) ^ toInteger(b));
         }
         break;
     case eBitwiseOr:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             pushNumber(toInteger(a) | toInteger(b));
         }
         break;
 
     case eAdd: 
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
 	    a = toPrimitive(a);
 	    b = toPrimitive(b);
 	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
@@ -121,8 +121,8 @@
 
     case eSubtract: 
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
             pushNumber(anum - bnum);
@@ -131,8 +131,8 @@
 
     case eMultiply:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
             pushNumber(anum * bnum);
@@ -141,8 +141,8 @@
 
     case eDivide:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
             pushNumber(anum / bnum);
@@ -151,8 +151,8 @@
 
     case eModulo:
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
 #ifdef XP_PC
@@ -167,68 +167,68 @@
 
     case eLogicalXor: 
         {
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             push(BOOLEAN_TO_JS2VAL(toBoolean(a) ^ toBoolean(b)));
         }
         break;
 
     case eLess:
         {
-	    js2val b = pop();
-	    js2val a = pop();
-            js2val ap = toPrimitive(a);
-            js2val bp = toPrimitive(b);
+	    b = pop();
+	    a = pop();
+            a = toPrimitive(a);
+            b = toPrimitive(b);
             bool rval;
-            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
-                rval = (*JS2VAL_TO_STRING(ap) < *JS2VAL_TO_STRING(bp));
+            if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
+                rval = (*JS2VAL_TO_STRING(a) < *JS2VAL_TO_STRING(b));
             else
-                rval = toNumber(ap) < toNumber(bp);
+                rval = toNumber(a) < toNumber(b);
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
 
     case eLessEqual:
         {
-	    js2val b = pop();
-	    js2val a = pop();
-            js2val ap = toPrimitive(a);
-            js2val bp = toPrimitive(b);
+	    b = pop();
+	    a = pop();
+            a = toPrimitive(a);
+            b = toPrimitive(b);
             bool rval;
-            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
-                rval = (*JS2VAL_TO_STRING(ap) <= *JS2VAL_TO_STRING(bp));
+            if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
+                rval = (*JS2VAL_TO_STRING(a) <= *JS2VAL_TO_STRING(b));
             else
-                rval = toNumber(ap) <= toNumber(bp);
+                rval = toNumber(a) <= toNumber(b);
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
 
     case eGreater:
         {
-	    js2val b = pop();
-	    js2val a = pop();
-            js2val ap = toPrimitive(a);
-            js2val bp = toPrimitive(b);
+	    b = pop();
+	    a = pop();
+            a = toPrimitive(a);
+            b = toPrimitive(b);
             bool rval;
-            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
-                rval = (*JS2VAL_TO_STRING(ap) > *JS2VAL_TO_STRING(bp));
+            if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
+                rval = (*JS2VAL_TO_STRING(a) > *JS2VAL_TO_STRING(b));
             else
-                rval = toNumber(ap) > toNumber(bp);
+                rval = toNumber(a) > toNumber(b);
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
     
     case eGreaterEqual:
         {
-	    js2val b = pop();
-	    js2val a = pop();
-            js2val ap = toPrimitive(a);
-            js2val bp = toPrimitive(b);
+	    b = pop();
+	    a = pop();
+            a = toPrimitive(a);
+            b = toPrimitive(b);
             bool rval;
-            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
-                rval = (*JS2VAL_TO_STRING(ap) >= *JS2VAL_TO_STRING(bp));
+            if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
+                rval = (*JS2VAL_TO_STRING(a) >= *JS2VAL_TO_STRING(b));
             else
-                rval = toNumber(ap) >= toNumber(bp);
+                rval = toNumber(a) >= toNumber(b);
             push(BOOLEAN_TO_JS2VAL(rval));
         }
         break;
@@ -237,8 +237,8 @@
     case eEqual:
         {
             bool rval;
-	    js2val b = pop();
-	    js2val a = pop();
+	    b = pop();
+	    a = pop();
             if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                 rval = (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b));
             else
@@ -246,64 +246,64 @@
                 if (JS2VAL_IS_BOOLEAN(b))
                     rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
                 else {
-                    js2val bp = toPrimitive(b);
-                    if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
+                    b = toPrimitive(b);
+                    if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                         rval = false;
                     else
-                        rval = (toNumber(a) == toNumber(bp));
+                        rval = (toNumber(a) == toNumber(b));
                 }
             }
             else
             if (JS2VAL_IS_NUMBER(a)) {
-                js2val bp = toPrimitive(b);
-                if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
+                b = toPrimitive(b);
+                if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                     rval = false;
                 else
-                    rval = (toNumber(a) == toNumber(bp));
+                    rval = (toNumber(a) == toNumber(b));
             }
             else 
             if (JS2VAL_IS_STRING(a)) {
-                js2val bp = toPrimitive(b);
-                if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
+                b = toPrimitive(b);
+                if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                     rval = false;
                 else
-                if (JS2VAL_IS_BOOLEAN(bp) || JS2VAL_IS_NUMBER(bp))
-                    rval = (toNumber(a) == toNumber(bp));
+                if (JS2VAL_IS_BOOLEAN(b) || JS2VAL_IS_NUMBER(b))
+                    rval = (toNumber(a) == toNumber(b));
                 else
-                    rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(bp));
+                    rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(b));
             }
             else     // a is not a primitive at this point, see if b is...
             if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
                 rval = false;
             else
             if (JS2VAL_IS_BOOLEAN(b)) {
-                js2val ap = toPrimitive(a);
-                if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
+                a = toPrimitive(a);
+                if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
-                if (JS2VAL_IS_BOOLEAN(ap))
-                    rval = (JS2VAL_TO_BOOLEAN(ap) == JS2VAL_TO_BOOLEAN(b));
+                if (JS2VAL_IS_BOOLEAN(a))
+                    rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
                 else
-                    rval = (toNumber(ap) == toNumber(b));
+                    rval = (toNumber(a) == toNumber(b));
             }
             else
             if (JS2VAL_IS_NUMBER(b)) {
-                js2val ap = toPrimitive(a);
-                if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
+                a = toPrimitive(a);
+                if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
-                    rval = (toNumber(ap) == toNumber(b));
+                    rval = (toNumber(a) == toNumber(b));
             }
             else
             if (JS2VAL_IS_STRING(b)) {
-                js2val ap = toPrimitive(a);
-                if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
+                a = toPrimitive(a);
+                if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                     rval = false;
                 else
-                if (JS2VAL_IS_BOOLEAN(ap) || JS2VAL_IS_NUMBER(ap))
-                    rval = (toNumber(ap) == toNumber(b));
+                if (JS2VAL_IS_BOOLEAN(a) || JS2VAL_IS_NUMBER(a))
+                    rval = (toNumber(a) == toNumber(b));
                 else
-                    rval = (*JS2VAL_TO_STRING(ap) == *JS2VAL_TO_STRING(b));
+                    rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(b));
             }
             else
                 rval = (JS2VAL_TO_OBJECT(a) == JS2VAL_TO_OBJECT(b));
@@ -320,9 +320,8 @@
             op = (JS2Op)*pc++;
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val a = meta->env.lexicalRead(meta, mn, phase);
-	    js2val b = pop();
-            js2val rval;
+            a = meta->env.lexicalRead(meta, mn, phase);
+	    b = pop();
             switch (op) {
             case eAdd:
                 {
@@ -333,12 +332,12 @@
 	                String *bstr = toString(b);
                         String *c = new String(*astr);
                         *c += *bstr;
-	                rval = STRING_TO_JS2VAL(c);
+	                a = STRING_TO_JS2VAL(c);
 	            }
 	            else {
                         float64 anum = toNumber(a);
                         float64 bnum = toNumber(b);
-                        rval = allocNumber(anum + bnum);
+                        a = allocNumber(anum + bnum);
 	            }
                 }
                 break;
@@ -346,14 +345,14 @@
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum - bnum);
+                    a = allocNumber(anum - bnum);
                 }
                 break;
             case eMultiply:
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum * bnum);
+                    a = allocNumber(anum * bnum);
                 }
                 break;
 
@@ -361,7 +360,7 @@
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum / bnum);
+                    a = allocNumber(anum / bnum);
                 }
                 break;
 
@@ -372,54 +371,54 @@
 #ifdef XP_PC
             /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
                     if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                        rval = anum;
+                        a = allocNumber(anum);
                     else
 #endif
-                    rval = allocNumber(fd::fmod(anum, bnum));
+                    a = allocNumber(fd::fmod(anum, bnum));
                 }
                 break;
 
             case eLeftShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toInteger(a) << count);
+                    a = allocNumber(toInteger(a) << count);
                 }
                 break;
             case eRightShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toInteger(a) >> count);
+                    a = allocNumber(toInteger(a) >> count);
                 }
                 break;
             case eLogicalRightShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toUInt32(toInteger(a)) >> count);
+                    a = allocNumber(toUInt32(toInteger(a)) >> count);
                 }
                 break;
             case eBitwiseAnd:
                 {
-                    rval = allocNumber(toInteger(a) & toInteger(b));
+                    a = allocNumber(toInteger(a) & toInteger(b));
                 }
                 break;
             case eBitwiseXor:
                 {
-                    rval = allocNumber(toInteger(a) ^ toInteger(b));
+                    a = allocNumber(toInteger(a) ^ toInteger(b));
                 }
                 break;
             case eBitwiseOr:
                 {
-                    rval = allocNumber(toInteger(a) | toInteger(b));
+                    a = allocNumber(toInteger(a) | toInteger(b));
                 }
                 break;
             case eLogicalXor:
                 {
-                    rval = allocNumber(toBoolean(a) ^ toBoolean(b));
+                    a = allocNumber(toBoolean(a) ^ toBoolean(b));
                 }
                 break;
             }
-            meta->env.lexicalWrite(meta, mn, rval, true, phase);
-            push(rval);
+            meta->env.lexicalWrite(meta, mn, a, true, phase);
+            push(a);
         }
         break;
 
@@ -427,8 +426,8 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val rval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(rval);
+            a = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(a);
             meta->env.lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
             pushNumber(num);
         }
@@ -437,8 +436,8 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val rval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(rval);
+            a = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(a);
             meta->env.lexicalWrite(meta, mn, allocNumber(num - 1.0), true, phase);
             pushNumber(num);
         }
@@ -447,20 +446,20 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val rval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(rval);
-            rval = pushNumber(num + 1.0);
-            meta->env.lexicalWrite(meta, mn, rval, true, phase);
+            a = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(a);
+            a = pushNumber(num + 1.0);
+            meta->env.lexicalWrite(meta, mn, a, true, phase);
         }
         break;
     case eLexicalPreDec:
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val rval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(rval);
-            rval = pushNumber(num - 1.0);
-            meta->env.lexicalWrite(meta, mn, rval, true, phase);
+            a = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(a);
+            a = pushNumber(num - 1.0);
+            meta->env.lexicalWrite(meta, mn, a, true, phase);
         }
         break;
 
@@ -470,12 +469,10 @@
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-	    js2val b = pop();
-            js2val baseVal = pop();
-            js2val a;
+	    b = pop();
+            baseVal = pop();
             if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            js2val rval;
             switch (op) {
             case eAdd:
                 {
@@ -486,12 +483,12 @@
 	                String *bstr = toString(b);
                         String *c = new String(*astr);
                         *c += *bstr;
-	                rval = STRING_TO_JS2VAL(c);
+	                a = STRING_TO_JS2VAL(c);
 	            }
 	            else {
                         float64 anum = toNumber(a);
                         float64 bnum = toNumber(b);
-                        rval = allocNumber(anum + bnum);
+                        a = allocNumber(anum + bnum);
 	            }
                 }
                 break;
@@ -499,14 +496,14 @@
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum - bnum);
+                    a = allocNumber(anum - bnum);
                 }
                 break;
             case eMultiply:
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum * bnum);
+                    a = allocNumber(anum * bnum);
                 }
                 break;
 
@@ -514,7 +511,7 @@
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum / bnum);
+                    a = allocNumber(anum / bnum);
                 }
                 break;
 
@@ -525,54 +522,55 @@
 #ifdef XP_PC
             /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
                     if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                        rval = anum;
+                        a = allocNumber(anum);
                     else
 #endif
-                    rval = allocNumber(fd::fmod(anum, bnum));
+                    a = allocNumber(fd::fmod(anum, bnum));
                 }
                 break;
 
             case eLeftShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toInteger(a) << count);
+                    a = allocNumber(toInteger(a) << count);
                 }
                 break;
             case eRightShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toInteger(a) >> count);
+                    a = allocNumber(toInteger(a) >> count);
                 }
                 break;
             case eLogicalRightShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toUInt32(toInteger(a)) >> count);
+                    a = allocNumber(toUInt32(toInteger(a)) >> count);
                 }
                 break;
             case eBitwiseAnd:
                 {
-                    rval = allocNumber(toInteger(a) & toInteger(b));
+                    a = allocNumber(toInteger(a) & toInteger(b));
                 }
                 break;
             case eBitwiseXor:
                 {
-                    rval = allocNumber(toInteger(a) ^ toInteger(b));
+                    a = allocNumber(toInteger(a) ^ toInteger(b));
                 }
                 break;
             case eBitwiseOr:
                 {
-                    rval = allocNumber(toInteger(a) | toInteger(b));
+                    a = allocNumber(toInteger(a) | toInteger(b));
                 }
                 break;
             case eLogicalXor:
                 {
-                    rval = allocNumber(toBoolean(a) ^ toBoolean(b));
+                    a = allocNumber(toBoolean(a) ^ toBoolean(b));
                 }
                 break;
             }
-            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
-            push(rval);
+            meta->writeProperty(baseVal, mn, &lookup, true, a, RunPhase);
+            push(a);
+            baseVal = JS2VAL_VOID;
         }
         break;
 
@@ -581,13 +579,13 @@
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val baseVal = pop();
-            js2val rval;
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
+            baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(rval);
+            float64 num = toNumber(a);
             meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
             pushNumber(num);
+            baseVal = JS2VAL_VOID;
         }
         break;
     case eDotPostDec:
@@ -595,13 +593,13 @@
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val baseVal = pop();
-            js2val rval;
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
+            baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(rval);
+            float64 num = toNumber(a);
             meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
             pushNumber(num);
+            baseVal = JS2VAL_VOID;
         }
         break;
     case eDotPreInc:
@@ -609,13 +607,13 @@
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val baseVal = pop();
-            js2val rval;
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
+            baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(rval);
-            rval = pushNumber(num + 1.0);
-            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
+            float64 num = toNumber(a);
+            a = pushNumber(num + 1.0);
+            meta->writeProperty(baseVal, mn, &lookup, true, a, RunPhase);
+            baseVal = JS2VAL_VOID;
         }
         break;
     case eDotPreDec:
@@ -623,13 +621,13 @@
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            js2val baseVal = pop();
-            js2val rval;
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
+            baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(rval);
-            rval = pushNumber(num - 1.0);
-            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
+            float64 num = toNumber(a);
+            a = pushNumber(num - 1.0);
+            meta->writeProperty(baseVal, mn, &lookup, true, a, RunPhase);
+            baseVal = JS2VAL_VOID;
         }
         break;
 
@@ -637,15 +635,13 @@
         {
             op = (JS2Op)*pc++;
             LookupKind lookup(false, NULL);
-	    js2val b = pop();
-            js2val indexVal = pop();
-            js2val baseVal = pop();
-            js2val a;
+	    b = pop();
+            indexVal = pop();
+            baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            js2val rval;
             switch (op) {
             case eAdd:
                 {
@@ -656,12 +652,12 @@
 	                String *bstr = toString(b);
                         String *c = new String(*astr);
                         *c += *bstr;
-	                rval = STRING_TO_JS2VAL(c);
+	                a = STRING_TO_JS2VAL(c);
 	            }
 	            else {
                         float64 anum = toNumber(a);
                         float64 bnum = toNumber(b);
-                        rval = allocNumber(anum + bnum);
+                        a = allocNumber(anum + bnum);
 	            }
                 }
                 break;
@@ -669,14 +665,14 @@
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum - bnum);
+                    a = allocNumber(anum - bnum);
                 }
                 break;
             case eMultiply:
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum * bnum);
+                    a = allocNumber(anum * bnum);
                 }
                 break;
 
@@ -684,7 +680,7 @@
                 {
                     float64 anum = toNumber(a);
                     float64 bnum = toNumber(b);
-                    rval = allocNumber(anum / bnum);
+                    a = allocNumber(anum / bnum);
                 }
                 break;
 
@@ -695,114 +691,120 @@
 #ifdef XP_PC
             /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
                     if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                        rval = anum;
+                        a = allocNumber(anum);
                     else
 #endif
-                    rval = allocNumber(fd::fmod(anum, bnum));
+                    a = allocNumber(fd::fmod(anum, bnum));
                 }
                 break;
 
             case eLeftShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toInteger(a) << count);
+                    a = allocNumber(toInteger(a) << count);
                 }
                 break;
             case eRightShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toInteger(a) >> count);
+                    a = allocNumber(toInteger(a) >> count);
                 }
                 break;
             case eLogicalRightShift:
                 {
                     int32 count = toInteger(b) & 0x1F;
-                    rval = allocNumber(toUInt32(toInteger(a)) >> count);
+                    a = allocNumber(toUInt32(toInteger(a)) >> count);
                 }
                 break;
             case eBitwiseAnd:
                 {
-                    rval = allocNumber(toInteger(a) & toInteger(b));
+                    a = allocNumber(toInteger(a) & toInteger(b));
                 }
                 break;
             case eBitwiseXor:
                 {
-                    rval = allocNumber(toInteger(a) ^ toInteger(b));
+                    a = allocNumber(toInteger(a) ^ toInteger(b));
                 }
                 break;
             case eBitwiseOr:
                 {
-                    rval = allocNumber(toInteger(a) | toInteger(b));
+                    a = allocNumber(toInteger(a) | toInteger(b));
                 }
                 break;
             case eLogicalXor:
                 {
-                    rval = allocNumber(toBoolean(a) ^ toBoolean(b));
+                    a = allocNumber(toBoolean(a) ^ toBoolean(b));
                 }
                 break;
             }
-            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
-            push(rval);
+            meta->writeProperty(baseVal, &mn, &lookup, true, a, RunPhase);
+            push(a);
+            baseVal = JS2VAL_VOID;
+            indexVal = JS2VAL_VOID;
         }
         break;
 
 case eBracketPostInc:
         {
             LookupKind lookup(false, NULL);
-            js2val indexVal = pop();
-            js2val baseVal = pop();
+            indexVal = pop();
+            baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
-            js2val rval;
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(rval);
+            float64 num = toNumber(a);
             meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
             pushNumber(num);
+            baseVal = JS2VAL_VOID;
+            indexVal = JS2VAL_VOID;
         }
         break;
     case eBracketPostDec:
         {
             LookupKind lookup(false, NULL);
-            js2val indexVal = pop();
-            js2val baseVal = pop();
+            indexVal = pop();
+            baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
-            js2val rval;
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(rval);
+            float64 num = toNumber(a);
             meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
             pushNumber(num);
+            baseVal = JS2VAL_VOID;
+            indexVal = JS2VAL_VOID;
         }
         break;
     case eBracketPreInc:
         {
             LookupKind lookup(false, NULL);
-            js2val indexVal = pop();
-            js2val baseVal = pop();
+            indexVal = pop();
+            baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
-            js2val rval;
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(rval);
-            rval = pushNumber(num + 1.0);
-            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
+            float64 num = toNumber(a);
+            a = pushNumber(num + 1.0);
+            meta->writeProperty(baseVal, &mn, &lookup, true, a, RunPhase);
+            baseVal = JS2VAL_VOID;
+            indexVal = JS2VAL_VOID;
         }
         break;
     case eBracketPreDec:
         {
             LookupKind lookup(false, NULL);
-            js2val indexVal = pop();
-            js2val baseVal = pop();
+            indexVal = pop();
+            baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
-            js2val rval;
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(rval);
-            rval = pushNumber(num - 1.0);
-            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
+            float64 num = toNumber(a);
+            a = pushNumber(num - 1.0);
+            meta->writeProperty(baseVal, &mn, &lookup, true, a, RunPhase);
+            baseVal = JS2VAL_VOID;
+            indexVal = JS2VAL_VOID;
         }
         break;

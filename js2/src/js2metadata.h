@@ -583,7 +583,6 @@ class Reference {
 public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)              { ASSERT(false); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)             { ASSERT(false); }
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); };
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { ASSERT(false); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { ASSERT(false); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { ASSERT(false); }
@@ -592,6 +591,8 @@ public:
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
 
     virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ ASSERT(false); }
     
@@ -621,6 +622,8 @@ public:
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
+    
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(variableMultiname); }
 
     virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eLexicalAssignOp, pos); bCon->addByte((uint8)op); bCon->addMultiname(variableMultiname); }
 };
@@ -652,6 +655,8 @@ public:
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(propertyMultiname); }
 
     virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eDotAssignOp, pos); bCon->addByte((uint8)op); bCon->addMultiname(propertyMultiname); }
 };
@@ -692,6 +697,8 @@ public:
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eBracketPostDec, pos); }
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreInc, pos); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreDec, pos); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketDelete, pos); }
 
     virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eBracketAssignOp, pos); bCon->addByte((uint8)op); }
 };
@@ -760,6 +767,7 @@ public:
     js2val findThis(bool allowPrototypeThis);
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
+    bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
     void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
 
@@ -891,13 +899,17 @@ public:
     bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
 
-
     bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
     bool writeStaticMember(StaticMember *m, js2val newValue, Phase phase);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
 
+    bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
+    bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
+    bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
+    bool deleteStaticMember(StaticMember *m, bool *result);
+    bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String& name);

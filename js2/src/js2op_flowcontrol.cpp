@@ -33,9 +33,9 @@
 
     case eBranchTrue:
         {
-            js2val cond = pop();
-            bool b = toBoolean(cond);
-            if (b) {
+            a = pop();
+            bool c = toBoolean(a);
+            if (c) {
                 int32 offset = BytecodeContainer::getOffset(pc);
                 pc += offset;
             }
@@ -46,9 +46,9 @@
 
     case eBranchFalse:
         {
-            js2val cond = pop();
-            bool b = toBoolean(cond);
-            if (!b) {
+            a = pop();
+            bool c = toBoolean(a);
+            if (!c) {
                 int32 offset = BytecodeContainer::getOffset(pc);
                 pc += offset;
             }

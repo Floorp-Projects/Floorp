@@ -76,7 +76,11 @@ namespace MetaData {
     js2val JS2Engine::interpreterLoop()
     {
         retval = JS2VAL_VOID;
+        baseVal = JS2VAL_VOID;
+        indexVal = JS2VAL_VOID;
         while (true) {
+            a = JS2VAL_VOID;
+            b = JS2VAL_VOID;
             JS2Op op = (JS2Op)*pc++;
             switch (op) {
     #include "js2op_arithmetic.cpp"
@@ -342,6 +346,8 @@ namespace MetaData {
             return 0;       // leave the value
         case eLexicalRef:
             return 2;       // push base & value
+        case eLexicalDelete:
+            return 1;       // push boolean result
 
         case eDotRead:
             return 0;       // pop a base, push the value
@@ -349,6 +355,8 @@ namespace MetaData {
             return -1;      // pop a base, leave the value
         case eDotRef:
             return 1;       // leave the base, push the value
+        case eDotDelete:    // pop base, push boolean result
+            return 0;
 
         case eBracketRead:
             return -1;      // pop a base and an index, push the value
@@ -356,6 +364,8 @@ namespace MetaData {
             return -2;      // pop a base and an index, leave the value
         case eBracketRef:
             return 1;       // leave the base, pop the index, push the value
+        case eBracketDelete:
+            return -1;      // pop base and index, push boolean result
 
         case eReturnVoid:
         case eBranch:
@@ -480,9 +490,9 @@ namespace MetaData {
     {
         if (bCon)
             bCon->mark();
-        for (ActivationFrame *a = activationStack; (a < activationStackTop); a++) {
-            if (a->bCon)
-                a->bCon->mark();
+        for (ActivationFrame *f = activationStack; (f < activationStackTop); f++) {
+            if (f->bCon)
+                f->bCon->mark();
         }
         for (js2val *e = execStack; (e < sp); e++) {
             if (JS2VAL_IS_OBJECT(*e)) {
@@ -497,15 +507,11 @@ namespace MetaData {
             if (float64Table[i])
                 JS2Object::mark(float64Table[i]);
         }
-        if (JS2VAL_IS_OBJECT(retval)) {
-            JS2Object *obj = JS2VAL_TO_OBJECT(retval);
-            GCMARKOBJECT(obj)
-        }
-        else {
-            if (JS2VAL_IS_DOUBLE(retval)) {
-                JS2Object::mark(JS2VAL_TO_DOUBLE(retval));
-            }
-        }
+        GCMARKVALUE(retval);
+        GCMARKVALUE(a);
+        GCMARKVALUE(b);
+        GCMARKVALUE(baseVal);
+        GCMARKVALUE(indexVal);
     }
 
 

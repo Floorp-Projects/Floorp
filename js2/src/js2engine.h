@@ -81,14 +81,17 @@ enum JS2Op {
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
     eLexicalRef,        // <multiname index:u16>
+    eLexicalDelete,     // <multiname index:u16>
     eDotRead,           // <multiname index:u16>
     eDotWrite,          // <multiname index:u16>
     eDotRef,            // <multiname index:u16>
+    eDotDelete,         // <multiname index:u16>
     eBracketRead,
     eBracketWrite,
     eBracketRef,
     eBracketReadForRef,
     eBracketWriteRef,
+    eBracketDelete,
 
     eReturn,
     eReturnVoid,
@@ -180,6 +183,10 @@ public:
 private:
     float64 *newDoubleValue(float64 x);
     js2val retval;
+
+    js2val a,b;
+    js2val baseVal,indexVal;
+
 
 public:
 

@@ -1168,6 +1168,7 @@ namespace MetaData {
             }
             break;
 
+        case ExprNode::Delete:
         case ExprNode::minus:
         case ExprNode::plus:
         case ExprNode::complement:
@@ -1519,6 +1520,16 @@ doUnary:
                 ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
             }
             break;
+        case ExprNode::Delete:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, u->op);
+                if (lVal)
+                    lVal->emitDeleteBytecode(bCon, p->pos);
+                else
+                    reportError(Exception::semanticError, "Delete needs an lValue", p->pos);
+            }
+            break;
         case ExprNode::postIncrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
@@ -1565,7 +1576,7 @@ doUnary:
                 Reference *baseVal = EvalExprNode(env, phase, i->op);
                 if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
                 ExprPairList *ep = i->pairs;
-                while (ep) {
+                while (ep) {    // Validate has made sure there is only one, unnamed argument
                     Reference *argVal = EvalExprNode(env, phase, ep->value);
                     if (argVal) argVal->emitReadBytecode(bCon, p->pos);
                     ep = ep->next;
@@ -1743,22 +1754,26 @@ doUnary:
     }
 
     // Read the value of a lexical reference - it's an error if that reference
-    // doesn't have a binding somewhere
+    // doesn't have a binding somewhere.
+    // Attempt the read in each frame in the current environment, stopping at the
+    // first succesful effort. If the property can't be found in any frame, it's 
+    // an error.
     js2val Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
         Frame *pf = firstFrame;
         while (pf) {
-            js2val rval;
+            js2val rval;    // XXX gc?
             if (meta->readProperty(pf, multiname, &lookup, phase, &rval))
                 return rval;
-
             pf = pf->nextFrame;
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
         return JS2VAL_VOID;
     }
 
+    // Attempt the write in the top frame in the current environment - if the property
+    // exists, then fine. Otherwise create the property there.
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
@@ -1776,6 +1791,19 @@ doUnary:
             }
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
+    }
+
+    bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
+    {
+        LookupKind lookup(true, findThis(false));
+        Frame *pf = firstFrame;
+        while (pf) {
+            bool result;
+            if (meta->deleteProperty(pf, multiname, &lookup, phase, &result))
+                return result;
+            pf = pf->nextFrame;
+        }
+        return true;
     }
 
     // Clone the pluralFrame bindings into the singularFrame, instantiating new members for each binding
@@ -2169,8 +2197,9 @@ doUnary:
 
     js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
     {
-        js2val thatValue = OBJECT_TO_JS2VAL(new RegExpInstance(meta->regexpClass));
-        RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(thatValue));
+        RegExpInstance *thisInst = new RegExpInstance(meta->regexpClass);
+        JS2Object::RootIterator ri = JS2Object::addRoot(&thisInst);
+        js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
         REuint32 flags = 0;
 
         const String *regexpStr = &meta->engine->Empty_StringAtom;
@@ -2178,11 +2207,11 @@ doUnary:
         if (argc > 0) {
             if (meta->objectType(argv[0]) == meta->regexpClass) {
                 if ((argc == 1) || JS2VAL_IS_UNDEFINED(argv[1])) {
-                    js2val src = thisInst->getSource(meta);
+                    RegExpInstance *otherInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(argv[0]));
+                    js2val src  = otherInst->getSource(meta);
                     ASSERT(JS2VAL_IS_STRING(src));
                     regexpStr = JS2VAL_TO_STRING(src);
-                    REState *other = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(argv[0])))->mRegExp;
-                    flags = other->flags;
+                    flags = otherInst->mRegExp->flags;
                 }
                 else
                     meta->reportError(Exception::typeError, "Illegal RegExp constructor args", meta->engine->errorPos());
@@ -2207,6 +2236,7 @@ doUnary:
         }
         else
             meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), "/" + *regexpStr + "/" + *flagStr);  // XXX what about the RE parser error message?
+        JS2Object::removeRoot(ri);
         return thatValue;
     }
 
@@ -2710,6 +2740,135 @@ readClassProperty:
             }
         }
     }
+
+    bool JS2Metadata::deleteProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result)
+    {
+        ASSERT(phase == RunPhase);
+        bool isDynamicInstance = false;
+        if (JS2VAL_IS_PRIMITIVE(containerVal)) {
+deleteClassProperty:
+            JS2Class *c = objectType(containerVal);
+            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
+            if ((ib == NULL) && isDynamicInstance) 
+                return deleteDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, result);
+            else 
+                return deleteInstanceMember(c, (ib) ? &ib->qname : NULL, result);
+        }
+        JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
+        switch (container->kind) {
+        case AttributeObjectKind:
+        case MultinameKind:
+        case FixedInstanceKind: 
+        case MethodClosureKind:
+            goto deleteClassProperty;
+        case DynamicInstanceKind:
+            isDynamicInstance = true;
+            goto deleteClassProperty;
+
+        case SystemKind:
+        case GlobalObjectKind: 
+        case PackageKind:
+        case ParameterKind: 
+        case BlockKind: 
+        case ClassKind:
+            return deleteProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, result);
+
+        case PrototypeInstanceKind: 
+            return deleteDynamicProperty(container, multiname, lookupKind, result);
+
+        default:
+            ASSERT(false);
+            return false;
+        }
+    }
+
+    bool JS2Metadata::deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result)
+    {
+        ASSERT(phase == RunPhase);
+        if (container->kind != ClassKind) {
+            // Must be System, Global, Package, Parameter or Block
+            StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
+            if (!m && (container->kind == GlobalObjectKind))
+                return deleteDynamicProperty(container, multiname, lookupKind, result);
+            else
+                return deleteStaticMember(m, result);
+        }
+        else {
+            // XXX using JS2VAL_UNINITIALIZED to signal generic 'this'
+            js2val thisObject;
+            if (lookupKind->isPropertyLookup()) 
+                thisObject = JS2VAL_UNINITIALIZED;
+            else
+                thisObject = lookupKind->thisObject;
+            MemberDescriptor m2;
+            if (findStaticMember(checked_cast<JS2Class *>(container), multiname, ReadAccess, phase, &m2) && m2.staticMember)
+                return deleteStaticMember(m2.staticMember, result);
+            else {
+                if (JS2VAL_IS_NULL(thisObject))
+                    reportError(Exception::propertyAccessError, "Null 'this' object", engine->errorPos());
+                if (JS2VAL_IS_UNINITIALIZED(thisObject)) {
+                    *result = false;
+                    return true;
+                }
+                return deleteInstanceMember(objectType(thisObject), m2.qname, result);
+            }
+        }
+    }
+
+    bool JS2Metadata::deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result)
+    {
+        ASSERT(container && ((container->kind == DynamicInstanceKind) 
+                                || (container->kind == GlobalObjectKind)
+                                || (container->kind == PrototypeInstanceKind)));
+        if (!multiname->onList(publicNamespace))
+            return false;
+        const StringAtom &name = multiname->name;
+        DynamicPropertyMap *dMap = NULL;
+        if (container->kind == DynamicInstanceKind)
+            dMap = &(checked_cast<DynamicInstance *>(container))->dynamicProperties;
+        else
+        if (container->kind == GlobalObjectKind)
+            dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
+        else {
+            dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
+        }
+        for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+            if (i->first == name) {
+                dMap->erase(i);
+                *result = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool JS2Metadata::deleteStaticMember(StaticMember *m, bool *result)
+    {
+        if (m == NULL)
+            return false;   // 'None'
+        switch (m->kind) {
+        case StaticMember::Forbidden:
+            reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
+            break;
+        case StaticMember::Variable:
+        case StaticMember::HoistedVariable:
+        case StaticMember::ConstructorMethod:
+        case StaticMember::Accessor:
+            *result = false;
+            return true;
+        }
+        NOT_REACHED("Bad member kind");
+        return false;
+    }
+
+    bool JS2Metadata::deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result)
+    {
+        InstanceMember *m = findInstanceMember(c, qname, ReadAccess);
+        if (m == NULL) return false;
+        *result = false;
+        return true;
+    }
+
 
     // Find a binding that matches the multiname and access.
     // It's an error if more than one such binding exists.
