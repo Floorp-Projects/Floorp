@@ -38,7 +38,7 @@
 #    clean     (also clobber)
 #
 # The nspr library is handled as follows,
-#    Read $HOME/.mozmyconfig.sh (or $(TOPSRCDIR)/myconfig.sh) and
+#    Read $HOME/.mozconfig.sh (or $(TOPSRCDIR)/mozconfig.sh) and
 #    get the directory specified by --with-nspr.
 #    If the flag is not there, look for nspr in /usr/bin.
 #    Otherwise, build from tip and install in $(OBJDIR)/dist/nspr
@@ -58,10 +58,10 @@
 CWD		:= $(shell pwd)
 ifeq (mozilla, $(notdir $(CWD)))
 ROOTDIR		:= $(shell dirname $(CWD))
-TOPSRCDIR	:= $(CWD)
+TOPSRCDIR       := $(CWD)
 else
 ROOTDIR		:= $(CWD)
-TOPSRCDIR	:= $(CWD)/mozilla
+TOPSRCDIR       := $(CWD)/mozilla
 endif
 
 AUTOCONF	:= autoconf
@@ -72,7 +72,7 @@ MAKE		:= gmake
 endif
 
 WEBCONFIG_URL   := http://cvs-mirror.mozilla.org/webtools/build/config.cgi
-WEBCONFIG_FILE  := $(HOME)/.mozmyconfig.sh
+WEBCONFIG_FILE  := $(HOME)/.mozconfig.sh
 
 CONFIG_GUESS	:= $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS
@@ -81,17 +81,17 @@ else
   IS_FIRST_CHECKOUT := 1
 endif
 
-# Load options from myconfig.sh
+# Load options from mozconfig.sh
 #   (See build pages, http://www.mozilla.org/build/unix.html, 
-#    for how to set up myconfig.sh.)
-MYCONFIG2DEFS := build/autoconf/myconfig2defs.sh
+#    for how to set up mozconfig.sh.)
+MOZCONFIG2DEFS := build/autoconf/mozconfig2defs.sh
 run_for_side_effects := \
-	$(shell if test ! -f $(TOPSRCDIR)/$(MYCONFIG2DEFS); then \
-		      cd $(ROOTDIR); \
-                      cvs co mozilla/$(MYCONFIG2DEFS); \
-		fi; \
-		$(TOPSRCDIR)/$(MYCONFIG2DEFS) $(TOPSRCDIR)/.client-defs.mk)
--include $(TOPSRCDIR)/.client-defs.mk
+  $(shell cd $(TOPSRCDIR); \
+          if test ! -f $(MOZCONFIG2DEFS); then \
+	    (cd ..; cvs co mozilla/$(MOZCONFIG2DEFS);) \
+	  fi; \
+	  $(MOZCONFIG2DEFS) .client-defs.mk)
+include $(TOPSRCDIR)/.client-defs.mk
 
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
@@ -284,7 +284,7 @@ build:  nspr $(OBJDIR)/Makefile
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
 nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
-	@echo NSPR is installed in $(NSPR_INSTALL_DIR)/lib
+	@echo NSPR is installed in $(NSPR_INSTALL_DIR)/lib objdir=$(OBJDIR)
 
 $(NSPR_INSTALL_DIR)/lib/libnspr21.so:
 	@-$(MKDIR) -p $(NSPR_INSTALL_DIR)
