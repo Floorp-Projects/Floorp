@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.9 2000/10/25 20:32:36 cls%seawood.org Exp $
+## $Id: mozilla,v 1.10 2001/01/23 15:34:56 cls%seawood.org Exp $
 ## 
 ## Usage:
 ##
@@ -37,6 +37,10 @@ script_args=""
 moreargs=""
 debugging=0
 MOZILLA_BIN="mozilla-bin"
+
+if [ "$OSTYPE" = "beos" ]; then
+  mimeset -F $MOZILLA_BIN
+fi
 
 while [ $# -gt 0 ]
 do
