@@ -44,11 +44,15 @@ CPPSRCS		= nsNetModule2.cpp
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkgopher_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkviewsource_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkdata_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkkwd_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../protocol/gopher/src \
 		-I$(srcdir)/../protocol/viewsource/src \
+		-I$(srcdir)/../protocol/keyword/src \
+		-I$(srcdir)/../protocol/data/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

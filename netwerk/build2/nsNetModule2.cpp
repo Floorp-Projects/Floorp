@@ -39,6 +39,9 @@
 
 #include "nsGopherHandler.h"
 #include "nsViewSourceHandler.h"
+#include "nsDataHandler.h"
+#include "nsKeywordProtocolHandler.h"
+#include "nsNetCID.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
@@ -51,6 +54,19 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsGopherHandler::Create
     },
 
+    // from netwerk/protocol/data:
+    { "Data Protocol Handler", 
+      NS_DATAPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
+      nsDataHandler::Create},
+
+    // from netwerk/protocol/keyword:
+    { "The Keyword Protocol Handler", 
+      NS_KEYWORDPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",
+      nsKeywordProtocolHandler::Create
+    },
+    
     // from netwerk/protocol/viewsource:
     { "The ViewSource Protocol Handler", 
       NS_VIEWSOURCEHANDLER_CID,
