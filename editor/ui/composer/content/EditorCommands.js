@@ -44,15 +44,17 @@ var gStyleTags = {
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
-function EditorOnLoad() {
+function EditorOnLoad()
+{
     // See if argument was passed.
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.    
         // Put argument where EditorStartup expects it.
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
+    
     // Continue with normal startup.
-    EditorStartup( 'html', document.getElementById("content-frame"));
+    EditorStartup('html', document.getElementById("content-frame"));
 
     // Active menu items that are initially hidden in XUL
     //  because they are not needed by Messenger Composer
@@ -64,7 +66,8 @@ function EditorOnLoad() {
     window.tryToClose = EditorClose;
 }
   
-function TextEditorOnLoad() {
+function TextEditorOnLoad()
+{
     // See if argument was passed.
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.    
@@ -72,8 +75,7 @@ function TextEditorOnLoad() {
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
     // Continue with normal startup.
-    EditorStartup( 'text', document.getElementById("content-frame"));
-    return;
+    EditorStartup('text', document.getElementById("content-frame"));
 }
 
 // This is called when the real editor document is created,
@@ -93,13 +95,10 @@ var DocumentStateListener =
 
 function EditorStartup(editorType, editorElement)
 {
-  dump("Doing Editor Startup...\n");
   contentWindow = window.content;
   
-  dump("Trying to make an Editor Shell through the component manager...\n");
-
   // store the editor shell in the window, so that child windows can get to it.
-  var editorShell = window.editorShell = editorElement.editorShell;
+  editorShell = editorElement.editorShell;
   
   editorShell.Init();
   editorShell.SetWebShellWindow(window);
@@ -115,37 +114,12 @@ function EditorStartup(editorType, editorElement)
   var url = document.getElementById("args").getAttribute("value");
   editorShell.LoadUrl(url);
   
-  dump("EditorAppCore windows have been set.\n");
-
   // Set focus to the edit window
   // This still doesn't work!
   // It works after using a toolbar button, however!
   contentWindow.focus();
 }
 
-function TestMenuCreation()
-{
-  var menubar = document.getElementById("MainMenuBar");
-  var fileMenu = menubar.firstChild;
-  var filePopup = fileMenu.firstChild;
-  
-  dump("File menu "+ fileMenu + "\n");
-  
-  var newChild = document.createElement("menuitem");
-  newChild.setAttribute("value", "testing");
-  newChild.setAttribute("id", "testItem");
-  dump(newChild);
-  filePopup.appendChild(newChild);
-  
-  // now try and find it
-  var someItem = document.getElementById("testItem");
-  if (!someItem)
-    dump("Failed to find new menu item\n");
-}
-
-function SetupToolbarElements()
-{
-}
 
 function _EditorNotImplemented()
 {
@@ -155,7 +129,6 @@ function _EditorNotImplemented()
 function EditorShutdown()
 {
   dump("In EditorShutdown..\n");
-  //editorShell = XPAppCoresManager.Remove(editorShell);
 }
 
 
@@ -490,7 +463,6 @@ function EditorSetDocumentCharacterSet(aCharset)
 function EditorSetTextProperty(property, attribute, value)
 {
   editorShell.SetTextProperty(property, attribute, value);
-  dump("Set text property -- calling focus()\n");
   contentWindow.focus();
 }
 
@@ -516,7 +488,7 @@ function onParagraphFormatChange()
   	var format = select.getAttribute("format");
     if ( format == "mixed")
     {
-dump("Mixed paragraph format *******\n");
+// dump("Mixed paragraph format *******\n");
       // No single type selected
       newIndex = -1;
     }
@@ -1035,17 +1007,20 @@ function EditorMakeOrChangeList(listType)
   // check the observer node,
   // which is the appropriate button
   var theButton = document.getElementById(listType + "Button");
-  dump("Toggling list " + listType + "\n");
+
   if (theButton)
   {
-    var isOn = theButton.getAttribute("toggled");
+    var buttonFormat = theButton.getAttribute("format");
+    var isOn = (listType == buttonFormat);
+
     if (isOn == 1)
     {
-      dump("Removing list \n");
       editorShell.RemoveList(listType);
     }
     else
+    {
       editorShell.MakeOrChangeList(listType);
+    }
 
     contentWindow.focus();
   }
@@ -1057,7 +1032,6 @@ function EditorMakeOrChangeList(listType)
 
 function EditorAlign(align)
 {
-  dump("aligning\n");
   editorShell.Align(align);
   contentWindow.focus();
 }
@@ -1581,7 +1555,6 @@ function onListFormatChange(listType)
       theButton.setAttribute("toggled", 0);
     }
   }
-  
 }
 
 function getColorAndSetColorWell(ColorPickerID, ColorWellID)
