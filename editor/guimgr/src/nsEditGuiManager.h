@@ -47,4 +47,4 @@ public:
   /* nsEditGuiManager specific methods. */
 };
 
-#endif // nsTransactionManager_h__
+#endif // nsGuiManager_h__
