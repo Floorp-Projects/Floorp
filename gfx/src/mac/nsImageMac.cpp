@@ -1490,6 +1490,7 @@ nsImageMac::MakeIconType(PRInt32 aHeight, PRInt32 aDepth, PRBool aMask)
 nsresult nsImageMac::SlowTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
 {
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
@@ -1523,8 +1524,8 @@ nsresult nsImageMac::SlowTile(nsIRenderingContext &aContext,
           aY1 = aTileRect.y + aTileRect.height,
           aX1 = aTileRect.x + aTileRect.width;
 
-  for (PRInt32 y = aY0; y < aY1; y += mHeight)
-    for (PRInt32 x = aX0; x < aX1; x += mWidth)
+  for (PRInt32 y = aY0; y < aY1; y += mHeight + aPadY)
+    for (PRInt32 x = aX0; x < aX1; x += mWidth + aPadX)
     {
       Draw(aContext, aSurface,
            0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),     // src coords
@@ -1820,15 +1821,17 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
 {
   nsresult rv = NS_ERROR_FAILURE;
+  PRBool padded = (aPadX || aPadY);
   
-  if (!RenderingToPrinter(aContext))
+  if (!RenderingToPrinter(aContext) && !padded)
     rv = DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
 
   if (NS_FAILED(rv))
-    rv = SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
+    rv = SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aPadX, aPadY, aTileRect);
     
   return rv;
 }

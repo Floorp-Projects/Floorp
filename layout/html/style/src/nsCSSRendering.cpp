@@ -3020,6 +3020,17 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
                        "Unknown gfxIFormats value");
           needBackgroundColor = frameFormat != gfxIFormats::RGB &&
                                 frameFormat != gfxIFormats::BGR;
+
+          /* check for tiling of a image where frame smaller than container */
+          nsSize iSize;
+          image->GetWidth(&iSize.width);
+          image->GetHeight(&iSize.height);
+          nsRect iframeRect;
+          gfxImgFrame->GetRect(iframeRect);
+          if (iSize.width != iframeRect.width ||
+              iSize.height != iframeRect.height) {
+            needBackgroundColor = PR_TRUE;
+          }
         }
       }
       break;
