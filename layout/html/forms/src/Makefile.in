@@ -46,6 +46,7 @@ CPPSRCS =				\
 	nsHTMLButtonControlFrame.cpp   \
 	nsLabelFrame.cpp   \
 	nsImageControlFrame.cpp \
+        nsButtonFrameRenderer.cpp \
 	$(NULL)
 
 MODULE=layout

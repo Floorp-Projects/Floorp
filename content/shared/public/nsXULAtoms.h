@@ -63,6 +63,7 @@ public:
   static nsIAtom* treecolgroup; // A column group in the tree view
 
   static nsIAtom* progressmeter; 
+  static nsIAtom* titledbutton;
   static nsIAtom* mode; 
 
   static nsIAtom* widget;
