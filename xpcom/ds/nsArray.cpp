@@ -110,19 +110,21 @@ nsArray::Enumerate(nsISimpleEnumerator **aResult)
 NS_IMETHODIMP
 nsArray::AppendElement(nsISupports* aElement, PRBool aWeak)
 {
-    nsCOMPtr<nsISupports> elementRef;
+    PRBool result;
     if (aWeak) {
-        elementRef =
+        nsCOMPtr<nsISupports> elementRef =
             getter_AddRefs(NS_STATIC_CAST(nsISupports*,
                                           NS_GetWeakReference(aElement)));
         NS_ASSERTION(elementRef, "AppendElement: Trying to use weak references on an object that doesn't support it");
         if (!elementRef)
             return NS_ERROR_FAILURE;
-        
-    } else {
-        elementRef = aElement;
+        result = mArray.AppendObject(elementRef);
     }
-    PRBool result = mArray.AppendObject(elementRef);
+
+    else {
+        // add the object directly
+        result = mArray.AppendObject(aElement);
+    }
     return result ? NS_OK : NS_ERROR_FAILURE;
 }
 

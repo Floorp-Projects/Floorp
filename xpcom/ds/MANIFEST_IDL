@@ -11,6 +11,7 @@ nsIRecyclingAllocator.idl
 nsISerializable.idl
 nsISimpleEnumerator.idl
 nsISupportsArray.idl
+nsIArray.idl
 nsITimelineService.idl
 nsISupportsIterators.idl
 nsISupportsPrimitives.idl

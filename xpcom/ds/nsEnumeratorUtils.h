@@ -51,7 +51,7 @@ public:
     NS_IMETHOD HasMoreElements(PRBool* aResult);
     NS_IMETHOD GetNext(nsISupports** aResult);
 
-    // nsRDFArrayEnumerator methods
+    // nsArrayEnumerator methods
     nsArrayEnumerator(nsISupportsArray* aValueArray);
     virtual ~nsArrayEnumerator(void);
 
@@ -60,7 +60,7 @@ protected:
     PRInt32 mIndex;
 };
 
-extern "C" NS_COM nsresult
+extern NS_COM nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
                       nsISupportsArray* array);
 
