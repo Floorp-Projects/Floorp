@@ -34,13 +34,9 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run()
 {
+  OpenWindow();
   mAppShell->Run();
   return 0;
-}
-
-void
-nsNativeViewerApp::CreateRobot(nsBrowserWindow* aWindow)
-{
 }
 
 //----------------------------------------------------------------------
