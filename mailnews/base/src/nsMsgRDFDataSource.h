@@ -30,7 +30,7 @@
 
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIShutdownListener,
-						   public nsIMsgWindowData
+  						   public nsIMsgWindowData
 {
  public:
   nsMsgRDFDataSource();
@@ -42,6 +42,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   NS_DECL_NSIRDFDATASOURCE
   NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
 
+
  protected:
 	nsIRDFService *getRDFService();
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
@@ -52,6 +53,10 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 
 	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 	nsCOMPtr<nsITransactionManager> mTransactionManager;
+	nsCOMPtr<nsIMessageView> mMessageView;
+
+	nsCOMPtr<nsISupportsArray> kEmptyArray;
+
  private:
   nsIRDFService *mRDFService;
   nsCOMPtr<nsISupportsArray> mObservers;

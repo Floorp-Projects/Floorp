@@ -33,6 +33,8 @@ nsMsgNotificationManager.h
 nsCopyMessageStreamListener.h
 nsMsgCopyService.h
 nsMsgStatusFeedback.h
+nsMessageView.h
+
 
 
 

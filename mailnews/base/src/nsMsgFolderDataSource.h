@@ -33,10 +33,7 @@ class nsMsgFolderDataSource : public nsMsgRDFDataSource,
 private:
 	PRBool				mInitialized;
 
-  // The cached service managers
-  
-  nsIRDFService* mRDFService;
-  
+
 public:
   
   NS_DECL_ISUPPORTS_INHERITED
@@ -131,8 +128,7 @@ protected:
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
                              nsIRDFNode **target);
 
-  static nsresult getFolderArcLabelsOut(nsIMsgFolder *folder,
-                                        nsISupportsArray **arcs);
+  nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
   
   nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments, nsITransactionManager *txnMgr);
@@ -151,6 +147,8 @@ protected:
 	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
 
 	nsresult GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order);
+
+	nsresult CreateArcsOutEnumerator();
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
@@ -177,6 +175,8 @@ protected:
   static nsIRDFResource* kNC_Compact;
   static nsIRDFResource* kNC_Rename;
   static nsIRDFResource* kNC_EmptyTrash;
+
+	nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
 
 };
 

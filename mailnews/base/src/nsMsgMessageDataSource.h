@@ -25,6 +25,7 @@
 #include "nsIDateTimeFormat.h"
 #include "nsCOMPtr.h"
 #include "MailNewsTypes.h"
+#include "nsIMsgThread.h"
 
 /**
  * The mail message source.
@@ -35,8 +36,6 @@ private:
 	PRBool				mInitialized;
 
 	// The cached service managers
-  
-	nsIRDFService* mRDFService;
 	nsIMsgHeaderParser *mHeaderParser;
   
 public:
@@ -139,6 +138,12 @@ protected:
 	nsresult createMessageSizeNode(nsIMessage *message,
 								   nsIRDFNode **target);
 
+	nsresult createMessageUnreadNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageTotalNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult GetMessageFolderAndThread(nsIMessage *message, nsIMsgFolder **folder,
+										nsIMsgThread **thread);
+	PRBool IsThreadsFirstMessage(nsIMsgThread *thread, nsIMessage *message);
+
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	nsresult DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
@@ -152,9 +157,11 @@ protected:
 	nsresult GetMessagesAndFirstFolder(nsISupportsArray *messages, nsIMsgFolder **folder,
 														   nsISupportsArray **messageArray);
 
-	static nsresult getMessageArcLabelsOut(nsIMessage *message,
+	nsresult getMessageArcLabelsOut(PRBool showThreads,
                                          nsISupportsArray **arcs);
   
+	nsresult CreateLiterals(nsIRDFService *rdf);
+	nsresult CreateArcsOutEnumerators();
 
 	static nsIRDFResource* kNC_Subject;
 	static nsIRDFResource* kNC_SubjectCollation;
@@ -165,6 +172,10 @@ protected:
 	static nsIRDFResource* kNC_Flagged;
 	static nsIRDFResource* kNC_Priority;
 	static nsIRDFResource* kNC_Size;
+	static nsIRDFResource* kNC_Total;
+	static nsIRDFResource* kNC_Unread;
+	static nsIRDFResource* kNC_MessageChild;
+
 
 	// commands
 	static nsIRDFResource* kNC_MarkRead;
@@ -173,6 +184,21 @@ protected:
 	static nsIRDFResource* kNC_MarkFlagged;
 	static nsIRDFResource* kNC_MarkUnflagged;
 
+	//Cached literals
+	nsCOMPtr<nsIRDFNode> kEmptyStringLiteral;
+	nsCOMPtr<nsIRDFNode> kLowestLiteral;
+	nsCOMPtr<nsIRDFNode> kLowLiteral;
+	nsCOMPtr<nsIRDFNode> kHighLiteral;
+	nsCOMPtr<nsIRDFNode> kHighestLiteral;
+	nsCOMPtr<nsIRDFNode> kFlaggedLiteral;
+	nsCOMPtr<nsIRDFNode> kUnflaggedLiteral;
+	nsCOMPtr<nsIRDFNode> kRepliedLiteral;
+	nsCOMPtr<nsIRDFNode> kForwardedLiteral;
+	nsCOMPtr<nsIRDFNode> kNewLiteral;
+	nsCOMPtr<nsIRDFNode> kReadLiteral;
+
+	nsCOMPtr<nsISupportsArray> kThreadsArcsOutArray;
+	nsCOMPtr<nsISupportsArray> kNoThreadsArcsOutArray;
 
 };
 

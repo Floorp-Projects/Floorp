@@ -48,8 +48,14 @@ nsMsgRDFDataSource::Init()
     getRDFService();
     
     rv = mRDFService->RegisterDataSource(this, PR_FALSE);
-    if (!rv) return rv;
+    if (NS_FAILED(rv)) return rv;
     
+	//Create Empty Enumerator
+
+	rv = NS_NewISupportsArray(getter_AddRefs(kEmptyArray));
+	if(NS_FAILED(rv)) return rv;
+
+
     return rv;
 }
 
@@ -310,6 +316,24 @@ NS_IMETHODIMP nsMsgRDFDataSource::SetTransactionManager(nsITransactionManager * 
 	mTransactionManager = aTransactionManager;
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgRDFDataSource::GetMessageView(nsIMessageView * *aMessageView)
+{
+	if(!aMessageView)
+		return NS_ERROR_NULL_POINTER;
+
+	*aMessageView = mMessageView;
+	NS_IF_ADDREF(*aMessageView);
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgRDFDataSource::SetMessageView(nsIMessageView * aMessageView)
+{
+	mMessageView = aMessageView;
+	return NS_OK;
+}
+
 
 nsIRDFService *
 nsMsgRDFDataSource::getRDFService()

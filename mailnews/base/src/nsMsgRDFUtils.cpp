@@ -16,15 +16,12 @@
  * Reserved.
  */
 #include "nsMsgRDFUtils.h"
-#include "nsIRDFService.h"
-#include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
 #include "nsIAllocator.h"
 
  
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 static PRBool
 peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
@@ -79,14 +76,13 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2)
 	return peqWithParameter(r1, r2, "sort=true");
 }
 
-nsresult createNode(nsString& str, nsIRDFNode **node)
+nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService)
 {
 	*node = nsnull;
 	nsresult rv; 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-	if (NS_FAILED(rv)) return rv;  
+	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
-	rv = rdf->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
+	rv = rdfService->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
 	if(NS_SUCCEEDED(rv)) {
 		*node = value;
 		NS_IF_ADDREF(*node);
@@ -94,26 +90,25 @@ nsresult createNode(nsString& str, nsIRDFNode **node)
 	return rv;
 }
 
-nsresult createNode(PRUint32 value, nsIRDFNode **node)
+nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService)
 {
 	nsresult rv;
 	char *valueStr = PR_smprintf("%d", value);
 	nsString str(valueStr);
 	PR_smprintf_free(valueStr);
-	rv = createNode(str, node);
+	rv = createNode(str, node, rdfService);
 	return rv;
 }
 
-nsresult createNode(const char* charstr, nsIRDFNode **node)
+nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfService)
 {
   nsresult rv;
   // use nsString to convert to unicode
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-	if (NS_FAILED(rv)) return rv;  
+	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
   nsString str(charstr);
   PRUnichar *ucharstr = str.ToNewUnicode();
-	rv = rdf->GetLiteral(ucharstr, getter_AddRefs(value));
+	rv = rdfService->GetLiteral(ucharstr, getter_AddRefs(value));
 	if(NS_SUCCEEDED(rv)) {
 		*node = value;
 		NS_IF_ADDREF(*node);
@@ -121,14 +116,13 @@ nsresult createNode(const char* charstr, nsIRDFNode **node)
   return rv;
 }
 
-nsresult createDateNode(PRTime time, nsIRDFNode **node)
+nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfService)
 {
 	*node = nsnull;
 	nsresult rv; 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-	if (NS_FAILED(rv)) return rv;  
+	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFDate> date;
-	rv = rdf->GetDateLiteral(time, getter_AddRefs(date));
+	rv = rdfService->GetDateLiteral(time, getter_AddRefs(date));
 	if(NS_SUCCEEDED(rv)) {
 		*node = date;
 		NS_IF_ADDREF(*node);

@@ -54,20 +54,16 @@ public:
 	virtual ~nsMessageViewDataSource (void);
   virtual nsresult Init();
 
+
 protected:
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property, nsIRDFNode **target);
-	nsresult createUnreadNode(nsIMessage *message, nsIRDFNode **target);
-	nsresult createTotalNode(nsIMessage *message, nsIRDFNode **target);
-	nsresult GetMessageFolderAndThread(nsIMessage *message, nsIMsgFolder **folder,
-										nsIMsgThread **thread);
-	PRBool IsThreadsFirstMessage(nsIMsgThread *thread, nsIMessage *message);
 
  
 	// caching frequently used resources
 protected:
 
 	nsCOMPtr<nsIRDFDataSource> mDataSource;
-	PRUint32 mShowStatus;
+	PRUint32 mViewType;
 	PRBool mShowThreads;
 
 	static nsIRDFResource* kNC_MessageChild;
@@ -75,8 +71,6 @@ protected:
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Sender;
 	static nsIRDFResource* kNC_Status;
-	static nsIRDFResource* kNC_Unread;
-	static nsIRDFResource* kNC_Total;
 
 	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 	nsCOMPtr<nsITransactionManager> mTransactionManager;

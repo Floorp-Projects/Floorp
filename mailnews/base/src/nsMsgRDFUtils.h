@@ -22,6 +22,7 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFService.h"
 #include "nsString.h"
 
 // this is used for notification of observers using nsVoidArray
@@ -87,14 +88,14 @@ PRBool
 peqCollationSort(nsIRDFResource* r1, nsIRDFResource* r2);
 
 //Given an nsString, create an nsIRDFNode
-nsresult createNode(nsString& str, nsIRDFNode **node);
-nsresult createNode(const char*, nsIRDFNode **);
+nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService);
+nsresult createNode(const char*, nsIRDFNode **, nsIRDFService *rdfService);
 
 //Given a PRUint32, create an nsiIRDFNode.
-nsresult createNode(PRUint32 value, nsIRDFNode **node);
+nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService);
 
 //Given a PRTime create an nsIRDFNode that is really a date literal.
-nsresult createDateNode(PRTime time, nsIRDFNode **node);
+nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfService);
 
 //Has Assertion for a datasource that will just call GetTarget on property.  When all of our 
 //datasource derive from our datasource baseclass, this should be moved there and the first

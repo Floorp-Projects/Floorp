@@ -27,11 +27,6 @@
 
 #include "plstr.h"
 
-#define VIEW_SHOW_ALL 0x1
-#define VIEW_SHOW_READ 0x2
-#define VIEW_SHOW_UNREAD 0x4
-#define VIEW_SHOW_WATCHED 0x8
-
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 
@@ -40,8 +35,6 @@ nsIRDFResource* nsMessageViewDataSource::kNC_Subject = nsnull;
 nsIRDFResource* nsMessageViewDataSource::kNC_Sender = nsnull;
 nsIRDFResource* nsMessageViewDataSource::kNC_Date = nsnull;
 nsIRDFResource* nsMessageViewDataSource::kNC_Status = nsnull;
-nsIRDFResource* nsMessageViewDataSource::kNC_Total = nsnull;
-nsIRDFResource* nsMessageViewDataSource::kNC_Unread = nsnull;
 
 NS_IMPL_ADDREF(nsMessageViewDataSource)
 
@@ -108,7 +101,7 @@ nsMessageViewDataSource::nsMessageViewDataSource(void)
 {
 	NS_INIT_REFCNT();
 	mObservers = nsnull;
-	mShowStatus = VIEW_SHOW_ALL;
+	mViewType = nsIMessageView::eShowAll;
 	mInitialized = PR_FALSE;
 	mShowThreads = PR_FALSE;
 }
@@ -123,8 +116,6 @@ nsMessageViewDataSource::~nsMessageViewDataSource (void)
 	NS_RELEASE2(kNC_Date, refcnt);
 	NS_RELEASE2(kNC_Sender, refcnt);
 	NS_RELEASE2(kNC_Status, refcnt);
-	NS_RELEASE2(kNC_Total, refcnt);
-	NS_RELEASE2(kNC_Unread, refcnt);
 	nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
 	mRDFService = nsnull;
 
@@ -151,8 +142,6 @@ nsMessageViewDataSource::Init()
 		mRDFService->GetResource(NC_RDF_DATE,			&kNC_Date);
 		mRDFService->GetResource(NC_RDF_SENDER,			&kNC_Sender);
 		mRDFService->GetResource(NC_RDF_STATUS		,   &kNC_Status);
-		mRDFService->GetResource(NC_RDF_TOTALMESSAGES		,   &kNC_Total);
-		mRDFService->GetResource(NC_RDF_TOTALUNREADMESSAGES		,   &kNC_Unread);
 	}
 	mInitialized = PR_TRUE;
 
@@ -216,90 +205,10 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 						PRBool tv,
 						nsISimpleEnumerator** targets)
 {
-	nsresult rv;
-	if(!targets)
-		return NS_ERROR_NULL_POINTER;
-
-	*targets=nsnull;
-
-	nsCOMPtr<nsIMsgFolder> folder;
-	nsCOMPtr<nsIMessage> message;
-	
-	folder = do_QueryInterface(source, &rv);
-	if (NS_SUCCEEDED(rv))
-	{
-		if (property == kNC_MessageChild)
-		{
-
-			if(mShowThreads)
-			{
-				nsCOMPtr<nsISimpleEnumerator> threads;
-				rv = folder->GetThreads(getter_AddRefs(threads));
-				if (NS_FAILED(rv)) return rv;
-				nsMessageViewThreadEnumerator * threadEnumerator = 
-					new nsMessageViewThreadEnumerator(threads, folder);
-				if(!threadEnumerator)
-					return NS_ERROR_OUT_OF_MEMORY;
-				NS_ADDREF(threadEnumerator);
-				*targets = threadEnumerator;
-				rv = NS_OK;
-			}
-			else
-			{
-				nsCOMPtr<nsISimpleEnumerator> messages;
-				rv = folder->GetMessages(getter_AddRefs(messages));
-				if (NS_SUCCEEDED(rv))
-				{
-					nsMessageViewMessageEnumerator * messageEnumerator = 
-						new nsMessageViewMessageEnumerator(messages, mShowStatus);
-					if(!messageEnumerator)
-						return NS_ERROR_OUT_OF_MEMORY;
-					NS_ADDREF(messageEnumerator);
-					*targets = messageEnumerator;
-					rv = NS_OK;
-				}
-			}
-		}
-	}
-	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
-	{
-		if(property == kNC_MessageChild)
-		{
-			nsCOMPtr<nsIMsgFolder> msgfolder;
-			rv = message->GetMsgFolder(getter_AddRefs(msgfolder));
-			if(NS_SUCCEEDED(rv))
-			{
-				nsCOMPtr<nsIMsgThread> thread;
-				rv = msgfolder->GetThreadForMessage(message, getter_AddRefs(thread));
-				if(NS_SUCCEEDED(rv))
-				{
-					nsCOMPtr<nsISimpleEnumerator> messages;
-					nsMsgKey msgKey;
-					message->GetMessageKey(&msgKey);
-					thread->EnumerateMessages(msgKey, getter_AddRefs(messages));
-					nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
-					NS_NewMessageFromMsgHdrEnumerator(messages, msgfolder, getter_AddRefs(converter));
-					nsMessageViewMessageEnumerator * messageEnumerator = 
-						new nsMessageViewMessageEnumerator(converter, mShowStatus);
-					if(!messageEnumerator)
-						return NS_ERROR_OUT_OF_MEMORY;
-					NS_ADDREF(messageEnumerator);
-					*targets = messageEnumerator;
-					rv = NS_OK;
-
-				}
-			}
-
-		}
-	}
-
-	if(*targets)
-		return rv;
-
 	if(mDataSource)
 		return mDataSource->GetTargets(source, property, tv, targets);
 	else
-		return rv;
+		return NS_RDF_NO_VALUE;
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::Assert(nsIRDFResource* source,
@@ -402,8 +311,6 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 		arcs->AppendElement(kNC_Sender);
 		arcs->AppendElement(kNC_Date);
 		arcs->AppendElement(kNC_Status);
-		arcs->AppendElement(kNC_Total);
-		arcs->AppendElement(kNC_Unread);
 
 		nsCOMPtr<nsIMsgFolder> folder;
 		rv = message->GetMsgFolder(getter_AddRefs(folder));
@@ -421,7 +328,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 				nsCOMPtr<nsMessageFromMsgHdrEnumerator> converter;
 				NS_NewMessageFromMsgHdrEnumerator(messages, folder, getter_AddRefs(converter));
 				nsMessageViewMessageEnumerator * messageEnumerator = 
-					new nsMessageViewMessageEnumerator(converter, VIEW_SHOW_ALL);
+					new nsMessageViewMessageEnumerator(converter, nsIMessageView::eShowAll);
 				if(!messageEnumerator)
 					return NS_ERROR_OUT_OF_MEMORY;
 				NS_ADDREF(messageEnumerator);
@@ -590,33 +497,33 @@ NS_IMETHODIMP nsMessageViewDataSource::OnMove(nsIRDFResource* aOldSource,
 }
 
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowAll()
+NS_IMETHODIMP nsMessageViewDataSource::GetViewType(PRUint32 *aViewType)
 {
-	mShowStatus = VIEW_SHOW_ALL;
+	if(!aViewType)
+		return NS_ERROR_NULL_POINTER;
+
+	*aViewType = mViewType;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowUnread()
+NS_IMETHODIMP nsMessageViewDataSource::SetViewType(PRUint32 aViewType)
 {
-	mShowStatus = VIEW_SHOW_UNREAD;
+	mViewType = aViewType;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowRead()
+NS_IMETHODIMP nsMessageViewDataSource::GetShowThreads(PRBool *aShowThreads)
 {
-	mShowStatus = VIEW_SHOW_READ;
+	if(!aShowThreads)
+		return NS_ERROR_NULL_POINTER;
+
+	*aShowThreads = mShowThreads;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowWatched()
+NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool aShowThreads)
 {
-	mShowStatus = VIEW_SHOW_WATCHED;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool showThreads)
-{
-	mShowThreads = showThreads;
+	mShowThreads = aShowThreads;
 	return NS_OK;
 }
 
@@ -652,125 +559,27 @@ NS_IMETHODIMP nsMessageViewDataSource::SetTransactionManager(nsITransactionManag
 	mTransactionManager = aTransactionManager;
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsMessageViewDataSource::GetMessageView(nsIMessageView * *aMessageView)
+{
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMessageViewDataSource::SetMessageView(nsIMessageView * aMessageView)
+{
+	return NS_OK;
+}
+
 nsresult
 nsMessageViewDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
                                          nsIRDFNode **target)
 {
-    if (mShowThreads && ( kNC_Total == property))
-      return createTotalNode(message, target);
-	else if (mShowThreads && (kNC_Unread == property))
-      return createUnreadNode(message, target);
-    else
       return NS_RDF_NO_VALUE;
 }
 
-nsresult nsMessageViewDataSource::createTotalNode(nsIMessage *message, nsIRDFNode **target)
-{
-	nsCOMPtr<nsIMsgFolder> folder;
-	nsCOMPtr<nsIMsgThread> thread;
-	nsresult rv;
-	nsString emptyString("");
 
-	rv = GetMessageFolderAndThread(message, getter_AddRefs(folder), getter_AddRefs(thread));
-	if(NS_SUCCEEDED(rv) && thread)
-	{
-		if(IsThreadsFirstMessage(thread, message))
-		{
-			PRUint32 numChildren;
-			rv = thread->GetNumChildren(&numChildren);
-			if(NS_SUCCEEDED(rv))
-			{
-				if(numChildren > 1)
-					rv = createNode(numChildren, target);
-				else
-					rv = createNode(emptyString, target);
-			}
-		}
-		else
-		{
-			rv = createNode(emptyString, target);
-		}
-
-	}
-
-	if(NS_SUCCEEDED(rv))
-		return rv;
-	else 
-		return NS_RDF_NO_VALUE;
-}
-
-nsresult nsMessageViewDataSource::createUnreadNode(nsIMessage *message, nsIRDFNode **target)
-{
-	nsCOMPtr<nsIMsgFolder> folder;
-	nsCOMPtr<nsIMsgThread> thread;
-	nsresult rv;
-	nsString emptyString("");
-
-	rv = GetMessageFolderAndThread(message, getter_AddRefs(folder), getter_AddRefs(thread));
-	if(NS_SUCCEEDED(rv) && thread)
-	{
-		if(IsThreadsFirstMessage(thread, message))
-		{
-			PRUint32 numUnread;
-			rv = thread->GetNumUnreadChildren(&numUnread);
-			if(NS_SUCCEEDED(rv))
-			{
-				if(numUnread > 0)
-					rv = createNode(numUnread, target);
-				else
-					rv = createNode(emptyString, target);
-			}
-		}
-		else
-		{
-			rv = createNode(emptyString, target);
-		}
-	}
-
-	if(NS_SUCCEEDED(rv))
-		return rv;
-	else 
-		return NS_RDF_NO_VALUE;
-}
-
-nsresult nsMessageViewDataSource::GetMessageFolderAndThread(nsIMessage *message,
-															nsIMsgFolder **folder,
-															nsIMsgThread **thread)
-{
-	nsresult rv;
-	rv = message->GetMsgFolder(folder);
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = (*folder)->GetThreadForMessage(message, thread);
-	}
-	return rv;
-}
-
-PRBool nsMessageViewDataSource::IsThreadsFirstMessage(nsIMsgThread *thread, nsIMessage *message)
-{
-	nsCOMPtr<nsIMsgDBHdr> firstHdr;
-	nsresult rv;
-
-	rv = thread->GetRootHdr(nsnull, getter_AddRefs(firstHdr));
-	if(NS_FAILED(rv))
-		return PR_FALSE;
-
-	nsMsgKey messageKey, firstHdrKey;
-
-	rv = message->GetMessageKey(&messageKey);
-
-	if(NS_FAILED(rv))
-		return PR_FALSE;
-
-	rv = firstHdr->GetMessageKey(&firstHdrKey);
-
-	if(NS_FAILED(rv))
-		return PR_FALSE;
-
-	return messageKey == firstHdrKey;
-
-}
 //////////////////////////   nsMessageViewMessageEnumerator //////////////////
 
 
@@ -863,7 +672,7 @@ nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBo
 
 	*meetsCriteria = PR_FALSE;
 
-	if(mShowStatus == VIEW_SHOW_ALL)
+	if(mShowStatus == nsIMessageView::eShowAll)
 	{
 		*meetsCriteria = PR_TRUE;
 	}
@@ -872,11 +681,11 @@ nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBo
 		PRUint32 flags;
 		message->GetFlags(&flags);
 
-		if(mShowStatus == VIEW_SHOW_READ)
+		if(mShowStatus == nsIMessageView::eShowRead)
 			*meetsCriteria = flags & MSG_FLAG_READ;
-		else if(mShowStatus == VIEW_SHOW_UNREAD)
+		else if(mShowStatus == nsIMessageView::eShowUnread)
 			*meetsCriteria = !(flags & MSG_FLAG_READ);
-		else if(mShowStatus == VIEW_SHOW_WATCHED)
+		else if(mShowStatus == nsIMessageView::eShowWatched)
 			*meetsCriteria = flags & MSG_FLAG_WATCHED;
 	}
 	return NS_OK;

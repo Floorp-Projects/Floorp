@@ -264,7 +264,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   }
 
   if (str!="")
-    rv = createNode(str, target);
+    rv = createNode(str, target, getRDFService());
   //if we have an empty string and we don't have an error value, then 
   //we don't have a value for RDF.
   else if(NS_SUCCEEDED(rv))
