@@ -2005,6 +2005,7 @@ VCardGetStringByID(PRInt32 stringID)
     if (returnBuffer)
     {
       v.ToCString(returnBuffer, bufferLen);
+	  nsAllocator::Free(ptrv);
       return returnBuffer;
     }
   }

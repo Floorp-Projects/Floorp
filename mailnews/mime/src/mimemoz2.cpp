@@ -163,6 +163,8 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
 
     nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec);
 
+	PR_Free(urlSpec);
+
     if ( (NS_FAILED(rv)) || (!tmp->url) )
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -560,6 +562,9 @@ mime_display_stream_complete (nsMIMESession *stream)
     
   if (msd->headers)
   	MimeHeaders_free (msd->headers);
+
+  if (msd->url_name)
+	  nsCRT::free(msd->url_name);
 
   PR_FREEIF(msd);
 }
@@ -1251,6 +1256,7 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     if (returnBuffer)
     {
       v.ToCString(returnBuffer, bufferLen);
+	  nsAllocator::Free(ptrv);
       return returnBuffer;
     }
   }
