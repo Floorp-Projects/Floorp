@@ -142,6 +142,9 @@ interface nsIXTFElement : nsISupports
   void attributeRemoved(in nsIAtom name);
 
   // These are for batching of child insertions during document load
+
+  // beginAddingChildren is called before any attributes or child nodes are
+  // added to the element.
   void beginAddingChildren();
   void doneAddingChildren();
 

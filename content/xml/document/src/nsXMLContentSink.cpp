@@ -1059,6 +1059,11 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     }
   }
   
+#ifdef MOZ_XTF
+  if (nameSpaceID > kNameSpaceID_LastBuiltin)
+    content->BeginAddingChildren();
+#endif
+
   // Set the attributes on the new content element
   result = AddAttributes(aAtts, content);
 
@@ -1073,11 +1078,6 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
     PushContent(content);
   }
-
-#ifdef MOZ_XTF
-  if (nameSpaceID > kNameSpaceID_LastBuiltin)
-    content->BeginAddingChildren();
-#endif
 
   // Some HTML nodes need DoneCreatingElement() called to initialize
   // properly (eg form state restoration).
