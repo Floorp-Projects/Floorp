@@ -88,10 +88,7 @@ public:
 
         // We'll try to use the file's length, if it has one. If not,
         // assume the file to be special, and set the content length
-        // to -1, which means "read the stream until
-        // exhausted". (Conveniently, a filespec will return "0" for a
-        // directory's length, so our directory HTTP index stream will
-        // just do the right thing.)
+        // to -1, which means "read the stream until exhausted".
         PRInt64 size;
         rv = mFile->GetFileSize(&size);
         if (NS_SUCCEEDED(rv)) {
@@ -105,7 +102,11 @@ public:
         PRBool isDir;
         rv = mFile->IsDirectory(&isDir);
         if (NS_SUCCEEDED(rv) && isDir) {
+            // Directories turn into an HTTP-index stream, with
+            // unbounded (i.e., read 'til the stream says it's done)
+            // length.
             *contentType = nsCRT::strdup("application/http-index-format");
+            *contentLength = -1;
         }
         else {
             char* fileName;
@@ -336,9 +337,6 @@ nsFileTransport::nsFileTransport()
       mOffset(0),
       mTotalAmount(-1),
       mTransferAmount(0),
-#ifdef PR_LOGGING
-      mSpec(nsnull),
-#endif
       mBuffer(nsnull)
 {
     NS_INIT_REFCNT();
@@ -351,6 +349,8 @@ nsFileTransport::nsFileTransport()
     if (nsnull == gFileTransportLog) {
         gFileTransportLog = PR_NewLogModule("nsFileTransport");
     }
+
+    mSpec = nsnull;
 #endif /* PR_LOGGING */
 }
 
@@ -591,8 +591,8 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     *result = mBufferInputStream.get();
     NS_ADDREF(*result);
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-           ("nsFileTransport: OpenInputStream [this=%x %s]",
-            this, (const char*)mSpec));
+           ("nsFileTransport: OpenInputStream [this=%x %s] startPosition=%d readCount=%d",
+            this, (const char*)mSpec, startPosition, readCount));
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -722,8 +722,8 @@ nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mTransferAmount = readCount;
 
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-           ("nsFileTransport: AsyncRead [this=%x %s]",
-            this, (const char*)mSpec));
+           ("nsFileTransport: AsyncRead [this=%x %s] startPosition=%d readCount=%d",
+            this, (const char*)mSpec, startPosition, readCount));
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -890,11 +890,17 @@ nsFileTransport::Process(void)
             return;
         }
         if (NS_FAILED(mStatus) || writeAmt == 0) {
+            PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                   ("nsFileTransport: READING [this=%x %s] %s writing to buffered output stream",
+                    this, (const char*)mSpec, NS_SUCCEEDED(mStatus) ? "done" : "error"));
             mState = END_READ;
             return;
         }
         if (mTransferAmount > 0) {
             mTransferAmount -= writeAmt;
+            PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                   ("nsFileTransport: READING [this=%x %s] %d bytes left to transfer",
+                    this, (const char*)mSpec, mTransferAmount));
         }
         PRUint32 offset = mOffset;
         mOffset += writeAmt;
@@ -903,6 +909,10 @@ nsFileTransport::Process(void)
                                                  mBufferInputStream,
                                                  offset, writeAmt);
             if (NS_FAILED(mStatus)) {
+                PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                       ("nsFileTransport: READING [this=%x %s] error notifying stream listener",
+                        this, (const char*)mSpec));
+
                 mState = END_READ;
                 return;
             }
