@@ -41,14 +41,12 @@ class nsIDOMElement;
 
 /* takes contentType, aURL, and element from its context */
 #define CHECK_CONTENT_POLICY(action, result)                                  \
-PR_BEGIN_MACRO                                                                \
     nsresult rv;                                                              \
     NS_WITH_SERVICE(nsIContentPolicy, policy, NS_CONTENTPOLICY_CONTRACTID, &rv);  \
     if (NS_FAILED(rv))                                                        \
         return rv;                                                            \
                                                                               \
-    return policy->##action(contentType, element, aURL.GetUnicode(), result); \
-PR_END_MACRO
+    return policy->##action(contentType, element, aURL.GetUnicode(), result)
 
 inline nsresult
 NS_CheckContentLoadPolicy(PRInt32 contentType, const nsString &aURL,
