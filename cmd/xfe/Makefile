@@ -374,7 +374,9 @@ ifdef EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
 
-BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
+BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a \
+		   $(DIST)/lib/libprgrss.a \
+		   $(NULL)
 
 endif # MOZ_JAVA
 
