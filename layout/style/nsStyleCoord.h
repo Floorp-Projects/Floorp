@@ -52,6 +52,7 @@ public:
 
   nsStyleCoord&  operator=(const nsStyleCoord& aCopy);
   PRBool         operator==(const nsStyleCoord& aOther) const;
+  PRBool         operator!=(const nsStyleCoord& aOther) const;
 
   nsStyleUnit GetUnit(void) const { return mUnit; }
   nscoord     GetCoordValue(void) const;
@@ -85,6 +86,7 @@ public:
 
 //  nsStyleSides&  operator=(const nsStyleSides& aCopy);  // use compiler's version
   PRBool         operator==(const nsStyleSides& aOther) const;
+  PRBool         operator!=(const nsStyleSides& aOther) const;
 
   nsStyleUnit GetLeftUnit(void) const;
   nsStyleUnit GetTopUnit(void) const;
@@ -119,6 +121,11 @@ protected:
 // -------------------------
 // nsStyleCoord inlines
 //
+inline PRBool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
+{
+  return PRBool(! ((*this) == aOther));
+}
+
 inline PRInt32 nsStyleCoord::GetCoordValue(void) const
 {
   NS_ASSERTION((mUnit == eStyleUnit_Coord), "not a coord value");
@@ -169,6 +176,11 @@ inline void nsStyleCoord::GetUnionValue(nsStyleUnion& aValue) const
 // -------------------------
 // nsStyleSides inlines
 //
+inline PRBool nsStyleSides::operator!=(const nsStyleSides& aOther) const
+{
+  return PRBool(! ((*this) == aOther));
+}
+
 inline nsStyleUnit nsStyleSides::GetLeftUnit(void) const
 {
   return (nsStyleUnit)mLeftUnit;
