@@ -1372,13 +1372,12 @@ Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c) {
   }
 }
 
-PUBLIC PRUnichar
-Wallet_UTF8Get(nsInputFileStream& strm) {
+static PRUnichar
+wallet_Get(nsInputFileStream& strm) {
   const PRUint32 buflen = 1000;
   static char buf[buflen+1];
   static PRUint32 last = 0;
   static PRUint32 next = 0;
-  PRUnichar c;
   if (next >= last) {
     next = 0;
     last = strm.read(buf, buflen);
@@ -1387,20 +1386,24 @@ Wallet_UTF8Get(nsInputFileStream& strm) {
       return 0;
     }
   }
-  c = (buf[next++] & 0xFF);
+  return (buf[next++] & 0xFF);
+}
 
+PUBLIC PRUnichar
+Wallet_UTF8Get(nsInputFileStream& strm) {
+  PRUnichar c = wallet_Get(strm);
   if ((c & 0x80) == 0x00) {
     return c;
   } else if ((c & 0xE0) == 0xC0) {
-    return (((c & 0x1F)<<6) + (strm.get() & 0x3F));
+    return (((c & 0x1F)<<6) + (wallet_Get(strm) & 0x3F));
   } else if ((c & 0xF0) == 0xE0) {
-    return (((c & 0x0F)<<12) + ((strm.get() & 0x3F)<<6) + (strm.get() & 0x3F));
+    return (((c & 0x0F)<<12) + ((wallet_Get(strm) & 0x3F)<<6) +
+           (wallet_Get(strm) & 0x3F));
   } else {
     return 0; /* this is an error, input was not utf8 */
   }
-}
+}/*
 
-/*
  * I have an even a simpler set of routines if you are not concerned about UTF-8.  The
  * algorithms for those routines are as follows:
  *
