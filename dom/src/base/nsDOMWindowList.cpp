@@ -118,9 +118,6 @@ nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
   if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
     *aReturn = nsnull;
-  NS_ASSERTION(globalObject != nsnull, "Couldn't get to the globalObject");
-  if (globalObject) {
-    CallQueryInterface(globalObject.get(), aReturn);
   }
   else {
     CallQueryInterface(globalObject.get(), aReturn);
