@@ -42,6 +42,8 @@ class nsIRDFResource;
 class nsIRDFContentModelBuilder : public nsISupports
 {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFCONTENTMODELBUILDER_IID; return iid; }
+
     /**
      * Point the content model builder to the document. The content model
      * builder must not reference count the document.
@@ -55,6 +57,11 @@ public:
      * via the nsIDocument::SetDocumentRoot() method.
      */
     NS_IMETHOD CreateRoot(nsIRDFResource* aResource) = 0;
+
+    /**
+     * Construct the contents for a container element.
+     */
+    NS_IMETHOD CreateContents(nsIRDFContent* aElement) = 0;
 
     /**
      * Called when a new assertion is made to the RDF graph that affects an
@@ -72,8 +79,8 @@ public:
 };
 
 
-extern nsresult NS_NewRDFTreeBuilder(nsIRDFContentModelBuilder** aResult);
 extern nsresult NS_NewRDFHTMLBuilder(nsIRDFContentModelBuilder** aResult);
-
+extern nsresult NS_NewRDFTreeBuilder(nsIRDFContentModelBuilder** aResult);
+extern nsresult NS_NewRDFXULBuilder(nsIRDFContentModelBuilder** aResult);
 
 #endif // nsIRDFContentModelBuilder_h__

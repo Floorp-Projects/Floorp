@@ -48,6 +48,7 @@
 // really sure if this is necessary...
 //#define CREATE_PROPERTIES_AS_ATTRIBUTES
 
+#include "nsCOMPtr.h"
 #include "nsDOMEvent.h"
 #include "nsGenericAttribute.h"
 #include "nsHashtable.h"
@@ -64,6 +65,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContent.h"
+#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
@@ -71,27 +73,33 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMElementIID,         NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
-static NS_DEFINE_IID(kIDOMNodeIID,            NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID,        NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID,     NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIRDFContentIID,         NS_IRDFCONTENT_IID);
+static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIDOMElementIID,             NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMEventReceiverIID,       NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID,            NS_IDOMNODELIST_IID);
+static NS_DEFINE_IID(kIEventListenerManagerIID,   NS_IEVENTLISTENERMANAGER_IID);
+static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID,         NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
+static NS_DEFINE_IID(kIRDFContentIID,             NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID,  NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIXMLContentIID,         NS_IXMLCONTENT_IID);
+static NS_DEFINE_IID(kIRDFDocumentIID,            NS_IRDFDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIXMLContentIID,             NS_IXMLCONTENT_IID);
 
-static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -105,8 +113,7 @@ class RDFResourceElementImpl : public nsIDOMElement,
 public:
     RDFResourceElementImpl(nsIRDFResource* aResource,
                            PRInt32 aNameSpaceID,
-                           nsIAtom* aTag,
-                           PRBool aChildrenMustBeGenerated);
+                           nsIAtom* aTag);
 
     ~RDFResourceElementImpl(void);
 
@@ -175,7 +182,7 @@ public:
 
     // nsIRDFContent
     NS_IMETHOD GetResource(nsIRDFResource*& aResource) const;
-    NS_IMETHOD ChildrenHaveBeenGenerated(PRBool& aResult) const;
+    NS_IMETHOD SetContainer(PRBool aIsContainer);
 
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -213,6 +220,8 @@ protected:
     /** The element's tag */
     nsIAtom*          mTag;
 
+    nsIEventListenerManager* mListenerManager;
+
     /** An array of attribute data. Instantiated
         lazily if attributes are required */
     nsVoidArray*      mAttributes;
@@ -220,40 +229,86 @@ protected:
     /** The RDF resource that the element corresponds to */
     nsIRDFResource*   mResource;
 
-    /** Set to PR_TRUE if the kids need to be generated */
-    PRBool mChildrenMustBeGenerated;
+    PRBool mContentsMustBeGenerated;
 
     /**
      * Dynamically generate the element's children from the RDF graph
      */
-    nsresult GenerateChildren(void) const;
+    nsresult EnsureContentsGenerated(void) const;
 };
 
 ////////////////////////////////////////////////////////////////////////
 // RDFResourceElementImpl
 
+static PRInt32 kNameSpaceID_RDF;
+static nsIAtom* kIdAtom;
+
 RDFResourceElementImpl::RDFResourceElementImpl(nsIRDFResource* aResource,
                                                PRInt32 aNameSpaceID,
-                                               nsIAtom* aTag,
-                                               PRBool aChildrenMustBeGenerated)
+                                               nsIAtom* aTag)
     : mDocument(nsnull),
       mScriptObject(nsnull),
       mChildren(nsnull),
       mParent(nsnull),
       mNameSpaceID(aNameSpaceID),
       mTag(aTag),
+      mListenerManager(nsnull),
       mAttributes(nsnull),
       mResource(aResource),
-      mChildrenMustBeGenerated(aChildrenMustBeGenerated)
+      mContentsMustBeGenerated(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aResource);
     NS_ADDREF(aTag);
+
+    if (nsnull == kIdAtom) {
+        kIdAtom = NS_NewAtom("ID");
+
+        nsresult rv;
+        nsINameSpaceManager* mgr;
+        if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+                                                           nsnull,
+                                                           kINameSpaceManagerIID,
+                                                           (void**) &mgr))) {
+static const char kRDFNameSpaceURI[]
+    = RDF_NAMESPACE_URI;
+
+            rv = mgr->RegisterNameSpace(kRDFNameSpaceURI, kNameSpaceID_RDF);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
+
+            NS_RELEASE(mgr);
+        }
+        else {
+            NS_ERROR("couldn't create namepsace manager");
+        }
+        
+    }
+    else {
+        NS_ADDREF(kIdAtom);
+    }
 }
 
 RDFResourceElementImpl::~RDFResourceElementImpl()
 {
+    if (nsnull != mAttributes) {
+        PRInt32 count = mAttributes->Count();
+        PRInt32 index;
+        for (index = 0; index < count; index++) {
+            nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+            delete attr;
+        }
+        delete mAttributes;
+    }
+
+    //NS_IF_RELEASE(mDocument); // not refcounted
+    //NS_IF_RELEASE(mParent)    // not refcounted
+    NS_IF_RELEASE(mTag);
+    NS_IF_RELEASE(mListenerManager);
+    NS_IF_RELEASE(mChildren);
     NS_RELEASE(mResource);
+
+    nsrefcnt refcnt;
+    NS_RELEASE2(kIdAtom, refcnt);
 }
 
 
@@ -261,8 +316,7 @@ nsresult
 NS_NewRDFResourceElement(nsIRDFContent** aResult,
                          nsIRDFResource* aResource,
                          PRInt32 aNameSpaceId,
-                         nsIAtom* aTag,
-                         PRBool aChildrenMustBeGenerated)
+                         nsIAtom* aTag)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
@@ -273,10 +327,10 @@ NS_NewRDFResourceElement(nsIRDFContent** aResult,
         return NS_ERROR_NULL_POINTER;
 
     RDFResourceElementImpl* element =
-        new RDFResourceElementImpl(aResource, aNameSpaceId, aTag, aChildrenMustBeGenerated);
+        new RDFResourceElementImpl(aResource, aNameSpaceId, aTag);
 
-    if (!element)
-        return NS_ERROR_NULL_POINTER;
+    if (! element)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(element);
     *aResult = element;
@@ -581,29 +635,52 @@ RDFResourceElementImpl::Normalize()
 NS_IMETHODIMP
 RDFResourceElementImpl::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsIEventListenerManager *manager;
+
+    if (NS_OK == GetListenerManager(&manager)) {
+        manager->AddEventListener(aListener, aIID);
+        NS_RELEASE(manager);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 RDFResourceElementImpl::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (nsnull != mListenerManager) {
+        mListenerManager->RemoveEventListener(aListener, aIID);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-RDFResourceElementImpl::GetListenerManager(nsIEventListenerManager** aInstancePtrResult)
+RDFResourceElementImpl::GetListenerManager(nsIEventListenerManager** aResult)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (nsnull != mListenerManager) {
+        NS_ADDREF(mListenerManager);
+        *aResult = mListenerManager;
+        return NS_OK;
+    }
+    nsresult rv = nsRepository::CreateInstance(kEventListenerManagerCID,
+                                               nsnull,
+                                               kIEventListenerManagerIID,
+                                               (void**) aResult);
+    if (NS_OK == rv) {
+        mListenerManager = *aResult;
+        NS_ADDREF(mListenerManager);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
-RDFResourceElementImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
+RDFResourceElementImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRepository::CreateInstance(kEventListenerManagerCID,
+                                        nsnull,
+                                        kIEventListenerManagerIID,
+                                        (void**) aResult);
 }
 
 
@@ -767,11 +844,9 @@ RDFResourceElementImpl::CanContainChildren(PRBool& aResult) const
 NS_IMETHODIMP
 RDFResourceElementImpl::ChildCount(PRInt32& aResult) const
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     aResult = mChildren ? mChildren->Count() : 0;
     return NS_OK;
@@ -780,11 +855,9 @@ RDFResourceElementImpl::ChildCount(PRInt32& aResult) const
 NS_IMETHODIMP
 RDFResourceElementImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     if (! mChildren) {
         aResult = nsnull;
@@ -806,11 +879,9 @@ RDFResourceElementImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 NS_IMETHODIMP
 RDFResourceElementImpl::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     aResult = (mChildren) ? (mChildren->IndexOf(aPossibleChild)) : (-1);
     return NS_OK;
@@ -819,11 +890,9 @@ RDFResourceElementImpl::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) co
 NS_IMETHODIMP
 RDFResourceElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     NS_PRECONDITION(nsnull != aKid, "null ptr");
 
@@ -832,8 +901,8 @@ RDFResourceElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool a
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    PRBool rv = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
-    if (rv) {
+    PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
+    if (insertOk) {
         NS_ADDREF(aKid);
         aKid->SetParent(this);
         //nsRange::OwnerChildInserted(this, aIndex);
@@ -851,11 +920,9 @@ RDFResourceElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool a
 NS_IMETHODIMP
 RDFResourceElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     NS_PRECONDITION(nsnull != mChildren, "illegal value");
     if (! mChildren)
@@ -866,8 +933,8 @@ RDFResourceElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool 
         return NS_ERROR_NULL_POINTER;
 
     nsIContent* oldKid = (nsIContent *)mChildren->ElementAt(aIndex);
-    PRBool rv = mChildren->ReplaceElementAt(aKid, aIndex);
-    if (rv) {
+    PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
+    if (replaceOk) {
         NS_ADDREF(aKid);
         aKid->SetParent(this);
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
@@ -888,12 +955,9 @@ RDFResourceElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool 
 NS_IMETHODIMP
 RDFResourceElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
-
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     NS_PRECONDITION((nsnull != aKid) && (aKid != this), "null ptr");
 
@@ -902,8 +966,8 @@ RDFResourceElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    PRBool rv = mChildren->AppendElement(aKid);
-    if (rv) {
+    PRBool appendOk = mChildren->AppendElement(aKid);
+    if (appendOk) {
         NS_ADDREF(aKid);
         aKid->SetParent(this);
         // ranges don't need adjustment since new child is at end of list
@@ -921,11 +985,9 @@ RDFResourceElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 NS_IMETHODIMP
 RDFResourceElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
-    if (mChildrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = GenerateChildren()))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = EnsureContentsGenerated()))
+        return rv;
 
     NS_PRECONDITION(mChildren != nsnull, "illegal value");
     if (! mChildren)
@@ -1023,9 +1085,16 @@ RDFResourceElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 RDFResourceElementImpl::GetAttribute(PRInt32 aNameSpaceID,
-                                   nsIAtom* aName,
-                                   nsString& aResult) const
+                                     nsIAtom* aName,
+                                     nsString& aResult) const
 {
+    NS_ASSERTION(nsnull != aName, "must have attribute name");
+    if (nsnull == aName) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     // XXX I'm not sure if we should support properties as attributes
     // or not...
@@ -1061,12 +1130,15 @@ done:
 
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
 
-    NS_ASSERTION(nsnull != aName, "must have attribute name");
-    if (nsnull == aName) {
-        return NS_ERROR_NULL_POINTER;
-    }
+    // Simulate the RDF:ID attribute to be the resource's URI
+    if (aNameSpaceID == kNameSpaceID_RDF && aName == kIdAtom) {
+        const char* uri;
+        if (NS_FAILED(rv = mResource->GetValue(&uri)))
+            return rv;
 
-    nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+        aResult = uri;
+        return NS_OK;
+    }
 
     if (nsnull != mAttributes) {
         PRInt32 count = mAttributes->Count();
@@ -1171,11 +1243,20 @@ done:
     return rv;
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
 
+    if (aIndex == 0) {
+        // The implicit RDF:ID property
+        aNameSpaceID = kNameSpaceID_RDF;
+        aName        = kIdAtom;
+        NS_IF_ADDREF(aName);
+        return NS_OK;
+    }
+
+    --aIndex;
     if (nsnull != mAttributes) {
         nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(aIndex);
         if (nsnull != attr) {
             aNameSpaceID = attr->mNameSpaceID;
-            aName = attr->mName;
+            aName        = attr->mName;
             NS_IF_ADDREF(aName);
             return NS_OK;
         }
@@ -1200,6 +1281,7 @@ RDFResourceElementImpl::GetAttributeCount(PRInt32& aResult) const
       aResult = 0;
     }
 
+    ++aResult; // For the implicit RDF:ID property
     return rv;
 }
 
@@ -1316,7 +1398,47 @@ RDFResourceElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
                                        PRUint32 aFlags,
                                        nsEventStatus& aEventStatus)
 {
-    return NS_OK;
+    nsresult ret = NS_OK;
+  
+    nsIDOMEvent* domEvent = nsnull;
+    if (DOM_EVENT_INIT == aFlags) {
+        aDOMEvent = &domEvent;
+    }
+  
+    //Capturing stage
+  
+    //Local handling stage
+    if (nsnull != mListenerManager) {
+        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
+    }
+
+    //Bubbling stage
+    if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull)) {
+        ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                      DOM_EVENT_BUBBLE, aEventStatus);
+    }
+
+    if (DOM_EVENT_INIT == aFlags) {
+        // We're leaving the DOM event loop so if we created a DOM event,
+        // release here.
+        if (nsnull != *aDOMEvent) {
+            nsrefcnt rc;
+            NS_RELEASE2(*aDOMEvent, rc);
+            if (0 != rc) {
+                // Okay, so someone in the DOM loop (a listener, JS object)
+                // still has a ref to the DOM Event but the internal data
+                // hasn't been malloc'd.  Force a copy of the data here so the
+                // DOM Event is still valid.
+                nsIPrivateDOMEvent *privateEvent;
+                if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&privateEvent)) {
+                    privateEvent->DuplicatePrivateData();
+                    NS_RELEASE(privateEvent);
+                }
+            }
+        }
+        aDOMEvent = nsnull;
+    }
+    return ret;
 }
 
 
@@ -1359,12 +1481,17 @@ RDFResourceElementImpl::GetResource(nsIRDFResource*& aResource) const
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
-RDFResourceElementImpl::ChildrenHaveBeenGenerated(PRBool& aResult) const
+RDFResourceElementImpl::SetContainer(PRBool aIsContainer)
 {
-    // XXX not exactly the same semantic information; I wonder if
-    // this'll cause problems...
-    aResult = (! mChildrenMustBeGenerated);
+    // If this item is a container, then we'll need to remember to
+    // dynamically generate the contents of the container when asked.
+    if (aIsContainer)
+        mContentsMustBeGenerated = PR_TRUE;
+    else
+        mContentsMustBeGenerated = PR_FALSE;
+
     return NS_OK;
 }
 
@@ -1373,8 +1500,11 @@ RDFResourceElementImpl::ChildrenHaveBeenGenerated(PRBool& aResult) const
 
 
 nsresult
-RDFResourceElementImpl::GenerateChildren(void) const
+RDFResourceElementImpl::EnsureContentsGenerated(void) const
 {
+    if (! mContentsMustBeGenerated)
+        return NS_OK;
+
     nsresult rv;
 
     NS_PRECONDITION(mResource != nsnull, "not initialized");
@@ -1392,25 +1522,23 @@ RDFResourceElementImpl::GenerateChildren(void) const
         if (NS_FAILED(rv = NS_NewISupportsArray(&unconstThis->mChildren)))
             return rv;
     }
-    else {
-        unconstThis->mChildren->Clear();
-    }
 
     // Clear this value *first*, so we can re-enter the nsIContent
     // getters if needed.
-    unconstThis->mChildrenMustBeGenerated = PR_FALSE;
+    unconstThis->mContentsMustBeGenerated = PR_FALSE;
 
-    nsIRDFDocument* rdfDoc;
-    if (NS_SUCCEEDED(rv = mDocument->QueryInterface(kIRDFDocumentIID, (void**) &rdfDoc))) {
-        if (NS_FAILED(rv = rdfDoc->CreateChildren(unconstThis)))
-            // Well, maybe it was a transient error. This'll let use try
-            // again some time in the future.
-            unconstThis->mChildrenMustBeGenerated = PR_TRUE;
+    nsCOMPtr<nsIRDFDocument> rdfDoc;
+    if (NS_FAILED(rv = mDocument->QueryInterface(kIRDFDocumentIID,
+                                                 (void**) getter_AddRefs(rdfDoc))))
+        return rv;
 
-        NS_RELEASE(rdfDoc);
-    }
+    nsCOMPtr<nsIRDFContentModelBuilder> builder;
+    if (NS_FAILED(rv = rdfDoc->GetContentModelBuilder(getter_AddRefs(builder))))
+        return rv;
 
+    rv = builder->CreateContents(unconstThis);
     NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
     return rv;
 }
+
 

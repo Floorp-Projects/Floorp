@@ -36,6 +36,8 @@ class nsIOutputStream;
 class nsIRDFXMLSource : public nsISupports
 {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFXMLSOURCE_IID; return iid; }
+
     NS_IMETHOD Serialize(nsIOutputStream* aStream) = 0;
 };
 

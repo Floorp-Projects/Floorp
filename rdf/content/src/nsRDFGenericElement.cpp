@@ -210,8 +210,10 @@ RDFGenericElementImpl::~RDFGenericElementImpl()
         delete mAttributes;
     }
 
-    // mDocument is not refcounted
+    //NS_IF_RELEASE(mDocument) // not refcounted
+    //NS_IF_RELEASE(mParent)   // not refcounted
     //NS_IF_RELEASE(mScriptObject); XXX don't forget!
+    NS_IF_RELEASE(mTag);
     NS_IF_RELEASE(mChildren);
 }
 

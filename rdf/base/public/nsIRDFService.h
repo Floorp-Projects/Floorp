@@ -45,8 +45,14 @@ class nsIRDFResourceFactory;
 
 typedef nsresult (*NSDataSourceConstructorCallback)(nsIRDFDataSource** aResult);
 
+// {BFD05261-834C-11d2-8EAC-00805F29F370}
+#define NS_IRDFSERVICE_IID \
+{ 0xbfd05261, 0x834c, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
+
+
 class nsIRDFService : public nsISupports {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFSERVICE_IID; return iid; }
 
     // Resource management routines
 
@@ -162,10 +168,6 @@ public:
     NS_IMETHOD CreateBrowserDatabase(nsIRDFDataBase** dataBase) = 0;
 
 };
-
-// {BFD05261-834C-11d2-8EAC-00805F29F370}
-#define NS_IRDFSERVICE_IID \
-{ 0xbfd05261, 0x834c, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
 
 extern nsresult

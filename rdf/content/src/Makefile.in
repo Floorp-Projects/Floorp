@@ -34,6 +34,7 @@ CPPSRCS =				\
 	nsRDFHTMLBuilder.cpp		\
 	nsRDFResourceElement.cpp	\
 	nsRDFTreeBuilder.cpp		\
+	nsRDFXULBuilder.cpp		\
 	$(NULL)
 
 EXPORTS = \

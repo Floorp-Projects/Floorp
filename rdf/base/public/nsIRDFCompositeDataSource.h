@@ -41,6 +41,8 @@ class nsIRDFDataSource;
  */
 class nsIRDFCompositeDataSource : public nsIRDFDataSource {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFCOMPOSITEDATASOURCE_IID; return iid; }
+
     /**
      * Add a datasource the the database.
      */

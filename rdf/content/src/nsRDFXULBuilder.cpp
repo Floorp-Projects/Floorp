@@ -69,6 +69,7 @@ public:
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
     NS_IMETHOD CreateRoot(nsIRDFResource* aResource);
+    NS_IMETHOD CreateContents(nsIRDFContent* aElement);
     NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
     NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 };
@@ -118,6 +119,14 @@ RDFXULBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
 
 NS_IMETHODIMP
 RDFXULBuilderImpl::CreateRoot(nsIRDFResource* aResource)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::CreateContents(nsIRDFContent* aElement)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

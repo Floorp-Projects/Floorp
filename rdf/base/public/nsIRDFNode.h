@@ -54,6 +54,8 @@
 
 class nsIRDFNode : public nsISupports {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFNODE_IID; return iid; }
+
     /**
      * Determine if two nodes are identical
      */
@@ -64,8 +66,15 @@ public:
 /**
  * A resource node, which has unique object identity.
  */
+
+// {E0C493D1-9542-11d2-8EB8-00805F29F370}
+#define NS_IRDFRESOURCE_IID \
+{ 0xe0c493d1, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
+
 class nsIRDFResource : public nsIRDFNode {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFRESOURCE_IID; return iid; }
+
     /**
      * Get the 8-bit string value of the node.
      */
@@ -82,13 +91,15 @@ public:
     NS_IMETHOD EqualsString(const char* uri, PRBool* result) const = 0;
 };
 
-// {E0C493D1-9542-11d2-8EB8-00805F29F370}
-#define NS_IRDFRESOURCE_IID \
-{ 0xe0c493d1, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
+// {E0C493D2-9542-11d2-8EB8-00805F29F370}
+#define NS_IRDFLITERAL_IID \
+{ 0xe0c493d2, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
 class nsIRDFLiteral : public nsIRDFNode {
 public:
+    static const nsIID& IID() { static nsIID iid = NS_IRDFLITERAL_IID; return iid; }
+
     /**
      * Get the Unicode string value of the node.
      */
@@ -100,9 +111,6 @@ public:
     NS_IMETHOD EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const = 0;
 };
 
-// {E0C493D2-9542-11d2-8EB8-00805F29F370}
-#define NS_IRDFLITERAL_IID \
-{ 0xe0c493d2, 0x9542, 0x11d2, { 0x8e, 0xb8, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
 
 #endif // nsIRDFNode_h__

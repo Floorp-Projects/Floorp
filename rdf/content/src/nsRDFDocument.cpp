@@ -29,6 +29,7 @@
 
  */
 
+#include "nsCOMPtr.h"
 #include "nsIArena.h"
 #include "nsICollection.h"
 #include "nsIContent.h"
@@ -82,6 +83,7 @@ static NS_DEFINE_IID(kINameSpaceManagerIID,   NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIParserIID,             NS_IPARSER_IID);
 static NS_DEFINE_IID(kIPresShellIID,          NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
@@ -282,10 +284,10 @@ public:
     NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
     // nsIRDFDocument interface
-    NS_IMETHOD Init(nsIRDFContentModelBuilder* aBuilder);
+    NS_IMETHOD SetContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
+    NS_IMETHOD GetContentModelBuilder(nsIRDFContentModelBuilder** aBuilder);
     NS_IMETHOD SetRootResource(nsIRDFResource* resource);
     NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource*& result);
-    NS_IMETHOD CreateChildren(nsIRDFContent* element);
     NS_IMETHOD AddTreeProperty(nsIRDFResource* resource);
     NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource);
     NS_IMETHOD IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) const;
@@ -311,9 +313,12 @@ public:
     NS_IMETHOD OnRootResourceFound(nsIRDFXMLDataSource* aDataSource, nsIRDFResource* aResource);
     NS_IMETHOD OnCSSStyleSheetAdded(nsIRDFXMLDataSource* aDataSource, nsIURL* aStyleSheetURI);
     NS_IMETHOD OnNamedDataSourceAdded(nsIRDFXMLDataSource* aDataSource, const char* aNamedDataSourceURI);
+    NS_IMETHOD OnContentModelBuilderSpecified(nsIRDFXMLDataSource* aDataSource, nsID* aCID);
 
     // Implementation methods
+    nsresult Init(void);
     nsresult StartLayout(void);
+    nsresult SetContentModelBuilderFromCID(nsID& aCID);
 
 protected:
     nsIContent*
@@ -650,10 +655,15 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
             }
         }
 
-        nsIRDFResource* root;
-        if (NS_SUCCEEDED(rv = mDocumentDataSource->GetRootResource(&root))) {
-            SetRootResource(root);
-            StartLayout();
+        nsID cid;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->GetContentModelBuilderCID(&cid))) {
+            SetContentModelBuilderFromCID(cid);
+
+            nsIRDFResource* root;
+            if (NS_SUCCEEDED(rv = mDocumentDataSource->GetRootResource(&root))) {
+                SetRootResource(root);
+                StartLayout();
+            }
         }
 
         // XXX Allright, this is an atrocious hack. Basically, we
@@ -1478,54 +1488,33 @@ RDFDocumentImpl::AppendToEpilog(nsIContent* aContent)
 // nsIRDFDocument interface
 
 NS_IMETHODIMP
-RDFDocumentImpl::Init(nsIRDFContentModelBuilder* aBuilder)
+RDFDocumentImpl::SetContentModelBuilder(nsIRDFContentModelBuilder* aBuilder)
 {
     NS_PRECONDITION(aBuilder != nsnull, "null ptr");
     if (! aBuilder)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
-
     NS_ADDREF(aBuilder);
     mBuilder = aBuilder;
 
-    if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
-        return rv;
-
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
-                                                    nsnull,
-                                                    kINameSpaceManagerIID,
-                                                    (void**) &mNameSpaceManager)))
-        return rv;
-
-    static PRInt32 kInitialResourceTableSize = 1023;
-
-    if ((mResources = PL_NewHashTable(kInitialResourceTableSize,
-                                      rdf_HashPointer,
-                                      PL_CompareValues,
-                                      PL_CompareValues,
-                                      nsnull,
-                                      nsnull)) == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFCompositeDataSourceIID,
-                                                    (void**) &mDB)))
-        return rv;
-
-    if (NS_FAILED(rv = mDB->AddObserver(this)))
-        return rv;
-
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                    kIRDFServiceIID,
-                                                    (nsISupports**) &mRDFService)))
-        return rv;
+    nsresult rv;
 
     // The builder may try to ask us for our DB, so do this last...
     if (NS_FAILED(rv = mBuilder->SetDocument(this)))
         return rv;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFDocumentImpl::GetContentModelBuilder(nsIRDFContentModelBuilder** aBuilder)
+{
+    NS_PRECONDITION(aBuilder != nsnull, "null ptr");
+    if (! aBuilder)
+        return NS_ERROR_NULL_POINTER;
+
+    *aBuilder = mBuilder;
+    NS_IF_ADDREF(mBuilder);
     return NS_OK;
 }
 
@@ -1553,88 +1542,6 @@ RDFDocumentImpl::GetDataBase(nsIRDFCompositeDataSource*& result)
     return NS_OK;
 }
 
-
-// XXX It may make sense to factor the implementation of this method
-// into the content model builder: maybe the content model builder can
-// do a more efficient implementation?
-
-NS_IMETHODIMP
-RDFDocumentImpl::CreateChildren(nsIRDFContent* element)
-{
-    nsresult rv;
-
-    NS_ASSERTION(mDB, "not initialized");
-    if (! mDB)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    NS_ASSERTION(mRDFService, "not initialized");
-    if (! mRDFService)
-        return NS_ERROR_NOT_INITIALIZED;
-
-
-    nsIRDFResource* resource = nsnull;
-    nsIRDFArcsOutCursor* properties = nsnull;
-
-    if (NS_FAILED(rv = element->GetResource(resource)))
-        goto done;
-
-    // Create a cursor that'll enumerate all of the outbound arcs
-    //
-    // XXX This is really horrendous and could use a good does of
-    // special casing. For example, we should treat RDF containers
-    // specially and _not_ enumerate each of the arcs.
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, &properties)))
-        goto done;
-
-    while (NS_SUCCEEDED(rv = properties->Advance())) {
-        nsIRDFResource* property = nsnull;
-
-        if (NS_FAILED(rv = properties->GetValue((nsIRDFNode**)&property)))
-            break;
-
-#ifdef DEBUG
-        {
-            const char* s;
-            property->GetValue(&s);
-        }
-#endif
-
-        // Create a second cursor that'll enumerate all of the values
-        // for all of the arcs.
-        nsIRDFAssertionCursor* assertions;
-        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, &assertions))) {
-            NS_RELEASE(property);
-            break;
-        }
-
-        while (NS_SUCCEEDED(rv = assertions->Advance())) {
-            nsIRDFNode* value;
-            if (NS_SUCCEEDED(rv = assertions->GetValue((nsIRDFNode**)&value))) {
-                // At this point, the specific RDFDocumentImpl
-                // implementations will create an appropriate child
-                // element (or elements).
-                rv = mBuilder->OnAssert(element, property, value);
-                NS_RELEASE(value);
-            }
-
-            if (NS_FAILED(rv))
-                break;
-        }
-
-        NS_RELEASE(assertions);
-        NS_RELEASE(property);
-    }
-
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        // This is a normal return code from nsIRDFCursor::Advance()
-        rv = NS_OK;
-
-done:
-    NS_IF_RELEASE(resource);
-    NS_IF_RELEASE(properties);
-
-    return rv;
-}
 
 NS_IMETHODIMP
 RDFDocumentImpl::AddTreeProperty(nsIRDFResource* resource)
@@ -1784,13 +1691,10 @@ RDFDocumentImpl::OnAssert(nsIRDFResource* subject,
         // it's not in the tree: we're done!
         return NS_OK;
 
-    PRBool hasLiveKids;
-    if (NS_SUCCEEDED(element->ChildrenHaveBeenGenerated(hasLiveKids)) && hasLiveKids) {
-        // that is, if the children have _already_ been generated,
-        // manually add this new one. Otherwise, just ignore it: it'll
-        // get generated when someone asks the content model for it.
-        mBuilder->OnAssert(element, predicate, object);
-    }
+    nsresult rv;
+    rv = mBuilder->OnAssert(element, predicate, object);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error notifying content model builder");
+
     return NS_OK;
 }
 
@@ -1808,13 +1712,10 @@ RDFDocumentImpl::OnUnassert(nsIRDFResource* subject,
         // it's not in the tree: we're done!
         return NS_OK;
 
-    PRBool hasLiveKids;
-    if (NS_SUCCEEDED(element->ChildrenHaveBeenGenerated(hasLiveKids)) && hasLiveKids) {
-        // that is, if the children have _already_ been generated,
-        // manually remove this one. Otherwise, just ignore it: it'll
-        // never get generated anyway...
-        mBuilder->OnUnassert(element, predicate, object);
-    }
+    nsresult rv;
+    rv = mBuilder->OnUnassert(element, predicate, object);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error notifying content model builder");
+
     return NS_OK;
 }
 
@@ -1847,6 +1748,8 @@ RDFDocumentImpl::OnResume(nsIRDFXMLDataSource* aDataSource)
 NS_IMETHODIMP
 RDFDocumentImpl::OnEndLoad(nsIRDFXMLDataSource* aDataSource)
 {
+    // XXX this is a temporary hack...please forgive...
+    StartLayout();
     return EndLoad();
 }
 
@@ -1857,7 +1760,8 @@ RDFDocumentImpl::OnRootResourceFound(nsIRDFXMLDataSource* aDataSource, nsIRDFRes
 {
     nsresult rv;
     if (NS_SUCCEEDED(rv = SetRootResource(aResource))) {
-        rv = StartLayout();
+        // XXX this is a temporary hack...please forgive...
+        //rv = StartLayout();
     }
     return rv;
 }
@@ -1873,6 +1777,14 @@ NS_IMETHODIMP
 RDFDocumentImpl::OnNamedDataSourceAdded(nsIRDFXMLDataSource* aDataSource, const char* aNamedDataSourceURI)
 {
     return AddNamedDataSource(aNamedDataSourceURI);
+}
+
+
+NS_IMETHODIMP
+RDFDocumentImpl::OnContentModelBuilderSpecified(nsIRDFXMLDataSource* aDataSource,
+                                                nsID* aCID)
+{
+    return SetContentModelBuilderFromCID(*aCID);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1972,6 +1884,67 @@ done:
 
 
 nsresult
+RDFDocumentImpl::Init(void)
+{
+    nsresult rv;
+
+    if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
+        return rv;
+
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+                                                    nsnull,
+                                                    kINameSpaceManagerIID,
+                                                    (void**) &mNameSpaceManager)))
+        return rv;
+
+    static PRInt32 kInitialResourceTableSize = 1023;
+
+    if ((mResources = PL_NewHashTable(kInitialResourceTableSize,
+                                      rdf_HashPointer,
+                                      PL_CompareValues,
+                                      PL_CompareValues,
+                                      nsnull,
+                                      nsnull)) == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
+                                                    nsnull,
+                                                    kIRDFCompositeDataSourceIID,
+                                                    (void**) &mDB)))
+        return rv;
+
+    if (NS_FAILED(rv = mDB->AddObserver(this)))
+        return rv;
+
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
+                                                    (nsISupports**) &mRDFService)))
+        return rv;
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFDocumentImpl::SetContentModelBuilderFromCID(nsID& aCID)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFContentModelBuilder> builder;
+    if (NS_FAILED(rv = nsRepository::CreateInstance(aCID, nsnull,
+                                                    kIRDFContentModelBuilderIID,
+                                                    (void**) getter_AddRefs(builder))))
+        return rv;
+
+    if (NS_FAILED(rv = SetContentModelBuilder(builder)))
+        return rv;
+
+    return NS_OK;
+}
+
+
+
+nsresult
 RDFDocumentImpl::StartLayout(void)
 {
     PRInt32 count = GetNumberOfShells();
@@ -2005,7 +1978,6 @@ RDFDocumentImpl::StartLayout(void)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
@@ -2020,6 +1992,13 @@ NS_NewRDFDocument(nsIRDFDocument** result)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(doc);
+
+    nsresult rv;
+    if (NS_FAILED(rv = doc->Init())) {
+        NS_RELEASE(doc);
+        return rv;
+    }
+
     *result = doc;
     return NS_OK;
 }
