@@ -377,6 +377,9 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	nsresult ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
+
+	void SetProgressBarPercent(int percent);
+	void SetProgressStatus(char * message);
 };
 
 NS_BEGIN_EXTERN_C

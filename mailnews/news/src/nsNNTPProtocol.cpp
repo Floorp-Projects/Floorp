@@ -70,6 +70,7 @@
 #include "nsIMsgAccountManager.h"
 
 #include "nsIPrompt.h"
+#include "nsIMsgStatusFeedback.h" 
 
 #define PREF_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
@@ -600,7 +601,10 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       if (NS_FAILED(rv) || (!m_newsHost)) 
           goto FAIL;
 
-      m_newsHost->Initialize(m_userName, m_hostName, port ? port : NEWS_PORT);
+      // m_newsHost holds m_runningURL (make this a weak reference)
+      // m_runningURL holds m_newsHost
+      // need to make sure there is no cycle. 
+      m_newsHost->Initialize(m_runningURL, m_userName, m_hostName, port ? port : NEWS_PORT);
 
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
@@ -3481,6 +3485,8 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 					0;
 #ifdef UNREADY_CODE
 		FE_SetProgressBarPercent (ce->window_id, percent);
+#else
+		SetProgressBarPercent(percent);
 #endif
 		
 		/* only update every 20 groups for speed */
@@ -3496,12 +3502,14 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 #ifdef UNREADY_CODE
 			statusText = PR_smprintf (XP_GetString(XP_THERMO_PERCENT_FORM), thisGroup, totalGroups);
 #else
-			statusText = nsnull;
+			statusText = PR_smprintf ("%s / %s", thisGroup, totalGroups);
 #endif
 			if (statusText)
 			{
 #ifdef UNREADY_CODE
 				FE_Progress (ce->window_id, statusText);
+#else
+				printf("FE_Progress(%s)\n",statusText);
 #endif
 				PR_Free(statusText);
 			}
@@ -3519,6 +3527,8 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		{
 #ifdef UNREADY_CODE
 			FE_SetProgressBarPercent (ce->window_id, -1);
+#else
+			SetProgressBarPercent(-1);
 #endif
 			m_newsRCListCount = 0;
 		}
@@ -3907,8 +3917,8 @@ PRInt32 nsNNTPProtocol::Cancel()
 #endif /* BUG_7770_FIXED */
     }
 
-#ifdef DEBUG_NEWS
     // just me for now...
+#ifdef DEBUG_seth
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);
@@ -4937,3 +4947,59 @@ nsresult nsNNTPProtocol::CloseSocket()
 
 	return nsMsgProtocol::CloseSocket();
 }
+
+void nsNNTPProtocol::SetProgressBarPercent(int percent)
+{
+#ifdef DEBUG_NEWS
+	printf("nsNNTPProtocol::SetProgressBarPercent(%d)\n",percent);
+#endif
+	PRUnichar *progressMsg = nsnull;	
+	// PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);
+
+	if (!m_runningURL) return;
+
+	nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+	if (mailnewsUrl) {
+		nsCOMPtr <nsIMsgStatusFeedback> feedback;
+		mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+
+		char *printfString = PR_smprintf("%d%%", percent);
+		if (printfString) {
+			nsString formattedString(printfString);
+			progressMsg = nsCRT::strdup(formattedString.GetUnicode());
+		}
+		if (feedback) {
+			feedback->ShowProgress(percent);
+			feedback->ShowStatusString(progressMsg);
+		} 
+	}                
+	PR_FREEIF(progressMsg);                                           
+}
+
+void
+nsNNTPProtocol::SetProgressStatus(char *message)
+{
+#ifdef DEBUG_NEWS
+        printf("nsNNTPProtocol::SetProgressStatus(%s)\n",message);
+#endif
+        PRUnichar *progressMsg = nsnull;
+        // PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);
+
+        if (!m_runningURL) return;
+
+        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+        if (mailnewsUrl) {
+                nsCOMPtr <nsIMsgStatusFeedback> feedback;
+                mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+
+                char *printfString = PR_smprintf("%s", message);
+                if (printfString) {
+                        nsString formattedString(printfString);
+                        progressMsg = nsCRT::strdup(formattedString.GetUnicode());
+                }
+                if (feedback) {
+                        feedback->ShowStatusString(progressMsg);
+                }
+        }
+        PR_FREEIF(progressMsg);
+}                

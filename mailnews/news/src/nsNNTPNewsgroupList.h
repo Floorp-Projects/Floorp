@@ -30,6 +30,7 @@
 #include "nsINNTPNewsgroup.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeySet.h"
+#include "nsINntpUrl.h"
 
 
 /* The below is all stuff that we remember for netlib about which
@@ -86,7 +87,7 @@ public:
   NS_IMETHOD ClearXOVERState();
   NS_IMETHOD GetGroupName(char **_retval);
     
-  NS_IMETHOD Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname);
+  NS_IMETHOD Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname);
 
 private:
   NS_METHOD CleanUp();
@@ -111,6 +112,8 @@ private:
   nsresult			ParseLine(char *line, PRUint32 *message_number);
   PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
   nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
+  void				SetProgressBarPercent(int percent);
+  void				SetProgressStatus(char *message);
 
 protected:
   nsIMsgDatabase	*m_newsDB;
@@ -138,6 +141,7 @@ protected:
   
   struct MSG_NewsKnown	m_knownArts;
   nsMsgKeySet		*m_set;
+  nsINntpUrl		*m_runningURL;
 };
     
 #endif /* nsNNTPNewsgroupListState_h___ */

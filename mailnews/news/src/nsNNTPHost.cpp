@@ -47,7 +47,7 @@ nsNNTPHost::~nsNNTPHost()
 {
 }
 
-nsresult nsNNTPHost::Initialize(const char *username, const char *hostname, PRInt32 port)
+nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname, PRInt32 port)
 {
     m_hostname = new char [PL_strlen(hostname) + 1];
 	PL_strcpy(m_hostname, hostname);
@@ -83,7 +83,7 @@ nsresult nsNNTPHost::Initialize(const char *username, const char *hostname, PRIn
 	m_groupTree = nsnull;
     m_inhaled = PR_FALSE;
     m_uniqueId = 0;
-
+    m_runningURL = runningURL;
     return NS_OK;
 }
 
@@ -2618,7 +2618,7 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
     rv = newsgroup->GetName(&name);
     if (NS_FAILED(rv)) return rv;
 
-    rv = newsgroupList->Initialize(this, newsgroup, m_username, m_hostname, name);
+    rv = newsgroupList->Initialize(this, m_runningURL, newsgroup, m_username, m_hostname, name);
     PR_FREEIF(name);
     name = nsnull;
     if (NS_FAILED(rv)) return rv;

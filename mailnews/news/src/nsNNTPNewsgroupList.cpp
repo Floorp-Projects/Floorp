@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDBFolderInfo.h"
 #include "nsINewsDatabase.h"
+#include "nsIMsgStatusFeedback.h"
 
 #ifdef HAVE_PANES
 class MSG_Master;
@@ -92,7 +93,7 @@ NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 
 
 nsresult
-nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname)
+nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname)
 {
 	m_newsDB = nsnull;
 	m_groupName = PL_strdup(groupname);
@@ -126,7 +127,7 @@ nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, 
 	m_maxArticles = 0;
 	m_firstMsgToDownload = 0;
 	m_lastMsgToDownload = 0;
-
+	m_runningURL=runningURL;
     return NS_OK;
 }
 
@@ -283,6 +284,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				if (parentpane)
 					context = parentpane->GetContext();
 				FE_Progress (context, noNewMsgs);
+#else
+				SetProgressStatus("There are no new messages on the server.");
 #endif /* HAVE_PANES */
 			}
 		}
@@ -764,22 +767,26 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 		PRInt32	numDownloaded = lastIndex;
 		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
 
-#ifdef HAVE_PANES
 		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
+#ifdef HAVE_PANES
 		FE_SetProgressBarPercent (m_pane->GetContext(), percent);
+#else	
+		SetProgressBarPercent(percent);
 #endif
 		
-		/* only update every 10 articles for speed */
+		/* only update every  NEWS_ART_DISPLAY_FREQ articles for speed */
 		if ( (totIndex <= NEWS_ART_DISPLAY_FREQ) || ((lastIndex % NEWS_ART_DISPLAY_FREQ) == 0) || (lastIndex == totIndex))
 		{
 #ifdef HAVE_XPGETSTRING
 			char *statusTemplate = XP_GetString (MK_HDR_DOWNLOAD_COUNT);
-#else
-			char *statusTemplate = "XP_GetString not implemented in nsNNTPNewsgroupList.";
-#endif
 			char *statusString = PR_smprintf (statusTemplate, numDownloaded, totToDownload);
+#else
+			char *statusString = PR_smprintf ("Received %d of %d headers", numDownloaded, totToDownload);
+#endif
 #ifdef HAVE_PANES
 			FE_Progress (m_pane->GetContext(), statusString);
+#else
+			SetProgressStatus(statusString);
 #endif
 			PR_Free(statusString);
 		}
@@ -887,13 +894,18 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 
 			char *statusTemplate = XP_GetString (MK_HDR_DOWNLOAD_COUNT);
 			char *statusString = PR_smprintf (statusTemplate,  m_lastProcessedNumber - m_firstMsgNumber + 1, m_lastMsgNumber - m_firstMsgNumber + 1);
-
+#else
+			char *statusString = PR_smprintf ("Downloading articles %d-%d",  m_lastProcessedNumber - m_firstMsgNumber + 1, m_lastMsgNumber - m_firstMsgNumber + 1);
+#endif
 			if (statusString)
 			{
+#ifdef HAVE_PANES
 				FE_Progress (context, statusString);
+#else
+				SetProgressStatus(statusString);
+#endif
 				PR_Free(statusString);
 			}
-#endif
 		}
 #ifdef HAVE_PANES
 		nsINNTPNewsgroup *newsFolder =
@@ -938,3 +950,50 @@ nsNNTPNewsgroupList::GetGroupName(char **_retval)
 		return NS_ERROR_NULL_POINTER;
 	}
 }
+
+void
+nsNNTPNewsgroupList::SetProgressBarPercent(int percent)
+{
+#ifdef DEBUG_NEWS
+        printf("nsNNTPNewsgroupList::SetProgressBarPercent(%d)\n",percent);
+#endif
+        if (!m_runningURL) return;
+
+        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+        if (mailnewsUrl) {
+                nsCOMPtr <nsIMsgStatusFeedback> feedback;
+                mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+
+                if (feedback) {
+                        feedback->ShowProgress(percent);
+                }
+        }
+} 
+
+void
+nsNNTPNewsgroupList::SetProgressStatus(char *message)
+{
+#ifdef DEBUG_NEWS
+        printf("nsNNTPNewsgroupList::SetProgressStatus(%s)\n",message);
+#endif
+        PRUnichar *progressMsg = nsnull;
+        // PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);
+
+        if (!m_runningURL) return;
+
+        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+        if (mailnewsUrl) {
+                nsCOMPtr <nsIMsgStatusFeedback> feedback;
+                mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+
+                char *printfString = PR_smprintf("%s", message);
+                if (printfString) {
+                        nsString formattedString(printfString);
+                        progressMsg = nsCRT::strdup(formattedString.GetUnicode());
+                }
+                if (feedback) {
+                        feedback->ShowStatusString(progressMsg);
+                }
+        }
+        PR_FREEIF(progressMsg);
+}     

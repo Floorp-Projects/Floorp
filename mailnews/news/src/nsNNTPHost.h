@@ -58,6 +58,7 @@
 #include "prio.h"
 
 #include "nsCOMPtr.h"
+#include "nsINntpUrl.h"
 
 /* temporary hacks to test if this compiles */
 typedef void MSG_GroupName;
@@ -69,7 +70,7 @@ public:
 
     NS_DECL_ISUPPORTS
     // nsINNTPHost
-    NS_IMETHOD Initialize(const char *username, const char *hostname, PRInt32 port);
+    NS_IMETHOD Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname, PRInt32 port);
     
     NS_IMPL_CLASS_GETSET(SupportsExtensions, PRBool,
                          m_supportsExtensions);
@@ -446,6 +447,8 @@ protected:
 								// starts.
 	PRInt32 m_fileSize;			// Total number of bytes in the hostinfo file.
 	PRInt32 m_uniqueId;			// Unique number assigned to each newsgroup.
+
+	nsINntpUrl *m_runningURL;
 	
 };
 

@@ -27,6 +27,7 @@
 
 interface nsINNTPHost;
 interface nsINNTPNewsgroup;
+interface nsINntpUrl;
 
 [scriptable, uuid(E628ED19-9452-11d2-B7EA-00805F05FFA5)]
 interface nsINNTPNewsgroupList : nsISupports {
@@ -63,6 +64,6 @@ interface nsINNTPNewsgroupList : nsISupports {
   void ClearXOVERState();
   string GetGroupName();
 
-  void Initialize(in nsINNTPHost host, in nsINNTPNewsgroup newsgroup, in string username, in string hostname, in string groupname);
+  void Initialize(in nsINNTPHost host, in nsINntpUrl runningURL, in nsINNTPNewsgroup newsgroup, in string username, in string hostname, in string groupname);
 };
 
