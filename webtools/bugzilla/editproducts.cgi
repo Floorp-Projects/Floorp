@@ -436,6 +436,7 @@ if ($action eq 'new') {
 
     print "OK, done.<p>\n";
     PutTrailer($localtrailer,
+        "<a href=\"editproducts.cgi?action=add\">add</a> a new product",
         "<a href=\"editcomponents.cgi?action=add&product=" .
         url_quote($product) . "\">add</a> components to this new product");
     exit;

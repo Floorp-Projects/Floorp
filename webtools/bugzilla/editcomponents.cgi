@@ -478,11 +478,13 @@ if ($action eq 'new') {
         PutTrailer("<a href=\"editcomponents.cgi?product=" .
             url_quote($product) . "\">edit</a> more components",
             "<a href=\"editcomponents.cgi?product=". url_quote($product) .
-            "&action=add\">add</a> another component");
+            "&action=add\">add</a> another component",
+            "<a href=\"editproducts.cgi?action=add\">add</a> a new product");
     } else {
         PutTrailer("<a href=\"editcomponents.cgi\">edit</a> more components",
             "<a href=\"editcomponents.cgi?action=add\">add</a>" .
-            "another component");
+            "another component",
+            "<a href=\"editproducts.cgi?action=add\">add</a> a new product");
     }
     exit;
 }
