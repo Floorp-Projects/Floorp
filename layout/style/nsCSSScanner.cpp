@@ -1078,7 +1078,7 @@ PRBool nsCSSScanner::GatherString(nsresult& aErrorCode, PRInt32 aStop,
 {
   for (;;) {
     if (EatNewline(aErrorCode)) {
-      break;
+      return PR_FALSE;
     }
     PRInt32 ch = Read(aErrorCode);
     if (ch < 0) {
