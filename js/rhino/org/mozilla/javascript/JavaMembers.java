@@ -369,25 +369,10 @@ class JavaMembers {
                                       nameComponent.substring(1);
                 }
                 
-                // If we already have a field by this name, don't do this
+                // If we already have a member by this name, don't do this
                 // property.
-                if (ht.containsKey(beanPropertyName)) {
-                    // Exclude field.
-                    Object propertyMethod = ht.get(beanPropertyName);
-                    if (propertyMethod instanceof Field)
-                        continue;
-                    
-                    // Exclude when there's a method with non-bean 
-                    // characteristics or non-static affinity.
-                    Method[] methods = ((NativeJavaMethod) propertyMethod).getMethods();
-                    boolean exclude = false;
-                    for (int i = 0; i < methods.length; ++i) 
-                        if (Modifier.isStatic(methods[i].getModifiers()) != isStatic ||
-                            methods[i].getParameterTypes().length > 0)
-                            exclude = true;
-                    if (exclude)
-                        continue;
-                }
+                if (ht.containsKey(beanPropertyName))
+                    continue;
                 
                 // Get the method by this name.
                 Object method = ht.get(name);
