@@ -61,9 +61,7 @@ nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
 {
     NS_INIT_REFCNT();
 
-#ifdef DEBUG_rpotts
-    NS_ASSERTION(m_pConnection, "HTTPChannel is null.");
-#endif
+    NS_ASSERTION(aConnection, "HTTPChannel is null.");
     m_pConnection = aConnection;
     NS_IF_ADDREF(m_pConnection);
 
