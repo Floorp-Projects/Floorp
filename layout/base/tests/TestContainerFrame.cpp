@@ -63,6 +63,11 @@ public:
   PRBool       AppendChild(nsIContent* aKid) {return PR_FALSE;}
   PRBool       RemoveChildAt(PRInt32 aIndex) {return PR_FALSE;}
 
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {
+    aResult = PR_FALSE;
+    return NS_OK;
+  }
+
   nsIAtom* GetTag() const {return nsnull;}
   void     SetAttribute(const nsString& aName,const nsString& aValue) {;}
   nsContentAttr GetAttribute(const nsString& aName, nsString& aRet) const {return eContentAttr_NotThere;}
