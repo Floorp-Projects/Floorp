@@ -503,6 +503,8 @@ sub BuildClientDist()
 	# XPFE COMPONENTS
 
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
+   InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
+   BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",				"mozcomps");
 
    # find
    InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components");
