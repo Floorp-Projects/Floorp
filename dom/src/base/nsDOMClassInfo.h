@@ -175,6 +175,7 @@ protected:
   {
     return (id == sInnerHeight_id  ||
             id == sInnerWidth_id   ||
+            id == sOpener_id       ||
             id == sOuterHeight_id  ||
             id == sOuterWidth_id   ||
             id == sScreenX_id      ||
@@ -260,6 +261,7 @@ protected:
   static jsval sWindow_id;
   static jsval sFrames_id;
   static jsval sSelf_id;
+  static jsval sOpener_id;
 
   static const JSClass *sObjectClass;
 
