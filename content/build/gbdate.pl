@@ -19,6 +19,16 @@
 # Contributor(s): 
 #
 
+$given_date = $ENV{"MOZ_BUILD_DATE"};
+
+if ($given_date ne "") {
+	# The gecko date does not use hour resolution
+	chop($given_date);
+	chop($given_date);
+	printf("#define PRODUCT_VERSION \"%08d\"\n", $given_date);
+	exit(0);
+}
+
 # XP way of doing the build date.
 # 1998091509 = 1998, September, 15th, 9am local time zone
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
