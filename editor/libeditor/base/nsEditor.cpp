@@ -4362,15 +4362,22 @@ nsresult nsEditor::EndUpdateViewBatch()
   
   nsresult rv;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak,&rv);
-  if (NS_FAILED(rv) || !selCon)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!selCon)
+    return NS_ERROR_FAILURE;
     
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   nsCOMPtr<nsICaret> caret;
-  if (ps)
-    rv = ps->GetCaret(getter_AddRefs(caret));
-  if (NS_FAILED(rv) ||!caret)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (!ps)
+    return NS_ERROR_FAILURE;
+
+  rv = ps->GetCaret(getter_AddRefs(caret));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!caret)
+    return NS_ERROR_FAILURE;
+
   StCaretHider caretHider(caret);
         
   nsCOMPtr<nsISelection>selection;
@@ -5203,8 +5210,10 @@ nsEditor::CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent
   nsCOMPtr<nsIDocument> doc;
 
   rv = GetDocument(getter_AddRefs(tempDoc));
-  if (NS_FAILED(rv) || !tempDoc)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!tempDoc)
+    return NS_ERROR_FAILURE;
 
   doc = do_QueryInterface(tempDoc);
 
@@ -5218,14 +5227,18 @@ nsEditor::CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent
   nsCOMPtr<nsINodeInfo> nodeInfo;
   rv = nodeInfoManager->GetNodeInfo(aTag, nsnull, kNameSpaceID_None,*getter_AddRefs(nodeInfo));
 
-  if (NS_FAILED(rv) || !nodeInfo)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!nodeInfo)
+    return NS_ERROR_FAILURE;
 
   rv = elementFactory->CreateInstanceByTag(nodeInfo, aContent);
 
-  if (NS_FAILED(rv) || !aContent)
-    return rv?rv:NS_ERROR_FAILURE;
-  else
-    return NS_OK;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!aContent)
+    return NS_ERROR_FAILURE;
+  
+  return NS_OK;
 }
 

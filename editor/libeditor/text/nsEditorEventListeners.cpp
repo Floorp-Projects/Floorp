@@ -754,8 +754,10 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     */
     nsCOMPtr<nsISelection> selection;
     rv = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(rv) || !selection) 
-      return rv?rv:NS_ERROR_FAILURE;
+    if (NS_FAILED(rv))
+      return rv;
+    if (!selection)
+      return NS_ERROR_FAILURE;
     
     nsCOMPtr<nsIDOMDocument> domdoc;
     rv = mEditor->GetDocument(getter_AddRefs(domdoc));
