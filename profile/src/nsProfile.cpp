@@ -2416,6 +2416,9 @@ nsProfile::SetRegStrings(const PRUnichar* profileName,
 
    rv = gProfileDataAccess->GetValue(profileName, &aProfile);
    if (NS_FAILED(rv)) return rv;
+
+   if (aProfile == nsnull)
+     return NS_ERROR_FAILURE;
    
    aProfile->NCHavePregInfo = regString;
 
@@ -2448,4 +2451,47 @@ NS_IMETHODIMP nsProfile::VetoChange()
 {
     mProfileChangeVetoed = PR_TRUE;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfile::GetRegStrings(const PRUnichar *aProfileName, 
+                        PRUnichar **aRegString, 
+                        PRUnichar **aRegName, 
+                        PRUnichar **aRegEmail, 
+                        PRUnichar **aRegOption)
+{
+    NS_ENSURE_ARG_POINTER(aProfileName);
+    NS_ENSURE_ARG_POINTER(aRegString);
+    NS_ENSURE_ARG_POINTER(aRegName);
+    NS_ENSURE_ARG_POINTER(aRegEmail);
+    NS_ENSURE_ARG_POINTER(aRegOption);
+
+    ProfileStruct*    profileVal;
+
+    nsresult rv = gProfileDataAccess->GetValue(aProfileName, &profileVal);
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    if (profileVal == nsnull)
+      return NS_ERROR_FAILURE;
+
+    *aRegString = ToNewUnicode(profileVal->NCHavePregInfo);
+    if (!*aRegString)
+      return NS_ERROR_OUT_OF_MEMORY;    
+
+    *aRegName = ToNewUnicode(profileVal->NCProfileName);
+    if (!*aRegName)
+      return NS_ERROR_OUT_OF_MEMORY;    
+
+    *aRegEmail = ToNewUnicode(profileVal->NCEmailAddress);
+    if (!*aRegEmail)
+      return NS_ERROR_OUT_OF_MEMORY;    
+
+    *aRegOption = ToNewUnicode(profileVal->NCDeniedService);
+    if (!*aRegOption)
+      return NS_ERROR_OUT_OF_MEMORY;    
+
+     delete profileVal;
+
+     return NS_OK;
 }

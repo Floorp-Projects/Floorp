@@ -40,6 +40,7 @@
 interface nsICmdLineService;
 interface nsIFile;
 interface nsILocalFile;
+interface nsISupportsArray;
 
 %{C++
 #define NS_ERROR_PROFILE_REQUIRES_INTERACTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 1)
@@ -120,6 +121,11 @@ interface nsIProfileInternal : nsIProfile {
     readonly attribute wstring firstProfile;
 
     [noscript] void updateRegistry(in nsIFile regName);
+    [noscript] void getRegStrings(in wstring profileName,
+                       out wstring regString,
+                       out wstring regName,
+                       out wstring regEmail,
+                       out wstring regOption);
     [noscript] void setRegStrings(in wstring profileName, 
                        in wstring regString,
                        in wstring regName,
