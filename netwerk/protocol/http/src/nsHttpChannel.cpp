@@ -360,6 +360,7 @@ nsHttpChannel::ProcessResponse()
     switch (httpStatus) {
     case 200:
     case 203:
+    case 206:
         rv = ProcessNormal();
         break;
     case 300:
