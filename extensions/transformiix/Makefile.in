@@ -26,14 +26,9 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#Disable Transformiix on OS/2 until bug 53518 is fixed.
-ifneq ($(OS_ARCH),OS2)
-
 DIRS            = source
 ifndef TX_EXE
 DIRS += build public
-endif
-
 endif
 
 include $(topsrcdir)/config/rules.mk
