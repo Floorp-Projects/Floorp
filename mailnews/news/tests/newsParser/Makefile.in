@@ -55,7 +55,6 @@ LIBS = \
 	-lsecfree \
 	-ljsdom \
 	-ljsurl \
-	-lraptorhtml \
 	-lraptorhtmlpars \
 	-lexpat \
 	-lxmltok \
