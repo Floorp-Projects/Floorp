@@ -87,8 +87,8 @@ NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
     nsSimpleArrayEnumerator* enumer = new nsSimpleArrayEnumerator(array);
     if (enumer == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(enumer);
     *result = enumer; 
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -131,7 +131,7 @@ nsCOMArrayEnumerator::~nsCOMArrayEnumerator()
 {
     // only release the entries that we haven't visited yet
     while (mIndex < mArraySize) {
-        NS_RELEASE(mValueArray[mIndex++]);
+        NS_IF_RELEASE(mValueArray[mIndex++]);
     }
 }
 
@@ -141,11 +141,6 @@ nsCOMArrayEnumerator::HasMoreElements(PRBool* aResult)
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
-
-    if (!mValueArray) {
-        *aResult = PR_FALSE;
-        return NS_OK;
-    }
 
     *aResult = (mIndex < mArraySize);
     return NS_OK;
@@ -157,11 +152,6 @@ nsCOMArrayEnumerator::GetNext(nsISupports** aResult)
     NS_PRECONDITION(aResult != 0, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
-
-    if (!mValueArray) {
-        *aResult = nsnull;
-        return NS_OK;
-    }
 
     if (mIndex >= mArraySize)
         return NS_ERROR_UNEXPECTED;
