@@ -338,8 +338,10 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     { 
       // If for some reason, our lists are not the same length, we guard
       // by bailing out of the loop.
-      if (childBoxSize == nsnull)
+      if (childBoxSize == nsnull) {
+        NS_NOTREACHED("Lists not the same length.");
         break;
+      }
         
       nscoord width = clientRect.width;
       nscoord height = clientRect.height;
@@ -360,8 +362,8 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
            nsBox::BoundsCheck(minSize, prefSize, maxSize);
        
            AddMargin(child, prefSize);
-           width = prefSize.width > originalClientRect.width ? originalClientRect.width : prefSize.width;
-           height = prefSize.height > originalClientRect.height ? originalClientRect.height : prefSize.height;
+           width = PR_MIN(prefSize.width, originalClientRect.width);
+           height = PR_MIN(prefSize.height, originalClientRect.height);
         }
       }
 
@@ -373,16 +375,17 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         height = childComputedBoxSize->size;
       
       // Adjust our x/y for the left/right spacing.
-      if (frameState & NS_STATE_IS_HORIZONTAL)
+      if (frameState & NS_STATE_IS_HORIZONTAL) {
         if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
           x += (childBoxSize->left);
         else
           x -= (childBoxSize->right);
-      else
+      } else {
         if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
           y += (childBoxSize->left);
         else
           y -= (childBoxSize->right);
+      }
 
       nextX = x;
       nextY = y;
@@ -729,7 +732,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   aFlexes = 0;
   nsBoxSize* currentBox = nsnull;
 
-  /*
+#if 0
   nsBoxSize* start = aBoxSizes;
   
   while(child)
@@ -765,7 +768,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
    
     child->GetNextBox(&child);
   }
-  */
+#endif
 
   // get pref, min, max
   aBox->GetChildBox(&child);
