@@ -44,7 +44,7 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
+#include "nsISupportsArray.h"
 #include "nsString.h"
 
 class nsIDocument;
@@ -109,7 +109,7 @@ protected:
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
   nsCOMPtr<nsINodeInfoManager>  mNodeInfoManager;
 
-  nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
+  nsCOMPtr<nsISupportsArray>    mScriptElements;
 
   nsCString mRef; // ScrollTo #ref
   PRBool mNeedToBlockParser;

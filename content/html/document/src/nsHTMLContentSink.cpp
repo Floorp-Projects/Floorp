@@ -4476,7 +4476,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     mNeedToBlockParser = PR_TRUE;
 
     nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = do_QueryInterface(element);
-    mScriptElements.AppendObject(scriptElement);
+    mScriptElements->AppendElement(scriptElement);
   }
 
   // Insert the child into the content tree. This will evaluate the

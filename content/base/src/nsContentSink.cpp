@@ -161,6 +161,9 @@ nsContentSink::Init(nsIDocument* aDoc,
     return NS_ERROR_NULL_POINTER;
   }
 
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(mScriptElements));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mDocument = aDoc;
 
   mDocumentURL = aURL;
@@ -174,7 +177,7 @@ nsContentSink::Init(nsIDocument* aDoc,
 
   nsIScriptLoader *loader = mDocument->GetScriptLoader();
   NS_ENSURE_TRUE(loader, NS_ERROR_FAILURE);
-  nsresult rv = loader->AddObserver(proxy);
+  rv = loader->AddObserver(proxy);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));
@@ -207,14 +210,18 @@ nsContentSink::ScriptAvailable(nsresult aResult,
                                PRInt32 aLineNo,
                                const nsAString& aScript)
 {
-  PRUint32 count = mScriptElements.Count();
+  PRUint32 count;
+  mScriptElements->Count(&count);
 
   if (count == 0) {
     return NS_OK;
   }
+  
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
+    do_QueryElementAt(mScriptElements, count - 1);
 
   // Check if this is the element we were waiting for
-  if (aElement != mScriptElements[count - 1]) {
+  if (aElement != scriptElement) {
     return NS_OK;
   }
 
@@ -232,7 +239,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
   if (NS_SUCCEEDED(aResult) && aResult != NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
     PreEvaluateScript();
   } else {
-    mScriptElements.RemoveObjectAt(count - 1);
+    mScriptElements->RemoveElementAt(count - 1);
 
     if (mParser && aWasPending) {
       // Loading external script failed!. So, resume
@@ -252,17 +259,21 @@ nsContentSink::ScriptEvaluated(nsresult aResult,
                                PRBool aWasPending)
 {
   // Check if this is the element we were waiting for
-  PRInt32 count = mScriptElements.Count();
+  PRUint32 count;
+  mScriptElements->Count(&count);
+
   if (count == 0) {
     return NS_OK;
   }
   
-  if (aElement != mScriptElements[count - 1]) {
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
+    do_QueryElementAt(mScriptElements, count - 1);
+  if (aElement != scriptElement) {
     return NS_OK;
   }
 
   // Pop the script element stack
-  mScriptElements.RemoveObjectAt(count - 1); 
+  mScriptElements->RemoveElementAt(count - 1); 
 
   if (NS_SUCCEEDED(aResult)) {
     PostEvaluateScript();
