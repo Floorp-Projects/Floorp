@@ -31,7 +31,16 @@ nsIAtom* nsXULAtoms::radio;
 nsIAtom* nsXULAtoms::text;
 nsIAtom* nsXULAtoms::toolbar;
 nsIAtom* nsXULAtoms::toolbox;
+
 nsIAtom* nsXULAtoms::tree;
+nsIAtom* nsXULAtoms::treecaption;
+nsIAtom* nsXULAtoms::treehead;
+nsIAtom* nsXULAtoms::treebody;
+nsIAtom* nsXULAtoms::treeitem;
+nsIAtom* nsXULAtoms::treerow;
+nsIAtom* nsXULAtoms::treecell;
+nsIAtom* nsXULAtoms::treechildren;
+
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
 
@@ -57,7 +66,16 @@ void nsXULAtoms::AddrefAtoms() {
     text = NS_NewAtom("text");
     toolbar = NS_NewAtom("toolbar");
     toolbox = NS_NewAtom("toolbox");
+
     tree = NS_NewAtom("tree");
+	treecaption = NS_NewAtom("treecaption");
+	treehead = NS_NewAtom("treehead");
+	treebody = NS_NewAtom("treebody");
+	treerow = NS_NewAtom("treerow");
+	treecell = NS_NewAtom("treecell");
+	treeitem = NS_NewAtom("treeitem");
+	treechildren = NS_NewAtom("treechildren");
+
     widget = NS_NewAtom("widget");
     window = NS_NewAtom("window");
   }
@@ -74,7 +92,16 @@ void nsXULAtoms::ReleaseAtoms() {
     NS_RELEASE(text);
     NS_RELEASE(toolbar);
     NS_RELEASE(toolbox);
+
     NS_RELEASE(tree);
+	NS_RELEASE(treecaption);
+	NS_RELEASE(treehead);
+	NS_RELEASE(treebody);
+	NS_RELEASE(treerow);
+	NS_RELEASE(treecell);
+	NS_RELEASE(treeitem);
+	NS_RELEASE(treechildren);
+
 	NS_RELEASE(widget);
     NS_RELEASE(window);
     NS_IF_RELEASE(gNameSpaceManager);
