@@ -95,14 +95,8 @@ public:
 
   void ClearRowGroupInfo() { if (mRowGroupInfo) mRowGroupInfo->Clear(); NeedsRecalc(); };
   
-  void SetRowHeight(PRInt32 aRowHeight) 
-  { 
-    if (mRowHeight != aRowHeight) { 
-      mRowHeight = aRowHeight;
-      nsBoxLayoutState state(mPresContext);
-      MarkDirtyChildren(state); 
-    } 
-  };
+  void SetRowHeight(PRInt32 aRowHeight);
+  PRBool IsFixedRowSize();
 
   nscoord GetYPosition();
   nscoord GetAvailableHeight();

@@ -94,7 +94,7 @@ nsTreeLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
     aSize.height = frame->GetRowCount() * rowheight;
     // Pad the height.
     nscoord y = frame->GetAvailableHeight();
-    if (y > 0 && rowheight > 0) {
+    if (aSize.height > y && y > 0 && rowheight > 0) {
       nscoord m = (aSize.height-y)%rowheight;
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
@@ -113,7 +113,7 @@ nsTreeLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
     aSize.height = frame->GetRowCount() * rowheight;
     // Pad the height.
     nscoord y = frame->GetAvailableHeight();
-    if (y > 0 && rowheight > 0) {
+    if (aSize.height > y && y > 0 && rowheight > 0) {
       nscoord m = (aSize.height-y)%rowheight;
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;
@@ -132,7 +132,7 @@ nsTreeLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
     aSize.height = frame->GetRowCount() * rowheight;
     // Pad the height.
     nscoord y = frame->GetAvailableHeight();
-    if (y > 0 && rowheight > 0) {
+    if (aSize.height > y && y > 0 && rowheight > 0) {
       nscoord m = (aSize.height-y)%rowheight;
       nscoord remainder = m == 0 ? 0 : rowheight - m;
       aSize.height += remainder;

@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsXULTreeOuterGroupFrame.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScrollableFrame.h"
@@ -63,7 +64,7 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
- mRowGroupInfo(nsnull), mRowHeight(TREE_LINE_HEIGHT), mCurrentIndex(0), mTwipIndex(0)
+ mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mTwipIndex(0)
 {}
 
 // Destructor
@@ -123,6 +124,42 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   return rv;
 
 } // Init
+
+PRBool
+nsXULTreeOuterGroupFrame::IsFixedRowSize()
+{
+  nsCOMPtr<nsIContent> parent;
+  mContent->GetParent(*getter_AddRefs(parent));
+  nsAutoString rows;
+  parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::rows, rows);
+  if (!rows.IsEmpty()) 
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
+void
+nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
+{ 
+  if (mRowHeight == 0) { 
+    mRowHeight = aRowHeight;
+    nsCOMPtr<nsIContent> parent;
+    mContent->GetParent(*getter_AddRefs(parent));
+    nsAutoString rows;
+    parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::rows, rows);
+    if (!rows.IsEmpty()) {
+      PRInt32 dummy;
+      PRInt32 count = rows.ToInteger(&dummy);
+      float t2p;
+      mPresContext->GetTwipsToPixels(&t2p);
+      PRInt32 rowHeight = NSTwipsToIntPixels(aRowHeight, t2p);
+      nsAutoString value;
+      value.AppendInt(rowHeight*count);
+      parent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value, PR_FALSE);
+    }
+    nsBoxLayoutState state(mPresContext);
+    MarkDirtyChildren(state); 
+  } 
+}
 
 nscoord
 nsXULTreeOuterGroupFrame::GetYPosition()
@@ -337,7 +374,7 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
     }
 
     nsBoxLayoutState state(mPresContext);
-    mFirstChild = mLastChild = nsnull;
+    ClearChildren(state);
     mFrames.DestroyFrames(mPresContext);
 
     nsCOMPtr<nsIContent> topRowContent;
@@ -715,19 +752,28 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
   PRInt32 rows = GetAvailableHeight()/mRowHeight;
   PRInt32 bottomIndex = mCurrentIndex + rows - 1;
-  
+  if (IsFixedRowSize())
+    bottomIndex++;
+
   // if row is visible, ignore
   if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)
     return;
 
-  // Try to center the new index.
-  PRInt32 newIndex = aRowIndex - rows/2;
-  if (newIndex < 0)
-    newIndex = 0;
-
+  PRInt32 newIndex = aRowIndex;
+  
   PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
-  PRInt32 up = newIndex < mCurrentIndex;
-  mCurrentIndex = newIndex;
+  PRBool up = newIndex < mCurrentIndex;
+  if (up)
+    mCurrentIndex = newIndex;
+  else {
+    // Scroll just enough to bring the newIndex into view.
+    PRInt32 adjustment = newIndex - rows;
+    if (!IsFixedRowSize())
+      adjustment++;
+    delta = adjustment - mCurrentIndex;
+    mCurrentIndex = adjustment;
+  }
+
   InternalPositionChanged(up, delta);
 
   // This change has to happen immediately.
@@ -742,7 +788,7 @@ nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
 {
   PRInt32 newIndex = aRowIndex;
   PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
-  PRInt32 up = newIndex < mCurrentIndex;
+  PRBool up = newIndex < mCurrentIndex;
   mCurrentIndex = newIndex;
   InternalPositionChanged(up, delta);
 

@@ -1294,7 +1294,8 @@ nsXBLBinding::BuildInsertionTable()
 
   PRUint32 count;
   childrenElements->Count(&count);
-  for (PRUint32 i = 0; i < count; i++) {
+  PRUint32 i;
+  for (i = 0; i < count; i++) {
     nsCOMPtr<nsISupports> supp;
     childrenElements->GetElementAt(i, getter_AddRefs(supp));
     nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
@@ -1330,6 +1331,20 @@ nsXBLBinding::BuildInsertionTable()
 
         nsMemory::Free(str);
       }
+    }
+  }
+
+  // Now remove the <children> elements.
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> supp;
+    childrenElements->GetElementAt(i, getter_AddRefs(supp));
+    nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
+    if (child) {
+      nsCOMPtr<nsIContent> parent; 
+      child->GetParent(*getter_AddRefs(parent));
+      PRInt32 index;
+      parent->IndexOf(child, index);
+      parent->RemoveChildAt(index, PR_FALSE);
     }
   }
 }

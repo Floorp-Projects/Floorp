@@ -39,6 +39,7 @@ public:
   NS_IMETHOD GetChildBox(nsIBox** aBox);
 
   nsContainerBox(nsIPresShell* aShell);
+  virtual ~nsContainerBox();
 
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout);
   NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout);
@@ -65,8 +66,6 @@ public:
   virtual void SanityCheck(nsFrameList& aFrameList);
   virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
 
-  virtual ~nsContainerBox() {}
-  
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
 
 

@@ -88,10 +88,15 @@ public:
     virtual PRBool IsSet() { return mIsSet; }
     virtual nsIBox* GetBox() { return mBox; }
 
+    virtual void SetAdjacent(nsBoxLayoutState& aState, nsBoxSizeList* aAdjacent);
+    virtual nsBoxSizeList* GetAdjacent() { return mAdjacent; }
+  
     nsBoxSizeListNodeImpl(nsIBox* aBox);
+    virtual ~nsBoxSizeListNodeImpl();
 
     nsBoxSizeList* mNext;
     nsBoxSizeList* mParent;
+    nsBoxSizeList* mAdjacent;
     nsIBox* mBox;
     PRInt32 mRefCount;
     PRBool mIsSet;
@@ -113,6 +118,7 @@ public:
     virtual void Release(nsBoxLayoutState& aState);
 
     nsBoxSizeListImpl(nsIBox* aBox);
+    virtual ~nsBoxSizeListImpl();
 
     nsBoxSizeList* mFirst;
     nsBoxSizeList* mLast;

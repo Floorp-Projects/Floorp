@@ -74,6 +74,10 @@ nsContainerBox::nsContainerBox(nsIPresShell* aShell):nsBox(aShell)
   mChildCount = 0;
 }
 
+nsContainerBox::~nsContainerBox()
+{
+}
+
 void
 nsContainerBox::GetBoxName(nsAutoString& aName)
 {

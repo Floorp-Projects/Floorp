@@ -87,8 +87,8 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
        child = b;
     }
 
-    nsIBoxLayout* layout = nsnull;
-    child->GetLayoutManager(&layout);
+    nsCOMPtr<nsIBoxLayout> layout;
+    child->GetLayoutManager(getter_AddRefs(layout));
 
     // must find a temple that is not our requestor and is a monument.
     if (layout != aRequestor) {
@@ -186,7 +186,6 @@ nsGridLayout::EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex)
 NS_IMETHODIMP
 nsGridLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  NS_ERROR("Should Never be Called!");
   return NS_OK;
 }
 
