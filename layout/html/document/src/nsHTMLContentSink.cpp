@@ -2073,6 +2073,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     }
     else if (key.EqualsIgnoreCase("media")) {
       GetAttributeValueAt(aNode, index, media, sco);
+      media.ToUpperCase();
     }
   }
 
@@ -2372,6 +2373,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     }
     else if (key.EqualsIgnoreCase("media")) {
       GetAttributeValueAt(aNode, index, media, sco);
+      media.ToUpperCase();
     }
   }
 
@@ -2517,7 +2519,8 @@ static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFun
 
 static PRBool MediumEnumFunc(const nsString& aSubString, void *aData)
 {
-  ((nsICSSStyleSheet*)aData)->AppendMedium(aSubString);
+  nsIAtom*  medium = NS_NewAtom(aSubString);
+  ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
   return PR_TRUE;
 }
 
