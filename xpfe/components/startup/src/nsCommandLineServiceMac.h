@@ -57,7 +57,7 @@ public:
 
   enum
   {
-    kMaxTokens      = 20  
+    kArgsGrowSize      = 20  
   };
 
                   nsMacCommandLine();
@@ -79,11 +79,10 @@ public:
 protected:
 
   nsresult        OpenWindow(const char *chrome, const PRUnichar *url);
-  
-  nsCString       mTempArgsString;    // temp storage for args as we accumulate them
-  char*           mArgsBuffer;        // final, immutable container for args
-  
-  char**          mArgs;              // array of pointers into argBuffer
+    
+  char**          mArgs;              // array of arg pointers (augmented argv)
+  PRUint32        mArgsAllocated;     // number of slots available in mArgs
+  PRUint32        mArgsUsed;          // number of slots used in mArgs
 
   PRBool          mStartedUp;
 
