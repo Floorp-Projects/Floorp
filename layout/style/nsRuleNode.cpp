@@ -2960,7 +2960,8 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
         display->mDisplay = NS_STYLE_DISPLAY_INLINE;
       }
     }
-  } else if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
+  } 
+  else if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
     // CSS2 9.7 specifies display type corrections dealing with 'float'
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
@@ -2974,6 +2975,10 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     //          method
     if (display->mFloats != NS_STYLE_FLOAT_NONE)
       EnsureBlockDisplay(display->mDisplay);
+    else if (nsCSSPseudoElements::firstLetter == pseudoTag) 
+      // a non-floating first-letter must be inline
+      // XXX this fix can go away once bug 103189 is fixed correctly
+      display->mDisplay = NS_STYLE_DISPLAY_INLINE;
     
     // 2) if position is 'absolute' or 'fixed' then display must be
     // 'block and float must be 'none'
