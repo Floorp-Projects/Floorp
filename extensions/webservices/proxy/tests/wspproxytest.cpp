@@ -763,6 +763,7 @@ WSPTestComplexType::Array3(PRUint32 *length, nsIWSPTestComplexType ***array3)
   }
   WSPTestComplexType* inst = new WSPTestComplexType();
   if (!inst) {
+    nsMemory::Free((void *) ptr);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   ptr[0] = inst;
