@@ -377,7 +377,12 @@ protected:
   NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
   // called after a transaction is undone successfully
   NS_IMETHOD DoAfterUndoTransaction();
-
+  // called after a transaction is redone successfully
+  NS_IMETHOD DoAfterRedoTransaction();
+  
+  // called after the document has been saved
+  NS_IMETHOD DoAfterDocumentSave();
+  
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);
   

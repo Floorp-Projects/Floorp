@@ -339,6 +339,7 @@ nsEditor::nsEditor()
 ,  mUpdateCount(0)
 ,  mActionListeners(nsnull)
 ,  mDoc(nsnull)
+,  mPrefs(nsnull)
 #ifdef ENABLE_JS_EDITOR_LOG
 ,  mJSEditorLog(nsnull)
 ,  mJSTxnLog(nsnull)
@@ -348,9 +349,8 @@ nsEditor::nsEditor()
   NS_INIT_REFCNT();
   PR_EnterMonitor(GetEditorMonitor());
   gInstanceCount++;
-  mActionListeners = 0;
   PR_ExitMonitor(GetEditorMonitor());
-  mPrefs = 0;
+
 }
 
 
@@ -856,7 +856,16 @@ nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
   
   if (!isTransientTransaction)
   {
-    rv = IncDocModCount(+1);		// don't count transient transactions
+    // we need to deal here with the case where the user saved after some
+    // edits, then undid one or more times. Then, the undo count is -ve,
+    // but we can't let a do take it back to zero. So we flip it up to
+    // a +ve number.
+    PRInt32 modCount;
+    GetDocModCount(modCount);
+    if (modCount < 0)
+      modCount = -modCount;
+        
+    rv = IncDocModCount(1);		// don't count transient transactions
   }
   
   return rv;
@@ -872,6 +881,24 @@ nsEditor::DoAfterUndoTransaction()
 
   return rv;
 }
+
+NS_IMETHODIMP 
+nsEditor::DoAfterRedoTransaction()
+{
+  nsresult rv = NS_OK;
+
+  rv = IncDocModCount(1);		// all redoable transactions are non-transient
+
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsEditor::DoAfterDocumentSave()
+{
+  // the mod count is reset by nsIDiskDocument. Nothing else to do now.
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
@@ -957,6 +984,10 @@ nsEditor::Redo(PRUint32 aCount)
     for ( ; i<aCount; i++)
     {
       result = mTxnMgr->Redo();
+
+      if (NS_SUCCEEDED(result))
+        result = DoAfterRedoTransaction();
+
       if (NS_FAILED(result))
         break;
     }
