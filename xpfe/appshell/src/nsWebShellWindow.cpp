@@ -474,13 +474,14 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
        * For size events, the WebShell must be resized to fill the entire
        * client area of the window...
        */
-      case NS_MOVE:
+      case NS_MOVE: {
         void* data;
         nsWebShellWindow *win;
         aEvent->widget->GetClientData(data);
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         win->StoreBoundsToXUL(PR_TRUE, PR_FALSE);
         break;
+      }
       case NS_SIZE: {
         void* data;
         nsWebShellWindow *win;
