@@ -2492,7 +2492,7 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
 
         rv = NS_MakeAbsoluteURI(str, base, absURL);
         NS_RELEASE(base);
-        nsCRT::free(str);
+        delete [] str;
 #else
         rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
 #endif // NECKO

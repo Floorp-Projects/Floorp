@@ -41,6 +41,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
@@ -539,21 +540,7 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
 #ifndef NECKO
             result = NS_MakeAbsoluteURL(baseURL, empty, aSrc, url);
 #else
-            NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-            if (NS_FAILED(result)) return result;
-
-            nsIURI *baseUri = nsnull;
-            result = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-            if (NS_FAILED(result)) return result;
-
-            char *absUrlStr = nsnull;
-            char *urlSpec = aSrc.ToNewCString();
-            if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-            result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
-            NS_RELEASE(baseUri);
-            url = absUrlStr;
-            nsCRT::free(urlSpec);
-            delete [] absUrlStr;
+            result = NS_MakeAbsoluteURI(aSrc, baseURL, url);
 #endif // NECKO
             if (NS_FAILED(result)) {
               url = aSrc;

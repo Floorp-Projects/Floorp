@@ -25,6 +25,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsISupportsArray.h"
@@ -1476,24 +1477,12 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
 #else
                     nsresult rv;
-                    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-                    if (NS_FAILED(rv)) return PR_FALSE;
-
                     nsIURI *baseUri = nsnull;
                     rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
                     if (NS_FAILED(rv)) return PR_FALSE;
 
-                    char *absUrlStr = nsnull;
-                    char *urlSpec = href.ToNewCString();
-                    if (!urlSpec) {
-                      NS_RELEASE(baseUri);
-                      return PR_FALSE;
-                    }
-                    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
-                    nsCRT::free(urlSpec);
+                    NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
                     NS_RELEASE(baseUri);
-                    absURLSpec = absUrlStr;
-                    delete [] absUrlStr;
 #endif // NECKO
                     NS_IF_RELEASE(docURL);
 

@@ -25,6 +25,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsISupportsArray.h"
@@ -630,24 +631,13 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 #ifndef NECKO
                   rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
 #else
-                  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-                  if (NS_FAILED(rv)) return 0;
-
                   nsIURI *baseUri = nsnull;
                   rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
                   if (NS_FAILED(rv)) return 0;
 
-                  char *absUrlStr = nsnull;
-                  char *urlSpec = href.ToNewCString();
-                  if (!urlSpec) {
-                    NS_RELEASE(baseUri);
-                    return 0;
-                  }
-                  rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+                  rv = NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
+
                   NS_RELEASE(baseUri);
-                  nsCRT::free(urlSpec);
-                  absURLSpec = absUrlStr;
-                  delete [] absUrlStr;
 #endif // NECKO
                   NS_IF_RELEASE(docURL);
 

@@ -70,6 +70,7 @@
 #else
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
@@ -1910,22 +1911,13 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     }
 #else
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     nsIURI *baseUri = nsnull;
     rv = mDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
     if (NS_FAILED(rv)) return rv;
 
-    char *absUrl = nsnull;
-    char *urlSpec = mURL.ToNewCString();
-    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
+    rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);
     NS_RELEASE(baseUri);
-    nsCRT::free(urlSpec);
     if (NS_FAILED(rv)) return rv;
-    mAbsURL = absUrl;
-    delete [] absUrl;
 #endif // NECKO
 
   }
