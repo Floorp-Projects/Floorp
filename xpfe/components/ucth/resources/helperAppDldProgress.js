@@ -353,6 +353,12 @@ function onLoad() {
     } else {
         centerWindowOnScreen();
     }
+    
+    // Set initial focus
+    if ( !completed )
+    {
+        keepProgressWindowUpBox.focus();
+    }
 }
 
 function onUnload()
@@ -417,6 +423,7 @@ function setupPostProgressUI()
   {
     cancelButton.label = getString("close");
     cancelButton.setAttribute("onclick", "window.close()");
+    cancelButton.focus();
   }
 
   // enable the open and open folder buttons
@@ -431,7 +438,6 @@ function setupPostProgressUI()
 
   dialog.pause.disabled = true; // setAttribute("disabled", true);
   dialog.resume.disabled = true;
-  keepProgressWindowUpBox.disabled = true;
   
 }
 
