@@ -208,6 +208,4 @@ private:
 
 };
 
-typedef NodeSet txResultTreeFragment;
-
 #endif

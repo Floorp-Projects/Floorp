@@ -343,16 +343,6 @@ public:
     txDecimalFormat* getDecimalFormat(const txExpandedName& name);
 
     /**
-     * Returns a pointer to a document that can be used to create RTFs
-     */
-    Document* getRTFDocument();
-
-    /**
-     * Sets a new document to be used for creating RTFs
-     */
-    void setRTFDocument(Document* aDoc);
-
-    /**
      * Returns the stylesheet document
      */
     Document* getStylesheetDocument();
@@ -397,14 +387,10 @@ public:
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  Element* aElem, FunctionCall*& aFunction);
 
-#ifdef TX_EXE
-    txIOutputXMLEventHandler* mOutputHandler;
-#else
-    nsCOMPtr<txIOutputXMLEventHandler> mOutputHandler;
-#endif
-    txXMLEventHandler* mResultHandler;
+    txAXMLEventHandler* mOutputHandler;
+    txAXMLEventHandler* mResultHandler;
     
-    txIOutputHandlerFactory* mOutputHandlerFactory;
+    txAOutputHandlerFactory* mOutputHandlerFactory;
 
 private:
 

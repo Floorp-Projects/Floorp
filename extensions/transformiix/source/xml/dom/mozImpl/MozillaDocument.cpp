@@ -264,22 +264,6 @@ Element* Document::getDocumentElement()
 }
 
 /**
- * Call nsIDOMDocument::CreateDocumentFragment to create a DocumentFragment.
- *
- * @return the DocumentFragment
- */
-Node* Document::createDocumentFragment()
-{
-    NSI_FROM_TX(Document);
-    nsCOMPtr<nsIDOMDocumentFragment> fragment;
-    nsDocument->CreateDocumentFragment(getter_AddRefs(fragment));
-    if (!fragment) {
-        return nsnull;
-    }
-    return createNode(fragment);
-}
-
-/**
  * Call nsIDOMDocument::GetElementById to get Element with ID.
  *
  * @param aID the name of ID referencing the element
@@ -305,27 +289,6 @@ Element* Document::getElementById(const nsAString& aID)
  * @return the Element
  */
 IMPL_CREATE_WRAPPER(Element)
-
-/**
- * Call nsIDOMDocument::CreateElementNS to create an Element.
- *
- * @param aNamespaceURI the URI of the namespace for the element
- * @param aTagName the name of the element you want to create
- *
- * @return the Element
- */
-Element* Document::createElementNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aTagName)
-{
-    NSI_FROM_TX(Document);
-    nsCOMPtr<nsIDOMElement> element;
-    nsDocument->CreateElementNS(aNamespaceURI, aTagName,
-                                getter_AddRefs(element));
-    if (!element) {
-        return nsnull;
-    }
-    return createElement(element);
-}
 
 /**
  * Create a wrapper for a nsIDOMAttr, reuses an existing wrapper if possible.
@@ -387,66 +350,6 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
     }
 
     return entry->mAttribute;
-}
-
-/**
- * Call nsIDOMDocument::CreateTextNode to create a Text node.
- *
- * @param aData the data of the text node you want to create
- *
- * @return the Text node
- */
-Node* Document::createTextNode(const nsAString& aData)
-{
-    NSI_FROM_TX(Document);
-    nsCOMPtr<nsIDOMText> text;
-    nsDocument->CreateTextNode(aData, getter_AddRefs(text));
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(text);
-    if (!node) {
-        return nsnull;
-    }
-    return createNode(node);
-}
-
-/**
- * Call nsIDOMDocument::CreateComment to create a Comment node.
- *
- * @param aData the data of the comment node you want to create
- *
- * @return the Comment node
- */
-Node* Document::createComment(const nsAString& aData)
-{
-    NSI_FROM_TX(Document);
-    nsCOMPtr<nsIDOMComment> comment;
-    nsDocument->CreateComment(aData, getter_AddRefs(comment));
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(comment);
-    if (!node) {
-        return nsnull;
-    }
-    return createNode(node);
-}
-
-/**
- * Call nsIDOMDocument::CreateProcessingInstruction to create a
- * ProcessingInstruction.
- *
- * @param aTarget the target of the ProcessingInstruction you want to create
- * @param aData the data of the ProcessingInstruction you want to create
- *
- * @return the ProcessingInstruction node
- */
-ProcessingInstruction* Document::createProcessingInstruction(
-            const nsAString& aTarget, const nsAString& aData)
-{
-    NSI_FROM_TX(Document);
-    nsCOMPtr<nsIDOMProcessingInstruction> pi;
-    nsDocument->CreateProcessingInstruction(aTarget, aData,
-                                            getter_AddRefs(pi));
-    if (!pi) {
-        return nsnull;
-    }
-    return createProcessingInstruction(pi);
 }
 
 /**

@@ -57,7 +57,7 @@
 /**
  * Output Handler Factories
  */
-class txToDocHandlerFactory : public txIOutputHandlerFactory
+class txToDocHandlerFactory : public txAOutputHandlerFactory
 {
 public:
     txToDocHandlerFactory(ProcessorState* aPs,
@@ -73,7 +73,7 @@ public:
     {
     }
 
-    TX_DECL_TXIOUTPUTHANDLERFACTORY;
+    TX_DECL_TXAOUTPUTHANDLERFACTORY
 
 private:
     ProcessorState* mPs;
@@ -82,7 +82,7 @@ private:
     nsCOMPtr<nsITransformObserver> mObserver;
 };
 
-class txToFragmentHandlerFactory : public txIOutputHandlerFactory
+class txToFragmentHandlerFactory : public txAOutputHandlerFactory
 {
 public:
     txToFragmentHandlerFactory(nsIDOMDocumentFragment* aFragment)
@@ -94,7 +94,7 @@ public:
     {
     }
 
-    TX_DECL_TXIOUTPUTHANDLERFACTORY;
+    TX_DECL_TXAOUTPUTHANDLERFACTORY
 
 private:
     nsCOMPtr<nsIDOMDocumentFragment> mFragment;
@@ -102,7 +102,7 @@ private:
 
 nsresult
 txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                         txIOutputXMLEventHandler** aHandler)
+                                         txAXMLEventHandler** aHandler)
 {
     *aHandler = nsnull;
     switch (aFormat->mMethod) {
@@ -138,7 +138,7 @@ nsresult
 txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                                          const nsAString& aName,
                                          PRInt32 aNsID,
-                                         txIOutputXMLEventHandler** aHandler)
+                                         txAXMLEventHandler** aHandler)
 {
     *aHandler = nsnull;
     switch (aFormat->mMethod) {
@@ -172,7 +172,7 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
 nsresult
 txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                              txIOutputXMLEventHandler** aHandler)
+                                              txAXMLEventHandler** aHandler)
 {
     *aHandler = nsnull;
     switch (aFormat->mMethod) {
@@ -212,7 +212,7 @@ nsresult
 txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
                                               const nsAString& aName,
                                               PRInt32 aNsID,
-                                              txIOutputXMLEventHandler** aHandler)
+                                              txAXMLEventHandler** aHandler)
 {
     *aHandler = nsnull;
     NS_ASSERTION(aFormat->mMethod != eMethodNotSet,
@@ -380,7 +380,9 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     // Process root of XML source document
     txXSLTProcessor::transform(&ps);
 
-    ps.mOutputHandler->getOutputDocument(aOutputDoc);
+    txAOutputXMLEventHandler* handler =
+        NS_STATIC_CAST(txAOutputXMLEventHandler*, ps.mOutputHandler);
+    handler->getOutputDocument(aOutputDoc);
 
     return NS_OK;
 }
@@ -476,7 +478,9 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     // Process root of XML source document
     txXSLTProcessor::transform(&ps);
 
-    ps.mOutputHandler->getOutputDocument(aResult);
+    txAOutputXMLEventHandler* handler =
+        NS_STATIC_CAST(txAOutputXMLEventHandler*, ps.mOutputHandler);
+    handler->getOutputDocument(aResult);
 
     return NS_OK;
 }

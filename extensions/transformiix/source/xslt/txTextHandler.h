@@ -41,74 +41,13 @@
 
 #include "txXMLEventHandler.h"
 
-class txTextHandler : public txXMLEventHandler
+class txTextHandler : public txAXMLEventHandler
 {
 public:
     txTextHandler(nsAString& aValue, MBool aOnlyText);
     virtual ~txTextHandler();
 
-    /**
-     * Signals to receive the start of an attribute.
-     *
-     * @param aName the name of the attribute
-     * @param aNsID the namespace ID of the attribute
-     * @param aValue the value of the attribute
-     */
-    void attribute(const nsAString& aName,
-                   const PRInt32 aNsID,
-                   const nsAString& aValue);
-
-    /**
-     * Signals to receive characters.
-     *
-     * @param aData the characters to receive
-     */
-    void characters(const nsAString& aData);
-
-    /**
-     * Signals to receive data that should be treated as a comment.
-     *
-     * @param data the comment data to receive
-     */
-    void comment(const nsAString& aData);
-
-    /**
-     * Signals the end of a document. It is an error to call
-     * this method more than once.
-     */
-    void endDocument();
-
-    /**
-     * Signals to receive the end of an element.
-     *
-     * @param aName the name of the element
-     * @param aNsID the namespace ID of the element
-     */
-    void endElement(const nsAString& aName,
-                    const PRInt32 aNsID);
-
-    /**
-     * Signals to receive a processing instruction.
-     *
-     * @param aTarget the target of the processing instruction
-     * @param aData the data of the processing instruction
-     */
-    void processingInstruction(const nsAString& aTarget,
-                               const nsAString& aData);
-
-    /**
-     * Signals the start of a document.
-     */
-    void startDocument();
-
-    /**
-     * Signals to receive the start of an element.
-     *
-     * @param aName the name of the element
-     * @param aNsID the namespace ID of the element
-     */
-    void startElement(const nsAString& aName,
-                      const PRInt32 aNsID);
+    TX_DECL_TXAXMLEVENTHANDLER
 
 private:
     PRUint32 mLevel;

@@ -715,16 +715,6 @@ txOutputFormat* ProcessorState::getOutputFormat()
     return &mOutputFormat;
 }
 
-Document* ProcessorState::getRTFDocument()
-{
-    return mRTFDocument;
-}
-
-void ProcessorState::setRTFDocument(Document* aDoc)
-{
-    mRTFDocument = aDoc;
-}
-
 Document* ProcessorState::getStylesheetDocument()
 {
     NS_ASSERTION(mLoadedDocuments.mStyleDocument,

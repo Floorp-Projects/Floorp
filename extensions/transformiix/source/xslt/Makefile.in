@@ -49,6 +49,7 @@ endif
 
 CPPSRCS = txOutputFormat.cpp \
         ProcessorState.cpp \
+        txBufferingHandler.cpp \
         txRtfHandler.cpp \
         txTextHandler.cpp \
         txXSLTNumber.cpp \
