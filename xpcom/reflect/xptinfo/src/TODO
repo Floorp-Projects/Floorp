@@ -1,16 +1,17 @@
 /* jband - 03/24/00 -  */
 
+- DOCS
+- integreate autoreg call with xpcom's component autoreg scheme
 - improve error handling
 - verification
 - check for truncated xpt files and version problems
-- integreate autoreg call with xpcom's component autoreg scheme
 - support xpt files in more than just the components dir; e.g. plugins?
    - probably just another field in the manifest containing a number
      i.e. '0' means components dir, '1' means plugins dir, etc.
 - TESTS!
 
-- switch to MoveTo for .dat file
-- use only 32 bits for file size?
-- verify the merge stuff really works
+- switch to MoveTo for .dat file (depends on bug 33098)
 - better autoreg logging
 - support #ifdef'ing out the zip #includes and uses
+- verify the merge stuff really works
+- use only 32 bits for file size?

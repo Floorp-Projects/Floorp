@@ -24,7 +24,7 @@
 
 #include "xptiprivate.h"
 
-static const char g_ZipReaderProgID[] = "component://netscape/libjar";
+static const char g_ZipReaderProgID[] = "component://netscape/libjar/zip-reader";
 
 // static 
 PRBool 
