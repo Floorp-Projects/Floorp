@@ -44,9 +44,7 @@ class NS_BASE nsString {
                           nsString(const char* anISOLatin1);
                           nsString(const nsString&);
                           nsString(const PRUnichar* aUnicode);    
-  protected:
-                          // special subclass constructor
-                          nsString(PRBool aSubclassBuffer);
+
   public:
   virtual                 ~nsString();
 

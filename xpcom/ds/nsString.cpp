@@ -33,21 +33,17 @@ const char* kOutOfBoundsError = "Error: out of bounds";
 const char* kNullPointerError = "Error: unexpected null ptr";
 
 //**********************************************
-//NOTE: Our buffer always hold capacity+1 bytes.
+//NOTE: Our buffer always holds capacity+1 bytes.
 //**********************************************
 
 
 /**
- * Default constructor. We assume that this string will have
- * a bunch of Append's or SetString's done to it, therefore
- * we start with a mid sized buffer.
+ * Default constructor. Assumes the string will be empty, and
+ * so it starts with a capacity of 0
  */
 nsString::nsString() {
   mLength = mCapacity = 0;
   mStr = 0;
-  // Size to 4*kGrowthDelta (EnsureCapacityFor adds in kGrowthDelta so
-  // subtract it before calling)
-  EnsureCapacityFor(4*kGrowthDelta - kGrowthDelta);
 }
 
 nsString::nsString(const char* anISOLatin1) {  
@@ -83,24 +79,6 @@ nsString::nsString(const PRUnichar* aUnicodeStr){
   PRInt32 len=(aUnicodeStr) ? nsCRT::strlen(aUnicodeStr) : 0;
   EnsureCapacityFor(len);
   this->SetString(aUnicodeStr,len);
-}
-
-/*-------------------------------------------------------
- * special subclas constructor
- * this will optionally not allocate a buffer
- * but the subclass must
- * @update	psl 4/16/98
- * @param 
- * @return
- *------------------------------------------------------*/
-nsString::nsString(PRBool aSubclassBuffer)
-{
-  mLength=mCapacity=0;
-  mStr=0;
-  if (PR_FALSE == aSubclassBuffer) {
-    EnsureCapacityFor(1);
-    this->SetString("");
-  }
 }
 
 /*-------------------------------------------------------
@@ -647,8 +625,11 @@ nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
     mStr[mLength]=0;
   }
   else {                          
-    mLength=0;  //This little bit of code handles the case                  
-    mStr[0]=0;  //where some blockhead hands us a null string
+    mLength=0;  //This little bit of code handles the case
+                //where some blockhead hands us a null string 
+    if (nsnull != mStr) {
+      mStr[0]=0;  
+    }
   }
   return *this;
 }
@@ -1907,7 +1888,7 @@ void nsString::SelfTest(void) {
  * @return
  *------------------------------------------------------*/
 nsAutoString::nsAutoString() 
-  : nsString(PR_TRUE) 
+  : nsString() 
 {
   mStr = mBuf;
   mLength=0;
@@ -1922,7 +1903,7 @@ nsAutoString::nsAutoString()
  * @return
  *------------------------------------------------------*/
 nsAutoString::nsAutoString(const char* isolatin1) 
-  : nsString(PR_TRUE)
+  : nsString()
 {
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
@@ -1937,7 +1918,7 @@ nsAutoString::nsAutoString(const char* isolatin1)
  * @return
  *------------------------------------------------------*/
 nsAutoString::nsAutoString(const nsString& other)
-  : nsString(PR_TRUE)
+  : nsString()
 {
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
@@ -1952,7 +1933,7 @@ nsAutoString::nsAutoString(const nsString& other)
  * @return
  *------------------------------------------------------*/
 nsAutoString::nsAutoString(PRUnichar aChar) 
-  : nsString(PR_TRUE)
+  : nsString()
 {
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
@@ -1967,7 +1948,7 @@ nsAutoString::nsAutoString(PRUnichar aChar)
  * @return
  *------------------------------------------------------*/
 nsAutoString::nsAutoString(const nsAutoString& other) 
-  : nsString(PR_TRUE)
+  : nsString()
 {
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
@@ -2007,7 +1988,7 @@ void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
  * @return
  *------------------------------------------------------*/
 nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) 
-  : nsString(PR_TRUE)
+  : nsString()
 {
   mStr = mBuf;
   mCapacity = sizeof(mBuf) / sizeof(chartype);
