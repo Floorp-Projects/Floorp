@@ -247,6 +247,13 @@ foreach my $path (split('/',$rcs_path)) {
 my $lxr_path = Fix_LxrLink("$link_path$file_tail");
 print "<A HREF='$lxr_path'>$file_tail</a> ";
 
+my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
+       </TR><TR>
+        <TD NOWRAP>
+         <A HREF="cvsgraph.cgi?file=$filename">Revision Graph</A>
+        </TD>
+--endquote--
+
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
 print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
 print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $use_dom;
@@ -271,6 +278,7 @@ print qq(
         <TD NOWRAP>
          <A HREF="cvslog.cgi?file=$filename">Full Change Log</A>
         </TD>
+$graph_cell
        </TR>
       </TABLE>
      </TD>

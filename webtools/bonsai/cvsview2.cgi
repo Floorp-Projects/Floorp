@@ -512,6 +512,10 @@ sub do_diff_links {
     $blame_link .= "&root=$opt_root" if defined($opt_root);
     my $diff_link = "$magic_url&command=DIRECTORY&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2";
     $diff_link .= "&root=$opt_root" if defined($opt_root);
+    my $graph_row = Param('cvsgraph') ? <<"--endquote--" : "";
+<TR><TD NOWRAP ALIGN=RIGHT VALIGN=TOP><A HREF="cvsgraph.cgi?file=$opt_subdir/$opt_file" TARGET="_top"><B>graph:</B></A></TD>
+<TD NOWRAP>View the revision tree as a graph</TD></TR>
+--endquote--
 
     print "<TD NOWRAP ALIGN=LEFT VALIGN=CENTER>";
     print "<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>";
@@ -521,6 +525,7 @@ sub do_diff_links {
     print "<TD NOWRAP>Annotate line authors.</TD></TR>\n";
     print "<TR><TD NOWRAP ALIGN=RIGHT VALIGN=TOP><A HREF=\"$lxr_link\" TARGET=_top><B>lxr:</B></A> </TD>";
     print "<TD NOWRAP>Browse source as hypertext.</TD></TR>\n";
+    print $graph_row;
     print "</TABLE>";
     print "</TD>";
 

@@ -74,7 +74,7 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 # Handle the "rev" argument
 #
 $::opt_rev = "";
-$::opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
+$::opt_rev = $::FORM{'rev'} if defined $::FORM{'rev'} && $::FORM{'rev'} !~ m/^(HEAD|MAIN)$/;
 my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
 my $revision = '';
@@ -182,6 +182,15 @@ foreach my $path (split('/',$rcs_path)) {
 $lxr_path = Fix_LxrLink("$link_path$file_tail");
 print "<A HREF='$lxr_path'>$file_tail</a> ";
 
+my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
+       </TR><TR>
+        <TD>
+         <A HREF="cvsgraph.cgi?file=$filename">graph</A>&nbsp;
+        </TD><TD NOWRAP>
+         View the revision history as a graph
+        </TD>
+--endquote--
+
 print " (";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
@@ -214,6 +223,7 @@ print qq(
         </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>
+$graph_cell
        </TR>
       </TABLE>
      </TD>

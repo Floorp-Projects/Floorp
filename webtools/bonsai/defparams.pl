@@ -214,6 +214,15 @@ DefParam("cocommand",
          "t",
          '/usr/bin/co');
 
+DefParam("cvsgraph",
+         "cvsgraph is an application that will output, in the form of a
+graphic, every branch, tag, and revision that exists for a file.  It requires
+that the <a href=\"http://www.akhphd.au.dk/~bertho/cvsgraph/\">cvsgraph
+executable</a> be installed on this system.  If you don't wish to use
+cvsgraph, leave this param blank.",
+         "t",
+         "");
+
 
 ##
 ## Things that we link to on the fly
