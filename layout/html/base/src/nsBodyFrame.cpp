@@ -408,9 +408,6 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
         DeleteChildsNextInFlow(aPresContext, mFirstChild);
       }
     }
-    else {
-      printf("XXX: incomplete body frame\n");
-    }
 
     mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
   
