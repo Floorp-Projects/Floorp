@@ -63,7 +63,7 @@ nsNativeBrowserWindow::InitNativeWindow()
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  CreateViewerMenus((GtkWidget*)mWindow->GetNativeData(NS_NATIVE_WIDGET),this);
+  CreateViewerMenus(mWindow,this);
   return NS_OK;
 }
 
