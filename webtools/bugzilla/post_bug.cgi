@@ -65,6 +65,13 @@ if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
 }
     
 
+if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
+    print "You must enter a summary for this bug.  Please hit the\n";
+    print "<B>Back</B> button and try again.\n";
+    exit;
+}
+
+
 my $forceAssignedOK = 0;
 if ($::FORM{'assigned_to'} eq "") {
     SendSQL("select initialowner from components where program=" .
