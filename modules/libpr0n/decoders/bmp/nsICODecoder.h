@@ -53,9 +53,11 @@
 
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
 #define GFXFORMATALPHA gfxIFormats::BGR_A1
+#define GFXFORMATALPHA8 gfxIFormats::BGR_A8
 #else
 #define USE_RGBA1
 #define GFXFORMATALPHA gfxIFormats::RGB_A1
+#define GFXFORMATALPHA8 gfxIFormats::RGB_A8
 #endif
 
 struct IconDirEntry
