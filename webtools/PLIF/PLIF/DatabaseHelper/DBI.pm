@@ -75,6 +75,8 @@ sub setupVerifyVersion {
     #
     # For MySQL, we should probably require 3.23.41... because that's
     # what I'm using to develop with.
+    #
+    # GRANT is only available since 3.22.11.
 }
 
 sub setupCreateUser {
@@ -94,10 +96,19 @@ sub setupSetRights {
     my $self = shift;
     my($app, $database, $username, $password, $hostname, $name) = @_;
     # XXX MySQL specific -- should we create a MySQL specific DatabaseHelper?
-    $self->assert($name !~ /`/o, 1, 'Internal error: An invalid database name was passed to setupSetRights (it contained a \'`\' character)'); #'); # reset font-lock
-    $self->assert($username !~ /`/o, 1, 'Internal error: An invalid username was passed to setupSetRights (it contained a \'`\' character)'); #'); # reset font-lock
-    $self->assert($hostname !~ /`/o, 1, 'Internal error: An invalid hostname was passed to setupSetRights (it contained a \'`\' character)'); #'); # reset font-lock
-    $database->execute("GRANT ALTER, INDEX, SELECT, CREATE, INSERT, DELETE, UPDATE, DROP, REFERENCES ON `$name`.* TO `$username`\@`$hostname` IDENTIFIED BY ?", $password);
+    # XXX are these really internal errors? (yes, if we say the caller must sanitise the input)
+    $self->assert($name !~ /\`/o, 1, 'Internal error: An invalid database name was passed to setupSetRights (it contained a \'`\' character)');
+    $self->assert($username !~ /\`/o, 1, 'Internal error: An invalid username was passed to setupSetRights (it contained a \'`\' character)');
+    $self->assert($hostname !~ /\`/o, 1, 'Internal error: An invalid hostname was passed to setupSetRights (it contained a \'`\' character)');
+    my $result;
+    if ($password ne '') {
+        $result = $database->execute("GRANT ALTER, INDEX, SELECT, CREATE, INSERT, DELETE, UPDATE, DROP, REFERENCES ON `$name`.* TO `$username`\@`$hostname` IDENTIFIED BY ?", $password);
+    } else {
+        $result = $database->execute("GRANT ALTER, INDEX, SELECT, CREATE, INSERT, DELETE, UPDATE, DROP, REFERENCES ON `$name`.* TO `$username`\@`$hostname`");
+    }
+    if ($result->err) {
+        $self->error(1, 'Failed to set user rights: ' . $result->errstr);
+    }
 }
 
 
