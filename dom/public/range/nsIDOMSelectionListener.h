@@ -39,17 +39,17 @@ class nsIDOMSelectionListener : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSELECTIONLISTENER_IID; return iid; }
 
-  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel)=0;
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)=0;
 };
 
 
 #define NS_DECL_IDOMSELECTIONLISTENER   \
-  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel);  \
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason);  \
 
 
 
 #define NS_FORWARD_IDOMSELECTIONLISTENER(_to)  \
-  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel) { return _to NotifySelectionChanged(aDoc, aSel); }  \
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason) { return _to NotifySelectionChanged(aDoc, aSel, aReason); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionListenerClass(nsIScriptContext *aContext, void **aPrototype);
