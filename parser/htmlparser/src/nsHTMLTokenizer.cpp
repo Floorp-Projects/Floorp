@@ -629,7 +629,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
          // support XML like syntax to fix bugs like 44186
         if(!key.IsEmpty() && kForwardSlash==key.First() && text.IsEmpty()) {
           aToken->SetEmpty(PR_TRUE);
-          isUsableAttr = PR_FALSE; // Fix bug 103095
+          isUsableAttr = (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)? PR_TRUE:PR_FALSE; // Fix bug 103095
         }
         if(isUsableAttr) {
           theAttrCount++;
