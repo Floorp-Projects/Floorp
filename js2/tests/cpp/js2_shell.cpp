@@ -213,6 +213,7 @@ class Tracer : public Context::Listener {
 };
 
 //#define HAVE_GEORGE_TRACE_IT
+//#define TEST_XML_LOADER
 
 static void readEvalPrint(FILE *in, World &world)
 {
@@ -302,7 +303,7 @@ static void readEvalPrint(FILE *in, World &world)
     stdOut << '\n';
 }
 
-
+//#define HAVE_GEORGE_TRACE_IT
 
 char * tests[] = {
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
@@ -327,7 +328,7 @@ static void testCompile()
         Arena a;
         Parser p(world, a, testScript, widenCString("testCompile"));
         StmtNode *parsedStatements = p.parseProgram();
-        ICodeGenerator icg(&world, &glob);
+        ICodeGenerator icg(&cx);
         StmtNode *s = parsedStatements;
         while (s) {
             icg.genStmt(s);

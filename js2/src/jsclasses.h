@@ -31,6 +31,7 @@
  * file under either the NPL or the GPL.
  */
 
+
 #ifndef jsclasses_h
 #define jsclasses_h
 

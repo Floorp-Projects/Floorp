@@ -171,14 +171,13 @@ namespace ICG {
         bool iCodeOwner;
         LabelList labels;
         
-        Register mTopRegister;              // highest (currently) alloacated register
+        Register mTopRegister;              // highest (currently) allocated register
         uint32   mParameterCount;           // number of parameters declared for the function
                                             // these must come before any variables declared.
         TypedRegister mExceptionRegister;   // reserved to carry the exception object.
         VariableList *variableList;         // name|register pair for each variable
-
-        World *mWorld;                      // used to register strings
-        JSScope *mGlobal;                   // the scope for compiling within
+        
+        Context *mContext;                  // the world and global object
         LabelStack mLabelStack;             // stack of LabelEntry objects, one per nested looping construct
                                             // maps source position to instruction index
         InstructionMap *mInstructionMap;
@@ -254,7 +253,7 @@ namespace ICG {
     
     public:
 
-        ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
+        ICodeGenerator(Context *cx, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
         
         ~ICodeGenerator()
         {

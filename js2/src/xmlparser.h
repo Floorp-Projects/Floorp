@@ -10,7 +10,7 @@
 
 namespace JavaScript {
 
-typedef enum {Tag, EmptyTag, EndTag, CommentTag, DocTypeTag, ProcessInstructionTag } TagFlag;
+typedef enum {Tag, EmptyTag, EndTag, CommentTag, DocTypeTag, ProcessInstructionTag, CDataTag } TagFlag;
 
 
 class XMLLexer 
@@ -68,13 +68,13 @@ public:
 
     String &name()      { return mName; }
 
-    void setEmpty()     { mFlag = EmptyTag; }
-    void setComment()   { mFlag = EmptyTag; }
-    void setEndTag()    { mFlag = EndTag; }
+    void setTag(TagFlag f)    { mFlag = f; }
 
     bool isEmpty() const      { return mFlag == EmptyTag; }
     bool isEndTag() const     { return mFlag == EndTag; }
     bool isComment() const    { return mFlag == CommentTag; }
+
+    bool hasContent() const   { return mFlag == Tag; }
 
     String mName;
     TagFlag mFlag;
@@ -152,6 +152,7 @@ public:
 
     XMLParser(const char *fileName) : mReader(fileName) { }
 
+    void parseStringLiteral(String &val);
 
     void parseName(String &id);
     void parseWhiteSpace();

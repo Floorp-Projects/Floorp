@@ -96,15 +96,15 @@ struct Activation : public gc_base {
     }
 
     Activation(ICodeModule* iCode, Activation* caller, const JSValue thisArg,
-                 const ArgumentList& list)
+                 const ArgumentList* list)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
         // copy caller's parameter list to initial registers.
         JSValues::iterator dest = mRegisters.begin();
         *dest++ = thisArg;
         const JSValues& params = caller->mRegisters;
-        for (ArgumentList::const_iterator src = list.begin(), 
-                 end = list.end(); src != end; ++src, ++dest) {
+        for (ArgumentList::const_iterator src = list->begin(), 
+                 end = list->end(); src != end; ++src, ++dest) {
             Register r = (*src).first.first;
             if (r != NotARegister)
                 *dest = params[r];
@@ -157,7 +157,7 @@ ICodeModule* Context::compileFunction(const String &source)
     String filename = widenCString("Some source source");
     Parser p(getWorld(), a, source, filename);
     ExprNode* e = p.parseExpression(false);
-    ICodeGenerator icg(&getWorld(), getGlobalObject());
+    ICodeGenerator icg(this);
     ASSERT(e->getKind() == ExprNode::functionLiteral);
     FunctionExprNode* f = static_cast<FunctionExprNode*>(e);
     icg.allocateParameter(getWorld().identifiers["this"]);   // always parameter #0
@@ -232,7 +232,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
 
 ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
 {
-    ICodeGenerator icg(&getWorld(), getGlobalObject());
+    ICodeGenerator icg(this);
     
     TypedRegister ret(NotARegister, &None_Type);
     while (p) {
@@ -248,7 +248,7 @@ ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
 
 void Context::loadClass(const char *fileName)
 {
-    ICodeGenerator icg(&getWorld(), getGlobalObject());
+    ICodeGenerator icg(this);
     icg.readICode(fileName);    // loads it into the global object
 }
 
@@ -702,11 +702,11 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (!target)
                         throw new JSException("Call to non callable object");
                     if (target->isNative()) {
-                        ArgumentList &params = op4(call);
-                        JSValues argv(params.size() + 1);
+                        ArgumentList *params = op4(call);
+                        JSValues argv(params->size() + 1);
                         argv[0] = (*registers)[op3(call).first];
                         JSValues::size_type i = 1;
-                        for (ArgumentList::const_iterator src = params.begin(), end = params.end();
+                        for (ArgumentList::const_iterator src = params->begin(), end = params->end();
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first.first];
                         }
@@ -717,12 +717,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     else {
                         ICodeModule *icm = target->getICode();
-                        ArgumentList &args = op4(call);
+                        ArgumentList *args = op4(call);
 
                         // mParameterCount includes 'this' and also 1 for a named rest parameter
                         //
                         uint32 pCount = icm->mParameterCount - 1;
-                        ArgumentList callArgs(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
+                        ArgumentList *callArgs = new ArgumentList(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
                         if (icm->mHasNamedRestParameter) pCount--;
 
 /*
@@ -740,19 +740,19 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         JSArray *restArg = NULL;
                         uint32 restIndex = 0;
                         uint32 i;
-                        for (i = 0; i < args.size(); i++) {
-                            if (args[i].second) {       // a named argument
-                                TypedRegister r = icm->itsVariables->findVariable(*(args[i].second));
+                        for (i = 0; i < args->size(); i++) {
+                            if ((*args)[i].second) {       // a named argument
+                                TypedRegister r = icm->itsVariables->findVariable(*((*args)[i].second));
                                 bool isParameter = false;
                                 if (r.first != NotABanana) {   // we found the name in the target's list of variables
                                     if (r.first < icm->mParameterCount) { // make sure we didn't match a local var                                            
-                                        ASSERT(r.first <= callArgs.size());
+                                        ASSERT(r.first <= callArgs->size());
                                         // the named argument is arriving in slot i, but needs to be r instead
                                         // r.first is the intended target register, we subtract 1 since the callArgs array doesn't include 'this'
                                         // here's where we could detect over-writing a positional arg with a named one if that is illegal
                                         // if (callArgs[r.first - 1].first.first != NotARegister)...
-                                        (*registers)[args[i].first.first] = (*registers)[args[i].first.first].convert(r.second);
-                                        callArgs[r.first - 1] = Argument(args[i].first, NULL);   // no need to copy the name through?
+                                        (*registers)[(*args)[i].first.first] = (*registers)[(*args)[i].first.first].convert(r.second);
+                                        (*callArgs)[r.first - 1] = Argument((*args)[i].first, NULL);   // no need to copy the name through?
                                         isParameter = true;
                                     }
                                 }
@@ -761,12 +761,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         if (icm->mHasNamedRestParameter) {
                                             if (restArg == NULL) {
                                                 restArg = new JSArray();
-                                                restArg->setProperty(*args[i].second, (*registers)[args[i].first.first]);
-                                                (*registers)[args[i].first.first] = restArg;
-                                                callArgs[pCount] = Argument(TypedRegister(args[i].first.first, &Array_Type), NULL);
+                                                restArg->setProperty(*(*args)[i].second, (*registers)[(*args)[i].first.first]);
+                                                (*registers)[(*args)[i].first.first] = restArg;
+                                                (*callArgs)[pCount] = Argument(TypedRegister((*args)[i].first.first, &Array_Type), NULL);
                                             }
                                             else
-                                                restArg->setProperty(*args[i].second, (*registers)[args[i].first.first]);
+                                                restArg->setProperty(*(*args)[i].second, (*registers)[(*args)[i].first.first]);
 
                                         }
                                         // else just throw it away 
@@ -782,12 +782,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         if (icm->mHasNamedRestParameter) {
                                             if (restArg == NULL) {
                                                 restArg = new JSArray();
-                                                (*restArg)[restIndex++] = (*registers)[args[i].first.first];
-                                                (*registers)[args[i].first.first] = restArg;
-                                                callArgs[pCount] = Argument(TypedRegister(args[i].first.first, &Array_Type), NULL);
+                                                (*restArg)[restIndex++] = (*registers)[(*args)[i].first.first];
+                                                (*registers)[(*args)[i].first.first] = restArg;
+                                                (*callArgs)[pCount] = Argument(TypedRegister((*args)[i].first.first, &Array_Type), NULL);
                                             }
                                             else
-                                                (*restArg)[restIndex++] = (*registers)[args[i].first.first];
+                                                (*restArg)[restIndex++] = (*registers)[(*args)[i].first.first];
                                         }
                                         // else just throw it away 
                                     }
@@ -796,14 +796,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                 }
                                 else {
                                     TypedRegister r = icm->itsVariables->getRegister(i + 1);    // the variable list includes 'this'
-                                    (*registers)[args[i].first.first] = (*registers)[args[i].first.first].convert(r.second);
-                                    callArgs[i] = args[i];  // it's a positional, just slap it in place
+                                    (*registers)[(*args)[i].first.first] = (*registers)[(*args)[i].first.first].convert(r.second);
+                                    (*callArgs)[i] = (*args)[i];  // it's a positional, just slap it in place
                                 }
                             }
                         }
                         uint32 contiguousArgs = 0;
-                        for (i = 0; i < args.size(); i++) {
-                            Argument &arg = args[i];
+                        for (i = 0; i < args->size(); i++) {
+                            Argument &arg = (*args)[i];
                             if (arg.first.first == NotARegister) break;
                             contiguousArgs++;
                         }
@@ -824,10 +824,10 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     DirectCall* call = static_cast<DirectCall*>(instruction);
                     JSFunction *target = op2(call);
                     if (target->isNative()) {
-                        ArgumentList &params = op3(call);
-                        JSValues argv(params.size() + 1);
+                        ArgumentList *params = op3(call);
+                        JSValues argv(params->size() + 1);
                         JSValues::size_type i = 1;
-                        for (ArgumentList::const_iterator src = params.begin(), end = params.end();
+                        for (ArgumentList::const_iterator src = params->begin(), end = params->end();
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first.first];
                         }

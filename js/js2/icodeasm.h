@@ -31,6 +31,12 @@
  * file under either the NPL or the GPL.
  */
 
+
+#ifdef _WIN32	// Microsoft Visual C++ 6.0 whines about name lengths over 255 getting truncated in the browser database
+#pragma warning( disable : 4786) 
+#endif
+
+
 #ifndef __icodeasm_h
 
 #define __icodeasm_h

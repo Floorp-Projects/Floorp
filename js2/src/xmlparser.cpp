@@ -124,12 +124,32 @@ void XMLParser::parseAttrValue(String &val)
     }
 }
 
+void XMLParser::parseStringLiteral(String &val)
+{
+    char quotech = mReader.get();
+    if ((quotech != '\"') || (quotech != '\''))
+        syntaxError("\" or \' expected");
+    else {
+        mReader.beginRecording(val);
+        while (true) {
+            char ch = mReader.get();
+            if (mReader.getEof())
+                syntaxError("Unterminated string literal");
+            if (ch == quotech)
+                break;
+            mReader.recordChar(ch);
+        }
+        mReader.endRecording();
+    }
+}
+
+
 XMLTag *XMLParser::parseTag()
 {
     XMLTag *tag = new XMLTag();
     char ch = mReader.peek();
     if (ch == '/') {
-        tag->setEndTag();
+        tag->setTag(EndTag);
         mReader.skip(1);
     }
     else {
@@ -137,7 +157,7 @@ XMLTag *XMLParser::parseTag()
             mReader.skip(1);
             if (mReader.match("--", 2)) {
                 mReader.skip(2);
-                tag->setComment();
+                tag->setTag(CommentTag);
                 while (true) {
                     ch = mReader.get();
                     if (mReader.getEof())
@@ -153,6 +173,25 @@ XMLTag *XMLParser::parseTag()
                     else
 		                if (mReader.isLineBreak(ch))
 			                mReader.beginLine();
+                }
+            } else {
+                if (mReader.match("[CDATA[", 7)) {
+                    mReader.skip(7);
+                    tag->setTag(CDataTag);
+                    while (true) {
+                        ch = mReader.get();
+                        if (mReader.getEof())
+                            syntaxError("Unterminated CDATA tag");
+                        if (ch == ']') {
+                            if (mReader.match("]>", 2)) {
+                                mReader.skip(2);
+                                return tag;
+                            }
+                        }
+                        else
+		                    if (mReader.isLineBreak(ch))
+			                    mReader.beginLine();
+                    }
                 }
             }
         }
@@ -174,7 +213,7 @@ XMLTag *XMLParser::parseTag()
     if (mReader.getEof())
         syntaxError("Unterminated tag");
     if (ch == '/') {
-        tag->setEmpty();
+        tag->setTag(EmptyTag);
         ch = mReader.get();
     }
     if (ch != '>')
@@ -197,7 +236,7 @@ void XMLParser::parseTagBody(XMLNode *parent, XMLTag *startTag)
             break;
         else {
             XMLNode *child = new XMLNode(parent, tag);
-            if (!tag->isEmpty())
+            if (tag->hasContent())
                 parseTagBody(child, tag);
         }
     }
