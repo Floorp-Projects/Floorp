@@ -36,7 +36,9 @@
 #include "nsIURL.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 class ImageFrame : public nsLeafFrame {
 public:
@@ -85,6 +87,9 @@ public:
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aResult) const;
   virtual void UnsetAttribute(nsIAtom* aAttribute);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext, 
+                                 nsIPresContext* aPresContext);
 
   PRPackedBool mIsMap;
   PRUint8 mSuppress;
@@ -258,27 +263,29 @@ NS_METHOD ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
                                   nsIFrame** aFrame,
                                   PRInt32& aCursor)
 {
-  nsStyleMolecule* mol = (nsStyleMolecule*)
-    mStyleContext->GetData(kStyleMoleculeSID);
-  if (mol->cursor != NS_STYLE_CURSOR_INHERIT) {
-    // If this container has a particular cursor, use it, otherwise
-    // let the child decide.
+  // The default cursor is to have no cursor
+  aCursor = NS_STYLE_CURSOR_INHERIT;
+
+  nsStyleColor* styleColor = (nsStyleColor*)
+    mStyleContext->GetData(kStyleColorSID);
+  if (styleColor->mCursor != NS_STYLE_CURSOR_INHERIT) {
+    // If we have a particular cursor, use it
     *aFrame = this;
-    aCursor = (PRInt32) mol->cursor;
+    aCursor = (PRInt32) styleColor->mCursor;
   }
+
   nsIImageMap* map = GetImageMap();
   if (nsnull != map) {
-    PRInt32 rv = NS_STYLE_CURSOR_DEFAULT;
+    aCursor = NS_STYLE_CURSOR_DEFAULT;
     float t2p = aPresContext.GetTwipsToPixels();
     nscoord x = nscoord(t2p * aPoint.x);
     nscoord y = nscoord(t2p * aPoint.y);
     if (NS_OK == map->IsInside(x, y)) {
-      rv = NS_STYLE_CURSOR_HAND;
+      aCursor = NS_STYLE_CURSOR_HAND;
     }
     NS_RELEASE(map);
-    return NS_OK;
   }
-  aCursor = NS_STYLE_CURSOR_INHERIT;
+
   return NS_OK;
 }
 
@@ -540,6 +547,28 @@ nsContentAttr ImagePart::AttributeToString(nsIAtom* aAttribute,
     ca = eContentAttr_HasValue;
   }
   return ca;
+}
+
+void ImagePart::MapAttributesInto(nsIStyleContext* aContext, 
+                                  nsIPresContext* aPresContext)
+{
+  if (ALIGN_UNSET != mAlign) {
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aContext->GetData(kStyleDisplaySID);
+    nsStyleText* text = (nsStyleText*)
+      aContext->GetData(kStyleTextSID);
+    switch (mAlign) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      display->mFloats = NS_STYLE_FLOAT_LEFT;
+      break;
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      display->mFloats = NS_STYLE_FLOAT_RIGHT;
+      break;
+    default:
+      text->mVerticalAlign = mAlign;
+      break;
+    }
+  }
 }
 
 nsIFrame* ImagePart::CreateFrame(nsIPresContext* aPresContext,
