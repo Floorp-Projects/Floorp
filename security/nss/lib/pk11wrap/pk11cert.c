@@ -2827,7 +2827,7 @@ PK11_ListCertsInSlot(PK11SlotInfo *slot)
 		(void*)certs);
 
     if( status != SECSuccess ) {
-	SECKEY_DestroyCertList(certs);
+	CERT_DestroyCertList(certs);
 	certs = NULL;
     }
 
