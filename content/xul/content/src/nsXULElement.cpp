@@ -1151,7 +1151,7 @@ nsXULElement::GetAttributeNS(const nsAString& aNamespaceURI,
                                                           &nsid);
 
     if (nsid == kNameSpaceID_Unknown) {
-        // Unkonwn namespace means no attr...
+        // Unknown namespace means no attr...
 
         aReturn.Truncate();
         return NS_OK;
@@ -1296,7 +1296,7 @@ nsXULElement::HasAttributeNS(const nsAString& aNamespaceURI,
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
 
     if (nsid == kNameSpaceID_Unknown) {
-        // Unkonwn namespace means no attr...
+        // Unknown namespace means no attr...
         *aReturn = PR_FALSE;
         return NS_OK;
     }
