@@ -52,7 +52,6 @@ CPPSRCS=                     \
 
 CPP_OBJS=                               \
     .\$(OBJDIR)\nsMessenger.obj			\
-	.\$(OBJDIR)\nsIMessenger.obj		\
 	.\$(OBJDIR)\nsMessengerNameSet.obj	\
 	.\$(OBJDIR)\nsMsgKeyArray.obj       \
 	.\$(OBJDIR)\nsUrlListenerManager.obj \
