@@ -46,6 +46,16 @@ const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT         = "update.extensions.count";
 const PREF_UPDATE_EXT_WSDL_URI  = "update.extensions.wsdl";
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// Utility Functions
+//
+
+function EM_NS(aProperty)
+{
+  return "http://www.mozilla.org/2004/em-rdf#" + aProperty;
+}
+
 function getDir(aKey, aSubDirs)
 {
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -60,20 +70,16 @@ function getDir(aKey, aSubDirs)
   return dir;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsInstallLogger
+//
 function nsInstallLogger(aExtensionID, aIsProfile)
 {
   this._isProfile = aIsProfile; // XXXben
-  this._extensionDir = getDir(aIsProfile ? "ProfD" : "ProfD", ["extensions", aExtensionID]); // XXXben XCurProcDir
-  this._uninstallDir = this._extensionDir.clone();
-  this._uninstallDir.append("uninstall");
-  var uninstallLog = this._uninstallDir.clone();
-  uninstallLog.append("uninstall.rdf");
-  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
-  var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                      .getService(Components.interfaces.nsIRDFService);
-  this._ds = rdf.GetDataSourceBlocking(fph.getURLSpecFromFile(uninstallLog));
+  this._uninstallLog = getDir(aIsProfile ? "ProfD" : "ProfD",
+                              ["extensions", aExtensionID, "uninstall"]); // XXXben XCurProcDir
+  this._uninstallLog.append("uninstall.log");
 }
 
 nsInstallLogger.prototype = {
@@ -81,22 +87,203 @@ nsInstallLogger.prototype = {
   _uninstallDir: null,
   _ds: null,
   
+  open: function ()
+  {
+    this._fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                          .createInstance(Components.interfaces.nsIFileOutputStream);
+    const MODE_WRONLY   = 0x02;
+    const MODE_CREATE   = 0x08;
+    const MODE_TRUNCATE = 0x20;
+    this._fos.init(this._uninstallLog, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
+  },
+  
+  close: function ()
+  {
+    this._fos.close();  
+  },
+  
   addFile: function (aFile) 
   {
-    dump("*** addFile: " + aFile.path + "\n");
+    var line = "add file: " + aFile.persistentDescriptor + "\n";
+    this._fos.write(line, line.length);
   },
   
-  replaceFile: function (aFile)
+  CHROME_TYPE_PACKAGE : "package",
+  CHROME_TYPE_SKIN    : "skin",
+  CHROME_TYPE_LOCALE  : "locale",
+  registerChrome: function (aFileURL, aChromeType, aIsProfile)
   {
+    var profile = aIsProfile ? "profile" : "global";
+    var line = "register " + aChromeType + " (" + profile + "): " + aFileURL + "\n";
+    this._fos.write(line, line.length);
+  }  
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsExtensionInstaller
+//
+function nsExtensionInstaller (aExtensionDS)
+{
+  this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);    
+  this._extensionDS = aExtensionDS;
+
+  this._provTypePackage = this._rdf.GetResource(EM_NS("package"));
+  this._provTypeSkin    = this._rdf.GetResource(EM_NS("skin"));
+  this._provTypeLocale  = this._rdf.GetResource(EM_NS("locale"));
+  this._fileProperty    = this._rdf.GetResource(EM_NS("file"));
+  this._sourceResource  = this._rdf.GetResource("urn:mozilla:extension:manifest");
+}
+
+nsExtensionInstaller.prototype = {
+  // Utility services and helpers
+  _rdf              : null,
+  _logger           : null,
+
+  // Extension metadata
+  _extensionID      : null,
+  _isProfile        : true,
+  _extDirKey        : "ProfD",
   
+  // Source and target datasources
+  _metadataDS       : null,
+  _extensionDS      : null,
+  
+  // RDF objects and properties
+  _provTypePackage  : null,
+  _provTypeSkin     : null,
+  _provTypeLocale   : null,
+  _sourceResource   : null,
+  _fileProperty     : null,
+  
+  install: function (aExtensionID, aIsProfile)
+  {
+    // Initialize the installer for this extension
+    this._extensionID = aExtensionID;
+    this._isProfile = aIsProfile;
+    this._extDirKey = this._isProfile ? "ProfD" : "ProfD"; // XXXben XCurProcDir
+
+    // Create a logger to log install operations for uninstall
+    this._logger = new nsInstallLogger(this._extensionID, this._isProfile);
+    this._logger.open();
+    
+    // Move files from the staging dir into the extension's final home.
+    // This function generates uninstall log files and creates backups of
+    // existing files. 
+    this._installExtensionFiles();
+    
+    // Load the metadata datasource
+    var metadataFile = getDir(this._extDirKey, ["extensions", aExtensionID]);
+    metadataFile.append("extension.rdf");
+    
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+    var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    this._metadataDS = this._rdf.GetDataSourceBlocking(fph.getURLSpecFromFile(metadataFile));
+    
+    // Add metadata for the extension to the global extension metadata set
+    this._extensionDS.addExtensionMetaData(this._extensionID, this._metadataDS, this._isProfile);
+    
+    // Register chrome packages for files specified in the extension manifest
+    this._registerChromeForExtension();
+    this._logger.close();
+    
+    // Unset the "toBeInstalled" flag
+    this._extensionDS.removePendingExtensionEntry(this._extensionID, this._isProfile);
   },
   
-  removeFile: function (aFile)
+  _installExtensionFiles: function ()
   {
+    var sourceXPI = getDir(this._extDirKey, ["extensions", "temp", this._extensionID]);
+    sourceXPI.append(this._extensionID + ".xpi");
+    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                              .createInstance(Components.interfaces.nsIZipReader);
+    zipReader.init(sourceXPI);
+    zipReader.open();
+
+    var entries = zipReader.findEntries("*");
+    while (entries.hasMoreElements()) {
+      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
+      
+      var parts = entry.name.split("/");
+      var subDirs = ["extensions", this._extensionID];
+      for (var i = 0; i < parts.length - 1; ++i)
+        subDirs.push(parts[i]);
+      
+      var targetFile = getDir(this._extDirKey, subDirs);
+      var fileName = parts[parts.length-1];
+      if (fileName != "") {
+        targetFile.append(fileName);
+        zipReader.extract(entry.name, targetFile);
+        this._logger.addFile(targetFile.QueryInterface(Components.interfaces.nsILocalFile));
+      }
+    }
+    zipReader.close();
+    // Kick off the extraction on a new thread, then join to wait for it to
+    // complete. 
+    // (new nsJarFileExtractor(aZipReader.file, dir)).extract();
+  },
   
+  _registerChromeForExtension: function ()
+  {
+    // Enumerate the metadata datasource files collection and register chrome
+    // for each file, calling _registerChrome for each.
+    var chromeDir = getDir(this._extDirKey, ["extensions", this._extensionID, "chrome"]);
+    
+    var files = this._metadataDS.GetTargets(this._sourceResource, this._fileProperty, true);
+    while (files.hasMoreElements()) {
+      var file = files.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var chromeFile = chromeDir.clone();
+      var fileName = file.Value.substr("urn:mozilla:extension:file:".length, file.Value.length);
+      dump("*** file = " + fileName + "\n");
+      chromeFile.append(fileName);
+      
+      var providers = [this._provTypePackage, this._provTypeSkin, this._provTypeLocale];
+      for (var i = 0; i < providers.length; ++i) {
+        var items = this._metadataDS.GetTargets(file, providers[i], true);
+        while (items.hasMoreElements()) {
+          var item = items.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral);
+          this._registerChrome(chromeFile, providers[i], item.Value);
+        }
+      }
+    }
+  },
+  
+  _registerChrome: function (aFile, aChromeType, aPath)
+  {
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+    var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    var fileURL = fph.getURLSpecFromFile(aFile);
+    if (!aFile.isDirectory()) // .jar files
+      fileURL = "jar:" + fileURL + "!/" + aPath;
+    else                      // flat chrome hierarchies
+      fileURL = fileURL + "/" + aPath;
+    
+    var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Components.interfaces.nsIXULChromeRegistry);
+    var type;
+    if (aChromeType.EqualsNode(this._provTypePackage)) {
+      cr.installPackage(fileURL, this._isProfile);
+      type = this._logger.CHROME_TYPE_PACKAGE;
+    }
+    else if (aChromeType.EqualsNode(this._provTypeSkin)) {
+      cr.installSkin(fileURL, this._isProfile);
+      type = this._logger.CHROME_TYPE_SKIN;
+    }
+    else if (aChromeType.EqualsNode(this._provTypeLocale)) {
+      cr.installLocale(fileURL, this._isProfile);
+      type = this._logger.CHROME_TYPE_LOCALE;
+    }
+    this._logger.registerChrome(fileURL, type, this._isProfile);
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsVersionChecker
+//
 function VersionChecker(aExtensionResource, aAppID, aAppVersion, aDataSource)
 {
   this._extensionResource = aExtensionResource;
@@ -169,6 +356,10 @@ VersionChecker.prototype = {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsJarFileExtractor
+//
 function nsJarFileExtractor(aXPIFile, aTargetDir)
 {
   this._xpiFile = aXPIFile.path;
@@ -237,6 +428,10 @@ nsJarFileExtractor.prototype = {
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsExtensionManager
+//
 function nsExtensionManager()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -246,6 +441,8 @@ function nsExtensionManager()
 }
 
 nsExtensionManager.prototype = {
+  _extInstaller: null,
+
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
   observe: function (aSubject, aTopic, aData)
@@ -296,9 +493,11 @@ nsExtensionManager.prototype = {
         
         // Look for extensions that need to be removed
         items = this._ds.getItemsWithFlagSet("toBeUninstalled");
-        dump("*** items.length = " + items.length + "\n");
         for (var i = 0; i < items.length; ++i)
           this._finalizeUninstall(items[i]);
+          
+        // Clean up any helper objects
+        delete this._extInstaller;
           
         win.close();
         
@@ -551,74 +750,12 @@ nsExtensionManager.prototype = {
   {
     var installLocation = this._ds.getExtensionProperty(aExtensionID, "installLocation");
     var isProfile = installLocation == "profile";
-    var logger = new nsInstallLogger(aExtensionID, isProfile);
     
-    // Move files from the staging dir into the extension's final home.
-    // This function generates uninstall log files and creates backups of
-    // existing files. 
-    this._installExtensionFiles(aExtensionID, logger);
-    
-    // Load the metadata datasource
-    var metadataFile = getDir(isProfile ? "ProfD" : "ProfD", 
-                              ["extensions", aExtensionID]); // XXXben XCurProcDir
-    metadataFile.append("extension.rdf");
-    
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                        .getService(Components.interfaces.nsIRDFService);    
-    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                           .getService(Components.interfaces.nsIIOService);
-    var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-    var metadataDS = rdf.GetDataSourceBlocking(fph.getURLSpecFromFile(metadataFile));
-    
-    // Add metadata for the extension to the global extension metadata set
-    this._ds.addExtensionMetaData(aExtensionID, metadataDS, isProfile);
-    
-    // Register chrome packages for files specified in the extension manifest
-    this._registerChromeForExtension(aExtensionID, metadataDS, logger);
-    
-    // Unset the "toBeInstalled" flag
-    this._ds.removePendingExtensionEntry(aExtensionID, isProfile);
+    if (!this._extInstaller)
+      this._extInstaller = new nsExtensionInstaller(this._ds);
+    this._extInstaller.install(aExtensionID, isProfile);
   },
-  
-  _installExtensionFiles: function (aExtensionID, aLogger, aIsProfile)
-  {
-    var sourceXPI = getDir(aIsProfile ? "ProfD" : "ProfD", 
-                           ["extensions", "temp", aExtensionID]); // XXXben XCurProcDir
-    sourceXPI.append(aExtensionID + ".xpi");
-    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                              .createInstance(Components.interfaces.nsIZipReader);
-    zipReader.init(sourceXPI);
-    zipReader.open();
 
-    var entries = zipReader.findEntries("*");
-    while (entries.hasMoreElements()) {
-      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
-      
-      var parts = entry.name.split("/");
-      var subDirs = ["extensions", aExtensionID];
-      for (var i = 0; i < parts.length - 1; ++i)
-        subDirs.push(parts[i]);
-      
-      var targetFile = getDir(aIsProfile ? "ProfD" : "ProfD", subDirs);
-      var fileName = parts[parts.length-1];
-      if (fileName != "") {
-        targetFile.append(fileName);
-        zipReader.extract(entry.name, targetFile);
-        aLogger.addFile(targetFile);
-      }
-    }
-    zipReader.close();
-    // Kick off the extraction on a new thread, then join to wait for it to
-    // complete. 
-    // (new nsJarFileExtractor(aZipReader.file, dir)).extract();
-  },
-  
-  _registerChromeForExtension: function (aExtensionID, aLogger)
-  {
-    // Enumerate the metadata datasource files collection and register chrome
-    // for each file
-  },
-  
   _unregisterChromeForExtension: function (aExtensionID, aLogger)
   {
   
@@ -815,12 +952,6 @@ nsExtensionItemUpdater.prototype = {
     return this;
   }  
 };
-
-
-function EM_NS(aProperty)
-{
-  return "http://www.mozilla.org/2004/em-rdf#" + aProperty;
-}
 
 function nsExtensionsDataSource()
 {
