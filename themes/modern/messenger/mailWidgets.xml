@@ -106,7 +106,7 @@
       </property>
 
       <!-- value forwards to the internal menulist's "data" attribute -->
-      <property name="value" onget="return this.anonymousContent[0].selectedItem.data">
+      <property name="value" onget="return this.anonymousContent[0].selectedItem.getAttribute('data');">
         <setter>
           <![CDATA[
             var menulist = this.anonymousContent[0];
@@ -289,10 +289,12 @@
       <method name="save">
         <body>
           <![CDATA[
-            dump("Saving searchvalue\n");
             var searchValue = this.value;
             var searchAttribute = this.searchAttribute;
             var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+
+            dump("Saving searchvalue: " + searchValue + " (type = " + searchAttribute + ")\n");
+            searchValue.attrib = searchAttribute;
             if (searchAttribute == nsMsgSearchAttrib.Priority)
                searchValue.priority = this.anonymousContent[1].selectedItem.data;
             else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
@@ -396,15 +398,10 @@
         <body>
           <![CDATA[
             var searchTerm = this.searchTerm;
-
-            dump("Saving searchterm = " + searchTerm + "\n");
-            dump("Saving (" + this.searchattribute.value + "," +
-                              this.searchoperator.value + "," +
-                              this.searchvalue.value + "," +
-                              this.booleanAnd + ")\n");
             searchTerm.attrib = this.searchattribute.value;
             searchTerm.op = this.searchoperator.value;
             this.searchvalue.save();
+            searchTerm.value = this.searchvalue.value;
             searchTerm.booleanAnd = this.booleanAnd;
           ]]>
         </body>
