@@ -129,13 +129,13 @@ Rights Reserved.
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
   
-	<key id="key_toggleRead" key="&markAsReadCmd.key;" alt="false" control="false" shift="false" observes="cmd_markAsRead"/>
-	<key id="key_markAllRead" key="&markAllReadCmd.key;" alt="false" control="false" shift="false" observes="cmd_markAllRead"/>
-	<key id="key_nextMsg" key="&nextMsgCmd.key;" alt="false" control="false" shift="false" observes="cmd_nextMsg"/>
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" alt="false" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
-	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" alt="false" observes="cmd_nextUnreadThread"/>
-	<key id="key_previousMsg" key="&previousMsgCmd.key;" alt="false" control="false" shift="false" observes="cmd_previousMsg"/>
-	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
+	<key id="key_toggleRead" key="&markAsReadCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_markAsRead"/>
+	<key id="key_markAllRead" key="&markAllReadCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_markAllRead"/>
+	<key id="key_nextMsg" key="&nextMsgCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_nextMsg"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
+	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" xulkey="false" control="false" shift="false" alt="false" observes="cmd_nextUnreadThread"/>
+	<key id="key_previousMsg" key="&previousMsgCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_previousMsg"/>
+	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" xulkey="false" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
 	<key id="key_reply" key="&replyMsgCmd.key;" xulkey="true" shift="false" observes="cmd_reply"/>
 	<key id="key_replyall" key="&replyToAllMsgCmd.key;" xulkey="true" shift="true" observes="cmd_replyall"/>
 	<key id="key_forward" key="&forwardMsgCmd.key;" xulkey="true" shift="false" observes="cmd_forward"/>
