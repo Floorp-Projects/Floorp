@@ -274,7 +274,12 @@ public:
    */
   NS_IMETHOD StyleChangeReflow() = 0;
 
-  NS_IMETHOD GetRootFrame(nsIFrame** aFrame) const = 0;
+  /**
+   * This calls through to the frame manager to get the root frame.
+   * Callers inside of gklayout should use FrameManager()->GetRootFrame()
+   * instead, as it's more efficient.
+   */
+  virtual NS_HIDDEN_(nsIFrame*) GetRootFrame() const;
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.

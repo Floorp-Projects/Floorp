@@ -108,8 +108,7 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aD
   nsCOMPtr<nsIPresShell> presShell;
   docShell->GetPresShell(getter_AddRefs(presShell));
 
-  nsIFrame*       root;
-  presShell->GetRootFrame(&root);
+  nsIFrame* root = presShell->GetRootFrame();
 
   nsIFrameDebug*  fdbg;
   rv = CallQueryInterface(root, &fdbg);

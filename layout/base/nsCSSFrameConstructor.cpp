@@ -10139,8 +10139,7 @@ nsCSSFrameConstructor::AttributeChanged(nsPresContext* aPresContext,
   if (aAttribute == nsXULAtoms::tooltiptext ||
       aAttribute == nsXULAtoms::tooltip) 
   {
-    nsIFrame* rootFrame = nsnull;
-    shell->GetRootFrame(&rootFrame);
+    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
     if (rootFrame)
       rootFrame = rootFrame->GetFirstChild(nsnull);
     nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));

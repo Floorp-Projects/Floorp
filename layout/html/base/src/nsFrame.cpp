@@ -222,8 +222,7 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
 
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (nsnull != shell) {
-    nsIFrame* frame;
-    shell->GetRootFrame(&frame);
+    nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if(nsnull != frame) {
       nsIFrameDebug* debugFrame;
       nsresult rv;
