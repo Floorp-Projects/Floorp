@@ -92,7 +92,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     nsSize            maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
   
-    aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
+    ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
   
     // Place and size the child. Make sure the child is at least as
     // tall as our max size (the containing window)
@@ -131,8 +131,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
 
       if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         // Get the child's desired size
-        htmlReflow->WillReflow(aPresContext);
-        aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
+        ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
   
         // Make sure the child is at least as tall as our max size (the containing window)
         if (aDesiredSize.height < aReflowState.maxSize.height) {
@@ -142,6 +141,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
         // Place and size the child
         nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
         mFirstChild->SetRect(rect);
+        // XXX Should we be sending the DidReflow?
         htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   
         // Is the frame complete?

@@ -208,15 +208,11 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
     nsHTMLReflowState kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
-    nsIHTMLReflow*    htmlReflow;
 
-    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      nsReflowStatus status = ReflowChild(kidFrame,&aPresContext, kidSize,
-                                          kidReflowState);
-      // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
-      kidFrame->SetRect(nsRect(0,0,0,0));
-    }
+    nsReflowStatus status;
+    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
+    // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
+    kidFrame->SetRect(nsRect(0,0,0,0));
   }
 
   aDesiredSize.width=0;

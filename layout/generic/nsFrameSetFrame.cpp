@@ -674,18 +674,17 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   nsIHTMLReflow*     htmlReflow;
 
   if (NS_OK == aChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    htmlReflow->WillReflow(aPresContext);
-                                          
     nsHTMLReflowMetrics metrics(nsnull);
     metrics.width = aSize.width;
     metrics.height= aSize.height;
     nsReflowStatus status;
 
     if (needFramesetReflow) {
+      htmlReflow->WillReflow(aPresContext);
       status = ((nsHTMLFramesetFrame*)aChild)->Reflow(aPresContext, childDrag, metrics, 
                                                       reflowState, status);
     } else {
-      status = ReflowChild(aChild, &aPresContext, metrics, reflowState);
+      ReflowChild(aChild, aPresContext, metrics, reflowState, status);
     }
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 

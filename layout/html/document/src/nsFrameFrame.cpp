@@ -328,8 +328,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
   nsIHTMLReflow*      htmlReflow;
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    htmlReflow->WillReflow(aPresContext);
-    aStatus = ReflowChild(mFirstChild, &aPresContext, kidMetrics, kidReflowState);
+    ReflowChild(mFirstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
     // Place and size the child

@@ -326,19 +326,15 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.maxSize.width);
   nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, availSize);
-  nsIHTMLReflow* htmlReflow;
 
-  if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    htmlReflow->WillReflow(aPresContext);
-    aStatus = ReflowChild(mFirstChild, &aPresContext, kidSize, kidReflowState);
+  ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState, aStatus);
 #ifdef NS_DEBUG
-      if (kidSize.width > availSize.width)
-      {
-        printf("WARNING: cell content returned desired width %d given avail width %d\n",
-                kidSize.width, availSize.width);
-      }
-#endif
+  if (kidSize.width > availSize.width)
+  {
+    printf("WARNING: cell content returned desired width %d given avail width %d\n",
+            kidSize.width, availSize.width);
   }
+#endif
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
     if (nsnull!=pMaxElementSize)

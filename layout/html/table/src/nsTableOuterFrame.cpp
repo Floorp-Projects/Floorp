@@ -464,19 +464,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     nsHTMLReflowState   innerReflowState(mInnerTableFrame, aReflowState,
                                          nsSize(tableWidth, aReflowState.maxSize.height));
     nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-    nsIHTMLReflow*      htmlReflow;
 
-    if (NS_OK == mInnerTableFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      aStatus = ReflowChild(mInnerTableFrame, &aPresContext, innerSize,
-                            innerReflowState);
+    ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
 
-      // Table's max element size is the MAX of the caption's max element size
-      // and the inner table's max element size...
-      if (nsnull != aDesiredSize.maxElementSize) {
-        if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
-          aDesiredSize.maxElementSize->width = mMinCaptionWidth;
-        }
+    // Table's max element size is the MAX of the caption's max element size
+    // and the inner table's max element size...
+    if (nsnull != aDesiredSize.maxElementSize) {
+      if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
+        aDesiredSize.maxElementSize->width = mMinCaptionWidth;
       }
     }
     state.innerTableMaxSize.width = innerSize.width;

@@ -110,13 +110,16 @@ protected:
                               const nsRect&        aDirtyRect);
 
   /**
-   * Reflow a child frame and return the status of the reflow. If the child
-   * is complete and it has next-in-flows, then delete the next-in-flows.
+   * Queries the child frame for the nsIHTMLReflow interface and if it's
+   * supported invokes the WillReflow() and Reflow() member functions. If
+   * the reflow succeeds and the child frame is complete, deletes any
+   * next-in-flows using DeleteChildsNextInFlow()
    */
-  nsReflowStatus ReflowChild(nsIFrame*                aKidFrame,
-                             nsIPresContext*          aPresContext,
-                             nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState);
+  nsresult ReflowChild(nsIFrame*                aKidFrame,
+                       nsIPresContext&          aPresContext,
+                       nsHTMLReflowMetrics&     aDesiredSize,
+                       const nsHTMLReflowState& aReflowState,
+                       nsReflowStatus&          aStatus);
 
  /**
   * Moves any frames on both the prev-in-flow's overflow list and the receiver's
