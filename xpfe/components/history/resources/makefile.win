@@ -22,6 +22,8 @@ DEPTH=..\..\..\..
 FILES=\
         history.xul     \
         history.css     \
+        history-test.xul     \
+        history-test.js \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
