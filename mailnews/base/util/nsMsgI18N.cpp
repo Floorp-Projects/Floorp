@@ -60,7 +60,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
                                      nsCString& outString)
 {
   if (inString.IsEmpty()) {
-    outString.Assign("");
+    outString.Truncate(0);
     return NS_OK;
   }
   // Note: this will hide a possible error when the unicode text may contain more than one charset.

@@ -282,7 +282,7 @@ nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 		return rv;
 
   // XXX use necko here
-	nsCAutoString uri("");
+	nsCAutoString uri;
 	uri.Append(mURI);
 	uri.Append('/');
 
@@ -568,7 +568,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     // (remove leading / and add .sbd to first n-1 folders)
     // to be appended onto the server's path
       
-    nsCAutoString newPath("");
+    nsCAutoString newPath;
 	NS_MsgCreatePathStringFromFolderURI(result, newPath);
 
     // now append munged path onto server path
