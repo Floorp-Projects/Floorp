@@ -5218,7 +5218,6 @@ elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(UNIX_ASYNC_DNS)
 elif test "$OS_ARCH" = "OpenVMS"; then
   AC_DEFINE(XP_UNIX)
-  AC_DEFINE(UNIX_ASYNC_DNS)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)

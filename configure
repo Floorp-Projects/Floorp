@@ -14954,10 +14954,6 @@ elif test "$OS_ARCH" = "OpenVMS"; then
 #define XP_UNIX 1
 EOF
 
-  cat >> confdefs.h <<\EOF
-#define UNIX_ASYNC_DNS 1
-EOF
-
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
   cat >> confdefs.h <<\EOF
 #define XP_UNIX 1
