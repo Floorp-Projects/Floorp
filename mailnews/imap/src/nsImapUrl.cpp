@@ -41,6 +41,7 @@
 #include "nsImapUtils.h"
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
+#include "nsIMAPNamespace.h"
 
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -643,11 +644,23 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 // Otherwise, returns a newly allocated name.
 NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory)
 {
-	nsresult result = NS_OK;
-	char *rv = NULL;
-#ifdef HAVE_PORT
+    nsresult rv;
+    nsXPIDLCString serverKey;
+    nsString aString;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    char *newOnlineName = nsnull;
+    
+    NS_WITH_SERVICE(nsIImapHostSessionList, hostSessionList,
+                    kCImapHostSessionListCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+    rv = server->GetKey(getter_Copies(serverKey));
+    if (NS_FAILED(rv)) return rv;
+    rv = hostSessionList->GetOnlineDirForHost(serverKey, aString);
+    char *onlineDir = aString.Length() > 0 ? aString.ToNewCString() : nsnull;
+
 	// If this host has an online server directory configured
-	char *onlineDir = TIMAPHostInfo::GetOnlineDirForHost(GetUrlHost());
 	if (onlineMailboxName && onlineDir)
 	{
 #ifdef DEBUG
@@ -656,30 +669,37 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 		// Therefore, the online directory must end in a slash.
 		PR_ASSERT(onlineDir[nsCRT::strlen(onlineDir) - 1] == '/');
 #endif
-		TIMAPNamespace *ns = TIMAPHostInfo::GetNamespaceForMailboxForHost(GetUrlHost(), onlineMailboxName);
+        nsIMAPNamespace *ns = nsnull;
+		rv = hostSessionList->GetNamespaceForMailboxForHost(serverKey,
+                                                            onlineMailboxName,
+                                                            ns); 
+
 		NS_ASSERTION(ns, "couldn't find namespace for host");
-		if (ns && (PL_strlen(ns->GetPrefix()) == 0) && PL_strcasecmp(onlineMailboxName, "INBOX"))
+		if (ns && (PL_strlen(ns->GetPrefix()) == 0) &&
+            PL_strcasecmp(onlineMailboxName, "INBOX"))
 		{
-			// Also make sure that the first character in the mailbox name is not '/'.
-			NS_ASSERTION(*onlineMailboxName != '/', "first char of onlinemailbox is //");
+			// Also make sure that the first character in the mailbox name is
+            // not '/'. 
+			NS_ASSERTION(*onlineMailboxName != '/', 
+                         "first char of onlinemailbox is //");
 
 			// The namespace for this mailbox is the root ("").
 			// Prepend the online server directory
-			int finalLen = nsCRT::strlen(onlineDir) + nsCRT::strlen(onlineMailboxName) + 1;
-			rv = (char *)PR_Malloc(finalLen);
-			if (rv)
+			int finalLen = nsCRT::strlen(onlineDir) +
+                nsCRT::strlen(onlineMailboxName) + 1;
+			newOnlineName = (char *)PR_Malloc(finalLen);
+			if (newOnlineName)
 			{
-				nsCRT::strcpy(rv, onlineDir);
-				nsCRT::strcat(rv, onlineMailboxName);
+				PL_strcpy(newOnlineName, onlineDir);
+				PL_strcat(newOnlineName, onlineMailboxName);
 			}
 		}
 	}
-#endif // HAVE_PORT
 	if (directory)
-		*directory = rv;
-	else
-		PR_FREEIF(rv);
-	return result;
+		*directory = newOnlineName;
+	else if (newOnlineName)
+		nsCRT::free(newOnlineName);
+	return rv;
 }
 
 // Converts from canonical format (hierarchy is indicated by '/' and all real slashes ('/') are escaped)

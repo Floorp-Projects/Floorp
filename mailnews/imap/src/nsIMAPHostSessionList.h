@@ -35,7 +35,7 @@ class nsIMAPHostInfo
 public:
 	friend class nsIMAPHostSessionList;
 
-	nsIMAPHostInfo(const char *serverKey);
+	nsIMAPHostInfo(const char *serverKey, nsIImapIncomingServer *server);
 	~nsIMAPHostInfo();
 protected:
 	char			*fServerKey;
@@ -69,7 +69,8 @@ public:
 	nsIMAPHostSessionList();
 	virtual ~nsIMAPHostSessionList();
 	// Host List
-	 NS_IMETHOD	AddHostToList(const char *serverKey);
+	 NS_IMETHOD	AddHostToList(const char *serverKey, 
+                              nsIImapIncomingServer *server);
 	 NS_IMETHOD ResetAll();
 
 	// Capabilities

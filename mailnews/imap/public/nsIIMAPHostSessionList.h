@@ -42,7 +42,7 @@ public:
    static const nsIID& GetIID() { static nsIID iid = NS_IIMAPHOSTSESSIONLIST_IID; return iid; }
 
 	// Host List
-	 NS_IMETHOD	AddHostToList(const char *serverKey) = 0;
+	 NS_IMETHOD	AddHostToList(const char *serverKey, nsIImapIncomingServer *server) = 0;
 	 NS_IMETHOD ResetAll() = 0;
 
 	// Capabilities

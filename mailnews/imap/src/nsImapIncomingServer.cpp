@@ -109,44 +109,43 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
     if (NS_FAILED(rv)) return rv;
 
-	hostSession->AddHostToList(aKey);
+	hostSession->AddHostToList(aKey, this);
   nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash; // default to trash
   GetDeleteModel(&deleteModel);
   hostSession->SetDeleteIsMoveToTrashForHost(aKey, deleteModel == nsMsgImapDeleteModels::MoveToTrash); 
   hostSession->SetShowDeletedMessagesForHost(aKey, deleteModel == nsMsgImapDeleteModels::IMAPDelete);
 
-	char *personalNamespace = nsnull;
-	char *publicNamespace = nsnull;
-	char *otherUsersNamespace = nsnull;
+  nsXPIDLCString onlineDir;
+  rv = GetServerDirectory(getter_Copies(onlineDir));
+  if (NS_FAILED(rv)) return rv;
+  if (onlineDir)
+      hostSession->SetOnlineDirForHost(aKey, (const char *) onlineDir);
 
-	rv = GetPersonalNamespace(&personalNamespace);
+  nsXPIDLCString personalNamespace;
+  nsXPIDLCString publicNamespace;
+  nsXPIDLCString otherUsersNamespace;
 
-	if (!personalNamespace && !publicNamespace && !otherUsersNamespace)
-		personalNamespace = PL_strdup("\"\"");
+  rv = GetPersonalNamespace(getter_Copies(personalNamespace));
+  if (NS_FAILED(rv)) return rv;
+  rv = GetPublicNamespace(getter_Copies(publicNamespace));
+  if (NS_FAILED(rv)) return rv;
+  rv = GetOtherUsersNamespace(getter_Copies(otherUsersNamespace));
+  if (NS_FAILED(rv)) return rv;
 
-	if (NS_SUCCEEDED(rv))
-	{
-		hostSession->SetNamespaceFromPrefForHost(aKey, personalNamespace, kPersonalNamespace);
-		PR_FREEIF(personalNamespace);
-	}
+  if (!personalNamespace && !publicNamespace && !otherUsersNamespace)
+      personalNamespace = PL_strdup("\"\"");
 
-	rv = GetPublicNamespace(&publicNamespace);
+  hostSession->SetNamespaceFromPrefForHost(aKey, personalNamespace,
+                                           kPersonalNamespace);
 
-	if (NS_SUCCEEDED(rv) && publicNamespace && *publicNamespace)
-	{
-		hostSession->SetNamespaceFromPrefForHost(aKey, publicNamespace, kPublicNamespace);
-		PR_FREEIF(publicNamespace);
-	}
+  if (publicNamespace && *publicNamespace)
+      hostSession->SetNamespaceFromPrefForHost(aKey, publicNamespace,
+                                               kPublicNamespace);
 
-	rv = GetOtherUsersNamespace(&otherUsersNamespace);
-
-	if (NS_SUCCEEDED(rv) && otherUsersNamespace && *otherUsersNamespace)
-	{
-		hostSession->SetNamespaceFromPrefForHost(aKey, otherUsersNamespace, kOtherUsersNamespace);
-		PR_FREEIF(otherUsersNamespace);
-	}
-
-	return rv;
+  if (otherUsersNamespace && *otherUsersNamespace)
+      hostSession->SetNamespaceFromPrefForHost(aKey, otherUsersNamespace,
+                                               kOtherUsersNamespace);
+  return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::GetLocalStoreType(char ** type)
@@ -156,20 +155,83 @@ NS_IMETHODIMP nsImapIncomingServer::GetLocalStoreType(char ** type)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapIncomingServer::GetServerDirectory(char **serverDirectory)
+{
+    return GetCharValue("server_sub_directory", serverDirectory);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
+{
+    nsCAutoString dirString = serverDirectory;
+    if (dirString.Last() != '/')
+        dirString += '/';
+    nsXPIDLCString serverKey;
+    nsresult rv = GetKey(getter_Copies(serverKey));
+    if (NS_SUCCEEDED(rv))
+    {
+        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                        kCImapHostSessionList, &rv);
+        if (NS_SUCCEEDED(rv))
+            hostSession->SetOnlineDirForHost(serverKey, dirString.GetBuffer());
+    }
+    return SetCharValue("server_sub_directory", dirString.GetBuffer());
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetOverrideNamespaces(PRBool *bVal)
+{
+    return GetBoolValue("override_namespaces", bVal);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetOverrideNamespaces(PRBool bVal)
+{
+    nsXPIDLCString serverKey;
+    GetKey(getter_Copies(serverKey));
+    if (serverKey)
+    {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                        kCImapHostSessionList, &rv);
+        if (NS_SUCCEEDED(rv))
+            hostSession->SetNamespacesOverridableForHost(serverKey, bVal);
+    }
+    return SetBoolValue("override_namespaces", bVal);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetUsingSubscription(PRBool *bVal)
+{
+    return GetBoolValue("using_subscription", bVal);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetUsingSubscription(PRBool bVal)
+{
+    nsXPIDLCString serverKey;
+    GetKey(getter_Copies(serverKey));
+    if (serverKey)
+    {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                        kCImapHostSessionList, &rv);
+        if (NS_SUCCEEDED(rv))
+            hostSession->SetHostIsUsingSubscription(serverKey, bVal);
+    }
+    return SetBoolValue("using_subscription", bVal);
+}
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DualUseFolders,
+                        "dual_use_folders");
+			
+			
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, AdminUrl,
                        "admin_url");
 
-NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, ServerDirectory,
-                       "server_sub_directory");
-
-NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UsingSubscription,
-                        "using_subscription");
-
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, CleanupInboxOnExit,
                         "cleanup_inbox_on_exit");
-			
-NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DualUseFolders,
-                        "dual_use_folders");
 			
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, EmptyTrashOnExit,
                         "empty_trash_on_exit");
@@ -177,9 +239,6 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, EmptyTrashOnExit,
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, OfflineDownload,
                         "offline_download");
 
-NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, OverrideNamespaces,
-                        "override_namespaces");
-			
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
                        "max_cached_connections");
 

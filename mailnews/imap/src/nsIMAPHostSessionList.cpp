@@ -30,10 +30,13 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgIncomingServer.h"
 
-nsIMAPHostInfo::nsIMAPHostInfo(const char *serverKey)
+nsIMAPHostInfo::nsIMAPHostInfo(const char *serverKey, 
+                               nsIImapIncomingServer *server)
 {
 	fServerKey = nsCRT::strdup(serverKey);
+    NS_ASSERTION(server, "*** Fatal null imap incoming server...\n");
     fOnlineDir = NULL;
+    server->GetServerDirectory(&fOnlineDir);
 	fNextHost = NULL;
 	fCachedPassword = NULL;
 	fCapabilityFlags = kCapabilityUndefined;
@@ -42,6 +45,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *serverKey)
 	fCanonicalOnlineSubDir = NULL;
 	fNamespaceList = nsIMAPNamespaceList::CreatensIMAPNamespaceList();
 	fUsingSubscription = PR_TRUE;
+    server->GetUsingSubscription(&fUsingSubscription);
 	fOnlineTrashFolderExists = PR_FALSE;
 	fShouldAlwaysListInbox = PR_TRUE;
 	fShellCache = nsIMAPBodyShellCache::Create();
@@ -51,6 +55,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *serverKey)
     fGotNamespaces = PR_FALSE;
 	fHaveAdminURL = PR_FALSE;
 	fNamespacesOverridable = PR_TRUE;
+    server->GetOverrideNamespaces(&fNamespacesOverridable);
 	fTempNamespaceList = nsIMAPNamespaceList::CreatensIMAPNamespaceList();
 }
 
@@ -141,14 +146,16 @@ NS_IMETHODIMP nsIMAPHostSessionList::ResetAll()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsIMAPHostSessionList::AddHostToList(const char *serverKey)
+NS_IMETHODIMP
+nsIMAPHostSessionList::AddHostToList(const char *serverKey,
+                                     nsIImapIncomingServer *server)
 {
 	nsIMAPHostInfo *newHost=NULL;
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	if (!FindHost(serverKey))
 	{
 		// stick it on the front
-		newHost = new nsIMAPHostInfo(serverKey);
+		newHost = new nsIMAPHostInfo(serverKey, server);
 		if (newHost)
 		{
 			newHost->fNextHost = fHostInfoList;
