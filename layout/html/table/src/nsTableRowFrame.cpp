@@ -410,7 +410,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
 
     // Compute the x-origin for the child, taking into account straddlers (cells from prior
     // rows with rowspans > 1)
-    nscoord x = 0;
+    nscoord x = kidMargin.left;
     PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
     for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
     {
@@ -452,10 +452,9 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     }
     else
     {
-      nsRect cellRect;
-      kidFrame->GetRect(cellRect);
-      desiredSize.width = cellRect.width;
-      desiredSize.height = cellRect.height;
+      nsSize priorSize = ((nsTableCellFrame *)kidFrame)->GetPriorDesiredSize();
+      desiredSize.width = priorSize.width;
+      desiredSize.height = priorSize.height;
       status = NS_FRAME_COMPLETE; // XXX: in paginated world, this doesn't work!
     }
 
