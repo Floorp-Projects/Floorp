@@ -90,7 +90,7 @@ ProcessorState::ProcessorState(Document* aSourceDocument,
 
     // add predefined default decimal format
     defaultDecimalFormatSet = MB_FALSE;
-    decimalFormats.put("", new txDecimalFormat);
+    decimalFormats.put(String(), new txDecimalFormat);
     decimalFormats.setObjectDeletion(MB_TRUE);
 }
 
@@ -461,19 +461,24 @@ Node* ProcessorState::findTemplate(Node* aNode,
         }
     }
 
-    #ifdef PR_LOGGING
+#ifdef PR_LOGGING
     char *nodeBuf = 0, *modeBuf = 0;
     if (matchTemplate) {
         char *matchBuf = 0, *uriBuf = 0;
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("MatchTemplate, Pattern %s, Mode %s, Stylesheet %s, " \
                 "Node %s\n",
-                (matchBuf = ((Element*)matchTemplate)->getAttribute("match").toCharArray()),
+                (matchBuf = ((Element*)matchTemplate)->getAttribute(String("match")).toCharArray()),
                 (modeBuf = aMode.toCharArray()),
                 (uriBuf = matchTemplate->getBaseURI().toCharArray()),
                 (nodeBuf = aNode->getNodeName().toCharArray())));
-        delete matchBuf;
-        delete uriBuf;
+#ifdef TX_EXE
+        delete [] matchBuf;
+        delete [] uriBuf;
+#else
+        nsMemory::Free(matchBuf);
+        nsMemory::Free(uriBuf);
+#endif
     }
     else {
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
@@ -481,9 +486,14 @@ Node* ProcessorState::findTemplate(Node* aNode,
                 (nodeBuf  = aNode->getNodeName().toCharArray()),
                 (modeBuf = aMode.toCharArray())));
     }
-    delete nodeBuf;
-    delete modeBuf;
-    #endif
+#ifdef TX_EXE
+        delete [] nodeBuf;
+        delete [] modeBuf;
+#else
+        nsMemory::Free(nodeBuf);
+        nsMemory::Free(modeBuf);
+#endif
+#endif
     return matchTemplate;
 }
 
@@ -557,7 +567,7 @@ Expr* ProcessorState::getExpr(Element* aElem, ExprAttr aAttr)
     expr = ExprParser::createExpr(attr, &pContext);
 
     if (!expr) {
-        String err = "Error in parsing XPath expression: ";
+        String err("Error in parsing XPath expression: ");
         err.append(attr);
         receiveError(err, NS_ERROR_XPATH_PARSE_FAILED);
     }
@@ -596,7 +606,7 @@ txPattern* ProcessorState::getPattern(Element* aElem, PatternAttr aAttr)
     pattern = txPatternParser::createPattern(attr, &pContext, this);
 
     if (!pattern) {
-        String err = "Error in parsing pattern: ";
+        String err("Error in parsing pattern: ");
         err.append(attr);
         receiveError(err, NS_ERROR_XPATH_PARSE_FAILED);
     }
@@ -929,7 +939,6 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node)
             ImportFrame* frame;
             txListIterator frameIter(&mImportFrames);
 
-            String name = node->getNodeName();
             while ((frame = (ImportFrame*)frameIter.next())) {
                 txListIterator iter(&frame->mWhiteNameTests);
                 while (iter.hasNext()) {
@@ -939,7 +948,7 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node)
                 }
             }
             if (mOutputFormat.mMethod == eHTMLOutput) {
-                String ucName = name;
+                String ucName = node->getNodeName();
                 ucName.toUpperCase();
                 if (ucName.isEqual("SCRIPT"))
                     return MB_FALSE;
@@ -949,7 +958,7 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node)
         case Node::TEXT_NODE:
         case Node::CDATA_SECTION_NODE:
         {
-            if (!XMLUtils::shouldStripTextnode(node->getNodeValue()))
+            if (!XMLUtils::isWhitespace(node->getNodeValue()))
                 return MB_FALSE;
             return isStripSpaceAllowed(node->getParentNode());
         }

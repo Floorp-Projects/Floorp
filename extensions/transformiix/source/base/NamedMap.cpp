@@ -147,15 +147,6 @@ void NamedMap::dumpMap() {
  *  Returns the object reference in this Map associated with the given name
  * @return the object reference in this Map associated with the given name
 **/
-TxObject* NamedMap::get(const char* key) {
-    String sKey = key;
-    return get(sKey);
-} //-- get
-
-/**
- *  Returns the object reference in this Map associated with the given name
- * @return the object reference in this Map associated with the given name
-**/
 TxObject* NamedMap::get(const String& key) {
     BucketItem* item = getBucketItem(key);
     if ( item ) return item->item;
@@ -189,15 +180,6 @@ StringList* NamedMap::keys() {
     }
     return list;
 } //-- keys
-
-/**
- * Adds the specified Node to the top of this Stack.
- * @param node the Node to add to the top of the Stack
-**/
-void NamedMap::put(const char* key, TxObject* obj) {
-    String sKey = key;
-    put(sKey, obj);
-} //-- put
 
 /**
  * Adds the specified Node to the top of this Stack.
@@ -333,17 +315,14 @@ NamedMap::BucketItem* NamedMap::getBucketItem(const String& key) {
 
 /**
 **/
-unsigned long NamedMap::hashKey(const String& key) {
-
-    PRInt32 len = key.length();
-    UNICODE_CHAR* chars = new UNICODE_CHAR[len];
-    key.toUnicode(chars);
+unsigned long NamedMap::hashKey(const String& key)
+{
+    PRUint32 len = key.length();
 
     unsigned long hashCode = 0;
-    for (PRInt32 i = 0; i < len; i++) {
-        hashCode +=  ((PRInt32)chars[i]) << 3;
+    for (PRUint32 i = 0; i < len; ++i) {
+        hashCode += ((PRInt32)key.charAt(i)) << 3;
     }
-    delete [] chars;
     return hashCode;
 } //-- hashKey
 

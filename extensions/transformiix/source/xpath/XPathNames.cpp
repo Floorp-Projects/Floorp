@@ -33,37 +33,30 @@
 #include "FunctionLib.h"
 
 //-- Function Names
-const String XPathNames::BOOLEAN_FN              = "boolean";
-const String XPathNames::CONCAT_FN               = "concat";
-const String XPathNames::CONTAINS_FN             = "contains";
-const String XPathNames::COUNT_FN                = "count";
-const String XPathNames::FALSE_FN                = "false";
-const String XPathNames::ID_FN                   = "id";
-const String XPathNames::LAST_FN                 = "last";
-const String XPathNames::LOCAL_NAME_FN           = "local-name";
-const String XPathNames::NAME_FN                 = "name";
-const String XPathNames::NAMESPACE_URI_FN        = "namespace-uri";
-const String XPathNames::NORMALIZE_SPACE_FN      = "normalize-space";
-const String XPathNames::NOT_FN                  = "not";
-const String XPathNames::POSITION_FN             = "position";
-const String XPathNames::STARTS_WITH_FN          = "starts-with";
-const String XPathNames::STRING_FN               = "string";
-const String XPathNames::STRING_LENGTH_FN        = "string-length";
-const String XPathNames::SUBSTRING_FN            = "substring";
-const String XPathNames::SUBSTRING_AFTER_FN      = "substring-after";
-const String XPathNames::SUBSTRING_BEFORE_FN     = "substring-before";
-const String XPathNames::SUM_FN                  = "sum";
-const String XPathNames::TRANSLATE_FN            = "translate";
-const String XPathNames::TRUE_FN                 = "true";
-// OG+
-const String XPathNames::NUMBER_FN               = "number";
-const String XPathNames::ROUND_FN                = "round";
-const String XPathNames::CEILING_FN              = "ceiling";
-const String XPathNames::FLOOR_FN                = "floor";
-// OG-
-//Marina M. boolean function lang
-const String XPathNames::LANG_FN                 = "lang";
-
-//-- internal XSL processor functions
-const String XPathNames::ERROR_FN                = "error";
-
+const String XPathNames::BOOLEAN_FN("boolean");
+const String XPathNames::CONCAT_FN("concat");
+const String XPathNames::CONTAINS_FN("contains");
+const String XPathNames::COUNT_FN("count");
+const String XPathNames::FALSE_FN("false");
+const String XPathNames::ID_FN("id");
+const String XPathNames::LAST_FN("last");
+const String XPathNames::LOCAL_NAME_FN("local-name");
+const String XPathNames::NAME_FN("name");
+const String XPathNames::NAMESPACE_URI_FN("namespace-uri");
+const String XPathNames::NORMALIZE_SPACE_FN("normalize-space");
+const String XPathNames::NOT_FN("not");
+const String XPathNames::POSITION_FN("position");
+const String XPathNames::STARTS_WITH_FN("starts-with");
+const String XPathNames::STRING_FN("string");
+const String XPathNames::STRING_LENGTH_FN("string-length");
+const String XPathNames::SUBSTRING_FN("substring");
+const String XPathNames::SUBSTRING_AFTER_FN("substring-after");
+const String XPathNames::SUBSTRING_BEFORE_FN("substring-before");
+const String XPathNames::SUM_FN("sum");
+const String XPathNames::TRANSLATE_FN("translate");
+const String XPathNames::TRUE_FN("true");
+const String XPathNames::NUMBER_FN("number");
+const String XPathNames::ROUND_FN("round");
+const String XPathNames::CEILING_FN("ceiling");
+const String XPathNames::FLOOR_FN("floor");
+const String XPathNames::LANG_FN("lang");

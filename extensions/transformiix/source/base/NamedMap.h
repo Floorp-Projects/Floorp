@@ -74,20 +74,9 @@ public:
     TxObject* get(const String& name);
 
     /**
-     *  Returns the object reference in this Map associated with the given name
-     * @return the object reference in this Map associated with the given name
-    **/
-    TxObject* get(const char* name);
-
-    /**
      *  Adds the Object reference to the map and associates it with the given name
     **/
     void  put(const String& name, TxObject* obj);
-
-    /**
-     *  Adds the Object reference to the map and associates it with the given name
-    **/
-    void  put(const char* name, TxObject* obj);
 
     /**
      * Removes all elements from the Map table

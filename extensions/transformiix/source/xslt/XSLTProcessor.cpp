@@ -86,8 +86,8 @@
  * A warning message used by all templates that do not allow non character
  * data to be generated
 **/
-const String XSLTProcessor::NON_TEXT_TEMPLATE_WARNING =
-"templates for the following element are not allowed to generate non character data: ";
+const String XSLTProcessor::NON_TEXT_TEMPLATE_WARNING(
+"templates for the following element are not allowed to generate non character data: ");
 
 /*
  * Implement static variables for atomservice and dom.
@@ -239,11 +239,11 @@ void XSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href)
 **/
 void XSLTProcessor::parseStylesheetPI(String& data, String& type, String& href) {
 
-    PRInt32 size = data.length();
+    PRUint32 size = data.length();
     NamedMap bufferMap;
-    bufferMap.put("type", &type);
-    bufferMap.put("href", &href);
-    int ccount = 0;
+    bufferMap.put(String("type"), &type);
+    bufferMap.put(String("href"), &href);
+    PRUint32 ccount = 0;
     MBool inLiteral = MB_FALSE;
     UNICODE_CHAR matchQuote = '"';
     String sink;
@@ -1039,7 +1039,7 @@ void XSLTProcessor::processAction(Node* aNode,
         nodeType == Node::CDATA_SECTION_NODE) {
         const String& textValue = aXSLTAction->getNodeValue();
         if (!aPs->isXSLStripSpaceAllowed(aXSLTAction) ||
-            !XMLUtils::shouldStripTextnode(textValue)) {
+            !XMLUtils::isWhitespace(textValue)) {
             NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
             mResultHandler->characters(textValue);
         }
@@ -1323,8 +1323,8 @@ void XSLTProcessor::processAction(Node* aNode,
         String value;
         processChildrenAsValue(aNode, actionElement, aPs, MB_TRUE, value);
         PRInt32 pos = 0;
-        PRInt32 length = value.length();
-        while ((pos = value.indexOf('-', pos)) != NOT_FOUND) {
+        PRUint32 length = value.length();
+        while ((pos = value.indexOf('-', pos)) != kNotFound) {
             ++pos;
             if ((pos == length) || (value.charAt(pos) == '-'))
                 value.insert(pos++, ' ');
@@ -2258,7 +2258,7 @@ XSLTProcessor::startElement(ProcessorState* aPs, const String& aName, const PRIn
         if (format->mMethod == eMethodNotSet) {
             // XXX Should check for whitespace-only sibling text nodes
             if ((aNsID == kNameSpaceID_None) &&
-                aName.isEqualIgnoreCase("html")) {
+                aName.isEqualIgnoreCase(String("html"))) {
                 // Switch to html output mode according to the XSLT spec.
                 format->mMethod = eHTMLOutput;
 #ifndef TX_EXE

@@ -55,6 +55,7 @@
  */
 
 #include "Tokenizer.h"
+#include "XMLUtils.h"
 
 /*
  * Creates a new Tokenizer using the given source string
@@ -67,10 +68,8 @@ txTokenizer::txTokenizer(const String& aSource)
 
     // Advance to start pos
     while (mCurrentPos < mSize) {
-        UNICODE_CHAR ch = mSource.charAt(mCurrentPos);
         // If character is not a whitespace, we are at start of first token
-        if (ch != ' ' && ch != '\n' &&
-            ch != '\r' && ch != '\t')
+        if (!XMLUtils::isWhitespace(mSource.charAt(mCurrentPos)))
             break;
         ++mCurrentPos;
     }
@@ -87,18 +86,15 @@ void txTokenizer::nextToken(String& aBuffer)
     while (mCurrentPos < mSize) {
         UNICODE_CHAR ch = mSource.charAt(mCurrentPos++);
         // If character is not a delimiter we append it
-        if (ch == ' ' || ch == '\n' ||
-            ch == '\r' || ch == '\t')
+        if (XMLUtils::isWhitespace(ch))
             break;
         aBuffer.append(ch);
     }
 
     // Advance to next start pos
     while (mCurrentPos < mSize) {
-        UNICODE_CHAR ch = mSource.charAt(mCurrentPos);
         // If character is not a whitespace, we are at start of next token
-        if (ch != ' ' && ch != '\n' &&
-            ch != '\r' && ch != '\t')
+        if (!XMLUtils::isWhitespace(mSource.charAt(mCurrentPos)))
             break;
         ++mCurrentPos;
     }

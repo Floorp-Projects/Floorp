@@ -34,7 +34,7 @@
 //Construct a text object with the specified document owner and data
 //
 Text::Text(const String& theData, Document* owner) :
-      CharacterData(Node::TEXT_NODE, "#text", theData, owner)
+      CharacterData(Node::TEXT_NODE, String("#text"), theData, owner)
 {
 }
 
@@ -52,12 +52,12 @@ Text::Text(NodeType type, const String& name, const String& value,
 //Split the text node at Offset into two siblings.  Return a pointer to the new
 //sibling.
 //
-Text* Text::splitText(PRInt32 offset)
+Text* Text::splitText(PRUint32 offset)
 {
   Text* newTextSibling = NULL;
   String newData;
 
-  if ((offset >= 0) && (offset < nodeValue.length()))
+  if (offset < nodeValue.length())
     {
       newTextSibling = getOwnerDocument()->createTextNode(nodeValue.subString(offset, newData));
       getParentNode()->insertBefore(newTextSibling, getNextSibling());

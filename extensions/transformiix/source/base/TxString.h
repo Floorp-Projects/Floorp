@@ -25,186 +25,224 @@
  *
  */
 
-#ifndef MITRE_STRING
-#define MITRE_STRING
+#ifndef txString_h__
+#define txString_h__
 
 #include "TxObject.h"
 #include "baseutils.h"
-#include <iostream.h>
 
 #ifdef TX_EXE
+#include <iostream.h>
 typedef unsigned short UNICODE_CHAR;
+const PRInt32 kNotFound = -1;
 #else
 #include "nsString.h"
 typedef PRUnichar UNICODE_CHAR;
 #endif
 
-#ifndef NULL
- #define NULL 0
+class String
+#ifdef TX_EXE
+: public TxObject
 #endif
-
-#define NOT_FOUND -1
-
-class String : public TxObject
 {
-  //Translate UNICODE_CHARs to Chars and output to the provided stream
-  friend ostream& operator<<(ostream& output, const String& source);
+public:
+    /*
+     * Default constructor.
+     */
+    String();
 
-  public:
-    String();                     //Default Constructor, create an empty string
-    String(PRInt32 initSize);       //Create an empty string of a specific size
-    String(const String& source); //Create a copy of the source string
-    String(const char* source);   //Create a string from the characters
-    String(const UNICODE_CHAR* source);
-    String(const UNICODE_CHAR* source, PRInt32 length);
-#ifndef TX_EXE
-    String(nsString* theNSString);
+#ifdef TX_EXE
+    /*
+     * Copying constructor.
+     */
+    String(const String& aSource);
+
+    /*
+     * Constructor, allocates a buffer and copies the supplied string buffer.
+     * If aLength is zero it computes the length from the supplied string.
+     */
+    explicit String(const UNICODE_CHAR* aSource, PRUint32 aLength = 0);
+#else
+    explicit String(const nsAString& aSource);
 #endif
+    ~String();
 
-    ~String();                    //Destroy the string, and free memory
+    /*
+     * Append aSource to this string.
+     */
+    void append(UNICODE_CHAR aSource);
+    void append(const String& aSource);
 
+    /*
+     * Insert aSource at aOffset in this string.
+     */
+    void insert(PRUint32 aOffset, UNICODE_CHAR aSource);
+    void insert(PRUint32 aOffset, const String& aSource);
 
-    //Assign source to this string
-    virtual String& operator=(const String& source);
-    virtual String& operator=(const char* source);
-    virtual String& operator=(const UNICODE_CHAR* source);
-    virtual String& operator=(PRInt32 source);
+    /*
+     * Replace characters starting at aOffset with aSource.
+     */
+    void replace(PRUint32 aOffset, UNICODE_CHAR aSource);
+    void replace(PRUint32 aOffset, const String& aSource);
 
-    //Grow buffer if necessary and append the source
-    virtual void append(UNICODE_CHAR source);
-    virtual void append(char source);
-    virtual void append(const String& source);
-    virtual void append(const char* source);
-    virtual void append(const UNICODE_CHAR* source);
-    virtual void append(const UNICODE_CHAR* source, PRInt32 length);
-    virtual void append(PRInt32 source);
+    /*
+     * Delete aCount characters starting at aOffset.
+     */
+    void deleteChars(PRUint32 aOffset, PRUint32 aCount);
 
-    //Provide the ability to insert data into the middle of a string
-    virtual void insert(PRInt32 offset, const UNICODE_CHAR source);
-    virtual void insert(PRInt32 offset, const char source);
-    virtual void insert(PRInt32 offset, const String& source);
-    virtual void insert(PRInt32 offset, const char* source);
-    virtual void insert(PRInt32 offset, const UNICODE_CHAR* source);
-    virtual void insert(PRInt32 offset, const UNICODE_CHAR* source,
-                        PRInt32 sourceLength);
-    virtual void insert(PRInt32 offset, PRInt32 source);
+    /*
+     * Returns the character at aIndex. Caller needs to check the
+     * index for out-of-bounds errors.
+     */
+    UNICODE_CHAR charAt(PRUint32 aIndex) const;
 
-    //Provide the ability to replace one or more characters
-    virtual void replace(PRInt32 offset, const UNICODE_CHAR source);
-    virtual void replace(PRInt32 offset, const char source);
-    virtual void replace(PRInt32 offset, const String& source);
-    virtual void replace(PRInt32 offset, const char* source);
-    virtual void replace(PRInt32 offset, const UNICODE_CHAR* source);
-    virtual void replace(PRInt32 offset, const UNICODE_CHAR* source,
-                         PRInt32 srcLength);
-    virtual void replace(PRInt32 offset, PRInt32 source);
+    /*
+     * Clear the string.
+     */
+    void clear();
 
-    //Provide the ability to delete a range of charactes
-    virtual void deleteChars(PRInt32 offset, PRInt32 count);
+    /*
+     * Returns index of first occurrence of aData.
+     */
+    PRInt32 indexOf(UNICODE_CHAR aData,
+                    PRInt32 aOffset = 0) const;
+    PRInt32 indexOf(const String& aData, PRInt32 aOffset = 0) const;
 
-    /**
-     * Returns the character at index.
-     * If the index is out of bounds, -1 will be returned.
-    **/
-    virtual UNICODE_CHAR charAt(PRInt32 index) const;
+    /*
+     * Returns index of last occurrence of aData.
+     */
+    PRInt32 lastIndexOf(UNICODE_CHAR aData,
+                        PRInt32 aOffset = 0) const;
 
-    virtual void clear();                 //Clear string
+    /*
+     * Check equality between strings.
+     */
+    MBool isEqual(const String& aData) const;
 
-    virtual void ensureCapacity(PRInt32 capacity); //Make sure buffer is at least
-                                                 //'size'
+    /*
+     * Check equality (ignoring case) between strings.
+     */
+    MBool isEqualIgnoreCase(const String& aData) const;
 
-    //Returns index of first occurrence of data
-    virtual PRInt32 indexOf(UNICODE_CHAR data) const;
-    virtual PRInt32 indexOf(UNICODE_CHAR data, PRInt32 offset) const;
-    virtual PRInt32 indexOf(const String& data) const;
-    virtual PRInt32 indexOf(const String& data, PRInt32 offset) const;
+    /*
+     * Check whether the string is empty.
+     */
+    MBool isEmpty() const;
 
-    virtual MBool isEqual(const String& data) const; //Check equality between
-                                                     //strings
-    virtual MBool isEqualIgnoreCase(const String& data) const;
+    /*
+     * Return the length of the string.
+     */
+    PRUint32 length() const;
 
-    //Returns index of last occurrence of data
-    virtual PRInt32 lastIndexOf(UNICODE_CHAR data) const;
-    virtual PRInt32 lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const;
-    virtual PRInt32 lastIndexOf(const String& data) const;
-    virtual PRInt32 lastIndexOf(const String& data, PRInt32 offset) const;
-
-    //Checks whether the string is empty
-    virtual MBool isEmpty() const;
-
-    virtual PRInt32 length() const;               //Returns the length
-
-    /**
-     * Sets the Length of this String, if length is less than 0, it will
-     * be set to 0; if length > current length, the string will be extended
-     * and padded with '\0' null characters. Otherwise the String
-     * will be truncated
-    **/
-    virtual void setLength(PRInt32 length);
-
-    /**
-     * Sets the Length of this String, if length is less than 0, it will
-     * be set to 0; if length > current length, the string will be extended
-     * and padded with given pad character. Otherwise the String
-     * will be truncated
-    **/
-    virtual void setLength(PRInt32 length, UNICODE_CHAR padChar);
-
-    /**
+    /*
      * Returns a substring starting at start
      * Note: the dest String is cleared before use
-    **/
-    virtual String& subString(PRInt32 start, String& dest) const;
+     */
+    String& subString(PRUint32 aStart, String& aDest) const;
 
-    /**
+    /*
      * Returns the subString starting at start and ending at end
      * Note: the dest String is cleared before use
-    **/
-    virtual String& subString(PRInt32 start, PRInt32 end, String& dest) const;
+     */
+    String& subString(PRUint32 aStart, PRUint32 aEnd,
+                      String& aDest) const;
 
-    //Convert the internal rep. to a char buffer
-    virtual char* toCharArray() const;
-    virtual char* toCharArray(char* dest) const;
-    virtual UNICODE_CHAR* toUnicode(UNICODE_CHAR* dest) const;
-    virtual const UNICODE_CHAR* toUnicode() const;
+    /*
+     * Convert string to lowercase.
+     */
+    void toLowerCase();
 
-    virtual void toLowerCase();           //Convert string to lowercase
-    virtual void toUpperCase();           //Convert string to uppercase
-    virtual void trim();                  //Trim whitespace from both ends
+    /*
+     * Convert string to uppercase.
+     */
+    void toUpperCase();
 
-    virtual void reverse();               //Reverse the string
+    /*
+     * Shorten the string to aLength.
+     */
+    void truncate(PRUint32 aLength);
 
-#ifndef TX_EXE
-    virtual nsString& getNSString();
-    virtual const nsString& getConstNSString() const;
-#endif
-
-  protected:
-    //Convert an Int into a String
-    //TK 12/09/1999 - Make this function available to Derrived classes
-    String& ConvertInt(PRInt32 value, String& target);
-
-    //Calculates the length of a null terminated UNICODE_CHAR array
-    PRInt32 UnicodeLength(const UNICODE_CHAR* data);
-
-  private:
-#ifndef TX_EXE
-    nsString* ptrNSString;
+#ifdef TX_EXE
+    /*
+     * Assignment operator. Override default assignment operator
+     * only on standalone, the default will do the right thing for
+     * module.
+     */
+    String& operator = (const String& aSource);
 #else
-    PRInt32     strLength;
-    PRInt32     bufferLength;
-    UNICODE_CHAR* strBuffer;
+    /*
+     * Return a reference to this string's nsString.
+     */
+    nsString& getNSString();
+
+    /*
+     * Return a const reference to this string's nsString.
+     */
+    const nsString& getConstNSString() const;
 #endif
 
-    //String copies itself to the destination
-    void copyString(UNICODE_CHAR* dest);
+private:
+#ifndef TX_EXE
+    nsString mString;
+#else
+    /*
+     * Make sure the string buffer can hold aCapacity characters.
+     */
+    MBool ensureCapacity(PRUint32 aCapacity);
 
-    //Compare the two string representations for equality
-    MBool isEqual(const UNICODE_CHAR* data, const UNICODE_CHAR* search,
-                   PRInt32 length) const;
+    /*
+     * Allocate a new UNICODE_CHAR buffer and copy this string's
+     * buffer into it. Caller needs to free the buffer.
+     */
+    UNICODE_CHAR* toUnicode() const;
+
+    /*
+     * Compute the unicode length of aData.
+     */
+    static PRUint32 unicodeLength(const UNICODE_CHAR* aData);
+
+    /*
+     * Translate UNICODE_CHARs to Chars and output to the provided stream.
+     */
+    friend ostream& operator << (ostream& aOutput, const String& aSource);
+
+    UNICODE_CHAR* mBuffer;
+    PRUint32 mBufferLength;
+    PRUint32 mLength;
+#endif
+
+// XXX DEPRECATED
+public:
+    explicit String(PRUint32 aSize);
+    explicit String(const char* aSource); // XXX Used for literal strings
+    void append(const char* aSource);
+    MBool isEqual(const char* aData) const;
+    char* toCharArray() const;
+// XXX DEPRECATED
 };
 
-ostream& operator<<(ostream& output, const String& source);
+#ifdef TX_EXE
+ostream& operator << (ostream& aOutput, const String& aSource);
 
+inline UNICODE_CHAR String::charAt(PRUint32 aIndex) const
+{
+  NS_ASSERTION(aIndex < mLength, "|charAt| out-of-range");
+  return mBuffer[aIndex];
+}
+
+inline MBool String::isEmpty() const
+{
+  return (mLength == 0);
+}
+
+inline PRUint32 String::length() const
+{
+  return mLength;
+}
+#else
+// txMozillaString.h contains all inline implementations for the 
+// Mozilla module.
+#include "txMozillaString.h"
 #endif
 
+#endif // txString_h__

@@ -30,19 +30,19 @@
  * This class represents a FunctionCall as defined by the XSL Working Draft
 **/
 
-const String FunctionCall::INVALID_PARAM_COUNT =
-        "invalid number of parameters for function: ";
+const String FunctionCall::INVALID_PARAM_COUNT(
+        "invalid number of parameters for function: ");
 
-const String FunctionCall::INVALID_PARAM_VALUE =
-        "invalid parameter value for function: ";
+const String FunctionCall::INVALID_PARAM_VALUE(
+        "invalid parameter value for function: ");
 
 //- Constructors -/
 
 /**
  * Creates a new FunctionCall
 **/
-FunctionCall::FunctionCall() {
-    this->name = "void";
+FunctionCall::FunctionCall() : name("void")
+{
 } //-- FunctionCall
 
 /**

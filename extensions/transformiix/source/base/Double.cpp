@@ -35,6 +35,7 @@
  */
 
 #include "primitives.h"
+#include "XMLUtils.h"
 #include <math.h>
 #include <stdlib.h>
 #ifdef WIN32
@@ -130,17 +131,15 @@ MBool Double::isNeg(double aDbl)
  */
 double Double::toDouble(const String& aSrc)
 {
-    PRInt32 idx = 0;
-    PRInt32 len = aSrc.length();
+    PRUint32 idx = 0;
+    PRUint32 len = aSrc.length();
     MBool digitFound = MB_FALSE;
 
     // leading whitespace
     while (idx < len &&
-           (aSrc.charAt(idx) == ' ' ||
-            aSrc.charAt(idx) == '\n' ||
-            aSrc.charAt(idx) == '\r' ||
-            aSrc.charAt(idx) == '\t'))
+           XMLUtils::isWhitespace(aSrc.charAt(idx))) {
         ++idx;
+    }
 
     // sign char
     if (idx < len && aSrc.charAt(idx) == '-')
@@ -168,12 +167,10 @@ double Double::toDouble(const String& aSrc)
     }
 
     // ending whitespace
-    while ((aSrc.charAt(idx) == ' ' ||
-            aSrc.charAt(idx) == '\n' ||
-            aSrc.charAt(idx) == '\r' ||
-            aSrc.charAt(idx) == '\t') &&
-           idx < len)
+    while (idx < len &&
+           XMLUtils::isWhitespace(aSrc.charAt(idx))) {
         ++idx;
+    }
 
     // "."==NaN, ".0"=="0."==0
     if (digitFound && idx == len) {

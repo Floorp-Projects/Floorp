@@ -41,7 +41,7 @@ Element::Element(const String& tagName, Document* owner) :
   mNamespaceID = kNameSpaceID_Unknown;
 
   int idx = nodeName.indexOf(':');
-  if (idx == NOT_FOUND) {
+  if (idx == kNotFound) {
     mLocalName = TX_GET_ATOM(nodeName);
   }
   else {
@@ -93,7 +93,7 @@ PRInt32 Element::getNamespaceID()
   if (mNamespaceID>=0)
     return mNamespaceID;
   int idx = nodeName.indexOf(':');
-  if (idx == NOT_FOUND) {
+  if (idx == kNotFound) {
     Node* node = this;
     while (node && node->getNodeType() == Node::ELEMENT_NODE) {
       String nsURI;
