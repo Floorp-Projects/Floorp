@@ -20,7 +20,6 @@
 
 #include "nsContainerFrame.h"
 class nsString;
-struct nsStyleMolecule;
 
 // Base class for html container frames that provides common
 // functionality.
