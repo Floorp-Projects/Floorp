@@ -459,11 +459,6 @@ void txKeyPattern::toString(nsAString& aDest)
  * a txPattern to hold the NodeTest and the Predicates of a StepPattern
  */
 
-txStepPattern::~txStepPattern()
-{
-    delete mNodeTest;
-}
-
 MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
 {
     NS_ASSERTION(mNodeTest && aNode, "Internal error");

@@ -44,16 +44,13 @@
 /**
  * Creates a new MultiplicativeExpr using the given operator
 **/
-MultiplicativeExpr::MultiplicativeExpr(Expr* leftExpr, Expr* rightExpr, short op) {
-    this->op = op;
-    this->leftExpr = leftExpr;
-    this->rightExpr = rightExpr;
-} //-- MultiplicativeExpr
-
-MultiplicativeExpr::~MultiplicativeExpr() {
-    delete leftExpr;
-    delete rightExpr;
-} //-- ~MultiplicativeExpr
+MultiplicativeExpr::MultiplicativeExpr(nsAutoPtr<Expr> aLeftExpr,
+                                       nsAutoPtr<Expr> aRightExpr, short aOp)
+    : op(aOp),
+      leftExpr(aLeftExpr),
+      rightExpr(aRightExpr)
+{
+}
 
 /**
  * Evaluates this Expr based on the given context node and processor state

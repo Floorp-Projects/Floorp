@@ -35,10 +35,6 @@ txNodeTypeTest::txNodeTypeTest(NodeType aNodeType)
 {
 }
 
-txNodeTypeTest::~txNodeTypeTest()
-{
-}
-
 void txNodeTypeTest::setNodeName(const nsAString& aName)
 {
     mNodeName = do_GetAtom(aName);

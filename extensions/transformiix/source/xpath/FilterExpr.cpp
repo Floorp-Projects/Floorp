@@ -35,16 +35,10 @@
  * Creates a new FilterExpr using the given Expr
  * @param expr the Expr to use for evaluation
 **/
-FilterExpr::FilterExpr(Expr* expr) : PredicateList() {
-    this->expr = expr;
+FilterExpr::FilterExpr(nsAutoPtr<Expr> aExpr)
+    : expr(aExpr)
+{
 } //-- FilterExpr
-
-/**
- * Destroys this FilterExpr, all predicates and the expr will be deleted
-**/
-FilterExpr::~FilterExpr() {
-    delete expr;
-} //-- ~FilterExpr
 
   //-----------------------------/
  //- Virtual methods from Expr -/

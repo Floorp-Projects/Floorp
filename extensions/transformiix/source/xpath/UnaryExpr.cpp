@@ -27,14 +27,9 @@
 #include "ExprResult.h"
 #include "txIXPathContext.h"
 
-UnaryExpr::UnaryExpr(Expr* expr)
+UnaryExpr::UnaryExpr(nsAutoPtr<Expr> aExpr)
+    : expr(aExpr)
 {
-    this->expr = expr;
-}
-
-UnaryExpr::~UnaryExpr()
-{
-    delete expr;
 }
 
 /*
