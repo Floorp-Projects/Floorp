@@ -33,5 +33,5 @@
   <description style="font-weight: bold; text-align: center; text-decoration: blink;">&createCertInfo.msg2;</description>
   <separator/>
 
-</box>
+</vbox>
 </window>
