@@ -60,7 +60,7 @@ void CnsICmdParams::GetValueTypeTest(const char *aCommand, const char *stateType
 			return;
 		}
 		else {
-			rv = cmdMgrObj->GetCommandState(aCommand,cmdParamObj);
+			rv = cmdMgrObj->GetCommandState(aCommand, nsnull, cmdParamObj);
 			RvTestResult(rv, "cmdMgrObj->GetCommandState test", displayMode);
 		}
 		rv = cmdParamObj->GetValueType(stateType, &retval);
@@ -85,7 +85,7 @@ void CnsICmdParams::GetBooleanValueTest(const char *aCommand, const char *stateT
 			return;
 		}
 		else
-			cmdMgrObj->GetCommandState(aCommand, cmdParamObj);
+			cmdMgrObj->GetCommandState(aCommand, nsnull, cmdParamObj);
 
 		rv = cmdParamObj->GetBooleanValue(stateType, &retval);
 		RvTestResult(rv, "GetBooleanValue test", displayMode);
@@ -159,7 +159,7 @@ void CnsICmdParams::GetCStringValueTest(const char *aCommand, const char *stateT
 			return;
 		}
 		else
-			cmdMgrObj->GetCommandState(aCommand, cmdParamObj);
+			cmdMgrObj->GetCommandState(aCommand, nsnull, cmdParamObj);
 		char *tCstringValue = nsnull;
 		rv = cmdParamObj->GetCStringValue(stateType, &tCstringValue);
 		RvTestResult(rv, "GetCStringValue test", displayMode);
