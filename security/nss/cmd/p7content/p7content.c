@@ -34,7 +34,7 @@
 /*
  * p7content -- A command to display pkcs7 content.
  *
- * $Id: p7content.c,v 1.5 2001/02/01 00:54:34 kirke%netscape.com Exp $
+ * $Id: p7content.c,v 1.6 2001/09/20 21:58:33 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -127,7 +127,7 @@ DecodeAndPrintFile(FILE *out, PRFileDesc *in, char *progName)
 		SEC_PKCS7DecoderUpdate(dcx, derdata.data + i, 1);
 	}
 #else
-	SEC_PKCS7DecoderUpdate(dcx, derdata.data, derdata.len);
+	SEC_PKCS7DecoderUpdate(dcx, (char *)derdata.data, derdata.len);
 #endif
 	cinfo = SEC_PKCS7DecoderFinish(dcx);
     }
