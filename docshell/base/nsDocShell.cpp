@@ -990,14 +990,16 @@ NS_IMETHODIMP nsDocShell::GoBack()
 
    NS_ENSURE_STATE(mSessionHistory);
 
+ 
+   UpdateCurrentSessionHistory();  
+
    nsCOMPtr<nsISHEntry> previousEntry;
 
    NS_ENSURE_SUCCESS(mSessionHistory->GetPreviousEntry(PR_TRUE, 
       getter_AddRefs(previousEntry)), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(previousEntry, NS_ERROR_FAILURE);
 
-   UpdateCurrentSessionHistory();  
-
+  
    NS_ENSURE_SUCCESS(LoadHistoryEntry(previousEntry), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1018,13 +1020,14 @@ NS_IMETHODIMP nsDocShell::GoForward()
 
    NS_ENSURE_STATE(mSessionHistory);
    
+   UpdateCurrentSessionHistory();  
+
    nsCOMPtr<nsISHEntry> nextEntry;
 
    NS_ENSURE_SUCCESS(mSessionHistory->GetNextEntry(PR_TRUE, 
       getter_AddRefs(nextEntry)), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(nextEntry, NS_ERROR_FAILURE);
-
-   UpdateCurrentSessionHistory();  
+   
 
    NS_ENSURE_SUCCESS(LoadHistoryEntry(nextEntry), NS_ERROR_FAILURE);
 
@@ -2313,6 +2316,31 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
       NS_ERROR("ContentViewer Initialization failed");
       return NS_ERROR_FAILURE;
       }   
+    // Restore up any HistoryLayoutState this page might have.
+    nsresult rv = NS_OK;
+    if (mSessionHistory) {
+      PRInt32 index = 0;
+      mSessionHistory->GetIndex(&index);
+      if (-1 < index) {
+ 
+        nsCOMPtr<nsISHEntry> entry;
+        rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+        if (NS_SUCCEEDED(rv) && entry) {
+ 
+          nsCOMPtr<nsILayoutHistoryState> layoutState;
+          rv = entry->GetLayoutHistoryState(getter_AddRefs(layoutState));
+          if (NS_SUCCEEDED(rv) && layoutState) {
+ 
+            nsCOMPtr<nsIPresShell> presShell;
+            rv = GetPresShell(getter_AddRefs(presShell));
+            if (NS_SUCCEEDED(rv) && presShell) {
+ 
+              rv = presShell->SetHistoryState(layoutState);
+            }
+          }
+        }
+      }
+    }
 
    mContentViewer->Show();
 
@@ -2794,7 +2822,6 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
 {
     NS_ASSERTION(aURI, "uri is null");
 
-    UpdateCurrentSessionHistory();
     UpdateCurrentGlobalHistory();
 
     PRBool updateHistory = PR_TRUE;
@@ -2822,6 +2849,7 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
 
     if(updateHistory)
     {
+		UpdateCurrentSessionHistory();
         PRBool shouldAdd = PR_FALSE;
 
         ShouldAddToSessionHistory(aURI, &shouldAdd);
@@ -3027,7 +3055,7 @@ NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI *aURI, nsIChannel *aChannel
 
     //Title is set in nsDocShell::SetTitle()
     NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
-            inputStream, layoutState), NS_ERROR_FAILURE);
+            inputStream, nsnull), NS_ERROR_FAILURE);
 
     NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
             NS_ERROR_FAILURE);
@@ -3035,24 +3063,70 @@ NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI *aURI, nsIChannel *aChannel
     return NS_OK;
 }
 
+ /* 
+  * Save the HistoryLayoutState for this page before we leave it.
+  */
 NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
 {
-   if(mInitialPageLoad || !mSessionHistory)
-      return NS_OK;
-
-   // XXXTAB
-   //NS_ERROR("Not Yet Implemented");
-   return NS_OK;
+   nsresult rv = NS_OK;
+   if(!mInitialPageLoad && mSessionHistory) {
+  
+     PRInt32 index = 0;
+     mSessionHistory->GetIndex(&index);
+     if (-1 < index) {
+ 
+       nsCOMPtr<nsISHEntry> entry;
+       rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
+       if (NS_SUCCEEDED(rv) && entry) {
+ 
+         nsCOMPtr<nsIPresShell> shell;
+         rv = GetPresShell(getter_AddRefs(shell));            
+         if (NS_SUCCEEDED(rv) && shell) {
+ 
+           nsCOMPtr<nsILayoutHistoryState> layoutState;
+           rv = shell->CaptureHistoryState(getter_AddRefs(layoutState));
+           if (NS_SUCCEEDED(rv) && layoutState) {
+ 
+             rv = entry->SetLayoutHistoryState(layoutState);
+           }
+         }
+       }
+     }
+   }
+   return rv;
+   
 }
 
 NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 {
    nsCOMPtr<nsIURI> uri;
    nsCOMPtr<nsIInputStream> postData;
+   PRBool repost = PR_TRUE;
 
    NS_ENSURE_SUCCESS(aEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
       NS_ERROR_FAILURE);
+
+   /* Ask whether to repost form post data */
+   if (postData) {
+       nsCOMPtr<nsIPrompt> prompter;
+       nsCOMPtr<nsIStringBundle> stringBundle;
+       GetPromptAndStringBundle(getter_AddRefs(prompter), 
+          getter_AddRefs(stringBundle));
+ 
+       if (stringBundle && prompter) {
+          nsXPIDLString messageStr;
+          nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").GetUnicode(), 
+          getter_Copies(messageStr));
+          
+		  if (NS_SUCCEEDED(rv) && messageStr) {
+             prompter->Confirm(nsnull, messageStr, &repost);
+		     if (!repost)
+                postData = nsnull;
+		  }
+	   }
+    }
+    
 
    NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, postData, loadHistory),
       NS_ERROR_FAILURE);
@@ -3064,8 +3138,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 // nsDocShell: Global History
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, 
-   PRBool* aShouldAdd)
+NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShouldAdd)
 {
    *aShouldAdd = PR_FALSE;
    if(!mGlobalHistory || !aURI || (typeContent != mItemType))
