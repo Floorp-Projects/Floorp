@@ -72,4 +72,4 @@ pref("browser.chrome.favicons", true);
 pref("browser.download.autoDownload", true);
 pref("browser.download.autoDispatch", false);
 
-pref("chimera.enable_rendezvous", false);
+pref("chimera.enable_rendezvous", true);
