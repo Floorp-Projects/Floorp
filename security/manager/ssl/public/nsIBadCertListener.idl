@@ -40,6 +40,8 @@ interface nsIInterfaceRequestor;
 
 /**
  * Functions that display warnings for problems with web site trust.
+ *
+ * @status FROZEN
  */
 [scriptable, uuid(86960956-edb0-11d4-998b-00b0d02354a0)]
 interface nsIBadCertListener : nsISupports {
