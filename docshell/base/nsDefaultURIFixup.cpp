@@ -199,7 +199,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     // Did the caller want us to try an alternative URI?
     // If so, attempt to fixup http://foo into http://www.foo.com
 
-    if (aURI && aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) {
+    if (*aURI && aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) {
         MakeAlternateURI(*aURI);
     }
 
