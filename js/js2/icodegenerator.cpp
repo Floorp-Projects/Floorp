@@ -1251,6 +1251,10 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             ret = r1;
         }
         break;
+    default:
+        {
+            assert (0); /* quiet linux warnings */
+        }   
     }
     return ret;
 }
