@@ -1,0 +1,14 @@
+add 
+__DATA__
+to most service files and then make services, during construction,
+call $self->load(), which loads any unloaded __DATA__ blocks in any of
+the module's ISA chain.
+
+
+Move PLIF/Service/Components to PLIF/Component
+Move PLIF/Service/User* to PLIF/Session/*
+Move PLIF/Service/Session.pm to PLIF/Session.pm
+Move PLIF/Service/ContactMethods to PLIF/ProtocolHelper/...
+
+
+CGI input needs POST support
