@@ -375,12 +375,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
 	 		<button class="button-toolbar-2 top" id="button-send" value="&sendButton.label;" tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" observes="cmd_sendNow"/>
-            <toolbarseparator/>
+            <separator/>
 	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" observes="cmd_selectAddress"/>
 	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" observes="cmd_attachFile"/>
 	 		<button class="button-toolbar-2 top" id="button-quote" disabled="true" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') QuoteMessage()"/>
             <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
-            <toolbarseparator/>
+            <separator/>
 	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" observes="cmd_saveDefault"/>
 	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') Stop()"/>
 	    	<spring flex="100%"/>
