@@ -4097,11 +4097,11 @@ if (!$series_exists) {
                 # We need to delete in case the text file had duplicate entries
                 # in it.
                 $deletesth->execute($seriesids{$field},
-                                    $dbh->quote($date));
+                                    $date);
                          
                 # We prepared this above
                 $seriesdatasth->execute($seriesids{$field},
-                                        $dbh->quote($date), 
+                                        $date, 
                                         $fielddata{$date} || 0);
             }
         }
