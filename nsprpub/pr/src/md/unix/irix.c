@@ -1532,7 +1532,7 @@ void _MD_IrixInit()
 /************** code and such for NSPR 2.0's interval times ***************/
 /**************************************************************************/
 
-#define PR_CLOCK_GRANULARITY 10000UL
+#define PR_PSEC_PER_SEC 1000000000000ULL  /* 10^12 */
 
 #ifndef SGI_CYCLECNTR_SIZE
 #define SGI_CYCLECNTR_SIZE      165     /* Size user needs to use to read CC */
@@ -1546,6 +1546,7 @@ static PRUint32 pr_clock_shift = 0;
 static PRIntervalTime pr_ticks = 0;
 static PRUint32 pr_clock_granularity = 1;
 static PRUint32 pr_previous = 0, pr_residual = 0;
+static PRUint32 pr_ticks_per_second = 0;
 
 extern PRIntervalTime _PR_UNIX_GetInterval(void);
 extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
@@ -1605,16 +1606,21 @@ static void _MD_IrixIntervalInit()
             pr_clock_granularity = pr_clock_granularity << 1;
         }
         pr_clock_mask = pr_clock_granularity - 1;  /* to make a mask out of it */
+        pr_ticks_per_second = PR_PSEC_PER_SEC
+                / ((PRUint64)pr_clock_granularity * (PRUint64)cycleval);
             
         iotimer_addr = (void*)
             ((__psunsigned_t)iotimer_addr + (phys_addr & poffmask));
     }
-
+    else
+    {
+        pr_ticks_per_second = _PR_UNIX_TicksPerSecond();
+    }
 }  /* _MD_IrixIntervalInit */
 
 PRIntervalTime _MD_IrixIntervalPerSec()
 {
-    return pr_clock_granularity;
+    return pr_ticks_per_second;
 }
 
 PRIntervalTime _MD_IrixGetInterval()
@@ -1649,8 +1655,6 @@ PRIntervalTime _MD_IrixGetInterval()
          * rates, and it's expensive to acqurie.
          */
         pr_ticks = _PR_UNIX_GetInterval();
-        PR_ASSERT(PR_CLOCK_GRANULARITY > _PR_UNIX_TicksPerSecond());
-        pr_ticks *= (PR_CLOCK_GRANULARITY / _PR_UNIX_TicksPerSecond());
     }
     return pr_ticks;
 }  /* _MD_IrixGetInterval */
