@@ -111,6 +111,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          const nsString& aURL,
                          const nscolor* aBackgroundColor,
                          nsIFrame* aTargetFrame,
+                         const nsSize& aDesiredSize,
                          nsFrameImageLoaderCB aCallBack,
                          PRBool aNeedSizeUpdate,
                          PRBool aNeedErrorNotification)
@@ -125,6 +126,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   mTargetFrame = aTargetFrame;
+  mDesiredSize = aDesiredSize;
   mCallBack = aCallBack;
   mPresContext = aPresContext;
   NS_IF_ADDREF(mPresContext);
@@ -143,8 +145,15 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
     ("nsFrameImageLoader::Init start loading for '%s', frame=%p loadStatus=%x",
      cp ? cp : "(null)", mTargetFrame, mImageLoadStatus));
 
+  // Computed desired size, in pixels
+  float t2p;
+  aPresContext->GetTwipsToPixels(&t2p);
+  nscoord desiredWidth = NSToCoordRound(mDesiredSize.width * t2p);
+  nscoord desiredHeight = NSToCoordRound(mDesiredSize.height * t2p);
+
   // Start image load request
-  mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor, 0, 0, 0);
+  mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor,
+                                   desiredWidth, desiredHeight, 0);
   delete cp;
 
   return NS_OK;

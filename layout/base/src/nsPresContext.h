@@ -28,10 +28,16 @@ class nsIImageGroup;
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext {
 public:
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
+  void* operator new(size_t size) {
+    void* rv = ::operator new(size);
+    if (rv) {
+      nsCRT::zero(rv, size);
+    }
     return rv;
+  }
+
+  void operator delete(void* ptr, size_t size) {
+    ::operator delete(ptr);
   }
 
   // nsISupports methods
@@ -76,6 +82,7 @@ public:
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
                             nsIFrame* aTargetFrame,
+                            const nsSize& aDesiredSize,
                             nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
                             PRBool aNeedErrorNotification,
