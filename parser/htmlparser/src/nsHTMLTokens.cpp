@@ -1673,10 +1673,12 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                 if (NS_OK==result) {
                   if ((kQuote==aChar) || (kApostrophe==aChar)) {
                     aScanner.GetChar(aChar);
+                    PRInt32 quotehere = mTextValue.Length();
+                    
                     result=ConsumeQuotedString(aChar,mTextValue,mNewlineCount,
                                                aScanner,aFlag);
                     if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-                      mTextValue.Insert(aChar,0);
+                      mTextValue.Insert(aChar,quotehere);
                       mTextValue.Append(aChar);
                     }
                     // According to spec. we ( who? ) should ignore linefeeds. But look,
