@@ -77,7 +77,7 @@ public:
 
     branch->GetIntPref(DOWNLOAD_MANAGER_BEHAVIOR_PREF, &behavior);
     if (behavior == 0)
-      return dm->Open(nsnull);
+      return dm->Open(nsnull, this);
     if (behavior == 1) {
       nsCAutoString path;
       rv = aTarget->GetNativePath(path);

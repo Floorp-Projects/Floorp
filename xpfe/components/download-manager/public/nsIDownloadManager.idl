@@ -125,9 +125,12 @@ interface nsIDownloadManager : nsISupports {
   * Opens the Download Manager front end.
   *
   * @param aParent The parent, or opener, of the front end (optional).
+  * @param aDownload A download to pass to the manager window.  Useful
+  *                  if, for example, you want the window to select a
+  *                  certain download (optional).
   */
 
-  void open(in nsIDOMWindow aParent);
+  void open(in nsIDOMWindow aParent, in nsIDownload aDownload);
 
   /**
   * Opens an individual progress dialog displaying progress for the download.

@@ -46,10 +46,33 @@ var gRDFService = null;
 var gNC_File = null;
 var gStatusBar = null;
 
+const dlObserver = {
+  observe: function(subject, topic, state) {
+    if (topic != "download-starting") return;
+    selectDownload(subject.QueryInterface(Components.interfaces.nsIDownload));
+  }
+};
+
+function selectDownload(aDownload)
+{
+  var dlElt = document.getElementById(aDownload.target.path);
+  var dlIndex = gDownloadView.contentView.getIndexOfItem(dlElt);
+  gDownloadView.treeBoxObject.selection.select(dlIndex);
+  gDownloadView.treeBoxObject.ensureRowIsVisible(dlIndex);
+}
+
 function Startup()
 {
   if (!window.arguments.length)
     return;
+
+  try {
+    var observerService = Components.classes[kObserverServiceProgID]
+                                    .getService(Components.interfaces.nsIObserverService);
+    observerService.addObserver(dlObserver, "download-starting", false);
+  }
+  catch (ex) {
+  }
 
   const rdfSvcContractID = "@mozilla.org/rdf/rdf-service;1";
   const rdfSvcIID = Components.interfaces.nsIRDFService;
@@ -89,15 +112,25 @@ function Startup()
 function onRebuild() {
   gDownloadView.controllers.appendController(downloadViewController);
   gDownloadView.focus();
-  // Select the first item in the view, if any.
-  if (gDownloadView.view.rowCount) 
+  
+  // If the window was opened automatically because
+  // a download started, select the new download
+  if (window.arguments.length > 1 && window.arguments[1]) {
+    var dl = window.arguments[1];
+    selectDownload(dl.QueryInterface(Components.interfaces.nsIDownload));
+  }
+  else if (gDownloadView.view.rowCount) {
+    // Select the first item in the view, if any.
     gDownloadView.treeBoxObject.selection.select(0);
+  }
 }
 
 function onSelect(aEvent) {
   if (!gStatusBar)
     gStatusBar = document.getElementById("statusbar-text");
-  if (gDownloadView.currentIndex >= 0)
+  
+  var selectionCount = gDownloadView.treeBoxObject.selection.count;
+  if (selectionCount == 1)
     gStatusBar.label = getSelectedItem().id;
   else
     gStatusBar.label = "";
@@ -130,14 +163,8 @@ var downloadViewController = {
     var isDownloading = gDownloadManager.getDownload(selectedItem.id);
     switch (aCommand) {
     case "cmd_openfile":
-      try {
-        if (!isDownloading && getFileForItem(selectedItem).isExecutable())
-          return false;
-      } catch(e) {
-        // Exception means file doesn't exist; launch is not allowed.
+      if (isDownloading)
         return false;
-      }
-
     case "cmd_showinshell":
       // some apps like kazaa/morpheus let you "preview" in-progress downloads because
       // that's possible for movies and music. for now, just disable indiscriminately.
@@ -174,6 +201,16 @@ var downloadViewController = {
     case "cmd_openfile":
       selectedItem = getSelectedItem();
       file = getFileForItem(selectedItem);
+      if (file.isExecutable()) {
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+        var strBundle = document.getElementById("dlProgressDlgBundle");
+        var title = strBundle.getFormattedString("openingAlertTitle", [file.leafName]);
+        var msg = strBundle.getFormattedString("securityAlertMsg", [file.leafName]);
+        var okToProceed = promptService.confirm(window, title, msg);
+        if (!okToProceed)
+          return;
+      }
       file.launch();
       break;
     case "cmd_showinshell":
@@ -202,7 +239,6 @@ var downloadViewController = {
         gDownloadManager.cancelDownload(selectedItems[i].id);
       window.updateCommands("tree-select");
       break;
-    case "cmd_remove":
     case "cmd_remove":
       selectedItems = getSelectedItems();
       gDownloadManager.startBatchUpdate();
@@ -287,4 +323,15 @@ function createLocalFile(aFilePath)
   var lf = Components.classes[lfContractID].createInstance(lfIID);
   lf.initWithPath(aFilePath);
   return lf;
+}
+
+function Shutdown()
+{
+  try {
+    var observerService = Components.classes[kObserverServiceProgID]
+                     .getService(Components.interfaces.nsIObserverService);
+    observerService.removeObserver(dlObserver, "download-starting");
+  }
+  catch (ex) {
+  }
 }
