@@ -98,7 +98,7 @@ Contributor(s):
               <label value="&marginTop.label;" style="visibility: hidden;"/>
               <spacer flex="1"/>
             </hbox>
-            <hbox>
+            <hbox dir="ltr">
               <spacer flex="1"/>
               <vbox>
                 <spacer flex="1"/>
@@ -113,7 +113,7 @@ Contributor(s):
                    the JS code dynamically based on the user input. -->
               <vbox id="marginPage" style="height:29.7mm;">
                 <box id="marginTop" style="height:0.05in;"/>
-                <hbox flex="1">
+                <hbox flex="1" dir="ltr">
                   <box id="marginLeft" style="width:0.025in;"/>
                   <box style="border: 1px; border-style: dashed; border-color: gray;" flex="1"/>
                   <box id="marginRight" style="width:0.025in;"/>
@@ -140,7 +140,7 @@ Contributor(s):
         </groupbox>
         <groupbox>
           <caption id="headersAndFooters" label="&headerFooter.label;"/>
-          <hbox>
+          <hbox dir="ltr">
             <vbox>
               <menulist id="hLeftOption" oncommand="customize(this)" tabindex="2">
                 <menupopup>
