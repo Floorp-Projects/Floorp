@@ -523,33 +523,23 @@ FTPDataSource::GetTarget(nsIRDFResource *source,
 	}
 	else if (isFTPCommand(source))
 	{
+		nsAutoString	name;
 		if (property == kNC_Name)
 		{
 			if (source == kNC_FTPCommand_Refresh)
 			{
-				nsAutoString	name("Refresh FTP file listing");		// XXX localization
-				nsIRDFLiteral	*literal;
-				rv = gRDFService->GetLiteral(name.GetUnicode(), &literal);
-
-				rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
-				NS_RELEASE(literal);
-
-				return rv;
+				name = "Refresh FTP file listing";		// XXX localization
 			}
 			else if (source == kNC_FTPCommand_DeleteFolder)
 			{
-				nsAutoString	name("Delete remote FTP folder");		// XXX localization
-				nsIRDFLiteral	*literal;
-				rv = gRDFService->GetLiteral(name.GetUnicode(), &literal);
-
-				rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
-				NS_RELEASE(literal);
-
-				return rv;
+				name = "Delete remote FTP folder";		// XXX localization
 			}
 			else if (source == kNC_FTPCommand_DeleteFile)
 			{
-				nsAutoString	name("Delete remote FTP file");		// XXX localization
+				name = "Delete remote FTP file";		// XXX localization
+			}
+			if (name.Length() > 0)
+			{
 				nsIRDFLiteral	*literal;
 				rv = gRDFService->GetLiteral(name.GetUnicode(), &literal);
 
