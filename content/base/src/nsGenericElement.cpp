@@ -1116,8 +1116,8 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(propName));
       nsIEventListenerManager *manager = nsnull;
 
-      if (atom == nsLayoutAtoms::onmousedown || atom == nsLayoutAtoms::onmouseup || atom ==  nsLayoutAtoms::onclick ||
-         atom == nsLayoutAtoms::onmouseover || atom == nsLayoutAtoms::onmouseout) {
+      if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || atom.get() ==  nsLayoutAtoms::onclick ||
+         atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseListenerIID)) {
@@ -1126,7 +1126,7 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (atom == nsLayoutAtoms::onkeydown || atom == nsLayoutAtoms::onkeyup || atom == nsLayoutAtoms::onkeypress) {
+      else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMKeyListenerIID)) {
@@ -1135,7 +1135,7 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (atom == nsLayoutAtoms::onmousemove) {
+      else if (atom.get() == nsLayoutAtoms::onmousemove) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseMotionListenerIID)) {
@@ -1144,7 +1144,7 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (atom == nsLayoutAtoms::onfocus || atom == nsLayoutAtoms::onblur) {
+      else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFocusListenerIID)) {
@@ -1153,8 +1153,8 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (atom == nsLayoutAtoms::onsubmit || atom == nsLayoutAtoms::onreset || atom == nsLayoutAtoms::onchange ||
-               atom == nsLayoutAtoms::onselect) {
+      else if (atom.get() == nsLayoutAtoms::onsubmit || atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
+               atom.get() == nsLayoutAtoms::onselect) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFormListenerIID)) {
@@ -1163,8 +1163,8 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (atom == nsLayoutAtoms::onload || atom == nsLayoutAtoms::onunload || atom == nsLayoutAtoms::onabort ||
-               atom == nsLayoutAtoms::onerror) {
+      else if (atom.get() == nsLayoutAtoms::onload || atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
+               atom.get() == nsLayoutAtoms::onerror) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMLoadListenerIID)) {
@@ -1173,7 +1173,7 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (atom == nsLayoutAtoms::onpaint) {
+      else if (atom.get() == nsLayoutAtoms::onpaint) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)
             JS_GetContextPrivate(aContext);
