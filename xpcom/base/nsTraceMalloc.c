@@ -1508,7 +1508,7 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
                     int maxargc, nargc;
                     char **nargv, *token;
 #if HAVE_STRTOK_R
-                    char *newstr = nsnull;
+                    char *newstr = NULL;
 #endif
 
                     if (pipefds[0] != 0) {
