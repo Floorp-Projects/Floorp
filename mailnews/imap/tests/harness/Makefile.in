@@ -33,9 +33,7 @@ LIBS =	\
 		-L$(DIST)/bin			\
 		-lxpcom					\
 		-lreg					\
-		-lnspr3				\
-		-lplc3					\
-		-lplds3				\
+		$(NSPR_LIBS)			\
 		$(NULL)
 
 

@@ -56,7 +56,7 @@ LIBS = \
 	-lraptorbase \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
-	-lz \
+	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
