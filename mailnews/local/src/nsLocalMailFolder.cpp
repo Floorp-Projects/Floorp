@@ -1148,10 +1148,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
       if (!alertString) return rv;
         nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
       if (dialog)
-      {
-        PRBool okToDelete = PR_FALSE;
         dialog->Confirm(nsnull, alertString, &okToDelete);
-      }
     }
     else
       okToDelete = PR_TRUE;
