@@ -974,6 +974,10 @@ sub init {
 sub SqlifyDate {
     my ($str) = @_;
     $str = "" if !defined $str;
+    if ($str eq "") {
+        my ($sec, $min, $hour, $mday, $month, $year, $wday) = localtime(time());
+        return sprintf("%4d-%02d-%02d 00:00:00", $year+1900, $month+1, $mday);
+    }
     if ($str =~ /^-?(\d+)([dDwWmMyY])$/) {   # relative date
         my ($amount, $unit, $date) = ($1, lc $2, time);
         my ($sec, $min, $hour, $mday, $month, $year, $wday)  = localtime($date);
