@@ -309,6 +309,16 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   if (uriStr == nsnull) 
     return NS_ERROR_OUT_OF_MEMORY;
 
+  //will make sure mSubFolders does not have duplicates because of bogus msf files.
+
+  nsCOMPtr <nsIMsgFolder> msgFolder;
+  rv = GetChildWithURI(uriStr, PR_FALSE/*deep*/, PR_FALSE /*case Insensitive*/, getter_AddRefs(msgFolder));  
+  if (NS_SUCCEEDED(rv) && msgFolder)
+  {
+    nsMemory::Free(uriStr);
+    return NS_MSG_FOLDER_EXISTS;
+  }
+  
   nsCOMPtr<nsIRDFResource> res;
   rv = rdf->GetResource(uriStr, getter_AddRefs(res));
   if (NS_FAILED(rv))

@@ -267,6 +267,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   NS_ENSURE_SUCCESS(rv,rv);
   uri.Append(escapedName.get());
 
+  nsCOMPtr <nsIMsgFolder> msgFolder;
+  rv = GetChildWithURI(uri.get(), PR_FALSE/*deep*/, PR_TRUE /*case Insensitive*/, getter_AddRefs(msgFolder));  
+  if (NS_SUCCEEDED(rv) && msgFolder)
+    return NS_MSG_FOLDER_EXISTS;
+
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
@@ -434,8 +439,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (!path.IsDirectory())
       AddDirectorySeparator(path);
     
-    if(NS_FAILED(rv)) return rv;
-    
+    mInitialized = PR_TRUE;      // need to set this flag here to avoid infinite recursion
     // we have to treat the root folder specially, because it's name
     // doesn't end with .sbd
     PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
@@ -481,12 +485,8 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
         rv = localMailServer->SetFlagsOnDefaultMailboxes();
         if (NS_FAILED(rv)) return rv;
       }
-	
     }
     UpdateSummaryTotals(PR_FALSE);
-    
-    if (NS_FAILED(rv)) return rv;
-    mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
   rv = mSubFolders->Enumerate(result);
   return rv;
