@@ -282,7 +282,8 @@ function fetchPref(prefName, prefIndex)
       case gPrefBranch.PREF_STRING:
         pref.valueCol = gPrefBranch.getComplexValue(prefName, nsISupportsString).data;
         // Try in case it's a localized string (will throw an exception if not)
-        if (pref.lockCol == PREF_IS_DEFAULT_VALUE)
+        if (pref.lockCol == PREF_IS_DEFAULT_VALUE &&
+            /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.valueCol))
           pref.valueCol = gPrefBranch.getComplexValue(prefName, nsIPrefLocalizedString).data;
         break;
     }
