@@ -432,10 +432,9 @@ NS_IMETHODIMP nsWebBrowser::Create()
       {
       // XXX Review this code, carried over from old webShell
       // Create a device context
-      nsCOMPtr<nsIDeviceContext> deviceContext;
-      NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kDeviceContextCID,
-         nsnull, NS_GET_IID(nsIDeviceContext), getter_AddRefs(deviceContext)), 
-         NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDeviceContext> deviceContext = 
+                                          do_CreateInstance(kDeviceContextCID);
+      NS_ENSURE_TRUE(deviceContext, NS_ERROR_FAILURE);
 
       deviceContext->Init(mParentNativeWindow);
       float dev2twip;
@@ -447,8 +446,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       deviceContext->SetGamma(1.0f);
 
       // Create the widget
-      NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kChildCID, nsnull,
-         NS_GET_IID(nsIWidget), getter_AddRefs(mInternalWidget)), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(mInternalWidget = do_CreateInstance(kChildCID), NS_ERROR_FAILURE);
 
       nsWidgetInitData  widgetInit;
 
