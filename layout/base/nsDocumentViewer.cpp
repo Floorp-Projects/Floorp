@@ -5001,20 +5001,22 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   nsresult rv = NS_ERROR_FAILURE;
-  PRUint32 numPrinters = 0;
 
   nsCOMPtr<nsISimpleEnumerator> simpEnum;
   aPrintOptions->AvailablePrinters(getter_AddRefs(simpEnum));
   if (simpEnum) {
-    numPrinters = 0;
-    do {
-      PRBool hasMore;
-      simpEnum->HasMoreElements(&hasMore);
-      if (!hasMore) break;
-
+    PRBool fndPrinter = PR_FALSE;
+    simpEnum->HasMoreElements(&fndPrinter);
+    if (fndPrinter) {
+      // For now, it assumes the first item in the list
+      // is the default printer, but only set the 
+      // printer name if there isn't one
       nsCOMPtr<nsISupports> supps;
       simpEnum->GetNext(getter_AddRefs(supps));
-      if (numPrinters == 0) {
+      PRUnichar* defPrinterName;
+      aPrintSettings->GetPrinterName(&defPrinterName);
+      if (!defPrinterName || (defPrinterName && !*defPrinterName)) {
+        if (defPrinterName) nsMemory::Free(defPrinterName);
         nsCOMPtr<nsISupportsWString> wStr = do_QueryInterface(supps);
         if (wStr) {
           PRUnichar* defPrinterName;
@@ -5022,15 +5024,13 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
           aPrintSettings->SetPrinterName(defPrinterName);
           nsMemory::Free(defPrinterName);
         }
+      } else {
+        nsMemory::Free(defPrinterName);
       }
-      numPrinters++;
-    } while (1);
-
-    if (numPrinters == 0) {
+      rv = NS_OK;
+    } else {
       // this means there were no printers
       ShowPrintErrorDialog(aErrorCode, aIsPrinting);
-    } else {
-      rv = NS_OK;
     }
   } else {
     // this means there were no printers
@@ -5231,6 +5231,13 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 
   if (doSilent) {
     mPrt->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
+  }
+
+  // override any UI that wants to PrintPreview any selection
+  PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages;
+  mPrt->mPrintSettings->GetPrintRange(&printRangeType);
+  if (printRangeType == nsIPrintSettings::kRangeSelection) {
+    mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
   }
 
   mPrt->mPrintDC = mDeviceContext; // XXX why?
