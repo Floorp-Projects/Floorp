@@ -1211,8 +1211,6 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
 NS_IMETHODIMP
 nsWindow::SetFocus(PRBool aRaise)
 {
-  PRBool sendActivate = gJustGotActivate;
-  gJustGotActivate = PR_FALSE;
 #ifdef DEBUG_FOCUS
   printf("nsWindow::SetFocus %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
@@ -1285,9 +1283,6 @@ nsWindow::SetFocus(PRBool aRaise)
 #endif // USE_XIM 
 
   DispatchSetFocusEvent();
-  if (sendActivate) {
-    DispatchActivateEvent();
-  }
 
 #ifdef DEBUG_FOCUS
   printf("Returning:\n");
@@ -1330,6 +1325,12 @@ void nsWindow::DispatchSetFocusEvent(void)
 
   NS_ADDREF_THIS();
   DispatchFocus(event);
+
+  if (gJustGotActivate) {
+    gJustGotActivate = PR_FALSE;
+    DispatchActivateEvent();
+  }
+
   NS_RELEASE_THIS();
 }
 
@@ -1436,6 +1437,11 @@ void nsWindow::HandleMozAreaFocusIn(void)
   // window.  embedding handles activate semantics for us.
   if (mIsToplevel)
     gJustGotActivate = PR_TRUE;
+
+#ifdef USE_XIM
+  IMESetFocusWindow();
+#endif // USE_XIM 
+
   DispatchSetFocusEvent();
 }
 
