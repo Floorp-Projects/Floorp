@@ -456,6 +456,74 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
       </qandaentry>
 
       <qandaentry>
+        <question id="faq-phb-cvsupdate">
+          <para>
+            How can I update the code and the database using CVS?
+          </para>
+        </question>
+        <answer>
+          <para>
+            <orderedlist>
+              <listitem>
+                <para>
+                  Make a backup of both your Bugzilla directory and the
+                  database. For the Bugzilla directory this is as easy as
+                  doing <command>cp -rp bugzilla bugzilla.bak</command>.
+                  For the database, there's a number of options - see the
+                  MySQL docs and pick the one that fits you best (the easiest
+                  is to just make a physical copy of the database on the disk,
+                  but you have to have the database server shut down to do
+                  that without risking dataloss).
+                </para>
+              </listitem>
+
+              <listitem>
+                <para>
+                  Make the Bugzilla directory your current directory.
+                </para>
+              </listitem>
+
+              <listitem>
+                <para>
+                  Use <command>cvs -q update -AdP</command> if you want to
+                  update to the tip or
+                  <command>cvs -q update -dP -rTAGNAME</command>
+                  if you want a specific version (in that case you'll have to
+                  replace TAGNAME with a CVS tag name such as BUGZILLA-2_16_5).
+                </para>
+
+                <para>
+                  If you've made no local changes, this should be very clean.
+                  If you have made local changes, then watch the cvs output
+                  for C results. If you get any lines that start with a C
+                  it means there  were conflicts between your local changes
+                  and what's in CVS. You'll need to fix those manually before
+                  continuing.
+                </para>
+              </listitem>
+
+              <listitem>
+                <para>
+                  After resolving any conflicts that the cvs update operation
+                  generated, running <command>./checksetup.pl</command> will
+                  take care of updating the database for you as well as any
+                  other changes required for the new version to operate.
+                </para>
+
+                <warning>
+                  <para>
+                    Once you run checksetup.pl, the only way to go back is
+                    to restore the database backups. You can't "downgrade"
+                    the system cleanly under most circumstances.
+                  </para>
+                </warning>
+              </listitem>
+            </orderedlist>
+          </para>
+        </answer>
+      </qandaentry>
+
+      <qandaentry>
 	<question id="faq-phb-maintenance">
 	  <para>
 	    What type of human resources are needed to be on staff to install and
