@@ -28,12 +28,13 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = timer_os2_s
+LIBRARY_NAME = timer_s
 
 MODULE=timer
 
 REQUIRES=xpcom
 
+DEFINES += -D_IMPL_NS_TIMER
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 

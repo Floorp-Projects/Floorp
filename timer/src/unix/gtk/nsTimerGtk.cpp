@@ -132,7 +132,7 @@ nsTimerGtk::Cancel()
   if (mTimerId)
     gtk_timeout_remove(mTimerId);
 
-  NS_RELEASE(me);
+//  NS_RELEASE(me);
 }
 
 gint nsTimerExpired(gpointer aCallData)
@@ -143,8 +143,7 @@ gint nsTimerExpired(gpointer aCallData)
   return 0;
 }
 
-#if 1
-/* NS_GFXNONXP */ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+NS_TIMER nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
@@ -158,4 +157,3 @@ gint nsTimerExpired(gpointer aCallData)
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
-#endif

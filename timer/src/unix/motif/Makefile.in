@@ -24,12 +24,12 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = timer_motif_s
+LIBRARY_NAME = timer_s
 ### XXX ### IS_COMPONENT=1
 
 REQUIRES=xpcom
 
-### XXX ### DEFINES += -D_IMPL_NS_GFXNONXP
+DEFINES += -D_IMPL_NS_TIMER
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 

@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 ifneq (,$(filter beos os2 rhapsody photon,$(OS_ARCH)))
-DIRS = $(MOZ_GFX_TOOLKIT)
+DIRS = $(MOZ_WIDGET_TOOLKIT)
 else
 DIRS = unix
 endif
