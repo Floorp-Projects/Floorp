@@ -152,6 +152,11 @@ public:
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
 
+  // Overridden from nsIFrame to cache our pres context.
+  NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
+                  nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
   // to paint our contents (our rows and cells).
@@ -171,6 +176,15 @@ public:
   NS_IMETHOD PaintCell(int aRowIndex, 
                        nsOutlinerColumn*    aColumn,
                        const nsRect& aCellRect,
+                       nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer);
+
+  // This method paints the text string inside a particular cell of the outliner.
+  NS_IMETHOD PaintText(int aRowIndex, 
+                       nsOutlinerColumn*    aColumn,
+                       const nsRect& aTextRect,
                        nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
@@ -203,6 +217,9 @@ protected:
   void EnsureColumns(nsIPresContext* aContext);
 
 protected: // Data Members
+  // Our cached pres context.
+  nsIPresContext* mPresContext;
+
   // The current view for this outliner widget.  We get all of our row and cell data
   // from the view.
   nsCOMPtr<nsIOutlinerView> mView;    
