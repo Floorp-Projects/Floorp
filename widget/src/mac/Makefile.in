@@ -91,6 +91,7 @@ CPPSRCS         = nsAppShell.cpp \
 
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
+		nsIMacTextInputEventSink.idl \
 		nsIMenuCommandDispatcher.idl \
 		nsPIWidgetMac.idl \
 		nsPIEventSinkStandalone.idl \
