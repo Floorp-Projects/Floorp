@@ -515,7 +515,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
       aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.htm; *.html");
     aFilePicker.appendFilter(bundle.GetStringFromName("WebPageHTMLOnlyFilter"), "*.htm; *.html");
     if (aSaveMode == MODE_COMPLETE)
-      aFilePicker.appendFilter(bundle.GetStringFromName("TextOnlyFilter"), "*.txt");
+      aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
     break;
   default:
     var mimeInfo = getMIMEInfoForType(aContentType);
@@ -534,11 +534,11 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
       if (extCount.value > 0) {
         aFilePicker.appendFilter(mimeInfo.Description, extString);
       } else {
-        aFilePicker.appendFilter(bundle.GetStringFromName("AllFilesFilter"), "*.*");
+        aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       }        
     }
     else
-      aFilePicker.appendFilter(bundle.GetStringFromName("AllFilesFilter"), "*.*");
+      aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
     break;
   }
 } 
