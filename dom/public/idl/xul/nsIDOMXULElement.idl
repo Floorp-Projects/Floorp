@@ -110,11 +110,6 @@ interface nsIDOMXULElement : nsIDOMElement
   readonly attribute nsIControllers            controllers;
   readonly attribute nsIBoxObject              boxObject;
 
-  void                      addBroadcastListener(in DOMString attr,
-                                                 in nsIDOMElement element);
-  void                      removeBroadcastListener(in DOMString attr,
-                                                    in nsIDOMElement element);
-
   void                      focus();
   void                      blur();
   void                      click();

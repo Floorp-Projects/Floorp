@@ -69,7 +69,7 @@ class nsIURI;
 { 0x954f0811, 0x81dc, 0x11d2, { 0xb5, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
 /**
- * RDF document extensions to nsIDocument
+ * XUL extensions to nsIDocument
  */
 
 class nsIRDFDataSource;

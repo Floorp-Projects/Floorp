@@ -547,10 +547,8 @@ protected:
         Slots(nsXULElement* mElement);
         ~Slots();
 
-        nsXULElement*                       mElement;            // [WEAK]
         nsCOMPtr<nsINameSpace>              mNameSpace;          // [OWNER]
         nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
-        nsVoidArray*                        mBroadcastListeners; // [WEAK]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
 
         /**
@@ -625,7 +623,6 @@ protected:
     // delegate.
     nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace.get(); }
     nsINodeInfo*               NodeInfo() const        { return mSlots ? mSlots->mNodeInfo              : mPrototype->mNodeInfo; }
-    nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }

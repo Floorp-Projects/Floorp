@@ -341,92 +341,6 @@ FinishEventHandlerMap()
     }
 }
 
-
-//----------------------------------------------------------------------
-
-struct XULBroadcastListener
-{
-    nsVoidArray* mAttributeList;
-    nsIDOMElement* mListener;
-
-    XULBroadcastListener(const nsAReadableString& aAttribute,
-                         nsIDOMElement* aListener)
-    : mAttributeList(nsnull)
-    {
-        mListener = aListener; // WEAK REFERENCE
-        if (!aAttribute.Equals(NS_LITERAL_STRING("*"))) {
-            mAttributeList = new nsVoidArray();
-            mAttributeList->AppendElement((void*)(new nsString(aAttribute)));
-        }
-
-        // For the "*" case we leave the attribute list nulled out, and this means
-        // we're observing all attribute changes.
-    }
-
-    ~XULBroadcastListener()
-    {
-        // Release all the attribute strings.
-        if (mAttributeList) {
-            PRInt32 count = mAttributeList->Count();
-            for (PRInt32 i = 0; i < count; i++) {
-                nsString* str = (nsString*)(mAttributeList->ElementAt(i));
-                delete str;
-            }
-
-            delete mAttributeList;
-        }
-    }
-
-    PRBool IsEmpty()
-    {
-        if (ObservingEverything())
-            return PR_FALSE;
-
-        PRInt32 count = mAttributeList->Count();
-        return (count == 0);
-    }
-
-    void RemoveAttribute(const nsAReadableString& aString)
-    {
-        if (ObservingEverything())
-            return;
-
-        if (mAttributeList) {
-            PRInt32 count = mAttributeList->Count();
-            for (PRInt32 i = 0; i < count; i++) {
-                nsString* str = (nsString*)(mAttributeList->ElementAt(i));
-                if (str->Equals(aString)) {
-                    mAttributeList->RemoveElementAt(i);
-                    delete str;
-                    break;
-                }
-            }
-        }
-    }
-
-    PRBool ObservingEverything()
-    {
-        return (mAttributeList == nsnull);
-    }
-
-    PRBool ObservingAttribute(const nsAReadableString& aString)
-    {
-        if (ObservingEverything())
-            return PR_TRUE;
-
-        if (mAttributeList) {
-            PRInt32 count = mAttributeList->Count();
-            for (PRInt32 i = 0; i < count; i++) {
-                nsString* str = (nsString*)(mAttributeList->ElementAt(i));
-                if (str->Equals(aString))
-                    return PR_TRUE;
-            }
-        }
-
-        return PR_FALSE;
-    }
-};
-
 //----------------------------------------------------------------------
 
 static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
@@ -495,6 +409,23 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 
   return PR_FALSE;
 }
+
+//----------------------------------------------------------------------
+
+static PRInt32
+StyleHintFor(nsINodeInfo* aNodeInfo)
+{
+    nsCOMPtr<nsIAtom> tagName;
+    aNodeInfo->GetNameAtom(*getter_AddRefs(tagName));
+    if ((tagName == nsXULAtoms::broadcaster) ||
+        (tagName == nsXULAtoms::command) ||
+        (tagName == nsXULAtoms::key)) {
+        return NS_STYLE_HINT_NONE;
+    }
+
+    return NS_STYLE_HINT_UNKNOWN;
+}
+
 
 //----------------------------------------------------------------------
 
@@ -1595,10 +1526,7 @@ nsXULElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
 
     gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceId);
 
-    nsresult rv = UnsetAttr(nameSpaceId, tag, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove attribute");
-
-    return NS_OK;
+    return UnsetAttr(nameSpaceId, tag, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -2815,27 +2743,6 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     // Add popup and event listeners
     AddListenerFor(aNodeInfo, PR_TRUE);
 
-    // Notify any broadcasters that are listening to this node.
-    if (BroadcastListeners()) {
-        nsAutoString attribute;
-        aNodeInfo->GetName(attribute);
-        PRInt32 count = BroadcastListeners()->Count();
-        for (PRInt32 i = 0; i < count; i++) {
-            XULBroadcastListener* xulListener =
-                NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
-
-            if (xulListener->ObservingAttribute(attribute) &&
-                (!aNodeInfo->Equals(nsXULAtoms::id)) &&
-                (!aNodeInfo->Equals(nsXULAtoms::persist)) &&
-                (!aNodeInfo->Equals(nsXULAtoms::ref))) {
-                // XXX Should have a function that knows which attributes are special.
-                // First we set the attribute in the observer.
-                xulListener->mListener->SetAttribute(attribute, aValue);
-                ExecuteOnBroadcastHandler(xulListener->mListener, attribute);
-            }
-        }
-    }
-
     if (mDocument) {
       nsCOMPtr<nsIBindingManager> bindingManager;
       mDocument->GetBindingManager(getter_AddRefs(bindingManager));
@@ -2872,17 +2779,12 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
       }
 
       if (aNotify) {
-        nsCOMPtr<nsIAtom> tagName;
-        NodeInfo()->GetNameAtom(*getter_AddRefs(tagName));
-        if ((tagName == nsXULAtoms::broadcaster) ||
-            (tagName == nsXULAtoms::command) ||
-            (tagName == nsXULAtoms::key))
-            return rv;
+        PRInt32 modHint = modification
+            ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
+            : PRInt32(nsIDOMMutationEvent::ADDITION);
 
-        PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
-                                       : PRInt32(nsIDOMMutationEvent::ADDITION);
         mDocument->AttributeChanged(this, attrns, attrName, modHint, 
-                                    NS_STYLE_HINT_UNKNOWN);
+                                    StyleHintFor(NodeInfo()));
 
         // XXXwaterson do we need to mDocument->EndUpdate() here?
       }
@@ -3096,40 +2998,18 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
 
     // Check to see if the OBSERVES attribute is being unset.  If so, we
     // need to remove our broadcaster goop completely.
-    if (mDocument &&
-        (aNameSpaceID == kNameSpaceID_None) &&
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) &&
         (aName == nsXULAtoms::observes || aName == nsXULAtoms::command)) {
-        // Do a getElementById to retrieve the broadcaster.
-        nsCOMPtr<nsIDOMElement> broadcaster;
-        nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
-        domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
-        if (broadcaster) {
-            nsCOMPtr<nsIDOMXULElement> xulBroadcaster = do_QueryInterface(broadcaster);
-            if (xulBroadcaster) {
-                xulBroadcaster->RemoveBroadcastListener(NS_LITERAL_STRING("*"), this);
-            }
-        }
-    }
-
-    // Notify any broadcasters of the change.
-    if (BroadcastListeners()) {
-        PRInt32 count = BroadcastListeners()->Count();
-        for (PRInt32 i = 0; i < count; i++) {
-            XULBroadcastListener* xulListener =
-                NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
-
-            nsAutoString str;
-            aName->ToString(str);
-            if (xulListener->ObservingAttribute(str) &&
-                (aName != nsXULAtoms::id) &&
-                (aName != nsXULAtoms::persist) &&
-                (aName != nsXULAtoms::ref)) {
-                // XXX Should have a function that knows which attributes are special.
-                // Unset the attribute in the broadcast listener.
-                nsCOMPtr<nsIDOMElement> element;
-                element = do_QueryInterface(xulListener->mListener);
-                if (element)
-                    element->RemoveAttribute(str);
+        nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(mDocument);
+        if (xuldoc) {
+            // Do a getElementById to retrieve the broadcaster
+            nsCOMPtr<nsIDOMElement> broadcaster;
+            nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
+            domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
+            if (broadcaster) {
+                xuldoc->RemoveBroadcastListenerFor(broadcaster,
+                                                   NS_STATIC_CAST(nsIDOMElement*, this),
+                                                   NS_LITERAL_STRING("*"));
             }
         }
     }
@@ -3144,19 +3024,11 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
             binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
 
         if (aNotify) {
-            nsCOMPtr<nsIAtom> tagName;
-            NodeInfo()->GetNameAtom(*getter_AddRefs(tagName));
-            if ((tagName != nsXULAtoms::broadcaster) &&
-                (tagName != nsXULAtoms::command) &&
-                (tagName != nsXULAtoms::key)) {
-                // Don't notify for broadcaster, command, or key
-                // changes. (XXXwaterson Why?)
-                mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
-                                            aNameSpaceID, aName, nsIDOMMutationEvent::REMOVAL, 
-                                            NS_STYLE_HINT_UNKNOWN);
-            }
+            mDocument->AttributeChanged(this, aNameSpaceID, aName,
+                                        nsIDOMMutationEvent::REMOVAL, 
+                                        StyleHintFor(NodeInfo()));
 
-            // XXXwaterson call nsIDocument::EndUpdate()?
+            // XXXwaterson do we need to mDocument->EndUpdate() here?
         }
     }
 
@@ -3680,124 +3552,6 @@ nsXULElement::GetRangeList(nsVoidArray*& aResult) const
 }
 
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsXULElement::AddBroadcastListener(const nsAReadableString& attr,
-                                   nsIDOMElement* anElement)
-{
-    // Add ourselves to the array.
-    nsresult rv;
-
-    if (! BroadcastListeners()) {
-        rv = EnsureSlots();
-        if (NS_FAILED(rv)) return rv;
-
-        mSlots->mBroadcastListeners = new nsVoidArray();
-        if (! mSlots->mBroadcastListeners)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    BroadcastListeners()->AppendElement(new XULBroadcastListener(attr, anElement));
-
-    // We need to sync up the initial attribute value.
-    nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
-
-    if (attr.Equals(NS_LITERAL_STRING("*"))) {
-        // All of the attributes found on this node should be set on the
-        // listener.
-        PRBool haveLocalAttributes = PR_FALSE;
-        if (Attributes()) {
-            PRInt32 count = Attributes()->Count();
-            haveLocalAttributes = count > 0;
-            for (PRInt32 i = count - 1; i >= 0; --i) {
-                nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(i));
-                nsINodeInfo *ni = attr->GetNodeInfo();
-
-                // Don't push the |id| attribute's value.
-                if (ni->Equals(nsXULAtoms::id, kNameSpaceID_None))
-                    continue;
-
-                // Don't push a value that's been over-ridden locally
-                if (haveLocalAttributes && FindLocalAttribute(ni))
-                    continue;
-
-                nsAutoString value;
-                attr->GetValue(value);
-                listener->SetAttr(ni, value, PR_TRUE);
-            }
-        }
-
-        if (mPrototype) {
-            for (PRInt32 i = mPrototype->mNumAttributes - 1; i >= 0; --i) {
-                nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
-                nsINodeInfo* ni = attr->mNodeInfo;
-                if (ni->Equals(nsXULAtoms::id, kNameSpaceID_None))
-                    continue;
-
-                nsAutoString value;
-                attr->mValue.GetValue(value);
-                listener->SetAttr(ni, value, PR_TRUE);
-            }
-        }
-    }
-    else {
-        // Find out if the attribute is even present at all.
-        nsCOMPtr<nsIAtom> kAtom = dont_AddRef(NS_NewAtom(attr));
-
-        nsAutoString attrValue;
-        nsresult result = GetAttr(kNameSpaceID_None, kAtom, attrValue);
-        PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                              result == NS_CONTENT_ATTR_HAS_VALUE);
-
-        if (attrPresent) {
-            // Set the attribute
-            anElement->SetAttribute(attr, attrValue);
-        }
-        else {
-            // Unset the attribute
-            anElement->RemoveAttribute(attr);
-        }
-    }
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULElement::RemoveBroadcastListener(const nsAReadableString& attr,
-                                      nsIDOMElement* anElement)
-{
-    if (BroadcastListeners()) {
-        // Find the element.
-        PRInt32 count = BroadcastListeners()->Count();
-        for (PRInt32 i = 0; i < count; i++) {
-            XULBroadcastListener* xulListener =
-                NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
-
-            if (xulListener->mListener == anElement) {
-                if (xulListener->ObservingEverything() || attr.Equals(NS_LITERAL_STRING("*"))) {
-                    // Do the removal.
-                    BroadcastListeners()->RemoveElementAt(i);
-                    delete xulListener;
-                }
-                else {
-                    // We're observing specific attributes and removing a specific attribute
-                    xulListener->RemoveAttribute(attr);
-                    if (xulListener->IsEmpty()) {
-                        // Do the removal.
-                        BroadcastListeners()->RemoveElementAt(i);
-                        delete xulListener;
-                    }
-                }
-                break;
-            }
-        }
-    }
-
-    return NS_OK;
-}
-
-
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
 NS_IMETHODIMP
 nsXULElement::GetResource(nsIRDFResource** aResource)
@@ -3907,88 +3661,6 @@ nsXULElement::EnsureContentsGenerated(void) const
 
     return NS_OK;
 }
-
-
-nsresult
-nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReadableString& attrName)
-{
-    // Now we execute the onchange handler in the context of the
-    // observer. We need to find the observer in order to
-    // execute the handler.
-    nsCOMPtr<nsIContent> content(do_QueryInterface(anElement));
-    PRInt32 count;
-    content->ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
-        nsCOMPtr<nsIContent> child;
-        content->ChildAt(i, *getter_AddRefs(child));
-        nsCOMPtr<nsIAtom> tag;
-        child->GetTag(*getter_AddRefs(tag));
-        if (tag == nsXULAtoms::observes) {
-            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
-            if (domElement) {
-                // We have a domElement. Find out if it was listening to us.
-                nsAutoString listeningToID;
-                domElement->GetAttribute(NS_LITERAL_STRING("element"), listeningToID);
-                nsAutoString broadcasterID;
-                GetAttribute(NS_LITERAL_STRING("id"), broadcasterID);
-                if (listeningToID == broadcasterID) {
-                    // We are observing the broadcaster, but is this the right
-                    // attribute?
-                    nsAutoString listeningToAttribute;
-                    domElement->GetAttribute(NS_LITERAL_STRING("attribute"), listeningToAttribute);
-                    if (listeningToAttribute.Equals(attrName)) {
-                        // This is the right observes node.
-                        // Execute the onchange event handler
-                        nsEvent event;
-                        event.eventStructType = NS_EVENT;
-                        event.message = NS_XUL_BROADCAST;
-                        ExecuteJSCode(domElement, &event);
-                    }
-                }
-            }
-        }
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-nsXULElement::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
-{
-    // This code executes in every presentation context in which this
-    // document is appearing.
-    nsCOMPtr<nsIContent> content;
-    content = do_QueryInterface(anElement);
-    if (!content)
-      return NS_OK;
-
-    nsCOMPtr<nsIDocument> document;
-    content->GetDocument(*getter_AddRefs(document));
-
-    if (!document)
-      return NS_OK;
-
-    PRInt32 count = document->GetNumberOfShells();
-    for (PRInt32 i = 0; i < count; i++) {
-        nsCOMPtr<nsIPresShell> shell;
-        document->GetShellAt(i, getter_AddRefs(shell));
-        if (!shell)
-            continue;
-
-        // Retrieve the context in which our DOM event will fire.
-        nsCOMPtr<nsIPresContext> aPresContext;
-        shell->GetPresContext(getter_AddRefs(aPresContext));
-
-        // Handle the DOM event
-        nsEventStatus status = nsEventStatus_eIgnore;
-        content->HandleDOMEvent(aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, &status);
-    }
-
-    return NS_OK;
-}
-
-
 
 nsresult
 nsXULElement::GetElementsByTagName(nsIDOMNode* aNode,
@@ -5164,9 +4836,7 @@ nsresult nsXULElement::MakeHeavyweight()
 //
 
 nsXULElement::Slots::Slots(nsXULElement* aElement)
-    : mElement(aElement),
-      mBroadcastListeners(nsnull),
-      mAttributes(nsnull),
+    : mAttributes(nsnull),
       mLazyState(0),
       mInnerXULElement(nsnull)
 {
@@ -5179,19 +4849,6 @@ nsXULElement::Slots::~Slots()
     MOZ_COUNT_DTOR(nsXULElement::Slots);
 
     NS_IF_RELEASE(mAttributes);
-
-    // Release our broadcast listeners
-    if (mBroadcastListeners) {
-        PRInt32 count = mBroadcastListeners->Count();
-        for (PRInt32 i = 0; i < count; i++) {
-            XULBroadcastListener* xulListener =
-                NS_REINTERPRET_CAST(XULBroadcastListener*, mBroadcastListeners->ElementAt(0));
-
-            mElement->RemoveBroadcastListener(NS_LITERAL_STRING("*"), xulListener->mListener);
-        }
-
-        delete mBroadcastListeners;
-    }
 
     // Delete the aggregated interface, if one exists.
     delete mInnerXULElement;

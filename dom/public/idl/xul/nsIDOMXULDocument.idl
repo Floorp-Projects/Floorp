@@ -57,5 +57,13 @@ interface nsIDOMXULDocument : nsIDOMDocument
   nsIDOMNodeList            getElementsByAttribute(in DOMString name,
                                                    in DOMString value);
 
+  void                      addBroadcastListenerFor(in nsIDOMElement broadcaster,
+                                                    in nsIDOMElement observer,
+                                                    in DOMString attr);
+
+  void                      removeBroadcastListenerFor(in nsIDOMElement broadcaster,
+                                                       in nsIDOMElement observer,
+                                                       in DOMString attr);
+
   void                      persist(in DOMString id, in DOMString attr);
 };
