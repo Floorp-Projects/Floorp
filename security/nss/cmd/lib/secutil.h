@@ -259,6 +259,10 @@ extern int SECU_PrintPublicKey(FILE *out, SECItem *der, char *m, int level);
 /* Dump contents of private key */
 extern int SECU_PrintPrivateKey(FILE *out, SECItem *der, char *m, int level);
 
+/* Print the MD5 and SHA1 fingerprints of a cert */
+extern int SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m,
+                                  int level);
+
 /* Pretty-print any PKCS7 thing */
 extern int SECU_PrintPKCS7ContentInfo(FILE *out, SECItem *der, char *m, 
 				      int level);
