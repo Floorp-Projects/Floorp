@@ -191,13 +191,12 @@ static void readEvalFile(FILE* in, const String& fileName)
     }
 }
 
+inline char narrow(char16 ch) { return char(ch); }
+
 static JSValue load(const JSValues &argv)
 {
     size_t n = argv.size();
     if (n > 1) {                // the 'this' parameter is un-interesting
-        struct {
-            char operator() (char16 ch) { return static_cast<char>(ch); }
-        } narrow;
         for (size_t i = 1; i < n; ++i) {
             JSValue val = argv[i].toString();
             if (val.isString()) {
