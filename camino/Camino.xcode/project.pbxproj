@@ -155,8 +155,9 @@
 				INFOPLIST_FILE = "Info-HistoryPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = History;
 				SECTORDER_FLAGS = "";
@@ -452,8 +453,9 @@
 				INFOPLIST_FILE = "Info-DownloadsPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Downloads;
 				SECTORDER_FLAGS = "";
@@ -649,8 +651,9 @@
 				INFOPLIST_FILE = "Info-TabsPrefPane.plist";
 				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Tabs;
 				SECTORDER_FLAGS = "";
@@ -5293,8 +5296,9 @@
 				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-AppearancePrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Appearance;
 				SECTORDER_FLAGS = "";
@@ -5472,8 +5476,9 @@
 				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
 				INFOPLIST_FILE = "Info-NavigationPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Navigation;
 				SECTORDER_FLAGS = "";
@@ -5651,8 +5656,9 @@
 				HEADER_SEARCH_PATHS = "../dist/include/necko ../dist/include/pref ../dist/include/nspr ../dist/include/cookie ../dist/include/nkcache ../dist/include/string ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-PrivacyPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Privacy;
 				SECTORDER_FLAGS = "";
@@ -5845,8 +5851,9 @@
 				HEADER_SEARCH_PATHS = "../dist/include/pref ../dist/include/nspr ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-SecurityPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = Security;
 				SECTORDER_FLAGS = "";
@@ -6033,8 +6040,9 @@
 				HEADER_SEARCH_PATHS = "../dist/include/necko ../dist/include/string ../dist/include/cookie ../dist/include/pref ../dist/include/nspr ../dist/include/xpcom ../dist/include/";
 				INFOPLIST_FILE = "Info-WebFeaturesPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = "../dist/Embed ../embedding/base ../intl/unicharutil/util ../js/src ../dist/Embed/components";
+				LIBRARY_STYLE = BUNDLE;
 				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_LDFLAGS = "-lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = WebFeatures;
 				SECTORDER_FLAGS = "";
