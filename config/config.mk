@@ -26,21 +26,26 @@
 # appropriate platform-specific .mk file, then defines all (most?)
 # of the generic macros.
 #
+
+# Define an include-at-most-once flag
+INCLUDED_CONFIG_MK = 1
+
 ifndef topsrcdir
 topsrcdir	= $(DEPTH)
 endif
 
-ifndef USE_AUTOCONF
+ifndef INCLUDED_AUTOCONF_MK
 include $(DEPTH)/config/autoconf.mk
 endif
+ifndef INCLUDED_INSURE_MK
+ifdef MOZ_INSURIFYING
+include $(topsrcdir)/config/insure.mk
+endif
+endif
 
-#
-# Define an include-at-most-once flag
-#
-NS_CONFIG_MK	= 1
-
-# This wastes time.
+ifndef INCLUDED_COMMON_MK
 include $(topsrcdir)/config/common.mk
+endif
 
 #
 # Tweak the default OS_ARCH and OS_RELEASE macros as needed.
@@ -159,7 +164,7 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Relative pathname from top-of-tree to current source directory
 #
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-REVDEPTH	:= $(topsrcdir)/config/revdepth
+REVDEPTH	:= $(CONFIG_TOOLS)/revdepth
 endif
 
 #
@@ -190,7 +195,7 @@ CCC		= $(CXX)
 CCF		= $(CC) $(CFLAGS)
 LINK_EXE	= $(LINK) $(OS_LFLAGS) $(LFLAGS)
 LINK_DLL	= $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
-NFSPWD		= $(DEPTH)/config/nfspwd
+NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
 MOC		= moc
@@ -328,7 +333,7 @@ MKDEPEND_DIR	=
 # (Picking 3000 somewhat arbitrarily.)
 MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND) -Y -w 3000
 else
-MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
+MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/mkdepend
 endif
 
@@ -393,7 +398,7 @@ endif
 GARBAGE		= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
 ifneq ($(OS_ARCH),WINNT)
-NSINSTALL	= $(DEPTH)/config/nsinstall
+NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
 
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime
