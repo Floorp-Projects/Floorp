@@ -43,8 +43,6 @@
 
 #include "nsCRT.h"
 
-#if 0 // convenience
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
@@ -62,8 +60,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     }
 
 }
-
-#endif // if 0
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSelection
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jobject selection)
