@@ -2299,6 +2299,7 @@ AddFDef("bug_group", "Group", 0);
 AddFDef("estimated_time", "Estimated Hours", 1);
 AddFDef("remaining_time", "Remaining Hours", 0);
 AddFDef("deadline", "Deadline", 1);
+AddFDef("commenter", "Commenter", 0);
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
