@@ -601,6 +601,7 @@ void nsDocAccessible::FireDocLoadFinished()
 
     if (mBusy != eBusyStateDone) {
 #ifndef MOZ_ACCESSIBILITY_ATK
+      mBusy = eBusyStateDone; // before event callback so STATE_BUSY is not reported
       FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
 #endif
     }
