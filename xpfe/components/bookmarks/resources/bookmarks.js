@@ -566,7 +566,7 @@ function OpenBookmarksFind()
 {
     window.openDialog("chrome://communicator/content/bookmarks/bm-find.xul",
                       "FindBookmarksWindow",
-                      "centerscreen,dialog=no,close,chrome,resizable");
+                      "dialog=no,close,chrome,resizable");
     return true;
 }
 
