@@ -42,9 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_SVG
 DIRS		= src
-endif
 
 include $(topsrcdir)/config/rules.mk
 
