@@ -70,7 +70,4 @@ interface nsIWalletService : nsISupports {
   [noscript] void SI_GetSignonListForViewer(in nsAutoStringRef aSignonList);
   [noscript] void SI_GetRejectListForViewer(in nsAutoStringRef aRejectList);
   [noscript] void SI_SignonViewerReturn(in nsAutoString results);
-
-  string WALLET_Encrypt(in wstring text);
-  wstring WALLET_Decrypt(in string crypt);
 };

@@ -75,9 +75,6 @@ public:
   NS_IMETHOD SI_GetRejectListForViewer(nsAutoString& aRejectList);
   NS_IMETHOD SI_SignonViewerReturn(nsAutoString results);
 
-  NS_IMETHOD WALLET_Encrypt (const PRUnichar *text, char **crypt);
-  NS_IMETHOD WALLET_Decrypt (const char *crypt, PRUnichar **text);
-
   // nsIObserver
   NS_DECL_NSIOBSERVER
   NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI* actionURL);

@@ -24,7 +24,6 @@
 /* universal global variables */
 
 var walleteditor = null; // walleteditor interface
-var walletservice = null; // walletservices interface
 var walletList = []; // input stream
 var bundle = null; // string bundle
 var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletEditor.properties";
@@ -50,49 +49,13 @@ function ViewSynonymsFromXul(){
 
 /*** =================== STARTING AND STOPPING =================== ***/
 
-/* decrypt a value */
-function Decrypt(crypt) {
-  try {
-    return walletservice.WALLET_Decrypt(crypt);
-  } catch (ex) {
-    return bundle.GetStringFromName("EncryptionFailure");
-  }
-}
-
-/* encrypt a value */
-function Encrypt(text) {
-  try {
-    return walletservice.WALLET_Encrypt(text);
-  } catch (ex) {
-    alert(bundle.GetStringFromName("UnableToUnlockDatabase"));
-    return "";
-  }
-}
-
-/* see if user was able to unlock the database */
-function EncryptionTest() {
-  try {
-    walletservice.WALLET_Encrypt("dummy");
-  } catch (ex) {
-    alert(bundle.GetStringFromName("UnableToUnlockDatabase"));
-    window.close();
-  }
-}
-
 /* initializes the wallet editor dialog */
 function Startup()
 {
   walleteditor = Components.classes["component://netscape/walleteditor/walleteditor-world"].createInstance();
   walleteditor = walleteditor.QueryInterface(Components.interfaces.nsIWalletEditor);
 
-  walletservice = Components.classes['component://netscape/wallet'];
-  walletservice = walletservice.getService();
-  walletservice = walletservice.QueryInterface(Components.interfaces.nsIWalletService);
-
   bundle = srGetStrBundle(JS_STRINGS_FILE); /* initialize string bundle */
-
-  EncryptionTest(); /* abort if user failed to unlock the database */
-
   if (!FetchInput()) {
     return; /* user failed to unlock the database */
   }
@@ -158,7 +121,7 @@ function FetchInput()
       }
     }
   }
-  entries[j] = stringsLength-1;
+  entries[j] = stringsLength;
   j = 0;
   for (i=0; i<entriesLength; i++) {
     if (i == 0 || (strings[entries[i]] != strings[entries[i-1]])) {
@@ -418,8 +381,7 @@ function ViewEntries()
     var lastPlusOne = schemas[FirstSelectedSchema()+1];
     for (i=first; i<lastPlusOne; i++) {
       if (strings[entries[i]+1] != "") {
-        var text = Decrypt(strings[entries[i]+1]);
-        AddItem("entrieslist", [text], "tree_", i-first); 
+        AddItem("entrieslist", [strings[entries[i]+1]], "tree_", i-first); 
       }
     }
     SchemaSelected();
@@ -439,8 +401,7 @@ function ViewSynonyms()
     var first = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+2;
     var lastPlusOne = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()+1]-1;
     for (i=first; i<lastPlusOne; i++) {
-      var text = Decrypt(strings[i]);
-      AddItem("synonymslist", [text], "tree_", i-first);
+      AddItem("synonymslist", [strings[i]], "tree_", i-first);
     }
     EntrySelected();
   }
@@ -571,19 +532,14 @@ function AddEntry0() {
   if (text == "") {
     return;
   }
-  var crypt = Encrypt(text);
-  if (crypt == "") {
-    /* user failed to unlock the database */
-    return;
-  }
   stringIndex = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()];
   if(strings[entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+1]=="") {
-    addString(entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+1, crypt);
+    addString(entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+1, text);
     return;
   }
 
   addString(stringIndex, strings[entries[schemas[FirstSelectedSchema()]]]);
-  addString(stringIndex+1, crypt);
+  addString(stringIndex+1, text);
   addString(stringIndex+2, "");
 
   entriesLength++;
@@ -603,12 +559,7 @@ function AddSynonym0() {
   if (text == "") {
     return;
   }
-  var crypt = Encrypt(text);
-  if (crypt == "") {
-    /* user failed to unlock the database */
-    return;
-  }
-  addString(entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+2, crypt);
+  addString(entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+2, text);
 }
 
 function deleteString(stringToDelete) {
