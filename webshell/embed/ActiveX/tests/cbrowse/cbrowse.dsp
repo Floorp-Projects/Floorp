@@ -137,6 +137,18 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TabDOM.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TabMessages.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TabTests.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Tests.cpp
 # End Source File
 # Begin Source File
@@ -186,6 +198,18 @@ SOURCE=.\Resource.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TabDOM.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TabMessages.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TabTests.h
 # End Source File
 # Begin Source File
 
@@ -242,6 +266,10 @@ SOURCE=.\Scripts\Basic.vbs
 # Begin Source File
 
 SOURCE=.\Scripts\NewWindow.vbs
+# End Source File
+# Begin Source File
+
+SOURCE=.\Scripts\Post.vbs
 # End Source File
 # End Group
 # Begin Source File

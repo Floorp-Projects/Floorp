@@ -14,6 +14,9 @@
 #define IDI_TEST                        132
 #define IDI_TESTPASSED                  133
 #define IDI_TESTFAILED                  134
+#define IDD_TAB_MESSAGES                135
+#define IDD_TAB_TESTS                   136
+#define IDD_TAB_DOM                     137
 #define IDC_URL                         1000
 #define IDC_GO                          1001
 #define IDC_BROWSER_MARKER              1002
@@ -29,14 +32,16 @@
 #define IDC_TESTCGI                     1012
 #define IDC_REFRESHDOM                  1013
 #define IDC_NEWWINDOW                   1014
+#define IDC_OUTPUT                      1016
+#define IDC_TAB_MARKER                  1017
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

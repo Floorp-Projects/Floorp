@@ -50,7 +50,6 @@ CBrowseDlg::CBrowseDlg(CWnd* pParent /*=NULL*/)
 	double y = 1.0/x;
 
 	//{{AFX_DATA_INIT(CBrowseDlg)
-	m_szTestDescription = _T("");
 	m_bNewWindow = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
@@ -63,12 +62,7 @@ void CBrowseDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CBrowseDlg)
-	DDX_Control(pDX, IDC_DOMLIST, m_tcDOM);
-	DDX_Control(pDX, IDC_RUNTEST, m_btnRunTest);
 	DDX_Control(pDX, IDC_URL, m_cmbURLs);
-	DDX_Control(pDX, IDC_TESTLIST, m_tcTests);
-	DDX_Control(pDX, IDC_LISTMESSAGES, m_lbMessages);
-	DDX_Text(pDX, IDC_TESTDESCRIPTION, m_szTestDescription);
 	DDX_Check(pDX, IDC_NEWWINDOW, m_bNewWindow);
 	//}}AFX_DATA_MAP
 }
@@ -78,13 +72,11 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_GO, OnGo)
-	ON_BN_CLICKED(IDC_RUNTEST, OnRuntest)
 	ON_BN_CLICKED(IDC_BACKWARD, OnBackward)
 	ON_BN_CLICKED(IDC_FORWARD, OnForward)
-	ON_NOTIFY(TVN_SELCHANGED, IDC_TESTLIST, OnSelchangedTestlist)
-	ON_NOTIFY(NM_DBLCLK, IDC_TESTLIST, OnDblclkTestlist)
-	ON_BN_CLICKED(IDC_REFRESHDOM, OnRefreshDOM)
 	ON_WM_CLOSE()
+	ON_WM_DESTROY()
+	ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -103,7 +95,6 @@ BOOL CBrowseDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	
 
 	CWinApp *pApp = AfxGetApp();
 	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
@@ -114,6 +105,24 @@ BOOL CBrowseDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
+	CRect rcTabMarker;
+	GetDlgItem(IDC_TAB_MARKER)->GetWindowRect(&rcTabMarker);
+	ScreenToClient(rcTabMarker);
+	GetDlgItem(IDC_TAB_MARKER)->DestroyWindow();
+
+    m_dlgPropSheet.AddPage(&m_TabMessages);
+    m_dlgPropSheet.AddPage(&m_TabTests);
+    m_dlgPropSheet.AddPage(&m_TabDOM);
+
+	m_TabMessages.m_pBrowseDlg = this;
+	m_TabTests.m_pBrowseDlg = this;
+	m_TabDOM.m_pBrowseDlg = this;
+
+    m_dlgPropSheet.Create(this, WS_CHILD | WS_VISIBLE, 0);
+    m_dlgPropSheet.ModifyStyleEx (0, WS_EX_CONTROLPARENT);
+    m_dlgPropSheet.ModifyStyle( 0, WS_TABSTOP );
+    m_dlgPropSheet.SetWindowPos( NULL, rcTabMarker.left-7, rcTabMarker.top-7, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE );
+
 	// Image list
 	m_cImageList.Create(16, 16, ILC_COLOR | ILC_MASK, 0, 10);
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_CLOSEDFOLDER));
@@ -122,36 +131,10 @@ BOOL CBrowseDlg::OnInitDialog()
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTFAILED));
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTPASSED));
 	
-	// Create the test tree
-	m_tcTests.SetImageList(&m_cImageList, TVSIL_NORMAL);
-	for (int i = 0; i < nTestSets; i++)
-	{
-		TestSet *pTestSet = &aTestSets[i];
-		HTREEITEM hParent = m_tcTests.InsertItem(pTestSet->szName, IL_CLOSEDFOLDER, IL_CLOSEDFOLDER);
-		m_tcTests.SetItemData(hParent, (DWORD) pTestSet);
-
-		if (pTestSet->pfnPopulator)
-		{
-			pTestSet->pfnPopulator(pTestSet);
-		}
-
-		for (int j = 0; j < pTestSet->nTests; j++)
-		{
-			Test *pTest = &pTestSet->aTests[j];
-			HTREEITEM hTest = m_tcTests.InsertItem(pTest->szName, IL_TEST, IL_TEST, hParent);
-			if (hTest)
-			{
-				m_tcTests.SetItemData(hTest, (DWORD) pTest);
-			}
-		}
-	}
-
-	// Create the DOM tree
-	m_tcDOM.SetImageList(&m_cImageList, TVSIL_NORMAL);
 
 	// Set up some URLs. The first couple are internal
 	m_cmbURLs.AddString(m_szTestURL);
-	for (i = 0; i < sizeof(aURLs) / sizeof(aURLs[0]); i++)
+	for (int i = 0; i < sizeof(aURLs) / sizeof(aURLs[0]); i++)
 	{
 		m_cmbURLs.AddString(aURLs[i]);
 	}
@@ -163,54 +146,6 @@ BOOL CBrowseDlg::OnInitDialog()
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-HRESULT CBrowseDlg::CreateWebBrowser()
-{
-	// Get the position of the browser marker
-	CRect rcMarker;
-	GetDlgItem(IDC_BROWSER_MARKER)->GetWindowRect(&rcMarker);
-	ScreenToClient(rcMarker);
-
-	GetDlgItem(IDC_BROWSER_MARKER)->DestroyWindow();
-
-	CControlSiteInstance::CreateInstance(&m_pControlSite);
-	if (m_pControlSite == NULL)
-	{
-		return E_OUTOFMEMORY;
-	}
-
-	CControlEventSinkInstance *pEventSink = NULL;
-	CControlEventSinkInstance::CreateInstance(&pEventSink);
-	if (pEventSink == NULL)
-	{
-		m_pControlSite->Release();
-		m_pControlSite = NULL;
-		return E_OUTOFMEMORY;
-	}
-	pEventSink->m_pBrowseDlg = this;
-
-	PropertyList pl;
-	m_pControlSite->AddRef();
-	m_pControlSite->Create(m_clsid, pl);
-	m_pControlSite->Attach(GetSafeHwnd(), rcMarker, NULL);
-	m_pControlSite->SetPosition(rcMarker);
-	m_pControlSite->Advise(pEventSink, DIID_DWebBrowserEvents2, &m_dwCookie);
-
-	return S_OK;
-}
-
-
-HRESULT CBrowseDlg::DestroyWebBrowser()
-{
-	if (m_pControlSite)
-	{
-		m_pControlSite->Unadvise(DIID_DWebBrowserEvents2, m_dwCookie);
-		m_pControlSite->Detach();
-		m_pControlSite->Release();
-		m_pControlSite = NULL;
-	}
-
-	return S_OK;
-}
 
 // If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
@@ -248,6 +183,126 @@ void CBrowseDlg::OnPaint()
 HCURSOR CBrowseDlg::OnQueryDragIcon()
 {
 	return (HCURSOR) m_hIcon;
+}
+
+struct EnumData
+{
+	CBrowseDlg *pBrowseDlg;
+	CSize sizeDelta;
+};
+
+BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
+{
+	EnumData *pData = (EnumData *) lParam;
+	return TRUE;
+}
+
+void CBrowseDlg::OnSize(UINT nType, int cx, int cy) 
+{
+	CDialog::OnSize(nType, cx, cy);
+	EnumData data;
+	data.pBrowseDlg = this;
+	data.sizeDelta = CSize(cx, cy);
+	::EnumChildWindows(GetSafeHwnd(), EnumChildProc, (LPARAM) &data);
+}
+
+HRESULT CBrowseDlg::CreateWebBrowser()
+{
+	// Get the position of the browser marker
+	CRect rcMarker;
+	GetDlgItem(IDC_BROWSER_MARKER)->GetWindowRect(&rcMarker);
+	ScreenToClient(rcMarker);
+
+	GetDlgItem(IDC_BROWSER_MARKER)->DestroyWindow();
+
+	CControlSiteInstance::CreateInstance(&m_pControlSite);
+	if (m_pControlSite == NULL)
+	{
+		OutputString(_T("Error: could not create control site"));
+		return E_OUTOFMEMORY;
+	}
+
+	CControlEventSinkInstance *pEventSink = NULL;
+	CControlEventSinkInstance::CreateInstance(&pEventSink);
+	if (pEventSink == NULL)
+	{
+		m_pControlSite->Release();
+		m_pControlSite = NULL;
+		OutputString(_T("Error: could not create event sink"));
+		return E_OUTOFMEMORY;
+	}
+	pEventSink->m_pBrowseDlg = this;
+
+	HRESULT hr;
+
+	PropertyList pl;
+	m_pControlSite->AddRef();
+	m_pControlSite->Create(m_clsid, pl);
+	hr = m_pControlSite->Attach(GetSafeHwnd(), rcMarker, NULL);
+	if (hr != S_OK)
+	{
+		OutputString(_T("Error: Cannot attach to browser control, hr = 0x%08x"), hr);
+	}
+	else
+	{
+		OutputString(_T("Sucessfully attached to browser control"));
+	}
+	
+	m_pControlSite->SetPosition(rcMarker);
+	hr = m_pControlSite->Advise(pEventSink, DIID_DWebBrowserEvents2, &m_dwCookie);
+	if (hr != S_OK)
+	{
+		OutputString(_T("Error: Cannot subscribe to DIID_DWebBrowserEvents2 events, hr = 0x%08x"), hr);
+	}
+	else
+	{
+		OutputString(_T("Sucessfully subscribed to events"));
+	}
+
+	return S_OK;
+}
+
+
+HRESULT CBrowseDlg::DestroyWebBrowser()
+{
+	if (m_pControlSite)
+	{
+		m_pControlSite->Unadvise(DIID_DWebBrowserEvents2, m_dwCookie);
+		m_pControlSite->Detach();
+		m_pControlSite->Release();
+		m_pControlSite = NULL;
+	}
+
+	return S_OK;
+}
+
+void CBrowseDlg::PopulateTests()
+{
+	// Create the test tree
+	CTreeCtrl &tc = m_TabTests.m_tcTests;
+
+	tc.SetImageList(&m_cImageList, TVSIL_NORMAL);
+	for (int i = 0; i < nTestSets; i++)
+	{
+		TestSet *pTestSet = &aTestSets[i];
+		HTREEITEM hParent = tc.InsertItem(pTestSet->szName, IL_CLOSEDFOLDER, IL_CLOSEDFOLDER);
+		m_TabTests.m_tcTests.SetItemData(hParent, (DWORD) pTestSet);
+
+		if (pTestSet->pfnPopulator)
+		{
+			pTestSet->pfnPopulator(pTestSet);
+		}
+
+		for (int j = 0; j < pTestSet->nTests; j++)
+		{
+			Test *pTest = &pTestSet->aTests[j];
+			HTREEITEM hTest = tc.InsertItem(pTest->szName, IL_TEST, IL_TEST, hParent);
+			if (hTest)
+			{
+				tc.SetItemData(hTest, (DWORD) pTest);
+			}
+		}
+	}
 }
 
 HRESULT CBrowseDlg::GetWebBrowser(IWebBrowser **pWebBrowser)
@@ -401,19 +456,19 @@ void CBrowseDlg::OutputString(const TCHAR *szMessage, ...)
 	CString szOutput;
 	szOutput.Format(_T("%s"), szBuffer);
 
-	m_lbMessages.AddString(szOutput);
-	m_lbMessages.SetTopIndex(m_lbMessages.GetCount() - 1);
+	m_TabMessages.m_lbMessages.AddString(szOutput);
+	m_TabMessages.m_lbMessages.SetTopIndex(m_TabMessages.m_lbMessages.GetCount() - 1);
 }
 
 void CBrowseDlg::UpdateTest(HTREEITEM hItem, TestResult nResult)
 {
 	if (nResult == trPassed)
 	{
-		m_tcTests.SetItemImage(hItem, IL_TESTPASSED, IL_TESTPASSED);
+		m_TabTests.m_tcTests.SetItemImage(hItem, IL_TESTPASSED, IL_TESTPASSED);
 	}
 	else if (nResult == trFailed)
 	{
-		m_tcTests.SetItemImage(hItem, IL_TESTFAILED, IL_TESTFAILED);
+		m_TabTests.m_tcTests.SetItemImage(hItem, IL_TESTFAILED, IL_TESTFAILED);
 	}
 	else if (nResult == trPartial)
 	{
@@ -424,89 +479,44 @@ void CBrowseDlg::UpdateTest(HTREEITEM hItem, TestResult nResult)
 void CBrowseDlg::UpdateTestSet(HTREEITEM hItem)
 {
 	// Examine the results
-	HTREEITEM hTest = m_tcTests.GetNextItem(hItem, TVGN_CHILD);
+	HTREEITEM hTest = m_TabTests.m_tcTests.GetNextItem(hItem, TVGN_CHILD);
 	while (hTest)
 	{
-		Test *pTest = (Test *) m_tcTests.GetItemData(hTest);
+		Test *pTest = (Test *) m_TabTests.m_tcTests.GetItemData(hTest);
 		UpdateTest(hTest, pTest->nLastResult);
-		hTest = m_tcTests.GetNextItem(hTest, TVGN_NEXT);
+		hTest = m_TabTests.m_tcTests.GetNextItem(hTest, TVGN_NEXT);
 	}
 }
 
-void CBrowseDlg::OnRuntest() 
+void CBrowseDlg::OnRunTest() 
 {
-	HTREEITEM hItem = m_tcTests.GetNextItem(NULL, TVGN_FIRSTVISIBLE);
+	HTREEITEM hItem = m_TabTests.m_tcTests.GetNextItem(NULL, TVGN_FIRSTVISIBLE);
 	while (hItem)
 	{
-		UINT nState = m_tcTests.GetItemState(hItem, TVIS_SELECTED);
+		UINT nState = m_TabTests.m_tcTests.GetItemState(hItem, TVIS_SELECTED);
 		if (!(nState & TVIS_SELECTED))
 		{
-			hItem = m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
+			hItem = m_TabTests.m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
 			continue;
 		}
 
-		if (m_tcTests.ItemHasChildren(hItem))
+		if (m_TabTests.m_tcTests.ItemHasChildren(hItem))
 		{
 			// Run complete set of tests
-			TestSet *pTestSet = (TestSet *) m_tcTests.GetItemData(hItem);
+			TestSet *pTestSet = (TestSet *) m_TabTests.m_tcTests.GetItemData(hItem);
 			RunTestSet(pTestSet);
 			UpdateTestSet(hItem);
 		}
 		else
 		{
 			// Find the test
-			Test *pTest = (Test *) m_tcTests.GetItemData(hItem);
+			Test *pTest = (Test *) m_TabTests.m_tcTests.GetItemData(hItem);
 			TestResult nResult = RunTest(pTest);
 			UpdateTest(hItem, nResult);
 		}
 
-		hItem = m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
+		hItem = m_TabTests.m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
 	}
-}
-
-
-void CBrowseDlg::OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult) 
-{
-	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
-
-	BOOL bItemSelected = FALSE;
-	m_szTestDescription.Empty();
-
-	HTREEITEM hItem = m_tcTests.GetNextItem(NULL, TVGN_FIRSTVISIBLE);
-	while (hItem)
-	{
-		UINT nState;
-
-		nState = m_tcTests.GetItemState(hItem, TVIS_SELECTED);
-		if (nState & TVIS_SELECTED)
-		{
-			bItemSelected = TRUE;
-			if (m_tcTests.ItemHasChildren(hItem))
-			{
-				TestSet *pTestSet = (TestSet *) m_tcTests.GetItemData(hItem);
-				m_szTestDescription = pTestSet->szDesc;
-			}
-			else
-			{
-				Test *pTest = (Test *) m_tcTests.GetItemData(hItem);
-				m_szTestDescription = pTest->szDesc;
-			}
-		}
-
-		hItem = m_tcTests.GetNextItem(hItem, TVGN_NEXTVISIBLE);
-	}
-
-	UpdateData(FALSE);
-	m_btnRunTest.EnableWindow(bItemSelected);
-
-	*pResult = 0;
-}
-
-
-void CBrowseDlg::OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult) 
-{
-	OnRuntest();
-	*pResult = 0;
 }
 
 struct _ElementPos
@@ -528,7 +538,7 @@ struct _ElementPos
 
 void CBrowseDlg::OnRefreshDOM() 
 {
-	m_tcDOM.DeleteAllItems();
+	m_TabDOM.m_tcDOM.DeleteAllItems();
 
 	std::stack<_ElementPos> cStack;
 
@@ -588,7 +598,7 @@ void CBrowseDlg::OnRefreshDOM()
 			SysFreeString(bstrTagName);
 
 			// Add an icon to the tree
-			HTREEITEM htiParent = m_tcDOM.InsertItem(szTagName, IL_CLOSEDFOLDER, IL_CLOSEDFOLDER, pos.m_htiParent);
+			HTREEITEM htiParent = m_TabDOM.m_tcDOM.InsertItem(szTagName, IL_CLOSEDFOLDER, IL_CLOSEDFOLDER, pos.m_htiParent);
 
 			CIPtr(IDispatch) cpDispColl;
 			hr = cpElem->get_children(&cpDispColl);
@@ -608,4 +618,11 @@ void CBrowseDlg::OnClose()
 {
 	DestroyWebBrowser();
 	DestroyWindow();
+}
+
+
+void CBrowseDlg::OnDestroy() 
+{
+	CDialog::OnDestroy();
+	delete this;	
 }

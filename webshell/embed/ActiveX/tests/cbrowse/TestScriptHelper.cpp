@@ -25,6 +25,7 @@ STDMETHODIMP CTestScriptHelper::OutputString(BSTR bstrMessage)
 	return S_OK;
 }
 
+
 STDMETHODIMP CTestScriptHelper::get_WebBrowser(LPDISPATCH *pVal)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
@@ -45,6 +46,7 @@ STDMETHODIMP CTestScriptHelper::get_WebBrowser(LPDISPATCH *pVal)
 	return spWebBrowserApp->QueryInterface(IID_IDispatch, (void **) pVal);
 }
 
+
 STDMETHODIMP CTestScriptHelper::put_Result(TestResult newVal)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
@@ -59,6 +61,7 @@ STDMETHODIMP CTestScriptHelper::put_Result(TestResult newVal)
 	return S_OK;
 }
 
+
 STDMETHODIMP CTestScriptHelper::get_TestURL(BSTR *pVal)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
@@ -71,6 +74,24 @@ STDMETHODIMP CTestScriptHelper::get_TestURL(BSTR *pVal)
 	{
 		USES_CONVERSION;
 		*pVal = SysAllocString(T2OLE(m_pBrowserInfo->szTestURL));
+	}
+
+	return S_OK;
+}
+
+
+STDMETHODIMP CTestScriptHelper::get_TestCGI(BSTR *pVal)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState())
+
+	if (pVal == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	if (m_pBrowserInfo)
+	{
+		USES_CONVERSION;
+		*pVal = SysAllocString(T2OLE(m_pBrowserInfo->szTestCGI));
 	}
 
 	return S_OK;

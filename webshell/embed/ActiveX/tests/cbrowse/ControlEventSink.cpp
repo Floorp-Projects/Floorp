@@ -45,7 +45,11 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
 	switch (dispIdMember)
 	{
 	case 0x66:
-		szEvent = _T("StatusTextChange");
+		{
+			USES_CONVERSION;
+			CString szText(OLE2T(pDispParams->rgvarg[0].bstrVal));
+			szEvent.Format(_T("StatusTextChange: \"%s\""), szText);
+		}
 		break;
 	case 0x6c:
 		szEvent = _T("ProgressChange");

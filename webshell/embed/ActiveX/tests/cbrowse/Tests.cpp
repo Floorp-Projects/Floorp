@@ -374,6 +374,7 @@ TestResult __cdecl tstScriptTest(BrowserInfo &cInfo)
 			pSite->AddNamedObject(_T("BrowserInfo"), pHelper, TRUE);
 			pSite->ParseScriptFile(szScript);
 			pSite->PlayScript();
+			pSite->Detach();
 			pSite->Release();
 		}
 	}

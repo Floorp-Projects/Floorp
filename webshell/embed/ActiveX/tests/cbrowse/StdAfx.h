@@ -20,6 +20,8 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
 #define _ATL_APARTMENT_THREADED
+#define _ATL_DEBUG_INTERFACES
+
 // ATL headers
 #include <atlbase.h>
 

@@ -8,6 +8,10 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+#include "TabMessages.h"
+#include "TabTests.h"
+#include "TabDOM.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CBrowseDlg dialog
 
@@ -35,15 +39,20 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
 	enum { IDD = IDD_CBROWSE_DIALOG };
-	CTreeCtrl	m_tcDOM;
-	CButton	m_btnRunTest;
 	CComboBox	m_cmbURLs;
-	CTreeCtrl	m_tcTests;
-	CListBox	m_lbMessages;
-	CString	m_szTestDescription;
 	BOOL	m_bNewWindow;
 	//}}AFX_DATA
 
+	CPropertySheet m_dlgPropSheet;
+	CTabMessages m_TabMessages;
+	CTabTests    m_TabTests;
+	CTabDOM      m_TabDOM;
+	CImageList m_cImageList;
+
+	void OnRefreshDOM();
+	void OnRunTest();
+	void PopulateTests();
+	
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CBrowseDlg)
 	protected:
@@ -53,7 +62,6 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
-	CImageList m_cImageList;
 	CString m_szTestURL;
 	CString m_szTestCGI;
 	DWORD m_dwCookie;
@@ -64,13 +72,11 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnGo();
-	afx_msg void OnRuntest();
 	afx_msg void OnBackward();
 	afx_msg void OnForward();
-	afx_msg void OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnRefreshDOM();
 	afx_msg void OnClose();
+	afx_msg void OnDestroy();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

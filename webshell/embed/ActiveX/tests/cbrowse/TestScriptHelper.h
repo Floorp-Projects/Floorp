@@ -31,6 +31,7 @@ END_COM_MAP()
 
 // DITestScriptHelper
 public:
+	STDMETHOD(get_TestCGI)(/*[out, retval]*/ BSTR *pVal);
 	STDMETHOD(get_TestURL)(/*[out, retval]*/ BSTR *pVal);
 	STDMETHOD(put_Result)(/*[in]*/ TestResult newVal);
 	STDMETHOD(get_WebBrowser)(/*[out, retval]*/ LPDISPATCH *pVal);
