@@ -390,7 +390,8 @@ protected:
 
   nsresult ConstructTableFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
-                               nsIFrame*        aParentFrame,
+                               nsIFrame*        aGeometricParent,
+                               nsIFrame*        aContentParent,
                                nsIStyleContext* aStyleContext,
                                nsAbsoluteItems& aAboluteItems,
                                nsIFrame*&       aNewFrame);
@@ -1096,7 +1097,8 @@ HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
 nsresult
 HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
                                         nsIContent*      aContent,
-                                        nsIFrame*        aParentFrame,
+                                        nsIFrame*        aGeometricParent,
+                                        nsIFrame*        aContentParent,
                                         nsIStyleContext* aStyleContext,
                                         nsAbsoluteItems& aAbsoluteItems,
                                         nsIFrame*&       aNewFrame)
@@ -1112,7 +1114,8 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned
-  aNewFrame->Init(*aPresContext, aContent, aParentFrame, aParentFrame, aStyleContext);
+  aNewFrame->Init(*aPresContext, aContent, aGeometricParent, aContentParent,
+                  aStyleContext);
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                            aStyleContext, PR_FALSE);
 
@@ -1898,11 +1901,29 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
       break;
   
     case NS_STYLE_DISPLAY_TABLE:
-      rv = ConstructTableFrame(aPresContext, aContent, aParentFrame, aStyleContext,
-                               aAbsoluteItems, aNewFrame);
+    {
+      isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
+      nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                           aParentFrame;
+      rv = ConstructTableFrame(aPresContext, aContent, geometricParent, aParentFrame,
+                               aStyleContext, aAbsoluteItems, aNewFrame);
       // Note: table construction function takes care of initializing the frame,
       // processing children, and setting the initial child list
+      if (isAbsolutelyPositioned) {
+        nsIFrame* placeholderFrame;
+
+        CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                                  aParentFrame, placeholderFrame);
+
+        // Add the absolutely positioned frame to its containing block's list
+        // of child frames
+        aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+
+        // Add the placeholder frame to the flow
+        aNewFrame = placeholderFrame;
+      }
       return rv;
+    }
   
     case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
     case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
@@ -2372,8 +2393,8 @@ FindPreviousSibling(nsIPresShell* aPresShell,
 {
   nsIFrame* prevSibling = nsnull;
 
-  // Note: not all content objects are associated with a frame so
-  // keep looking until we find a previous frame
+  // Note: not all content objects are associated with a frame (e.g., if their
+  // 'display' type is 'hidden') so keep looking until we find a previous frame
   for (PRInt32 index = aIndexInContainer - 1; index >= 0; index--) {
     nsIContent* precedingContent;
     aContainer->ChildAt(index, precedingContent);
@@ -2404,8 +2425,8 @@ FindNextSibling(nsIPresShell* aPresShell,
 {
   nsIFrame* nextSibling = nsnull;
 
-  // Note: not all content objects are associated with a frame so
-  // keep looking until we find a next frame
+  // Note: not all content objects are associated with a frame (e.g., if their
+  // 'display' type is 'hidden') so keep looking until we find a previous frame
   PRInt32 count;
   aContainer->ChildCount(count);
   for (PRInt32 index = aIndexInContainer + 1; index < count; index++) {
