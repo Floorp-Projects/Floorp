@@ -5713,7 +5713,15 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         // Convert to a tree row group frame.
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
         if (treeRowGroup && treeRowGroup->IsLazy()) {
-          treeRowGroup->OnContentAdded(*aPresContext);
+          nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
+		  if(!nextSibling)
+            treeRowGroup->OnContentAdded(*aPresContext);
+		  else {
+            nsIFrame*     frame = GetFrameFor(shell, aPresContext, aContainer);
+            nsTreeRowGroupFrame* frameTreeRowGroup = (nsTreeRowGroupFrame*)frame;
+			if(frameTreeRowGroup)
+              frameTreeRowGroup->OnContentInserted(*aPresContext, nextSibling);
+		  }
           return NS_OK;
         }
       }
