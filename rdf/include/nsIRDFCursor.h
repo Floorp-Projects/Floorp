@@ -28,8 +28,7 @@
 */
 
 #include "nsISupports.h"
-#include "rdf.h"
-
+class nsIRDFNode;
 
 // 1c2abdb0-4cef-11d2-bc16-00805f912fe7
 #define NS_IRDFCURSOR_IID \
