@@ -55,6 +55,7 @@ function Startup()
   var list = document.getElementById( "skinsList" );
   if ("loaded" in gData && "themeIndex" in gData) {
     list.selectedIndex = gData.themeIndex;    
+    removeInvalidThemes();
     return;
   }
   gData.loaded = true;
@@ -80,6 +81,8 @@ function Startup()
     }      
   }
 
+  removeInvalidThemes();
+  
   var navbundle = document.getElementById("bundle_navigator");
   var showSkinsDescription = navbundle.getString("showskinsdescription");
   if (showSkinsDescription == "false")
@@ -88,6 +91,21 @@ function Startup()
     var description = document.getElementById("description");
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
+  }
+}
+
+function removeInvalidThemes() {
+  var list = document.getElementById( "skinsList" );
+  for (var i = 0; i < list.childNodes.length; ++i) {
+    var child = list.childNodes[i];
+    var name = child.getAttribute("name");
+    if (name) {
+      var oldTheme = !chromeRegistry.checkThemeVersion(name);
+      if (oldTheme) {
+        list.removeItemAt(i);
+        i--;
+      }
+    }
   }
 }
 
@@ -123,49 +141,13 @@ function applyTheme()
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Components.interfaces.nsIXULChromeRegistry);
 
-  var oldTheme = false;
-  try {
-    oldTheme = !chromeRegistry.checkThemeVersion(data.name);
-  }
-  catch(e) {
-  }
-
-
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  if (oldTheme) {
-    var title = gNavigatorBundle.getString("oldthemetitle");
-    var message = gNavigatorBundle.getString("oldTheme");
-    
-    message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
-    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
-
-    if (promptService.confirm(window, title, message)){
-      var inUse = chromeRegistry.isSkinSelected(data.name, true);
-
-      chromeRegistry.uninstallSkin(data.name, true);
-
-      var str = Components.classes["@mozilla.org/supports-string;1"]
-                          .createInstance(Components.interfaces.nsISupportsString);
-
-      str.data = true;
-      pref.setComplexValue("general.skins.removelist." + data.name,
-                           Components.interfaces.nsISupportsString, str);
-      
-      if (inUse)
-        chromeRegistry.refreshSkins();
-    list.selectedIndex = 0;
-    }
-
-    return;
-  }
-
   var str = Components.classes["@mozilla.org/supports-string;1"]
                       .createInstance(Components.interfaces.nsISupportsString);
   str.data = data.name;
   prefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
 
 
-  chromeRegistry.selectSkin(data.name, true);                                        
+  chromeRegistry.selectSkin(data.name, true);
   chromeRegistry.refreshSkins();
 }
 
@@ -197,14 +179,6 @@ function themeSelect()
     var skinName = selectedItem.getAttribute("name");
     gData.name = skinName;
     gData.themeIndex = list.selectedIndex;
-
-    var oldTheme;
-    try {
-      oldTheme = !chromeRegistry.checkThemeVersion(skinName);
-    }
-    catch(e) {
-      oldTheme = false;
-    }
 
     var nameField = document.getElementById("displayName");
     var author = document.getElementById("author");
@@ -239,34 +213,14 @@ function themeSelect()
     }
     catch (e) {
     }
-    if (!oldTheme) {    
-      if( gShowDescription ) 
-        description.appendChild(descText);
-
-      var locType = selectedItem.getAttribute("loctype");
-      uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
-      
-      uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      uninstallButton.label = uninstallLabel;
-    }
-    else {
-      var brandbundle = document.getElementById("bundle_brand");
-
-      uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      uninstallButton.label = uninstallLabel;
-
-      uninstallButton.disabled = selectedSkin == skinName;
-
-      var newText = prefbundle.getString("oldTheme");
-      newText = newText.replace(/%theme_name%/, themeName);
-      
-      newText = newText.replace(/%brand%/g, brandbundle.getString("brandShortName"));
-
-      if( gShowDescription )  {
-        descText = document.createTextNode(newText);
-        description.appendChild(descText);
-      }
-    }
+    if( gShowDescription ) 
+      description.appendChild(descText);
+    
+    var locType = selectedItem.getAttribute("loctype");
+    uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
+    
+    uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
+    uninstallButton.label = uninstallLabel;
   }
   else {
     uninstallButton.disabled = true;
