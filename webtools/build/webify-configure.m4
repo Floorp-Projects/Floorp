@@ -71,6 +71,14 @@ dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
 define(MOZ_ARG_WITH_STRING,
 [MOZ_ARG_PRINT(string,with,[$1],[$2])])
 
+dnl AC_ARG_ENABLE(NAME, HELP, IF-SET [, ELSE])
+define(AC_ARG_ENABLE,
+[MOZ_ARG_PRINT(unhandled,enable,[$1],[$2])])
+
+dnl AC_ARG_WITH(NAME, HELP, IF-SET [, ELSE])
+define(AC_ARG_WITH,
+[MOZ_ARG_PRINT(unhandled,with,[$1],[$2])])
+
 dnl MOZ_ARG_HEADER(Comment)
 dnl This is used by webconfig to group options
 define(MOZ_ARG_HEADER,

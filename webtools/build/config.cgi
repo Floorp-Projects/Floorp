@@ -53,32 +53,9 @@ print "Content-type: text/html\n\n";
 #########################################################
 
 sub parse_params {
-  if ($query->param('nspr_option') eq 'userdefined') {
-    my $nspr_dir = $query->param('nspr_dir');
-    $nspr_dir =~ s@/$@@;
-    $nspr_dir =~ s@/lib$@@;
-    $query->param(-name=>'--with-nspr',
-		  -values=>[$nspr_dir]);
-  }
-  #if ($query->param('nspr_option') eq 'rpm') {
-  #  $query->param(-name=>'--with-nspr',
-  #		  -values=>['/usr']);
-  #}
-  if ($query->param('nspr_option') eq 'tip') {
-    $query->param(-name=>'--with-nspr',
-		  -values=>['@OBJDIR@/nspr']);
-  }
-  if ($query->param('debug_option') eq 'userdefined') {
-    $query->param(-name=>'--enable-debug',
-		  -values=>[$query->param('debug_dirs')]);
-  }
-  if ($query->param('pthreads_'.$query->param('nspr_option')) eq 'yes') {
-      $query->param(-name=>'--with-pthreads',
-		    -values=>['yes']);
-  }
-  if ($query->param('debug_option') eq 'yes') {
-    $query->param(-name=>'--enable-debug',
-		  -values=>['yes']);
+  if ($query->param('MOZ_OBJDIR') eq '@TOPSRCDIR@') {
+    $query->param(-name=>'MOZ_OBJDIR',
+		  -values=>['']);
   }
 }
 
@@ -156,24 +133,20 @@ sub print_script_preview {
 <tr><td colspan=3>
 Save the script, then build the tree as follows,
 </td></tr><tr><td>&nbsp;</td><td>
-  1.</td><td>  <code>cvs co mozilla/client.mk</code>
+  1. </td><td>  <code>cvs co mozilla/client.mk</code>
 </td></tr><tr><td></td><td>
-  2.</td><td>  <code>cd mozilla</code>
+  2. </td><td>  <code>cd mozilla</code>
 </td></tr><tr><td></td><td>
-  3.</td><td>  <code>gmake -f client.mk</code><br>
+  3. </td><td>  <code>gmake -f client.mk</code><br>
 </td></tr><tr><td></td><td>
-</td><td>      (default targets = <code>checkout build</code>)
+</td><td>      (default targets: <code>checkout depend build</code>)
 </td></tr>
 </td></tr><tr><td colspan=3>&nbsp;</td></tr><tr><td colspan=3>
-Here is a shortcut you can use to run <code>viewer</code>
-or <code>apprunner</code> when the tree is built,
-</td></tr><tr><td></td><td>
-  1.</td><td>   <code>cd &lt;objdir&gt;</code>
-</td></tr><tr><td></td><td>
-  2a.</td><td>  <code>gmake run_viewer
-</td></tr><tr><td></td><td>
-  2b.</td><td>  <code>gmake run_apprunner
 </td></tr></table>
+If you do not want to use <code><b>client.mk</b></code>, 
+then use your usual build steps.<br>
+<code><b>configure</b></code> will
+pick up the options in your <code><b>.mozconfig</b></code> script.
 <P>
 Check out the <A HREF="http://www.mozilla.org/build/configurator-faq.html">Build Configuator FAQ</A>
 for more information.
@@ -195,10 +168,6 @@ sub print_script {
   print "#\n";
   print "\n";
 
-  print "# Options for client.mk.\n";
-  print "# Note: client.mk also uses the following 'ac_add_options',\n";
-  print "#          --with-nspr=blah\n";
-  print "#          --with-pthreads\n";
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
       my $value = $query->param($param);
@@ -207,19 +176,25 @@ sub print_script {
       next if $value eq '';
       next if $param eq 'MOZ_CO_MODULE' and $value eq 'SeaMonkeyEditor';
       next if $param eq 'MOZ_CO_BRANCH' and $value eq 'HEAD';
+      print "# Options for client.mk.\n" if not $have_client_mk_options;
       print "mk_add_options $param=".$value."\n";
-      $need_blank_line = 1;
+      $have_client_mk_options = 1;
     }
   }
-  print "\n" if $need_blank_line;
-  print "# Options for 'configure' (same as command-line options).\n";
+  print "\n" if $have_client_mk_options;
   foreach $param ($query->param()) {
     if ($param =~ /^--/) {
       next if $query->param($param) eq '';
+      print "# Options for 'configure' (same as command-line options).\n"
+        if not $have_configure_options;
       print "ac_add_options $param";
       print "=".$query->param($param) if $query->param($param) ne "yes";
       print "\n";
+      $have_configure_options = 1;
     }
+  }
+  if (not $have_client_mk_options and not $have_configure_options) {
+    print "\n# No script needed. Only default values were selected\n";
   }
 }
 
@@ -252,14 +227,22 @@ sub print_configure_form {
     Unix Build Configurator
     </b></font>
     </td></tr><tr><td>
-    This form produces a script that you can save and use to configure your
-    mozilla build. If this form does not have some options you want, you can
-	add them to the script later.
+    The mozilla Unix build system is designed to build without any user set
+    options. However, should you need to configure an option, the
+    Configurator is here to help.
+    This form produces a script that you can use to configure your build. 
+    The script saves you the trouble of setting environment 
+    variables for <code><b>client.mk</b></code>
+    or typing command-line options for <code><b>configure</b></code>.
     </td></tr></table>
 
     <table cellpadding=0 cellspacing=0 border=0><tr><td>
 	<input type="Submit" value="Preview Build Script">
     </td></tr></table>
+
+    <font size=+1 face="Helvetica,Arial"><b>
+    Options for "<code>client.mk</code>":
+    </b></font><br>
 
     <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0 border=0><tr><td>
     <table bgcolor="#FFFFFF" cellspacing=2 cellpadding=0 border=0><tr><td>
@@ -286,91 +269,12 @@ sub print_configure_form {
     Object Directory:</b></font><br>
     </td></tr><tr><td><table><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@" checked>
-    <code>mozilla</code></td><td> (build in the source tree)<br></td></tr><tr><td>
+    <code>mozilla</code></td><td> Build in the source tree. (default)<br></td></tr><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/obj-\@CONFIG_GUESS\@">
-    <code>mozilla/obj-\@CONFIG_GUESS\@</code> </td><td>(use directory like&nbsp; <code>mozilla/obj-i686-pc-linux-gnu</code>)<br>
-    <!-- Take this option out for now...
-    <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/../obj-\@CONFIG_GUESS\@">
-    mozilla/../obj-\@CONFIG_GUESS\@(e.g. <code>mozilla/../obj-i686-pc-linux-gnu</code>)<br>
-    -->
+    <code>mozilla/obj-\@CONFIG_GUESS\@</code> </td><td>Use directory like&nbsp; <code>mozilla/obj-i686-pc-linux-gnu.</code><br>
     </td></tr></table>
     </td></tr>
 
-    <!-- NSPR and Pthreads -->
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>NSPR and Pthreads:</b></font><br>
-    </td></tr><tr><td>
-
-    NSPR and mozilla can be build either with or without
-    pthreads (POSIX threads). They should both be build the same way. Selecting Pthreads in the right column will cause mozilla to be built with be threads.
-    For more information on NSPR and pthreads, check 
-    <a href="http://www.mozilla.org/docs/refList/refNSPR/platforms.html">
-    the NSPR supported platforms</a>.
-
-    <table cellpadding=0 cellspacing=5><tr><td>
-    <table cellpadding=0 cellspacing=0><tr><td>
-    <input type="radio" name="nspr_option" value="tip" checked>
-    Build NSPR from the tip (installs in <code>\@OBJDIR\@/nspr</code>)
-    </td><td>&nbsp;
-    </td><td>
-    <input type="checkbox" name="pthreads_tip" value="yes">
-    Use Pthreads for NSPR and mozilla
-    </td></tr><tr><td>
-    <input type="radio" name="nspr_option" value="userdefined" onclick="document.ff.nspr_dir.focus();">
-    NSPR is installed in
-    <input type="text" name="nspr_dir" onfocus="document.ff.nspr_option[1].checked=true;">
-    </td><td>&nbsp;
-    </td><td>
-    <input type="checkbox" name="pthreads_userdefined" value="yes">
-    NSPR was Built with Pthreads, so build mozilla with Pthreads
-    </td></tr>
-    <!-- Reduce clutter. This option was only for nscp folk
-    <tr><td>
-    <input type="radio" name="nspr_option" value="rpm">
-    NSPR is installed in /usr/lib (NSPR RPM installation)
-    </td><td>&nbsp;
-    </td><td>
-    <input type="checkbox" name="pthreads_rpm" value="yes">
-    NSPR was Built with Pthreads, so build mozilla with Pthreads
-    </td></tr>
-    -->
-    </table>
-    </td></tr></table>
-    </td></tr>
-
-    <!-- Threads
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>Threads:</b></font><br>
-    </td></tr><tr><td>
-    NSPR and mozilla can both be built with or without
-    pthreads (POSIX threads).
-    Check
-    <a href="http://www.mozilla.org/docs/refList/refNSPR/platforms.html">
-    the NSPR supported platforms</a>
-    to see if you can choose this option.<p>
-    <input type="checkbox" name="--with-pthreads" value="yes">
-    The selected NSPR was built with pthreads, 
-    or if building NSPR from the tip 
-    and you would like to build it with pthreads.<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    (Sets <code>USE_PTHREADS=1</code> for NSPR, 
-    and <code>--with-pthreads</code> for mozilla client.)
-    </td></tr>
-    -->
-
-    <!-- Debug -->
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>Debug option:</b></font><br>
-    </td></tr><tr><td>
-    <input type="radio" name="debug_option" value="yes" checked>
-    Enable debug symbols<br>
-    <input type="radio" name="debug_option" value="no">
-    Disable debug symbols<br>
-    <input type="radio" name="debug_option" value="userdefined" onclick="document.ff.debug_dirs.focus();">
-    Enable debug symbols, but only for the following directories: <br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <input type="text" name="debug_dirs" size=50 onfocus="document.ff.debug_option[2].checked=true;"> (comma separated, no spaces)<br>
-    </td></tr>
 
     </table>
     </td></tr></table>
@@ -385,6 +289,8 @@ sub print_configure_form {
     <table cellspacing=0 cellpadding=4 border=0>
   );
 
+  my @unhandled_options = ();
+
   open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
     or die "Error parsing configure.in\n";
 
@@ -392,19 +298,23 @@ sub print_configure_form {
     chomp;
     ($type, $prename, $name, $comment) = split /$field_separator/;
     ($dummy,$dummy2,$help) = split /\s+/, $comment, 3;
-    #$help =~ s/\\\$/\$/g;
 
-    next if $name eq 'debug';
-
-    if ($type eq "header") {
-      print "</td></tr></table></td></tr>\n" if $inTable == 1;
+    if ($type eq 'header') {
       &header_option($comment);
-      print "<tr><td><table cellspacing=0 cellpadding=0 border=0><tr><td>\n";
-      $inTable = 1;
+    } elsif ($type eq 'unhandled') {
+      push @unhandled_options, $comment;
     } else {
       eval "&${type}_option(\"--$prename-$name\",\"$help\");";
     }
   }
+  header_option("Options not handled by Configurator"
+               ." (Add them to the script by hand)");
+  foreach $comment (@unhandled_options) {
+    $comment =~ s/\\\$/\$/g;
+    my ($dummy,$option,$help) = split /\s+/, $comment, 3;
+    print "<tr><td>&nbsp;$option</td><td>&nbsp;&nbsp;&nbsp;$help</td></tr>\n";
+  }
+
   print "</td></tr></table></td></tr>\n";
 
   print qq(
@@ -415,7 +325,12 @@ sub print_configure_form {
 	   <input type="Submit" value="Preview Build Script">
        </td></tr></table>
 	   </form>
+       <p>
+       <hr align=left width=600>
+           Send questions or comments to 
+           &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
 	  );
+
   print "\n</body>\n</html>\n";
 }
 
@@ -454,9 +369,12 @@ sub bool_or_string_option {
 
 sub header_option {
   my ($header) = @_;
+  print "</td></tr></table></td></tr>\n" if $inTable == 1;
   print qq(<tr bgcolor=$chrome_color><td colspan=3>
            <b><font face="Arial,Helvetica">
            $header
 	   </font></b></td></tr>
 	  );
+  print "<tr><td><table cellspacing=0 cellpadding=0 border=0><tr><td>\n";
+  $inTable = 1;
 }
