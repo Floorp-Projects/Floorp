@@ -376,6 +376,7 @@ nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
   ourView->CreateWidget(kWidgetCID);
   ourView->GetWidget(*getter_AddRefs(mTreeWidget));
   mIndentation = GetIndentation();
+  mRowHeight = GetRowHeight();
   return rv;
 }
 
@@ -383,7 +384,6 @@ NS_IMETHODIMP
 nsTreeBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
   if (!mView) {
-    mRowHeight = GetRowHeight();
     EnsureBoxObject();
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
@@ -474,7 +474,7 @@ nsTreeBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
       desiredRows = 0;
   }
 
-  aSize.height = GetRowHeight() * desiredRows;
+  aSize.height = mRowHeight * desiredRows;
 
   AddBorderAndPadding(aSize);
   AddInset(aSize);
@@ -588,7 +588,7 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
   if (recompute) {
     mInnerBox = GetInnerBox();
     if (!mHasFixedRowCount)
-      mPageCount = mRowHeight ? (mInnerBox.height / mRowHeight) : 0;
+      mPageCount = mInnerBox.height / mRowHeight;
 
     PRInt32 rowCount;
     mView->GetRowCount(&rowCount);
@@ -717,11 +717,9 @@ NS_IMETHODIMP nsTreeBodyFrame::GetSelection(nsITreeSelection** aSelection)
 
 NS_IMETHODIMP nsTreeBodyFrame::GetRowHeight(PRInt32* _retval)
 {
-  PRInt32 height = mRowHeight == 0 ? GetRowHeight() : mRowHeight;
-
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
-  *_retval = NSToCoordRound((float) height * t2p);
+  *_retval = NSToCoordRound((float) mRowHeight * t2p);
 
   return NS_OK;
 }
@@ -1034,10 +1032,6 @@ NS_IMETHODIMP nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, 
 {
   if (!mView)
     return NS_OK;
-
-  // Ensure we have a row height.
-  if (mRowHeight == 0)
-    mRowHeight = GetRowHeight();
 
   PRInt32 x, y;
   AdjustEventCoordsToBoxCoordSpace ( aX, aY, &x, &y );
@@ -1824,24 +1818,42 @@ PRInt32 nsTreeBodyFrame::GetRowHeight()
   if (rowContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           rowContext->GetStyleData(eStyleStruct_Position);
-    if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord)  {
-      PRInt32 val = myPosition->mHeight.GetCoordValue();
-      if (val > 0) {
-        // XXX Check box-sizing to determine if border/padding should augment the height
-        // Inflate the height by our margins.
-        nsRect rowRect(0,0,0,val);
-        const nsStyleMargin* rowMarginData = (const nsStyleMargin*)rowContext->GetStyleData(eStyleStruct_Margin);
-        nsMargin rowMargin;
-        rowMarginData->GetMargin(rowMargin);
-        rowRect.Inflate(rowMargin);
-        val = rowRect.height;
-      }
-      return val;
+
+    nscoord minHeight = 0;
+    if (myPosition->mMinHeight.GetUnit() == eStyleUnit_Coord)
+      minHeight = myPosition->mMinHeight.GetCoordValue();
+
+    nscoord height = 0;
+    if (myPosition->mHeight.GetUnit() == eStyleUnit_Coord)
+      height = myPosition->mHeight.GetCoordValue();
+
+    if (height < minHeight)
+      height = minHeight;
+
+    if (height > 0) {
+      float t2p;
+      mPresContext->GetTwipsToPixels(&t2p);
+      height = NSTwipsToIntPixels(height, t2p);
+      height += height % 2;
+      float p2t;
+      mPresContext->GetPixelsToTwips(&p2t);
+      height = NSIntPixelsToTwips(height, p2t);
+
+      // XXX Check box-sizing to determine if border/padding should augment the height
+      // Inflate the height by our margins.
+      nsRect rowRect(0,0,0,height);
+      const nsStyleMargin* rowMarginData = (const nsStyleMargin*)rowContext->GetStyleData(eStyleStruct_Margin);
+      nsMargin rowMargin;
+      rowMarginData->GetMargin(rowMargin);
+      rowRect.Inflate(rowMargin);
+      height = rowRect.height;
+      return height;
     }
   }
+
   float p2t;
   mPresContext->GetPixelsToTwips(&p2t);
-  return NSIntPixelsToTwips(19, p2t); // As good a default as any.
+  return NSIntPixelsToTwips(18, p2t); // As good a default as any.
 }
 
 PRInt32 nsTreeBodyFrame::GetIndentation()
@@ -1854,7 +1866,7 @@ PRInt32 nsTreeBodyFrame::GetIndentation()
     const nsStylePosition* myPosition = (const nsStylePosition*)
           indentContext->GetStyleData(eStyleStruct_Position);
     if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord)  {
-      PRInt32 val = myPosition->mWidth.GetCoordValue();
+      nscoord val = myPosition->mWidth.GetCoordValue();
       return val;
     }
   }
@@ -1916,16 +1928,13 @@ NS_IMETHODIMP nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
 
   PRBool clipState = PR_FALSE;
   
-  // Update our page count, our available height and our row height.
-  PRInt32 oldRowHeight = mRowHeight;
-  PRInt32 oldPageCount = mPageCount;
-  mRowHeight = GetRowHeight();
+  // Update our available height and our page count.
   mInnerBox = GetInnerBox();
-
+  PRInt32 oldPageCount = mPageCount;
   if (!mHasFixedRowCount)
     mPageCount = mInnerBox.height/mRowHeight;
 
-  if (mRowHeight != oldRowHeight || oldPageCount != mPageCount) {
+  if (oldPageCount != mPageCount) {
     // Schedule a ResizeReflow that will update our page count properly.
     nsBoxLayoutState state(mPresContext);
     MarkDirty(state);
@@ -2245,8 +2254,8 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
 
       nsRect imageSize(0,0,0,0);
 
-      PRInt32 lineX = currX;
-      PRInt32 lineY = (aRowIndex - mTopRowIndex) * mRowHeight;
+      nscoord lineX = currX;
+      nscoord lineY = (aRowIndex - mTopRowIndex) * mRowHeight;
 
       // Compute the maximal level to paint.
       PRInt32 maxLevel = level;
@@ -3152,7 +3161,7 @@ nsTreeBodyFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex)
 NS_IMETHODIMP
 nsTreeBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
-  if (!mRowHeight || !EnsureScrollbar())
+  if (!EnsureScrollbar())
     return NS_ERROR_UNEXPECTED;
 
   float t2p;
