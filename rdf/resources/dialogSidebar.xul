@@ -1,61 +1,84 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!DOCTYPE window> 
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="Init();">
 
-<html:script src="dialogSidebar.js" />  
+<html:script src="resource://res/rdf/dialogSidebar.js" />
 
-Current My Sidebar
-<html:div>
-<box align="horizontal">
+<box align="vertical">
 
+  <html:div>
+    Current Panels
+  </html:div>
 
-<html:form name="one">
-   <html:select name="two" id="selectList" size="10" multiple="true">
-   </html:select>
+  <box align="horizontal">
 
+    <box align="vertical">
+      <spring flex="50%"/>
+      <html:button  onclick="moveUp()">
+        <html:div>Move Up</html:div>
+      </html:button>
+      <html:button  onclick="moveDown()">
+        <html:div>Move Down</html:div>
+      </html:button>
+      <spring flex="50%"/>
+    </box>
 
-</html:form>
+    <html:form name="one">
+      <html:select name="two" id="selectList" size="10">
+      </html:select>
+    </html:form>
 
+    <box align="vertical">
+      <spring flex="50%"/>
+      <html:button  onclick="">
+        <html:div>Customize</html:div>
+      </html:button>
+      <html:button  onclick="deleteOption()">
+        <html:div>Remove</html:div>
+      </html:button>
+      <spring flex="50%"/>
+    </box>
 
-	<box align="vertical">
-	
-			      <spring flex="100%"/>
-			      <html:button  style="width:144px; height:15px;" onclick="moveUp()">
-		   			<html:div>Move Up</html:div>
-		   		</html:button>
-		   		<spring style="width:15px"/>
-			      <html:button  style="width:108px; height:15px;" onclick="moveDown()">
-		   				<html:div>Move Down</html:div>
-		   		</html:button>
-				<html:button  style="width:108px; height:15px;"  onclick="dump('here');deleteOption()">
-		   				<html:div>Remove</html:div>
-		   		</html:button>
-				<spring style="width:15px"/>
-				<html:button  style="width:108px; height:15px;" onclick="parent.frames[1].location.href = 'about:blank'">
-		   				<html:div>Customize</html:div>
-		   		</html:button>
-		<!--		<html:button  style="width:108px; height:15px;" onclick="writeRDF('New Panel','http://foo.com/content.html','http://foo.com/customize.html',0)">
-		   				<html:div>Add</html:div>
-		   		</html:button>
-					<html:button  style="width:108px; height:15px;" onclick="writeRDF('New Panel','http://foo.com/content.html','http://foo.com/customize.html',1)">
-		   				<html:div>Remove</html:div>
-		   		</html:button>
-			
-				
-					<html:button  style="width:108px; height:15px;" onclick="DumpIt()">
-		   				<html:div>RemoveIt</html:div>
-		   		</html:button>  -->
+  </box>
 
-				
-	</box>
+  <html:hr/>
+
+  <html:div>
+    Select a Panel to Add
+  </html:div>
+
+  <box align="horizontal" height="100%">
+
+    <html:iframe id="dialog"  scrolling="auto" resize="yes" height="90%" src="resource://res/rdf/dialog.xul"/>
+
+    <box align="vertical">
+      <spring flex="500%"/>
+      <html:button  onclick="Addit()" flex="100%">
+        <html:div>Add</html:div>
+      </html:button>
+      <html:button  onclick="" flex="100%">
+        <html:div>Preview ...</html:div>
+      </html:button>
+      <spring flex="50%"/>
+    </box>
+
+  </box> 
+
+  <html:hr/>
+
+  <box align="horizontal">
+    <spring flex="100%"/>
+    <html:button onclick="Cancel();">Cancel</html:button>
+    <html:button onclick="Save();">Save</html:button>
+  </box>
+
 </box>
-
-</html:div>
 
 </window>

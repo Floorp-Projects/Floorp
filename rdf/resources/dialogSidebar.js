@@ -4,62 +4,48 @@
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-// the current profile directory
-// XXX obviously, this shouldn't be hard-coded
-var profiledir = 'resource:/res/rdf/';
+var sidebar = new Object;
 
-
-// the location of the flash registry.
-var sidebardb = profiledir + 'sidebar-browser.rdf';
-//var sidebardb = 'file:///C:/matt/rdf/sidebar-browser.rdf';
-var sidebar_resource = 'NC:BrowserSidebarRoot';
-
-function dumpTree(node, depth) {
-  var inde
-  nt = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
-  var kids = node.childNodes;
-  dump(indent.substr(indent.length - depth*2));
-
-  // Print your favorite attributes here
-  dump(node.nodeName)
-  dump(" "+node.getAttribute('id'));
-  dump("\n");
-
-  for (var ii=0; ii < kids.length; ii++) {
-    dumpTree(kids[ii], depth + 1);
-  }
-}
-
-function Init(sidebardb, sidebar_resource)
+function Init()
 {
- dump("here we go \n");
-  // Initialize the Sidebar
+  sidebar.db       = window.arguments[0];
+  sidebar.resource = window.arguments[1];
 
-  // Install all the datasources named in the Flash Registry into
-  // the tree control. Datasources are listed as members of the
-  // NC:FlashDataSources sequence, and are loaded in the order that
-  // they appear in that sequence.
-  var registry = RDF.GetDataSource(sidebardb);
+ dump("Sidebar Customize Init("+sidebar.db+",\n                       "+sidebar.resource+")\n");
+  var registry;
+  try {
+    // First try to construct a new one and load it
+    // synchronously. nsIRDFService::GetDataSource() loads RDF/XML
+    // asynchronously by default.
+    registry = Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
+    registry = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
-  // Create a 'container' wrapper around the sidebar_resources
+    var remote = registry.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    remote.Init(sidebar.db); // this will throw if it's already been opened and registered.
+
+    // read it in synchronously.
+    remote.Refresh(true);
+  }
+  catch (ex) {
+    // if we get here, then the RDF/XML has been opened and read
+    // once. We just need to grab the datasource.
+    registry = RDF.GetDataSource(sidebar.db);
+  }
+
+  // Create a 'container' wrapper around the sidebar.resources
   // resource so we can use some utility routines that make access a
   // bit easier.
   var sb_datasource = Components.classes['component://netscape/rdf/container'].createInstance();
   sb_datasource = sb_datasource.QueryInterface(Components.interfaces.nsIRDFContainer);
-
-  sb_datasource.Init(registry, RDF.GetResource(sidebar_resource));
+  sb_datasource.Init(registry, RDF.GetResource(sidebar.resource));
   
   var sideoption = document.getElementById('selectList');
 
   // Now enumerate all of the flash datasources.
-  dump(sb_datasource.GetElements() + '\n');
   var enumerator = sb_datasource.GetElements();
   var count = 0;
-  var countTotal = sb_datasource.GetCount();
-  dump("Start Get:" + countTotal + "\n");
   while (enumerator.HasMoreElements()) {
     count = ++count;
-	dump(count + "\n");
     var service = enumerator.GetNext();
     service = service.QueryInterface(Components.interfaces.nsIRDFResource);
 
@@ -156,16 +142,16 @@ function moveUp() {
 }
    
 function moveDown() {
-    var list = document.getElementById('selectList');	
-	var listSelect = list.selectedIndex;
-	dump("list\n" + listSelect);	
-	if (list.selectedIndex != -1) {
-		var listOption = list.childNodes.item(listSelect);
-		var listOptionBefore = list.childNodes.item(listSelect+1).cloneNode(true);
-		list.remove(listSelect+1);
-		list.insertBefore(listOptionBefore, listOption);
-		dump("\n" + listOption + "\n");
-	 }
+  var list = document.getElementById('selectList');	
+  var listSelect = list.selectedIndex;
+  dump("list\n" + listSelect);	
+  if (list.selectedIndex != -1) {
+    var listOption = list.childNodes.item(listSelect);
+    var listOptionBefore = list.childNodes.item(listSelect+1).cloneNode(true);
+    list.remove(listSelect+1);
+    list.insertBefore(listOptionBefore, listOption);
+    dump("\n" + listOption + "\n");
+  }
 }
 
 function deleteOption()
@@ -278,22 +264,3 @@ function writeRDF(title,content,customize,append)
     datasource.Flush();
     dump("wrote " + FileURL + " back to disk.\n");
 }
-
-
-// To get around "window.onload" not working in viewer.
-
-
-function Boot()
-{
-    var root = document.documentElement;
-	dump("booting \n");
-    if (root == null) {
-        setTimeout(Boot, 0);
-    }
-    else {
-        Init(sidebardb, sidebar_resource);
-    }
-}
-
-setTimeout('Boot()', 0);
-dump("finished\n");
