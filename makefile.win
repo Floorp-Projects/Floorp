@@ -88,7 +88,7 @@ DIRS = \
   xpfe				\
   xpinstall                     \
   extensions			\
-!if !defined(DISABLE_MAILNEWS) && !defined(NECKO)
+!if !defined(DISABLE_MAILNEWS)
   mailnews			\
 !endif
 !endif
