@@ -202,11 +202,11 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
     NS_ENSURE_ARG(printProgressParams);
     NS_ENSURE_ARG(notifyOnOpen);
 
+    *notifyOnOpen = PR_FALSE;
     if (mPrintProgress) 
     {
         *webProgressListener = nsnull;
         *printProgressParams = nsnull;
-        *notifyOnOpen        = PR_FALSE;
         return NS_ERROR_FAILURE;
     }
 
@@ -221,7 +221,6 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
     rv = prtProgressParams->QueryInterface(NS_GET_IID(nsIPrintProgressParams), (void**)printProgressParams);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *notifyOnOpen = PR_FALSE;
     if (printProgressParams) 
     {
         nsCOMPtr<nsIDOMWindowInternal> parentDOMIntl(do_QueryInterface(parent));
@@ -238,6 +237,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
             mPrintProgress->OpenProgressDialog(parentDOMIntl, 
                                                isForPrinting?kPrintProgressDialogURL:kPrtPrvProgressDialogURL, 
                                                *printProgressParams, openDialogObserver, notifyOnOpen);
+            *notifyOnOpen = PR_TRUE;
         }
     }
 
