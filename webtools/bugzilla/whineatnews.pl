@@ -32,19 +32,24 @@ require "globals.pl";
 
 ConnectToDatabase();
 
-SendSQL("select bug_id,login_name from bugs,profiles where " .
+SendSQL("select bug_id,short_desc,login_name from bugs,profiles where " .
         "bug_status = 'NEW' and to_days(now()) - to_days(delta_ts) > " .
         Param('whinedays') . " and userid=assigned_to order by bug_id");
 
 my %bugs;
+my %desc;
 my @row;
 
 while (@row = FetchSQLData()) {
-    my ($id, $email) = (@row);
+    my ($id, $desc, $email) = (@row);
     if (!defined $bugs{$email}) {
         $bugs{$email} = [];
     }
+    if (!defined $desc{$email}) {
+        $desc{$email} = [];
+    }
     push @{$bugs{$email}}, $id;
+    push @{$desc{$email}}, $desc;
 }
 
 
@@ -59,7 +64,8 @@ foreach my $email (sort (keys %bugs)) {
     my $msg = PerformSubsts($template, \%substs);
 
     foreach my $i (@{$bugs{$email}}) {
-        $msg .= "  ${urlbase}show_bug.cgi?id=$i\n"
+        $msg .= "  " . shift(@{$desc{$email}}) . "\n";
+        $msg .= "    -> ${urlbase}show_bug.cgi?id=$i\n";
     }
 
     my $sendmailparam = Param('sendmailnow') ? '' : "-ODeliveryMode=deferred";
