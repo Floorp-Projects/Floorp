@@ -596,6 +596,8 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
            mDocShell->SetAllowPlugins(aValue);
         }
+        break;
+
     default:
         return NS_ERROR_INVALID_ARG;
   
