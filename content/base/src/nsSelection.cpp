@@ -1514,8 +1514,10 @@ nsDOMSelection::ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 a
   rv = shell->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = encoder->Init(doc, aFormatType,
-                     aFlags);
+  // Flags should always include OutputSelectionOnly if we're coming from here:
+  aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
+
+  rv = encoder->Init(doc, aFormatType, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder->SetSelection(this);
@@ -1625,8 +1627,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
 {
   if (!aNewFocus)
     return NS_ERROR_NULL_POINTER;
-  if (GetBatching())
-    return NS_ERROR_FAILURE;
+
   STATUS_CHECK_RETURN_MACRO();
 
   if (mLimiter )
@@ -1688,7 +1689,10 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
         mDomSelections[index]->Extend(domNode, aContentOffset);
     }
   }
-    
+
+  // Don't notify selection listeners if batching is on:
+  if (GetBatching())
+    return NS_OK;
   return NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
 }
 
