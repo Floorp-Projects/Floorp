@@ -2647,7 +2647,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 
     nsAString& firstFourChars = Substring(sigData, 0, 4);
     
-    if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n")) ||
+    if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n"))) ||
           firstFourChars.Equals(NS_LITERAL_STRING("-- \r")))
     {
       sigOutput.AppendWithConversion(dashes);
