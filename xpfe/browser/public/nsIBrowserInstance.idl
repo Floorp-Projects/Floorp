@@ -36,6 +36,9 @@ interface nsIBrowserInstance : nsISupports {
     boolean startPageCycler();
     attribute boolean cmdLineURLUsed;
     
+    // XXXjag
+    void setDefaultCharacterSet(in wstring aCharSet);
+
     // Infrastructure.
     void init();
     void getContentDocShell(out nsIDocShell aDocShell);

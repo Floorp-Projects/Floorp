@@ -446,6 +446,33 @@ nsBrowserInstance::~nsBrowserInstance()
   Close();
 }
 
+NS_IMETHODIMP
+nsBrowserInstance::SetDefaultCharacterSet(const PRUnichar *aCharset)
+{
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+
+  if (!globalObj)
+   return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+
+  if (docShell) {
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIMarkupDocumentViewer> markupCV(do_QueryInterface(childCV));
+
+    if (markupCV) {
+      NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
+    }
+  }
+  return NS_OK;
+}
+
 void
 nsBrowserInstance::ReinitializeContentWindow()
 {
