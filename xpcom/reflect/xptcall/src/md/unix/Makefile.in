@@ -111,7 +111,6 @@ ASFILES		= \
 		  $(NULL)
 endif
 
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
@@ -119,3 +118,15 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../..
+
+ifeq ($(OS_ARCH), IRIX)
+# The assembler on IRIX (6.3 only?) seems to have trouble with the default command,
+# but works fine if we first copy the header and source file into the current dir.
+$(OBJDIR)/xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
+	@rm -f ./xptcstubsdef.inc
+	@cp $(DIST)/include/xptcstubsdef.inc .
+	@if test "$(DEPTH)" != "$(topsrcdir)"; then rm -f ./xptcstubs_asm_irix.s; cp $(srcdir)/xptcstubs_asm_irix.s .; else true; fi
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_irix.s
+	@rm -f ./xptcstubsdef.inc
+	@if test "$(DEPTH)" != "$(topsrcdir)"; then rm -f ./xptcstubs_asm_irix.s; else true; fi
+endif
