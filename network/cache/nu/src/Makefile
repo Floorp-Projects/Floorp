@@ -41,6 +41,8 @@ CPPSRCS	= nsCacheObject.cpp 	\
 		  nsBkgThread.cpp		\
 		  nsCacheBkgThd.cpp		\
 		  CacheStubs.cpp		\
+		  nsFileStream.cpp		\
+		  nsMemStream.cpp		\
 	 	  $(NULL)
 
 REQUIRES = dbm nspr pref xpcom 

@@ -28,6 +28,8 @@
 
 static const PRUint32 kCACHE_VERSION = 5;
 
+class nsStream;
+
 class nsCacheObject //: public nsISupports
 {
 
@@ -135,6 +137,7 @@ protected:
     PRUint32        m_PostDataLen;
     PRInt16         m_Module;
     PRUint32        m_Size;
+    nsStream*       m_pStream;
     char*           m_URL;
     
 

@@ -24,6 +24,8 @@
 #include "nsCacheTrace.h"
 #include "nsCacheModule.h"
 #include "nsCacheManager.h"
+#include "nsStream.h"
+
 /* 
  * nsCacheObject
  *
@@ -152,6 +154,7 @@ nsCacheObject::nsCacheObject():
     m_PageServicesURL(new char[1]),
     m_PostData(new char[1]),
     m_PostDataLen(0),
+    m_pStream(0),
     m_URL(new char[1]) 
 {
     Init();
@@ -183,6 +186,8 @@ nsCacheObject::~nsCacheObject()
         delete[] m_PostData;
     if (m_URL)
         delete[] m_URL;
+    if (m_pStream)
+        delete m_pStream;
 }
 
 nsCacheObject::nsCacheObject(const nsCacheObject& another):
@@ -196,6 +201,7 @@ nsCacheObject::nsCacheObject(const nsCacheObject& another):
     m_PostDataLen(another.m_PostDataLen),
     m_PostData(new char[another.m_PostDataLen+1]),
     m_URL(new char[PL_strlen(another.m_URL)+1]), 
+    m_pStream(0),
     m_pInfo(0) /* Should this be copied as well? */
 {
     PL_strncpy(m_Charset, another.m_Charset, PL_strlen(another.m_Charset));
@@ -226,6 +232,7 @@ nsCacheObject::nsCacheObject(const char* i_url):
     m_PostDataLen(0),
     m_URL(new char[PL_strlen(i_url)+1]), 
     m_Module(-1),
+    m_pStream(0),
     m_pInfo(0)
 {
     Init();
@@ -510,16 +517,22 @@ void nsCacheObject::PostData(const char* i_data, const PRUint32 i_Len)
 
 PRUint32 nsCacheObject::Read(char* o_Buffer, PRUint32 len)
 {
-    PR_ASSERT(m_Module >=0);
-    if (0 <= m_Module)
+    if (!m_pStream)
     {
-        nsCacheModule* pModule = nsCacheManager::GetInstance()->GetModule(m_Module);
-        if (pModule)
+        PR_ASSERT(m_Module >=0);
+        if (0 <= m_Module)
         {
-            return pModule->Read(this, o_Buffer, len);
+            nsCacheModule* pModule = nsCacheManager::GetInstance()->GetModule(m_Module);
+            if (pModule)
+            {
+                m_pStream = pModule->GetStreamFor(this);
+                if (m_pStream)
+                    return m_pStream->Read(o_Buffer, len);
+            }
         }
+        return 0;
     }
-    return 0;
+    return m_pStream->Read(o_Buffer, len);
 }
 
 #if 0
@@ -548,14 +561,20 @@ const char* nsCacheObject::Trace() const
 
 PRUint32 nsCacheObject::Write(const char* i_Buffer, const PRUint32 len)
 {
-    PR_ASSERT(m_Module >=0);
-    if (0 <= m_Module)
+    if (!m_pStream)
     {
-        nsCacheModule* pModule = nsCacheManager::GetInstance()->GetModule(m_Module);
-        if (pModule)
-        {   
-            return pModule->Write(this, i_Buffer, len);
+        PR_ASSERT(m_Module >=0);
+        if (0 <= m_Module)
+        {
+            nsCacheModule* pModule = nsCacheManager::GetInstance()->GetModule(m_Module);
+            if (pModule)
+            {   
+                m_pStream = pModule->GetStreamFor(this);
+                if (m_pStream)
+                    return m_pStream->Write(i_Buffer, len);
+            }
         }
+        return 0;
     }
-    return 0;
+    return m_pStream->Write(i_Buffer, len);
 }
