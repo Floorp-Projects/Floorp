@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -27,6 +27,9 @@ use diagnostics;
 use strict;
 use CGI "param";
 use AnyDBM_File;
+
+use lib qw(.);
+
 require "globals.pl";
 require "CGI.pl";
 

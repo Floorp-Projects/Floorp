@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,6 +24,8 @@
 use diagnostics;
 use strict;
 
+use lib qw(.);
+
 require "CGI.pl";
 
 if (!defined $::FORM{'attach_id'}) {
@@ -43,7 +45,7 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
+if (!detaint_natural($::FORM{attach_id})) {
     DisplayError("Attachment ID should be numeric.");
     exit;
 }

@@ -55,13 +55,40 @@ foreach my $file (@testitems) {
     }
     my $file_line1 = <FILE>;
     close (FILE);
+
+    $file =~ m/.*\.(.*)/;
+    my $ext = $1;
+
     if ($file_line1 !~ /\/usr\/bonsaitools\/bin\/perl/) {
         ok(1,"$file does not have a shebang");	
     } else {
-        if ($file_line1 =~ m#/usr/bonsaitools/bin/perl -w#) {
-            ok(1,"$file uses -w");
+        my $flags;
+        if ($file eq "processmail") {
+            # special case processmail, which is tainted checked
+            $flags = "wT";
+        } elsif (!defined $ext || $ext eq "pl") {
+            # standalone programs (eg syncshadowdb) aren't taint checked yet
+            $flags = "w";
+        } elsif ($ext eq "pm") {
+            ok(0, "$file is a module, but has a shebang");
+            next;
+        } elsif ($ext eq "cgi") {
+            # cgi files must be taint checked, but only the user-accessible
+            # ones have been checked so far
+            if ($file =~ m/^edit/) {
+                $flags = "w";
+            } else {
+                $flags = "wT";
+            }
         } else {
-            ok(0,"$file is MISSING -w --WARNING");
+            ok(0, "$file has shebang but unknown extension");
+            next;
+        }
+
+        if ($file_line1 =~ m#/usr/bonsaitools/bin/perl -$flags#) {
+            ok(1,"$file uses -$flags");
+        } else {
+            ok(0,"$file is MISSING -$flags --WARNING");
         }
     }
 }

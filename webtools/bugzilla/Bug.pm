@@ -1,4 +1,3 @@
-#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -75,10 +74,12 @@ sub initBug  {
   my $self = shift();
   my ($bug_id, $user_id) = (@_);
 
-
-  if ( (! defined $bug_id) || (!$bug_id) ) {
-    # no bug number given
-    return {};
+  my $old_bug_id = $bug_id;
+  if ((! defined $bug_id) || (!$bug_id) || (!&::detaint_natural($bug_id))) {
+      # no bug number given
+      $self->{'bug_id'} = $old_bug_id;
+      $self->{'error'} = "InvalidBugId";
+      return $self;
   }
 
 # default userid 0, or get DBID if you used an email address

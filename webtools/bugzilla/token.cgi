@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -27,6 +27,8 @@
 # Make it harder for us to do dangerous things in Perl.
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";

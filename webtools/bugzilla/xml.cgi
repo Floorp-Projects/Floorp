@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -23,10 +23,13 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
+
 use Bug;
 require "CGI.pl";
 
-if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+(,\d+)*\s*$/) {
+if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
   print "Content-type: text/html\n\n";
   PutHeader("Display as XML");
   print "<FORM METHOD=GET ACTION=\"xml.cgi\">\n";

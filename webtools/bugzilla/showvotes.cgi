@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,6 +24,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 
@@ -61,7 +63,7 @@ if (defined $::FORM{'voteon'}) {
 
 # Make sure the user ID is a positive integer representing an existing user.
 if (defined $::FORM{'user'}) {
-  $::FORM{'user'} =~ /^([1-9][0-9]*)$/
+  detaint_natural($::FORM{'user'})
     || DisplayError("The user number is invalid.") 
     && exit;
   SendSQL("SELECT 1 FROM profiles WHERE userid = $::FORM{'user'}");

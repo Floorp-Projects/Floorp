@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl -w
+#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -25,6 +25,8 @@
 
 use diagnostics;
 use strict;
+
+use lib qw(.);
 
 require "CGI.pl";
 use Date::Parse;
@@ -783,6 +785,11 @@ sub GenerateSQL {
                     die "Internal error: $errstr" if $chart < 0;
                     return Error($errstr);
                 }
+
+                # This is either from the internal chart (in which case we
+                # already know about it), or it was in %chartfields, so it is
+                # a valid field name, which means that its ok.
+                trick_taint($f);
                 $q = SqlQuote($v);
                 my $func;
                 $term = undef;
@@ -1067,7 +1074,15 @@ my @fields = ("bugs.bug_id", "bugs.groupset");
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
-        push(@fields, "$::key{$c}");
+        # The value we are actually using is $::key{$c}, which was created
+        # using the DefCol() function earlier.  We test for the existance
+        # of $::needsquote{$c} to find out if $c is a legitimate key in the
+        # hashes that were defined by DefCol().  If $::needsquote{$c} exists,
+        # then $c is valid and we can use it to look up our key.
+        # If it doesn't exist, then we know the user is screwing with us   
+        # and we'll just skip it.
+        trick_taint($c);
+        push(@fields, $::key{$c});
     }
 }
 
@@ -1142,6 +1157,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     }
     die "Invalid order: $::FORM{'order'}" unless
         $::FORM{'order'} =~ /^([a-zA-Z0-9_., ]+)$/;
+    $::FORM{'order'} = $1; # detaint this, since we've checked it
 
     # Extra special disgusting hack: if we are ordering by target_milestone,
     # change it to order by the sortkey of the target_milestone first.

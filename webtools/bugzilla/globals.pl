@@ -194,8 +194,27 @@ sub SqlLog {
     }
 }
 
+# This is from the perlsec page, slightly modifed to remove a warning
+# From that page:
+#      This function makes use of the fact that the presence of
+#      tainted data anywhere within an expression renders the
+#      entire expression tainted.
+# Don't ask me how it works...
+sub is_tainted {
+    return not eval { my $foo = join('',@_), kill 0; 1; };
+}
+
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
+
+    # Don't use DBI's taint stuff yet, because:
+    # a) We don't want out vars to be tainted (yet)
+    # b) We want to know who called SendSQL...
+    # Is there a better way to do b?
+    if (is_tainted($str)) {
+        die "Attempted to send tainted string to the database";
+    }
+
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
