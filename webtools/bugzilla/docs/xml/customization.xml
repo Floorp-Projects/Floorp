@@ -240,46 +240,55 @@
       <para>
         <command>bug/create/create.html.tmpl</command> and
         <command>bug/create/comment.txt.tmpl</command>:
-        You may wish to get bug submitters to give certain bits of structured
-        information, each in a separate input widget, for which there is not a
-        field in the database. The bug entry system has been designed in an
-        extensible fashion to enable you to define arbitrary fields and widgets,
-        and have their values appear formatted in the initial
-        Description, rather than in database fields. An example of this
-        is the mozilla.org 
-        <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?format=guided">guided 
-        bug submission form</ulink>.
+        You may not wish to go to the effort of creating custom fields in
+        Bugzilla, yet you want to make sure that each bug report contains
+        a number of pieces of important information for which there is not
+        a special field. The bug entry system has been designed in an
+        extensible fashion to enable you to add arbitrary HTML widgets,
+        such as drop-down lists or textboxes, to the bug entry page
+        and have their values appear formatted in the initial comment.
       </para>
+      
+      <para>  
+        An example of this is the mozilla.org 
+        <ulink url="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi?product=WorldControl&amp;format=guided">guided 
+        bug submission form</ulink>. The code for this comes with the Bugzilla
+        distribution as an example for you to copy. It can be found in the
+        files 
+        <filename>create-guided.html.tmpl</filename> and
+        <filename>comment-guided.html.tmpl</filename>.
+      </para>  
 
       <para>
-        To make this work, create a custom template for 
-        <filename>enter_bug.cgi</filename> (the default template, on which you
-        could base it, is <filename>create.html.tmpl</filename>),
-        and either call it <filename>create.html.tmpl</filename> or use a format and
-        call it <filename>create-&lt;formatname&gt;.html.tmpl</filename>.
-        Put it in the <filename class="directory">custom/bug/create</filename>
-        directory. In it, add widgets for each piece of information you'd like
+        So to use this feature, create a custom template for 
+        <filename>enter_bug.cgi</filename>. The default template, on which you
+        could base it, is 
+        <filename>custom/bug/create/create.html.tmpl</filename>.
+        Call it <filename>create-&lt;formatname&gt;.html.tmpl</filename>, and
+        in it, add widgets for each piece of information you'd like
         collected - such as a build number, or set of steps to reproduce.
       </para>
 
       <para>
         Then, create a template like 
-        <filename>custom/bug/create/comment.txt.tmpl</filename>, also named
-        after your format if you are using one, which
-        references the form fields you have created. When a bug report is
+        <filename>custom/bug/create/comment.txt.tmpl</filename>, and call it 
+        <filename>comment-&lt;formatname&gt;.txt.tmpl</filename>. This 
+        template should reference the form fields you have created using
+        the syntax <filename>[% form.&lt;fieldname&gt; %]</filename>. When a 
+        bug report is
         submitted, the initial comment attached to the bug report will be
         formatted according to the layout of this template.
       </para> 
 
       <para>
-        For example, if your enter_bug template had a field
+        For example, if your custom enter_bug template had a field
         <programlisting>&lt;input type="text" name="buildid" size="30"&gt;</programlisting>
         and then your comment.txt.tmpl had
         <programlisting>BuildID: [% form.buildid %]</programlisting>
-        then
+        then something like
         <programlisting>BuildID: 20020303</programlisting>
-        would appear in the initial checkin comment.
-      </para>        
+        would appear in the initial comment.
+      </para>            
     </section>          
     
 
