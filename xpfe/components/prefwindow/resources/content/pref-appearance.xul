@@ -42,7 +42,7 @@
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
    // the first elements in this array will be poked from chromeregistry loaded
    // overlays once overlays.rdf works properly 
-    var _elementIDs = ["generalStartupBrowser", "toolbarStyle", "showHideTooltips", "languageList"];
+    var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "languageList"];
 
     function Startup()
     {
@@ -90,7 +90,7 @@
     <!-- XXX -->
   </groupbox>
   
-  <groupbox id="toolbarStyleBox" orient="vertical">
+  <groupbox id="toolbarStyleBox" orient="vertical" style="display: none;">
     <label value="&showToolsLegend.label;"/>
     <radiogroup id="toolbarStyle" orient="vertical" align="start"
                 pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
