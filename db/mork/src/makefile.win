@@ -16,7 +16,7 @@
 # Reserved.
 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..
 MODULE= msgmork
 
 include <$(DEPTH)\config\config.mak>
