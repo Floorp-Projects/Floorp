@@ -70,12 +70,14 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE
 LLIBS=	 $(LLIBS) ole32.lib	\
-	 $(DIST)\lib\xpcom32.lib 
+	 $(DIST)\lib\xpcom32.lib \
+	 $(DIST)\lib\raptorbase.lib
 	
 
 LINCS=$(LINCS)  -I. \
 		-I$(PUBLIC)\mailnews   \
-                -I$(PUBLIC)\xpcom
+        -I$(PUBLIC)\xpcom		\
+		-I$(PUBLIC)\raptor
 
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen
