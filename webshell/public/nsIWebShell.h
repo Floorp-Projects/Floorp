@@ -109,12 +109,6 @@ public:
   
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode) = 0;
 
-  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup) = 0;
-
   /**
    * Notify the WebShellContainer that a contained webshell is
    * offering focus (for example if it finshed tabbing through its
