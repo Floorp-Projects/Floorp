@@ -108,7 +108,7 @@
                (dolist (action-signature (grammar-symbol-signature grammar token))
                  (push (cdr action-signature) type-stack)))
              (dolist (action-function-binding (gethash token (grammar-terminal-actions grammar)))
-               (push (funcall (cdr action-function-binding) token) value-stack))
+               (push (funcall (cdr action-function-binding) token-arg) value-stack))
              (push (transition-state transition) state-stack)
              (setq token nil))
             
