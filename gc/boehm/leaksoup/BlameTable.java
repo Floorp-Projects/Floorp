@@ -65,7 +65,7 @@ public class BlameTable {
 		return "error";
 	}
 	
-	static final String CVSBLAME_CGI = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?data=1&file=";
+	static final String CVSBLAME_CGI = "http://bonsai.mozilla.org/cvsblame.cgi?data=1&file=";
 
 	private static int parseInt(String str) {
 		int value = 0;

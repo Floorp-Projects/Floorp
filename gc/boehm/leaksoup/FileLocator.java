@@ -43,7 +43,7 @@ public class FileLocator {
 
 	static final String MOZILLA_BASE = "mozilla/";
 	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
-	static final String BONSAI_BASE = "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi?file=";
+	static final String BONSAI_BASE = "http://bonsai.mozilla.org/cvsblame.cgi?file=";
 
 	static final Hashtable fileTables = new Hashtable();
 	static final RevisionTable revisionTable = new RevisionTable();
