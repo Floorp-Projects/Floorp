@@ -1,8 +1,0 @@
-# GC exports.
-GC_add_roots
-GC_remove_roots
-GC_clear_roots
-GC_generic_init_threads
-GC_gcollect
-GC_stdout
-GC_stderr
