@@ -1228,6 +1228,8 @@ case "$target" in
     DSO_PIC_CFLAGS=
     MOZ_DEBUG_LDFLAGS='-g'
     COMPAQ_CXX=1
+    CC_VERSION=`$CC -V 2>&1 | awk '/ C / { print $3 }'`
+    CXX_VERSION=`$CXX -V 2>&1 | awk '/ C\+\+ / { print $3 }'`
     ;;
 
 
