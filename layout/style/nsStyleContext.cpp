@@ -1810,6 +1810,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   if (0 < cnt) {
     MapStyleData  data(this, aPresContext);
     mRules->EnumerateForwards(MapStyleRuleFont, &data);
+    if (mFont.mFlags & NS_STYLE_FONT_USE_FIXED) {
+      mFont.mFont = mFont.mFixedFont;
+    }
     mRules->EnumerateForwards(MapStyleRule, &data);
   }
   if (-1 == mDataCode) {
@@ -1852,6 +1855,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       if (0 < numRules) {
         MapStyleData  data(this, aPresContext);
         mRules->EnumerateForwards(MapStyleRuleFont, &data);
+        if (mFont.mFlags & NS_STYLE_FONT_USE_FIXED) {
+          mFont.mFont = mFont.mFixedFont;
+        }
         mRules->EnumerateForwards(MapStyleRule, &data);
       }
       // reset all font data for tables again
@@ -1890,9 +1896,6 @@ void StyleContextImpl::ForceUnique(void)
 
 void StyleContextImpl::RecalcAutomaticData(nsIPresContext* aPresContext)
 {
-  if (mFont.mFlags & NS_STYLE_FONT_USE_FIXED) {
-    mFont.mFont = mFont.mFixedFont;
-  }
   mSpacing.RecalcData(aPresContext, mColor.mColor);
 }
 
