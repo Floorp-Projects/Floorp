@@ -59,6 +59,11 @@ public:
   nsDOMCSSValueList(PRBool aCommaDelimited, PRBool aReadonly);
   virtual ~nsDOMCSSValueList();
 
+  /**
+   * Adds a value to this list.
+   * @retval PR_TRUE Adding the value succeeded
+   * @retval PR_FALSE The value could not be added (Out of memory)
+   */
   PRBool AppendCSSValue(nsIDOMCSSValue* aValue);
 
 private:
