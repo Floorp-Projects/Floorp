@@ -1919,8 +1919,6 @@ nsEventStatus nsXPFCCanvas::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * a
    * Update our internal structure based on this update
    */
 
-  Action(aCommand);
-
   return (Action(aCommand));
 }
 
