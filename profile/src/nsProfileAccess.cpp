@@ -1064,7 +1064,6 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 #if defined(XP_MAC)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
-        nsCAutoString temp; 
         NS_ConvertUCS2toUTF8 temp(profile);
         nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.get())));
         nsAutoString convertedProfName(NS_ConvertUTF8toUCS2(profileName).get());
