@@ -640,11 +640,18 @@ NS_METHOD nsWindow::Show(PRBool bState)
     // are we a toplevel window?
     if (mIsToplevel && mShell)
     {
+#ifdef DEBUG_pavlov
+      printf("nsWidget::Show %s (%p) bState = %i, mWindowType = %i\n",
+             mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+             bState, mWindowType);
+      g_print("nsWindow::Show(%i) toplevel, mWindowType = %i\n", bState, mWindowType);
+#endif
       // popup windows don't have vboxes
       if (mVBox)
         gtk_widget_show(mVBox);
 
       gtk_widget_show(mShell);
+
     }
   }
   // hide
@@ -722,38 +729,46 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
 NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-#if 0
+#ifdef DEBUG_pavlov
   printf("nsWidget::Resize %s (%p) to %d %d\n",
          mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
          aWidth, aHeight);
 #endif
 
-  // ignore resizes smaller than or equal to 1x1
+  // ignore resizes smaller than or equal to 1x1 for everything except not-yet-shown toplevel windows
   if (aWidth <= 1 || aHeight <= 1)
-    return NS_OK;
-  
+  {
+    if (mIsToplevel && mShell)
+    {
+      if (!GTK_WIDGET_VISIBLE(mShell))
+      {
+        aWidth = 1;
+        aHeight = 1;
+      }
+    }
+    else
+      return NS_OK;
+  }
+    
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
 
   if (mWidget) {
-    mWidget->allocation.width = aWidth;
-    mWidget->allocation.height = aHeight;
+    //    mWidget->allocation.width = aWidth;
+    //    mWidget->allocation.height = aHeight;
 
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
     {
-      mShell->allocation.width = aWidth;
-      mShell->allocation.height = aHeight;
+      //      mShell->allocation.width = aWidth;
+      //      mShell->allocation.height = aHeight;
 
       //      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
       gtk_widget_set_usize(mShell, aWidth, aHeight);
     }
 
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
-
-    if (aRepaint)
-      Invalidate(PR_FALSE);
   }
 
   return NS_OK;
