@@ -30,8 +30,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRBool       EvaluateString(const char *aScript, 
-                                      PRUint32 aScriptSize, 
+  virtual PRBool       EvaluateString(nsString& aScript, 
                                       const char *aURL,
                                       PRUint32 aLineNo,
                                       jsval *aRetValue);
