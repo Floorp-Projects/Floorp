@@ -390,7 +390,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
                     goto doneBad;
                 if (!js_TryMethod(cx, obj2, cx->runtime->atomState.toLocaleStringAtom, 0, NULL, &v))
                     goto doneBad;
-                str = JSVAL_TO_STRING(v);
+                str = js_ValueToString(cx, v);
             }
             else
                 str = (literalize ? js_ValueToSource : js_ValueToString)(cx, v);
@@ -493,10 +493,10 @@ array_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	       jsval *rval)
 {
     /*
-     *  Passing comma_space here as the separator. Need a way to get a
+     *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
      */
-    return array_join_sub(cx, obj, &comma_space, JS_FALSE, rval, JS_TRUE);
+    return array_join_sub(cx, obj, &comma, JS_FALSE, rval, JS_TRUE);
 }
 
 static JSBool
