@@ -1542,25 +1542,32 @@ PRInt32 nsNNTPProtocol::SendModeReader()
 
 PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 {
-	SetFlag(NNTP_READER_PERFORMED);
-
-	/* ignore the response code and continue
+  SetFlag(NNTP_READER_PERFORMED);
+  
+  /* ignore the response code and continue
 	 */
-    PRBool pushAuth;
-    nsresult rv = m_nntpServer->GetPushAuth(&pushAuth);
-    if (NS_SUCCEEDED(rv) && pushAuth)
+  PRBool pushAuth = PR_FALSE;
+  nsresult rv = NS_OK;
+
+  NS_ASSERTION(m_nntpServer, "no server, see bug #107797");
+  if (m_nntpServer) {
+    rv = m_nntpServer->GetPushAuth(&pushAuth);
+  }
+  if (NS_SUCCEEDED(rv) && pushAuth) {
 		/* if the news host is set up to require volunteered (pushed) authentication,
-		 * do that before we do anything else
-		 */
-		m_nextState = NNTP_BEGIN_AUTHORIZE;
-	else
+    * do that before we do anything else
+    */
+    m_nextState = NNTP_BEGIN_AUTHORIZE;
+  }
+  else {
 #ifdef HAVE_NNTP_EXTENSIONS
-		m_nextState = SEND_LIST_EXTENSIONS;
+    m_nextState = SEND_LIST_EXTENSIONS;
 #else
 		m_nextState = SEND_FIRST_NNTP_COMMAND;
 #endif  /* HAVE_NNTP_EXTENSIONS */
+  }
 
-	return(0);
+  return(0);
 }
 
 PRInt32 nsNNTPProtocol::SendListExtensions()
