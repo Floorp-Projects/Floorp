@@ -768,11 +768,14 @@ nsToolboxFrame::DragEnter(nsIDOMEvent* aDragEvent)
     nsAutoString toolbarFlavor(TOOLBAR_MIME);
     if (dragSession && (NS_OK == dragSession->IsDataFlavorSupported(&toolbarFlavor))) {
       dragSession->SetCanDrop(PR_TRUE);
+      rv = NS_ERROR_BASE; // consume event
     }
     
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
+  } else {
+    rv = NS_OK;
   }
-  return NS_OK;
+  return rv; 
 }
 
 
@@ -794,14 +797,13 @@ nsToolboxFrame::DragOver(nsIDOMEvent* aDragEvent)
       // and whether you can drop here
 
       dragSession->SetCanDrop(PR_TRUE);
-    } else {
-      rv = NS_ERROR_BASE; // event bubbles
+      rv = NS_ERROR_BASE; // consume event
     }
     
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 
-  // NS_ERROR_xxx means event is NOT consumed
+  // NS_OK means event is NOT consumed
   return rv; 
 }
 
@@ -810,7 +812,7 @@ nsToolboxFrame::DragOver(nsIDOMEvent* aDragEvent)
 nsresult
 nsToolboxFrame::DragExit(nsIDOMEvent* aDragEvent)
 {
-  return NS_OK; // consumes event
+  return NS_ERROR_BASE; // consumes event
 }
 
 
@@ -870,10 +872,6 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
                 stuffToPaste.SetString(str, len);
                 dragSession->SetCanDrop(PR_TRUE);
               }
-
-              // XXX This is where image support might go
-              //void * data;
-              //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
             }
           } // foreach drag item
         }
@@ -882,6 +880,6 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   } // if valid drag service
 
-  return NS_OK;
+  return NS_ERROR_BASE; // consume the event;
 }
 #endif
