@@ -39,7 +39,6 @@
 
 
 CSS_PROP(_moz_border_radius, VISUAL)
-CSS_PROP(_moz_compat_floater_margin, REFLOW)
 CSS_PROP(azimuth, AURAL)
 CSS_PROP(background, VISUAL)
 CSS_PROP(background_attachment, VISUAL)
