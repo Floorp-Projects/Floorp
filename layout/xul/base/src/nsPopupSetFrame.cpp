@@ -519,16 +519,14 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
     nsCOMPtr<nsIContent> childContent;
     mContent->ChildAt(i, *getter_AddRefs(childContent));
 
-    if (childContent.get() != aPopupContent) {
-      // Retrieve the menugenerated attribute.
-      nsAutoString value;
-      childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
-                                 value);
-      if (value == NS_LITERAL_STRING("true")) {
-        // Ungenerate this element.
-        childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
-                                     PR_TRUE);
-      }
+    // Retrieve the menugenerated attribute.
+    nsAutoString value;
+    childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
+                               value);
+    if (value == NS_LITERAL_STRING("true")) {
+      // Ungenerate this element.
+      childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
+                                   PR_TRUE);
     }
   }
 
