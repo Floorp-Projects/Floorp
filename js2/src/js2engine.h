@@ -268,7 +268,7 @@ public:
     
     // The execution stack for expression evaluation, should be empty
     // between statements.
-#define INITIAL_EXEC_STACK (40)
+#define INITIAL_EXEC_STACK (80)
 
     js2val *execStackLimit;
     js2val *execStack;

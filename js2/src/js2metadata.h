@@ -187,6 +187,8 @@ public:
     static void mark(const void *p)       { ((PondScum *)p)[-1].mark(); }
     static void markJS2Value(js2val v);
 
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue)  { ASSERT(false); }
+
 };
 
 class Attribute : public JS2Object {
@@ -563,10 +565,11 @@ public:
     DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
     FunctionWrapper *fWrap;
 
-    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
-
     virtual void markChildren();
     virtual ~SimpleInstance()            { }
+
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+
 };
 
 
@@ -584,6 +587,9 @@ public:
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
     virtual ~PrototypeInstance()            { }
+
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+
 };
 
 // Date instances are simple instances created by the Date class, they have an extra field 
@@ -644,7 +650,7 @@ public:
 // are added.
 class ArrayInstance : public PrototypeInstance {
 public:
-    ArrayInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+    ArrayInstance(JS2Metadata *meta, JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { setLength(meta, this, 0); }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
     virtual ~ArrayInstance()             { }

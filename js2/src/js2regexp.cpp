@@ -142,7 +142,7 @@ namespace MetaData {
 
             REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, toInt32(str->length()), meta->toBoolean(globalMultiline));
             if (match) {
-                PrototypeInstance *A = new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass);
+                PrototypeInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
                 result = OBJECT_TO_JS2VAL(A);
                 js2val matchStr = meta->engine->allocString(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
                 Multiname mname(&meta->world.identifiers[*meta->toString((long)0)], meta->publicNamespace);

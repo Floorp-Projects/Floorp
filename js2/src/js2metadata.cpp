@@ -3066,14 +3066,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
 
 /*** ECMA 3  Date Class ***/
-        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         defineLocalMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
  //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
 
 /*** ECMA 3  RegExp Class ***/
-        MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, &world.identifiers["RegExp"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["RegExp"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
         defineLocalMember(env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initRegExpObject(this);
@@ -3094,37 +3094,37 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initBooleanObject(this);
 
 /*** ECMA 3  Math Class ***/
-        MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Math"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
         defineLocalMember(env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initMathObject(this);
 
 /*** ECMA 3  Array Class ***/
-        MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, &world.identifiers["Array"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Array"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
 
 /*** ECMA 3  Error Classes ***/
-        MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, &world.identifiers["Error"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
         defineLocalMember(env, &world.identifiers["Error"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, &world.identifiers["EvalError"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["EvalError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
         defineLocalMember(env, &world.identifiers["EvalError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, &world.identifiers["RangeError"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["RangeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
         defineLocalMember(env, &world.identifiers["RangeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, &world.identifiers["ReferenceError"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["ReferenceError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
         defineLocalMember(env, &world.identifiers["ReferenceError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, &world.identifiers["SyntaxError"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["SyntaxError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
         defineLocalMember(env, &world.identifiers["SyntaxError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, &world.identifiers["TypeError"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["TypeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
         defineLocalMember(env, &world.identifiers["TypeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, &world.identifiers["UriError"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["UriError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
         defineLocalMember(env, &world.identifiers["UriError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initErrorObject(this);
@@ -3303,6 +3303,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         dynamicProperties->insert(e);
     }
 
+    void PrototypeInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue)
+    {
+        const DynamicPropertyMap::value_type e(*name, newValue);
+        dynamicProperties.insert(e);
+    }
+
     void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue)
     {
         // An index has to pass the test that :
@@ -3372,8 +3378,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
             else {
                 PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(container);
-                const DynamicPropertyMap::value_type e(*name, newValue);
-                pInst->dynamicProperties.insert(e);
+                pInst->writeProperty(this, name, newValue);
                 return true;
             }
         }
@@ -3982,6 +3987,7 @@ deleteClassProperty:
         GCMARKOBJECT(dateClass);
         GCMARKOBJECT(regexpClass);
         GCMARKOBJECT(mathClass);
+        GCMARKOBJECT(arrayClass);
         GCMARKOBJECT(errorClass);
         GCMARKOBJECT(evalErrorClass);
         GCMARKOBJECT(rangeErrorClass);
@@ -4644,9 +4650,9 @@ deleteClassProperty:
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
-        js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass->prototype, meta->arrayClass));
+        js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
         ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argumentsVal));
-	uint32 i;
+        uint32 i;
         for (i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
             ASSERT(plural->positional[i]->cloneContent);
             ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);

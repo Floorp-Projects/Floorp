@@ -223,7 +223,7 @@ namespace MetaData {
     // otherwise get a double value
     js2val JS2Engine::allocNumber(float64 x)
     {
-        uint32 i;
+        int32 i;
         js2val retval;
         if (JSDOUBLE_IS_INT(x, i) && INT_FITS_IN_JS2VAL(i))
             retval = INT_TO_JS2VAL(i);

@@ -398,14 +398,14 @@
                             pushNumber(z);
                     }
                 }
-	    } 
+            } 
         }
         break;
 
     case eSubtract: 
         {
-	    b = pop();
-	    a = pop();
+            b = pop();
+            a = pop();
             a = meta->toGeneralNumber(a);
             b = meta->toGeneralNumber(b);
             if (JS2VAL_IS_LONG(a)) {
