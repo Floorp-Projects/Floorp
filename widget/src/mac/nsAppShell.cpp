@@ -50,7 +50,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIWidget.h"
-#include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
 #include "nsToolKit.h"
 #include <Quickdraw.h>
