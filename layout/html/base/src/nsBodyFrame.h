@@ -60,6 +60,7 @@ public:
                          PRInt32&        aCursor);
 
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+  NS_IMETHOD ListTag(FILE* out) const;
 
   // nsIAnchoredItems
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
@@ -114,7 +115,7 @@ private:
 
   nsSize GetColumnAvailSpace(nsIPresContext& aPresContext,
                              const nsMargin& aBorderPadding,
-                             const nsSize&   aMaxSize);
+                             const nsHTMLReflowState& aReflowState);
 };
 
 #endif /* nsBodyFrame_h___ */
