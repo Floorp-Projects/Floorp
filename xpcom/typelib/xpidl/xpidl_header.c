@@ -691,7 +691,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call) {
      * If generated method has no arguments, output 'void' to avoid C legacy
      * behavior of disabling type checking.
      */
-    if (no_generated_args) {
+    if (no_generated_args && !as_call) {
         fputs("void", outfile);
     }
 
