@@ -273,6 +273,7 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
   var treeitem    = document.createElement ( "treeitem" );
   var treerow     = document.createElement ( "treerow" );
   var attrcell    = document.createElement ( "treecell" );
+  attrcell.setAttribute( "class", "propertylist" );
   attrcell.setAttribute( "value", name.toLowerCase() );
   treerow.appendChild ( attrcell );
   
@@ -293,8 +294,8 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
 function CreateCellWithField( name, value )
 {
   var valcell     = document.createElement ( "treecell" );
-  valcell.setAttribute ( "class", "value" );
-  valcell.setAttribute ( "treeallowevents", "true" );
+  valcell.setAttribute ( "class", "value propertylist" );
+  valcell.setAttribute ( "allowevents", "true" );
   var valField    = document.createElement ( "html:input" );
   valField.setAttribute ( "type", "text" );
   if ( name  ) valField.setAttribute ( "id", name );

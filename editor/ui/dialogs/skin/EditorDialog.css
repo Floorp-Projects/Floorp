@@ -142,11 +142,6 @@ spring.bigspacer {
       height: 10px;
 }
 
-box.tabpanel {
-  border: 1px outset #CCCCDD;
-  padding: 10px;
-}
-
 img.AlignIcon {
   margin-right: 5px;
   /* To make all align the same */
@@ -189,49 +184,14 @@ div#tagLabel {
 tree.AttributesTree {
   min-width : 200px;
   min-height: 200px;
-  border: 1px inset #CCCCCC;
-}
-
-tree.AttributesTree > treehead > treerow > treecell, 
-tree.AttributesTree > treechildren > treerow > treecell treecell {
-  color         : #000000;
-  padding-left  : 10px;
-  padding-top   : 2px;
-  padding-bottom: 2px;
-  padding-right : 2px;
-}
-
-tree.AttributesTree > treechildren > treeitem > treerow > treecell {
-    border-right    : 1px solid #CCCCCC;
-    border-bottom   : 1px solid #CCCCCC;
-    color           : #000000;
-    background-color: #FFFFFF;
-    padding-left    : 10px;
-    padding-top     : 2px;
-    padding-bottom  : 2px;
-    padding-right   : 2px;
 }
 
 tree.AttributesTree > treechildren > treeitem > treerow > treecell.value {
-    border-bottom   : 1px solid #CCCCCC;
-    color           : #000000;
-    background-color: #FFFFFF;
     padding-left    : 0px;
     padding-top     : 0px;
     padding-bottom  : 0px;
     padding-right   : 0px;
     margin-left     : 0px;
-}
-
-
-tree.AttributesTree > treechildren > treeitem > treerow [selected ~= false] {
-    color           : #000000;
-    background-color: #FFFFFF;
-}
-
-tree.AttributesTree > treechildren > treeitem > treerow [selected ~= true] {
-    color           : #000000;
-    background-color: #E5E5E5;
 }
 
 input.AttributesCell {
