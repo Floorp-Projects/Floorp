@@ -973,6 +973,7 @@
     "window.pkcs11", \
     "window.print", \
     "window.prompt", \
+    "window.prompter", \
     "window.releaseevents", \
     "window.resizeby", \
     "window.resizeto", \

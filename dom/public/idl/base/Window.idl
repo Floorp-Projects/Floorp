@@ -12,7 +12,7 @@ interface Window {
         readonly attribute  Window top;
         readonly replaceable attribute  Window _content;
         readonly replaceable attribute  xpidl nsISidebar sidebar;
-        readonly replaceable attribute  xpidl nsIPrompt prompt;
+        readonly replaceable attribute  xpidl nsIPrompt prompter;
 
         readonly attribute  BarProp menubar;
         readonly attribute  BarProp toolbar;

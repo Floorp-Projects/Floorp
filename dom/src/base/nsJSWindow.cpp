@@ -96,7 +96,7 @@ enum Window_slots {
   WINDOW_TOP = -8,
   WINDOW__CONTENT = -9,
   WINDOW_SIDEBAR = -10,
-  WINDOW_PROMPT = -11,
+  WINDOW_PROMPTER = -11,
   WINDOW_MENUBAR = -12,
   WINDOW_TOOLBAR = -13,
   WINDOW_LOCATIONBAR = -14,
@@ -969,10 +969,10 @@ WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// prompt Property Getter
+// prompter Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowpromptGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowprompterGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
 
@@ -985,13 +985,13 @@ WindowpromptGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPTER, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIPrompt* prop;
-          rv = a->GetPrompt(&prop);
+          rv = a->GetPrompter(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIPrompt), cx, obj, vp);
@@ -1002,10 +1002,10 @@ WindowpromptGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// prompt Property Setter
+// prompter Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowpromptSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+WindowprompterSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
 
@@ -1018,13 +1018,13 @@ WindowpromptSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPTER, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
 
-  JS_DefineProperty(cx, obj, "prompt", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  JS_DefineProperty(cx, obj, "prompter", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -2838,7 +2838,7 @@ static JSPropertySpec WindowProperties[] =
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"_content",    WINDOW__CONTENT,    JSPROP_ENUMERATE, Window_contentGetter, Window_contentSetter},
   {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE, WindowsidebarGetter, WindowsidebarSetter},
-  {"prompt",    WINDOW_PROMPT,    JSPROP_ENUMERATE, WindowpromptGetter, WindowpromptSetter},
+  {"prompter",    WINDOW_PROMPTER,    JSPROP_ENUMERATE, WindowprompterGetter, WindowprompterSetter},
   {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
