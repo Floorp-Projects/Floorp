@@ -59,6 +59,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
+#include "nsEscape.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -123,9 +124,6 @@ public:
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
 
-  void GetAttributeValueAt(const nsIParserNode& aNode,
-                           PRInt32 aIndex,
-                           nsString& aResult);
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent);
 
@@ -877,57 +875,51 @@ nsHTMLFragmentContentSink::FlushText()
 }
 
 // XXX Code copied from nsHTMLContentSink. It should be shared.
-void
-nsHTMLFragmentContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
-                                               PRInt32 aIndex,
-                                               nsString& aResult)
-{
-  // Copy value
-  const nsAString& value = aNode.GetValueAt(aIndex);
-  aResult.Truncate();
-  aResult.Append(value);
-
-  // Strip quotes if present
-  if (!aResult.IsEmpty()) {
-    PRUnichar first = aResult.First();
-    if ((first == '\"') || (first == '\'')) {
-      if (aResult.Last() == first) {
-        aResult.Cut(0, 1);
-        PRInt32 pos = aResult.Length() - 1;
-        if (pos >= 0) {
-          aResult.Cut(pos, 1);
-        }
-      } else {
-        // Mismatched quotes - leave them in
-      }
-    }
-  }
-}
-
-// XXX Code copied from nsHTMLContentSink. It should be shared.
 nsresult
 nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
                                          nsIContent* aContent)
 {
   // Add tag attributes to the content attributes
-  nsAutoString k, v;
+
   PRInt32 ac = aNode.GetAttributeCount();
+
+  if (ac == 0) {
+    // No attributes, nothing to do. Do an early return to avoid
+    // constructing the nsAutoString object for nothing.
+
+    return NS_OK;
+  }
+
+  nsAutoString k;
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+
   for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
+    // Get lower-cased key
     const nsAString& key = aNode.GetKeyAt(i);
     k.Assign(key);
     ToLowerCase(k);
 
     nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(k);
-    
-    if (NS_CONTENT_ATTR_NOT_THERE == 
-        aContent->GetAttr(kNameSpaceID_None, keyAtom, v)) {
-      // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v);
 
-      // Add attribute to content
-      aContent->SetAttr(kNameSpaceID_None, keyAtom, v, PR_FALSE);
+    if (!aContent->HasAttr(kNameSpaceID_None, keyAtom)) {
+      // Get value and remove mandatory quotes
+      static const char* kWhitespace = "\n\r\t\b";
+      const nsAString& v =
+        nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
+
+      if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+        NS_ConvertUCS2toUTF8 cname(v);
+        NS_ConvertUTF8toUCS2 uv(nsUnescape(NS_CONST_CAST(char *,
+                                                         cname.get())));
+
+        // Add attribute to content
+        aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, PR_FALSE);
+      } else {
+        // Add attribute to content
+        aContent->SetAttr(kNameSpaceID_None, keyAtom, v, PR_FALSE);
+      }
     }
   }
+
   return NS_OK;
 }
