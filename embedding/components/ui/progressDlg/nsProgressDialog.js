@@ -72,7 +72,7 @@ function nsProgressDialog() {
     this.mRequest     = null;
     this.mCompleted   = false;
     this.mMode        = "normal";
-    this.mPercent     = 0;
+    this.mPercent     = -1;
     this.mRate        = 0;
     this.mBundle      = null;
     this.mCancelDownloadOnClose = true;
