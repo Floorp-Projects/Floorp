@@ -89,6 +89,7 @@ LCFLAGS = \
 
 # These are the libraries we need to link with to create the dll
 LLIBS =                                \
+        $(LIBNSPR)                     \
         $(DIST)\lib\xpcom.lib          \
         $(NULL)
 
