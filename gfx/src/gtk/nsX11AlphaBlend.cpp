@@ -479,6 +479,8 @@ nsBlendMonoImage0888(XImage *ximage, nsAntiAliasedGlyph * glyph,
   PRUint16 g = NS_GET_G(color);
   PRUint16 b = NS_GET_B(color);
 
+  NS_ASSERTION(((ximage->data-(char*)0)&3)==0,"possible alignment error");
+  NS_ASSERTION((ximage->bytes_per_line&3)==0,"possible alignment error");
   PRUint8 *glyph_p = glyph->GetBuffer();
   PRUint8 *imageLineStart = (PRUint8 *)ximage->data
                              + 4*xOff + (yOff * ximage->bytes_per_line);
