@@ -417,13 +417,31 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
   nsCAutoString finalURL;
   GetBaseURL(package, provider, finalURL);
   if (finalURL.IsEmpty()) {
-    /* hard coded, for now. */
+    // hard-coded fallback
     if (provider.Equals("skin")) {
       finalURL = "resource:/chrome/skins/modern/";
     }
+#ifdef XP_MAC
     else {
       finalURL = "resource:/chrome/";
     }
+#else
+    else if (provider.Equals("locale")) {
+      finalURL = "resource:/chrome/locales/en-US/";
+    }
+    else if (package.Equals("aim")) {
+      finalURL = "resource:/chrome/packages/aim/";
+    }
+    else if (package.Equals("messenger")) {
+      finalURL = "resource:/chrome/packages/messenger/";
+    }
+    else if (package.Equals("global")) {
+      finalURL = "resource:/chrome/packages/widget-toolkit/";
+    }
+    else {
+      finalURL = "resource:/chrome/packages/core/";
+    }
+#endif
   } 
 
   finalURL += package;
