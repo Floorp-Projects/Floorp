@@ -735,9 +735,8 @@ MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString&
     nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);    
 
     if (xmlContent) {
-      nsCOMPtr<nsIAtom> value;
-      if (NS_SUCCEEDED(xmlContent->GetID(getter_AddRefs(value))) &&
-          value && value->EqualsUTF8(aUTF8Id)) {
+      nsIAtom* value = xmlContent->GetID();
+      if (value && value->EqualsUTF8(aUTF8Id)) {
         return aContent;
       }
     }

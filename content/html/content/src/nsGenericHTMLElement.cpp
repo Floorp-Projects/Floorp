@@ -1882,24 +1882,6 @@ nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_HAS_VALUE;
 }
 
-nsresult
-nsGenericHTMLElement::GetID(nsIAtom** aResult) const
-{
-  *aResult = nsnull;
-
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::id);
-  NS_ASSERTION(!attrVal ||
-               attrVal->Type() == nsAttrValue::eAtom ||
-               (attrVal->Type() == nsAttrValue::eString &&
-                attrVal->GetStringValue().IsEmpty()),
-               "unexpected attribute type");
-  if (attrVal && attrVal->Type() == nsAttrValue::eAtom) {
-    NS_ADDREF(*aResult = attrVal->GetAtomValue());
-  }
-
-  return NS_OK;
-}
-
 const nsAttrValue*
 nsGenericHTMLElement::GetClasses() const
 {

@@ -2859,7 +2859,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     // get the styledcontent interface and the ID
     if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&mStyledContent))) {
       NS_ASSERTION(mStyledContent, "Succeeded but returned null");
-      mStyledContent->GetID(&mContentID);
+      mContentID = mStyledContent->GetID();
     }
 
     // see if there are attributes for the content
@@ -2910,7 +2910,6 @@ RuleProcessorData::~RuleProcessorData()
   if (mParentData)
     mParentData->Destroy(mPresContext);
 
-  NS_IF_RELEASE(mContentID);
   NS_IF_RELEASE(mStyledContent);
 
   delete mLanguage;

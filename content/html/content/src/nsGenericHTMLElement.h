@@ -211,7 +211,6 @@ public:
 
   // Implementation for nsIHTMLContent
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
-  NS_IMETHOD GetID(nsIAtom** aResult) const;
   virtual const nsAttrValue* GetClasses() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;

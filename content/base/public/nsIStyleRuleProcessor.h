@@ -83,7 +83,7 @@ struct RuleProcessorData {
   nsIContent*       mScopedRoot;    // Root of scoped stylesheet (set and unset by the supplier of the scoped stylesheet
   
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
-  nsIAtom*          mContentID;     // if styled content, then styledcontent->GetID()
+  nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
   nsIStyledContent* mStyledContent; // if content, content->QI(nsIStyledContent)
   PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
   PRPackedBool      mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink

@@ -3083,10 +3083,10 @@ nsXULElement::EnsureContentsGenerated(void) const
 }
 
 // nsIStyledContent Implementation
-NS_IMETHODIMP
-nsXULElement::GetID(nsIAtom** aResult) const
+/// XXX GetID must be defined here because nsXUL element does not inherit from nsGenericElement.
+nsIAtom*
+nsXULElement::GetID() const
 {
-    *aResult = nsnull;
     const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::id);
 
     NS_ASSERTION(!attrVal ||
@@ -3096,10 +3096,9 @@ nsXULElement::GetID(nsIAtom** aResult) const
                  "unexpected attribute type");
 
     if (attrVal && attrVal->Type() == nsAttrValue::eAtom) {
-        NS_ADDREF(*aResult = attrVal->GetAtomValue());
+        return attrVal->GetAtomValue();
     }
-
-    return NS_OK;
+    return nsnull;
 }
 
 const nsAttrValue*
