@@ -49,9 +49,8 @@ EXTRA_DSO_LDOPTS = \
 		-lraptorbase			\
 		-lmozjs					\
 		-ljsdom					\
-		-lxp					\
 		-lappcores				\
-		-lsecfree				\
+		-lmsgbaseutil			\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
