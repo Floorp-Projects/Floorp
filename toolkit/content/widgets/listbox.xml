@@ -12,7 +12,7 @@
   </binding>
   
   <binding id="listbox"
-           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
+           extends="chrome://global/content/widgets/listbox.xml#listbox-base">
     <content>
       <children includes="listcols">
         <xul:listcols>
@@ -27,7 +27,7 @@
       </xul:listrows>
     </content>
     
-    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
       <field name="_isUpSelection">0</field>
       <field name="_isDownSelection">0</field>
       <field name="_suppressOnSelect">false</field>
@@ -492,9 +492,9 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="vk_up" phase="target">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (this.selectedItems.length < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -505,11 +505,8 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="vk_down" phase="target">
         <![CDATA[
-         if (event.target != this)
-           return;
-
          var n;
          if (this.selectedItems.length == 0) {
            n = this.getItemAtIndex(0);
@@ -526,10 +523,10 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_up">
+      <handler event="keypress" modifiers="shift" keycode="vk_up" phase="target">
         <![CDATA[
          var l=this.selectedItems.length;
-         if (event.target != this || l < 1 || this.selType != "multiple")
+         if (l < 1 || this.selType != "multiple")
            return;
          var n = this.getPreviousItem(this.selectedItems[l-1], 1);
          if (n) {
@@ -547,10 +544,10 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_down">
+      <handler event="keypress" modifiers="shift" keycode="vk_down" phase="target">
         <![CDATA[
          var l=this.selectedItems.length;
-         if (event.target != this || l < 1 || this.selType != "multiple")
+         if (l < 1 || this.selType != "multiple")
            return;
          var n = this.getNextItem(this.selectedItems[l-1], 1);
          if (n) {
@@ -568,10 +565,10 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up">
+      <handler event="keypress" keycode="vk_page_up" phase="target">
         <![CDATA[
          var l = this.selectedItems.length;
-         if (event.target != this || l < 1)
+         if (l < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -591,10 +588,10 @@
          this.timedSelect(n, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down">
+      <handler event="keypress" keycode="vk_page_down" phase="target">
         <![CDATA[
          var l = this.selectedItems.length;
-         if (event.target != this || l < 1)
+         if (l < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -616,9 +613,9 @@
          this.timedSelect(n, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home">
+      <handler event="keypress" keycode="vk_home" phase="target">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (this.selectedItems.length < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -626,9 +623,9 @@
          this.selectItem(this.getItemAtIndex(0));
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end">
+      <handler event="keypress" keycode="vk_end" phase="target">
         <![CDATA[
-         if (event.target != this || this.selectedItems.length < 1)
+         if (this.selectedItems.length < 1)
            return;
          this._isUpSelection=0;
          this._isDownSelection=0;
@@ -638,7 +635,7 @@
         ]]>
       </handler>
 
-      <handler event="keypress" key=" ">
+      <handler event="keypress" key=" " phase="target">
       <![CDATA[
         if (this.currentItem &&
             this.currentItem.getAttribute("type") == "checkbox" &&
@@ -646,7 +643,7 @@
           this.currentItem.checked = !this.currentItem.checked;
       ]]>
       </handler>
-      <handler event="keypress">
+      <handler event="keypress" phase="target">
       <![CDATA[
          if (!this.disableKeyNavigation && event.charCode > 0 && 
              !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
@@ -654,12 +651,21 @@
            key = key.toLowerCase();
            if (event.timeStamp - this._lastKeyTime > 1000)
              this._incrementalString = key;
-           else {
-             if (this._incrementalString.length != 1 || this._incrementalString.charAt(0) != key.charAt(0))
-               this._incrementalString += key;
-           }
+           else
+             this._incrementalString += key;
            this._lastKeyTime = event.timeStamp;
            
+           var length = this._incrementalString.length;
+           var incrementalString = this._incrementalString;
+           var charIndex = 1;
+           while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
+             charIndex++;
+           // If all letters in incremental string are same, just try to match the first one
+           if (charIndex == length) {
+             length = 1;
+             incrementalString = incrementalString.substring(0, length);
+           }
+
            var l = this.selectedItems.length;
            var c = -1;
            if (l > 0)
@@ -667,7 +673,7 @@
            var rowCount = this.getRowCount();
            var start = 1;
            
-           if (this._incrementalString.length > 1) {
+           if (length > 1) {
              start = 0;
              if (c < 0)
                c = 0;
@@ -677,8 +683,8 @@
              var k = (i + start + c) % rowCount;
              var item = this.getItemAtIndex(k); //listitem
              var cellText = item.getAttribute("label");
-             cellText = cellText.toLowerCase();
-             if (cellText.search(this._incrementalString) == 0) {
+             cellText = cellText.substring(0, length).toLowerCase();
+             if (cellText == incrementalString) {
                this._isUpSelection=0;
                this._isDownSelection=0;
                this.ensureIndexIsVisible(k);
@@ -693,100 +699,25 @@
   </binding>
 
   <binding id="listrows"
-           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
-    <implementation>
-      <constructor>
-        this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
-      </constructor>
-
-      <field name="_handleMouseScroll">
-      <![CDATA[
-        ({
-          subject: this,
-          handleEvent: function(aEvent)
-          {
-            var listBox = this.subject.parentNode.listBoxObject;
-            var rows = aEvent.detail;
-            if (rows == NSUIEvent.SCROLL_PAGE_UP)
-              rows = -1 * listBox.getNumberOfVisibleRows();
-            else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
-              rows = listBox.getNumberOfVisibleRows();
-
-            listBox.scrollByLines(rows);
-          }
-        })
-      ]]>
-      </field>
-    </implementation>
-
+           extends="chrome://global/content/widgets/listbox.xml#listbox-base">
     <handlers>
-      <!-- If there is no modifier key, we select on mousedown, not
-           click, so that drags work correctly. -->
-      <handler event="mousedown">
+      <handler event="DOMMouseScroll" phase="capturing">
       <![CDATA[
-        var targetItem = event.target;
-        if (targetItem.localName == "listitem" && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-          if (!targetItem.selected) {
-            parentNode.selectItem(targetItem);
-          }
-          parentNode.currentItem = targetItem;
-        }
-      ]]>
-      </handler>
+        var listBox = this.parentNode.listBoxObject;
+        var rows = event.detail;
+        if (rows == NSUIEvent.SCROLL_PAGE_UP)
+          rows = -listBox.getNumberOfVisibleRows();
+        else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+          rows = listBox.getNumberOfVisibleRows();
 
-      <!-- On a click (up+down on the same item), deselect everything
-           except this item. -->
-      <handler event="click">
-      <![CDATA[
-        if (event.button != 0) return;
-        var targetItem = event.target;
-        if (targetItem.localName == "listitem") {
-          if (parentNode.selType != "multiple") {
-            parentNode.selectItem(targetItem);
-          }
-          else if (event.ctrlKey || event.metaKey) {
-            parentNode.toggleItemSelection(targetItem);
-            parentNode.currentItem = targetItem;
-          }
-          else if (event.shiftKey) {
-            parentNode.selectItemRange(null, targetItem);
-            parentNode.currentItem = targetItem;
-          }
-          else {
-            /* We want to deselect all the selected items except what was
-               clicked, UNLESS it was a right-click.  We have to do this
-               in click rather than mousedown so that you can drag a
-               selected group of items */
-            
-            var selectedItems = parentNode.selectedItems;
-            var didSuppressSelect = false;
-            var i = 0;
-            while (i < selectedItems.length) {
-              if (selectedItems[i] != targetItem) {
-                if (!didSuppressSelect) {
-                  parentNode._suppressOnSelect = true;
-                  didSuppressSelect = true;
-                }
-                parentNode.removeItemFromSelection(selectedItems[i]);
-              }
-              else
-                i++;
-            }
-            if (didSuppressSelect)
-              parentNode._suppressOnSelect = false;
-          }
-        }
-        else {
-          if (parentNode.selType != "multiple" || (!event.ctrlKey && !event.shiftKey && !event.metaKey))
-            parentNode.clearSelection();
-        }
+        listBox.scrollByLines(rows);
       ]]>
       </handler>
     </handlers>
   </binding>
   
   <binding id="listitem"
-           extends="chrome://global/content/bindings/general.xml#basetext">
+           extends="chrome://global/content/widgets/general.xml#basetext">
     <resources>
       <stylesheet src="chrome://global/skin/listbox.css"/>
     </resources>
@@ -837,7 +768,7 @@
             this.removeAttribute("selected");
 
           var event = document.createEvent("Events");
-          event.initEvent("ListitemStateChange", true, true);
+          event.initEvent("DOMMenuItemActive", true, true);
           this.dispatchEvent(event);
 
           return val;
@@ -856,10 +787,66 @@
         ]]></getter>
       </property>
     </implementation>
+    <handlers>
+      <!-- If there is no modifier key, we select on mousedown, not
+           click, so that drags work correctly. -->
+      <handler event="mousedown">
+      <![CDATA[
+        if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
+          if (!this.selected) {
+            parentNode.selectItem(this);
+          }
+          parentNode.currentItem = this;
+        }
+      ]]>
+      </handler>
+
+      <!-- On a click (up+down on the same item), deselect everything
+           except this item. -->
+      <handler event="click">
+      <![CDATA[
+        if (event.button != 0) return;
+        if (parentNode.selType != "multiple") {
+          parentNode.selectItem(this);
+        }
+        else if (event.ctrlKey || event.metaKey) {
+          parentNode.toggleItemSelection(this);
+          parentNode.currentItem = this;
+        }
+        else if (event.shiftKey) {
+          parentNode.selectItemRange(null, this);
+          parentNode.currentItem = this;
+        }
+        else {
+          /* We want to deselect all the selected items except what was
+            clicked, UNLESS it was a right-click.  We have to do this
+            in click rather than mousedown so that you can drag a
+            selected group of items */
+
+          var selectedItems = parentNode.selectedItems;
+          var didSuppressSelect = false;
+          var i = 0;
+          while (i < selectedItems.length) {
+            if (selectedItems[i] != this) {
+              if (!didSuppressSelect) {
+                parentNode._suppressOnSelect = true;
+                didSuppressSelect = true;
+              }
+              parentNode.removeItemFromSelection(selectedItems[i]);
+            }
+            else
+              i++;
+          }
+          if (didSuppressSelect)
+            parentNode._suppressOnSelect = false;
+        }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="listitem-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listitem">
+           extends="chrome://global/content/widgets/listbox.xml#listitem">
     <content>
       <children>
         <xul:listcell class="listcell-iconic" xbl:inherits="label,image,crop,disabled,flexlabel"/>
@@ -868,7 +855,7 @@
   </binding>
   
   <binding id="listitem-checkbox"
-           extends="chrome://global/content/bindings/listbox.xml#listitem">
+           extends="chrome://global/content/widgets/listbox.xml#listitem">
     <content>
       <children>
         <xul:listcell type="checkbox" xbl:inherits="label,crop,checked,disabled,flexlabel"/>
@@ -897,7 +884,7 @@
   </binding>
   
   <binding id="listitem-checkbox-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
+           extends="chrome://global/content/widgets/listbox.xml#listitem-checkbox">
     <content>
       <children>
         <xul:listcell type="checkbox" class="listcell-iconic" xbl:inherits="label,image,crop,checked,disabled,flexlabel"/>
@@ -906,7 +893,7 @@
   </binding>
   
   <binding id="listcell"
-           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
+           extends="chrome://global/content/widgets/listbox.xml#listbox-base">
     <content>
       <children>
         <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
@@ -915,7 +902,7 @@
   </binding>
 
   <binding id="listcell-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listcell">
+           extends="chrome://global/content/widgets/listbox.xml#listcell">
     <content>
       <children>
         <xul:image class="listcell-icon" xbl:inherits="src=image"/>
@@ -925,7 +912,7 @@
   </binding>
 
   <binding id="listcell-checkbox"
-           extends="chrome://global/content/bindings/listbox.xml#listcell">
+           extends="chrome://global/content/widgets/listbox.xml#listcell">
     <content>
       <children>
         <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
@@ -935,7 +922,7 @@
   </binding>
 
   <binding id="listcell-checkbox-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listcell-checkbox">
+           extends="chrome://global/content/widgets/listbox.xml#listcell-checkbox">
     <content>
       <children>
         <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
@@ -946,7 +933,7 @@
   </binding>
 
   <binding id="listhead"
-           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
+           extends="chrome://global/content/widgets/listbox.xml#listbox-base">
     <content>
       <xul:listheaditem>
         <children includes="listheader"/>
@@ -955,7 +942,7 @@
   </binding>
   
   <binding id="listheader" display="xul:button"
-           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
+           extends="chrome://global/content/widgets/listbox.xml#listbox-base">
     <content>
       <xul:image class="listheader-icon"/>
       <xul:label class="listheader-label" xbl:inherits="value=label,crop" flex="1" crop="right"/>
