@@ -56,12 +56,15 @@ interface nsIOutlinerView : nsISupports
   // and if so, whether an open or closed twisty should be used.
   boolean isContainer(in long index);
   boolean isContainerOpen(in long index);
+  
+  // The level is an integer value that represents
+  // the level of indentation.  It is multiplied by the width specified in the 
+  // :moz-outliner-indentation pseudoelement to compute the exact indendation.
+  long getLevel(in long index);
 
   // The text for a given cell.  If a column consists only of an image, then
-  // the empty string is returned.  The level is an integer value that represents
-  // the level of indentation.  It is multiplied by the width specified in the 
-  // :moz-outliner-indentation pseudoclass to compute the exact indendation.
-  wstring getCellText(in long row, in wstring colID, out long level);
+  // the empty string is returned.  
+  wstring getCellText(in long row, in wstring colID);
   
   // Called during initialization to link the view to the front end box object.
   void setOutliner(in nsIOutlinerBoxObject outliner);

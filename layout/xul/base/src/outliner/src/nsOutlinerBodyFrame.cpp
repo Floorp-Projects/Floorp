@@ -36,6 +36,14 @@
 #include "nsIContent.h"
 #include "nsICSSStyleRule.h"
 #include "nsCSSRendering.h"
+#include "nsIRenderingContext.h"
+#include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
+#include "nsXPIDLString.h"
+#include "nsHTMLContainerFrame.h"
+#include "nsIView.h"
+#include "nsWidgetsCID.h"
+#include "nsBoxFrame.h"
 
 // The style context cache impl
 nsresult 
@@ -105,6 +113,7 @@ nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
 // Column class that caches all the info about our column.
 nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
+:mNext(nsnull)
 {
   mColFrame = aFrame;
   mColElement = aColElement; 
@@ -181,7 +190,7 @@ NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 // Constructor
 nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell),
+:nsLeafBoxFrame(aPresShell), mPresContext(nsnull),
  mTopRowIndex(0), mColumns(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
@@ -190,11 +199,6 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
 // Destructor
 nsOutlinerBodyFrame::~nsOutlinerBodyFrame()
 {
-  delete mColumns;
-  
-  // Drop our ref to the view.
-  mView->SetOutliner(nsnull);
-  mView = nsnull;
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -209,6 +213,29 @@ nsOutlinerBodyFrame::Release(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOutlinerBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
+                          nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
+{
+  mPresContext = aPresContext;
+  nsresult rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
+{
+  // Delete our column structures.
+  delete mColumns;
+  mColumns = nsnull;
+
+  // Drop our ref to the view.
+  mView->SetOutliner(nsnull);
+  mView = nsnull;
+
+  return nsLeafBoxFrame::Destroy(aPresContext);
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
 {
   *aView = mView;
@@ -221,13 +248,15 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
   // Outliner, meet the view.
   mView = aView;
   
-  // View, meet the outliner.
-  mView->SetOutliner(this);
+  if (mView)
+    // View, meet the outliner.
+    mView->SetOutliner(this);
 
   // Changing the view causes us to refetch our data.  This will
   // necessarily entail a full invalidation of the outliner.
   mTopRowIndex = 0;
   delete mColumns;
+  mColumns = nsnull;
   Invalidate();
   
   return NS_OK;
@@ -252,6 +281,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::ScrollToRow(PRInt32 aRow)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
 {
+  nsLeafBoxFrame::Invalidate(mPresContext, mRect, PR_FALSE);
   return NS_OK;
 }
 
@@ -326,9 +356,9 @@ nsRect nsOutlinerBodyFrame::GetInnerBox()
 {
   nsRect r(0,0,mRect.width, mRect.height);
   nsMargin m(0,0,0,0);
-  const nsStyleBorderPadding* borderpadding = (const nsStyleBorderPadding*)
-      mStyleContext->GetStyleData(eStyleStruct_BorderPaddingShortcut);
-  borderpadding->GetBorderPadding(m);
+  nsStyleBorderPadding  bPad;
+  mStyleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  bPad.GetBorderPadding(m);
   r.Deflate(m);
   return r;
 }
@@ -348,18 +378,25 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   nsresult rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FAILED(rv)) return rv;
 
+  if (!mView)
+    return NS_OK;
+
+  PRBool clipState = PR_FALSE;
+  nsRect clipRect(mRect);
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+
   // Update our page count, our available height and our row height.
   mRowHeight = GetRowHeight(aPresContext);
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
   PRInt32 rowCount = 0;
-  if (mView)
-    mView->GetRowCount(&rowCount);
+  mView->GetRowCount(&rowCount);
   
   // Ensure our column info is built.
   EnsureColumns(aPresContext);
 
-  // Loop through our onscreen rows.
+  // Loop through our on-screen rows.
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
     nsRect rowRect(0, mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
     nsRect dirtyRect;
@@ -367,6 +404,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
       PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
 
+  aRenderingContext.PopState(clipState);
   return NS_OK;
 }
 
@@ -413,6 +451,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
       PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+    currX += currCol->GetWidth();
   }
 
   return NS_OK;
@@ -426,18 +465,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
                                              const nsRect&        aDirtyRect,
                                              nsFramePaintLayer    aWhichLayer)
 {
-  // Now obtain the properties for our row.
+  // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
   mScratchArray->Clear();
   mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
 
-  // Resolve style for the row.  It contains all the info we need to lay ourselves
+  // Resolve style for the cell.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> cellContext;
   GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
 
-  // Obtain the margins for the row and then deflate our rect by that 
-  // amount.  The row is assumed to be contained within the deflated rect.
+  // Obtain the margins for the cell and then deflate our rect by that 
+  // amount.  The cell is assumed to be contained within the deflated rect.
   nsRect cellRect(aCellRect);
   const nsStyleMargin* cellMarginData = (const nsStyleMargin*)cellContext->GetStyleData(eStyleStruct_Margin);
   nsMargin cellMargin;
@@ -449,13 +488,85 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
     PaintBackgroundLayer(cellContext, aPresContext, aRenderingContext, cellRect, aDirtyRect);
 
+  nscoord currX = cellRect.x;
+  nscoord remainingWidth = cellRect.width;
+
   // Now we paint the contents of the cells.
+  // Text alignment determines the order in which we paint.  
+  // LEFT means paint from left to right.
+  // RIGHT means paint from right to left.
+  // XXX Implement RIGHT alignment!
 
   // If we're the primary column, we need to indent and paint the twisty.
 
   // Now paint the various images.
 
   // Now paint our text.
+  nsRect textRect(currX, cellRect.y, remainingWidth, cellRect.height);
+  nsRect dirtyRect;
+  if (dirtyRect.IntersectRect(aDirtyRect, textRect))
+    PaintText(aRowIndex, aColumn, textRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex, 
+                                             nsOutlinerColumn*    aColumn,
+                                             const nsRect& aTextRect,
+                                             nsIPresContext*      aPresContext,
+                                             nsIRenderingContext& aRenderingContext,
+                                             const nsRect&        aDirtyRect,
+                                             nsFramePaintLayer    aWhichLayer)
+{
+  // Now obtain the text for our cell.
+  nsXPIDLString text;
+  mView->GetCellText(aRowIndex, aColumn->GetID(), getter_Copies(text));
+
+  nsAutoString realText(text);
+
+  // Resolve style for the text.  It contains all the info we need to lay ourselves
+  // out and to paint.
+  nsCOMPtr<nsIStyleContext> textContext;
+  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercelltext, getter_AddRefs(textContext));
+
+  // Obtain the margins for the text and then deflate our rect by that 
+  // amount.  The text is assumed to be contained within the deflated rect.
+  nsRect textRect(aTextRect);
+  const nsStyleMargin* textMarginData = (const nsStyleMargin*)textContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin textMargin;
+  textMarginData->GetMargin(textMargin);
+  textRect.Deflate(textMargin);
+
+  // If the layer is the background layer, we must paint our borders and background for our
+  // text rect.
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+    PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
+  else {
+    // Time to paint our text. 
+    
+    // Compute our text size.
+    const nsStyleFont* fontStyle = (const nsStyleFont*)textContext->GetStyleData(eStyleStruct_Font);
+
+    nsCOMPtr<nsIDeviceContext> deviceContext;
+    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+
+    nsCOMPtr<nsIFontMetrics> fontMet;
+    deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
+    nscoord height;
+    fontMet->GetHeight(height);
+
+    // Center the text. XXX Obey vertical-align style prop?
+    if (height < textRect.height) {
+      textRect.y += (textRect.height - height)/2;
+      textRect.height = height;
+    }
+
+    // XXX Crop if the width is too big!
+    nscoord width;
+    aRenderingContext.GetWidth(realText, width);
+    aRenderingContext.SetFont(fontMet);
+
+    aRenderingContext.DrawString(realText, textRect.x, textRect.y);
+  }
 
   return NS_OK;
 }
