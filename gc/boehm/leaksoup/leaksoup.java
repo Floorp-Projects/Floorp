@@ -154,24 +154,30 @@ class Leak {
 }
 
 public class leaksoup {
+	private static boolean ROOTS_ONLY = false;
+
 	public static void main(String[] args) {
 		if (args.length == 0) {
-			System.out.println("usage:  leaksoup [-blame] leaks");
+			System.out.println("usage:  leaksoup [-blame] [-assign] [-roots] leaks");
 			System.exit(1);
 		}
 		
 		// assume user want's lxr URLs. (why?)
 		FileLocator.USE_BLAME = false;
 		FileLocator.ASSIGN_BLAME = false;
+		ROOTS_ONLY = false;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			if (arg.charAt(0) == '-') {
 				if (arg.equals("-blame"))
 					FileLocator.USE_BLAME = true;
-				else
-				if (arg.equals("-assign"))
+				else if (arg.equals("-assign"))
 					FileLocator.ASSIGN_BLAME = true;
+				else if (arg.equals("-roots"))
+					ROOTS_ONLY = true;
+				else
+					System.out.println("unrecognized option: " + arg);
 			} else {
 				cook(arg);
 			}
@@ -308,7 +314,10 @@ public class leaksoup {
 			printHistogram(out, hist);
 			
 			// print the leak report.
-			printLeaks(out, leaks);
+			if (ROOTS_ONLY)
+				printRootLeaks(out, leaks);
+			else
+				printLeaks(out, leaks);
 			
 			out.close();
 		} catch (Exception e) {
@@ -348,9 +357,43 @@ public class leaksoup {
 		}
 		out.println("</PRE>");
 	}
+	
+	static StringBuffer appendChar(StringBuffer buffer, int ch) {
+		if (ch > 32 && ch < 0x7F) {
+			switch (ch) {
+			case '<':	buffer.append("&LT;"); break;
+			case '>':	buffer.append("&GT;"); break;
+			default:	buffer.append((char)ch); break;
+			}
+		} else {
+			buffer.append("&#183;");
+		}
+		return buffer;
+	}
+	
+	static void printField(PrintWriter out, Object field) {
+		String value = field.toString();
+		if (field instanceof String) {
+			// this is just a plain HEX value, print its contents as ASCII as well.
+			if (value.startsWith("0x")) {
+				try {
+					int hexValue = Integer.parseInt(value.substring(2), 16);
+					StringBuffer buffer = new StringBuffer(value);
+					buffer.append('\t');
+					appendChar(buffer, ((hexValue >>> 24) & 0x00FF));
+					appendChar(buffer, ((hexValue >>> 16) & 0x00FF));
+					appendChar(buffer, ((hexValue >>>  8) & 0x00FF));
+					appendChar(buffer, (hexValue & 0x00FF));
+					value = buffer.toString();
+				} catch (NumberFormatException nfe) {
+				}
+			}
+		}
+		out.println("\t" + value);
+	}
 
 	static void printLeaks(PrintWriter out, Leak[] leaks) throws IOException {
-		// sort the leaks by size.
+		// sort the leaks by total size.
 		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
 		bySize.sort(leaks);
 
@@ -387,7 +430,7 @@ public class leaksoup {
 			Object[] refs = leak.mReferences;
 			int count = refs.length;
 			for (int j = 0; j < count; j++)
-				out.println("\t" + refs[j]);
+				printField(out, refs[j]);
 			// print object's stack crawl:
 			Object[] crawl = leak.mCrawl;
 			count = crawl.length;
@@ -403,6 +446,54 @@ public class leaksoup {
 				count = parents.length;
 				for (int j = 0; j < count; j++)
 					out.println("\t" + parents[j]);
+			}
+		}
+
+		out.println("</PRE>");
+	}
+	
+	static void printRootLeaks(PrintWriter out, Leak[] leaks) throws IOException {
+		// sort the leaks by total size.
+		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
+		bySize.sort(leaks);
+
+		out.println("<H2>Leak Roots Only</H2>");
+		
+		out.println("<PRE>");
+
+		int leakCount = leaks.length;
+		for (int i = 0; i < leakCount; i++) {
+			Leak leak = leaks[i];
+			if (leak.mRefCount == 0)
+				out.println(leak);
+		}
+
+		Type anchorType = null;
+
+		// now, print just the root leaks.
+		for (int i = 0; i < leakCount; i++) {
+			Leak leak = leaks[i];
+			if (leak.mRefCount > 0)
+				continue;
+			if (anchorType != leak.mType) {
+				anchorType = leak.mType;
+				out.println("\n<HR>");
+				out.println("<A NAME=\"" + anchorType.mName + "_" + anchorType.mSize + "\"></A>");
+				out.println("<H3>" + anchorType + " Leaks</H3>");
+			}
+			out.println("<A NAME=\"" + leak.mAddress + "\"></A>");
+			out.println(leak);
+			// print object's fields:
+			Object[] refs = leak.mReferences;
+			int count = refs.length;
+			for (int j = 0; j < count; j++)
+				printField(out, refs[j]);
+			// print object's stack crawl:
+			Object[] crawl = leak.mCrawl;
+			count = crawl.length;
+			for (int j = 0; j < count; j++) {
+				String location = FileLocator.getFileLocation((String) crawl[j]);
+				out.println(location);
 			}
 		}
 
