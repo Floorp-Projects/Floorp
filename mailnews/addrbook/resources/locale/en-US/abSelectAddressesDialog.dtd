@@ -25,15 +25,10 @@ Rights Reserved.
 <!-- Buttons -->
 	<!ENTITY toButton.label		"To:"> 
 	<!ENTITY ccButton.label		"Cc:"> 
-	<!ENTITY bccButton.label	"Bcc:"> 
-	<!ENTITY stopButton.label	".Stop"> 
-	<!ENTITY searchButton.label	".Search..."> 
+	<!ENTITY bccButton.label	"Bcc:">  
 	<!ENTITY newButton.label	"New..."> 
 	<!ENTITY editButton.label	"Edit..."> 
 	<!ENTITY removeButton.label	"Remove"> 
-
-<!-- Toolbar items -->  
-	<!ENTITY search.label "Show names containing:">  
 
 <!-- Tooltips items -->  
 <!ENTITY addressPickerSearchButton.tooltip "Search the selected address book"> 

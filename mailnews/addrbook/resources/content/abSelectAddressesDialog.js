@@ -25,6 +25,7 @@ var addressbook = 0;
 var composeWindow = 0;
 var msgCompFields = 0;
 var editCardCallback = 0;
+var gDialogResultsPaneSelectionChanged = 0;
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
 
@@ -43,6 +44,8 @@ function OnLoadSelectAddress()
 
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
+
+	top.gDialogResultsPaneSelectionChanged = DialogResultsPaneSelectionChanged;
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0])
@@ -69,6 +72,9 @@ function OnLoadSelectAddress()
 	}
 	
 	SelectFirstAddressBook();
+	
+	DialogResultsPaneSelectionChanged();
+	DialogBucketPaneSelectionChanged();
 }
 
 function AddAddressFromComposeWindow(addresses, prefix)
@@ -202,3 +208,58 @@ function RemoveSelectedFromBucket()
 		}	
 	}	
 }
+
+/* Function: DialogResultsPaneSelectionChanged()
+ * Callers : OnLoadSelectAddress(), abCommon.js:ResultsPaneSelectionChange()
+ * -------------------------------------------------------------------------
+ * This function is used to grab the selection state of the results tree to maintain
+ * the appropriate enabled/disabled states of the "Edit", "To:", "CC:", and "Bcc:" buttons.
+ * If an entry is selected in the results Tree, then the "disabled" attribute is removed.
+ * Otherwise, if nothing is selected, "disabled" is set to true.
+ */
+
+function DialogResultsPaneSelectionChanged()
+{
+	var resultsTree = document.getElementById("resultsTree");
+	var editButton = document.getElementById("edit");
+	var toButton = document.getElementById("toButton");
+	var ccButton = document.getElementById("ccButton");
+	var bccButton = document.getElementById("bccButton");
+	
+	if (editButton && toButton && ccButton && bccButton && resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length) 
+	{
+		editButton.removeAttribute("disabled");
+		toButton.removeAttribute("disabled");
+		ccButton.removeAttribute("disabled");
+		bccButton.removeAttribute("disabled");
+	} 
+	else 
+	{ 
+		editButton.setAttribute("disabled", "true");
+		toButton.setAttribute("disabled", "true");
+		ccButton.setAttribute("disabled", "true");
+		bccButton.setAttribute("disabled", "true");
+	}
+}
+
+/* Function: DialogBucketPaneSelectionChanged()
+ * Callers : OnLoadSelectAddress(), abSelectAddressesDialog.xul:id="addressBucket"
+ * -------------------------------------------------------------------------------
+ * This function is used to grab the selection state of the bucket tree to maintain
+ * the appropriate enabled/disabled states of the "Remove" button.
+ * If an entry is selected in the bucket Tree, then the "disabled" attribute is removed.
+ * Otherwise, if nothing is selected, "disabled" is set to true.
+ */
+
+function DialogBucketPaneSelectionChanged()
+{
+	var bucketTree = document.getElementById("addressBucket");
+	var removeButton = document.getElementById("remove");
+	
+	if (removeButton && bucketTree && bucketTree.selectedItems && bucketTree.selectedItems.length)
+		removeButton.removeAttribute("disabled");
+	else 
+		removeButton.setAttribute("disabled", "true");
+}
+
+

@@ -302,6 +302,9 @@ function ResultsPaneSelectionChange()
 {
 	if ( top.gUpdateCardView )
 		top.gUpdateCardView();
+	
+	if ( top.gDialogResultsPaneSelectionChanged )
+	    top.gDialogResultsPaneSelectionChanged();
 }
 
 function ClearResultsTreeSelection()

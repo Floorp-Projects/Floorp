@@ -49,60 +49,47 @@ Rights Reserved.
 	<keyset id="keyset"/>
 	<popupset id="aTooltipSet"/>
 
-	<!-- Thin box across top, show names containing & stop, search buttons -->
-	<box align="horizontal" style="padding:0px; padding-top:2px; padding-bottom:2px">
-		<text for="searchtext" tabindex="0" value="&search.label;"/>
-		<textfield id="searchtext" flex="100%"/>
-		
-		<spring style="width: 1em;"/>
-		
-		<button id="stop" value="&stopButton.label;" class="dialog" disabled="true" oncommand="SelectAddressStopButton()"/>	
-		<spring style="width:5px"/>
-		<button id="search" value="&searchButton.label;" class="dialog" disabled="true" tooltip="aTooltip" tooltiptext="&addressPickerSearchButton.tooltip;" oncommand="SelectAddressSearchButton()"/>	
-	</box>
-
 	<!-- Main box, 3 pane and majority of buttons -->
 	<box align="horizontal" flex="100%">
 		<!-- 3 Pane box -->
-		<box align="horizontal" flex="100%" style="border-top:solid black 1px; border-bottom:solid black 1px">
+		<box id="3PaneBox" align="horizontal" orient="horizontal" flex="100%">
 			
 			<!-- dir tree -->
-			<box align="horizontal" style="width:180px; height:100%; background-color:white; border-right:solid black 1px">
-				<tree id="dirTree" style="height:100px; min-width:10px" flex="1"/>
+			<box id="dirTreeBox" align="horizontal">
+				<tree id="dirTree" flex="1"/>
 			</box>
 				
-			<splitter collapse="before"/>
+			<splitter id="gray_vertical_splitter" collapse="after"  persist="state"/>
 
 			<!-- Box that holds results pane, (to,cc,bcc buttons), and address bucket -->
-			<box align="vertical" flex="100%" style="border-left:solid black 1px; border-right:solid black 1px">
+			<box id="results-bucket-tree-box" orient="vertical" flex="100%">
 				<!-- Box that holds results pane and (to,cc,bcc buttons) -->
 				<box align="vertical" flex="100%">
 					<!-- results tree -->
-					<box flex="100%" align="vertical"
-						 style="background-color:white; border-bottom:solid black 1px">
-						<tree id="resultsTree" style="height:100px; min-width:10px" flex="1"/>
+					<box id="resultsTreeBox" flex="100%" align="vertical">
+						<tree id="resultsTree" flex="1"/>
 					</box>
 					
 					<!-- Box that holds (to,cc,bcc buttons) -->
-					<box align="horizontal" style="padding:0.3em; border-bottom:solid black 1px; min-width:10px">
+					<box id="addToBucketButtonBox" align="horizontal">
 						<spring flex="50%"/>
 						<button id="toButton" value="&toButton.label;" class="dialog" oncommand="SelectAddressToButton()"/>	
-						<spring style="width:10px"/>
+						<spring class="middle-button-spring"/>
 						<button id="ccButton" value="&ccButton.label;" class="dialog" oncommand="SelectAddressCcButton()"/>	
-						<spring style="width:10px"/>
+						<spring class="middle-button-spring"/>
 						<button id="bccButton" value="&bccButton.label;" class="dialog" oncommand="SelectAddressBccButton()"/>	
 						<spring flex="50%"/>
 					</box>
 				</box>
 				
-				<splitter collapse="after"/>
+					<splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
 				
 				<!-- Address bucket -->
-				<box align="vertical" style="height:170px; border-top:solid black 1px">
-					<tree id="addressBucket" style="height:100px; min-width:10px" flex="1" multiple="true">
-                                                <treecolgroup>
+				<box id="bucketBox" align="vertical">
+					<tree id="addressBucket" flex="1" multiple="true" onselect="top.DialogBucketPaneSelectionChanged();">
+                        <treecolgroup>
 						  <treecol flex="1"/>
-                                                </treecolgroup>
+                        </treecolgroup>
 						<treechildren id="bucketBody" flex="1"/>
 					</tree>
 				</box>
@@ -111,11 +98,11 @@ Rights Reserved.
 		</box>
 		
 		<!-- Box with buttons on right edge of window -->
-		<box align="vertical" style="padding: .5em; padding-right: 0px">
+		<box id="rightColumnButtonBox" align="vertical">
 			<box align="vertical" flex="50%">
-				<spring style="height:10px"/>
+				<spring class="3rd-column-spring"/>
 				<button id="new" value="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard()"/>	
-				<spring style="height:10px"/>
+				<spring class="3rd-column-spring"/>
 				<button id="edit" value="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/>	
 				<spring flex="100%"/>
 			</box>
