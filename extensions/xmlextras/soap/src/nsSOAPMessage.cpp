@@ -244,7 +244,8 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
         rv = header->GetEncoding(getter_AddRefs(encoding));
         if (NS_FAILED(rv)) return rv;
         if (!encoding) {
-          encoding = mEncoding;
+	  rv = GetEncoding(getter_AddRefs(encoding));
+          if (NS_FAILED(rv)) return rv;
         }
         rv = header->GetSchemaType(getter_AddRefs(schemaType));
         if (NS_FAILED(rv)) return rv;
@@ -318,7 +319,8 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
       rv = param->GetEncoding(getter_AddRefs(encoding));
       if (NS_FAILED(rv)) return rv;
       if (!encoding) {
-        encoding = mEncoding;
+	rv = GetEncoding(getter_AddRefs(encoding));
+        if (NS_FAILED(rv)) return rv;
       }
       rv = param->GetSchemaType(getter_AddRefs(schemaType));
       if (NS_FAILED(rv)) return rv;

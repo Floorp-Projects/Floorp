@@ -228,7 +228,7 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
       rc = lookupType->GetTargetNamespace(schemaURI);
       if (NS_FAILED(rc)) return rc;
-      rc = aEncoding->GetEncoder(schemaType, schemaURI, getter_AddRefs(encoder));
+      rc = aEncoding->GetEncoder(schemaURI, schemaType, getter_AddRefs(encoder));
       if (NS_FAILED(rc)) return rc;
       if (encoder) break;
       PRUint16 typevalue;
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
     else {
       schemaType.Assign(kAnySimpleTypeSchemaType);
     }
-    nsresult rc = aEncoding->GetEncoder(schemaType, kSchemaDatatypesNamespaceURI, getter_AddRefs(encoder));
+    nsresult rc = aEncoding->GetEncoder(kSchemaDatatypesNamespaceURI, schemaType, getter_AddRefs(encoder));
     if (NS_FAILED(rc)) return rc;
   }
   if (encoder) {
@@ -382,7 +382,7 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
   }
   if (!nativeSchemaType.IsEmpty()) {
     nsCOMPtr<nsISOAPEncoder> encoder;
-    nsresult rc = aEncoding->GetEncoder(nativeSchemaType, nativeSchemaURI, getter_AddRefs(encoder));
+    nsresult rc = aEncoding->GetEncoder(nativeSchemaURI, nativeSchemaType, getter_AddRefs(encoder));
     if (NS_FAILED(rc)) return rc;
     if (encoder) {
       nsresult rc = encoder->Encode(aEncoding, aSource, aNamespaceURI, aName, aSchemaType, aAttachments, aDestination, aReturnValue);
@@ -997,7 +997,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
       rc = lookupType->GetTargetNamespace(schemaURI);
       if (NS_FAILED(rc)) return rc;
-      rc = aEncoding->GetDecoder(schemaType, schemaURI, getter_AddRefs(decoder));
+      rc = aEncoding->GetDecoder(schemaURI, schemaType, getter_AddRefs(decoder));
       if (NS_FAILED(rc)) return rc;
       if (decoder) break;
       PRUint16 typevalue;
@@ -1028,7 +1028,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
     else {
       schemaType.Assign(kAnySimpleTypeSchemaType);
     }
-    nsresult rc = aEncoding->GetDecoder(schemaType, kSchemaDatatypesNamespaceURI, getter_AddRefs(decoder));
+    nsresult rc = aEncoding->GetDecoder(kSchemaDatatypesNamespaceURI, schemaType, getter_AddRefs(decoder));
     if (NS_FAILED(rc)) return rc;
   }
   if (decoder) {
