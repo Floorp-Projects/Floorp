@@ -49,6 +49,44 @@ sub shorthost {
   return $host;
 }
 
+sub stagesymbols {
+  my $builddir = shift;
+  TinderUtils::run_shell_command "make -C $builddir deliver";
+}
+
+sub makefullsoft {
+  my $builddir = shift;
+  if (is_windows()) {
+    # need to convert the path in case we're using activestate perl
+    $builddir = `cygpath -u $builddir`;
+  }
+  chomp($builddir);
+  # should go in config
+  my $moforoot = "cltbld\@cvs.mozilla.org:/mofo"; 
+  my $fullsofttag = " ";
+  $fullsofttag = " -r $Settings::BuildTag"
+        unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
+  TinderUtils::run_shell_command "cd $builddir; cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft";
+  TinderUtils::run_shell_command "$builddir/build/autoconf/make-makefile $builddir/fullsoft";
+  TinderUtils::run_shell_command "make -C $builddir/fullsoft";
+  TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push";
+}
+
+sub processtalkback {
+  # first argument is whether to make a new talkback build on server
+  #                and upload debug symbols
+  # second argument is where we're building our tree
+  my $makefullsoft      = shift;
+  my $builddir      = shift;   
+  # put symbols in builddir/dist/buildid
+  stagesymbols($builddir); 
+  if ($makefullsoft) {
+    $ENV{FC_UPLOADSYMS} = 1;
+    makefullsoft($builddir);
+  }
+  
+}
+
 sub packit {
   my ($packaging_dir, $package_location, $url, $stagedir) = @_;
   my $status;
@@ -285,6 +323,8 @@ sub main {
     $cachebuild = 0;
   }
 
+  processtalkback($cachebuild && $Settings::shiptalkback, $objdir);
+
   $upload_directory = $package_location . "/" . $upload_directory;
 
   unless (packit($package_creation_path,$package_location,$url_path,$upload_directory)) {
@@ -296,7 +336,7 @@ sub main {
     return returnStatus("Pushing package $upload_directory failed", ("testfailed"));
   }
 
-  if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) { 
+  if ($cachebuild) { 
     open BLAH, ">last-built"; 
     close BLAH;
     return reportRelease ("$url_path\/", "$datestamp");

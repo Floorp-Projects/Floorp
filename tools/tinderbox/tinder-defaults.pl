@@ -143,6 +143,24 @@ $ShellOverride = '';
 # allow override of timezone value (for win32 POSIX::strftime)
 $Timezone = '';
 
+# Release build options
+$ReleaseBuild  = 1;
+$shiptalkback  = 1;
+$build_hour    = "8";
+$package_creation_path = "/xpinstall/packager";
+$ssh_version   = "1";
+$ssh_user      = "cltbld";
+$ssh_server    = "stage.mozilla.org";
+$ftp_path      = "/home/ftp/pub/mozilla/nightly/experimental";
+$url_path      = "http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/experimental";
+$tbox_ftp_path = $ftp_path;
+$tbox_url_path = $url_path;
+$milestone     = "trunk";
+$notify_list   = "leaf\@mozilla.org";
+$stub_installer = 1;
+$sea_installer = 1;
+$archive       = 0;
+
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
 # locking up (and testing would be suspect even after a couple of cycles).
