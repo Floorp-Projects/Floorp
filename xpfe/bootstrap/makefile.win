@@ -101,6 +101,7 @@ LLIBS=                          \
  $(DIST)\lib\js3250.lib          \
  $(DIST)\lib\gkgfxwin.lib   \
  $(DIST)\lib\appfilelocprovider_s.lib \
+ $(DIST)\lib\mpfilelocprovider_s.lib \
 !ifdef GC_LEAK_DETECTOR
  $(DIST)\lib\boehm.lib \
 !endif
