@@ -52,6 +52,7 @@
 #include "nsITransport.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIEventQueue.h"
+#include "nsIAuthModule.h"
 
 #define UNKNOWN_ERROR             101
 #define UNKNOWN_HOST_ERROR        102
@@ -73,35 +74,35 @@ class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener
                                 , public nsITransportEventSink
 {
 public:
-	nsMsgProtocol(nsIURI * aURL);
-	virtual ~nsMsgProtocol();
+  nsMsgProtocol(nsIURI * aURL);
+  virtual ~nsMsgProtocol();
 
-	NS_DECL_ISUPPORTS
-	// nsIChannel support
-	NS_DECL_NSICHANNEL
-	NS_DECL_NSIREQUEST
+  NS_DECL_ISUPPORTS
+  // nsIChannel support
+  NS_DECL_NSICHANNEL
+  NS_DECL_NSIREQUEST
   
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSITRANSPORTEVENTSINK
 
-	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
-	// then calls the base class which opens the socket if it needs opened. If the socket is 
-	// already opened then we just call ProcessProtocolState to start the churning process.
-	// aConsumer is the consumer for the url. It can be null if this argument is not appropriate
-	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
+  // LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
+  // then calls the base class which opens the socket if it needs opened. If the socket is 
+  // already opened then we just call ProcessProtocolState to start the churning process.
+  // aConsumer is the consumer for the url. It can be null if this argument is not appropriate
+  virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
 
-	virtual nsresult SetUrl(nsIURI * aURL); // sometimes we want to set the url before we load it
+  virtual nsresult SetUrl(nsIURI * aURL); // sometimes we want to set the url before we load it
 
-	// Flag manipulators
-	virtual PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
-	virtual void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
-	virtual void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
+  // Flag manipulators
+  virtual PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
+  virtual void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
+  virtual void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
 protected:
-	// methods for opening and closing a socket with core netlib....
-	// mscott -okay this is lame. I should break this up into a file protocol and a socket based
-	// protocool class instead of cheating and putting both methods here...
+  // methods for opening and closing a socket with core netlib....
+  // mscott -okay this is lame. I should break this up into a file protocol and a socket based
+  // protocool class instead of cheating and putting both methods here...
 
   // open a connection on this url
   virtual nsresult OpenNetworkSocket(nsIURI * aURL,
@@ -116,53 +117,59 @@ protected:
                                              nsIInterfaceRequestor* callbacks);
   // helper routine
   nsresult GetFileFromURL(nsIURI * aURL, nsIFile **aResult);
-	virtual nsresult OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
+  virtual nsresult OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
 
-	// a Protocol typically overrides this method. They free any of their own connection state and then
-	// they call up into the base class to free the generic connection objects
-	virtual nsresult CloseSocket(); 
+  // a Protocol typically overrides this method. They free any of their own connection state and then
+  // they call up into the base class to free the generic connection objects
+  virtual nsresult CloseSocket(); 
 
-	virtual nsresult SetupTransportState(); // private method used by OpenNetworkSocket and OpenFileSocket
+  virtual nsresult SetupTransportState(); // private method used by OpenNetworkSocket and OpenFileSocket
 
-	// ProcessProtocolState - This is the function that gets churned by calls to OnDataAvailable. 
-	// As data arrives on the socket, OnDataAvailable calls ProcessProtocolState.
-	
-	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
-									      PRUint32 sourceOffset, PRUint32 length) = 0;
+  // ProcessProtocolState - This is the function that gets churned by calls to OnDataAvailable. 
+  // As data arrives on the socket, OnDataAvailable calls ProcessProtocolState.
+  
+  virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
+									PRUint32 sourceOffset, PRUint32 length) = 0;
 
-	// SendData -- Writes the data contained in dataBuffer into the current output stream. 
-	// It also informs the transport layer that this data is now available for transmission.
-	// Returns a positive number for success, 0 for failure (not all the bytes were written to the
-	// stream, etc). 
+  // SendData -- Writes the data contained in dataBuffer into the current output stream. 
+  // It also informs the transport layer that this data is now available for transmission.
+  // Returns a positive number for success, 0 for failure (not all the bytes were written to the
+  // stream, etc). 
     // aSuppressLogging is a hint that sensitive data is being sent and should not be logged
-	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
+  virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
 
   virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
 
   virtual nsresult InitFromURI(nsIURI *aUrl);
 
-	// Ouput stream for writing commands to the socket	
-	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
-    nsCOMPtr<nsIInputStream>    m_inputStream;
+  nsresult DoNtlmStep1(const char *username, const char *password, nsCString &response);
+  nsresult DoNtlmStep2(nsCString &commandResponse, nsCString &response);
 
-	// Ouput stream for writing commands to the socket
-	nsCOMPtr<nsITransport>		m_transport; 
-	nsCOMPtr<nsIRequest>        m_request;
+  // Ouput stream for writing commands to the socket	
+  nsCOMPtr<nsIOutputStream>   m_outputStream;   // this will be obtained from the transport interface
+  nsCOMPtr<nsIInputStream>    m_inputStream;
 
-	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
-							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
-	PRUint32	m_flags; // used to store flag information
-	//PRUint32	m_startPosition;
-	PRInt32		m_readCount;
+  // Ouput stream for writing commands to the socket
+  nsCOMPtr<nsITransport>  m_transport; 
+  nsCOMPtr<nsIRequest>    m_request;
 
-	nsFileSpec	m_tempMsgFileSpec;  // we currently have a hack where displaying a msg involves writing it to a temp file first
+  PRBool        m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
+                                  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
+  PRUint32      m_flags; // used to store flag information
+  //PRUint32	m_startPosition;
+  PRInt32       m_readCount;
 
-	// the following is a catch all for nsIChannel related data
-	nsCOMPtr<nsIURI>            m_originalUrl;  // the original url
-	nsCOMPtr<nsIURI>            m_url;          // the running url
-	nsCOMPtr<nsIStreamListener> m_channelListener;
-	nsCOMPtr<nsISupports>	    	m_channelContext;
-	nsCOMPtr<nsILoadGroup>		  m_loadGroup;
+  nsFileSpec	m_tempMsgFileSpec;  // we currently have a hack where displaying a msg involves writing it to a temp file first
+
+  // auth module for access to NTLM functions
+  nsCOMPtr<nsIAuthModule> m_authModule;
+
+  // the following is a catch all for nsIChannel related data
+  nsCOMPtr<nsIURI>            m_originalUrl;  // the original url
+  nsCOMPtr<nsIURI>            m_url;          // the running url
+  nsCOMPtr<nsIStreamListener> m_channelListener;
+  nsCOMPtr<nsISupports>	      m_channelContext;
+  nsCOMPtr<nsILoadGroup>      m_loadGroup;
   nsLoadFlags                 mLoadFlags;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;

@@ -590,7 +590,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
       buffer += fullAddress;
       buffer += ">";
       if(TestFlag(SMTP_EHLO_SIZE_ENABLED))
-        buffer += nsPrintfCString(" SIZE=%d", m_totalMessageSize);;
+        buffer += nsPrintfCString(" SIZE=%d", m_totalMessageSize);
       buffer += CRLF;
     }
     PR_Free (fullAddress);
@@ -686,13 +686,16 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
             if(m_prefTrySecAuth)
             {
-                if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
-                {
                     nsresult rv;
                     nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
                     // this checks if psm is installed...
                     if (NS_SUCCEEDED(rv))
+                {
+                    if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
                       SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+
+                    if (m_responseText.Find("NTLM", PR_TRUE, 5) >= 0)  
+                        SetFlag(SMTP_AUTH_NTLM_ENABLED);
                 }
             }
 
@@ -817,6 +820,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
     if (m_prefAuthMethod == PREF_AUTH_ANY)
         {
         if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
+            TestFlag(SMTP_AUTH_NTLM_ENABLED) ||
             TestFlag(SMTP_AUTH_PLAIN_ENABLED))
             m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
         else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
@@ -869,6 +873,10 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
         if(TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
           // if CRAM-MD5 enabled, clear it if we failed. 
           ClearFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+        else
+        if(TestFlag(SMTP_AUTH_NTLM_ENABLED))
+          // if NTLM enabled, clear it if we failed. 
+          ClearFlag(SMTP_AUTH_NTLM_ENABLED);
         else
         if(TestFlag(SMTP_AUTH_PLAIN_ENABLED))
           // if PLAIN enabled, clear it if we failed. 
@@ -957,6 +965,16 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   else
     password.Assign(mLogonCookie);
   
+  if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
+    PR_snprintf(buffer, sizeof(buffer), "AUTH CRAM-MD5" CRLF);
+  else
+  if (TestFlag(SMTP_AUTH_NTLM_ENABLED))
+  {
+    nsCAutoString response;
+    rv = DoNtlmStep1(username.get(), password.get(), response);
+    PR_snprintf(buffer, sizeof(buffer), "AUTH NTLM %.256s" CRLF, response.get());
+  }
+  else
   if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
   {
     char plain_string[512];
@@ -970,22 +988,15 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
     len += password.Length();
     
     base64Str = PL_Base64Encode(plain_string, len, nsnull);
+    PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
   }
   else
+  if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
   {
-    base64Str = 
-      PL_Base64Encode((const char *) username, 
+    base64Str = PL_Base64Encode((const char *)username, 
       strlen((const char*)username), nsnull);
-  } 
-
-  if (base64Str) {
-    // if cram md5 available, let's use it.
-    if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
-      PR_snprintf(buffer, sizeof(buffer), "AUTH CRAM-MD5" CRLF);
-    else if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
-      PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
-    else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
       PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
+  } 
     else
       return (NS_ERROR_COMMUNICATIONS_ERROR);
     
@@ -998,8 +1009,6 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
     
     return (status);
   }
-  return -1;
-}
 
 PRInt32 nsSmtpProtocol::AuthLoginPassword()
 {
@@ -1067,12 +1076,19 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
         PR_snprintf(buffer, sizeof(buffer), "*" CRLF);
     }
     else
+    if (TestFlag(SMTP_AUTH_NTLM_ENABLED))
+    {
+      nsCAutoString response;
+      rv = DoNtlmStep2(m_responseText, response);
+      PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, response.get());
+    }
+    else
     {
       char *base64Str = PL_Base64Encode(password.get(), password.Length(), nsnull);
-      
       PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
       nsCRT::free(base64Str);
     }
+
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
     status = SendData(url, buffer, PR_TRUE);
     m_nextState = SMTP_RESPONSE;

@@ -46,6 +46,7 @@
 #include "nsIMsgLogonRedirector.h"
 #include "nsIMsgStringService.h"
 #include "nsMsgLineBuffer.h"
+#include "nsIAuthModule.h"
 
 #include "nsCOMPtr.h"
 
@@ -104,8 +105,9 @@ SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 23
 #define SMTP_ESMTP_SERVER               0x00000200
 #define SMTP_AUTH_CRAM_MD5_ENABLED      0x00000400
 #define SMTP_AUTH_DIGEST_MD5_ENABLED    0x00000800
-#define SMTP_AUTH_ANY_ENABLED           0x00000C1C
-#define SMTP_EHLO_SIZE_ENABLED          0x00001000
+#define SMTP_AUTH_NTLM_ENABLED          0x00001000
+#define SMTP_AUTH_ANY_ENABLED           0x00001C1C
+#define SMTP_EHLO_SIZE_ENABLED          0x00002000
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,

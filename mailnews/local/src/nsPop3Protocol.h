@@ -50,6 +50,7 @@
 #include "nsLocalStringBundle.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nsIAuthModule.h"
 
 #include "prerror.h"
 #include "plhash.h"
@@ -104,8 +105,9 @@ enum Pop3CapabilityEnum {
     POP3_HAS_AUTH_PLAIN         = 0x00001000,
     POP3_HAS_AUTH_CRAM_MD5      = 0x00002000,
     POP3_HAS_AUTH_APOP          = 0x00004000,
-    POP3_HAS_RESP_CODES         = 0x00008000,
-    POP3_HAS_AUTH_RESP_CODE     = 0x00010000
+    POP3_HAS_AUTH_NTLM          = 0x00010000,
+    POP3_HAS_RESP_CODES         = 0x00020000,
+    POP3_HAS_AUTH_RESP_CODE     = 0x00040000
 };
 
 #define POP3_HAS_AUTH_ANY         0x00001C00
@@ -157,13 +159,15 @@ enum Pop3StatesEnum {
 
     POP3_AUTH_LOGIN,                            // 35
     POP3_AUTH_LOGIN_RESPONSE,                   // 36
-    POP3_SEND_XSENDER,                          // 37
-    POP3_XSENDER_RESPONSE,                      // 38
-    POP3_SEND_GURL,                             // 39
+    POP3_AUTH_NTLM,                             // 37
+    POP3_AUTH_NTLM_RESPONSE,                    // 38
+    POP3_SEND_XSENDER,                          // 39
+    POP3_XSENDER_RESPONSE,                      // 40
+    POP3_SEND_GURL,                             // 41
 
-    POP3_GURL_RESPONSE,                         // 40
-    POP3_QUIT_RESPONSE,                         // 41
-    POP3_INTERRUPTED                            // 42
+    POP3_GURL_RESPONSE,                         // 42
+    POP3_QUIT_RESPONSE,                         // 43
+    POP3_INTERRUPTED                            // 44
 };
 
 
@@ -362,6 +366,8 @@ private:
   PRInt32 AuthFallback();
   PRInt32 AuthLogin();
   PRInt32 AuthLoginResponse();
+  PRInt32 AuthNtlm();
+  PRInt32 AuthNtlmResponse();
   PRInt32 SendUsername();
   PRInt32 SendPassword();
   PRInt32 SendStatOrGurl(PRBool sendStat);

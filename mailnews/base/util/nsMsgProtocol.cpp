@@ -56,6 +56,7 @@
 #include "nsIPipe.h"
 #include "nsIPrompt.h"
 #include "prprf.h"
+#include "plbase64.h"
 #include "nsIStringBundle.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyInfo.h"
@@ -856,6 +857,61 @@ nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
         delete fileStream;
     }
     return NS_OK;
+}
+
+nsresult nsMsgProtocol::DoNtlmStep1(const char *username, const char *password, nsCString &response)
+{
+    nsresult rv;
+
+    m_authModule = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm", &rv);
+    // if this fails, then it means that we cannot do NTLM auth.
+    if (NS_FAILED(rv) || !m_authModule)
+        return rv;
+
+    m_authModule->Init(nsnull, NS_ConvertUTF8toUCS2(username).get(),
+                       NS_ConvertUTF8toUCS2(password).get());
+
+    void *outBuf;
+    PRUint32 outBufLen;
+    rv = m_authModule->GetNextToken((void *)nsnull, 0, &outBuf, &outBufLen);
+    if (NS_SUCCEEDED(rv) && outBuf)
+    {
+        response.Adopt(PL_Base64Encode((char *)outBuf, outBufLen, nsnull));
+        rv = response.IsEmpty() ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+        nsMemory::Free(outBuf);
+    }
+
+    return rv;
+}
+
+nsresult nsMsgProtocol::DoNtlmStep2(nsCString &commandResponse, nsCString &response)
+{
+    nsresult rv;
+    void *inBuf, *outBuf;
+    PRUint32 inBufLen, outBufLen;
+
+    // decode into the input secbuffer
+    inBufLen = (commandResponse.Length() * 3)/4;      // sufficient size (see plbase64.h)
+    inBuf = nsMemory::Alloc(inBufLen);
+    if (!inBuf)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = (PL_Base64Decode(commandResponse.get(), commandResponse.Length(), (char *)inBuf))
+         ? m_authModule->GetNextToken(inBuf, inBufLen, &outBuf, &outBufLen)
+         : NS_ERROR_FAILURE;
+
+    nsMemory::Free(inBuf);
+    if (NS_SUCCEEDED(rv) && outBuf)
+    {
+        response.Adopt(PL_Base64Encode((char *)outBuf, outBufLen, nsnull));
+        rv = response.IsEmpty() ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+        nsMemory::Free(outBuf);
+    }
+
+    if (NS_FAILED(rv))
+        response = "*";
+
+    return rv;
 }
 
 /////////////////////////////////////////////////////////////////////

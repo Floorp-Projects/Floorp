@@ -728,6 +728,8 @@ void nsPop3Protocol::Abort()
   }
   // need this to close the stream on the inbox.
   m_nsIPop3Sink->AbortMailDelivery();
+  m_pop3Server->SetRunningProtocol(nsnull);
+
 }
 
 NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
@@ -1124,6 +1126,13 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
         if (NS_SUCCEEDED(rv))
             SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
     }
+    else if (!PL_strcasecmp (line, "NTLM")) 
+    {
+        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+        // this checks if psm is installed...
+        if (NS_SUCCEEDED(rv))
+            SetCapFlag(POP3_HAS_AUTH_NTLM);
+    }
     else if (!PL_strcasecmp (line, "PLAIN")) 
         SetCapFlag(POP3_HAS_AUTH_PLAIN);
     else if (!PL_strcasecmp (line, "LOGIN")) 
@@ -1220,6 +1229,9 @@ PRInt32 nsPop3Protocol::ProcessAuth()
       if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
           m_pop3ConData->next_state = POP3_SEND_USERNAME;
       else
+        if (TestCapFlag(POP3_HAS_AUTH_NTLM))
+            m_pop3ConData->next_state = POP3_AUTH_NTLM;
+        else
         if (TestCapFlag(POP3_HAS_AUTH_APOP))
             m_pop3ConData->next_state = POP3_SEND_PASSWORD;
         else
@@ -1283,6 +1295,9 @@ PRInt32 nsPop3Protocol::AuthFallback()
             if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
                 // if CRAM-MD5 enabled, disable it
                 ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+            else if (TestCapFlag(POP3_HAS_AUTH_NTLM))
+                // if NTLM enabled, disable it
+                ClearCapFlag(POP3_HAS_AUTH_NTLM);
             else if (TestCapFlag(POP3_HAS_AUTH_APOP))
             {
                 // if APOP enabled, disable it
@@ -1293,6 +1308,8 @@ PRInt32 nsPop3Protocol::AuthFallback()
         }
         else
         {
+            // If one authentication failed, we're going to
+            // fall back on a less secure login method.
             if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
                 // if PLAIN enabled, disable it
                 ClearCapFlag(POP3_HAS_AUTH_PLAIN);
@@ -1374,7 +1391,7 @@ PRInt32 nsPop3Protocol::AuthLogin()
 
 PRInt32 nsPop3Protocol::AuthLoginResponse()
 {
-    // need the test to be here instead in AuthResponse() to
+    // need the test to be here instead in AuthFallback() to
     // differentiate between command AUTH LOGIN failed and
     // sending username using LOGIN mechanism failed.
     if (!m_pop3ConData->command_succeeded) 
@@ -1392,10 +1409,56 @@ PRInt32 nsPop3Protocol::AuthLoginResponse()
     return 0;
 }
 
+// NTLM, like LOGIN consists of three steps not two as USER/PASS or CRAM-MD5,
+// so we've to start here and continue in SendUsername if the server
+// responds + to "AUTH NTLM"
+PRInt32 nsPop3Protocol::AuthNtlm()
+{
+    nsCAutoString command("AUTH NTLM" CRLF);
+    m_pop3ConData->next_state_after_response = POP3_AUTH_NTLM_RESPONSE;
+    m_pop3ConData->pause_for_read = PR_TRUE;
+
+    return SendData(m_url, command.get());
+}
+
+PRInt32 nsPop3Protocol::AuthNtlmResponse()
+{
+    // need the test to be here instead in AuthFallback() to
+    // differentiate between command AUTH NTLM failed and
+    // sending username using NTLM mechanism failed.
+    if (!m_pop3ConData->command_succeeded) 
+    {
+        // we failed with NTLM, remove it
+        ClearCapFlag(POP3_HAS_AUTH_NTLM);
+
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+    }
+    else
+        m_pop3ConData->next_state = POP3_SEND_USERNAME;
+
+    m_pop3ConData->pause_for_read = PR_FALSE;
+
+    return 0;
+}
+
 PRInt32 nsPop3Protocol::SendUsername()
 {
     if(m_username.IsEmpty())
         return(Error(POP3_USERNAME_UNDEFINED));
+
+    nsXPIDLCString password;
+    PRBool okayValue = PR_TRUE;
+    nsresult rv = GetPassword(getter_Copies(password), &okayValue);
+    if (NS_SUCCEEDED(rv) && !okayValue)
+    {
+        // user has canceled the password prompt
+        m_pop3ConData->next_state = POP3_ERROR_DONE;
+        return NS_ERROR_ABORT;
+    }
+    else if (NS_FAILED(rv) || !password)
+    {
+      return Error(POP3_PASSWORD_UNDEFINED);
+    }
 
     nsCAutoString cmd;
 
@@ -1403,6 +1466,8 @@ PRInt32 nsPop3Protocol::SendUsername()
     {
         if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
             cmd = "AUTH CRAM-MD5";
+        else if (TestCapFlag(POP3_HAS_AUTH_NTLM))
+            rv = DoNtlmStep1(m_username.get(), password.get(), cmd);
     }
     else
     {
@@ -1410,8 +1475,7 @@ PRInt32 nsPop3Protocol::SendUsername()
             cmd = "AUTH PLAIN";
         else if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
         {
-            char *base64Str =
-                PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
+            char *base64Str = PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
             cmd = base64Str;
             PR_Free(base64Str);
         }
@@ -1485,8 +1549,9 @@ PRInt32 nsPop3Protocol::SendPassword()
             if (NS_FAILED(rv))
                 cmd = "*";
         }
-        else
-        if (TestCapFlag(POP3_HAS_AUTH_APOP))
+        else if (TestCapFlag(POP3_HAS_AUTH_NTLM))
+            rv = DoNtlmStep2(m_commandResponse, cmd);
+        else if (TestCapFlag(POP3_HAS_AUTH_APOP))
         {
             char buffer[512];
             unsigned char digest[DIGEST_LENGTH];
@@ -1530,8 +1595,7 @@ PRInt32 nsPop3Protocol::SendPassword()
             cmd = base64Str;
             PR_Free(base64Str);
         }
-        else
-        if (TestCapFlag(POP3_HAS_AUTH_LOGIN)) 
+        else if (TestCapFlag(POP3_HAS_AUTH_LOGIN)) 
         {
             char * base64Str = 
                 PL_Base64Encode(password, PL_strlen(password), nsnull);
@@ -3248,6 +3312,14 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       
     case POP3_AUTH_LOGIN_RESPONSE:
       status = AuthLoginResponse();
+      break;
+      
+    case POP3_AUTH_NTLM:
+      status = AuthNtlm();
+      break;
+      
+    case POP3_AUTH_NTLM_RESPONSE:
+      status = AuthNtlmResponse();
       break;
       
     case POP3_SEND_USERNAME:
