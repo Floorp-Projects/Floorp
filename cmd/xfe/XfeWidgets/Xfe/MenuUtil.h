@@ -128,6 +128,16 @@ XfeDisplaySetUserGrabbed		(Widget				w,
 								 Boolean			grabbed);
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Destruction															*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+XfeDestroyMenuWidgetTree		(WidgetList		children,
+								 int			num_children,
+								 Boolean		skip_private_components);
+/*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/
 }

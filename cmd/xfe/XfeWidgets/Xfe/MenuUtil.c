@@ -749,3 +749,55 @@ XfeMenuType(Widget menu)
 	return RC_Type(menu);
 }
 /*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Destruction															*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ void
+XfeDestroyMenuWidgetTree(WidgetList		children,
+						 int			num_children,
+						 Boolean		skip_private_components)
+{
+	int			i;
+
+	if ((num_children <= 0) || (children == NULL))
+	{
+		return;
+	}
+    
+	for (i = num_children - 1; i >= 0; i--) 
+	{
+		Widget		submenu = XfeCascadeGetSubMenu(children[i]);
+		Boolean		skip = False;
+
+		if (submenu) 
+		{
+			/*
+			 * I think we should use submenu instead of children[i],
+             * but this is how the original code was written.
+			 *
+			 * I need to think about this some more...
+             */
+			if (_XfemChildren(children[i]) && _XfemNumChildren(children[i]))
+			{
+				XfeDestroyMenuWidgetTree(_XfemChildren(children[i]),
+										 _XfemNumChildren(children[i]),
+										 skip_private_components);
+			}
+		}
+		
+		skip = (skip_private_components &&
+				XfeIsAlive(_XfeParent(children[i])) &&
+				XfeIsManager(_XfeParent(children[i])) &&
+				_XfeManagerPrivateComponent(children[i]));
+
+		if (!skip)
+		{
+			XtDestroyWidget(children[i]);
+		}
+    }
+}
+/*----------------------------------------------------------------------*/
