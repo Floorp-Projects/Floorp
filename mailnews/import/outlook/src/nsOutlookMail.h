@@ -59,8 +59,8 @@ private:
 	void		BuildAttachments( CMapiMessage& msg, int count);
 	void		DumpAttachments( void);
 
-	PRBool		IsAddressBookNameUnique( nsCString& name, nsCString& list);
-	void		MakeAddressBookNameUnique( nsCString& name, nsCString& list);
+	PRBool		IsAddressBookNameUnique( nsString& name, nsString& list);
+	void		MakeAddressBookNameUnique( nsString& name, nsString& list);
 	void		SanitizeValue( nsString& val);
 	void		SplitString( nsString& val1, nsString& val2);
 	PRBool		BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);

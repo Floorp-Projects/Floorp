@@ -68,7 +68,6 @@ private:
 	void			ExtractNoteField( nsCString& note, nsCString& field, const char *pFieldName);
 	void			SanitizeValue( nsCString& val);
 	void			SplitString( nsCString& val1, nsCString& val2);
-	void			ConvertToUnicode( const char *pStr, nsString& uniStr);
 
 public:
 	static PRInt32 		CountQuote( const char *pLine, PRInt32 len);
@@ -77,7 +76,6 @@ public:
 
 private:
 	nsVoidArray		m_alias;
-	nsCOMPtr<nsIImportService>	m_pService;
 };
 
 

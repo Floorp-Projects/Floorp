@@ -145,20 +145,20 @@ class CMapiFolder {
 public:
 	CMapiFolder();
 	CMapiFolder( const CMapiFolder *pCopyFrom);
-	CMapiFolder( const char *pDisplayName, ULONG cbEid, LPENTRYID lpEid, int depth, LONG oType = MAPI_FOLDER);
+	CMapiFolder( const PRUnichar *pDisplayName, ULONG cbEid, LPENTRYID lpEid, int depth, LONG oType = MAPI_FOLDER);
 	~CMapiFolder();
 
 	void	SetDoImport( BOOL doIt) { m_doImport = doIt;}
 	void	SetObjectType( long oType) { m_objectType = oType;}
-	void	SetDisplayName( const char *pDisplayName) { m_displayName = pDisplayName;}
+	void	SetDisplayName( const PRUnichar *pDisplayName) { m_displayName = pDisplayName;}
 	void	SetEntryID( ULONG cbEid, LPENTRYID lpEid);
 	void	SetDepth( int depth) { m_depth = depth;}
-	void	SetFilePath( const char *pFilePath) { m_mailFilePath = pFilePath;}
+	void	SetFilePath( const PRUnichar *pFilePath) { m_mailFilePath = pFilePath;}
 	
 	BOOL	GetDoImport( void) const { return( m_doImport);}
 	LONG	GetObjectType( void) const { return( m_objectType);}
-	void	GetDisplayName( nsCString& name) const { name = m_displayName;}
-	void	GetFilePath( nsCString& path) const { path = m_mailFilePath;}
+	void	GetDisplayName( nsString& name) const { name = m_displayName;}
+	void	GetFilePath( nsString& path) const { path = m_mailFilePath;}
 	BOOL	IsStore( void) const { return( m_objectType == MAPI_STORE);}
 	BOOL	IsFolder( void) const { return( m_objectType == MAPI_FOLDER);}
 	int		GetDepth( void) const { return( m_depth);}
@@ -170,9 +170,9 @@ private:
 	LONG		m_objectType;
 	ULONG		m_cbEid;
 	BYTE *		m_lpEid;
-	nsCString	m_displayName;
+	nsString	m_displayName;
 	int			m_depth;
-	nsCString	m_mailFilePath;
+	nsString	m_mailFilePath;
 	BOOL		m_doImport;
 
 };
@@ -195,7 +195,7 @@ public:
 protected:
 	void	EnsureUniqueName( CMapiFolder *pFolder);
 	void	GenerateFilePath( CMapiFolder *pFolder);
-	void	ChangeName( nsCString& name);
+	void	ChangeName( nsString& name);
 
 private:
 	nsVoidArray		m_array;

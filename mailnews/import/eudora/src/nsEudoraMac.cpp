@@ -34,6 +34,7 @@
 #include "nsIImportABDescriptor.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEudoraStringBundle.h"
+#include "nsEudoraImport.h"
 
 #include "EudoraDebugLog.h"
 
@@ -304,9 +305,11 @@ nsresult nsEudoraMac::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *pA
 
 nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName; displayName.AssignWithConversion(pName);
+	nsString								displayName;
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
+
+	ConvertToUnicode(pName, displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -345,9 +348,11 @@ nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, ns
 
 nsresult nsEudoraMac::FoundMailFolder( nsIFileSpec *mailFolder, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName; displayName.AssignWithConversion(pName);
+	nsString								displayName;
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
+
+	ConvertToUnicode(pName, displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -1140,7 +1145,7 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 			rv = spec->IsFile( &isFile);
 			rv = spec->GetLeafName( &pName);
 			if (pName)	{
-				displayName.AssignWithConversion(pName);
+				ConvertToUnicode(pName, displayName);
 				nsCRT::free( pName);
 			}
 			if (NS_SUCCEEDED( rv) && pName && isFile) {

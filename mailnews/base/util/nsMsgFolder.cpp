@@ -43,6 +43,7 @@
 #include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
+#include "nsMsgI18N.h"
 
 #include "nsIPref.h"
 
@@ -862,24 +863,25 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 	rv = mSubFolders->Count(&count);
 	if (NS_FAILED(rv)) return rv;
 
+	nsString uniName;
+	ConvertToUnicode(nsMsgI18NFileSystemCharset(), name, uniName);
+
 	for (PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
 		folder = do_QueryInterface(supports, &rv);
 		if(NS_SUCCEEDED(rv))
 		{
-			PRUnichar *folderName = nsnull;
+			nsXPIDLString folderName;
 
-			folder->GetName(&folderName);
+			rv = folder->GetName(getter_Copies(folderName));
 			// case-insensitive compare is probably LCD across OS filesystems
-			if (folderName && nsCRT::strcasecmp(folderName, name)==0)
+			if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(folderName, uniName.GetUnicode()) == 0)
 			{
 				*aChild = folder;
 				NS_ADDREF(*aChild);
-				delete[] folderName;
 				return NS_OK;
 			}
-			delete[] folderName;
 		}
 	}
 	return NS_OK;

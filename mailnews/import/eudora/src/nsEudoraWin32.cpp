@@ -33,6 +33,7 @@
 #include "nsIImportMailboxDescriptor.h"
 #include "nsIImportABDescriptor.h"
 #include "nsEudoraStringBundle.h"
+#include "nsEudoraImport.h"
 
 #include "EudoraDebugLog.h"
 
@@ -420,9 +421,11 @@ nsresult nsEudoraWin32::ScanDescmap( nsIFileSpec *pFolder, nsISupportsArray *pAr
 
 nsresult nsEudoraWin32::FoundMailbox( nsIFileSpec *mailFile, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName; displayName.AssignWithConversion(pName);
+	nsString								displayName;
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
+
+	ConvertToUnicode(pName, displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -461,9 +464,11 @@ nsresult nsEudoraWin32::FoundMailbox( nsIFileSpec *mailFile, const char *pName, 
 
 nsresult nsEudoraWin32::FoundMailFolder( nsIFileSpec *mailFolder, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName; displayName.AssignWithConversion(pName);
+	nsString								displayName;
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
+
+	ConvertToUnicode(pName, displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -1357,7 +1362,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 			return( rv);
 		if (!pLeaf)
 			return( NS_ERROR_FAILURE);
-		name.AssignWithConversion(pLeaf);
+		ConvertToUnicode(pLeaf, name);
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);

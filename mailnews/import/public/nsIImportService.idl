@@ -40,6 +40,7 @@ interface nsIImportGeneric;
 interface nsIImportFieldMap;
 
 [ref] native nsStringRef(nsString);
+[ref] native nsCStringRef(nsCString);
 
 [scriptable, uuid(50d7ea80-1726-11d3-a206-00a0cc26da63)]
 interface nsIImportService : nsISupports
@@ -60,6 +61,7 @@ interface nsIImportService : nsISupports
 	nsIImportGeneric			CreateNewGenericAddressBooks();
 
 	[noscript] void SystemStringToUnicode( in string sysStr, in nsStringRef uniStr);
+        [noscript] void SystemStringFromUnicode(in wstring uniStr, in nsCStringRef sysStr);
 
 };
 

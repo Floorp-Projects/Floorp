@@ -171,6 +171,25 @@ private:
 	PRUint32		m_bytes;
 };
 
+////////////////////////////////////////////////////////////////////////
+// Converter functions
+////////////////////////////////////////////////////////////////////////
+
+nsCOMPtr<nsIImportService>	gService;
+
+void ConvertToUnicode(const char *pStr, nsString &dist)
+{
+	nsresult rv = NS_OK;
+
+	if (!gService)
+		gService = do_GetService(kImportServiceCID);
+
+	if (gService)
+		rv = gService->SystemStringToUnicode(pStr, dist);
+
+	if (!gService || NS_FAILED(rv)) // XXX bad cast
+		dist.AssignWithConversion(pStr);
+}
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
+#include "nsICharsetConverterManager2.h"
 
 #include "nsCRT.h"
 #include "nsString.h"
@@ -81,6 +82,7 @@ private:
 	PRBool					m_didDiscovery;	
 	nsString				m_sysCharset;
 	nsIUnicodeDecoder *		m_pDecoder;
+	nsIUnicodeEncoder *		m_pEncoder;
 };
 
 // extern nsresult NS_NewImportService(nsIImportService** aImportService);
@@ -177,6 +179,7 @@ nsImportService::nsImportService() : m_pModules( nsnull)
 
 	m_didDiscovery = PR_FALSE;
 	m_pDecoder = nsnull;
+	m_pEncoder = nsnull;
 
 	// Go ahead an initialize the charset converter to avoid any 
 	// thread issues later.
@@ -187,8 +190,8 @@ nsImportService::nsImportService() : m_pModules( nsnull)
 
 nsImportService::~nsImportService()
 {
-	if (m_pDecoder)
-		NS_RELEASE( m_pDecoder);
+	NS_IF_RELEASE(m_pDecoder);
+	NS_IF_RELEASE(m_pEncoder);
 
 	gImportService = nsnull;
 
@@ -266,28 +269,15 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 
 	
 	if (!m_pDecoder) {
-		nsAutoString convCharset;
+		nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 
-		// Resolve charset alias
-		NS_WITH_SERVICE( nsICharsetAlias, calias, kCharsetAliasCID, &rv); 
-		if (NS_SUCCEEDED( rv)) {
-			nsAutoString aAlias( m_sysCharset);
-			if (aAlias.Length()) {
-				rv = calias->GetPreferred( aAlias, convCharset);
-			}
-		}
+		if (NS_SUCCEEDED( rv) && (nsnull != ccm2)) {
+			// get charset atom due to getting unicode converter
+			nsCOMPtr <nsIAtom> charsetAtom;
+			rv = ccm2->GetCharsetAtom(m_sysCharset.GetUnicode(), getter_AddRefs(charsetAtom));
 
-		if (NS_FAILED( rv)) {
-			IMPORT_LOG0( "*** Error getting charset alias to convert to uinicode\n");
-			uniStr.AssignWithConversion( sysStr);
-			return( rv);
-		}
-
-		NS_WITH_SERVICE( nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
-
-		if (NS_SUCCEEDED( rv) && (nsnull != ccm)) {
 			// get an unicode converter
-			rv = ccm->GetUnicodeDecoder( &convCharset, &m_pDecoder);
+			rv = ccm2->GetUnicodeDecoder(charsetAtom, &m_pDecoder);
 		}	    
 	}
 
@@ -314,6 +304,71 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 	return( rv);
 }
 
+NS_IMETHODIMP nsImportService::SystemStringFromUnicode(const PRUnichar *uniStr, nsCString & sysStr)
+{
+	nsresult	rv;
+	if (m_sysCharset.IsEmpty()) {
+		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+		if (NS_SUCCEEDED(rv)) 
+			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
+
+		if (NS_FAILED(rv)) 
+			m_sysCharset.AssignWithConversion("ISO-8859-1");
+	}
+
+	if (!uniStr) {
+		sysStr.Truncate();
+		return NS_OK;
+	}
+
+	if (*uniStr == '\0') {
+		sysStr.Truncate();
+		return NS_OK;
+	}
+
+	if (m_sysCharset.IsEmpty() ||
+		m_sysCharset.EqualsIgnoreCase("us-ascii") ||
+		m_sysCharset.EqualsIgnoreCase("ISO-8859-1")) {
+		sysStr.AssignWithConversion(uniStr);
+		return NS_OK;
+	}
+
+	if (!m_pEncoder) {
+		nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+
+		if (NS_SUCCEEDED( rv) && (nsnull != ccm2)) {
+			// get charset atom due to getting unicode converter
+			nsCOMPtr <nsIAtom> charsetAtom;
+			rv = ccm2->GetCharsetAtom(m_sysCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+
+			// get an unicode converter
+			rv = ccm2->GetUnicodeEncoder(charsetAtom, &m_pEncoder);
+		}
+	}
+
+	if (m_pEncoder) {
+		PRInt32 srcLen = nsCRT::strlen(uniStr);
+		char *  chars;
+		PRInt32 charLength = 0;
+
+		rv = m_pEncoder->GetMaxLength( uniStr, srcLen, &charLength);
+		// allocale an output buffer
+		chars = NS_STATIC_CAST(char*, nsMemory::Alloc((charLength + 1) * sizeof(char)));
+		if (chars != nsnull) {
+			// convert to unicode
+			rv = m_pEncoder->Convert( uniStr, &srcLen, chars, &charLength);
+			sysStr.Assign(chars, charLength);
+			nsMemory::Free(chars);
+		}
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+	}
+	
+	if (NS_FAILED( rv))
+		sysStr.AssignWithConversion(uniStr);
+
+	return rv;
+}
 
 extern nsresult NS_NewGenericMail(nsIImportGeneric** aImportGeneric);
 

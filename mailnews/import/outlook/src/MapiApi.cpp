@@ -271,7 +271,7 @@ public:
 	virtual BOOL HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID pEntry);
 
 protected:
-	BOOL	ExcludeFolderClass( const char *pName);
+	BOOL	ExcludeFolderClass( const PRUnichar *pName);
 
 	BOOL				m_isMail;
 	CMapiApi *			m_pApi;
@@ -287,27 +287,27 @@ CGetStoreFoldersIter::CGetStoreFoldersIter( CMapiApi *pApi, CMapiFolderList& fol
 	m_isMail = isMail;
 }
 
-BOOL CGetStoreFoldersIter::ExcludeFolderClass( const char *pName)
+BOOL CGetStoreFoldersIter::ExcludeFolderClass( const PRUnichar *pName)
 {
 	BOOL bResult;
 	if (m_isMail) {
 		bResult = FALSE;
-		if (!nsCRT::strcasecmp( pName, "IPF.Appointment"))
+		if (!nsCRT::strcasecmp( pName, L"IPF.Appointment"))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, "IPF.Contact"))
+		else if (!nsCRT::strcasecmp( pName, L"IPF.Contact"))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, "IPF.Journal"))
+		else if (!nsCRT::strcasecmp( pName, L"IPF.Journal"))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, "IPF.StickyNote"))
+		else if (!nsCRT::strcasecmp( pName, L"IPF.StickyNote"))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, "IPF.Task"))
+		else if (!nsCRT::strcasecmp( pName, L"IPF.Task"))
 			bResult = TRUE;
 		// else if (!stricmp( pName, "IPF.Note"))
 		//	bResult = TRUE;
 	}
 	else {
 		bResult = TRUE;
-		if (!nsCRT::strcasecmp( pName, "IPF.Contact"))
+		if (!nsCRT::strcasecmp( pName, L"IPF.Contact"))
 			bResult = FALSE;
 	}
 
@@ -320,7 +320,7 @@ BOOL CGetStoreFoldersIter::HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID
 		LPMAPIFOLDER pFolder;
 		if (m_pApi->OpenEntry( cb, pEntry, (LPUNKNOWN *) &pFolder)) {
 			LPSPropValue		pVal;
-			nsCString			name;
+			nsString			name;
 
 			pVal = m_pApi->GetMapiProperty( pFolder, PR_CONTAINER_CLASS);
 			if (pVal)
@@ -328,10 +328,10 @@ BOOL CGetStoreFoldersIter::HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID
 			else
 				name.Truncate();
 
-			if ((name.IsEmpty() && m_isMail) || (!ExcludeFolderClass( name))) {
+			if ((name.IsEmpty() && m_isMail) || (!ExcludeFolderClass(name.GetUnicode()))) {
 				pVal = m_pApi->GetMapiProperty( pFolder, PR_DISPLAY_NAME);
 				m_pApi->GetStringFromProp( pVal, name);
-				CMapiFolder	*pNewFolder = new CMapiFolder( name, cb, pEntry, m_depth);
+				CMapiFolder	*pNewFolder = new CMapiFolder(name.GetUnicode(), cb, pEntry, m_depth);
 				m_pList->AddItem( pNewFolder);
 				
 				pVal = m_pApi->GetMapiProperty( pFolder, PR_FOLDER_TYPE);
@@ -862,7 +862,19 @@ BOOL CMapiApi::IterateStores( CMapiFolderList& stores)
 				// there would be nothing to import from anyway!
 				// Currently, this does exclude IMAP server accounts
 				// which is the desired behaviour.
-				CMapiFolder *pFolder = new CMapiFolder( lpStr, cbEID, lpEID, 0, MAPI_STORE);
+
+                int         strLen = nsCRT::strlen(lpStr);
+                PRUnichar * pwszStr = (PRUnichar *) nsMemory::Alloc((strLen + 1) * sizeof(WCHAR));
+                if (!pwszStr) {
+                    // out of memory
+                    FreeProws( lpRow);
+                    lpTable->Release();
+                    return FALSE;
+                }
+                ::MultiByteToWideChar(CP_ACP, 0, lpStr, nsCRT::strlen(lpStr) + 1, pwszStr, (strLen + 1) * sizeof(WCHAR));
+				CMapiFolder *pFolder = new CMapiFolder( pwszStr, cbEID, lpEID, 0, MAPI_STORE);
+                nsMemory::Free(pwszStr);
+
 				long szContents = 1;
  				GetStoreInfo( pFolder, &szContents);
 
@@ -1428,10 +1440,10 @@ void CMapiFolderList::AddItem( CMapiFolder *pFolder)
 	m_array.AppendElement( pFolder);
 }
 
-void CMapiFolderList::ChangeName( nsCString& name)
+void CMapiFolderList::ChangeName( nsString& name)
 {
 	if (name.IsEmpty()) {
-		name = "1";
+		name.AssignWithConversion("1");
 		return;
 	}
 	PRUnichar lastC = name.Last();
@@ -1440,14 +1452,14 @@ void CMapiFolderList::ChangeName( nsCString& name)
 		if (lastC > '9') {
 			lastC = '1';
 			name.SetCharAt( lastC, name.Length() - 1);
-			name += "0";
+			name.AppendWithConversion("0");
 		}
 		else {
 			name.SetCharAt( lastC, name.Length() - 1);
 		}
 	}
 	else {
-		name += " 2";
+		name.AppendWithConversion(" 2");
 	}
 }
 
@@ -1458,8 +1470,8 @@ void CMapiFolderList::EnsureUniqueName( CMapiFolder *pFolder)
 	CMapiFolder *	pCurrent;
 	int				i;
 	BOOL			done;
-	nsCString		name;
-	nsCString		cName;
+	nsString		name;
+	nsString		cName;
 
 	pFolder->GetDisplayName( name);
 	do {
@@ -1471,7 +1483,7 @@ void CMapiFolderList::EnsureUniqueName( CMapiFolder *pFolder)
 				pCurrent->GetDisplayName( cName);
 				if (!cName.CompareWithConversion( name, PR_TRUE)) {
 					ChangeName( name);
-					pFolder->SetDisplayName( name);
+					pFolder->SetDisplayName(name.GetUnicode());
 					done = FALSE;
 					break;
 				}
@@ -1486,11 +1498,11 @@ void CMapiFolderList::EnsureUniqueName( CMapiFolder *pFolder)
 void CMapiFolderList::GenerateFilePath( CMapiFolder *pFolder)
 {
 	// A file path, includes all of my parent's path, plus mine
-	nsCString		name;
-	nsCString		path;
+	nsString		name;
+	nsString		path;
 	if (!pFolder->GetDepth()) {
 		pFolder->GetDisplayName( name);
-		pFolder->SetFilePath( name);
+		pFolder->SetFilePath(name.GetUnicode());
 		return;
 	}
 
@@ -1500,16 +1512,16 @@ void CMapiFolderList::GenerateFilePath( CMapiFolder *pFolder)
 		pCurrent = (CMapiFolder *) GetAt( i);
 		if (pCurrent->GetDepth() == (pFolder->GetDepth() - 1)) {
 			pCurrent->GetFilePath( path);
-			path += ".sbd\\";
+			path.AppendWithConversion(".sbd\\");
 			pFolder->GetDisplayName( name);
 			path += name;
-			pFolder->SetFilePath( path);
+			pFolder->SetFilePath(path.GetUnicode());
 			return;
 		}
 		i--;
 	}
 	pFolder->GetDisplayName( name);
-	pFolder->SetFilePath( name);
+	pFolder->SetFilePath(name.GetUnicode());
 }
 
 void CMapiFolderList::ClearAll( void)
@@ -1525,7 +1537,7 @@ void CMapiFolderList::ClearAll( void)
 void CMapiFolderList::DumpList( void)
 {
 	CMapiFolder *pFolder;
-	nsCString	str;
+	nsString	str;
 	int			depth;
 	char		prefix[256];
 
@@ -1539,9 +1551,17 @@ void CMapiFolderList::DumpList( void)
 			depth = 255;
 		nsCRT::memset( prefix, ' ', depth);
 		prefix[depth] = 0;
-		MAPI_TRACE2( "%s%s: ", prefix, (const char *)str);
+#ifdef MAPI_DEBUG
+        char *ansiStr = str.ToNewCString();
+		MAPI_TRACE2( "%s%s: ", prefix, ansiStr);
+		nsCRT::free(ansiStr);
+#endif
 		pFolder->GetFilePath( str);
-		MAPI_TRACE2( "depth=%d, filePath=%s\n", pFolder->GetDepth(), (const char *)str);
+#ifdef MAPI_DEBUG
+        ansiStr = str.ToNewCString();
+		MAPI_TRACE2( "depth=%d, filePath=%s\n", pFolder->GetDepth(), ansiStr);
+		nsCRT::free(ansiStr);
+#endif
 	}
 	MAPI_TRACE0( "---------------------------------------------\n");
 }
@@ -1556,7 +1576,7 @@ CMapiFolder::CMapiFolder()
 	m_doImport = TRUE;
 }
 
-CMapiFolder::CMapiFolder( const char *pDisplayName, ULONG cbEid, LPENTRYID lpEid, int depth, LONG oType)
+CMapiFolder::CMapiFolder( const PRUnichar *pDisplayName, ULONG cbEid, LPENTRYID lpEid, int depth, LONG oType)
 {
 	m_cbEid = 0;
 	m_lpEid = NULL;
@@ -1572,11 +1592,11 @@ CMapiFolder::CMapiFolder( const CMapiFolder *pCopyFrom)
 	m_lpEid = NULL;
 	m_cbEid = 0;
 	SetDoImport( pCopyFrom->GetDoImport());
-	SetDisplayName( pCopyFrom->m_displayName);
+	SetDisplayName(pCopyFrom->m_displayName.GetUnicode());
 	SetObjectType( pCopyFrom->GetObjectType());
 	SetEntryID( pCopyFrom->GetCBEntryID(), pCopyFrom->GetEntryID());
 	SetDepth( pCopyFrom->GetDepth());
-	SetFilePath( pCopyFrom->m_mailFilePath);
+	SetFilePath(pCopyFrom->m_mailFilePath.GetUnicode());
 }
 
 CMapiFolder::~CMapiFolder()

@@ -56,6 +56,22 @@ nsOEScanBoxes::~nsOEScanBoxes()
 }
 
 
+// convert methods
+void nsOEScanBoxes::ConvertToUnicode(const char *pStr, nsString &dist)
+{
+	nsresult rv = NS_OK;
+
+	if (!mService)
+		mService = do_GetService(kImportServiceCID);
+
+	if (mService)
+		rv = mService->SystemStringToUnicode(pStr, dist);
+
+	if (!mService || NS_FAILED(rv)) // XXX bad cast
+		dist.AssignWithConversion(pStr);
+}
+
+
 /*
  3.x & 4.x registry
 	Software/Microsoft/Outlook Express/
@@ -400,7 +416,7 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 				pEntry->child = 0;
 				pEntry->type = 0;
 				pEntry->sibling = -1;
-				pEntry->mailName.AssignWithConversion((const char *) (pBytes + strOffset));
+				ConvertToUnicode((const char *) (pBytes + strOffset), pEntry->mailName);
 				if (pFileName)
 					pEntry->fileName = pFileName;
 				AddChildEntry( pEntry, localStoreId);
@@ -516,7 +532,7 @@ PRBool nsOEScanBoxes::Scan50MailboxDir( nsIFileSpec * srcDir)
 						pEntry->type = -1;
 						pEntry->fileName = pLeaf;
 						pLeaf[sLen - 4] = 0;
-						pEntry->mailName.AssignWithConversion(pLeaf);
+						ConvertToUnicode(pLeaf, pEntry->mailName);
 						m_entryArray.AppendElement( pEntry);				
 					}
 				}
@@ -587,7 +603,7 @@ void nsOEScanBoxes::ScanMailboxDir( nsIFileSpec * srcDir)
 					pEntry->type = -1;
 					pEntry->fileName = pLeaf;
 					pLeaf[sLen - 4] = 0;
-					pEntry->mailName.AssignWithConversion(pLeaf);
+					ConvertToUnicode(pLeaf, pEntry->mailName);
 					m_entryArray.AppendElement( pEntry);				
 				}
 				if (pLeaf)

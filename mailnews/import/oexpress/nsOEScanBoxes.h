@@ -29,6 +29,7 @@
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
 #include "nsIFileSpec.h"
+#include "nsIImportService.h"
 	
 class nsOEScanBoxes {
 public:
@@ -74,10 +75,13 @@ private:
 	void 			BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PRInt32 depth, nsISupportsArray *pArray);
 	PRBool 			GetMailboxList( nsIFileSpec * root, nsISupportsArray **pArray);
 	
+	void			ConvertToUnicode(const char *pStr, nsString &dist);
 	
 private:
 	MailboxEntry *				m_pFirst;
 	nsVoidArray					m_entryArray;
+
+	nsCOMPtr<nsIImportService>	mService;
 };
 
 #endif // nsOEScanBoxes_h__

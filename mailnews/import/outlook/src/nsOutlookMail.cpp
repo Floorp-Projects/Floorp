@@ -160,8 +160,8 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 	// Create the mailbox descriptors for the list of folders
 	nsIImportMailboxDescriptor *	pID;
 	nsISupports *					pInterface;
-	nsCString						name;
-	PRUnichar *						pChar;
+	nsString						name;
+	nsString						uniName;
 
 	for (i = 0; i < m_folderList.GetSize(); i++) {
 		pFolder = m_folderList.GetItem( i);
@@ -169,10 +169,10 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 		if (NS_SUCCEEDED( rv)) {
 			pID->SetDepth( pFolder->GetDepth());
 			pID->SetIdentifier( i);
+
 			pFolder->GetDisplayName( name);
-			pChar = name.ToNewUnicode();
-			pID->SetDisplayName( pChar);
-			nsCRT::free( pChar);
+			pID->SetDisplayName(name.GetUnicode());
+
 			pID->SetSize( 1000);
 			rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
 			(*pArray)->AppendElement( pInterface);
@@ -184,32 +184,33 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 	return( NS_OK);	
 }
 
-PRBool nsOutlookMail::IsAddressBookNameUnique( nsCString& name, nsCString& list)
+PRBool nsOutlookMail::IsAddressBookNameUnique( nsString& name, nsString& list)
 {
-	nsCString		usedName("[");
+	nsString		usedName;
+	usedName.AppendWithConversion("[");
 	usedName.Append( name);
-	usedName.Append( "],");
+	usedName.AppendWithConversion( "],");
 
 	return( list.Find( usedName) == -1);
 }
 
-void nsOutlookMail::MakeAddressBookNameUnique( nsCString& name, nsCString& list)
+void nsOutlookMail::MakeAddressBookNameUnique( nsString& name, nsString& list)
 {
-	nsCString		newName;
+	nsString		newName;
 	int				idx = 1;
 
 	newName = name;
 	while (!IsAddressBookNameUnique( newName, list)) {
 		newName = name;
-		newName.Append( ' ');
+		newName.AppendWithConversion( ' ');
 		newName.AppendInt( (PRInt32) idx);
 		idx++;
 	}
 	
 	name = newName;
-	list.Append( "[");
+	list.AppendWithConversion( "[");
 	list.Append( name);
-	list.Append( "],");
+	list.AppendWithConversion( "],");
 }
 
 nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
@@ -261,9 +262,8 @@ nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
 	// Create the mailbox descriptors for the list of folders
 	nsIImportABDescriptor *			pID;
 	nsISupports *					pInterface;
-	nsCString						name;
-	PRUnichar *						pChar;
-	nsCString						list;
+	nsString						name;
+	nsString						list;
 
 	for (i = 0; i < m_addressList.GetSize(); i++) {
 		pFolder = m_addressList.GetItem( i);
@@ -273,9 +273,7 @@ nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
 				pID->SetIdentifier( i);
 				pFolder->GetDisplayName( name);
 				MakeAddressBookNameUnique( name, list);
-				pChar = name.ToNewUnicode();
-				pID->SetPreferredName( pChar);
-				nsCRT::free( pChar);
+				pID->SetPreferredName(name.GetUnicode());
 				pID->SetSize( 100);
 				rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
 				(*pArray)->AppendElement( pInterface);

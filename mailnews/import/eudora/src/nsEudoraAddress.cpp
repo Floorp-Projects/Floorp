@@ -23,10 +23,10 @@
 #include "nsABBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsIServiceManager.h"
+#include "nsEudoraImport.h"
 
 static NS_DEFINE_CID(kAbCardCID,			NS_ABCARD_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
-static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 #include "EudoraDebugLog.h"
 
@@ -694,18 +694,6 @@ void nsEudoraAddress::SplitString( nsCString& val1, nsCString& val2)
 		val1 = temp;
 		SanitizeValue( val1);
 	}
-}
-
-void nsEudoraAddress::ConvertToUnicode( const char *pStr, nsString& uniStr)
-{
-	if (!m_pService) {
-		m_pService = do_GetService( kImportServiceCID);
-	}
-	if (m_pService) {
-		m_pService->SystemStringToUnicode( pStr, uniStr);
-	}
-	else
-		uniStr.AssignWithConversion( pStr);
 }
 
 void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, nsIAddrDatabase *pDb)
