@@ -23,9 +23,30 @@
 
 function abPanelStartup() 
 {
-  var abList = document.getElementById('addressbookList');
-  abList.selectedIndex = 0; /* moz-abmdbdirectory://abook.mab */
-  ChangeDirectoryByDOMNode(abList.selectedItem);
+  var selectedAB = "moz-abmdbdirectory://abook.mab";
+
+  // XXX duplicated code, see OnLoadMailList()
+  // set popup with address book names
+  var abPopup = document.getElementById('addressbookList');
+  if ( abPopup )
+  {
+    var menupopup = document.getElementById('addressbookList-menupopup');
+
+    if ( selectedAB && menupopup && menupopup.childNodes )
+    {
+      for ( var index = menupopup.childNodes.length - 1; index >= 0; index-- )
+      {
+        if ( menupopup.childNodes[index].getAttribute('value') == selectedAB )
+        {
+          abPopup.label = menupopup.childNodes[index].getAttribute('label');
+          abPopup.value = menupopup.childNodes[index].getAttribute('value');
+          break;
+        }
+      }
+    }
+  }
+
+  ChangeDirectoryByDOMNode(abPopup.selectedItem);
 }
 
 function AbPanelNewCard() 
@@ -60,3 +81,4 @@ function UpdateCardView()
 {
   // do nothing for ab panel
 }
+
