@@ -1,2 +1,6 @@
 globalOverlay.xul
 globalOverlay.js
+tasksOverlay.xul
+tasksOverlay.js
+dialogOverlay.xul
+dialogOverlay.js

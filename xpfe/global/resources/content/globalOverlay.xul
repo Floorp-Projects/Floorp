@@ -4,23 +4,6 @@
 [
 <!ENTITY quitApplicationCmd.label			"Exit"> 
 
-<!ENTITY tasksMenu.label				"Tasks">
-<!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY messengerCmd.label					"Messenger">  
-<!ENTITY addressBookCmd.label				"Address Book">  
-<!ENTITY bookmarkMenu.label					".Bookmarks"> 
-<!ENTITY addBookmarkCmd.label					".Add Bookmark">  
-<!ENTITY fileBookmarkCmd.label					".File Bookmark">  
-<!ENTITY editBookmarkCmd.label					".Edit Bookmark">  
-<!ENTITY newsgroupsCmd.label				".Newsgroups">  
-<!ENTITY toolsMenu.label					".Tools"> 
-<!ENTITY historyCmd.label						".History">  
-<!ENTITY securityInfoCmd.label					".Security Info">  
-<!ENTITY messageCenterCmd.label					".Message Center">  
-<!ENTITY importUtilCmd.label					".Import Utility">  
-<!ENTITY javaConsoleCmd.label					".Java Console">
-<!ENTITY windowMenu.label					".Window (it worked Dave!)">
-
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpContentCmd.label				".Help Contents">  
 <!ENTITY referenceLibraryCmd.label			".Reference Library">  
@@ -44,51 +27,29 @@
 
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
+	<!-- File Menu (Exit) -->
 	<menu id="fileMenu">
-		<menuitem name="&quitApplicationCmd.label;" onclick="QuitApplication()"/>
+		<menuitem name="&quitApplicationCmd.label;" onclick="goQuitApplication()"/>
 	</menu>
 	
-	<menu id="tasksMenu" name="&tasksMenu.label;">
-		<menuitem name="&navigatorCmd.label;" onclick="NavigatorWindow()"/>
-		<menuitem name="&messengerCmd.label;" onclick="MessengerWindow()"/>
-		<menuitem name="&addressBookCmd.label;" onclick="AddressBook()"/>
-		<separator/>
-		<menu name="&bookmarkMenu.label;">
-			<menuitem name="&addBookmarkCmd.label;" onclick="AddBookmark()"/>
-			<menuitem name="&fileBookmarkCmd.label;" onclick="FileBookmark()"/>
-			<menuitem name="&editBookmarkCmd.label;" onclick="EditBookmark()"/>
-		</menu>
-		<menuitem name="&newsgroupsCmd.label;" onclick="Newsgroups()"/>
-		<separator/>
-		<menu name="&toolsMenu.label;">
-			<menuitem name="&historyCmd.label;" onclick="History()"/>
-			<menuitem name="&securityInfoCmd.label;" onclick="SecurityInfo()"/>
-			<menuitem name="&messageCenterCmd.label;" onclick="MessengerCenter()"/>
-			<menuitem name="&importUtilCmd.label;" onclick="Import()"/>
-			<menuitem name="&javaConsoleCmd.label;" onclick="JavaConsole()"/>
-		</menu>
-		<separator/>
-		<menu name="&windowMenu.label;">
-		</menu>
-	</menu>
-
+	<!-- Help Menu -->
 	<menu id="helpMenu" name="&helpMenu.label;">
-		<menuitem name="&helpContentCmd.label;" onclick="Help()"/>
-		<menuitem name="&referenceLibraryCmd.label;" onclick="Help()"/>
-		<menuitem name="&releaseNotesCmd.label;" onclick="Help()"/>
-		<menuitem name="&productInfoCmd.label;" onclick="Help()"/>
+		<menuitem name="&helpContentCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&referenceLibraryCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&releaseNotesCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&productInfoCmd.label;" onclick="goHelp()"/>
 		<separator/>
-		<menuitem name="&softwareUpdatesCmd.label;" onclick="Help()"/>
-		<menuitem name="&registerCmd.label;" onclick="Help()"/>
-		<menuitem name="&memberServicesCmd.label;" onclick="Help()"/>
+		<menuitem name="&softwareUpdatesCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&registerCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&memberServicesCmd.label;" onclick="goHelp()"/>
 		<separator/>
-		<menuitem name="&internationalCmd.label;" onclick="Help()"/>
-		<menuitem name="&securityCmd.label;" onclick="Help()"/>
-		<menuitem name="&netwatchCmd.label;" onclick="Help()"/>
+		<menuitem name="&internationalCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&securityCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&netwatchCmd.label;" onclick="goHelp()"/>
 		<separator/>
-		<menuitem name="&aboutPluginsCmd.label;" onclick="About()"/>
-		<menuitem name="&aboutFontCmd.label;" onclick="About()"/>
-		<menuitem name="&aboutCmd.label;" onclick="About()"/>
+		<menuitem name="&aboutPluginsCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&aboutFontCmd.label;" onclick="goHelp()"/>
+		<menuitem name="&aboutCmd.label;" onclick="goHelp()"/>
 	</menu>
-
+	
 </overlay>		
