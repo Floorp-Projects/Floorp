@@ -24,6 +24,7 @@ LIBRARY_NAME = raptorhtmltable_s
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
     BasicTableLayoutStrategy.cpp \
+	FixedTableLayoutStrategy.cpp \
 	nsCellMap.cpp			\
 	nsTableCellFrame.cpp	\
 	nsTableColFrame.cpp		\
