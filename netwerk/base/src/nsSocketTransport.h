@@ -32,6 +32,7 @@
 #include "nsIBufferOutputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
+#include "nsIDNSListener.h"
 #ifndef NSPIPE2
 #include "nsIBuffer.h"
 #else
@@ -105,13 +106,16 @@ enum nsSocketReadWriteInfo {
   eSocketWrite_Done           = 0x1000,
   eSocketWrite_Wait           = 0x2000,
   eSocketWrite_Type_Mask      = 0x0F00,
-  eSocketWrite_Flag_Mask      = 0xF000
+  eSocketWrite_Flag_Mask      = 0xF000,
+
+  eSocketDNS_Wait             = 0x2020
 };
 
 // Forward declarations...
 class nsSocketTransportService;
 
 class nsSocketTransport : public nsIChannel, 
+                          public nsIDNSListener,
 #ifndef NSPIPE2
                           public nsIBufferObserver
 #else
@@ -137,6 +141,9 @@ public:
   // nsIPipeObserver methods:
   NS_DECL_NSIPIPEOBSERVER
 #endif
+
+  // nsIDNSListener methods:
+  NS_DECL_NSIDNSLISTENER
 
   // nsSocketTransport methods:
   nsSocketTransport();
@@ -237,6 +244,9 @@ protected:
 
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;
+
+  nsCOMPtr<nsIRequest>      mDNSRequest;
+  nsresult                  mStatus;
   nsCOMPtr<nsISupports>     mOwner;
 };
 

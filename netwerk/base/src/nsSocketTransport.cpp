@@ -37,6 +37,7 @@
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
+static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
 
 
 //
@@ -144,11 +145,13 @@ nsSocketTransport::nsSocketTransport()
   mService        = nsnull;
   mLoadAttributes = LOAD_NORMAL;
 
+  mStatus = NS_OK;
+
   //
   // Set up Internet defaults...
   //
   memset(&mNetAddress, 0, sizeof(mNetAddress));
-    PR_InitializeNetAddr(PR_IpAddrNull, 0, &mNetAddress);
+  PR_InitializeNetAddr(PR_IpAddrNull, 0, &mNetAddress);
 
   //
   // Initialize the global connect timeout value if necessary...
@@ -203,7 +206,14 @@ nsSocketTransport::~nsSocketTransport()
   mWritePipeIn   = null_nsCOMPtr();
   mWritePipeOut  = null_nsCOMPtr();
 #endif
-    
+  //
+  // Cancel any pending DNS request...
+  //
+  if (mDNSRequest) {
+    mDNSRequest->Cancel();
+  }
+  mDNSRequest = null_nsCOMPtr();
+
   NS_IF_RELEASE(mService);
 
   if (mHostName) {
@@ -277,7 +287,6 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
 
 nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 {
-  nsresult rv = NS_OK;
   PRBool done = PR_FALSE;
 
   //
@@ -299,8 +308,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     PR_LOG(gSocketLog, PR_LOG_ERROR, 
            ("Operation failed via PR_POLL_EXCEPT. [this=%x].\n", this));
     // An error has occurred, so cancel the read and/or write operation...
-    mCurrentState = eSocketState_Error;
-    rv = NS_BINDING_FAILED;
+    mStatus = NS_BINDING_FAILED;
   }
 
   while (!done)
@@ -314,7 +322,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
              ("Transport [this=%x] is suspended.\n", this));
   
       done = PR_TRUE;
-      rv = NS_OK;
+      mStatus = NS_OK;
       continue;
     }
 
@@ -322,12 +330,15 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
       PR_LOG(gSocketLog, PR_LOG_DEBUG, 
              ("Transport [this=%x] has been cancelled.\n", this));
 
-      // Cancel any read and/or write requests...
-      SetFlag(eSocketRead_Done);
-      SetFlag(eSocketWrite_Done);
-      mCurrentState = eSocketState_Done;
+      mCancelOperation = PR_FALSE;
+      mStatus = NS_BINDING_ABORTED;
+    }
 
-      rv = NS_BINDING_ABORTED;
+    //
+    // If an error has occurred then move into the error state...
+    //
+    if (NS_FAILED(mStatus) && (NS_BASE_STREAM_WOULD_BLOCK != mStatus)) {
+      mCurrentState = eSocketState_Error;
     }
 
     switch (mCurrentState) {
@@ -364,6 +375,12 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         PR_LOG(gSocketLog, PR_LOG_DEBUG, 
                ("Transport [this=%x] is in error state.\n", this));
 
+        // Cancel any DNS requests...
+        if (mDNSRequest) {
+          mDNSRequest->Cancel();
+          mDNSRequest = null_nsCOMPtr();
+        }
+
         // Cancel any read and/or write requests...
         SetFlag(eSocketRead_Done);
         SetFlag(eSocketWrite_Done);
@@ -379,7 +396,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         if (GetFlag(eSocketRead_Done)) {
           // Fire a notification that the read has finished...
           if (mReadListener) {
-            mReadListener->OnStopRequest(this, mReadContext, rv, nsnull);
+            mReadListener->OnStopRequest(this, mReadContext, mStatus, nsnull);
             mReadListener = null_nsCOMPtr();
             mReadContext  = null_nsCOMPtr();
           }
@@ -398,7 +415,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         if (GetFlag(eSocketWrite_Done)) {
           // Fire a notification that the write has finished...
           if (mWriteObserver) {
-            mWriteObserver->OnStopRequest(this, mWriteContext, rv, nsnull);
+            mWriteObserver->OnStopRequest(this, mWriteContext, mStatus, nsnull);
             mWriteObserver = null_nsCOMPtr();
             mWriteContext  = null_nsCOMPtr();
           }
@@ -421,6 +438,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         {
           mCurrentState = gStateTable[mOperation][mCurrentState];
           mOperation    = eSocketOperation_None;
+          mStatus = NS_OK;
           done = PR_TRUE;
         } else {
           // Still reading or writing...
@@ -429,27 +447,27 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         continue;
 
       case eSocketState_WaitDNS:
-        rv = doResolveHost();
+        mStatus = doResolveHost();
         break;
 
       case eSocketState_WaitConnect:
-        rv = doConnection(aSelectFlags);
+        mStatus = doConnection(aSelectFlags);
         break;
 
       case eSocketState_WaitReadWrite:
         // Process the read request...
         if (GetReadType() != eSocketRead_None) {
-          rv = doRead(aSelectFlags);
-          if (NS_OK == rv) {
+          mStatus = doRead(aSelectFlags);
+          if (NS_OK == mStatus) {
             SetFlag(eSocketRead_Done);
             break;
           }
         }
         // Process the write request...
-        if ((NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK)
+        if ((NS_SUCCEEDED(mStatus) || mStatus == NS_BASE_STREAM_WOULD_BLOCK)
             && (GetWriteType() != eSocketWrite_None)) {
-          rv = doWrite(aSelectFlags);
-          if (NS_OK == rv) {
+          mStatus = doWrite(aSelectFlags);
+          if (NS_OK == mStatus) {
             SetFlag(eSocketWrite_Done);
             break;
           }
@@ -458,27 +476,25 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
       case eSocketState_Timeout:
         NS_ASSERTION(0, "Unexpected state...");
-        rv = NS_ERROR_FAILURE;
+        mStatus = NS_ERROR_FAILURE;
         break;
 
       default:
         NS_ASSERTION(0, "Unexpected state...");
-        rv = NS_ERROR_FAILURE;
+        mStatus = NS_ERROR_FAILURE;
         break;
     }
     //
     // If the current state has successfully completed, then move to the
     // next state for the current operation...
     //
-    if (NS_OK == rv) {
+    if (NS_OK == mStatus) {
       mCurrentState = gStateTable[mOperation][mCurrentState];
     } 
-    else if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
+    else if (NS_BASE_STREAM_WOULD_BLOCK == mStatus) {
       done = PR_TRUE;
     }
-    else if (NS_FAILED(rv)) {
-      mCurrentState = eSocketState_Error;
-    }
+
     // 
     // Any select flags are *only* valid the first time through the loop...
     // 
@@ -486,12 +502,12 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
   }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("--- Leaving nsSocketTransport::Process() [this=%x]. rv = %x.\t"
+         ("--- Leaving nsSocketTransport::Process() [this=%x]. mStatus = %x.\t"
           "CurrentState = %d\n\n",
-          this, rv, mCurrentState));
+          this, mStatus, mCurrentState));
 
   PR_Unlock(mLock);
-  return rv;
+  return mStatus;
 }
 
 
@@ -510,7 +526,6 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 //-----
 nsresult nsSocketTransport::doResolveHost(void)
 {
-  PRStatus status;
   nsresult rv = NS_OK;
 
   NS_ASSERTION(eSocketState_WaitDNS == mCurrentState, "Wrong state.");
@@ -520,57 +535,32 @@ nsresult nsSocketTransport::doResolveHost(void)
           this));
 
   //
-  // Initialize the port used for the connection...
+  // The hostname has not been resolved yet...
   //
-  // XXX: The list of ports must be restricted - see net_bad_ports_table[] in 
-  //      mozilla/network/main/mkconect.c
-  //
-  mNetAddress.inet.port = PR_htons(mPort);
+  if (! mNetAddress.inet.ip) {
+    //
+    // Initialize the port used for the connection...
+    //
+    // XXX: The list of ports must be restricted - see net_bad_ports_table[] in 
+    //      mozilla/network/main/mkconect.c
+    //
+    mNetAddress.inet.port = PR_htons(mPort);
 
-  //
-  // Resolve the address of the given host...
-  //
-  char dbbuf[PR_NETDB_BUF_SIZE];
-  PRHostEnt hostEnt;
-
-  PRBool numeric = PR_TRUE;
-  for (char *hostCheck = mHostName; *hostCheck; hostCheck++) {
-      if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
-          numeric = PR_FALSE;
-          break;
-      }
-  }
-
-  if (numeric) {
-      PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
-      status = PR_StringToNetAddr(mHostName, netAddr);
-      if (PR_SUCCESS != status) {
-          rv = NS_ERROR_UNKNOWN_HOST; // check this!
-      }
-      status = PR_GetHostByAddr(netAddr, dbbuf, sizeof(dbbuf), &hostEnt);
-      nsAllocator::Free(netAddr);
-  } else {
-      status = PR_GetHostByName(mHostName, dbbuf, sizeof(dbbuf), &hostEnt);
-  }
-
-  if (PR_SUCCESS == status) {
-    if (hostEnt.h_addr_list) {
-      memcpy(&mNetAddress.inet.ip, hostEnt.h_addr_list[0], 
-                                   sizeof(mNetAddress.inet.ip));
-    } else {
-      // XXX: What should happen here?  The GetHostByName(...) succeeded but 
-      //      there are *no* A records...
+    NS_WITH_SERVICE(nsIDNSService,
+                    pDNSService,
+                    kDNSService,
+                    &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = pDNSService->Lookup(nsnull, mHostName, this, 
+                             getter_AddRefs(mDNSRequest));
+    //
+    // The DNS lookup is being processed...  Mark the transport as waiting
+    // until the result is available...
+    //
+    // XXX: What should this result code be??
+    if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
+      SetFlag(eSocketDNS_Wait);
     }
-
-    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-           ("Host name resolved [this=%x].  Name is %s\n", this, mHostName));
-  } 
-  // DNS lookup failed...
-  else {
-    PR_LOG(gSocketLog, PR_LOG_ERROR, 
-           ("Host name resolution FAILURE [this=%x].\n", this));
-
-    rv = NS_ERROR_UNKNOWN_HOST;
   }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
@@ -1158,6 +1148,11 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
+  if (aIID.Equals(NS_GET_IID(nsIDNSListener))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIDNSListener*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
 #ifndef NSPIPE2
   if (aIID.Equals(NS_GET_IID(nsIBufferObserver))) {
     *aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this); 
@@ -1394,6 +1389,72 @@ nsSocketTransport::OnEmpty(nsIPipe* aPipe)
   }
 
   return rv;
+}
+
+
+//
+// --------------------------------------------------------------------------
+// nsIDNSListener implementation...
+// --------------------------------------------------------------------------
+//
+NS_IMETHODIMP
+nsSocketTransport::OnStartLookup(nsISupports *aContext, const char *aHostName)
+{
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnStartLookup(...) [this=%x].  Host is %s\n", 
+         this, aHostName));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::OnFound(nsISupports *aContext, 
+                           const char* aHostName,
+                           nsHostEnt *aHostEnt) 
+{
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnFound(...) [this=%x]."
+          "  DNS lookup for %s succeeded.\n", 
+         this, aHostName));
+  //
+  // XXX: What thread are we on??
+  //
+  if (aHostEnt->hostEnt.h_addr_list) {
+    memcpy(&mNetAddress.inet.ip, aHostEnt->hostEnt.h_addr_list[0], 
+           sizeof(mNetAddress.inet.ip));
+  } else {
+    // XXX: What should happen here?  The GetHostByName(...) succeeded but 
+    //      there are *no* A records...
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::OnStopLookup(nsISupports *aContext,
+                                const char *aHostName,
+                                nsresult aStatus)
+{
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnStopLookup(...) [this=%x].  Status = %x Host is %s\n", 
+         this, aStatus, aHostName));
+
+  //
+  // XXX: What thread are we on??
+  //
+
+  // Release our reference to the DNS Request...
+  mDNSRequest = null_nsCOMPtr();
+
+  if (GetFlag(eSocketDNS_Wait)) {
+    // Enter the socket transport lock...
+    nsAutoLock aLock(mLock);
+
+    ClearFlag(eSocketDNS_Wait);
+    mStatus = aStatus;
+    mService->AddToWorkQ(this);
+  }
+  return NS_OK;
 }
 
 
