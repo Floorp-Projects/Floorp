@@ -76,6 +76,7 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
                              const nsString& aPopupType, const nsString& aAnchorAlignment, 
                              const nsString& aPopupAlignment)
 {
+  /*
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
@@ -114,6 +115,7 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
   popupSetFrame->CreatePopup(aElement, content, aXPos, aYPos,
                              aPopupType, anAnchorAlignment,
                              aPopupAlignment);
+  */
   return NS_OK;
 }
 
@@ -121,6 +123,7 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
 NS_IMETHODIMP
 nsXULPopupElement::ClosePopup()
 {
+  /*
   // Close the popup by simulating proper dismissal.
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;
@@ -156,6 +159,6 @@ nsXULPopupElement::ClosePopup()
 
   nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
   popupSetFrame->DestroyPopup();
-
+*/
   return NS_OK;
 }
