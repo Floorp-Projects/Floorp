@@ -292,11 +292,22 @@ protected:
                                    nsIURILoader * aURILoader);
     NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
                               PRUint32 aLoadType, nscoord *cx, nscoord *cy);
-    nsresult OnLoadingSite(nsIChannel * aChannel,
-                           PRBool aFireOnLocationChange);
 
-    void OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType,
-                  PRBool aFireOnLocationChange);
+    // Returns PR_TRUE if would have called FireOnLocationChange,
+    // but did not because aFireOnLocationChange was false on entry.
+    // In this case it is the caller's responsibility to ensure
+    // FireOnLocationChange is called.
+    // In all other cases PR_FALSE is returned.
+    PRBool OnLoadingSite(nsIChannel * aChannel,
+                         PRBool aFireOnLocationChange);
+
+    // Returns PR_TRUE if would have called FireOnLocationChange,
+    // but did not because aFireOnLocationChange was false on entry.
+    // In this case it is the caller's responsibility to ensure
+    // FireOnLocationChange is called.
+    // In all other cases PR_FALSE is returned.
+    PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType,
+                    PRBool aFireOnLocationChange);
 
     virtual void SetReferrerURI(nsIURI * aURI);
 
@@ -374,8 +385,13 @@ protected:
     static PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                                  nsIDocShellTreeItem* aTargetTreeItem);
 
-    void SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
-                       PRBool aFireOnLocationChange);
+    // Returns PR_TRUE if would have called FireOnLocationChange,
+    // but did not because aFireOnLocationChange was false on entry.
+    // In this case it is the caller's responsibility to ensure
+    // FireOnLocationChange is called.
+    // In all other cases PR_FALSE is returned.
+    PRBool SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
+                         PRBool aFireOnLocationChange);
 
 protected:
     // Override the parent setter from nsDocLoader

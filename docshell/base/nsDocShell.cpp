@@ -1336,14 +1336,14 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
     return NS_OK;
 }
 
-void
+PRBool
 nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
                           PRBool aFireOnLocationChange)
 {
     // We don't want to send a location change when we're displaying an error
     // page, and we don't want to change our idea of "current URI" either
     if (mLoadType == LOAD_ERROR_PAGE) {
-        return;
+        return PR_FALSE;
     }
 
     mCurrentURI = aURI;         //This assignment addrefs
@@ -1373,12 +1373,13 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
        * a subframe is being loaded for the first time, while
        * visiting a frameset page
        */
-      return; 
+      return PR_FALSE; 
     }
 
     if (aFireOnLocationChange) {
         FireOnLocationChange(this, aRequest, aURI);
     }
+    return !aFireOnLocationChange;
 }
 
 NS_IMETHODIMP
@@ -4749,7 +4750,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
-    OnLoadingSite(aOpenedChannel, PR_FALSE);
+    PRBool onLocationChangeNeeded = OnLoadingSite(aOpenedChannel, PR_FALSE);
 
     // let's try resetting the load group if we need to...
     nsCOMPtr<nsILoadGroup> currentLoadGroup;
@@ -4820,7 +4821,9 @@ nsDocShell::CreateContentViewer(const char *aContentType,
       PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
     }
 
-    FireOnLocationChange(this, request, mCurrentURI);
+    if (onLocationChangeNeeded) {
+      FireOnLocationChange(this, request, mCurrentURI);
+    }
   
     return NS_OK;
 }
@@ -6221,7 +6224,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
 }
 
 
-void
+PRBool
 nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
                      PRUint32 aLoadType, PRBool aFireOnLocationChange)
 {
@@ -6354,13 +6357,15 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         if (shInternal)
             shInternal->UpdateIndex();
     }
-    SetCurrentURI(aURI, aChannel, aFireOnLocationChange);
+    PRBool onLocationChangeNeeded = SetCurrentURI(aURI, aChannel,
+                                                  aFireOnLocationChange);
     // if there's a refresh header in the channel, this method
     // will set it up for us. 
     SetupRefreshURI(aChannel);
+    return onLocationChangeNeeded;
 }
 
-nsresult
+PRBool
 nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange)
 {
     nsCOMPtr<nsIURI> uri;
@@ -6376,11 +6381,10 @@ nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange)
         aChannel->GetURI(getter_AddRefs(uri));
     else
         aChannel->GetOriginalURI(getter_AddRefs(uri));
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(uri, PR_FALSE);
 
-    OnNewURI(uri, aChannel, mLoadType, aFireOnLocationChange);
+    return OnNewURI(uri, aChannel, mLoadType, aFireOnLocationChange);
 
-    return NS_OK;
 }
 
 void
