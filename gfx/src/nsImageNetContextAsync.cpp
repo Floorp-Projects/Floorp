@@ -590,7 +590,8 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       nsCOMPtr<nsIChannel> channel;
       nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl);
       if (NS_SUCCEEDED(rv)) {
-        rv = mLoadGroup->AddChannel(channel, nsnull);
+        if (mLoadGroup)
+          rv = mLoadGroup->AddChannel(channel, nsnull);
         if (NS_SUCCEEDED(rv)) {
           rv = channel->AsyncRead(0, -1, nsnull, ic);
         }
@@ -627,7 +628,10 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
     }
   }
 #ifdef NECKO
-  return mLoadGroup->RemoveChannel(channel, ctxt, status, aMsg);
+  if (mLoadGroup)
+    return mLoadGroup->RemoveChannel(channel, ctxt, status, aMsg);
+  else
+    return NS_OK;
 #endif
 }
 
