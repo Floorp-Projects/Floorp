@@ -8,6 +8,19 @@
 ; ; file comment
 ;
 
+[langengb]
+;
+; en-GB 
+bin/defaults/profile/en-GB/*
+bin/chrome/locales/en-GB/*
+
+[deflenus]
+;
+; default files for en-US
+bin/defaults/profile/bookmarks.html
+bin/defaults/profile/panels.rdf
+bin/defaults/profile/search.rdf
+
 [xpcom]
 bin/libjsdom.so
 bin/libmozjs.so
