@@ -322,14 +322,20 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
   //see if any of this view's children can process the event
   if (*aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN)) {
+    PRInt32 numkids;
     nsRect  trect;
     nscoord x, y;
 
+    GetChildCount(numkids); 
     x = event->point.x;
     y = event->point.y;
 
-    nsIView *pKid = mFirstChild;
-    while (nsnull != pKid) {
+    for (PRInt32 cnt = 0; cnt < numkids && !aHandled; cnt++) 
+    {
+      nsIView *pKid;
+      GetChild(cnt, pKid);
+      if (!pKid) break;
+ 
       pKid->GetBounds(trect);
 
       if (PointIsInside(*pKid, x, y))
@@ -346,7 +352,6 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
         event->point.x += trect.x;
         event->point.y += trect.y;
       }
-      pKid->GetNextSibling(pKid);
     }
   }
 
