@@ -37,6 +37,10 @@
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
 
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_ACCOUNTMANAGER 1
+#endif
+
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -362,7 +366,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
   if (!aDefaultAccount) return NS_ERROR_NULL_POINTER;
 
   if (!m_defaultAccount) {
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer)
+#ifdef DEBUG_ACCOUNTMANAGER
     printf("No default account. Looking for one..\n");
 #endif
     
@@ -373,7 +377,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     // are there ANY entries?
     if (!entry.found) return NS_ERROR_UNEXPECTED;
 
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer)
+#ifdef DEBUG_ACCOUNTMANAGER
     printf("Account (%p) found\n", entry.account);
 #endif
     m_defaultAccount = dont_QueryInterface(entry.account);
@@ -648,8 +652,8 @@ nsMsgAccountManager::LoadAccounts()
   }
 
     /* parse accountList and run loadAccount on each string, comma-separated */
-#ifdef DEBUG_sspitzer
-    printf("accountList = %s\n", accountList);
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("accountList = %s\n", (const char*)accountList);
 #endif
    
     nsCOMPtr<nsIMsgAccount> account;
@@ -663,7 +667,7 @@ nsMsgAccountManager::LoadAccounts()
       str.StripWhitespace();
       
       if (str != "") {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_ACCOUNTMANAGER
         printf("accountKey = %s\n", str.GetBuffer());
 #endif
         account = getter_AddRefs(LoadAccount(str));
@@ -674,7 +678,7 @@ nsMsgAccountManager::LoadAccounts()
           return NS_ERROR_NULL_POINTER;
         str = "";
       }
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_ACCOUNTMANAGER
       else {
         printf("nothing between two commas. ignore and keep going...\n");
       }
