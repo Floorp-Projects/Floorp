@@ -757,11 +757,7 @@ PRIVATE uTable* LoadUCS2Table(uint16 csid, int from)
 				static f p = NULL;
 
                                 if (p == NULL) {
-#ifndef NSPR20
-				    p = (f)PR_FindSymbol(UNICODE_LOADUCS2TABLE_SYM, uniLib);
-#else
 				    p = (f)PR_FindSymbol(uniLib, UNICODE_LOADUCS2TABLE_SYM);
-#endif
                                 }
 				XP_ASSERT(p);
 				if(p)
@@ -789,11 +785,7 @@ PRIVATE void UnloadUCS2Table(uint16 csid, uTable* utblPtr, int from)
 				static f p = NULL;
 
                                 if (p == NULL) {
-#ifndef NSPR20
-				    p = (f)PR_FindSymbol(UNICODE_UNLOADUCS2TABLE_SYM, uniLib);
-#else
 				    p = (f)PR_FindSymbol(uniLib, UNICODE_UNLOADUCS2TABLE_SYM);
-#endif
                                 }
 				XP_ASSERT(p);
 				if(p)
