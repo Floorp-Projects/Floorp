@@ -762,22 +762,6 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND | flags);
     }
 
-    switch(aLoadMethod){
-            case USE_IMG_CACHE:            
-                  (void)channel->SetLoadAttributes((nsIChannel::VALIDATE_NEVER) | flags); 
-                   break;
-
-            case DONT_USE_IMG_CACHE:
-                  (void)channel->SetLoadAttributes((nsIChannel::FORCE_VALIDATION) | flags);
-                  break;
-
-            case SYNTH_IMGDOC_NEEDS_IMG_CACHE:
-                  break;
-
-            default:
-                  break;
-    }
-
     nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
