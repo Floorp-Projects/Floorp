@@ -85,6 +85,12 @@ $ops{"LOAD_IMMEDIATE"} =
    rem    => "dest, immediate value (double)",
    params => [ ("Register", "double" ) ]
   };
+$ops{"LOAD_VALUE"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, immediate value (JSValue)",
+   params => [ ("Register", "JSValue" ) ]
+  };
 $ops{"LOAD_STRING"} =
   {
    super  => "Instruction_2",
@@ -133,6 +139,12 @@ $ops{"PROP_XCR"} =
    rem    => "dest, source, name, value",
    params => [ ("Register", "Register", "const StringAtom*", "double") ]
   };
+$ops{"ELEM_XCR"} =
+  {
+   super  => "Instruction_4",
+   rem    => "dest, base, index, value",
+   params => [ ("Register", "Register", "Register", "double") ]
+  };
 $ops{"NAME_XCR"} =
   {
    super  => "Instruction_3",
@@ -148,13 +160,13 @@ $ops{"VAR_XCR"} =
 $ops{"GET_ELEMENT"} =
   {
    super  => "Instruction_3",
-   rem    => "dest, array, index",
+   rem    => "dest, base, index",
    params => [ ("Register", "Register", "Register") ]
   };
 $ops{"SET_ELEMENT"} =
   {
    super  => "Instruction_3",
-   rem    => "base, source1, source2",
+   rem    => "base, index, value",
    params => [ ("Register", "Register", "Register") ]
   };
 $ops{"ADD"}        = $math_op;
@@ -180,6 +192,7 @@ $ops{"STRICT_NE"}  = $compare_op;
 $ops{"INSTANCEOF"} = $compare_op;
 $ops{"BITNOT"}     = $unary_op;
 $ops{"NOT"}        = $unary_op;
+$ops{"TEST"}       = $unary_op;
 $ops{"NEGATE"}     = $unary_op;
 $ops{"POSATE"}     = $unary_op;
 $ops{"BRANCH"} =
@@ -194,6 +207,8 @@ $ops{"BRANCH_EQ"} = $cbranch_op;
 $ops{"BRANCH_NE"} = $cbranch_op;
 $ops{"BRANCH_GE"} = $cbranch_op;
 $ops{"BRANCH_GT"} = $cbranch_op;
+$ops{"BRANCH_TRUE"} = $cbranch_op;
+$ops{"BRANCH_FALSE"} = $cbranch_op;
 $ops{"RETURN"} =
   {
    super    => "Instruction_1",
