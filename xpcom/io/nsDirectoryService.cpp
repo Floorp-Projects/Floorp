@@ -399,6 +399,7 @@ nsIAtom*  nsDirectoryService::sCommon_Startup = nsnull;
 nsIAtom*  nsDirectoryService::sCommon_Desktopdirectory = nsnull;
 nsIAtom*  nsDirectoryService::sAppdata = nsnull;
 nsIAtom*  nsDirectoryService::sPrinthood = nsnull;
+nsIAtom*  nsDirectoryService::sWinCookiesDirectory = nsnull;
 #elif defined (XP_UNIX)
 nsIAtom*  nsDirectoryService::sLocalDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sLibDirectory = nsnull;
@@ -503,6 +504,7 @@ nsDirectoryService::Init()
     nsDirectoryService::sCommon_Desktopdirectory    = NS_NewAtom(NS_WIN_COMMON_DESKTOP_DIRECTORY);
     nsDirectoryService::sAppdata                    = NS_NewAtom(NS_WIN_APPDATA_DIR);
     nsDirectoryService::sPrinthood                  = NS_NewAtom(NS_WIN_PRINTHOOD);
+    nsDirectoryService::sWinCookiesDirectory        = NS_NewAtom(NS_WIN_COOKIES_DIR);
 #elif defined (XP_UNIX)
     nsDirectoryService::sLocalDirectory             = NS_NewAtom(NS_UNIX_LOCAL_DIR);
     nsDirectoryService::sLibDirectory               = NS_NewAtom(NS_UNIX_LIB_DIR);
@@ -597,6 +599,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sCommon_Desktopdirectory);
      NS_IF_RELEASE(nsDirectoryService::sAppdata);
      NS_IF_RELEASE(nsDirectoryService::sPrinthood);
+     NS_IF_RELEASE(nsDirectoryService::sWinCookiesDirectory);
 #elif defined (XP_UNIX)
      NS_IF_RELEASE(nsDirectoryService::sLocalDirectory);
      NS_IF_RELEASE(nsDirectoryService::sLibDirectory);
@@ -1128,6 +1131,11 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sPrinthood)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Printhood); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sWinCookiesDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Cookies); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }
 #elif defined (XP_UNIX)

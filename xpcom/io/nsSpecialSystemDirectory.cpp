@@ -936,6 +936,11 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             GetWindowsFolder(CSIDL_PRINTHOOD, *this);
             break;
         }
+        case Win_Cookies:
+        {
+            GetWindowsFolder(CSIDL_COOKIES, *this);
+            break;
+        }
 #endif  // XP_WIN
 
 #if defined(XP_UNIX)
