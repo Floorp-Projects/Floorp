@@ -29,12 +29,13 @@
 #include "nsIMessage.h"
 #include "nsIMsgThread.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgWindowData.h"
 
 /**
  * The mail data source.
  */
 class nsMessageViewDataSource : public nsIRDFCompositeDataSource, public nsIMessageView,
-								public nsIRDFObserver
+								public nsIRDFObserver, nsIMsgWindowData
 {
 private:
 	nsCOMPtr<nsISupportsArray> mObservers;
@@ -155,6 +156,12 @@ public:
 	NS_IMETHOD SetShowWatched();
 	NS_IMETHOD SetShowThreads(PRBool showThreads);
 
+	 //nsIMsgWindowData interface
+	NS_IMETHOD GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback);
+	NS_IMETHOD SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback);
+	NS_IMETHOD GetTransactionManager(nsITransactionManager * *aTransactionManager);
+	NS_IMETHOD SetTransactionManager(nsITransactionManager * aTransactionManager);
+
 protected:
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property, nsIRDFNode **target);
 	nsresult createUnreadNode(nsIMessage *message, nsIRDFNode **target);
@@ -178,6 +185,9 @@ protected:
 	static nsIRDFResource* kNC_Status;
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_Total;
+
+	nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
+	nsCOMPtr<nsITransactionManager> mTransactionManager;
 
 };
 
