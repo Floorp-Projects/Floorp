@@ -75,7 +75,9 @@ struct ptys {                 /* PTY structure */
 int pty_create(struct ptys *ptyp, char *const argv[],
                int errfd, int noblock, int noecho, int noexport, int debug);
 
-/* resizes the PTY, returning 0 on success and -1 on error */
+/* resizes a PTY; if ptyp is null, resizes file desciptor 0,
+ * returning 0 on success and -1 on error.
+ */
 int pty_resize(struct ptys *ptyp, int rows, int cols,
                                   int xpix, int ypix);
 

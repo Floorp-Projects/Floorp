@@ -50,7 +50,7 @@
 #include <poll.h>
 #endif
 
-#ifdef LINUX
+#if defined(LINUX) || defined(BSDFAMILY)
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 typedef unsigned int nfds_t;
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     write( echofd, "Echoing PTYTEST output ...\n", 27);
   }
 
-  fprintf(stderr, "Type Control-@ (NUL) to terminate input\n");
+  fprintf(stderr, "Type Control-] to terminate input\n");
 
   if (strcmp(argv[1],"pipe") == 0) {
     pipeTest(argc-3, argv+3);
@@ -152,8 +152,8 @@ void ptyTest(int argc, char *argv[])
       /* Read character from parent STDIN and write to child STDIN */
       ch = getchar();
 
-      /* Exit poll loop if a null (Control-@) is read */
-      if (ch == 0) break;
+      /* Exit poll loop if a Control-] character is read */
+      if (ch == 0x1D) break;
 
       if (write(ptyFD, &ch, 1) != 1) {
         fprintf(stderr, "Error in writing to child STDIN\n");
@@ -293,8 +293,8 @@ void pipeTest(int argc, char *argv[])
       /* Read character from parent STDIN and write to child STDIN */
       ch = getchar();
 
-      /* Exit poll loop if a null (Control-@) is read */
-      if (ch == 0) break;
+      /* Exit poll loop if a Control-] is read */
+      if (ch == 0x1D) break;
 
       if (write(pipeIN, &ch, 1) != 1) {
         fprintf(stderr, "Error in writing to child STDIN\n");

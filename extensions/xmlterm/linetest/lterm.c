@@ -461,8 +461,8 @@ void input_handler(int *plterm)
 
     /* fprintf(stderr, "input_handler-00: ch=%d\n", ch); */
 
-    if (ch == 0) {
-      fprintf(stderr, "input_handler-00: NUL character read; terminating\n");
+    if (ch == 0x1D) {
+      fprintf(stderr, "input_handler-00: C-] character read; terminating\n");
       break;
     }
 

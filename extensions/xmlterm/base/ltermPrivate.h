@@ -36,6 +36,7 @@
  * CPP options:
  *   LINUX:          for Linux2.0/glibc
  *   SOLARIS:        for Solaris2.6
+ *   BSDFAMILY:      for FreeBSD, ...
  *   DEBUG:          to enable some debugging output
  *   NO_PTY:         force use of pipes rather than PTY for process
  *                   communication
@@ -105,10 +106,6 @@
 
 #ifdef USE_NSPR_IO           /* Use NSPR I/O API (no PTY implementation) */
 
-#ifdef LINUX
-#include <sys/poll.h>
-#endif
-
 typedef PRFileDesc  *FILEDESC;
 #define NULL_FILEDESC     0
 #define VALID_FILEDESC(x) (x != 0)
@@ -144,7 +141,7 @@ typedef PRFileDesc FILESTREAM;
 
 #if defined(SOLARIS)
 #include <poll.h>
-#elif defined(LINUX)
+#else
 #include <sys/poll.h>
 #endif
 

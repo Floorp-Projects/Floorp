@@ -541,7 +541,15 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
     if (buf[jLen] == U_LINEFEED)
       newline = true;
 
-    ubuf[jLen++] = (UNICHAR) buf[jLen];
+    ubuf[jLen] = (UNICHAR) buf[jLen];
+
+    if (ubuf[jLen] == U_PRIVATE0) {
+      // Hack to handle input of NUL characters in NUL-terminated strings
+      // See also: mozXMLTermKeyListener::KeyPress
+      ubuf[jLen] = U_NUL;
+    }
+
+    jLen++;
   }
 
   if (jLen >= MAXCOL-1) {

@@ -439,11 +439,8 @@ int lterm_open(int lterm, char *const argv[],
             "lterm_open: Error - PTY creation failed\n")
     }
 
-    /* Resize TTY */
-    if (pty_resize(&ptyStruc, lts->nRows, lts->nCols, 0, 0) != 0) {
-      LTERM_OPEN_ERROR_RETURN(lterm,lts,
-            "lterm_open: Error - PTY resizing failed\n")
-    }
+    /* Resize TTY (fails on BSD?) */
+    pty_resize(&ptyStruc, lts->nRows, lts->nCols, 0, 0);
 #endif  /* !NO_PTY */
 
     /* Copy PTY structure */
@@ -1275,8 +1272,11 @@ static int ltermCreateProcess(struct LtermProcess *ltp,
 
   LTERM_LOG(ltermCreateProcess,20,("Creating process %s, nostderr=%d, noexport=%d\n", argv[0], nostderr, noexport));
 
-  stdERR= NULL_FILEDESC;
-  if (!nostderr) {
+  if (nostderr) {
+    /* No STDERR pipe */
+    ltp->processERR = NULL_FILEDESC;
+    stdERR=           NULL_FILEDESC;
+  } else {
     /* Create STDERR pipe: needs clean-up */
     FILEDESC pipeFD[2];
 

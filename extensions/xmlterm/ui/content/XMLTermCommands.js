@@ -537,13 +537,13 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
 // Set history buffer count using form entry
 function SetHistoryValue() {
-  var field = document.getElementById('InputValue');
+  var field = document.getElementById('inputvalue');
   return SetHistory(field.value);
 }
 
 // Set prompt using form entry
 function SetPromptValue() {
-  var field = document.getElementById('InputValue');
+  var field = document.getElementById('inputvalue');
   return SetPrompt(field.value);
 }
 
