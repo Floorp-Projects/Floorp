@@ -55,7 +55,8 @@
 
 .toolbarbutton-1,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-.toolbarbutton-1[disabled="true"]:hover:active {
+.toolbarbutton-1[disabled="true"]:hover:active,
+.toolbarbutton-1[disabled="true"]:hover:active > .toolbarbutton-menubutton-button {
   padding: 2px 7px 2px 6px;
 }
 
