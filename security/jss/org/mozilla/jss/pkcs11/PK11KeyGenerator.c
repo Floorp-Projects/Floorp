@@ -256,9 +256,7 @@ finish:
     if( pbeCtxt ) {
         PBE_DestroyContext(pbeCtxt);
     }
-    if(keyBits) {
-        SECITEM_ZfreeItem(keyBits, PR_TRUE /*freeit*/);
-    }
+    /* keyBits == pbeCtxt, so we don't need to free it */
     return key;
 }
 
