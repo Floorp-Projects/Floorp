@@ -19,6 +19,8 @@
 #ifndef nsID_h__
 #define nsID_h__
 
+#include <string.h>
+
 #ifndef prtypes_h___
 #include "prtypes.h"
 #endif
