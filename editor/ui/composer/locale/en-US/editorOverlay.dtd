@@ -79,6 +79,16 @@
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY editpaste.accesskey "p">
 <!ENTITY editpaste.keybinding "v">
+<!-- For a "Paste" submenu when more than 1 
+     clipboard formats are available -->
+<!ENTITY pasteTextCmd.label "Text">
+<!ENTITY editpastetext.accesskey "t">
+<!ENTITY pasteTextCmd.label "Image">
+<!ENTITY editpastetext.accesskey "i">
+<!ENTITY pasteTextCmd.label "Link">
+<!ENTITY editpastetext.accesskey "l">
+<!ENTITY pasteTextCmd.label "HTML">
+<!ENTITY editpastetext.accesskey "h">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
 <!ENTITY editStripQuotesCmd.label "Strip Quotes">
@@ -401,6 +411,8 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!-- Shared by Heading and Paragraph menu, and in toolbar menulist -->
 <!ENTITY normalCmd.label "Normal">
 <!ENTITY normal.accesskey "n">
+<!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
+<!ENTITY advancedproperties.accesskey "v">
 
 <!ENTITY NormalAbbr.label "Norm.">
 <!ENTITY ParagraphAbbr.label "P">  
@@ -474,6 +486,8 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY tablecolumnafter.accesskey "a">
 <!ENTITY tableCell.label "Cell">
 <!ENTITY tablecell.accesskey "c">
+<!ENTITY tableCellContents.label "Cell Contents">
+<!ENTITY tablecellcontents.accesskey "n">
 <!ENTITY tableAllCells.label "All Cells">
 <!ENTITY tableCellBefore.label "Cell Before">
 <!ENTITY tableallcells.accesskey "a">
@@ -484,8 +498,8 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY tableDeleteMenu.label "Delete">
 <!ENTITY tabledeletemenu.accesskey "d">
 
-<!ENTITY tableFixup.label "Normalize table layout">
-<!ENTITY tablefixup.accesskey "n">
+<!ENTITY tableFixup.label "Fix Table Layout">
+<!ENTITY tablefixup.accesskey "f">
 <!-- text for "Join Cells" is in editor.properties 
      ("JoinSelectedCells" and "JoinCellToRight")
      the access key must exist in both of those strings

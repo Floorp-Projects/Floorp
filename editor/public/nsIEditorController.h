@@ -47,6 +47,11 @@ public:
    */
   NS_IMETHOD SetCommandRefCon(nsISupports *aCommandRefCon) = 0;
 
+  /** Execute the command identified by the ID string
+   *  @param aCommandName  ID string of the command
+   */
+  NS_IMETHOD DoCommand(const PRUnichar *aCommandName)=0;
+  /* Should we expose nsEditorController::IsCommandEnabled() as well? */
 };
 
 

@@ -44,6 +44,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIStyleSet.h"
 #include "nsIURI.h"
@@ -92,7 +93,6 @@
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsString.h"
 #include "nsIDOMText.h"
@@ -117,6 +117,7 @@
 
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
+#include "nsEditorShellMouseListener.h"
 
 ///////////////////////////////////////
 
@@ -142,6 +143,11 @@ static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 #define APP_DEBUG 0 
 
 #define EDITOR_BUNDLE_URL "chrome://editor/locale/editor.properties"
+
+enum {
+  eEditorController,
+  eComposerController
+};
 
 /////////////////////////////////////////////////////////////////////////
 // Utility to extract document from a webshell object.
@@ -267,6 +273,17 @@ nsEditorShell::~nsEditorShell()
   NS_IF_RELEASE(mStateMaintainer);
   NS_IF_RELEASE(mParserObserver);
   
+  // Remove our document mouse event listener
+  if (mMouseListenerP)
+  {
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    nsresult rv = GetDocumentEventReceiver(getter_AddRefs(erP));
+    if (NS_SUCCEEDED(rv) && erP)
+    {
+      erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
+      mMouseListenerP = nsnull;
+    }
+  }
   // the only other references we hold are in nsCOMPtrs, so they'll take
   // care of themselves.
 }
@@ -367,19 +384,32 @@ nsEditorShell::ResetEditingState()
     }
   }
   
+  nsresult rv;  
   // now, unregister the selection listener, if there was one
   if (mStateMaintainer)
   {
     nsCOMPtr<nsIDOMSelection> domSelection;
     // using a scoped result, because we don't really care if this fails
-    nsresult result = GetEditorSelection(getter_AddRefs(domSelection));
-    if (NS_SUCCEEDED(result) && domSelection)
+    rv = GetEditorSelection(getter_AddRefs(domSelection));
+    if (NS_SUCCEEDED(rv) && domSelection)
     {
       domSelection->RemoveSelectionListener(mStateMaintainer);
       NS_IF_RELEASE(mStateMaintainer);
     }
   }
-  
+
+  // Remove our document mouse event listener
+  if (mMouseListenerP)
+  {
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    rv = GetDocumentEventReceiver(getter_AddRefs(erP));
+    if (NS_SUCCEEDED(rv) && erP)
+    {
+      erP->RemoveEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
+      mMouseListenerP = nsnull;
+    }
+  }
+
   // clear this editor out of the controller
   if (mEditorController)
   {
@@ -476,6 +506,28 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     mEditorController->SetCommandRefCon(editorAsISupports);
   }
 
+
+  // get a mouse listener for double click on tags
+  // We can't use nsEditor listener because core editor shouldn't call UI commands
+  rv = NS_NewEditorShellMouseListener(getter_AddRefs(mMouseListenerP), this);
+  if (NS_FAILED(rv))
+  {
+    mMouseListenerP = nsnull;
+    return rv;
+  }
+
+  // Add mouse listener to document
+  nsCOMPtr<nsIDOMEventReceiver> erP;
+  rv = GetDocumentEventReceiver(getter_AddRefs(erP));
+  if (NS_FAILED(rv))
+  {
+    mMouseListenerP = nsnull;
+    return rv;
+  }
+
+  rv = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
+  if (NS_FAILED(rv)) return rv;
+
   // now all the listeners are set up, we can call PostCreate
   rv = editor->PostCreate();
   if (NS_FAILED(rv)) return rv;
@@ -498,7 +550,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
          nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)                   
     {
       // Clutzy method of converting URL to local file format
-      // nsIFileSpec is going away -- is nsFileSpec???
+      // nsIFileSpec is going away --  WE NEED TO REWRITE nsIDiskDocument!
       nsFileURL    pageURL(pageURLString);
       nsFileSpec   pageSpec(pageURL);
 
@@ -554,6 +606,53 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   return NS_OK;
 }
 
+nsresult nsEditorShell::GetDocumentEventReceiver(nsIDOMEventReceiver **aEventReceiver)
+{
+  if (!aEventReceiver) return NS_ERROR_NULL_POINTER;
+  if (!mContentWindow || !mEditor) return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;          
+  mContentWindow->GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc) return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  nsresult rv = editor->GetRootElement(getter_AddRefs(rootElement));
+
+  nsCOMPtr<nsIDOMEventReceiver> erP;
+
+//(Copied from nsHTMLEditor::InstallEventListeners)
+//now hack to make sure we are not anonymous content if we are 
+  //  grabbing the parent of root element for our observer
+  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
+  if (content)
+  {
+    nsCOMPtr<nsIContent> parent;
+    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent)
+    {
+      PRInt32 index;
+      if (NS_FAILED(parent->IndexOf(content, index)) || index<0 )
+      {
+        rootElement = do_QueryInterface(parent);
+        rv = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+      }
+      else
+        rootElement = 0;
+    }
+  }
+  if (!rootElement && domDoc)
+    rv = domDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+//end hack
+
+  if (erP)
+  {
+    *aEventReceiver = erP;
+    NS_ADDREF(*aEventReceiver);
+  }  
+  return rv;
+}
+
+
 NS_IMETHODIMP    
 nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
 {
@@ -592,12 +691,12 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
     
     mEditorController = editorController;   // temp weak link, so we can get it and set the editor later
     
-    rv = controllers->InsertControllerAt(0, controller);
+    rv = controllers->InsertControllerAt(eEditorController, controller);
     if (NS_FAILED(rv)) return rv;  
   }
   
   {
-    // the first is a composer controller, and takes an nsIEditorShell as the refCon
+    // the second is a composer controller, and takes an nsIEditorShell as the refCon
     nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/composercontroller", &rv);
     if (NS_FAILED(rv)) return rv;  
     nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
@@ -606,7 +705,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
     rv = editorController->Init(shellAsISupports);
     if (NS_FAILED(rv)) return rv;
     
-    rv = controllers->InsertControllerAt(1, controller);
+    rv = controllers->InsertControllerAt(eComposerController, controller);
     if (NS_FAILED(rv)) return rv;  
   }
 
@@ -2668,21 +2767,30 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
   if ( NS_SUCCEEDED(rv) )
   { 
     // Stuff in Parameters 
-    block->SetInt( nsICommonDialogs::eNumberButtons,3 ); 
     block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
     nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif"  ); 
     block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
 
     nsAutoString yesStr, noStr;
+    // Default is Yes, No, Cancel
+    PRInt32 numberOfButtons = 3;
     if (aYesString)
       yesStr.Assign(*aYesString);
     else
+      // We always want a "Yes" string, so supply the default
       GetBundleString(NS_ConvertASCIItoUCS2("Yes"), yesStr);
 
-    if (aNoString)
+    if (aNoString && aNoString->Length() > 0)
+    {
       noStr.Assign(*aNoString);
+      block->SetString( nsICommonDialogs::eButton2Text, noStr.GetUnicode() ); 
+    }
     else
-      GetBundleString(NS_ConvertASCIItoUCS2("No"), noStr);
+    {
+      // No string for "No" means we only want Yes, Cancel
+      numberOfButtons = 2;
+    }    
+    block->SetInt( nsICommonDialogs::eNumberButtons, numberOfButtons ); 
 
     nsAutoString cancelStr;
     GetBundleString(NS_ConvertASCIItoUCS2("Cancel"), cancelStr);
@@ -2691,7 +2799,6 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
     block->SetString( nsICommonDialogs::eButton0Text, yesStr.GetUnicode() ); 
     block->SetString( nsICommonDialogs::eButton1Text, cancelStr.GetUnicode() ); 
-    block->SetString( nsICommonDialogs::eButton2Text, noStr.GetUnicode() ); 
 
     NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
     if ( NS_SUCCEEDED( rv ) ) 
@@ -2921,7 +3028,6 @@ nsEditorShell::SetParagraphFormat(const PRUnichar * paragraphFormat)
 
   return err;
 }
-
 
 NS_IMETHODIMP
 nsEditorShell::GetEditorDocument(nsIDOMDocument** aEditorDocument)
@@ -4663,3 +4769,33 @@ nsEditorShell::DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditorShell::EditElementProperties(nsIDOMElement *aElement, int x, int y)
+{
+  if (!aElement) return NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
+
+#if DEBUG_cmanske
+  nsAutoString TagName;
+  aElement->GetTagName(TagName);
+  TagName.ToLowerCase();
+  char szTagName[64];
+  TagName.ToCString(szTagName, 64);
+  printf("***** DBLClick: TagName of element clicked on: %s\n", szTagName);
+#endif
+  // Get the ComposerController:
+  nsCOMPtr<nsIControllers> controllers;      
+  rv = mContentWindow->GetControllers(getter_AddRefs(controllers));      
+  if (NS_FAILED(rv)) return rv;
+  if (!controllers) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIController> controller;   
+  rv = controllers->GetControllerAt(eComposerController, getter_AddRefs(controller));
+  if (NS_FAILED(rv)) return rv;
+  if (!controller) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
+
+  // Execute the command
+  nsAutoString commandName(NS_ConvertASCIItoUCS2("cmd_advancedProperties"));
+  return composerController->DoCommand(commandName.GetUnicode());
+}

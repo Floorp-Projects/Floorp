@@ -96,7 +96,6 @@
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
-  		<menuitem id="showEditModeBar"/>
       <menuseparator/>
       <menuitem id="viewSourceMenuitem"/>
       <menuitem id="viewParagraphMarks"/>
@@ -202,14 +201,15 @@
     </deck>
 
     <!-- TODO: Set collapsed="true" so default is to not show the editmode toolbar -->
-    <toolbar id="EditModeToolbar" chromeclass="extrachrome" persist="collapsed">
-      <text class="margin-left-right" value="&editMode.label;"/>
+    <toolbar id="EditModeToolbar" autostretch="never" valign="middle" persist="collapsed">
+      <text id="EditModeLabel" class="margin-left-right" value="&editMode.label;"/>
       <!-- From editorOverlay.xul -->
-      <text id="NormalModeButton"/>
-      <text id="TagModeButton"/>
-      <text id="SourceModeButton"/>
-      <text id="PreviewModeButton"/>
+      <button id="NormalModeButton" persist="type"/>
+      <button id="TagModeButton"/>
+      <button id="SourceModeButton"/>
+      <button id="PreviewModeButton"/>
       <spring flex="1"/>
+      <button id="ToggleEditModeType"/>
     </toolbar>
 
     <!-- Some of this is from globarOverlay.xul -->

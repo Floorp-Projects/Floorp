@@ -143,11 +143,16 @@ function SetTextfieldFocus(textfield)
 {
   if (textfield)
   {
+dump("Selection Start="+textfield.selectionStart+"\n");
+dump("Selection End="+textfield.selectionEnd+"\n");
     textfield.focus();
     //TODO: This is not working -- did Simon checkin? Do we need to change XBL?
-    textfield.selectionStart = 0;
+    //textfield.selectionStart = 0;
+    textfield.setAttribute("selectionStart",0);
     //TODO: Simon should change this to support "-1" for "select to end"
-    textfield.selectionEnd = textfield.value.length;
+    //textfield.selectionEnd = textfield.value.length;
+    textfield.setAttrubute("selectionEnd",textfield.value.length);
+
   }
 }
 

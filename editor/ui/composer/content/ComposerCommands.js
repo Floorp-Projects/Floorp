@@ -25,6 +25,8 @@
 
 
 var gComposerCommandManager = null;
+var commonDialogsService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
 //-----------------------------------------------------------------------------------
 function PrintObject(obj)
@@ -97,6 +99,64 @@ var nsOpenCommand =
   	                        "chrome,dialog=no,all",
   	                        fp.fileURL.spec);
         }
+      }
+    }
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsRevertCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && 
+            window.editorShell.documentModified &&
+            editorShell.editorDocument.location != "about:blank");
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell && 
+        window.editorShell.documentModified &&
+        editorShell.editorDocument.location != "about:blank")
+    {
+      // Confirm with the user to abandon current changes
+      if (commonDialogsService)
+      {
+        var result = {value:0};
+
+        // Put the page title in the message string
+        var title = editorShell.editorDocument.title;
+        if (!title || title.length == 0)
+          title = editorShell.GetTitle("untitled");
+
+        var msg = editorShell.GetString("AbandonChanges").replace(/%title%/,title);
+
+        commonDialogsService.UniversalDialog(
+          window,
+          null,
+          editorShell.GetString("RevertCaption"),
+          msg,
+          null,
+          editorShell.GetString("Revert"),
+          editorShell.GetString("Cancel"),
+          null,
+          null,
+          null,
+          null,
+          {value:0},
+          {value:0},
+          "chrome://global/skin/question-icon.gif",
+          {value:"false"},
+          2,
+          0,
+          0,
+          result
+          );
+
+        // Reload page if first button (Rever) was pressed
+        if(result.value == 0)
+          editorShell.LoadUrl(editorShell.editorDocument.location);
       }
     }
   }
@@ -296,8 +356,6 @@ var nsHLineCommand =
     hLine = window.editorShell.GetSelectedElement(tagName);
   
     if (hLine) {
-      dump("HLine was found -- opening dialog...!\n");
-  
       // We only open the dialog for an existing HRule
       window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
     } else {
@@ -307,7 +365,6 @@ var nsHLineCommand =
         // We change the default attributes to those saved in the user prefs
 
         if (gPrefs) {
-          dump(" We found the Prefs Service\n");
           var percent;
           var height;
           var shading;
@@ -315,7 +372,6 @@ var nsHLineCommand =
   
           try {
             var align = gPrefs.GetIntPref("editor.hrule.align");
-            dump("Align pref: "+align+"\n");
             if (align == 0 ) {
               hLine.setAttribute("align", "left");
             } else if (align == 2) {
@@ -327,18 +383,15 @@ var nsHLineCommand =
   	  
             var width = gPrefs.GetIntPref("editor.hrule.width");
             var percent = gPrefs.GetBoolPref("editor.hrule.width_percent");
-            dump("Width pref: "+width+", percent:"+percent+"\n");
             if (percent)
               width = width +"%";
   
             hLine.setAttribute("width", width);
   
             var height = gPrefs.GetIntPref("editor.hrule.height");
-            dump("Size pref: "+height+"\n");
             hLine.setAttribute("size", String(height));
   
             var shading = gPrefs.GetBoolPref("editor.hrule.shading");
-            dump("Shading pref:"+shading+"\n");
             if (shading) {
               hLine.removeAttribute("noshade");
             } else {
@@ -491,6 +544,22 @@ var nsPagePropertiesCommand =
   }
 };
 
+//-----------------------------------------------------------------------------------
+
+var nsAdvancedPropertiesCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    // Launch AdvancedEdit dialog for the selected element
+    var element = window.editorShell.GetSelectedElement("");
+    if (element)
+      window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", element);
+  }
+};
 
 //-----------------------------------------------------------------------------------
 var nsColorPropertiesCommand =
@@ -575,6 +644,7 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_newEditor",  nsNewEditorCommand);
 
   gComposerCommandManager.registerCommand("cmd_open",       nsOpenCommand);
+  gComposerCommandManager.registerCommand("cmd_revert",     nsRevertCommand);
   gComposerCommandManager.registerCommand("cmd_openRemote", nsOpenRemoteCommand);
   gComposerCommandManager.registerCommand("cmd_preview",    nsPreviewCommand);
   gComposerCommandManager.registerCommand("cmd_quit",       nsQuitCommand);
@@ -590,6 +660,8 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
   gComposerCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
   gComposerCommandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
+  gComposerCommandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
+
 
   gComposerCommandManager.registerCommand("cmd_image",       nsImageCommand);
   gComposerCommandManager.registerCommand("cmd_hline",       nsHLineCommand);

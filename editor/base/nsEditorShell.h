@@ -33,9 +33,11 @@
 #include "nsIEditorController.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIPrompt.h"
 #include "nsIStreamObserver.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMEventListener.h"
 #include "nsVoidArray.h"
 #include "nsTextServicesCID.h"
 #include "nsIEditorSpellCheck.h"
@@ -143,9 +145,15 @@ class nsEditorShell :   public nsIEditorShell,
     // is the document being loaded the root of a frameset, or a non-frameset doc?
     nsresult        DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot);
     
-    nsCOMPtr<nsIHTMLEditor>	 	  mEditor;						// this can be either an HTML or plain text (or other?) editor
-    nsCOMPtr<nsISupports>       mSearchContext;		    // context used for search and replace. Owned by the appshell.
-    nsCOMPtr<nsISpellChecker>   mSpellChecker;
+    nsCOMPtr<nsIHTMLEditor>	 	    mEditor;         // this can be either an HTML or plain text (or other?) editor
+    nsCOMPtr<nsISupports>         mSearchContext;  // context used for search and replace. Owned by the appshell.
+    nsCOMPtr<nsISpellChecker>     mSpellChecker;
+
+    // Let UI detect and process double click on elements for AdvancedProperties
+    //  (see nsEditorShellMouseEventListener)
+    nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
+    // We need this to add mMouseListenerP to document
+    nsresult GetDocumentEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 
     PRBool mMailCompose;
 

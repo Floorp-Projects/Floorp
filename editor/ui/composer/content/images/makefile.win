@@ -25,7 +25,7 @@ CHROME_DIR = editor
 CHROME_CONTENT_DIR = content\images
 
 CHROME_CONTENT = \
-  .\anchor-in-doc.gif    \
+  .\tag-anchor.gif    \
 	.\tag-abr.gif          \
 	.\tag-acr.gif          \
 	.\tag-adr.gif          \

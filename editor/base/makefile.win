@@ -39,6 +39,7 @@ CPPSRCS =				\
       nsHTMLEditUtils.cpp    \
       TextEditorTest.cpp     \
       nsEditorEventListeners.cpp \
+      nsEditorShellMouseListener.cpp \
       nsEditProperty.cpp     \
       EditTxn.cpp            \
       EditAggregateTxn.cpp   \
@@ -80,6 +81,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsHTMLEditRules.obj     \
   .\$(OBJDIR)\nsHTMLEditUtils.obj     \
   .\$(OBJDIR)\nsEditorEventListeners.obj		\
+  .\$(OBJDIR)\nsEditorShellMouseListener.obj \
 	.\$(OBJDIR)\nsEditProperty.obj	    \
   .\$(OBJDIR)\EditTxn.obj             \
   .\$(OBJDIR)\EditAggregateTxn.obj    \

@@ -164,5 +164,4 @@ NS_DECL_COMPOSER_COMMAND(nsIncreaseFontSizeCommand)
 NS_DECL_COMPOSER_COMMAND(nsDecreaseFontSizeCommand)
 
 
-
 #endif // nsComposerCommands_h_
