@@ -45,6 +45,7 @@
         style="width: 44em; height: 20em;"
         persist="width height"
         buttons="accept"
+        ondialogaccept="return onAccept();"
         onload="doLoad();"
         windowtype="Mail:News-BlogSubscriptions"
         flex="1">
@@ -126,7 +127,7 @@
   </grid>
 
     <vbox>
-        <button label="&addButton.label;" accesskey="&addButton.accesskey;" oncommand="doAdd();"/>
+        <button id="addButton" label="&addButton.label;" accesskey="&addButton.accesskey;" oncommand="doAdd();"/>
         <button label="&editButton.label;" accesskey="&editButton.accesskey;" oncommand="doEdit();"/>
         <button label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" oncommand="doRemove();"/>
     </vbox>

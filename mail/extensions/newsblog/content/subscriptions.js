@@ -47,6 +47,27 @@ function doLoad() {
     tree.builder.rebuild();
 }
 
+function onAccept()
+{
+  var dismissDialog = true;
+
+  // if we are in the middle of subscribing to a feed, inform the user that 
+  // dismissing the dialog right now will abort the feed subscription.
+  // cheat and look at the disabled state of the add button to determine if we are in the middle of a new subscription
+  if (document.getElementById('addButton').getAttribute('disabled'))
+  {
+    var IPS = Components.interfaces.nsIPromptService;
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(IPS);
+    var newsBlogBundle = document.getElementById("bundle_newsblog");
+    dismissDialog = !(promptService.confirmEx(window, newsBlogBundle.getString('subscribe-cancelSubscriptionTitle'), 
+                                     newsBlogBundle.getString('subscribe-cancelSubscription'), 
+                                     (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) + (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
+                                     null, null, null, null, { }));      
+  }
+
+  return dismissDialog;
+}
+
 // opens the feed properties dialog
 // optionally, pass in the name and 
 function openFeedEditor(feedProperties)
@@ -94,6 +115,9 @@ var feedDownloadCallback = {
       window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-invalidFeed', [feed.url]));
     else // we never even downloaded the feed...(kNewsBlogRequestFailure)
       window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-networkError', [feed.url]));
+
+    // re-enable the add button now that we are done subscribing
+    document.getElementById('addButton').removeAttribute('disabled');
 
     // our operation is done...clear out the status text and progressmeter
     setTimeout(clearStatusInfo, 1000);
@@ -158,6 +182,8 @@ function doAdd() {
     // turn around and download the feed again so we could actually parse the items...
     // But now that this operation is asynch, just kick it off once...if we change this back
     // modify feedDownloadCallback.downloaded to parse the feed...
+    // Also, disable the Add button while we are subscribing.
+    document.getElementById('addButton').setAttribute('disabled', 'true');
     feed.download(true, feedDownloadCallback);
 }
 
