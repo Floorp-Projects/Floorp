@@ -100,6 +100,7 @@ public:
 
   virtual void ProcessReflowCommands() = 0;
 
+  virtual void ClearFrameRefs(nsIFrame* aFrame) = 0;
   /**
    * Given a frame, cough up a rendering context suitable for use with
    * the frame.

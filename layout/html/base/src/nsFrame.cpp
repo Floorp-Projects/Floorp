@@ -312,6 +312,14 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
+  if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
+    nsIPresShell *shell = aPresContext.GetShell();
+    if (nsnull != shell) {
+      shell->ClearFrameRefs(this);
+      NS_RELEASE(shell);
+    }
+  }
+
   //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
   aPresContext.StopLoadImage(this);
