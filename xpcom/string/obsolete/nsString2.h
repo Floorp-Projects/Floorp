@@ -297,6 +297,9 @@ public:
   nsString& ReplaceChar(PRUnichar anOldChar,PRUnichar aNewChar);
   nsString& ReplaceChar(const char* aSet,PRUnichar aNewChar);
 
+  nsString& ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue);
+  nsString& ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* aNewValue);
+
   PRInt32 CountChar(PRUnichar aChar);
 
   /**

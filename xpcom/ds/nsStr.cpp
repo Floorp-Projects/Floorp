@@ -586,7 +586,6 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   return kNotFound;
 }
 
-
 /**
  * Compare source and dest strings, up to an (optional max) number of chars
  * @param   aDest is the first str to compare
@@ -609,11 +608,37 @@ PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PR
       return 1;
     }
 
-    PRInt32 maxlen=(aSource.mLength<aDest.mLength) ? aDest.mLength : aSource.mLength;
-    aCount = (aCount<0) ? maxlen : MinInt(aCount,maxlen);
+    aCount = (aCount<0) ? minlen: MinInt(aCount,minlen);
     result=(*gCompare[aDest.mCharSize][aSource.mCharSize])(aDest.mStr,aSource.mStr,aCount,aIgnoreCase);
+
+    if (0==result) {
+      if (aDest.mLength != aSource.mLength) {
+        //we think they match, but we've only compared minlen characters. 
+        //if the string lengths are different, then they don't really match.
+        result = (aDest.mLength<aSource.mLength) ? -1 : 1;
+      }
+    }
+
   }
   return result;
+}
+
+/**
+ * Overwrites the contents of dest at offset with contents of aSource
+ * 
+ * @param   aDest is the first str to compare
+ * @param   aSource is the second str to compare
+ * @param   aDestOffset is the offset within aDest where source should be copied
+ * @return  error code
+ */
+void nsStr::Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 aDestOffset) {
+  if(aDest.mLength && aSource.mLength) {
+    if((aDest.mLength-aDestOffset)>=aSource.mLength) {
+      //if you're here, then both dest and source have valid lengths
+      //and there's enough room in dest (at offset) to contain source.
+      (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDestOffset,aSource.mStr,0,aSource.mLength);      
+    }
+  }
 }
 
 //----------------------------------------------------------------------------------------
