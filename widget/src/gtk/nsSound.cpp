@@ -38,14 +38,20 @@
 
 #include <gtk/gtk.h>
 /* used with esd_open_sound */
-//static int esdref = -1;
+static int esdref = -1;
 static PRLibrary *lib = nsnull;
 
-//typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
-//typedef int (PR_CALLBACK *EsdCloseType)(int);
+#define ESD_BITS16 (0x0001)
+#define ESD_STEREO (0x0020)
+#define ESD_STREAM (0x0000)
+#define ESD_PLAY (0x1000)
+#define ESD_DEFAULT_RATE 44100
+
+typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
+typedef int (PR_CALLBACK *EsdCloseType)(int);
 
 /* used to play the sounds from the find symbol call */
-typedef int (PR_CALLBACK *EsdPlayFileType)(const char *, const char *, int);
+typedef int (PR_CALLBACK *EsdPlayStreamFallbackType)(int, int, const char *, const char *);
 
 NS_IMPL_ISUPPORTS1(nsSound, nsISound);
 
@@ -57,30 +63,27 @@ nsSound::nsSound()
   /* we don't need to do esd_open_sound if we are only going to play files
      but we will if we want to do things like streams, etc
   */
-  //  EsdOpenSoundType EsdOpenSound;
+
+  EsdOpenSoundType EsdOpenSound;
 
   lib = PR_LoadLibrary("libesd.so");
 
-#if 0
   if (!lib)
     return;
   EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(lib, "esd_open_sound");
   esdref = (*EsdOpenSound)("localhost");
-#endif
 }
 
 nsSound::~nsSound()
 {
   /* see above comment */
 
-#if 0
   if (esdref != -1)
   {
     EsdCloseType EsdClose = (EsdCloseType) PR_FindSymbol(lib, "esd_close");
     (*EsdClose)(esdref);
     esdref = -1;
   }
-#endif
   if (mPlayBuf)
       PR_Free( mPlayBuf );
   if (mBuffer)
@@ -127,23 +130,25 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 {
   nsresult rv;
   nsIInputStream *inputStream;
+  int fd;
   PRUint32 totalLen = 0;
   PRUint32 len;
 
-#if 0
   if (lib)
   {
-    g_print("there are some issues with playing sound right now, but this should work\n");
-    EsdPlayFileType EsdPlayFile = (EsdPlayFileType) PR_FindSymbol(lib, "esd_play_file");
+    EsdPlayStreamFallbackType EsdPlayStreamFallback = (EsdPlayStreamFallbackType) PR_FindSymbol(lib, "esd_play_stream_fallback");
 
     if ( mPlayBuf ) {
-          ::PlaySound(nsnull, nsnull, 0);       // stop what might be playing so we can free
+//          ::PlaySound(nsnull, nsnull, 0);       // stop what might be playing so we can free
           PR_Free( this->mPlayBuf );
           this->mPlayBuf = (char *) NULL;
     }
     rv = NS_OpenURI(&inputStream, aURI);
-    if (NS_FAILED(rv))
-          return rv;
+    fd = (*EsdPlayStreamFallback)(ESD_BITS16 | ESD_STEREO | ESD_STREAM | ESD_PLAY, ESD_DEFAULT_RATE, "localhost", "YabbaDabbaDoo"); 
+    if (fd < 0) {
+	NS_IF_RELEASE( inputStream );
+	return NS_ERROR_FAILURE;
+    }
     do {
         rv = inputStream->Read(this->mBuffer, this->mBufferSize, &len);
         if ( len ) {
@@ -167,11 +172,10 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
         }
     } while (len > 0);
     if ( this->mPlayBuf != (char *) NULL )
- /*     (*EsdPlayFile)("mozilla", filename, 1); */
+	write( fd, this->mPlayBuf, totalLen );
+    close( fd );
     NS_IF_RELEASE( inputStream );
     return NS_OK;
   } else 
 	return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-  return NS_OK;
 }
