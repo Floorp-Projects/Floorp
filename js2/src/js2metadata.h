@@ -699,6 +699,7 @@ public:
     Environment(Environment *e) : JS2Object(EnvironmentKind), frameList(e->frameList) { }
     
     JS2Class *getEnclosingClass();
+    ParameterFrame *Environment::getEnclosingParameterFrame();
     FrameListIterator getRegionalFrame();
     FrameListIterator getRegionalEnvironment();
     Frame *getTopFrame()                    { return frameList.front(); }
@@ -1211,12 +1212,21 @@ public:
         : NonWithFrame(ParameterFrameKind), 
                 thisObject(thisObject), 
                 prototype(prototype), 
-                buildArguments(false)  { }    
+                buildArguments(false),
+                isConstructor(false),
+                callsSuperConstructor(false),
+                superConstructorCalled(true)
+                    { }    
     ParameterFrame(ParameterFrame *pluralFrame) 
         : NonWithFrame(ParameterFrameKind, pluralFrame), 
                 thisObject(JS2VAL_UNDEFINED), 
                 prototype(pluralFrame->prototype), 
-                buildArguments(pluralFrame->buildArguments) { }
+                buildArguments(pluralFrame->buildArguments),
+                isConstructor(pluralFrame->isConstructor),
+                callsSuperConstructor(pluralFrame->callsSuperConstructor),
+                superConstructorCalled(false)  // initialized to false for each construction of a singular frame
+                                               // and then set true when/if the call occurs
+                    { }
 
 //    Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;
@@ -1225,6 +1235,9 @@ public:
 
     bool prototype;                 // true if this function is not an instance method but defines this anyway
     bool buildArguments;
+    bool isConstructor;
+    bool callsSuperConstructor;
+    bool superConstructorCalled;
 
 //    Variable **positional;          // list of positional parameters, in order
 //    uint32 positionalCount;
@@ -1388,6 +1401,7 @@ public:
     js2val invokeFunction(const char *fname);
     bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc);
+    void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
     void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
     void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);

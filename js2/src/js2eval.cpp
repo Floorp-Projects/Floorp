@@ -268,6 +268,15 @@ namespace MetaData {
         return retval;
     }
 
+    // Invoke the constructor function for a class, calling the super constructor as necessary
+    void JS2Metadata::invokeInit(JS2Class *c, js2val thisValue, js2val *argv, uint32 argc)
+    {
+        if (c->init) {
+            invokeFunction(c->init, thisValue, argv, argc);            
+        }
+        
+    }
+
     js2val JS2Metadata::invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc)
     {
         js2val result = JS2VAL_UNDEFINED;

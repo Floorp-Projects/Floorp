@@ -595,12 +595,13 @@ namespace MetaData {
         { ePopFrame,  "PopFrame", 0 },
         { eWithin, "With", 0 },
         { eWithout, "EndWith", 0 },
-        { eBranchFalse,  "BranchFalse", BRANCH_OFFSET },       // <branch displacement:s32> XXX save space with short and long versions instead ?
-        { eBranchTrue,  "BranchTrue", BRANCH_OFFSET },        // <branch displacement:s32>
-        { eBranch,  "Branch", BRANCH_OFFSET },            // <branch displacement:s32>
-        { eBreak,  "Break", BREAK_OFFSET_AND_COUNT },            // <branch displacement:s32> <blockCount:u16>
-        { eNew,  "New", U16 },               // <argCount:u16>
+        { eBranchFalse,  "BranchFalse", BRANCH_OFFSET },        // <branch displacement:s32> XXX save space with short and long versions instead ?
+        { eBranchTrue,  "BranchTrue", BRANCH_OFFSET },          // <branch displacement:s32>
+        { eBranch,  "Branch", BRANCH_OFFSET },                  // <branch displacement:s32>
+        { eBreak,  "Break", BREAK_OFFSET_AND_COUNT },           // <branch displacement:s32> <blockCount:u16>
+        { eNew,  "New", U16 },                // <argCount:u16>
         { eCall,  "Call", U16 },              // <argCount:u16>
+        { eSuperCall,  "SuperCall", U16 },    // <argCount:u16>
         { eTypeof,  "Typeof", 0 },
         { eInstanceof,  "Instanceof", 0 },
         { eIs,  "Is", 0 },
@@ -968,9 +969,7 @@ namespace MetaData {
         JS2Class *c = checked_cast<JS2Class *>(obj);
         SimpleInstance *result = new SimpleInstance(meta, c->prototype, c);
         DEFINE_ROOTKEEPER(rk, result);
-        if (c->init) {
-            meta->invokeFunction(c->init, OBJECT_TO_JS2VAL(result), NULL, 0);
-        }
+        meta->invokeInit(c, OBJECT_TO_JS2VAL(result), NULL, 0);
         return OBJECT_TO_JS2VAL(result);
     }
 

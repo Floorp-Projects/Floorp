@@ -175,6 +175,7 @@ namespace MetaData {
             reportError(Exception::syntaxError, "A class constructor cannot be a getter or a setter", pos);
         // XXX shouldn't be using validateStaticFunction
         c->init = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+        c->init->fWrap->compileFrame->isConstructor = true;
     }
 
     void JS2Metadata::validateInstance(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final, size_t pos)
@@ -1914,6 +1915,22 @@ namespace MetaData {
                 f->obj = validateStaticFunction(cxt, env, &f->function, true, true, p->pos);
             }
             break;
+        case ExprNode::superStmt:
+            {
+                ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                if ((pFrame == NULL) || !pFrame->isConstructor) 
+                    reportError(Exception::syntaxError, "A super statement is meaningful only inside a constructor", p->pos);
+
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                ValidateExpression(cxt, env, i->op);
+                ExprPairList *args = i->pairs;
+                while (args) {
+                    ValidateExpression(cxt, env, args->value);
+                    args = args->next;
+                }
+                pFrame->callsSuperConstructor = true;
+            }
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         } // switch (p->getKind())
@@ -2638,7 +2655,7 @@ doUnary:
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eNew, p->pos, -(argCount + 1) + 1);    // pop argCount args, the type/function, and push a result
+                bCon->emitOp(eNew, p->pos, -(argCount + 1) + 1);    // pop argCount args, the type or function, and push a result
                 bCon->addShort(argCount);
             }
             break;
@@ -2675,6 +2692,21 @@ doUnary:
                 bCon->addObject(f->obj);
             }
             break;
+        case ExprNode::superStmt:
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                ExprPairList *args = i->pairs;
+                uint16 argCount = 0;
+                while (args) {
+                    Reference *r = SetupExprNode(env, phase, args->value, exprType);
+                    if (r) r->emitReadBytecode(bCon, p->pos);
+                    argCount++;
+                    args = args->next;
+                }
+                bCon->emitOp(eSuperCall, p->pos, -argCount);    // pop argCount args, no result
+                bCon->addShort(argCount);
+            }
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }
@@ -2695,6 +2727,28 @@ doUnary:
         while (fi != getEnd()) {
             if ((*fi)->kind == ClassKind)
                 return checked_cast<JS2Class *>(*fi);
+            fi++;
+        }
+        return NULL;
+    }
+
+    // If env is from with a function's body, return the innermost ParameterFrame for
+    // the innermost such function, otherwise return NULL
+    ParameterFrame *Environment::getEnclosingParameterFrame()
+    {
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            switch ((*fi)->kind) {
+            case ClassKind:
+            case PackageKind:
+            case SystemKind:
+                return NULL;
+            case ParameterFrameKind:
+                return checked_cast<ParameterFrame *>(*fi);
+            case BlockFrameKind:
+            case WithFrameKind:
+                break;
+            }
             fi++;
         }
         return NULL;

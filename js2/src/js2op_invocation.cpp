@@ -177,6 +177,21 @@
         }
         break;
 
+    case eSuperCall:
+        {
+            uint16 argCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(uint16);
+            ParameterFrame *pFrame = meta->env->getEnclosingParameterFrame();
+            ASSERT(pFrame && (pFrame->isConstructor));
+            if (pFrame->superConstructorCalled)
+                meta->reportError(Exception::referenceError, "The superconstructor cannot be called twice", errorPos());
+            JS2Class *c = meta->env->getEnclosingClass();
+            ASSERT(c);
+            ASSERT(!JS2VAL_IS_VOID(pFrame->thisObject));
+            meta->invokeInit(c->super, pFrame->thisObject, base(argCount), argCount);
+        }
+        break;
+
     case ePopv:
         {
             retval = pop();

@@ -159,6 +159,7 @@ enum JS2Op {
     eBreak,             // <branch displacement:s32> <blockCount:u16>
     eNew,               // <argCount:u16>
     eCall,              // <argCount:u16>
+    eSuperCall,         // <argCount:u16>
     eTypeof,
     eInstanceof,
     eIs,
