@@ -33,6 +33,7 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
   buttons="accept,cancel,help"
   onload="onLoad();"
   ondialogaccept="return onOk();"
+  ondialogcancel="return onCancel();"
   ondialoghelp="return doHelpButton();"
   width="440"
   height="320"

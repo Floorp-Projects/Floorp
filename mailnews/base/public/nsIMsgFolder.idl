@@ -150,6 +150,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   /* function to get the filter list on folder's server */
   nsIMsgFilterList getFilterList( in nsIMsgWindow msgWindow);
+  void setFilterList( in nsIMsgFilterList filterList);
   
 	void ForceDBClosed ();
 	void Delete ();

@@ -341,7 +341,8 @@ public:
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);
         NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
-
+        NS_IMETHOD SetFilterList(nsIMsgFilterList *aMsgFilterList);
+        
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
                                      const char *destFolder,

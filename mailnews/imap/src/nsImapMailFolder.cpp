@@ -7017,3 +7017,10 @@ nsImapMailFolder::SetPerformingBiff(PRBool aPerformingBiff)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::SetFilterList(nsIMsgFilterList *aMsgFilterList)
+{
+  m_filterList = aMsgFilterList;
+  return nsMsgFolder::SetFilterList(aMsgFilterList);
+}
+

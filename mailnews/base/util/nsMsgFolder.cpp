@@ -2536,6 +2536,18 @@ nsMsgFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
   return server->GetFilterList(aMsgWindow, aResult);
 }
 
+NS_IMETHODIMP
+nsMsgFolder::SetFilterList(nsIMsgFilterList *aFilterList)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
+  
+  return server->SetFilterList(aFilterList);
+}
+
 /* void enableNotifications (in long notificationType, in boolean enable); */
 NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool enable, PRBool dbBatching)
 {

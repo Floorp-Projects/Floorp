@@ -79,6 +79,35 @@ function onOk()
   window.close();
 }
 
+function onCancel()
+{
+    var firstItem = getSelectedServerForFilters();
+    if (!firstItem)
+        firstItem = getServerThatCanHaveFilters();
+    
+    if (firstItem) {
+        var resource = rdf.GetResource(firstItem);
+        var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (msgFolder)
+        {
+           msgFolder.ReleaseDelegate("filter");
+           msgFolder.setFilterList(null);
+           try
+           {
+              //now find Inbox
+              var outNumFolders = new Object();
+              var inboxFolder = msgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders);
+              inboxFolder.setFilterList(null);
+           }
+           catch(ex)
+           {
+             dump ("ex " +ex + "\n");
+           }
+        }
+    }
+    window.close();
+}
+
 function onServerClick(event)
 {
     var item = event.target;
