@@ -418,14 +418,18 @@ ldap_url_search( LDAP *ld, const char *url, int attrsonly )
 		LDAP_SET_LDERRNO( ld, LDAP_NO_MEMORY, NULL, NULL );
 		err = -1;
 	} else {
-		if ( ludp->lud_port == 0 ) {
-			if (( ludp->lud_options & LDAP_URL_OPT_SECURE ) == 0 ) {
-				srv->lsrv_port = LDAP_PORT;
-			} else {
-				srv->lsrv_port = LDAPS_PORT;
-			}
-		} else {
+		if ( ludp->lud_port != 0 ) {
+			/* URL includes a port - use it */
 			 srv->lsrv_port = ludp->lud_port;
+		} else if ( ludp->lud_host == NULL ) {
+			/* URL has no port or host - use port from ld */
+			srv->lsrv_port = ld->ld_defport;
+		} else if (( ludp->lud_options & LDAP_URL_OPT_SECURE ) == 0 ) {
+			/* ldap URL has a host but no port - use std. port */
+			srv->lsrv_port = LDAP_PORT;
+		} else {
+			/* ldaps URL has a host but no port - use std. port */
+			srv->lsrv_port = LDAPS_PORT;
 		}
 	}
 
