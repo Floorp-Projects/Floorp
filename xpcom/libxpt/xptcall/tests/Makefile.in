@@ -22,10 +22,10 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = TestXPC
+MODULE = TestXPTCInvoke
 
 CPPSRCS = \
-	TestXPC.cpp \
+	TestXPTCInvoke.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -36,6 +36,7 @@ CFLAGS += -DJS_THREADSAFE -DJSFILE
 LDFLAGS		= 		\
 	-L$(DIST)/bin \
 	-lxpcom       \
+	-lxpt \
 	-lxptcmd \
 	-lxptinfo \
 	-lreg       \
@@ -44,9 +45,7 @@ LDFLAGS		= 		\
 	$(NULL)
 
 
-PROGS = $(OBJDIR)/TestXPC
-
-TEST_FILES = testxpc.js
+PROGS = $(OBJDIR)/TestXPTCInvoke
 
 TARGETS= $(PROGS)
 
@@ -61,8 +60,7 @@ INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xptcall \
 
 export:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
-	$(INSTALL) $(TEST_FILES) $(DIST)/bin
 
 clobber::
-	rm -f $(DIST)/bin/TestXPC
+	rm -f $(DIST)/bin/TestXPTCInvoke
 	rm -f $(PROGS) $(OBJS)
