@@ -29,7 +29,7 @@ IsWindowsNT()
 
   versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   ::GetVersionEx(&versionInfo);
-  return versionInfo.dwPlatformId = VER_PLATFORM_WIN32_NT;
+  return versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT;
 }
 
 PRBool nsImageWin::gIsWinNT = IsWindowsNT();
@@ -260,7 +260,7 @@ void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
       mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
 
       MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-      ::SetDIBits(NULL /* ignored */, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+      ::SetDIBits(the_hdc, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
                   (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
     }
 
@@ -395,9 +395,14 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
       }
       else
       {
+        COLORREF oldTextColor = ::SetTextColor(the_hdc, RGB(0, 0, 0));
+        COLORREF oldBkColor = ::SetBkColor(the_hdc, RGB(255, 255, 255));
         oldbits = ::SelectObject(srcdc, mAlphaHBitmap);
         ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
                      mAlphaWidth, mAlphaHeight, SRCAND);
+        ::SetTextColor(the_hdc, oldTextColor);
+        ::SetBkColor(the_hdc, oldBkColor);
+
         ::SelectObject(srcdc, mHBitmap);
         ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
                      mBHead->biWidth, mBHead->biHeight, SRCPAINT);
