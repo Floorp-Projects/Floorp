@@ -30,6 +30,11 @@
 #include "xp_str.h"
 #include "xpassert.h"
 
+#include "felocale.h"		// fe_ConvertToXmString()
+#include "intl_csi.h"		// For INTL_ functions
+
+#include "xfe.h"			// For fe_FormatDocTitle()
+
 //////////////////////////////////////////////////////////////////////////
 //
 // XFE Command utilities
@@ -272,5 +277,95 @@ XFE_RDFUtils::guessTitle(MWContext *		context,
             (*guessedTitleOut) += 7;
         }
     }
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// XmString hackery
+//
+//////////////////////////////////////////////////////////////////////////
+/* static */ XmString
+XFE_RDFUtils::entryToXmString(HT_Resource			entry,
+							  INTL_CharSetInfo		char_set_info)
+{
+    XP_ASSERT( entry != NULL );
+
+    XmString            result = NULL;
+    XmString            tmp;
+    char *                psz;
+
+    tmp = XFE_RDFUtils::formatItem(entry,INTL_DefaultWinCharSetID(NULL));
+    
+    // Mid truncate the name
+    if (XmStringGetLtoR(tmp,XmSTRING_DEFAULT_CHARSET,&psz))
+    {
+        XmStringFree(tmp);
+
+        INTL_MidTruncateString(INTL_GetCSIWinCSID(char_set_info),psz,psz,40);
+
+        result = XmStringCreateLtoR(psz,XmSTRING_DEFAULT_CHARSET);
+
+        if (psz)
+        {
+            XtFree(psz);
+        }
+    }
+    else
+    {
+        result = tmp;
+    }
+
+    return result;
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ XmString
+XFE_RDFUtils::formatItem(HT_Resource entry,int16 charset)
+{
+  XmString xmstring;
+  char buf [1024];
+  char *name = HT_GetNodeName(entry);
+  char *url = HT_GetNodeURL(entry);
+  XmFontList font_list;
+
+  if (HT_IsSeparator(entry))
+  {
+      strcpy (buf, "-------------------------");
+  }
+  else if (name || url)
+  {
+      fe_FormatDocTitle (name, url, buf, 1024);
+  }
+
+  if (!*buf)
+  {
+      xmstring = 0;
+  }
+  else if (name || url)
+  {
+      xmstring = fe_ConvertToXmString ((unsigned char *) buf, charset, 
+                                       NULL, XmFONT_IS_FONT, &font_list);
+  }
+  else
+  {
+      char *loc;
+
+      loc = (char *) fe_ConvertToLocaleEncoding (charset,
+                                                 (unsigned char *) buf);
+
+      xmstring = XmStringSegmentCreate (loc, "HEADING",
+                                        XmSTRING_DIRECTION_L_TO_R, False);
+      if (loc != buf)
+      {
+          XP_FREE(loc);
+      }
+  }
+
+  if (!xmstring)
+  {
+	  xmstring = XmStringCreateLtoR ("", XmFONTLIST_DEFAULT_TAG);
+  }
+
+  return (xmstring);
 }
 //////////////////////////////////////////////////////////////////////////

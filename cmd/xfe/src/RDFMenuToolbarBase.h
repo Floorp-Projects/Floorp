@@ -169,14 +169,6 @@ private:
     char *             _dropTitleBuffer;      // 
     time_t             _dropLastAccess;       // 
 
-    // Format item blah blah blah
-    static XmString  formatItem         (HT_Resource        entry, 
-                                         int16              charset);
-
-    // Obtain an internationallized XmString from an entry
-    static XmString  entryToXmString    (HT_Resource        entry,
-                                         INTL_CharSetInfo   char_set_info);
-
     void             createPixmaps      ();
 
     Widget           getLastMoreMenu    (Widget menu);

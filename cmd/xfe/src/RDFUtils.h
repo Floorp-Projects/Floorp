@@ -33,6 +33,8 @@
 #include "xp_core.h"
 #include "Command.h"
 
+#include <Xm/Xm.h>			// For XmString
+
 class XFE_RDFUtils
 {
 public:
@@ -77,6 +79,21 @@ public:
 									 XP_Bool		sameShell,
 									 char **		resolvedTitleOut,
 									 time_t *		resolvedLastDateOut);
+
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// XmString hackery                                                 //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+
+    // Format item blah blah blah
+    static XmString  formatItem         (HT_Resource        entry, 
+                                         int16              charset);
+
+    // Obtain an internationallized XmString from an entry
+    static XmString  entryToXmString    (HT_Resource        entry,
+                                         INTL_CharSetInfo   char_set_info);
 
 };
 
