@@ -23,6 +23,9 @@
 #include "nsIRegistry.h"
 #include "nsIFactory.h"
 #include "nsIStringStream.h"
+#include "nsIIOService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
 
 #define ASYNC_TEST // undefine this if you want to test sycnronous conversion.
 
@@ -44,6 +47,7 @@ static nsIEventQueue* gEventQ = nsnull;
 // Test converters include
 /////////////////////////////////
 #include "Converters.h"
+#include "nsMultiMixedConv.h"
 
 // CID setup
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
@@ -67,6 +71,22 @@ public:
     NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, 
                                PRUint32 sourceOffset, PRUint32 count)
     {
+        nsresult rv;
+        PRUint32 read, len;
+        rv = inStr->GetLength(&len);
+        if (NS_FAILED(rv)) return rv;
+
+        char *buffer = (char*)nsAllocator::Alloc(len + 1);
+        if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = inStr->Read(buffer, len, &read);
+        buffer[len] = '\0';
+        if (NS_FAILED(rv)) return rv;
+
+        printf("CONTEXT %x: Received %d bytes and the following data: \n %s\n\n", ctxt, read, buffer);
+
+        nsAllocator::Free(buffer);
+
         return NS_OK;
     }
 
@@ -120,6 +140,11 @@ main(int argc, char* argv[])
     rv = convFactory1->QueryInterface(NS_GET_IID(nsIFactory), (void**)&convFactSup1);
     if (NS_FAILED(rv)) return rv;
 
+    // multipart mixed converter registration
+    nsIFactory *multiMixedFactSup = nsnull;
+    rv = nsComponentManager::FindFactory(kMultiMixedConverterCID, &multiMixedFactSup);
+    if (NS_FAILED(rv)) return rv;
+
     // register the TestConverter with the component manager. One progid registration
     // per conversion pair (from - to pair).
     rv = nsComponentManager::RegisterFactory(kTestConverterCID,
@@ -133,6 +158,13 @@ main(int argc, char* argv[])
                                              "TestConverter1",
                                              NS_ISTREAMCONVERTER_KEY "?from=b/foo?to=c/foo",
                                              convFactSup1,
+                                             PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = nsComponentManager::RegisterFactory(kMultiMixedConverterCID,
+                                             "MultiMixedConverter",
+                                             NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html",
+                                             multiMixedFactSup,
                                              PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
@@ -191,6 +223,9 @@ main(int argc, char* argv[])
     rv = registry->AddSubtreeRaw(key, "?from=b/foo?to=c/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
+    rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace?to=text/html", &key1);
+    if (NS_FAILED(rv)) return rv;
+
     rv = registry->AddSubtreeRaw(key, "?from=b/foo?to=d/foo", &key1);
     if (NS_FAILED(rv)) return rv;
 
@@ -210,7 +245,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     // use a dummy string as a stream to convert. This is the original from data.
-    nsString2 dummyData("aaaaaaaaaaaaaaa");
+    nsString2 dummyData("--aBoundary Test ");
     nsIInputStream *inputData = nsnull;
     nsISupports *inputDataSup = nsnull;
     nsIInputStream *convertedData = nsnull;
@@ -219,16 +254,31 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     PRUnichar *from, *to;
-    nsString2 fromStr("a/foo");
+    nsString2 fromStr("multipart/x-mixed-replace");
     from = fromStr.ToNewUnicode();
-    nsString2 toStr  ("c/foo");
+    nsString2 toStr  ("text/html");
     to = toStr.ToNewUnicode();
 
     rv = inputDataSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData);
+    NS_RELEASE(inputDataSup);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef ASYNC_TEST
     // ASYNCRONOUS conversion
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // we need a dummy channel for the async calls.
+    nsIChannel *dummyChannel = nsnull;
+    nsIURI *dummyURI = nsnull;
+    rv = serv->NewURI("http://neverneverland.com", nsnull, &dummyURI);
+    if (NS_FAILED(rv)) return rv;
+    rv = serv->NewInputStreamChannel(dummyURI, "multipart/x-mixed-replace;boundary= --aBoundary",
+                                     nsnull, &dummyChannel);
+    NS_RELEASE(dummyURI);
+    if (NS_FAILED(rv)) return rv;
+
 
     // setup a listener to receive the converted data. This guy is the end
     // listener in the chain, he wants the fully converted (toType) data.
@@ -246,14 +296,35 @@ main(int argc, char* argv[])
     // that will receive the converted data. Let's mimic On*() calls and get the conversion
     // going. Typically these On*() calls would be made inside their respective wrappers On*()
     // methods.
-    rv = converterListener->OnStartRequest(nsnull, nsnull);
+    rv = converterListener->OnStartRequest(dummyChannel, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = converterListener->OnDataAvailable(nsnull, nsnull, inputData, 0, -1);
+    // For the OnDataAvailable() call, we'll simulate multiple (two) calls.
+    rv = converterListener->OnDataAvailable(dummyChannel, nsnull, inputData, 0, -1);
+    NS_RELEASE(inputData);
     if (NS_FAILED(rv)) return rv;
 
-    rv = converterListener->OnStopRequest(nsnull, nsnull, rv, nsnull);
+    // And the second...
+    nsString2 dummyData2("--aBoundary me. --aBoundary--");
+    nsIInputStream *inputData2 = nsnull;
+    nsISupports *inputDataSup2 = nsnull;
+
+    rv = NS_NewStringInputStream(&inputDataSup2, dummyData2);
     if (NS_FAILED(rv)) return rv;
+
+    rv = inputDataSup2->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData2);
+    NS_RELEASE(inputDataSup2);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = converterListener->OnDataAvailable(dummyChannel, nsnull, inputData2, 0, -1);
+    NS_RELEASE(inputData2);
+    if (NS_FAILED(rv)) return rv;
+
+
+    rv = converterListener->OnStopRequest(dummyChannel, nsnull, rv, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_RELEASE(dummyChannel);
 
 #else
     // SYNCRONOUS conversion
@@ -261,6 +332,8 @@ main(int argc, char* argv[])
 #endif
 
     NS_RELEASE(convFactSup);
+    nsAllocator::Free(from);
+    nsAllocator::Free(to);
 
     if (NS_FAILED(rv)) return rv;
 
