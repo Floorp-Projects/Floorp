@@ -218,6 +218,31 @@ nsStyleSides::nsStyleSides(void)
   nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
 }
 
+#define COMPARE_SIDE(side)                                                            \
+  if ((eStyleUnit_Percent <= m##side##Unit) && (m##side##Unit < eStyleUnit_Coord)) {  \
+    if (m##side##Value.mFloat != aOther.m##side##Value.mFloat)                        \
+      return PR_FALSE;                                                                \
+  }                                                                                   \
+  else {                                                                              \
+    if (m##side##Value.mInt != aOther.m##side##Value.mInt)                            \
+      return PR_FALSE;                                                                \
+  }
+
+PRBool nsStyleSides::operator==(const nsStyleSides& aOther) const
+{
+  if ((mLeftUnit == aOther.mLeftUnit) && 
+      (mTopUnit == aOther.mTopUnit) &&
+      (mRightUnit == aOther.mRightUnit) &&
+      (mBottomUnit == aOther.mBottomUnit)) {
+    COMPARE_SIDE(Left);
+    COMPARE_SIDE(Top);
+    COMPARE_SIDE(Right);
+    COMPARE_SIDE(Bottom);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 void nsStyleSides::Reset(void)
 {
   nsCRT::memset(this, 0x00, sizeof(nsStyleSides));
