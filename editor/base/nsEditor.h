@@ -20,6 +20,7 @@
 #define __editor_h__
 
 #include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
 #include "prmon.h"
 
 #include "nsIEditor.h"
@@ -584,7 +585,7 @@ protected:
 
   PRUint32        mFlags;		// behavior flags. See nsIHTMLEditor.h for the flags we use.
   
-  nsIPresShell   *mPresShell;
+  nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
   nsIViewManager *mViewManager;
   PRUint32        mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
@@ -604,10 +605,10 @@ protected:
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
 
-  nsIDOMDocument * mDoc;
+  nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
   nsCOMPtr<nsIDTD> mDTD;
   // Services are not nsCOMPtr friendly
-  nsIPref* mPrefs;
+  nsIPref         *mPrefs;
 
   static PRInt32 gInstanceCount;
 

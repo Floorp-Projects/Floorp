@@ -304,8 +304,8 @@ nsHTMLEditor::PostCreate()
 NS_IMETHODIMP 
 nsHTMLEditor::InstallEventListeners()
 {
-  NS_ASSERTION(mDoc, "no document set on this editor");
-  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+  NS_ASSERTION(mDocWeak, "no document set on this editor");
+  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result;
   // get a key listener
@@ -358,7 +358,9 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 
   // get the DOM event receiver
   nsCOMPtr<nsIDOMEventReceiver> erP;
-  result = mDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  result = doc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
   if (NS_FAILED(result)) {
     HandleEventListenerError();
     return result;
@@ -2116,7 +2118,9 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   //  go through the transaction system
 
   nsCOMPtr<nsIDOMElement>newElement;
-  res = mDoc->CreateElement(realTagName, getter_AddRefs(newElement));
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  res = doc->CreateElement(realTagName, getter_AddRefs(newElement));
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;
 
@@ -2205,7 +2209,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
       // Set contents to the &nbsp character by concatanating the char code
       space += nbsp;
       // If we fail here, we return NS_OK anyway, since we have an OK cell node
-      nsresult result = mDoc->CreateTextNode(space, getter_AddRefs(newTextNode));
+      nsresult result = doc->CreateTextNode(space, getter_AddRefs(newTextNode));
 			if (NS_FAILED(result)) return result;
 			if (!newTextNode) return NS_ERROR_NULL_POINTER;
 
@@ -2326,7 +2330,7 @@ DELETE_ANCHOR:
 NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 {
 //  nsresult result;
-  NS_PRECONDITION(mDoc, "Missing Editor DOM Document");
+  NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
   // For initial testing, just set the background on the BODY tag (the document's background)
@@ -2353,7 +2357,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const n
   nsresult res;
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
 
-  NS_ASSERTION(mDoc, "Missing Editor DOM Document");
+  NS_ASSERTION(mDocWeak, "Missing Editor DOM Document");
   
   // Set the background color attribute on the body tag
   nsCOMPtr<nsIDOMElement> bodyElement;
@@ -2523,7 +2527,10 @@ NS_IMETHODIMP nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocument> document;
 
-    rv = mPresShell->GetDocument(getter_AddRefs(document));
+    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+    if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    rv = ps->GetDocument(getter_AddRefs(document));
 
     if (NS_SUCCEEDED(rv)) {
       if (document) {
@@ -2592,11 +2599,14 @@ nsHTMLEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
   nsCOMPtr<nsIContent> content = do_QueryInterface(body);
 
   nsIFrame *frame;
-  res = mPresShell->GetPrimaryFrameFor(content, &frame);
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  res = ps->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(res)) return res;
   
   nsCOMPtr<nsIStyleContext> styleContext;
-  return mPresShell->GetStyleContextFor(frame, aStyleContext);
+  return ps->GetStyleContextFor(frame, aStyleContext);
 }
 
 //
@@ -2967,7 +2977,10 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsresult res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res))
     return res;
 
@@ -2985,7 +2998,10 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
 {
   //printf("nsEditor::Copy\n");
 
-  return mPresShell->DoCopy();
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  return ps->DoCopy();
 }
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
@@ -3303,22 +3319,24 @@ void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, 
 NS_IMETHODIMP nsHTMLEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)
 {
   nsresult result = NS_ERROR_FAILURE;  // we return an error unless we get the index
-  if( mPresShell != nsnull )
-  {
-    if ((nsnull!=aNode))
-    { // get the content interface
-      nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aNode) );
-      if (nodeAsContent)
-      { // get the frame from the content interface
-        //Note: frames are not ref counted, so don't use an nsCOMPtr
-        *aLayoutObject = nsnull;
-        result = mPresShell->GetLayoutObjectFor(nodeAsContent, aLayoutObject);
-      }
-    }
-    else {
-      result = NS_ERROR_NULL_POINTER;
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+
+  if ((nsnull!=aNode))
+  { // get the content interface
+    nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aNode) );
+    if (nodeAsContent)
+    { // get the frame from the content interface
+      //Note: frames are not ref counted, so don't use an nsCOMPtr
+      *aLayoutObject = nsnull;
+      result = ps->GetLayoutObjectFor(nodeAsContent, aLayoutObject);
     }
   }
+  else {
+    result = NS_ERROR_NULL_POINTER;
+  }
+
   return result;
 }
 

@@ -136,84 +136,84 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 //  PRBool keyProcessed;
 //  ProcessShortCutKeys(aKeyEvent, keyProcessed);
 //  if (PR_FALSE==keyProcessed)
-	{
-		if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
-				NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
-				NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
-				NS_SUCCEEDED(uiEvent->GetAltKey(&altKey)) &&
-				NS_SUCCEEDED(uiEvent->GetMetaKey(&metaKey)))
-		{
-			 {
-				switch(keyCode) {
-	//      case nsIDOMUIEvent::VK_BACK:
-	//        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
-	//        break;
+   {
+      if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
+            NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
+            NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
+            NS_SUCCEEDED(uiEvent->GetAltKey(&altKey)) &&
+            NS_SUCCEEDED(uiEvent->GetMetaKey(&metaKey)))
+      {
+          {
+            switch(keyCode) {
+   //      case nsIDOMUIEvent::VK_BACK:
+   //        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
+   //        break;
 
-				case nsIDOMUIEvent::VK_DELETE:
-					mEditor->DeleteSelection(nsIEditor::eDeleteNext);
-					break;
+            case nsIDOMUIEvent::VK_DELETE:
+               mEditor->DeleteSelection(nsIEditor::eDeleteNext);
+               break;
 
-	//      case nsIDOMUIEvent::VK_RETURN:
-				//case nsIDOMUIEvent::VK_ENTER:			// why does this not exist?
-					// Need to implement creation of either <P> or <BR> nodes.
-	//        mEditor->InsertBreak();
-	//        break;
+   //      case nsIDOMUIEvent::VK_RETURN:
+            //case nsIDOMUIEvent::VK_ENTER:         // why does this not exist?
+               // Need to implement creation of either <P> or <BR> nodes.
+   //        mEditor->InsertBreak();
+   //        break;
       
-				case nsIDOMUIEvent::VK_LEFT:
-				case nsIDOMUIEvent::VK_RIGHT:
-				case nsIDOMUIEvent::VK_UP:
-				case nsIDOMUIEvent::VK_DOWN:
-      		// these have already been handled in nsRangeList. Why are we getting them
-      		// again here (Mac)? In switch to avoid putting in bogus chars.
+            case nsIDOMUIEvent::VK_LEFT:
+            case nsIDOMUIEvent::VK_RIGHT:
+            case nsIDOMUIEvent::VK_UP:
+            case nsIDOMUIEvent::VK_DOWN:
+            // these have already been handled in nsRangeList. Why are we getting them
+            // again here (Mac)? In switch to avoid putting in bogus chars.
 
-					//return NS_OK to allow page scrolling.
-					return NS_OK;
-      		break;
+               //return NS_OK to allow page scrolling.
+               return NS_OK;
+            break;
       
-				case nsIDOMUIEvent::VK_HOME:
-				case nsIDOMUIEvent::VK_END:
-      		// who handles these?
-	#if DEBUG
-			printf("Key not handled\n");
-	#endif
-					return NS_OK;
-					break;
+            case nsIDOMUIEvent::VK_HOME:
+            case nsIDOMUIEvent::VK_END:
+            // who handles these?
+   #if DEBUG
+         printf("Key not handled\n");
+   #endif
+               return NS_OK;
+               break;
 
-				case nsIDOMUIEvent::VK_PAGE_UP:
-				case nsIDOMUIEvent::VK_PAGE_DOWN:
-					//return NS_OK to allow page scrolling.
-					return NS_OK;
-      		break;
+            case nsIDOMUIEvent::VK_PAGE_UP:
+            case nsIDOMUIEvent::VK_PAGE_DOWN:
+               //return NS_OK to allow page scrolling.
+               return NS_OK;
+            break;
 
-				case nsIDOMUIEvent::VK_TAB:
-				{
-					PRUint32 flags=0;
-					mEditor->GetFlags(&flags);
-					if (! (flags & nsIHTMLEditor::eEditorSingleLineMask))
-					{
-						if (metaKey || altKey)
-							return NS_OK;	// don't consume
-						// else we insert the tab straight through  
- 						nsAutoString key;
-						key += keyCode;
+            case nsIDOMUIEvent::VK_TAB:
+            {
+               PRUint32 flags=0;
+               mEditor->GetFlags(&flags);
+               if (! (flags & nsIHTMLEditor::eEditorSingleLineMask))
+               {
+                  if (metaKey || altKey)
+                     return NS_OK;   // don't consume
+                  // else we insert the tab straight through  
+                   nsAutoString key;
+                  key += keyCode;
 
-						nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
- 						if (htmlEditor)
- 							htmlEditor->InsertText(key);
-						return NS_ERROR_BASE; // this means "I handled the event, don't do default processing"
-					}
-					else {
-						return NS_OK;
-					}
-					break;
-				}
+                  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+                   if (htmlEditor)
+                      htmlEditor->InsertText(key);
+                  return NS_ERROR_BASE; // this means "I handled the event, don't do default processing"
+               }
+               else {
+                  return NS_OK;
+               }
+               break;
+            }
 
-				default:
-					return NS_OK; // this indicates that we have not handled the keyDown event in any way.
-				}
-			}
-		}
-	}
+            default:
+               return NS_OK; // this indicates that we have not handled the keyDown event in any way.
+            }
+         }
+      }
+   }
   
   return NS_ERROR_BASE;
 }
@@ -229,70 +229,74 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-	nsAutoString  key;
-	PRUint32     character;
-	PRUint32 keyCode;
+  nsAutoString  key;
+  PRUint32     character;
+  PRUint32 keyCode;
 
-	nsCOMPtr<nsIDOMUIEvent>uiEvent;
-	uiEvent = do_QueryInterface(aKeyEvent);
-	if (!uiEvent) {
-		//non-key event passed to keydown.  bad things.
-		return NS_OK;
-	}
-	//
-	// look at the keyCode if it is return or backspace, process it
-	//	we handle these two special characters here because it makes windows integration
-	//	eaiser
-	//
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aKeyEvent);
+  if (!uiEvent) 
+  {
+    //non-key event passed to keydown.  bad things.
+    return NS_OK;
+  }
+   //
+   // look at the keyCode if it is return or backspace, process it
+   //   we handle these two special characters here because it makes windows integration
+   //   eaiser
+   //
 
   PRBool keyProcessed;
   ProcessShortCutKeys(aKeyEvent, keyProcessed);
   if (PR_FALSE==keyProcessed)
   {
     PRUint32 flags;
-	  PRBool ctrlKey, altKey, metaKey;
-	  uiEvent->GetCtrlKey(&ctrlKey);
-	  uiEvent->GetAltKey(&altKey);
-	  uiEvent->GetMetaKey(&metaKey);
+    PRBool ctrlKey, altKey, metaKey;
+    uiEvent->GetCtrlKey(&ctrlKey);
+    uiEvent->GetAltKey(&altKey);
+    uiEvent->GetMetaKey(&metaKey);
 
-	  if (metaKey)
-		  return NS_OK;	// don't consume
+    if (metaKey)
+      return NS_OK;   // don't consume
 
-	  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-	  if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+    if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
 
-	  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
-	  {
-		  if (nsIDOMUIEvent::VK_BACK==keyCode) {
-			  mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
-			  return NS_ERROR_BASE; // consumed
-		  }	
-		  if (nsIDOMUIEvent::VK_RETURN==keyCode) 
+    if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
+    {
+      if (nsIDOMUIEvent::VK_BACK==keyCode) 
+      {
+        mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
+         return NS_ERROR_BASE; // consumed
+      }   
+      if (nsIDOMUIEvent::VK_RETURN==keyCode) 
       {
         mEditor->GetFlags(&flags);
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
-			    htmlEditor->InsertBreak();
-			    return NS_ERROR_BASE; // consumed
+          htmlEditor->InsertBreak();
+          return NS_ERROR_BASE; // consumed
         }
-        else {
+        else 
+        {
           return NS_OK;
         }
-		  }
-	  }
-	  
- 	  if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
-			  (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
- 	  {
-		  if (nsIDOMUIEvent::VK_TAB==character) {
-			  return NS_OK; // ignore tabs here, they're handled in keyDown if at all
-		  }
- 		  key += character;
- 		  htmlEditor->InsertText(key);
- 	  }
-	}
+      }
+    }
+     
+    if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
+        (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
+    {
+      if (nsIDOMUIEvent::VK_TAB==character) 
+      {
+        return NS_OK; // ignore tabs here, they're handled in keyDown if at all
+      }
+      key += character;
+      htmlEditor->InsertText(key);
+    }
+  }
 
-	return NS_ERROR_BASE; // consumed
+  return NS_ERROR_BASE; // consumed
   
 }
 
@@ -321,8 +325,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 //  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
       NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
       NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
-      NS_SUCCEEDED(uiEvent->GetAltKey(&altKey))
-      ) 
+      NS_SUCCEEDED(uiEvent->GetAltKey(&altKey)) ) 
   {
     if (PR_TRUE==ctrlKey) {
       aProcessed = PR_TRUE;
@@ -385,11 +388,11 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
           if (mailEditor)
           {
-	          PRInt32 wrap;
-	          if (NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-	            printf("Currently wrapping to %d\n", wrap);
-	          else
-	            printf("GetBodyWrapWidth returned an error\n");	            
+             PRInt32 wrap;
+             if (NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
+               printf("Currently wrapping to %d\n", wrap);
+             else
+               printf("GetBodyWrapWidth returned an error\n");               
           }
         }
         break;
@@ -398,24 +401,24 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         // hard coded "Decrease wrap size"
         if (PR_TRUE==altKey)
         {
-	        nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-	        if (mailEditor)
-	        {
-	          aProcessed=PR_TRUE;
-	          PRInt32 wrap;
-	          if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-	          {
-	            printf("GetBodyWrapWidth returned an error\n");
-	            break;
-	          }
-	          mailEditor->SetBodyWrapWidth(wrap - 5);
-	          if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-	          {
-	            printf("Second GetBodyWrapWidth returned an error\n");
-	            break;
-	          }
-	          else printf("Now wrapping to %d\n", wrap);
-	        }
+           nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+           if (mailEditor)
+           {
+             aProcessed=PR_TRUE;
+             PRInt32 wrap;
+             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
+             {
+               printf("GetBodyWrapWidth returned an error\n");
+               break;
+             }
+             mailEditor->SetBodyWrapWidth(wrap - 5);
+             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
+             {
+               printf("Second GetBodyWrapWidth returned an error\n");
+               break;
+             }
+             else printf("Now wrapping to %d\n", wrap);
+           }
         }
         break;
 
@@ -423,24 +426,24 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         // hard coded "Increase wrap size"
         if (PR_TRUE==altKey)
         {
-	        nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-	        if (mailEditor)
-	        {
-	          aProcessed=PR_TRUE;
-	          PRInt32 wrap;
-	          if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-	          {
-	            printf("GetBodyWrapWidth returned an error\n");
-	            break;
-	          }
-	          mailEditor->SetBodyWrapWidth(wrap + 5);
-	          if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
-	          {
-	            printf("Second GetBodyWrapWidth returned an error\n");
-	            break;
-	          }
-	          else printf("Now wrapping to %d\n", wrap);
-	        }
+           nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+           if (mailEditor)
+           {
+             aProcessed=PR_TRUE;
+             PRInt32 wrap;
+             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
+             {
+               printf("GetBodyWrapWidth returned an error\n");
+               break;
+             }
+             mailEditor->SetBodyWrapWidth(wrap + 5);
+             if (!NS_SUCCEEDED(mailEditor->GetBodyWrapWidth(&wrap)))
+             {
+               printf("Second GetBodyWrapWidth returned an error\n");
+               break;
+             }
+             else printf("Now wrapping to %d\n", wrap);
+           }
         }
         break;
 
@@ -818,7 +821,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             // the unit tests are only exposed through nsIEditor
             nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
             if (editor)
-	            editor->DebugUnitTests(&numTests, &numFailed);
+               editor->DebugUnitTests(&numTests, &numFailed);
           }
         }
         break;
@@ -895,20 +898,20 @@ nsTextEditorMouseListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aOutIsInSel)
 {
-	aOutIsInSel = PR_FALSE;	// init out-param
-	if (!aInNode || !aInSelection) { return NS_ERROR_NULL_POINTER; }
+   aOutIsInSel = PR_FALSE;   // init out-param
+   if (!aInNode || !aInSelection) { return NS_ERROR_NULL_POINTER; }
 
   nsCOMPtr<nsIContentIterator>iter;
   nsresult result = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
                                                        nsIContentIterator::GetIID(), 
-																											 getter_AddRefs(iter));
-	if (NS_FAILED(result)) { return result; }
-	if (!iter) { return NS_ERROR_OUT_OF_MEMORY; }
+                                                                                  getter_AddRefs(iter));
+   if (NS_FAILED(result)) { return result; }
+   if (!iter) { return NS_ERROR_OUT_OF_MEMORY; }
 
-	nsCOMPtr<nsIEnumerator> enumerator;
+   nsCOMPtr<nsIEnumerator> enumerator;
   result = aInSelection->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result)) { return result; }
-	if (!enumerator) { return NS_ERROR_OUT_OF_MEMORY; }
+   if (!enumerator) { return NS_ERROR_OUT_OF_MEMORY; }
 
   for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
   {
@@ -918,31 +921,31 @@ IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aO
     {
       nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
 
-			iter->Init(range);
-			nsCOMPtr<nsIContent> currentContent;
-			iter->CurrentNode(getter_AddRefs(currentContent));
-			while (NS_COMFALSE == iter->IsDone())
-			{
-				nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
-				if (currentNode.get()==aInNode)
-				{
-					// if it's a start or end node, need to test whether the (x,y) 
-					// of the event falls within the selection
+         iter->Init(range);
+         nsCOMPtr<nsIContent> currentContent;
+         iter->CurrentNode(getter_AddRefs(currentContent));
+         while (NS_COMFALSE == iter->IsDone())
+         {
+            nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
+            if (currentNode.get()==aInNode)
+            {
+               // if it's a start or end node, need to test whether the (x,y) 
+               // of the event falls within the selection
 
-					// talk to Mike
+               // talk to Mike
 
-					aOutIsInSel = PR_TRUE;
-					return NS_OK;
-				}
-				/* do not check result here, and especially do not return the result code.
-				 * we rely on iter->IsDone to tell us when the iteration is complete
-				 */
-				iter->Next();
-				iter->CurrentNode(getter_AddRefs(currentContent));
-			}
-		}
-	}
-	return NS_OK;
+               aOutIsInSel = PR_TRUE;
+               return NS_OK;
+            }
+            /* do not check result here, and especially do not return the result code.
+             * we rely on iter->IsDone to tell us when the iteration is complete
+             */
+            iter->Next();
+            iter->CurrentNode(getter_AddRefs(currentContent));
+         }
+      }
+   }
+   return NS_OK;
 }
 
 
@@ -959,136 +962,136 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-	nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
+   nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
   if (!editor) { return NS_OK; }
 
   
-	// get the document
-	nsCOMPtr<nsIDOMDocument>domDoc;
+   // get the document
+   nsCOMPtr<nsIDOMDocument>domDoc;
   editor->GetDocument(getter_AddRefs(domDoc));
-	if (!domDoc) { return NS_OK; }
-	nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-	if (!doc) { return NS_OK; }
+   if (!domDoc) { return NS_OK; }
+   nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+   if (!doc) { return NS_OK; }
 
   PRUint16 button = 0;
   uiEvent->GetButton(&button);
-	// left button click might be a drag-start
-	if (1==button)
-	{
+   // left button click might be a drag-start
+   if (1==button)
+   {
 #ifndef EXPERIMENTAL_DRAG_CODE
-		return NS_OK;
+      return NS_OK;
 #else
-		nsString XIFBuffer;
-		// get the DOM select here
-		nsCOMPtr<nsIDOMSelection> sel;
-		editor->GetSelection(getter_AddRefs(sel));
+      nsString XIFBuffer;
+      // get the DOM select here
+      nsCOMPtr<nsIDOMSelection> sel;
+      editor->GetSelection(getter_AddRefs(sel));
     
-		// convert the DOMselection to XIF
-		if (sel)
-		{
-			// if we are within the selection, start the drag
+      // convert the DOMselection to XIF
+      if (sel)
+      {
+         // if we are within the selection, start the drag
 
-			nsCOMPtr<nsIDOMNode> target;
-			nsresult rv = aMouseEvent->GetTarget(getter_AddRefs(target));
-			if (NS_FAILED(rv) || !target) { return NS_OK; }
-			PRBool isInSel;
-			rv = IsNodeInSelection(target, sel, isInSel);
-			if (NS_FAILED(rv) || PR_FALSE==isInSel) { return NS_OK; }
-			doc->CreateXIF(XIFBuffer, sel);
+         nsCOMPtr<nsIDOMNode> target;
+         nsresult rv = aMouseEvent->GetTarget(getter_AddRefs(target));
+         if (NS_FAILED(rv) || !target) { return NS_OK; }
+         PRBool isInSel;
+         rv = IsNodeInSelection(target, sel, isInSel);
+         if (NS_FAILED(rv) || PR_FALSE==isInSel) { return NS_OK; }
+         doc->CreateXIF(XIFBuffer, sel);
 
-			// Get the Clipboard
-			nsIClipboard* clipboard;
-			rv = nsServiceManager::GetService(kCClipboardCID,
-			    															nsIClipboard::GetIID(),
-																			  (nsISupports **)&clipboard);
-			if (NS_OK == rv) 
-			{
-				// Create a data flavor to tell the transferable 
-				// that it is about to receive XIF
-				nsAutoString flavor(kXIFMime);
+         // Get the Clipboard
+         nsIClipboard* clipboard;
+         rv = nsServiceManager::GetService(kCClipboardCID,
+                                                          nsIClipboard::GetIID(),
+                                                           (nsISupports **)&clipboard);
+         if (NS_OK == rv) 
+         {
+            // Create a data flavor to tell the transferable 
+            // that it is about to receive XIF
+            nsAutoString flavor(kXIFMime);
 
-				// Create a transferable for putting data on the Clipboard
-				nsCOMPtr<nsITransferable> trans;
-				rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-																								nsITransferable::GetIID(), 
-																								(void**) getter_AddRefs(trans));
-				if (NS_OK == rv) {
-					// The data on the clipboard will be in "XIF" format
-					// so give the clipboard transferable a "XIFConverter" for 
-					// converting from XIF to other formats
-					nsCOMPtr<nsIFormatConverter> xifConverter;
-					rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-																									nsIFormatConverter::GetIID(), (void**) getter_AddRefs(xifConverter));
-					if (NS_OK == rv) {
-						// Add the XIF DataFlavor to the transferable
-						// this tells the transferable that it can handle receiving the XIF format
-						trans->AddDataFlavor(&flavor);
+            // Create a transferable for putting data on the Clipboard
+            nsCOMPtr<nsITransferable> trans;
+            rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                                                        nsITransferable::GetIID(), 
+                                                                        (void**) getter_AddRefs(trans));
+            if (NS_OK == rv) {
+               // The data on the clipboard will be in "XIF" format
+               // so give the clipboard transferable a "XIFConverter" for 
+               // converting from XIF to other formats
+               nsCOMPtr<nsIFormatConverter> xifConverter;
+               rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
+                                                                           nsIFormatConverter::GetIID(), (void**) getter_AddRefs(xifConverter));
+               if (NS_OK == rv) {
+                  // Add the XIF DataFlavor to the transferable
+                  // this tells the transferable that it can handle receiving the XIF format
+                  trans->AddDataFlavor(&flavor);
 
-						// Add the converter for going from XIF to other formats
-						trans->SetConverter(xifConverter);
+                  // Add the converter for going from XIF to other formats
+                  trans->SetConverter(xifConverter);
 
-						// Now add the XIF data to the transferable
-						// the transferable wants the number bytes for the data and since it is double byte
-						// we multiply by 2
-						trans->SetTransferData(&flavor, XIFBuffer.ToNewUnicode(), XIFBuffer.Length()*2);
+                  // Now add the XIF data to the transferable
+                  // the transferable wants the number bytes for the data and since it is double byte
+                  // we multiply by 2
+                  trans->SetTransferData(&flavor, XIFBuffer.ToNewUnicode(), XIFBuffer.Length()*2);
 
-						// Now invoke the drag session
-						nsIDragService* dragService; 
-						nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
-																											 nsIDragService::GetIID(), 
-																											 (nsISupports **)&dragService); 
-						if (NS_OK == rv) { 
-							nsCOMPtr<nsISupportsArray> items;
-							NS_NewISupportsArray(getter_AddRefs(items));
-							if ( items ) {
-								items->AppendElement(trans);
-								dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
-							}
-							nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
-						} 
-					}
-				}
-				nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
-			}
-			return NS_ERROR_BASE;	// return that we've handled the event
-		}
+                  // Now invoke the drag session
+                  nsIDragService* dragService; 
+                  nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
+                                                                                  nsIDragService::GetIID(), 
+                                                                                  (nsISupports **)&dragService); 
+                  if (NS_OK == rv) { 
+                     nsCOMPtr<nsISupportsArray> items;
+                     NS_NewISupportsArray(getter_AddRefs(items));
+                     if ( items ) {
+                        items->AppendElement(trans);
+                        dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
+                     }
+                     nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
+                  } 
+               }
+            }
+            nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
+         }
+         return NS_ERROR_BASE;   // return that we've handled the event
+      }
 #endif
   }
   // middle-mouse click (paste);
   else if (button == 2)
-	{
+   {
 
     // Set the selection to the point under the mouse cursor:
-		nsCOMPtr<nsIDOMNSUIEvent> mouseEvent (do_QueryInterface(aMouseEvent));
+      nsCOMPtr<nsIDOMNSUIEvent> mouseEvent (do_QueryInterface(aMouseEvent));
 
-		if (!mouseEvent)
-			return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
-		nsCOMPtr<nsIDOMNode> parent;
-		if (!NS_SUCCEEDED(mouseEvent->GetRangeParent(getter_AddRefs(parent))))
-			return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
-		PRInt32 offset = 0;
-		if (!NS_SUCCEEDED(mouseEvent->GetRangeOffset(&offset)))
-			return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+      if (!mouseEvent)
+         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+      nsCOMPtr<nsIDOMNode> parent;
+      if (!NS_SUCCEEDED(mouseEvent->GetRangeParent(getter_AddRefs(parent))))
+         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+      PRInt32 offset = 0;
+      if (!NS_SUCCEEDED(mouseEvent->GetRangeOffset(&offset)))
+         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
 
-		nsCOMPtr<nsIDOMSelection> selection;
-		if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
-			(void)selection->Collapse(parent, offset);
+      nsCOMPtr<nsIDOMSelection> selection;
+      if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
+         (void)selection->Collapse(parent, offset);
 
-		// If the ctrl key is pressed, we'll do paste as quotation.
-		// Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-		PRBool ctrlKey = PR_FALSE;
-		uiEvent->GetCtrlKey(&ctrlKey);
+      // If the ctrl key is pressed, we'll do paste as quotation.
+      // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+      PRBool ctrlKey = PR_FALSE;
+      uiEvent->GetCtrlKey(&ctrlKey);
 
-		if (ctrlKey)
-		{
-			nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-			if (mailEditor)
-				mailEditor->PasteAsQuotation();
-		}
-		editor->Paste();
-		return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
-	}
-	return NS_OK;	// did not process the event
+      if (ctrlKey)
+      {
+         nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+         if (mailEditor)
+            mailEditor->PasteAsQuotation();
+      }
+      editor->Paste();
+      return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+   }
+   return NS_OK;   // did not process the event
 }
 
 
@@ -1113,7 +1116,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 nsresult
 nsTextEditorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-	nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if (htmlEditor)
   {
     nsCOMPtr<nsIDOMElement> selectedElement;
@@ -1163,8 +1166,8 @@ NS_IMPL_RELEASE(nsTextEditorTextListener)
 
 
 nsTextEditorTextListener::nsTextEditorTextListener()
-:	mCommitText(PR_FALSE),
-	mInTransaction(PR_FALSE)
+:   mCommitText(PR_FALSE),
+   mInTransaction(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -1211,26 +1214,26 @@ nsTextEditorTextListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 {
-	nsString				composedText;
-	nsresult				result = NS_OK;
-	nsCOMPtr<nsIPrivateTextEvent> textEvent;
-	nsIPrivateTextRangeList		*textRangeList;
-	nsTextEventReply			*textEventReply;
+   nsString            composedText;
+   nsresult            result = NS_OK;
+   nsCOMPtr<nsIPrivateTextEvent> textEvent;
+   nsIPrivateTextRangeList      *textRangeList;
+   nsTextEventReply         *textEventReply;
 
-	textEvent = do_QueryInterface(aTextEvent);
-	if (!textEvent) {
-		//non-ui event passed in.  bad things.
-		return NS_OK;
-	}
+   textEvent = do_QueryInterface(aTextEvent);
+   if (!textEvent) {
+      //non-ui event passed in.  bad things.
+      return NS_OK;
+   }
 
-	textEvent->GetText(composedText);
-	textEvent->GetInputRange(&textRangeList);
-	textEvent->GetEventReply(&textEventReply);
-	textRangeList->AddRef();
-	nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor, &result);
-	if (imeEditor)
+   textEvent->GetText(composedText);
+   textEvent->GetInputRange(&textRangeList);
+   textEvent->GetEventReply(&textEventReply);
+   textRangeList->AddRef();
+   nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor, &result);
+   if (imeEditor)
     result = imeEditor->SetCompositionString(composedText,textRangeList,textEventReply);
-	return result;
+   return result;
 }
 
 /*
@@ -1455,7 +1458,7 @@ nsTextEditorCompositionListener::HandleEvent(nsIDOMEvent* aEvent)
 void nsTextEditorCompositionListener::SetEditor(nsIEditor *aEditor)
 {
   nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(aEditor);
-  if (!imeEditor) return;		// should return an error here!
+  if (!imeEditor) return;      // should return an error here!
   
   // note that we don't hold an extra reference here.
   mEditor = imeEditor;
@@ -1464,13 +1467,13 @@ void nsTextEditorCompositionListener::SetEditor(nsIEditor *aEditor)
 nsresult
 nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
-	return mEditor->BeginComposition();
+   return mEditor->BeginComposition();
 }
 
 nsresult
 nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
-	return mEditor->EndComposition();
+   return mEditor->EndComposition();
 }
 
 
@@ -1515,14 +1518,14 @@ NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult,
 nsresult
 NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsIEditor* aEditor)
 {
-	nsTextEditorTextListener*	it = new nsTextEditorTextListener();
-	if (nsnull==it) {
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
+   nsTextEditorTextListener*   it = new nsTextEditorTextListener();
+   if (nsnull==it) {
+      return NS_ERROR_OUT_OF_MEMORY;
+   }
 
-	it->SetEditor(aEditor);
+   it->SetEditor(aEditor);
 
-	return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
+   return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
 
@@ -1544,11 +1547,11 @@ NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult,
 nsresult
 NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsIEditor* aEditor)
 {
-	nsTextEditorCompositionListener*	it = new nsTextEditorCompositionListener();
-	if (nsnull==it) {
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-	it->SetEditor(aEditor);
+   nsTextEditorCompositionListener*   it = new nsTextEditorCompositionListener();
+   if (nsnull==it) {
+      return NS_ERROR_OUT_OF_MEMORY;
+   }
+   it->SetEditor(aEditor);
   return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
@@ -1561,7 +1564,7 @@ NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetEditor(aEditor);
-	return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
+   return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
 
@@ -1654,7 +1657,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
           ps->GetViewManager(getter_AddRefs(viewmgr));
           if (viewmgr) {
             nsIView* view;
-            viewmgr->GetRootView(view);			// views are not refCounted
+            viewmgr->GetRootView(view);         // views are not refCounted
             if (view) {
               viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
             }
@@ -1698,7 +1701,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         if (viewmgr) 
         {
           nsIView* view;
-          viewmgr->GetRootView(view);			// views are not refCounted
+          viewmgr->GetRootView(view);         // views are not refCounted
           if (view) {
             viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
           }

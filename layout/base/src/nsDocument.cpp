@@ -798,6 +798,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+    nsISupportsWeakReference* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kISupportsIID)) {
     nsIDocument* tmp = this;

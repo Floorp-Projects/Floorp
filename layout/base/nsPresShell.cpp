@@ -47,6 +47,7 @@
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 #include "nsICaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXMLDocument.h"
@@ -110,7 +111,7 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
-                  public nsIDOMSelectionListener
+                  public nsIDOMSelectionListener, public nsSupportsWeakReference
 {
 public:
   PresShell();
@@ -428,6 +429,12 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDomSelectionListenerIID)) {
     nsIDOMSelectionListener* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+    nsISupportsWeakReference* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;

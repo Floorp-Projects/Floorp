@@ -19,6 +19,7 @@
 #define nsDocument_h___
 
 #include "nsIDocument.h"
+#include "nsWeakReference.h"
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
@@ -105,7 +106,8 @@ class nsDocument : public nsIDocument,
                    public nsIDiskDocument,
                    public nsIScriptObjectOwner, 
                    public nsIDOMEventCapturer, 
-                   public nsIJSScriptObject
+                   public nsIJSScriptObject,
+                   public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

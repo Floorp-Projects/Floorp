@@ -52,7 +52,7 @@ InsertTextTxn::~InsertTextTxn()
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   PRUint32             aOffset,
                                   const nsString      &aStringToInsert,
-                                  nsIPresShell        *aPresShell)
+                                  nsWeakPtr           aPresShellWeak)
 {
 #if 0 //def DEBUG_cmanske
       nsString text;
@@ -62,30 +62,32 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
       printf("\n");
 #endif
 
-  NS_ASSERTION(aElement&&aPresShell, "bad args");
-	if (!aElement || !aPresShell) return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(aElement && aPresShellWeak, "bad args");
+  if (!aElement || !aPresShellWeak) return NS_ERROR_NULL_POINTER;
 
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mStringToInsert = aStringToInsert;
-  mPresShell = aPresShell;
+  mPresShellWeak = aPresShellWeak;
   return NS_OK;
 }
 
 NS_IMETHODIMP InsertTextTxn::Do(void)
 {
   if (gNoisy) { printf("Do Insert Text element = %p\n", mElement.get()); }
-	NS_ASSERTION(mElement && mPresShell, "bad state");
-  if (!mElement || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_ASSERTION(mElement && mPresShellWeak, "bad state");
+  if (!mElement || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   // advance caret: This requires the presentation shell to get the selection.
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-	if (NS_FAILED(result)) return result;
-	if (!selection) return NS_ERROR_NULL_POINTER;
+  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (NS_FAILED(result)) return result;
+  if (!selection) return NS_ERROR_NULL_POINTER;
   result = mElement->InsertData(mOffset, mStringToInsert);
   if (NS_SUCCEEDED(result)) 
-	{
+  {
     result = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
     NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");
   }
@@ -95,8 +97,10 @@ NS_IMETHODIMP InsertTextTxn::Do(void)
 NS_IMETHODIMP InsertTextTxn::Undo(void)
 {
   if (gNoisy) { printf("Undo Insert Text element = %p\n", mElement.get()); }
-	NS_ASSERTION(mElement && mPresShell, "bad state");
-  if (!mElement || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_ASSERTION(mElement && mPresShellWeak, "bad state");
+  if (!mElement || !mPresShellWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result;
   PRUint32 length = mStringToInsert.Length();
@@ -104,9 +108,9 @@ NS_IMETHODIMP InsertTextTxn::Undo(void)
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
+    result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+    if (NS_FAILED(result)) return result;
+    if (!selection) return NS_ERROR_NULL_POINTER;
     result = selection->Collapse(mElement, mOffset);
     NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
   }
