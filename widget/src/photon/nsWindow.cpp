@@ -493,6 +493,30 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     PhTile_t    *clipped_tiles, *sib_tiles, *tile;
     PhTile_t    *offset_tiles, *intersection = nsnull;
 
+    PtStartFlux( widget );
+
+    // Manually move all the child-widgets
+
+    PtWidget_t *w;
+    PtArg_t    arg;
+    PhPoint_t  *pos;
+    PhPoint_t  p;
+
+    for( w=PtWidgetChildFront( widget ); w; w=PtWidgetBrotherBehind( w )) 
+    { 
+      PtSetArg( &arg, Pt_ARG_POS, &pos, 0 );
+      PtGetResources( w, 1, &arg ) ;
+      p = *pos;
+      p.x += aDx;
+      p.y += aDy;
+      //		printf ("new pos: %d %d\n",p.x,p.y);
+      PtSetArg( &arg, Pt_ARG_POS, &p, 0 );
+      PtSetResources( w, 1, &arg ) ;
+//      PtDamageWidget(w);
+    } 
+
+    PtEndFlux( widget );
+
     // Take our nice, clean client-rect and shatter it into lots (maybe) of
     // unobscured tiles. sib_tiles represents the rects occupied by siblings
     // in front of our window - but its not needed here.
@@ -565,25 +589,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       PhFreeTiles( clipped_tiles );
       PhFreeTiles( sib_tiles );
 
-      // Manually move all the child-widgets
-
-      PtWidget_t *w;
-      PtArg_t    arg;
-      PhPoint_t  *pos;
-      PhPoint_t  p;
-
-      for( w=PtWidgetChildFront( widget ); w; w=PtWidgetBrotherBehind( w )) 
-      { 
-        PtSetArg( &arg, Pt_ARG_POS, &pos, 0 );
-        PtGetResources( w, 1, &arg ) ;
-        p = *pos;
-        p.x += aDx;
-        p.y += aDy;
-        //		printf ("new pos: %d %d\n",p.x,p.y);
-        PtSetArg( &arg, Pt_ARG_POS, &p, 0 );
-        PtSetResources( w, 1, &arg ) ;
-        PtDamageWidget(w);
-      } 
     }
   }
   
@@ -1096,7 +1101,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     return;
 
 //  if( !(pWin->mUpdateArea.width) || !( pWin->mUpdateArea.height ) || pWin->mCreateHold )
-  if( /*pWin->mCreateHold ||*/ pWin->mHold )
+  if( pWin->mCreateHold || pWin->mHold )
   {
 //    printf( "Not drawing: mCreateHold=%d  mHold=%d\n", pWin->mCreateHold, pWin->mHold );
     return;
@@ -1171,46 +1176,14 @@ if (rect.ul.x>=rect.lr.x || rect.ul.y>=rect.lr.y) return;
 
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&pev.renderingContext))
     {
-      PhRect_t  *rects;
-      int       rect_count;
-      int       i;
-
       pev.renderingContext->Init( pWin->mContext, pWin );
 
-/*
-      rects = PhTilesToRects( damage->next, &rect_count );
-
-      for(i=0;i<rect_count;i++)
+      if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
       {
-        rects[i].ul.x -= offset.x;
-        rects[i].ul.y -= offset.y;
-        rects[i].lr.x -= offset.x;
-        rects[i].lr.y -= offset.y;
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+        pWin->DispatchWindowEvent(&pev);
       }
-*/
-      pWin->SetWindowClipping( damage, offset );
 
-//      PgSetClipping( rect_count, rects );
-
-/*
-      for(i=0;i<rect_count;i++)
-      {
-        rects[i].ul.x += offset.x;
-        rects[i].ul.y += offset.y;
-        rects[i].lr.x += offset.x;
-        rects[i].lr.y += offset.y;
-      }
-*/
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
-/*
-	nsDmg.y = 0;
- 	nsDmg.x = 0;
-	nsDmg.width = 100;
-	nsDmg.height = 100;
-*/
-//987
-//      printf ( "Dispatching paint event %p %p %d %d (area=%ld,%ld,%ld,%ld).\n",pWidget,pWin->mWidget,offset.x,offset.y,nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height );
-      pWin->DispatchWindowEvent(&pev);
       NS_RELEASE(pev.renderingContext);
     }
 
@@ -1425,14 +1398,17 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
 
     PhFreeTiles( clip_tiles );
 
-    res = NS_OK;
+//    res = NS_OK;
   }  
 
-  rects = PhTilesToRects( dmg, &rect_count );
-  PgSetClipping( rect_count, rects );
-  free( rects );
-  PhFreeTiles( dmg );
-  res = NS_OK;
+  if( dmg )
+  {
+    rects = PhTilesToRects( dmg, &rect_count );
+    PgSetClipping( rect_count, rects );
+    free( rects );
+    PhFreeTiles( dmg );
+    res = NS_OK;
+  }
 
   return res;
 }
