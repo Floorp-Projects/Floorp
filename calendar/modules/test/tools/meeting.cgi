@@ -20,6 +20,8 @@ use Socket;
 
 $mailhost = 'localhost';
 
+@MonthNames = (" ", "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December");
 srand();
 &process_args;
 
@@ -42,6 +44,10 @@ foreach $val (@parms)
     $v =~ s/%0D/\r/g;
     $v =~ s/%0A/\n/g;
     $v =~ s/%2F/\//g;
+    $v =~ s/%28/(/g;
+    $v =~ s/%27/'/g;
+    $v =~ s/%29/)/g;
+    $v =~ s/%2C/,/g;
     $vals{$p} = $v;
 }
 
@@ -136,6 +142,20 @@ sub unique_id
     $r = int(rand(100000));
     $hostname.".".$domain.$d."$$"."$r";
 }
+
+sub fmtDate
+{
+    local($d,$year,$month,$day,$hour,$min,$sec) = @_;
+
+    $year = substr($d,0,4);
+    $month = substr($d,4,2);
+    $day = substr($d,6,2);
+    $hour = substr($d,9,2);
+    $min = substr($d,11,2);
+    $sec = substr($d,13,2);
+
+    $MonthNames[ int($month) ]." ".int($day).", ".$year."  ".$hour.":".$min." Z";
+}
     
 sub mail_the_message {
     chop(my $hostname = `hostname`);
@@ -189,7 +209,7 @@ sub mail_the_message {
 
     printf(S "%s has invited you to a meeting\n", $vals{'organizer'});
     printf(S "\n");
-    printf(S "    When: %s\n", $vals{'DTSTART'});
+    printf(S "    When: %s\n", &fmtDate($vals{'DTSTART'}));
     printf(S "    With: ");
     foreach $i (@attendees) 
     {
