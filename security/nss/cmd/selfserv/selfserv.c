@@ -167,7 +167,7 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
 
-"Usage: %s -n rsa_nickname -p port [-3NRTmrvx] [-w password] [-t threads]\n"
+"Usage: %s -n rsa_nickname -p port [-3DRTmrvx] [-w password] [-t threads]\n"
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
 "         [-M maxProcs] \n"
 "-3 means disable SSL v3\n"
@@ -382,6 +382,7 @@ thread_wrapper(void * arg)
 
     /* notify the thread exit handler. */
     PZ_Lock(qLock);
+    slot->state = rs_zombie;
     --threadCount;
     PZ_NotifyAllCondVar(threadCountChangeCv);
     PZ_Unlock(qLock);
@@ -471,7 +472,7 @@ launch_threads(
     }
     PZ_Unlock(qLock); 
 
-    return SECSuccess;
+    return rv;
 }
 
 #define DESTROY_CONDVAR(name) if (name) { \
@@ -484,7 +485,6 @@ void
 terminateWorkerThreads(void)
 {
     VLOG(("selfserv: server_thead: waiting on stopping"));
-    stopping = 1; /* should already be true, but let's make sure. */
     PZ_Lock(qLock);
     PZ_NotifyAllCondVar(jobQNotEmptyCv);
     while (threadCount > 0) {
@@ -744,8 +744,8 @@ handle_connection(
 	if (status != PR_SUCCESS) {
 	    errWarn("PR_SetSocketOption(PR_SockOpt_NoDelay, PR_TRUE)");
 	    PR_Close(ssl_sock);
-	    return SECSuccess;
-	} 
+	    return SECFailure;
+	}
     }
 
     while (1) {
@@ -814,7 +814,7 @@ handle_connection(
     bufDat = pBuf - buf;
     if (bufDat) do {	/* just close if no data */
 	/* Have either (a) a complete get, (b) a complete post, (c) EOF */
-	if (reqLen > 0 && !strncmp(buf, getCmd, 4)) {
+	if (reqLen > 0 && !strncmp(buf, getCmd, sizeof getCmd - 1)) {
 	    char *      fnBegin = buf + 4;
 	    char *      fnEnd;
 	    PRFileInfo  info;
@@ -824,16 +824,16 @@ handle_connection(
 	    fnEnd = strpbrk(fnBegin, " \r\n");
 	    if (fnEnd) {
 		int fnLen = fnEnd - fnBegin;
-		if (fnLen > 512)
-		    fnLen = 512;
-		strncpy(fileName, fnBegin, fnLen);
-		fileName[fnLen] = 0;	/* null terminate */
-	    }
-	    status = PR_GetFileInfo(fileName, &info);
-	    if (status == PR_SUCCESS &&
-		info.type == PR_FILE_FILE &&
-		info.size >= 0 ) {
-		local_file_fd = PR_Open(fileName, PR_RDONLY, 0);
+		if (fnLen < sizeof fileName) {
+		    strncpy(fileName, fnBegin, fnLen);
+		    fileName[fnLen] = 0;	/* null terminate */
+		    status = PR_GetFileInfo(fileName, &info);
+		    if (status == PR_SUCCESS &&
+			info.type == PR_FILE_FILE &&
+			info.size >= 0 ) {
+			local_file_fd = PR_Open(fileName, PR_RDONLY, 0);
+		    }
+		}
 	    }
 	}
 	/* if user has requested client auth in a subsequent handshake,
@@ -926,7 +926,7 @@ handle_connection(
 	}
 
 	iovs[numIOVs].iov_base = (char *)EOFmsg;
-	iovs[numIOVs].iov_len  = 9;
+	iovs[numIOVs].iov_len  = sizeof EOFmsg - 1;
 	numIOVs++;
 
 	rv = PR_Writev(ssl_sock, iovs, numIOVs, PR_INTERVAL_NO_TIMEOUT);
@@ -943,7 +943,7 @@ cleanup:
     VLOG(("selfserv: handle_connection: exiting\n"));
 
     /* do a nice shutdown if asked. */
-    if (!strncmp(buf, stopCmd, strlen(stopCmd))) {
+    if (!strncmp(buf, stopCmd, sizeof stopCmd - 1)) {
 	stopping = 1;
         VLOG(("selfserv: handle_connection: stop command"));
 	PR_Interrupt(acceptorThread);
@@ -984,6 +984,7 @@ do_accepts(
 		        "Ignoring PR_CONNECT_RESET_ERROR error - continue\n");
 		continue;
 	    }
+	    stopping = 1;
 	    break;
 	}
 
@@ -1000,14 +1001,16 @@ do_accepts(
 	}
 	myLink = PR_LIST_HEAD(&freeJobs);
 	PR_REMOVE_AND_INIT_LINK(myLink);
-/*	PZ_Unlock(qLock); */
+	/* could release qLock here and reaquire it 7 lines below, but 
+	** why bother for 4 assignment statements? 
+	*/
 	{
 	    JOB * myJob = (JOB *)myLink;
 	    myJob->tcp_sock    = tcp_sock;
 	    myJob->model_sock  = model_sock;
 	    myJob->requestCert = requestCert;
 	}
-/*	PZ_Lock(qLock);   */
+
 	PR_APPEND_LINK(myLink, &jobQ);
 	PZ_NotifyCondVar(jobQNotEmptyCv);
 	PZ_Unlock(qLock);
