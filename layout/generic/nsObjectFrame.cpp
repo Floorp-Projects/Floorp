@@ -2632,9 +2632,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 
 static nsHashtable *gCharsetMap = nsnull;
 typedef struct {
-    char *mozName;
-    char *javaName;
+    char mozName[16];
+    char javaName[12];
 } moz2javaCharset;
+
+/* XXX If you add any strings longer than
+ *  {"x-mac-cyrillic",  "MacCyrillic"},
+ *  {"x-mac-ukrainian", "MacUkraine"},
+ * to the following array then you MUST update the
+ * sizes of the arrays in the moz2javaCharset struct
+ */
 
 static const moz2javaCharset charsets[] = 
 {
