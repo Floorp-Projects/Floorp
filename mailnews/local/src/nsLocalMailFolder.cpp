@@ -343,7 +343,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatabase)
 {
-  nsresult rv;
+  nsresult rv=NS_OK;
   NS_ENSURE_ARG(aDatabase);
   if (!mDatabase)
   {
