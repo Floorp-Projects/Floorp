@@ -25,7 +25,7 @@ CC				= gcc
 CXX				= g++
 AS				= gcc -c
 RANLIB			= ranlib
-MKSHLIB			= $(LD) $(DSO_LDOPTS) -soname $(@:$(OBJDIR)/%.so=%.so)
+MKSHLIB			= $(CC) $(DSO_LDOPTS)
 MKMODULE		= ld -Ur -o $@
 
 WARNING_CFLAG	= -Wall
