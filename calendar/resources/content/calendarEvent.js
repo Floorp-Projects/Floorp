@@ -274,6 +274,8 @@ CalendarEventDataSource.prototype.getEventsForDay = function( date )
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
 
+   eventDisplays.sort( this.orderEventsByDate );
+
    return eventDisplays;
 }
 
@@ -311,6 +313,8 @@ CalendarEventDataSource.prototype.getEventsForWeek = function( date )
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
 
+   eventDisplays.sort( this.orderEventsByDate );
+
    return eventDisplays;
 }
 
@@ -345,6 +349,8 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
+
+   eventDisplays.sort( this.orderEventsByDate );
 
    return eventDisplays;
 }
@@ -382,6 +388,8 @@ CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
+
+   eventDisplays.sort( this.orderRawEventsByDate );
 
    return eventDisplays;
 }
