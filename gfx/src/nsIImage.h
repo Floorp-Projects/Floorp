@@ -189,25 +189,11 @@ public:
 
 
   /**
-   * Composite this image with the passed in image using the alpha mask
-   * @param aTheImage The image to blend into this image
-   * @param aULLocation The upper left coordinate to place the passed in image
-   */
-  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality) = 0;
-
-  /**
    * Build an alpha mask using this image
    * @param aTheMaskImage The image to build the mask from
    * @return true if the mask was set up.
    */
   virtual PRBool  SetAlphaMask(nsIImage *aTheMask) = 0;
-
-  /**
-   * Move the alpha mask to this absolute location
-   * @param the horiztonal location
-   * @param the vertical location
-   */
-  virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY) = 0;
 
 
   /**
