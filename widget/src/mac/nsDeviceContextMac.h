@@ -38,6 +38,7 @@ public:
   NS_IMETHOD  GetScrollBarWidth(float &aWidth) const;
   NS_IMETHOD  GetScrollBarHeight(float &aHeight) const;
 
+	void SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
 
