@@ -85,15 +85,15 @@ EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR)	\
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/../src
+LOCAL_INCLUDES = -I$(srcdir) -I$(srcdir)/../src
 
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= shell32.lib
+OS_LIBS	+= $(call EXPAND_LIBNAME,shell32)
 endif
 

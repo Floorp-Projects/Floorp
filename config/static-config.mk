@@ -94,14 +94,14 @@ STATIC_EXTRA_LIBS	+= $(MOZ_XINERAMA_LIBS)
 endif
 
 ifdef MOZ_CALENDAR
-STATIC_EXTRA_LIBS	+= -lmozical -lmozicalss
+STATIC_EXTRA_LIBS	+= $(call EXPAND_MOZLIBNAME,mozicalss mozical)
 endif
 
 # Component Makefile always brings in this.
 # STATIC_EXTRA_LIBS	+= $(TK_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
-STATIC_EXTRA_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
+STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
 endif
 
 

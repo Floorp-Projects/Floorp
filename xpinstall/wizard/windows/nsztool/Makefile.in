@@ -39,7 +39,9 @@ NO_DIST_INSTALL	= 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifndef GNU_CC
 LDFLAGS		+= /SUBSYSTEM:WINDOWS /MACHINE:i386
+endif
 
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install

@@ -113,12 +113,13 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-OS_LIBS		+= ole32.lib shell32.lib
+
+OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
 
 LOCAL_INCLUDES	+= \
 	-I$(srcdir)/../urlwidget \

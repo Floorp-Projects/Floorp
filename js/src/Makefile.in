@@ -240,7 +240,7 @@ LDFLAGS		+= -lm
 endif
 
 # Prevent floating point errors caused by VC++ optimizations
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CFLAGS += /Op
 endif # WINNT
 

@@ -112,6 +112,7 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
 EXPORTS		+= \
 		nsAbOutlookCard.h \
 		nsAbOutlookDirFactory.h \
@@ -127,6 +128,7 @@ CPPSRCS		+= \
 		nsWabAddressBook.cpp \
 		$(NULL)
 
+endif
 endif
 
 ifdef MOZ_LDAP_XPCOM

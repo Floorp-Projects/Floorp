@@ -70,12 +70,9 @@ LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-OS_LIBS		+= \
-		ole32.lib \
-		comdlg32.lib \
-		shell32.lib \
-		version.lib \
-		$(NULL)
+LOCAL_INCLUDES	= -I$(srcdir)
+
+OS_LIBS		+= $(call EXPAND_LIBNAME,ole32 comdlg32 shell32 version)
 
 #
 # Control the default heap size.

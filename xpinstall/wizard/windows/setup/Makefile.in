@@ -60,13 +60,17 @@ CPPSRCS		= \
 
 LIBS		= $(EXTRA_DSO_LIBS)
 
-LOCAL_INCLUDES	= -I$(srcdir)/../uninstall
+LOCAL_INCLUDES	= -I$(srcdir) -I$(srcdir)/../uninstall
 
 NO_DIST_INSTALL	= 1
 
 include $(topsrcdir)/config/rules.mk
 
-OS_LIBS		+= ole32.lib comdlg32.lib shell32.lib version.lib
+_OS_LIBS 	= ole32 comdlg32 shell32 version
+ifdef GNU_CC
+_OS_LIBS	+= gdi32 ws2_32 uuid
+endif
+OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/install

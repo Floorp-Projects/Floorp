@@ -77,7 +77,7 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS		+= shell32.lib
+OS_LIBS		+= $(call EXPAND_LIBNAME,shell32)
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -69,7 +69,9 @@ LDFLAGS += $(TK_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
 LDFLAGS += /SUBSYSTEM:WINDOWS
+endif
 endif
 
 libs::

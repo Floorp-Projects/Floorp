@@ -90,7 +90,7 @@ endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/win 
-OS_LIBS += winspool.lib comdlg32.lib
+OS_LIBS	+= $(call EXPAND_LIBNAME,winspool comdlg32)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
