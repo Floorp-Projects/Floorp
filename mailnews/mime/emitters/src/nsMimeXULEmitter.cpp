@@ -362,7 +362,7 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
                             mBufferMgr->GetSize(), &written);
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
-    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
     *amountWritten = written;
 
@@ -397,8 +397,8 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
 
   // Only call the listener if we wrote data into the stream.
-  if ((!mBodyStarted) && (mOutListener))
-    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+//  if ((!mBodyStarted) && (mOutListener))
+    //mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
   return rc;
 }
@@ -691,6 +691,11 @@ nsMimeXULEmitter::Complete()
   PRUint32      written; 
   if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
     Write("", 0, &written);
+
+  // now flush things out to layout..
+  PRUint32 bytesInStream;
+  mInputStream->Available(&bytesInStream);
+  mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
 
   return NS_OK;
 }

@@ -148,6 +148,13 @@ nsMimeHtmlEmitter::Complete()
   if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
     Write("", 0, &written);
 
+  if (mOutListener)
+  {
+      PRUint32 bytesInStream;
+      mInputStream->Available(&bytesInStream);
+      mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
+  }
+
 #ifdef DEBUG_rhp
   if (mLogFile) 
     PR_Close(mLogFile);
@@ -474,7 +481,7 @@ nsMimeHtmlEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
                             mBufferMgr->GetSize(), &written);
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
-    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
     *amountWritten = written;
 
     // if we couldn't write all the old data, buffer the new data
@@ -496,8 +503,8 @@ nsMimeHtmlEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
 
-  if (mOutListener)
-    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+//  if (mOutListener)
+//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
   return rc;
 }
