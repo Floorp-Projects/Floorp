@@ -62,7 +62,7 @@ MOZLIBS=/LIBPATH:$(MOZ_BUILD_DIR)\lib
 #    necessary here *and* below (below, because there two lib dir
 #    to include in LDFLAGS for the dev dir structure)
 PYTHONINCLUDES=/I$(PYTHON_SRC)\include /I$(PYTHON_SRC)\PC
-PYTHONLIBS=/LIBPATH:$(PYTHON_SRC)\libs
+PYTHONLIBS=/LIBPATH:$(PYTHON_SRC)\libs /LIBPATH:$(PYTHON_SRC)\pcbuild
 
 MOZ_BIN=$(MOZ_BUILD_DIR)\bin
 
