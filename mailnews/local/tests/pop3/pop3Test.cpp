@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "nsCOMPtr.h"
+
 #ifdef XP_PC
 #include <windows.h>
 #endif
@@ -92,7 +94,7 @@ static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 class nsPop3TestDriver : public nsIUrlListener
 {
 public:
-	nsPop3TestDriver(nsINetService * pService, PLEventQueue *queue);
+	nsPop3TestDriver(nsINetService * pService, nsIEventQueue *queue);
 	virtual ~nsPop3TestDriver();
 	NS_DECL_ISUPPORTS
 
@@ -122,7 +124,7 @@ public:
 	nsresult OnIdentityCheck();
 
 protected:
-    PLEventQueue *m_eventQueue;
+    nsIEventQueue *m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
@@ -134,7 +136,7 @@ protected:
 NS_IMPL_ISUPPORTS(nsPop3TestDriver, nsIUrlListener::GetIID())
 
 nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService,
-                                   PLEventQueue *queue)
+                                   nsIEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
@@ -142,12 +144,14 @@ nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService,
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
 	m_eventQueue = queue;
+	NS_IF_ADDREF(queue);
 
 	InitializeTestDriver(); // prompts user for initialization information...
 }
 
 nsPop3TestDriver::~nsPop3TestDriver()
 {
+	NS_IF_RELEASE(m_eventQueue);
 }
 
 nsresult nsPop3TestDriver::OnStartRunningUrl(nsIURL * aUrl)
@@ -192,7 +196,7 @@ nsresult nsPop3TestDriver::RunDriver()
 		}  // if running url
 #ifdef XP_UNIX
         printf(".");
-        PL_ProcessPendingEvents(m_eventQueue);
+        m_eventQueue->ProcessPendingEvents();
 #endif
 #ifdef XP_PC	
 		MSG msg;
@@ -463,7 +467,7 @@ nsresult nsPop3TestDriver::OnGet()
 
 int main()
 {
-    PLEventQueue *queue;
+    nsCOMPtr<nsIEventQueue> queue;
 	nsINetService * pNetService;
     nsresult result;
 
@@ -497,7 +501,7 @@ int main()
 		return 1;
 	}
 
-    result = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+    result = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
         return 1;

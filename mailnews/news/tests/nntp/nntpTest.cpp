@@ -35,6 +35,8 @@
 #include <windows.h>
 #endif
 
+#include "nsCOMPtr.h"
+
 #include "plstr.h"
 #include "plevent.h"
 
@@ -169,7 +171,7 @@ static void strip_nonprintable(char *string) {
 class nsNntpTestDriver : public nsIUrlListener
 {
 public:
-	nsNntpTestDriver(nsINetService * pService, PLEventQueue *queue);
+	nsNntpTestDriver(nsINetService * pService, nsIEventQueue *queue);
 	virtual ~nsNntpTestDriver();
 	
 	NS_DECL_ISUPPORTS
@@ -202,7 +204,7 @@ public:
 	nsresult OnRunURL();
 	nsresult OnExit(); 
 protected:
-    PLEventQueue *m_eventQueue;
+    nsIEventQueue *m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
@@ -224,7 +226,7 @@ protected:
 };
 
 nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
-                                   PLEventQueue *queue)
+                                   nsIEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 
@@ -235,6 +237,7 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 	m_runTestHarness = PR_TRUE;
 	m_runningURL = PR_FALSE;
     m_eventQueue = queue;
+		NS_IF_ADDREF(queue);
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 	
@@ -276,6 +279,8 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
 
 nsNntpTestDriver::~nsNntpTestDriver()
 {
+	NS_IF_RELEASE(m_eventQueue);
+
 	if (m_url)
 		m_url->UnRegisterListener(this);
 
@@ -316,7 +321,7 @@ nsresult nsNntpTestDriver::RunDriver()
 	 // if running url
 #ifdef XP_UNIX
 
-        PL_ProcessPendingEvents(m_eventQueue);
+        m_eventQueue->ProcessPendingEvents();
 
 #endif
 #ifdef XP_PC	
@@ -784,7 +789,7 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
 int main()
 {
 	nsINetService * pNetService;
-    PLEventQueue *queue;
+    nsCOMPtr<nsIEventQueue> queue;
     nsresult result;
 
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
@@ -817,7 +822,7 @@ int main()
 	}
 
     result =
-        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
         return 1;

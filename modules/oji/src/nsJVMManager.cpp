@@ -243,16 +243,17 @@ nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
 	nsIEventQueueService* eventService = NULL;
 	nsresult rv = theServiceManager->GetService(kEventQueueServiceCID, kIEventQueueServiceIID, (nsISupports **)&eventService);
 	if (NS_SUCCEEDED(rv)) {
-		PLEventQueue* eventQueue = NULL;
+		nsIEventQueue* eventQueue = NULL;
 		rv = eventService->GetThreadEventQueue((PRThread*)threadID, &eventQueue);
 		theServiceManager->ReleaseService(kEventQueueServiceCID, eventService);
 		if (NS_SUCCEEDED(rv) && eventQueue != NULL) {
 			RunnableEvent* runnableEvent = new RunnableEvent(runnable);
 			if (async)
-				PL_PostEvent(eventQueue, runnableEvent);
+				eventQueue->PostEvent(runnableEvent);
 			else
-				PL_PostSynchronousEvent(eventQueue, runnableEvent);
+				eventQueue->PostSynchronousEvent(runnableEvent);
 		}
+		NS_IF_RELEASE(eventQueue);
 	}
 	return rv;
 }

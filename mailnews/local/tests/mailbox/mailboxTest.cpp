@@ -172,7 +172,7 @@ public:
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
 
-	nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser);
+	nsMailboxTestDriver(nsIEventQueue *queue, nsIStreamListener * aMailboxParser);
 	virtual ~nsMailboxTestDriver();
 
 	// run driver initializes the instance, lists the commands, runs the command and when
@@ -194,7 +194,7 @@ public:
 	nsresult OnExit(); 
 
 protected:
-    PLEventQueue *m_eventQueue;
+    nsIEventQueue *m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[800];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[500];	// generic string buffer for storing the current user entered data...
@@ -241,7 +241,7 @@ nsresult nsMailboxTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode
 
 NS_IMPL_ISUPPORTS(nsMailboxTestDriver, nsIUrlListener::GetIID())
 
-nsMailboxTestDriver::nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser) : m_folderSpec("")
+nsMailboxTestDriver::nsMailboxTestDriver(nsIEventQueue *queue, nsIStreamListener * aMailboxParser) : m_folderSpec("")
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
@@ -250,6 +250,7 @@ nsMailboxTestDriver::nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener 
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
     m_eventQueue = queue;
+		NS_IF_ADDREF(queue);
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 
@@ -265,6 +266,7 @@ nsMailboxTestDriver::nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener 
 nsMailboxTestDriver::~nsMailboxTestDriver()
 {
 	NS_IF_RELEASE(m_mailboxParser);
+	NS_IF_RELEASE(m_eventQueue);
 }
 
 nsresult nsMailboxTestDriver::RunDriver()
@@ -535,7 +537,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 int main()
 {
 	nsINetService * pNetService;
-    PLEventQueue *queue;
+    nsCOMPtr<nsIEventQueue> queue;
     nsresult result;
 
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
@@ -562,7 +564,7 @@ int main()
 		return 1;
 	}
 
-    pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+    pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
         return 1;
