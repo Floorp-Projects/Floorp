@@ -362,6 +362,7 @@ nsOutlinerBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 
   ourView->CreateWidget(kWidgetCID);
   ourView->GetWidget(*getter_AddRefs(mOutlinerWidget));
+  mIndentation = GetIndentation();
   return rv;
 }
 
@@ -1869,7 +1870,6 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   PRInt32 oldRowHeight = mRowHeight;
   PRInt32 oldPageCount = mPageCount;
   mRowHeight = GetRowHeight();
-  mIndentation = GetIndentation();
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
 
