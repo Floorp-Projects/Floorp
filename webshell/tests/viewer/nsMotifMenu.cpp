@@ -22,6 +22,7 @@
 #include <Xm/RowColumn.h>
 #include "resources.h"
 #include "nsMotifMenu.h"
+#include "nsError.h" // For NS_ERROR_OUT_OF_MEMORY.
 
 #include "stdio.h"
 
@@ -34,16 +35,13 @@
 //==============================================================
 void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
-
   MenuCallbackStruct * cbs = (MenuCallbackStruct *)p;
   if (cbs != NULL) {
-    MenuCallbackProc cb = (MenuCallbackProc)call_data;
     if (cbs->mCallback != NULL) {
       (*cbs->mCallback)(cbs->mId);
     }
   }
 }
-
 
 //-----------------------------------------------------
 Widget CreatePulldownMenu(Widget   aParent, 
@@ -82,8 +80,11 @@ Widget CreateMenuItem(Widget          aParent,
                                           NULL);
 
   MenuCallbackStruct * cbs = new MenuCallbackStruct();
-  cbs->mCallback = aCallback;
-  cbs->mId       = aID;
+  if (cbs) {
+    cbs->mCallback = aCallback;
+    cbs->mId       = aID;
+  }
+  else cbs = (MenuCallbackStruct *)NS_ERROR_OUT_OF_MEMORY;
 
   XtAddCallback(widget, XmNactivateCallback, nsXtWidget_Menu_Callback, cbs);
 
