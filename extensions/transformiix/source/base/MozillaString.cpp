@@ -617,6 +617,17 @@ String& MozillaString::subString(Int32 start, Int32 end, String& dest) const
 }
 
 /**
+ * Instantiate a new character buffer (remembering the null terminator) and pass
+ * it to toChar(char*).
+**/
+char* MozillaString::toCharArray() const
+{
+  char* tmpBuffer = new char[ptrNSString->Length()+1];
+
+  return toCharArray(tmpBuffer);
+}
+
+/**
  * Convert the internally represented string to a character buffer.  Store
  * the resultant character array in the buffer provided by the caller. A
  * null terminator will be placed at the end of the array, make sure
@@ -624,14 +635,14 @@ String& MozillaString::subString(Int32 start, Int32 end, String& dest) const
  * Use ( nsString::GetUnicode() ) to retreive the nsString's buffer, then
  * copy it to dest.
 **/
-char* MozillaString::toChar(char* dest) const
+char* MozillaString::toCharArray(char* dest) const
 {
   Int32 copyLoop;
   Int32 strLength = ptrNSString->Length();
   const char* strBuffer = ptrNSString->GetBuffer();
 
   for (copyLoop=0;copyLoop<strLength;copyLoop++)
-   dest[copyLoop] = strBuffer[copyLoop];
+    dest[copyLoop] = strBuffer[copyLoop];
 
   //Place a NULL terminator at the end of the character buffer
   dest[copyLoop] = 0;

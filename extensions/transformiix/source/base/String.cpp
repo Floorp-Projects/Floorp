@@ -105,6 +105,9 @@
 // TK  03/10/2000  Fixed a bug found by Bobbi Guarino where 
 //                 String::indexOf(const String& string...) was not RETURNing
 //                 a value.
+//
+// TK  03/30/2000  Changed toChar to toCharArray and provided an overloaded
+//                 version which will instantiate its own character buffer.
 
 #include <stdlib.h>
 #include <string.h>
@@ -1037,12 +1040,23 @@ String& String::subString(Int32 start, Int32 end, String& dest) const
 }
 
 /**
+ * Instantiate a new character buffer (remembering the null terminator) and pass
+ * it to toChar(char*).
+**/
+char* String::toCharArray() const
+{
+  char* tmpBuffer = new char[strLength+1];
+
+  return toCharArray(tmpBuffer);
+}
+
+/**
  * Convert the internally represented string to a character buffer.  Store
  * the resultant character array in the buffer provided by the caller. A
  * null terminator will be placed at the end of the array, make sure
  * space has been provided.
 **/
-char* String::toChar(char* dest) const
+char* String::toCharArray(char* dest) const
 {
   Int32 copyLoop;
 

@@ -33,6 +33,8 @@
 //                  Also provided a means to obtain a const reference to the
 //                  nsString object to support const object/references.
 //
+// TK  03/30/2000  Changed toChar to toCharArray and provided an overloaded
+//                 version which will instantiate its own character buffer.
 
 #include "String.h"
 #include "MITREObject.h"
@@ -182,7 +184,8 @@ class MozillaString : public String
     virtual String& subString(Int32 start, Int32 end, String& dest) const;
 
     //Convert the internal rep. to a char buffer
-    virtual char* toChar(char* dest) const;
+    virtual char* toCharArray() const;
+    virtual char* toCharArray(char* dest) const;
     virtual UNICODE_CHAR* toUnicode(UNICODE_CHAR* dest) const;
     virtual const UNICODE_CHAR* toUnicode() const;
 
