@@ -71,6 +71,10 @@
                           tbattr="tabbrowser-multiple"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeTab(tabbrowser.mContextTab);"/>
+            <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+                          tbattr="tabbrowser-multiple"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
@@ -700,6 +704,24 @@
                                  aReferrerURI, null, null);
 
             return t;
+          ]]>
+        </body>
+      </method>
+      
+      <method name="removeAllTabsBut">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            if (aTab.localName != "tab")
+              aTab = this.mCurrentTab;
+            else
+              this.mTabContainer.selectedItem = aTab;
+
+            while (this.mTabContainer.lastChild != aTab)
+              this.removeTab(this.mTabContainer.lastChild);
+
+            while (aTab.previousSibling)
+              this.removeTab(aTab.previousSibling);
           ]]>
         </body>
       </method>
