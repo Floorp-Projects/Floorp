@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+#include "nsITransferable.idl"
+
+%{ C++
+#include "nsSize.h"
+%}
+
+native nsSize (nsSize);
+
+
+[scriptable, uuid(CBA22C53-FCCE-11d2-96D4-0060B0FB9956)]
+interface nsIDragSession : nsISupports
+{
+  /**
+    * Set the current state of the drag whether it can be dropped or not.
+    * usually the target "frame" sets this so the native system can render the correct feedback
+    */
+  attribute boolean CanDrop;
+  
+  /**
+    * Sets the action (copy, move, link, et.c) for the current drag 
+    */ 
+  attribute unsigned long DragAction;
+  
+  /**
+    * Sets the current width and height if the drag target area. 
+    * It will contain the current size of the Frame that the drag is currently in
+    */  
+  attribute nsSize TargetSize;
+ 
+  /**
+    * Get the number items that were dropped
+    */
+  readonly attribute unsigned long NumDropItems;
+
+  /**
+    * Get data from a Drag&Drop. Can be called while the drag is in process
+    * or after the drop has completed.  
+    *
+    * @param  aTransferable the transferable for the data to be put into
+    * @param  aItemIndex which of multiple drag items, zero-based
+    */
+  void GetData ( in nsITransferable aTransferable, in unsigned long aItemIndex ) ;
+
+   /**
+    * Check to set if ant of the native data on the clipboard matches this data flavor
+    *
+    * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
+    */
+  boolean IsDataFlavorSupported ( in string aDataFlavor ) ;
+  
+};
+
+
+%{ C++
+
+%}

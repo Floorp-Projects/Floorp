@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+
+
+[scriptable, uuid(948A0023-E3A7-11d2-96CF-0060B0FB9956)]
+interface nsIFormatConverter : nsISupports
+{  
+  /**
+    * Get the list of the "input" data flavors (mime types as nsISupportsString),
+    * in otherwords, the flavors that this converter can convert "from" (the 
+    * incoming data to the converter).
+    */
+  nsISupportsArray GetInputDataFlavors ( ) ;
+
+  /**
+    * Get the list of the "output" data flavors (mime types as nsISupportsString),
+    * in otherwords, the flavors that this converter can convert "to" (the 
+    * outgoing data to the converter).
+    *
+    * @param  aDataFlavorList fills list with supported flavors
+    */
+  nsISupportsArray GetOutputDataFlavors ( ) ;
+
+  /**
+    * Determines whether a converion from one flavor to another is supported
+    *
+    * @param  aFromFormatConverter flavor to convert from
+    * @param  aFromFormatConverter flavor to convert to
+    */
+  boolean CanConvert ( in string aFromDataFlavor, in string aToDataFlavor ) ;
+
+  /**
+    * Converts from one flavor to another.
+    *
+    * @param  aFromFormatConverter flavor to convert from
+    * @param  aFromFormatConverter flavor to convert to (destination own the memory)
+    * @returns returns NS_OK if it was converted
+    */
+  void Convert ( in string aFromDataFlavor, in nsISupports aFromData, in unsigned long aDataLen,
+                   in string aToDataFlavor, out nsISupports aToData, out unsigned long aDataToLen ) ; 
+
+};
+
+
+%{ C++
+
+%}
