@@ -39,14 +39,13 @@ function initDialogObject()
   dialog.wrap            = document.getElementById("dialog.wrap");
   dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
   dialog.find            = document.getElementById("ok");
-  dialog.cancel          = document.getElementById("cancel");
-  dialog.bundle          = document.getElementById("findBundle");
+  dialog.bundle          = null;
 }
 
 function fillDialog()
 {
   // Set initial dialog field contents.
-  dialog.findKey.setAttribute("value", data.searchString);
+  dialog.findKey.value = data.searchString;
 
   dialog.caseSensitive.checked   = data.caseSensitive;
   dialog.wrap.checked            = data.wrapSearch;
@@ -71,7 +70,7 @@ function onLoad()
   finder = finder.QueryInterface(Components.interfaces.nsIFindComponent);
 
   // Change "OK" to "Find".
-  dialog.find.setAttribute("value", document.getElementById("fBLT").getAttribute("value"));
+  dialog.find.value = document.getElementById("fBLT").getAttribute("value");
 
   // Setup the dialogOverlay.xul button handlers.
   doSetOKCancel(onOK, onCancel);
@@ -104,8 +103,11 @@ function onOK()
 
   // Search.
   var result = finder.findNext(data);
-  if (!result)
+  if (!result) {
+    if (!dialog.bundle)
+      dialog.bundle = document.getElementById("findBundle");
     window.alert(dialog.bundle.getString("notFoundWarning"));
+  }
 }
 
 function onCancel()
