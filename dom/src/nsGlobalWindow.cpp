@@ -695,7 +695,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
       }
       
       timeout->argc = 0;
-      for (i = 2; (uint)i < argc; i++) {
+      for (i = 2; (PRUint32)i < argc; i++) {
         timeout->argv[i - 2] = argv[i];
         if (!JS_AddNamedRoot(cx, &timeout->argv[i - 2], "timeout.argv[i]")) {
           DropTimeout(timeout);
