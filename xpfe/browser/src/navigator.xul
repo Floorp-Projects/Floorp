@@ -104,7 +104,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	    dump("Opening New Window\n");
+      dump("Opening New Window\n");
       appCore.newWindow();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -166,6 +166,21 @@
     }
   }
 
+  function OpenMessenger()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/samples/mailshell.xul",
+                             window);
+    }
+  }    
+
 
   </html:script>
 
@@ -205,12 +220,16 @@
       <menuitem name="Forward" onclick="BrowserForward();" />
       <menuitem name="Home" onclick="BrowserHome();"/>
     </menu>
-	
-	<menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
-		<menuitem name="Add Bookmark"/>
-		<menuitem name="Edit Bookmarks..." onclick="BrowserEditBookmarks();"/>
-		<separator/>
-	</menu>
+    <menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
+      <menuitem name="Add Bookmark"/>
+      <menuitem name="Edit Bookmarks..." onclick="BrowserEditBookmarks();"/>
+      <separator/>
+    </menu>
+    <menu name="Apps">
+      <menuitem name="Messenger" onclick="OpenMessenger();"/>
+      <menuitem name="Calendar"/>
+      <menuitem name="AIM"/>
+    </menu>
   </menubar>
   
   <html:div id="header">
