@@ -51,6 +51,9 @@ void ToLowerCase(char* str, PRInt32 length=-1);
 nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
                                  PRUint32 *endPos, char* *scheme);
 
+/* check that the given scheme conforms to RFC 2396 */
+PRBool IsValidScheme(const char *scheme, PRUint32 schemeLen);
+
 #ifdef __cplusplus
 }
 #endif
