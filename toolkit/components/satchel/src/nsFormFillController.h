@@ -49,6 +49,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMLoadListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
@@ -62,7 +63,8 @@ class nsFormFillController : public nsIFormFillController,
                              public nsIDOMFocusListener,
                              public nsIDOMKeyListener,
                              public nsIDOMFormListener,
-                             public nsIDOMMouseListener
+                             public nsIDOMMouseListener,
+                             public nsIDOMLoadListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -94,6 +96,13 @@ public:
   NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
+
+  // nsIDOMLoadListener
+  NS_IMETHOD Load(nsIDOMEvent *aLoadEvent);
+  NS_IMETHOD BeforeUnload(nsIDOMEvent *aLoadEvent);
+  NS_IMETHOD Unload(nsIDOMEvent *aLoadEvent);
+  NS_IMETHOD Abort(nsIDOMEvent *aLoadEvent);
+  NS_IMETHOD Error(nsIDOMEvent *aLoadEvent);
 
   nsFormFillController();
   virtual ~nsFormFillController();
