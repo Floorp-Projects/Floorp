@@ -952,7 +952,6 @@ case "$target" in
     AC_DEFINE(MSVC4)
     AC_DEFINE(STDC_HEADERS)
     TARGET_MD_ARCH=win32
-    OS_TARGET=WINNT
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
@@ -4424,24 +4423,24 @@ fi # $no_x
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_TARGET" = "OS2"; then
+if test "$OS_ARCH" = "OS2"; then
   AC_DEFINE(XP_PC)
   AC_DEFINE(XP_OS2)
   AC_DEFINE(XP_OS2_FIX)
   if test "$VACPP" = "yes"; then
       LIBS='so32dll.lib tcp32dll.lib'
   fi
-elif test "$OS_TARGET" = "WINNT"; then
+elif test "$OS_ARCH" = "WINNT"; then
   AC_DEFINE(XP_PC)
-elif test "$OS_TARGET" = "BeOS"; then
+elif test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
   MOZ_MOVEMAIL=1
-elif test "$OS_TARGET" = "Darwin"; then
+elif test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_EMBED)
   AC_DEFINE(UNIX_LDAP)
   AC_DEFINE(UNIX_ASYNC_DNS)
-elif test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
+elif test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 else
