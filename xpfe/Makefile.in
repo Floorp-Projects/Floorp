@@ -60,8 +60,13 @@ DIRS += \
         components/search \
         components/shistory \
         components/windowds \
-        components/build \
         $(NULL)
+
+ifdef MOZ_ENABLE_XREMOTE
+DIRS += components/xremote
+endif
+
+DIRS += components/build
 else
 DIRS += browser components/shistory communicator global
 
