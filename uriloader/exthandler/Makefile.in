@@ -34,7 +34,11 @@ else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 OSDIR		= mac
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+OSDIR		= beos
+else
 OSDIR		= unix
+endif
 endif
 endif
 endif
