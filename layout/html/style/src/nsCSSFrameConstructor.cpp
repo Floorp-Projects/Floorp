@@ -12014,6 +12014,13 @@ nsresult
 nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
                                                 nsIContent* aContent)
 {
+  // If there is no document, we don't want to recreate frames for it.  (You
+  // shouldn't generally be giving this method content without a document
+  // anyway).
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
   // Is the frame `special'? If so, we need to reframe the containing
   // block *here*, rather than trying to remove and re-insert the
   // content (which would otherwise result in *two* nested reframe
