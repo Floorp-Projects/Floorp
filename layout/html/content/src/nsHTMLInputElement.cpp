@@ -768,7 +768,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
 
-  // Try script event handlers first
+  // Try script event handlers first if its not a focus/blur event
+  //we dont want the doc to get these
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 

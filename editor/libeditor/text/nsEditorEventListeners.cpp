@@ -1070,6 +1070,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   if (mEditor)
   {
     PRUint32 flags;
+    aEvent->PreventBubble();
     mEditor->GetFlags(&flags);
     if (! (flags & nsIHTMLEditor::eEditorDisabledMask))
     { // only enable caret and selection if the editor is not disabled
@@ -1115,6 +1116,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
   if (mEditor)
   {
     PRUint32 flags;
+    aEvent->PreventBubble();
     mEditor->GetFlags(&flags);
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
     if (editor)

@@ -358,7 +358,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               }
             }
             
-            gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
+            if(gLastFocusedDocument != mDocument)
+              gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
             
             if (commandDispatcher) {
               commandDispatcher->SetSuppressFocus(PR_FALSE);
@@ -372,7 +373,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         if (globalObject) {
           nsIContent* currentFocus = mCurrentFocus;
           mCurrentFocus = nsnull;
-          mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+          if(gLastFocusedDocument != mDocument)
+            mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+          
           globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
           mCurrentFocus = currentFocus;
         }
@@ -570,7 +573,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         if(gLastFocusedDocument) {
           gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-          gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          //gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
           if(globalObject)
             globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
