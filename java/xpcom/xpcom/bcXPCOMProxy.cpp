@@ -153,9 +153,13 @@ NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
     }  
     NS_IF_RELEASE(eventQ);
     bcIUnMarshaler * unmarshaler = call->GetUnMarshaler();
-    mt->UnMarshal(unmarshaler);
+    nsresult result;
+    unmarshaler->ReadSimple(&result, bc_T_U32);
+    if (NS_SUCCEEDED(result)) {
+        mt->UnMarshal(unmarshaler);
+    }
     delete call; delete marshaler; delete unmarshaler; delete mt;
-    return NS_OK;
+    return result;
 }
 
 nsrefcnt bcXPCOMProxy::AddRef(void) { 

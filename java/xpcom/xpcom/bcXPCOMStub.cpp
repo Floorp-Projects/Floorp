@@ -111,10 +111,12 @@ void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue
     stubsAndProxiesService->PushEventQueue(eventQueue);
     //nb return value; excepion handling
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to XPTC_InvokeByIndex\n"));
-    XPTC_InvokeByIndex(object, mid, paramCount, params);
+    nsresult result = XPTC_InvokeByIndex(object, mid, paramCount, params);
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade after XPTC_InvokeByIndex\n"));
-    if (mt != NULL) { //nb to do what about nsresult ?
-        bcIMarshaler * m = call->GetMarshaler();
+    bcIMarshaler * m = call->GetMarshaler();
+    m->WriteSimple(&result, bc_T_U32); 
+    if (NS_SUCCEEDED(result)
+        && mt != NULL) { 
         PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to mt->Marshal\n"));
         mt->Marshal(m);
         delete m;
