@@ -1765,7 +1765,12 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
         nsrefcnt objsAlive;
         PRBool canUnload;
         rv = mobj->CanUnload(serviceMgr, &canUnload, &objsAlive);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+        {
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                   ("nsComponentManager: nsIModule::CanUnload() returned error for %s.", dll->GetNativePath()));
+            return rv;
+        }
         
         if (canUnload)
         {
@@ -2217,6 +2222,7 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
                    ("nsComponentManager: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
         }
+        mobj = NULL;	// Force a release of the Module object before unload()
     }
 #ifndef OBSOLETE_MODULE_LOADING
     else
@@ -2267,6 +2273,7 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
                    ("nsComponentManager: dll->GetDllSpec() on %s FAILED.", dll->GetNativePath()));
         }
+        mobj = NULL;	// Force a release of the Module object before unload()
     }
 #ifndef OBSOLETE_MODULE_LOADING
     else
