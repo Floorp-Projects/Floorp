@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStyleContext.h"
+#include "nsReflowPath.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIPresContext.h"
@@ -5408,7 +5409,28 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
 
     DR_state->PrettyUC(aReflowState.availableWidth, width);
     DR_state->PrettyUC(aReflowState.availableHeight, height);
-    printf("r=%d a=%s,%s ", aReflowState.reason, width, height); 
+    if (aReflowState.path && aReflowState.path->mReflowCommand) {
+      nsReflowType type;
+      aReflowState.path->mReflowCommand->GetType(type);
+      char *incr_reason;
+      switch(type) {
+        case eReflowType_ContentChanged:
+          incr_reason = "incr. (Content)";
+          break;
+        case eReflowType_StyleChanged:
+          incr_reason = "incr. (Style)";
+          break;
+        case eReflowType_ReflowDirty:
+          incr_reason = "incr. (Dirty)";
+          break;
+        default:
+          incr_reason = "incr. (Unknown)";
+      }
+      printf("r=%d %s a=%s,%s ", aReflowState.reason, incr_reason, width, height);
+    }
+    else {
+      printf("r=%d a=%s,%s ", aReflowState.reason, width, height);
+    }
 
     DR_state->PrettyUC(aReflowState.mComputedWidth, width);
     DR_state->PrettyUC(aReflowState.mComputedHeight, height);
