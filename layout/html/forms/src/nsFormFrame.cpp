@@ -1034,6 +1034,9 @@ void nsFormFrame::Temp_GetContentType(char* aPathName, char* aContentType)
            (0 == nsCRT::strcasecmp(fileExt, ".jpg"))) {
     strcpy(aContentType, "image/jpeg");
   }
+  else if (0 == nsCRT::strcasecmp(fileExt, ".art")){
+    strcpy(aContentType, "image/x-art");
+  }
   else { // don't bother trying to do the others here
     strcpy(aContentType, "unknown");
   }
