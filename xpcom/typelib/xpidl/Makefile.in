@@ -35,15 +35,13 @@ CSRCS = \
 
 include $(topsrcdir)/config/config.mk
 
-# XXX replace with proper configure test for glib
-CFLAGS += $(shell @GLIB_CONFIG@ --cflags) $(shell @LIBIDL_CONFIG@ --cflags)
+# LIBIDL_CFLAGS, LIBIDL_LIBS set in libIDL.m4
+CFLAGS += $(LIBIDL_CFLAGS)
 
-# seperate out to get dependancies right
+# separate out to get dependancies right
 LIBXPT=$(DIST)/lib/libxpt.a
 
-# XXX need configure test
-EX_LIBS = -lIDL -L$(DIST)/bin $(LIBXPT) $(shell @GLIB_CONFIG@ --libs) \
-	$(shell @LIBIDL_CONFIG@ --libs)
+EX_LIBS = -lIDL -L$(DIST)/bin $(LIBXPT) $(LIBIDL_LIBS)
 
 PROGS = $(OBJDIR)/xpidl
 
