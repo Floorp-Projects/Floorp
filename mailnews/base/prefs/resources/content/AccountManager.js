@@ -289,7 +289,7 @@ function getAccountValue(account, accountValues, type, slot) {
       source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
     else if (type == "smtp")
-        dump("getAccountValue: doing default server thing " + smtpService.defaultServer + "\n");
+        source = smtpService.defaultServer;
     
     } catch (ex) {
       dump("error getting account value: " + ex + "\n");
