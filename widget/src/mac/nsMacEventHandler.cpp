@@ -73,6 +73,11 @@ PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
 
+
+static nsEventStatus HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
+                                          Point inMouseLoc, nsIWidget* inWidget ) ;
+
+#if !TARGET_CARBON
 //
 // ScrollActionProc
 //
@@ -90,34 +95,58 @@ static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode
 		case kControlPageDownPart:
 		  PhantomScrollbarData* data = NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(ctrl));
 		  if ( data && (data->mWidgetToGetEvent || gEventDispatchHandler.GetActive()) ) {
-        nsMouseScrollEvent scrollEvent;
-        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
-        if ( partCode == kControlPageUpPart || partCode == kControlPageDownPart )
-          scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-        
-        scrollEvent.delta = 
+        Point mouseLoc;
+        ::GetMouse ( &mouseLoc );
+        PRBool scrollByLine = !(partCode == kControlPageUpPart || partCode == kControlPageDownPart);
+        PRInt32 delta = 
           (partCode == kControlUpButtonPart || partCode == kControlPageUpPart) ? -1 : 1;
+      	nsIWidget* widget = data->mWidgetToGetEvent ? 
+                              data->mWidgetToGetEvent : gEventDispatchHandler.GetActive();
         
-        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
-        scrollEvent.isShift   = PR_FALSE;
-        scrollEvent.isControl = PR_FALSE;
-        scrollEvent.isMeta    = PR_FALSE;
-        scrollEvent.isAlt     = PR_FALSE;
-      	scrollEvent.message 		= NS_MOUSE_SCROLL;
-      	scrollEvent.point.x			= 100;
-      	scrollEvent.point.y			= 100;
-      	scrollEvent.time				= PR_IntervalNow();
-      	scrollEvent.widget			= data->mWidgetToGetEvent ? 
-      	                            data->mWidgetToGetEvent : gEventDispatchHandler.GetActive();
-      	scrollEvent.nativeMsg		= nsnull;
-
-        // dispatch scroll event
-        nsEventStatus rv;
-        scrollEvent.widget->DispatchEvent(&scrollEvent, rv);
+        HandleScrollEvent ( kEventMouseWheelAxisY, scrollByLine, delta, mouseLoc, widget );
       }
       break;
   }
 }
+#endif
+
+
+//
+// HandleScrollEvent
+//
+// Actually dispatch the mouseWheel scroll event to the appropriate widget. If |inByLine| is false,
+// then scroll by a full page.
+//
+static nsEventStatus
+HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
+                     Point inMouseLoc, nsIWidget* inWidget )
+{
+  nsMouseScrollEvent scrollEvent;
+  
+  scrollEvent.scrollFlags = 
+    (inAxis == kEventMouseWheelAxisX) ? nsMouseScrollEvent::kIsHorizontal : nsMouseScrollEvent::kIsVertical;
+  if ( !inByLine )
+    scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+  
+  scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+  scrollEvent.isShift = PR_FALSE;
+  scrollEvent.isControl = PR_FALSE;
+  scrollEvent.isMeta = PR_FALSE;
+  scrollEvent.isAlt = PR_FALSE;
+	scrollEvent.message = NS_MOUSE_SCROLL;
+  scrollEvent.delta = inDelta;
+	scrollEvent.point.x = inMouseLoc.h;
+	scrollEvent.point.y = inMouseLoc.v;
+	scrollEvent.time = PR_IntervalNow();
+	scrollEvent.widget = inWidget;
+	scrollEvent.nativeMsg = nsnull;
+
+  // dispatch scroll event
+  nsEventStatus rv;
+  scrollEvent.widget->DispatchEvent(&scrollEvent, rv);
+  return rv;
+  
+} // HandleScrollEvent
 
 
 //-------------------------------------------------------------------------
@@ -382,7 +411,9 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	mIMEIsComposing = PR_FALSE;
 	mIMECompositionStr=nsnull;
 
+#if !TARGET_CARBON
     mControlActionProc = NewControlActionUPP(ScrollActionProc);
+#endif
 }
 
 
@@ -394,10 +425,12 @@ nsMacEventHandler::~nsMacEventHandler()
 		delete mIMECompositionStr;
 		mIMECompositionStr = nsnull;
 	}
+#if !TARGET_CARBON
 	if ( mControlActionProc ) {
 	  DisposeControlActionUPP(mControlActionProc); 
 	  mControlActionProc = nsnull;
 	}
+#endif
 }
 
 
@@ -1214,6 +1247,31 @@ PRBool nsMacEventHandler::ResizeEvent ( WindowRef inWindow )
 }
 
 
+//
+// Scroll
+//
+// Called from a mouseWheel carbon event, tell Gecko to scroll.
+// 
+PRBool
+nsMacEventHandler :: Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc )
+{
+  // figure out which widget should be scrolled. First try the widget the mouse is under,
+  // then try the last focussed widget.
+  nsIWidget* widgetToScroll = gEventDispatchHandler.GetWidgetPointed();
+  if ( !widgetToScroll )
+    widgetToScroll = gEventDispatchHandler.GetActive();
+  
+  // the direction we get from the carbon event is opposite from the way mozilla looks at
+  // it. Reverse the direction.
+  inDelta *= -1;
+  
+  HandleScrollEvent ( inAxis, PR_TRUE, inDelta, inMouseLoc, widgetToScroll );
+  
+  return PR_TRUE;
+  
+} // Scroll
+
+
 //-------------------------------------------------------------------------
 //
 // HandleMouseDownEvent
@@ -1312,6 +1370,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 
+#if !TARGET_CARBON
       // Check if the mousedown is in our window's phantom scrollbar. If so, track
       // the movement of the mouse. The scrolling code is in the action proc.
       Point local = aOSEvent.where;
@@ -1336,6 +1395,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
           break;
         }
       }
+#endif
 
 			nsCOMPtr<nsIWidget> kungFuDeathGrip ( mouseEvent.widget );            // ensure widget doesn't go away
 			nsWindow* widgetHit = NS_STATIC_CAST(nsWindow*, mouseEvent.widget);   //   while we're processing event

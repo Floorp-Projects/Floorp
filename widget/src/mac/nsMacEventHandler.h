@@ -37,6 +37,16 @@ class nsWindow;
 class nsMacWindow;
 
 
+#if UNIVERSAL_INTERFACES_VERSION < 0x0337
+enum {
+  kEventMouseWheelAxisX         = 0,
+  kEventMouseWheelAxisY         = 1
+};
+typedef UInt16                          EventMouseWheelAxis;
+#endif
+
+
+#if !TARGET_CARBON
 //
 // struct PhantomScrollbarData
 //
@@ -56,6 +66,7 @@ struct PhantomScrollbarData
   ResType mTag;                     // should always be kUniqueTag
   nsIWidget* mWidgetToGetEvent;     // for the action proc, the widget to get the event
 }; 
+#endif
 
 
 //-------------------------------------------------------------------------
@@ -132,6 +143,7 @@ public:
 		//
 		virtual PRBool UpdateEvent ( ) ;
 		virtual PRBool ResizeEvent ( WindowRef inWindow ) ;
+		virtual PRBool Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc );
 		 
 protected:
 #if 1
@@ -157,7 +169,9 @@ protected:
 	static PRBool	sMouseInWidgetHit;
   static PRBool	sInBackground;
 
+#if !TARGET_CARBON
   ControlActionUPP mControlActionProc;
+#endif
   
 	nsMacWindow*	mTopLevelWidget;
 	RgnHandle			mUpdateRgn;
