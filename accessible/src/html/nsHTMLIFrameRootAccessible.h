@@ -43,7 +43,6 @@
 #include "nsRootAccessible.h"
 #include "nsAccessible.h"
 #include "nsIAccessibleDocument.h"
-#include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleEventReceiver.h"
 
 class nsIWebShell;
@@ -51,13 +50,11 @@ class nsIWeakReference;
 
 class nsHTMLIFrameAccessible : public nsBlockAccessible, 
                                public nsIAccessibleDocument,
-                               public nsIAccessibleHyperText,
                                public nsIAccessibleEventReceiver,
                                public nsDocAccessibleMixin
 {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
-  NS_DECL_NSIACCESSIBLEHYPERTEXT
 
   public:
     nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *doc);
@@ -76,16 +73,6 @@ class nsHTMLIFrameAccessible : public nsBlockAccessible,
 
   protected:
     nsCOMPtr<nsIAccessible> mRootAccessible;
-
-    //helper function for nsIAccessibleHyperText
-    PRBool IsHyperLink(nsIAccessible *aAccNode);
-    PRInt32 GetLinksFromAccNode(nsIAccessible *aAccNode);
-    nsresult GetLinkFromAccNode(PRInt32 aIndex, nsIAccessible *aAccNode,
-                                nsIAccessibleHyperLink **_retval);
-    PRInt32 GetAccNodeCharLength(nsIAccessible *aAccNode);
-    nsresult GetLinkIndexFromAccNode(nsIAccessible *aAccNode,
-                                     PRInt32 aCharIndex, PRInt32 *_retval);
-
 };
 
 class nsHTMLIFrameRootAccessible : public nsRootAccessible

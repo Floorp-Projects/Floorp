@@ -1395,6 +1395,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULToolbarSeparatorAccessible(nsIDOM
 NS_IMETHODIMP nsAccessibilityService::CreateXULTooltipAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
 #ifdef MOZ_XUL
+#ifndef MOZ_ACCESSIBILITY_ATK
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
@@ -1403,6 +1404,9 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTooltipAccessible(nsIDOMNode *aNo
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_ACCESSIBILITY_ATK
 #else
   *_retval = nsnull;
 #endif // MOZ_XUL
@@ -1631,6 +1635,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 
   frame->GetAccessible(getter_AddRefs(newAcc));
 
+#ifndef MOZ_ACCESSIBILITY_ATK
   // ---- If link, create link accessible ----
   if (!newAcc) {
     // is it a link?
@@ -1640,6 +1645,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
       newAcc = new nsHTMLLinkAccessible(aNode, weakShell);
     }
   }
+#endif //MOZ_ACCESSIBILITY_ATK
 
   // ---- If <select> <option>, create select option accessible
     

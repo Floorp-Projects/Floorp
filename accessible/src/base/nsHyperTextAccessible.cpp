@@ -52,7 +52,7 @@
  *   Typically, it's a paragraph of text, a cell of table, etc.
 */
 
-NS_IMPL_ISUPPORTS1(nsAccessibleHyperText, nsIAccessibleText)
+NS_IMPL_ISUPPORTS2(nsAccessibleHyperText, nsIAccessibleHyperText, nsIAccessibleText)
 
 nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakReference* aShell)
 {
@@ -370,6 +370,86 @@ NS_IMETHODIMP nsAccessibleHyperText::AddSelection(PRInt32 aStartOffset, PRInt32 
 NS_IMETHODIMP nsAccessibleHyperText::RemoveSelection(PRInt32 aSelectionNum)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// ------- nsIAccessibleHyperText ---------------
+/* readonly attribute long links; */
+NS_IMETHODIMP nsAccessibleHyperText::GetLinks(PRInt32 *aLinks)
+{
+  *aLinks = 0;
+
+  PRUint32 index, count;
+  mTextChildren->Count(&count);
+  for (index = 0; index < count; index++) {
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> parentNode;
+    domNode->GetParentNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
+    if (link)
+      (*aLinks)++;
+  }
+
+  return NS_OK;
+}
+
+/* nsIAccessibleHyperLink getLink (in long index); */
+NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperLink **aLink)
+{
+  PRUint32 index, count, linkCount = 0;
+  mTextChildren->Count(&count);
+  for (index = 0; index < count; index++) {
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> parentNode;
+    // text node maybe a child of a link node
+    domNode->GetParentNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
+    if (link) {
+      if (linkCount++ == aIndex) {
+        nsCOMPtr<nsIWeakReference> weakShell;
+        nsAccessibilityService::GetShellFromNode(parentNode, getter_AddRefs(weakShell));
+        NS_ENSURE_TRUE(weakShell, NS_ERROR_FAILURE);
+        *aLink = new nsHTMLLinkAccessible(parentNode, weakShell);
+        NS_IF_ADDREF(*aLink);
+        break;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+/* long getLinkIndex (in long charIndex); */
+NS_IMETHODIMP nsAccessibleHyperText::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *aLinkIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* long getSelectedLinkIndex (); */
+NS_IMETHODIMP nsAccessibleHyperText::GetSelectedLinkIndex(PRInt32 *aSelectedLinkIndex)
+{
+  *aSelectedLinkIndex = -1;
+
+  nsCOMPtr<nsIDOMNode> focusedNode;
+  NS_REINTERPRET_CAST(nsAccessible*, this)->GetFocusedNode(getter_AddRefs(focusedNode));
+
+  PRUint32 index, count, linkCount = 0;
+  mTextChildren->Count(&count);
+  for (index = 0; index < count; index++) {
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> parentNode;
+    // text node maybe a child of a link node
+    domNode->GetParentNode(getter_AddRefs(parentNode));
+    nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
+    if (link) {
+      linkCount++;
+      if (parentNode == focusedNode) {
+        *aSelectedLinkIndex = linkCount;
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 #endif //MOZ_ACCESSIBILITY_ATK
