@@ -148,11 +148,13 @@ interface nsIWebBrowser : nsISupports
      * their own implementation if they intend to override or prevent
      * how certain kinds of content are loaded.
      *
-     * @note The implementation should not refcount this interface; it
-     *       should assume that a non nsnull value is always valid.
-     *       The embedder should explicitly set this value back to nsnull
-     *       if the parent content listener is destroyed before the
-     *       browser object.
+     * @note If this attribute is set to an object that implements
+     *       nsISupportsWeakReference, the implementation should get the
+     *       nsIWeakReference and hold that.  Otherwise, the implementation
+     *       should not refcount this interface; it should assume that a non
+     *       null value is always valid.  In that case, the embedder should
+     *       explicitly set this value back to null if the parent content
+     *       listener is destroyed before the browser object.
      *
      * @see nsIURIContentListener
      */
