@@ -1,4 +1,3 @@
-
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -52,7 +51,20 @@ else {
   $CPSEP = ";";
 }
 
-$BINDIR = $ENV{"PWD"} . $SEP . $ARGV[0];
+if ($SEP eq "/") {
+  $IS_UNIX = 1;
+}
+
+if ($IS_UNIX) {
+  $BINDIR = $ENV{"PWD"} . $SEP . $ARGV[0];
+}
+else {
+  open(CD, "cd |");
+  $_ = <CD>;
+  chop;
+  close(CD);
+  $BINDIR = $_ . $SEP . $ARGV[0];
+}
 $JAVA_CMD = $ENV{"JDKHOME"} . $SEP . "bin" . $SEP . "java";
 
 #
@@ -65,13 +77,11 @@ $ENV{"MOZILLA_FIVE_HOME"} = $BINDIR;
 $ENV{PATH} = $BINDIR . $CPSEP . $ENV{PATH};
 
 # if on UNIX, stock the LD_LIBRARY_PATH
-if ($SEP eq "/") {
-
+if ($IS_UNIX) {
   # append the GTK lib dirs
   open(GTK_CONFIG, "gtk-config --libs |");
   $_ = <GTK_CONFIG>;
   close(GTK_CONFIG);
-  print $gtk_config;
   @libs = split;
   foreach $_ (@libs) {
     if (/-L/) {
@@ -92,9 +102,16 @@ if ($SEP eq "/") {
 
 # stock the CLASSPATH
 $ENV{"CLASSPATH"} = $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "tools.jar" . 
-  $CPSEP . $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "rt.jar" . 
-  $CPSEP . $BINDIR . $SEP . ".." . $SEP . "classes" . $CPSEP . 
+  $CPSEP . $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "rt.jar" . $CPSEP . 
   $ENV{"CLASSPATH"};
+if ($IS_UNIX) {
+  $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP . $BINDIR . $SEP . ".." . 
+    $SEP . "classes";
+}
+else {
+  $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP . $DEPTH . $SEP . "dist" . 
+    $SEP . "classes";
+}
 
 # build up the command invocation string
 

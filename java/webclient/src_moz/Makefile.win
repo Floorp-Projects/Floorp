@@ -162,12 +162,9 @@ nsSetupRegistry.cpp:
 buildRunems:
 !ifdef BAL_INTERFACE
 !else
-	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\runem.bat.  Use this to run the test browser.
-	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\runem.bat
-	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\runem.bat
-	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\swingem.bat.  Use this to run the swing based test browser.
-	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\swingem.bat
-	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.swing.SwingEmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\swingem.bat
+	@echo +++ Creating runem.bat.  Use this to run the test browser.
+	rm -f runem.bat
+	@echo $(PERL) runem.pl $(DIST)\bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
 !endif
 
 install:: $(DLL) buildRunems
@@ -189,6 +186,5 @@ clobber::
 	rm -f RDFTreeNode.h
 	rm -f ISupportsPeer.h
 	rm -f nsSetupRegistry.cpp
-	rm -f .\$(OBJDIR)\runem.bat
-	rm -f .\$(OBJDIR)\swingem.bat
+	rm -f runem.bat
 
