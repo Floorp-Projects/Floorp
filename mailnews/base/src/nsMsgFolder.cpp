@@ -1364,7 +1364,7 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 #include "prprf.h"
 #include "prsystem.h"
 
-static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
+static const char kMsgRootFolderPref[] = "mail.rootFolder";
 
 char* gMailboxRoot = nsnull;
 

@@ -59,6 +59,7 @@ public:
 	NS_IMETHOD GetPopPassword(const char ** aUserPassword) = 0;
 	NS_IMETHOD GetPopServer(const char ** aHostName) = 0;
 	NS_IMETHOD GetSmtpServer(const char ** aHostName) = 0;
+	NS_IMETHOD GetReplyTo(const char ** aReplyTo) = 0;
 };
 
 #endif /* nsIMsgIdentity_h___ */

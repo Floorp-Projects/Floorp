@@ -39,6 +39,7 @@ nsMsgIdentity::nsMsgIdentity()
 	m_userFullName = nsnull;
 	m_userEmail = nsnull;
 	m_userPassword = nsnull;
+	m_replyTo = nsnull;
 
 	m_rootPath = nsnull;
 	InitializeIdentity();
@@ -52,6 +53,7 @@ nsMsgIdentity::~nsMsgIdentity()
 	PR_FREEIF(m_userFullName);
 	PR_FREEIF(m_userEmail);
 	PR_FREEIF(m_userPassword);
+	PR_FREEIF(m_replyTo);
 	PR_FREEIF(m_smtpHost);
 	PR_FREEIF(m_popHost);
 	PR_FREEIF(m_rootPath);
@@ -69,43 +71,54 @@ void nsMsgIdentity::InitializeIdentity()
     if (prefs && NS_SUCCEEDED(rv))
 	{
 		prefs->Startup("prefs.js");
-		rv = prefs->GetCharPref("mailnews.rootFolder", prefValue, &prefLength);
+
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.rootFolder", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_rootPath = PL_strdup(prefValue);
 		
-		rv = prefs->GetCharPref("mailnews.organization", prefValue, &prefLength);
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.identity.organization", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_organization = PL_strdup(prefValue);
 		
-		rv = prefs->GetCharPref("mailnews.user_full_name", prefValue, &prefLength);
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.identity.username", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_userFullName = PL_strdup(prefValue);
 		
-		rv = prefs->GetCharPref("mailnews.user_email", prefValue, &prefLength);
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.identity.useremail", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_userEmail = PL_strdup(prefValue);
 		
-		rv = prefs->GetCharPref("mailnews.pop_server", prefValue, &prefLength);
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mail.identity.reply_to", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_replyTo = PL_strdup(prefValue);
+		
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("network.hosts.pop_server", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_popHost = PL_strdup(prefValue);
 		
 		prefLength = PREF_LENGTH;
-		rv = prefs->GetCharPref("mailnews.smtp_server", prefValue, &prefLength);
+		rv = prefs->GetCharPref("network.hosts.smtp_server", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_smtpHost = PL_strdup(prefValue);
 		
 		prefLength = PREF_LENGTH;
-		rv = prefs->GetCharPref("mailnews.pop_name", prefValue, &prefLength);
+		rv = prefs->GetCharPref("mail.pop_name", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_popName = PL_strdup(prefValue);
 
 		prefLength = PREF_LENGTH;
-		rv = prefs->GetCharPref("mailnews.smtp_name", prefValue, &prefLength);
+		rv = prefs->GetCharPref("mail.smtp_name", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_smtpName = PL_strdup(prefValue);
 
 		prefLength = PREF_LENGTH;
-		rv = prefs->GetCharPref("mailnews.pop_password", prefValue, &prefLength);
+		rv = prefs->GetCharPref("mail.pop_password", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
 			m_userPassword = PL_strdup(prefValue);
 
@@ -180,5 +193,12 @@ nsresult nsMsgIdentity::GetRootFolderPath(const char ** aRootFolderPath)
 {
 	if (aRootFolderPath)
 		*aRootFolderPath = m_rootPath;
+	return NS_OK;
+}	
+
+nsresult nsMsgIdentity::GetReplyTo(const char ** aReplyTo)
+{
+	if (aReplyTo)
+		*aReplyTo = m_replyTo;
 	return NS_OK;
 }	
