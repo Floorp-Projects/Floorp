@@ -49,6 +49,10 @@
 		<integer>910</integer>
 		<integer>889</integer>
 	</array>
+	<key>IBOpenObjects</key>
+	<array>
+		<integer>919</integer>
+	</array>
 	<key>IBSystem Version</key>
 	<string>7D24</string>
 </dict>
