@@ -51,6 +51,8 @@
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
+#include "nsString.h"
+#include "nsDependentString.h"
 
 #include "MRJPlugin.h"
 #include "MRJContext.h"
@@ -213,7 +215,7 @@ NS_NewURI(nsIURI* *result,
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
     nsresult rv = theServiceManager->GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (void**)&ioService);
     if (rv == NS_OK)
-        rv = ioService->NewURI(spec, nsnull, baseURI, result);
+        rv = ioService->NewURI(nsDependentCString(spec), nsnull, baseURI, result);
     NS_RELEASE(ioService);
     return rv;
 }
