@@ -56,17 +56,21 @@ class nsPermissionEnumerator : public nsISimpleEnumerator
           char *host;
           PRBool capability;
           PRInt32 type;
-          (void) PERMISSION_Enumerate
+          nsresult rv = PERMISSION_Enumerate
             (mHostCount, mTypeCount++, &host, &type, &capability);
-          if (mTypeCount == PERMISSION_TypeCount(mHostCount)) {
-            mTypeCount = 0;
-            mHostCount++;
+          if (NS_SUCCEEDED(rv)) {
+            if (mTypeCount == PERMISSION_TypeCount(mHostCount)) {
+              mTypeCount = 0;
+              mHostCount++;
+            }
+            nsIPermission *permission =
+              new nsPermission(host, type, capability);
+            *result = permission;
+            NS_ADDREF(*result);
+          } else {
+            *result = nsnull;
           }
-          nsIPermission *permission =
-            new nsPermission(host, type, capability);
-          *result = permission;
-          NS_ADDREF(*result);
-          return NS_OK;
+          return rv;
         }
 
         virtual ~nsPermissionEnumerator() 
