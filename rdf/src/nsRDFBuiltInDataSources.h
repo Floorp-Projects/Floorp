@@ -38,6 +38,9 @@ nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
 // in nsSimpleDataBase.cpp
 nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);
 
+// in nsStreamDataSource.cpp
+nsresult NS_NewRDFStreamDataSource(nsIRDFDataSource** result);
+
 #endif // nsBuiltinDataSources_h__
 
 
