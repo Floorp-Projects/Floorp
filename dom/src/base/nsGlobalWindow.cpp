@@ -1130,32 +1130,6 @@ NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
   return result;
 }
 
-NS_IMETHODIMP    
-GlobalWindowImpl::GetTitle(nsAWritableString& aTitle)
-{
-  aTitle = mTitle;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
-{
-  mTitle = aTitle;
-  if(mDocShell) {
-    // See if we're a chrome shell.
-    PRInt32 type;
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-    docShellAsItem->GetItemType(&type);
-    if(type == nsIDocShellTreeItem::typeChrome) {
-      nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-      if(docShellAsWin) {
-        docShellAsWin->SetTitle(PromiseFlatString(mTitle).get());
-      }
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
   FlushPendingNotifications();

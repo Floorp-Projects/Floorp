@@ -78,7 +78,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   // XXX: The setter that takes a string argument needs to be special
   // cased!
   readonly attribute nsIDOMLocation              location;
-           attribute DOMString                   title;
 
            attribute long                        innerWidth;
            attribute long                        innerHeight;

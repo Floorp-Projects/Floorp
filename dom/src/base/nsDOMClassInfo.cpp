@@ -380,7 +380,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Core classes
-  NS_DEFINE_CLASSINFO_DATA(Document, nsDocumentSH,
+  NS_DEFINE_CLASSINFO_DATA(XMLDocument, nsDocumentSH,
                            NODE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(DocumentType, nsNodeSH,
@@ -971,7 +971,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Document, nsIDOMDocument)
+  DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
