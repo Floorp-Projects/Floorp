@@ -111,7 +111,7 @@ var downloadViewController = {
       return selectionCount > 0;
     case "cmd_remove":
       // XXX ensure selection isn't still in progress
-      //     how to handle multiple selection?
+      //     and how to handle multiple selection?
       return selectionCount > 0;
     case "cmd_selectAll":
       return gDownloadViewChildren.childNodes.length != selectionCount;
