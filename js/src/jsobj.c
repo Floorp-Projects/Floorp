@@ -1238,6 +1238,7 @@ JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
+    jsval fval;
 
 #if JS_HAS_SHARP_VARS
     JS_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >= ATOM_INDEX_LIMIT_LOG2 + 1);
@@ -1251,6 +1252,17 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 	return NULL;
     }
 #endif
+    
+    /* ECMA (15.1.2.1) says 'eval' is also a property of the global object. */
+    if (!OBJ_GET_PROPERTY(cx, proto, (jsid)cx->runtime->atomState.evalAtom,
+                          &fval)) {
+        return NULL;
+    }
+    if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)cx->runtime->atomState.evalAtom,
+                             fval, NULL, NULL, 0, NULL)) {
+	return NULL;
+    }
+    
     return proto;
 }
 
@@ -2594,7 +2606,18 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->call) {
+        /* 
+         * The decompiler may need to access the args of the function
+         * in progress, so we switch the function pointer in the
+         * frame to the function below us, rather than the one we had
+         * hoped to call.
+         */
+        JSStackFrame *fp = cx->fp;
+        JSFunction *fun = fp->fun;
+        if (fp->down)   /* guaranteed ? */
+           fp->fun = fp->down->fun;
 	js_ReportIsNotFunction(cx, &argv[-2], JS_FALSE);
+        fp->fun = fun;
 	return JS_FALSE;
     }
     return clasp->call(cx, obj, argc, argv, rval);
