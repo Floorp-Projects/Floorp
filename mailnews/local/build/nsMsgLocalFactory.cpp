@@ -114,47 +114,91 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 
 	*aResult = NULL;  
   
-	nsISupports *inst = nsnull;
-
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
 	// do they want a local datasource ?
 	if (mClassID.Equals(kCMailboxUrl)) 
 	{
-		inst = NS_STATIC_CAST(nsIMailboxUrl*, new nsMailboxUrl(nsnull, nsnull));
+		nsMailboxUrl * url = new nsMailboxUrl(nsnull, nsnull);
+		if (url)
+			rv = url->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+		
+		if (NS_FAILED(rv) && url)
+			delete url;
 	}
 	else if (mClassID.Equals(kCPop3Url))
 	{
-		inst = NS_STATIC_CAST(nsIPop3URL*, new nsPop3URL(nsnull, nsnull));
+		nsPop3URL * popUrl = new nsPop3URL(nsnull, nsnull);
+		if (popUrl)
+			rv = popUrl->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+		
+		if (NS_FAILED(rv) && popUrl)
+			delete popUrl;
 	}
 	else if (mClassID.Equals(kCMailboxParser)) 
 	{
-		inst = new nsMsgMailboxParser();
+		nsMsgMailboxParser * parser = new nsMsgMailboxParser();
+		if (parser)
+			rv =  parser->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+		
+		if (NS_FAILED(rv) && parser)
+			delete parser;
 	}
 	else if (mClassID.Equals(kCMailboxService)) 
 	{
-		inst = new nsMailboxService();
+		nsMailboxService * mboxService = new nsMailboxService();
+		if (mboxService)
+			rv = mboxService->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && mboxService)
+			delete mboxService;
 	}
 	else if (mClassID.Equals(kPop3ServiceCID))
 	{
-		inst = new nsPop3Service();
+		nsPop3Service * popService = new nsPop3Service();
+		if (popService)
+			rv = popService->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && popService)
+			delete popService;
 	}
 	else if (mClassID.Equals(kMailNewsDatasourceCID)) 
 	{
-		inst = NS_STATIC_CAST(nsIRDFMSGFolderDataSource*, new nsMSGFolderDataSource());
+		nsMSGFolderDataSource * folderDataSource = new nsMSGFolderDataSource();
+		if (folderDataSource)
+			rv = folderDataSource->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && folderDataSource)
+			delete folderDataSource;
 	}
 	else if (mClassID.Equals(kMailNewsResourceCID)) 
 	{
-		inst = NS_STATIC_CAST(nsIMsgLocalMailFolder*, new nsMsgLocalMailFolder());
-	}
-	if (inst == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
+		nsMsgLocalMailFolder * localDataSource = new nsMsgLocalMailFolder();
+		if (localDataSource)
+			rv = localDataSource->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
 
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv))
-    delete inst;
-  return rv;
+		if (NS_FAILED(rv) && localDataSource)
+			delete localDataSource;
+	}
+	else
+		rv = NS_NOINTERFACE;
+  
+	return rv;
 }  
 
 nsresult nsMsgLocalFactory::LockFactory(PRBool aLock)  
