@@ -225,7 +225,7 @@ nsLargeHeapChunk::nsLargeHeapChunk(
 	mTail->SetNextBlock(nil);
 	mTail->SetPrevBlock(freeBlock);
 
-	mTotalFree = freeBlock->GetBlockHeapUsageSize();
+	mTotalFree = mLargestFreeBlock = freeBlock->GetBlockHeapUsageSize();
 }
 
 //--------------------------------------------------------------------
@@ -240,7 +240,7 @@ LargeBlockHeader* nsLargeHeapChunk::GetSpaceForBlock(UInt32 blockSize)
 {
 	UInt32				allocSize = ((blockSize + 3) & ~3) + LargeBlockHeader::kLargeBlockOverhead;
 
-	if (allocSize > mTotalFree) return nil;
+	if (allocSize > mLargestFreeBlock) return nil;
 	//Boolean				expectFailure = (allocSize > mTotalFree);
 	
 	/* scan through the blocks in this chunk looking for a big enough free block */
@@ -290,7 +290,9 @@ LargeBlockHeader* nsLargeHeapChunk::GetSpaceForBlock(UInt32 blockSize)
 	
 	mTotalFree -= blockHeader->GetBlockHeapUsageSize();
 	IncrementUsedBlocks();
-	
+
+	UpdateLargestFreeBlock();			// we could optimize this
+
 	//MEM_ASSERT(!expectFailure, "I though this would fail!");
 	return blockHeader;
 
@@ -353,6 +355,8 @@ void *nsLargeHeapChunk::GrowBlock(LargeBlockHeader *growBlock, size_t newSize)
 	GetOwningAllocator()->AccountForResizedBlock(oldLogicalSize, newSize);
 #endif
 
+	UpdateLargestFreeBlock();			// we could optimize this
+
 	return (void *)(&growBlock->memory);
 }
 
@@ -412,6 +416,8 @@ void *nsLargeHeapChunk::ShrinkBlock(LargeBlockHeader *growBlock, size_t newSize)
 	GetOwningAllocator()->AccountForResizedBlock(oldLogicalSize, newSize);
 #endif
 
+	UpdateLargestFreeBlock();			// we could optimize this
+
 	return (void *)(&growBlock->memory);
 }
 
@@ -433,6 +439,8 @@ void* nsLargeHeapChunk::ResizeBlockInPlace(LargeBlockHeader *theBlock, size_t ne
 	GetOwningAllocator()->AccountForResizedBlock(theBlock->header.logicalBlockSize, newSize);
 	theBlock->header.logicalBlockSize = newSize;
 #endif
+
+	UpdateLargestFreeBlock();			// we could optimize this
 
 	return (void *)(&theBlock->memory);
 }
@@ -473,7 +481,30 @@ void nsLargeHeapChunk::ReturnBlock(LargeBlockHeader *deadBlock)
 	deadBlock->prev = nil;
 
 	mTotalFree += deadBlock->GetBlockHeapUsageSize();
+	
+	UpdateLargestFreeBlock();			// we could optimize this
+	
 	DecrementUsedBlocks();
 }
 
+
+//--------------------------------------------------------------------
+void nsLargeHeapChunk::UpdateLargestFreeBlock()
+//--------------------------------------------------------------------
+{
+	LargeBlockHeader	*thisBlock = mHead;
+	UInt32				curMaxSize = 0;
+	
+	while (thisBlock != mTail)
+	{
+		UInt32		blockSize = thisBlock->GetBlockHeapUsageSize();
+		
+		if (blockSize > curMaxSize)
+			curMaxSize = blockSize;
+		
+		thisBlock = thisBlock->GetNextBlock();
+	}
+
+	mLargestFreeBlock = curMaxSize;
+}
 

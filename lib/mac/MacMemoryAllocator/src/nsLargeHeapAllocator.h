@@ -154,7 +154,10 @@ class nsLargeHeapChunk : public nsHeapChunk
 		
 	protected:
 	
+		void				UpdateLargestFreeBlock();
+		
 		UInt32				mTotalFree;
+		UInt32				mLargestFreeBlock;		// heap useage for largest block we can allocate
 		
 		LargeBlockHeader*	mTail;
 		LargeBlockHeader	mHead[];
