@@ -126,6 +126,7 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
 
   NS_IF_RELEASE(mLayout);
   NS_IF_RELEASE(mChildWidgets);
+  NS_IF_RELEASE(mModel);
 
   if (mImageGroup != nsnull)
   {
@@ -707,12 +708,33 @@ nsresult nsXPFCCanvas :: SetLayout(nsILayout * aLayout)
 
 nsIModel * nsXPFCCanvas :: GetModel()
 {
+  if (nsnull != mModel)
     return mModel;
+
+  if (nsnull != GetParent())
+    return (GetParent()->GetModel());
+
+  return nsnull;
 }
+
+nsresult nsXPFCCanvas :: GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface)
+{
+  nsIModel * model = GetModel();
+
+  if (nsnull == model)
+    return (NS_NOINTERFACE);
+
+  nsresult res = model->QueryInterface(aModelIID, (void**) &aInterface);
+
+  return res;
+}
+
 
 nsresult nsXPFCCanvas :: SetModel(nsIModel * aModel)
 {
+  NS_IF_RELEASE(mModel);
   mModel = aModel;
+  NS_ADDREF(mModel);
   return NS_OK;
 }
 

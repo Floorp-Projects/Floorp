@@ -72,6 +72,7 @@ public:
   NS_IMETHOD             SetLabel(nsString& aString);
 
   NS_IMETHOD_(nsIModel *)   GetModel();
+  NS_IMETHOD                GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface) ;
   NS_IMETHOD                SetModel(nsIModel * aModel);
 
   NS_IMETHOD  SetBounds(const nsRect& aBounds);

@@ -114,6 +114,7 @@ public:
    * @result nsIModel pointer, nsnull if no model object assigned, else a pointer to the model object
    */
   NS_IMETHOD_(nsIModel *)   GetModel() = 0;
+  NS_IMETHOD                GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface) = 0;
   NS_IMETHOD                SetModel(nsIModel * aModel) = 0;
 
   /**
