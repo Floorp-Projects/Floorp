@@ -980,6 +980,7 @@ select[disabled] {
 
 /* combobox button */
 select > input[type="button"] {
+  position: static !important;
   white-space:nowrap;
   border: outset 2px rgb(204, 204, 204);
   background-image:url("arrow.gif");
