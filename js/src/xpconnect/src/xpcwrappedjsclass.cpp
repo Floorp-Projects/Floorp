@@ -1304,6 +1304,9 @@ pre_call_clean_up:
         *((void**)p) = nsnull;
     }
 
+    // Make sure "this" doesn't get deleted during this call.
+    nsCOMPtr<nsIXPCWrappedJSClass> kungFuDeathGrip(this);
+
     if(!readyToDoTheCall)
         goto done;
 
