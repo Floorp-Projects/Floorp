@@ -917,6 +917,8 @@ restart:
 	if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
 	    GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);
 #endif
+        if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
+            GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2", NULL);
     }
 
     /*
@@ -946,7 +948,7 @@ restart:
 	    } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
 		JS_ARENA_ALLOCATE(final, &cx->tempPool, sizeof(JSGCThing));
 		if (!final)
-		    goto out;
+		    goto finalize_phase;
 		final->next = thing;
 		final->flagp = flagp;
 		JS_ASSERT(rt->gcBytes >= sizeof(JSGCThing) + sizeof(uint8));
@@ -956,6 +958,7 @@ restart:
 	}
     }
 
+finalize_phase:
     /*
      * Finalize phase.
      * Don't hold the GC lock while running finalizers!

@@ -127,6 +127,8 @@ EXPORTS
 ;	JS_CallFunctionValue
 ;	JS_SetBranchCallback
 ;	JS_IsRunning
+;	JS_IsConstructing
+;	JS_SetCallReturnValue2
 ;	JS_NewString
 ;	JS_NewStringCopyN
 ;	JS_NewStringCopyZ

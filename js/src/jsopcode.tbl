@@ -269,3 +269,6 @@ OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 12,  JOF_CONST)
 /* Like JSOP_INITPROP, but specialized to make a DontDelete property for ECMA ed. 3 catch variables. */
 OPDEF(JSOP_INITCATCHVAR,130, "initcatchvar",NULL,     3,  1,  0,  0,  JOF_CONST|JOF_PROP)
 OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0,  0,  JOF_BYTE)
+
+/* Host object extension: given 'o.item(i) = j', the left-hand side compiles JSOP_SETCALL, rather than JSOP_CALL. */
+OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 11,  JOF_UINT16|JOF_SET)

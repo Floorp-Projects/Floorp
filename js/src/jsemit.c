@@ -1930,6 +1930,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
             break;
+          case TOK_LP:
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+            break;
           default:
             JS_ASSERT(0);
         }
@@ -1958,6 +1962,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 EMIT_ATOM_INDEX_OP(JSOP_GETPROP, atomIndex);
                 break;
               case TOK_LB:
+              case TOK_LP:
                 if (js_Emit1(cx, cg, JSOP_DUP2) < 0)
                     return JS_FALSE;
                 if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
@@ -1996,6 +2001,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
             break;
           case TOK_LB:
+          case TOK_LP:
             if (js_Emit1(cx, cg, JSOP_SETELEM) < 0)
                 return JS_FALSE;
             break;
@@ -2099,7 +2105,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_THROW:
 #endif
       case TOK_UNARYOP:
-        /* Unary op, including unary +/-. */
+        /* Unary op, including unary +/-/&. */
         if (!js_EmitTree(cx, cg, pn->pn_kid))
             return JS_FALSE;
         if (js_Emit1(cx, cg, pn->pn_op) < 0)
@@ -2139,11 +2145,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ASSERT(0);
         }
         break;
-
-      case TOK_NEW:
-        /* Code for (new f()) and f() are the same, except for the opcode. */
-        op = JSOP_NEW;
-        goto emit_call;
 
       case TOK_DELETE:
         /* Under ECMA 3, deleting a non-reference returns true. */
@@ -2194,14 +2195,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         return EmitElemOp(cx, pn, pn->pn_op, cg);
 
+      case TOK_NEW:
       case TOK_LP:
         /*
-         * Emit function call or operator new (constructor call) code.  First
-         * emit code for the left operand to evaluate the call- or construct-
-         * able object expression.
+         * Emit function call or operator new (constructor call) code.
+         * First, emit code for the left operand to evaluate the callable or
+         * constructable object expression.
          */
-        op = JSOP_CALL;
-      emit_call:
+        op = pn->pn_op;
         pn2 = pn->pn_head;
         if (pn2->pn_op == JSOP_NAME &&
             pn2->pn_atom == cx->runtime->atomState.evalAtom) {
@@ -2224,7 +2225,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         /*
-         * Emit code for each argument in order, then emit the JSOP_CALL or
+         * Emit code for each argument in order, then emit the JSOP_*CALL or
          * JSOP_NEW bytecode with a two-byte immediate telling how many args
          * were pushed on the operand stack.
          */
@@ -2235,8 +2236,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         argc = pn->pn_count - 1;
         if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
                            (ptrdiff_t)(CG_OFFSET(cg) - off)) < 0 ||
-            js_Emit3(cx, cg, op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
+            js_Emit3(cx, cg, op, ARGC_HI(argc), ARGC_LO(argc)) < 0) {
             return JS_FALSE;
+        }
         break;
 
 #if JS_HAS_INITIALIZERS

@@ -1491,6 +1491,19 @@ static JSPropertySpec its_props[] = {
     {0}
 };
 
+static JSBool
+its_item(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    *rval = OBJECT_TO_JSVAL(obj);
+    JS_SetCallReturnValue2(cx, argv[0]);
+    return JS_TRUE;
+}
+
+static JSFunctionSpec its_methods[] = {
+    {"item",            its_item,       0},
+    {0}
+};
+
 #ifdef JSD_LOWLEVEL_SOURCE
 /*
  * This facilitates sending source to JSD (the debugger system) in the shell
@@ -1965,6 +1978,8 @@ main(int argc, char **argv)
     if (!it)
 	return 1;
     if (!JS_DefineProperties(cx, it, its_props))
+	return 1;
+    if (!JS_DefineFunctions(cx, it, its_methods))
 	return 1;
 
 #ifdef PERLCONNECT

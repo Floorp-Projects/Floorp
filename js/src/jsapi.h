@@ -1132,6 +1132,25 @@ JS_IsRunning(JSContext *cx);
 extern JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx);
 
+/*
+ * Returns true if a script is executing and its current bytecode is a set
+ * (assignment) operation, even if there are native (no script) stack frames
+ * between the script and the caller to JS_IsAssigning.
+ */
+extern JS_FRIEND_API(JSBool)
+JS_IsAssigning(JSContext *cx);
+
+/*
+ * Set the second return value, which should be a string or int jsval that
+ * identifies a property in the returned object, to form an ECMA reference
+ * type value (obj, id).  Only native methods can return reference types,
+ * and if the returned value is used on the left-hand side of an assignment
+ * op, the identified property will be set.  If the return value is in an
+ * r-value, the interpreter just gets obj[id]'s value.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetCallReturnValue2(JSContext *cx, jsval v);
+
 /************************************************************************/
 
 /*
@@ -1387,16 +1406,6 @@ JS_ClearContextThread(JSContext *cx);
 #endif
 
 /************************************************************************/
-
-/*
- * Returns true if a script is executing and its current bytecode is a set
- * (assignment) operation.
- *
- * NOTE: Previously conditional on NETSCAPE_INTERNAL. This function may
- * be removed in the future.
- */
-extern JS_FRIEND_API(JSBool)
-JS_IsAssigning(JSContext *cx);
 
 JS_END_EXTERN_C
 
