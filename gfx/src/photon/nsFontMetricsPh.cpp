@@ -314,6 +314,13 @@ nsFontMetricsPh :: GetHeight(nscoord &aHeight)
 }
 
 NS_IMETHODIMP
+nsFontMetricsPh ::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFontMetricsPh :: GetLeading(nscoord &aLeading)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetLeading mLeading=<%d>- Not Implemented\n", mLeading));
