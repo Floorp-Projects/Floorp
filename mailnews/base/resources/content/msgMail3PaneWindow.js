@@ -650,7 +650,6 @@ function OnLoadMessenger()
     gStartFolderUri = window.arguments[0];
     gStartMsgKey = window.arguments[1];
     gSearchEmailAddress = window.arguments[2];
-
   }
   else
   {
