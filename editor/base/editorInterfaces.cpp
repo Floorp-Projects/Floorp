@@ -18,9 +18,6 @@
 #include "editorInterfaces.h"
 #include "editor.h"
 
-#include "ChangeAttributeTxn.h"
-#include "InsertTextTxn.h"
-#include "DeleteTextTxn.h"
 #include "CreateElementTxn.h"
 #include "SplitElementTxn.h"
 
@@ -152,9 +149,7 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
             // XXX: for now, just append the text
             PRUint32 offset;
             text->GetLength(&offset);
-            DeleteTextTxn *txn;
-            txn = new DeleteTextTxn(mEditor, text, offset-1, 1);
-            mEditor->ExecuteTransaction(txn);
+            nsresult result = mEditor->DeleteText(text, offset-1, 1);
           }
         }
         break;
@@ -169,10 +164,7 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
               NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
               NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
           {
-            // XXX: for now, just append the text
-            DeleteTextTxn *txn;
-            txn = new DeleteTextTxn(mEditor, text, 0, 1);
-            mEditor->ExecuteTransaction(txn);
+            nsresult result = mEditor->DeleteText(text, 0, 1);
           }
         }
         break;
@@ -202,9 +194,7 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
               // XXX: for now, just append the text
               PRUint32 offset;
               text->GetLength(&offset);
-              InsertTextTxn *txn;
-              txn = new InsertTextTxn(mEditor, text, offset, key);
-              mEditor->ExecuteTransaction(txn);
+              mEditor->InsertText(text, offset, key);
             }
           }
         }
@@ -279,7 +269,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
             SplitElementTxn *txn;
             if (PR_FALSE==isShift)   // split the element so there are 0 children in the first half
               txn = new SplitElementTxn(mEditor, currentNode, -1);
-            else                    // split the element so there are 0 children in the first half
+            else                    // split the element so there are 2 children in the first half
              txn = new SplitElementTxn(mEditor, currentNode, 1);
             mEditor->ExecuteTransaction(txn);        
           }
@@ -303,12 +293,11 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
           {
             if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
             {
-              ChangeAttributeTxn *txn;
+              nsresult result;
               if (PR_TRUE==ctrlKey)   // remove the attribute
-                txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_TRUE);
+                result = mEditor->RemoveAttribute(element, attribute);
               else                    // change the attribute
-               txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_FALSE);
-              mEditor->ExecuteTransaction(txn);        
+                result = mEditor->SetAttribute(element, attribute, value);
             }
           }
         }
@@ -329,19 +318,12 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
           result = mEditor->GetFirstNodeOfType(nsnull, bodyTag, getter_AddRefs(currentNode));
           if (NS_SUCCEEDED(result))
           {
-            nsIDOMDocument *doc=nsnull;
-            result = mEditor->GetDomInterface(&doc);
-            if (NS_SUCCEEDED(result))
-            {
-              PRUint32 position=0;
-              if (PR_TRUE==ctrlKey)
-                position=CreateElementTxn::eAppend;
-              else
-                position=0;
-              CreateElementTxn *txn;
-              txn = new CreateElementTxn(mEditor, doc, imgTag, currentNode, position);
-              mEditor->ExecuteTransaction(txn);
-            }
+            PRInt32 position;
+            if (PR_TRUE==ctrlKey)
+              position=CreateElementTxn::eAppend;
+            else
+              position=0;
+            result = mEditor->CreateElement(imgTag, currentNode, position);
           }
 /*
           //for building a composite transaction... 

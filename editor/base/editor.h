@@ -26,6 +26,8 @@
 #include "nsITransactionManager.h"
 //#include "nsISelection.h"
 
+class nsIDOMCharacterData;
+
 
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
@@ -164,6 +166,30 @@ public:
     *
     */
   nsresult Redo();
+
+  nsresult CreateElement(const nsString& aTag,
+                         nsIDOMNode *    aParent,
+                         PRInt32         aPosition);
+
+  nsresult InsertText(nsIDOMCharacterData *aElement,
+                      PRUint32             aOffset,
+                      const nsString&      aStringToInsert);
+
+  nsresult DeleteText(nsIDOMCharacterData *aElement,
+                      PRUint32             aOffset,
+                      PRUint32             aLength);
+
+  static  nsresult SplitNode(nsIDOMNode * aNode,
+                             PRInt32      aOffset,
+                             nsIDOMNode * aNewNode,
+                             nsIDOMNode * aParent);
+
+  static nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
+                            nsIDOMNode * aNodeToJoin,
+                            nsIDOMNode * aParent,
+                            PRBool       aNodeToKeepIsFirst);
+
+  nsresult Delete(PRBool aForward, PRUint32 aCount);
 
 /*END private methods of nsEditor*/
 };
