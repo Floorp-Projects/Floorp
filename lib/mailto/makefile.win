@@ -44,10 +44,34 @@ OBJS	= \
 
 
 EXPORTS = \
+	ad_codes.h \
+	appledbl.h \
+	bytearr.h \
+	dwordarr.h \
+	errcode.h \
+	error.h \
+	memstrem.h \
 	mhtmlstm.h \
 	mprdecod.h \
-      msg.h \
+	mprmime.h \
+	msg.h \
+	msgbg.h \
+	msgcflds.h \
+	msgcpane.h \
+	msghdr.h \
+	msgmast.h \
+	msgmdn.h \
+	msgpane.h \
+	msgppane.h \
+	msgprefs.h \
+	msgprnot.h \
+	msgsend.h \
+	msgsendp.h \
+	msgurlq.h \
 	msgutils.h \
+	msgzap.h \
+	m_binhex.h \
+	ptrarray.h \
 	$(NULL)
 
 MODULE=mailto
