@@ -819,7 +819,7 @@
                 <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasCustomIcon</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>Shared</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasBeenInited</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Label</NAME><VALUE>0</VALUE></SETTING>
@@ -2354,7 +2354,7 @@
                 <SETTING><NAME>HasBundle</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>NameLocked</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Stationery</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>HasCustomIcon</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>HasCustomIcon</NAME><VALUE>true</VALUE></SETTING>
                 <SETTING><NAME>Shared</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>HasBeenInited</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>Label</NAME><VALUE>0</VALUE></SETTING>
