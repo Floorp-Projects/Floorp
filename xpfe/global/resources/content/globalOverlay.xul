@@ -100,7 +100,7 @@
 
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;">
-		<menupopup>
+		<menupopup id="helpPopup">
 	        <!-- Help Menu disabled
 			<menu value="&helpContentCmd.label;">
 				<menupopup>
