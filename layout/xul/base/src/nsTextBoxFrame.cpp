@@ -485,9 +485,9 @@ nsTextBoxFrame::UpdateAccessTitle()
                 tmpstring += mAccessKey;
                 tmpstring.ToUpperCase();
                 tmpstring.AppendWithConversion(")");
-                PRUint32 offset = mTitle.RFind("...");
+                PRInt32 offset = mTitle.RFind("...");
                 if (offset != kNotFound)
-                    mTitle.Insert(tmpstring,offset);
+                    mTitle.Insert(tmpstring,NS_STATIC_CAST(PRUint32, offset));
                 else
                     mTitle += tmpstring;
             }
