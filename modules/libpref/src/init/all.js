@@ -119,6 +119,7 @@ pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:sear
 pref("browser.search.mode", 0);
 pref("browser.search.powermode", 0);
 pref("browser.search.use_double_clicks", false);
+pref("browser.urlbar.autocomplete.enabled", true);
 
 localDefPref("browser.bookmark_location",       "");
 localDefPref("browser.addressbook_location",    "");
