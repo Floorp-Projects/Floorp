@@ -508,7 +508,12 @@ sub do_diff_links {
 
     my $lxr_path = "$opt_subdir/$opt_file";
     my $lxr_link = Fix_LxrLink($lxr_path);
-    my $blame_link = "$blame_base?file=$opt_subdir/$opt_file";
+
+# Partial fix for bug 104313, which tries to fix blame links to be more intuitive.
+# In this case, make the default behavior be that blame revisions match the requested
+# diff version, rather than always showing the tip.
+
+    my $blame_link = "$blame_base?file=$opt_subdir/$opt_file&rev=$opt_rev2";
     $blame_link .= "&root=$opt_root" if defined($opt_root);
     my $diff_link = "$magic_url&command=DIRECTORY&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2";
     $diff_link .= "&root=$opt_root" if defined($opt_root);
