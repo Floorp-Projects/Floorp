@@ -32,12 +32,13 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIAtom;
+class nsIController;
 
 class nsXBLEventHandler : public nsIDOMKeyListener, 
                           public nsIDOMMouseListener
 {
 public:
-  nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement);
+  nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, const nsString& aEventName);
   virtual ~nsXBLEventHandler();
    
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
@@ -62,6 +63,8 @@ protected:
   inline PRBool IsMatchingKeyCode(const PRUint32 aChar, const nsString& aKeyName);
   inline PRBool IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName);
 
+  NS_IMETHOD GetController(nsIController** aResult);
+
   NS_IMETHOD ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent);
 
   static PRUint32 gRefCnt;
@@ -74,14 +77,17 @@ protected:
   static nsIAtom* kAltAtom;
   static nsIAtom* kMetaAtom;
   static nsIAtom* kValueAtom;
+  static nsIAtom* kCommandAtom;
 
 protected:
   nsIContent* mBoundElement; // Both of these refs are weak.
   nsIContent* mHandlerElement;
+  nsAutoString mEventName;
 };
 
 extern nsresult
 NS_NewXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, 
+                      const nsString& aEventName,
                       nsXBLEventHandler** aResult);
 
 
