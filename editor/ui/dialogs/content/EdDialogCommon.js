@@ -347,7 +347,7 @@ function AppendStringToMenulist(menulist, string)
     // May not have any popup yet -- so create one
     if (!menupopup)
     {
-      menupopup = document.createElement("menupopup");
+      menupopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menupopup");
       if (menupopup)
         menulist.appendChild(menupopup);
       else
@@ -356,7 +356,7 @@ function AppendStringToMenulist(menulist, string)
         return null;
       }
     }
-    menuItem = document.createElement("menuitem");
+    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
       menuItem.setAttribute("value", string);
@@ -375,7 +375,7 @@ function AppendValueAndDataToMenulist(menulist, valueStr, dataStr)
     // May not have any popup yet -- so create one
     if (!menupopup)
     {
-      menupopup = document.createElement("menupopup");
+      menupopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menupopup");
       if (menupopup)
         menulist.appendChild(menupopup);
       else
@@ -384,7 +384,7 @@ function AppendValueAndDataToMenulist(menulist, valueStr, dataStr)
         return null;
       }
     }
-    menuItem = document.createElement("menuitem");
+    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
       menuItem.setAttribute("value", valueStr);
@@ -429,7 +429,7 @@ function AppendStringToTreelist(tree, string)
     var treechildren = tree.firstChild;
     if (!treechildren)
     {
-      treechildren = document.createElement("treechildren");
+      treechildren = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treechildren");
       if (treechildren)
         tree.appendChild(treechildren);
       else
@@ -438,9 +438,9 @@ function AppendStringToTreelist(tree, string)
         return null;
       }
     }
-    var treeitem = document.createElement("treeitem");
-    var treerow = document.createElement("treerow");
-    var treecell = document.createElement("treecell");
+    var treeitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treeitem");
+    var treerow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treerow");
+    var treecell = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell");
     if (treeitem && treerow && treecell)
     {
       treerow.appendChild(treecell);
