@@ -1284,6 +1284,8 @@ void nsImapServerResponseParser::msg_fetch()
       else
       {
         nsImapAction imapAction; 
+        if (!fServerConnection.GetCurrentUrl())
+          return;
         fServerConnection.GetCurrentUrl()->GetImapAction(&imapAction);
         nsXPIDLCString userDefinedFetchAttribute;
         fServerConnection.GetCurrentUrl()->GetCustomAttributeToFetch(getter_Copies(userDefinedFetchAttribute));
@@ -2074,7 +2076,7 @@ PRBool nsImapServerResponseParser::msg_fetch_quoted(PRBool chunk, PRInt32 origin
          char *q = CreateQuoted();
          if (q)
          {
-           fServerConnection.HandleMessageDownLoadLine(q, PR_FALSE);
+           fServerConnection.HandleMessageDownLoadLine(q, PR_FALSE, q);
            PR_Free(q);
          }
          
@@ -2660,6 +2662,8 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
   PRBool lastChunk = !chunk || (origin + numberOfCharsInThisChunk >= fTotalDownloadSize);
   
   nsImapAction imapAction; 
+  if (!fServerConnection.GetCurrentUrl())
+    return PR_TRUE;
   fServerConnection.GetCurrentUrl()->GetImapAction(&imapAction);
   if (!lastCRLFwasCRCRLF && 
     fServerConnection.GetIOTunnellingEnabled() && 
@@ -2709,7 +2713,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
         else
         {
           lastCRLFwasCRCRLF = (*(fCurrentLine + strlen(fCurrentLine) - 1) == nsCRT::CR);
-          fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk && (charsReadSoFar == numberOfCharsInThisChunk));
+          fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk && (charsReadSoFar == numberOfCharsInThisChunk), fCurrentLine);
         }
       }
     }

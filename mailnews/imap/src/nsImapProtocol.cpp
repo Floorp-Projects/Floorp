@@ -3170,7 +3170,7 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
     if (m_channelListener)
     {
       PRUint32 count = 0;
-      char * line = downloadLineDontDelete->adoptedMessageLine;
+      const char * line = downloadLineDontDelete->adoptedMessageLine;
       if (m_channelOutputStream)
       {
         nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
@@ -3193,44 +3193,78 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
   // ***** We need to handle the pseudo interrupt here *****
 }
 
-// well, this is what the old code used to look like to handle a line seen by the parser.
-// I'll leave it mostly #ifdef'ed out, but I suspect it will look a lot like this.
-// Perhaps we'll send the line to a messageSink...
-void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd)
+// Handle a line seen by the parser.
+// * The argument |lineCopy| must be nsnull or should contain the same string as
+//   |line|.  |lineCopy| will be modified.
+// * A line may be passed by parts, e.g., "part1 part2\r\n" may be passed as
+//     HandleMessageDownLoadLine("part 1 ", 1);
+//     HandleMessageDownLoadLine("part 2\r\n", 0); 
+//   However, it is assumed that a CRLF or a CRCRLF is never split (i.e., this is
+//   ensured *before* invoking this method).
+void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool isPartialLine,
+                                               char *lineCopy)
 {
+  NS_PRECONDITION(lineCopy == nsnull || !PL_strcmp(line, lineCopy),
+                  "line and lineCopy must contain the same string");    
+  const char *messageLine = line;
+  PRUint32 lineLength = strlen(messageLine);
+  const char *cEndOfLine = messageLine + lineLength;
+  char *localMessageLine = nsnull;
 
-  // when we duplicate this line, whack it into the native line
-  // termination.  Do not assume that it really ends in CRLF
-  // to start with, even though it is supposed to be RFC822
-  
-  // If we are fetching by chunks, we can make no assumptions about
-  // the end-of-line terminator, and we shouldn't mess with it.
-  
-  // leave enough room for two more chars. (CR and LF)
-  char *localMessageLine = (char *) PR_CALLOC(strlen(line) + 3);
-  if (localMessageLine)
-    strcpy(localMessageLine,line);
-  char *endOfLine = localMessageLine + strlen(localMessageLine);
-  PRBool canonicalLineEnding = PR_FALSE;
-  nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
-  
-  if (m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk && msgUrl)
-    msgUrl->GetCanonicalLineEnding(&canonicalLineEnding);
-  
-  if (!chunkEnd)
+  // If we obtain a partial line (due to fetching by chunks), we do not
+  // add/modify the end-of-line terminator.
+  if (!isPartialLine)
   {
+    // Change this line to native line termination, duplicate if necessary.
+    // Do not assume that the line really ends in CRLF
+    // to start with, even though it is supposed to be RFC822
+
+    // note: usually canonicalLineEnding==FALSE 
+    PRBool canonicalLineEnding = PR_FALSE;
+    nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
+
+    if (m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk && msgUrl)
+      msgUrl->GetCanonicalLineEnding(&canonicalLineEnding);
+  
+    NS_PRECONDITION(MSG_LINEBREAK_LEN == 1 ||
+                    MSG_LINEBREAK_LEN == 2 && !PL_strcmp(CRLF, MSG_LINEBREAK),
+                    "violated assumptions on MSG_LINEBREAK");
     if (MSG_LINEBREAK_LEN == 1 && !canonicalLineEnding)
     {
-      if ((endOfLine - localMessageLine) >= 2 &&
+      PRBool lineEndsWithCRorLF = lineLength >= 1 &&
+        (cEndOfLine[-1] == nsCRT::CR || cEndOfLine[-1] == nsCRT::LF);
+      char *endOfLine;
+      if (lineCopy && lineEndsWithCRorLF)  // true for most lines
+      {
+        endOfLine = lineCopy + lineLength;
+        messageLine = lineCopy;
+      }
+      else
+      {
+        // leave enough room for one more char, MSG_LINEBREAK[0]
+        localMessageLine = (char *) PR_MALLOC(lineLength + 2);
+        if (!localMessageLine) // memory failure
+          return;
+        PL_strcpy(localMessageLine, line);
+        endOfLine = localMessageLine + lineLength;
+        messageLine = localMessageLine;
+      }
+      
+      if (lineLength >= 2 &&
         endOfLine[-2] == nsCRT::CR &&
         endOfLine[-1] == nsCRT::LF)
       {
+        if(lineLength>=3 && endOfLine[-3] == nsCRT::CR) // CRCRLF
+        {
+          endOfLine--;
+          lineLength--;
+        }
         /* CRLF -> CR or LF */
         endOfLine[-2] = MSG_LINEBREAK[0];
         endOfLine[-1] = '\0';
+        lineLength--;
       }
-      else if (endOfLine > localMessageLine + 1 &&
-        endOfLine[-1] != MSG_LINEBREAK[0] &&
+      else if (lineLength >= 1 &&
         ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF)))
       {
         /* CR -> LF or LF -> CR */
@@ -3240,46 +3274,64 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
       {
         endOfLine[0] = MSG_LINEBREAK[0]; // CR or LF
         endOfLine[1] = '\0';
+        lineLength++;
       }
     }
-    else
+    else  // enforce canonical CRLF linebreaks
     {
-      if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != nsCRT::CR) ||
-        ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != nsCRT::LF))
+      if (lineLength==0 || lineLength == 1 && cEndOfLine[-1] == nsCRT::LF)
       {
-        if ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF))
-        {
-          /* LF -> CRLF or CR -> CRLF */
-          endOfLine[-1] = MSG_LINEBREAK[0];
-          endOfLine[0]  = MSG_LINEBREAK[1];
-          endOfLine[1]  = '\0';
-        }
-        else	// no eol characters at all
-        {
-          endOfLine[0] = MSG_LINEBREAK[0];	// CR
-          endOfLine[1] = MSG_LINEBREAK[1];	// LF
-          endOfLine[2] = '\0';
-        }
+        messageLine = CRLF;
+        lineLength = 2;
       }
-      else if ((endOfLine - localMessageLine) >=3 && endOfLine[-3] == nsCRT::CR && endOfLine[-2] == nsCRT::CR
-        && endOfLine[-1] == nsCRT::LF)
+      else if (cEndOfLine[-1] != nsCRT::LF || cEndOfLine[-2] != nsCRT::CR ||
+               lineLength >=3 && cEndOfLine[-3] == nsCRT::CR)
       {
-        // CRCRLF -> CRLF
-        endOfLine[-2] = nsCRT::LF;
-        endOfLine[-1] = '\0';
-      }
+        // The line does not end in CRLF (or it ends in CRCRLF).
+        // Copy line and leave enough room for two more chars (CR and LF).
+        localMessageLine = (char *) PR_MALLOC(lineLength + 3);
+        if (!localMessageLine) // memory failure
+            return;
+        PL_strcpy(localMessageLine, line);
+        char *endOfLine = localMessageLine + lineLength;
+        messageLine = localMessageLine;
 
+        if (lineLength>=3 && endOfLine[-1] == nsCRT::LF && 
+            endOfLine[-2] == nsCRT::CR)
+        {
+          // CRCRLF -> CRLF
+          endOfLine[-2] = nsCRT::LF;
+          endOfLine[-1] = '\0';
+          lineLength--;
+        }
+        else if ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF))
+        {
+          // LF -> CRLF or CR -> CRLF 
+          endOfLine[-1] = nsCRT::CR;
+          endOfLine[0]  = nsCRT::LF;
+          endOfLine[1]  = '\0';
+          lineLength++;
+        }
+        else // no eol characters at all
+        {
+          endOfLine[0] = nsCRT::CR;
+          endOfLine[1] = nsCRT::LF;
+          endOfLine[2] = '\0';
+          lineLength += 2;
+        }
+      }
     }
   }
-  
+  NS_ASSERTION(lineLength == PL_strlen(messageLine), "lineLength not accurate");
+
   // check if sender obtained via XSENDER server extension matches "From:" field
   const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
   if (xSenderInfo && *xSenderInfo && !m_fromHeaderSeen)
   {
-    if (!PL_strncmp("From: ", localMessageLine, 6))
+    if (!PL_strncmp("From: ", messageLine, 6))
     {
       m_fromHeaderSeen = PR_TRUE;
-      if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
+      if (PL_strstr(messageLine, xSenderInfo) != NULL)
           // Adding a X-Mozilla-Status line here is not very elegant but it
           // works.  Another X-Mozilla-Status line is added to the message when
           // downloading to a local folder; this new line will also contain the
@@ -3295,13 +3347,13 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
   {
     if (!m_curHdrInfo)
       BeginMessageDownLoad(GetServerStateParser().SizeOfMostRecentMessage(), MESSAGE_RFC822);
-    m_curHdrInfo->CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
-    PR_Free( localMessageLine);
+    m_curHdrInfo->CacheLine(messageLine, GetServerStateParser().CurrentResponseUID());
+    PR_FREEIF(localMessageLine);
     return;
   }
   // if this line is for a different message, or the incoming line is too big
   if (((m_downloadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !m_downloadLineCache.CacheEmpty()) ||
-    (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
+    (m_downloadLineCache.SpaceAvailable() < lineLength + 1) )
   {
     if (!m_downloadLineCache.CacheEmpty())
     {
@@ -3313,30 +3365,22 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
   }
   
   // so now the cache is flushed, but this string might still be to big
-  if (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
+  if (m_downloadLineCache.SpaceAvailable() < lineLength + 1)
   {
     // has to be dynamic to pass to other win16 thread
     msg_line_info *downLoadInfo = (msg_line_info *) PR_CALLOC(sizeof(msg_line_info));
     if (downLoadInfo)
     {
-      downLoadInfo->adoptedMessageLine = localMessageLine;
+      downLoadInfo->adoptedMessageLine = messageLine;
       downLoadInfo->uidOfMessage = GetServerStateParser().CurrentResponseUID();
       PostLineDownLoadEvent(downLoadInfo);
-      if (!DeathSignalReceived())
-        PR_Free(downLoadInfo);
-      else
-      {
-        // this is very rare, interrupt while waiting to display a huge single line
-        // Net_InterruptIMAP will read this line so leak the downLoadInfo              
-        // set localMessageLine to NULL so the FREEIF( localMessageLine) leaks also
-        localMessageLine = NULL;
-      }
+      PR_Free(downLoadInfo);
     }
   }
   else
-    m_downloadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
-  
-  PR_Free( localMessageLine);
+    m_downloadLineCache.CacheLine(messageLine, GetServerStateParser().CurrentResponseUID());
+
+  PR_FREEIF(localMessageLine);
 }
 
 

@@ -94,7 +94,7 @@ class nsIMsgIncomingServer;
 
 
 typedef struct _msg_line_info {
-    char   *adoptedMessageLine;
+    const char   *adoptedMessageLine;
     PRUint32 uidOfMessage;
 } msg_line_info;
 
@@ -201,7 +201,7 @@ public:
   // used when streaming a message fetch
   virtual nsresult BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
     const char *contentType);     // some downloads are header only
-  virtual void HandleMessageDownLoadLine(const char *line, PRBool chunkEnd);
+  virtual void HandleMessageDownLoadLine(const char *line, PRBool isPartialLine, char *lineCopy=nsnull);
   virtual void NormalMessageEndDownload();
   virtual void AbortMessageDownLoad();
   virtual void PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete);

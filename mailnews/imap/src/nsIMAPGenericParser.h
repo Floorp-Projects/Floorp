@@ -104,7 +104,6 @@ protected:
   char           *fStartOfLineOfTokens;
   char           *fCurrentTokenPlaceHolder;
   PRBool          fAtEndOfLine;
-	PRBool				  fTokenizerAdvanced;
 
   char           *fSyntaxErrorLine;
   PRBool          fSyntaxError;

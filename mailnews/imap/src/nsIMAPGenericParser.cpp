@@ -53,7 +53,6 @@ fLineOfTokens(nsnull),
 fStartOfLineOfTokens(nsnull),
 fCurrentTokenPlaceHolder(nsnull),
 fAtEndOfLine(PR_FALSE),
-fTokenizerAdvanced(PR_FALSE),
 fSyntaxErrorLine(nsnull),
 fSyntaxError(PR_FALSE),
 fDisconnected(PR_FALSE)
@@ -76,7 +75,6 @@ void nsIMAPGenericParser::ResetLexAnalyzer()
 {
   PR_FREEIF( fCurrentLine );
   PR_FREEIF( fStartOfLineOfTokens );
-  fTokenizerAdvanced = PR_FALSE;
   
   fCurrentLine = fNextToken = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nsnull;
   fAtEndOfLine = PR_FALSE;
@@ -188,15 +186,7 @@ void nsIMAPGenericParser::AdvanceToNextToken()
     AdvanceToNextLine();
   else if (Connected())
   {
-    if (fTokenizerAdvanced)
-    {
-      fNextToken = nsCRT::strtok(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);;
-      fTokenizerAdvanced = PR_FALSE;
-    }
-    else
-    {
-      fNextToken = nsCRT::strtok(fCurrentTokenPlaceHolder, WHITESPACE, &fCurrentTokenPlaceHolder);
-    }
+    fNextToken = nsCRT::strtok(fCurrentTokenPlaceHolder, WHITESPACE, &fCurrentTokenPlaceHolder);
     if (!fNextToken)
     {
       fAtEndOfLine = PR_TRUE;
@@ -209,7 +199,6 @@ void nsIMAPGenericParser::AdvanceToNextLine()
 {
   PR_FREEIF( fCurrentLine );
   PR_FREEIF( fStartOfLineOfTokens);
-  fTokenizerAdvanced = PR_FALSE;
   
   PRBool ok = GetNextLineForParser(&fCurrentLine);
   if (!ok)
@@ -261,7 +250,6 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
     (int32)strlen(fCurrentLine), "cannot advance beyond end of fLineOfTokens");
   fLineOfTokens += bytesToAdvance;
   fCurrentTokenPlaceHolder = fLineOfTokens;
-  fTokenizerAdvanced = PR_TRUE;
 }
 
 // Lots of things in the IMAP protocol are defined as an "astring."
@@ -583,7 +571,6 @@ char *nsIMAPGenericParser::CreateParenGroup()
               returnString.Append(fNextToken);	// append the {xx} to the buffer
               returnString.Append(CRLF);			// append a CRLF to the buffer
               char *lit = CreateLiteral();
-              fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
               NS_ASSERTION(lit, "syntax error or out of memory");
               if (lit)
               {
@@ -622,7 +609,6 @@ char *nsIMAPGenericParser::CreateParenGroup()
           if (fNextToken)
           {
             char *q = CreateQuoted();
-            fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
             NS_ASSERTION(q, "syntax error or out of memory creating paren group");
             if (q)
             {
