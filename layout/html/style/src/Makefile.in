@@ -66,7 +66,8 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 MODULE=layout
 
 INCLUDES += -I$(srcdir)/../../base/src -I$(srcdir)/../../../base/src \
-	-I$(srcdir)/../../table/src -I$(srcdir)/../../content/src -I$(srcdir)/.
+	-I$(srcdir)/../../table/src -I$(srcdir)/../../content/src \
+	-I$(srcdir)/../../../xul/content/src -I$(srcdir)/.
 
 REQUIRES = xpcom raptor dom netlib js
 
