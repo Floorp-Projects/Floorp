@@ -25,8 +25,6 @@
 
 #include "nsISound.h"
 
-#include <Sound.h>
-
 class nsSound : public nsISound
 {
 public: 
@@ -41,6 +39,7 @@ public:
 protected:
 
   nsresult    PlaySound(Handle waveDataHandle, long waveDataSize);
+  PRBool      HaveQuickTime();
   
 };
 

@@ -30,6 +30,8 @@
 #include "nsNetUtil.h"
 #include "prmem.h"
 
+#include <Gestalt.h>
+#include <Sound.h>
 #include <QuickTimeComponents.h>
 
 NS_IMPL_ISUPPORTS(nsSound, NS_GET_IID(nsISound));
@@ -76,6 +78,10 @@ NS_METHOD nsSound::Beep()
 // this currently does no cacheing of the sound buffer. It should
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
+  // if quicktime is not installed, we can't do anything
+  if (!HaveQuickTime())
+    return NS_ERROR_NOT_IMPLEMENTED;
+  
 #if !TARGET_CARBON
   nsresult rv;
   nsCOMPtr<nsIInputStream> inputStream;
@@ -200,4 +206,12 @@ bail:		// gasp, a goto label
 #else
   return NS_OK;
 #endif
+}
+
+
+PRBool nsSound::HaveQuickTime()
+{
+  long  gestResult;
+  OSErr err = Gestalt (gestaltQuickTime, &gestResult);
+  return (err == noErr) && ((long)EnterMovies != kUnresolvedCFragSymbolAddress);
 }
