@@ -388,6 +388,13 @@ nsHTMLImageElement::GetHeight(PRInt32* aHeight)
 
       *aHeight = NSTwipsToIntPixels(size.height, t2p);
     }
+  } else {
+    nsHTMLValue value;
+    rv = mInner.GetHTMLAttribute(nsHTMLAtoms::height, value);
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      *aHeight = value.GetPixelValue();
+    }
   }
 
   return NS_OK;
@@ -454,6 +461,13 @@ nsHTMLImageElement::GetWidth(PRInt32* aWidth)
       context->GetTwipsToPixels(&t2p);
 
       *aWidth = NSTwipsToIntPixels(size.width, t2p);
+    }
+  } else {
+    nsHTMLValue value;
+    rv = mInner.GetHTMLAttribute(nsHTMLAtoms::width, value);
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      *aWidth = value.GetPixelValue();
     }
   }
 
