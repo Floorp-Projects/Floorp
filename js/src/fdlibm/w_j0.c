@@ -63,7 +63,8 @@
 	double z = __ieee754_j0(x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x)) return z;
 	if(fd_fabs(x)>X_TLOSS) {
-	        return __kernel_standard(x,x,34); /* j0(|x|>X_TLOSS) */
+        int err;
+        return __kernel_standard(x,x,34,&err); /* j0(|x|>X_TLOSS) */
 	} else
 	    return z;
 #endif
@@ -80,18 +81,19 @@
 	return __ieee754_y0(x);
 #else
 	double z;
+    int err;
 	z = __ieee754_y0(x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x) ) return z;
         if(x <= 0.0){
                 if(x==0.0)
                     /* d= -one/(x-x); */
-                    return __kernel_standard(x,x,8);
+                    return __kernel_standard(x,x,8,&err);
                 else
                     /* d = zero/(x-x); */
-                    return __kernel_standard(x,x,9);
+                    return __kernel_standard(x,x,9,&err);
         }
 	if(x>X_TLOSS) {
-	        return __kernel_standard(x,x,35); /* y0(x>X_TLOSS) */
+	        return __kernel_standard(x,x,35,&err); /* y0(x>X_TLOSS) */
 	} else
 	    return z;
 #endif

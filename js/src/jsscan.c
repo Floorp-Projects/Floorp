@@ -260,7 +260,7 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
 	file = fopen(filename, "r");
 	if (!file) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
-				 filename, strerror(errno));
+				 filename, "No such file or directory");
 	    return NULL;
 	}
     }

@@ -64,7 +64,8 @@
 	z = __ieee754_sqrt(x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x)) return z;
 	if(x<0.0) {
-	    return __kernel_standard(x,x,26); /* sqrt(negative) */
+	    int err;
+	    return __kernel_standard(x,x,26,&err); /* sqrt(negative) */
 	} else
 	    return z;
 #endif

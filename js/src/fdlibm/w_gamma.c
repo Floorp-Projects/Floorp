@@ -69,10 +69,11 @@ extern int signgam;
         y = __ieee754_gamma_r(x,&signgam);
         if(_LIB_VERSION == _IEEE_) return y;
         if(!fd_finite(y)&&fd_finite(x)) {
+            int err;
             if(fd_floor(x)==x&&x<=0.0)
-                return __kernel_standard(x,x,41); /* gamma pole */
+                return __kernel_standard(x,x,41,&err); /* gamma pole */
             else
-                return __kernel_standard(x,x,40); /* gamma overflow */
+                return __kernel_standard(x,x,40,&err); /* gamma overflow */
         } else
             return y;
 #endif

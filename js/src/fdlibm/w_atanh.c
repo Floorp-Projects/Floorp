@@ -65,10 +65,11 @@
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x)) return z;
 	y = fd_fabs(x);
 	if(y>=1.0) {
+        int err;
 	    if(y>1.0)
-	        return __kernel_standard(x,x,30); /* atanh(|x|>1) */
+	        return __kernel_standard(x,x,30,&err); /* atanh(|x|>1) */
 	    else 
-	        return __kernel_standard(x,x,31); /* atanh(|x|==1) */
+	        return __kernel_standard(x,x,31,&err); /* atanh(|x|==1) */
 	} else
 	    return z;
 #endif

@@ -54,7 +54,7 @@ JS_BEGIN_EXTERN_C
  * zero is returned.
  */
 JS_FRIEND_API(double)
-JS_strtod(const char *s00, char **se);
+JS_strtod(const char *s00, char **se, int *err);
 
 /*
  * Modes for converting floating-point numbers to strings.

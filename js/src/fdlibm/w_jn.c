@@ -86,7 +86,8 @@
 	z = __ieee754_jn(n,x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x) ) return z;
 	if(fd_fabs(x)>X_TLOSS) {
-	    return __kernel_standard((double)n,x,38); /* jn(|x|>X_TLOSS,n) */
+        int err;
+	    return __kernel_standard((double)n,x,38,&err); /* jn(|x|>X_TLOSS,n) */
 	} else
 	    return z;
 #endif
@@ -103,18 +104,19 @@
 	return __ieee754_yn(n,x);
 #else
 	double z;
+    int err;
 	z = __ieee754_yn(n,x);
 	if(_LIB_VERSION == _IEEE_ || fd_isnan(x) ) return z;
         if(x <= 0.0){
                 if(x==0.0)
                     /* d= -one/(x-x); */
-                    return __kernel_standard((double)n,x,12);
+                    return __kernel_standard((double)n,x,12,&err);
                 else
                     /* d = zero/(x-x); */
-                    return __kernel_standard((double)n,x,13);
+                    return __kernel_standard((double)n,x,13,&err);
         }
 	if(x>X_TLOSS) {
-	    return __kernel_standard((double)n,x,39); /* yn(x>X_TLOSS,n) */
+	    return __kernel_standard((double)n,x,39,&err); /* yn(x>X_TLOSS,n) */
 	} else
 	    return z;
 #endif

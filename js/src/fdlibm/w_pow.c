@@ -63,31 +63,32 @@
 	return  __ieee754_pow(x,y);
 #else
 	double z;
+    int err;
 	z=__ieee754_pow(x,y);
 	if(_LIB_VERSION == _IEEE_|| fd_isnan(y)) return z;
 	if(fd_isnan(x)) {
 	    if(y==0.0) 
-	        return __kernel_standard(x,y,42); /* pow(NaN,0.0) */
+	        return __kernel_standard(x,y,42,&err); /* pow(NaN,0.0) */
 	    else 
 		return z;
 	}
 	if(x==0.0){ 
 	    if(y==0.0)
-	        return __kernel_standard(x,y,20); /* pow(0.0,0.0) */
+	        return __kernel_standard(x,y,20,&err); /* pow(0.0,0.0) */
 	    if(fd_finite(y)&&y<0.0)
-	        return __kernel_standard(x,y,23); /* pow(0.0,negative) */
+	        return __kernel_standard(x,y,23,&err); /* pow(0.0,negative) */
 	    return z;
 	}
 	if(!fd_finite(z)) {
 	    if(fd_finite(x)&&fd_finite(y)) {
 	        if(fd_isnan(z))
-	            return __kernel_standard(x,y,24); /* pow neg**non-int */
+	            return __kernel_standard(x,y,24,&err); /* pow neg**non-int */
 	        else 
-	            return __kernel_standard(x,y,21); /* pow overflow */
+	            return __kernel_standard(x,y,21,&err); /* pow overflow */
 	    }
 	} 
 	if(z==0.0&&fd_finite(x)&&fd_finite(y))
-	    return __kernel_standard(x,y,22); /* pow underflow */
+	    return __kernel_standard(x,y,22,&err); /* pow underflow */
 	return z;
 #endif
 }

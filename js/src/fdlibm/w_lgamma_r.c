@@ -65,10 +65,11 @@
         y = __ieee754_lgamma_r(x,signgamp);
         if(_LIB_VERSION == _IEEE_) return y;
         if(!fd_finite(y)&&fd_finite(x)) {
+            int err;
             if(fd_floor(x)==x&&x<=0.0)
-                return __kernel_standard(x,x,15); /* lgamma pole */
+                return __kernel_standard(x,x,15,&err); /* lgamma pole */
             else
-                return __kernel_standard(x,x,14); /* lgamma overflow */
+                return __kernel_standard(x,x,14,&err); /* lgamma overflow */
         } else
             return y;
 #endif

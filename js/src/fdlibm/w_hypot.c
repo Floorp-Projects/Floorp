@@ -64,9 +64,10 @@
 	double z;
 	z = __ieee754_hypot(x,y);
 	if(_LIB_VERSION == _IEEE_) return z;
-	if((!fd_finite(z))&&fd_finite(x)&&fd_finite(y))
-	    return __kernel_standard(x,y,4); /* hypot overflow */
-	else
+	if((!fd_finite(z))&&fd_finite(x)&&fd_finite(y)) { 
+        int err;
+	    return __kernel_standard(x,y,4,&err); /* hypot overflow */
+    } else
 	    return z;
 #endif
 }
