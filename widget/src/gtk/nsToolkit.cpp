@@ -30,6 +30,7 @@ nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
   mPLEventQueue = nsnull;
+  mSharedGC = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -48,6 +49,23 @@ nsToolkit::~nsToolkit()
 //-------------------------------------------------------------------------
 NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
 NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+
+void nsToolkit::CreateSharedGC(void)
+{
+  GdkPixmap *pixmap;
+
+  if (mSharedGC)
+    return;
+
+  pixmap = ::gdk_pixmap_new (NULL, 1, 1, gdk_rgb_get_visual()->depth);
+  mSharedGC = ::gdk_gc_new (pixmap);
+  gdk_pixmap_unref (pixmap);
+}
+
+GdkGC *nsToolkit::GetSharedGC(void)
+{
+  return mSharedGC;
+}
 
 static void event_processor_callback(gpointer data,
 				     gint source,
@@ -70,6 +88,8 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
                   GDK_INPUT_READ,
 		  event_processor_callback,
 		  mPLEventQueue);
+
+  CreateSharedGC();
 
   return NS_OK;
 }
