@@ -7,5 +7,5 @@ Name: JavaScript
 Description: The Mozilla JavaScript Library
 Version: %MOZILLA_VERSION%
 Requires: mozilla-nspr = %MOZILLA_VERSION%
-Libs: -L${libdir} -js
+Libs: -L${libdir} -lmozjs
 Cflags: -I${includedir}/js -DXP_UNIX
