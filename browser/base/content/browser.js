@@ -218,7 +218,7 @@ function UpdateBackForwardButtons()
 function UpdatePageReport(event)
 {
   if (!gReportButton)
-    return;
+    gReportButton = document.getElementById("page-report-button");
 
   if (gBrowser.mCurrentBrowser.pageReport) {
     gReportButton.setAttribute("blocked", "true");
@@ -256,8 +256,7 @@ function Startup()
   // init globals
   gNavigatorBundle = document.getElementById("bundle_browser");
   gBrowser = document.getElementById("content");
-  gURLBar = document.getElementById("urlbar");
-  gReportButton = document.getElementById("page-report-button");
+  gURLBar = document.getElementById("urlbar");  
 
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
 
