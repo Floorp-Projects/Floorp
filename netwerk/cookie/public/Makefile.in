@@ -33,7 +33,7 @@ GRE_MODULE	= 1
 SDK_XPIDLSRCS   = \
 		nsICookieManager.idl \
 		nsICookie.idl \
-        $(NULL)
+		$(NULL)
 
 XPIDLSRCS	= \
 		nsICookieService.idl \
