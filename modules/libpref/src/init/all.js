@@ -416,6 +416,8 @@ pref("dom.disable_open_during_load",                false);
 pref("dom.popup_maximum",                           20);
 pref("dom.popup_allowed_events", "change click dblclick error reset submit");
 
+pref("dom.event.contextmenu.enabled",       true);
+
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);

@@ -286,11 +286,11 @@ public:
                                        nsINodeInfoManager* aNodeInfoManager,
                                        nsINodeInfo** aNodeInfo);
 
-private:
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
                                           nsIDocument** aDocument,
                                           nsIPrincipal** aPrincipal);
 
+private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
                                            nsIDocument *aOldDocument,
