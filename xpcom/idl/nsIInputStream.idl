@@ -16,12 +16,18 @@
  * Reserved.
  */
 
-#include "nsISupports.idl"
-#include "nsIFactory.idl"
+#include "nsIBaseStream.idl"
 
-[object, uuid(cf0df3b0-3401-11d2-8163-006008119d7a)]
-interface nsIShutdownListener : nsISupports {
+[object, uuid[022396f0-93b5-11d1-895b-006008911b81)]
+interface nsIInputStream : nsIBaseStream {
 
-  void OnShutdown(in nsCIDRef aClass, in nsISupports service);
+  unsigned long GetLength();
 
+  /* this is really an out char buf, but I don't know how to express
+   * that in IDL */
+  unsigned long Read(in string aBuf,
+                     in unsigned long aOffset,
+                     in unsigned long aCount,
+                     out unsigned long aReadCount);
 };
+
