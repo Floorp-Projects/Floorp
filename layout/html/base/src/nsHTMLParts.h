@@ -28,16 +28,25 @@
 class nsIArena;
 class nsIAtom;
 class nsIContent;
+class nsIContentIterator;
 class nsIDocument;
 class nsIHTMLContent;
 class nsIHTMLContentSink;
 class nsIHTMLFragmentContentSink;
+class nsIPresContext;
 class nsITextContent;
 class nsIURI;
 class nsString;
 class nsIWebShell;
 class nsIAttributeContent;
 class nsIPresShell;
+
+// Factory method for creating a content iterator for generated
+// content
+extern nsresult
+NS_NewGeneratedContentIterator(nsIPresContext*      aPresContext,
+                               nsIFrame*            aFrame,
+                               nsIContentIterator** aIterator);
 
 // Factory methods for creating html content objects
 // XXX argument order is wrong (out parameter should be last)
