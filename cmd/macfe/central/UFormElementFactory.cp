@@ -598,8 +598,9 @@ LPane* UFormElementFactory::MakeHTMLArea(
 {
 	if (!formElem->element_data)
 		return nil;
-	CHyperScroller * theScroller = NULL;
-	CFormHTMLArea * theHTMLAreaView = NULL;
+	CHyperScroller  *theScroller = NULL;
+	LView			*theView = NULL;
+	CFormHTMLArea   *theHTMLAreaView = NULL;
 	FontInfo fontInfo;
 	if (!HasFormWidget(formElem))				// If there is no form, create it
 	{	
@@ -609,12 +610,12 @@ LPane* UFormElementFactory::MakeHTMLArea(
 		LCommander::SetDefaultCommander(inHTMLView);
 		LView::SetDefaultView(inHTMLView);
 	
-		theScroller = (CHyperScroller *)UReanimator::ReadObjects('PPob', formHTMLArea);
-		ThrowIfNil_(theScroller);
-		theScroller->FinishCreate();
-		theScroller->PutInside(inHTMLView);
+		theView = (LView *)UReanimator::ReadObjects('PPob', formHTMLArea);
+		ThrowIfNil_(theView);
+		theView->FinishCreate();
+		theView->PutInside(inHTMLView);
 	
-		theHTMLAreaView = (CFormHTMLArea*)theScroller->FindPaneByID(formHTMLAreaID);
+		theHTMLAreaView = (CFormHTMLArea*)theView->FindPaneByID(formHTMLAreaID);
 		ThrowIfNil_(theHTMLAreaView);
 
 		URL_Struct* url = 0;	
@@ -638,21 +639,21 @@ LPane* UFormElementFactory::MakeHTMLArea(
 		short wantedWidth = htmlAreaData->cols * ::CharWidth('M') + 8;
 		short wantedHeight = htmlAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
 		
-		theScroller->ResizeFrameTo(wantedWidth + 16 + BigTextLeftIndent + BigTextRightIndent,
+		theView->ResizeFrameTo(wantedWidth + 16 + BigTextLeftIndent + BigTextRightIndent,
 								   wantedHeight + 16 + BigTextTopIndent + BigTextBottomIndent,
 								   FALSE);
 								   
 	// Set the default values.
-		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theScroller, theHTMLAreaView, theHTMLAreaView));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theView, theHTMLAreaView, theHTMLAreaView));
 
-		theScroller->Show();
+		theView->Show();
 	}
 	else
 	{
-		theScroller = (CHyperScroller*)FEDATAPANE;
-		if (!theScroller)
+		theView = (LView*)FEDATAPANE;
+		if (!theView)
 			return NULL;
-		theHTMLAreaView = (CFormHTMLArea*)theScroller->FindPaneByID(formHTMLAreaID);
+		theHTMLAreaView = (CFormHTMLArea*)theView->FindPaneByID(formHTMLAreaID);
 		theHTMLAreaView->FocusDraw();
 		
 		//
@@ -665,12 +666,12 @@ LPane* UFormElementFactory::MakeHTMLArea(
 	}		
 	
 	SDimension16 size;
-	theScroller->GetFrameSize(size);
+	theView->GetFrameSize(size);
 	width = size.width + textLeftExtra + textRightExtra;;
 	height = size.height + textTopExtra + textBottomExtra;;
 	baseline = fontInfo.ascent + 2;
 	
-	return theScroller;
+	return theView;
 }
 
 // Creates a button
@@ -1956,8 +1957,7 @@ void UFormElementFactory::ResetFormElementData(
 			}
 			else
 			{
-				// moose: this is probably all wrong... revisit.
-				EDT_ReadFromBuffer( pContext, (XP_HUGE_CHAR_PTR)htmlAreaData->current_text );
+				EDT_SetDefaultHTML( pContext, (char*)(htmlAreaData->current_text) );
 			}
 			if ( redraw )
 				htmlEdit->Refresh();

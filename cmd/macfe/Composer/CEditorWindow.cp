@@ -382,7 +382,7 @@ void CEditorWindow::RegisterViewTypes()
 	RegisterClass_( CTarget);
 	RegisterClass_( CLineProp);
 	RegisterClass_( CFormattingToolBar);
-	RegisterClass_( CFormattingToolFloatView);	 
+	RegisterClass_( CHTMLAreaToolBar);	 
 	
 	RegisterClass_( CToolbarPopup);					// newer, better class?
 	RegisterClass_( CIconToolbarPopup);				// newer, better class?

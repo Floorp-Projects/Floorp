@@ -336,7 +336,6 @@ public:
 
 	virtual	Boolean ObeyCommand( CommandT inCommand, void *ioParam );
 	virtual	void 	BeTarget();
-	virtual	void 	DontBeTarget();
 };
 
 

@@ -814,26 +814,32 @@ Boolean CFormHTMLArea::ObeyCommand( CommandT inCommand, void *ioParam )
 
 void CFormHTMLArea::BeTarget()
 {
-	// I tried to do this stuff in FinishCreateSelf(), but the UReanimator class
-	// (which streams in these objects, including the tool windoid) is not
-	// reintrant.  ugh.
-	LView *view = CFormattingToolFloatView::GetFloatingToolBar(this);
-	Assert_(view);
+	if (!mParagraphToolbarPopup)
+	{
+		// lazy initialization of pointers to toolbar controls
+		LView *view = GetSuperView(); // parent
+		view = view->GetSuperView(); // grandparent
+		view = view->GetSuperView(); // greatgrandparent
+		Assert_(view);
 
-	mParagraphToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Paragraph_Hierarchical_Menu );
-	mSizeToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Font_Size_Hierarchical_Menu );
-	mAlignToolbarPopup = (CPatternButtonPopup *)view->FindPaneByID( cmd_Align_Hierarchical_Menu );
-	mFontToolbarPopup = (CFontMenuPopup *)view->FindPaneByID( 'Font' );
-	mColorPopup = (CColorPopup *)view->FindPaneByID( 'Colr' );
-	CFormattingToolFloatView::ShowFormatFloatTool();
+		// implicit assumption that formatting controls are somewhere in the greatgrandparent view.
+		// if we switch around the formatting interface for htmlareas this code may need
+		// to be updated.
+		mParagraphToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Paragraph_Hierarchical_Menu );
+		mSizeToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Font_Size_Hierarchical_Menu );
+		mAlignToolbarPopup = (CPatternButtonPopup *)view->FindPaneByID( cmd_Align_Hierarchical_Menu );
+		mFontToolbarPopup = (CFontMenuPopup *)view->FindPaneByID( 'Font' );
+		mColorPopup = (CColorPopup *)view->FindPaneByID( 'Colr' );
+
+		// Also, tell the toolbar about us.
+		CHTMLAreaToolBar *toolbar = (CHTMLAreaToolBar *)view->FindPaneByID( 'ftfv' );
+		Assert_(toolbar);
+		toolbar->SetEditView(this);
+		
+	}
 	inherited::BeTarget();
 }
 
-void CFormHTMLArea::DontBeTarget()
-{
-	inherited::DontBeTarget();
-	CFormattingToolFloatView::HideFormatFloatTool();
-}
 
 
 #pragma mark == CFormList ==
