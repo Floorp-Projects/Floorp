@@ -23,6 +23,7 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Scott MacGregor <mscott@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Håkan Waara <hwaara@chello.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -67,6 +68,8 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIMessengerWindowService.h"
+#include "nsIWindowMediator.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIMsgSearchSession.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
@@ -1578,24 +1581,39 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 NS_IMETHODIMP 
 nsNntpService::HandleContent(const char * aContentType, const char * aCommand, nsISupports * aWindowContext, nsIRequest *request)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   if (!request) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if (!aChannel) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (nsCRT::strcasecmp(aContentType, "x-application-newsgroup") == 0) {
-      nsCOMPtr<nsIURI> uri;
-      rv = aChannel->GetURI(getter_AddRefs(uri));
-	  if (NS_FAILED(rv)) return rv;
+  if (nsCRT::strcasecmp(aContentType, "x-application-newsgroup") == 0)
+  {
+    nsCOMPtr<nsIURI> uri;
+    rv = aChannel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if (uri) { 	
-		nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID,&rv);
-		if (NS_FAILED(rv)) return rv;
+    if (uri)
+    {
+      nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIDOMWindowInternal> window;
 
-		rv = messengerWindowService->OpenMessengerWindowWithUri(uri);
-		if (NS_FAILED(rv)) return rv;
-	  }
+      // If there already is a messenger window open, don't waste time opening
+      // a new one; focus it. Otherwise, create a new messenger window.
+      mediator->GetMostRecentWindow(NS_LITERAL_STRING("mail:3pane").get(), getter_AddRefs(window));
+
+      if (window)
+        window->Focus();
+      else
+      {
+        nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID,&rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = messengerWindowService->OpenMessengerWindowWithUri(uri);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
   }
 
   return rv;
