@@ -502,7 +502,6 @@ var MessageWindowController =
 			case "cmd_viewPageSource":
 			case "cmd_reload":
 			case "cmd_find":
-			case "cmd_findAgain":
       case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
@@ -531,6 +530,8 @@ var MessageWindowController =
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 				return true;
+			case "cmd_findAgain":
+				return MsgCanFindAgain();
 			default:
 				return false;
 		}

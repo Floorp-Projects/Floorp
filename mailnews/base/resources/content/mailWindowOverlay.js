@@ -819,12 +819,21 @@ function MsgViewPageSource()
 
 function MsgFind()
 {
-    messenger.find();
+  var contentWindow = window.top._content;
+
+  // from utilityOverlay.js
+  findInPage(getMessageBrowser(), contentWindow, contentWindow)
 }
 
 function MsgFindAgain()
 {
-    messenger.findAgain();
+  var contentWindow = window.top._content;
+  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow)
+}
+
+function MsgCanFindAgain()
+{
+  return canFindAgainInPage();
 }
 
 function MsgSearchMessages()
