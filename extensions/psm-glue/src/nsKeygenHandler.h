@@ -42,6 +42,9 @@ public:
                             nsVoidArray& aContent, 
                             nsString& aAttribute); 
   NS_DECL_ISUPPORTS 
+
+  static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+
 protected:
   nsresult GetPublicKey(nsString& value, nsString& challenge, 
 			nsString& keyType, nsString& outPublicKey,
