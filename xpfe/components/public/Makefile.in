@@ -23,9 +23,14 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS=	\
-		nsIAppShellComponent.h	\
 		nsIAppShellComponentImpl.h	\
 		$(NULL)
+
+XPIDL_MODULE=mozcomps
+
+XPIDLSRCS=\
+    nsIAppShellComponent.idl \
+    $(NULL)
 
 include $(topsrcdir)/config/config.mk
 

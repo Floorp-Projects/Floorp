@@ -22,8 +22,13 @@ MODULE=xpfe\components
 DEPTH=..\..\..
 
 EXPORTS=\
-	nsIAppShellComponent.h \
 	nsIAppShellComponentImpl.h \
 	$(NULL)
+
+XPIDL_MODULE=mozcomps
+
+XPIDLSRCS=\
+    .\nsIAppShellComponent.idl \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
