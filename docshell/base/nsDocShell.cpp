@@ -274,7 +274,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
   PRBool stopActiveDoc = PR_FALSE;
   nsCOMPtr<nsISHEntry> shEntry;
 
-  LoadType loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
+  PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
 
   NS_ENSURE_ARG(aURI);
 
