@@ -15,51 +15,33 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIArena.h"
+
+#include "nsArena.h"
 #include "nsCRT.h"
 
-#define PL_ARENA_CONST_ALIGN_MASK 7
-#include "plarena.h"
-
-static NS_DEFINE_IID(kArenaIID, NS_IARENA_IID);
-
-// Simple arena implementation layered on plarena
-class ArenaImpl : public nsIArena {
-public:
-  ArenaImpl(PRInt32 aBlockSize);
-
-  NS_DECL_ISUPPORTS
-
-  virtual void* Alloc(PRInt32 aSize);
-
-protected:
-  virtual ~ArenaImpl();
-
-  PLArenaPool mPool;
-  PRInt32 mBlockSize;
-};
-
-ArenaImpl::ArenaImpl(PRInt32 aBlockSize)
+NS_IMETHODIMP
+ArenaImpl::Init(PRUint32 aBlockSize)
 {
-  NS_INIT_REFCNT();
   if (aBlockSize < NS_MIN_ARENA_BLOCK_SIZE) {
     aBlockSize = NS_DEFAULT_ARENA_BLOCK_SIZE;
   }
   PL_INIT_ARENA_POOL(&mPool, "nsIArena", aBlockSize);
   mBlockSize = aBlockSize;
+  return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(ArenaImpl,kArenaIID)
+NS_IMPL_ISUPPORTS(ArenaImpl, nsIArena::GetIID())
 
 ArenaImpl::~ArenaImpl()
 {
   PL_FinishArenaPool(&mPool);
 }
 
-void* ArenaImpl::Alloc(PRInt32 size)
+NS_IMETHODIMP_(void*)
+ArenaImpl::Alloc(PRUint32 size)
 {
   // Adjust size so that it's a multiple of sizeof(double)
-  PRInt32 align = size & (sizeof(double) - 1);
+  PRUint32 align = size & (sizeof(double) - 1);
   if (0 != align) {
     size += sizeof(double) - align;
   }
@@ -69,12 +51,36 @@ void* ArenaImpl::Alloc(PRInt32 size)
   return p;
 }
 
-NS_BASE nsresult NS_NewHeapArena(nsIArena** aInstancePtrResult,
-                                 PRInt32 aArenaBlockSize)
+NS_METHOD
+ArenaImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  ArenaImpl* it = new ArenaImpl(aArenaBlockSize);
-  if (nsnull == it) {
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+  
+  ArenaImpl* it = new ArenaImpl();
+  if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kArenaIID, (void **) aInstancePtrResult);
+
+  NS_ADDREF(it);
+  nsresult rv = it->QueryInterface(aIID, aResult);
+  NS_RELEASE(it);
+  return rv;
+}
+
+NS_COM nsresult NS_NewHeapArena(nsIArena** aInstancePtrResult,
+                                 PRUint32 aArenaBlockSize)
+{
+  nsresult rv;
+  nsIArena* arena;
+  rv = ArenaImpl::Create(NULL, nsIArena::GetIID(), (void**)&arena);
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = arena->Init(aArenaBlockSize);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(arena);
+    return rv;
+  }    
+  
+  *aInstancePtrResult = arena;
+  return rv;
 }

@@ -43,7 +43,8 @@ CPPSRCS = \
 	nsGfxFactoryGTK.cpp \
 	nsRenderingContextGTK.cpp \
 	nsImageGTK.cpp \
-	nsRegionGTK.cpp 
+	nsRegionGTK.cpp \
+	nsTimer.cpp 
 
 CSRCS = \
 	nsPrintdGTK.c

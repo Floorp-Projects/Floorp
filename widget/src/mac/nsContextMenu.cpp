@@ -24,7 +24,7 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsComponentManager.h"
+#include "nsIComponentManager.h"
 
 #include "nsMenu.h" // for mMacMenuIDCount
 

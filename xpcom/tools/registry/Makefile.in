@@ -29,7 +29,7 @@ include $(topsrcdir)/config/config.mk
 
 DEFINES		+= -DUSE_NSREG
 
-LIBS		= -lxpcom -lreg $(NSPR_LIBS)
+LIBS		= -lxpcom $(NSPR_LIBS)
 
 SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 

@@ -28,3 +28,6 @@ nsIDeviceContextSpec.h
 nsIDeviceContextSpecFactory.h
 nsColorNameIDs.h
 nsIDrawingSurface.h
+nsITimer.h
+nsITimerCallback.h
+nsRepeater.h

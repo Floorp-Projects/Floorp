@@ -9,6 +9,7 @@ nsIClipboard.h
 nsITransferable.h
 nsIDragService.h
 nsIDragSession.h
+nsIDragSessionMac.h
 nsui.h
 nsIWidget.h
 nsIButton.h
@@ -19,7 +20,6 @@ nsITextWidget.h
 nsITextAreaWidget.h
 nsIComboBox.h
 nsIListBox.h
-nsIFileWidget.h
 nsIScrollbar.h
 nsGUIEvent.h
 nsIRadioButton.h
@@ -31,7 +31,6 @@ nsWidgetsCID.h
 nsITabWidget.h
 nsITooltipWidget.h
 nsIAppShell.h
-nsStringUtil.h
 nsIDialog.h
 nsILabel.h
 nsILookAndFeel.h
@@ -45,4 +44,5 @@ nsIImageButton.h
 nsIImageButtonListener.h
 nsIContentConnector.h
 nsIKeyBindMgr.h
+nsStringUtil.h
 nsIContextMenu.h

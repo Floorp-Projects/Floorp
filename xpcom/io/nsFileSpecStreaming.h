@@ -30,18 +30,18 @@ class nsIOutputStream;
 class nsFileURL;
 class nsFileSpec;
 
-NS_BASE nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& spec);
-NS_BASE nsresult ReadDescriptor(
+NS_COM nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& spec);
+NS_COM nsresult ReadDescriptor(
 	nsIInputStream* aStream, nsPersistentFileDescriptor&);
-NS_BASE nsresult WriteDescriptor(
+NS_COM nsresult WriteDescriptor(
 	nsIOutputStream* aStream,
 	const nsPersistentFileDescriptor&);
         // writes the data to a file
-NS_BASE nsInputStream& operator >> (
+NS_COM nsInputStream& operator >> (
     nsInputStream&,
     nsPersistentFileDescriptor&);
         // reads the data from a stream (file or string)
-NS_BASE nsOutputStream& operator << (
+NS_COM nsOutputStream& operator << (
     nsOutputStream&,
     const nsPersistentFileDescriptor&);
     	// writes the data to a  stream (file or string)

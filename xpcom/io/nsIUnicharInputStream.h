@@ -43,7 +43,7 @@ public:
  * it destroyes the string (so make a copy if you don't want it doing
  * that)
  */
-extern NS_BASE nsresult
+extern NS_COM nsresult
   NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
                                  nsString* aString);
 
@@ -52,7 +52,7 @@ extern NS_BASE nsresult
  * nsnull is returned and the error code is set to
  * NS_INPUTSTREAM_NO_CONVERTER.
  */
-extern NS_BASE nsresult
+extern NS_COM nsresult
   NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
                         nsISupports* aOuter,
                         nsIInputStream* aStreamToWrap,

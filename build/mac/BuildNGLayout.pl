@@ -18,25 +18,20 @@
 #
 
 #
-# nglayout build script (debug)
+# build script (optimized)
 #
 use Mac::Processes;
 use NGLayoutBuildList;
 use Cwd;
 use Moz;
 
-# configuration variables
-$DEBUG = 0;
-$ALIAS_SYM_FILES = $DEBUG;
-$CLOBBER_LIBS = 1;
-$MOZ_FULLCIRCLE = 0;
-$CARBON = 0;				# turn on to build with TARGET_CARBON
-$PROFILE = 0;				# do not turn on with optimized builds
-
-# The following two options will delete all files, but leave the directory structure intact.
-$CLOBBER_DIST_ALL 	= 0;		# turn on to clobber all files inside dist (headers, xsym and libs)
-$CLOBBER_DIST_LIBS 	= 0;		# turn on to clobber the aliases to libraries and sym files in dist
-$USE_XPIDL 			= 1;		# turn on to use the XPIDL plugin to generate files.
+#-----------------------------------------------
+# configuration variables that globally affect what is built
+#-----------------------------------------------
+$DEBUG					= 0;
+$CARBON					= 0;	# turn on to build with TARGET_CARBON
+$MOZ_FULLCIRCLE			= 0;
+$PROFILE				= 0;
 
 $pull{all} 			= 0;
 $pull{lizard} 		= 0;
@@ -46,18 +41,46 @@ $pull{netlib} 		= 0;
 $pull{nglayout} 	= 0;
 $pull{mac} 			= 0;
 
-$build{all} 		= 1;				# turn off to do individual builds
-$build{dist} 		= 0;
-$build{runtime}		= 0;
-$build{stubs} 		= 0;
-$build{common} 		= 0;
-$build{intl} 		= 0;
-$build{nglayout} 	= 0;
-$build{resources} 	= 0;
-$build{editor} 		= 0;
-$build{mailnews} 	= 0;
-$build{viewer} 		= 0;
-$build{xpapp} 		= 0;
+$build{all} 			= 0;			# turn off to do individual builds, or to do "most"
+$build{most} 			= 0;			# turn off to do individual builds
+$build{dist} 			= 0;
+$build{dist_runtime}	= 0;			# implied by $build{dist}
+$build{resources} 		= 0;
+$build{stubs} 			= 0;
+$build{runtime}			= 0;
+$build{common} 			= 1;
+$build{intl} 			= 1;
+$build{nglayout} 		= 1;
+$build{editor} 			= 1;
+$build{mailnews} 		= 1;
+$build{viewer} 			= 1;
+$build{xpapp} 			= 1;
+
+#-----------------------------------------------
+# configuration variables that affect the manner
+# of building, but possibly affecting
+# the outcome.
+#-----------------------------------------------
+$ALIAS_SYM_FILES		= $DEBUG;
+$CLOBBER_LIBS			= 1;	# turn on to clobber existing libs and .xSYM files before
+								# building each project							
+# The following two options will delete all dist files (if you have $build{dist} turned on),
+# but leave the directory structure intact.
+$CLOBBER_DIST_ALL 		= 1;	# turn on to clobber all aliases/files inside dist (headers/xsym/libs)
+$CLOBBER_DIST_LIBS 		= 0;	# turn on to clobber only aliases/files for libraries/sym files in dist
+
+#-----------------------------------------------
+# configuration variables that are preferences for the build style,
+# and do not affect what is built.
+#-----------------------------------------------
+$CodeWarriorLib::CLOSE_PROJECTS_FIRST
+						= 1;
+								# 1 = close then make (for development),
+								# 0 = make then close (for tinderbox).
+$USE_TIMESTAMPED_LOGS 	= 1;
+#-----------------------------------------------
+# END OF CONFIG SWITCHES
+#-----------------------------------------------
 
 if ($pull{all})
 {
@@ -73,17 +96,38 @@ if ($build{all})
 		$build{$k} = 1;
 	}
 }
+if ($build{most})
+{
+### Just uncomment/comment to get the ones you want (if "most" is selected).
+#	$build{dist}		= 1;
+#	$build{dist_runtime}= 1;
+#	$build{resources}	= 1;
+#   $build{stubs}		= 1;
+#   $build{runtime}		= 1;
+#	$build{common}		= 1; # Requires intl
+#   $build{intl}		= 1; 
+#	$build{nglayout}	= 1;
+#	$build{editor}		= 1;
+#	$build{mailnews}	= 1;
+#	$build{viewer}		= 1;
+	$build{xpapp}		= 1;
+}
 
 # do the work
-# you should not have to edit anything bellow
+# you should not have to edit anything below
 
 chdir("::::");
 $MOZ_SRC = cwd();
 
-$USE_TIMESTAMPED_LOGS = 0;
+if ($MOZ_FULLCIRCLE)
+{
+	#// Get the Build Number for the Master.ini(Full Circle) n'stuff
+	$buildnum = Moz::SetBuildNumber();
+}
+
 if ($USE_TIMESTAMPED_LOGS)
 {
-	#Use timestamped names so that you don't clobber your previous log file!
+	#Use time-stamped names so that you don't clobber your previous log file!
 	my $now = localtime();
 	while ($now =~ s@:@.@) {} # replace all colons by periods
 	my $logdir = ":Build Logs:";
@@ -114,5 +158,4 @@ BuildDist();
 chdir($MOZ_SRC);
 BuildProjects();
 
-print "Build layout complete\n";
-
+print "Build complete\n";

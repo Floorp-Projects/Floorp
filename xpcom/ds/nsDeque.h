@@ -48,7 +48,7 @@
  *
  * @update	gess4/20/98
  */
-class NS_BASE nsDequeFunctor{
+class NS_COM nsDequeFunctor{
 public:
   virtual void* operator()(void* anObject)=0;
 };
@@ -68,7 +68,7 @@ public:
  * @update	gess4/20/98
  */
 
-class NS_BASE nsDeque {
+class NS_COM nsDeque {
 friend class nsDequeIterator;
   public:
                        nsDeque(nsDequeFunctor* aDeallocator);
@@ -260,7 +260,7 @@ private:
  * Here comes the nsDequeIterator class...
  ******************************************************/
 
-class NS_BASE nsDequeIterator {
+class NS_COM nsDequeIterator {
 public:
   
   /**

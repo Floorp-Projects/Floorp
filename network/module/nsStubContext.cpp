@@ -211,7 +211,6 @@ char *stub_Prompt(MWContext *context,
 #include "nsIBlockingNotification.h" 
 #include "nsAppShellCIDs.h" 
 #include "plevent.h" 
-#include "nsXPComFactory.h"
 
 static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 // static NS_DEFINE_IID(kDefaultNotificationCID,  NS_DEFAULT_NOTIFICATION_CID);
@@ -264,6 +263,8 @@ nsDefaultNotification::Resume(nsIURL *aURL, void *aExtraInfo)
 }
 
 /*--------------------------------------------------------------*/
+#if 0
+#include "nsXPComFactory.h"
 
 /* forward declaration */
 class nsDefaultNotification;
@@ -285,7 +286,7 @@ nsresult NS_NewDefaultNotificationFactory(nsIFactory** aResult)
   *aResult = inst;
   return rv;
 }
-
+#endif
 /*--------------------------------------------------------------*/
 
 

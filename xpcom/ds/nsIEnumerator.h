@@ -89,6 +89,7 @@ class nsIBidirectionalEnumerator : public nsIEnumerator {
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIBidirectionalEnumerator *priv);
 #endif
 };
+
 extern "C" NS_COM nsresult
 NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult);
 // Construct and return an implementation of a "conjoining enumerator." This

@@ -24,7 +24,6 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
 
 #include "nsIAppShell.h"

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "nslayout.h"
+
 // this class is used to gather caret properties from the OS. It
 // must be implemented by each platform that wants more than
 // the generic caret properties.
@@ -50,4 +52,4 @@ class nsCaretProperties
 
 };
 
-NS_BASE nsCaretProperties* NewCaretProperties();
+NS_LAYOUT nsCaretProperties* NewCaretProperties();

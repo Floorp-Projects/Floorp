@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIAtom.h"
+
+#include "nsAtomTable.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "plhash.h"
@@ -26,30 +27,6 @@
  */
 static nsrefcnt gAtoms;
 static struct PLHashTable* gAtomHashTable;
-
-class AtomImpl : public nsIAtom {
-public:
-  AtomImpl();
-  virtual ~AtomImpl();
-
-  NS_DECL_ISUPPORTS
-
-  void* operator new(size_t size, const PRUnichar* us, PRInt32 uslen);
-
-  void operator delete(void* ptr) {
-    ::operator delete(ptr);
-  }
-
-  virtual void ToString(nsString& aBuf) const;
-
-  virtual const PRUnichar* GetUnicode() const;
-
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
-
-  // Actually more; 0 terminated. This slot is reserved for the
-  // terminating zero.
-  PRUnichar mString[1];
-};
 
 AtomImpl::AtomImpl()
 {
@@ -115,18 +92,18 @@ static PRIntn CompareKeys(const PRUnichar* k1, const PRUnichar* k2)
   return nsCRT::strcmp(k1, k2) == 0;
 }
 
-NS_BASE nsIAtom* NS_NewAtom(const char* isolatin1)
+NS_COM nsIAtom* NS_NewAtom(const char* isolatin1)
 {
   nsAutoString tmp(isolatin1);
   return NS_NewAtom(tmp.GetUnicode());
 }
 
-NS_BASE nsIAtom* NS_NewAtom(const nsString& aString)
+NS_COM nsIAtom* NS_NewAtom(const nsString& aString)
 {
   return NS_NewAtom(aString.GetUnicode());
 }
 
-NS_BASE nsIAtom* NS_NewAtom(const PRUnichar* us)
+NS_COM nsIAtom* NS_NewAtom(const PRUnichar* us)
 {
   if (nsnull == gAtomHashTable) {
     gAtomHashTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
@@ -149,7 +126,7 @@ NS_BASE nsIAtom* NS_NewAtom(const PRUnichar* us)
   return id;
 }
 
-NS_BASE nsrefcnt NS_GetNumberOfAtoms(void)
+NS_COM nsrefcnt NS_GetNumberOfAtoms(void)
 {
   if (nsnull != gAtomHashTable) {
     NS_PRECONDITION(nsrefcnt(gAtomHashTable->nentries) == gAtoms, "bad atom table");

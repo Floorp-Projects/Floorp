@@ -378,7 +378,7 @@ NS_IMETHODIMP BasicStringImpl::Seek(PRSeekWhence whence, PRInt32 offset)
 } // StringImpl::Seek
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewStringInputStream(
+extern "C" NS_COM nsresult NS_NewStringInputStream(
     nsISupports** aStreamResult,
     const nsString& aStringToRead)
     // Factory method to get an nsInputStream from a string.  Result will implement all the
@@ -399,7 +399,7 @@ extern "C" NS_BASE nsresult NS_NewStringInputStream(
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewStringOutputStream(
+extern "C" NS_COM nsresult NS_NewStringOutputStream(
     nsISupports** aStreamResult,
     nsString& aStringToChange)
     // Factory method to get an nsOutputStream from a string.  Result will implement all the
@@ -420,7 +420,7 @@ extern "C" NS_BASE nsresult NS_NewStringOutputStream(
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewCharInputStream(
+extern "C" NS_COM nsresult NS_NewCharInputStream(
     nsISupports** aStreamResult,
     const char* aStringToRead)
     // Factory method to get an nsInputStream from a string.  Result will implement all the
@@ -441,7 +441,7 @@ extern "C" NS_BASE nsresult NS_NewCharInputStream(
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewCharOutputStream(
+extern "C" NS_COM nsresult NS_NewCharOutputStream(
     nsISupports** aStreamResult,
     char** aStringToChange)
     // Factory method to get an nsOutputStream to a string.  Result will implement all the
@@ -463,7 +463,7 @@ extern "C" NS_BASE nsresult NS_NewCharOutputStream(
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewStringIOStream(
+extern "C" NS_COM nsresult NS_NewStringIOStream(
     nsISupports** aStreamResult,
     nsString& aStringToChange)
     // Factory method to get an nsOutputStream to a string.  Result will implement all the
@@ -474,7 +474,7 @@ extern "C" NS_BASE nsresult NS_NewStringIOStream(
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewCharIOStream(
+extern "C" NS_COM nsresult NS_NewCharIOStream(
     nsISupports** aStreamResult,
     char** aStringToChange)
     // Factory method to get an nsOutputStream to a string.  Result will implement all the

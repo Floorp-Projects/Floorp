@@ -34,10 +34,6 @@
 #include <direct.h>
 #endif
 
-// It is important to include this header file as it contains the
-// registry CIDs.
-#include "nsXPComCIID.h"
-
 // included for XPlatform coding 
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"

@@ -32,7 +32,6 @@ LIBS		= \
 	-lxpcom \
 	-lreg \
 	-lpics \
-	-lraptorbase \
 	$(NSPR_LIBS) \
 	$(NULL)
 

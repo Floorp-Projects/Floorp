@@ -18,10 +18,9 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+MODULE		= xpcom
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= xptinfo
 
 CFLAGS	+= -DEXPORT_XPCI_API
 

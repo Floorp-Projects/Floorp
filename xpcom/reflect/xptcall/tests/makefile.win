@@ -23,17 +23,11 @@ MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestXPTCInvoke.exe
 PROGRAMS = $(PROG1)
 
-LCFLAGS=-DUSE_NSREG
+LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN
 
-DEFINES=-DWIN32_LEAN_AND_MEAN
-
-REQUIRES=xpcom xptcall
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\xptcall \
-      -I$(PUBLIC)\raptor -I$(PUBLIC)\xptinfo -I$(PUBLIC)\libxpt
+LINCS=-I$(PUBLIC)\xpcom
 
 LLIBS=					\
- $(DIST)\lib\xptcall32.lib \
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)				\
  $(NULL)

@@ -160,7 +160,7 @@ nsThread::GetPRThread(PRThread* *result)
     return NS_OK;
 }
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewThread(nsIThread* *result, 
              nsIRunnable* runnable,
              PRUint32 stackSize,
@@ -203,13 +203,13 @@ nsThread::RegisterThreadSelf()
     return NS_OK;
 }
 
-NS_BASE nsresult
+NS_COM nsresult
 nsIThread::GetCurrent(nsIThread* *result)
 {
     return GetIThread(PR_CurrentThread(), result);
 }
 
-NS_BASE nsresult
+NS_COM nsresult
 nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
 {
     PRStatus status;
@@ -422,7 +422,7 @@ nsThreadPool::Shutdown()
     return rv;
 }
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewThreadPool(nsIThreadPool* *result,
                  PRUint32 minThreads, PRUint32 maxThreads,
                  PRUint32 stackSize,

@@ -43,6 +43,6 @@ public:
    
 };
 
-extern NS_BASE nsresult NS_NewObserverList(nsIObserverList** anObserverList);
+extern NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList);
 
 #endif /* nsIObserverList_h__ */

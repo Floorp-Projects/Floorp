@@ -22,6 +22,7 @@
 
 #include "nsFileStream.h"
 
+#include "nsFileSpec.h"
 #include "nsIStringStream.h"
 
 #include <string.h>
@@ -307,6 +308,64 @@ void nsOutputFileStream::flush()
 	if (mFileOutputStream)
 		mFileOutputStream->Flush();
 }
+
+//----------------------------------------------------------------------------------------
+void nsOutputFileStream::abort()
+//----------------------------------------------------------------------------------------
+{
+	mResult = NS_FILE_FAILURE;
+	close();
+}
+
+//========================================================================================
+//          nsSaveViaTempStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsSaveViaTempStream::nsSaveViaTempStream(const nsFileSpec& inFileToSave)
+//----------------------------------------------------------------------------------------
+	: mFileToSave(inFileToSave)
+	, mTempFileSpec(new nsFileSpec(inFileToSave))
+{
+	// Make sure the temp file's unique (in particular, different from the target file)
+	mTempFileSpec->MakeUnique();
+	open(
+		*mTempFileSpec,
+		(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
+    	0700 /*(octal)*/);
+} // nsSaveViaTempStream::nsSaveViaTempStream
+
+//----------------------------------------------------------------------------------------
+void nsSaveViaTempStream::close()
+//----------------------------------------------------------------------------------------
+{
+	if (!mTempFileSpec)
+		return;
+	nsresult currentResult = mResult;
+	Inherited::close();
+	mResult = currentResult;
+	if (error())
+	{
+		mTempFileSpec->Delete(PR_FALSE);
+	}
+	else
+	{
+		nsFileSpec thirdSpec(mFileToSave);
+		thirdSpec.MakeUnique();
+		nsSimpleCharString originalName(mFileToSave.GetLeafName());
+		((nsFileSpec&)mFileToSave).Rename(nsSimpleCharString(thirdSpec.GetLeafName()));
+		if (NS_SUCCEEDED(mTempFileSpec->Rename(originalName)) && mTempFileSpec->Valid())
+			mFileToSave.Delete(PR_FALSE);
+	}
+	delete mTempFileSpec;
+} // nsSaveViaTempStream::~nsSaveViaTempStream
+
+//----------------------------------------------------------------------------------------
+nsSaveViaTempStream::~nsSaveViaTempStream()
+//----------------------------------------------------------------------------------------
+{
+	delete mTempFileSpec;
+} // nsSaveViaTempStream::~nsSaveViaTempStream
 
 //========================================================================================
 //        Manipulators

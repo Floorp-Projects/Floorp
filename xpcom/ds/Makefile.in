@@ -51,7 +51,6 @@ CPPSRCS =				\
 	nsObserverList.cpp            \
 	nsObserverService.cpp         \
 	nsPageMgr.cpp                 \
-	nsPipe.cpp                    \
 	nsProperties.cpp              \
 	nsQuickSort.cpp               \
 	nsRBTree.cpp                  \

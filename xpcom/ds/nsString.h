@@ -50,7 +50,7 @@
 
 class nsISizeOfHandler;
 
-class NS_BASE nsString1 {
+class NS_COM nsString1 {
   public: 
 
 /**
@@ -771,7 +771,7 @@ typedef PRUnichar chartype;
 };
 
 ostream& operator<<(ostream& os,nsString1& aString);
-extern NS_BASE int fputs(const nsString1& aString, FILE* out);
+extern NS_COM int fputs(const nsString1& aString, FILE* out);
 
 //----------------------------------------------------------------------
 
@@ -782,7 +782,7 @@ extern NS_BASE int fputs(const nsString1& aString, FILE* out);
  * allocated and grown as necessary.
  */
 // XXX template this with a parameter for the size of the buffer?
-class NS_BASE nsAutoString1 : public nsString1 {
+class NS_COM nsAutoString1 : public nsString1 {
 public:
                 nsAutoString1();
                 nsAutoString1(const nsString1& other);

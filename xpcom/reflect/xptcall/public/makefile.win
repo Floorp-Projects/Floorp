@@ -19,11 +19,11 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
 
+MODULE	=	xpcom
+
 EXPORTS =	xptcall.h	\
 		xptcstubsdecl.inc \
 		xptcstubsdef.inc \
 		$(NULL)
-
-MODULE	=	xptcall
 
 include <$(DEPTH)\config\rules.mak>

@@ -27,18 +27,54 @@ PROG2 = .\$(OBJDIR)\RegFactory.exe
 PROG3 = .\$(OBJDIR)\TestArray.exe
 PROG4 = .\$(OBJDIR)\TestID.exe
 PROG5 = .\$(OBJDIR)\TestServMgr.exe
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6)
+#PROG6 = .\$(OBJDIR)\TimerTest.exe
+PROG7 = .\$(OBJDIR)\TestAtoms.exe
+PROG8 = .\$(OBJDIR)\CvtURL.exe
+PROG9 = .\$(OBJDIR)\TestCRT.exe
+PROG10 = .\$(OBJDIR)\FilesTest.exe
+PROG11 = .\$(OBJDIR)\PropertiesTest.exe
+PROG12 = .\$(OBJDIR)\TestAutoLock.exe
+PROG13 = .\$(OBJDIR)\TestThreads.exe
+PROG14 = .\$(OBJDIR)\TestObserverService.exe
+PROG15 = .\$(OBJDIR)\TestBuffers.exe
+PROG16 = .\$(OBJDIR)\TestPipes.exe
+
+RESFILE = timer.res
+
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) \
+        $(PROG6) $(PROG7) \
+!ifdef MODULAR_NETLIB
+        $(PROG8) \
+	$(PROG9) \
+	$(PROG10) \
+!endif
+	$(PROG11) \
+        $(PROG12) \
+        $(PROG13) \
+        $(PROG14) \
+        $(PROG15) \
+        $(PROG16) \
+	$(NULL)
 
 LCFLAGS=-DUSE_NSREG -GX
 
 REQUIRES=libreg
 
-LINCS=-I$(PUBLIC)\xpcom -Iservices
+LINCS=                     \
+        -Iservices         \
+!ifdef MODULAR_NETLIB
+        -I$(PUBLIC)\netlib \
+!endif
+        -I$(PUBLIC)\xpcom
 
-LLIBS=					\
- $(DIST)\lib\xpcom32.lib		\
- $(LIBNSPR)				\
- $(DIST)\lib\plc3.lib
+LLIBS=                         \
+        $(DIST)\lib\xpcom.lib  \
+!ifdef MODULAR_NETLIB
+        $(DIST)\lib\netlib.lib \
+!endif
+        $(LIBNSPR)             \
+        $(DIST)\lib\plc3.lib
+
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
@@ -48,7 +84,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
-clobber::
+xoclobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 # Move this into config/obj.inc when it's allowed
@@ -72,3 +108,27 @@ $(PROG2): $(OBJDIR) RegFactory.cpp
 $(PROG3): $(OBJDIR) TestArray.cpp
 $(PROG4): $(OBJDIR) TestID.cpp
 $(PROG5): $(OBJDIR) TestServMgr.cpp
+
+#$(PROG6): $(OBJDIR) TimerTest.cpp $(RESFILE)
+
+$(PROG7): $(OBJDIR) TestAtoms.cpp
+
+$(PROG8): $(OBJDIR) FilesTest.cpp
+
+!ifdef MODULAR_NETLIB
+$(PROG9): $(OBJDIR) CvtURL.cpp
+
+$(PROG10): $(OBJDIR) TestCRT.cpp
+
+$(PROG11): $(OBJDIR) PropertiesTest.cpp
+!endif
+
+$(PROG12): $(OBJDIR) TestAutoLock.cpp
+
+$(PROG13): $(OBJDIR) TestThreads.cpp
+
+$(PROG14): $(OBJDIR) TestObserverService.cpp
+
+$(PROG15): $(OBJDIR) TestBuffers.cpp
+
+$(PROG16): $(OBJDIR) TestPipes.cpp

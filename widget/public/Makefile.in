@@ -29,6 +29,7 @@ EXPORTS = \
 	nsIFontNameIterator.h \
 	nsIFontRetrieverService.h \
 	nsIFileListTransferable.h \
+	nsIGenericTransferable.h \
 	nsIMenuBar.h	\
 	nsIMenu.h		\
 	nsIMenuItem.h	\
@@ -48,7 +49,6 @@ EXPORTS = \
 	nsITextAreaWidget.h \
 	nsIComboBox.h   \
 	nsIListBox.h    \
-	nsIFileWidget.h \
 	nsIScrollbar.h  \
 	nsGUIEvent.h    \
 	nsIRadioButton.h\

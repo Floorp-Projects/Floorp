@@ -40,7 +40,6 @@ CPPSRCS = \
 
 LIBS := \
 	-lraptorgfx \
-	-lgmbase$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \
 	-lgfxps \
 	-lnetlib \
@@ -62,7 +61,6 @@ LIBS := \
 	-limg \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
-	-lraptorbase \
 	-lxpcom \
 	-lreg \
 	-l$(MOZ_LIB_JS_PREFIX)js \

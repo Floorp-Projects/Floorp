@@ -31,7 +31,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 #include "nsWebCrawler.h"
 #include "nsSpecialSystemDirectory.h"    // For exe dir
 #include "prprf.h"

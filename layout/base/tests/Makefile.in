@@ -46,12 +46,10 @@ LIBS = \
 	-lpwcac \
 	-lnetcache \
 	-lnetwork \
-	-lraptorbase \
 	-lraptorhtml \
 	-lpref \
 	-lsecfree \
 	-limg \
-	-lgmbase$(MOZ_TOOLKIT) \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \

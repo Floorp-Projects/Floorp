@@ -30,7 +30,6 @@ REQUIRES	=
 
 LIBS		= \
 	-lxpcom \
-	-lraptorbase \
 	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)

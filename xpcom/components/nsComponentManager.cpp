@@ -703,7 +703,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 //
 // HashProgID
 //
-nsresult
+nsresult 
 nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
 {
     if(!aProgID)
@@ -1817,21 +1817,22 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
     	
     if (dll->Load() == PR_FALSE)
     {
+#ifdef NS_DEBUG
         // Cannot load. Probably not a dll.
         char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
         if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
             PR_GetErrorText(errorMsg);
-#ifdef NS_DEBUG
+
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: SelfRegisterDll(%s) Load FAILED with error:%s", dll->GetFullPath(), errorMsg));
-#endif /* NS_DEBUG */
+
     	// Put the error message on the screen.
         // For now this message is also for optimized builds. Hence no ifdef DEBUG
         printf("**************************************************\n"
                "nsComponentManager: Load(%s) FAILED with error: %s\n"
                "**************************************************\n",
                dll->GetFullPath(), errorMsg);
-
+#endif /* NS_DEBUG */
         return(NS_ERROR_FAILURE);
     }
     	

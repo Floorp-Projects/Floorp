@@ -26,7 +26,7 @@ DLL = $(OBJDIR)\TestDynamic.dll
 LINCS = -I.. -I$(PUBLIC)\xpcom
 
 LLIBS=				\
- $(DIST)\lib\xpcom32.lib	\
+ $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
  $(DIST)\lib\plc3.lib
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
@@ -46,4 +46,4 @@ MODULE = xpcom
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components

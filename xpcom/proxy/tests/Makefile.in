@@ -28,11 +28,6 @@ CPPSRCS         = proxytests.cpp
 LIBS		=     \
         -L$(DIST)/bin \
 	-lxpcom       \
-	-lxpt \
-	-lxptcmd \
-	-lxptinfo \
-	-lreg       \
-	-lraptorbase \
 	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NSPR_LIBS) 	\
 	$(NULL)

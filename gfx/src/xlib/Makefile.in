@@ -42,6 +42,7 @@ CPPSRCS = nsFontMetricsXlib.cpp \
 	nsRenderingContextXlib.cpp \
 	nsDeviceContextSpecFactoryX.cpp \
 	nsDeviceContextSpecXlib.cpp \
+	nsTimer.cpp \
 	nsGfxFactoryXlib.cpp
 
 CSRCS =

@@ -25,8 +25,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\src
 LLIBS=				\
  $(DIST)\lib\raptorlayout_s.lib	\
  $(DIST)\lib\raptorgfxwin.lib	\
- $(DIST)\lib\raptorbase.lib	\
- $(DIST)\lib\xpcom32.lib	\
+ $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\jsdom.lib	        \
  $(LIBNSPR)			\
  $(DIST)\lib\plc3.lib

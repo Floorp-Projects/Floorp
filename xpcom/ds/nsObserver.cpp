@@ -35,25 +35,34 @@ static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 
 NS_IMPL_AGGREGATED(nsObserver);
 
-NS_BASE nsresult NS_NewObserver(nsIObserver** anObserver)
+NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer)
 {
-    if (anObserver == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    } 
-    
-    nsObserver* it = new nsObserver();
-
-    if (it == 0) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return it->QueryInterface(kIObserverIID, (void **) anObserver);
+    return nsObserver::Create(outer, kIObserverIID, (void**)anObserver);
 }
 
-nsObserver::nsObserver()
+NS_METHOD
+nsObserver::Create(nsISupports* outer, const nsIID& aIID, void* *anObserver)
 {
-    NS_INIT_REFCNT();
+    if (anObserver == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    nsObserver* it = new nsObserver(outer);
+
+    if (it == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsISupports* inner = outer ? it->GetInner() : it;
+    nsresult rv = inner->QueryInterface(aIID, anObserver);
+    if (NS_FAILED(rv)) {
+        delete it;
+        return rv;
+    }
+    return rv;
+}
+
+nsObserver::nsObserver(nsISupports* outer)
+{
+    NS_INIT_AGGREGATED(outer);
 }
 
 nsObserver::~nsObserver(void)
@@ -67,7 +76,7 @@ nsObserver::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     if (aIID.Equals(nsIObserver::GetIID()) ||
         aIID.Equals(nsISupports::GetIID())) {
-        *aInstancePtr = this;
+        *aInstancePtr = (nsIObserver*)this;
         NS_ADDREF_THIS();
         return NS_OK;
     }

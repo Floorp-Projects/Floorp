@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
+DEPTH=..\..\..\..
 
 IGNORE_MANIFEST=1
 
@@ -24,23 +24,19 @@ PROG1 = .\$(OBJDIR)\xpt_dump.exe
 PROG2 = .\$(OBJDIR)\xpt_link.exe
 PROGRAMS = $(PROG1) $(PROG2)
 
-LCFLAGS=-DUSE_NSREG
+LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN -DEXPORT_XPT_API 
 
-DEFINES=-DWIN32_LEAN_AND_MEAN
+LINCS=-I$(PUBLIC)\xpcom
 
-REQUIRES=libxpt
-
-LINCS=-I$(PUBLIC)\libxpt
-
-LLIBS=					\
- $(DIST)\lib\libxpt32.lib		\
+LLIBS=                      \
+ $(DIST)\lib\xpcom.lib      \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 # build these xpt tools early so that it'll be
 # available along with xpidl, which also must be built early.
-export:: $(PROGRAMS)
+install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 # Move this into config/obj.inc when it's allowed

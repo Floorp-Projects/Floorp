@@ -27,6 +27,7 @@
 #include "xptcall.h"    // defines nsXPTCVariant
 
 #include "nsProxyEvent.h"
+#include "nsProxyObjectManager.h"
 
 class nsProxyEventObject;
 class nsProxyEventClass;

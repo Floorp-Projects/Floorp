@@ -37,7 +37,6 @@
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
 #include "prlog.h"

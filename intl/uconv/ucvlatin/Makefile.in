@@ -109,11 +109,11 @@ CPPSRCS		= \
 EXPORTS         = \
                   nsUCvLatinCID.h \
 		  $(NULL)
-                
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CFLAGS		+= -DUSE_NSREG -D__STDC__
 
-REQUIRES	= $(MODULE) libxpcom libraptorbase
+REQUIRES	= $(MODULE) libxpcom 
 
 include $(topsrcdir)/config/rules.mk

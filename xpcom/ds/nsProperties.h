@@ -21,13 +21,14 @@
 
 #include "nsIProperties.h"
 #include "nsHashtable.h"
+#include "nsAgg.h"
 
 class nsIUnicharInputStream;
 
 class nsProperties : public nsIProperties, public nsHashtable {
 public:
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_AGGREGATED
 
   // nsIProperties methods:
   NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
@@ -37,8 +38,11 @@ public:
   NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
 
   // nsProperties methods:
-  nsProperties();
+  nsProperties(nsISupports* outer);
   virtual ~nsProperties();
+
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
 
@@ -51,6 +55,9 @@ public:
   virtual ~nsPersistentProperties();
 
   NS_DECL_ISUPPORTS
+
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   // nsIProperties methods:
   NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);

@@ -19,4 +19,34 @@
 #ifndef nsObserverService_h___
 #define nsObserverService_h___
 
+#include "nsIObserverService.h"
+
+class nsHashtable;
+
+class nsObserverService : public nsIObserverService {
+public:
+
+	static nsresult GetObserverService(nsIObserverService** anObserverService);
+    
+	NS_IMETHOD AddObserver(nsIObserver** anObserver, nsString* aTopic);
+  NS_IMETHOD RemoveObserver(nsIObserver** anObserver, nsString* aTopic);
+	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic);
+
+   
+  nsObserverService();
+  virtual ~nsObserverService(void);
+     
+  NS_DECL_ISUPPORTS
+
+  static NS_METHOD
+  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+private:
+	
+  NS_IMETHOD GetObserverList(nsIObserverList** anObserverList, nsString* aTopic);
+
+  nsHashtable* mObserverTopicTable;
+
+};
+
 #endif /* nsObserverService_h___ */

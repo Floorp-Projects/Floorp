@@ -53,11 +53,9 @@
 #include "nsIURL.h"
 #include "nsDOMCID.h"    // for NS_SCRIPT_NAMESET_REGISTRY_CID
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID
-#include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
-#include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
 #include "rdf.h"

@@ -202,8 +202,9 @@ protected:
  * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  * alpha0.40 : repository -> component manager
  * alpha0.50 : using nsIRegistry
+ * alpha0.60 : xpcom 2.0 landing
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.50"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.60"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

@@ -36,9 +36,10 @@
 #include "nsIURLGroup.h"
 #include "nsIServiceManager.h"
 #include "nsINetService.h"
-#include "nsXPComFactory.h"
+#include "nsIGenericFactory.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsCOMPtr.h"
+#include "nsCom.h"
 
 // XXX ick ick ick
 #include "nsIDocument.h"
@@ -76,7 +77,7 @@ static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kINetServiceIID,              NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
-
+static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
 
 /* Define CIDs... */
 static NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
@@ -156,6 +157,9 @@ class nsDocLoaderImpl : public nsIDocumentLoader,
 public:
 
     nsDocLoaderImpl();
+
+    // for nsIGenericFactory:
+    static NS_IMETHODIMP Create(nsISupports *aOuter, const nsIID &aIID, void **aResult);
 
     NS_DECL_ISUPPORTS
 
@@ -1583,20 +1587,8 @@ nsDocumentBindInfo::CancelRefreshURLTimers(void)
  *******************************************/
 static nsDocLoaderImpl* gServiceInstance = nsnull;
 
-NS_DEF_FACTORY(DocLoaderServiceGen,nsDocLoaderImpl)
-
-class nsDocLoaderServiceFactory : public nsDocLoaderServiceGenFactory
-{
-public:
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-};
-
 NS_IMETHODIMP
-nsDocLoaderServiceFactory::CreateInstance(nsISupports *aOuter,
-                                          const nsIID &aIID,
-                                          void **aResult)
+nsDocLoaderImpl::Create(nsISupports *aOuter, const nsIID &aIID, void **aResult)
 {
   nsresult rv;
   nsDocLoaderImpl* inst;
@@ -1641,13 +1633,18 @@ done:
 nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult)
 {
   nsresult rv = NS_OK;
-  nsIFactory* inst = new nsDocLoaderServiceFactory();
-  if (NULL == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
+  nsIGenericFactory* factory;
+  rv = nsComponentManager::CreateInstance(kGenericFactoryCID, nsnull, 
+                                          nsIGenericFactory::GetIID(),
+                                          (void**)&factory);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = factory->SetConstructor(nsDocLoaderImpl::Create);
+  if (NS_FAILED(rv)) {
+      NS_RELEASE(factory);
+      return rv;
   }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
+
+  *aResult = factory;
   return rv;
 }

@@ -37,13 +37,11 @@ LIBS		= \
 	-lhttpurl \
 	-lnetwork \
 	-lnetcache \
-	-lgmbase$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxp \
-	-lraptorbase \
 	-lxpcom \
 	-lreg \
 	$(ZLIB_LIBS) \

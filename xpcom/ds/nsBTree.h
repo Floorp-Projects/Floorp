@@ -42,7 +42,7 @@
 
 #include "nscore.h"
 
-struct NS_BASE nsNode {
+struct NS_COM nsNode {
 
   /**
    * 
@@ -135,7 +135,7 @@ struct NS_BASE nsNode {
  *
  * @update	gess4/20/98
  */
-class NS_BASE nsNodeFunctor {
+class NS_COM nsNodeFunctor {
 public:
   virtual nsNodeFunctor& operator()(nsNode& aNode)=0;
 };
@@ -145,7 +145,7 @@ public:
  * Here comes the nsBTree class...
  ****************************************************/
 
-class NS_BASE nsBTree {
+class NS_COM nsBTree {
 public:
 friend class nsBTreeIterator;
   

@@ -21,7 +21,6 @@ IGNORE_MANIFEST=1
 
 DIRS = windows \
        registry \
-       xpidl \
        $(NULL)
 
 # removed !ifdef BUILD_XPIDL above...

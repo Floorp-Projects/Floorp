@@ -20,7 +20,6 @@
 #include "nsIPref.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
-#include "nsGfxCIID.h"
 #include "nsViewsCID.h"
 #include "nsPluginsCID.h"
 #include "nsRDFCID.h"
@@ -30,7 +29,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIThrobber.h"
 
-#include "nsXPComCIID.h"
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
 #include "nsINetService.h"
@@ -54,13 +52,15 @@
 #include "nsIObserver.h"
 #include "nsIAllocator.h"
 #include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 #include "nsIGenericFactory.h"
+#include "nsGfxCIID.h"
 
 #include "prprf.h"
 #include "prmem.h"
 
 #ifdef XP_PC
-    #define XPCOM_DLL  "xpcom32.dll"
+    #define XPCOM_DLL  "xpcom.dll"
     #define WIDGET_DLL "raptorwidget.dll"
     #define GFXWIN_DLL "raptorgfxwin.dll"
     #define VIEW_DLL   "raptorview.dll"
@@ -81,7 +81,6 @@
     #define UCVJA2_DLL   "ucvja2.dll"
     #define STRRES_DLL   "strres.dll"
     #define UNICHARUTIL_DLL   "unicharutil.dll"
-    #define BASE_DLL   "raptorbase.dll"
 #elif defined(XP_MAC)
     #define XPCOM_DLL   "XPCOM_DLL"
     #define WIDGET_DLL    "WIDGET_DLL"
@@ -104,7 +103,6 @@
     #define UCVJA2_DLL   "UCVJA2_DLL"
     #define STRRES_DLL   "STRRES_DLL"
     #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
-    #define BASE_DLL   "base.shlb"
 #else
     #define XPCOM_DLL  "libxpcom.so"
     /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
@@ -135,14 +133,9 @@
     #define UCVJA2_DLL   "libucvja2.so"
     #define STRRES_DLL   "libstrres.so"
     #define UNICHARUTIL_DLL   "libunicharutil.so"
-    #define BASE_DLL     "libraptorbase.so"
 #endif
 
 // Class ID's
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-static NS_DEFINE_IID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
@@ -182,8 +175,6 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
-static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
 
 static NS_DEFINE_IID(kClipboardCID,            NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -212,10 +203,6 @@ static NS_DEFINE_IID(kUnicharUtilCID,             NS_UNICHARUTIL_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -255,8 +242,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kObserverServiceCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kObserverCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kClipboardCID,            NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCTransferableCID,        NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -269,8 +254,6 @@ NS_SetupRegistry()
 
 
   nsComponentManager::RegisterComponent(kUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
-
-  nsComponentManager::RegisterComponent(kPersistentPropertiesCID, NULL, NULL, BASE_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
 #ifdef OJI

@@ -35,7 +35,7 @@ CPPSRCS =                           \
 
 EXTRA_DSO_LDOPTS = \
     -L$(DIST)/lib  \
-    -lraptorbase   \
+    -lxpcom   \
     $(NULL)
 
 MODULE = txmgr

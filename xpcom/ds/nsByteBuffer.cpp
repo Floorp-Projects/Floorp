@@ -15,39 +15,29 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIByteBuffer.h"
+
+#include "nsByteBuffer.h"
 #include "nsIInputStream.h"
 #include "nsCRT.h"
 
 #define MIN_BUFFER_SIZE 32
 
-class ByteBufferImpl : public nsIByteBuffer {
-public:
-  ByteBufferImpl(PRUint32 aBufferSize);
-  virtual ~ByteBufferImpl();
+ByteBufferImpl::ByteBufferImpl(void)
+  : mBuffer(NULL), mSpace(0), mLength(0)
+{
+  NS_INIT_REFCNT();
+}
 
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD_(PRUint32) GetLength(void) const;
-  NS_IMETHOD_(PRUint32) GetBufferSize(void) const;
-  NS_IMETHOD_(char*) GetBuffer() const;
-  NS_IMETHOD_(PRBool) Grow(PRUint32 aNewSize);
-  NS_IMETHOD_(PRInt32) Fill(nsresult* aErrorCode, nsIInputStream* aStream,
-                            PRUint32 aKeep);
-
-  char* mBuffer;
-  PRUint32 mSpace;
-  PRUint32 mLength;
-};
-
-ByteBufferImpl::ByteBufferImpl(PRUint32 aBufferSize)
+NS_IMETHODIMP
+ByteBufferImpl::Init(PRUint32 aBufferSize)
 {
   if (aBufferSize < MIN_BUFFER_SIZE) {
     aBufferSize = MIN_BUFFER_SIZE;
   }
   mSpace = aBufferSize;
-  mBuffer = new char[aBufferSize];
   mLength = 0;
-  NS_INIT_REFCNT();
+  mBuffer = new char[aBufferSize];
+  return mBuffer ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_DEFINE_IID(kByteBufferIID,NS_IBYTE_BUFFER_IID);
@@ -60,6 +50,22 @@ ByteBufferImpl::~ByteBufferImpl()
     mBuffer = nsnull;
   }
   mLength = 0;
+}
+
+NS_METHOD
+ByteBufferImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  ByteBufferImpl* it = new ByteBufferImpl();
+  if (nsnull == it) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(it);
+  nsresult rv = it->QueryInterface(aIID, (void**)aResult);
+  NS_RELEASE(it);
+  return rv;
 }
 
 NS_IMETHODIMP_(PRUint32)
@@ -127,16 +133,20 @@ ByteBufferImpl::Fill(nsresult* aErrorCode, nsIInputStream* aStream,
   return nb;
 }
 
-NS_BASE nsresult NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
+NS_COM nsresult NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
                                   nsISupports* aOuter,
                                   PRUint32 aBufferSize)
 {
-  if (nsnull != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
+  nsresult rv;
+  nsIByteBuffer* buf;
+  rv = ByteBufferImpl::Create(aOuter, nsIByteBuffer::GetIID(), (void**)&buf);
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = buf->Init(aBufferSize);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(buf);
+    return rv;
   }
-  ByteBufferImpl* it = new ByteBufferImpl(aBufferSize);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kByteBufferIID, (void **) aInstancePtrResult);
+  *aInstancePtrResult = buf;
+  return rv;
 }

@@ -74,7 +74,7 @@
 #include "prlog.h"
 
 // If you ever decide that you need to add a non-inline method to this
-// class, be sure to change the class declaration to "class NS_BASE
+// class, be sure to change the class declaration to "class NS_COM
 // nsAutoLock".
 
 class nsAutoLock {

@@ -28,6 +28,9 @@ class nsBuffer : public nsIBuffer {
 public:
     NS_DECL_ISUPPORTS
 
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
     // nsIBuffer methods:
     NS_IMETHOD Init(PRUint32 growBySize, PRUint32 maxSize,
                     nsIAllocator* allocator);

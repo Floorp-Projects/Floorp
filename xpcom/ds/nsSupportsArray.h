@@ -28,6 +28,9 @@ public:
   nsSupportsArray(void);
   virtual ~nsSupportsArray(void);
 
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
   NS_DECL_ISUPPORTS
 
   // nsICollection methods:

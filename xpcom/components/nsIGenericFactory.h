@@ -54,4 +54,40 @@ public:
     NS_IMETHOD SetDestructor(DestructorProcPtr destructor) = 0;
 };
 
+extern nsresult
+NS_NewGenericFactory(nsIGenericFactory* *result,
+                     nsIGenericFactory::ConstructorProcPtr constructor,
+                     nsIGenericFactory::DestructorProcPtr destructor = NULL);
+
+#define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                          \
+static nsresult                                                                 \
+_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
+{                                                                               \
+    nsresult rv;                                                                \
+                                                                                \
+    _InstanceClass * inst;                                                      \
+                                                                                \
+    if (NULL == aResult) {                                                      \
+        rv = NS_ERROR_NULL_POINTER;                                             \
+        goto done;                                                              \
+    }                                                                           \
+    *aResult = NULL;                                                            \
+    if (NULL != aOuter) {                                                       \
+        rv = NS_ERROR_NO_AGGREGATION;                                           \
+        goto done;                                                              \
+    }                                                                           \
+                                                                                \
+    NS_NEWXPCOM(inst, _InstanceClass);                                          \
+    if (NULL == inst) {                                                         \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                            \
+        goto done;                                                              \
+    }                                                                           \
+    NS_ADDREF(inst);                                                            \
+    rv = inst->QueryInterface(aIID, aResult);                                   \
+    NS_RELEASE(inst);                                                           \
+                                                                                \
+  done:                                                                         \
+    return rv;                                                                  \
+} 
+
 #endif /* nsIGenericFactory_h___ */

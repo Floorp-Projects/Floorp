@@ -27,7 +27,6 @@ PROGRAM	= scribble
 
 TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_TOOLKIT)
-TOOLKIT_BASE_LIB	:= -lgmbase$(MOZ_TOOLKIT)
 
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
@@ -46,7 +45,6 @@ ifdef MOZ_OJI
 endif
 
 LIBS := \
-	-lraptorbase    \
 	-lpref \
 	-lxmltok \
 	-lexpat \
@@ -56,7 +54,6 @@ LIBS := \
 	-lgfxps \
 	-lraptorhtml \
 	$(DIST)/lib/libraptorhtmlforms_s.a \
-	$(TOOLKIT_BASE_LIB) \
 	-lraptorhtmlpars \
 	-lraptorview \
 	-labouturl \

@@ -32,7 +32,7 @@ MODULE=raptor
 DEFINES += -D_IMPL_NS_GFXONXP 
 CFLAGS	+= $(TK_CFLAGS)
 
-LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
+LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorgfx.a
 
 CPPSRCS = \
 	nsDeviceContextPS.cpp \

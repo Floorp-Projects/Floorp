@@ -34,6 +34,22 @@ nsSupportsArray::~nsSupportsArray()
   DeleteArray();
 }
 
+NS_METHOD
+nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsSupportsArray *it = new nsSupportsArray();
+  if (it == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(it);
+  nsresult rv = it->QueryInterface(aIID, aResult);
+  NS_RELEASE(it);
+  return rv;
+}
+
 NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray::GetIID());
 
 void nsSupportsArray::DeleteArray(void)
@@ -348,14 +364,9 @@ nsSupportsArray::Enumerate(nsIEnumerator* *result)
 NS_COM nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
 {
-  if (aInstancePtrResult == 0)
-    return NS_ERROR_NULL_POINTER;
-
-  nsSupportsArray *it = new nsSupportsArray();
-  if (0 == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-  *aInstancePtrResult = it;
-  return NS_OK;
+  nsresult rv;
+  rv = nsSupportsArray::Create(NULL, nsISupportsArray::GetIID(),
+                               (void**)aInstancePtrResult);
+  return rv;
 }
 

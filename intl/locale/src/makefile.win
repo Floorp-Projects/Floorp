@@ -46,8 +46,7 @@ LINCS		= -I.						\
 			  -I$(PUBLIC)\unicharutil
 
 
-LLIBS		= $(DIST)\lib\xpcom32.lib		\
-			  $(DIST)\lib\raptorbase.lib 	\
+LLIBS		= $(DIST)\lib\xpcom.lib		\
 			  $(LIBNSPR)
 
 MISCDEP		= $(LLIBS)

@@ -52,8 +52,6 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-l$(MOZ_LIB_JS_PREFIX)js	\
-	-lraptorbase \
-	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \

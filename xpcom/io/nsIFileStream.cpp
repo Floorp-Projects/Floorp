@@ -395,7 +395,7 @@ NS_IMETHODIMP FileImpl::Flush()
 } // FileImpl::flush
 
 //----------------------------------------------------------------------------------------
-NS_BASE nsresult NS_NewTypicalInputFileStream(
+NS_COM nsresult NS_NewTypicalInputFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*Default nsprMode == PR_RDONLY*/
@@ -407,7 +407,7 @@ NS_BASE nsresult NS_NewTypicalInputFileStream(
 }
 
 //----------------------------------------------------------------------------------------
-NS_BASE nsresult NS_NewOutputConsoleStream(
+NS_COM nsresult NS_NewOutputConsoleStream(
     nsISupports** aResult)
 // Factory method to get an nsOutputStream to the console.
 //----------------------------------------------------------------------------------------
@@ -426,7 +426,7 @@ NS_BASE nsresult NS_NewOutputConsoleStream(
 }
 
 //----------------------------------------------------------------------------------------
-NS_BASE nsresult NS_NewTypicalOutputFileStream(
+NS_COM nsresult NS_NewTypicalOutputFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*default nsprMode= (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/
@@ -442,7 +442,7 @@ NS_BASE nsresult NS_NewTypicalOutputFileStream(
 }
 
 //----------------------------------------------------------------------------------------
-NS_BASE nsresult NS_NewIOFileStream(
+NS_COM nsresult NS_NewIOFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile,
     PRInt32 nsprMode /*default = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/,
@@ -465,7 +465,7 @@ NS_BASE nsresult NS_NewIOFileStream(
 }
 
 //----------------------------------------------------------------------------------------
-NS_BASE nsresult NS_NewTypicalIOFileStream(
+NS_COM nsresult NS_NewTypicalIOFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile
     /*default nsprMode= (PR_RDWR | PR_CREATE_FILE)*/

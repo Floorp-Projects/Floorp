@@ -18,7 +18,7 @@
 #
 
 #
-# nglayout build script (debug)
+# build script (debug)
 #
 use Mac::Processes;
 use NGLayoutBuildList;
@@ -30,7 +30,6 @@ use Moz;
 #-----------------------------------------------
 $DEBUG					= 1;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
-$USE_XPIDL				= 1;	# turn on to use the XPIDL plugin to generate files.
 $MOZ_FULLCIRCLE			= 0;
 $PROFILE				= 0;
 
@@ -44,17 +43,18 @@ $pull{mac} 				= 0;
 
 $build{all} 			= 1;			# turn off to do individual builds, or to do "most"
 $build{most} 			= 1;			# turn off to do individual builds
-$build{dist} 			= 0;
-$build{runtime}			= 0;
+$build{dist} 			= 1;
+$build{dist_runtime}	= 0;			# implied by $build{dist}
+$build{resources} 		= 0;
 $build{stubs} 			= 0;
-$build{common} 			= 0;
+$build{runtime}			= 0;
+$build{common} 			= 1;
 $build{intl} 			= 0;
 $build{nglayout} 		= 0;
-$build{resources} 		= 0;
 $build{editor} 			= 0;
 $build{mailnews} 		= 0;
 $build{viewer} 			= 0;
-$build{xpapp} 			= 0;
+$build{xpapp} 			= 1;
 
 #-----------------------------------------------
 # configuration variables that affect the manner
@@ -64,9 +64,9 @@ $build{xpapp} 			= 0;
 $ALIAS_SYM_FILES		= $DEBUG;
 $CLOBBER_LIBS			= 1;	# turn on to clobber existing libs and .xSYM files before
 								# building each project							
-# The following two options will delete all files,
+# The following two options will delete all dist files (if you have $build{dist} turned on),
 # but leave the directory structure intact.
-$CLOBBER_DIST_ALL 		= 0;	# turn on to clobber all aliases/files inside dist (headers/xsym/libs)
+$CLOBBER_DIST_ALL 		= 1;	# turn on to clobber all aliases/files inside dist (headers/xsym/libs)
 $CLOBBER_DIST_LIBS 		= 0;	# turn on to clobber only aliases/files for libraries/sym files in dist
 
 #-----------------------------------------------
@@ -78,6 +78,9 @@ $CodeWarriorLib::CLOSE_PROJECTS_FIRST
 								# 1 = close then make (for development),
 								# 0 = make then close (for tinderbox).
 $USE_TIMESTAMPED_LOGS 	= 1;
+#-----------------------------------------------
+# END OF CONFIG SWITCHES
+#-----------------------------------------------
 
 if ($pull{all})
 {
@@ -97,11 +100,13 @@ if ($build{most})
 {
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
 #	$build{dist}		= 1;
+#	$build{dist_runtime}= 1;
+#	$build{resources}	= 1;
 #   $build{stubs}		= 1;
+#   $build{runtime}		= 1;
 #	$build{common}		= 1; # Requires intl
 #   $build{intl}		= 1; 
 #	$build{nglayout}	= 1;
-#	$build{resources}	= 1;
 #	$build{editor}		= 1;
 #	$build{mailnews}	= 1;
 #	$build{viewer}		= 1;
@@ -146,12 +151,9 @@ if ($pull{all}) {
    Checkout();
 }
 
-if ($build{dist}) {
-	chdir($MOZ_SRC);
-	BuildDist();
-}
+BuildDist();
 
 chdir($MOZ_SRC);
 BuildProjects();
 
-print "Build layout complete\n";
+print "Build complete\n";

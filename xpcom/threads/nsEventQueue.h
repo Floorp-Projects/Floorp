@@ -19,7 +19,6 @@
 
 #include "prmon.h"
 #include "nsIEventQueue.h"
-#include "nsXPComFactory.h"
 
 static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
 

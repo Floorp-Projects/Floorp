@@ -777,7 +777,10 @@ protected:
 public:
     BookmarkDataSourceImpl(void);
     virtual ~BookmarkDataSourceImpl(void);
-
+#if 0
+    // for nsIGenericFactory:
+    static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+#endif
     // nsISupports
     NS_DECL_ISUPPORTS
 
@@ -931,6 +934,27 @@ BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 	NS_RELEASE(mInner);
 	bm_ReleaseGlobals();
 }
+
+#if 0
+nsresult
+BookmarkDataSourceImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    if (aResult == nsnull)
+        return NS_ERROR_NULL_POINTER;
+    BookmarkDataSourceImpl* ds = new BookmarkDataSourceImpl();
+    if (ds == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    rv = ds->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {
+        delete ds;
+        return rv;
+    }
+    return rv;
+}
+#endif
 
 //NS_IMPL_ISUPPORTS(BookmarkDataSourceImpl, kIRDFDataSourceIID);
 NS_IMPL_ADDREF(BookmarkDataSourceImpl);
@@ -1437,6 +1461,7 @@ BookmarkDataSourceImpl::CanAccept(nsIRDFResource* aSource,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 #include "nsXPComFactory.h"
 
 NS_DEF_FACTORY(BookmarkDataSource,BookmarkDataSourceImpl)
@@ -1454,6 +1479,7 @@ NS_NewRDFBookmarkDataSourceFactory(nsIFactory** aResult)
     *aResult = inst;
     return rv;
 }
+#endif
 
 nsresult
 NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result)

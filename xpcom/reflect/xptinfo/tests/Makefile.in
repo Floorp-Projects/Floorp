@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= libxpt
+MODULE		= xpcom
 
 SIMPLE_PROGRAMS	= TestInterfaceInfo
 
@@ -33,10 +33,7 @@ CPPSRCS		= \
 
 LIBS		= \
 		  -L$(DIST)/bin \
-		  -lxptinfo 	\
-		  -lxpt 	\
 		  -lxpcom	\
-		  -lreg		\
 		  $(NSPR_LIBS) 	\
 		  $(NULL)
 

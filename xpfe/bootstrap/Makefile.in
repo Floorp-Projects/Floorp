@@ -25,23 +25,17 @@ MODULE		= apprunner
 
 include $(DEPTH)/config/autoconf.mk
 
-TOOLKIT_GFX_LIB		= -lgfx$(MOZ_TOOLKIT)
-TOOLKIT_WIDGET_LIB	= -lwidget$(MOZ_TOOLKIT)
-TOOLKIT_BASE_LIB	= -lgmbase$(MOZ_TOOLKIT)
-TOOLKIT_CFLAGS		= -DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
-			  -DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
-			  $(TK_CFLAGS)
+TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
+TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 
 LIBS = \
 	-L$(DIST)/bin	\
 	-lnsappshell	\
 	-lxpcom		\
-	-lraptorbase	\
 	$(TOOLKIT_WIDGET_LIB)\
 	-lraptorgfx	\
 	$(TOOLKIT_GFX_LIB)\
 	-lgfxps         \
-	$(TOOLKIT_BASE_LIB)\
 	-lreg		\
 	-labouturl	\
 	-lhttpurl	\
@@ -62,7 +56,6 @@ LIBS = \
 	-lxmltok \
 	-ljsdom		\
 	-ljsurl		\
-	-lraptorbase	\
 	-lsecfree	\
 	-l$(MOZ_LIB_JS_PREFIX)js		\
 	$(JSJ_LIB)	\

@@ -29,6 +29,7 @@ MODULE=layout
 # Alphabetical list of source files
 CPPSRCS =				\
 	nsCaret.cpp			\
+	nsCaretProperties_$(MOZ_TOOLKIT).cpp \
 	nsCommentNode.cpp		\
 	nsContentIterator.cpp		\
 	nsContentList.cpp		\

@@ -24,9 +24,6 @@
 #include "nsIServiceManager.h"
 #include <string.h>     /* for memcpy */
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
-
 nsAllocatorImpl::nsAllocatorImpl(nsISupports* outer)
 {
     NS_INIT_AGGREGATED(outer);
@@ -44,8 +41,8 @@ nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
     if (NULL == aInstancePtr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
-    if (aIID.Equals(kIAllocatorIID) || 
-        aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(nsIAllocator::GetIID()) || 
+        aIID.Equals(nsISupports::GetIID())) {
         *aInstancePtr = (void*) this; 
         AddRef(); 
         return NS_OK; 
@@ -56,13 +53,13 @@ nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
 NS_METHOD
 nsAllocatorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-    if (outer && !aIID.Equals(kISupportsIID))
+    if (outer && !aIID.Equals(nsISupports::GetIID()))
         return NS_NOINTERFACE;   // XXX right error?
     nsAllocatorImpl* mm = new nsAllocatorImpl(outer);
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mm->AddRef();
-    if (aIID.Equals(kISupportsIID))
+    if (aIID.Equals(nsISupports::GetIID()))
         *aInstancePtr = mm->GetInner();
     else
         *aInstancePtr = mm;
@@ -102,7 +99,7 @@ nsAllocatorImpl::HeapMinimize(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#if 0
 nsAllocatorFactory::nsAllocatorFactory(void)
 {
     NS_INIT_REFCNT();
@@ -128,6 +125,7 @@ nsAllocatorFactory::LockFactory(PRBool aLock)
 {
     return NS_OK;       // XXX what?
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,10 +173,7 @@ nsIAllocator* nsAllocator::mAllocator = NULL;
 
 PRBool nsAllocator::FetchAllocator()
 {
-    NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-    NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
-    nsServiceManager::GetService(kAllocatorCID, kIAllocatorIID, 
-                                 (nsISupports **)&mAllocator);
+    nsAllocatorImpl::Create(NULL, nsIAllocator::GetIID(), (void**)&mAllocator);
     NS_ASSERTION(mAllocator, "failed to get Allocator!");
     return (PRBool) mAllocator;
 }    

@@ -17,12 +17,12 @@
 
 IGNORE_MANIFEST=1
 
-DEPTH=..\..\..
+DEPTH=..\..\..\..
+
+MODULE	=	xpcom
 
 EXPORTS =	xpt_struct.h	\
 		xpt_xdr.h	\
 		$(NULL)
-
-MODULE	=	libxpt
 
 include <$(DEPTH)\config\rules.mak>

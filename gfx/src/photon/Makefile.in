@@ -43,6 +43,7 @@ CPPSRCS = \
 	nsGfxFactoryPh.cpp					\
 	nsImagePh.cpp						\
 	nsRegionPh.cpp						\
+	nsTimer.cpp \
 	nsRenderingContextPh.cpp
 
 

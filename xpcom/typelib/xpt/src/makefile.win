@@ -17,17 +17,16 @@
 
 IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE	= DLL
+DEPTH=..\..\..\..
 
-DEPTH=..\..\..
+MODULE	= 	xpcom
 
-LIBNAME = .\$(OBJDIR)\libxpt$(MOZ_BITS)
-DLL = $(LIBNAME).dll
+LIBRARY_NAME = xpcomxpt_s
 
 LCFLAGS = -DEXPORT_XPT_API -DWIN32_LEAN_AND_MEAN
 
 LINCS = \
-	-I$(PUBLIC)\libxpt	\
+	-I$(PUBLIC)\xpcom	\
 	$(NULL)
 
 LLIBS	=	\
@@ -43,10 +42,10 @@ C_OBJS = \
 	.\$(OBJDIR)\xpt_xdr.obj		\
 	$(NULL)
 
-MODULE	= 	libxpt
-
 include <$(DEPTH)\config\rules.mak>
 
-export:: $(DLL)
-	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+export:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -34,14 +34,15 @@ OBJS =  \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom	\
-	-I$(PUBLIC)\libxpt	\
 	-I$(MOZ_TOOLS)\include	\
 	$(NULL)
+
+LCFLAGS = -DEXPORT_XPT_API
 
 MYDIR=C:\USR\LOCAL
 
 MYLIBS=                         \
- $(DIST)\lib\libxpt32.lib		\
+ $(DIST)\lib\xpcomxpt_s.lib		\
  $(MOZ_TOOLS)\lib\glib-1.2.lib		\
  $(MOZ_TOOLS)\lib\libidl-0.6.lib	\
  $(NULL)

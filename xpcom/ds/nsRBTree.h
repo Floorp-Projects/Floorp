@@ -41,9 +41,9 @@
  * @update	gess4/20/98
  */
 
-class NS_BASE nsRBTree : public nsBTree {
+class NS_COM nsRBTree : public nsBTree {
 public:
-friend class NS_BASE nsRBTreeIterator;
+friend class NS_COM nsRBTreeIterator;
   
   /**
    * nsRBTree constructor
@@ -173,7 +173,7 @@ private:
 
 };
 
-class NS_BASE nsRBTreeIterator {
+class NS_COM nsRBTreeIterator {
 public:
 
   /**

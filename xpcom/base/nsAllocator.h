@@ -73,7 +73,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#if 0
 class nsAllocatorFactory : public nsIFactory {
 public:
     NS_IMETHOD CreateInstance(nsISupports *aOuter,
@@ -87,6 +87,6 @@ public:
 
     NS_DECL_ISUPPORTS
 };
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 #endif // nsAllocator_h__

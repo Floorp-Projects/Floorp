@@ -26,7 +26,6 @@ CPPSRCS		= TestTXMgr.cpp
 INCLUDES	+= -I$(DIST)/include
 
 LIBS		= \
-		  -lraptorbase \
 		  -lxpcom \
 		  -lreg \
 		  $(NSPR_LIBS) \

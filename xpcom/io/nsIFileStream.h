@@ -104,7 +104,7 @@ public:
 }; // class nsIFileOutputStream
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewTypicalInputFileStream(
+extern "C" NS_COM nsresult NS_NewTypicalInputFileStream(
     nsISupports** aStreamResult,
     const nsFileSpec& inFile
     /*Default nsprMode == PR_RDONLY*/
@@ -112,12 +112,12 @@ extern "C" NS_BASE nsresult NS_NewTypicalInputFileStream(
 // Factory method to get an nsInputStream from a file, using most common options
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewOutputConsoleStream(
+extern "C" NS_COM nsresult NS_NewOutputConsoleStream(
     nsISupports** aStreamResult);
     // Factory method to get an nsOutputStream to the console.
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewTypicalOutputFileStream(
+extern "C" NS_COM nsresult NS_NewTypicalOutputFileStream(
     nsISupports** aStreamResult, // will implement all the above interfaces
     const nsFileSpec& inFile
     /*default nsprMode= (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/
@@ -125,7 +125,7 @@ extern "C" NS_BASE nsresult NS_NewTypicalOutputFileStream(
     // Factory method to get an nsOutputStream to a file - most common case.
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewTypicalIOFileStream(
+extern "C" NS_COM nsresult NS_NewTypicalIOFileStream(
     nsISupports** aStreamResult, // will implement all the above interfaces
     const nsFileSpec& inFile
     /*default nsprMode = (PR_RDWR | PR_CREATE_FILE)*/
@@ -134,7 +134,7 @@ extern "C" NS_BASE nsresult NS_NewTypicalIOFileStream(
     // and nsIOutputStream, associated with a single file.
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_BASE nsresult NS_NewIOFileStream(
+extern "C" NS_COM nsresult NS_NewIOFileStream(
     nsISupports** aStreamResult, // will implement all the above interfaces
     const nsFileSpec& inFile,
     PRInt32 nsprMode,

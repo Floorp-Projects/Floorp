@@ -23,7 +23,6 @@ DLLNAME		= xpctest
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=xpconnect
-REQUIRES=xpcom js libxpt xptinfo xptcall
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
@@ -33,8 +32,7 @@ OBJS=					\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \
-      -I$(PUBLIC)\raptor -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo \
-      -I$(PUBLIC)\xptcall -I$(PUBLIC)\xpconnect
+      -I$(PUBLIC)\raptor -I$(PUBLIC)\xpconnect
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -43,9 +41,7 @@ LCFLAGS = \
 
 LLIBS=	$(LIBNSPR)	\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
-		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
-		$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
-		$(DIST)\lib\xptcall$(MOZ_BITS).lib	\
+		$(DIST)\lib\xpcom.lib	\
 		$(DIST)\lib\xpc$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(NULL)
 

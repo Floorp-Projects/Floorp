@@ -64,7 +64,7 @@ MAPFILE= npsimple.map
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom32.lib
+LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen
 

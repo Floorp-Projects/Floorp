@@ -91,6 +91,12 @@ public:
 };
 
 /** Factory method for creating an nsITimer */
-extern NS_GFX nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
+extern
+#ifdef XP_MAC // On the macintosh, this is built into the network library.
+NS_NET
+#else
+NS_GFX
+#endif
+nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
 
 #endif

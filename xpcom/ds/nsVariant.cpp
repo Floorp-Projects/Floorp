@@ -218,7 +218,7 @@ nsVariant::GetDescription(char* *result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_BASE nsresult
+NS_COM nsresult
 NS_NewIVariant(nsVariantType initialType, nsVariantValue& initialValue,
                nsIVariant* *result)
 {
