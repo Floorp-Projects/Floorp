@@ -144,6 +144,31 @@ void CQaUtils::FormatAndPrintOutput(const char *theInput, const char *theVar, in
 	}
 }
 
+void CQaUtils::FormatAndPrintOutput(const char *theInput, int theVar, int outputMode) 
+{
+	nsCString outStr;
+	CString strMsg;
+
+	outStr = theInput;
+	outStr.AppendInt(theVar);
+
+	strMsg = outStr.get();
+
+	switch (outputMode)
+	{
+	case 0:
+		AfxMessageBox(strMsg); 
+		break;
+	case 1:
+		WriteToOutputFile(outStr.get());
+		break;
+	case 2:
+		WriteToOutputFile(outStr.get());
+		AfxMessageBox(strMsg); 
+		break;
+	}
+}
+
 // stringMsg is returned in case embeddor wishes to use it in the calling method.
 void CQaUtils::RequestName(nsIRequest *request, nsCString &stringMsg,
 						   int displayMethod)

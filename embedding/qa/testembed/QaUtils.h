@@ -48,6 +48,7 @@ public:
 	void static WriteToOutputFile(const char *);
 	void static QAOutput(const char *pLine, int displayMethod=1);
 	void static FormatAndPrintOutput(const char *, const char *, int);
+	void static FormatAndPrintOutput(const char *, int, int);
 	void static RequestName(nsIRequest *, nsCString &, int displayMethod=1);
 	void static WebProgDOMWindowTest(nsIWebProgress *, const char *, 
 									 int displayMethod=1);
