@@ -23,6 +23,7 @@
 #include "nsIWin32LocaleImpl.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
+#include <Windows.h>
 
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 NS_DEFINE_IID(kIWin32LocaleImplCID, NS_WIN32LOCALE_CID);
@@ -30,200 +31,358 @@ NS_DEFINE_IID(kIWin32LocaleImplCID, NS_WIN32LOCALE_CID);
 #define USER_DEFINED_PRIMARYLANG	0x0200
 #define USER_DEFINED_SUBLANGUAGE	0x20
 
-#define LENGTH_LANGUAGE_LIST		51
-#define LENGTH_COUNTRY_LIST			96
-#define LENGTH_OVERRIDE_LIST		9
+#define LENGTH_MAPPING_LIST		50
 
-struct iso_lang_mapping
+struct iso_pair 
 {
 	char*	iso_code;
-	DWORD	lang_code;
+	DWORD	win_code;
 };
-typedef struct iso_lang_mapping iso_lang_mapping;
+typedef struct iso_pair iso_pair;
 
-struct iso_country_mapping
+struct iso_map
 {
-	char*	iso_code;
-	DWORD	country_code;
+	char*				iso_code;
+	DWORD				win_code;
+	iso_pair			sublang_list[20];
 };
-typedef struct iso_country_mapping iso_country_mapping;
+typedef struct iso_map iso_map;
 
-struct iso_country_override
-{
-	char*	iso_country_code;
-	char*	iso_lang_code;
-	DWORD	country_code;
-};
-typedef struct iso_country_override iso_country_override;
+
 //
-// ISO <--> Windows 32 Mappings from www.unicode.org
+// Additional ISO <--> Windows 32 Language values from http://www.unicode.org
 //
-iso_lang_mapping language_list[LENGTH_LANGUAGE_LIST] =
-{
-	{"af",	0x0036},
-	{"sq",	0x001c},
-	{"ar",	0x0001},
-	{"eu",	0x002d},
-	{"bg",	0x0002},
-	{"be",	0x0023},
-	{"ca",	0x0003},
-	{"zh",	0x0004},
-	{"hr",	0x001a},
-	{"cs",	0x0005},
-	{"da",	0x0006},
-	{"nl",	0x0013},
-	{"en",	0x0009},
-	{"et",	0x0025},
-	{"fo",	0x0038},
-	{"fa",	0x0029},
-	{"fi",	0x000b},
-	{"fr",	0x000c},
-	{"de",	0x0007},
-	{"el",	0x0008},
-	{"iw",	0x000d},
-	{"he",	0x000d},
-	{"hi",	0x0039},
-	{"hu",	0x000e},
-	{"is",	0x000f},
-	{"in",	0x0021},
-	{"id",	0x0021},
-	{"it",	0x0010},
-	{"ja",	0x0011},
-	{"ko",	0x0012},
-	{"lv",	0x0026},
-	{"lt",	0x0027},
-	{"mk",	0x002f},
-	{"ms",	0x003e},
-	{"no",	0x0014},
-	{"pl",	0x0015},
-	{"pt",	0x0016},
-	{"ro",	0x0018},
-	{"ru",	0x0019},
-	{"sr",	0x001a},
-	{"sk",	0x001b},
-	{"sl",	0x0024},
-	{"es",	0x000a},
-	{"sw",	0x0041},
-	{"sv",	0x001d},
-	{"th",	0x001e},
-	{"tr",	0x001f},
-	{"uk",	0x0022},
-	{"ur",	0x0020},
-	{"vi",	0x002a}
-};
+#define MOZ_LANG_HINDI			0x39
+#define MOZ_LANG_MACEDONIAN		0x2f
+#define MOZ_LANG_MALAY			0x3e
+#define MOZ_LANG_SWAHILI		0x41
+#define MOZ_LANG_URDU			0x20
 
-iso_country_mapping country_list[LENGTH_COUNTRY_LIST] =
+//
+// This list is used to map between ISO language
+iso_map iso_list[LENGTH_MAPPING_LIST] =
 {
-	{"AL",0x0400},
-	{"DZ",0x1400},
-	{"AR",0x2c00},
-	{"AU",0x0c00},
-	{"AT",0x0c00},
-	{"BH",0x3c00},
-	{"BY",0x0400},
-	{"BE",0x0800},
-	{"BZ",0x2800},
-	{"BO",0x4000},
-	{"BR",0x0400},
-	{"BN",0x0800},
-	{"BG",0x0400},
-	{"CA",0x1000},
-	{"CL",0x3400},
-	{"CN",0x0800},
-	{"CO",0x2400},
-	{"CR",0x1400},
-	{"CZ",0x0400},
-	{"DK",0x0400},
-	{"DO",0x1c00},
-	{"EC",0x3000},
-	{"EG",0x0c00},
-	{"SV",0x4400},
-	{"EE",0x0400},
-	{"FO",0x0400},
-	{"FI",0x0400},
-	{"FR",0x0400},
-	{"DE",0x0400},
-	{"GR",0x0400},
-	{"GT",0x1000},
-	{"HN",0x4800},
-	{"HK",0x0c00},
-	{"HU",0x0400},
-	{"IS",0x0400},
-	{"IN",0x0400},
-	{"ID",0x0400},
-	{"IR",0x0400},
-	{"IQ",0x0800},
-	{"IE",0x1800},
-	{"IL",0x0400},
-	{"IT",0x0400},
-	{"JM",0x2000},
-	{"JP",0x0400},
-	{"JO",0x2c00},
-	{"KE",0x0400},
-	{"KR",0x0400},
-	{"KW",0x3400},
-	{"LV",0x0400},
-	{"LB",0x3000},
-	{"LY",0x1000},
-	{"LI",0x1400},
-	{"LT",0x0400},
-	{"LU",0x1000},
-	{"MO",0x1400},
-	{"MK",0x0400},
-	{"MY",0x0400},
-	{"MX",0x0800},
-	{"MC",0x1800},
-	{"MA",0x1800},
-	{"NL",0x0400},
-	{"NZ",0x1400},
-	{"NI",0x4c00},
-	{"NO",0x0400},
-	{"OM",0x2000},
-	{"PK",0x0400},
-	{"PA",0x1800},
-	{"PY",0x3c00},
-	{"PE",0x2800},
-	{"PH",0x3400},
-	{"PL",0x0400},
-	{"PT",0x0800},
-	{"PR",0x5000},
-	{"QA",0x4000},
-	{"RO",0x0400},
-	{"RU",0x0400},
-	{"SA",0x0400},
-	{"SG",0x1000},
-	{"SK",0x0400},
-	{"SI",0x0400},
-	{"ZA",0x0400},
-	{"ES",0x0400},
-	{"TH",0x0400},
-	{"TT",0x2c00},
-	{"TN",0x1c00},
-	{"TR",0x0400},
-	{"TW",0x0400},
-	{"UA",0x0400},
-	{"AE",0x3800},
-	{"GB",0x0800},
-	{"US",0x0400},
-	{"UY",0x3800},
-	{"VE",0x2000},
-	{"VN",0x2400},
-	{"YE",0x2400},
-	{"ZW",0x3000}
+	{"af",	LANG_AFRIKAANS, {
+		{ "ZA", SUBLANG_DEFAULT },
+		{ "",0}}
+	},
+	{ "ar", LANG_ARABIC, {
+		{ "SA", SUBLANG_ARABIC_SAUDI_ARABIA }, 
+		{ "IQ", SUBLANG_ARABIC_IRAQ },  
+		{ "EG",	SUBLANG_ARABIC_EGYPT },	
+		{ "LY", SUBLANG_ARABIC_LIBYA },
+		{ "DZ", SUBLANG_ARABIC_ALGERIA },
+		{ "MA", SUBLANG_ARABIC_MOROCCO },
+		{ "TN", SUBLANG_ARABIC_TUNISIA },
+		{ "OM", SUBLANG_ARABIC_OMAN }, 
+		{ "YE", SUBLANG_ARABIC_YEMEN },
+		{ "SY", SUBLANG_ARABIC_SYRIA },
+		{ "JO", SUBLANG_ARABIC_JORDAN },
+		{ "LB", SUBLANG_ARABIC_LEBANON },
+		{ "KW", SUBLANG_ARABIC_KUWAIT },
+		{ "AE", SUBLANG_ARABIC_UAE },
+		{ "BH", SUBLANG_ARABIC_BAHRAIN },
+		{ "QA", SUBLANG_ARABIC_QATAR },
+		{"",0}}
+	},
+	{"be",	LANG_BELARUSIAN, {
+		{ "BY",SUBLANG_DEFAULT },
+		{ "",0}}
+	},
+	{"bg",	LANG_BULGARIAN, {
+		{ "BG", SUBLANG_DEFAULT },
+		{ "",0}}
+	},
+	{"ca",	LANG_CATALAN, {
+		{ "ES", SUBLANG_DEFAULT},
+		{ "",0}}
+	},
+	{"cs",	LANG_CZECH, {
+		{ "CZ", SUBLANG_DEFAULT},
+		{"",0}}
+	},
+	{ "da", LANG_DUTCH, { 
+		{ "DK", SUBLANG_DUTCH },
+		{ "BE", SUBLANG_DUTCH_BELGIAN },
+		{ "",0}}
+	},
+	{ "de", LANG_GERMAN, {
+		{ "DE", SUBLANG_GERMAN },
+		{ "CH", SUBLANG_GERMAN_SWISS },
+		{ "AT", SUBLANG_GERMAN_AUSTRIAN },
+		{ "LU", SUBLANG_GERMAN_LUXEMBOURG },
+		{ "LI", SUBLANG_GERMAN_LIECHTENSTEIN },
+		{ "" , 0}}
+	},
+	{"el",	LANG_GREEK, {
+		{ "GR", SUBLANG_DEFAULT},
+		{ "", 0}}
+	},
+	{ "en", LANG_ENGLISH, {
+		{ "US", SUBLANG_ENGLISH_US },
+		{ "GB", SUBLANG_ENGLISH_UK },
+		{ "AU", SUBLANG_ENGLISH_AUS },
+		{ "CA", SUBLANG_ENGLISH_CAN },
+		{ "NZ", SUBLANG_ENGLISH_NZ },
+		{ "IE", SUBLANG_ENGLISH_EIRE },
+		{ "ZA", SUBLANG_ENGLISH_SOUTH_AFRICA },
+		{ "JM", SUBLANG_ENGLISH_JAMAICA },
+		{ "BZ", SUBLANG_ENGLISH_BELIZE },
+		{ "TT", SUBLANG_ENGLISH_TRINIDAD },
+		{ "",0}}
+	},
+	{ "es", LANG_SPANISH, {
+		{ "ES", SUBLANG_SPANISH },
+		{ "MX", SUBLANG_SPANISH_MEXICAN },
+		{ "GT", SUBLANG_SPANISH_GUATEMALA },
+		{ "CR", SUBLANG_SPANISH_COSTA_RICA },
+		{ "PA", SUBLANG_SPANISH_PANAMA },
+		{ "DO", SUBLANG_SPANISH_DOMINICAN_REPUBLIC },
+		{ "VE", SUBLANG_SPANISH_VENEZUELA },
+		{ "CO", SUBLANG_SPANISH_COLOMBIA },
+		{ "PE", SUBLANG_SPANISH_PERU },
+		{ "AR", SUBLANG_SPANISH_ARGENTINA },
+		{ "EC", SUBLANG_SPANISH_ECUADOR },
+		{ "CL", SUBLANG_SPANISH_CHILE },
+		{ "UY", SUBLANG_SPANISH_URUGUAY },
+		{ "PY", SUBLANG_SPANISH_PARAGUAY },
+		{ "BO", SUBLANG_SPANISH_BOLIVIA },
+		{ "SV", SUBLANG_SPANISH_EL_SALVADOR },
+		{ "HN", SUBLANG_SPANISH_HONDURAS },
+		{ "NI", SUBLANG_SPANISH_NICARAGUA },
+	    { "PR", SUBLANG_SPANISH_PUERTO_RICO },
+		{ "", 0 }}
+	},
+	{"et",	LANG_ESTONIAN, {
+		{ "EE", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"eu",	LANG_BASQUE, {
+		{ "ES" , SUBLANG_DEFAULT },
+		{ "" , 0 }}
+	},
+	{"fa",	LANG_FARSI, {
+		{ "IR", SUBLANG_DEFAULT},
+		{ "", 0}}
+	},
+	{"fi",	LANG_FINNISH, {
+		{ "FI", SUBLANG_DEFAULT },
+		{ "",0}}
+	},
+	{"fo",	LANG_FAEROESE, {
+		{ "FO", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "fr", LANG_FRENCH, {
+		{ "FR", SUBLANG_FRENCH },
+		{ "BE", SUBLANG_FRENCH_BELGIAN },
+		{ "CA", SUBLANG_FRENCH_CANADIAN },
+		{ "CH", SUBLANG_FRENCH_SWISS },
+		{ "LU", SUBLANG_FRENCH_LUXEMBOURG },
+		{"",0}}
+	},
+	{"he",	LANG_HEBREW, {
+		{ "IL", SUBLANG_DEFAULT},
+		{ "", 0}}
+	},
+	{"hi",	MOZ_LANG_HINDI, {
+		{ "IN", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"hr",	LANG_CROATIAN, {
+		{ "HR", SUBLANG_DEFAULT},
+		{ "" ,0 }}
+	},
+	{"hu",	LANG_HUNGARIAN, {
+		{ "HU", SUBLANG_DEFAULT },
+		{ "" , 0 }}
+	},
+	{"id",	LANG_INDONESIAN, {
+		{ "ID", SUBLANG_DEFAULT },
+		{"", 0}}
+	},
+	{"in",	LANG_INDONESIAN, {
+		{ "ID", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"is",	LANG_ICELANDIC, {
+		{ "IS", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "it", LANG_ITALIAN, {
+		{ "IT", SUBLANG_ITALIAN },
+		{ "CH", SUBLANG_ITALIAN_SWISS },
+		{ "", 0}}
+	},
+	{"iw",	LANG_HEBREW, {
+		{ "IL", SUBLANG_DEFAULT},
+		{ "", 0}}
+	},
+	{"ja",	LANG_JAPANESE, {
+		{ "JP", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "ko", LANG_KOREAN, {
+		{ "KO", SUBLANG_KOREAN },
+		{ "", 0}}
+	},
+	{"lt",	LANG_LITHUANIAN, {
+		{ "LT", SUBLANG_DEFAULT },
+		{ "" ,0 }}
+	},
+	{"lv",	LANG_LATVIAN, {
+		{ "LV", SUBLANG_DEFAULT},
+		{ "", 0}}
+	},
+	{"mk",	MOZ_LANG_MACEDONIAN, {
+		{ "MK", SUBLANG_DEFAULT },
+		{ "", 0 }}
+	},
+	{"ms",	MOZ_LANG_MALAY, {
+		{ "MY", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"nl",	LANG_DUTCH, {
+		{"NL", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"no",	LANG_NORWEGIAN, {
+		{ "NO",  SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"pl",	LANG_POLISH, {
+		{ "PL", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "pt", LANG_PORTUGUESE, {
+		{ "PT", SUBLANG_PORTUGUESE },
+		{ "BR", SUBLANG_PORTUGUESE_BRAZILIAN },
+		{"",0}}
+	},
+	{"ro",	LANG_ROMANIAN, {
+		{ "RO", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"ru",	LANG_RUSSIAN, {
+		{ "RU", SUBLANG_DEFAULT },
+		{ "", 0 }}
+	},
+	{"sk",	LANG_SLOVAK, {
+		{ "SK", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"sl",	LANG_SLOVENIAN, {
+		{ "SI", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"sq",	LANG_ALBANIAN, {
+		{ "AL", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},		
+	{"sr",	LANG_SERBIAN, {
+		{ "YU", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "sv", LANG_SWEDISH, {
+		{ "SE", SUBLANG_SWEDISH },
+		{ "FI", SUBLANG_SWEDISH_FINLAND },
+		{ "", 0 }}
+	},
+	{"sw",	MOZ_LANG_SWAHILI, {
+		{ "KE", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"th",	LANG_THAI, {
+		{"TH", SUBLANG_DEFAULT},
+		{"",0}}
+	},
+	{"tr",	LANG_TURKISH, {
+		{ "TR", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"uk",	LANG_UKRAINIAN, {
+		{ "UA", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"ur",	MOZ_LANG_URDU, {
+		{ "IN", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{"vi",	LANG_VIETNAMESE, {
+		{ "VN", SUBLANG_DEFAULT },
+		{ "", 0}}
+	},
+	{ "zh", LANG_CHINESE, {
+		{ "TW", SUBLANG_CHINESE_TRADITIONAL },
+		{ "CN", SUBLANG_CHINESE_SIMPLIFIED },
+		{ "HK", SUBLANG_CHINESE_HONGKONG },
+		{ "SG", SUBLANG_CHINESE_SINGAPORE },
+		{ "",0}}
+	}
 };
-
-iso_country_override country_override[LENGTH_OVERRIDE_LIST] =
+	
+//
+// This list maps ISO 2 digit country codes to Win32 country codes.
+// This list must be kept in alphabetic (by iso code) order and synchronized
+// with the list above.  This is only used in debug builds to check the consistentcy
+// of the internal tables.
+//
+#ifdef DEBUG
+iso_pair dbg_list[LENGTH_MAPPING_LIST+1] =
 {
-	{"CA","fr",0x0c00},
-	{"CA","en",0x1000},
-	{"CH","de",0x0800},
-	{"CH","it",0x0800},
-	{"CH","fr",0x1000},
-	{"LU","de",0x1000},
-	{"LU","fr",0x1400},
-	{"ZA","en",0x1c00},
-	{"ZA","af",0x0400}
+	{"af",	LANG_AFRIKAANS},		
+	{"ar",	LANG_ARABIC},
+	{"be",	LANG_BELARUSIAN},
+	{"bg",	LANG_BULGARIAN},
+	{"ca",	LANG_CATALAN},
+	{"cs",	LANG_CZECH},
+	{"da",	LANG_DANISH},
+	{"de",	LANG_GERMAN},
+	{"el",	LANG_GREEK},
+	{"en",	LANG_ENGLISH},
+	{"es",	LANG_SPANISH},
+	{"et",	LANG_ESTONIAN},
+	{"eu",	LANG_BASQUE},
+	{"fa",	LANG_FARSI},
+	{"fi",	LANG_FINNISH},
+	{"fo",	LANG_FAEROESE},
+	{"fr",	LANG_FRENCH},
+	{"he",	LANG_HEBREW},
+	{"hi",	MOZ_LANG_HINDI},
+	{"hr",	LANG_CROATIAN},
+	{"hu",	LANG_HUNGARIAN},
+	{"id",	LANG_INDONESIAN},
+	{"in",	LANG_INDONESIAN},
+	{"is",	LANG_ICELANDIC},
+	{"it",	LANG_ITALIAN},
+	{"iw",	LANG_HEBREW},
+	{"ja",	LANG_JAPANESE},
+	{"ko",	LANG_KOREAN},
+	{"lt",	LANG_LITHUANIAN},
+	{"lv",	LANG_LATVIAN},
+	{"mk",	MOZ_LANG_MACEDONIAN},
+	{"ms",	MOZ_LANG_MALAY},
+	{"nl",	LANG_DUTCH},
+	{"no",	LANG_NORWEGIAN},
+	{"pl",	LANG_POLISH},
+	{"pt",	LANG_PORTUGUESE},
+	{"ro",	LANG_ROMANIAN},
+	{"ru",	LANG_RUSSIAN},
+	{"sk",	LANG_SLOVAK},
+	{"sl",	LANG_SLOVENIAN},
+	{"sq",	LANG_ALBANIAN},		
+	{"sr",	LANG_SERBIAN},
+	{"sv",	LANG_SWEDISH},
+	{"sw",	MOZ_LANG_SWAHILI},
+	{"th",	LANG_THAI},
+	{"tr",	LANG_TURKISH},
+	{"uk",	LANG_UKRAINIAN},
+	{"ur",	MOZ_LANG_URDU},
+	{"vi",	LANG_VIETNAMESE},
+	{"zh",	LANG_CHINESE},
+	{"",0}
 };
+#endif
 
 /* nsIWin32LocaleImpl */
 NS_IMPL_ISUPPORTS(nsIWin32LocaleImpl,kIWin32LocaleIID)
@@ -251,7 +410,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 	char		language_code[3];
 	char		country_code[3];
 	char		region_code[3];
-	DWORD		winLangCode = 0, winSublangCode=0;
+	int			i,j;
 
 	locale_string = locale->ToNewCString();
 	if (locale_string!=NULL)
@@ -264,43 +423,23 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 		}
 		// we have a LL-CC-RR style string
 
-		winLangCode = GetLangIDFromISOCode(language_code);
-		if (winLangCode==0) {
-			//
-			// didn't find a corresponding language code -- return user default
-			//
-			*winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
-								SORT_DEFAULT);
-			delete [] locale_string;
-			return NS_OK;
+		for(i=0;i<LENGTH_MAPPING_LIST;i++) {
+			if (strcmp(language_code,iso_list[i].iso_code)==0) {
+				for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
+					if (strcmp(country_code,iso_list[i].sublang_list[j].iso_code)==0) {
+						delete [] locale_string;
+						*winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,iso_list[i].sublang_list[j].win_code),SORT_DEFAULT);
+						return NS_OK;
+					}
+				}
+				// here we have a language match but no country match
+				delete [] locale_string;
+				*winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,SUBLANG_DEFAULT),SORT_DEFAULT);
+				return NS_OK;
+			}
 		}
-		
-		if (strlen(country_code)==0) {
-			//
-			// no country code specified -- use SUBLANG_DEFAULT
-			//
-			*winLCID = MAKELCID(MAKELANGID(winLangCode,SUBLANG_DEFAULT),
-								SORT_DEFAULT);
-			delete [] locale_string;
-			return NS_OK;
-		}
-
-		winSublangCode = GetSublangIDFromISOCode(language_code,country_code);
-		if (winSublangCode==0) {
-			//
-			// didn't find a corresponding language code -- return user default
-			//
-			*winLCID = MAKELCID(MAKELANGID(winLangCode,USER_DEFINED_SUBLANGUAGE),
-								SORT_DEFAULT);
-			delete [] locale_string;
-			return NS_OK;
-		}
-
-		*winLCID = winLangCode | winSublangCode;
-		delete [] locale_string;
-		return NS_OK;
 	}
-
+		
 	return NS_ERROR_FAILURE;
 }
 
@@ -308,38 +447,34 @@ NS_IMETHODIMP
 nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsString* locale)
 {
 	DWORD		lang_id, sublang_id;
-	const char*	lang_code;
-	const char*	country_code;
 	char		rfc_locale_string[9];
+	int			i,j;
 
 	lang_id = PRIMARYLANGID(LANGIDFROMLCID(winLCID));
 	sublang_id = SUBLANGID(LANGIDFROMLCID(winLCID));
 
-	if (sublang_id!=USER_DEFINED_SUBLANGUAGE) {
-		sublang_id = sublang_id << 10;
+	for(i=0;i<LENGTH_MAPPING_LIST;i++) {
+		if (lang_id==iso_list[i].win_code) {
+			for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;i++) {
+				if (sublang_id == iso_list[i].sublang_list[j].win_code) {
+					PR_snprintf(rfc_locale_string,9,"%s-%s%c",iso_list[i].iso_code,
+						iso_list[i].sublang_list[j].iso_code,0);
+					*locale = rfc_locale_string;
+					return NS_OK;
+				}
+			}
+			// no sublang, so just lang
+			PR_snprintf(rfc_locale_string,9,"%s%c",iso_list[i].iso_code,0);
+			*locale = rfc_locale_string;
+			return NS_OK;
+		}
 	}
 
-	if (lang_id==USER_DEFINED_PRIMARYLANG && sublang_id==USER_DEFINED_SUBLANGUAGE) {
-		*locale = "x-user-defined";
-		return NS_OK;
-	}
+	//
+	// totally didn't find it
+	//
+	return NS_ERROR_FAILURE;
 
-	lang_code = GetISOCodeFromLangID(lang_id);
-	if (lang_code==nsnull) {
-		*locale = "x-user-defined";
-		return NS_OK;
-	}
-
-	country_code = GetISOCodeFromSublangID(sublang_id,lang_code);
-
-	if (country_code==nsnull) {
-		PR_snprintf(rfc_locale_string,9,"%s%c",lang_code,0);
-	} else {
-		PR_snprintf(rfc_locale_string,9,"%s-%s%c",lang_code,country_code,0);
-	}
-
-	*locale = rfc_locale_string;
-	return NS_OK;
 }
 
 //
@@ -386,78 +521,30 @@ nsIWin32LocaleImpl::ParseLocaleString(const char* locale_string, char* language,
 	return PR_TRUE;
 }
 
-DWORD
-nsIWin32LocaleImpl::GetLangIDFromISOCode(const char* lang)
+
+#ifdef DEBUG
+void
+test_internal_tables(void)
 {
 	int	i;
 
-	for(i=0;i<LENGTH_LANGUAGE_LIST;i++) {
-		if (strcmp(lang,language_list[i].iso_code)==0) {
-			return language_list[i].lang_code;
-		}
+	for(i=1;i<LENGTH_MAPPING_LIST;i++) {
+		if (strcmp(dbg_list[i-1].iso_code,dbg_list[i].iso_code)>=0)
+			fprintf(stderr,"nsLocale: language_list %s and %s are not ordered\n",dbg_list[i-1].iso_code,dbg_list[i].iso_code);
 	}
 
-	return 0;
+	i=0;
+	while(strlen(dbg_list[i].iso_code)!=0) {
+		i++;
+	}
+	if (i!=LENGTH_MAPPING_LIST)
+		fprintf(stderr,"nsLocale: language_list length is %d, reported length is %d\n",i,LENGTH_MAPPING_LIST);
+
+	for(i=0;i<LENGTH_MAPPING_LIST;i++) {
+		if (strcmp(iso_list[i].iso_code,dbg_list[i].iso_code)!=0) {
+			fprintf(stderr,"nsLocale: iso_list and dbg_list differet at item: %d\n",i);
+		}
+	}
 }
 
-DWORD
-nsIWin32LocaleImpl::GetSublangIDFromISOCode(const char* lang, const char* country)
-{
-	int	i;
-	DWORD	winSublangCode = 0;
-
-	for(i=0;i<LENGTH_COUNTRY_LIST;i++) {
-		if (strcmp(country,country_list[i].iso_code)==0) {
-			winSublangCode = country_list[i].country_code;
-			break;
-		}
-	}
-
-	for(i=0;i<LENGTH_OVERRIDE_LIST;i++) {
-		if (strcmp(country,country_override[i].iso_country_code)==0 &&
-			strcmp(lang,country_override[i].iso_lang_code)==0) {
-			winSublangCode = country_override[i].country_code;
-			break;
-		}
-	}
-
-	return winSublangCode;
-}
-
-const char*
-nsIWin32LocaleImpl::GetISOCodeFromLangID(DWORD lang_id)
-{
-	int	i;
-
-	for(i=0;i<LENGTH_LANGUAGE_LIST;i++) {
-		if (language_list[i].lang_code==lang_id) {
-			return language_list[i].iso_code;
-		}
-	}
-
-	return nsnull;
-}
-
-const char*
-nsIWin32LocaleImpl::GetISOCodeFromSublangID(DWORD sublang_id, const char* lang)
-{
-	int	i;
-
-	//
-	// check the overrides first
-	//
-	for(i=0;i<LENGTH_OVERRIDE_LIST;i++) {
-		if (country_override[i].country_code==sublang_id &&
-			strcmp(lang,country_override[i].iso_lang_code)==0) {
-			return country_override[i].iso_country_code;
-		}
-	}
-
-	for(i=0;i<LENGTH_COUNTRY_LIST;i++) {
-		if (country_list[i].country_code==sublang_id) {
-			return country_list[i].iso_code;
-		}
-	}
-
-	return nsnull;
-}
+#endif
