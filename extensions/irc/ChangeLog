@@ -1,14 +1,17 @@
 #################################################################################
 # 12/03/01, ChatZilla 0.8.5-rc1, <rginda@netscape.com>
 
-Currently in the release candidate stage, this should be 0.8.5 final by mozilla
-0.9.7.  Again, thanks to Samuel Sieb <samuel@sieb.net> for contributing
-many of the fixes (most obvious of which is mIRC color code support), reviews,
-and driving the release candidate process.  Thanks to Casey Hutchinson
-<nnooiissee@yahoo.com> for mac accelerator cleanup, help and edit menus, xul
-refactoring work, statusbar, and motivation.
+Shipped with 0.9.7.  Again, thanks to Samuel Sieb <samuel@sieb.net> for
+contributing many of the fixes (the most obvious of which is mIRC color code
+support), reviews, and driving the release candidate process.  Thanks to Casey 
+Hutchinson <nnooiissee@yahoo.com> for mac accelerator cleanup, help and edit
+menus, xul refactoring work, statusbar, and motivation.  Thanks to
+KOIKE Kazuhiko, Katsuhiko Momoi, Shoji Matsumoto, and others who helped out in
+bug 41564 to get charsets working.
 
 * strict warning cleanup.
+* add input/output charset support.  use /eval setCharset("charsetname"); to
+  change the current charset, settings will be saved.
 * add "open at startup" item to view menus.
 * implement urls for /query views (isnick urls.)
 * make nicknames in output window isnick urls.
@@ -16,16 +19,16 @@ refactoring work, statusbar, and motivation.
 * add chatzilla icon to mozilla statusbar.
 * move "statusbar" to top of message window, rename to "header".
 * add mirc color code handling.
-* show long topics in multiple lines is header, instead of cropping.
+* show long topics in multiple lines in header, instead of cropping.
 * add bugzilla munger rule, links "bug 12345" and "bug #12345" to appropriate
   bugzilla bugs.
 * add channel munger rule to link #channelname to the channel.
 * add edit and help menus.
 * make /attach accept urls and url "fragments",
   /attach moznet, /attach moznet/chatzilla, and /attach irc://moznet/chatzilla
-  are all valid commands.
-* add prefs for when to beep, new msg, msg in existing query view, and stalk
-  matches.
+  are now all valid commands.
+* add prefs for when to make noise; new msg, msg in existing query view, and/or
+  /stalk matches.
 * allow for space seperated list of sounds to play, like "beep beep", or
   "file:/foo.wav"
 * fix bogus "connection refused" error when disconnecting.
@@ -49,7 +52,6 @@ refactoring work, statusbar, and motivation.
 * remove unused listbox.js file from chatzilla.jar.
 * add help menu.
 * allow params in /ctcp commands.
-* UNTESTED - add input/output charset support.
 
 
 =================================================================================

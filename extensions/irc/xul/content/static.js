@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.5-rc5";
+client.version = "0.8.5";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -138,16 +138,9 @@ function toUnicode (msg)
     if (!("ucConverter" in client))
         return msg;
     
-    /* if we're in a stateful charset, return to ascii mode before starting */
-    if (client.CHARSET.search(/iso-2022/i) != -1)
-        client.ucConverter.ConvertToUnicode("\x1B(B");
-
-    msg = client.ucConverter.ConvertToUnicode(msg);
-
-    /* if we're in a stateful charset, return to ascii mode at the end */
-    if (client.CHARSET.search(/iso-2022/i) != -1)
-        client.ucConverter.ConvertToUnicode("\x1B(B");
-    return msg
+    /* XXX set charset again to force the encoder to reset, see bug 114923 */
+    client.ucConverter.charset = client.CHARSET;
+    return client.ucConverter.ConvertToUnicode(msg);
 }
 
 function fromUnicode (msg)
@@ -155,6 +148,8 @@ function fromUnicode (msg)
     if (!("ucConverter" in client))
         return msg;
     
+    /* XXX set charset again to force the encoder to reset, see bug 114923 */
+    client.ucConverter.charset = client.CHARSET;
     return client.ucConverter.ConvertFromUnicode(msg);
 }
 
@@ -194,6 +189,7 @@ function setCharset (charset)
     catch (ex)
     {
         dd ("Caught exception setting charset to " + charset + "\n" + ex);
+        delete client.ucConverter;
         client.CHARSET = "";
         client.eventPump.removeHookByName("uc-hook");
         return false;
@@ -273,10 +269,9 @@ function initStatic()
     client.onInputNetworks();
     client.onInputCommands();
 
-    ary = client.INITIAL_VICTIMS.split(";");
+    ary = client.INITIAL_VICTIMS.split(/\s*;\s*/);
     for (i in ary)
     {
-        ary[i] = stringTrim(ary[i]);
         if (ary[i])
             client.stalkingVictims.push (ary[i]);
     }
@@ -302,13 +297,11 @@ function initStatic()
     if (!wentSomewhere)
     {
         /* if we had nowhere else to go, connect to any default urls */
-        ary = client.INITIAL_URLS.split(";");
+        ary = client.INITIAL_URLS.split(/\s*;\s*/).reverse();
         for (var i in ary)
         {
-            if ((ary[i] = stringTrim(ary[i])) && ary[i] != "irc://")
-            {
+            if (ary[i] && ary[i] != "irc://")
                 gotoIRCURL (ary[i]);
-            }
         }
     }
     

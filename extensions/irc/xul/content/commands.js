@@ -39,6 +39,7 @@ function addCommands(commandObject)
     add ("attach", "onInputAttach");
     add ("away", "onInputAway");
     add ("cancel", "onInputCancel");
+    add ("charset", "onInputCharset");
     add ("clear", "onInputClear");
     add ("client", "onInputClient");
     add ("commands", "onInputCommands");

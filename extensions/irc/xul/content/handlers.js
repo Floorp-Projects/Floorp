@@ -734,10 +734,17 @@ function onInputKeyPress (e)
             }
             else
             {
-                if (client.lastHistoryReferenced <
-                    client.inputHistory.length - 1)
+                if (client.lastHistoryReferenced == -2)
+                {
+                    client.lastHistoryReferenced = -1;
+                    e.target.value = client.incompleteLine;
+                }
+                else if (client.lastHistoryReferenced <
+                         client.inputHistory.length - 1)
+                {
                     e.target.value =
                         client.inputHistory[++client.lastHistoryReferenced];
+                }
             }
             break;
 
@@ -745,21 +752,22 @@ function onInputKeyPress (e)
             if (client.lastHistoryReferenced > 0)
                 e.target.value =
                     client.inputHistory[--client.lastHistoryReferenced];
+            else if (client.lastHistoryReferenced == -1)
+            {
+                e.target.value = "";
+                client.lastHistoryReferenced = -2;
+            }
             else
             {
                 client.lastHistoryReferenced = -1;
                 e.target.value = client.incompleteLine;
             }
-            
             break;
 
-            //        case 9: /* tab */
-            //e.preventDefault();
-            //break;       
-            
-
+        default:
+            client.lastHistoryReferenced = -1;
             client.incompleteLine = e.target.value;
-            
+            break;
     }
 
 }
@@ -1001,6 +1009,25 @@ function cli_icancel (e)
 
     return true;
 }    
+
+client.onInputCharset =
+function cli_icharset (e)
+{
+    if (e.inputData)
+    {
+        if (!setCharset(e.inputData))
+        {
+            client.currentObject.display (getMsg("cli_charsetError",
+                                                 e.inputData),
+                                          "ERROR");
+            return false;
+        }
+	}
+
+    client.currentObject.display (getMsg("cli_currentCharset", client.CHARSET),
+                                  "INFO");
+    return true;
+}
 
 client.onInputCommand = 
 function cli_icommand (e)
