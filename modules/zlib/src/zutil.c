@@ -3,13 +3,16 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: zutil.c,v 3.1 1998/03/28 03:36:17 ltabb Exp $ */
+/* $Id: zutil.c,v 3.2 1999/09/07 21:23:17 dveditz%netscape.com Exp $ */
 
 #include <stdio.h>
 
 #include "zutil.h"
+
+#ifdef MOZILLA_CLIENT
 #include "prtypes.h"
 #include "prlog.h"
+#endif
 
 struct internal_state      {int dummy;}; /* for buggy compilers */
 
@@ -35,7 +38,7 @@ PR_PUBLIC_API(const char *) zlibVersion()
     return ZLIB_VERSION;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(MOZILLA_CLIENT)
 void z_error (m)
     char *m;
 {
