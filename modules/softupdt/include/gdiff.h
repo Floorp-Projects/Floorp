@@ -88,7 +88,11 @@
  *  types
  *------------------------------------*/
 #ifndef AIX
+#ifdef OSF1
+#include <sys/types.h>
+#else
 typedef unsigned char uchar;
+#endif
 #endif
 
 typedef struct _diffdata {

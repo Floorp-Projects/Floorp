@@ -22,6 +22,24 @@
 #include "prtypes.h"
 #include "nsVersionInfo.h"
 
+/**
+ * DEFAULT_MODE has UI, triggers conditionally
+ * @see StartSoftwareUpdate flags argument
+ *
+ */
+static PRInt32 DEFAULT_MODE = 0;
+
+/**
+ * FORCE_MODE will install the package regardless of what was installed previously
+ * @see StartSoftwareUpdate flags argument
+ */
+static PRInt32 FORCE_MODE = 1;
+
+/**
+ * SILENT_MODE will not display the UI
+ */
+static PRInt32 SILENT_MODE = 2;
+
 PR_BEGIN_EXTERN_C
 
 struct nsTrigger {
@@ -30,25 +48,6 @@ public:
 
   /* Public Fields */
 
-  /**
-   * DEFAULT_MODE has UI, triggers conditionally
-   * @see StartSoftwareUpdate flags argument
-   *
-   */
-  static PRInt32 DEFAULT_MODE = 0;
-
-  /**
-   * FORCE_MODE will install the package regardless of what was installed previously
-   * @see StartSoftwareUpdate flags argument
-   */
-  static PRInt32 FORCE_MODE = 1;
-
-  /**
-   * SILENT_MODE will not display the UI
-   */
-  static PRInt32 SILENT_MODE = 2;
-  
-  
   /* Public Methods */
   /**
    * @return true if SmartUpdate is enabled

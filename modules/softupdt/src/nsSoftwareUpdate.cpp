@@ -34,6 +34,7 @@
 #include "nsInstallPatch.h"
 #include "nsVersionRegistry.h"
 #include "nsSUError.h"
+#include "nsWinProfile.h"
 #include "nsWinReg.h"
 #include "nsPrivilegeManager.h"
 #include "nsTarget.h"
@@ -86,11 +87,6 @@ static PRBool su_PathEndsWithSeparator(char* path, char* sep);
 #ifdef XP_PC
 extern char * WH_TempFileName(int type, const char * prefix, const char * extension); 
 #endif
-
-extern void FolderSpecInitialize(JRIEnv * env);
-extern void InstallFileInitialize(JRIEnv * env);
-extern void SU_Reg_Initialize(JRIEnv *env );
-extern void SUWinSpecificInit( JRIEnv *env );
 
 extern uint32 FE_DiskSpaceAvailable (MWContext *context, const char *lpszPath );
 
@@ -275,7 +271,7 @@ void* nsSoftwareUpdate::GetWinProfile(nsFolderSpec* folder, char* file, char* *e
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, nsSoftUpdateError_INSTALL_NOT_STARTED );
     return NULL;
   }
-  profile = new nsWinProfile(this, folder, file, errorMsg);
+  profile = new nsWinProfile(this, folder, file);
 
   return profile;
 #else
@@ -296,7 +292,7 @@ void* nsSoftwareUpdate::GetWinRegistry(char* *errorMsg)
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, nsSoftUpdateError_INSTALL_NOT_STARTED );
     return NULL;
   }
-  registry = new nsWinReg(this, errorMsg);
+  registry = new nsWinReg(this);
   return registry;
 #else
   return NULL;
@@ -351,11 +347,11 @@ char* nsSoftwareUpdate::ExtractJARFile(char* inJarLocation, char* finalFile, cha
     for (i=0; i < noOfPrins; i++) {
       nsPrincipal* prin = (nsPrincipal*)prinArray->Get(i);
       if (installPrincipal->equals( prin )) {
-        haveMatch = true;
+        haveMatch = PR_TRUE;
         break;
       }
     }
-    if (haveMatch == false) {
+    if (haveMatch == PR_FALSE) {
       char *msg = NULL;
       msg = PR_sprintf_append(msg, "Missing certificate for %s", inJarLocation);
       *errorMsg = SU_GetErrorMsg3(msg, nsSoftUpdateError_NO_MATCHING_CERTIFICATE);
@@ -481,7 +477,7 @@ void nsSoftwareUpdate::UserApproved()
  */
 PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
 {
-  PRBool rebootNeeded = false;
+  PRBool rebootNeeded = PR_FALSE;
   int result = nsSoftwareUpdate_SUCCESS;
   
   SetProgressDialogItem(""); // blank the "current item" line
@@ -539,8 +535,8 @@ PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
     ie = (nsInstallObject*)ve->Get(i);
     if (ie == NULL)
       continue;
-    ie->Complete(errorMsg);
-    if (errorMsg != NULL) {
+    *errorMsg = ie->Complete();
+    if (*errorMsg != NULL) {
       ie->Abort();
       return nsSoftUpdateError_UNEXPECTED_ERROR;
     }

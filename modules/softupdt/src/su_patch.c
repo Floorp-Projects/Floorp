@@ -26,6 +26,13 @@
 #include <winnt.h>
 #endif
 
+#ifdef SUNOS4
+#include <unistd.h>  /* for SEEK_SET */
+#endif
+
+#ifdef XP_MAC
+#include "Errors.h"	/* for fnfErr */
+#endif
 
 /*--------------------------------------
  *  constants / macros
@@ -74,10 +81,11 @@ int32 SU_PatchFile( char* srcfile, XP_FileType srctype, char* patchfile,
                     XP_FileType patchtype, char* outfile, XP_FileType outtype )
 {
     DIFFDATA    *dd;
-    int32       status = GDIFF_ERR_MEM;
-    char        *realfile = srcfile;
-    XP_FileType realtype = srctype;
-    char        *tmpurl = NULL;
+    int32       status 			= 	GDIFF_ERR_MEM;
+    char        *realfile 		= 	srcfile;
+    XP_FileType realtype 		= 	srctype;
+
+    char        *tmpurl		= NULL;
     
     dd = XP_CALLOC( 1, sizeof(DIFFDATA) );
     if ( dd != NULL ) 
@@ -109,12 +117,75 @@ int32 SU_PatchFile( char* srcfile, XP_FileType srctype, char* patchfile,
                 if (su_unbind( srcfile, srctype, tmpurl, xpURL )) {
                     realfile = tmpurl;
                     realtype = xpURL;
+                    
                 }
             }
             else
                 status = GDIFF_ERR_MEM;
         }
 #endif
+
+#ifdef XP_MAC
+
+	if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
+	{
+		FSSpec 	srcFSSpec, tmpFSSpec;
+		char	*srcMacPath, *tmpMacPath;		
+	
+        /* We need a tmp file so that we can AppleSingle the src file */
+        tmpurl 		= WH_TempName( xpURL, NULL );
+        
+        /* Put the source file into a mac file path */
+		tmpMacPath	= WH_FileName( tmpurl, xpURL );
+		
+		/* Get the mac filepath for srcMacPath */
+		srcMacPath 	= WH_FileName( srcfile, srctype );
+		
+		/* bail if we did not get our files! */
+        if ( tmpMacPath == NULL || srcMacPath == NULL) 
+        {
+        	XP_FREEIF( srcMacPath );
+	   		XP_FREEIF( tmpMacPath );
+	   		
+	   		goto cleanup;
+        }
+                
+		/* Get the source FSSpec */
+		status = FSpLocationFromFullPath(strlen(srcMacPath), srcMacPath, &srcFSSpec);
+        if (status != noErr) 
+        {
+        	XP_FREEIF( srcMacPath );
+	   		XP_FREEIF( tmpMacPath );
+
+        	goto cleanup;
+        }
+        
+        
+        /* Get the temporary FSSpec.  THis is where the encoded file will go */
+        status = FSpLocationFromFullPath(strlen(tmpMacPath), tmpMacPath, &tmpFSSpec);
+        if (status != noErr && status != fnfErr) 
+        {
+        	XP_FREEIF( srcMacPath );
+	   		XP_FREEIF( tmpMacPath );
+
+        	goto cleanup;
+        }
+        
+       /* Encode! */
+		status = PAS_EncodeFile(&srcFSSpec, &tmpFSSpec);
+			
+		if (status == noErr)
+		{
+			/* set */
+			realfile 		= tmpurl;
+            realtype 		= xpURL;
+		}
+		
+		XP_FREEIF( srcMacPath );
+   		XP_FREEIF( tmpMacPath );
+	}
+#endif 
+
 
         if ( status != GDIFF_OK )
             goto cleanup;
@@ -141,16 +212,120 @@ int32 SU_PatchFile( char* srcfile, XP_FileType srctype, char* patchfile,
     }
 
 
+#ifdef XP_MAC
+	if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
+	{
+		FSSpec 	outFSSpec;
+		char	*outMacPath;
+		
+		char*	anotherURL;
+		char*	anotherURLMacPath;
+		FSSpec	anotherFSSpec;
+		
+		Str63	fileName;
+		
+		
+		/* We need a temp file so that we can decode somewhere */
+		anotherURL 	= WH_TempName( xpURL, NULL );
+		
+		/* Get the mac file path for anotherURL */
+		anotherURLMacPath	= WH_FileName( anotherURL, xpURL );
+		
+		/* Get the mac file path for outfile */
+		outMacPath 	= WH_FileName( outfile, outtype );
+
+		if ( anotherURLMacPath == NULL || outMacPath == NULL) 
+        {
+        	status = mFulErr;
+		   	goto macPostProcessCleanup;
+        }
+			
+			
+		/* Get the out FSSpec.  This is where the decoded will end up */
+
+		status = FSpLocationFromFullPath(strlen(outMacPath), outMacPath, &outFSSpec);
+       
+        if (status != noErr) 
+        {
+		   	goto macPostProcessCleanup;
+        }
+			
+        /* Get the anotherURL FSSpec.  This is where the decoded will first be placed */
+
+        status = FSpLocationFromFullPath(strlen(anotherURLMacPath), anotherURLMacPath, &anotherFSSpec);
+        if (status != noErr && status != fnfErr)
+		{
+		   	goto macPostProcessCleanup;
+        }
+			
+		/* Close the out file so that we can read it */
+			
+		XP_FileClose( dd->fOut );
+		dd->fOut = NULL;
+
+		status =  PAS_DecodeFile(&outFSSpec, &anotherFSSpec);
+		if (status != noErr)
+		{
+		   	goto macPostProcessCleanup;
+        }
+			
+		/* Delete the outfile so that we can replace */				
+		XP_FileRemove( outfile, outtype );
+		
+			
+		/* get the name of the file */
+		BlockMove(outFSSpec.name, fileName, sizeof(Str63) );
+
+		/* We want the parent */
+		outFSSpec.name[0] = 0;
+		
+		/* Copy the output of the decodef to the outfile location passed to us */
+		status = FSpFileCopy(&anotherFSSpec, &outFSSpec, fileName, NULL, 0,true);
+		
+		if (status != noErr)
+		{
+		   	goto macPostProcessCleanup;
+        }
+       
+       
+macPostProcessCleanup:       
+       
+		XP_FREEIF( outMacPath );
+		XP_FREEIF( anotherURLMacPath );
+			
+		if(anotherURL) 
+		{
+			XP_FileRemove( anotherURL, xpURL );
+			XP_FREEIF( anotherURL );
+		}
+		
+		if (status != noErr)
+		{
+		   	goto cleanup;
+        }
+	}
+	
+#endif 
+
+
 cleanup:
     if ( dd != NULL ) 
     {
         if ( dd->fSrc != NULL )
             XP_FileClose( dd->fSrc );
 
-        if ( dd->fDiff != NULL )
-            XP_FileClose( dd->fDiff );
 
-        if ( dd->fOut != NULL )
+        if ( dd->fDiff != NULL )
+        {
+            XP_FileClose( dd->fDiff );
+			
+			if ( status != GDIFF_OK )
+			{
+        		XP_FileRemove( outfile, outtype );
+			}
+		}
+		
+		if ( dd->fOut != NULL )
             XP_FileClose( dd->fOut );
 
         XP_FREEIF( dd->databuf );
@@ -159,13 +334,11 @@ cleanup:
         XP_FREE(dd);
     }
 
-    if ( status != GDIFF_OK )
-        XP_FileRemove( outfile, outtype );
-
-    if ( tmpurl != NULL ) {
+	if ( tmpurl != NULL ) {
         XP_FileRemove( tmpurl, xpURL );
         XP_FREE( tmpurl );
     }
+    
     return status;
 }
 

@@ -22,6 +22,7 @@
 #include "prprf.h"
 #include "xp.h"
 #include "softupdt.h"
+#include "su_instl.h"
 #include "nsInstallDelete.h"
 #include "nsVersionRegistry.h"
 #include "nsSUError.h"

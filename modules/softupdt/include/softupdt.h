@@ -20,6 +20,10 @@
 /* Public */
 typedef void (*SoftUpdateCompletionFunction) (int result, void * closure);
 
+#ifdef XP_WIN16
+extern XP_Bool	utilityScheduled = FALSE;
+#endif
+
 XP_BEGIN_PROTOS
 
 /* Flags for start software update */
@@ -46,18 +50,35 @@ extern XP_Bool SU_StartSoftwareUpdate(MWContext * context,
 /* SU_NewStream
  * Stream decoder for software updates
  */	
-NET_StreamClass * SU_NewStream (int format_out, void * registration,
-								URL_Struct * request, MWContext *context);
+extern NET_StreamClass * SU_NewStream (int format_out, void * registration,
+                                       URL_Struct * request, MWContext *context);
 
-int32 SU_PatchFile( char* srcfile, XP_FileType srctype,
-                    char* patchfile, XP_FileType patchtype,
-                    char* targfile, XP_FileType targtype );
+extern int32 SU_PatchFile( char* srcfile, XP_FileType srctype,
+                           char* patchfile, XP_FileType patchtype,
+                           char* targfile, XP_FileType targtype );
 
-int32 SU_Uninstall(char *regPackageName);
-int32 SU_EnumUninstall(void** context, char* packageName,
-                     int32 len1, char*regPackageName, int32 len2);
+extern int32 SU_Uninstall(char *regPackageName);
+
+/* This method enumerates through the packages which can be uninstalled 
+* by finding the packages in the shared uninstall list and the packages 
+* in the current communicator uninstall list. 
+* When SU_EnumUninstall is first called, *context should be null. Context
+* keeps track of which list we are traversing, either shared or the current
+* communicator list. If we are able to enumerate all packages without any 
+* errors, context is freed in the routine, otherwise you must XP_FREE it yourself.
+* packageName - user readable package name (if this is blank you could use
+*               regPackageName as a substitute).
+* len1 - sizeof(packageName)
+* regPackageName - name of package name installed. This name is unique
+*                  and is what should be passed to SU_Uninstall()
+* len2 - sizeof(regPackageName)
+*/
+extern int32 SU_EnumUninstall(void** context, char* packageName,
+                              int32 len1, char*regPackageName, int32 len2);
 
 #define AUTOUPDATE_ENABLE_PREF "autoupdate.enabled"
+#define AUTOUPDATE_CONFIRM_PREF "autoupdate.confirm_install"
+#define CHARSET_HEADER "Charset"
 #define CONTENT_ENCODING_HEADER "Content-encoding"
 #define INSTALLER_HEADER "Install-Script"
 

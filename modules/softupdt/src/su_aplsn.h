@@ -15,23 +15,50 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* su_aplsn.h */
 
-/* SU_DecodeAppleSingle
- * Decodes an AppleSingle disk file
- * Arguments:
- *			src - file path in XP_FILE_URL_PATH format
- *			dst - returns the path of the extracted file. NULL if err
- * Returns an error on failure
- */
+#ifndef APSINGLE_H
+#define APSINGLE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "xp_core.h"
+#include "su_applsn_defines.h"
+
+
+#include <Files.h>
 
 #define APPLESINGLE_MIME_TYPE "application/applefile"
 
 XP_BEGIN_PROTOS
+//int
+//convert_apsingle_file(const char *inFile, int inflags, const char *outFile, int outflags, int *bin);
 
-int SU_DecodeAppleSingle(const char * inSrc, char ** dst);
+/* Decodes
+ * Arguments:
+ * inFile - name of the AppleSingle file
+ * outSpec - destination. If destination is renamed (as part of decoding of realName)
+ *                      the outSpec is modified to represent the new name
+ * wantedEntries - a bitmask what entries do we want decoded. Bit positions correspond to entryIDs
+ */
+int
+SU_DecodeAppleSingle( const char * inSrc, char ** dst );
+
+/*
+ * Arguments:
+ * inSpec - file to be encoded
+ * outSpec - destination. If an error occurs during decoding, destination will be deleted!
+ * wantedEntries - a bitmask what entries do we want encoded. Bit positions correspond to entryIDs
+ */
+int
+SU_EncodeAppleSingle( const char * inSpec, const char * outFile);
 
 XP_END_PROTOS
 
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* APSINGLE_H */

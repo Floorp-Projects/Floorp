@@ -86,40 +86,31 @@ typedef enum nsTriggerDiffLevelEnum {
 } nsTriggerDiffLevelEnum;
 
 typedef enum nsWinRegEnum {
-    /* not static because class is not public--users couldn't get to them */
-  HKEY_CLASSES_ROOT           = 0x80000000,
-  HKEY_CURRENT_USER           = 0x80000001,
-  HKEY_LOCAL_MACHINE          = 0x80000002,
-  HKEY_USERS                  = 0x80000003,
-
-  CREATE          = 1,
-  DELETE          = 2,
-  DELETE_VAL      = 3,
-  SET_VAL_STRING  = 4,
-  SET_VAL         = 5
+  NS_WIN_REG_CREATE          = 1,
+  NS_WIN_REG_DELETE          = 2,
+  NS_WIN_REG_DELETE_VAL      = 3,
+  NS_WIN_REG_SET_VAL_STRING  = 4,
+  NS_WIN_REG_SET_VAL         = 5
 
 } nsWinRegEnum;
 
 
 typedef enum nsWinRegValueEnum {
-  REG_SZ                          = 1,
-  REG_EXPAND_SZ                   = 2,
-  REG_BINARY                      = 3,
-  REG_DWORD                       = 4,
-  REG_DWORD_LITTLE_ENDIAN         = 4,
-  REG_DWORD_BIG_ENDIAN            = 5,
-  REG_LINK                        = 6,
-  REG_MULTI_SZ                    = 7,
-  REG_RESOURCE_LIST               = 8,
-  REG_FULL_RESOURCE_DESCRIPTOR    = 9,
-  REG_RESOURCE_REQUIREMENTS_LIST  = 10
+  NS_WIN_REG_SZ                          = 1,
+  NS_WIN_REG_EXPAND_SZ                   = 2,
+  NS_WIN_REG_BINARY                      = 3,
+  NS_WIN_REG_DWORD                       = 4,
+  NS_WIN_REG_DWORD_LITTLE_ENDIAN         = 4,
+  NS_WIN_REG_DWORD_BIG_ENDIAN            = 5,
+  NS_WIN_REG_LINK                        = 6,
+  NS_WIN_REG_MULTI_SZ                    = 7,
+  NS_WIN_REG_RESOURCE_LIST               = 8,
+  NS_WIN_REG_FULL_RESOURCE_DESCRIPTOR    = 9,
+  NS_WIN_REG_RESOURCE_REQUIREMENTS_LIST  = 10
 } nsWinRegValueEnum;
 
 typedef enum nsRegistryErrorsEnum {
-  REGERR_BADUTF8       = 19,
-
   REGERR_SECURITY      = 99,
-
 } nsRegistryErrorsEnum;
 
 #endif /* nsSoftUpdateEnums_h__ */

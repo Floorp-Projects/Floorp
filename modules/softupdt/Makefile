@@ -16,6 +16,6 @@
 # Reserved.
 
 DEPTH	= ../..
-DIRS	= classes src include
+DIRS	= src include
 
 include $(DEPTH)/config/rules.mk

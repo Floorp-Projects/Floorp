@@ -16,10 +16,11 @@
  * Reserved.
  */
 #include "softupdt.h"
+#include "su_instl.h"
 #include "su_folderspec.h"
 #define NEW_FE_CONTEXT_FUNCS
-#include "zig.h"
 #include "net.h"
+#include "zig.h"
 #include "libevent.h"
 #include "prefapi.h"
 #include "prprf.h"
@@ -31,12 +32,13 @@
 #include "pw_public.h"
 #include "NSReg.h"
 #include "VerReg.h"
-
+#include "libi18n.h"
 
 extern int MK_OUT_OF_MEMORY;
-extern REGERR  fe_DeleteOldFileLater(char * filename);
 
 #define MOCHA_CONTEXT_PREFIX "autoinstall:"
+#define REG_SOFTUPDT_DIR    "Netscape/Communicator/SoftwareUpdate/"
+#define LAST_REGPACK_TIME   "LastRegPackTime"
 
 /* error codes */
 #define su_ErrInvalidArgs -1
@@ -50,6 +52,12 @@ extern int SU_NOT_A_JAR_FILE;
 extern int SU_SECURITY_CHECK;
 extern int SU_INSTALL_FILE_HEADER;
 extern int SU_INSTALL_FILE_MISSING;
+extern int SU_PROGRESS_DOWNLOAD_TITLE;
+extern int SU_PROGRESS_DOWNLOAD_LINE1;
+extern int REGPACK_PROGRESS_TITLE;
+extern int REGPACK_PROGRESS_LINE1;
+extern int REGPACK_PROGRESS_LINE2;
+
 
 /* structs */
 
@@ -76,7 +84,7 @@ typedef struct su_URLFeData_struct {
     int32 fFlags;    /* download flags */
 } su_URLFeData;
 
-static char * EncodeSoftUpJSArgs(const char * fileName, XP_Bool silent, XP_Bool force);
+static char * EncodeSoftUpJSArgs(const char * fileName, XP_Bool silent, XP_Bool force, const char* charset);
 
 /* Stream callbacks */
 int su_HandleProcess (NET_StreamClass *stream, const char *buffer, int32 buffLen);
@@ -94,6 +102,12 @@ void su_CompleteSoftwareUpdate(MWContext * context,
 void su_NetExitProc(URL_Struct* url, int result, MWContext * context);
 void su_HandleCompleteJavaScript (su_DownloadStream* realStream);
 
+int su_GetLastRegPackTime(int32 *lastRegPackTime);
+int su_SetLastRegPackTime(int32 lastRegPackTime);
+
+XP_Bool su_RegPackTime(void);
+void su_RegPackCallback(void *userData, int32 bytes, int32 totalBytes);
+int su_PackRegistry();
 
 /* Handles cancel of progress dialog by user */
 void cancelProgressDlg(void * closure) 
@@ -103,6 +117,7 @@ void cancelProgressDlg(void * closure)
 		XP_InterruptContext(realStream->fContext);
 	}
 }
+
 
 /* Completion routine for SU_StartSoftwareUpdate */
 
@@ -161,7 +176,6 @@ typedef struct su_UninstallContext_struct	{
     REGENUM         state;
     XP_Bool         bShared;
 } su_UninstallContext;
-
 
 XP_Bool     DnLoadInProgress = FALSE;
 PRMonitor * su_monitor = NULL;
@@ -308,12 +322,11 @@ done:
 void su_NetExitProc(URL_Struct* url, int result, MWContext * context)
 {
 	su_startCallback * c;
-
+    
     if (result != MK_CHANGING_CONTEXT)
 	{
 	    PR_EnterMonitor(su_monitor);
-        c = QGetItem();
-	    if (c != NULL)
+	    if ((c = QGetItem()) != NULL)
 	    {
 		    FE_SetTimeout( su_FE_timer_callback, c, 1 );
 	    }
@@ -411,6 +424,7 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 	XP_Bool	isJar;
     pw_ptr prg = NULL;
 	MWContext *fContext;
+/*  char path[256]; */
 
 	/* Initialize the stream data by data passed in the URL*/
 	fe_data = (su_URLFeData *) request->fe_data;
@@ -460,16 +474,14 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 		result = MK_OUT_OF_MEMORY;
 		goto fail;
 	}
-
+    
     prg = PW_Create(context, pwApplicationModal);
 	fContext = PW_CreateProgressContext();
     PW_AssociateWindowWithContext(fContext, prg);
 	fContext->url = request->address;
 	NET_SetNewContext(request, fContext, su_NetExitProc); 
-	PW_SetWindowTitle(streamData->progress, "SmartUpdate");
-	PW_Show(prg);
-
-	stream = NET_NewStream (NULL, 
+    
+	stream = NET_NewStream ("SmartUpdate", 
 			su_HandleProcess,
 			su_HandleComplete, 
 			su_HandleAbort, 
@@ -512,7 +524,17 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 	}
 
     PW_SetCancelCallback(streamData->progress, cancelProgressDlg, streamData);
-	PW_SetWindowTitle(streamData->progress, "SmartUpdate");
+    PW_SetWindowTitle(streamData->progress, XP_GetString(SU_PROGRESS_DOWNLOAD_TITLE));
+/*
+    PR_snprintf(path, 256, XP_GetString(SU_PROGRESS_DOWNLOAD_LINE1), streamData->fURL->address);
+    PW_SetLine1(streamData->progress, path);
+*/
+    PW_SetLine1(streamData->progress, streamData->fURL->address);
+    PW_SetLine2(streamData->progress, NULL);
+#ifndef XP_UNIX
+	PW_Show(prg);
+#endif
+  
 /* return the stream */
 	return stream;
 
@@ -547,7 +569,9 @@ void su_HandleAbort (NET_StreamClass *stream, int reason)
 	/* Close the files */
 	if (realStream->fFile)
 		XP_FileClose(realStream->fFile);
+#ifndef XP_UNIX
     PW_Hide((pw_ptr)(realStream->progress));
+#endif
 	/* Report the result */
 	su_CompleteSoftwareUpdate(realStream->fContext, 
 					realStream->fCompletion, realStream->fCompletionClosure, reason, realStream);
@@ -568,7 +592,9 @@ void su_HandleComplete (NET_StreamClass *stream)
 
 	if (realStream->fFile)
 		XP_FileClose(realStream->fFile);
+#ifndef XP_UNIX
     PW_Hide((pw_ptr)(realStream->progress));
+#endif
 	su_HandleCompleteJavaScript( realStream );
 }
 
@@ -640,29 +666,40 @@ fail:
 /* Encodes the args in the format
  * MOCHA_CONTEXT_PREFIX<File>CR<silent>CR<force>
  * Booleans are encoded as T or F.
- * DecodeSoftUpJSArgs is in lm_softup.c
+ * DecodeSoftUpJSArgs is in lm_supdt.c
  */
 static char *
-EncodeSoftUpJSArgs(const char * fileName, XP_Bool force, XP_Bool silent )
+EncodeSoftUpJSArgs(const char * fileName, XP_Bool force, XP_Bool silent,const char* charset )
 {
     char * s;
     int32 length;
     if (fileName == NULL)
         return NULL;
 
-    length = XP_STRLEN(fileName) + 
-            XP_STRLEN(MOCHA_CONTEXT_PREFIX) + 5;  /* 2 booleans and a CR */
+    length = 	XP_STRLEN(MOCHA_CONTEXT_PREFIX) +
+    			XP_STRLEN(fileName) + 
+            	6 + 							 /* 2 booleans and 3 CR and one NULL*/
+            	XP_STRLEN(charset); 
+
+
+
     s = XP_ALLOC(length);
     if (s != NULL)
     {
+        int32 tempLen;
+        
         s[0] = 0;
         XP_STRCAT(s, MOCHA_CONTEXT_PREFIX);
-        XP_STRCAT(s, fileName);
-        s[length - 5] = CR;
-        s[length - 4] = silent ? 'T' : 'F';
-        s[length - 3] = CR;
-        s[length - 2] = force ? 'T' : 'F';
-        s[length - 1] = 0;
+        XP_STRCAT(s, fileName);                 	/* Prefix and Name */
+        
+        tempLen = XP_STRLEN(s);						/* CR */
+        s[tempLen] = CR;
+        s[tempLen + 1] = silent ? 'T' : 'F';		/* Silent */
+        s[tempLen + 2] = CR;						/* CR */
+        s[tempLen + 3] = force ? 'T' : 'F';			/* Force */
+		s[tempLen + 4] = CR;						/* CR */
+		s[tempLen + 5] = 0;	
+    	XP_STRCAT(&(s[tempLen + 5]), charset);		/* charset */
     }
     return s;
 }
@@ -681,14 +718,20 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
     char * codebase = NULL;
     int32  urlLen;
 	unsigned long fileNameLength;
+  	char * charset = NULL;
+	unsigned long charsetLen;
 	ZIG * jarData = NULL;
 	char s[255];
-    char * jsScope = NULL;
-	ETEvalStuff * stuff = NULL;
-    Chrome chrome;
+	char * jsScope = NULL;
+    char * nativeJar;
+	Chrome chrome;
 	MWContext * context;
 	JSPrincipals * principals = NULL;
-
+  	ETEvalStuff * stuff = NULL;
+	char * jarCharset = NULL;
+	unsigned long jarCharsetLen;
+	
+	
 	/* Initialize the JAR file */
 
 	jarData = SOB_new();
@@ -707,7 +750,7 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 
 	if (result < 0)
 	{
-		char *errMsg = SOB_get_error(result);
+        char *errMsg = SOB_get_error(result); /* do not free, bug 157209 */
 		PR_snprintf(s, 255, XP_GetString(SU_SECURITY_CHECK), (errMsg?errMsg:"") );
 		FE_Alert(realStream->fContext, s);
 
@@ -736,7 +779,47 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 		result = su_JarError;
 		goto fail;
 	}
+
+    /* extract the character set info, if any */
+    	
+	result = SOB_get_metainfo( jarData, installerJarName, CHARSET_HEADER, (void**)&charset, &charsetLen);
+
+	if ((result < 0) || (INTL_CharSetNameToID(charset) == CS_UNKNOWN))
+	{
+		if (charset)
+		{
+			/*
+			 * if you hit this assert, that means that your jar
+			 * file has a bad charset name in it
+			 */
+			XP_ASSERT(0);
+			XP_FREE(charset);
+		}
+		charset = XP_STRDUP((const char *) INTL_CsidToCharsetNamePt(FE_DefaultDocCharSetID(realStream->fContext)));
+	}
 	
+	
+	
+    /* extract the character set info for the Jar File, if any */
+    	
+	result = SOB_get_metainfo( jarData, NULL, CHARSET_HEADER, (void**)&jarCharset, &jarCharsetLen);
+
+	if ((result < 0) || (INTL_CharSetNameToID(jarCharset) == CS_UNKNOWN))
+	{
+		if (jarCharset)
+		{
+			/*
+			 * if you hit this assert, that means that your jar
+			 * file has a bad charset name in it
+			 */
+			XP_ASSERT(0);
+			XP_FREE(jarCharset);
+		}
+		
+		jarCharset = XP_STRDUP((const char *) INTL_CsidToCharsetNamePt(FE_DefaultDocCharSetID(realStream->fContext)));
+	}
+	
+
 	/* Extract the script out */
 
 	result = SOB_verified_extract( jarData, installerJarName, installerFileNameURL);
@@ -765,16 +848,24 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	SOB_destroy( jarData);
 	jarData = NULL;
 
+    /* add installer .JAR to the classpath */
+    nativeJar = WH_FileName( realStream->fJarFile, xpURL );
+    if ( nativeJar != NULL ) {
+        LJ_AddToClassPath( nativeJar );
+        XP_FREE( nativeJar );
+    }
+
 	/* For security reasons, installer JavaScript has to execute inside a
 	special context. This context is created by ET_EvaluateBuffer as a JS object
 	of type SoftUpdate. the arguments to the object are passed in the string,
     jsScope
 	*/
-		jsScope = EncodeSoftUpJSArgs(realStream->fJarFile, 
-                                     ((realStream->fFlags & FORCE_INSTALL) != 0),
-                                     ((realStream->fFlags & SILENT_INSTALL) != 0));
-        if (jsScope == NULL)
-            goto fail;
+	jsScope = EncodeSoftUpJSArgs(realStream->fJarFile, 
+                                 ((realStream->fFlags & FORCE_INSTALL) != 0),
+                                 ((realStream->fFlags & SILENT_INSTALL) != 0),
+                                 jarCharset);
+    if (jsScope == NULL)
+        goto fail;
 
 		XP_BZERO(&chrome, sizeof(Chrome));
 		chrome.location_is_chrome = TRUE;
@@ -785,44 +876,45 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
        We need a different solution for int'l content encoding on macs    */
     chrome.type = MWContextBrowser;
 #endif
-        chrome.l_hint = -3000;
-	    chrome.t_hint = -3000;
-		context = FE_MakeNewWindow(realStream->fContext, NULL, NULL, &chrome);
-		if (context == NULL)
-			goto fail;
+	chrome.l_hint = -3000;
+	chrome.t_hint = -3000;
+	context = FE_MakeNewWindow(realStream->fContext, NULL, NULL, &chrome);
+	if (context == NULL)
+		goto fail;
+	urlLen = XP_STRLEN(realStream->fURL->address);
+	codebase = XP_ALLOC( urlLen + XP_STRLEN(installerJarName) + 2 );
+        if (codebase == NULL) { 
+	    goto fail;
+	}
+	XP_STRCPY( codebase, realStream->fURL->address );
+	codebase[urlLen] = '/';
+	XP_STRCPY( codebase+urlLen+1, installerJarName );
 
-        urlLen = XP_STRLEN(realStream->fURL->address);
-        codebase = XP_ALLOC( urlLen + XP_STRLEN(installerJarName) + 2 );
-        if ( codebase == NULL) {
-            goto fail;
-        }
-        XP_STRCPY( codebase, realStream->fURL->address );
-        codebase[urlLen] = '/';
-        XP_STRCPY( codebase+urlLen+1, installerJarName );
+	principals = LM_NewJSPrincipals(realStream->fURL, installerJarName, codebase);
+	if (principals == NULL)
+		goto fail;
 
-        principals = LM_NewJSPrincipals(realStream->fURL, installerJarName, codebase );
-		if (principals == NULL) {
-			goto fail;
-		}
+	ET_StartSoftUpdate(context, codebase);
 
-        ET_StartSoftUpdate(context, codebase);
+	/* Execute the mocha script, result will be reported in the callback */
+	realStream->fContext = context;
 
-		/* Execute the mocha script, result will be reported in the callback */
-		realStream->fContext = context;
+	stuff = (ETEvalStuff *) XP_NEW_ZAP(ETEvalStuff);
+        if (!stuff) {
+	    FE_DestroyWindow(context);
+	    goto fail;
+	}
 
-		stuff = (ETEvalStuff *) XP_NEW_ZAP(ETEvalStuff);
-		if (!stuff) {
-		    FE_DestroyWindow(context);
-		    goto fail;
-		}
-
-		stuff->len = bufferSize;
-		stuff->line_no = 1;
-		stuff->scope_to = jsScope;
-		stuff->want_result = JS_TRUE;
-		stuff->data = realStream;
-		stuff->version = JSVERSION_DEFAULT;
-		stuff->principals = principals;
+	stuff->len = bufferSize;
+	stuff->line_no = 1;
+	stuff->scope_to = jsScope;
+	stuff->want_result = JS_TRUE;
+	stuff->data = realStream;
+	stuff->version = JSVERSION_DEFAULT;
+	stuff->principals = principals;
+    /* TODO: The following member doesn't exist
+	stuff->charset = charset;
+    */
 
 		ET_EvaluateScript(context, buffer, stuff, su_mocha_eval_exit_fn);
 
@@ -835,14 +927,26 @@ fail:
 					realStream->fCompletion, realStream->fCompletionClosure, result, realStream );
 	/* drop through */
 done:
-	XP_FREEIF(jsScope);
-    /* Don't free 'codebase', the event destructor will! */
-    /* XP_FREEIF(codebase); */
-	if ( installerFileNameURL )
-		XP_FREE( installerFileNameURL );
-
+	
+    /* Don't free the following, they are freed in the mocha event destructor!
+     
+    XP_FREEIF(jsScope);
+    XP_FREEIF(codebase); 
+    XP_FREEIF(charset);
+    
+    */
+	
+	XP_FREEIF( installerFileNameURL );
+    XP_FREEIF( installerJarName );
+    XP_FREEIF( jarCharset );
+	
 	/* Should we purge stuff from the disk cache here? */
 }
+
+
+#ifdef XP_MAC
+#pragma export reset
+#endif
 
 int su_UninstallDeleteFile(char *fileNamePlatform)
 {
@@ -872,7 +976,7 @@ int su_UninstallDeleteFile(char *fileNamePlatform)
                     {
 #ifdef XP_PC
 /* REMIND  need to move function to generic XP file */
-						fe_DeleteOldFileLater( (char*)fileNamePlatform );
+						su_DeleteOldFileLater( (char*)fileNamePlatform );
 #endif
 					}
 
@@ -1056,7 +1160,6 @@ PUBLIC int SU_Startup()
     /* check to see that we have a valid registry */
     if (REGERR_OK == NR_RegOpen("", &reg))
     {
-#ifdef XP_PC
 	    XP_StatStruct stat;
  		XP_Bool removeFromList;
 	    RKEY key;
@@ -1155,7 +1258,6 @@ PUBLIC int SU_Startup()
                 NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
             }
         }
-#endif /* XP_PC */
         NR_RegClose(reg);
     }
 
@@ -1165,10 +1267,169 @@ PUBLIC int SU_Startup()
 
 int SU_Shutdown()
 {
+    if (su_RegPackTime())
+    {
+        su_PackRegistry();
+    }
     SU_DestroyMonitor();
+    NR_ShutdownRegistry();
 
     return 0;
 }
+
+int su_GetLastRegPackTime(int32 *lastRegPackTime)
+{
+    HREG reg;
+    REGERR  err = REGERR_OK;
+    RKEY key;
+    char pathbuf[MAXREGPATHLEN+1] = {0};
+    char lrptstr[MAXREGNAMELEN];
+
+    *lastRegPackTime = 0;
+    err = NR_RegOpen("", &reg);
+    if (REGERR_OK == err)
+    {
+        err = NR_RegGetKey( reg, ROOTKEY_PRIVATE,  REG_SOFTUPDT_DIR, &key);
+
+        if (err == REGERR_OK)
+        {
+            err = NR_RegGetEntryString( reg, key, LAST_REGPACK_TIME, lrptstr, sizeof(lrptstr) );
+	        if (err == REGERR_OK)
+            {
+                *lastRegPackTime = XP_ATOI( lrptstr );
+            }
+        }
+        NR_RegClose(reg);
+    }
+    return err;
+}
+
+int su_SetLastRegPackTime(int32 lastRegPackTime)
+{
+    HREG reg;
+    REGERR  err = REGERR_OK;
+    RKEY key;
+    char pathbuf[MAXREGPATHLEN+1] = {0};
+    char lrptstr[MAXREGNAMELEN];
+
+    err = NR_RegOpen("", &reg);
+    if (REGERR_OK == err)
+    {
+        XP_STRCPY(pathbuf, REG_SOFTUPDT_DIR);
+        err = NR_RegAddKey( reg, ROOTKEY_PRIVATE,  pathbuf, &key);
+        if (err == REGERR_OK)
+        {
+            *lrptstr = '\0';
+	       
+	        PR_snprintf(lrptstr, MAXREGNAMELEN, "%d", lastRegPackTime);
+	        if ( lrptstr != NULL && *lrptstr != '\0' ) {
+                /* Add "LastRegPackTime" */
+	            err = NR_RegSetEntryString( reg, key, LAST_REGPACK_TIME, lrptstr);  
+            }
+                
+        }
+        NR_RegClose(reg);
+    }
+    return err;
+}
+
+XP_Bool su_RegPackTime()
+{
+    int32 lastRegPackTime = 0;
+    int32 nowSecInt = 0;
+    int32 intervalDays = 0;
+    int32 intervalSec = 0;
+    int32 i;
+    int64 bigNumber;
+    REGERR err;
+
+    int64 now;
+    int64 nowSec;
+
+    LL_I2L(now, 0);
+    LL_I2L(nowSec, 0);
+    LL_I2L(bigNumber, 1000000);
+    
+    PREF_GetIntPref("autoupdate.regpack_interval", &intervalDays);
+    intervalSec = intervalDays*24*60*60;
+    err = su_GetLastRegPackTime(&lastRegPackTime);
+  
+    now = PR_Now();
+   
+    LL_DIV(nowSec, now, bigNumber);
+    LL_L2I(nowSecInt, nowSec);
+
+    i = nowSecInt - lastRegPackTime;
+    if ((i > intervalSec) || (i < 0))
+    {
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+void su_RegPackCallback(void *userData, int32 bytes, int32 totalBytes)
+{
+    int32 value;
+    pw_ptr prg = (pw_ptr)userData;
+    char valueStr[256];
+    static XP_Bool rangeSet = FALSE;
+    
+    if (totalBytes)
+    {
+        if (!rangeSet)
+        {
+            PW_SetProgressRange(prg, 0, totalBytes);
+            PW_SetProgressValue(prg, 0);
+            /* Need to do this to force the progressMeter to work */
+            value = (int32) (5 * (((double)totalBytes) /((double)100)));
+            PW_SetProgressValue(prg, value);
+            rangeSet = TRUE;
+        }
+             
+        PR_snprintf(valueStr, 256, XP_GetString(REGPACK_PROGRESS_LINE2), bytes, totalBytes);
+        PW_SetProgressValue(prg, bytes);
+        PW_SetLine2(prg, valueStr);
+     }
+}
+
+int su_PackRegistry()
+{
+    int64   bigNumber;
+    int32 nowSecInt = 0;
+    REGERR  err = REGERR_OK;
+    pw_ptr prg;
+   
+    int64 now;
+    int64 nowSec;
+
+    LL_I2L(now, 0);
+    LL_I2L(nowSec, 0);
+    LL_I2L(bigNumber, 1000000);
+    
+    prg = PW_Create(NULL, pwApplicationModal);
+    PW_SetWindowTitle(prg, XP_GetString(REGPACK_PROGRESS_TITLE));
+    PW_SetLine2(prg, NULL);
+  	PW_Show(prg);
+    PW_SetLine1(prg, XP_GetString(REGPACK_PROGRESS_LINE1));;
+      
+    err = VR_PackRegistry((void *)prg, su_RegPackCallback);
+    /* We ignore all errors from PackRegistry. Later, we will check for an error
+       which is is called if the cancel button of the progress dialog is clicked,
+       in which case we will not set the lastRegPackTime.
+    */
+        now = PR_Now();
+        LL_DIV(nowSec, now, bigNumber);
+        LL_L2I(nowSecInt, nowSec);
+        su_SetLastRegPackTime(nowSecInt);
+    
+    PW_Destroy(prg);
+    
+    return err;
+}
+
 
 #ifdef XP_MAC
 #pragma export reset

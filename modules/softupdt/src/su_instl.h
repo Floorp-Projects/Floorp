@@ -40,5 +40,9 @@ void FE_ScheduleRenameUtility(void);
 int FE_CopyFile (const char *in, const char *out);
 #endif
 
+int32 su_DeleteOldFileLater(char * filename);
+int32 su_ReplaceOldFileLater(char *tmpfile, char *target );
+
+
 XP_END_PROTOS
 

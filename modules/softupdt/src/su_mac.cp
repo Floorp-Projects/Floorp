@@ -14,7 +14,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* su_mac.c
+/* su_mac.cp
  * Mac specific softupdate routines
  */
 
@@ -27,10 +27,13 @@
 #include <Folders.h>
 
 // MacFE
+
 #include "ufilemgr.h"
 #include "uprefd.h"
 #include "macutil.h"
 #include "macfeprefs.h"
+#include "FSpCompat.h"
+
 
 /* Given a system folder enum, returns a full path, in the URL form */
 char * GetDirectoryPathFromSystemEnum(OSType folder)
@@ -153,14 +156,14 @@ PR_PUBLIC_API(char *) FE_GetDirectoryPath( su_DirSpecID folderID)
 
     case eOSDriveFolder:
         {
-            char *p;
-            path = GetDirectoryPathFromSystemEnum(kSystemFolderType);
-            /* Drive on mac is :Drive:, so look for second ':' */
-            if ( (p = XP_STRCHR( path+1, ':' )) )
-            {
-                if (p[1])
-                    p[1] =  '\0';
-            }
+			path = GetDirectoryPathFromSystemEnum(kSystemFolderType);
+			/* Drive on mac is :Drive:, so look for second ':' */
+			char* p = XP_STRCHR( path+1, ':' );
+			if (p)
+			{
+			    if (p[1])
+			        p[1] =  '\0';
+			}
         }
         break;
 
@@ -192,9 +195,11 @@ PR_PUBLIC_API(char *) FE_GetDirectoryPath( su_DirSpecID folderID)
 
 int FE_ExecuteFile( const char * fileName, const char * cmdline )
 {
-	OSErr err;
-	FSSpec appSpec;
-
+	OSErr 	err;
+	FSSpec 	appSpec;
+	char* 	doomedPath;
+	
+	
     if ( fileName == NULL )
         return -1;
 
@@ -215,6 +220,24 @@ int FE_ExecuteFile( const char * fileName, const char * cmdline )
 			launchThis.launchControlFlags += launchDontSwitch;
 		err = LaunchApplication(&launchThis);
 		ThrowIfOSErr_(err);
+		
+		
+		/* add this file to the registry to be deleted when we restart communicator */
+		
+		if ( err == noErr)
+		{
+		
+			/* Returns a full pathname to the given file */
+			doomedPath = CFileMgr::PathNameFromFSSpec(appSpec, true );    
+		    
+			if (doomedPath)
+			{    
+				su_DeleteOldFileLater(doomedPath);
+				XP_FREEIF(doomedPath);
+			}
+		}
+		
+		
 	}
 	catch (OSErr err)
 	{
@@ -231,7 +254,6 @@ int FE_ReplaceExistingFile(char *from, XP_FileType ftype,
 		XP_Bool /* force */)	/* We ignore force because we do not check versions */
 {
     int result;
-	OSErr err;
 	FSSpec fileSpec;
 	short vRefNum;
 	long dirID;
@@ -241,25 +263,81 @@ int FE_ReplaceExistingFile(char *from, XP_FileType ftype,
 	{
    		result = XP_FileRename(from, ftype, to, totype);
 	}
-    else {
-    	err = CFileMgr::FSSpecFromLocalUnixPath(to, &fileSpec, true);
-    	if (err != noErr)
+    else 
+    {
+		FSSpec 	tempFileSpec; /* Temp Spec for the unique file name */
+    	FSSpec 	trashSpec;
+    	char*	doomedPath;
+    	
+    	result = CFileMgr::FSSpecFromLocalUnixPath(to, &fileSpec, true);
+    	if (result != noErr)
 		    return -1;
-	    err = FindFolder(fileSpec.vRefNum, kTrashFolderType, true, &vRefNum, &dirID);
-	    if (err != noErr)
+		
+		
+		/* Get the trash DirID and RefNum */    
+	    result = FindFolder(fileSpec.vRefNum, kTrashFolderType, true, &vRefNum, &dirID);
+	    if (result != noErr)
     		return -1;
-    	CMovePBRec pb;
+    		
+    	/* 
+    		We need to see if there is a file in the trash that is already named
+    	   	what we are planning to move there.  If there is, give us another name
+    	   	that will work
+    	*/
+    		
+		trashSpec.vRefNum 	= vRefNum;
+		trashSpec.parID 	= dirID;
+		trashSpec.name[0]	= 0;
+			
+    	result = CFileMgr::UniqueFileSpec(trashSpec, fileSpec.name,  tempFileSpec);
+		if ( result != noErr )
+			return -1;	
+    	
+    	
+    	/* Lets rename the file in-place.  This works on application an open files */
+    	
+    	result = FSpRename(&fileSpec, tempFileSpec.name);
+    	if ( result != noErr)
+		    return -1;
+		    
+		    
+		/* now that we renamed it to something that does not exist in the trash, move it there */    
+		CMovePBRec pb;
     	pb.ioCompletion = NULL;
-    	pb.ioNamePtr = (StringPtr)&fileSpec.name;
+    	pb.ioNamePtr = (StringPtr)&tempFileSpec.name;
     	pb.ioDirID = fileSpec.parID;
     	pb.ioVRefNum = vRefNum;
     	pb.ioNewName = NULL;
     	pb.ioNewDirID = dirID;
     
-    	err = PBCatMoveSync(&pb);
-    	if ( err != noErr)
+    	result = PBCatMoveSync(&pb);
+    	if ( result != noErr)
 		    return -1;
+		
+		
+		/* add this file to the registry to be deleted when we restart communicator */
+		
+		
+		result = FSMakeFSSpec(pb.ioVRefNum, pb.ioNewDirID, pb.ioNamePtr, &tempFileSpec);
+		if ( result == noErr)
+		{
+		
+			/* Returns a full pathname to the given file */
+			doomedPath = CFileMgr::PathNameFromFSSpec(tempFileSpec, true );    
+		    
+			if (doomedPath)
+			{    
+				result = su_DeleteOldFileLater(doomedPath);
+				XP_FREEIF(doomedPath);
+			}
+		}
+
+		/* Rename the new file */    
+		    
 	    result = XP_FileRename(from, ftype, to, totype);
+    	if ( result != noErr)
+		    return -1;
+    
     }
 	return result;
 }

@@ -18,14 +18,14 @@
 
 DEPTH=..\.. 
 
-DIRS=classes src include 
+DIRS=src include 
 
 include <$(DEPTH)\config\rules.mak>
 
 build_classes: 
-        cd $(DEPTH)\modules\softupdt
-        $(NMAKE) -f makefile.win
-        cd $(DEPTH)\sun-java\classsrc
-        $(NMAKE) -f makefile.win java$(VERSION_NUMBER).jar
-        cd $(DEPTH)\cmd\winfe\mkfiles32
-        $(NMAKE) -f mozilla.mak
+#        cd $(DEPTH)\modules\softupdt
+#        $(NMAKE) -f makefile.win
+#        cd $(DEPTH)\sun-java\classsrc
+#        $(NMAKE) -f makefile.win java$(VERSION_NUMBER).jar
+#        cd $(DEPTH)\cmd\winfe\mkfiles32
+#        $(NMAKE) -f mozilla.mak

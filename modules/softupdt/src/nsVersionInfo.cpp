@@ -19,6 +19,7 @@
 #include "prmem.h"
 #include "prmon.h"
 #include "prlog.h"
+#include "xp.h"
 #include "prefapi.h"
 #include "prprf.h"
 #include "nsVersionInfo.h"

@@ -16,8 +16,10 @@
  * Reserved.
  */
 
-#include "nsVersionRegistry.h"
+#include "prtypes.h"
+#include "prmem.h"
 #include "xp_mcom.h"
+#include "nsVersionRegistry.h"
 #include "NSReg.h"
 #include "VerReg.h"
 #include "prefapi.h"
@@ -370,7 +372,7 @@ nsVersionRegistry::nsVersionRegistry()
 char* nsVersionRegistry::convertPackageName( char* regPackageName )
 {
   char* convertedPackageName;
-  PRBool bSharedUninstall = false;
+  PRBool bSharedUninstall = PR_FALSE;
   PRUint32 i=0;
   PRUint32 j= 0;
   PRUint32 len = XP_STRLEN(regPackageName);

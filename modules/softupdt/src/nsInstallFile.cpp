@@ -34,6 +34,9 @@ extern int SU_ERROR_INSTALL_FILE_UNEXPECTED;
 extern int SU_DETAILS_REPLACE_FILE_MSG_ID;
 extern int SU_DETAILS_INSTALL_FILE_MSG_ID;
 
+#ifdef XP_WIN16
+XP_Bool	utilityScheduled = FALSE;
+#endif
 
 PR_BEGIN_EXTERN_C
 
@@ -256,13 +259,13 @@ char* nsInstallFile::Complete()
       /* XXX: Fix it. memeory leak */
       found = nsVersionRegistry::uninstallFileExists(regPackageName->ToNewCString(), vrName->ToNewCString());
       if (found != REGERR_OK)
-        bUpgrade = false;
+        bUpgrade = PR_FALSE;
       else
-        bUpgrade = true;
+        bUpgrade = PR_TRUE;
     } else if (REGERR_OK == nsVersionRegistry::inRegistry(vrName->ToNewCString())) {
-      bUpgrade = true;
+      bUpgrade = PR_TRUE;
     } else {
-      bUpgrade = false;
+      bUpgrade = PR_FALSE;
     }
     
     refCount = nsVersionRegistry::getRefCount(vrName->ToNewCString());

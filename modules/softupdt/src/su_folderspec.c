@@ -15,13 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* su_trigger.c
- * netscape.softupdate.FolderSpec.java
- * native methods
- * created by atotic, 1/6/97
- */
+
 #include "xp_mcom.h"
-#include "jri.h"
 #include "su_folderspec.h"
 
 /* #include "prthread.h" */
@@ -34,17 +29,6 @@
 #include "prprf.h"
 #include "fe_proto.h"
 #include "xpgetstr.h"
-
-#define IMPLEMENT_netscape_softupdate_FolderSpec
-#define IMPLEMENT_netscape_softupdate_SoftwareUpdate
-
-#ifndef XP_MAC
-#include "_jri/netscape_softupdate_FolderSpec.c"
-#include "_jri/netscape_softupdate_SoftwareUpdate.h"
-#else
-#include "n_softupdate_FolderSpec.c"
-#include "n_softupdate_SoftwareUpdate.h"
-#endif
 
 #ifndef MAX_PATH
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -75,17 +59,10 @@
 
 extern int SU_INSTALL_ASK_FOR_DIRECTORY;
 
-/* Standard Java initialization for native classes */
-void 
-FolderSpecInitialize(JRIEnv * env)
-{
-	use_netscape_softupdate_FolderSpec( env );
-}
-
 /* Makes sure that the path ends with a slash (or other platform end character)
  * @return  alloc'd new path that ends with a slash
  */
-static char *
+char *
 AppendSlashToDirPath(char * dirPath)
 {
     char pathSeparator; /* Gross, but harmless */
@@ -115,16 +92,6 @@ AppendSlashToDirPath(char * dirPath)
     return newPath;
 }
 
-/* su_PickDirTimer
- * keeps track of all SU specific data needed for the stream
- */ 
-typedef struct su_PickDirTimer_struct {
-    MWContext * context;
-    char * fileName;
-    char * prompt;
-    XP_Bool done;
-} su_PickDirTimer;
-
 
 /* Callback for FE_PromptForFileName */
 PR_STATIC_CALLBACK(void) 
@@ -146,7 +113,7 @@ GetDirectoryPathCallbackFunction(MWContext *context,
 }
 
 /* Callback for the timer set by FE_SetTimer */
-PR_STATIC_CALLBACK(void) 
+PR_EXTERN(void) 
 pickDirectoryCallback(void * a)
 {
     su_PickDirTimer *t = (su_PickDirTimer *)a;
@@ -162,106 +129,57 @@ pickDirectoryCallback(void * a)
         t->done = TRUE;
 }
 
-/* NativePickDefaultDirectory
- * Asks the user where he'd like to install the package
- */
-
-JRI_PUBLIC_API(struct java_lang_String *)
-native_netscape_softupdate_FolderSpec_NativePickDefaultDirectory(
-    JRIEnv* env, 
-	struct netscape_softupdate_FolderSpec* self)
-{
-	struct java_lang_String * jPackageName, * newName= NULL;
-    su_PickDirTimer callback;
-    char * packageName;
-    char prompt[200];
-
- 
-    callback.context = XP_FindSomeContext();
-    callback.fileName = NULL;
-    callback.done = FALSE;
- 	/* Get the name of the package to prompt for */
-	jPackageName = get_netscape_softupdate_FolderSpec_userPackageName( env, self);
-	packageName = (char*)JRI_GetStringPlatformChars( env, jPackageName, "", 0 );
-
-	if (packageName)
-	{
-		/* In Java thread now, and need to call FE_PromptForFileName
-         * from the main thread
-         * post an event on a timer, and busy-wait until it completes.
-         */
-       PR_snprintf(prompt, 200, XP_GetString(SU_INSTALL_ASK_FOR_DIRECTORY), packageName); 
-       callback.prompt = prompt;
-       FE_SetTimeout( pickDirectoryCallback, &callback, 1 );
-        while (!callback.done)  /* Busy loop for now */
-             PR_Sleep(PR_INTERVAL_NO_WAIT); /* java_lang_Thread_yield(WHAT?); */
-	}
-
-    if (callback.fileName != NULL)
-	{
-		newName = JRI_NewStringPlatform(env, callback.fileName, XP_STRLEN( callback.fileName), "", 0);
-		XP_FREE( callback.fileName);
-	}
-	return newName;
-}
 
 /* 
  *Directory manipulation 
  */
 
 /* Entry for the DirectoryTable[] */
-struct su_DirectoryTable
-{
-	char * directoryName;			/* The formal directory name */
-	su_SecurityLevel securityLevel;	/* Security level */
-	su_DirSpecID folderEnum;		/* Directory ID */
-};
-
 /* DirectoryTable holds the info about built-in directories:
  * Text name, security level, enum
  */
-static struct su_DirectoryTable DirectoryTable[] = 
+struct su_DirectoryTable DirectoryTable[] = 
 {
-	{"Plugins", eAllFolderAccess, ePluginFolder},
-	{"Program", eAllFolderAccess, eProgramFolder},
-	{"Communicator", eAllFolderAccess, eCommunicatorFolder},
-	{"User Pick", eAllFolderAccess, ePackageFolder},
-	{"Temporary", eAllFolderAccess, eTemporaryFolder},
-	{"Installed", eAllFolderAccess, eInstalledFolder},
-	{"Current User", eAllFolderAccess, eCurrentUserFolder},
+	{"Plugins",         ePluginFolder,              TRUE},
+	{"Program",         eProgramFolder,             FALSE},
+	{"Communicator",    eCommunicatorFolder,        FALSE},
+	{"User Pick",       ePackageFolder,             FALSE},
+	{"Temporary",       eTemporaryFolder,           FALSE},
+	{"Installed",       eInstalledFolder,           FALSE},
+	{"Current User",    eCurrentUserFolder,         FALSE},
 
-	{"NetHelp", eAllFolderAccess, eNetHelpFolder},
-	{"OS Drive", eAllFolderAccess, eOSDriveFolder},
-	{"File URL", eAllFolderAccess, eFileURLFolder},
+	{"NetHelp",         eNetHelpFolder,             FALSE},
+	{"OS Drive",        eOSDriveFolder,             FALSE},
+	{"File URL",        eFileURLFolder,             FALSE},
 
-	{"Netscape Java Bin", eAllFolderAccess, eJavaBinFolder},
-	{"Netscape Java Classes", eAllFolderAccess, eJavaClassesFolder},
-	{"Java Download", eOneFolderAccess, eJavaDownloadFolder},
+	{"Netscape Java Bin",     eJavaBinFolder,       FALSE},
+	{"Netscape Java Classes", eJavaClassesFolder,   TRUE},
+	{"Java Download",         eJavaDownloadFolder,  TRUE},
 
-	{"Win System", eAllFolderAccess, eWin_SystemFolder},
-	{"Win System16", eAllFolderAccess, eWin_System16Folder},
-	{"Windows", eAllFolderAccess, eWin_WindowsFolder},
+	{"Win System",      eWin_SystemFolder,          FALSE},
+	{"Win System16",    eWin_System16Folder,        FALSE},
+	{"Windows",         eWin_WindowsFolder,         FALSE},
 
-	{"Mac System", eAllFolderAccess, eMac_SystemFolder},
-	{"Mac Desktop", eAllFolderAccess, eMac_DesktopFolder},
-	{"Mac Trash", eAllFolderAccess, eMac_TrashFolder},
-	{"Mac Startup", eAllFolderAccess, eMac_StartupFolder},
-	{"Mac Shutdown", eAllFolderAccess, eMac_ShutdownFolder},
-	{"Mac Apple Menu", eAllFolderAccess, eMac_AppleMenuFolder},
-	{"Mac Control Panel", eAllFolderAccess, eMac_ControlPanelFolder},
-	{"Mac Extension", eAllFolderAccess, eMac_ExtensionFolder},
-	{"Mac Fonts", eAllFolderAccess, eMac_FontsFolder},
-	{"Mac Preferences", eAllFolderAccess, eMac_PreferencesFolder},
+	{"Mac System",      eMac_SystemFolder,          FALSE},
+	{"Mac Desktop",     eMac_DesktopFolder,         FALSE},
+	{"Mac Trash",       eMac_TrashFolder,           FALSE},
+	{"Mac Startup",     eMac_StartupFolder,         FALSE},
+	{"Mac Shutdown",    eMac_ShutdownFolder,        FALSE},
+	{"Mac Apple Menu",  eMac_AppleMenuFolder,       FALSE},
+	{"Mac Control Panel", eMac_ControlPanelFolder,  FALSE},
+	{"Mac Extension",   eMac_ExtensionFolder,       FALSE},
+	{"Mac Fonts",       eMac_FontsFolder,           FALSE},
+	{"Mac Preferences", eMac_PreferencesFolder,     FALSE},
 
-	{"Unix Local", eAllFolderAccess, eUnix_LocalFolder},
-	{"Unix Lib", eAllFolderAccess, eUnix_LibFolder},
+	{"Unix Local",      eUnix_LocalFolder,          FALSE},
+	{"Unix Lib",        eUnix_LibFolder,            FALSE},
 
-	{"", eAllFolderAccess, eBadFolder}	/* Termination line */
+	{"",                eBadFolder,                 FALSE} /* Termination */
 };
 
 /* MapNameToEnum
  * maps name from the directory table to its enum */
-static su_DirSpecID MapNameToEnum(const char * name)
+su_DirSpecID MapNameToEnum(const char * name)
 {
 	int i = 0;
 	XP_ASSERT( name );
@@ -275,112 +193,5 @@ static su_DirSpecID MapNameToEnum(const char * name)
 		i++;
 	}
 	return eBadFolder;
-}
-
-/**
- *  GetNativePickPath -- return a native path equivalent of a XP path
- */
-
-JRI_PUBLIC_API(struct java_lang_String *)
-native_netscape_softupdate_FolderSpec_GetNativePath (JRIEnv* env, 
-					struct netscape_softupdate_FolderSpec* self, 
-					struct java_lang_String *a) 
-{
-	struct java_lang_String * nativePath = NULL;
-	char *xpPath, *p;
-	char pathSeparator;
-
-#define XP_PATH_SEPARATOR  '/'
-
-#ifdef XP_WIN
-	pathSeparator = '\\';
-#elif defined(XP_MAC)
-	pathSeparator = ':';
-#else /* XP_UNIX */
-	pathSeparator = '/';
-#endif
-
-	p = xpPath = (char *) JRI_GetStringUTFChars (env, a); /* UTF OK */
-
-	/*
-	 * Traverse XP path and replace XP_PATH_SEPARATOR with
-	 * the platform native equivalent
-	 */
-	if ( p == NULL )
-	{
-		xpPath = "";
-	}
-	else
-	{
-		while ( *p )
-		{
-			if ( *p == XP_PATH_SEPARATOR )
-				*p = pathSeparator;
-			++p;
-		}
-	}
-
-	nativePath = JRI_NewStringUTF(env, xpPath, XP_STRLEN( xpPath)); /* UTF OK */
-
-	return nativePath;
-}
-
-/*
- * NativeGetDirectoryPath
- */
-JRI_PUBLIC_API(jint)
-native_netscape_softupdate_FolderSpec_NativeGetDirectoryPath(JRIEnv* env,
-						struct netscape_softupdate_FolderSpec* self)
-{
-	su_DirSpecID folderID;
-	char *		folderName;
-	char *		folderPath = NULL;
-	struct java_lang_String * jFolderName;
-
-	/* Get the name of the package to prompt for */
-
-	jFolderName = get_netscape_softupdate_FolderSpec_folderID( env, self);
-	folderName = (char*)JRI_GetStringUTFChars( env, jFolderName ); /* UTF OK */
-
-	folderID = MapNameToEnum(folderName);
-    switch (folderID)
-    {
-    case eBadFolder:
- 		return netscape_softupdate_FolderSpec_INVALID_PATH_ERR;
-
-    case eCurrentUserFolder:
-        {
-	        char dir[MAX_PATH];
-	        int len = MAX_PATH;
-	        if ( PREF_GetCharPref("profile.directory", dir, &len) == PREF_NOERROR)
-	        {
-	        	char * platformDir = WH_FileName(dir, xpURL);
-	        	if (platformDir)
-		            folderPath = AppendSlashToDirPath(platformDir);
-	    		XP_FREEIF(platformDir);
-	        }
-        }
-        break;
-
-    default:
-    	/* Get the FE path */
-	    folderPath = FE_GetDirectoryPath( folderID);
-        break;
-   }
-
-
-	/* Store it in the object */
-	if (folderPath != NULL)
-	{
-		struct java_lang_String * jFolderPath;
-		jFolderPath = JRI_NewStringPlatform(env, folderPath, strlen( folderPath), "", 0);
-		if ( jFolderPath != NULL)
-			set_netscape_softupdate_FolderSpec_urlPath(env, self, jFolderPath);
-
-        XP_FREE(folderPath);
-		return 0;
-	}
-
-	return netscape_softupdate_FolderSpec_INVALID_PATH_ERR;
 }
 

@@ -24,6 +24,19 @@
  */
 
 #include "xp_mcom.h"
+#include "prtypes.h"
+#include "ntypes.h"
+
+/* su_PickDirTimer
+ * keeps track of all SU specific data needed for the stream
+ */ 
+typedef struct su_PickDirTimer_struct {
+    MWContext * context;
+    char * fileName;
+    char * prompt;
+    XP_Bool done;
+} su_PickDirTimer;
+
 
 typedef enum su_DirSpecID {
 
@@ -73,6 +86,15 @@ typedef enum su_SecurityLevel {
 	eAllFolderAccess
 } su_SecurityLevel;
 
+struct su_DirectoryTable
+{
+	char * directoryName;			/* The formal directory name */
+	su_SecurityLevel securityLevel;	/* Security level */
+	su_DirSpecID folderEnum;		/* Directory ID */
+};
+
+extern struct su_DirectoryTable DirectoryTable[];
+
 XP_BEGIN_PROTOS
 
 /* FE_GetDirectoryPath
@@ -85,5 +107,17 @@ int    FE_ReplaceExistingFile(char *, XP_FileType, char *, XP_FileType, XP_Bool)
 #ifdef WIN32
 BOOL WFE_IsMoveFileExBroken();
 #endif
+
+PR_EXTERN(void) 
+pickDirectoryCallback(void * a);
+
+/* Makes sure that the path ends with a slash (or other platform end character)
+ * @return  alloc'd new path that ends with a slash
+ */
+char * AppendSlashToDirPath(char * dirPath);
+
+/* MapNameToEnum
+ * maps name from the directory table to its enum */
+su_DirSpecID MapNameToEnum(const char * name);
 
 XP_END_PROTOS

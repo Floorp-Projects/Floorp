@@ -147,10 +147,10 @@ char* nsInstallPatch::Prepare(void)
   IntegerKey ikey(PL_HashString(targetfile));
   srcname = (char *)softUpdate->patchList->Get( &ikey );
   if (srcname != NULL) {
-    deleteOldSrc = true;
+    deleteOldSrc = PR_TRUE;
   } else {
     srcname = targetfile;
-    deleteOldSrc = false;
+    deleteOldSrc = PR_FALSE;
   }
 
   patchedfile = NativePatch( srcname, patchURL, &errorMsg );

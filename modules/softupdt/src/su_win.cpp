@@ -46,9 +46,6 @@ extern "C" char * FE_GetProgramDirectory(char *buffer, int length);
 
 extern "C" int SU_NEED_TO_REBOOT;
 
-extern "C" REGERR  fe_DeleteOldFileLater(char * filename);
-extern "C" REGERR  fe_ReplaceOldFileLater(char *tmpfile, char *target);
-
 XP_Bool fe_FileNeedsUpdate(char *sourceFile, char *targetFile);
 
 #if defined(WIN32) || defined(XP_OS2)
@@ -218,7 +215,7 @@ int FE_ExecuteFile( const char * filename, const char * cmdline )
         return -1;
 
     DWORD hInst = WinExec( cmdline, SW_NORMAL );
-    fe_DeleteOldFileLater( (char*)filename );
+    su_DeleteOldFileLater( (char*)filename );
 
     if ( hInst < 32 )
         return -1;
@@ -303,7 +300,7 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
                     if ( nameFound ) {
                         if ( MoveFile( finalName, tmpname ) ) {
                             if ( MoveFile( currentName, finalName ) ) {
-                                err = fe_DeleteOldFileLater( tmpname );
+                                err = su_DeleteOldFileLater( tmpname );
                             }
                             else {
                                 /* 2nd move failed, put old file back */
@@ -312,7 +309,7 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
                         }
                         else {
                             /* non-executable in use; schedule for later */
-                            err = fe_ReplaceOldFileLater( CurrentFname, FinalFname );
+                            err = su_ReplaceOldFileLater( CurrentFname, FinalFname );
                         }
                     }
                 }
@@ -457,42 +454,6 @@ XP_Bool fe_FileNeedsUpdate(char *sourceFile, char *targetFile)
 }
 
 
-REGERR fe_DeleteOldFileLater(char * filename)
-{
-    RKEY newkey;
-    REGERR result = -1;
-    HREG reg;
-    if ( REGERR_OK == NR_RegOpen("", &reg) ) {
-        if (REGERR_OK == NR_RegAddKey( reg, ROOTKEY_PRIVATE, 
-            REG_DELETE_LIST_KEY, &newkey) )
-        {
-            result = NR_RegSetEntryString( reg, newkey, filename, "" );
-        }
-
-        NR_RegClose(reg);
-    }
-
-    return result;
-}
-
-
-
-REGERR fe_ReplaceOldFileLater(char *tmpfile, char *target )
-{
-    RKEY newkey;
-    REGERR err;
-    HREG reg;
-
-    err = NR_RegOpen("", &reg);
-    if ( err == REGERR_OK ) {
-        err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &newkey);
-        if ( err == REGERR_OK ) {
-            err = NR_RegSetEntryString( reg, newkey, tmpfile, target );
-        }
-        NR_RegClose(reg);
-    }
-    return err;
-}
 
 
 
