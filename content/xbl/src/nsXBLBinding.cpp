@@ -105,6 +105,8 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLBinding.h"
 
+#include "prprf.h"
+
 // Helper classes
 
 /***********************************************************************/
@@ -1089,13 +1091,36 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
   jsval val;
   JSObject* proto;
 
-  if ((!::JS_LookupProperty(cx, global, aClassName.get(), &val)) ||
-      JSVAL_IS_PRIMITIVE(val)) {
+  nsCAutoString className(aClassName);
+  // Retrieve the current prototype of obj.
+  JSObject* parent_proto = ::JS_GetPrototype(cx, obj);
+  if (parent_proto) {
+    // We need to create a unique classname based on aClassName and
+    // parent_proto.  Append a space (an invalid URI character) to ensure that
+    // we don't have accidental collisions with the case when parent_proto is
+    // null and aClassName ends in some bizarre numbers (yeah, it's unlikely).
+    jsid parent_proto_id;
+    if (!::JS_GetObjectId(cx, parent_proto, &parent_proto_id)) {
+      // Probably OOM
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // One space, maybe "0x", at most 16 chars (on a 64-bit system) of long,
+    // and a null-terminator (which PR_snprintf ensures is there even if the
+    // string representation of what we're printing does not fit in the buffer
+    // provided).
+    char buf[20];
+    PR_snprintf(buf, sizeof(buf), " %lx", parent_proto_id);
+    className.Append(buf);
+  }
+
+  if ((!::JS_LookupProperty(cx, global, className.get(), &val)) ||
+      JSVAL_IS_PRIMITIVE(val)) {  
     // We need to initialize the class.
 
     nsXBLJSClass* c;
     void* classObject;
-    nsCStringKey key(aClassName);
+    nsCStringKey key(className);
     classObject = (nsXBLService::gClassTable)->Get(&key);
 
     if (classObject) {
@@ -1110,7 +1135,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
     } else {
       if (JS_CLIST_IS_EMPTY(&nsXBLService::gClassLRUList)) {
         // We need to create a struct for this class.
-        c = new nsXBLJSClass(aClassName);
+        c = new nsXBLJSClass(className);
 
         if (!c)
           return NS_ERROR_OUT_OF_MEMORY;
@@ -1127,15 +1152,12 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 
         // Change the class name and we're done.
         nsMemory::Free((void*) c->name);
-        c->name = ToNewCString(aClassName);
+        c->name = ToNewCString(className);
       }
 
       // Add c to our table.
       (nsXBLService::gClassTable)->Put(&key, (void*)c);
     }
-
-    // Retrieve the current prototype of obj.
-    JSObject* parent_proto = ::JS_GetPrototype(cx, obj);
 
     // The prototype holds a strong reference to its class struct.
     c->Hold();
