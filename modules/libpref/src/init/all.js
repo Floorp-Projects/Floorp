@@ -113,7 +113,6 @@ pref("browser.show_about_as_stupid_modal_window", false);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator/locale/navigator.properties");
-pref("browser.search.defaultengine", "engine://D%3A%5Cmozilla%5Cdist%5CWIN32_D.OBJ%5Cbin%5Csearchplugins%5CNetscapeSearch.src");
 pref("browser.search.opensidebarsearchpanel", true);
 pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
 pref("browser.search.mode", 0);
