@@ -17,7 +17,6 @@
 #
 
 msgCore.h
-nsIMsgMailNewsUrl.h
 nsIMsgHdr.h
 nsMsgFolderFlags.h
 nsMsgHeaderMasks.h
