@@ -72,7 +72,8 @@
 //             itself.  Note that "#foo" on the end of URL doesn't affect
 //             whether it's considered identical, but "?foo" or ";foo" are
 //             considered and compared.
-#define MAX_SAME_URL_CONTENT_FRAMES 3
+// Bug 228829: Limit this to 1, like IE does.
+#define MAX_SAME_URL_CONTENT_FRAMES 1
 
 // Bug 8065: Limit content frame depth to some reasonable level. This
 // does not count chrome frames when determining depth, nor does it
@@ -431,26 +432,14 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   
   // Bug 136580: Check for recursive frame loading
   // pre-grab these for speed
-  nsCAutoString prepath;
-  nsCAutoString filepath;
-  nsCAutoString query;
-  nsCAutoString param;
-  rv = aURI->GetPrePath(prepath);
-  NS_ENSURE_SUCCESS(rv,rv);
-  nsCOMPtr<nsIURL> aURL(do_QueryInterface(aURI, &rv)); // QI can fail
-  if (NS_SUCCEEDED(rv)) {
-    rv = aURL->GetFilePath(filepath);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = aURL->GetQuery(query);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = aURL->GetParam(param);
-    NS_ENSURE_SUCCESS(rv,rv);
-  } else {
-    // Not a URL, so punt and just take the whole path.  Note that if you
-    // have a self-referential-via-refs non-URL (can't happen via nsSimpleURI,
-    // but could in theory with an external protocol handler) frameset it will
-    // recurse down to the depth limit before stopping, but it will stop.
-    rv = aURI->GetPath(filepath);
+  nsCOMPtr<nsIURI> cloneURI;
+  rv = aURI->Clone(getter_AddRefs(cloneURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // Bug 98158/193011: We need to ignore data after the #
+  nsCOMPtr<nsIURL> cloneURL(do_QueryInterface(cloneURI)); // QI can fail
+  if (cloneURL) {
+    rv = cloneURL->SetRef(EmptyCString());
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -464,42 +453,20 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
       nsCOMPtr<nsIURI> parentURI;
       parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
       if (parentURI) {
-        // Bug 98158/193011: We need to ignore data after the #
-        // Note that this code is back-stopped by the maximum-depth checks.
-        
-        // Check prepath (foo://blah@bar:port/) and filepath
-        // (/dir/dir/file.ext), but not # extensions.
-        // There's no easy way to get the URI without extension
-        // directly, so check prepath, filepath and query/param (if any)
-
-        // Note that while in theory a CGI could return different data for
-        // the same query string, the spec states that it shouldn't, so
-        // we'll compare queries (and params).
-        nsCAutoString parentPrePath;
-        nsCAutoString parentFilePath;
-        nsCAutoString parentQuery;
-        nsCAutoString parentParam;
-        rv = parentURI->GetPrePath(parentPrePath);
-        NS_ENSURE_SUCCESS(rv,rv);
-        nsCOMPtr<nsIURL> parentURL(do_QueryInterface(parentURI, &rv)); // QI can fail
-        if (NS_SUCCEEDED(rv)) {
-          rv = parentURL->GetFilePath(parentFilePath);
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = parentURL->GetQuery(parentQuery);
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = parentURL->GetParam(parentParam);
-          NS_ENSURE_SUCCESS(rv,rv);
-        } else {
-          rv = parentURI->GetPath(filepath);
+        nsCOMPtr<nsIURI> parentClone;
+        rv = parentURI->Clone(getter_AddRefs(parentClone));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIURL> parentURL(do_QueryInterface(parentClone));
+        if (parentURL) {
+          rv = parentURL->SetRef(EmptyCString());
           NS_ENSURE_SUCCESS(rv,rv);
         }
+
+        PRBool equal;
+        rv = cloneURI->Equals(parentClone, &equal);
+        NS_ENSURE_SUCCESS(rv, rv);
         
-        // filepath will often not match; test it first
-        if (filepath.Equals(parentFilePath) &&
-            query.Equals(parentQuery) &&
-            prepath.Equals(parentPrePath) &&
-            param.Equals(parentParam))
-        {
+        if (equal) {
           matchCount++;
           if (matchCount >= MAX_SAME_URL_CONTENT_FRAMES) {
             NS_WARNING("Too many nested content frames have the same url (recursion?) so giving up");
