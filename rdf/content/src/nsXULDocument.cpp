@@ -2789,7 +2789,7 @@ XULDocumentImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 
         if (NS_SUCCEEDED(rv)) {
             nsIDOMNode* domNode;
-            rv = mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**) domNode);
+            rv = mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**)&domNode);
             NS_ASSERTION(NS_SUCCEEDED(rv), "root content is not a DOM node");
 
             if (NS_SUCCEEDED(rv)) {
