@@ -172,7 +172,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
   /* Add the nsMenu to our list */
   mItems->AppendElement(aMenu);
-  NS_ADDREF(aMenu);					// Not sure about this but windows did it
+  NS_ADDREF(aMenu);
 
 #ifdef DEBUG		  
   nsString Label;
@@ -238,13 +238,12 @@ NS_METHOD nsMenuBar::RemoveAll()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::RemoveAll\n"));
 
-  while (mItems->Count())
-  {
+ while (mItems->Count()) {
     nsISupports * supports = (nsISupports *)mItems->ElementAt(0);
-	NS_RELEASE(supports);
-	mItems->RemoveElementAt(0);
+    NS_RELEASE(supports);
+    mItems->RemoveElementAt(0);
   }
-
+  
   return NS_OK;
 }
 
@@ -272,16 +271,13 @@ NS_METHOD nsMenuBar::Paint()
 }
 
 //-------------------------------------------------------------------------
-//
-// nsMenuListener interface
-//
-//-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuItemSelected - Not Implemented\n"));
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   // I should determine which menu was selected and call MenuConstruct
@@ -297,12 +293,14 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuBar::MenuDeSelected - Not Implemented\n"));
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
 nsEventStatus nsMenuBar::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
@@ -373,7 +371,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
         // HACK: force a paint for now
         pnsMenuBar->Paint();
         
-	NS_RELEASE(pnsMenuBar);
+		NS_RELEASE(pnsMenuBar);
     } // end if ( nsnull != pnsMenuBar )
   }
   
