@@ -296,13 +296,12 @@ CLASS="section"
 NAME="bzldap"
 ></A
 >4.2.4. LDAP Authentication</H2
-><P
->&#13;        <DIV
-CLASS="warning"
+><DIV
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="warning"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -311,23 +310,32 @@ WIDTH="25"
 ALIGN="CENTER"
 VALIGN="TOP"
 ><IMG
-SRC="../images/warning.gif"
+SRC="../images/note.gif"
 HSPACE="5"
-ALT="Warning"></TD
+ALT="Note"></TD
 ><TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->This information on using the LDAP
-            authentication options with Bugzilla is old, and the authors do
-            not know of anyone who has tested it. Approach with caution.
+>LDAP authentication has been rewritten for the 2.18 release of
+        Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
+        Net::LDAP instead. This rewrite was part of a larger landing that
+        allowed for additional authentication schemes to be easily added
+        (<A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=180642"
+TARGET="_top"
+>bug
+        180642</A
+>).
+        </P
+><P
+>This patch originally landed in 21-Mar-2003 and was included
+          in the 2.17.4 development release.
           </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
->
-      </P
 ><P
 >&#13;      The existing authentication
       scheme for Bugzilla uses email addresses as the primary user ID, and a
@@ -346,92 +354,189 @@ VALIGN="TOP"
       email address, not LDAP username. You still assign bugs by email
       address, query on users by email address, etc.
       </P
+><DIV
+CLASS="caution"
 ><P
->Using LDAP for Bugzilla authentication requires the 
-      Mozilla::LDAP (aka PerLDAP) Perl module. The
-      Mozilla::LDAP module in turn requires Netscape's Directory SDK for C.
-      After you have installed the SDK, then install the PerLDAP module.
-      Mozilla::LDAP and the Directory SDK for C are both 
-      <A
-HREF="http://www.mozilla.org/directory/"
-TARGET="_top"
->available for
-      download</A
-> from mozilla.org. 
-      </P
-><P
->&#13;      Set the Param 'useLDAP' to "On" **only** if you will be using an LDAP
-      directory for
-      authentication. Be very careful when setting up this parameter; if you
-      set LDAP authentication, but do not have a valid LDAP directory set up,
-      you will not be able to log back in to Bugzilla once you log out. (If
-      this happens, you can get back in by manually editing the data/params
-      file, and setting useLDAP back to 0.)
-      </P
-><P
->If using LDAP, you must set the
-      three additional parameters: Set LDAPserver to the name (and optionally
-      port) of your LDAP server. If no port is specified, it defaults to the
-      default port of 389. (e.g "ldap.mycompany.com" or
-      "ldap.mycompany.com:1234") Set LDAPBaseDN to the base DN for searching
-      for users in your LDAP directory. (e.g. "ou=People,o=MyCompany") uids
-      must be unique under the DN specified here. Set LDAPmailattribute to
-      the name of the attribute in your LDAP directory which contains the
-      primary email address. On most directory servers available, this is
-      "mail", but you may need to change this.
-      </P
-><P
->You can also try using <A
-HREF="http://www.openldap.org/"
-TARGET="_top"
->&#13;      OpenLDAP</A
-> with Bugzilla, using any of a number of administration
-      tools.  You should apply the patch attached to 
-      <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=158630"
-TARGET="_top"
->bug 158630</A
->
-      , then set the following object classes for your users:
-
-      <P
 ></P
-><OL
-TYPE="1"
-><LI
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
 ><P
->objectClass: person</P
-></LI
-><LI
-><P
->objectClass: organizationalPerson</P
-></LI
-><LI
-><P
->objectClass: inetOrgPerson</P
-></LI
-><LI
-><P
->objectClass: top</P
-></LI
-><LI
-><P
->objectClass: posixAccount</P
-></LI
-><LI
-><P
->objectClass: shadowAccount</P
-></LI
-></OL
+>Because the Bugzilla account is not created until the first time
+        a user logs in, a user who has not yet logged is unknown to Bugzilla.
+        This means they cannot be used as an assignee or QA contact (default or
+        otherwise), added to any cc list, or any other such operation. One
+        possible workaround is the <TT
+CLASS="filename"
+>bugzilla_ldapsync.rb</TT
 >
-
-      Please note that this patch <EM
->has not</EM
-> yet been
-      accepted by the Bugzilla team, and so you may need to do some
-      manual tweaking.  That said, it looks like Net::LDAP is probably
-      the way to go in the future.
-      </P
+        script in the
+        <A
+HREF="glossary.html#gloss-contrib"
+><I
+CLASS="glossterm"
+><TT
+CLASS="filename"
+>contrib</TT
+></I
+></A
+> directory. Another possible solution is fixing
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=201069"
+TARGET="_top"
+>bug
+        201069</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Parameters required to use LDAP Authentication:</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><A
+NAME="param-loginmethod"
+></A
+>loginmethod</DT
+><DD
+><P
+>This parameter should be set to <SPAN
+CLASS="QUOTE"
+>"LDAP"</SPAN
+>
+            <EM
+>only</EM
+> if you will be using an LDAP directory
+            for authentication. If you set this param to <SPAN
+CLASS="QUOTE"
+>"LDAP"</SPAN
+> but
+            fail to set up the other parameters listed below you will not be
+            able to log back in to Bugzilla one you log out. If this happens
+            to you, you will need to manually edit
+            <TT
+CLASS="filename"
+>data/params</TT
+> and set loginmethod to
+            <SPAN
+CLASS="QUOTE"
+>"DB"</SPAN
+>.
+            </P
+></DD
+><DT
+><A
+NAME="param-LDAPserver"
+></A
+>LDAPserver</DT
+><DD
+><P
+>This parameter should be set to the name (and optionally the
+            port) of your LDAP server. If no port is specified, it assumes
+            the default LDAP port of 389.
+            </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"ldap.company.com"</SPAN
+>
+             or <SPAN
+CLASS="QUOTE"
+>"ldap.company.com:3268"</SPAN
+>
+            </P
+></DD
+><DT
+><A
+NAME="param-LDAPbinddn"
+></A
+>LDAPbinddn [Optional]</DT
+><DD
+><P
+>Some LDAP servers will not allow an anonymous bind to search
+             the directory. If this is the case with your configuration you
+             should set the LDAPbinddn parameter to the user account Bugzilla
+             should use instead of the anonymous bind.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"cn=default,cn=user:password"</SPAN
+></P
+></DD
+><DT
+><A
+NAME="param-LDAPBaseDN"
+></A
+>LDAPBaseDN</DT
+><DD
+><P
+>The LDAPBaseDN parameter should be set to the location in
+             your LDAP tree that you would like to search for e-mail addresses.
+             Your uids should be unique under the DN specified here.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"ou=People,o=Company"</SPAN
+></P
+></DD
+><DT
+><A
+NAME="param-LDAPuidattribute"
+></A
+>LDAPuidattribute</DT
+><DD
+><P
+>The LDAPuidattribute parameter should be set to the attribute
+             which contains the unique UID of your users. The value retrieved
+             from this attribute will be used when attempting to bind as the
+             user to confirm their password.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"uid"</SPAN
+></P
+></DD
+><DT
+><A
+NAME="param-LDAPmailattribute"
+></A
+>LDAPmailattribute</DT
+><DD
+><P
+>The LDAPmailattribute parameter should be the name of the
+             attribute which contains the e-mail address your users will enter
+             into the Bugzilla login boxes.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"mail"</SPAN
+></P
+></DD
+></DL
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -452,13 +557,19 @@ HREF="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"
 TARGET="_top"
 >http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</A
 >.
-      Executing the following code snippet from a UNIX command shell will
-      rectify the problem if your Bugzilla installation is intended for an
-      English-speaking audience. As always, be sure your Bugzilla
-      installation has a good backup before making changes, and I recommend
-      you understand what the script is doing before executing it.</P
+      Making the change below will fix the problem if your installation is for
+      an English speaking audience.
+      </P
 ><P
->&#13;        <TABLE
+>Telling Bugzilla to output a charset as part of the HTTP header is
+      much easier in version 2.18 and higher (including any cvs
+      pull after 4-May-2003 and development release after 2.17.5) than it was
+      in previous versions. Simply locate the following line in
+      <TT
+CLASS="filename"
+>Bugzilla/CGI.pm</TT
+>:
+      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -468,38 +579,34 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; charset=ISO-8859-1/i" *.cgi *.pl
-        </PRE
+>&#13;    # Make sure that we don't send any charset headers
+    $self-&#62;charset('');
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      and change it to:
+      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;    # Send all data using the ISO-8859-1 charset
+    $self-&#62;charset('ISO-8859-1');
+      </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
       </P
-><P
->All this one-liner command does is search for all instances of 
-      <SPAN
-CLASS="QUOTE"
->"Content-type: text/html"</SPAN
->
-
-      and replaces it with 
-      <SPAN
-CLASS="QUOTE"
->"Content-Type: text/html; charset=ISO-8859-1"</SPAN
->
-
-      . This specification prevents possible Javascript attacks on the
-      browser, and is suggested for all English-speaking sites. For
-      non-English-speaking Bugzilla sites, I suggest changing 
-      <SPAN
-CLASS="QUOTE"
->"ISO-8859-1"</SPAN
->, above, to 
-      <SPAN
-CLASS="QUOTE"
->"UTF-8"</SPAN
->.</P
 ><DIV
 CLASS="note"
 ><P

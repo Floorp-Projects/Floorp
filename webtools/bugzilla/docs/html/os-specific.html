@@ -414,7 +414,7 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >&#13;use Net::SMTP;
-$smtp_server = 'smtp.mycompany.com';  # change this
+my $smtp_server = 'smtp.mycompany.com';  # change this
 
 # Use die on error, so that the mail will be in the 'unsent mails' and
 # can be sent from the sanity check page.
@@ -526,110 +526,172 @@ TARGET="_top"
 >.</P
 ><P
 >Follow the instructions for setting up Fink. Once it's installed,
-      you'll want to run the following as root: 
-      <B
-CLASS="command"
->fink install gd</B
->
+      you'll want to use it to install the gd2 package.
       </P
 ><P
 >It will prompt you for a number of dependencies, type 'y' and hit
-      enter to install all of the dependencies. Then watch it work.</P
-><P
->To prevent creating conflicts with the software that Apple installs
-      by default, Fink creates its own directory tree at /sw where it installs
-      most of the software that it installs. This means your libraries and
-      headers for libgd will be at /sw/lib and /sw/include instead of /usr/lib
-      and /usr/local/include. Because of these changed locations for the
-      libraries, the Perl GD module will not install directly via CPAN, because it
-      looks for the specific paths instead of getting them from your
-      environment. But there's a way around that :-)</P
-><P
->Instead of typing 
-      <SPAN
-CLASS="QUOTE"
->"install GD"</SPAN
->
-      at the 
-      <TT
-CLASS="prompt"
->cpan&#62;</TT
->
-      prompt, type 
-      <B
-CLASS="command"
->look GD</B
->. 
-      This should go through the motions of downloading the latest version of
-      the GD module, then it will open a shell and drop you into the build
-      directory. Apply <A
-HREF="../xml/gd-makefile.patch"
-TARGET="_top"
->this patch</A
-> 
-      to the Makefile.PL file (save the
-      patch into a file and use the command 
-      <B
-CLASS="command"
->patch &#60; patchfile</B
->.)
+      enter to install all of the dependencies and then watch it work. You will
+      then be able to use <A
+HREF="glossary.html#gloss-cpan"
+><I
+CLASS="glossterm"
+>CPAN</I
+></A
+> to
+      install the GD perl module.
       </P
+><DIV
+CLASS="note"
 ><P
->Then, run these commands to finish the installation of the GD
-      module: 
-      <P
 ></P
 ><TABLE
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
-><TBODY
 ><TR
 ><TD
->&#13;          <B
-CLASS="command"
->perl Makefile.PL</B
->
-        </TD
-></TR
-><TR
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
 ><TD
->&#13;          <B
-CLASS="command"
->make</B
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <B
-CLASS="command"
->make test</B
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <B
-CLASS="command"
->make install</B
->
-        </TD
-></TR
-><TR
-><TD
->And don't forget to run 
-        <B
-CLASS="command"
->exit</B
->
-
-        to get back to CPAN.</TD
-></TR
-></TBODY
-></TABLE
+ALIGN="LEFT"
+VALIGN="TOP"
 ><P
-></P
->
+>To prevent creating conflicts with the software that Apple
+        installs by default, Fink creates its own directory tree at 
+        <TT
+CLASS="filename"
+>/sw</TT
+> where it installs most of
+        the software that it installs. This means your libraries and headers be
+        at <TT
+CLASS="filename"
+>/sw/lib</TT
+> and
+        <TT
+CLASS="filename"
+>/sw/include</TT
+> instead of
+        <TT
+CLASS="filename"
+>/usr/lib</TT
+> and
+        <TT
+CLASS="filename"
+>/usr/local/include</TT
+>. When the
+        Perl module config script asks where your libgd is, be sure to tell it
+        <TT
+CLASS="filename"
+>/sw/lib</TT
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Also available via Fink is expat. Once running using fink to
+      install the expat package you will be able to install
+      XML::Parser using CPAN. There is one caveat. Unlike recent versions of
+      the GD module, XML::Parser doesn't prompt for the location of the
+      required libraries. When using CPAN, you will need to use the following
+      command sequence:
       </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;# perl -MCPAN -e'look XML::Parser'        <A
+NAME="macosx-look"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+# perl Makefile.PL EXPATLIBPATH=/sw/lib EXPATINCPATH=/sw/include
+# make; make test; make install           <A
+NAME="macosx-make"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+>
+# exit                                    <A
+NAME="macosx-exit"
+><IMG
+SRC="../images/callouts/3.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(3)"></A
+>
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="os-specific.html#macosx-look"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+><A
+HREF="os-specific.html#macosx-exit"
+><IMG
+SRC="../images/callouts/3.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(3)"></A
+></DT
+><DD
+>The look command will download the module and spawn a
+          new shell with the extracted files as the current working directory.
+          The exit command will return you to your original shell.
+          </DD
+><DT
+><A
+HREF="os-specific.html#macosx-make"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+></DT
+><DD
+>You should watch the output from these make commands,
+          especially <SPAN
+CLASS="QUOTE"
+>"make test"</SPAN
+> as errors may prevent XML::Parser
+          from functioning correctly with Bugzilla.
+          </DD
+></DL
+></DIV
 ></DIV
 ><DIV
 CLASS="section"

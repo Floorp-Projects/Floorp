@@ -1251,11 +1251,16 @@ bash# ./checksetup.pl
 
 4.2.4. LDAP Authentication
 
-   Warning
+   Note
 
-   This information on using the LDAP authentication options with
-   Bugzilla is old, and the authors do not know of anyone who has tested
-   it. Approach with caution.
+   LDAP authentication has been rewritten for the 2.18 release of
+   Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
+   Net::LDAP instead. This rewrite was part of a larger landing that
+   allowed for additional authentication schemes to be easily added (bug
+   180642).
+
+   This patch originally landed in 21-Mar-2003 and was included in the
+   2.17.4 development release.
 
    The existing authentication scheme for Bugzilla uses email addresses
    as the primary user ID, and a password to authenticate that user. All
@@ -1273,43 +1278,61 @@ bash# ./checksetup.pl
    tasks are still handled by email address, not LDAP username. You still
    assign bugs by email address, query on users by email address, etc.
 
-   Using LDAP for Bugzilla authentication requires the Mozilla::LDAP (aka
-   PerLDAP) Perl module. The Mozilla::LDAP module in turn requires
-   Netscape's Directory SDK for C. After you have installed the SDK, then
-   install the PerLDAP module. Mozilla::LDAP and the Directory SDK for C
-   are both available for download from mozilla.org.
+   Caution
 
-   Set the Param 'useLDAP' to "On" **only** if you will be using an LDAP
-   directory for authentication. Be very careful when setting up this
-   parameter; if you set LDAP authentication, but do not have a valid
-   LDAP directory set up, you will not be able to log back in to Bugzilla
-   once you log out. (If this happens, you can get back in by manually
-   editing the data/params file, and setting useLDAP back to 0.)
+   Because the Bugzilla account is not created until the first time a
+   user logs in, a user who has not yet logged is unknown to Bugzilla.
+   This means they cannot be used as an assignee or QA contact (default
+   or otherwise), added to any cc list, or any other such operation. One
+   possible workaround is the bugzilla_ldapsync.rb script in the contrib
+   directory. Another possible solution is fixing bug 201069.
 
-   If using LDAP, you must set the three additional parameters: Set
-   LDAPserver to the name (and optionally port) of your LDAP server. If
-   no port is specified, it defaults to the default port of 389. (e.g
-   "ldap.mycompany.com" or "ldap.mycompany.com:1234") Set LDAPBaseDN to
-   the base DN for searching for users in your LDAP directory. (e.g.
-   "ou=People,o=MyCompany") uids must be unique under the DN specified
-   here. Set LDAPmailattribute to the name of the attribute in your LDAP
-   directory which contains the primary email address. On most directory
-   servers available, this is "mail", but you may need to change this.
+   Parameters required to use LDAP Authentication:
 
-   You can also try using OpenLDAP with Bugzilla, using any of a number
-   of administration tools. You should apply the patch attached to bug
-   158630 , then set the following object classes for your users:
+   loginmethod
+          This parameter should be set to "LDAP" only if you will be
+          using an LDAP directory for authentication. If you set this
+          param to "LDAP" but fail to set up the other parameters listed
+          below you will not be able to log back in to Bugzilla one you
+          log out. If this happens to you, you will need to manually edit
+          data/params and set loginmethod to "DB".
 
-    1. objectClass: person
-    2. objectClass: organizationalPerson
-    3. objectClass: inetOrgPerson
-    4. objectClass: top
-    5. objectClass: posixAccount
-    6. objectClass: shadowAccount
+   LDAPserver
+          This parameter should be set to the name (and optionally the
+          port) of your LDAP server. If no port is specified, it assumes
+          the default LDAP port of 389.
 
-   Please note that this patch has not yet been accepted by the Bugzilla
-   team, and so you may need to do some manual tweaking. That said, it
-   looks like Net::LDAP is probably the way to go in the future.
+          Ex. "ldap.company.com" or "ldap.company.com:3268"
+
+   LDAPbinddn [Optional]
+          Some LDAP servers will not allow an anonymous bind to search
+          the directory. If this is the case with your configuration you
+          should set the LDAPbinddn parameter to the user account
+          Bugzilla should use instead of the anonymous bind.
+
+          Ex. "cn=default,cn=user:password"
+
+   LDAPBaseDN
+          The LDAPBaseDN parameter should be set to the location in your
+          LDAP tree that you would like to search for e-mail addresses.
+          Your uids should be unique under the DN specified here.
+
+          Ex. "ou=People,o=Company"
+
+   LDAPuidattribute
+          The LDAPuidattribute parameter should be set to the attribute
+          which contains the unique UID of your users. The value
+          retrieved from this attribute will be used when attempting to
+          bind as the user to confirm their password.
+
+          Ex. "uid"
+
+   LDAPmailattribute
+          The LDAPmailattribute parameter should be the name of the
+          attribute which contains the e-mail address your users will
+          enter into the Bugzilla login boxes.
+
+          Ex. "mail"
      _________________________________________________________________
 
 4.2.5. Preventing untrusted Bugzilla content from executing malicious
@@ -1319,22 +1342,21 @@ Javascript code
    Due to internationalization concerns, we are unable to incorporate the
    code changes necessary to fulfill the CERT advisory requirements
    mentioned in
-   http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3.
-   Executing the following code snippet from a UNIX command shell will
-   rectify the problem if your Bugzilla installation is intended for an
-   English-speaking audience. As always, be sure your Bugzilla
-   installation has a good backup before making changes, and I recommend
-   you understand what the script is doing before executing it.
+   http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3. Making
+   the change below will fix the problem if your installation is for an
+   English speaking audience.
 
-bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; char
-set=ISO-8859-1/i" *.cgi *.pl
+   Telling Bugzilla to output a charset as part of the HTTP header is
+   much easier in version 2.18 and higher (including any cvs pull after
+   4-May-2003 and development release after 2.17.5) than it was in
+   previous versions. Simply locate the following line in
+   Bugzilla/CGI.pm:
+    # Make sure that we don't send any charset headers
+    $self->charset('');
 
-   All this one-liner command does is search for all instances of
-   "Content-type: text/html" and replaces it with "Content-Type:
-   text/html; charset=ISO-8859-1" . This specification prevents possible
-   Javascript attacks on the browser, and is suggested for all
-   English-speaking sites. For non-English-speaking Bugzilla sites, I
-   suggest changing "ISO-8859-1", above, to "UTF-8".
+   and change it to:
+    # Send all data using the ISO-8859-1 charset
+    $self->charset('ISO-8859-1');
 
    Note
 
@@ -1464,7 +1486,7 @@ close SENDMAIL;
 
    to
 use Net::SMTP;
-$smtp_server = 'smtp.mycompany.com';  # change this
+my $smtp_server = 'smtp.mycompany.com';  # change this
 
 # Use die on error, so that the mail will be in the 'unsent mails' and
 # can be sent from the sanity check page.
@@ -1510,33 +1532,39 @@ $smtp->quit;
    http://sourceforge.net/projects/fink/.
 
    Follow the instructions for setting up Fink. Once it's installed,
-   you'll want to run the following as root: fink install gd
+   you'll want to use it to install the gd2 package.
 
    It will prompt you for a number of dependencies, type 'y' and hit
-   enter to install all of the dependencies. Then watch it work.
+   enter to install all of the dependencies and then watch it work. You
+   will then be able to use CPAN to install the GD perl module.
+
+   Note
 
    To prevent creating conflicts with the software that Apple installs by
    default, Fink creates its own directory tree at /sw where it installs
    most of the software that it installs. This means your libraries and
-   headers for libgd will be at /sw/lib and /sw/include instead of
-   /usr/lib and /usr/local/include. Because of these changed locations
-   for the libraries, the Perl GD module will not install directly via
-   CPAN, because it looks for the specific paths instead of getting them
-   from your environment. But there's a way around that :-)
+   headers be at /sw/lib and /sw/include instead of /usr/lib and
+   /usr/local/include. When the Perl module config script asks where your
+   libgd is, be sure to tell it /sw/lib.
 
-   Instead of typing "install GD" at the cpan> prompt, type look GD. This
-   should go through the motions of downloading the latest version of the
-   GD module, then it will open a shell and drop you into the build
-   directory. Apply this patch to the Makefile.PL file (save the patch
-   into a file and use the command patch < patchfile.)
+   Also available via Fink is expat. Once running using fink to install
+   the expat package you will be able to install XML::Parser using CPAN.
+   There is one caveat. Unlike recent versions of the GD module,
+   XML::Parser doesn't prompt for the location of the required libraries.
+   When using CPAN, you will need to use the following command sequence:
+# perl -MCPAN -e'look XML::Parser'         (1)
+# perl Makefile.PL EXPATLIBPATH=/sw/lib EXPATINCPATH=/sw/include
+# make; make test; make install            (2)
+# exit                                     (3)
 
-   Then, run these commands to finish the installation of the GD module:
-
-   perl Makefile.PL
-   make
-   make test
-   make install
-   And don't forget to run exit to get back to CPAN.
+   (1) (3) 
+          The look command will download the module and spawn a new shell
+          with the extracted files as the current working directory. The
+          exit command will return you to your original shell.
+   (2) 
+          You should watch the output from these make commands,
+          especially "make test" as errors may prevent XML::Parser from
+          functioning correctly with Bugzilla.
      _________________________________________________________________
 
 4.3.3. Linux-Mandrake 8.0
@@ -2658,6 +2686,13 @@ skip-networking
      _________________________________________________________________
 
 5.9. Upgrading to New Releases
+
+   Warning
+
+   Upgrading is a one-way process. You should backup your database and
+   current Bugzilla directory before attempting the upgrade. If you wish
+   to revert to the old Bugzilla version for any reason, you will have to
+   restore from these backups.
 
    Upgrading Bugzilla is something we all want to do from time to time,
    be it to get new features or pick up the latest security fix. How easy
@@ -4552,6 +4587,19 @@ C
           CPAN stands for the "Comprehensive Perl Archive Network". CPAN
           maintains a large number of extremely useful Perl modules -
           encapsulated chunks of code for performing a particular task.
+
+   contrib
+          The contrib directory is a location to put scripts that have
+          been contributed to Bugzilla but are not a part of the official
+          distribution. These scripts are written by third parties and
+          may be in languages other than perl. For those that are in
+          perl, there may be additional modules or other requirements
+          than those of the offical distribution.
+
+          Note
+
+   Scripts in the contrib directory are not offically supported by the
+   Bugzilla team and may break in between versions.
 
 D
 

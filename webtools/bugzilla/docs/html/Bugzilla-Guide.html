@@ -2699,174 +2699,174 @@ CLASS="QUOTE"
 ></DIV
 ><P
 >Perl Modules (minimum version):
-  <P
+      <P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-bundle-bugzilla"
 >Bundle::Bugzilla</A
 >
-        (Will allow you to skip the rest)
-      </P
+            (Will allow you to skip the rest)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-appconfig"
 >AppConfig</A
 >
-        (1.52)
-      </P
+            (1.52)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-cgi"
 >CGI</A
 > 
-        (2.88)
-      </P
+            (2.88)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-data-dumper"
 >Data::Dumper</A
 > 
-        (any)
-      </P
+            (any)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-date-format"
 >Date::Format</A
 >
-        (2.21)
-      </P
+            (2.21)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-dbi"
 >DBI</A
 > 
-        (1.32)
-      </P
+            (1.32)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-dbd-mysql"
 >DBD::mysql</A
 >
-        (2.1010)
-      </P
+            (2.1010)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-file-spec"
 >File::Spec</A
 >
-        (0.82)
-      </P
+            (0.82)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-file-temp"
 >File::Temp</A
 >
-        (any)
-      </P
+            (any)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-template"
 >Template Toolkit</A
 >
-        (2.08)
-      </P
+            (2.08)
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-text-wrap"
 >Text::Wrap</A
 > 
-        (2001.0131)
-      </P
+            (2001.0131)
+          </P
 ></LI
 ></OL
 >
 
-  and, optionally:
-  <P
+      and, optionally:
+      <P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-gd"
 >GD</A
 >
-        (1.20) for bug charting
-      </P
+            (1.20) for bug charting
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-chart-base"
 >Chart::Base</A
 >
-        (0.99c) for bug charting
-      </P
+            (0.99c) for bug charting
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-xml-parser"
 >XML::Parser</A
 >
-        (any) for the XML interface
-      </P
+            (any) for the XML interface
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-gd-graph"
 >GD::Graph</A
 >
-        (any) for bug charting
-      </P
+            (any) for bug charting
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-gd-text-align"
 >GD::Text::Align</A
 >
-        (any) for bug charting
-      </P
+            (any) for bug charting
+          </P
 ></LI
 ><LI
 ><P
->&#13;        <A
+>&#13;            <A
 HREF="#install-modules-mime-parser"
 >MIME::Parser</A
 >
-        (any) for the email interface
-      </P
+            (any) for the email interface
+          </P
 ></LI
 ></OL
 >          
-  </P
+      </P
 ><DIV
 CLASS="section"
 ><HR><H3
@@ -4263,13 +4263,12 @@ CLASS="section"
 NAME="bzldap"
 ></A
 >4.2.4. LDAP Authentication</H2
-><P
->&#13;        <DIV
-CLASS="warning"
+><DIV
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="warning"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -4278,23 +4277,32 @@ WIDTH="25"
 ALIGN="CENTER"
 VALIGN="TOP"
 ><IMG
-SRC="../images/warning.gif"
+SRC="../images/note.gif"
 HSPACE="5"
-ALT="Warning"></TD
+ALT="Note"></TD
 ><TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->This information on using the LDAP
-            authentication options with Bugzilla is old, and the authors do
-            not know of anyone who has tested it. Approach with caution.
+>LDAP authentication has been rewritten for the 2.18 release of
+        Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
+        Net::LDAP instead. This rewrite was part of a larger landing that
+        allowed for additional authentication schemes to be easily added
+        (<A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=180642"
+TARGET="_top"
+>bug
+        180642</A
+>).
+        </P
+><P
+>This patch originally landed in 21-Mar-2003 and was included
+          in the 2.17.4 development release.
           </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
->
-      </P
 ><P
 >&#13;      The existing authentication
       scheme for Bugzilla uses email addresses as the primary user ID, and a
@@ -4313,92 +4321,189 @@ VALIGN="TOP"
       email address, not LDAP username. You still assign bugs by email
       address, query on users by email address, etc.
       </P
+><DIV
+CLASS="caution"
 ><P
->Using LDAP for Bugzilla authentication requires the 
-      Mozilla::LDAP (aka PerLDAP) Perl module. The
-      Mozilla::LDAP module in turn requires Netscape's Directory SDK for C.
-      After you have installed the SDK, then install the PerLDAP module.
-      Mozilla::LDAP and the Directory SDK for C are both 
-      <A
-HREF="http://www.mozilla.org/directory/"
-TARGET="_top"
->available for
-      download</A
-> from mozilla.org. 
-      </P
-><P
->&#13;      Set the Param 'useLDAP' to "On" **only** if you will be using an LDAP
-      directory for
-      authentication. Be very careful when setting up this parameter; if you
-      set LDAP authentication, but do not have a valid LDAP directory set up,
-      you will not be able to log back in to Bugzilla once you log out. (If
-      this happens, you can get back in by manually editing the data/params
-      file, and setting useLDAP back to 0.)
-      </P
-><P
->If using LDAP, you must set the
-      three additional parameters: Set LDAPserver to the name (and optionally
-      port) of your LDAP server. If no port is specified, it defaults to the
-      default port of 389. (e.g "ldap.mycompany.com" or
-      "ldap.mycompany.com:1234") Set LDAPBaseDN to the base DN for searching
-      for users in your LDAP directory. (e.g. "ou=People,o=MyCompany") uids
-      must be unique under the DN specified here. Set LDAPmailattribute to
-      the name of the attribute in your LDAP directory which contains the
-      primary email address. On most directory servers available, this is
-      "mail", but you may need to change this.
-      </P
-><P
->You can also try using <A
-HREF="http://www.openldap.org/"
-TARGET="_top"
->&#13;      OpenLDAP</A
-> with Bugzilla, using any of a number of administration
-      tools.  You should apply the patch attached to 
-      <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=158630"
-TARGET="_top"
->bug 158630</A
->
-      , then set the following object classes for your users:
-
-      <P
 ></P
-><OL
-TYPE="1"
-><LI
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
 ><P
->objectClass: person</P
-></LI
-><LI
-><P
->objectClass: organizationalPerson</P
-></LI
-><LI
-><P
->objectClass: inetOrgPerson</P
-></LI
-><LI
-><P
->objectClass: top</P
-></LI
-><LI
-><P
->objectClass: posixAccount</P
-></LI
-><LI
-><P
->objectClass: shadowAccount</P
-></LI
-></OL
+>Because the Bugzilla account is not created until the first time
+        a user logs in, a user who has not yet logged is unknown to Bugzilla.
+        This means they cannot be used as an assignee or QA contact (default or
+        otherwise), added to any cc list, or any other such operation. One
+        possible workaround is the <TT
+CLASS="filename"
+>bugzilla_ldapsync.rb</TT
 >
-
-      Please note that this patch <EM
->has not</EM
-> yet been
-      accepted by the Bugzilla team, and so you may need to do some
-      manual tweaking.  That said, it looks like Net::LDAP is probably
-      the way to go in the future.
-      </P
+        script in the
+        <A
+HREF="#gloss-contrib"
+><I
+CLASS="glossterm"
+><TT
+CLASS="filename"
+>contrib</TT
+></I
+></A
+> directory. Another possible solution is fixing
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=201069"
+TARGET="_top"
+>bug
+        201069</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Parameters required to use LDAP Authentication:</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><A
+NAME="param-loginmethod"
+></A
+>loginmethod</DT
+><DD
+><P
+>This parameter should be set to <SPAN
+CLASS="QUOTE"
+>"LDAP"</SPAN
+>
+            <EM
+>only</EM
+> if you will be using an LDAP directory
+            for authentication. If you set this param to <SPAN
+CLASS="QUOTE"
+>"LDAP"</SPAN
+> but
+            fail to set up the other parameters listed below you will not be
+            able to log back in to Bugzilla one you log out. If this happens
+            to you, you will need to manually edit
+            <TT
+CLASS="filename"
+>data/params</TT
+> and set loginmethod to
+            <SPAN
+CLASS="QUOTE"
+>"DB"</SPAN
+>.
+            </P
+></DD
+><DT
+><A
+NAME="param-LDAPserver"
+></A
+>LDAPserver</DT
+><DD
+><P
+>This parameter should be set to the name (and optionally the
+            port) of your LDAP server. If no port is specified, it assumes
+            the default LDAP port of 389.
+            </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"ldap.company.com"</SPAN
+>
+             or <SPAN
+CLASS="QUOTE"
+>"ldap.company.com:3268"</SPAN
+>
+            </P
+></DD
+><DT
+><A
+NAME="param-LDAPbinddn"
+></A
+>LDAPbinddn [Optional]</DT
+><DD
+><P
+>Some LDAP servers will not allow an anonymous bind to search
+             the directory. If this is the case with your configuration you
+             should set the LDAPbinddn parameter to the user account Bugzilla
+             should use instead of the anonymous bind.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"cn=default,cn=user:password"</SPAN
+></P
+></DD
+><DT
+><A
+NAME="param-LDAPBaseDN"
+></A
+>LDAPBaseDN</DT
+><DD
+><P
+>The LDAPBaseDN parameter should be set to the location in
+             your LDAP tree that you would like to search for e-mail addresses.
+             Your uids should be unique under the DN specified here.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"ou=People,o=Company"</SPAN
+></P
+></DD
+><DT
+><A
+NAME="param-LDAPuidattribute"
+></A
+>LDAPuidattribute</DT
+><DD
+><P
+>The LDAPuidattribute parameter should be set to the attribute
+             which contains the unique UID of your users. The value retrieved
+             from this attribute will be used when attempting to bind as the
+             user to confirm their password.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"uid"</SPAN
+></P
+></DD
+><DT
+><A
+NAME="param-LDAPmailattribute"
+></A
+>LDAPmailattribute</DT
+><DD
+><P
+>The LDAPmailattribute parameter should be the name of the
+             attribute which contains the e-mail address your users will enter
+             into the Bugzilla login boxes.
+             </P
+><P
+>Ex. <SPAN
+CLASS="QUOTE"
+>"mail"</SPAN
+></P
+></DD
+></DL
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -4419,13 +4524,19 @@ HREF="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"
 TARGET="_top"
 >http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</A
 >.
-      Executing the following code snippet from a UNIX command shell will
-      rectify the problem if your Bugzilla installation is intended for an
-      English-speaking audience. As always, be sure your Bugzilla
-      installation has a good backup before making changes, and I recommend
-      you understand what the script is doing before executing it.</P
+      Making the change below will fix the problem if your installation is for
+      an English speaking audience.
+      </P
 ><P
->&#13;        <TABLE
+>Telling Bugzilla to output a charset as part of the HTTP header is
+      much easier in version 2.18 and higher (including any cvs
+      pull after 4-May-2003 and development release after 2.17.5) than it was
+      in previous versions. Simply locate the following line in
+      <TT
+CLASS="filename"
+>Bugzilla/CGI.pm</TT
+>:
+      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -4435,38 +4546,34 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; charset=ISO-8859-1/i" *.cgi *.pl
-        </PRE
+>&#13;    # Make sure that we don't send any charset headers
+    $self-&#62;charset('');
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      and change it to:
+      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;    # Send all data using the ISO-8859-1 charset
+    $self-&#62;charset('ISO-8859-1');
+      </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
       </P
-><P
->All this one-liner command does is search for all instances of 
-      <SPAN
-CLASS="QUOTE"
->"Content-type: text/html"</SPAN
->
-
-      and replaces it with 
-      <SPAN
-CLASS="QUOTE"
->"Content-Type: text/html; charset=ISO-8859-1"</SPAN
->
-
-      . This specification prevents possible Javascript attacks on the
-      browser, and is suggested for all English-speaking sites. For
-      non-English-speaking Bugzilla sites, I suggest changing 
-      <SPAN
-CLASS="QUOTE"
->"ISO-8859-1"</SPAN
->, above, to 
-      <SPAN
-CLASS="QUOTE"
->"UTF-8"</SPAN
->.</P
 ><DIV
 CLASS="note"
 ><P
@@ -4945,7 +5052,7 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >&#13;use Net::SMTP;
-$smtp_server = 'smtp.mycompany.com';  # change this
+my $smtp_server = 'smtp.mycompany.com';  # change this
 
 # Use die on error, so that the mail will be in the 'unsent mails' and
 # can be sent from the sanity check page.
@@ -5057,110 +5164,172 @@ TARGET="_top"
 >.</P
 ><P
 >Follow the instructions for setting up Fink. Once it's installed,
-      you'll want to run the following as root: 
-      <B
-CLASS="command"
->fink install gd</B
->
+      you'll want to use it to install the gd2 package.
       </P
 ><P
 >It will prompt you for a number of dependencies, type 'y' and hit
-      enter to install all of the dependencies. Then watch it work.</P
-><P
->To prevent creating conflicts with the software that Apple installs
-      by default, Fink creates its own directory tree at /sw where it installs
-      most of the software that it installs. This means your libraries and
-      headers for libgd will be at /sw/lib and /sw/include instead of /usr/lib
-      and /usr/local/include. Because of these changed locations for the
-      libraries, the Perl GD module will not install directly via CPAN, because it
-      looks for the specific paths instead of getting them from your
-      environment. But there's a way around that :-)</P
-><P
->Instead of typing 
-      <SPAN
-CLASS="QUOTE"
->"install GD"</SPAN
->
-      at the 
-      <TT
-CLASS="prompt"
->cpan&#62;</TT
->
-      prompt, type 
-      <B
-CLASS="command"
->look GD</B
->. 
-      This should go through the motions of downloading the latest version of
-      the GD module, then it will open a shell and drop you into the build
-      directory. Apply <A
-HREF="../xml/gd-makefile.patch"
-TARGET="_top"
->this patch</A
-> 
-      to the Makefile.PL file (save the
-      patch into a file and use the command 
-      <B
-CLASS="command"
->patch &#60; patchfile</B
->.)
+      enter to install all of the dependencies and then watch it work. You will
+      then be able to use <A
+HREF="#gloss-cpan"
+><I
+CLASS="glossterm"
+>CPAN</I
+></A
+> to
+      install the GD perl module.
       </P
+><DIV
+CLASS="note"
 ><P
->Then, run these commands to finish the installation of the GD
-      module: 
-      <P
 ></P
 ><TABLE
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
-><TBODY
 ><TR
 ><TD
->&#13;          <B
-CLASS="command"
->perl Makefile.PL</B
->
-        </TD
-></TR
-><TR
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
 ><TD
->&#13;          <B
-CLASS="command"
->make</B
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <B
-CLASS="command"
->make test</B
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <B
-CLASS="command"
->make install</B
->
-        </TD
-></TR
-><TR
-><TD
->And don't forget to run 
-        <B
-CLASS="command"
->exit</B
->
-
-        to get back to CPAN.</TD
-></TR
-></TBODY
-></TABLE
+ALIGN="LEFT"
+VALIGN="TOP"
 ><P
-></P
->
+>To prevent creating conflicts with the software that Apple
+        installs by default, Fink creates its own directory tree at 
+        <TT
+CLASS="filename"
+>/sw</TT
+> where it installs most of
+        the software that it installs. This means your libraries and headers be
+        at <TT
+CLASS="filename"
+>/sw/lib</TT
+> and
+        <TT
+CLASS="filename"
+>/sw/include</TT
+> instead of
+        <TT
+CLASS="filename"
+>/usr/lib</TT
+> and
+        <TT
+CLASS="filename"
+>/usr/local/include</TT
+>. When the
+        Perl module config script asks where your libgd is, be sure to tell it
+        <TT
+CLASS="filename"
+>/sw/lib</TT
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Also available via Fink is expat. Once running using fink to
+      install the expat package you will be able to install
+      XML::Parser using CPAN. There is one caveat. Unlike recent versions of
+      the GD module, XML::Parser doesn't prompt for the location of the
+      required libraries. When using CPAN, you will need to use the following
+      command sequence:
       </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;# perl -MCPAN -e'look XML::Parser'        <A
+NAME="macosx-look"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+# perl Makefile.PL EXPATLIBPATH=/sw/lib EXPATINCPATH=/sw/include
+# make; make test; make install           <A
+NAME="macosx-make"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+>
+# exit                                    <A
+NAME="macosx-exit"
+><IMG
+SRC="../images/callouts/3.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(3)"></A
+>
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="#macosx-look"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+><A
+HREF="#macosx-exit"
+><IMG
+SRC="../images/callouts/3.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(3)"></A
+></DT
+><DD
+>The look command will download the module and spawn a
+          new shell with the extracted files as the current working directory.
+          The exit command will return you to your original shell.
+          </DD
+><DT
+><A
+HREF="#macosx-make"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+></DT
+><DD
+>You should watch the output from these make commands,
+          especially <SPAN
+CLASS="QUOTE"
+>"make test"</SPAN
+> as errors may prevent XML::Parser
+          from functioning correctly with Bugzilla.
+          </DD
+></DL
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -5842,7 +6011,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1086"
+NAME="AEN1111"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -5867,7 +6036,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1091"
+NAME="AEN1116"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -7953,7 +8122,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1534"
+NAME="AEN1559"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -8068,7 +8237,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1553"
+NAME="AEN1578"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -8150,7 +8319,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1563"
+NAME="AEN1588"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -8212,7 +8381,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1576"
+NAME="AEN1601"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
@@ -8576,6 +8745,36 @@ CLASS="section"
 NAME="upgrading"
 ></A
 >5.9. Upgrading to New Releases</H1
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Upgrading is a one-way process. You should backup your database
+      and current Bugzilla directory before attempting the upgrade. If you wish
+      to revert to the old Bugzilla version for any reason, you will have to
+      restore from these backups.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
 ><P
 >Upgrading Bugzilla is something we all want to do from time to time,
     be it to get new features or pick up the latest security fix. How easy
@@ -11005,7 +11204,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN1980"
+NAME="AEN2007"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -11449,7 +11648,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN2063"
+NAME="AEN2090"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12077,7 +12276,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2185"
+NAME="AEN2212"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -12191,7 +12390,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2212"
+NAME="AEN2239"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -12754,7 +12953,7 @@ NAME="gfdl"
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN2300"
+NAME="AEN2327"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -13217,7 +13416,7 @@ NAME="gfdl-howto"
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN2390"
+NAME="AEN2417"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -13254,7 +13453,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2395"
+NAME="AEN2422"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -13558,6 +13757,62 @@ CLASS="glossterm"
 >
         modules - encapsulated chunks of code for performing a
         particular task.</P
+></DD
+><DT
+><A
+NAME="gloss-contrib"
+></A
+><B
+><TT
+CLASS="filename"
+>contrib</TT
+></B
+></DT
+><DD
+><P
+>The <TT
+CLASS="filename"
+>contrib</TT
+> directory is
+        a location to put scripts that have been contributed to Bugzilla but
+        are not a part of the official distribution. These scripts are written
+        by third parties and may be in languages other than perl. For those
+        that are in perl, there may be additional modules or other requirements
+        than those of the offical distribution.
+        <DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Scripts in the <TT
+CLASS="filename"
+>contrib</TT
+>
+          directory are not offically supported by the Bugzilla team and may
+          break in between versions.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+>
+        </P
 ></DD
 ></DL
 ></DIV
@@ -14062,7 +14317,7 @@ NAME="gloss-zarro"
         Terry had the following to say:
         </P
 ><A
-NAME="AEN2621"
+NAME="AEN2657"
 ></A
 ><TABLE
 BORDER="0"
