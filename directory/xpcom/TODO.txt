@@ -6,11 +6,22 @@ implementation
 
 housecleaning
 ------------- 
+* get the ldap sdk unix build cleanly hooked up to the browser build
+  (we'll need to talk to the SDK guys about this -- the quick-n-dirty
+  thing to do might be to just whack some of the Makefile.client files
+  in the SDK; in the long run, auutoconfifying it might be better)
+
+* get the mac build glue wired up, and make the mac build work
+
+* get the windows build glue wired up, and make the windows build work
+
 * are we using the right constructs for -lldap40 and -llber40 in 
   Makefile.in?
 
 * get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
   from nsLDAP{Connection,Operation,Message}.[ch]
+
+* implement nsLDAPChannel::Cancel()
 
 * why is there a JS assert after loading an LDAP URL bookmark?
 
@@ -51,8 +62,8 @@ housecleaning
 
 * get rid of "friend"liness of nsLDAP{Message,Connection,Operation} classes?
 
-* fix directory SDK makefile to put files in the right places and
-  work with OBJDIR scheme
+* investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
+  want the reference to "xp_sort.h"?
 
 features
 --------
