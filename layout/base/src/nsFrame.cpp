@@ -1340,13 +1340,16 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
   return NS_OK;
 }
 
-void nsFrame::Invalidate(const nsRect& aDamageRect) const
+void
+nsFrame::Invalidate(const nsRect& aDamageRect,
+                    PRBool aImmediate) const
 {
   nsIViewManager* viewManager = nsnull;
 
+  PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   if (nsnull != mView) {
     mView->GetViewManager(viewManager);
-    viewManager->UpdateView(mView, aDamageRect, NS_VMREFRESH_NO_SYNC);
+    viewManager->UpdateView(mView, aDamageRect, flags);
     
   } else {
     nsRect    rect(aDamageRect);
@@ -1357,7 +1360,7 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
     NS_ASSERTION(nsnull != view, "no view");
     rect += offset;
     view->GetViewManager(viewManager);
-    viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
+    viewManager->UpdateView(view, rect, flags);
   }
 
   NS_IF_RELEASE(viewManager);
