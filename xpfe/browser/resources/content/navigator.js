@@ -461,23 +461,31 @@ function BrowserStop()
 function BrowserReload()
 {
   const reloadFlags = nsIWebNavigation.LOAD_FLAGS_NONE;
-  try {
-    getWebNavigation().reload(reloadFlags);
-  }
-  catch(ex) {
-  }
+  return BrowserReloadWithFlags(reloadFlags);
 }
 
 function BrowserReloadSkipCache()
 {
   // Bypass proxy and cache.
   const reloadFlags = nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-  try {
-    getWebNavigation().reload(reloadFlags);
-  }
-  catch(ex) {
-  }
+  return BrowserReloadWithFlags(reloadFlags);
 }
+
+function BrowserReloadWithFlags(reloadFlags)
+{
+   try {
+     /* Need to get SessionHistory from docshell so that
+      * reload on framed pages will work right. This 
+      * method should not be used for the context menu item "Reload frame".
+      * "Reload frame" should directly call into docshell as it does right now
+      */
+     var sh = getWebNavigation().sessionHistory;
+     var webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);      
+     webNav.reload(reloadFlags);
+   }
+   catch(ex) {
+   }
+ }
 
 function BrowserHome()
 {
