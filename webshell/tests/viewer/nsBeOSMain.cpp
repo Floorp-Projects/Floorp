@@ -103,11 +103,16 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
+  int result = B_OK;
   nsViewerApp* app = new nsNativeViewerApp();
-  NS_ADDREF(app);
-  app->Initialize(argc, argv);
-  app->Run();
-  NS_RELEASE(app);
-
-  return 0;
+  if(app)
+  {
+    NS_ADDREF(app);
+    app->Initialize(argc, argv);
+    app->Run();
+    NS_RELEASE(app);
+  }
+  else
+    result = B_NO_MEMORY;
+  return result;
 }
