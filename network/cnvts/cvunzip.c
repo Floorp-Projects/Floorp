@@ -19,6 +19,7 @@
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
 #include "prmem.h"
+#include "plstr.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -486,7 +487,25 @@ NET_UnZipConverter (int         format_out,
     }
 
     /* create the next stream, but strip the compressed encoding */
-    PR_FREEIF(URL_s->content_encoding);
+    /*
+     * We might have been sent here from either a transfer-encoding: gzip
+     * or a content-encoding: gzip stream.  There is no way to know for
+     * sure at this point.  Based on knowing what NET_StreamBuilder does
+     * I know transfer-encoding is processed before content-encoding
+     * and that the only encoding currently sent here are
+     * ENCODING_GZIP and ENCODING_GZIP2.  If this changes in the
+     * future it could cause an infinite recursion bug here.
+     */
+    if ((URL_s->transfer_encoding != NULL)&&
+        ((!PL_strcasecmp(URL_s->transfer_encoding, ENCODING_GZIP))||
+         (!PL_strcasecmp(URL_s->transfer_encoding, ENCODING_GZIP2))))
+    {
+        PR_FREEIF(URL_s->transfer_encoding);
+    }
+    else
+    {
+        PR_FREEIF(URL_s->content_encoding);
+    }
     obj->next_stream = NET_StreamBuilder(format_out, URL_s, window_id);
 
     if(!obj->next_stream)
