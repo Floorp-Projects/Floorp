@@ -113,8 +113,7 @@ public:
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
@@ -126,17 +125,15 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext);
+  TransmitAutomaticData();
 
   NS_IMETHOD
-  UpdatePresentationData(nsPresContext* aPresContext,
-                         PRInt32         aScriptLevelIncrement,
+  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                    PRInt32         aFirstIndex,
+  UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,

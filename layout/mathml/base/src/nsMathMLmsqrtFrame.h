@@ -102,14 +102,13 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  InheritAutomaticData(nsPresContext* aPresContext,
-                       nsIFrame*       aParent);
+  InheritAutomaticData(nsIFrame* aParent);
+
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext);
+  TransmitAutomaticData();
 
   virtual nsresult
-  FixInterFrameSpacing(nsPresContext*      aPresContext,
-                       nsHTMLReflowMetrics& aDesiredSize)
+  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   {
     // XXX the base method doesn't work properly with <msqrt> because it
     // only slides child frames and has no idea that we have a sqrt glyph

@@ -83,36 +83,32 @@ public:
   // Overloaded nsMathMLFrame methods -- see documentation in nsIMathMLFrame.h
 
   NS_IMETHOD
-  Stretch(nsPresContext*      aPresContext,
-          nsIRenderingContext& aRenderingContext,
+  Stretch(nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize);
 
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                    PRInt32         aFirstIndex,
+  UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
-    PropagatePresentationDataFromChildAt(aPresContext, this,
-      aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    PropagatePresentationDataFromChildAt(this, aFirstIndex, aLastIndex,
+      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsPresContext* aPresContext,
-                       PRInt32         aParentScriptLevel)
+  ReResolveScriptStyle(PRInt32 aParentScriptLevel)
   {
-    PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
+    PropagateScriptStyleFor(this, aParentScriptLevel);
     return NS_OK;
   }
 
@@ -134,28 +130,20 @@ public:
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  AppendFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList);
 
   NS_IMETHOD
-  InsertFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList);
 
   NS_IMETHOD
-  RemoveFrame(nsPresContext* aPresContext,
-              nsIPresShell&   aPresShell,
-              nsIAtom*        aListName,
+  RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame);
 
   NS_IMETHOD
-  ReplaceFrame(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  ReplaceFrame(nsIAtom*        aListName,
                nsIFrame*       aOldFrame,
                nsIFrame*       aNewFrame);
 
@@ -215,19 +203,17 @@ public:
   // helper to re-sync the automatic data in our children and notify our parent to
   // reflow us when changes (e.g., append/insert/remove) happen in our child list
   virtual nsresult
-  ChildListChanged(nsPresContext* aPresContext,
-                   PRInt32         aModType);
+  ChildListChanged(PRInt32 aModType);
 
   // helper to wrap non-MathML frames so that foreign elements (e.g., html:img)
   // can mix better with other surrounding MathML markups
   virtual nsresult
-  WrapForeignFrames(nsPresContext* aPresContext);
+  WrapForeignFrames();
 
   // helper to get the preferred size that a container frame should use to fire
   // the stretch on its stretchy child frames.
   virtual void
-  GetPreferredStretchSize(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+  GetPreferredStretchSize(nsIRenderingContext& aRenderingContext,
                           PRUint32             aOptions,
                           nsStretchDirection   aStretchDirection,
                           nsBoundingMetrics&   aPreferredStretchSize);
@@ -235,12 +221,10 @@ public:
   // error handlers to provide a visual feedback to the user when an error
   // (typically invalid markup) was encountered during reflow.
   virtual nsresult
-  ReflowError(nsPresContext*      aPresContext,
-              nsIRenderingContext& aRenderingContext,
+  ReflowError(nsIRenderingContext& aRenderingContext,
               nsHTMLReflowMetrics& aDesiredSize);
   virtual nsresult
-  PaintError(nsPresContext*      aPresContext,
-             nsIRenderingContext& aRenderingContext,
+  PaintError(nsIRenderingContext& aRenderingContext,
              const nsRect&        aDirtyRect,
              nsFramePaintLayer    aWhichLayer);
 
@@ -266,14 +250,12 @@ public:
   // emulate the spacing that would have been done by a <mrow> container.
   // e.g., it fixes <math> <mi>f</mi> <mo>q</mo> <mi>f</mi> <mo>I</mo> </math>
   virtual nsresult
-  FixInterFrameSpacing(nsPresContext*      aPresContext,
-                       nsHTMLReflowMetrics& aDesiredSize);
+  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
 
   // helper method to complete the post-reflow hook and ensure that embellished
   // operators don't terminate their Reflow without receiving a Stretch command.
   virtual nsresult
-  FinalizeReflow(nsPresContext*      aPresContext,
-                 nsIRenderingContext& aRenderingContext,
+  FinalizeReflow(nsIRenderingContext& aRenderingContext,
                  nsHTMLReflowMetrics& aDesiredSize);
 
   // helper method to facilitate getting the reflow and bounding metrics
@@ -288,22 +270,19 @@ public:
   // helper to let the scriptstyle re-resolution pass through
   // a subtree that may contain non-MathML container frames
   static void
-  PropagateScriptStyleFor(nsPresContext* aPresContext,
-                          nsIFrame*       aFrame,
+  PropagateScriptStyleFor(nsIFrame*       aFrame,
                           PRInt32         aParentScriptLevel);
 
   // helper to let the update of presentation data pass through
   // a subtree that may contain non-MathML container frames
   static void
-  PropagatePresentationDataFor(nsPresContext* aPresContext,
-                               nsIFrame*       aFrame,
+  PropagatePresentationDataFor(nsIFrame*       aFrame,
                                PRInt32         aScriptLevelIncrement,
                                PRUint32        aFlagsValues,
                                PRUint32        aFlagsToUpdate);
 
   static void
-  PropagatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                       nsIFrame*       aParentFrame,
+  PropagatePresentationDataFromChildAt(nsIFrame*       aParentFrame,
                                        PRInt32         aFirstChildIndex,
                                        PRInt32         aLastChildIndex,
                                        PRInt32         aScriptLevelIncrement,
@@ -323,8 +302,7 @@ public:
   // has to request the re-build from its parent. Unfortunately, the extra cost
   // for this is that it will re-sync in the siblings of the child as well.
   static void
-  RebuildAutomaticDataForChildren(nsPresContext* aPresContext,
-                                  nsIFrame*       aParentFrame);
+  RebuildAutomaticDataForChildren(nsIFrame* aParentFrame);
 
   // helper to blow away the automatic data cached in a frame's subtree and
   // re-layout its subtree to reflect changes that may have happen. In the
@@ -335,8 +313,7 @@ public:
   // frame itself (except for those particular operations that the parent frame
   // may do do its TransmitAutomaticData()). @see RebuildAutomaticDataForChildren
   static nsresult
-  ReLayoutChildren(nsPresContext* aPresContext,
-                   nsIFrame*       aParentFrame);
+  ReLayoutChildren(nsIFrame* aParentFrame);
 
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
@@ -365,7 +342,7 @@ public:
     nsresult rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
-    nsMathMLContainerFrame::RebuildAutomaticDataForChildren(aPresContext, this);
+    nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
     return rv;
   }
 
@@ -377,54 +354,47 @@ public:
   {
     if (mScriptStyleChanged) {
       mScriptStyleChanged = PR_FALSE;
-      nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+      nsMathMLContainerFrame::PropagateScriptStyleFor(this, 0);
     }
     return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
   NS_IMETHOD
-  AppendFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
-    nsresult rv = nsBlockFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsBlockFrame::AppendFrames(aListName, aFrameList);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
   NS_IMETHOD
-  InsertFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
-    nsresult rv = nsBlockFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsBlockFrame::InsertFrames(aListName, aPrevFrame,
+                                             aFrameList);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
   NS_IMETHOD
-  ReplaceFrame(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  ReplaceFrame(nsIAtom*        aListName,
                nsIFrame*       aOldFrame,
                nsIFrame*       aNewFrame)
   {
-    nsresult rv = nsBlockFrame::ReplaceFrame(aPresContext, aPresShell, aListName, aOldFrame, aNewFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsBlockFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
   NS_IMETHOD
-  RemoveFrame(nsPresContext* aPresContext,
-              nsIPresShell&   aPresShell,
-              nsIAtom*        aListName,
+  RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
-    nsresult rv = nsBlockFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsBlockFrame::RemoveFrame(aListName, aOldFrame);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
@@ -456,7 +426,7 @@ public:
     nsresult rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
-    nsMathMLContainerFrame::RebuildAutomaticDataForChildren(aPresContext, this);
+    nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
     return rv;
   }
 
@@ -468,54 +438,47 @@ public:
   {
     if (mScriptStyleChanged) {
       mScriptStyleChanged = PR_FALSE;
-      nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+      nsMathMLContainerFrame::PropagateScriptStyleFor(this, 0);
     }
     return nsInlineFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
   NS_IMETHOD
-  AppendFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
-    nsresult rv = nsInlineFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
   NS_IMETHOD
-  InsertFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
-    nsresult rv = nsInlineFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame,
+                                              aFrameList);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
   NS_IMETHOD
-  ReplaceFrame(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  ReplaceFrame(nsIAtom*        aListName,
                nsIFrame*       aOldFrame,
                nsIFrame*       aNewFrame)
   {
-    nsresult rv = nsInlineFrame::ReplaceFrame(aPresContext, aPresShell, aListName, aOldFrame, aNewFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsInlineFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 
   NS_IMETHOD
-  RemoveFrame(nsPresContext* aPresContext,
-              nsIPresShell&   aPresShell,
-              nsIAtom*        aListName,
+  RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
-    nsresult rv = nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(aPresContext, this);
+    nsresult rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
+    nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
 

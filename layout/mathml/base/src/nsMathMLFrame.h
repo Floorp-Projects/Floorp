@@ -96,8 +96,7 @@ public:
   }
 
   NS_IMETHOD
-  Stretch(nsPresContext*      aPresContext,
-          nsIRenderingContext& aRenderingContext,
+  Stretch(nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize)
@@ -106,8 +105,7 @@ public:
   }
 
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize)
   {
@@ -139,24 +137,21 @@ public:
   }
 
   NS_IMETHOD
-  InheritAutomaticData(nsPresContext* aPresContext,
-                       nsIFrame*       aParent);
+  InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext)
+  TransmitAutomaticData()
   {
     return NS_OK;
   }
 
   NS_IMETHOD
-  UpdatePresentationData(nsPresContext* aPresContext,
-                         PRInt32         aScriptLevelIncrement,
+  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                    PRInt32         aFirstIndex,
+  UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
@@ -166,8 +161,7 @@ public:
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsPresContext* aPresContext,
-                       PRInt32         aParentScriptLevel)
+  ReResolveScriptStyle(PRInt32 aParentScriptLevel)
   {
     return NS_OK;
   }
@@ -263,28 +257,27 @@ public:
 
   // helper methods for getting sup/subdrop's from a child
   static void 
-  GetSubDropFromChild(nsPresContext* aPresContext,
-                      nsIFrame*       aChild, 
+  GetSubDropFromChild(nsIFrame*       aChild,
                       nscoord&        aSubDrop) 
   {
     const nsStyleFont* font = aChild->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
+    nsCOMPtr<nsIFontMetrics> fm = aChild->GetPresContext()->GetMetricsFor(
+                                                              font->mFont);
     GetSubDrop(fm, aSubDrop);
   }
 
   static void 
-  GetSupDropFromChild(nsPresContext* aPresContext,
-                      nsIFrame*       aChild, 
+  GetSupDropFromChild(nsIFrame*       aChild,
                       nscoord&        aSupDrop) 
   {
     const nsStyleFont* font = aChild->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
+    nsCOMPtr<nsIFontMetrics> fm = aChild->GetPresContext()->GetMetricsFor(
+                                                              font->mFont);
     GetSupDrop(fm, aSupDrop);
   }
 
   static void
-  GetSkewCorrectionFromChild(nsPresContext* aPresContext,
-                             nsIFrame*       aChild, 
+  GetSkewCorrectionFromChild(nsIFrame*       aChild,
                              nscoord&        aSkewCorrection) 
   {
     // default is 0

@@ -135,7 +135,7 @@ nsMathMLmfracFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::TransmitAutomaticData(nsPresContext* aPresContext)
+nsMathMLmfracFrame::TransmitAutomaticData()
 {
   // 1. The REC says:
   //    The <mfrac> element sets displaystyle to "false", or if it was already
@@ -145,10 +145,10 @@ nsMathMLmfracFrame::TransmitAutomaticData(nsPresContext* aPresContext)
   PRInt32 increment =
      NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) ? 0 : 1;
   mInnerScriptLevel = mPresentationData.scriptLevel + increment;
-  UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
+  UpdatePresentationDataFromChildAt(0, -1, increment,
     ~NS_MATHML_DISPLAYSTYLE,
      NS_MATHML_DISPLAYSTYLE);
-  UpdatePresentationDataFromChildAt(aPresContext, 1,  1, 0,
+  UpdatePresentationDataFromChildAt(1,  1, 0,
      NS_MATHML_COMPRESSED,
      NS_MATHML_COMPRESSED);
 
@@ -267,14 +267,12 @@ nsMathMLmfracFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   ////////////////////////////////////
   // Get the children's desired sizes
-
   nsBoundingMetrics bmNum, bmDen;
   nsHTMLReflowMetrics sizeNum (nsnull);
   nsHTMLReflowMetrics sizeDen (nsnull);
@@ -285,7 +283,7 @@ nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
   if (!frameNum || !frameDen || frameDen->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+    return ReflowError(aRenderingContext, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
   GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
@@ -293,7 +291,8 @@ nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
   //////////////////
   // Get shifts
 
-  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
+  nsPresContext* presContext = GetPresContext();
+  nscoord onePixel = presContext->IntScaledPixelsToTwips(1);
 
   aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;
@@ -316,8 +315,8 @@ nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
   // see if the linethickness attribute is there 
   nsAutoString value;
   GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::linethickness_, value);
-  mLineRect.height = CalcLineThickness(aPresContext, mStyleContext, 
-                                       value, onePixel, defaultRuleThickness);
+  mLineRect.height = CalcLineThickness(presContext, mStyleContext, value,
+                                       onePixel, defaultRuleThickness);
   nscoord numShift = 0;
   nscoord denShift = 0;
 
@@ -440,10 +439,10 @@ nsMathMLmfracFrame::Place(nsPresContext*      aPresContext,
     nscoord dy;
     // place numerator
     dy = 0;
-    FinishReflowChild(frameNum, aPresContext, nsnull, sizeNum, dxNum, dy, 0);
+    FinishReflowChild(frameNum, presContext, nsnull, sizeNum, dxNum, dy, 0);
     // place denominator
     dy = aDesiredSize.height - sizeDen.height;
-    FinishReflowChild(frameDen, aPresContext, nsnull, sizeDen, dxDen, dy, 0);
+    FinishReflowChild(frameDen, presContext, nsnull, sizeDen, dxDen, dy, 0);
     // place the fraction bar - dy is top of bar
     dy = aDesiredSize.ascent - (axisHeight + actualRuleThickness/2);
     mLineRect.SetRect(leftSpace, dy, width - (leftSpace + rightSpace), actualRuleThickness);
@@ -485,8 +484,7 @@ nsMathMLmfracFrame::AttributeChanged(nsIContent*     aContent,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::UpdatePresentationData(nsPresContext* aPresContext,
-                                           PRInt32         aScriptLevelIncrement,
+nsMathMLmfracFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                                            PRUint32        aFlagsValues,
                                            PRUint32        aFlagsToUpdate)
 {
@@ -508,7 +506,7 @@ nsMathMLmfracFrame::UpdatePresentationData(nsPresContext* aPresContext,
       if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
         // ...and is being set to true, so undo the inner increment now
         mInnerScriptLevel = mPresentationData.scriptLevel;
-        UpdatePresentationDataFromChildAt(aPresContext, 0, -1, -1, 0, 0);
+        UpdatePresentationDataFromChildAt(0, -1, -1, 0, 0);
       }
     }
     else {
@@ -519,19 +517,19 @@ nsMathMLmfracFrame::UpdatePresentationData(nsPresContext* aPresContext,
       NS_ASSERTION(NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags), "out of sync");
       if (!NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
         mInnerScriptLevel = mPresentationData.scriptLevel + 1;
-        UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 1, 0, 0);
+        UpdatePresentationDataFromChildAt(0, -1, 1, 0, 0);
       }
     }
   }
 
   mInnerScriptLevel += aScriptLevelIncrement;
   return nsMathMLContainerFrame::
-    UpdatePresentationData(aPresContext, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+    UpdatePresentationData(aScriptLevelIncrement, aFlagsValues,
+                           aFlagsToUpdate);
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                                      PRInt32         aFirstIndex,
+nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                                       PRInt32         aLastIndex,
                                                       PRInt32         aScriptLevelIncrement,
                                                       PRUint32        aFlagsValues,
@@ -552,7 +550,7 @@ nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(nsPresContext* aPresContex
   aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
 #endif
   return nsMathMLContainerFrame::
-    UpdatePresentationDataFromChildAt(aPresContext, aFirstIndex, aLastIndex,
+    UpdatePresentationDataFromChildAt(aFirstIndex, aLastIndex,
       aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
 }
 

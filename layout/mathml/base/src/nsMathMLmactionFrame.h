@@ -85,8 +85,7 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 

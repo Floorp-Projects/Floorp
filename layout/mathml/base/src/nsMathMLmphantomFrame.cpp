@@ -75,11 +75,10 @@ nsMathMLmphantomFrame::~nsMathMLmphantomFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmphantomFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                            nsIFrame*       aParent)
+nsMathMLmphantomFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // let the base class get the default from our parent
-  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 

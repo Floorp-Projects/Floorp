@@ -56,23 +56,21 @@ public:
   // Overloaded nsIMathMLFrame methods
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(nsPresContext* aPresContext,
-                                    PRInt32         aFirstIndex,
+  UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
-    nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(aPresContext, this,
+    nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
       aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
 
   NS_IMETHOD
-  ReResolveScriptStyle(nsPresContext* aPresContext,
-                       PRInt32         aParentScriptLevel)
+  ReResolveScriptStyle(PRInt32 aParentScriptLevel)
   {
-    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
+    nsMathMLContainerFrame::PropagateScriptStyleFor(this, aParentScriptLevel);
     return NS_OK;
   }
 
@@ -108,9 +106,7 @@ public:
 
   // we are just a wrapper and these methods shouldn't be called
   NS_IMETHOD
-  AppendFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
     NS_NOTREACHED("unsupported operation");
@@ -118,9 +114,7 @@ public:
   }
 
   NS_IMETHOD
-  InsertFrames(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
@@ -132,29 +126,25 @@ public:
   // as two operations: remove & insert; In our case, removing the child will
   // remove us too... so we have to operate from our parent's perspective
   NS_IMETHOD
-  ReplaceFrame(nsPresContext* aPresContext,
-               nsIPresShell&   aPresShell,
-               nsIAtom*        aListName,
+  ReplaceFrame(nsIAtom*        aListName,
                nsIFrame*       aOldFrame,
                nsIFrame*       aNewFrame)
   {
-    nsresult rv = mParent->ReplaceFrame(aPresContext, aPresShell, aListName, this, aNewFrame);
+    nsresult rv = mParent->ReplaceFrame(aListName, this, aNewFrame);
     // XXX the usage of ReplaceFrame() vs. ReplaceFrameAndDestroy() is
     // XXX ambiguous - see bug 122748. The style system doesn't call ReplaceFrame()
     // XXX and that's why nobody seems to have been biten by the ambiguity yet
-    aOldFrame->Destroy(aPresContext);
+    aOldFrame->Destroy(GetPresContext());
     return rv;
   }
 
   // Our life is bound to the life of our unique child.
   // When our child goes away, we ask our parent to delete us
   NS_IMETHOD
-  RemoveFrame(nsPresContext* aPresContext,
-              nsIPresShell&   aPresShell,
-              nsIAtom*        aListName,
+  RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
-    return mParent->RemoveFrame(aPresContext, aPresShell, aListName, this);
+    return mParent->RemoveFrame(aListName, this);
   }
 
 protected:

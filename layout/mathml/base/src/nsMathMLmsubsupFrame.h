@@ -52,11 +52,10 @@ public:
   friend nsresult NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsPresContext* aPresContext);
+  TransmitAutomaticData();
 
   NS_IMETHOD
-  Place(nsPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
+  Place(nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 

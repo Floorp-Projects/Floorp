@@ -114,25 +114,25 @@ nsMathMLmsqrtFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                         nsIFrame*       aParent) 
+nsMathMLmsqrtFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // let the base class get the default from our parent
-  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
   return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::TransmitAutomaticData(nsPresContext* aPresContext)
+nsMathMLmsqrtFrame::TransmitAutomaticData()
 {
   // 1. The REC says:
   //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
   //    unchanged within all its arguments.
   // 2. The TeXBook (Ch 17. p.141) says that \sqrt is cramped 
-  UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
+  UpdatePresentationDataFromChildAt(0, -1, 0,
      NS_MATHML_COMPRESSED,
      NS_MATHML_COMPRESSED);
 

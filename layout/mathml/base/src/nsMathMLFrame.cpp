@@ -63,8 +63,7 @@ static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 NS_IMPL_QUERY_INTERFACE1(nsMathMLFrame, nsIMathMLFrame)
 
 NS_IMETHODIMP
-nsMathMLFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                    nsIFrame*       aParent) 
+nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) 
 {
   mEmbellishData.flags = 0;
   mEmbellishData.nextFrame = nsnull;
@@ -94,8 +93,7 @@ nsMathMLFrame::InheritAutomaticData(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLFrame::UpdatePresentationData(nsPresContext* aPresContext,
-                                      PRInt32         aScriptLevelIncrement,
+nsMathMLFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
                                       PRUint32        aFlagsValues,
                                       PRUint32        aFlagsToUpdate)
 {

@@ -78,11 +78,10 @@ nsMathMLmfencedFrame::~nsMathMLmfencedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::InheritAutomaticData(nsPresContext* aPresContext,
-                                           nsIFrame*       aParent)
+nsMathMLmfencedFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // let the base class get the default from our parent
-  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
@@ -119,13 +118,12 @@ nsMathMLmfencedFrame::AttributeChanged(nsIContent*     aContent,
 }
 
 nsresult
-nsMathMLmfencedFrame::ChildListChanged(nsPresContext* aPresContext,
-                                       PRInt32         aModType)
+nsMathMLmfencedFrame::ChildListChanged(PRInt32 aModType)
 {
   RemoveFencesAndSeparators();
-  CreateFencesAndSeparators(aPresContext);
+  CreateFencesAndSeparators(GetPresContext());
 
-  return nsMathMLContainerFrame::ChildListChanged(aPresContext, aModType);
+  return nsMathMLContainerFrame::ChildListChanged(aModType);
 }
 
 void
@@ -362,7 +360,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   }
   else {
     // case when the call is made for mfenced
-    mathMLFrame->GetPreferredStretchSize(aPresContext, *aReflowState.rendContext,
+    mathMLFrame->GetPreferredStretchSize(*aReflowState.rendContext,
                                          0, /* i.e., without embellishments */
                                          stretchDir, containerSize);
     childFrame = firstChild;
@@ -373,7 +371,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
         // retrieve the metrics that was stored at the previous pass
         GetReflowAndBoundingMetricsFor(childFrame, childDesiredSize, childDesiredSize.mBoundingMetrics);
 
-        mathmlChild->Stretch(aPresContext, *aReflowState.rendContext, 
+        mathmlChild->Stretch(*aReflowState.rendContext, 
                              stretchDir, containerSize, childDesiredSize);
         // store the updated metrics
         childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
@@ -387,7 +385,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
       childFrame = childFrame->GetNextSibling();
     }
     // bug 121748: for surrounding fences & separators, use a size that covers everything
-    mathMLFrame->GetPreferredStretchSize(aPresContext, *aReflowState.rendContext,
+    mathMLFrame->GetPreferredStretchSize(*aReflowState.rendContext,
                                          STRETCH_CONSIDER_EMBELLISHMENTS,
                                          stretchDir, containerSize);
   }

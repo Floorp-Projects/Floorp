@@ -77,7 +77,7 @@ nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsPresContext* aPresContext)
+nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
 {
   // if our base is an embellished operator, let its state bubble to us
   GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);
@@ -87,7 +87,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsPresContext* aPresContext)
   // The REC says:
   // The <mmultiscripts> element increments scriptlevel by 1, and sets
   // displaystyle to "false", within each of its arguments except base
-  UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
+  UpdatePresentationDataFromChildAt(1, -1, 1,
     ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
 
   // The TeXbook (Ch 17. p.141) says the superscript inherits the compression
@@ -120,7 +120,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsPresContext* aPresContext)
   }
   for (PRInt32 i = subScriptFrames.Count() - 1; i >= 0; i--) {
     childFrame = (nsIFrame*)subScriptFrames[i];
-    PropagatePresentationDataFor(aPresContext, childFrame, 0,
+    PropagatePresentationDataFor(childFrame, 0,
       NS_MATHML_COMPRESSED, NS_MATHML_COMPRESSED);
   }
 
@@ -128,7 +128,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsPresContext* aPresContext)
 }
 
 void
-nsMathMLmmultiscriptsFrame::ProcessAttributes(nsPresContext* aPresContext)
+nsMathMLmmultiscriptsFrame::ProcessAttributes()
 {
   mSubScriptShift = 0;
   mSupScriptShift = 0;
@@ -140,7 +140,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes(nsPresContext* aPresContext)
                    nsMathMLAtoms::subscriptshift_, value)) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mSubScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
+      mSubScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
     }
   }
   // check if the superscriptshift attribute is there
@@ -148,14 +148,13 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes(nsPresContext* aPresContext)
                    nsMathMLAtoms::superscriptshift_, value)) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mSupScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
+      mSupScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
     }
   }
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
-                                  nsIRenderingContext& aRenderingContext,
+nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
                                   PRBool               aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -169,7 +168,7 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
   // depend only on the current font
   ////////////////////////////////////////
 
-  ProcessAttributes(aPresContext);
+  ProcessAttributes();
 
   // get x-height (an ex)
   aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
@@ -277,7 +276,7 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
         // duplicate <mprescripts/> found
         // report an error, encourage people to get their markups in order
         NS_WARNING("invalid markup");
-        return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+        return ReflowError(aRenderingContext, aDesiredSize);
       }
       mprescriptsFrame = childFrame;
       firstPrescriptsPair = PR_TRUE;
@@ -303,7 +302,7 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
           subScriptFrame = childFrame;
           GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
           // get the subdrop from the subscript font
-          GetSubDropFromChild (aPresContext, subScriptFrame, subDrop);
+          GetSubDropFromChild (subScriptFrame, subDrop);
           // parameter v, Rule 18a, App. G, TeXbook
           minSubScriptShift = bmBase.descent + subDrop;
           trySubScriptShift = PR_MAX(minSubScriptShift,subScriptShift);
@@ -319,7 +318,7 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
           supScriptFrame = childFrame;
           GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
           // get the supdrop from the supscript font
-          GetSupDropFromChild (aPresContext, supScriptFrame, supDrop);
+          GetSupDropFromChild (supScriptFrame, supDrop);
           // parameter u, Rule 18a, App. G, TeXbook
           minSupScriptShift = bmBase.ascent - supDrop;
           // get min supscript shift limit from x-height
@@ -386,7 +385,7 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
   if ((0 != width) || !baseFrame || !subScriptFrame || !supScriptFrame) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
-    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+    return ReflowError(aRenderingContext, aDesiredSize);
   }
 
   // we left out the width of prescripts, so ...
@@ -428,7 +427,7 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
         // place the base ...
         childFrame = baseFrame;
         dy = aDesiredSize.ascent - baseSize.ascent;
-        FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
+        FinishReflowChild (baseFrame, GetPresContext(), nsnull, baseSize, dx, dy, 0);
         dx += bmBase.width + mScriptSpace + italicCorrection;
       }
       else if (mprescriptsFrame != childFrame) {
@@ -451,12 +450,12 @@ nsMathMLmmultiscriptsFrame::Place(nsPresContext*      aPresContext,
 
           dy = aDesiredSize.ascent - subScriptSize.ascent +
             maxSubScriptShift;
-          FinishReflowChild (subScriptFrame, aPresContext, nsnull, subScriptSize,
+          FinishReflowChild (subScriptFrame, GetPresContext(), nsnull, subScriptSize,
                              dx + (width-subScriptSize.width)/2, dy, 0);
 
           dy = aDesiredSize.ascent - supScriptSize.ascent -
             maxSupScriptShift;
-          FinishReflowChild (supScriptFrame, aPresContext, nsnull, supScriptSize,
+          FinishReflowChild (supScriptFrame, GetPresContext(), nsnull, supScriptSize,
                              dx + (width-supScriptSize.width)/2, dy, 0);
 
           dx += mScriptSpace + width;
