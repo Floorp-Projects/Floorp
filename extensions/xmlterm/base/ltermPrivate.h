@@ -235,6 +235,7 @@ typedef FILE FILESTREAM;
 #define MAXPROMPT 256          /* Maximum length of prompt regexp+1 */
 #define MAXRAWINCOMPLETE 5     /* Maximum incomplete raw buffer size */
 #define MAXSTREAMTERM 11       /* Maximum stream terminator buffer size */
+#define MAXSHELLINITSTR 128    /* Maximum length of shell init string+1 */
 #define MAXCOOKIESTR 64        /* Maximum length of cookie string+1 */
 #define MAXESCAPEPARAMS 16     /* Maximum no. of numeric ESCAPE parameters */
 #define MAXSTRINGPARAM  512    /* Maximum length of string ESCAPE parameters */
@@ -469,12 +470,14 @@ struct lterms {
   int ptyMode;                     /* pseudo-TTY mode flag */
   int noTTYEcho;                   /* no TTY echo flag */
   int disabledInputEcho;           /* disabled input echo flag */
+  int restoreInputEcho;            /* restore input echo flag */
 
   int processType;                 /* Process type code */
   int maxInputMode;                /* maximum allowed input mode value */
   int readERRfirst;                /* Read STDERR before STDOUT */
   int interleave;                  /* interleave STDERR/STDOUT flag */
   UNICHAR control[MAXTTYCONTROL];  /* TTY control characters */
+
 
   int commandNumber;               /* output command number
                                     * (0 if not command line)
@@ -504,6 +507,9 @@ struct lterms {
                                       JUST A LIST OF DELIMITERS AT PRESENT */
 
   char cookie[MAXCOOKIESTR];       /* cookie string */
+  char shellInitStr[MAXSHELLINITSTR];
+                                   /* shell initialization string */
+  int shellInitFlag;               /* shell initialization flag */
 
   struct ptys pty;                 /* pseudo-tty (PTY) stream info for LTERM */
   struct LtermProcess ltermProcess; /* LTERM process structure */

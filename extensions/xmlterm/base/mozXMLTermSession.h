@@ -38,6 +38,7 @@
 #include "mozXMLT.h"
 #include "mozILineTermAux.h"
 #include "mozIXMLTerminal.h"
+#include "mozIXMLTermStream.h"
 
 
 class mozXMLTermSession
@@ -69,8 +70,9 @@ class mozXMLTermSession
   /** Reads all available data from LineTerm and displays it;
    * returns when no more data is available.
    * @param lineTermAux LineTermAux object to read data from
+   * @param processedData (output) true if any data was processed
    */
-  NS_IMETHOD ReadAll(mozILineTermAux* lineTermAux);
+  NS_IMETHOD ReadAll(mozILineTermAux* lineTermAux, PRBool& processedData);
 
   /** Gets current entry (command) number
    * @param aNumber (output) current entry number
@@ -136,6 +138,8 @@ protected:
   /** markup style of output */
   enum OutputMarkupType {
     PLAIN_TEXT = 0,
+    TEXT_FRAGMENT,
+    JS_FRAGMENT,
     HTML_FRAGMENT,
     HTML_DOCUMENT,
     XML_DOCUMENT
@@ -161,8 +165,9 @@ protected:
     NO_META_COMMAND    = 0,
     STREAM_META_COMMAND,
     HTTP_META_COMMAND,
-    LS_META_COMMAND,
+    JS_META_COMMAND,
     TREE_META_COMMAND,
+    LS_META_COMMAND,
     META_COMMAND_TYPES
   };
 
@@ -196,12 +201,13 @@ protected:
 
   /** Autodetects markup in current output line
    * @param aString string to be displayed
-   * @param aStyle style values for string (see lineterm.h)
    * @param firstOutputLine true if this is the first output line
+   * @param secure true if output data is secure
+   *               (usually true for metacommand output only)
    */
   NS_IMETHOD AutoDetectMarkup(const nsString& aString,
-                              const nsString& aStyle,
-                              PRBool firstOutputLine);
+                              PRBool firstOutputLine,
+                              PRBool secure);
 
   /** Initializes display of stream output with specified markup type
    * @param streamURL effective URL of stream output
@@ -258,7 +264,7 @@ protected:
    *                (default value is false)
    */
   NS_IMETHOD InsertFragment(const nsString& aString,
-                            nsCOMPtr<nsIDOMNode>& parentNode,
+                            nsIDOMNode* parentNode,
                             PRInt32 entryNumber = -1,
                             nsIDOMNode* beforeNode = nsnull,
                             PRBool replace = false);
@@ -362,6 +368,22 @@ protected:
    */
   NS_IMETHOD NewTextNode( nsIDOMNode* parentNode,
                           nsCOMPtr<nsIDOMNode>& textNode);
+
+  /** Creates a new IFRAME element with attributes NAME="iframe#",
+   * FRAMEBORDER="0" and appends it as a child of the specified parent.
+   * ("#" denotes the specified number)
+   * @param number numeric suffix for element ID
+   *             (If < 0, no name attribute is defined)
+   * @param parentNode parent node for element
+   * @param src IFRAME SRC attribute
+   * @param width IFRAME width attribute
+   * @param height IFRAME height attribute
+   */
+  NS_IMETHOD NewIFrame(PRInt32 number,
+                       nsIDOMNode* parentNode,
+                       const nsString& src,
+                       const nsString& width,
+                       const nsString& height);
 
   /** Add event attributes (onclick, ondblclick, ...) to DOM node
    * @param name name of DOM node (supplied as argument to the event handler)
@@ -495,6 +517,9 @@ protected:
   /** current text node for command output */
   nsCOMPtr<nsIDOMNode> mOutputTextNode;
 
+  /** current XMLTerm stream interface for stream display */
+  nsCOMPtr<mozIXMLTermStream> mXMLTermStream;
+
 
   /** currently active meta command (if any) */
   MetaCommandType      mMetaCommandType;
@@ -527,6 +552,12 @@ protected:
   /** copy of PRE text already displayed */
   nsString             mPreTextDisplayed;
 
+
+  /** restore input echo flag */
+  PRBool               mRestoreInputEcho;
+
+  /** shell prompt string */
+  nsString             mShellPrompt;
 
   /** prompt string (HTML) */
   nsString             mPromptHTML;

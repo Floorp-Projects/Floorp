@@ -437,7 +437,7 @@ int ltermWrite(struct lterms *lts, int *opcodes)
 /** Reads a (possibly incomplete) line from LTERM.
  * The LtermRead structure *LTR contains both input and output parameters,
  * returning opcodes values of 
- * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? XMLSTREAM? DOCSTREAM? WINSTREAM?
+ * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
  * if StreamMode data is being returned.
  *
  * OPCODES ::= SCREENDATA BELL? (  CLEAR
@@ -788,7 +788,7 @@ int ltermRead(struct lterms *lts, struct LtermRead *ltr, int timeout)
 
 /** Returns stream data from STDOUT
  * (Auxiliary procedure for ltermRead.)
- * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? XMLSTREAM? DOCSTREAM? WINSTREAM?
+ * OPCODES ::= STREAMDATA NEWLINE? COOKIESTR? DOCSTREAM? XMLSTREAM? WINSTREAM?
  * The LtermRead structure *LTR contains both input and output parameters.
  * @return  0 if successful,
  *         -1 if an error occurred while reading,
@@ -1082,19 +1082,18 @@ static int ltermReturnOutputLine(struct lterms *lts, struct LtermRead *ltr)
     returnCode = -3;
   }
 
-  if ((lto->promptChars > 0) && (lto->promptChars == lto->outputChars)) {
-    /* Copy prompt characters (plain text; no markup or escape sequences) */
+  /* Copy output characters (plain text; no markup or escape sequences) */
+  ltr->opcodes |= LTERM_OUTPUT_CODE;
+  for (j=0; j<charCount; j++) {
+    ltr->buf[j] = lto->outputLine[j];
+    ltr->style[j] = lto->outputStyle[j];
+  }
+
+  if ((lto->promptChars > 0) && (lto->promptChars <= charCount)) {
+    /* Set prompt style */
     ltr->opcodes |= LTERM_PROMPT_CODE;
-    for (j=0; j<charCount; j++) {
-      ltr->buf[j] = lto->outputLine[j];
+    for (j=0; j<lto->promptChars; j++) {
       ltr->style[j] = LTERM_PROMPT_STYLE;
-    }
-  } else {
-    /* Copy output characters (plain text; no markup or escape sequences) */
-    ltr->opcodes |= LTERM_OUTPUT_CODE;
-    for (j=0; j<charCount; j++) {
-      ltr->buf[j] = lto->outputLine[j];
-      ltr->style[j] = lto->outputStyle[j];
     }
   }
 

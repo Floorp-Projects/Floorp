@@ -51,11 +51,14 @@
 #include "mozXMLT.h"
 #include "mozILineTermAux.h"
 #include "mozIXMLTerminal.h"
+#include "mozXMLTermUtils.h"
 #include "mozXMLTermSession.h"
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermSession definition
 /////////////////////////////////////////////////////////////////////////
+static const char* kWhitespace=" \b\t\r\n";
+
 const char* const mozXMLTermSession::sessionElementNames[] = {
   "session",
   "entry",
@@ -77,8 +80,9 @@ const char* const mozXMLTermSession::metaCommandNames[] = {
   "",
   "",
   "http",
-  "ls",
-  "tree"
+  "js",
+  "tree",
+  "ls"
 };
 
 const char* const mozXMLTermSession::fileTypeNames[] = {
@@ -123,6 +127,8 @@ mozXMLTermSession::mozXMLTermSession() :
   mOutputDisplayNode(nsnull),
   mOutputTextNode(nsnull),
 
+  mXMLTermStream(nsnull),
+
   mMetaCommandType(NO_META_COMMAND),
 
   mOutputDisplayType(NO_NODE),
@@ -137,6 +143,9 @@ mozXMLTermSession::mozXMLTermSession() :
   mPreTextBuffered(""),
   mPreTextDisplayed(""),
 
+  mRestoreInputEcho(false),
+
+  mShellPrompt(""),
   mPromptHTML(""),
   mFragmentBuffer("")
 
@@ -242,6 +251,8 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
   mOutputDisplayNode = nsnull;
   mOutputTextNode = nsnull;
 
+  mXMLTermStream = nsnull;
+
   mPromptSpanNode = nsnull;
   mCommandSpanNode = nsnull;
   mInputTextNode = nsnull;
@@ -335,15 +346,19 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
 /** Reads all available data from LineTerm and displays it;
  * returns when no more data is available.
  * @param lineTermAux LineTermAux object to read data from
+ * @param processedData (output) true if any data was processed
  */
-NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
+NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
+                                         PRBool& processedData)
 {
   PRInt32 opcodes, buf_row, buf_col;
   PRUnichar *buf_str, *buf_style;
-  PRBool newline, streamData, promptLine, inputLine, metaCommand;
+  PRBool newline, streamData;
   nsAutoString bufString, bufStyle;
 
   XMLT_LOG(mozXMLTermSession::ReadAll,60,("\n"));
+
+  processedData = false;
 
   if (lineTermAux == nsnull)
     return NS_ERROR_FAILURE;
@@ -352,6 +367,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
   PRBool flushOutput = false;
 
   PRBool metaNextCommand = false;
+
   for (;;) {
     // NOTE: Remember to de-allocate buf_str and buf_style
     //       using nsAllocator::Free, if opcodes != 0
@@ -365,6 +381,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
             opcodes, mMetaCommandType, mEntryHasOutput));
 
     if (opcodes == 0) break;
+
+    processedData = true;
 
     streamData = (opcodes & LTERM_STREAMDATA_CODE);
     newline = (opcodes & LTERM_NEWLINE_CODE);
@@ -384,11 +402,35 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
 
         // Disable input echo
         lineTermAux->SetEchoFlag(false);
+        mRestoreInputEcho = true;
 
-        // Determine stream markup type
-        OutputMarkupType streamMarkupType = HTML_FRAGMENT;
+        // Determine effective stream URL and default markup type
+        nsAutoString streamURL;
+        OutputMarkupType streamMarkupType;
 
-        if (opcodes & LTERM_DOCSTREAM_CODE) {
+        if (opcodes & LTERM_COOKIESTR_CODE) {
+          // Secure stream, i.e., prefixed with cookie; fragments allowed
+          streamURL = "chrome://xmlterm/content/xmltblank.html";
+
+          if (opcodes & LTERM_JSSTREAM_CODE) {
+            // Javascript stream 
+            streamMarkupType = JS_FRAGMENT;
+
+          } else {
+            // HTML/XML stream
+            streamMarkupType = HTML_FRAGMENT;
+          }
+
+        } else {
+          // Insecure stream; treat as text fragment
+          streamURL = "http://in.sec.ure";
+          streamMarkupType = TEXT_FRAGMENT;
+        }
+
+        if (!(opcodes & LTERM_JSSTREAM_CODE) &&
+            (opcodes & LTERM_DOCSTREAM_CODE)) {
+          // Stream contains complete document (not Javascript)
+
           if (opcodes & LTERM_XMLSTREAM_CODE) {
             streamMarkupType = XML_DOCUMENT;
           } else {
@@ -397,7 +439,6 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
         }
 
         // Initialize stream output
-        nsAutoString streamURL = "";
         result = InitStream(streamURL, streamMarkupType);
         if (NS_FAILED(result))
           return result;
@@ -405,7 +446,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
 
       // Process stream output
       bufStyle = "";
-      result = ProcessOutput(bufString, bufStyle, true, true);
+      result = ProcessOutput(bufString, bufStyle, false, true);
       if (NS_FAILED(result))
         return result;
 
@@ -422,24 +463,24 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
 
         mMetaCommandType = NO_META_COMMAND;
         flushOutput = true;
-
-        // Enable input echo
-        lineTermAux->SetEchoFlag(false);
       }
 
     } else {
       // Process non-stream data
+      PRBool promptLine, inputLine, metaCommand, completionRequested;
+
       flushOutput = true;
 
       inputLine = (opcodes & LTERM_INPUT_CODE);
       promptLine = (opcodes & LTERM_PROMPT_CODE);
       metaCommand = (opcodes & LTERM_META_CODE);
+      completionRequested = (opcodes & LTERM_COMPLETION_CODE);
 
       nsAutoString promptStr ("");
       PRInt32 promptLength = 0;
 
       if (promptLine) {
-        // Process prompt
+        // Count prompt characters
         const PRUnichar *styleVals = bufStyle.GetUnicode();
         const PRInt32 bufLength = bufStyle.Length();
 
@@ -457,28 +498,48 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
         // Extract prompt string
         bufString.Left(promptStr, promptLength);
 
-        // Remove prompt chars/style from buffer strings
-        bufString.Cut(0, promptLength);
-        bufStyle.Cut(0, promptLength);
+        if ( (promptLength < bufLength) &&
+             !inputLine &&
+             !promptStr.Equals(mShellPrompt) ) {
+          // Ignore the mismatched prompt in the output line
+          int j;
+          promptLine = 0;
+
+          for (j=0; j<promptLength; j++)
+            bufStyle.SetCharAt((UNICHAR) LTERM_STDOUT_STYLE, j);
+
+        } else {
+          // Remove prompt chars/style from buffer strings
+          bufString.Cut(0, promptLength);
+          bufStyle.Cut(0, promptLength);
+
+          // Save prompt string
+          mShellPrompt = promptStr;
+        }
       }
 
       if (!metaCommand && inputLine) {
         if (metaNextCommand) {
           // Echo of transmitted meta command
           metaNextCommand = false;
+
         } else {
           // No meta command; enable input echo
           mMetaCommandType = NO_META_COMMAND;
-          lineTermAux->SetEchoFlag(true);
+
+          if (mRestoreInputEcho) {
+            lineTermAux->SetEchoFlag(true);
+            mRestoreInputEcho = false;
+          }
         }
       }
 
-      if (metaCommand) {
+      if (metaCommand && !completionRequested) {
         // Identify meta command type
 
         // Eliminate leading spaces/TABs
         nsAutoString metaLine = bufString;
-        metaLine.Trim(" \t", PR_TRUE, PR_FALSE);
+        metaLine.Trim(kWhitespace, PR_TRUE, PR_FALSE);
 
         int delimOffset = metaLine.FindChar((PRUnichar) ':');
         PR_ASSERT(delimOffset >= 0);
@@ -514,11 +575,73 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
         metaLine.Right(commandArgs, argChars);
 
         // Eliminate leading spaces/TABs
-        commandArgs.Trim(" \t", PR_TRUE, PR_FALSE);
+        commandArgs.Trim(kWhitespace, PR_TRUE, PR_FALSE);
+
+        // Display meta command
+        if (mEntryHasOutput) {
+          // Break previous output display
+          result = BreakOutput();
+
+          // Create new entry block
+          result = NewEntry(promptStr);
+          if (NS_FAILED(result))
+            return result;
+        }
+
+        // Display input and position cursor
+        PRInt32 cursorCol = 0;
+        result = lineTermAux->GetCursorColumn(&cursorCol);
+
+        // Remove prompt offset
+        cursorCol -= promptLength;
+        if (cursorCol < 0) cursorCol = 0;
+
+        XMLT_LOG(mozXMLTermSession::ReadAll,62,("cursorCol=%d\n", cursorCol));
+
+        result = DisplayInput(bufString, bufStyle, cursorCol);
+        if (NS_FAILED(result))
+          return NS_ERROR_FAILURE;
 
         if (newline && mXMLTerminal) {
           // Complete meta command; XMLterm instantiated
+          nsAutoString metaCommandOutput = "";
+
           switch (mMetaCommandType) {
+
+          case HTTP_META_COMMAND:
+            {
+              // Display URL using IFRAME
+              nsAutoString url = "http:";
+              url.Append(commandArgs);
+              nsAutoString width = "100%";
+              nsAutoString height = "100";
+              result = NewIFrame(mCurrentEntryNumber, mOutputBlockNode,
+                                 url, width, height);
+              if (NS_FAILED(result))
+                return result;
+
+            }
+            break;
+
+          case JS_META_COMMAND:
+            {
+              // Execute JavaScript command
+              result = mozXMLTermUtils::ExecuteScript(mDOMDocument,
+                                                      commandArgs,
+                                                      metaCommandOutput);
+              if (NS_FAILED(result))
+                metaCommandOutput = "Error in executing JavaScript command\n";
+
+              nsCAutoString cstrout = metaCommandOutput;
+              printf("mozXMLTermSession::ReadAll, JS output=%s\n",
+                     cstrout.GetBuffer());
+
+            }
+            break;
+
+          case TREE_META_COMMAND:
+            XMLT_WARNING("\nTraverseDOMTree: use arrow keys; A for attributes; H for HTML; Q to quit\n");
+            break;
 
           case LS_META_COMMAND:
             {
@@ -538,42 +661,44 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
 
               /* Set flag to recognize transmitted command */
               metaNextCommand = true;
+              mRestoreInputEcho = true;
             }
             break;
-
-          case TREE_META_COMMAND:
-            XMLT_WARNING("\nTraverseDOMTree: use arrow keys; A for attributes; H for HTML; Q to quit\n");
 
           default:
             break;
           }
+
+          if (mMetaCommandType == JS_META_COMMAND) {
+            // Display metacommand output
+            mEntryHasOutput = true;
+
+            XMLT_LOG(mozXMLTermSession::ReadAll,62,("metaCommandOutput\n"));
+            // Check metacommand output for markup (secure)
+            result = AutoDetectMarkup(metaCommandOutput, true, true);
+            if (NS_FAILED(result))
+              return result;
+
+            nsAutoString nullStyle ("");
+            result = ProcessOutput(metaCommandOutput, nullStyle, true,
+                                   mOutputMarkupType != PLAIN_TEXT);
+            if (NS_FAILED(result))
+              return result;
+
+            // Break metacommand output display
+            result = BreakOutput();
+          }
+
+          // Reset newline flag
+          newline = false;
         }
+
+        // Clear the meta command from the string nuffer
+        bufString = "";
+        bufStyle = "";
       }
 
-      if (!promptLine) {
-        // Not prompt line
-        if (!mEntryHasOutput) {
-          // Start of command output
-          mEntryHasOutput = true;
-          mFirstOutputLine = true;
-        }
-
-        if (newline) {
-          // Complete line; check for markup
-          result = AutoDetectMarkup(bufString, bufStyle, mFirstOutputLine);
-          if (NS_FAILED(result))
-            return result;
-
-          // Not first output line anymore
-          mFirstOutputLine = false;
-        }
-
-        // Display output
-        result = ProcessOutput(bufString, bufStyle, newline, false);
-        if (NS_FAILED(result))
-          return result;
-
-      } else {
+      if (promptLine) {
         // Prompt line
         if (mEntryHasOutput) {
           // Break previous output display
@@ -604,6 +729,39 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux)
           // (this is needed to properly handle commands with no output!)
           mEntryHasOutput = true;
           mFirstOutputLine = true;
+
+        }
+
+      } else {
+        // Not prompt line
+        if (!mEntryHasOutput) {
+          // Start of command output
+          mEntryHasOutput = true;
+          mFirstOutputLine = true;
+        }
+
+        if (newline) {
+          // Complete line; check for markup (insecure)
+          result = AutoDetectMarkup(bufString, mFirstOutputLine, false);
+          if (NS_FAILED(result))
+            return result;
+
+          // Not first output line anymore
+          mFirstOutputLine = false;
+        }
+
+        if (mOutputMarkupType == PLAIN_TEXT) {
+          // Display plain text output
+          result = ProcessOutput(bufString, bufStyle, newline, false);
+          if (NS_FAILED(result))
+            return result;
+
+        } else if (newline) {
+          // Process autodetected stream output (complete lines only)
+          bufStyle = "";
+          result = ProcessOutput(bufString, bufStyle, true, true);
+          if (NS_FAILED(result))
+            return result;
         }
       }
     }
@@ -694,15 +852,19 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
 
 
 /** Autodetects markup in current output line
+ * @param aString string to be displayed
  * @param firstOutputLine true if this is the first output line
+ * @param secure true if output data is secure
+ *               (usually true for metacommand output only)
  */
 NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
-                                                  const nsString& aStyle,
-                                                  PRBool firstOutputLine)
+                                                  PRBool firstOutputLine,
+                                                  PRBool secure)
 {
   nsresult result;
 
-  XMLT_LOG(mozXMLTermSession::AutoDetectMarkup,70,("\n"));
+  XMLT_LOG(mozXMLTermSession::AutoDetectMarkup,70,("firstOutputLine=0x%x\n",
+                                                   firstOutputLine));
 
   // If autodetect disabled or not plain text, do nothing
   if ((mAutoDetect == NO_MARKUP) ||
@@ -712,9 +874,50 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
 
   OutputMarkupType newMarkupType = PLAIN_TEXT;
 
+  // Copy string and trim leading spaces/backspaces/tabs
+  nsAutoString str = aString;
+  
+  str.Trim(kWhitespace, PR_TRUE, PR_FALSE);
+
+  if (str.First() == U_LESSTHAN) {
+    // Markup tag detected
+    str.CompressWhitespace();
+    str.Append(" ");
+
+    if ( (str.Find("<!DOCTYPE HTML",PR_TRUE) == 0) ||
+         (str.Find("<BASE ",PR_TRUE) == 0) ||
+         (str.Find("<HTML>",PR_TRUE) == 0) ) {
+      // HTML document
+      newMarkupType = HTML_DOCUMENT;
+
+    } else if (str.Find("<?xml ",PR_FALSE) == 0) {
+      // XML document
+      newMarkupType = XML_DOCUMENT;
+
+    } else {
+      // HTML fragment
+      if (secure) {
+        // Secure HTML fragment
+        newMarkupType = HTML_FRAGMENT;
+      } else {
+        // Insecure; treat as text fragment for security reasons
+        newMarkupType = TEXT_FRAGMENT;
+      }
+    }
+
+
+  } else if (firstOutputLine && str.Find("Content-Type",PR_TRUE) == 0) {
+    // Possible MIME content type header
+    str.StripWhitespace();
+    if (str.Find("Content-Type:text/html",PR_TRUE) == 0) {
+      // MIME content type header for HTML document
+      newMarkupType = HTML_DOCUMENT;
+    }
+  }
+
   if (newMarkupType != PLAIN_TEXT) {
-    // Markup found; initialize stream
-    nsAutoString streamURL = "";
+    // Markup found; initialize (insecure) stream
+    nsAutoString streamURL = "http://in.sec.ure";
     result = InitStream(streamURL, newMarkupType);
     if (NS_FAILED(result))
       return result;
@@ -724,13 +927,16 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
     mOutputMarkupType = PLAIN_TEXT;
   }
 
+  XMLT_LOG(mozXMLTermSession::AutoDetectMarkup,71,("mOutputMarkupType=%d\n",
+                                                   mOutputMarkupType));
+
   return NS_OK;
 }
 
 
 /** Initializes display of stream output with specified markup type
  * @param streamURL effective URL of stream output
- * @param streamMarkupType stream markup stype
+ * @param streamMarkupType stream markup type
  */
 NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
                                             OutputMarkupType streamMarkupType)
@@ -745,17 +951,72 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
   if (NS_FAILED(result))
     return result;
 
-  // Initialize markup handling
-  switch (mOutputMarkupType) {
-
-  case HTML_FRAGMENT:
+  if ((streamMarkupType == TEXT_FRAGMENT) ||
+      (streamMarkupType == JS_FRAGMENT) ||
+      (streamMarkupType == HTML_FRAGMENT)) {
     // Initialize fragment buffer
     mFragmentBuffer = "";
-    break;
 
-  default:
-    PR_ASSERT(0);
-    break;
+  } else {
+    // Create IFRAME to display stream document
+    nsAutoString src = "about:blank";
+    nsAutoString width = "100%";
+    nsAutoString height = "10";
+    result = NewIFrame(mCurrentEntryNumber, mOutputBlockNode,
+                       src, width, height);
+
+    if (NS_FAILED(result))
+      return result;
+
+    result = NS_NewXMLTermStream(getter_AddRefs(mXMLTermStream));
+    if (NS_FAILED(result))
+      return result;
+
+
+    nsCOMPtr<nsIWebShell> webShell;
+    result = mXMLTerminal->GetWebShell(getter_AddRefs(webShell));
+    if (NS_FAILED(result) || !webShell)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMWindow> outerDOMWindow;
+    result = mozXMLTermUtils::ConvertWebShellToDOMWindow(webShell,
+                                              getter_AddRefs(outerDOMWindow));
+
+    if (NS_FAILED(result) || !outerDOMWindow) {
+      fprintf(stderr,
+                "mozXMLTermSession::InitStream: Failed to convert webshell\n");
+      return NS_ERROR_FAILURE;
+    }
+
+    // Initialize markup handling
+    nsCAutoString iframeName = "iframet";
+    //iframeName.Append(mCurrentEntryNumber,10);
+
+    nsCAutoString contentType;
+    switch (streamMarkupType) {
+
+    case HTML_DOCUMENT:
+      contentType = "text/html";
+      break;
+
+    case XML_DOCUMENT:
+      contentType = "text/xml";
+      break;
+
+    default:
+      PR_ASSERT(0);
+      break;
+    }
+
+    nsCAutoString url ( streamURL );
+    result = mXMLTermStream->Open(outerDOMWindow, iframeName.GetBuffer(),
+                                  url.GetBuffer(),
+                                  contentType.GetBuffer(), 800);
+    if (NS_FAILED(result)) {
+      fprintf(stderr, "mozXMLTerminal::Activate: Failed to open stream\n");
+      return result;
+    }
+
   }
 
   mOutputMarkupType = streamMarkupType;
@@ -772,7 +1033,59 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(void)
   XMLT_LOG(mozXMLTermSession::BreakOutput,70,("mOutputMarkupType=%d\n",
                                               mOutputMarkupType));
 
+  if (!mEntryHasOutput)
+    return NS_OK;
+
   switch (mOutputMarkupType) {
+
+  case TEXT_FRAGMENT:
+    {
+      // Display text fragment using new SPAN node
+      nsCOMPtr<nsIDOMNode> spanNode, textNode;
+      nsAutoString tagName = "span";
+      nsAutoString elementName = "stream";
+      result = NewElementWithText(tagName, elementName, -1,
+                                  mOutputBlockNode, spanNode, textNode);
+
+      if (NS_FAILED(result) || !spanNode || !textNode)
+        return NS_ERROR_FAILURE;
+
+      // Append node
+      nsCOMPtr<nsIDOMNode> resultNode;
+      result = mOutputBlockNode->AppendChild(spanNode,
+                                             getter_AddRefs(resultNode));
+
+      // Display text
+      result = SetDOMText(textNode, mFragmentBuffer);
+      if (NS_FAILED(result))
+        return result;
+
+      mFragmentBuffer = "";
+      break;
+    }
+
+  case JS_FRAGMENT:
+    {
+      // Execute JS fragment
+      nsAutoString jsOutput = "";
+      result = mozXMLTermUtils::ExecuteScript(mDOMDocument,
+                                              mFragmentBuffer,
+                                              jsOutput);
+      if (NS_FAILED(result))
+        jsOutput = "Error in JavaScript execution\n";
+
+      mFragmentBuffer = "";
+
+      if (jsOutput.Length() > 0) {
+        // Display JS output as HTML fragment
+        result = InsertFragment(jsOutput, mOutputBlockNode,
+                                mCurrentEntryNumber);
+        if (NS_FAILED(result))
+          return result;
+      }
+    }
+
+    break;
 
   case HTML_FRAGMENT:
     // Display HTML fragment
@@ -785,7 +1098,14 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(void)
     break;
 
   case HTML_DOCUMENT:
-    // Close HTML document
+  case XML_DOCUMENT:
+    // Close HTML/XML document
+    result = mXMLTermStream->Close();
+    if (NS_FAILED(result)) {
+      fprintf(stderr, "mozXMLTermSession::BreakOutput: Failed to close stream\n");
+      return result;
+    }
+    mXMLTermStream = nsnull;
     break;
 
   default:
@@ -839,23 +1159,31 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
 
     switch (mOutputMarkupType) {
 
+    case TEXT_FRAGMENT:
+    case JS_FRAGMENT:
     case HTML_FRAGMENT:
-      // Append complete lines to HTML fragment buffer
+      // Append complete lines to fragment buffer
       if (newline || streamOutput) {
         mFragmentBuffer += aString;
-        if (!streamOutput)
+        if (newline)
           mFragmentBuffer += '\n';
       }
 
       break;
 
     case HTML_DOCUMENT:
+    case XML_DOCUMENT:
       // Write complete lines to document stream
+
       if (newline || streamOutput) {
-        // ********** streamWrite(aString.GetUnicode());
-        if (!streamOutput) {
-          static const PRUnichar lineFeed[] = {U_LINEFEED, U_NUL};
-          // ************ streamWrite(lineFeed);
+        nsAutoString str = aString;
+        if (newline)
+          str.Append("\n");
+
+        result = mXMLTermStream->Write(str.GetUnicode());
+        if (NS_FAILED(result)) {
+          fprintf(stderr, "mozXMLTermSession::ProcessOutput: Failed to write to stream\n");
+          return result;
         }
       }
       break;
@@ -1060,7 +1388,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
     // Display line
     result = SetDOMText(mOutputTextNode, aString);
     if (NS_FAILED(result))
-    return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
 
     if (newline) {
       mOutputDisplayType = NO_NODE;
@@ -1134,7 +1462,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
     if (wordBegin >= lineLength) break;
 
     // Locate end of word (non-space character)
-    PRInt32 wordEnd = aString.FindCharInSet(" \t", wordBegin);
+    PRInt32 wordEnd = aString.FindCharInSet(kWhitespace, wordBegin);
     if (wordEnd < 0) {
       wordEnd = lineLength-1;
     } else {
@@ -1261,8 +1589,8 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
  * @param replace if true, replace beforeNode with inserted fragment
  *                (default value is false)
  */
-NS_IMETHODIMP mozXMLTermSession::InsertFragment(const nsString& aString,
-                                              nsCOMPtr<nsIDOMNode>& parentNode,
+ NS_IMETHODIMP mozXMLTermSession::InsertFragment(const nsString& aString,
+                                              nsIDOMNode* parentNode,
                                               PRInt32 entryNumber,
                                               nsIDOMNode* beforeNode,
                                               PRBool replace)
@@ -2100,6 +2428,89 @@ NS_IMETHODIMP mozXMLTermSession::NewTextNode( nsIDOMNode* parentNode,
     return NS_ERROR_FAILURE;
 
   return NS_OK;
+}
+
+
+/** Creates a new IFRAME element with attributes NAME="iframe#",
+ * FRAMEBORDER="0" and appends it as a child of the specified parent.
+ * ("#" denotes the specified number)
+ * @param number numeric suffix for element ID
+ *             (If < 0, no name attribute is defined)
+ * @param parentNode parent node for element
+ * @param src IFRAME SRC attribute
+ * @param width IFRAME width attribute
+ * @param height IFRAME height attribute
+ */
+NS_IMETHODIMP mozXMLTermSession::NewIFrame(PRInt32 number,
+                                           nsIDOMNode* parentNode,
+                                           const nsString& src,
+                                           const nsString& width,
+                                           const nsString& height)
+{
+  nsresult result;
+
+  XMLT_LOG(mozXMLTermSession::NewIFrame,80,("\n"));
+
+#if 0
+  nsAutoString iframeFrag = "<iframe name='iframe";
+  iframeFrag.Append(number,10);
+  iframeFrag.Append("' src='");
+  iframeFrag.Append(src)
+  iframeFrag.Append("' frameborder=0> </iframe>\n");
+  result = InsertFragment(iframeFrag, parentNode, number);
+  if (NS_FAILED(result))
+    return result;
+
+  return NS_OK;
+#else
+  // Create IFRAME element
+  nsCOMPtr<nsIDOMElement> newElement;
+  nsAutoString tagName = "iframe";
+  result = mDOMDocument->CreateElement(tagName, getter_AddRefs(newElement));
+  if (NS_FAILED(result) || !newElement)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString attName, attValue;
+
+  // Set attributes
+  if (number >= 0) {
+    attName = "name";
+    attValue = "iframe";
+    attValue.Append(number,10);
+    newElement->SetAttribute(attName, attValue);
+  }
+
+  attName = "frameborder";
+  attValue = "0";
+  newElement->SetAttribute(attName, attValue);
+
+  if (src.Length() > 0) {
+    // Set SRC attribute
+    attName = "src";
+    newElement->SetAttribute(attName, src);
+  }
+
+  if (width.Length() > 0) {
+    // Set WIDTH attribute
+    attName = "width";
+    newElement->SetAttribute(attName, width);
+  }
+
+  if (height.Length() > 0) {
+    // Set HEIGHT attribute
+    attName = "height";
+    newElement->SetAttribute(attName, height);
+  }
+
+  // Append child to parent
+  nsCOMPtr<nsIDOMNode> iframeNode;
+  nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(newElement);
+  result = parentNode->AppendChild(newNode, getter_AddRefs(iframeNode));
+  if (NS_FAILED(result) || !iframeNode)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+#endif
 }
 
 

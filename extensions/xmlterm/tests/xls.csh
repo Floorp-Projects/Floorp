@@ -25,7 +25,7 @@ foreach arg ($*)
    endsw
 end
 
-$echocmd '\033{S\007\c'
+$echocmd "\033{S${LTERM_COOKIE}\007\c"
 $echocmd '<TABLE FRAME=none BORDER=0>'
 $echocmd "<COLGROUP COLSPAN=$ncols WIDTH=1*>"
 

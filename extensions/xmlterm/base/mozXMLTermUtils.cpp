@@ -26,6 +26,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
@@ -147,12 +148,9 @@ mozXMLTermUtils::ConvertWebShellToDOMWindow(nsIWebShell* aWebShell,
 
   *aDOMWindow = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObj(do_QueryInterface(aWebShell));
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aWebShell));
 
-  if (!scriptGlobalObj)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObj));
+  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObject));
   if (!domWindow)
     return NS_ERROR_FAILURE;
 
@@ -349,12 +347,14 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
 
   // Execute script
   PRBool isUndefined = PR_FALSE;
-  nsString outputString = "";
   const char* URL = "";
-  const char* version = "";
-  result = scriptContext-> EvaluateString(aScript, (void *) nsnull,
-                                          docPrincipal, URL, 0, version,
-                                          aOutput, &isUndefined);
+  result = scriptContext->EvaluateString(aScript, (void *) nsnull,
+                                         docPrincipal, URL, 0, nsnull,
+                                         aOutput, &isUndefined);
+
+  XMLT_LOG(mozXMLTermUtils::ExecuteScript,0,("result=0x%x, isUndefined=0x%x\n",
+                                             result, isUndefined));
+
   return result;
 }
 

@@ -81,6 +81,7 @@ class mozXMLTermStream : public mozIXMLTermStream
   /** Frame element in which to display stream */
   nsCOMPtr<nsIDOMElement> mDOMIFrameElement;
 
+#ifdef NO_WORKAROUND
   /** Context for stream display (what's this??) */
   nsCOMPtr<nsISupports> mContext;
 
@@ -92,5 +93,8 @@ class mozXMLTermStream : public mozIXMLTermStream
 
   /** Stream listener object */
   nsCOMPtr<nsIStreamListener> mStreamListener;
+#else // !NO_WORKAROUND
+  nsCOMPtr<nsIDOMHTMLDocument> mDOMHTMLDocument;
+#endif // !NO_WORKAROUND
 };
 
