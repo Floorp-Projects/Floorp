@@ -257,10 +257,11 @@ void nsMenuBarFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
     return;
 
   // Unset the current child.
-  mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+  if (mCurrentMenu)
+    mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
   
   // Set the new child.
-  aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  if (aMenuItem)
+    aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
   mCurrentMenu = aMenuItem;
 }
-
