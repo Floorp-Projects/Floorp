@@ -317,7 +317,7 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32   b0;
 
-  *rval = JSVAL_NULL;
+  *rval = JSVAL_VOID;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -537,7 +537,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsInstallFolder* folder;
   PRBool b5;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -688,7 +688,7 @@ InstallDeleteComponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   PRInt32 nativeRet;
   nsAutoString b0;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -730,7 +730,7 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsAutoString b1;
   nsInstallFolder* folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -785,7 +785,7 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   PRInt64 nativeRet;
   nsAutoString b0;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -830,7 +830,7 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   nsAutoString b0;
   nsAutoString b1;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -884,7 +884,7 @@ InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -922,7 +922,7 @@ InstallGestalt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   PRInt32 nativeRet;
   nsAutoString b0;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1056,14 +1056,14 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       
       if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
       {
-        *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+        *rval = JSVAL_NULL;
         return JS_TRUE;
       }
 
       jsObj = JSVAL_TO_OBJECT(argv[0]);
       if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
       {
-        *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+        *rval = JSVAL_NULL;
         return JS_TRUE; 
       }
 
@@ -1132,7 +1132,7 @@ InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   PRInt32 nativeRet;
 
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1293,7 +1293,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsInstallFolder *folder = nsnull;
 
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1386,7 +1386,7 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
 
-  *rval = JSVAL_NULL;
+  *rval = JSVAL_VOID;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1424,7 +1424,8 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsAutoString b0;
   JSObject *jsObj;
   nsInstallFolder *folder;
-  *rval = JSVAL_NULL;
+
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1458,7 +1459,7 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       if(NS_OK != nativeThis->SetPackageFolder(*folder))
         return JS_FALSE;
 
-    *rval = JSVAL_VOID;
+    *rval = JSVAL_ZERO;
   }
   else
   {
@@ -1481,7 +1482,7 @@ InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsAutoString b1;
   nsAutoString b2;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1526,7 +1527,7 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   PRInt32 nativeRet;
   nsAutoString b0;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1586,7 +1587,7 @@ InstallFileOpDirCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   PRInt32 nativeRet;
   nsAutoString b0;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)

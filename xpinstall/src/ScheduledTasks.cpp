@@ -166,7 +166,7 @@ PRInt32 DeleteFileNowOrSchedule(const nsFileSpec& filename)
                         err = NR_RegSetEntry( reg, newkey, valname, 
                                               REGTYPE_ENTRY_BYTES, 
                                               (void*)fnamestr, 
-                                              strlen(fnamestr));
+                                              strlen(fnamestr)+1);
 
                         if ( err == REGERR_OK )
                             result = nsInstall::REBOOT_NEEDED;
@@ -453,7 +453,7 @@ void ReplaceScheduledFiles( HREG reg )
                     rv1 = src->GetFileSpec(&srcSpec);
 
                     dest->SetPersistentDescriptorString(doomedFile);
-                    rv2 = src->GetFileSpec(&doomedSpec);
+                    rv2 = dest->GetFileSpec(&doomedSpec);
 
                     if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
                     {
