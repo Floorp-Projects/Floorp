@@ -389,6 +389,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
                                      nsRadioControlGroup *    aGroup,
                                      nsGfxRadioControlFrame * aRadioToIgnore)
 {
+#if 0
   // If in standard mode, then a radio group MUST default 
   // to the first item in the group (it must be selected)
   nsCompatibility mode;
@@ -397,15 +398,20 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
     // first find out if any have a default selection
     PRInt32 i;
     PRInt32 numItems = aGroup->GetNumRadios();
-    PRBool oneIsSelected = PR_FALSE;
-    for (i=0;i<numItems && !oneIsSelected;i++) {
+    PRBool changed          = PR_FALSE;
+    PRBool oneIsDefSelected = PR_FALSE;
+    for (i=0;i<numItems && !oneIsDefSelected;i++) {
       nsGfxRadioControlFrame * radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(i);
       nsCOMPtr<nsIContent> content;
       radioBtn->GetContent(getter_AddRefs(content));
       if (content) {
         nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(content));
         if (input) {
-          input->GetDefaultChecked(&oneIsSelected);
+          input->GetDefaultChecked(&oneIsDefSelected);
+          PRBool currentValue = radioBtn->GetChecked(PR_FALSE);
+          if (currentValue != oneIsDefSelected) {
+            changed = PR_TRUE;
+          }
         }
       }
     }
@@ -414,7 +420,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
     // select the firdst one in the group.
     // if aRadioToIgnore is not null then it is being deleted
     // so don't select that item, select the next one if there is one.
-    if (!oneIsSelected && numItems > 0) {
+    if (!changed && !oneIsDefSelected && numItems > 0) {
       nsGfxRadioControlFrame * radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(0);
       if (aRadioToIgnore != nsnull && aRadioToIgnore == radioBtn) {
         if (numItems == 1) {
@@ -433,6 +439,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
       }
     }
   }
+#endif
 }
 
 
