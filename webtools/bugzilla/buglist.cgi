@@ -115,8 +115,8 @@ sub Error {
     }
     PuntTryAgain($str);
 }
-    
-        
+
+
 
 
 
@@ -145,7 +145,7 @@ sub GenerateSQL {
             ("bugs.assigned_to = map_assigned_to.userid",
              "bugs.reporter = map_reporter.userid",
              "bugs.groupset & $::usergroupset = bugs.groupset"));
-            
+
 
     my $minvotes;
     if (defined $F{'votes'}) {
@@ -235,7 +235,7 @@ sub GenerateSQL {
         }
     }
 
-                
+
     if (defined $F{'changedin'}) {
         my $c = trim($F{'changedin'});
         if ($c ne "") {
@@ -272,7 +272,7 @@ sub GenerateSQL {
 
     if (defined $ref && 0 < @$ref) {
         push(@supptables, "bugs_activity actcheck");
-    
+
         my @list;
         foreach my $f (@$ref) {
             push(@list, "\nactcheck.fieldid = " . GetFieldID($f));
@@ -312,7 +312,7 @@ sub GenerateSQL {
             }
         }
     }
-    
+
 
     my $chartid;
     my $f;
@@ -410,7 +410,7 @@ sub GenerateSQL {
                  } else {
                      return Error("Unknown keyword named <code>$v</code>.\n" .
                                   "<P>The legal keyword names are\n" .
-                                  "<A HREF=describekeywords.cgi>" . 
+                                  "<A HREF=describekeywords.cgi>" .
                                   "listed here</A>.\n");
                  }
              }
@@ -642,7 +642,7 @@ sub GenerateSQL {
 }
 
 
-         
+
 sub LookupNamedQuery {
     my ($name) = (@_);
     confirm_login();
@@ -661,7 +661,7 @@ sub LookupNamedQuery {
 }
 
 
-        
+
 $::querytitle = "Bug List";
 
 CMD: for ($::FORM{'cmdtype'}) {
@@ -686,7 +686,7 @@ Refresh: 0; URL=$url
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid " .
                 "AND name = " . SqlQuote($::FORM{'namedcmd'}));
-        
+
         print "Content-type: text/html\n\n";
         PutHeader("Query is gone", "");
 
@@ -773,7 +773,7 @@ if (exists $ENV{'HTTP_USER_AGENT'} && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/
 
 sub DefCol {
     my ($name, $k, $t, $s, $q) = (@_);
-    
+
     $::key{$name} = $k;
     $::title{$name} = $t;
     if (defined $s && $s ne "") {
@@ -903,7 +903,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
                                                # hack.
     $::FORM{'order'} =~ s/assign\.login_name/map_assigned_to.login_name/g;
                                 # Another backwards compatability hack.
-    
+
     ORDER: for ($::FORM{'order'}) {
         /\./ && do {
             # This (hopefully) already has fieldnames in it, so we're done.
@@ -926,7 +926,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     }
     die "Invalid order: $::FORM{'order'}" unless
         $::FORM{'order'} =~ /^([a-zA-Z0-9_., ]+)$/;
-    
+
     # Extra special disgusting hack: if we are ordering by target_milestone,
     # change it to order by the sortkey of the target_milestone first.
     my $order = $::FORM{'order'};
@@ -1061,7 +1061,7 @@ while (@row = FetchSQLData()) {
             pnl "</TABLE>$tablestart";
         }
         push @bugarray, $bug_id;
-        
+
         # retrieve this bug's priority and severity, if available,
         # by looping through all column names -- gross but functional
         my $priority = "unknown";
@@ -1113,7 +1113,7 @@ while (@row = FetchSQLData()) {
 		    }else {
 			$value= sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
 		    }
-                }
+		}
                 if ($::needquote{$c} || $::needquote{$c} == 5) {
                     $value = html_quote($value);
                 } else {
@@ -1149,9 +1149,9 @@ if (Param('usequip')){
   $quip ||= "Bugzilla would like to put a random quip here, but nobody has entered any.";
 }
 
- 
+
 # We've done all we can without any output.  If we can server push it is time
-# take down the waiting page and put up the real one.       
+# take down the waiting page and put up the real one.
 if ($serverpush) {
     print "\n";
     print "--thisrandomstring\n";
@@ -1245,7 +1245,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
         @legal_versions = @{$::versions{$prod_list[0]}};
         @legal_component = @{$::components{$prod_list[0]}};
     }
-    
+
     my $version_popup = make_options(\@legal_versions, $::dontchange);
     my $platform_popup = make_options(\@::legal_platform, $::dontchange);
     my $priority_popup = make_options(\@::legal_priority, $::dontchange);
@@ -1392,7 +1392,7 @@ if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
         }
     }
     print "
-<INPUT TYPE=radio NAME=knob VALUE=reassign> 
+<INPUT TYPE=radio NAME=knob VALUE=reassign>
         <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bugs to
         <INPUT NAME=assigned_to SIZE=32
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"
@@ -1418,8 +1418,8 @@ To make changes to a bunch of bugs at once:
     $movers =~ s/\s?,\s?/|/g;
     $movers =~ s/@/\@/g;
 
-    if ( Param("move-enabled") 
-         && (defined $::COOKIE{"Bugzilla_login"}) 
+    if ( Param("move-enabled")
+         && (defined $::COOKIE{"Bugzilla_login"})
          && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
       print "<P>";
       print "<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"";
