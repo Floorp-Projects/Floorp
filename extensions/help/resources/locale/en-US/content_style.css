@@ -214,3 +214,7 @@ HR { border-top: solid }        /* 'border-bottom' could also have been used */
   font-family: arial, helvetica, sans-serif;
   font-size: 10px;
 }
+
+a[href^="http://"]:after { content: url("chrome://help/locale/images/web-links.png"); }
+
+

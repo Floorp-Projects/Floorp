@@ -101,6 +101,7 @@ en-US.jar:
         locale/en-US/help/images/key.gif                   (locale/en-US/images/key.gif)
         locale/en-US/help/images/help_nav.gif              (locale/en-US/images/help_nav.gif)
         locale/en-US/help/images/help_print.gif            (locale/en-US/images/help_print.gif)	
+        locale/en-US/help/images/web-links.png             (locale/en-US/images/web-links.png)
         locale/en-US/help/shortcuts.html                   (locale/en-US/shortcuts.html)
 
 modern.jar:
