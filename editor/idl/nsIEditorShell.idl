@@ -96,9 +96,10 @@ interface nsIEditorShell : nsISupports
   
   void Init();
   
-  /* Commands */
-  void Open();
+  /* check a particular window's URL to see if it matches the given URL */
+  boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindow inCheckWindow); 
 
+  /* Commands */
   /** 
    *  @param saveAs false to try to save to existing file
    *          If document is not already saved, it is treated as true
@@ -113,13 +114,8 @@ interface nsIEditorShell : nsISupports
    *          false if there is some problem with saving or user
    *          executed "Cancel" when prompted for a filename to save
    */  
-  boolean SaveDocument(in boolean saveAs, in boolean saveCopy);
+  boolean saveDocument(in boolean saveAs, in boolean saveCopy);
   
-  /** These are for simpler access and we ignore if user Cancels*/
-  /** This is SaveDocument(false, false) */
-  void Save();
-  /** This is SaveDocument(true, false) */
-  void SaveAs();
   /** Check if current document has changes and prompt to save if it does.
    *  return value:
    *         false ONLY if user executed "Cancel" in the SaveAs dialog

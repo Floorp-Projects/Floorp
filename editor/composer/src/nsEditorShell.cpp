@@ -1124,167 +1124,42 @@ nsEditorShell::TransferDocumentStateListeners()
   return NS_OK;
 }
 
-// Utility function to open an editor window and pass a URL to it.
-static nsresult OpenWindow( const char *chrome, const PRUnichar *url )
-{
-    nsCOMPtr<nsIDOMWindow> hiddenWindow;
-    JSContext *jsContext;
-    nsresult rv;
-    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
-    if (NS_SUCCEEDED(rv))
-    {
-        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                    &jsContext );
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Set up arguments for "window.openDialog"
-            void *stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "sssW",
-                                            chrome,
-                                            "_blank",
-                                            "chrome,dialog=no,all",
-                                            url );
-            if ( argv ) {
-                nsCOMPtr<nsIDOMWindow> newWindow;
-                rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               4,
-                                               getter_AddRefs( newWindow ) );
-                JS_PopArguments( jsContext, stackPtr );
-            }
-        }
-    }
-    return rv;
-}
-
-// this will AddRef the returned window, if any.
 NS_IMETHODIMP
-nsEditorShell::FindOpenWindowForFile(const PRUnichar* inFileURL, nsIDOMWindow** outFoundWindow)
+nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWindow* inCheckWindow, PRBool *aDidFind)
 {
-  if (!outFoundWindow) return NS_ERROR_NULL_POINTER;
+  if (!inCheckWindow) return NS_ERROR_NULL_POINTER;
+  *aDidFind = PR_FALSE;
   
-  *outFoundWindow = nsnull;
-
   // get an nsFileSpec from the URL
   nsFileURL    fileURL(inFileURL);
   nsFileSpec   fileSpec(fileURL);
   
-  nsresult rv;
-  static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-  // the "navigator:composer" string is on the window tag in the XUL
-  nsAutoString windowType("composer:html");
-  rv = windowMediator->GetEnumerator(windowType.GetUnicode(), getter_AddRefs(windowEnumerator));
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool more;
-
-  // get the (main) webshell for each window in the enumerator
-  windowEnumerator->HasMoreElements(&more);
-  while (more)
+  nsCOMPtr<nsIDOMWindow> contentWindow;
+  inCheckWindow->GetContent(getter_AddRefs(contentWindow));
+  if (contentWindow)
   {
-    nsCOMPtr<nsISupports> protoWindow;
-    rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
-    if (NS_SUCCEEDED(rv) && protoWindow)
+    // get the content doc
+    nsCOMPtr<nsIDOMDocument> contentDoc;          
+    contentWindow->GetDocument(getter_AddRefs(contentDoc));
+    if (contentDoc)
     {
-    	nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(protoWindow));
-    	// need to get to the content window
-    	if (domWindow)
-    	{
-    	  nsCOMPtr<nsIDOMWindow> contentWindow;
-    	  domWindow->GetContent(getter_AddRefs(contentWindow));
-        if (contentWindow)
+      nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(contentDoc));
+      if (diskDoc)
+      {
+        nsFileSpec docFileSpec;
+        if (NS_SUCCEEDED(diskDoc->GetFileSpec(docFileSpec)))
         {
-          // get the content doc
-          nsCOMPtr<nsIDOMDocument> contentDoc;          
-          contentWindow->GetDocument(getter_AddRefs(contentDoc));
-          if (contentDoc)
+          // is this the filespec we are looking for?
+          if (docFileSpec == fileSpec)
           {
-            nsCOMPtr<nsIDiskDocument> diskDoc(do_QueryInterface(contentDoc));
-            if (diskDoc)
-            {
-              nsFileSpec docFileSpec;
-              if (NS_SUCCEEDED(diskDoc->GetFileSpec(docFileSpec)))
-              {
-                // is this the filespec we are looking for?
-                if (docFileSpec == fileSpec)
-                {
-                  *outFoundWindow = domWindow;
-                  NS_ADDREF(*outFoundWindow);
-                  break;
-                }
-              }
-            }
+            *aDidFind = PR_TRUE;
           }
         }
-    	}
+      }
     }
-    
-    windowEnumerator->HasMoreElements(&more);
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::Open()
-{
-  nsresult  result;
-  
-  // GetLocalFileURL will do all the nsFileSpec/nsFileURL conversions,
-  // and return a "file:///" string
-  nsCOMPtr<nsIFileWidget>  fileWidget;
-
-  result = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
-  if (NS_FAILED(result) || !fileWidget)
-    return result;
-    
-  result = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-    {
-      // This was written for all local file getting
-      PRUnichar *fileURLString = nsnull;
-      nsAutoString filterType("html");
-      result = GetLocalFileURL(mContentWindow, filterType.GetUnicode(), &fileURLString);
-      if (NS_FAILED(result) || !fileURLString || !*fileURLString)
-        return result;
-      
-      // does the file URL correspond to any open windows?
-      nsCOMPtr<nsIDOMWindow> foundWindow;
-      result = FindOpenWindowForFile(fileURLString, getter_AddRefs(foundWindow));
-      if (NS_FAILED(result))
-      {
-        nsCRT::free(fileURLString);
-        return result;
-      }
-      
-      if (foundWindow)
-      {
-        // bring it to the front
-        foundWindow->Focus();
-        nsCRT::free(fileURLString);
-      	return NS_OK;
-      }
-      
-      // Open a new editor window on the specified file.
-      result = OpenWindow("chrome://editor/content", fileURLString);
-
-      // delete the string
-      nsCRT::free(fileURLString);
-      break;
-    }
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-
 }
 
 NS_IMETHODIMP    
@@ -1529,24 +1404,6 @@ SkipFilters:
       res = NS_ERROR_NOT_IMPLEMENTED;
   }
   return res;
-}
-
-// These are for convenience so the params to SaveDocument aren't as opaque in the UI
-// We ignore the result that tells us if user Canceled and action
-NS_IMETHODIMP
-nsEditorShell::Save()
-{
-  // Params: SaveAs, SavingCopy
-  PRBool result;
-  return SaveDocument(PR_FALSE, PR_FALSE, &result);
-}
-
-NS_IMETHODIMP    
-nsEditorShell::SaveAs()
-{
-  // Params: SaveAs, SavingCopy
-  PRBool result;
-  return SaveDocument(PR_TRUE, PR_FALSE, &result);
 }
 
 NS_IMETHODIMP    

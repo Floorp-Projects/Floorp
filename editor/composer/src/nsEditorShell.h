@@ -130,7 +130,6 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD      TransferDocumentStateListeners();
     NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-		NS_IMETHOD      FindOpenWindowForFile(const PRUnichar* fileURL, nsIDOMWindow** outFoundWindow);
 		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
 
