@@ -37,6 +37,7 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsApplicationManager.h"
+#include "nsString.h"
 
 #include "nsAppTest.h"
 
@@ -200,8 +201,11 @@ MyLoadImage(char *aFileName)
         nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
         if (NS_NewImageGroup(&gImageGroup) != NS_OK ||
             gImageGroup->Init(drawCtx) != NS_OK) {
-                ::MessageBox(NULL, "Couldn't create image group",
-                             class1Name, MB_OK);
+                nsString aMessage("Couldn't create image group");
+
+                NSApplicationManager::ModalMessage(aMessage, 
+                                                   class1Name, 
+                                                   eModalMessage_ok);
                 NS_RELEASE(drawCtx);
                 return;
             }
@@ -223,8 +227,12 @@ MyLoadImage(char *aFileName)
                                       observer,
                                       white, 0, 0, 0);
     if (gImageReq == NULL) {
-      ::MessageBox(NULL, "Couldn't create image request",
-                   class1Name, MB_OK);
+      
+      nsString aMessage("Couldn't create image request");
+
+      NSApplicationManager::ModalMessage(aMessage, 
+                                         class1Name, 
+                                         eModalMessage_ok);
     }
 }
 
@@ -265,6 +273,46 @@ OpenFileDialog(char *aBuffer, int32 aBufLen)
     return (PRBool)result;
 }
 
+nsEventStatus PR_CALLBACK 
+HandleEventApplication(nsGUIEvent *aEvent)
+{
+    nsEventStatus result = nsEventStatus_eConsumeNoDefault;
+    switch(aEvent->message) {
+
+        case NS_CREATE:
+        {
+          // Initialize image library
+          if (NS_NewImageManager(&gImageManager) != NS_OK ||
+              gImageManager->Init() != NS_OK) {
+                nsString aMessage("Can't initialize the image library");
+                NSApplicationManager::ModalMessage(aMessage, 
+                                                   class1Name, 
+                                                   eModalMessage_ok);
+          }	  
+
+          gImageManager->SetCacheSize(1024*1024);
+          return nsEventStatus_eConsumeNoDefault;
+        }
+        break ;
+
+        case NS_DESTROY:
+        {
+          MyInterrupt();
+          MyReleaseImages();
+          if (gImageGroup != nsnull) {
+              NS_RELEASE(gImageGroup);
+          }
+          if (gImageManager != nsnull) {
+              NS_RELEASE(gImageManager);
+          }
+          shellInstance->ExitApplication() ;
+        }
+        break ;
+    }
+
+    return nsEventStatus_eIgnore; 
+}
+
 long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
@@ -292,7 +340,7 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
             break;
       }
       break;
-
+/*
     case WM_CREATE:
       // Initialize image library
       if (NS_NewImageManager(&gImageManager) != NS_OK ||
@@ -314,7 +362,7 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
       }
       PostQuitMessage(0);
       break;
-
+*/
     default:
       break;
   }
@@ -365,6 +413,8 @@ nsresult RunAppTest(nsAppTest * aAppTest)
 
 void InitAppTest(nsAppTest * aAppTest)
 {
+    static NS_DEFINE_IID(kCChildWindowIID, NS_CHILD_CID);
+  
     nsresult res = NS_OK;
     
     res = NSApplicationManager::GetShellInstance(aAppTest, &shellInstance) ;
@@ -372,6 +422,22 @@ void InitAppTest(nsAppTest * aAppTest)
     if (res == NS_OK)
         gInstance = (HINSTANCE) shellInstance->GetNativeInstance();
 
+    nsRect rect(100, 100, 600, 600);
+
+    shellInstance->CreateApplicationWindow(rect, HandleEventApplication);
+
+    gHwnd = shellInstance->GetApplicationWindowNativeInstance();
+
+    nsRect rect2(0, 0, 620, 400);  
+
+    nsresult rv = NSRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
+
+    if (NS_OK == rv) {
+      gWindow->Create((nsNativeWindow)gHwnd, rect2, MyHandleEvent, NULL);
+    }
+
+    shellInstance->ShowApplicationWindow(PR_TRUE) ;
+/*
 //  if (!prevInstance) {
     WNDCLASS wndClass;
     wndClass.style = 0;
@@ -389,6 +455,6 @@ void InitAppTest(nsAppTest * aAppTest)
 
   // Create our first top level window
   HWND gHwnd = CreateTopLevel(class1Name, "Raptor HTML Viewer", 620, 400);
-
+*/
 }
 

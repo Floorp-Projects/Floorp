@@ -26,13 +26,25 @@
 #include "prmon.h"
 #include "plstr.h"
 #include "nsCom.h"
-#include "nsweb.h"
+#include "nsshell.h"
 #include "nsHashtable.h"
 #include "nsIShellInstance.h"
 #include "nsIApplicationShell.h"
 
 
-class NS_WEB NSApplicationManager {
+/**
+ * ModalMessage enums
+ */
+
+enum nsModalMessageType {   
+                  ///OK Modal Message
+                eModalMessage_ok,
+                  ///OK/CANCEL Modal Message
+                eModalMessage_ok_cancel,
+              }; 
+
+
+class NS_SHELL NSApplicationManager {
 private:
   static PRMonitor *monitor;
   static nsHashtable * applications;
@@ -51,6 +63,7 @@ public:
   static nsresult DeleteShellAssociation(nsIApplicationShell * aApplicationShell,
                                          nsIShellInstance *aShellInstance);
 
+  static nsresult ModalMessage(const nsString &aMessage, const nsString &aTitle, nsModalMessageType aModalMessageType);
 };
 
 #endif
