@@ -378,59 +378,8 @@ RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode**
 NS_IMETHODIMP
 RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
 {
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(aIndex != nsnull, "null ptr");
-    if (! aIndex)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-    PRInt32 count;
-    rv = GetCount(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 idx = 1; idx <= count; ++idx) {
-        nsCOMPtr<nsIRDFResource> ordinal;
-        rv = gRDFContainerUtils->IndexToOrdinalResource(idx, getter_AddRefs(ordinal));
-        if (NS_FAILED(rv)) return rv;
-
-        // Get all of the elements in the container with the specified
-        // ordinal. This is an ultra-paranoid way to do it, but -- due
-        // to aggregation, we may end up with a container that has >1
-        // element for the same ordinal.
-        nsCOMPtr<nsISimpleEnumerator> targets;
-        rv = mDataSource->GetTargets(mContainer, ordinal, PR_TRUE, getter_AddRefs(targets));
-        if (NS_FAILED(rv)) return rv;
-
-        while (1) {
-            PRBool hasMore;
-            rv = targets->HasMoreElements(&hasMore);
-            if (NS_FAILED(rv)) return rv;
-
-            if (! hasMore)
-                break;
-
-            nsCOMPtr<nsISupports> isupports;
-            rv = targets->GetNext(getter_AddRefs(isupports));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to read cursor");
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIRDFNode> element = do_QueryInterface(isupports);
-
-            if (element.get() != aElement)
-                continue;
-
-            // Okay, we've found it!
-            *aIndex = idx;
-            return NS_OK;
-        }
-    }
-
-    *aIndex = -1;
-    return NS_OK;
+    return gRDFContainerUtils->IndexOf(mDataSource, mContainer,
+                                       aElement, aIndex);
 }
 
 
