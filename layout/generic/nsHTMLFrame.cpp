@@ -105,23 +105,69 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   if (eReflowReason_Incremental == aReflowState.reason) {
-    // We don't expect the target of the reflow command to be the root frame
-#ifdef NS_DEBUG
-    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "no reflow command");
+    // See if we're the target frame
+    nsIFrame* targetFrame;
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      nsIReflowCommand::ReflowType  reflowType;
+      nsIFrame*                     childFrame;
 
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    NS_ASSERTION(target != this, "root frame is reflow command target");
-#endif
-  
-    // Verify that the next frame in the reflow chain is our pseudo frame
-    nsIFrame* next;
-    aReflowState.reflowCommand->GetNext(next);
-    NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
+      // Get the reflow type
+      aReflowState.reflowCommand->GetType(reflowType);
+
+      if ((nsIReflowCommand::FrameAppended == reflowType) ||
+          (nsIReflowCommand::FrameInserted == reflowType)) {
+        // Insert the frame into the child list
+        aReflowState.reflowCommand->GetChildFrame(childFrame);
+        if (nsnull == mFirstChild) {
+          mFirstChild = childFrame;
+        } else {
+          nsIFrame* lastChild = LastFrame(mFirstChild);
+          lastChild->SetNextSibling(childFrame);
+        }
+
+      } else if (nsIReflowCommand::FrameRemoved == reflowType) {
+        nsIFrame* deletedFrame;
+
+        // Get the child frame we should delete
+        aReflowState.reflowCommand->GetChildFrame(deletedFrame);
+
+        // Remove it from the child list
+        if (deletedFrame == mFirstChild) {
+          deletedFrame->GetNextSibling(mFirstChild);
+        } else {
+          nsIFrame* prevSibling = nsnull;
+          for (nsIFrame* f = mFirstChild; nsnull != f; f->GetNextSibling(f)) {
+            if (f == deletedFrame) {
+              break;
+            }
+
+            prevSibling = f;
+          }
+
+          if (nsnull != f) {
+            nsIFrame* nextSibling;
+
+            f->GetNextSibling(nextSibling);
+            NS_ASSERTION(nsnull != prevSibling, "null pointer");
+            prevSibling->SetNextSibling(nextSibling);
+          }
+        }
+        deletedFrame->SetNextSibling(nsnull);
+          
+        // Delete the frame
+        deletedFrame->DeleteFrame(aPresContext);
+      }
+
+    } else {
+      nsIFrame* nextFrame;
+      // Get the next frame in the reflow chain
+      aReflowState.reflowCommand->GetNext(nextFrame);
+      NS_ASSERTION(nextFrame == mFirstChild, "unexpected next reflow command frame");
+    }
   }
 
-  // Reflow our pseudo frame. It will choose whetever height its child frame
-  // wants
+  // Reflow our child frame
   if (nsnull != mFirstChild) {
     // Compute how much space to reserve for our border and padding
     const nsStyleSpacing* spacing =
