@@ -87,14 +87,14 @@ sub domakefile {
   my $srcdir;
   open MAKE, "<$dir/Makefile" or die "huh? $dir/Makefile";
   while ( <MAKE> ) {
-    if ( m#^\s*srcdir\s*=\s*(.*?mozilla.*?)\s*$# ) {
+    if ( m#^\s*srcdir\s*=\s*(\S*)# ) {
       $srcdir = $1;
       last;
     }
   }
   close MAKE;
 
-  $srcdir or die "No srcdir found";
+  $srcdir or die "No srcdir found in file $dir/Makefile";
 
   open MAKE, "<$srcdir/Makefile.in" or die "huh? $dir/Makefile, $srcdir/Makefile.in";
 
