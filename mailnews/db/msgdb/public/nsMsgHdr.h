@@ -53,6 +53,9 @@ public:
     NS_IMETHOD SetSubject(const char *subject);
     NS_IMETHOD SetStatusOffset(PRUint32 statusOffset);
 
+	NS_IMETHOD GetAuthor(nsString &resultAuthor);
+	NS_IMETHOD GetSubject(nsString &resultSubject);
+
     // flag handling routines
     NS_IMETHOD GetFlags(PRUint32 *result);
     NS_IMETHOD SetFlags(PRUint32 flags);

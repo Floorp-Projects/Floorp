@@ -501,6 +501,7 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsMsgHdr **pmsgHdr)
 			if (err == NS_OK)
 			{
 				*pmsgHdr = new nsMsgHdr(this, hdrRow);
+				(*pmsgHdr)->AddRef();
 			}
 			rowCursor->Release();
 		}
@@ -1171,7 +1172,10 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 	err  = GetStore()->NewRowWithOid(GetEnv(), m_hdrRowScopeToken,
 		&allMsgHdrsTableOID, &hdrRow);
 	if (err == NS_OK)
+	{
+		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdrRow);
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+	}
 	return err;
 }
 

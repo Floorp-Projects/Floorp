@@ -3,6 +3,7 @@
 #ifndef _MDB_
 #define _MDB_ 1
 
+#include "msgCore.h"
 // { %%%%% begin scalar typedefs %%%%%
 typedef unsigned char mdb_bool;  // unsigned byte with zero=false, nonzero=true
 typedef unsigned long mdb_id;    // unsigned object identity in a scope
@@ -297,6 +298,8 @@ class mdbRow;
 class mdbRowCellCursor;
 class mdbBlob;
 class mdbCell;
+class mdbCellImpl;
+
 // } %%%%% end class forward defines %%%%%
 
 // { %%%%% begin temporary dummy base class for class hierarchy %%%%%
@@ -309,6 +312,51 @@ protected:
 	int	mRefCnt;
 };
 // } %%%%% end temporary dummy base class for class hierarchy %%%%%
+
+
+typedef PRBool (*MDBCellArrayEnumFunc)(mdbCellImpl& aElement, void *aData);
+
+class MDBCellArray: public nsVoidArray
+{
+public:
+  MDBCellArray(void);
+  ~MDBCellArray(void);
+
+  MDBCellArray& operator=(const MDBCellArray& other);
+ 
+  PRInt32 Count(void) const {
+    return mCount;
+  }
+
+  void CellAt(PRInt32 aIndex, mdbCellImpl& acell) const;
+  mdbCellImpl* CellAt(PRInt32 aIndex) const;
+  mdbCellImpl* operator[](PRInt32 aIndex) const { return CellAt(aIndex); }
+
+  PRInt32 IndexOf(const mdbCellImpl& aPossibleCell) const;
+
+  PRBool InsertCellAt(const mdbCellImpl& aString, PRInt32 aIndex);
+
+  PRBool ReplaceCellAt(const mdbCellImpl& aString, PRInt32 aIndex);
+
+  PRBool AppendCell(const mdbCellImpl& aString) {
+    return InsertCellAt(aString, mCount);
+  }
+
+  PRBool RemoveCell(const mdbCellImpl& aString);
+  PRBool RemoveCellAt(PRInt32 aIndex);
+  void   Clear(void);
+
+  void Compact(void) {
+    nsVoidArray::Compact();
+  }
+
+  PRBool EnumerateForwards(MDBCellArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(MDBCellArrayEnumFunc aFunc, void* aData);
+
+private:
+  /// Copy constructors are not allowed
+  MDBCellArray(const MDBCellArray& other);
+};
 
 
 // { %%%%% begin C++ abstract class interfaces %%%%%
@@ -1433,7 +1481,7 @@ public:
     mdbEnv* ev, // context
     mdb_column inColumn) ; // the column to index if ever sorted
   // } ----- end index methods -----
-
+	nsVoidArray		m_rows;
 // } ===== end mdbTable methods =====
 };
 
@@ -1473,7 +1521,7 @@ public:
   // { ----- begin oid iteration methods -----
    mdb_err NextRowOid( // get row id of next row in the table
     mdbEnv* ev, // context
-    const mdbOid* outOid, // out row oid
+    mdbOid* outOid, // out row oid
     mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end oid iteration methods -----
 
@@ -1497,7 +1545,8 @@ public:
     const mdbOid* outOid, // out row oid
     mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end copy iteration methods -----
-
+	mdb_pos		m_pos;
+	mdbTable	*m_table;
 // } ===== end mdbTableRowCursor methods =====
 };
 
@@ -1560,6 +1609,9 @@ public:
   // } ----- end row methods -----
 
 // } ===== end mdbRow methods =====
+	MDBCellArray	m_cells;
+	mdbOid			m_oid;
+
 };
 
 /*| mdbRowCellCursor: cursor class for iterating row cells
@@ -1632,7 +1684,7 @@ public:
     mdbYarn* outYarn) ;  // writes some yarn slots 
   // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
   
-   mdb_err AliasYarn(mdbEnv* ev, 
+   virtual mdb_err AliasYarn(mdbEnv* ev, 
     mdbYarn* outYarn) ; // writes ALL yarn slots
   // AliasYarn() reveals sensitive internal text buffer state to the caller
   // by setting mYarn_Buf to point into the guts of this text implementation.
@@ -1756,6 +1808,19 @@ class mdbCell : public mdbBlob { // text attribute in row with column scope
 };
 
 // } %%%%% end C++ abstract class interfaces %%%%%
+
+class mdbCellImpl : public mdbCell
+{
+public:
+	mdbCellImpl() {}
+	mdbCellImpl(const mdbCellImpl &anotherCell);
+	mdbCellImpl& operator=(const mdbCellImpl& other);
+	virtual mdb_err AliasYarn(mdbEnv* ev, mdbYarn* outYarn) ; 
+	mdb_column	m_column;
+	PRBool		Equals(const mdbCellImpl& other);
+	char		*m_cellValue;
+};
+
 
 #endif /* _MDB_ */
 

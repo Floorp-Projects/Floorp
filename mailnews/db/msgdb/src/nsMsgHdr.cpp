@@ -280,6 +280,16 @@ NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
 	return SetPriority(nsMsgPriority_Normal);
 }
 
+NS_IMETHODIMP nsMsgHdr::GetAuthor(nsString &resultAuthor)
+{
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetSubject(nsString &resultSubject)
+{
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+}
+
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 {
 	struct mdbYarn yarn;
