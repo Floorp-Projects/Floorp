@@ -239,7 +239,7 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999062217">
+<!ENTITY  buildId.label "Build ID: 1999062312">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -372,9 +372,11 @@
 	      <menuitem name="&useStlyleSheetBizarreCmd.label;" onclick="BrowserReload();"/>
       </menu>
       <separator />
-      <menuitem name="&reloadCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&reloadCmd.label;" id="menuitem-reload" onclick="BrowserReallyReload(0);"/>
+       
       <menuitem name="&showImagesCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&stopCmd.label;" id="menuitem-stop" onclick="BrowserStop();"/>
+        
       <separator />
       <menuitem name="&pageSourceCmd.label;" onclick="BrowserViewSource();"/>
       <menuitem name="&pageInfoCmd.label;" onclick="BrowserReload();"/>
@@ -619,9 +621,13 @@
 				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
 	      </titledbutton>
 
+        // Right now only regular reload is supported. 
+        // When the functionality is available, look for 
+        // 'Shift' key pressed state and pass on appropriate
+        // reload type
 	      <titledbutton id="reload-button" align="bottom" value="&reloadButton.label;" 
-				  onclick="window.frames[0].frames[1].location.reload()">
-				  <observes element="canReload" attribute="disabled"/>
+				  onclick="BrowserReallyReload(0)">
+				  <observes element="canReload" attribute="disabled" onChange="BrowserSetReload()" />
 	      </titledbutton>
 
 	      <titledbutton id="stop-button" align="bottom" value="&stopButton.label;" 
