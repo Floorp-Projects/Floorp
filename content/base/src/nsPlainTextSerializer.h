@@ -164,6 +164,11 @@ protected:
   // The width of the line as it will appear on the screen (approx.) 
   PRUint32         mCurrentLineWidth; 
 
+  // Treat quoted text as though it's preformatted -- don't wrap it.
+  // Having it on a pref is a temporary measure, See bug 69638.
+  PRInt32          mSpanLevel;
+  PRBool           mQuotesPreformatted;
+
   PRBool           mDoFragment;
   PRInt32          mEmptyLines; // Will be the number of empty lines before
                                 // the current. 0 if we are starting a new

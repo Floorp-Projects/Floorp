@@ -237,6 +237,10 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
   res = CreateListOfNodesToPaste(fragmentAsNode, address_of(nodeList), rangeStartHint, rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);
   
+  PRUint32 cc;
+
+  nodeList->Count(&cc);
+  
   // are there any table elements in the list?  
   // node and offset for insertion
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -369,6 +373,9 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
     {
       nsCOMPtr<nsISupports> isupports = dont_AddRef(nodeList->ElementAt(j));
       nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+
+      nsString namestr;
+      curNode->GetNodeName(namestr);
 
       NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
       NS_ENSURE_TRUE(curNode != fragmentAsNode, NS_ERROR_FAILURE);
@@ -583,6 +590,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         PRUnichar* text = nsnull;
 
         textDataObj->ToString ( &text );
+        nsAutoString debugDump (text);
         stuffToPaste.Assign ( text, len / 2 );
         nsAutoEditBatch beginBatching(this);
         rv = InsertHTMLWithContext(stuffToPaste, aContextStr, aInfoStr);
@@ -1306,6 +1314,14 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
   nsresult rv;
+
+  // The quotesPreformatted pref is a temporary measure. See bug 69638.
+  // Eventually we'll pick one way or the other.
+  PRBool quotesInPre;
+  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+    rv = prefs->GetBoolPref("editor.quotesPreformatted", &quotesInPre);
+
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection
   nsCOMPtr<nsISelection> selection;
@@ -1326,7 +1342,12 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
     if (!handled)
     {
       // Wrap the inserted quote in a <pre> so it won't be wrapped:
-      nsAutoString tag; tag.AssignWithConversion("pre");
+      nsAutoString tag;
+      if (quotesInPre)
+        tag.Assign(NS_LITERAL_STRING("pre"));
+      else
+        tag.Assign(NS_LITERAL_STRING("span"));
+
       rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
       
       // If this succeeded, then set selection inside the pre
@@ -1565,6 +1586,11 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
   NS_ENSURE_SUCCESS(res, res);
   res = docFragRange->SetEnd(endParent, endOffset);
   NS_ENSURE_SUCCESS(res, res);
+
+  nsAutoString str;
+  docFragRange->ToString(str);
+  nsCOMPtr<nsIContent> root = do_QueryInterface(aFragmentAsNode);
+  if (root)  root->List(stdout);
 
   // now use a subtree iterator over the range to create a list of nodes
   nsTrivialFunctor functor;
