@@ -257,6 +257,35 @@ function InitMessageMenu()
   document.commandDispatcher.updateCommands('create-menu-message');
 }
 
+function InitViewHeadersMenu()
+{
+  var id = null;
+  var headerchoice = 1;
+  try 
+  {
+    headerchoice = pref.getIntPref("mail.show_headers");
+  }
+  catch (ex) 
+  {
+    dump("failed to get the header pref\n");
+  }
+
+  switch (headerchoice) 
+  {
+	case 2:	
+		id = "viewallheaders";
+		break;
+	case 1:	
+	default:
+		id = "viewnormalheaders";
+		break;
+  }
+
+  var menuitem = document.getElementById(id);
+  if (menuitem)
+    menuitem.setAttribute("checked", "true"); 
+}
+
 function IsNewsMessage(messageUri)
 {
     if (!messageUri) return false;

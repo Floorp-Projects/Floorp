@@ -444,45 +444,10 @@ function OnLoadMessenger()
   // FIX ME - later we will be able to use onload from the overlay
   OnLoadMsgHeaderPane();
 
-	var id = null;
-	var headerchoice = null;
+  gHaveLoadedMessage = false;
 
-	try {
-		headerchoice = pref.getIntPref("mail.show_headers");
-	}
-	catch (ex) {
-		dump("failed to get the header pref\n");
-	}
-
-	switch (headerchoice) {
-		case 2:	
-			id = "viewallheaders";
-			break;
-		case 0:
-			id = "viewbriefheaders";
-			break;
-		case 1:	
-			id = "viewnormalheaders";
-			break;
-		default:
-			id = "viewnormalheaders";
-			break;
-	}
-
-	var menuitem = document.getElementById(id);
-
-	try {
-		// not working right yet.  see bug #??????
-		// menuitem.setAttribute("checked", "true"); 
-	}
-	catch (ex) {
-		dump("failed to set the view headers menu item\n");
-	}
-
-	gHaveLoadedMessage = false;
-
-	//Set focus to the Thread Pane the first time the window is opened.
-	SetFocusThreadPane();
+  //Set focus to the Thread Pane the first time the window is opened.
+  SetFocusThreadPane();
 }
 
 function OnUnloadMessenger()

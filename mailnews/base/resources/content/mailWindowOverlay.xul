@@ -995,7 +995,7 @@ Rights Reserved.
         </menupopup>
       </menu>
       <menu id="viewheadersmenu" label="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
-        <menupopup>
+        <menupopup  onpopupshowing="InitViewHeadersMenu();">
           <menuitem id="viewallheaders"
            type="radio"
            name="viewheadergroup"
