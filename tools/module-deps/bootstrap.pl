@@ -46,7 +46,8 @@ END_USAGE
 
 # Globals.
 my $root_modules = 0;  # modules we want to build.
-my $skip_cvs = 0;
+my $skip_cvs = 0;      # Skip all cvs checkouts.
+my $skip_core_cvs = 0; # Only skip core cvs checkout, useful for hacking.
 
 sub parse_args() {
   PrintUsage() if $#ARGV < 0;
@@ -55,7 +56,8 @@ sub parse_args() {
   # Print usage if we get an unknown argument.
   PrintUsage() if !GetOptions('module=s' => \$root_modules,
                               'modules=s' => \$root_modules,
-                              'skip-cvs' => \$skip_cvs);
+                              'skip-cvs' => \$skip_cvs,
+                              'skip-core-cvs' => \$skip_core_cvs);
   if ($root_modules) {
     print "root_modules = $root_modules\n";
 
@@ -155,7 +157,7 @@ sub FindMakefiles {
   # Module map file is currently mozilla/tools/module-deps/all.dot
 
   # Pull core build stuff.
-  unless($skip_cvs) {
+  unless($skip_cvs || $skip_core_cvs) {
     print "\n\nPulling core build files...\n";
     my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/configure.in mozilla/aclocal.m4 mozilla/Makefile.in mozilla/build mozilla/include mozilla/tools/module-deps";
     $rv = run_shell_command("cvs co $core_build_files");
