@@ -38,11 +38,7 @@ CPPSRCS = nsModule.cpp \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-<<<<<<< Makefile.in
-DEFINES += -DPSTOREC_DLL=\"$(WINDIR)\\system32\\pstorec.dll\"
-=======
 DEFINES += -DPSTOREC_DLL=\"$(subst \,\\,$(WINDIR))\\system32\\pstorec.dll\"
->>>>>>> 1.19
 
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
 endif
