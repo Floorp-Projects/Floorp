@@ -5707,11 +5707,11 @@ FFRESubstituteEncoding(nsACString &aFFREName,
 nsFontGTK*
 nsFontMetricsGTK::TryNodes(nsACString &aFFREName, PRUint32 aChar)
 {
-  FIND_FONT_PRINTF(("        TryNodes aFFREName = %s", 
-                        PromiseFlatCString(aFFREName).get()));
-  const char *FFREName = PromiseFlatCString(aFFREName).get();
+  const nsPromiseFlatCString& FFREName = PromiseFlatCString(aFFREName);
+
+  FIND_FONT_PRINTF(("        TryNodes aFFREName = %s", FFREName.get()));
   nsCStringKey key(FFREName);
-  PRBool anyFoundry = (FFREName[0] == '*');
+  PRBool anyFoundry = (FFREName.First() == '*');
   nsFontNodeArray* nodes = (nsFontNodeArray*) gCachedFFRESearches->Get(&key);
   if (!nodes) {
     nsCAutoString pattern;
