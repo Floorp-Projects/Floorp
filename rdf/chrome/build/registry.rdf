@@ -88,12 +88,12 @@
   
   </chrome>
   
-  <chrome r:ID="chrome://editordialogs/">
+  <chrome ID="chrome://editordlgs/">
     <skin> 
-      <RDF:Description ID="chrome://editordialogs/skin/">
+      <RDF:Description ID="chrome://editordlgs/skin/">
 	    <base>resource:/chrome/editor/dialogs/skin/</base>
         <main>EditorDialog.css</main> 
-      </r:Description> 
+      </RDF:Description> 
     </skin> 
 
     <content> 
