@@ -46,9 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= profile
 
-PREF_JS_EXPORTS = \
-    $(srcdir)/profile/all.js \
-    $(NULL)
+PREF_FILES = $(srcdir)/profile/all.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = MozillaFirebird$(BIN_SUFFIX)
@@ -222,6 +220,12 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/default.xpm $(DESTDIR)$(mozappdir)/icons
 endif
+
+export:: $(PREF_FILES)
+	@for i in $(PREF_FILES); do rm -f $(DIST)/bin/defaults/pref/`basename $$i`; $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/defaults/pref/`basename $$i`; done
+
+install:: $(PREF_FILES)
+	@for i in $(PREF_FILES); do rm -f $(DESTDIR)$(mozappdir)/defaults/pref/`basename $$i`; $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/defaults/pref/`basename $$i`; done
 
 libs::
 	touch $(DIST)/bin/.autoreg
