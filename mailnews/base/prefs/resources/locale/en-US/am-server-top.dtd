@@ -2,12 +2,12 @@
 
 <!ENTITY serverSettings.label "Server Settings">
 <!-- LOCALIZATION NOTE (popServer.label) : do not translate "POP" in below line -->
-<!ENTITY popServer.label "POP Mail server">
+<!ENTITY popServer.label "POP Mail Server">
 <!-- LOCALIZATION NOTE (imapServer.label) : do not translate "IMAP" in below line -->
-<!ENTITY imapServer.label "IMAP Mail server">
+<!ENTITY imapServer.label "IMAP Mail Server">
 <!-- LOCALIZATION NOTE (newsServer.label) : do not translate "NNTP" in below line -->
-<!ENTITY newsServer.label "News Server (NNTP)">
-<!ENTITY webmail.label "Web mail account">
+<!ENTITY newsServer.label "News (NNTP) Server">
+<!ENTITY webmail.label "WebMail account">
 <!ENTITY serverType.label "Server Type:">
 <!ENTITY serverName.label "Server Name:">
 <!ENTITY userName.label "User Name:">
