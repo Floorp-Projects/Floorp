@@ -41,7 +41,7 @@
 /* static */ void
 nsAtomListUtils::AddRefAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
 {
-    for (nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
+    for (const nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
          info != info_end; ++info) {
         *(info->mAtom) = NS_NewPermanentAtom(info->mString);
     }
@@ -50,7 +50,7 @@ nsAtomListUtils::AddRefAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
 /* static */ void
 nsAtomListUtils::ReleaseAtoms(const nsAtomListInfo* aInfo, PRUint32 aCount)
 {
-    for (nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
+    for (const nsAtomListInfo *info = aInfo, *info_end = aInfo + aCount;
          info != info_end; ++info) {
         NS_RELEASE(*(info->mAtom));
     }
@@ -61,7 +61,7 @@ nsAtomListUtils::IsMember(nsIAtom *aAtom,
                           const nsAtomListInfo* aInfo,
                           PRUint32 aInfoCount)
 {
-    for (nsAtomListInfo *info = aInfo, *info_end = aInfo + aInfoCount;
+    for (const nsAtomListInfo *info = aInfo, *info_end = aInfo + aInfoCount;
          info != info_end; ++info) {
         if (aAtom == *(info->mAtom))
             return PR_TRUE;
