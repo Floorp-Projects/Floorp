@@ -35,3 +35,4 @@ Contributor(s):
 <!ENTITY advFeaturesSectionHdr.label  "Advanced Features"> 
 <!ENTITY searchMsgsLink.label         "Search messages"> 
 <!ENTITY filtersLink.label            "Create message filters">
+<!ENTITY offlineLink.label            "Offline settings">

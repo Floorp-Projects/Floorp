@@ -1,7 +1,7 @@
 <!ENTITY offlineSettings.label "Offline &amp; Disk Space">
 <!ENTITY offlineDesc.label "Offline enables you to download your messages locally so that they are available when you are disconnected from the server. Use the &quot;Select&quot; button to choose which messages will be available when you are offline.">
-<!ENTITY offlinePopDesc.label "Message are stored locally on your computer. Use the following settings to save disk space.">
-<!ENTITY offlineMsg.label "Offline messages are downloaded and stored locally on your computer. Use the following settings to save download time and disk space.">
+<!ENTITY offlinePopDesc.label "Messages are stored locally on your computer. Use the following settings to save disk space.">
+<!ENTITY offlineMsg.label "To save download time and disk space:">
 <!ENTITY offlineNewFolder.label "When I create new folders, select them for offline">
 <!ENTITY offlineNewFolder.accesskey "h">
 <!ENTITY offlineRemove.label "Remove message bodies only older than">
@@ -30,3 +30,8 @@
 <!ENTITY nntpRemoveBody.label "Remove message bodies only older than">
 <!ENTITY nntpRemoveBody.accesskey "m">
 <!ENTITY offlineSelect.label "Select...">
+<!ENTITY offlineNntpDesc.label "You can download your messages locally so that they are available when you are working offline. Use the &quot;Select&quot; button to choose which newsgroups will be available when you are working offline.">
+<!ENTITY offlineImapDesc.label "You can download your messages locally so that they are available when you are working offline.">
+<!ENTITY selectButtonDesc.label "Use the &quot;Select&quot; button to choose which folders will be available when you are working offline.">
+<!ENTITY makeInboxMsgsAvailable.label "Make the messages in my Inbox available when I am working offline">
+<!ENTITY makeInboxMsgsAvailable.accesskey "b">
