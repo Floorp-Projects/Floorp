@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 XPIDL_MODULE	= xpcom_glue
-LIBRARY_NAME	= xpcomglue_s
+LIBRARY_NAME	= xpcomglue
 
 REQUIRES	= string
 

@@ -41,7 +41,6 @@ CPPSRCS		= \
 		nsDebug.cpp \
 		nsIInterfaceRequestor.cpp \
 		nsTraceRefcnt.cpp \
-		nsCOMPtr.cpp \
 		nsID.cpp \
 		nsCWeakReference.cpp \
 		nsWeakReference.cpp \
@@ -60,7 +59,6 @@ EXPORTS		= \
 		nsAgg.h \
 		nsIAllocator.h \
 		nsMemory.h \
-		nsCOMPtr.h \
 		nsCom.h \
 		nsComObsolete.h \
 		nsCWeakReference.h \
