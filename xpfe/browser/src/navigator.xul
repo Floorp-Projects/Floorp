@@ -26,7 +26,7 @@
   <broadcaster id="Browser:OnStopBinding"/>
   <broadcaster id="Browser:Security" secure="false"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
-  <broadcaster id="args" value="resource:/res/samples/BrowserInitPage.html"/>
+  <broadcaster id="args" value="http://www.mozilla.org/quality/smoketests/"/>
 
 
   <menubar>
