@@ -49,7 +49,7 @@ interface nsIImapHostSessionList;
 interface nsIMsgWindow;
 
 [scriptable, uuid(132231ca-c796-11d3-b9f5-00108335942a)]
-interface nsIImapProtocol : nsIStreamListener {
+interface nsIImapProtocol : nsISupports {
 	/////////////////////////////////////////////////////////////////////////
 	/* LoadUrl should really be pushed into a generic protocol interface
 	// I think. Imap happens to be the only case where we need to push back
@@ -79,9 +79,7 @@ interface nsIImapProtocol : nsIStreamListener {
 	/////////////////////////////////////////////////////////////////////////
 	void Initialize(in nsIImapHostSessionList aHostSessionList, in nsIEventQueue aSinkEventQueue) ;
 
-    void GetThreadEventQueue(out nsIEventQueue aEventQueue);
-
-    void NotifyFEEventCompletion();
+  void NotifyFEEventCompletion();
 
 	void NotifyHdrsToDownload(out unsigned long keys, in unsigned long keyCount);
 	void NotifyBodysToDownload(out unsigned long keys, in unsigned long count);
@@ -91,17 +89,17 @@ interface nsIImapProtocol : nsIStreamListener {
 
 	void GetRunningImapURL(out nsIImapUrl aImapUrl);
 
-    void GetRunningUrl(out nsIURI aUrl);
+  void GetRunningUrl(out nsIURI aUrl);
 
-    // Tell thread to die
-    void TellThreadToDie(in boolean isSafeToDie);
-    // Get last active time stamp
-    void GetLastActiveTimeStamp(out PRTime aTimeStamp);
+  // Tell thread to die
+  void TellThreadToDie(in boolean isSafeToDie);
+  // Get last active time stamp
+  void GetLastActiveTimeStamp(out PRTime aTimeStamp);
 
 	void pseudoInterruptMsgLoad(in nsIMsgFolder imapFolder, in nsIMsgWindow aMsgWindow, out boolean interrupted);
-    void GetSelectedMailboxName(out string folderName);
-    // Reset folder connection to authenticated state
-    void ResetToAuthenticatedState();
+  void GetSelectedMailboxName(out string folderName);
+  // Reset folder connection to authenticated state
+  void ResetToAuthenticatedState();
 
 	void OverrideConnectionInfo(in wstring pHost, in unsigned short pPort, in string pCookieData);
 };
