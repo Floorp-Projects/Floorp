@@ -33,7 +33,7 @@
 #include "nsINetDataDiskCache.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-//#define FILE_CACHE_IS_READY
+#define FILE_CACHE_IS_READY
 // Limit the number of entries in the cache to conserve memory space
 // in the nsReplacementPolicy code
 #define MAX_MEM_CACHE_ENTRIES    800
@@ -44,33 +44,6 @@
 #define DEFAULT_DISK_CACHE_CAPACITY   10000
 const char* CACHE_MEM_CAPACITY = "browser.cache.memory_cache_size";
 const char* CACHE_DISK_CAPACITY = "browser.cache.disk_cache_size";
-
-
-#define CACHE_HIGH_WATER_MARK(capacity) ((PRUint32)(0.98 * (capacity)))
-#define CACHE_LOW_WATER_MARK(capacity)  ((PRUint32)(0.97 * (capacity)))
-
-nsCacheManager* gCacheManager = 0;
-
-NS_IMPL_ISUPPORTS(nsCacheManager, NS_GET_IID(nsINetDataCacheManager))
-
-nsCacheManager::nsCacheManager()
-    : mActiveCacheRecords(0),
-    mDiskCacheCapacity(DEFAULT_DISK_CACHE_CAPACITY),
-    mMemCacheCapacity(DEFAULT_MEMORY_CACHE_CAPACITY)
-{
-    NS_ASSERTION(!gCacheManager, "Multiple cache managers created");
-    gCacheManager = this;
-    NS_INIT_REFCNT();
-}
-
-nsCacheManager::~nsCacheManager()
-{
-    gCacheManager = 0;
-    delete mActiveCacheRecords;
-    delete mMemSpaceManager;
-    delete mDiskSpaceManager;
-}
-
 
 static int diskCacheSizeChanged(const char *pref, void *closure)
 {
@@ -95,6 +68,39 @@ static int memCacheSizeChanged(const char *pref, void *closure)
 	}
 	return ( (nsCacheManager*)closure )->SetMemCacheCapacity( capacity );	
 }
+
+#define CACHE_HIGH_WATER_MARK(capacity) ((PRUint32)(0.98 * (capacity)))
+#define CACHE_LOW_WATER_MARK(capacity)  ((PRUint32)(0.97 * (capacity)))
+
+nsCacheManager* gCacheManager = 0;
+
+NS_IMPL_ISUPPORTS(nsCacheManager, NS_GET_IID(nsINetDataCacheManager))
+
+nsCacheManager::nsCacheManager()
+    : mActiveCacheRecords(0),
+    mDiskCacheCapacity(DEFAULT_DISK_CACHE_CAPACITY),
+    mMemCacheCapacity(DEFAULT_MEMORY_CACHE_CAPACITY)
+{
+    NS_ASSERTION(!gCacheManager, "Multiple cache managers created");
+    gCacheManager = this;
+    NS_INIT_REFCNT();
+}
+
+nsCacheManager::~nsCacheManager()
+{
+    gCacheManager = 0;
+    delete mActiveCacheRecords;
+    delete mMemSpaceManager;
+    delete mDiskSpaceManager;
+	  nsresult rv;
+	  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+		if ( NS_SUCCEEDED (rv ) )
+		{
+			prefs->UnregisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
+			prefs->UnregisterCallback( CACHE_MEM_CAPACITY, memCacheSizeChanged, this); 
+		}
+}
+
 
 nsresult nsCacheManager::InitPrefs()
 {
@@ -198,7 +204,7 @@ nsresult nsCacheManager::GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDa
 	PRBool diskCacheEnabled = PR_FALSE;
 	if ( mDiskCache.get() )
 		mDiskCache->GetEnabled( &diskCacheEnabled );
-		
+
   if (aFlags & CACHE_AS_FILE) {
       if ( diskCacheEnabled )
      	 cache = mDiskCache;
