@@ -480,14 +480,14 @@ void nsComboboxButtonAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBounding
   if (!context)
     return;
 
-  frame->FirstChild(context, nsnull, &frame);
+  *aBoundingFrame = frame;  // bounding frame is the ComboboxControlFrame
+  frame->FirstChild(context, nsnull, &frame); // first frame is for the textfield
 #ifdef DEBUG
   if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
     return;
 #endif
 
-  frame->GetNextSibling(aBoundingFrame);
-  frame->GetNextSibling(&frame);
+  frame->GetNextSibling(&frame);  // sibling frame is for the button
 #ifdef DEBUG
   if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::gfxButtonControlFrame))
     return;
