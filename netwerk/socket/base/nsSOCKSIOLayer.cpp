@@ -534,7 +534,9 @@ ConnectSOCKS4(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
         return NS_ERROR_FAILURE;
     }
     
-    if (response[0] != 0x00) {
+    if ((response[0] != 0x00) && (response[0] != 0x04)) {
+        // Novell BorderManager sends a response of type 4, should be zero
+        // According to the spec. Cope with this brokenness.        
         // it's not a SOCKS 4 reply or version 0 of the reply code
         LOGERROR(("Not a SOCKS 4 reply. Expected: 0; received: %x.", response[0]));
         return NS_ERROR_FAILURE;
