@@ -86,6 +86,7 @@ public:
     NS_IMETHOD              GetClientBounds(nsRect &aRect);
     NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
     NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+    NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 protected:
 
@@ -123,6 +124,7 @@ protected:
     //PRInt32           mWidth;
     //PRInt32           mHeight;
     nsRect            mBounds;
+    nsIWidget        *mVScrollbar;
 
     // keep the list of children
     class Enumerator : public nsIBidirectionalEnumerator {

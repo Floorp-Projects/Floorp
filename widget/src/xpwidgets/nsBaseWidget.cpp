@@ -787,4 +787,10 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
+NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
+{
+  mVScrollbar = aWidget;
+  return NS_OK;
+}
+
 
