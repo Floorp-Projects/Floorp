@@ -1336,7 +1336,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
       switch (accelKey)
       {
         case nsIDOMKeyEvent::DOM_VK_META:
-          aAccelString += NS_LITERAL_STRING("Ctrl");
+          aAccelString += NS_LITERAL_STRING("Meta");
           break;
 
         case nsIDOMKeyEvent::DOM_VK_ALT:
