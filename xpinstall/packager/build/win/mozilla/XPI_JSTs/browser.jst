@@ -462,10 +462,7 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if( err == SUCCESS )
   {
-    fileToRegister = getFolder(fProgram, "ISimpleDOMNodeMarshal.dll");
-    err2           = File.windowsRegisterServer(fileToRegister);
-    logComment("windowsRegisterServer() returned: " + err2);
-    fileToRegister = getFolder(fProgram, "ISimpleDOMDocumentMarshal.dll");
+    fileToRegister = getFolder(fProgram, "AccessibleMarshal.dll");
     err2           = File.windowsRegisterServer(fileToRegister);
     logComment("windowsRegisterServer() returned: " + err2);
     updateWinReg();  // Finish registering above marshalling dll's

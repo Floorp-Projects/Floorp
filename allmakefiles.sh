@@ -926,8 +926,6 @@ fi
        accessible/Makefile
        accessible/public/Makefile
        accessible/public/msaa/Makefile
-       accessible/public/msaa/ISimpleDOMNode/Makefile
-       accessible/public/msaa/ISimpleDOMDocument/Makefile
        accessible/src/Makefile
        accessible/src/base/Makefile
        accessible/src/html/Makefile

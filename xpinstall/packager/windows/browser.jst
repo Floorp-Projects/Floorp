@@ -383,6 +383,8 @@ function upgradeCleanup()
   deleteThisFile("Program",    "gkwidget.dll");
   deleteThisFile("Program",    "jpeg3250.dll");
   deleteThisFile("Program",    "mozreg.dll");
+  deleteThisFile("Program",    "ISimpleDOMNode.dll");
+  deleteThisFile("Program",    "ISimpleDOMDocument.dll");
   deleteThisFile("Program",    "defaults/pref/config.js");
   deleteThisFile("Program",    "defaults/pref/initpref.js");
   deleteThisFile("Program",    "defaults/pref/psm-glue.js");
@@ -624,10 +626,7 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if( err == SUCCESS )
   {
-    fileToRegister = getFolder(fProgram, "ISimpleDOMNodeMarshal.dll");
-    err2           = File.windowsRegisterServer(fileToRegister);
-    logComment("windowsRegisterServer() returned: " + err2);
-    fileToRegister = getFolder(fProgram, "ISimpleDOMDocumentMarshal.dll");
+    fileToRegister = getFolder(fProgram, "AccessibleMarshal.dll");
     err2           = File.windowsRegisterServer(fileToRegister);
     logComment("windowsRegisterServer() returned: " + err2);
     updateWinReg();  // Finish registering above marshalling dll's
