@@ -102,10 +102,6 @@ nsTextTransformer::Shutdown()
   }
 }
 
-// XXX I'm sure there are other special characters
-#define CH_NBSP 160
-#define CH_SHY  173
-
 // For now, we have only a single character to strip out. If we get
 // any more, change this to use a bitset to lookup into.
 #define IS_DISCARDED(_ch) \
@@ -223,6 +219,7 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen)
       // Strip discarded characters from the transformed output
       continue;
     }
+    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -416,6 +413,7 @@ nsTextTransformer::ScanPreAsciiData_F(PRInt32* aWordLen)
     else if (IS_DISCARDED(ch)) {
       continue;
     }
+    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == endbp) {
       PRInt32 oldLength = bp - mTransformBuf.GetBuffer();
       nsresult rv = mTransformBuf.GrowBy(1000);
@@ -580,6 +578,7 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
     else if (IS_DISCARDED(ch)) {
       continue;
     }
+    if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
       nsresult rv = mTransformBuf.GrowBy(1000);
