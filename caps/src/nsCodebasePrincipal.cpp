@@ -326,7 +326,7 @@ nsCodebasePrincipal::Write(nsIObjectOutputStream* aStream)
     rv = nsBasePrincipal::Write(aStream);
     if (NS_FAILED(rv)) return rv;
 
-    return aStream->WriteObject(mURI, PR_TRUE);
+    return aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
 }
 
 /////////////////////////////////////////////
