@@ -83,10 +83,14 @@ public final class LazilyLoadedCtor {
                     try {
                         ScriptableObject.defineClass(obj, cl, sealed);
                         isReplaced = true;
+                    } catch (RhinoException e) {
+                        throw e;
                     } catch (SecurityException ex) {
                         removeOnError = true;
-                    } catch (Exception e) {
-                        throw Context.throwAsScriptRuntimeEx(e);
+                    } catch (Throwable ex) {
+                        // Ignore any other erors. Due to lazily class loading
+                        // it may indicate absence of some necessary classes.
+                        removeOnError = true;
                     }
                 }
                 if (removeOnError) {
