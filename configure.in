@@ -29,8 +29,10 @@ dnl AC_CONFIG_HEADER(include/config.h nsprpub/include/config.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 
-dnl Set this define to make fixes w/o breaking anything else
+dnl Set this define to make fixes w/o breaking anything else.
 AC_DEFINE(USE_AUTOCONF)
+
+dnl Always set this for mozilla.
 AC_DEFINE(MOZILLA_CLIENT)
 
 dnl d=`pwd`
@@ -388,29 +390,33 @@ else
 fi  
 CC=$_SAVE_CC
 
-dnl Mozilla specific options
-dnl ========================================================
+# Mozilla specific options
+# ========================================================
+dnl builtin(include, build/autoconf/mozconfig.in)dnl
+
+dnl nglayout only supports building with one toolkit
+dnl so ignore everything after the first,
 dnl nglayout only supports building with one toolkit
 dnl so ignore everything after the first ,
-AC_ARG_ENABLE(toolkit,
+AM_ARG_ENABLE_STRING(toolkit,
 [  --enable-toolkit=\$val	  enable \$val fe (defaults to gtk)],
-    [ 
-      res=`echo $target_os| grep -c "^Rhapsody"`;
-      if test "$enableval" != "motif" && test "$enableval" != "gtk" && test $res = 0; then
-	AC_MSG_ERROR(Toolkit must be either gtk or motif.)
-      else
-	MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*//g" `
-      fi 
-    ], 
-    MOZ_TOOLKIT=USE_DEFAULT)
+dnl [Toolkit must be either "gtk" or "Motif" (except on Rhapsody.)],
+[ 
+  res=`echo $target_os| grep -c "^Rhapsody"`;
+  if test "$enableval" != "motif" && test "$enableval" != "gtk" && test $res = 0; then
+    AC_MSG_ERROR(Toolkit must be either gtk or motif.)
+  else
+    MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*//g" `
+  fi], 
+MOZ_TOOLKIT=USE_DEFAULT)
 
-if [ test "$MOZ_TOOLKIT" = "USE_DEFAULT" ]; then
-    res=`echo $target_os| grep -c "^Rhapsody"`
-    if [ test $res != 0 ]; then
-	MOZ_TOOLKIT="rhapsody"
-    else
-	MOZ_TOOLKIT="gtk"
-    fi
+if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
+  res=`echo $target_os| grep -c "^Rhapsody"`
+  if test $res != 0; then
+    MOZ_TOOLKIT="rhapsody"
+  else
+    MOZ_TOOLKIT="gtk"
+  fi
 fi
 
 CFLAGS="$CFLAGS -DMOZ_TOOLKIT=$MOZ_TOOLKIT"
@@ -419,147 +425,104 @@ CFLAGS="$CFLAGS -DMOZ_DLL_SUFFIX=$DLL_SUFFIX"
 
 OS_TARGET=`uname -s`
 
-AC_ARG_ENABLE(shared,
+AM_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        disable building of internal shared libs],
-	[if test "$enableval" = "no"; then
-	    NO_SHARED_LIB=1
-	fi] )
+  NO_SHARED_LIB=1)
 
-AC_ARG_ENABLE(static,
+AM_ARG_DISABLE_BOOL(static,
 [  --disable-static        disable building of internal static libs (broken)],
-	[if test "$enableval" = "no"; then
-	    NO_STATIC_LIB=1
-	fi] )
+  NO_STATIC_LIB=1)
 
-AC_ARG_ENABLE(crypto,
+AM_ARG_ENABLE_BOOL(crypto,
 [  --enable-crypto	  enable use of SSL (untested)],
-	[if test "$enableval" = "yes"; then
-	    MOZ_SECURITY=1
-	else
-	    MOZ_SECURITY=
-	fi],
-	[MOZ_SECURITY= ])
+  MOZ_SECURITY=1)
 
-AC_ARG_ENABLE(netcast,
-[  --enable-netcast	  enable use of netcast (untested)],
-	[if test "$enableval" = "yes"; then
-	    MOZ_NETCAST=1
-	fi ] )
+AM_ARG_ENABLE_BOOL(netcast,
+[  --enable-netcast          enable use of netcast (untested)],
+  MOZ_NETCAST=1)
 
-AC_ARG_ENABLE(java,
+AM_ARG_ENABLE_BOOL(java,
 [  --enable-java           enable use of java applets (untested)],
-	[if test "$enableval" = "yes"; then
-	    MOZ_JAVA=1
-	    FULL_STATIC_BUILD=
-	    NO_SHARED_LIB=
-	fi] )
+dnl [ Note: setting this will also unset FULL_STATIC_BUILD and NO_SHARED_LIB],
+  [MOZ_JAVA=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
-AC_ARG_ENABLE(oji,
+AM_ARG_ENABLE_BOOL(oji,
 [  --enable-oji            enable use of Open JVM Interface],
-	[if test "$enableval" = "yes"; then
-	    MOZ_OJI=1
-	    FULL_STATIC_BUILD=
-	    NO_SHARED_LIB=
-	fi] )
+dnl [ Note: setting this will also unset FULL_STATIC_BUILD and NO_SHARED_LIB],
+  [MOZ_OJI=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
-AC_ARG_ENABLE(debug,
+AM_ARG_ENABLE_BOOL_OR_STRING(debug,
 [  --enable-debug	  enable debug symbols],
-	[if test "$enableval" = yes; then
-	    MOZ_DEBUG=1 OPTIMIZE="-g"
-	 else
-	    MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'`
-	fi] )
+  [ MOZ_DEBUG=1 OPTIMIZE="-g" ],
+  [],
+  [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
-AC_ARG_ENABLE(profile,
-[  --enable-profile	  enable profiling (solaris only)],
-	[if test "$enableval" = "yes"; then
-	    MOZILLA_GPROF=1
-	fi] )
+AM_ARG_ENABLE_BOOL(profile,
+[  --enable-profile        enable profiling (solaris only)],
+  MOZILLA_GPROF=1)
 
-AC_ARG_ENABLE(mailnews,
+AM_ARG_ENABLE_BOOL(mailnews,
 [  --enable-mailnews       enable Mail & News (broken)],
-	[if test "$enableval" = "yes"; then
-        MOZ_MAIL_NEWS=1
-	fi] )
+  MOZ_MAIL_NEWS=1)
 
-AC_ARG_ENABLE(ldap,
+AM_ARG_ENABLE_BOOL(ldap,
 [  --enable-ldap           enable LDAP directory access],
-    [if test "$enableval" = "yes"; then
-        MOZ_LDAP=1
-    fi] )
+  MOZ_LDAP=1)
 
-AC_ARG_ENABLE(editor,
+AM_ARG_ENABLE_BOOL(editor,
 [  --enable-editor         enable editor],
-	[if test "$enableval" = "yes"; then
-	    MOZ_EDITOR=1
-	fi] )
+  MOZ_EDITOR=1)
 
-AC_ARG_ENABLE(asserts,
+AM_ARG_DISABLE_BOOL(asserts,
 [  --disable-asserts       disable asserts during debugging],
-	[if test "$enableval" = "no"; then
-	    UNIX_SKIP_ASSERTS=1
-	fi] )
+  UNIX_SKIP_ASSERTS=1)
 
-AC_ARG_ENABLE(async-dns,
+AM_ARG_DISABLE_BOOL(async-dns,
 [  --disable-async-dns     disable separate dns thread],
-	[if test "$enableval" = "no"; then
-	    NO_UNIX_ASYNC_DNS=1
-	fi] )
+  NO_UNIX_ASYNC_DNS=1)
 
-AC_ARG_ENABLE(tests,
+AM_ARG_ENABLE_BOOL(tests,
 [  --enable-tests          enable test stubs],
-	[if test "$enableval" = "yes"; then
-	    ENABLE_TESTS=1
-	fi])
+  ENABLE_TESTS=1)
 
-AC_ARG_ENABLE(homedir,
+AM_ARG_ENABLE_STRING(homedir,
 [  --enable-homedir=\$val   set the homedir to \$val],
-	[ res=`echo $enableval | grep -c "\/"`
-	    if [ test $res != 0 ]; then
-		AC_MSG_ERROR("Homedir must be single relative path.")
-	    else 
-		MOZ_USER_DIR=\\\"$enableval\\\"
-	    fi], 
-	MOZ_USER_DIR='\".mozilla\"' )
+dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
+  [res=`echo $enableval | grep -c "\/"`
+  if [ test $res != 0 ]; then
+    AC_MSG_ERROR("Homedir must be single relative path.")
+  else 
+    MOZ_USER_DIR=\\\"$enableval\\\"
+  fi], 
+  MOZ_USER_DIR='\".mozilla\"' )
 
-AC_ARG_ENABLE(smart-mail,
+AM_ARG_ENABLE_BOOL(smart-mail,
 [  --enable-smart-mail     enable HTML/RDF-based client-side mail (untested)],
-	[if test "$enableval" = "yes"; then
-	    MOZ_SMART_MAIL=1
-	fi])
+  MOZ_SMART_MAIL=1)
 
-AC_ARG_ENABLE(mail-compose,
+AM_ARG_ENABLE_BOOL(mail-compose,
 [  --enable-mail-compose   enable old Messenger mail composer ],
-	[if test "$enableval" = "yes"; then
-	    MOZ_MAIL_COMPOSE=1
-	    MOZ_EDITOR=1
-	fi])
+  [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
 
-NO_UNIX_LDAP=1
-AC_ARG_ENABLE(ldap,
+AM_ARG_ENABLE_BOOL(ldap,
 [  --enable-ldap           enable ldap ],
-	[if test "$enableval" = "yes"; then
-	    NO_UNIX_LDAP=
-	fi] )
+  NO_UNIX_LDAP=,
+  NO_UNIX_LDAP=1)
 
-AC_ARG_ENABLE(idltool,
+AM_ARG_ENABLE_BOOL(idltool,
 [  --enable-idltool        build idl tool (default=no) ],
-	[if test "$enableval" = "yes"; then
-	    MOZ_IDL_TOOL=1
-	fi] )
+  MOZ_IDL_TOOL=1)
 
-AC_ARG_ENABLE(wrap-malloc,
+AM_ARG_ENABLE_BOOL(wrap-malloc,
 [  --enable-wrap-malloc    wrap malloc calls (gnu linker only) (default=no) ],
-	[if test "$enableval" = "yes"; then
-            if test "$GNU_CC" = 1; then
-                WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-                MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS)'
-	    fi
-	fi] )
+  [ if test "$GNU_CC" = 1; then
+      WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
+      MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS)'
+    fi])
 
-AC_ARG_WITH(wrap-malloc,
+AM_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc-=\$dir location of malloc wrapper library],
-	WRAP_MALLOC_LIB=$withval)
+  WRAP_MALLOC_LIB=$withval)
 
 AC_SUBST(OS_TARGET)
 AC_SUBST(MOZ_TOOLKIT)
@@ -585,6 +548,7 @@ AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(MOZ_IDL_TOOL)
+
 
 dnl Checks for X libraries.
 dnl Ordering is important.
