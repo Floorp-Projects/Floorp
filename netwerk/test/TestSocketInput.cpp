@@ -164,7 +164,7 @@ main(int argc, char* argv[])
 
   nsIChannel* transport;
 
-  rv = sts->CreateTransport(hostName, port, hostName, 0, 0, &transport);
+  rv = sts->CreateTransport(hostName, port, nsnull, 0, 0, 0, &transport);
   if (NS_SUCCEEDED(rv)) {
     transport->AsyncRead(nsnull, new InputTestConsumer);
 

@@ -137,7 +137,8 @@ public:
         const char* aHost, 
         PRInt32 aPort,
         const char* aSocketType,
-        const char* aPrintHost, // This host is used for status mesg
+        const char* aProxyHost, 
+        PRInt32 aProxyPort,
         PRUint32 bufferSegmentSize,
         PRUint32 bufferMaxSize);
     
@@ -210,6 +211,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
     char*                           mHostName;
+    PRInt32                         mPort;
     PRIntervalTime                  mLastActiveTime;
     PRCList                         mListLink;
     PRUint32                        mLoadAttributes;
@@ -220,8 +222,8 @@ protected:
     nsSocketOperation               mOperation;
     nsCOMPtr<nsISupports>           mOwner;
     nsCOMPtr<nsISupports>           mSecurityInfo;
-    PRInt32                         mPort;
-    char*                           mPrintHost; // not the proxy
+    PRInt32                         mProxyPort;
+    char*                           mProxyHost;
     nsCOMPtr<nsISupports>           mReadContext;
     nsCOMPtr<nsIStreamListener>     mReadListener;
     nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;

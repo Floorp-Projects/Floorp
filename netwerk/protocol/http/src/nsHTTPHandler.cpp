@@ -971,14 +971,22 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             }
         }
 
-        if (usingProxy)
-            rv = CreateTransport(proxy, proxyPort, host, bufferSegmentSize, 
-                    bufferMaxSize, &trans);
-        else
-            rv = CreateTransport(host, port, host, bufferSegmentSize, 
-                    bufferMaxSize, &trans);
-
+        rv = CreateTransport( host, 
+                              port, 
+                              proxy, 
+                              proxyPort, 
+                              bufferSegmentSize, 
+                              bufferMaxSize, 
+                              &trans );
+        
         if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (*o_pTrans, &rv);
+        if (NS_SUCCEEDED (rv))
+        {
+            trans->SetSocketTimeout(mRequestTimeout);
+            trans->SetSocketConnectTimeout(mConnectTimeout);
+        }
     }
 
     // Put it in the table...
@@ -1000,7 +1008,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
 nsresult nsHTTPHandler::CreateTransport(const char* host, 
                                         PRInt32 port, 
-                                        const char* aPrintHost,
+                                        const char* proxyHost,
+                                        PRInt32 proxyPort,
                                         PRUint32 bufferSegmentSize,
                                         PRUint32 bufferMaxSize,
                                         nsIChannel** o_pTrans)
@@ -1011,17 +1020,14 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
     if (NS_FAILED (rv))
         return rv;
 
-    rv = sts->CreateTransport(host, port, aPrintHost, bufferSegmentSize, 
-            bufferMaxSize, o_pTrans);
-    if (NS_SUCCEEDED (rv))
-    {
-        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (*o_pTrans, &rv);
-        if (NS_SUCCEEDED (rv))
-        {
-            trans->SetSocketTimeout(mRequestTimeout);
-            trans->SetSocketConnectTimeout(mConnectTimeout);
-        }
-    }
+    rv = sts->CreateTransport(host, 
+                              port, 
+                              proxyHost, 
+                              proxyPort, 
+                              bufferSegmentSize, 
+                              bufferMaxSize, 
+                              o_pTrans);
+    
     return rv;
 }
 

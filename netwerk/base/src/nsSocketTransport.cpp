@@ -131,7 +131,8 @@ nsSocketTransport::nsSocketTransport():
     mMonitor(nsnull),
     mOperation(eSocketOperation_None),
     mPort(0),
-    mPrintHost(nsnull),
+    mProxyHost(nsnull),
+    mProxyPort(0),
     mReadWriteState(0),
     mSelectFlags(0),
     mService(nsnull),
@@ -222,7 +223,7 @@ nsSocketTransport::~nsSocketTransport()
 
     NS_IF_RELEASE (mService);
     
-    CRTFREEIF (mPrintHost);
+    CRTFREEIF (mProxyHost);
     CRTFREEIF (mHostName);
     CRTFREEIF (mSocketType);
 
@@ -245,7 +246,8 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
                                  const char* aSocketType,
-                                 const char* aPrintHost,
+                                 const char* aProxyHost,
+                                 PRInt32 aProxyPort,
                                  PRUint32 bufferSegmentSize,
                                  PRUint32 bufferMaxSize)
 {
@@ -259,24 +261,27 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     mService = aService;
     NS_ADDREF(mService);
     
-    mPort = aPort;
+    mPort      = aPort;
+    mProxyPort = aProxyPort;
+
     if (aHost && *aHost)
     {
         mHostName = nsCRT::strdup(aHost);
         if (!mHostName)
             rv = NS_ERROR_OUT_OF_MEMORY;
-    } 
-    // hostname was nsnull or empty...
-    else
-        rv = NS_ERROR_FAILURE;
-    
-    if (aPrintHost)
+    }
+    else // hostname was nsnull or empty...
     {
-        mPrintHost = nsCRT::strdup(aPrintHost);
-        if (!mPrintHost)
-            rv = NS_ERROR_OUT_OF_MEMORY;
+        rv = NS_ERROR_FAILURE;
     }
     
+    if (aProxyHost && *aProxyHost)
+    {
+        mProxyHost = nsCRT::strdup(aProxyHost);
+        if (!mProxyHost)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+
     if (NS_SUCCEEDED(rv) && aSocketType)
     {
         mSocketType = nsCRT::strdup(aSocketType);
@@ -680,7 +685,7 @@ nsresult nsSocketTransport::doResolveHost(void)
     // XXX: The list of ports must be restricted - see net_bad_ports_table[] in 
     //      mozilla/network/main/mkconect.c
     //
-    mNetAddress.ipv6.port = PR_htons(mPort);
+      mNetAddress.ipv6.port = PR_htons(((mProxyPort != -1) ? mProxyPort : mPort));
 
     NS_WITH_SERVICE(nsIDNSService,
                     pDNSService,
@@ -694,7 +699,9 @@ nsresult nsSocketTransport::doResolveHost(void)
     //
     PR_ExitMonitor(mMonitor);
 
-    rv = pDNSService->Lookup(mHostName, this, nsnull, 
+    rv = pDNSService->Lookup(mProxyHost ? mProxyHost : mHostName, 
+                             this, 
+                             nsnull, 
                              getter_AddRefs(mDNSRequest));
     //
     // Aquire the SocketTransport lock again...
@@ -778,7 +785,12 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         rv = pProviderService->GetSocketProvider(mSocketType, getter_AddRefs(pProvider));
 
       if (NS_SUCCEEDED(rv))
-        rv = pProvider->NewSocket(mHostName, &mSocketFD, getter_AddRefs(mSecurityInfo));
+        rv = pProvider->NewSocket(mHostName,
+                                  mPort,
+                                  mProxyHost,
+                                  mProxyPort,
+                                  &mSocketFD, 
+                                  getter_AddRefs(mSecurityInfo));
     }
 
     if (mSocketFD) {
@@ -1726,8 +1738,17 @@ nsSocketTransport::GetOriginalURI(nsIURI* *aURL)
 {
   nsStdURL *url;
   url = new nsStdURL(nsnull);
-  url->SetHost(mHostName);
-  url->SetPort(mPort);
+  if( mProxyHost )
+  {
+    url->SetHost(mProxyHost);
+    url->SetPort(mProxyPort);
+  }
+  else
+  {
+    url->SetHost(mHostName);
+    url->SetPort(mPort);
+  }
+
 
   nsresult rv;
   rv = CallQueryInterface(url, aURL);
@@ -2350,10 +2371,7 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
   nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
 
   nsAutoString mesg(tempmesg);
-  if (mPrintHost)
-    mesg.AppendWithConversion(mPrintHost);
-  else 
-      mesg.AppendWithConversion(mHostName);
+  mesg.AppendWithConversion(mHostName);
 
   if (NS_FAILED(rv)) return rv;
 

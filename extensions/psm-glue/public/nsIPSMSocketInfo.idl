@@ -36,10 +36,15 @@
 interface nsIPSMSocketInfo : nsISupports {
     
     readonly attribute string           hostName;
+    readonly attribute PRInt32          hostPort;
+    
+    readonly attribute string           proxyName;
+    readonly attribute PRInt32          proxyPort;
+
     readonly attribute psmtControlStar  controlPtr;
     readonly attribute cmSocketStar     socketPtr;
     readonly attribute nsFileDescStar   fileDescPtr;
-
+    
     void getPickledStatus(out charStar pickledStatus);
 };
 

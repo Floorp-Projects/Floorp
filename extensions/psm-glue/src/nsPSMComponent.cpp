@@ -57,6 +57,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsICertificatePrincipal.h"
 
+#include "nsIProtocolProxyService.h"
+
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
 #ifdef WIN32
@@ -72,7 +74,7 @@
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
+static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 nsPSMComponent* nsPSMComponent::mInstance = nsnull;
 
@@ -564,6 +566,10 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         }
 
         PR_FREEIF(profileName);
+        
+        nsCOMPtr<nsIProtocolProxyService> proxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        proxySvc->AddNoProxyFor("127.0.0.1", mControl->port);
         
         *_retval = mControl;
         return NS_OK;

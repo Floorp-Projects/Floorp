@@ -38,13 +38,16 @@ interface nsISocketTransportService : nsISupports
      */
     nsIChannel createTransport(in string host,
                                in long port,
-                               in string printHost,
+                               in string proxyHost,
+                               in long proxyPort,
                                in unsigned long bufferSegmentSize,
                                in unsigned long bufferMaxSize);
+    
     nsIChannel createTransportOfType(in string socketType,
                                      in string host, 
                                      in long port,
-                                     in string printHost,
+                                     in string proxyHost,
+                                     in long proxyPort,
                                      in unsigned long bufferSegmentSize,
                                      in unsigned long bufferMaxSize);
 

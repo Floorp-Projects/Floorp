@@ -202,7 +202,7 @@ nsFingerChannel::OpenInputStream(nsIInputStream **_retval)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, mHost, BUFFER_SEG_SIZE,
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, BUFFER_SEG_SIZE,
             BUFFER_MAX_SIZE, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
@@ -234,7 +234,7 @@ nsFingerChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, mHost, BUFFER_SEG_SIZE,
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, BUFFER_SEG_SIZE,
       BUFFER_MAX_SIZE, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 

@@ -30,8 +30,10 @@
 // define taken from 4.x cartman glue code.  
 #define SSMSTRING_PADDED_LENGTH(x) ((((x)+3)/4)*4)
 
-nsresult nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports **securityInfo);
-
-
-
+nsresult nsSSLIOLayerNewSocket(const char *host, 
+                               PRInt32 port, 
+                               const char *proxyHost, 
+                               PRInt32 proxyPort, 
+                               PRFileDesc **fd, 
+                               nsISupports **securityInfo);
 #endif /* _NSSSLIOLAYER_H */

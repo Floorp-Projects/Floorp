@@ -76,8 +76,19 @@ nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
 
 NS_IMETHODIMP
-nsSSLSocketProvider::NewSocket(const char *hostName, PRFileDesc **_result, nsISupports **securityInfo)
+nsSSLSocketProvider::NewSocket(const char *host, 
+                               PRInt32 port, 
+                               const char *proxyHost, 
+                               PRInt32 proxyPort, 
+                               PRFileDesc **_result, 
+                               nsISupports **securityInfo)
 {
-  nsresult rv = nsSSLIOLayerNewSocket(hostName, _result, securityInfo);
+  nsresult rv = nsSSLIOLayerNewSocket(host,
+                                      port,
+                                      proxyHost,
+                                      proxyPort,
+                                      _result, 
+                                      securityInfo);
+  
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

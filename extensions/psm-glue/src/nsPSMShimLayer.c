@@ -140,15 +140,10 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path)
         switch (errcode)
         {
             case PR_IS_CONNECTED_ERROR:
+            case PR_IN_PROGRESS_ERROR:
                 rv = CMTSuccess;
                 break;
-
-            case PR_IN_PROGRESS_ERROR:
-            case PR_IO_TIMEOUT_ERROR:
-#ifdef WIN32
-            case PR_WOULD_BLOCK_ERROR:            
-            case PR_INVALID_ARGUMENT_ERROR:
-#endif
+            
             default:
                 rv = CMTFailure;
                 break;

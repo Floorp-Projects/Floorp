@@ -69,9 +69,11 @@ public:
     *    make a new channel.
     **/
 
-    virtual nsresult CreateTransport(const char* host, PRInt32 port, 
-                                     const char* printHost, 
-                                     PRUint32 bufferSegmentSize,
+    virtual nsresult CreateTransport(const char* host, 
+                                     PRInt32 port, 
+                                     const char* proxyHost, 
+                                     PRInt32 proxyPort, 
+                                     PRUint32 bufferSegmentSize, 
                                      PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);
 };
