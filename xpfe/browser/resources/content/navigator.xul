@@ -72,7 +72,10 @@ Contributor(s): ______________________________________. -->
 <script type="text/javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
 
 <!-- hook for stringbundle overlays -->
-<stringbundleset id="stringbundleset"/>
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+</stringbundleset>
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>

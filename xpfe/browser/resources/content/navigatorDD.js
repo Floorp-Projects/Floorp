@@ -303,9 +303,9 @@ var homeButtonObserver = {
       var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                 "nsICommonDialogs");
       var pressedVal = { };                            
-      var promptTitle = bundle.GetStringFromName("droponhometitle");
-      var promptMsg   = bundle.GetStringFromName("droponhomemsg");
-      var okButton    = bundle.GetStringFromName("droponhomeokbutton");
+      var promptTitle = gNavigatorBundle.getString("droponhometitle");
+      var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
+      var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
       var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
 
       commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, null, 
@@ -321,7 +321,7 @@ var homeButtonObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.setAttribute("value", bundle.GetStringFromName("droponhomebutton"));
+      statusTextFld.setAttribute("value", gNavigatorBundle.getString("droponhomebutton"));
     },
     
   onDragExit: function (aEvent, aDragSession)

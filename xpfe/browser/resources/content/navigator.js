@@ -25,8 +25,8 @@
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 var gURLBar = null;
-var bundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
-var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+var gNavigatorBundle;
+var gBrandBundle;
 
 var pref = Components.classes["@mozilla.org/preferences;1"]
                      .getService(Components.interfaces.nsIPref);
@@ -128,7 +128,7 @@ function UpdateInternetSearchResults(event)
 
 function nsXULBrowserWindow()
 {
-  this.defaultStatus = bundle.GetStringFromName("defaultStatus");
+  this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
 }
 
 nsXULBrowserWindow.prototype =
@@ -265,7 +265,7 @@ nsXULBrowserWindow.prototype =
         if (location != "about:blank") {
           // Record page loading time.
           var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
-          msg = bundle.GetStringFromName("nv_done");
+          msg = gNavigatorBundle.getString("nv_done");
           msg = msg.replace(/%elapsed%/, elapsed);
         }
         this.setDefaultStatus(msg);
@@ -353,7 +353,7 @@ function getHomePage()
 
   // use this if we can't find the pref
   if (!url)
-    url = bundle.GetStringFromName("homePageDefault");
+    url = gNavigatorBundle.getString("homePageDefault");
 
   return url;
 }
@@ -402,6 +402,9 @@ nsButtonPrefListener.prototype =
 
 function Startup()
 {
+  gNavigatorBundle = document.getElementById("bundle_navigator");
+  gBrandBundle = document.getElementById("bundle_brand");
+
   window.XULBrowserWindow = new nsXULBrowserWindow();
   window.buttonPrefListener = new nsButtonPrefListener();
 
@@ -644,7 +647,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 {
   var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
-  var fallbackDefaultSearchURL = bundle.GetStringFromName("fallbackDefaultSearchURL");
+  var fallbackDefaultSearchURL = gNavigatorBundle.getString("fallbackDefaultSearchURL");
   // XXX This somehow causes a big leak, back to the old way
   //     till we figure out why. See bug 61886.
   // var url = getWebNavigation().currentURI.spec;
@@ -664,7 +667,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
     if (defaultSearchURL != fallbackDefaultSearchURL)
       loadURI(defaultSearchURL);
     else
-      loadURI(bundle.GetStringFromName("otherSearchURL"));
+      loadURI(gNavigatorBundle.getString("otherSearchURL"));
 
   } else {
     var searchMode = 0;
@@ -762,7 +765,7 @@ function BrowserOpenFileWindow()
   try {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
+    fp.init(window, gNavigatorBundle.getString("openFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText | nsIFilePicker.filterImages |
                      nsIFilePicker.filterXML | nsIFilePicker.filterHTML);
 
@@ -1045,7 +1048,7 @@ var consoleListener = {
       var statusbarDisplay = document.getElementById("statusbar-display");
       statusbarDisplay.setAttribute("error", "true");
       statusbarDisplay.addEventListener("click", loadErrorConsole, true);
-      statusbarDisplay.value = bundle.GetStringFromName("jserror");
+      statusbarDisplay.value = gNavigatorBundle.getString("jserror");
       this.isShowingError = true;
     }
   },
@@ -1257,7 +1260,7 @@ function applyTheme(themeName)
 
 function getNewThemes()
 {
-  loadURI(brandBundle.GetStringFromName("getNewThemesURL"));
+  loadURI(gBrandBundle.getString("getNewThemesURL"));
 }
 
 function URLBarLeftClickHandler(aEvent)
