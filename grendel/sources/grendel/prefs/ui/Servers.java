@@ -101,7 +101,7 @@ public class Servers extends JFrame {
   public static void main(String argv[]) {
     
     Servers servers = new Servers();
-    servers.show();
+    servers.setVisible( true );
     
   }
  
@@ -242,7 +242,7 @@ public class Servers extends JFrame {
       sva.get(currentSelection).setHost       (tfHost.getText());
       sva.get(currentSelection).setPort       (Integer.parseInt(tfPort.getText()));
       sva.get(currentSelection).setUsername   (tfUser.getText());
-      sva.get(currentSelection).setPassword   (tfPass.getText());
+      sva.get(currentSelection).setPassword   (new String( tfPass.getPassword() ));
       int index = cbType.getSelectedIndex();
       if (index == 1) { type = "berkeley"; }
       if (index == 2) { type = "pop3"; }
@@ -273,81 +273,80 @@ public class Servers extends JFrame {
   }
   
   void showNothing() {
-    tfHost.hide(); lbHost.hide();
-    tfPort.hide(); lbPort.hide();
-    tfUser.hide(); lbUser.hide();
-    tfPass.hide(); lbPass.hide();
-    cbIdent.hide();lbIdent.hide();
+    tfHost.setVisible( false ); lbHost.setVisible( false );
+    tfPort.setVisible( false ); lbPort.setVisible( false );
+    tfUser.setVisible( false ); lbUser.setVisible( false );
+    tfPass.setVisible( false ); lbPass.setVisible( false );
+    cbIdent.setVisible( false );lbIdent.setVisible( false );
 
-    tfDir.hide();  lbDir.hide();  btChoose.hide();
+    tfDir.setVisible( false );  lbDir.setVisible( false );  btChoose.setVisible( false );
   
-    rbToLocal.hide();
-    rbAsImap.hide();
-    cbLeave.hide();
+    rbToLocal.setVisible( false );
+    rbAsImap.setVisible( false );
+    cbLeave.setVisible( false );
 
     pane.repaint(new Rectangle(pane.getSize()));
   }
   
   void showBerkeley() {
-    tfHost.hide(); lbHost.hide();
-    tfPort.hide(); lbPort.hide();
-    tfUser.hide(); lbUser.hide();
-    tfPass.hide(); lbPass.hide();
-    cbIdent.show();lbIdent.show();
-
-    tfDir.show();  lbDir.show();  btChoose.show();
+    tfHost.setVisible( false ); lbHost.setVisible( false );
+    tfPort.setVisible( false ); lbPort.setVisible( false );
+    tfUser.setVisible( false ); lbUser.setVisible( false );
+    tfPass.setVisible( false ); lbPass.setVisible( false );
+setVisible( true );
+    tfDir.setVisible( true );  lbDir.setVisible( true );  btChoose.setVisible( true );
   
-    rbToLocal.hide();
-    rbAsImap.hide();
-    cbLeave.hide();
+    rbToLocal.setVisible( false );
+    rbAsImap.setVisible( false );
+    cbLeave.setVisible( false );
 
     pane.repaint(new Rectangle(pane.getSize()));
   }
   
   void showPOP3() {
-    tfHost.show(); lbHost.show();
-    tfPort.show(); lbPort.show();
-    tfUser.show(); lbUser.show();
-    tfPass.show(); lbPass.show();
-    cbIdent.show();lbIdent.show();
+    tfHost.setVisible( true ); lbHost.setVisible( true );
+    tfPort.setVisible( true ); lbPort.setVisible( true );
+    tfUser.setVisible( true ); lbUser.setVisible( true );
+    tfPass.setVisible( true ); lbPass.setVisible( true );
+    cbIdent.setVisible( true );lbIdent.setVisible( true );
 
-    tfDir.hide();  lbDir.hide();  btChoose.hide();
+    tfDir.setVisible( false );  lbDir.setVisible( false );  btChoose.setVisible( false );
   
-    rbToLocal.show();
-    rbAsImap.show();
-    cbLeave.show();
+    rbToLocal.setVisible( true );
+    rbAsImap.setVisible( true );
+    cbLeave.setVisible( true );
 
     pane.repaint(new Rectangle(pane.getSize()));
   }
   
   void showIMAP() {
-    tfHost.show(); lbHost.show();
-    tfPort.show(); lbPort.show();
-    tfUser.show(); lbUser.show();
-    tfPass.show(); lbPass.show();
-    cbIdent.show();lbIdent.show();
+    tfHost.setVisible( true ); lbHost.setVisible( true );
+    tfPort.setVisible( true ); lbPort.setVisible( true );
+    tfUser.setVisible( true ); lbUser.setVisible( true );
+    tfPass.setVisible( true ); lbPass.setVisible( true );
+    cbIdent.setVisible( true );lbIdent.setVisible( true );
 
-    tfDir.hide();  lbDir.hide();  btChoose.hide();
+    tfDir.setVisible( false );  lbDir.setVisible( false );  btChoose.setVisible( false );
   
-    rbToLocal.hide();
-    rbAsImap.hide();
-    cbLeave.hide();
+    rbToLocal.setVisible( false );
+    rbAsImap.setVisible( false );
+    cbLeave.setVisible( false );
 
     pane.repaint(new Rectangle(pane.getSize()));
   }
   
   void showNews() {
-    tfHost.show(); lbHost.show();
-    tfPort.show(); lbPort.show();
-    tfUser.hide(); lbUser.hide();
-    tfPass.hide(); lbPass.hide();
-    cbIdent.show();lbIdent.show();
+    tfHost.setVisible( true ); lbHost.setVisible( true );
+    tfPort.setVisible( true ); lbPort.setVisible( true );
+    tfUser.setVisible( false ); lbUser.setVisible( false );
+    tfPass.setVisible( false ); lbPass.setVisible( false );
+    cbIdent.setVisible( true );lbIdent.setVisible( true );
 
-    tfDir.hide();  lbDir.hide();  btChoose.hide();
+    tfDir.setVisible( false );  lbDir.setVisible( false );  btChoose.setVisible( false );
   
-    rbToLocal.hide();
-    rbAsImap.hide();
-    cbLeave.hide();
+    rbToLocal.setVisible( false );
+    rbAsImap.setVisible( false );
+    cbLeave.setVisible( false );
     
     pane.repaint(new Rectangle(pane.getSize()));
   }
@@ -416,7 +415,7 @@ public class Servers extends JFrame {
       update();
       sva.writePrefs();
       StoreFactory.Instance().refreshStores();
-      hide();
+      setVisible( false );
       dispose();
     	
     }
@@ -428,7 +427,7 @@ public class Servers extends JFrame {
     public void actionPerformed(ActionEvent e) {
     	
       sva.readPrefs();
-      hide();
+      setVisible( false );
       dispose();
     	
     }

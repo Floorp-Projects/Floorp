@@ -57,7 +57,7 @@ import grendel.ui.UnifiedMessageDisplayManager;
 
 public class UI extends JFrame {
 
-  private static boolean DEBUG = true;
+  private static boolean DEBUG = false;
 
   UIPrefs prefs = UIPrefs.GetMaster();
 
