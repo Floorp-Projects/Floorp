@@ -19,7 +19,7 @@
 #define nsIApplicationShell_h___
 
 #include "nsISupports.h"
-#include "nsweb.h"
+#include "nsshell.h"
 #include "nscore.h"
 
 #define NS_IAPPLICATIONSHELL_IID      \
