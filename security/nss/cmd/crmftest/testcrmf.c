@@ -177,23 +177,28 @@ GetSubjectPubKeyInfo(SECKEYPrivateKey **destPrivKey,
     SECKEYPrivateKey         *privKey    = NULL;
     SECKEYPublicKey          *pubKey     = NULL;
     PK11SlotInfo             *keySlot    = NULL;
+    PK11SlotInfo             *cryptoSlot = NULL;
     PK11RSAGenParams         *rsaParams  = NULL;
     PQGParams                *dsaParams  = NULL;
     
     keySlot = PK11_GetInternalKeySlot();
     PK11_Authenticate(keySlot, PR_FALSE, NULL);
-    PK11_Authenticate(PK11_GetInternalSlot(), PR_FALSE, NULL);
+    cryptoSlot = PK11_GetInternalSlot();
+    PK11_Authenticate(cryptoSlot, PR_FALSE, NULL);
+    PK11_FreeSlot(cryptoSlot);
     rsaParams  = GetRSAParams();
     privKey = PK11_GenerateKeyPair(keySlot, CKM_RSA_PKCS_KEY_PAIR_GEN,
 				   (void*)rsaParams, &pubKey, PR_FALSE,
 				   PR_FALSE, NULL);
 /*    dsaParams = GetDSAParams();
     if (dsaParams == NULL) {
+        PK11_FreeSlot(keySlot);
         return NULL;
     }
     privKey = PK11_GenerateKeyPair(keySlot, CKM_DSA_KEY_PAIR_GEN,
 				   (void*)dsaParams, &pubKey, PR_FALSE,
 				   PR_FALSE, NULL);*/
+    PK11_FreeSlot(keySlot);
     if (privKey == NULL || pubKey == NULL) {
         if (pubKey) {
 	    SECKEY_DestroyPublicKey(pubKey);
