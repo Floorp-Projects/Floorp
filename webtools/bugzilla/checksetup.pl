@@ -1865,8 +1865,13 @@ unless ($sth->rows) {
              undef, $product_id, '---', 0);
 }
 
-
-
+# Create a default classification if one does not exist
+my $class_count =
+    $dbh->selectrow_array("SELECT COUNT(*) FROM classifications");
+if (!$class_count) {
+    $dbh->do("INSERT INTO classifications (name,description) " .
+             "VALUES('Unclassified','Unassigned to any classifications')");
+}
 
 ###########################################################################
 # Update the tables to the current definition
@@ -3564,6 +3569,9 @@ if ($dbh->bz_get_field_def("user_group_map", "isderived")) {
             $sth2->execute($uid, $gid);
         }
     }
+
+    # Make sure groups get rederived
+    $dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
 }
 
 # 2004-07-03 - Make it possible to disable flags without deleting them
@@ -3648,12 +3656,187 @@ if (!$dbh->bz_get_field_def('fielddefs', 'obsolete')) {
                  OR name = 'assignee_accessible'");
 }
 
+# Add fulltext indexes for bug summaries and descriptions/comments.
+if (!defined $dbh->bz_get_index_def('bugs', 'short_desc')) {
+    print "Adding full-text index for short_desc column in bugs table...\n";
+    $dbh->do('ALTER TABLE bugs ADD FULLTEXT (short_desc)');
+}
+if (!defined $dbh->bz_get_index_def('longdescs', 'thetext')) {
+    print "Adding full-text index for thetext column in longdescs table...\n";
+    $dbh->do('ALTER TABLE longdescs ADD FULLTEXT (thetext)');
+}
+
+# 2002 November, myk@mozilla.org, bug 178841:
+#
+# Convert the "attachments.filename" column from a ridiculously large
+# "mediumtext" to a much more sensible "varchar(100)".  Also takes
+# the opportunity to remove paths from existing filenames, since they 
+# shouldn't be there for security.  Buggy browsers include them, 
+# and attachment.cgi now takes them out, but old ones need converting.
+#
+{
+    my $ref = $dbh->bz_get_field_def("attachments", "filename");
+    if ($ref->[1] ne 'varchar(100)') {
+        print "Removing paths from filenames in attachments table...\n";
+        
+        $sth = $dbh->prepare("SELECT attach_id, filename FROM attachments " . 
+                             "WHERE " . $dbh->sql_position(q{'/'}, 'filename') .
+                             " OR " . $dbh->sql_position(q{'\\\\'}, 'filename'));
+        $sth->execute;
+        
+        while (my ($attach_id, $filename) = $sth->fetchrow_array) {
+            $filename =~ s/^.*[\/\\]//;
+            my $quoted_filename = $dbh->quote($filename);
+            $dbh->do("UPDATE attachments SET filename = $quoted_filename " . 
+                     "WHERE attach_id = $attach_id");
+        }
+        
+        print "Done.\n";
+        
+        print "Resizing attachments.filename from mediumtext to varchar(100).\n";
+        $dbh->bz_change_field_type("attachments", "filename", "varchar(100) not null");
+    }
+}
+
+# 2003-01-11, burnus@net-b.de, bug 184309
+# Support for quips approval
+$dbh->bz_add_field('quips', 'approved', 'tinyint(1) NOT NULL  DEFAULT 1');
+ 
+# 2002-12-20 Bug 180870 - remove manual shadowdb replication code
+if ($dbh->bz_table_exists('shadowlog')) {
+    print "Removing shadowlog table\n";
+    $dbh->do("DROP TABLE shadowlog");
+}
+
+# 2003-04-27 - bugzilla@chimpychompy.org (GavinS)
+#
+# Bug 180086 (http://bugzilla.mozilla.org/show_bug.cgi?id=180086)
+#
+# Renaming the 'count' column in the votes table because Sybase doesn't
+# like it
+if ($dbh->bz_get_field_def('votes', 'count')) {
+    # 2003-04-24 - myk@mozilla.org/bbaetz@acm.org, bug 201018
+    # Force all cached groups to be updated at login, due to security bug
+    # Do this here, inside the next schema change block, so that it doesn't
+    # get invalidated on every checksetup run.
+    $dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
+
+    $dbh->bz_rename_field('votes', 'count', 'vote_count');
+}
+
+# 2004/02/15 - Summaries shouldn't be null - see bug 220232
+if ($dbh->bz_get_field_def('bugs', 'short_desc')->[2]) { # if it allows nulls
+    $dbh->do("UPDATE bugs SET short_desc = '' WHERE short_desc IS NULL");
+    $dbh->bz_change_field_type('bugs', 'short_desc', 'mediumtext not null');
+}
+
+# 2004-12-29 - Flag email code is broke somewhere, and doesn't treat a lack
+# of FlagRequestee/er emailflags as 'on' like it's supposed to. Easiest way
+# to fix this is to make sure that everyone has these set. (bug 275599).
+# While we're at it, let's make sure everyone has some emailprefs set,
+# whether or not they've ever visited userprefs.cgi (bug 108870). In fact,
+# do this first so that the second check gets fewer hits.
+# 
+my $emailflags_count = 0;
+$sth = $dbh->prepare("SELECT userid FROM profiles " .
+                     "WHERE emailflags LIKE '' " .
+                     "OR emailflags IS NULL");
+$sth->execute();
+while (my ($userid) = $sth->fetchrow_array()) {
+    $dbh->do("UPDATE profiles SET emailflags = " .
+             $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) .
+             "WHERE userid = $userid");
+    $emailflags_count++;
+}
+
+if ($emailflags_count) {
+    print "Added default email prefs to $emailflags_count users who had none.\n" unless $silent;
+    $emailflags_count = 0;
+}
+
+
+$sth = $dbh->prepare("SELECT userid, emailflags FROM profiles " .
+                     "WHERE emailflags NOT LIKE '%Flagrequeste%' ");
+$sth->execute();
+while (my ($userid, $emailflags) = $sth->fetchrow_array()) {
+    $emailflags .= Bugzilla::Constants::DEFAULT_FLAG_EMAIL_SETTINGS;
+    $emailflags = $dbh->quote($emailflags);
+    $dbh->do("UPDATE profiles SET emailflags = $emailflags " .
+             "WHERE userid = $userid");
+    $emailflags_count++;
+}
+
+if ($emailflags_count) {
+    print "Added default Flagrequester/ee email prefs to $emailflags_count users who had none.\n" unless $silent;
+    $emailflags_count = 0;
+}
+
+# 2003-10-24 - alt@sonic.net, bug 224208
+# Support classification level
+$dbh->bz_add_field('products', 'classification_id', 'smallint DEFAULT 1');
+
+# 2004-08-29 - Tomas.Kopal@altap.cz, bug 257303
+# Change logincookies.lastused type from timestamp to datetime
+if (($fielddef = $dbh->bz_get_field_def("logincookies", "lastused")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    $dbh->bz_change_field_type('logincookies', 'lastused', 'DATETIME NOT NULL');
+}
+
+# 2005-01-12 Nick Barnes <nb@ravenbrook.com> bug 278010
+# Rename any group which has an empty name.
+# Note that there can be at most one such group (because of
+# the SQL index on the name column).
+$sth = $dbh->prepare("SELECT id FROM groups where name = ''");
+$sth->execute();
+my ($emptygroupid) = $sth->fetchrow_array();
+if ($emptygroupid) {
+    # There is a group with an empty name; find a name to rename it
+    # as.  Must avoid collisions with existing names.  Start with
+    # group_$gid and add _<n> if necessary.
+    my $trycount = 0;
+    my $trygroupname;
+    my $trygroupsth = $dbh->prepare("SELECT id FROM groups where name = ?");
+    do {
+        $trygroupname = "group_$emptygroupid";
+        if ($trycount > 0) {
+            $trygroupname .= "_$trycount";
+        }
+        $trygroupsth->execute($trygroupname);
+        if ($trygroupsth->rows > 0) {
+            $trycount ++;
+        }
+    } while ($trygroupsth->rows > 0);
+    $sth = $dbh->prepare("UPDATE groups SET name = ? " .
+                         "WHERE id = $emptygroupid");
+    $sth->execute($trygroupname);
+    print "Group $emptygroupid had an empty name; renamed as '$trygroupname'.\n";
+}
+
+# 2005-01-17 - Tomas.Kopal@altap.cz, bug 257315
+# Change bugs.delta_ts type from timestamp to datetime
+if (($fielddef = $dbh->bz_get_field_def("bugs", "delta_ts")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    $dbh->bz_change_field_type('bugs', 'delta_ts', 'DATETIME NOT NULL');
+}
+
+# 2005-02-12 bugreport@peshkin.net, bug 281787
+if (!defined $dbh->bz_get_index_def('attachments','submitter_id')) {
+    print "Adding index for submitter_id column in attachments table...\n";
+    $dbh->do('ALTER TABLE attachments ADD INDEX (submitter_id)');
+}
+if (!defined $dbh->bz_get_index_def('bugs_activity','who')) {
+    print "Adding index for who column in bugs_activity table...\n";
+    $dbh->do('ALTER TABLE bugs_activity ADD INDEX (who)');
+}
 
 $dbh->bz_change_field_type('bugs', 'status_whiteboard', 
                            q{mediumtext not null default ''});
 $dbh->bz_change_field_type('bugs', 'keywords',
                            q{mediumtext not null default ''});
 $dbh->bz_change_field_type('bugs', 'votes', 'mediumint not null default 0');
+
+# 2005-03-03 travis@sedsystems.ca -- Bug 41972
+add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -3959,192 +4142,6 @@ if ($sth->rows == 0) {
     print "\n$login is now set up as an administrator account.\n";
 }
 
-# Add fulltext indexes for bug summaries and descriptions/comments.
-if (!defined $dbh->bz_get_index_def('bugs', 'short_desc')) {
-    print "Adding full-text index for short_desc column in bugs table...\n";
-    $dbh->do('ALTER TABLE bugs ADD FULLTEXT (short_desc)');
-}
-if (!defined $dbh->bz_get_index_def('longdescs', 'thetext')) {
-    print "Adding full-text index for thetext column in longdescs table...\n";
-    $dbh->do('ALTER TABLE longdescs ADD FULLTEXT (thetext)');
-}
-
-# 2002 November, myk@mozilla.org, bug 178841:
-#
-# Convert the "attachments.filename" column from a ridiculously large
-# "mediumtext" to a much more sensible "varchar(100)".  Also takes
-# the opportunity to remove paths from existing filenames, since they 
-# shouldn't be there for security.  Buggy browsers include them, 
-# and attachment.cgi now takes them out, but old ones need converting.
-#
-{
-    my $ref = $dbh->bz_get_field_def("attachments", "filename");
-    if ($ref->[1] ne 'varchar(100)') {
-        print "Removing paths from filenames in attachments table...\n";
-        
-        $sth = $dbh->prepare("SELECT attach_id, filename FROM attachments " . 
-                             "WHERE " . $dbh->sql_position(q{'/'}, 'filename') .
-                             " OR " . $dbh->sql_position(q{'\\\\'}, 'filename'));
-        $sth->execute;
-        
-        while (my ($attach_id, $filename) = $sth->fetchrow_array) {
-            $filename =~ s/^.*[\/\\]//;
-            my $quoted_filename = $dbh->quote($filename);
-            $dbh->do("UPDATE attachments SET filename = $quoted_filename " . 
-                     "WHERE attach_id = $attach_id");
-        }
-        
-        print "Done.\n";
-        
-        print "Resizing attachments.filename from mediumtext to varchar(100).\n";
-        $dbh->bz_change_field_type("attachments", "filename", "varchar(100) not null");
-    }
-}
-
-# 2003-01-11, burnus@net-b.de, bug 184309
-# Support for quips approval
-$dbh->bz_add_field('quips', 'approved', 'tinyint(1) NOT NULL  DEFAULT 1');
- 
-# 2002-12-20 Bug 180870 - remove manual shadowdb replication code
-if ($dbh->bz_table_exists('shadowlog')) {
-    print "Removing shadowlog table\n";
-    $dbh->do("DROP TABLE shadowlog");
-}
-
-# 2003-04-27 - bugzilla@chimpychompy.org (GavinS)
-#
-# Bug 180086 (http://bugzilla.mozilla.org/show_bug.cgi?id=180086)
-#
-# Renaming the 'count' column in the votes table because Sybase doesn't
-# like it
-if ($dbh->bz_get_field_def('votes', 'count')) {
-    # 2003-04-24 - myk@mozilla.org/bbaetz@acm.org, bug 201018
-    # Force all cached groups to be updated at login, due to security bug
-    # Do this here, inside the next schema change block, so that it doesn't
-    # get invalidated on every checksetup run.
-    $dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
-
-    $dbh->bz_rename_field('votes', 'count', 'vote_count');
-}
-
-# 2004/02/15 - Summaries shouldn't be null - see bug 220232
-if ($dbh->bz_get_field_def('bugs', 'short_desc')->[2]) { # if it allows nulls
-    $dbh->do("UPDATE bugs SET short_desc = '' WHERE short_desc IS NULL");
-    $dbh->bz_change_field_type('bugs', 'short_desc', 'mediumtext not null');
-}
-
-# 2004-04-12 - Keep regexp-based group permissions up-to-date - Bug 240325
-# Make sure groups get rederived
-$dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
-
-# 2004-12-29 - Flag email code is broke somewhere, and doesn't treat a lack
-# of FlagRequestee/er emailflags as 'on' like it's supposed to. Easiest way
-# to fix this is to make sure that everyone has these set. (bug 275599).
-# While we're at it, let's make sure everyone has some emailprefs set,
-# whether or not they've ever visited userprefs.cgi (bug 108870). In fact,
-# do this first so that the second check gets fewer hits.
-# 
-my $emailflags_count = 0;
-$sth = $dbh->prepare("SELECT userid FROM profiles " .
-                     "WHERE emailflags LIKE '' " .
-                     "OR emailflags IS NULL");
-$sth->execute();
-while (my ($userid) = $sth->fetchrow_array()) {
-    $dbh->do("UPDATE profiles SET emailflags = " .
-             $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) .
-             "WHERE userid = $userid");
-    $emailflags_count++;
-}
-
-if ($emailflags_count) {
-    print "Added default email prefs to $emailflags_count users who had none.\n" unless $silent;
-    $emailflags_count = 0;
-}
-
-
-$sth = $dbh->prepare("SELECT userid, emailflags FROM profiles " .
-                     "WHERE emailflags NOT LIKE '%Flagrequeste%' ");
-$sth->execute();
-while (my ($userid, $emailflags) = $sth->fetchrow_array()) {
-    $emailflags .= Bugzilla::Constants::DEFAULT_FLAG_EMAIL_SETTINGS;
-    $emailflags = $dbh->quote($emailflags);
-    $dbh->do("UPDATE profiles SET emailflags = $emailflags " .
-             "WHERE userid = $userid");
-    $emailflags_count++;
-}
-
-if ($emailflags_count) {
-    print "Added default Flagrequester/ee email prefs to $emailflags_count users who had none.\n" unless $silent;
-    $emailflags_count = 0;
-}
-
-
-# 2003-10-24 - alt@sonic.net, bug 224208
-# Support classification level and make sure there is a default classification
-$dbh->bz_add_field('products', 'classification_id', 'smallint DEFAULT 1');
-$sth = $dbh->prepare("SELECT name FROM classifications WHERE id=1");
-$sth->execute;
-if (! $sth->rows) {
-    $dbh->do("INSERT INTO classifications (id,name,description) " .
-             "VALUES(1,'Unclassified','Unassigned to any classifications')");
-}
-
-# 2004-08-29 - Tomas.Kopal@altap.cz, bug 257303
-# Change logincookies.lastused type from timestamp to datetime
-if (($fielddef = $dbh->bz_get_field_def("logincookies", "lastused")) &&
-    $fielddef->[1] =~ /^timestamp/) {
-    $dbh->bz_change_field_type('logincookies', 'lastused', 'DATETIME NOT NULL');
-}
-
-# 2005-01-12 Nick Barnes <nb@ravenbrook.com> bug 278010
-# Rename any group which has an empty name.
-# Note that there can be at most one such group (because of
-# the SQL index on the name column).
-$sth = $dbh->prepare("SELECT id FROM groups where name = ''");
-$sth->execute();
-my ($emptygroupid) = $sth->fetchrow_array();
-if ($emptygroupid) {
-    # There is a group with an empty name; find a name to rename it
-    # as.  Must avoid collisions with existing names.  Start with
-    # group_$gid and add _<n> if necessary.
-    my $trycount = 0;
-    my $trygroupname;
-    my $trygroupsth = $dbh->prepare("SELECT id FROM groups where name = ?");
-    do {
-        $trygroupname = "group_$emptygroupid";
-        if ($trycount > 0) {
-            $trygroupname .= "_$trycount";
-        }
-        $trygroupsth->execute($trygroupname);
-        if ($trygroupsth->rows > 0) {
-            $trycount ++;
-        }
-    } while ($trygroupsth->rows > 0);
-    $sth = $dbh->prepare("UPDATE groups SET name = ? " .
-                         "WHERE id = $emptygroupid");
-    $sth->execute($trygroupname);
-    print "Group $emptygroupid had an empty name; renamed as '$trygroupname'.\n";
-}
-
-# 2005-01-17 - Tomas.Kopal@altap.cz, bug 257315
-# Change bugs.delta_ts type from timestamp to datetime
-if (($fielddef = $dbh->bz_get_field_def("bugs", "delta_ts")) &&
-    $fielddef->[1] =~ /^timestamp/) {
-    $dbh->bz_change_field_type('bugs', 'delta_ts', 'DATETIME NOT NULL');
-}
-
-# 2005-02-12 bugreport@peshkin.net, bug 281787
-if (!defined $dbh->bz_get_index_def('attachments','submitter_id')) {
-    print "Adding index for submitter_id column in attachments table...\n";
-    $dbh->do('ALTER TABLE attachments ADD INDEX (submitter_id)');
-}
-if (!defined $dbh->bz_get_index_def('bugs_activity','who')) {
-    print "Adding index for who column in bugs_activity table...\n";
-    $dbh->do('ALTER TABLE bugs_activity ADD INDEX (who)');
-}
-
-# 2005-03-03 travis@sedsystems.ca -- Bug 41972
-add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
 
 #
 # Final checks...
