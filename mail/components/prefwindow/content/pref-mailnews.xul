@@ -73,16 +73,15 @@
     </hbox> 
   </groupbox>
 
-  <spring flex="1"/>
-
-  <groupbox>
+  <groupbox flex="1">
     <caption label="&windowBehavior.label;"/>
     <label value="&reuseExp.label;"/>
-    <hbox class="indent" align="center">
+    <hbox align="center">
       <radiogroup id="mailnewsDoubleClick2NewWindow" preftype="bool" prefstring="mailnews.reuse_message_window" orient="vertical">
         <radio value="false" label="&reuseExpRadio0.label;" accesskey="&reuseExpRadio0.accesskey;" id="new"/>
         <radio value="true" label="&reuseExpRadio1.label;" accesskey="&reuseExpRadio1.accesskey;" id="existing"/>
       </radiogroup>
+      <spring flex="99"/>
     </hbox>
   </groupbox>
 
