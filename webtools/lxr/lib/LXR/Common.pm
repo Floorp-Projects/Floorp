@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.8 1998/06/16 19:53:43 jwz Exp $
+# $Id: Common.pm,v 1.9 1998/06/16 20:23:42 jwz Exp $
 
 package LXR::Common;
 
@@ -323,6 +323,8 @@ sub fixpaths {
 
 
 sub init {
+    my ($argv_0) = @_;
+
     my @a;
 
     $HTTP->{'path_info'} = &http_wash($ENV{'PATH_INFO'});
@@ -348,20 +350,56 @@ sub init {
     
     $Conf = new LXR::Config;
 
-    if (defined($readraw)) {
-	print("\n");
-    } else {
-        print("Content-Type: text/html; charset=iso-8859-1\n");
-        print("\n");
-    }
-    
-    
     foreach ($Conf->allvariables) {
 	$Conf->variable($_, $HTTP->{'param'}->{$_}) if $HTTP->{'param'}->{$_};
     }
     
     &fixpaths($HTTP->{'path_info'} || $HTTP->{'param'}->{'file'});
 
+    if (defined($readraw)) {
+	print("\n");
+    } else {
+        print("Content-Type: text/html; charset=iso-8859-1\n");
+
+	#
+	# Print out a Last-Modified date that is the larger of: the
+	# underlying file that we are presenting; and the "source" script
+	# itself (passed in as an argument to this function.)  If we can't
+	# stat either of them, don't print out a L-M header.  (Note that this
+	# stats lxr/source but not lxr/lib/LXR/Common.pm.  Oh well, I can
+	# live with that I guess...)    -- jwz, 16-Jun-98
+	#
+	my $file1 = $Path->{'realf'};
+	my $file2 = $argv_0;
+
+	# make sure the thing we call stat with doesn't end in /.
+	if ($file1) { $file1 =~ s@/$@@; }
+	if ($file2) { $file2 =~ s@/$@@; }
+
+	my $time1 = 0, $time2 = 0;
+	if ($file1) { $time1 = (stat($file1))[9]; }
+	if ($file2) { $time2 = (stat($file2))[9]; }
+
+	my $time = ($time1 > $time2 ? $time1 : $time2);
+	if ($time > 0) {
+	    my @t = gmtime($time);
+	    my ($sec, $min, $hour, $mday, $mon, $year,$wday) = @t;
+	    my @days = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+	    my @months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+	    $year += 1900;
+	    $wday = $days[$wday];
+	    $mon = $months[$mon];
+	    # Last-Modified: Wed, 10 Dec 1997 00:55:32 GMT
+	    print sprintf("Last-Modified: %s, %2d %s %d %02d:%02d:%02d GMT\n",
+			  $wday, $mday, $mon, $year, $hour, $min, $sec);
+	}
+
+	# Close the HTTP header block.
+        print("\n");
+    }
+    
+    
     if (defined($readraw)) {
 	open(RAW, $Path->{'realf'});
 	while (<RAW>) {

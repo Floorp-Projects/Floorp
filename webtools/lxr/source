@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.5 1998/06/16 09:03:38 jwz Exp $
+# $Id: source,v 1.6 1998/06/16 20:23:38 jwz Exp $
 
 # source --	Present sourcecode as html, complete with references
 #
@@ -302,7 +302,7 @@ sub printfile {
     }
 }
 
-($Conf, $HTTP, $Path) = &init;
+($Conf, $HTTP, $Path) = &init($0);
 
 #if the file is html then don't print a header because the file
 #has its own -dme
