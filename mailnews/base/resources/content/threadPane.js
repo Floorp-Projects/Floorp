@@ -145,8 +145,14 @@ function MsgSortByPriority()
 
 function MsgSortBySize() 
 {
-	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+	SortThreadPane('MemoryColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
 }
+
+function MsgSortByLines() 
+{
+	SortThreadPane('MemoryColumn', 'http://home.netscape.com/NC-rdf#Lines', 'http://home.netscape.com/NC-rdf#Date', true, null, true);
+}
+
 
 function MsgSortByUnread()
 {
