@@ -1201,7 +1201,7 @@ fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     indent = 0;
     if (argc && !js_ValueToECMAUint32(cx, argv[0], &indent))
 	return JS_FALSE;
-    str = JS_DecompileFunctionBody(cx, fun, (uintN)indent);
+    str = JS_DecompileFunction(cx, fun, (uintN)indent);
     if (!str)
 	return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
