@@ -176,7 +176,10 @@ public:
     char                              get();
     void                              close()
                                       {
-                                          mInputStream->Close();
+    					NS_ASSERTION(mInputStream, "mInputStream is null!");
+					if (mInputStream) {
+						mInputStream->Close();
+					}
                                       }
     PRInt32                           read(void* s, PRInt32 n);
 

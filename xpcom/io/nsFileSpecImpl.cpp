@@ -415,8 +415,10 @@ NS_IMETHODIMP nsFileSpecImpl::GetInputStream(nsIInputStream** _retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
-	if (!mInputStream)
-		openStreamForReading();
+	if (!mInputStream) {
+		nsresult rv = openStreamForReading();
+		if (NS_FAILED(rv)) return rv;
+	}
 	*_retval = mInputStream;
 	NS_IF_ADDREF(mInputStream);
 	return NS_OK;
@@ -427,8 +429,10 @@ NS_IMETHODIMP nsFileSpecImpl::GetOutputStream(nsIOutputStream** _retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
-	if (!mOutputStream)
-		openStreamForWriting();
+	if (!mOutputStream) {
+		nsresult rv = openStreamForWriting();
+		if (NS_FAILED(rv)) return rv;
+	}
 	*_retval = mOutputStream;
 	NS_IF_ADDREF(mOutputStream);
 	return NS_OK;
@@ -439,8 +443,7 @@ NS_IMETHODIMP nsFileSpecImpl::SetFileContents(char* inString)
 //----------------------------------------------------------------------------------------
 {
 	nsresult rv = openStreamForWriting();
-	if (NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
 	PRInt32 count;
 	rv = write(inString, PL_strlen(inString), &count);
 	nsresult rv2 = closeStream();
@@ -454,8 +457,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetFileContents(char** _retval)
 	TEST_OUT_PTR(_retval)
 	*_retval = nsnull;
 	nsresult rv = openStreamForReading();
-	if (NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
 	PRInt32 theSize;
 	rv = GetFileSize((PRUint32*)&theSize);
 	if (NS_SUCCEEDED(rv))
@@ -501,8 +503,10 @@ NS_IMETHODIMP nsFileSpecImpl::read(char** buffer, PRInt32 requestedCount, PRInt3
 {
 	TEST_OUT_PTR(_retval)
 	TEST_OUT_PTR(buffer)
-	if (!mInputStream)
-		openStreamForReading();
+	if (!mInputStream) {
+		nsresult rv = openStreamForReading();
+		if (NS_FAILED(rv)) return rv;
+	}
 	if (!*buffer)
 		*buffer = (char*)PR_Malloc(requestedCount + 1);
 	if (!mInputStream)
@@ -518,8 +522,10 @@ NS_IMETHODIMP nsFileSpecImpl::readLine(char** line, PRInt32 bufferSize, PRBool *
 {
 	TEST_OUT_PTR(wasTruncated)
 	TEST_OUT_PTR(line)
-	if (!mInputStream)
-		openStreamForReading();
+	if (!mInputStream) {
+		nsresult rv = openStreamForReading();
+		if (NS_FAILED(rv)) return rv;
+	}
 	if (!*line)
 		*line = (char*)PR_Malloc(bufferSize + 1);
 	if (!mInputStream)
@@ -536,8 +542,10 @@ NS_IMETHODIMP nsFileSpecImpl::write(const char * data, PRInt32 requestedCount, P
 	TEST_OUT_PTR(_retval)
 	if (!mOutputStream)
 		return NS_ERROR_NULL_POINTER;
-	if (!mOutputStream)
-		openStreamForWriting();
+	if (!mOutputStream) {
+		nsresult rv=openStreamForWriting();
+		if (NS_FAILED(rv)) return rv;
+	}
 	nsOutputFileStream s(mOutputStream);
 	*_retval = s.write(data, requestedCount);
 	return s.error();
