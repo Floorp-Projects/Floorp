@@ -34,76 +34,39 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# The main PyXPCOM C++ tree
+# The PyXPCOM component loader
 
-DEPTH=../../../..
+DEPTH=../../../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS = loader $(NULL)
-
 include $(DEPTH)/config/autoconf.mk
 
-PYTHON_DEBUG_SUFFIX=
 ifdef MOZ_DEBUG
-ifeq ($(OS_ARCH),WINNT)
 PYTHON_DEBUG_SUFFIX=_d
-endif
+else
+PYTHON_DEBUG_SUFFIX=
 endif
 
-MODULE		= pyxpcom
-LIBRARY_NAME	= _xpcom$(PYTHON_DEBUG_SUFFIX)
+MODULE		= pyloader
+LIBRARY_NAME	= pyloader$(PYTHON_DEBUG_SUFFIX)
+IS_COMPONENT	= 1
 #MODULE_NAME	= 
 REQUIRES	= xpcom string $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-DLL_SUFFIX=.pyd
 LOCAL_INCLUDES = -I$(PYTHON_SRC)/Include -I$(PYTHON_SRC)/PC
 EXTRA_LIBS += /libpath:$(PYTHON_SRC)/PCBuild
-else
-LOCAL_INCLUDES = -I$(PYTHON_SRC)/include/python2.1
-EXTRA_LIBS += -L$(PYTHON_SRC)/lib -lpython2.1
-endif
 
-CPPSRCS= \
-	ErrorUtils.cpp \
-	PyGBase.cpp \
-	PyGModule.cpp \
-	PyGStub.cpp \
-	PyGInputStream.cpp \
-	PyGWeakReference.cpp \
-	PyIClassInfo.cpp \
-	PyIComponentManager.cpp \
-	PyIInputStream.cpp \
-	PyIEnumerator.cpp \
-	PyIID.cpp \
-	PyIInterfaceInfo.cpp \
-	PyIInterfaceInfoManager.cpp \
-	PyISimpleEnumerator.cpp \
-	PyISupports.cpp \
-	Pyxpt_info.cpp \
-	TypeObject.cpp \
-	VariantUtils.cpp \
-	dllmain.cpp \
-	xpcom.cpp \
-	$(NULL)
+CPPSRCS		=		   \
+		pyloader.cpp	   \
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
+
 include $(topsrcdir)/config/rules.mk
-
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.pyd=.lib)
 
-# Install into our Python directory
-# default build installs into bin and lib - remove them
-libs::
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/python/xpcom
-else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/python/xpcom
-	mv $(DIST)/bin/python/xpcom/$(SHARED_LIBRARY) $(DIST)/bin/python/xpcom/_xpcom.so
-endif
-	rm -f $(DIST)/bin/$(SHARED_LIBRARY)
-	rm -f $(DIST)/lib/$(IMPORT_LIBRARY)
-
+clobber::
+	rm -f *.ilk
