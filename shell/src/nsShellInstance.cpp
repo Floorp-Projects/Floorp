@@ -116,11 +116,12 @@ void nsShellInstance::SetApplicationShell(nsIApplicationShell * aApplicationShel
 nsresult nsShellInstance::RegisterFactories()
 {
   // hardcode names of dll's
-  #define WIDGET_DLL "raptorwidget.dll"
 #ifdef NS_WIN32
   #define GFXWIN_DLL "raptorgfxwin.dll"
+  #define WIDGET_DLL "raptorwidget.dll"
 #else
-  #define GFXWIN_DLL "raptorgfxunix.dll"
+  #define GFXWIN_DLL "libgfxunix.so"
+  #define WIDGET_DLL "libwidgetunix.so"
 #endif
 
   // register graphics classes
