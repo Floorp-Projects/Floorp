@@ -567,7 +567,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool a
         // See if the URIs match.
         nsCAutoString uri;
         styleBinding->GetBindingURI(uri);
-        if (uri.EqualsWithConversion(NS_ConvertUCS2toUTF8(aURL).get()))
+        if (uri.Equals(NS_ConvertUCS2toUTF8(aURL)))
           return NS_OK;
         else {
           FlushStyleBindings(aContent);

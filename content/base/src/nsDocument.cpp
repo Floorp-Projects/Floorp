@@ -867,7 +867,7 @@ nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
 NS_IMETHODIMP
 nsDocument::GetContentType(nsAString& aContentType)
 {
-  aContentType = NS_ConvertUTF8toUCS2(mContentType);
+  CopyUTF8toUTF16(mContentType, aContentType);
 
   return NS_OK;
 }
@@ -879,7 +879,7 @@ nsDocument::SetContentType(const nsAString& aContentType)
                mContentType.Equals(NS_ConvertUCS2toUTF8(aContentType)),
                "Do you really want to change the content-type?");
 
-  mContentType = NS_ConvertUCS2toUTF8(aContentType);
+  CopyUTF16toUTF8(aContentType, mContentType);
 
   return NS_OK;
 }
@@ -3403,12 +3403,12 @@ nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
 NS_IMETHODIMP
 nsDocument::GetBaseURI(nsAString &aURI)
 {
-  aURI.Truncate();
+  nsCAutoString spec;
   if (mDocumentBaseURL) {
-    nsCAutoString spec;
     mDocumentBaseURL->GetSpec(spec);
-    aURI = NS_ConvertUTF8toUCS2(spec);
   }
+
+  CopyUTF8toUTF16(spec, aURI);
 
   return NS_OK;
 }

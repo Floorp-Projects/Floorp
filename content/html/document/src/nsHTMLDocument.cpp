@@ -1865,8 +1865,7 @@ nsHTMLDocument::GetBaseURI(nsAString &aURI)
     nsCAutoString spec;
     uri->GetSpec(spec);
 
-    // XXX: CopyUTF8toUCS2()?
-    aURI = NS_ConvertUTF8toUCS2(spec);
+    CopyUTF8toUTF16(spec, aURI);
   }
 
   return NS_OK;
@@ -1952,7 +1951,8 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
   nsCAutoString hostName;
   if (NS_FAILED(uri->GetHost(hostName)))
     return NS_ERROR_FAILURE;
-  aDomain.Assign(NS_ConvertUTF8toUCS2(hostName));
+
+  CopyUTF8toUTF16(hostName, aDomain);
 
   return NS_OK;
 }
@@ -2044,13 +2044,13 @@ nsHTMLDocument::WasDomainSet(PRBool* aDomainWasSet)
 NS_IMETHODIMP
 nsHTMLDocument::GetURL(nsAString& aURL)
 {
+  nsCAutoString str;
+
   if (mDocumentURL) {
-    nsCAutoString str;
     mDocumentURL->GetSpec(str);
-    aURL.Assign(NS_ConvertUTF8toUCS2(str));
-  } else {
-    aURL.Truncate();
   }
+
+  CopyUTF8toUTF16(str, aURL);
 
   return NS_OK;
 }
@@ -4626,13 +4626,11 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (cmdToDispatch.Equals("cmd_fontFace"))
     rv = cmdParams->GetStringValue("state_attribute", _retval);
   else {
-    char *cStringResult = nsnull;
-    rv = cmdParams->GetCStringValue("state_attribute", &cStringResult);
-    if (NS_SUCCEEDED(rv) && cStringResult && cStringResult[0])
-      _retval.Assign(NS_ConvertUTF8toUCS2(cStringResult));
+    nsXPIDLCString cStringResult;
+    rv = cmdParams->GetCStringValue("state_attribute",
+                                    getter_Copies(cStringResult));
 
-    if (cStringResult)
-      nsMemory::Free(cStringResult);
+    CopyUTF8toUTF16(cStringResult, _retval);
   }
 
   return rv;

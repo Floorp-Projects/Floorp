@@ -177,13 +177,13 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         // think a value of "./this:that" would have a scheme of "./that"
 
         NS_ConvertUCS2toUTF8 str(value);
-      
-        rv = MakeURI(str,nsnull,aURI);
+
+        rv = MakeURI(str, nsnull, aURI);
         if (NS_FAILED(rv))
           break;
 
         if (!base.IsEmpty()) { // XXXdarin base is always empty
-          str = NS_ConvertUCS2toUTF8(base);
+          CopyUTF16toUTF8(base, str);
           nsCAutoString resolvedStr;
           rv = (*aURI)->Resolve(str, resolvedStr);
           if (NS_FAILED(rv)) break;
@@ -224,8 +224,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         *aURI = docBase.get();    
         NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
       } else {
-        NS_ConvertUCS2toUTF8 str(base);
-        rv = MakeURI(str,docBase,aURI);
+        rv = MakeURI(NS_ConvertUCS2toUTF8(base), docBase, aURI);
       }
     }
 
@@ -328,13 +327,12 @@ static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAString& aURI,
   *aAbsURI = nsnull;
 
   nsresult rv;
-  rv = MakeURI(str,aBaseURI,aAbsURI);
+  rv = MakeURI(str, aBaseURI, aAbsURI);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      rv= securityManager->CheckLoadURI(aBaseURI,
-                                         *aAbsURI,
+      rv = securityManager->CheckLoadURI(aBaseURI, *aAbsURI,
                                          nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
     }
   }

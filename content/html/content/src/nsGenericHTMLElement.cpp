@@ -4429,7 +4429,7 @@ nsGenericHTMLElement::SetProtocolInHrefString(const nsAString &aHref,
   nsCAutoString newHref;
   uri->GetSpec(newHref);
 
-  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+  CopyUTF8toUTF16(newHref, aResult);
 
   return NS_OK;
 }
@@ -4451,7 +4451,7 @@ nsGenericHTMLElement::SetHostnameInHrefString(const nsAString &aHref,
   nsCAutoString newHref;
   uri->GetSpec(newHref);
 
-  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+  CopyUTF8toUTF16(newHref, aResult);
 
   return NS_OK;
 }
@@ -4476,7 +4476,8 @@ nsGenericHTMLElement::SetPathnameInHrefString(const nsAString &aHref,
 
   nsCAutoString newHref;
   uri->GetSpec(newHref);
-  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  CopyUTF8toUTF16(newHref, aResult);
 
   return NS_OK;
 }
@@ -4507,6 +4508,7 @@ nsGenericHTMLElement::SetHostInHrefString(const nsAString &aHref,
   aResult.Assign(NS_ConvertUTF8toUCS2(scheme) + NS_LITERAL_STRING("://") +
                  NS_ConvertUTF8toUCS2(userpass) + aHost +
                  NS_ConvertUTF8toUCS2(path));
+
   return NS_OK;
 }
 
@@ -4531,7 +4533,8 @@ nsGenericHTMLElement::SetSearchInHrefString(const nsAString &aHref,
 
   nsCAutoString newHref;
   uri->GetSpec(newHref);
-  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  CopyUTF8toUTF16(newHref, aResult);
 
   return NS_OK;
 }
@@ -4557,7 +4560,8 @@ nsGenericHTMLElement::SetHashInHrefString(const nsAString &aHref,
 
   nsCAutoString newHref;
   uri->GetSpec(newHref);
-  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  CopyUTF8toUTF16(newHref, aResult);
 
   return NS_OK;
 }
@@ -4584,7 +4588,8 @@ nsGenericHTMLElement::SetPortInHrefString(const nsAString &aHref,
 
   nsCAutoString newHref;
   uri->GetSpec(newHref);
-  aResult.Assign(NS_ConvertUTF8toUCS2(newHref));
+
+  CopyUTF8toUTF16(newHref, aResult);
 
   return NS_OK;
 }
@@ -4654,7 +4659,7 @@ nsGenericHTMLElement::GetHostFromHrefString(const nsAString& aHref,
   // error. Some URI's just don't have a hostport.
 
   if (NS_SUCCEEDED(rv)) {
-    aHost.Assign(NS_ConvertUTF8toUCS2(hostport));
+    CopyUTF8toUTF16(hostport, aHost);
   }
 
   return NS_OK;
@@ -4678,7 +4683,7 @@ nsGenericHTMLElement::GetHostnameFromHrefString(const nsAString& aHref,
     // Failure to get the host from the URI isn't necessarily an
     // error. Some URI's just don't have a host.
 
-    aHostname.Assign(NS_ConvertUTF8toUCS2(host));
+    CopyUTF8toUTF16(host, aHostname);
   }
 
   return NS_OK;
@@ -4709,7 +4714,7 @@ nsGenericHTMLElement::GetPathnameFromHrefString(const nsAString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  aPathname.Assign(NS_ConvertUTF8toUCS2(file));
+  CopyUTF8toUTF16(file, aPathname);
 
   return NS_OK;
 }
@@ -4740,7 +4745,7 @@ nsGenericHTMLElement::GetSearchFromHrefString(const nsAString& aHref,
     return rv;
 
   if (!search.IsEmpty()) {
-    aSearch.Assign(NS_LITERAL_STRING("?") + NS_ConvertUTF8toUCS2(search));
+    CopyUTF8toUTF16(NS_LITERAL_CSTRING("?") + search, aSearch);
   }
 
   return NS_OK;

@@ -57,6 +57,7 @@
 #include "nsIContent.h"
 #include "nsRuleNetwork.h"
 #include "plhash.h"
+#include "nsReadableUtils.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -401,7 +402,7 @@ Value::ToCString(nsACString& aResult)
                 aResult = "[nsIRDFLiteral \"";
                 const PRUnichar* s;
                 lit->GetValueConst(&s);
-                aResult += NS_ConvertUCS2toUTF8(s);
+                AppendUTF16toUTF8(s, aResult);
                 aResult += "\"]";
                 break;
             }
@@ -414,7 +415,7 @@ Value::ToCString(nsACString& aResult)
 
     case eString:
         aResult = "[string \"";
-        aResult += NS_ConvertUCS2toUTF8(mString);
+        AppendUTF16toUTF8(mString, aResult);
         aResult += "\"]";
         break;
 

@@ -676,7 +676,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
       if (!GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) || !mValue) {
         GetDefaultValue(aValue);
       } else {
-        aValue = NS_ConvertUTF8toUCS2(mValue);
+        CopyUTF8toUTF16(mValue, aValue);
       }
     }
 

@@ -2522,14 +2522,13 @@ CSSStyleSheetImpl::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetHref(nsAString& aHref)
 {
+  nsCAutoString str;
+
   if (mInner && mInner->mURL) {
-    nsCAutoString str;
     mInner->mURL->GetSpec(str);
-    aHref.Assign(NS_ConvertUTF8toUCS2(str));
   }
-  else {
-    aHref.Truncate();
-  }
+
+  CopyUTF8toUTF16(str, aHref);
 
   return NS_OK;
 }

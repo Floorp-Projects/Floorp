@@ -486,7 +486,7 @@ NameSpaceManagerImpl::GetElementFactory(PRInt32 aNameSpaceID,
 
   if (!uri.IsEmpty()) {
     nsCAutoString contract_id(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
-    contract_id.Append(NS_ConvertUCS2toUTF8(uri));
+    AppendUTF16toUTF8(uri, contract_id);
     ef = do_GetService(contract_id.get());
   }
 
