@@ -290,3 +290,12 @@ endif
 endif
 endif
 
+#
+# For OS/2
+#
+ifeq ($(OS_ARCH), OS_2)
+OS_ARCH		:= OS2
+OS_RELEASE	:= $(shell uname -v)
+OS_CONFIG	:= $(OS_ARCH)
+endif
+
