@@ -709,17 +709,8 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          {
             alert( "This doesn't appear to be a valid file. Here's what I got back from\n"+Channel.URI.spec+":\nResult:"+result );
          } else {
-             //if we have only one event, open the event dialog.
-             var firstMatchLocation = result.indexOf( "BEGIN:VEVENT" );
-             if( firstMatchLocation == -1 )
-             {
-                alert( "There are no events in this file. Here's what I got from\n"+Channel.URI.spec+"\nResult: "+result );
-             }
-             else
-             {
-                onResponse( result );
-                retval = true;
-             }
+             onResponse( result );
+             retval = true;
          }
          if( gNextSubNodeToRefresh )
             gCalendarWindow.calendarManager.refreshAllRemoteCalendars();
