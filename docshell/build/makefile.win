@@ -20,9 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..
+MODULE=docshell
+REQUIRES	= xpcom string dom shistory necko layout uriloader timer webshell widget pref view intl htmlparser chardet appcomps find raptor gfx history
 include <$(DEPTH)\config\config.mak>
 
-MODULE=docshell
 LIBRARY_NAME=docshell
 MODULE_NAME=docshell_provider
 

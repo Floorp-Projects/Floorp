@@ -24,6 +24,7 @@ DEPTH=..\..\..
 MAKE_OBJ_TYPE   = EXE
 
 MODULE          = winEmbed
+REQUIRES		= xpcom string embed_base webBrowser_core raptor embedding windowwatcher profile necko docshell dom gfx widget layout uriloader shistory
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 RESFILE         = $(MODULE).res
 

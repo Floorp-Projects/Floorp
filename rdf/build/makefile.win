@@ -20,10 +20,11 @@
 # Contributor(s): 
 
 DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
 MODULE=rdf
 LIBRARY_NAME=rdf
 MODULE_NAME=nsRDFModule
+REQUIRES	= xpcom string layout htmlparser necko raptor
+include <$(DEPTH)/config/config.mak>
 
 EXPORTS=\
         nsRDFCID.h                      \

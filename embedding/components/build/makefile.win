@@ -20,9 +20,10 @@
 
 DEPTH=..\..\..
 
+MODULE=embedcomponents
+REQUIRES	= js xpcom string windowwatcher jsconsole find embed_base dom txtsvc
 include <$(DEPTH)\config\config.mak>
 
-MODULE=embedcomponents
 LIBRARY_NAME=embedcomponents
 MODULE_NAME=embedcomponents
 

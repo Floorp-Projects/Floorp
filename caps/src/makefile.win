@@ -44,6 +44,7 @@ DEPTH= ..\..
 MODULE=caps
 LIBRARY_NAME=caps
 MODULE_NAME=nsSecurityManagerModule
+REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl docshell windowwatcher
 
 #//------------------------------------------------------------------------
 #// 
@@ -78,23 +79,6 @@ CPP_OBJS=                                    \
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LINCS= $(LINCS) \
-		-I$(PUBLIC)\js \
-		-I$(XPDIST)\public\js \
-		-I$(PUBLIC)\nspr \
-		-I$(PUBLIC)\xpcom \
-		-I$(PUBLIC)\security \
-		-I$(PUBLIC)\libimg   \
-		-I$(PUBLIC)\jar \
-		-I$(PUBLIC)\zlib \
-		-I$(PUBLIC)\pref \
-		-I$(DEPTH)\lib\layout \
-		-I$(DEPTH)\lib\libstyle \
-		-I$(PUBLIC)\caps \
-		-I$(PUBLIC)\public \
-		-I$(PUBLIC)\xpconnect \
-#		-I$(PUBLIC)\rdf \
-		$(NULL)
 
 LLIBS = \
 	$(LIBNSPR)                    \

@@ -21,8 +21,9 @@
 
 
 DEPTH	= ..\..\..
-include <$(DEPTH)/config/config.mak>
+REQUIRES	= xpcom string rdf necko layout dom htmlparser
 MODULE=rdfpoll
+include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE=EXE
 

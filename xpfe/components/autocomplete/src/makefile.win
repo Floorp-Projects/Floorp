@@ -28,8 +28,10 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
-include <$(DEPTH)/config/config.mak>
 MODULE=appcomps
+REQUIRES	= xpcom string layout dom mozldap necko
+
+include <$(DEPTH)/config/config.mak>
 LIBRARY_NAME=autocomplete_s
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 

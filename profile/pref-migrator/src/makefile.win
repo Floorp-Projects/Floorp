@@ -21,10 +21,11 @@
 
 
 DEPTH=..\..\..
+MODULE=nsprefm
+REQUIRES	= xpcom string pref appshell intl docshell dom necko rdf widget webBrowser_core uconv windowwatcher raptor prefmigr
 include <$(DEPTH)/config/config.mak>
 
 
-MODULE=nsprefm
 LIBRARY_NAME=nsprefm
 MODULE_NAME=nsPrefMigrationModule
 

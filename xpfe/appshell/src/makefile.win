@@ -20,9 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE=appshell
+REQUIRES	= xpcom string widget docshell webshell layout layout_xul dom necko uriloader js locale webBrowser_core rdf pref xpconnect timer intl xul windowwatcher browser appcomps caps profile gfx raptor mozbrwsr content
 include <$(DEPTH)/config/config.mak>
 
-MODULE=appshell
 LIBRARY_NAME=appshell
 MODULE_NAME=appshell
 

@@ -28,6 +28,8 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
+MODULE		= appcomps
+REQUIRES	= xpcom string necko dom js widget pref intl
 include <$(DEPTH)/config/config.mak>
 #//------------------------------------------------------------------------
 #//
@@ -35,22 +37,8 @@ include <$(DEPTH)/config/config.mak>
 #//
 #//------------------------------------------------------------------------
 
-MODULE		= mozxfer
 LIBRARY_NAME	= mozxfer
 MODULE_NAME	= nsStreamTransferModule
-
-LINCS = \
-	-I$(PUBLIC)/xpcom \
-	-I$(PUBLIC)/xpfe/components \
-	-I$(PUBLIC)/raptor \
-!ifdef NECKO
-        -I$(PUBLIC)\necko                 \
-!else
-        -I$(PUBLIC)\netlib                \
-!endif
-	-I$(PUBLIC)/rdf \
-	-I$(PUBLIC)/dom \
-	$(NULL)
 
 LLIBS	= \
 	$(LIBNSPR) \

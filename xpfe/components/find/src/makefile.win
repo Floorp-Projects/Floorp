@@ -28,6 +28,9 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
+MODULE		= appcomps
+REQUIRES	= xpcom string dom layout widget editor necko txtsvc docshell content gfx
+
 include <$(DEPTH)/config/config.mak>
 
 #//------------------------------------------------------------------------
@@ -36,19 +39,9 @@ include <$(DEPTH)/config/config.mak>
 #//
 #//------------------------------------------------------------------------
 
-MODULE		= appcomps
 XPIDL_MODULE	= mozfind
 LIBRARY_NAME	= mozfind
 MODULE_NAME	= nsFindComponent
-
-LINCS = \
-	-I$(PUBLIC)/xpcom \
-	-I$(PUBLIC)/txtsvc \
-	-I$(PUBLIC)/xpfe/components \
-	-I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/rdf \
-	-I$(PUBLIC)/dom \
-	$(NULL)
 
 LLIBS	= \
 	$(LIBNSPR) \

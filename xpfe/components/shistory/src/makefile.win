@@ -20,6 +20,7 @@
 
 DEPTH=..\..\..\..
 MODULE=shistory
+REQUIRES	= xpcom string necko dom layout docshell pref
 LIBRARY_NAME=shistory
 MODULE_NAME=Session_History_Module
 

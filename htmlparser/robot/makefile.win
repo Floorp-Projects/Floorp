@@ -27,6 +27,7 @@ LIBNAME = .\$(OBJDIR)\DebugRobot
 DLL = $(LIBNAME).dll
 
 DEPTH=..\..
+REQUIRES	= xpcom string htmlparser necko docshell dom uriloader
 
 include <$(DEPTH)\config\config.mak>
 

@@ -37,6 +37,7 @@ CHROME_L10N = \
 		$(NULL)
 
 MODULE=regviewer
+REQUIRES	= xpcom string rdf
 LIBRARY_NAME=regviewr
 MODULE_NAME=nsRegistryViewerModule
 

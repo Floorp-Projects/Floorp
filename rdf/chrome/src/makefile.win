@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 MODULE=chrome
 LIBRARY_NAME=chrome_s
-
+REQUIRES=xpcom string necko rdf raptor layout content intl dom widget xuldoc gfx docshell pref imglib2 caps xpconnect js
 CPP_OBJS=\
         .\$(OBJDIR)\nsChromeRegistry.obj    \
 	    .\$(OBJDIR)\nsChromeProtocolHandler.obj    \

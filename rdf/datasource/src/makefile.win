@@ -22,6 +22,7 @@
 DEPTH=..\..\..
 MODULE=rdf
 LIBRARY_NAME=rdfdatasource_s
+REQUIRES	= xpcom string necko uconv
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \

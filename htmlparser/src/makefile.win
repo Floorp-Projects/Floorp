@@ -21,12 +21,13 @@
 
 DEPTH=..\..
 
+MODULE         = htmlparser
+REQUIRES       = xpcom string necko util uconv expat layout dom pref nkcache intl widget raptor content
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
 
-MODULE         = htmlparser
 LIBRARY_NAME   = gkparser
 MODULE_NAME	   = nsParserModule
 

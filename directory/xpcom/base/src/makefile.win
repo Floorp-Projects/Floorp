@@ -17,9 +17,11 @@
 
 DEPTH=..\..\..\..
 
+MODULE=mozldap
+REQUIRES	= xpcom string necko
+
 include <$(DEPTH)\config\config.mak>
 
-MODULE=mozldap
 LIBRARY_NAME=mozldap
 MODULE_NAME=nsLDAPProtocolModule
 

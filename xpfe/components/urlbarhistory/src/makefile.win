@@ -19,7 +19,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=appcomps
+MODULE=urlbarhistory
+REQUIRES	= xpcom string rdf pref necko appcomps
 LIBRARY_NAME=urlbarhistory_s
 
 CPP_OBJS=                               \

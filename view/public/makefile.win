@@ -25,7 +25,7 @@ DEPTH=..\..
 DEFINES=-D_IMPL_NS_UI 
 EXPORTS=nsIView.h nsIViewManager.h nsIScrollableView.h nsViewsCID.h nsIViewObserver.h \
  nsIClipView.h nsIScrollPositionListener.h nsICompositeListener.h
-MODULE=raptor 
+MODULE=view 
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -20,7 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=appcomps
+MODULE=search
+REQUIRES	= xpcom string rdf necko timer pref uconv intl bookmarks
 
 CPP_OBJS=                                \
  .\$(OBJDIR)\nsLocalSearchService.obj    \

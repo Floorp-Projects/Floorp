@@ -21,6 +21,8 @@
 
 DEPTH=..\..
 
+MODULE=editor 
+REQUIRES	= xpcom string dom locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome appcomps xuldoc windowwatcher exthandler mimetype content raptor gfx
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=editor
@@ -184,7 +186,6 @@ DEFINES = -DENABLE_EDITOR_API_LOG $(DEFINES)
 
 !endif
 
-MODULE=editor 
 LIBRARY_NAME=editor
 MODULE_NAME=nsEditorModule
 

@@ -21,6 +21,7 @@
 
 DEPTH=..\..
 MODULE=accessibility
+REQUIRES	= xpcom string dom
 LIBRARY_NAME=accessibility
 MODULE_NAME=nsAccessibilityModule
 

@@ -22,9 +22,11 @@
 
 DEPTH=..\..\..
 
+MODULE=webBrowser_core
+REQUIRES	= xpcom string docshell dom widget layout necko uriloader shistory timer windowwatcher gfx content
+
 include <$(DEPTH)\config\config.mak>
 
-MODULE=webbrwsr 
 LIBRARY_NAME=webbrwsr
 MODULE_NAME=Browser_Embedding_Module
 

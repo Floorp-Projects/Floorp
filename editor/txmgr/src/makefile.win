@@ -23,6 +23,8 @@ DEPTH=..\..\..
 
 
 LIBRARY_NAME=txmgr
+MODULE=txmgr 
+REQUIRES	= xpcom string
 
 CPPSRCS =				\
 	nsTransactionItem.cpp	\
@@ -40,14 +42,9 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsTransactionManagerFactory.obj	\
 	$(NULL)
 
-MODULE=txmgr 
 LIBRARY_NAME=txmgr
 MODULE_NAME=nsTransactionManagerModule
 
-LINCS=-I$(PUBLIC)\xpcom \
-      -I$(PUBLIC)\txmgr \
-      -I$(PUBLIC)\base \
-      -I$(PUBLIC)\raptor
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
