@@ -91,18 +91,6 @@
 #define NS_CALLBACK_(_type, _name) _type (* _name)
 #define NS_STDCALL
 
-#elif defined(XP_OS2)
-
-#define NS_IMPORT
-#define NS_IMPORT_(type) type
-#define NS_EXPORT
-#define NS_EXPORT_(type) type
-#define NS_IMETHOD_(type) virtual type
-#define NS_IMETHODIMP_(type) type
-#define NS_METHOD_(type) type
-#define NS_CALLBACK_(_type, _name) _type (* _name)
-#define NS_STDCALL
-
 #else
 
 #define NS_IMPORT
