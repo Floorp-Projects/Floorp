@@ -35,8 +35,6 @@
 #include "nsIRollupListener.h"
 #include "nsIPresState.h"
 
-class nsButtonControlFrame;
-class nsTextControlFrame;
 class nsFormFrame;
 class nsIView;
 class nsStyleContext;
@@ -109,9 +107,7 @@ public:
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
   void       ScrollIntoView(nsIPresContext* aPresContext);
-  virtual void PostCreateWidget(nsIPresContext* aPresContext,
-                                nscoord& aWidth,
-                                nscoord& aHeight);
+  virtual void InitializeControl(nsIPresContext* aPresContext);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   virtual void   Reset(nsIPresContext* aPresContext);

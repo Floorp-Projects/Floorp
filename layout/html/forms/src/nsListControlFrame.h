@@ -217,6 +217,7 @@ protected:
   PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
   void     HandleListSelection(nsIDOMEvent * aDOMEvent);
   PRInt32  GetSelectedIndexFromFrame(nsIFrame *aHitFrame);
+  PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
 
   // onChange detection
   nsresult InitSelectionCache(PRInt32 aLength);

@@ -24,6 +24,9 @@
 #define nsLegendFrame_h___
 
 #include "nsAreaFrame.h"
+#include "nsIPresContext.h"
+#include "nsCOMPtr.h"
+
 class  nsIContent;
 class  nsIFrame;
 class  nsIPresContext;
@@ -38,14 +41,23 @@ class nsLegendFrame : public nsAreaFrame {
 public:
 
   nsLegendFrame();
+  virtual ~nsLegendFrame();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
   PRInt32 GetAlign();
+
+  nsCOMPtr<nsIPresContext> mPresContext;
 };
 
 

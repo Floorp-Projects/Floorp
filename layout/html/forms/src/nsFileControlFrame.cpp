@@ -22,9 +22,7 @@
 
 #include "nsFileControlFrame.h"
 #include "nsFormFrame.h"
-#include "nsButtonControlFrame.h"
-#include "nsTextControlFrame.h"
-#include "nsNativeTextControlFrame.h"   // XXX: remove when frame construction is done properly
+#include "nsGfxTextControlFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -312,7 +310,7 @@ nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
  * frame constuctor create the frame and its implementation. So we are given the text
  * node from the constructor and we find it in our tree.
  */
-nsTextControlFrame*
+nsGfxTextControlFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
   // find the text control frame.
@@ -331,13 +329,13 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
         value.ToUpperCase();
         nsString txt("TEXT");
         if (value == txt) {
-           return (nsTextControlFrame*)childFrame;      
+           return (nsGfxTextControlFrame*)childFrame;      
         }
       }
     }
 
     // if not continue looking
-    nsTextControlFrame* frame = GetTextControlFrame(aPresContext, childFrame);
+    nsGfxTextControlFrame* frame = GetTextControlFrame(aPresContext, childFrame);
     if (frame)
        return frame;
      

@@ -70,8 +70,6 @@ public:
   virtual void Reset(nsIPresContext* aPresContext);
   virtual const nsIID& GetCID();
 
-  virtual const nsIID& GetIID();
-
   //
   // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
   // under windows. Later it may be used to GFX-render the controls to the display. 

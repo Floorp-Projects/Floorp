@@ -27,7 +27,6 @@
 #include "nsCOMPtr.h"
 #include "nsCWeakReference.h"
 #include "nsFormControlFrame.h"
-#include "nsTextControlFrame.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIEditor.h"
 #include "nsIDocumentObserver.h"
@@ -45,6 +44,8 @@
 #include "nsHTMLValue.h"
 #include "nsIWebShell.h"
 #include "nsIViewManager.h"
+
+#include "nsIStatefulFrame.h"
 
 #include "nsCSSFrameConstructor.h"
 
@@ -377,7 +378,8 @@ protected:
  * and attaches an editor to the subdocument.
  ******************************************************************************/
 
-class nsGfxTextControlFrame : public nsTextControlFrame,
+class nsGfxTextControlFrame : public nsFormControlFrame,
+                              public nsIStatefulFrame,
                               public nsIGfxTextControlFrame
 {
 private:
@@ -420,9 +422,6 @@ public:
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);
-  virtual void PostCreateWidget(nsIPresContext* aPresContext,
-                                nscoord& aWidth,
-                                nscoord& aHeight) {};
 
   /** handler for attribute changes to mContent */
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
@@ -451,6 +450,7 @@ public:
 
   virtual void EnterPressed(nsIPresContext* aPresContext) ;
 
+  virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
   virtual void Reset(nsIPresContext* aPresContext);
@@ -509,7 +509,14 @@ public:
   NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
   NS_IMETHOD SetInnerFocus();
 
+  //nsIStatefulFrame
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+
+
 protected:
+  PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
 
   /** calculate the inner region of the text control (size - border and padding) in pixels */
   virtual void CalcSizeOfSubDocInTwips(const nsMargin &aBorder, 

@@ -92,6 +92,7 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
 {
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
@@ -513,15 +514,18 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
                                nsReflowStatus& aStatus)
 {
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    mPresContext = aPresContext;
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
+#if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
   }
-
+#endif
   // XXX remove the following when the reflow state is fixed
   ButtonHack((nsHTMLReflowState&)aReflowState, "html4 button");
 
@@ -662,10 +666,12 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
+#if 1
   //adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
     aDesiredSize.AddBorderPaddingToMaxElementSize(aReflowState.mComputedBorderPadding);
   }
+#endif
 
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
@@ -684,11 +690,10 @@ nsHTMLButtonControlFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFont(nsIPresContext*  aPresContext, 
-                                  const nsFont*&   aFont)
+nsHTMLButtonControlFrame::GetFont(nsIPresContext* aPresContext, 
+                                  const nsFont*&  aFont)
 {
-  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-  return NS_OK;
+  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 
 NS_IMETHODIMP

@@ -22,7 +22,7 @@
 #ifndef nsCheckboxControlFrame_h___
 #define nsCheckboxControlFrame_h___
 
-#include "nsNativeFormControlFrame.h"
+#include "nsFormControlFrame.h"
 #include "nsIStatefulFrame.h"
 
 class nsIPresState;
@@ -47,7 +47,7 @@ class nsIPresState;
 // become checked since "mixed" doesn't exist on normal checkboxes.
 //
 
-class nsCheckboxControlFrame : public nsNativeFormControlFrame,
+class nsCheckboxControlFrame : public nsFormControlFrame,
                                public nsIStatefulFrame
 {
 public:

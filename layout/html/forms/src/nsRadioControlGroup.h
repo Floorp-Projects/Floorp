@@ -23,7 +23,7 @@
 #ifndef nsRadioControlGroup_h___
 #define nsRadioControlGroup_h___
 
-#include "nsRadioControlFrame.h"
+#include "nsGfxRadioControlFrame.h"
 
 
 class nsRadioControlGroup
@@ -32,19 +32,21 @@ public:
   nsRadioControlGroup(nsString& aName);
   virtual ~nsRadioControlGroup();
 
-  PRBool               AddRadio(nsRadioControlFrame* aRadio);
+  PRBool               AddRadio(nsGfxRadioControlFrame* aRadio);
   PRInt32              GetRadioCount() const;
-  nsRadioControlFrame* GetRadioAt(PRInt32 aIndex) const;
-  PRBool               RemoveRadio(nsRadioControlFrame* aRadio);
+  nsGfxRadioControlFrame* GetRadioAt(PRInt32 aIndex) const;
+  PRInt32              GetNumRadios() const { return mRadios.Count(); }
 
-  nsRadioControlFrame* GetCheckedRadio();
-  void                 SetCheckedRadio(nsRadioControlFrame* aRadio);
+  PRBool               RemoveRadio(nsGfxRadioControlFrame* aRadio);
+
+  nsGfxRadioControlFrame* GetCheckedRadio();
+  void                 SetCheckedRadio(nsGfxRadioControlFrame* aRadio);
   void                 GetName(nsString& aNameResult) const;
 
 protected:
   nsString             mName;
   nsVoidArray          mRadios;
-  nsRadioControlFrame* mCheckedRadio;
+  nsGfxRadioControlFrame* mCheckedRadio;
  
 };
 

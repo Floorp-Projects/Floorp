@@ -46,6 +46,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsFormFrame.h"
+#include "nsFormControlFrame.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks
 /*enum nsMouseState {
@@ -145,6 +146,8 @@ protected:
   nsCursor mPreviousCursor;
   nsRect mTranslatedRect;
   PRBool mGotFocus;
+
+  nsCOMPtr<nsIPresContext> mPresContext;
 };
 
 
@@ -160,6 +163,8 @@ nsImageControlFrame::nsImageControlFrame()
 
 nsImageControlFrame::~nsImageControlFrame()
 {
+  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
@@ -255,6 +260,8 @@ nsImageControlFrame::Reflow(nsIPresContext*         aPresContext,
                            nsReflowStatus&          aStatus)
 {
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    mPresContext = aPresContext;
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }

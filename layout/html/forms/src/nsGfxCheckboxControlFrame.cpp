@@ -27,9 +27,12 @@
 #include "nsFormFrame.h"
 #include "nsIFormControl.h"
 #include "nsIContent.h"
-#include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
+#include "nsHTMLAtoms.h"
+#include "nsINameSpaceManager.h"
+#include "nsIPresState.h"
 
+//------------------------------------------------------------
 nsresult
 NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -46,18 +49,156 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 
+//------------------------------------------------------------
 // Initialize GFX-rendered state
 nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
   : mChecked(eOff)
 {
 }
 
+//----------------------------------------------------------------------
+// nsISupports
+//----------------------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
+  if ( !aInstancePtr )
+    return NS_ERROR_NULL_POINTER;
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;
+  }
+  return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
+}
 
+//------------------------------------------------------------
+//
+// Init
+//
+// We need to override this in order to see if we're a tristate checkbox.
+//
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsFormControlFrame::Init ( aPresContext, aContent, aParent, aContext, aPrevInFlow );
+  
+  // figure out if we're a tristate at the start. This may change later on once
+  // we've been running for a while, so more code is in AttributeChanged() to pick
+  // that up. Regardless, we need this check when initializing.
+  nsAutoString value;
+  nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateAtom(), value );
+  if ( res == NS_CONTENT_ATTR_HAS_VALUE )
+    mIsTristate = PR_TRUE;
+
+  // give the attribute a default value so it's always present, if we're a tristate
+  if ( IsTristateCheckbox() )
+    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), "0", PR_FALSE );
+  
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+//
+// GetTristateAtom [static]
+//
+// Use a lazily instantiated static initialization scheme to create an atom that
+// represents the attribute set when this should be a tri-state checkbox.
+//
+// Does NOT addref!
+//
+nsIAtom*
+nsGfxCheckboxControlFrame :: GetTristateAtom ( )
+{
+  return nsHTMLAtoms::moz_tristate;
+}
+
+//------------------------------------------------------------
+//
+// GetTristateValueAtom [static]
+//
+// Use a lazily instantiated static initialization scheme to create an atom that
+// represents the attribute that holds the value when the button is a tri-state (since
+// we can't use "checked").
+//
+// Does NOT addref!
+//
+nsIAtom*
+nsGfxCheckboxControlFrame :: GetTristateValueAtom ( )
+{
+  return nsHTMLAtoms::moz_tristatevalue;
+}
+
+//------------------------------------------------------------
+//
+// AttributeChanged
+//
+// Override to check for the attribute that determines if we're a normal or a 
+// tristate checkbox. If we notice a switch from one to the other, we need
+// to adjust the proper attributes in the content model accordingly.
+//
+// Also, since the value of a tri-state is kept in a separate attribute (we
+// can't use "checked" because it's a boolean), we have to notice it changing
+// here.
+//
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                          nsIContent*     aChild,
+                                          PRInt32         aNameSpaceID,
+                                          nsIAtom*        aAttribute,
+                                          PRInt32         aHint)
+{
+  if ( aAttribute == GetTristateAtom() ) {    
+    nsAutoString value;
+    nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateAtom(), value );
+    PRBool isNowTristate = (res == NS_CONTENT_ATTR_HAS_VALUE);
+    if ( isNowTristate != mIsTristate )
+      SwitchModesWithEmergencyBrake(aPresContext, isNowTristate);
+  }
+  else if ( aAttribute == GetTristateValueAtom() ) {
+    // ignore this change if we're not a tri-state checkbox
+    if ( IsTristateCheckbox() ) {      
+      nsAutoString value;
+      nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value );
+      if ( res == NS_CONTENT_ATTR_HAS_VALUE )
+        SetCheckboxControlFrameState(aPresContext, value);
+    }
+  }
+  else
+    return nsFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+//
+// InitializeControl
+//
+// Set the default checked state of the checkbox.
+// 
+void 
+nsGfxCheckboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
+{
+  nsFormControlFrame::InitializeControl(aPresContext);
+
+  PRBool checked = PR_FALSE;
+  nsresult result = GetDefaultCheckState(&checked);
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+    SetCheckboxState (aPresContext, checked ? eOn : eOff );
+  }
+}
+
+//------------------------------------------------------------
 void
 nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect,
-                  nsFramePaintLayer aWhichLayer)
+                                         nsIRenderingContext& aRenderingContext,
+                                         const nsRect& aDirtyRect,
+                                         nsFramePaintLayer aWhichLayer)
 {
   aRenderingContext.PushState();
 
@@ -111,6 +252,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
 }
 
 
+//------------------------------------------------------------
 //
 // PaintMixedMark
 //
@@ -155,6 +297,7 @@ nsGfxCheckboxControlFrame::PaintMixedMark ( nsIRenderingContext& aRenderingConte
 } // PaintMixedMark
 
 
+//------------------------------------------------------------
 NS_METHOD 
 nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
@@ -167,7 +310,7 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
     return NS_OK;
 
   // Paint the background
-  Inherited::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // Paint the checkmark 
     PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
@@ -176,20 +319,232 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
 }
 
 
-nsCheckboxControlFrame::CheckState
-nsGfxCheckboxControlFrame :: GetCheckboxState ( )
+//------------------------------------------------------------
+nsGfxCheckboxControlFrame::CheckState 
+nsGfxCheckboxControlFrame::GetCheckboxState ( )
 {
   return mChecked;
 }
 
+//------------------------------------------------------------
 void 
-nsGfxCheckboxControlFrame :: SetCheckboxState (nsIPresContext* aPresContext,
-                                               nsCheckboxControlFrame::CheckState aValue )
+nsGfxCheckboxControlFrame::SetCheckboxState (nsIPresContext* aPresContext,
+                                               nsGfxCheckboxControlFrame::CheckState aValue )
 {
   mChecked = aValue;
   nsFormControlHelper::ForceDrawFrame(aPresContext, this);
 }
 
+//------------------------------------------------------------
+void nsGfxCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
+{
+  CheckStateToString(GetCheckboxState(), aValue);
+}       
+
+
+//------------------------------------------------------------
+void nsGfxCheckboxControlFrame::SetCheckboxControlFrameState(nsIPresContext* aPresContext,
+                                                          const nsString& aValue)
+{
+  CheckState state = StringToCheckState(aValue);
+  SetCheckboxState(aPresContext, state);
+}         
+
+//------------------------------------------------------------
+NS_IMETHODIMP nsGfxCheckboxControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                                  nsIAtom* aName,
+                                                  const nsString& aValue)
+{
+  if (nsHTMLAtoms::checked == aName)
+    SetCheckboxControlFrameState(aPresContext, aValue);
+  else
+    return nsFormControlFrame::SetProperty(aPresContext, aName, aValue);
+
+  return NS_OK;     
+}
+
+
+//------------------------------------------------------------
+NS_IMETHODIMP nsGfxCheckboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  if (nsHTMLAtoms::checked == aName)
+    GetCheckboxControlFrameState(aValue);
+  else
+    return nsFormControlFrame::GetProperty(aName, aValue);
+
+  return NS_OK;     
+}
+
+//------------------------------------------------------------
+PRInt32 
+nsGfxCheckboxControlFrame::GetMaxNumValues()
+{
+  return 1;
+}
+  
+//------------------------------------------------------------
+PRBool
+nsGfxCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                       nsString* aValues, nsString* aNames)
+{
+  nsAutoString name;
+  nsresult nameResult = GetName(&name);
+  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != nameResult)) {
+    return PR_FALSE;
+  }
+
+  PRBool result = PR_TRUE;
+  CheckState state = GetCheckboxState();
+
+  nsAutoString value;
+  nsresult valueResult = GetValue(&value);
+   
+   if (eOn != state) {
+      result = PR_FALSE;
+   } else {
+     if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
+       aValues[0] = "on";
+     } else {
+       aValues[0] = value;
+     }
+     aNames[0] = name;
+     aNumValues = 1;
+  }
+ 
+  return result;
+}
+
+//------------------------------------------------------------
+void 
+nsGfxCheckboxControlFrame::Reset(nsIPresContext* aPresContext) 
+{
+  PRBool checked;
+  GetDefaultCheckState(&checked);
+  SetCheckboxState (aPresContext, checked ? eOn : eOff );
+}  
+
+
+//------------------------------------------------------------
+//
+// CheckStateToString
+//
+// Converts from a CheckState to a string
+//
+void
+nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsString& outStateAsString )
+{
+  switch ( inState ) {
+    case eOn:
+      outStateAsString = NS_STRING_TRUE;
+	  break;
+
+    case eOff:
+      outStateAsString = NS_STRING_FALSE;
+      break;
+ 
+    case eMixed:
+      outStateAsString = "2";
+      break;
+  }
+} // CheckStateToString
+
+
+//------------------------------------------------------------
+//
+// StringToCheckState
+//
+// Converts from a string to a CheckState enum
+//
+nsGfxCheckboxControlFrame::CheckState 
+nsGfxCheckboxControlFrame::StringToCheckState ( const nsString & aStateAsString )
+{
+  if ( aStateAsString == NS_STRING_TRUE )
+    return eOn;
+  else if ( aStateAsString == NS_STRING_FALSE )
+    return eOff;
+
+  // not true and not false means mixed
+  return eMixed;
+  
+} // StringToCheckState
+
+
+//------------------------------------------------------------
+//
+// SwitchModesWithEmergencyBrake
+//
+// Since we use an attribute to decide if we're a tristate box or not, this can change
+// at any time. Since we have to use separate attributes to store the values depending
+// on the mode, we have to convert from one to the other.
+//
+void
+nsGfxCheckboxControlFrame::SwitchModesWithEmergencyBrake ( nsIPresContext* aPresContext,
+                                                          PRBool inIsNowTristate )
+{
+  if ( inIsNowTristate ) {
+    // we were a normal checkbox, and now we're a tristate. That means that the
+    // state of the checkbox was in "checked" and needs to be copied over into
+    // our parallel attribute.
+    nsAutoString value;
+    CheckStateToString ( GetCheckboxState(), value );
+    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
+  }
+  else {
+    // we were a tri-state checkbox, and now we're a normal checkbox. The current
+    // state is already up to date (because it's always up to date). We just have
+    // to make sure it's not mixed. If it is, just set it to checked. Remove our
+    // parallel attribute so that we're nice and HTML4 compliant.
+    if ( GetCheckboxState() == eMixed )
+      SetCheckboxState(aPresContext, eOn);
+    mContent->UnsetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), PR_FALSE );
+  }
+
+  // switch!
+  mIsTristate = inIsNowTristate;
+  
+} // SwitchModesWithEmergencyBrake
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsGfxCheckboxControlFrame::GetStateType(nsIPresContext* aPresContext,
+                                                   nsIStatefulFrame::StateType* aStateType)
+{
+  *aStateType=nsIStatefulFrame::eCheckboxType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
+                                                nsIPresState** aState)
+{
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  // This string will hold a single item, whether or not we're checked.
+  nsAutoString stateString;
+  GetCheckboxControlFrameState(stateString);
+  (*aState)->SetStateProperty("checked", stateString);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsGfxCheckboxControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                                   nsIPresState* aState)
+{
+  if (!mDidInit) {
+    mPresContext = aPresContext;
+    InitializeControl(aPresContext);
+    mDidInit = PR_TRUE;
+  }
+  nsAutoString string;
+  aState->GetStateProperty("checked", string);
+  SetCheckboxControlFrameState(aPresContext, string);
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// Extra Debug Methods
+//------------------------------------------------------------
 #ifdef DEBUG_rodsXXX
 NS_IMETHODIMP 
 nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
@@ -197,7 +552,7 @@ nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                   const nsHTMLReflowState& aReflowState, 
                                   nsReflowStatus&          aStatus)
 {
-  nsresult rv = nsNativeFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   COMPARE_QUIRK_SIZE("nsGfxCheckboxControlFrame", 13, 13) 
   return rv;

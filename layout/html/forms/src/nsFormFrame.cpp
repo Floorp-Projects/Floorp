@@ -66,8 +66,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDocument.h"
 #include "nsILinkHandler.h"
-#include "nsRadioControlFrame.h"
-#include "nsIRadioButton.h"
+#include "nsGfxRadioControlFrame.h"
 #include "nsDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
@@ -84,6 +83,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // Get base target for submission
 #include "nsIHTMLContent.h"
+#include "nsIDOMHTMLInputElement.h"
 
 #include "net.h"
 #include "xp_file.h"
@@ -333,6 +333,32 @@ void nsFormFrame::RemoveFormControlFrame(nsIFormControlFrame& aFrame)
   mFormControls.RemoveElement(&aFrame);
 }
 
+NS_IMETHODIMP
+nsFormFrame::RemoveFrame(nsIPresContext* aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame)
+{
+  nsresult rv = NS_OK;
+
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = aOldFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  if ((NS_OK == result) || (nsnull != fcFrame)) {
+    PRInt32 type;
+    fcFrame->GetType(&type);
+    if (NS_FORM_INPUT_RADIO == type) {
+      nsRadioControlGroup * group;
+      nsAutoString name;
+      nsresult rv = GetRadioInfo(fcFrame, name, group);
+      if (NS_SUCCEEDED(rv) && nsnull != group) {
+        DoDefaultSelection(aPresContext, group, (nsGfxRadioControlFrame*)fcFrame);
+      }
+    }
+  }
+
+  return nsBlockFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+}
+
 nsresult nsFormFrame::GetRadioInfo(nsIFormControlFrame* aFrame,
                                    nsString& aName,
                                    nsRadioControlGroup *& aGroup)
@@ -359,6 +385,57 @@ nsresult nsFormFrame::GetRadioInfo(nsIFormControlFrame* aFrame,
   return NS_ERROR_FAILURE;
 }
 
+void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext, 
+                                     nsRadioControlGroup *    aGroup,
+                                     nsGfxRadioControlFrame * aRadioToIgnore)
+{
+  // If in standard mode, then a radio group MUST default 
+  // to the first item in the group (it must be selected)
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+  if (eCompatibility_Standard == mode) {
+    // first find out if any have a default selection
+    PRInt32 i;
+    PRInt32 numItems = aGroup->GetNumRadios();
+    PRBool oneIsSelected = PR_FALSE;
+    for (i=0;i<numItems && !oneIsSelected;i++) {
+      nsGfxRadioControlFrame * radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(i);
+      nsCOMPtr<nsIContent> content;
+      radioBtn->GetContent(getter_AddRefs(content));
+      if (content) {
+        nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(content));
+        if (input) {
+          input->GetDefaultChecked(&oneIsSelected);
+        }
+      }
+    }
+
+    // if there isn't a default selcted radio then 
+    // select the firdst one in the group.
+    // if aRadioToIgnore is not null then it is being deleted
+    // so don't select that item, select the next one if there is one.
+    if (!oneIsSelected && numItems > 0) {
+      nsGfxRadioControlFrame * radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(0);
+      if (aRadioToIgnore != nsnull && aRadioToIgnore == radioBtn) {
+        if (numItems == 1) {
+          return;
+        }
+        radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(1);
+      }
+      nsCOMPtr<nsIContent> content;
+      radioBtn->GetContent(getter_AddRefs(content));
+      if (content) {
+        nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(content));
+        if (input) {
+          input->SetChecked(PR_TRUE);
+          OnRadioChecked(aPresContext, *radioBtn, PR_TRUE);
+        }
+      }
+    }
+  }
+}
+
+
 void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame)
 {
   mFormControls.AppendElement(&aFrame);
@@ -381,7 +458,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
 
   // radio group processing
   if (NS_FORM_INPUT_RADIO == type) { 
-    nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)&aFrame;
+    nsGfxRadioControlFrame* radioFrame = (nsGfxRadioControlFrame*)&aFrame;
     // gets the name of the radio group and the group
     nsRadioControlGroup * group;
     nsAutoString name;
@@ -401,6 +478,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
 	      radioFrame->SetChecked(aPresContext, PR_FALSE, PR_TRUE);
 	    }
     }
+    DoDefaultSelection(aPresContext, group);
   }
 }
 
@@ -411,7 +489,7 @@ void nsFormFrame::RemoveRadioControlFrame(nsIFormControlFrame * aFrame)
 
   // radio group processing
   if (NS_FORM_INPUT_RADIO == type) { 
-    nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)aFrame;
+    nsGfxRadioControlFrame* radioFrame = (nsGfxRadioControlFrame*)aFrame;
     // gets the name of the radio group and the group
     nsRadioControlGroup * group;
     nsAutoString name;
@@ -423,7 +501,7 @@ void nsFormFrame::RemoveRadioControlFrame(nsIFormControlFrame * aFrame)
 }
   
 void
-nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& aControl, PRBool aChecked)
+nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame& aControl, PRBool aChecked)
 {
   nsString radioName;
   aControl.GetName(&radioName);
@@ -437,7 +515,7 @@ nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& a
     nsRadioControlGroup* group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
     nsString groupName;
     group->GetName(groupName);
-    nsRadioControlFrame* checkedRadio = group->GetCheckedRadio();
+    nsGfxRadioControlFrame* checkedRadio = group->GetCheckedRadio();
     if (groupName.Equals(radioName)) {
       if (aChecked) {
         if (&aControl != checkedRadio) {

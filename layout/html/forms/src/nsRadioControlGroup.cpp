@@ -38,20 +38,20 @@ nsRadioControlGroup::GetRadioCount() const
   return mRadios.Count(); 
 }
 
-nsRadioControlFrame*
+nsGfxRadioControlFrame*
 nsRadioControlGroup::GetRadioAt(PRInt32 aIndex) const 
 { 
-  return (nsRadioControlFrame*) mRadios.ElementAt(aIndex);
+  return (nsGfxRadioControlFrame*) mRadios.ElementAt(aIndex);
 }
 
 PRBool 
-nsRadioControlGroup::AddRadio(nsRadioControlFrame* aRadio) 
+nsRadioControlGroup::AddRadio(nsGfxRadioControlFrame* aRadio) 
 { 
   return mRadios.AppendElement(aRadio);
 }
 
 PRBool 
-nsRadioControlGroup::RemoveRadio(nsRadioControlFrame* aRadio) 
+nsRadioControlGroup::RemoveRadio(nsGfxRadioControlFrame* aRadio) 
 { 
   if (aRadio == mCheckedRadio) {
     mCheckedRadio = nsnull;
@@ -59,14 +59,14 @@ nsRadioControlGroup::RemoveRadio(nsRadioControlFrame* aRadio)
   return mRadios.RemoveElement(aRadio);
 }
 
-nsRadioControlFrame*
+nsGfxRadioControlFrame*
 nsRadioControlGroup::GetCheckedRadio()
 {
   return mCheckedRadio;
 }
 
 void    
-nsRadioControlGroup::SetCheckedRadio(nsRadioControlFrame* aRadio)
+nsRadioControlGroup::SetCheckedRadio(nsGfxRadioControlFrame* aRadio)
 {
   mCheckedRadio = aRadio;
 }
