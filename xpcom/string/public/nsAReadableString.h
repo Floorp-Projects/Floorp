@@ -23,16 +23,21 @@
  * Contributor(s):
  */
 
-#ifndef _nsAReadableString_h__
-#define _nsAReadableString_h__
+#ifndef nsAReadableString_h___
+#define nsAReadableString_h___
 
 #ifndef nscore_h___
 #include "nscore.h"
   // for |PRUnichar|
 #endif
 
-#ifndef _nsCharTraits_h__
+#ifndef nsCharTraits_h___
 #include "nsCharTraits.h"
+#endif
+
+#ifndef nsAlgorithm_h___
+#include "nsAlgorithm.h"
+  // for |NS_MIN|, |NS_MAX|, and |NS_COUNT|...
 #endif
 
 /*
@@ -558,7 +563,7 @@ PRUint32
 basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   {
 #if 0
-    return PRUint32(count(BeginReading(), EndReading(), c));
+    return PRUint32(NS_COUNT(BeginReading(), EndReading(), c));
 #else
     PRUint32 result = 0;
     PRUint32 lengthToExamine = Length();
@@ -567,7 +572,7 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
     for (;;)
       {
         PRInt32 lengthToExamineInThisFragment = iter.size_forward();
-        result += PRUint32(count(iter.operator->(), iter.operator->()+lengthToExamineInThisFragment, c));
+        result += PRUint32(NS_COUNT(iter.operator->(), iter.operator->()+lengthToExamineInThisFragment, c));
         if ( !(lengthToExamine -= lengthToExamineInThisFragment) )
           return result;
         iter += lengthToExamineInThisFragment;
@@ -1075,49 +1080,6 @@ SameImplementation( const basic_nsAReadableString<CharT>& lhs, const basic_nsARe
     return imp_tag && (imp_tag==rhs.Implementation());
   }
 
-template <class InputIterator, class OutputIterator>
-OutputIterator
-copy_string( InputIterator first, InputIterator last, OutputIterator result )
-  {
-    typedef nsCharSourceTraits<InputIterator> source_traits;
-    typedef nsCharSinkTraits<OutputIterator>  sink_traits;
-
-    while ( first != last )
-      {
-        PRInt32 count_copied = PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_distance(first, last)));
-        NS_ASSERTION(count_copied > 0, "|copy_string| will never terminate");
-        first += count_copied;
-      }
-
-    return result;
-  }
-
-template <class InputIterator, class OutputIterator>
-OutputIterator
-copy_string_backward( InputIterator first, InputIterator last, OutputIterator result )
-  {
-    while ( first != last )
-      {
-        PRUint32 lengthToCopy = PRUint32( NS_MIN(last.size_backward(), result.size_backward()) );
-        if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
-
-        NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
-
-#ifdef _MSC_VER
-        // XXX Visual C++ can't stomach 'typename' where it rightfully should
-        nsCharTraits<OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
-#else
-        nsCharTraits<typename OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
-#endif
-
-        last -= PRInt32(lengthToCopy);
-        result -= PRInt32(lengthToCopy);
-      }
-
-    return result;
-  }
-
 template <class CharT>
 nsPromiseSubstring<CharT>
 Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
@@ -1275,4 +1237,4 @@ typedef basic_nsLiteralChar<char>       nsLiteralChar;
 typedef basic_nsLiteralChar<PRUnichar>  nsLiteralPRUnichar;
 
 
-#endif // !defined(_nsAReadableString_h__)
+#endif // !defined(nsAReadableString_h___)

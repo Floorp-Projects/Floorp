@@ -23,11 +23,14 @@
  * Contributor(s):
  */
 
-#ifndef _nsStdStringWrapper_h__
-#define _nsStdStringWrapper_h__
+#ifndef nsStdStringWrapper_h___
+#define nsStdStringWrapper_h___
 
 #include <string>
+
+#ifndef nsAWritableString_h___
 #include "nsAWritableString.h"
+#endif
 
 
 template <class T>
@@ -212,4 +215,4 @@ typedef basic_nsStdStringWrapper<PRUnichar> nsStdString;
 typedef basic_nsStdStringWrapper<char>      nsStdCString;
 
 
-#endif // !defined(_basic_nsStdStringWrapper_h__)
+#endif // !defined(nsStdStringWrapper_h___)

@@ -23,10 +23,12 @@
  * Contributor(s):
  */
 
-#ifndef _nsSharedString_h__
-#define _nsSharedString_h__
+#ifndef nsSharedString_h___
+#define nsSharedString_h___
 
+#ifndef nsAReadableString_h___
 #include "nsAReadableString.h"
+#endif
 
 template <class CharT>
 class basic_nsSharedString
@@ -186,4 +188,4 @@ typedef basic_nsSharedStringPtr<PRUnichar>  nsSharedStringPtr;
 typedef basic_nsSharedStringPtr<char>       nsSharedCStringPtr;
 
 
-#endif // !defined(_nsSharedString_h__)
+#endif // !defined(nsSharedString_h___)
