@@ -634,6 +634,7 @@ nsInlineReflow::IsZeroHeight() const
 // frame that is wrapping an anonymous block that none of the
 // alignment routines are used.
 
+// XXX avoid during pass1 table reflow
 void
 nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
                                     nscoord& aMaxAscent,
@@ -967,6 +968,7 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 void
 nsInlineReflow::TrimTrailingWhiteSpace(nsRect& aLineBox)
 {
+#if XXX_still_do_this
   nscoord deltaWidth;
   PerFrameData* pfd = mFrameDataBase + (mFrameNum - 1);
   if (pfd->mBounds.width > 0) {
@@ -980,11 +982,17 @@ nsInlineReflow::TrimTrailingWhiteSpace(nsRect& aLineBox)
       pfd->mBounds.width -= deltaWidth;
     }
   }
+#endif
 }
 
 void
 nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
 {
+  if (NS_UNCONSTRAINEDSIZE == mRightEdge) {
+    // Don't bother
+    return;
+  }
+
   nscoord maxWidth = mRightEdge - mLeftEdge;
   if (aLineBox.width < maxWidth) {
     nscoord dx = 0;
@@ -1038,6 +1046,7 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
   }
 }
 
+// XXX avoid during pass1 table reflow
 void
 nsInlineReflow::RelativePositionFrames(nsRect& aCombinedArea)
 {
