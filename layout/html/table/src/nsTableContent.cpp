@@ -42,6 +42,11 @@ static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 nsTableContent::nsTableContent (nsIAtom* aTag)
   : nsHTMLContainer(aTag)
 {
+  mTable = nsnull;
+}
+
+nsTableContent::~nsTableContent ()
+{
 }
 
 /**
@@ -54,13 +59,15 @@ nsTableContent::nsTableContent (nsIAtom* aTag, PRBool aImplicit)
 
 nsrefcnt nsTableContent::AddRef(void)
 {
-  if (gsNoisyRefs==PR_TRUE) printf("Add Ref: nsTableContent cnt = %d \n",mRefCnt+1);
+  if (gsNoisyRefs==PR_TRUE) printf("Add Ref: nsTableContent %d - %p cnt = %d \n",
+                                    GetType(), this, mRefCnt+1);
   return ++mRefCnt;
 }
 
 nsrefcnt nsTableContent::Release(void)
 {
-  if (gsNoisyRefs==PR_TRUE) printf("Release: nsTableContent cnt = %d \n",mRefCnt-1);
+  if (gsNoisyRefs==PR_TRUE) printf("Release: nsTableContent %d - %p cnt = %d \n",
+                                    GetType(), this, mRefCnt-1);
   if (--mRefCnt == 0) {
     if (gsNoisyRefs==PR_TRUE)  printf("Delete: nsTableContent \n");
     delete this;
@@ -105,7 +112,11 @@ void nsTableContent::SetTableForChildren(nsTablePart *aTable)
   {
     PRInt32 count = ChildCount();
     for (PRInt32 index = 0; index < count; index++)
-      SetTableForTableContent(ChildAt(index),aTable);
+    {
+      nsIContent* child = ChildAt(index);
+      SetTableForTableContent(child,aTable);
+      NS_RELEASE(child);
+    }
   }
 }
 

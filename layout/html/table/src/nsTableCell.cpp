@@ -19,13 +19,14 @@
 #include "nsTableCellFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIStyleContext.h"
+#include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_TRUE;
+static PRBool gsDebug = PR_FALSE;
 static PRBool gsNoisyRefs = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
@@ -180,7 +181,16 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     SetColSpan(val.GetIntValue());
     return;
   }
-
+  if (aAttribute == nsHTMLAtoms::width) {
+    ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
+  if (aAttribute == nsHTMLAtoms::height) {
+    ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
   // Use default attribute catching code
   nsTableContent::SetAttribute(aAttribute, aValue);
 }
@@ -192,17 +202,35 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
 
-  nsHTMLValue value;
+    // align: enum
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+      text->mTextAlign = value.GetIntValue();
+    }
+    MapBackgroundAttributesInto(aContext, aPresContext);
 
-  // align: enum
-  GetAttribute(nsHTMLAtoms::align, value);
-  if (value.GetUnit() == eHTMLUnit_Enumerated) 
-  {
-    nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
-    text->mTextAlign = value.GetIntValue();
+    // width: pixel
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStylePosition* pos = (nsStylePosition*)
+      aContext->GetData(eStyleStruct_Position);
+    GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      pos->mWidth.SetCoordValue(twips);
+    }
+
+    // height: pixel
+    GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      pos->mHeight.SetCoordValue(twips);
+    }
   }
-  MapBackgroundAttributesInto(aContext, aPresContext);
 
 }
 

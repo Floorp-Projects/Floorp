@@ -90,6 +90,8 @@ struct OuterTableReflowState {
     unconstrainedHeight = PRBool(aReflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
     firstRowGroup = PR_TRUE;
     processingCaption = PR_FALSE;
+    innerTableMaxSize.width=0;
+    innerTableMaxSize.height=0;
   }
 
   ~OuterTableReflowState() {
@@ -190,7 +192,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   PRBool  reflowMappedOK = PR_TRUE;
 
   aStatus = NS_FRAME_COMPLETE;
-  nsSize innerTableMaxElementSize(0,0);
 
   // Set up our kids.  They're already present, on an overflow list, 
   // or there are none so we'll create them now
@@ -228,11 +229,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
     nsReflowState innerTableReflowState(mInnerTableFrame, aReflowState, aReflowState.maxSize);
     aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize,
-                                                  innerTableReflowState,
-                                                  &innerTableMaxElementSize);
-  
-    mInnerTableFrame->RecalcLayoutData();
-
+                                                  innerTableReflowState);
   }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_SECOND);
   // assign table width info only if the inner table frame is a first-in-flow
@@ -249,7 +246,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     mInnerTableFrame->SetTableWidth(aPresContext);
   }
   // inner table max is now the computed width and assigned  height
-  nsSize  innerTableSize;
+  nsSize  innerTableSize(0,0);
 
   mInnerTableFrame->GetSize(innerTableSize);
   state.innerTableMaxSize.width = innerTableSize.width;
@@ -443,12 +440,13 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
   // PushChildren.
   PRBool    originalLastContentIsComplete = mLastContentIsComplete;
 
-  nsSize    kidMaxElementSize;
+  nsSize    kidMaxElementSize(0,0);
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRBool    result = PR_TRUE;
   aState.availSize.width = aState.innerTableMaxSize.width;
   for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
     nsReflowMetrics   kidSize(pKidMaxElementSize);
+    kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
     nsReflowStatus    status;
 
     SetReflowState(aState, kidFrame);
@@ -653,7 +651,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
 #endif
 #endif
   nsTableOuterFrame* nextInFlow = (nsTableOuterFrame*)mNextInFlow;
-  nsSize         kidMaxElementSize;
+  nsSize         kidMaxElementSize(0,0);
   nsSize*        pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
 #ifdef NS_DEBUG
   PRInt32        kidIndex = NextChildOffset();
@@ -673,6 +671,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
 
   while (nsnull != nextInFlow) {
     nsReflowMetrics   kidSize(pKidMaxElementSize);
+    kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
     nsReflowStatus    status;
 
     // Get the next child
@@ -697,7 +696,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
-    nsSize            kidFrameSize;
+    nsSize            kidFrameSize(0,0);
     nsSplittableType  kidIsSplittable;
 
     kidFrame->GetSize(kidFrameSize);
@@ -918,8 +917,7 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
   {
     if (PR_TRUE==gsDebug) printf("reflowChild called with a table body\n");
     nsReflowState kidReflowState(aKidFrame, aState.reflowState, aState.innerTableMaxSize);
-    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize,
-                                                           kidReflowState, aMaxElementSize,
+    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, kidReflowState, 
                                                            mMinCaptionWidth, mMaxCaptionWidth);
   }
   if (PR_TRUE==gsDebug)
@@ -1034,16 +1032,17 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
     {
       nsSize maxElementSize(0,0);
       nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-      nsReflowMetrics desiredSize(&maxElementSize);
+      nsReflowMetrics kidSize(&maxElementSize);
+      kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
       nsReflowStatus  status;
       nsReflowState   reflowState(captionFrame, aState.reflowState, maxSize, eReflowReason_Resize);
       captionFrame->WillReflow(*aPresContext);
-      captionFrame->Reflow(aPresContext, desiredSize, reflowState, status);
+      captionFrame->Reflow(aPresContext, kidSize, reflowState, status);
       if (mMinCaptionWidth<maxElementSize.width)
         mMinCaptionWidth = maxElementSize.width;
-      if (mMaxCaptionWidth<desiredSize.width)
-        mMaxCaptionWidth = desiredSize.width;
+      if (mMaxCaptionWidth<kidSize.width)
+        mMaxCaptionWidth = kidSize.width;
       captionFrame->VerticallyAlignChild(aPresContext);
 
     }
@@ -1087,6 +1086,7 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*        aPresCont
         if (NS_FRAME_IS_COMPLETE(result))
         {
           nsReflowMetrics desiredSize(nsnull);
+          desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
           nsReflowState   reflowState(captionFrame, aState.reflowState, aMaxSize, eReflowReason_Resize);
           captionFrame->WillReflow(*aPresContext);
           result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, reflowState);
@@ -1149,6 +1149,7 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
 */
       // reflow the caption
       nsReflowMetrics desiredSize(nsnull);
+      desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
       nsReflowState   reflowState(captionFrame, aState.reflowState, aMaxSize, eReflowReason_Resize);
       captionFrame->WillReflow(*aPresContext);
       result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, reflowState);

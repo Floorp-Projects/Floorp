@@ -180,12 +180,11 @@ protected:
     * as long as content and style don't change.  This is managed in the member variable mFirstPassIsValid.
     * The layout information for each cell is cached in mColumLayoutData.
     *
-    * @see ResizeReflow
+    * @see Reflow
     */
   virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*      aPresContext,
                                            nsReflowMetrics&     aDesiredSize,
-                                           const nsReflowState& aReflowState,
-                                           nsSize*              aMaxElementSize);
+                                           const nsReflowState& aReflowState);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
@@ -195,13 +194,12 @@ protected:
     * @param aMinCaptionWidth - the max of all the minimum caption widths.  0 if no captions.
     * @param aMaxCaptionWidth - the max of all the desired caption widths.  0 if no captions.
     *
-    * @see ResizeReflow
+    * @see Reflow
     * @see NeedsReflow
     */
   virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
                                            nsReflowMetrics& aDesiredSize,
                                            const nsReflowState& aReflowState,
-                                           nsSize*          aMaxElementSize,
                                            PRInt32 aMinCaptionWidth,
                                            PRInt32 mMaxCaptionWidth);
 
