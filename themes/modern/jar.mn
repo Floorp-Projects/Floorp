@@ -57,6 +57,8 @@ modern.jar:
   skin/modern/communicator/search/search.css                       (communicator/search/search.css)
   skin/modern/communicator/alerts/alert.css                        (communicator/alerts/alert.css)
   skin/modern/communicator/sidebar/sidebarBindings.xml             (communicator/sidebar/sidebarBindings.xml)
+  skin/modern/communicator/sidebar/sbar-top.gif                    (communicator/sidebar/sbar-top.gif)
+  skin/modern/communicator/sidebar/sbar-top-tabopen.gif            (communicator/sidebar/sbar-top-tabopen.gif)
   skin/modern/communicator/sidebar/sbtab-rit-top-act.gif           (communicator/sidebar/sbtab-rit-top-act.gif)
   skin/modern/communicator/sidebar/sbtab-rit-btm-act.gif           (communicator/sidebar/sbtab-rit-btm-act.gif)
   skin/modern/communicator/sidebar/sbtab-rit-top.gif               (communicator/sidebar/sbtab-rit-top.gif)

@@ -48,15 +48,21 @@
 
 /* ::::: sidebar header ::::: */
 
-.sidebarheader-main {
-  -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebarheader") !important;
-  -moz-box-align: center;
-  border-top: 1px solid #DFE5EF;
-  border-left: 1px solid #DFE5EF;
-  padding: 3px 0px 2px 6px;
-  background-color: #B9C4D0;
+.sidebar-header-text {
   color: #000000;
   font-weight: bold;
+  -moz-box-align: center;
+}
+
+.sidebarheader-main {
+  -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebarheader") !important;
+  background-color: #B9C4D0;
+  background-image: url("chrome://communicator/skin/sidebar/sbar-top.gif");
+  background-repeat: no-repeat;
+}
+
+.sidebarheader-main[prefixhidden="false"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbar-top-tabopen.gif");
 }
 
 /* ..... picker button ..... */
@@ -88,11 +94,9 @@
 #sidebar-close-button {
   margin: 0px 1px;
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
-  padding: 0px 2px 0px 4px;
+  padding: 4px 2px 4px 4px;
   list-style-image: url("chrome://global/skin/icons/closebox.gif");
 }
-
-
 
 /* ::::: loading info ::::: */
 
@@ -116,6 +120,12 @@
   border-bottom: 6px solid;
   -moz-border-bottom-colors: #B9C4D0 #B9C4D0 #B9C4D0 #B9C4D0 #DAE3ED #96A7B8;
 }
+
+.browser-sidebar {
+  border-bottom: 6px solid;
+  -moz-border-bottom-colors: #B9C4D0 #B9C4D0 #B9C4D0 #B9C4D0 #DAE3ED #96A7B8;  
+}
+
 
 /* ::::: sidebar tabs ::::: */
 

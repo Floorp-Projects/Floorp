@@ -49,6 +49,14 @@
   min-width: 0px;
 }
 
+toolbox {
+  border-bottom: none;
+}
+
+#appcontent {
+  border-top: 1px solid #494F5D;
+}
+
 #back-button {
   -moz-image-region: rect(0 41px 38px 0);
 }
@@ -472,12 +480,16 @@
   background: url("chrome://global/skin/toolbar/tb-mid.gif") #C7D0D9 repeat-x top;
 }
 
+#PersonalToolbar > .toolbar-prefix {
+  border-top: 1px solid #CED6DD;
+  border-left: 1px solid #DAE3ED;
+}
+
 #PersonalToolbar > toolbargrippy,
 #PersonalToolbar > .toolbar-holder {
   border-top: 1px solid #CED6DD;
   border-right: 1px solid #95A0AD;
   border-bottom: 1px solid #95A0AD;
-  border-left: 1px solid #DAE3ED;
 }
 
 #PersonalToolbar > toolbargrippy:hover:active {

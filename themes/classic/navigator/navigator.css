@@ -355,3 +355,9 @@
 #home-button:hover:active {
   list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
 }
+
+#PersonalToolbar > .toolbar-prefix {
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDShadow;
+}
