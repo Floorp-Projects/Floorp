@@ -94,7 +94,7 @@ friend class CTokenHandler;
      * Destructor
      * @update	gess5/11/98
      */
-    ~nsParser();
+    virtual ~nsParser();
 
     /**
      * Select given content sink into parser for parser output

@@ -43,9 +43,6 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
-static const char* kNullFilename= "Error: Null filename given";
-static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-static const char* kHTMLTextContentType = "text/html";
 static nsString    kUnknownFilename("unknown");
 
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
@@ -96,7 +93,7 @@ public:
   CDTDFinder(nsIDTD* aDTD) {
     NS_IF_ADDREF(mTargetDTD=aDTD);
   }
-  ~CDTDFinder() {
+  virtual ~CDTDFinder() {
     NS_IF_RELEASE(mTargetDTD);
   }
   virtual void* operator()(void* anObject) {
@@ -722,7 +719,6 @@ nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
 
   int len=1; //init to a non-zero value
   int err;
-  int offset=0;
 
   while (len > 0) {
     len = pIStream->Read(&err, mParserContext->mTransferBuffer, 0, mParserContext->eTransferBufferSize);
@@ -741,8 +737,7 @@ nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
     } //if
   }
 
-  nsresult result=ResumeParse();
-  return result;
+  return ResumeParse();
 }
 
 /**
