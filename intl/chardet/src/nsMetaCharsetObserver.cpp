@@ -93,14 +93,17 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
   nsresult res;
   mAlias = nsnull;
   NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
-  if(NS_SUCCEEDED(res))
+  if(NS_SUCCEEDED(res)) {
      mAlias = calias;
+     NS_ADDREF(mAlias);
+  }
 }
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::~nsMetaCharsetObserver()
 {
   // should we release mAlias
   PR_AtomicDecrement(& g_InstanceCount);
+  NS_IF_RELEASE(mAlias);
 }
 
 //-------------------------------------------------------------------------

@@ -135,11 +135,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
   if( aSource < mCharsetSource) // priority is lower the the current one , just
     return res;
 
-  nsICharsetAlias* calias = nsnull;
-  res = nsServiceManager::GetService(kCharsetAliasCID,
-                                       kICharsetAliasIID,
-                                       (nsISupports**)&calias);
-
+  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
   NS_ASSERTION( nsnull != calias, "cannot find charset alias");
   nsAutoString charsetName = aCharset;
   if( NS_SUCCEEDED(res) && (nsnull != calias))
@@ -152,7 +148,6 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
     }
     // different, need to change it
     res = calias->GetPreferred(aCharset, charsetName);
-    nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
 
     if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
     {
@@ -162,10 +157,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
     mCharset = charsetName;
     mCharsetSource = aSource;
 
-    nsICharsetConverterManager * ccm = nsnull;
-    res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                       nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
-                                       (nsISupports**)&ccm);
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {
       nsIUnicodeDecoder * decoder = nsnull;
@@ -176,7 +168,6 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
 
          mUnicodeDecoder = decoder;
       }    
-      nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
     }
   }
   return res;
