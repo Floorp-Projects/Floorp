@@ -194,7 +194,17 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
   }
   return NS_ERROR_FAILURE;
 }
+
+
+NS_IMETHODIMP
+nsTextEditRules::DocumentIsEmpty(PRBool *aDocumentIsEmpty)
+{
+  if (!aDocumentIsEmpty)
+    return NS_ERROR_NULL_POINTER;
   
+  *aDocumentIsEmpty = (mBogusNode.get() != nsnull);
+  return NS_OK;
+}
 
 /********************************************************
  *  Protected methods 

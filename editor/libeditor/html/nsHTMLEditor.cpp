@@ -2334,6 +2334,18 @@ NS_IMETHODIMP nsHTMLEditor::ScrollIntoView(PRBool aScrollToBegin)
 */
 
 
+NS_IMETHODIMP
+nsHTMLEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
+{
+  if (!aDocumentIsEmpty)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (!mRules)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  return mRules->DocumentIsEmpty(aDocumentIsEmpty);
+}
+
 
 NS_IMETHODIMP
 nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)                                              
@@ -2342,6 +2354,16 @@ nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)
   nsresult result;
   // initialize out params
   *aCount = 0;
+  
+  // special-case for empty document, to account for the bogus text node
+  PRBool docEmpty;
+  result = GetDocumentIsEmpty(&docEmpty);
+  if (NS_FAILED(result)) return result;
+  if (docEmpty)
+  {
+    *aCount = 0;
+    return NS_OK;
+  }
   
   nsCOMPtr<nsIDOMSelection> sel;
   result = GetSelection(getter_AddRefs(sel));
@@ -3017,6 +3039,24 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
 //  }
 //  else
 //  { // default processing
+
+
+    nsresult rv = NS_OK;
+    
+    // special-case for empty document when requesting plain text,
+    // to account for the bogus text node
+    if (aFormatType == "text/plain")
+    {
+      PRBool docEmpty;
+      rv = GetDocumentIsEmpty(&docEmpty);
+      if (NS_FAILED(rv)) return rv;
+      
+      if (docEmpty) {
+        aOutputString = "";
+        return NS_OK;
+      }
+    }
+
     nsCOMPtr<nsIDocumentEncoder> encoder;
     char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
     if (! progid)
@@ -3025,7 +3065,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     char* type = aFormatType.ToNewCString();
     strcat(progid, type);
     nsCRT::free(type);
-    nsresult rv = nsComponentManager::CreateInstance(progid,
+    rv = nsComponentManager::CreateInstance(progid,
                                             nsnull,
                                             nsIDocumentEncoder::GetIID(),
                                             getter_AddRefs(encoder));
@@ -3084,7 +3124,21 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
                                            const nsString* aCharset,
                                            PRUint32 aFlags)
 {
+
   nsresult rv;
+
+  // special-case for empty document when requesting plain text,
+  // to account for the bogus text node
+  if (aFormatType == "text/plain")
+  {
+    PRBool docEmpty;
+    rv = GetDocumentIsEmpty(&docEmpty);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (docEmpty)
+       return NS_OK;    // output nothing
+  }
+
   nsCOMPtr<nsIDocumentEncoder> encoder;
   char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
   if (! progid)
