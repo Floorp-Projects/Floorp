@@ -28,7 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= history
 
-XPIDLSRCS	= nsIGlobalHistory.idl
+XPIDLSRCS	= nsIGlobalHistory.idl  \
+		  nsISHEntry.idl        \
+		  nsISHContainer.idl    \
+                  nsISHTransaction.idl  \
+                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

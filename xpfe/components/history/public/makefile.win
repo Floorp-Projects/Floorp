@@ -25,6 +25,9 @@ MODULE=history
 
 XPIDLSRCS =                   \
     .\nsIGlobalHistory.idl    \
+    .\nsISHEntry.idl          \
+    .\nsISHContainer.idl      \
+    .\nsISHTransaction.idl    \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
