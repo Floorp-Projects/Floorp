@@ -92,7 +92,7 @@ nsFileChannel::~nsFileChannel()
     if (mCommand) nsCRT::free(mCommand);
 }
 
-NS_IMPL_ISUPPORTS5(nsFileChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsFileChannel,
                    nsIFileChannel,
                    nsIChannel,
                    nsIRequest,
