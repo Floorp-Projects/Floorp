@@ -42,13 +42,17 @@ MISCDEP=$(LLIBS)
 
 OBJS=   \
 	.\$(OBJDIR)\mkreg.obj	\
+!ifdef SMART_MAIL
 	.\$(OBJDIR)\mkbuf.obj	\
+!endif
 	$(NULL)
 
 
 CSRCS =	\
 	mkreg.c	\
+!ifdef SMART_MAIL
 	mkbuf.c \
+!endif
 	$(NULL)
 
 MODULE=network
@@ -61,7 +65,9 @@ EXTRA_LIBS=
 REQUIRES= network
 EXPORTS= \
 	mkreg.h \
+!ifdef SMART_MAIL
 	mkbuf.h \
+!endif
 	$(NULL);
 
 C_OBJS = \
