@@ -364,8 +364,14 @@ nsImageControlFrame::GetCursor(nsIPresContext& aPresContext,
   // the cursor style is "auto" we use the pointer cursor.
   const nsStyleColor* styleColor;
   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
-  aCursor = styleColor->mCursor;
-  if (NS_STYLE_CURSOR_AUTO == aCursor) {
+  NS_ASSERTION(styleColor,"null color style struct");
+
+  if (styleColor) {
+    aCursor = styleColor->mCursor;
+    if (NS_STYLE_CURSOR_AUTO == aCursor) {
+      aCursor = NS_STYLE_CURSOR_POINTER;
+    }
+  } else {
     aCursor = NS_STYLE_CURSOR_POINTER;
   }
   return NS_OK;
