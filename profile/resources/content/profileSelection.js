@@ -44,17 +44,17 @@ function StartUp()
 
   var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
   dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
-  
+
   // "AggRegF" stands for Application Registry File.
-  // Forgive the weird name directory service has adapted for 
+  // Forgive the weird name directory service has adapted for
   // application registry file....
   var regFile = dirServ.get("AppRegF", Components.interfaces.nsIFile);
 
   Registry = Components.classes['@mozilla.org/registry;1'].createInstance();
   Registry = Registry.QueryInterface(Components.interfaces.nsIRegistry);
   Registry.open(regFile.path);
- 
-  // get new profile registry & users location and dump it to console 
+
+  // get new profile registry & users location and dump it to console
   // to let users know about it.
   var regFolder = dirServ.get("AppRegD", Components.interfaces.nsIFile);
   dump("New location for profile registry and user profile directories is -> " + regFolder.path + "\n");
@@ -74,7 +74,7 @@ function StartUp()
 
   var profileTree = document.getElementById("profiles");
   profileTree.focus();
-    
+
   DoEnabling();
 }
 
@@ -105,7 +105,7 @@ function AddItem( aChildren, aProfileObject )
   var item    = document.createElement("treeitem");
   var row     = document.createElement("treerow");
   var cell    = document.createElement("treecell");
-  cell.setAttribute("value", aProfileObject.mName );
+  cell.setAttribute("label", aProfileObject.mName );
   cell.setAttribute("rowMigrate",  aProfileObject.mMigrated );
   cell.setAttribute("class", "treecell-iconic");
   row.appendChild(cell);
@@ -120,7 +120,7 @@ function AddItem( aChildren, aProfileObject )
   return item;
 }
 
-function Profile ( aName, aMigrated ) 
+function Profile ( aName, aMigrated )
 {
   this.mName       = aName ? aName : null;
   this.mMigrated   = aMigrated ? aMigrated : null;
@@ -161,29 +161,29 @@ function loadElements()
 // purpose  : starts mozilla given the selected profile (user choice: "Start Mozilla")
 function onStart()
 {
-  var profileTree = document.getElementById("profiles");   
+  var profileTree = document.getElementById("profiles");
   var selected = profileTree.selectedItems[0];
-    
+
   var profilename = selected.getAttribute("profile_name");
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
     var lString = gProfileManagerBundle.getString("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     lString = lString.replace(/%brandShortName%/gi,
                               gBrandBundle.getString("brandShortName"));
-    var title = gProfileManagerBundle.getString("migratetitle");   
-    
+    var title = gProfileManagerBundle.getString("migratetitle");
+
     if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
       return false;
   }
-  
+
   // start in online or offline mode
   var offlineState = document.getElementById("offlineState");
   var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
                                                   "nsIIOService");
-  ioService.offline = offlineState.checked;  
-  
+  ioService.offline = offlineState.checked;
+
   try {
     profile.startApprunner(profilename);
     ExitApp();
@@ -228,7 +228,7 @@ function foo()
       oldCaptionSelection = document.getElementById( "caption" ).firstChild.nodeValue;
     ChangeCaption( "What Is Mozollia?" ); // DO NOT LOCALIZE!
     set = true;
-  } 
+  }
   else {
     var tempCaption = document.getElementById( "caption" ).firstChild.nodeValue;
     if( profileManagerMode == "manager" ) {
@@ -248,10 +248,10 @@ function SetUpOKCancelButtons()
   doSetOKCancel( onStart, onExit, null, null );
   var okButton = document.getElementById("ok");
   var cancelButton = document.getElementById("cancel");
-  
+
   var okButtonString;
   var cancelButtonString;
-  
+
   try {
     okButtonString = gProfileManagerBundle.getString("startButton");
     okButtonString = okButtonString.replace(/%brandShortName%/,
@@ -261,8 +261,8 @@ function SetUpOKCancelButtons()
     okButtonString = "Start Yah";
     cancelButtonString = "Exit Yah";
   }
-  
-  okButton.setAttribute( "value", okButtonString );
+
+  okButton.setAttribute( "label", okButtonString );
   okButton.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
-  cancelButton.setAttribute( "value", cancelButtonString );
+  cancelButton.setAttribute( "label", cancelButtonString );
 }
