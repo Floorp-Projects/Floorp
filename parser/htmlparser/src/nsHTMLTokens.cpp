@@ -991,7 +991,11 @@ CCommentToken::CCommentToken() : CHTMLToken(eHTMLTag_comment) {
  *  @return  
  */
 CCommentToken::CCommentToken(const nsAString& aName) : CHTMLToken(eHTMLTag_comment) {
-  mTextValue.Assign(aName);
+  mComment.Rebind(aName);
+}
+
+void CCommentToken::AppendSourceTo(nsAString& anOutputString){
+  anOutputString.Append(mCommentDecl);
 }
 
 static PRBool IsCommentEnd(
@@ -1018,21 +1022,22 @@ static PRBool IsCommentEnd(
   return PR_FALSE;
 }
 
-static
-nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
-  aString.Truncate();
-
+nsresult CCommentToken::ConsumeStrictComment(nsScanner& aScanner) 
+{
   // <!--[... -- ... -- ...]*-->
   /*********************************************************
     NOTE: This algorithm does a fine job of handling comments
           when they're formatted per spec, but if they're not
           we don't handle them well.
    *********************************************************/
-  nsReadingIterator<PRUnichar> end, current, gt;
+  nsReadingIterator<PRUnichar> end, current, gt, lt;
   aScanner.EndReading(end);
   aScanner.CurrentPosition(current);
 
   nsReadingIterator<PRUnichar> beginData = end;
+
+  lt = current;
+  lt.advance(-2); // <!
 
   // Regular comment must start with <!--
   if (current != end && *current == kMinus &&
@@ -1052,18 +1057,10 @@ nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
         // done
         current.advance(-2);
         if (beginData != current) { // protects from <!---->
-#if 0
-          // XXX We should do this, but it HANGS until bug 112943 is fixed:
-          aString = Substring(beginData, current);
-#else
-          // XXX Instead we can do this EVIL HACK (from jag):
-          PRUint32 len = Distance(beginData, current);
-          aString.SetLength(len);
-          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-          copy_string(beginData, current, dest);
-#endif
+          aScanner.BindSubstring(mComment, beginData, current);
         }
-        aScanner.SetPosition(++gt);
+        aScanner.BindSubstring(mCommentDecl, lt, ++gt);
+        aScanner.SetPosition(gt);
         return NS_OK;
       } else {
         // Continue after the last '--'
@@ -1080,17 +1077,9 @@ nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
     aScanner.CurrentPosition(current);
     beginData = current;
     if (FindCharInReadable('>', current, end)) {
-#if 0
-      // XXX We should do this, but it HANGS until bug 112943 is fixed:
-      aString = Substring(beginData, current);
-#else
-      // XXX Instead we can do this EVIL HACK (from jag):
-      PRUint32 len = Distance(beginData, current);
-      aString.SetLength(len);
-      PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-      copy_string(beginData, current, dest);
-#endif    
-      aScanner.SetPosition(++current);
+      aScanner.BindSubstring(mComment, beginData, current); 
+      aScanner.BindSubstring(mCommentDecl, lt, ++current);
+      aScanner.SetPosition(current);
       return NS_OK;
     }
   }
@@ -1111,10 +1100,8 @@ nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
   return NS_OK;
 }
 
-static
-nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
-  aString.Truncate();
-
+nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner) 
+{
   // <![-[-]] ... [[-]-|--!]>
   /*********************************************************
     NOTE: This algorithm does a fine job of handling comments
@@ -1126,7 +1113,9 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
   aScanner.CurrentPosition(current);
   nsReadingIterator<PRUnichar> beginData = current, 
                                beginLastMinus = end,
-                               bestAltCommentEnd = end;
+                               bestAltCommentEnd = end,
+                               lt = current;
+  lt.advance(-2); // <!
 
   // When we get here, we have always already consumed <!
   // Skip over possible leading minuses
@@ -1172,18 +1161,10 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
         if (goodComment) {
           // done
           if (beginLastMinus != current) { // protects from <!---->
-#if 0
-            // XXX We should do this, but it HANGS until bug 112943 is fixed:
-            aString = Substring(beginData, ++current);
-#else
-            // XXX Instead we can do this EVIL HACK (from jag):
-            PRUint32 len = Distance(beginData, ++current);
-            aString.SetLength(len);
-            PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-            copy_string(beginData, current, dest);
-#endif
+            aScanner.BindSubstring(mComment, beginData, ++current);
           }
-          aScanner.SetPosition(++gt);
+          aScanner.BindSubstring(mCommentDecl, lt, ++gt);
+          aScanner.SetPosition(gt);
           return NS_OK;
         } else {
           // try again starting after the last '>'
@@ -1209,20 +1190,12 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
       // If not, the document has no end comment and should be treated as one big comment.
       gt = bestAltCommentEnd;
       if (beginData != gt) { // protects from <!-->
-#if 0
-        // XXX We should do this, but it HANGS until bug 112943 is fixed:
-        aString = Substring(beginData, gt);
-#else
-        // XXX Instead we can do this EVIL HACK (from jag):
-        PRUint32 len = Distance(beginData, gt);
-        aString.SetLength(len);
-        PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-        copy_string(beginData, gt, dest);
-#endif
+        aScanner.BindSubstring(mComment, beginData, gt);
       }
       if (gt != end) {
         ++gt;
       }
+      aScanner.BindSubstring(mCommentDecl, lt, gt);
       aScanner.SetPosition(gt);
       return NS_OK;
     }
@@ -1252,18 +1225,10 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
     }
 
     if (current != gt) {
-#if 0
-      // XXX We should do this, but it HANGS until bug 112943 is fixed:
-      aString = Substring(beginData, ++current);
-#else
-      // XXX Instead we can do this EVIL HACK (from jag):
-      PRUint32 len = Distance(beginData, ++current);
-      aString.SetLength(len);
-      PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-      copy_string(beginData, current, dest);
-#endif
+      aScanner.BindSubstring(mComment, beginData, ++current);
     }
-    aScanner.SetPosition(++gt);
+    aScanner.BindSubstring(mCommentDecl, lt, ++gt);
+    aScanner.SetPosition(gt);
     return NS_OK;
   }
 
@@ -1284,14 +1249,14 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
   
   if (aFlag & NS_IPARSER_FLAG_STRICT_MODE) {
     //Enabling strict comment parsing for Bug 53011 and  2749 contradicts!!!!
-    result=ConsumeStrictComment(aScanner,mTextValue);
+    result = ConsumeStrictComment(aScanner);
   }
   else {
-    result=ConsumeComment(aScanner,mTextValue);
+    result = ConsumeQuirksComment(aScanner);
   }
 
   if (NS_SUCCEEDED(result)) {
-    mNewlineCount = !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) ? mTextValue.CountChar(kNewLine) : -1;
+    mNewlineCount = !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) ? mCommentDecl.CountChar(kNewLine) : -1;
   }
 
   return result;
@@ -1299,7 +1264,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
 
 const nsAString& CCommentToken::GetStringValue(void)
 {
-  return mTextValue;
+  return mComment;
 }
 
 /* 
