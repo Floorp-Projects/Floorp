@@ -32,6 +32,14 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/MailAppShellNoTB.html \
 	$(srcdir)/MailFrame.html \
 	$(srcdir)/MailToolbar.xml \
+	$(srcdir)/pref-appearance.html \
+	$(srcdir)/pref-fonts.html \
+	$(srcdir)/pref-navigator.html \
+	$(srcdir)/prefbottom.html \
+	$(srcdir)/PrefsWindow.html \
+	$(srcdir)/PrefsWindow.js \
+	$(srcdir)/preftree.css \
+	$(srcdir)/preftree.xul \
 	$(NULL)
 
 EXPORT_RESOURCE_TOOLBAR = \
