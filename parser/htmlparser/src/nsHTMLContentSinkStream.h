@@ -174,13 +174,13 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
                               nsIOutputStream* aOutStream,
                               const nsString* aCharsetOverride=nsnull,
                               PRBool aDoFormat = PR_FALSE,
-                              PRBool aDoHeader = PR_TRUE);
+                              PRBool aDoHeader = PR_FALSE);
 
 extern NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                               nsString* aOutString, 
                               PRBool aDoFormat = PR_FALSE,
-                              PRBool aDoHeader = PR_TRUE);
+                              PRBool aDoHeader = PR_FALSE);
 
 
 #endif
