@@ -9,8 +9,8 @@ COSES
 
 <!-- HTTP Header -->
 <text>
-HTTP/1.1 <if lvalue="response" condition="ne" rvalue=""><text value="(response)"/></if><else>200 OK</else><br/>
-<if lvalue="headers" condition="ne" rvalue=""><text value="(headers)"/></if>Content-Type: text/html
+HTTP/1.1 <with variable="(response)"><text value="(response)"/></with><else>200 OK</else><br/>
+<with variable="headers"><text value="(headers)"/></with>Content-Type: text/html
 </text>
 
 <!-- Separator -->
