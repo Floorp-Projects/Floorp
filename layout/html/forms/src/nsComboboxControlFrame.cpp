@@ -1863,7 +1863,7 @@ nsComboboxControlFrame::SelectionChanged()
     }
     if (shouldSetValue) {
       if (mTextStr.Length() == 0) {
-        nsAutoString space(" ");
+        nsAutoString space; space.AssignWithConversion(" ");
         rv = mDisplayContent->SetText(space.GetUnicode(), space.Length(), PR_TRUE);
       } else {
         rv = mDisplayContent->SetText(mTextStr.GetUnicode(), mTextStr.Length(), PR_TRUE);
