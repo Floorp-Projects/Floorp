@@ -48,10 +48,8 @@ function setDivTextFromForm(divid, value) {
     // otherwise fill in the .text element
     var div = document.getElementById(divid+".text");
     if (!div) return;
-    
-    if (div.firstChild)
-        div.removeChild(div.firstChild);
-    div.appendChild(document.createTextNode(value));
+
+    div.setAttribute("value", value);
 }
 
 function setupAnother(event)

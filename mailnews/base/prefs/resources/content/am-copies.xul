@@ -25,7 +25,7 @@
       <spring class="header-spring" flex="1"/>
       <text class="right-header-text" value=""/>
     </box>
-  <text value="&sendingPrefix.label;"/>
+  <text class="label" value="&sendingPrefix.label;"/>
 
   <box>
     <box flex="1">
@@ -59,12 +59,12 @@
   </columns>
   <rows>
     <row>
-      <text value="&draftMailFolder.label;"/>
+      <text class="label" value="&draftMailFolder.label;"/>
       <!-- name="identity.draftFolder" -->
       <menu id="msgDraftsFolderPicker"/>
     </row>
     <row>
-      <text value="&templateMailFolder.label;"/>
+      <text class="label" value="&templateMailFolder.label;"/>
       <!-- name="identity.stationeryFolder " -->
       <menu id="msgStationeryFolderPicker"/>
     </row>

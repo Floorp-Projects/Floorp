@@ -29,40 +29,40 @@ Rights Reserved.
     class="dialog"
     onload="parent.wizardManager.onPageLoad('login');">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
 
   <box id="wizardHeader">
-    <titledbutton class="left-header-text" value="&loginTitle.label;"/>
+    <text class="left-header-text" value="&loginTitle.label;"/>
   </box>
 
   <box align="vertical">
-    <html:div>&usernameDesc.label; &usernameExample.label;</html:div>
-    <html:div>
-      <html:label for="username">&usernameLabel.label;</html:label>
+    <html>&usernameDesc.label; &usernameExample.label;</html>
+    <box>
+      <text class="label" value="&usernameLabel.label;"/>
       <html:input type="text" name="username" id="username"/>
-    </html:div>
+    </box>
   </box>
   <spring class="spacer"/>
   <box align="vertical">
-    <html:div class="title">&passwordTitle.label;</html:div>
-    <html:div>&savePasswordDesc.label;</html:div>
+    <text class="title" value="&passwordTitle.label;"/>
+    <html>&savePasswordDesc.label;</html>
     <spring class="spacer"/>
-    <html:div>&savePasswordLabel.label;</html:div>
-    <html:div>
+    <html>&savePasswordLabel.label;</html>
+    <box>
       <html:input type="checkbox" name="rememberPassword"
                   onchange="onSavePassword(event.target);"
                   id="rememberPassword"/>
       <html:label for="rememberPassword">&savePasswordCheckbox.label;</html:label>
-    </html:div>
+    </box>
     <spring class="spacer"/>
-    <html:div style="padding-left: 20px">
-      <html:label>&passwordDesc.label;</html:label>
-      <html:div>
-        <html:label for="password">&passwordLabel.label;</html:label>
+    <box orient="vertical" style="padding-left: 20px">
+      <text class="label" value="&passwordDesc.label;"/>
+      <box>
+        <text class="label" value="&passwordLabel.label;"/>
         <html:input type="password"
                     name="password" id="password"/>
-      </html:div>
-    </html:div>
+      </box>
+    </box>
   </box>
 </window>

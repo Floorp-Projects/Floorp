@@ -30,47 +30,46 @@ Rights Reserved.
     onload="parent.wizardManager.onPageLoad('accounttype');"
     onunload="onUnload();">
 
-<html:script src="aw-accounttype.js"/>
+<script src="aw-accounttype.js"/>
 <box align="vertical" style="width: 100%; height: 100%" flex="100%">
   <box id="wizardHeader">
     <titledbutton class="left-header-text" value="&accountTypeTitle.label;"/>
   </box>
 
-  <html:div class="desc">&accountTypeDesc.label;</html:div>
+  <html class="desc">&accountTypeDesc.label;</html>
   <spring class="spacer"/>
-  <html:div class="desc">&accountTypeDirections.label;</html:div>
+  <html class="desc">&accountTypeDirections.label;</html>
 <box align="vertical">
-  <html:div>
+  <box>
     <html:input type="radio" name="acctyperadio" id="mailaccount" onclick="onMailChanged(event);" value="mail" checked="1"/>
     <html:label for="mailaccount">&accountTypeMail.label;</html:label>
-  </html:div>
-  <html:div style="visibility: collapse; margin-left: 10px" id="mailSubButtons">
-  <html:div align="vertical" 
+  </box>
+  <box orient="vertical" style="margin-left: 10px" id="mailSubButtons" >
+  <box orient="vertical" 
             datasources="rdf:ispdefaults" 
             containment="http://home.netscape.com/NC-rdf#providers"
             id="ispBox"
             ref="NC:ispinfo">
   <template>
     <rule>
-      <html:div uri="...">
-        <html:input type="radio" name="ispchoice" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
+      <box uri="...">
+        <html:input type="radio" name="ispchoice" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" id="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
         <html:label for="rdf:http://home.netscape.com/NC-rdf#wizardShortName">
           <text value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
         </html:label>
-      </html:div>
+      </box>
     </rule>
   </template>
-  </html:div>
-    <html:div id="otherIsp">
+  </box>
+    <box id="otherIsp">
       <html:input type="radio" name="ispchoice" value="otherIsp" id="otherIspRadio"/>
       <html:label for="otherIspRadio">&accountTypeISP.label;</html:label>
-    </html:div>
-  </html:div>
-  <html:div>
+    </box>
+  </box>
+  <box>
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     <html:label for="newsaccount">&accountTypeNews.label;</html:label>
-  </html:div>
-    
+  </box>
 </box>
 </box>
 </window>

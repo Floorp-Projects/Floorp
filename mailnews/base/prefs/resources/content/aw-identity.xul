@@ -29,38 +29,34 @@ Rights Reserved.
     class="dialog"
     onload="parent.wizardManager.onPageLoad('identity');">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
 
   <box id="wizardHeader">
-    <titledbutton class="left-header-text" value="&identityTitle.label;"/>
+    <text class="left-header-text" value="&identityTitle.label;"/>
   </box>
-  <html:div>&identityDesc.label;</html:div>
+  <html>&identityDesc.label;</html>
 
   <spring class="spacer"/>
-  <html:div>
-    <html:div>&fullnameDesc.label; &fullnameExample.label;</html:div>
-  </html:div>
+  <html>&fullnameDesc.label; &fullnameExample.label;</html>
 
   <spring class="spacer"/>
 
-  <html:div>
+  <html>
       <html:label for="fullName">&fullnameLabel.label;</html:label>
       <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
-  </html:div>
+  </html>
   
   <spring class="spacer"/>
   <spring class="spacer"/>
 
-  <html:div>
-    <html:div>&emailDesc.label; &emailExample.label;</html:div>
-  </html:div>
+  <html>&emailDesc.label; &emailExample.label;</html>
 
   <spring class="spacer"/>
 
-  <html:div>
+  <html>
       <html:label for="email">&emailLabel.label;</html:label>
       <html:input type="text" mailtype="identity" name="email" id="email"/>
       <html:span id="postEmailText"/>
-  </html:div>
+  </html>
 </window>

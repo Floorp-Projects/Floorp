@@ -37,7 +37,7 @@ function fixLabels(box) {
 
     var haveDynamicInputs = false;
     while (child) {
-        if (child.tagName.toLowerCase() == "div") {
+        if (child.tagName.toLowerCase() == "html") {
             var input = child.childNodes[0];
             var label = child.childNodes[1];
 
@@ -57,7 +57,7 @@ function fixLabels(box) {
 
     if (haveDynamicInputs) {
         var subButtons = document.getElementById("mailSubButtons");
-        subButtons.style.visibility="visible";
+        subButtons.removeAttribute("hidden");
     }
 }
 

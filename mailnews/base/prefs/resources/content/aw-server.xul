@@ -30,53 +30,54 @@ Rights Reserved.
     class="dialog"
     onload="parent.wizardManager.onPageLoad('server');">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
 
   <box id="wizardHeader">
-    <titledbutton class="left-header-text" value="&serverTitle.label;"/>
+    <text class="left-header-text" value="&serverTitle.label;"/>
   </box>
 
   <box align="vertical">
-    <html:div class="title">&incomingServerTitle.label;</html:div>
+    <text class="title" value="&incomingServerTitle.label;"/>
     <spring class="spacer"/>
-    <html:div>&incomingServerTypeDesc.label;</html:div>
+    <html>&incomingServerTypeDesc.label;</html>
     <spring class="spacer"/>
-    <html:div>
-    <html:label for="servertype">
-      &incomingServerTypeLabel.label;</html:label>
+    <box>
+      <text class="label" value="&incomingServerTypeLabel.label;"/>
       <html:select id="servertype" name="servertype">
         <html:option value="pop3">&popType.label;</html:option>
         <html:option value="imap">&imapType.label;</html:option>
       </html:select>
-    </html:div>
+    </box>
     <spring class="spacer"/>
-    <html:div>&incomingServerNameDesc.label;</html:div>
+    <html>&incomingServerNameDesc.label;</html>
     <spring class="spacer"/>
-    <html:div>
-      <html:label for="hostname">&incomingServerLabel.label;</html:label>
+    <box>
+      <text class="label" value="&incomingServerLabel.label;"/>
       <html:input type="text" id="hostname" name="hostname"/>
-    </html:div>
+    </box>
   </box>
 
   <spring class="spacer"/>
   <spring class="spacer"/>
-  <html:div id="noSmtp">
-  <box align="vertical">
-    <html:div class="title">&smtpServerTitle.label;</html:div>
+  <box align="vertical" id="noSmtp">
+    <text class="title" value="&smtpServerTitle.label;"/>
     <spring class="spacer"/>
-    <html:div>&smtpServerDesc.label;</html:div>
+    <html>&smtpServerDesc.label;</html>
     <spring class="spacer"/>
-    <html:div>
-      <html:label for="smtphostname">&smtpServerLabel.label;</html:label>
+    <box>
+      <text class="label" value="&smtpServerLabel.label;"/>
       <html:input type="text" id="smtphostname" name="smtphostname"/>
-    </html:div>
+    </box>
   </box>
-  </html:div>
 
-  <html:div id="haveSmtp">
-    <html:p style="width: 500px">&currentSmtpBefore.label;<html:span id="smtpStaticText"/>&currentSmtpAfter.label;</html:p>
-    <html:p style="width: 500px">&haveSmtp1.label;</html:p>
-    <html:p style="width: 500px">&haveSmtp2.label;</html:p>
-  </html:div>
+  <box id="haveSmtp" orient="vertical">
+    <box>
+      <text value="&currentSmtpBefore.label;"/>
+      <text id="smtpStaticText"/>
+      <text value="&currentSmtpAfter.label;"/>
+    </box>
+    <html style="width: 500px">&haveSmtp1.label;</html>
+    <html style="width: 500px">&haveSmtp2.label;</html>
+  </box>
 </window>

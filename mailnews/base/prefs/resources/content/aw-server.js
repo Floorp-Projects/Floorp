@@ -57,10 +57,8 @@ function setDivText(id, value) {
   
   var div = document.getElementById("smtpStaticText");
   if (!div) return;
-  
-  if (div.firstChild)
-    div.removeChild(div.firstChild);
-  div.appendChild(document.createTextNode(value));
+
+  div.setAttribute("value", value);
 }
 
 function hideShowSmtpSettings(smtpServer) {
@@ -84,10 +82,10 @@ function hideShowSmtpSettings(smtpServer) {
   }
 
   if (boxToHide)
-    boxToHide.style.visibility = "collapse";
+    boxToHide.setAttribute("hidden", "true");
 
   if (boxToShow)
-    boxToShow.style.visibility = "visible";
+    boxToShow.removeAttribute("hidden");
 
 
 }

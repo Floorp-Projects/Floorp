@@ -26,7 +26,7 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountWizard.dtd" >
 
-<window id="account-wizard-dialog"
+<window id="account-wizard-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&windowTitle.label;"
     height="400" width="500" class="dialog"
@@ -44,7 +44,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/ispUtils.js"/>
 <box align="vertical" flex="100%">
   <box id="contentsink" flex="100%">
-  <iframe flex="100%" style="margin: 5px; border: none"
+  <html:iframe flex="100%" style="margin: 5px; border: none"
           name="wizardContents" scrolling="auto" id="wizardContents"/>
   </box>
   <box id="wizardButtons"/>

@@ -29,17 +29,17 @@ Rights Reserved.
     align="vertical"
     onload="parent.wizardManager.onPageLoad('accname');">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/aw-accname.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/aw-accname.js"/>
 
   <box id="wizardHeader">
     <titledbutton class="left-header-text" value="&accnameTitle.label;"/>
   </box>
-  <html:div>&accnameDesc.label;</html:div>
+  <html>&accnameDesc.label;</html>
   <spring class="spacer"/>
-  <html:div>
-    <html:label for="prettyName">&accnameLabel.label;</html:label>
+  <box>
+    <text class="label" value="&accnameLabel.label;"/>
     <html:input type="text" name="prettyName" id="prettyName" size="40"/>
-  </html:div>
+  </box>
 
 </window>
