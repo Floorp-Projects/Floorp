@@ -522,6 +522,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 											{
 												numKeys++;
 											}
+											nsCRT::free(isMigrated);
 										}
 									}
 								}
