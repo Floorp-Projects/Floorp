@@ -10,4 +10,3 @@ nsIDOMToolkitCore.h
 nsIDOMBrowserAppCore.h
 nsAppCoresCIDs.h
 nsIDOMEditorAppCore.h
-nsIDOMCookieCore.h
