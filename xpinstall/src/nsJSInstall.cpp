@@ -1460,9 +1460,14 @@ InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
     nsFileSpec fsB0(b0);
-    nsFileSpec fsB1(b1);
 
-    if(NS_OK != nativeThis->FileOpDirRename(fsB0, fsB1, &nativeRet))
+// fix: nsFileSpec::Rename() does not accept new name as a
+//      nsFileSpec type.  It only accepts a char* type for the new name
+//      This is a bug with nsFileSpec.  A char* will be used until
+//      nsFileSpec if fixed.
+//    nsFileSpec fsB1(b1);
+
+    if(NS_OK != nativeThis->FileOpDirRename(fsB0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -2057,9 +2062,14 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
     nsFileSpec fsB0(b0);
-    nsFileSpec fsB1(b1);
 
-    if(NS_OK != nativeThis->FileOpFileRename(fsB0, fsB1, &nativeRet))
+// fix: nsFileSpec::Rename() does not accept new name as a
+//      nsFileSpec type.  It only accepts a char* type for the new name
+//      This is a bug with nsFileSpec.  A char* will be used until
+//      nsFileSpec if fixed.
+//    nsFileSpec fsB1(b1);
+
+    if(NS_OK != nativeThis->FileOpFileRename(fsB0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
