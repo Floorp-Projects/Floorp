@@ -234,6 +234,8 @@ class CViewSourceHTML: public nsIDTD {
      * @return  ptr to recycler (or null)
      */
     virtual nsITokenRecycler* GetTokenRecycler(void);
+
+    static nsresult WriteText(nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText);
     
 protected:
 

@@ -773,12 +773,11 @@ nsresult COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartT
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null
  */
-nsresult COtherDTD::ConsumeContentToEndTag(const nsString& aString,
-																					 PRUnichar aChar,
+nsresult COtherDTD::ConsumeContentToEndTag(PRUnichar aChar,
 																					 eHTMLTags aChildTag,
 																					 CScanner& aScanner,
 																					 CToken*& aToken){
-  return CNavDTD::ConsumeContentToEndTag(aString,aChar,aChildTag,aScanner,aToken);
+  return CNavDTD::ConsumeContentToEndTag(aChar,aChildTag,aScanner,aToken);
 }
 
 /**
