@@ -50,6 +50,7 @@ class nsIEventListenerManager;
 class nsDOMStyleSheetList;
 class nsIOutputStream;
 class nsDocument;
+class nsIDTD;
 
 #if 0
 class nsPostData : public nsIPostData {
@@ -473,6 +474,7 @@ protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
+  NS_IMETHOD GetDTD(nsIDTD** aDTD) const;
 
 protected:
 
@@ -516,6 +518,8 @@ protected:
   // disk file members
   nsFileSpec*     mFileSpec;
   PRInt32         mModCount;
+
+  nsIDTD* mDTD;
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
