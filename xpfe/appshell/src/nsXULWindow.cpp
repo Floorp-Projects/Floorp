@@ -40,8 +40,10 @@
 #include "nsIDocument.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentEvent.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMScreen.h"
@@ -60,6 +62,7 @@
 #include "nsIScrollable.h"
 #include "nsIPref.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIURI.h"
 #include "nsIDOMDocumentView.h"
@@ -86,6 +89,7 @@
 #define WIDTH_ATTRIBUTE    NS_LITERAL_STRING("width")
 #define HEIGHT_ATTRIBUTE   NS_LITERAL_STRING("height")
 #define MODE_ATTRIBUTE     NS_LITERAL_STRING("sizemode")
+#define ZLEVEL_ATTRIBUTE   NS_LITERAL_STRING("zlevel")
 // CIDs
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -104,8 +108,8 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mDebuting(PR_FALSE), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
-   mZlevel(nsIXULWindow::normalZ), mContextFlags(0),
-   mBlurSuppressionLevel(0)
+   mContextFlags(0), mBlurSuppressionLevel(0),
+   mPersistentAttributesDirty(0), mPersistentAttributesMask(0)
 {
 }
 
@@ -172,17 +176,81 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
 
 NS_IMETHODIMP nsXULWindow::GetDocShell(nsIDocShell** aDocShell)
 {
-   NS_ENSURE_ARG_POINTER(aDocShell);
+  NS_ENSURE_ARG_POINTER(aDocShell);
 
-   *aDocShell = mDocShell;
-   NS_IF_ADDREF(*aDocShell);
-   return NS_OK;
+  *aDocShell = mDocShell;
+  NS_IF_ADDREF(*aDocShell);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetZlevel(PRUint32 *outLevel)
+NS_IMETHODIMP nsXULWindow::GetZLevel(PRUint32 *outLevel)
 {
-   *outLevel = mZlevel;
-   return NS_OK;
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  if (mediator)
+    mediator->GetZLevel(this, outLevel);
+  else
+    *outLevel = normalZ;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
+{
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  if (!mediator)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 zLevel;
+  mediator->GetZLevel(this, &zLevel);
+  if (zLevel == aLevel)
+    return NS_OK;
+
+  /* refuse to raise a maximized window above the normal browser level,
+     for fear it could hide newly opened browser windows */
+  if (aLevel > nsIXULWindow::normalZ) {
+    PRInt32 sizeMode;
+    if (mWindow) {
+      mWindow->GetSizeMode(&sizeMode);
+      if (sizeMode == nsSizeMode_Maximized)
+        return NS_ERROR_FAILURE;
+    }
+  }
+
+  // disallow user script
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+  if (!secMan)
+    return NS_ERROR_FAILURE;
+  PRBool inChrome;
+  if (NS_FAILED(secMan->SubjectPrincipalIsSystem(&inChrome)) || !inChrome)
+    return NS_ERROR_FAILURE;
+
+  // do it
+  mediator->SetZLevel(this, aLevel);
+  PersistentAttributesDirty(PAD_MISC);
+  SavePersistentAttributes();
+
+  // finally, send a notification DOM event
+  nsCOMPtr<nsIContentViewer> cv;
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
+  nsCOMPtr<nsIDocumentViewer> dv(do_QueryInterface(cv));
+  if (dv) {
+    nsCOMPtr<nsIDocument> doc;
+    dv->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(doc));
+    if (docEvent) {
+      nsCOMPtr<nsIDOMEvent> event;
+      docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+      if (event) {
+        event->InitEvent(NS_LITERAL_STRING("windowZLevel"), PR_TRUE, PR_FALSE);
+        PRBool noDefault;
+        nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(doc));
+        if (targ)
+          targ->DispatchEvent(event, &noDefault);
+      }
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetContextFlags(PRUint32 *aContextFlags)
@@ -401,7 +469,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
     nsCOMPtr<nsIWidget> parentWidget;
     parent->GetMainWidget(getter_AddRefs(parentWidget));
     if (parentWidget)
-      parentWidget->PlaceBehind(0, PR_TRUE);
+      parentWidget->PlaceBehind(eZPlacementTop, 0, PR_TRUE);
   }
 #endif
    
@@ -457,7 +525,8 @@ NS_IMETHODIMP nsXULWindow::SetPosition(PRInt32 aX, PRInt32 aY)
   mWindow->SetSizeMode(nsSizeMode_Normal);
     
   NS_ENSURE_SUCCESS(mWindow->Move(aX, aY), NS_ERROR_FAILURE);
-  PersistPositionAndSize(PR_TRUE, PR_FALSE, PR_FALSE);
+  PersistentAttributesDirty(PAD_POSITION);
+  SavePersistentAttributes();
   return NS_OK;
 }
 
@@ -476,7 +545,8 @@ NS_IMETHODIMP nsXULWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
   mIntrinsicallySized = PR_FALSE;
 
   NS_ENSURE_SUCCESS(mWindow->Resize(aCX, aCY, aRepaint), NS_ERROR_FAILURE);
-  PersistPositionAndSize(PR_FALSE, PR_TRUE, PR_FALSE);
+  PersistentAttributesDirty(PAD_SIZE);
+  SavePersistentAttributes();
   return NS_OK;
 }
 
@@ -496,7 +566,8 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
   mIntrinsicallySized = PR_FALSE;
 
   NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), NS_ERROR_FAILURE);
-  PersistPositionAndSize(PR_TRUE, PR_TRUE, PR_FALSE);
+  PersistentAttributesDirty(PAD_POSITION | PAD_SIZE);
+  SavePersistentAttributes();
   return NS_OK;
 }
 
@@ -872,7 +943,7 @@ void nsXULWindow::OnChromeLoaded()
 #endif
     if (positionSet)
       positionSet = LoadPositionFromXUL();
-    LoadSizeStateFromXUL();
+    LoadMiscPersistentAttributesFromXUL();
 
     //LoadContentAreas();
     LoadChromeHidingFromXUL();
@@ -883,6 +954,7 @@ void nsXULWindow::OnChromeLoaded()
     if(mShowAfterLoad)
       SetVisibility(PR_TRUE);
   }
+  mPersistentAttributesMask |= PAD_POSITION | PAD_SIZE | PAD_MISC;
 }
 
 nsresult nsXULWindow::LoadChromeHidingFromXUL()
@@ -1042,13 +1114,19 @@ PRBool nsXULWindow::LoadSizeFromXUL()
   return gotSize;
 }
 
-PRBool nsXULWindow::LoadSizeStateFromXUL()
+/* Miscellaneous persistent attributes are attributes named in the
+   |persist| attribute, other than size and position. Those are special
+   because it's important to load those before one of the misc
+   attributes (sizemode) and they require extra processing. */
+PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
 {
   nsresult rv;
   PRBool   gotState = PR_FALSE;
   
-  // if we're the hidden window, don't try to validate our size/position. We're
-  // special.
+  /* There are no misc attributes of interest to the hidden window.
+     It's especially important not to try to validate that window's
+     size or position, because some platforms (Mac OS X) need to
+     make it visible and offscreen. */
   if (mIsHiddenWindow)
     return PR_FALSE;
 
@@ -1059,6 +1137,8 @@ PRBool nsXULWindow::LoadSizeStateFromXUL()
     return PR_FALSE;
 
   nsAutoString stateString;
+
+  // sizemode
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("sizemode"), stateString);
   if (NS_SUCCEEDED(rv)) {
     PRInt32 sizeMode = nsSizeMode_Normal;
@@ -1073,6 +1153,15 @@ PRBool nsXULWindow::LoadSizeStateFromXUL()
     // the widget had better be able to deal with not becoming visible yet
     mWindow->SetSizeMode(sizeMode);
     gotState = PR_TRUE;
+  }
+
+  // zlevel
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("zlevel"), stateString);
+  if (NS_SUCCEEDED(rv) && stateString.Length() > 0) {
+    PRInt32  errorCode;
+    PRUint32 zLevel = stateString.ToInteger(&errorCode);
+    if (NS_SUCCEEDED(errorCode) && zLevel >= lowestZ && zLevel <= highestZ)
+      SetZLevel(zLevel);
   }
 
   return gotState;
@@ -1090,6 +1179,8 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   const PRInt32 kSlop = 4;
   nsresult rv;
   PRBool   keepTrying;
+  int      bouncedX = 0, // bounced off vertical edge of screen
+           bouncedY = 0; // bounced off horizontal edge
 
   // look for any other windows of this type
   nsCOMPtr<nsIWindowMediator> wm(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
@@ -1105,7 +1196,30 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   if (NS_FAILED(rv))
     return;
 
-  nsCOMPtr<nsIDOMWindowInternal> listDOMWindow;
+  PRInt32 screenTop,
+          screenRight,
+          screenBottom,
+          screenLeft;
+  PRBool  gotScreen = PR_FALSE;
+
+  { // fetch screen coordinates
+    nsCOMPtr<nsIScreenManager> screenMgr(do_GetService(
+                                         "@mozilla.org/gfx/screenmanager;1"));
+    if (screenMgr) {
+      nsCOMPtr<nsIScreen> ourScreen;
+      screenMgr->ScreenForRect(aRequestedX, aRequestedY,
+                               aSpecWidth, aSpecHeight,
+                               getter_AddRefs(ourScreen));
+      if (ourScreen) {
+        PRInt32 screenWidth, screenHeight;
+        ourScreen->GetAvailRect(&screenLeft, &screenTop,
+                                &screenWidth, &screenHeight);
+        screenBottom = screenTop + screenHeight;
+        screenRight = screenLeft + screenWidth;
+        gotScreen = PR_TRUE;
+      }
+    }
+  }
 
   // one full pass through all windows of this type. repeat until
   // no collisions.
@@ -1135,50 +1249,41 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
       if (listXULWindow != ourXULWindow) {
         listBaseWindow->GetPosition(&listX, &listY);
 
-        if (PR_ABS(listX-aRequestedX) <= kSlop && PR_ABS(listY-aRequestedY) <= kSlop) {
-          // collision! offset and stop. save the DOMWindow corresponding
-          // to the colliding window for later. (we'll need its nsIDOMScreen
-          nsCOMPtr<nsIDocShell> listDocShell;
-          listXULWindow->GetDocShell(getter_AddRefs(listDocShell));
-          if (listDocShell) {
-            nsCOMPtr<nsIInterfaceRequestor> listRequestor(do_QueryInterface(listDocShell));
-            if (listRequestor)
-              listRequestor->GetInterface(NS_GET_IID(nsIDOMWindowInternal),
-                             getter_AddRefs(listDOMWindow));
-          }
-          aRequestedX += kOffset;
+        if (PR_ABS(listX-aRequestedX) <= kSlop &&
+            PR_ABS(listY-aRequestedY) <= kSlop) {
+          // collision! offset and start over
+          if (bouncedX & 0x1)
+            aRequestedX -= kOffset;
+          else
+            aRequestedX += kOffset;
           aRequestedY += kOffset;
-          keepTrying = PR_TRUE;
+
+          if (gotScreen) {
+            // bounce off left and right edges
+            if (!(bouncedX & 0x1) && aRequestedX + aSpecWidth > screenRight) {
+              aRequestedX = screenRight - aSpecWidth;
+              ++bouncedX;
+            }
+            if ((bouncedX & 0x1) && aRequestedX < screenLeft) {
+              aRequestedX = screenLeft;
+              ++bouncedX;
+            }
+            // hit the bottom and start again at the top
+            if (aRequestedY + aSpecHeight > screenBottom) {
+              aRequestedY = screenTop;
+              ++bouncedY;
+            }
+          }
+
+          /* loop around again,
+             but it's time to give up once we've covered the screen.
+             there's a potential infinite loop with lots of windows. */
+          keepTrying = bouncedX < 2 || bouncedY == 0;
           break;
         }
       }
     } while(1);
   } while (keepTrying);
-
-  // if we found a competing DOM window (and therefore moved our window)
-  // sanity constrain the position against that window's screen
-  if (listDOMWindow) {
-    PRInt32 screenLeft;
-    PRInt32 screenTop;
-    PRInt32 screenWidth;
-    PRInt32 screenHeight;
-    PRInt32 screenRight;
-    PRInt32 screenBottom;
-    nsCOMPtr<nsIDOMScreen> screen;
-    listDOMWindow->GetScreen(getter_AddRefs(screen));
-    screen->GetAvailLeft(&screenLeft);
-    screen->GetAvailTop(&screenTop);
-    screen->GetAvailWidth(&screenWidth);
-    screen->GetAvailHeight(&screenHeight);
-    screenRight = screenLeft + screenWidth;
-    screenBottom = screenTop + screenHeight;
-
-    // Sanity check. 
-    if ((aRequestedX + aSpecWidth) > screenRight)
-      aRequestedX = screenLeft;
-    if ((aRequestedY + aSpecHeight) > screenBottom)
-      aRequestedY = screenTop;
-  }
 }
 
 NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
@@ -1297,7 +1402,7 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
     return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode)
+NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 {
   // can happen when the persistence timer fires at an inopportune time
   // during window shutdown
@@ -1311,8 +1416,10 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
 
   nsAutoString   persistString;
   docShellElement->GetAttribute(PERSIST_ATTRIBUTE, persistString);
-  if (persistString.IsEmpty()) // quick check which sometimes helps
+  if (persistString.IsEmpty()) { // quick check which sometimes helps
+    mPersistentAttributesDirty = 0;
     return NS_OK;
+  }
 
   PRInt32 x, y, cx, cy;
   PRInt32 sizeMode;
@@ -1346,7 +1453,8 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
   }
 
   // (only for size elements which are persisted)
-  if(aPosition && sizeMode == nsSizeMode_Normal) {
+  if ((mPersistentAttributesDirty & PAD_POSITION) &&
+      sizeMode == nsSizeMode_Normal) {
     if(persistString.Find("screenX") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
       sizeString.AssignWithConversion(sizeBuf);
@@ -1363,7 +1471,8 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
     }
   }
 
-  if(aSize && sizeMode == nsSizeMode_Normal) {
+  if ((mPersistentAttributesDirty & PAD_SIZE) &&
+      sizeMode == nsSizeMode_Normal) {
     if(persistString.Find("width") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
       sizeString.AssignWithConversion(sizeBuf);
@@ -1380,17 +1489,31 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
     }
   }
 
-  if (aSizeMode && sizeMode != nsSizeMode_Minimized &&
-      persistString.Find("sizemode") >= 0) {
-    if (sizeMode == nsSizeMode_Maximized)
-      sizeString.Assign(SIZEMODE_MAXIMIZED);
-    else
-      sizeString.Assign(SIZEMODE_NORMAL);
-    docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
-    if (ownerXULDoc)
-      ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
+  if (mPersistentAttributesDirty & PAD_MISC) {
+    if (sizeMode != nsSizeMode_Minimized &&
+        persistString.Find("sizemode") >= 0) {
+      if (sizeMode == nsSizeMode_Maximized)
+        sizeString.Assign(SIZEMODE_MAXIMIZED);
+      else
+        sizeString.Assign(SIZEMODE_NORMAL);
+      docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
+    }
+    if (persistString.Find("zlevel") >= 0) {
+      PRUint32 zLevel;
+      nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+      if (mediator) {
+        mediator->GetZLevel(this, &zLevel);
+        PR_snprintf(sizeBuf, sizeof(sizeBuf), "%lu", (unsigned long)zLevel);
+        sizeString.AssignWithConversion(sizeBuf);
+        docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString);
+        ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);
+      }
+    }
   }
 
+  mPersistentAttributesDirty = 0;
   return NS_OK;
 }
 
@@ -1763,14 +1886,16 @@ PRBool nsXULWindow::ConstrainToZLevel(
 
   PRBool         altered;
   PRUint32       position,
-                 newPosition;
-  nsIXULWindow  *us = NS_STATIC_CAST(nsIXULWindow *, this);
+                 newPosition,
+                 zLevel;
+  nsIXULWindow  *us = this;
 
   altered = PR_FALSE;
+  mediator->GetZLevel(this, &zLevel);
 
-  // translate from nsIWindowMediator to nsGUIEvent constants
+  // translate from nsGUIEvent to nsIWindowMediator constants
   position = nsIWindowMediator::zLevelTop;
-  if (*aPlacement == nsWindowZBottom)
+  if (*aPlacement == nsWindowZBottom || zLevel == nsIXULWindow::lowestZ)
     position = nsIWindowMediator::zLevelBottom;
   else if (*aPlacement == nsWindowZRelative)
     position = nsIWindowMediator::zLevelBelow;
@@ -1787,8 +1912,11 @@ PRBool nsXULWindow::ConstrainToZLevel(
         (position == nsIWindowMediator::zLevelTop ||
          position == nsIWindowMediator::zLevelBelow && aReqBelow == 0))
 
-      PlaceWindowLayersBehind(mZlevel+1, nsIXULWindow::highestZ, 0);
+      PlaceWindowLayersBehind(zLevel+1, nsIXULWindow::highestZ, 0);
 
+    if (*aPlacement != nsWindowZBottom &&
+        position == nsIWindowMediator::zLevelBottom)
+      altered = PR_TRUE;
     if (altered || aImmediate) {
       if (newPosition == nsIWindowMediator::zLevelTop)
         *aPlacement = nsWindowZTop;
@@ -1802,7 +1930,9 @@ PRBool nsXULWindow::ConstrainToZLevel(
         if (ourBase) {
           nsCOMPtr<nsIWidget> ourWidget;
           ourBase->GetMainWidget(getter_AddRefs(ourWidget));
-          ourWidget->PlaceBehind(*aActualBelow, PR_FALSE);
+          ourWidget->PlaceBehind(*aPlacement == nsWindowZBottom ?
+                                   eZPlacementBottom : eZPlacementBelow,
+                                 *aActualBelow, PR_FALSE);
         }
       }
     }
@@ -1863,13 +1993,12 @@ void nsXULWindow::PlaceWindowLayersBehind(PRUint32 aLowLevel,
 
   // get next lower window
   PRBool more;
-  windowEnumerator->HasMoreElements(&more);
-  for ( ; more; windowEnumerator->HasMoreElements(&more)) {
+  while (windowEnumerator->HasMoreElements(&more), more) {
     PRUint32 nextZ; // z-level of nextWindow
     nsCOMPtr<nsISupports> nextWindow;
     windowEnumerator->GetNext(getter_AddRefs(nextWindow));
     nsCOMPtr<nsIXULWindow> nextXULWindow(do_QueryInterface(nextWindow));
-    nextXULWindow->GetZlevel(&nextZ);
+    nextXULWindow->GetZLevel(&nextZ);
     if (nextZ < aLowLevel)
       break; // we've processed all windows through aLowLevel
     
@@ -1879,7 +2008,7 @@ void nsXULWindow::PlaceWindowLayersBehind(PRUint32 aLowLevel,
       nsCOMPtr<nsIWidget> nextWidget;
       nextBase->GetMainWidget(getter_AddRefs(nextWidget));
       if (nextZ <= aHighLevel)
-        nextWidget->PlaceBehind(previousHighWidget, PR_FALSE);
+        nextWidget->PlaceBehind(eZPlacementBelow, previousHighWidget, PR_FALSE);
       previousHighWidget = nextWidget;
     }
   }
@@ -1912,6 +2041,12 @@ PRBool nsXULWindow::GetContentScrollbarVisibility() {
       scrollbars->GetVisible(&visible);
   }
   return visible;
+}
+
+// during spinup, attributes that haven't been loaded yet can't be dirty
+void nsXULWindow::PersistentAttributesDirty(PRUint32 aDirtyFlags) {
+
+  mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
 }
 
 //*****************************************************************************
