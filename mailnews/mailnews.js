@@ -334,3 +334,6 @@ pref("ldap_2.version",											1); /* Update kCurrentListVersion in include/di
 /* until bug #7417 gets fix, or until beta */
 pref("mailnews.start_page.url", "http://people.netscape.com/sspitzer/startpage.html");
 pref("mailnews.start_page.enabled", true);
+
+/* default prefs for Mozilla 5.0 */
+pref("mail.identity.default.compose_html", true);
