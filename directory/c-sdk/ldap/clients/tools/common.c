@@ -116,6 +116,7 @@ ldaptool_common_usage( int two_hosts )
     fprintf( stderr, "    -w - \tprompt for bind passwd (for simple authentication)\n" );
     fprintf( stderr, "    -j file\tread bind passwd from 'file' (for simple authentication)\n" );
     fprintf( stderr, "    -E\t\task server to expose (report) bind identity\n" );
+    fprintf( stderr, "    -g\t\tdo not send a password policy request control\n" );
 #ifdef LDAP_DEBUG
     fprintf( stderr, "    -d level\tset LDAP debugging level to `level'\n" );
 #endif
