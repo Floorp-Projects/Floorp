@@ -996,7 +996,7 @@ function QualifySearchTerm()
   return "";
 }
 
-function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
+function OpenSearch(tabName, searchStr, newWindowFlag)
 {
   //This function needs to be split up someday.
 
@@ -1031,55 +1031,32 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
     if (forceAsURL) {
        BrowserLoadURL()
     } else {
-      var searchMode = 0;
-      try {
-        searchMode = pref.getIntPref("browser.search.powermode");
-      } catch(ex) {
-      }
+      if (searchStr) {
+        var escapedSearchStr = encodeURIComponent(searchStr);
+        defaultSearchURL += escapedSearchStr;
+        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                                 .getService(Components.interfaces.nsIInternetSearchService);
 
-      if (forceDialogFlag || searchMode == 1) {
-        // Use a single search dialog
-        var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                      .getService(Components.interfaces.nsIWindowMediator);
-
-        var searchWindow = windowManager.getMostRecentWindow("search:window");
-        if (!searchWindow) {
-          openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
-        } else {
-          // Already had one, focus it and load the page
-          searchWindow.focus();
-
-          if ("loadPage" in searchWindow)
-            searchWindow.loadPage(tabName, searchStr);
-        }
-      } else {
-        if (searchStr) {
-          var escapedSearchStr = encodeURIComponent(searchStr);
-          defaultSearchURL += escapedSearchStr;
-          var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                   .getService(Components.interfaces.nsIInternetSearchService);
-
-          searchDS.RememberLastSearchText(escapedSearchStr);
-          try {
-            var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
-            if (searchEngineURI) {          
-              var searchURL = getSearchUrl("actionButton");
-              if (searchURL) {
-                defaultSearchURL = searchURL + escapedSearchStr; 
-              } else {
-                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
-                if (searchURL)
-                  defaultSearchURL = searchURL;
-              }
+        searchDS.RememberLastSearchText(escapedSearchStr);
+        try {
+          var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
+          if (searchEngineURI) {          
+            var searchURL = getSearchUrl("actionButton");
+            if (searchURL) {
+              defaultSearchURL = searchURL + escapedSearchStr; 
+            } else {
+              searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
+              if (searchURL)
+                defaultSearchURL = searchURL;
             }
-          } catch (ex) {
           }
-
-          if (!newWindowFlag)
-            loadURI(defaultSearchURL);
-          else
-            window.open(defaultSearchURL, "_blank");
+        } catch (ex) {
         }
+
+        if (!newWindowFlag)
+          loadURI(defaultSearchURL);
+        else
+          window.open(defaultSearchURL, "_blank");
       }
     }
   }

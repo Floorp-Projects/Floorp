@@ -187,7 +187,7 @@
       <menuseparator id="context-sep-selectall"/>
       <menuitem id="context-searchselect"
                 accesskey="&search.accesskey;"
-                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
+                oncommand="OpenSearch('internet', gContextMenu.searchSelected(), true);"/>
       <menuseparator id="frame-sep"/>
       <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
         <menupopup id="frame_popup">

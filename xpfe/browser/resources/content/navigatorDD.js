@@ -199,7 +199,7 @@ var searchButtonObserver = {
       var xferData = aXferData.data.split("\n");
       var uri = xferData[1] ? xferData[1] : xferData[0];
       if (uri)
-        OpenSearch('internet',false, uri);
+        OpenSearch('internet', uri);
     },
   getSupportedFlavours: function ()
     {
