@@ -43,14 +43,25 @@
 
     <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-    <keyset id="keys">
-      <key id="key_openHelp" keycode="&openHelp.commandkey;"
-#ifdef MOZ_PHOENIX
-          oncommand="openHelp('firefox-help');"
-#elifdef MOZ_THUNDERBIRD
-          oncommand="openHelp('smtp-docs','chrome://help/locale/thunderbirdhelp.rdf');"
+# Use the Thunderbird content pack if we're building thunderbird. Otherwise use the Firefox content
+# pack. We should use else instead of elseif to prevent build errors if MOZ_PHOENIX and MOZ_THUNDERBIRD
+# are not built.
+# These keyset ids have to be used to show the key shortcut in the menu
+#ifdef MOZ_THUNDERBIRD
+    <keyset id="mailKeys">
+        <key id="key_openHelp"
+            oncommand="openHelp('smtp-docs','chrome://help/locale/thunderbirdhelp.rdf');"
+#else
+    <keyset id="mainKeyset">
+        <key id="key_openHelp"
+            oncommand="openHelp('firefox-help');"
 #endif
-          modifiers="accel"/>
+# VK_HELP doesn't work on other platforms yet
+#ifdef XP_MACOSX
+            keycode="&openHelpMac.commandkey;"/>
+#else
+            keycode="&openHelp.commandkey;"/>
+#endif
     </keyset>
 
     <menupopup id="menu_HelpPopup">

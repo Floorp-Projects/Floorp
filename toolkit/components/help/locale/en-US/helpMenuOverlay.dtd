@@ -41,5 +41,6 @@
 <!ENTITY helpContents.accesskey   "H">
 <!ENTITY helpForIEUsers.label     "For Internet Explorer Users">
 <!ENTITY helpForIEUsers.accesskey "I">
-<!ENTITY openHelp.commandkey      "VK_HELP">
+<!ENTITY openHelp.commandkey      "VK_F1">
+<!ENTITY openHelpMac.commandkey   "VK_HELP">
 
