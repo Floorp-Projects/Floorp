@@ -86,7 +86,7 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 {
   BOOL mDisplaySecureIcon;    // YES if currently displaying the security icon
 }
-- setDisplaySecureIcon:(BOOL)inIsVisible;
+- (void)setDisplaySecureIcon:(BOOL)inIsVisible;
 @end
 
 @implementation AutoCompleteTextCell
@@ -129,7 +129,7 @@ static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x7
 // Indicates whether or now we need to take away space on the right side for the security
 // icon. Causes the cell's drawing rect to be recalculated.
 //
-- setDisplaySecureIcon:(BOOL)inIsVisible
+- (void)setDisplaySecureIcon:(BOOL)inIsVisible
 {
   mDisplaySecureIcon = inIsVisible;
   [(NSControl*)[self controlView] calcSize];

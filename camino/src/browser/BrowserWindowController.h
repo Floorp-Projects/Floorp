@@ -95,7 +95,7 @@ typedef enum
 @class AutoCompleteTextField;
 @class SearchTextField;
 
-@interface BrowserWindowController : NSWindowController<Find>
+@interface BrowserWindowController : NSWindowController<Find, BrowserUIDelegate>
 {
   IBOutlet BrowserTabView*    mTabBrowser;
   IBOutlet NSView*            mLocationToolbarView;
@@ -111,7 +111,6 @@ typedef enum
   IBOutlet BrowserContentView*  mContentView;
   
   IBOutlet BookmarkToolbar*     mPersonalToolbar;
-  IBOutlet HistoryDataSource*   mHistoryDataSource;
   IBOutlet NSWindow*            mAddBookmarkSheetWindow;
   IBOutlet NSTextField*         mAddBookmarkTitleField;
   IBOutlet NSPopUpButton*       mAddBookmarkFolderField;
@@ -192,10 +191,7 @@ typedef enum
 - (BrowserWrapper*)getBrowserWrapper;
 
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
-- (void)updateLocationFields:(NSString *)locationString;
-- (void)updateSiteIcons:(NSImage *)siteIconImage;
-- (void)loadingStarted;
-- (void)loadingDone;
+
 - (void)focusURLBar;
 
     // call to update the image of the lock icon with a value from nsIWebProgressListener

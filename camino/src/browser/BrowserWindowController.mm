@@ -58,6 +58,7 @@
 #import "STFPopUpButtonCell.h"
 #import "MainController.h"
 #import "DraggableImageAndTextCell.h"
+#import "MVPreferencesController.h"
 
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
@@ -419,11 +420,8 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
 
-  if ([self isResponderGeckoView:[[self window] firstResponder]]) {
-    CHBrowserView* browserView = [mBrowserView getBrowserView];
-    if (browserView)
-      [browserView setActive:YES];
-  }
+  if ([self isResponderGeckoView:[[self window] firstResponder]])
+    [mBrowserView setBrowserActive:YES];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -433,11 +431,8 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:NO];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
 
-  if ([self isResponderGeckoView:[[self window] firstResponder]]) {
-    CHBrowserView* browserView = [mBrowserView getBrowserView];
-    if (browserView)
-      [browserView setActive:NO];
-  }
+  if ([self isResponderGeckoView:[[self window] firstResponder]])
+    [mBrowserView setBrowserActive:NO];
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)notification
@@ -1169,14 +1164,14 @@ enum BWCOpenDest {
 
     // we have to handle all the enabling/disabling ourselves because this
     // toolbar button is a view item. Note the return value is ignored.
-    [(NSButton*)[theItem view] setEnabled:enable];
+    [theItem setEnabled:enable];
     return enable;
   }
   else if (action == @selector(forward:)) {
     // we have to handle all the enabling/disabling ourselves because this
     // toolbar button is a view item. Note the return value is ignored.
     BOOL enable = [[mBrowserView getBrowserView] canGoForward];
-    [(NSButton*)[theItem view] setEnabled:enable];
+    [theItem setEnabled:enable];
     return enable;
   }
   else if (action == @selector(reload:))
@@ -1213,15 +1208,131 @@ enum BWCOpenDest {
 
 #pragma mark -
 
+// BrowserUIDelegate methods (called from the frontmost tab's BrowserWrapper)
+
+
 - (void)loadingStarted
 {
-  [self startThrobber];
+  [self ensureBrowserVisible:mBrowserView];
 }
 
-- (void)loadingDone
+- (void)loadingDone:(BOOL)activateContent
 {
-  [self stopThrobber];
+  if (activateContent)
+  {
+    if ([[self window] isKeyWindow])
+    {
+      if (![self userChangedLocationField])
+        [mBrowserView setBrowserActive:YES];
+    }
+    else
+      [[self window] makeFirstResponder:[mBrowserView getBrowserView]];
+  }
 }
+
+- (void)setLoadingActive:(BOOL)active
+{
+  if (active)
+  {
+    [self startThrobber];
+    [mProgress setIndeterminate:YES];
+    [self showProgressIndicator];
+    [mProgress startAnimation:self];
+  }
+  else
+  {
+    [self stopThrobber];
+    [mProgress stopAnimation:self];
+    [self hideProgressIndicator];
+    [mProgress setIndeterminate:YES];
+  }
+}
+
+- (void)setLoadingProgress:(float)progress
+{
+  if (progress > 0.0f)
+  {
+    [mProgress setIndeterminate:NO];
+    [mProgress setDoubleValue:progress];
+  }
+  else
+  {
+    [mProgress setIndeterminate:YES];
+    [mProgress startAnimation:self];
+  }
+}
+
+- (void)updateWindowTitle:(NSString*)title
+{
+  [[self window] setTitle:title];
+}
+
+- (void)updateStatus:(NSString*)status
+{
+  if (![[mStatus stringValue] isEqualToString:status])
+    [mStatus setStringValue:status];
+}
+
+- (void)updateLocationFields:(NSString*)url ignoreTyping:(BOOL)ignoreTyping
+{
+  if (!ignoreTyping && [self userChangedLocationField])
+    return;
+
+  if ([url isEqual:@"about:blank"])
+    url = @""; // return;
+
+  [mURLBar setURI:url];
+  [mLocationSheetURLField setStringValue:url];
+
+  // don't call [window display] here, no matter how much you might want
+  // to, because it forces a redraw of every view in the window and with a lot
+  // of tabs, it's dog slow.
+  // [[self window] display];
+}
+
+- (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping
+{
+  if (!ignoreTyping && [self userChangedLocationField])
+    return;
+
+  if (icon == nil)
+    icon = [NSImage imageNamed:@"globe_ico"];
+  [mProxyIcon setImage:icon];
+}
+
+- (void)showPopupBlocked:(BOOL)inBlocked
+{
+  if (inBlocked && ![mPopupBlocked window]) {       // told to show, currently hidden
+    [mPopupBlockSuperview addSubview:mPopupBlocked];
+  }
+  else if (!inBlocked && [mPopupBlocked window]) {  // told to hide, currently visible                               
+    [mPopupBlocked removeFromSuperview];
+  }
+}
+
+- (void)showSecurityState:(unsigned long)state
+{
+  [self updateLock:state];
+}
+
+- (BOOL)userChangedLocationField
+{
+  return [mURLBar userHasTyped];
+}
+
+- (void)updateFromFrontmostTab
+{
+  [[self window] setTitle:  [mBrowserView windowTitle]];
+  [self setLoadingActive:   [mBrowserView isBusy]];
+  [self setLoadingProgress: [mBrowserView loadingProgress]];
+  [self showPopupBlocked:   [mBrowserView popupsBlocked]];
+  [self showSecurityState:  [mBrowserView securityState]];
+  [self updateSiteIcons:    [mBrowserView siteIcon] ignoreTyping:NO];
+  [self updateStatus:       [mBrowserView statusString]];
+  [self updateLocationFields:[mBrowserView location] ignoreTyping:NO];
+}
+
+#pragma mark -
 
 - (void)performAppropriateLocationAction
 {
@@ -1249,8 +1360,8 @@ enum BWCOpenDest {
 
 - (void)focusURLBar
 {
-  [[mBrowserView getBrowserView] setActive:NO];
-	[mURLBar selectText: self];
+  [mBrowserView setBrowserActive:NO];
+	[mURLBar selectText:self];
 }
 
 - (void)beginLocationSheet
@@ -1301,8 +1412,7 @@ enum BWCOpenDest {
 
 - (void)focusSearchBar
 {
-  [[mBrowserView getBrowserView] setActive:NO];
-
+  [mBrowserView setBrowserActive:NO];
   [mSearchBar selectText:self];
 }
 
@@ -2040,27 +2150,6 @@ enum BWCOpenDest {
     }
 }
 
-- (void)updateLocationFields:(NSString *)locationString
-{
-    if ( [locationString isEqual:@"about:blank"] )
-      locationString = @""; // return;
-
-    [mURLBar setURI:locationString];
-    [mLocationSheetURLField setStringValue:locationString];
-
-    // don't call [window display] here, no matter how much you might want
-    // to, because it forces a redraw of every view in the window and with a lot
-    // of tabs, it's dog slow.
-    // [[self window] display];
-}
-
-- (void)updateSiteIcons:(NSImage *)siteIconImage
-{
-  if (siteIconImage == nil)
-    siteIconImage = [NSImage imageNamed:@"globe_ico"];
-	[mProxyIcon setImage:siteIconImage];
-}
-
 //
 // closeBrowserWindow:
 //
@@ -2238,15 +2327,23 @@ enum BWCOpenDest {
 
   // Disconnect the old view, if one has been designated.
   // If the window has just been opened, none has been.
-  if ( mBrowserView )
-    [mBrowserView disconnectView];
+  if (mBrowserView)
+  {
+    [mBrowserView willResignActiveBrowser];
+    [mBrowserView setDelegate:nil];
+  }
 
   // Connect up the new view
   mBrowserView = [aTabViewItem view];
   [mTabBrowser refreshTabBar:YES];
       
   // Make the new view the primary content area.
-  [mBrowserView makePrimary:mURLBar status:mStatus];
+  [mBrowserView setDelegate:self];
+  [mBrowserView didBecomeActiveBrowser];
+  [self updateFromFrontmostTab];
+
+  if (![self userChangedLocationField] && [[self window] isKeyWindow])
+    [mBrowserView setBrowserActive:YES];
 }
 
 - (void)tabView:(NSTabView *)aTabView willSelectTabViewItem:(NSTabViewItem *)aTabViewItem
@@ -2414,7 +2511,7 @@ enum BWCOpenDest {
 -(BrowserTabViewItem*)createNewTabItem
 {
   BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
-  BrowserWrapper* newView = [[BrowserWrapper alloc] initWithTab:newTab windowController:self];
+  BrowserWrapper* newView = [[BrowserWrapper alloc] initWithTab:newTab inWindow:[self window]];
 
   // size the new browser view properly up-front, so that if the
   // page is scrolled to a relative anchor, we don't mess with the
@@ -2798,21 +2895,6 @@ enum BWCOpenDest {
   [mProgress removeFromSuperview];
 }
 
-// 
-// - showPopupBlocked:
-//
-// Show/hide the image of the blocked-popup indicator
-//
-- (void)showPopupBlocked:(BOOL)inBlocked
-{
-  if (inBlocked && ![mPopupBlocked window]) {       // told to show, currently hidden
-    [mPopupBlockSuperview addSubview:mPopupBlocked];
-  }
-  else if (!inBlocked && [mPopupBlocked window]) {  // told to hide, currently visible                               
-    [mPopupBlocked removeFromSuperview];
-  }
-}
-
 //
 // buildPopupBlockerMenu:
 //
@@ -3045,7 +3127,7 @@ enum BWCOpenDest {
   BOOL newResponderIsGecko = [self isResponderGeckoView:newResponder];
 
   if (oldResponderIsGecko != newResponderIsGecko && [[self window] isKeyWindow])
-    [[mBrowserView getBrowserView] setActive:newResponderIsGecko];
+    [mBrowserView setBrowserActive:newResponderIsGecko];
 }
 
 
@@ -3105,9 +3187,7 @@ enum BWCOpenDest {
   if ([self isResponderGeckoView:[[self window] firstResponder]]) {
     // inform the tab view that it will be hidden so that it can perform any necessary cleanup
     [mTabBrowser setVisible:NO];
-    CHBrowserView* browserView = [mBrowserView getBrowserView];
-    if (browserView)
-      [browserView setActive:NO];
+    [mBrowserView setBrowserActive:NO];
   }
   
   // swap out between content and bookmarks.
@@ -3130,9 +3210,7 @@ enum BWCOpenDest {
   }
   else {
     [[self window] setTitle:[self savedTitle]];
-    CHBrowserView* browserView = [mBrowserView getBrowserView];
-    if (browserView)
-      [browserView setActive:YES];
+    [mBrowserView setBrowserActive:YES];
     // inform the tab view that it will be visible, so that it can adjust to any changes that occurred
     // when it was out of the hierarchy
     [mTabBrowser setVisible:YES];
@@ -3181,7 +3259,7 @@ enum BWCOpenDest {
     // kill any autocomplete that was in progress
     [mURLBar revertText];
     // set the text in the URL bar back to the current URL
-    [self updateLocationFields:[mBrowserView getCurrentURLSpec]];
+    [self updateLocationFields:[mBrowserView getCurrentURLSpec] ignoreTyping:YES];
     
   // see if command-return came in the search field
   } else if ([mSearchBar isFirstResponder]) {

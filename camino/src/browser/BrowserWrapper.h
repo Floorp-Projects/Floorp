@@ -44,11 +44,36 @@
 
 class nsISupportsArray;
 
+// The BrowserWrapper communicates with the UI via this delegate.
+// The delegate will be nil for background tabs.
+@protocol BrowserUIDelegate
+
+- (void)loadingStarted;
+- (void)loadingDone:(BOOL)activateContent;
+
+- (void)setLoadingActive:(BOOL)active;
+// a progress value of 0.0 will set the meter to its indeterminate state
+- (void)setLoadingProgress:(float)progress;
+
+- (void)updateWindowTitle:(NSString*)title;
+- (void)updateStatus:(NSString*)status;
+
+- (void)updateLocationFields:(NSString*)url ignoreTyping:(BOOL)ignoreTyping;
+- (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping;
+
+- (void)showPopupBlocked:(BOOL)blocked;
+- (void)showSecurityState:(unsigned long)state;
+
+- (BOOL)userChangedLocationField;
+
+@end
+
+
 @interface BrowserWrapper : NSView <CHBrowserListener, CHBrowserContainer>
 {
-  AutoCompleteTextField*    mUrlbar;
-  NSTextField*              mStatus;
-  BrowserWindowController*  mWindowController;
+  NSWindow*                 mWindow;           // the window we are or will be in
+  
+  // XXX the BrowserWrapper really shouldn;t know anything about the tab that it's in
   NSTabViewItem*            mTabItem;
 
   NSImage*                  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
@@ -74,7 +99,8 @@ class nsISupportsArray;
 
   double                    mProgress;
   
-  BOOL mIsPrimary;
+  id<BrowserUIDelegate>     mDelegate;      // not retained
+  
   BOOL mIsBusy;
   BOOL mOffline;
   BOOL mListenersAttached; // We hook up our click and context menu listeners lazily.
@@ -82,27 +108,43 @@ class nsISupportsArray;
   BOOL mActivateOnLoad;    // If set, activate the browser view when loading starts.
 }
 
-- (id)initWithTab:(NSTabViewItem*)aTab windowController:(BrowserWindowController*)aWindowController;
+- (id)initWithTab:(NSTabViewItem*)aTab inWindow:(NSWindow*)window;
+- (id)initWithFrame:(NSRect)frameRect inWindow:(NSWindow*)window;
 
-- (IBAction)load:(id)sender;
-- (void)awakeFromNib;
+// only the BrowserWrapper in the frontmost tab has a non-null delegate
+- (void)setDelegate:(id<BrowserUIDelegate>)delegate;
+- (id<BrowserUIDelegate>)delegate;
 
-- (void)setFrame:(NSRect)frameRect;
+- (void)windowClosed;
+
 - (void)setFrame:(NSRect)frameRect resizingBrowserViewIfHidden:(BOOL)inResizeBrowser;
 
+- (void)setBrowserActive:(BOOL)inActive;
+
+
+// accessors
 - (CHBrowserView*)getBrowserView;
 - (BOOL)isBusy;
 - (BOOL)isEmpty;                      // is about:blank loaded?
-- (void)windowClosed;
+
+- (NSString*)windowTitle;
+- (NSImage*)siteIcon;
+- (NSString*)location;
+- (NSString*)statusString;
+- (float)loadingProgress;
+- (BOOL)popupsBlocked;
+- (unsigned long)securityState;
 
 - (NSString*)getCurrentURLSpec;
 
 - (void)getBlockedSites:(nsISupportsArray**)outSites;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
-- (void)makePrimary:(AutoCompleteTextField*)aUrlbar status:(NSTextField*)aStatus;
-- (void)disconnectView;
-- (void)setTab: (NSTabViewItem*)tab;
+
+- (void)didBecomeActiveBrowser;
+- (void)willResignActiveBrowser;
+
+- (void)setTab:(NSTabViewItem*)tab;
 - (NSTabViewItem*) tab;
 
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
