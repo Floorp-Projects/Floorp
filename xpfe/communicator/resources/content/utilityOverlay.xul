@@ -2,7 +2,7 @@
 
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
 %brandDTD;

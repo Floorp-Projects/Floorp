@@ -27,7 +27,7 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/history/findHistory.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/history/findHistory.dtd">
 
 <dialog id="findHistoryWindow" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/internetresults.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
 
 <page onload="onLoadInternetResults();"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

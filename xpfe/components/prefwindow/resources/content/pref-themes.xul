@@ -24,7 +24,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE page [
 <!ENTITY % themesDTD SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
 %themesDTD;
 <!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >

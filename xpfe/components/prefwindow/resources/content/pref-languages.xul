@@ -20,7 +20,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="Init();"

@@ -36,7 +36,7 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/askViewZoom.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/askViewZoom.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="askViewZoom"

@@ -22,7 +22,7 @@
    -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-security.dtd" >
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-security.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-security.xul');"
       headertitle="&lHeader;">

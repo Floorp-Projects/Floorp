@@ -25,7 +25,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % platformDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >

@@ -22,7 +22,7 @@
      Joe Hewitt <hewitt@netscape.com>
   -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-smart_browsing.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/pref/pref-smart_browsing.dtd" >
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>

@@ -34,7 +34,7 @@
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
+<!DOCTYPE page SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
 
 <page id="bookmarksPanel"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

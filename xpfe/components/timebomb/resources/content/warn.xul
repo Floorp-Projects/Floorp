@@ -23,7 +23,7 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % commRegionDTD SYSTEM "chrome://communicator-region/locale/region.dtd" >
 %commRegionDTD;
 <!ENTITY % timebombDTD SYSTEM "chrome://communicator/locale/timebomb/timebomb.dtd">
