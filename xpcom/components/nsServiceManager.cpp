@@ -234,7 +234,12 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
     }
     else {
         nsISupports* service;
+        // We need to not be holding the service manager's monitor while calling 
+        // CreateInstance, because it invokes user code which could try to re-enter
+        // the service manager:
+        PR_ExitMonitor(mMonitor);
         rv = nsComponentManager::CreateInstance(aClass, NULL, aIID, (void**)&service);
+        PR_EnterMonitor(mMonitor);
         if (NS_SUCCEEDED(rv)) {
             entry = new nsServiceEntry(aClass, service);
             if (entry == NULL) {
