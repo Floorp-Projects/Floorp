@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: lfinger.pl,v 1.6 1998/07/29 08:19:12 leif Exp $
+# $Id: lfinger.pl,v 1.7 1998/07/29 08:36:45 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -40,8 +40,8 @@ use Mozilla::LDAP::Utils;		# LULU, utilities.
 $APPNAM	= "lfinger";
 $USAGE	= "$APPNAM [-nv] -b base -h host -D bind -w pswd -P cert user_info";
 
-@ATTRIBUTES = ("uid", "homedirectory", "loginshell", "pager", "telephonenumber",
-	       "facsimiletelephonenumber", "cn", "ou", "businesscategory");
+@ATTRIBUTES = ("uid", "cn", "homedirectory", "loginshell", "pager",
+	       "telephonenumber", "facsimiletelephonenumber", "mobile");
 $HIDE = "(objectclass=nscphidethis)";
 
 
@@ -54,14 +54,28 @@ sub printIt
   my($entry) = @_;
 
   print "Login name: $entry->{uid}[0]";
-  print " " x (33 - 11 - length($entry->{uid}[0]));
+  print " " x (39 - 11 - length($entry->{uid}[0]));
   print "In real life: $entry->{cn}[0]\n";
-  print "Directory: $entry->{homedirectory}[0]";
-  print " " x (33 - 10 - length($entry->{homedirectory}[0]));
-  print "Shell: $entry->{loginshell}[0]\n";
-  print "Phone: $entry->{telephonenumber}[0]";
-  print " " x (33 - 6 - length($entry->{telephonenumber}[0]));
-  print "Pager: $entry->{pager}[0]\n";
+  if ($entry->{homedirectory}[0] || $entry->{loginshell}[0])
+    {
+      print "Directory: $entry->{homedirectory}[0]";
+      print " " x (39 - 10 - length($entry->{homedirectory}[0]));
+      print "Shell: $entry->{loginshell}[0]\n";
+    }
+
+  if ($entry->{telephonenumber}[0] || $entry->{pager}[0])
+    {
+      print "Phone: $entry->{telephonenumber}[0]";
+      print " " x (39 - 6 - length($entry->{telephonenumber}[0]));
+      print "Pager: $entry->{pager}[0]\n";
+    }
+
+  if ($entry->{mobile}[0] || $entry->{facsimiletelephonenumber}[0])
+    {
+      print "Mobile: $entry->{mobile}[0]";
+      print " " x (39 - 7 - length($entry->{mobile}[0]));
+      print "Fax: $entry->{facsimiletelephonenumber}[0]\n";
+    }
 
   print "\n";
 }
