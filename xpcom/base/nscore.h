@@ -202,6 +202,14 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 
+  // Other platforms declare standard implementations for operators
+  // !=, >, >=, and <= based on == and <. VC++ chooses to put these in
+  // a special namespace. We'll make it seem like they're *not* in a
+  // special namespace.
+  namespace std { namespace rel_ops {} }
+  using namespace std::rel_ops;
+
+
   /* VC++ is special and doesn't use naked min() and max() */
   #undef NS_MIN
   #define NS_MIN std::_cpp_min
