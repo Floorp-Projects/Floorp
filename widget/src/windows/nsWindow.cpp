@@ -186,14 +186,14 @@ OleRegisterMgr::~OleRegisterMgr()
 }
 
 ////////////////////////////////////////////////////
-// nsWindow Class static variable defintions
+// nsWindow Class static variable definitions
 ////////////////////////////////////////////////////
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
 UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
-UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert messge for MSIME
-UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
-UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
+UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert message for MSIME
+UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse message for MSIME
+UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert message for ATOK
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
 
@@ -204,7 +204,7 @@ nsWindow* nsWindow::gCurrentWindow = nsnull;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
-// Rollup Listener - static variable defintions
+// Rollup Listener - static variable definitions
 ////////////////////////////////////////////////////
 static nsIRollupListener * gRollupListener           = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
@@ -225,13 +225,14 @@ static UINT         gHookTimerId   = 0;
 
 
 ////////////////////////////////////////////////////
-// Mouse Clicks - static variable defintions 
+// Mouse Clicks - static variable definitions 
 // for figuring out 1 - 3 Clicks
 ////////////////////////////////////////////////////
 static POINT gLastMousePoint;
 static POINT gLastMouseMovePoint;
 static LONG  gLastMouseDownTime = 0L;
 static LONG  gLastClickCount    = 0L;
+static BYTE  gLastMouseButton = 0;
 ////////////////////////////////////////////////////
 
 // The last user input event time in milliseconds. If there are any pending
@@ -2988,10 +2989,12 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   // Ctrl+[Add, Subtract, Equals] are always handled here to make text zoom shortcuts work
   // on different keyboard layouts (Equals is needed because many layouts return it when
   // pressing Ctrl++ and that's why it's also accepted as a shortcut for increasing zoom).
+  // Alt+[a..z] are handled here to keep them lowercase (not affected by Caps Lock).
   if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK || 
     (mIsControlDown && !mIsAltDown && !mIsShiftDown && 
      (virtualKeyCode == NS_VK_ADD || virtualKeyCode == NS_VK_SUBTRACT || 
-     virtualKeyCode == NS_VK_EQUALS)))
+     virtualKeyCode == NS_VK_EQUALS)) ||
+     (!mIsControlDown && mIsAltDown && virtualKeyCode >= NS_VK_A && virtualKeyCode <= NS_VK_Z))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
     if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
@@ -5127,6 +5130,28 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     gLastMouseMovePoint.y = mp.y;
   }
 
+  BYTE eventButton;
+  switch (aEventType) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_LEFT_DOUBLECLICK:
+      eventButton = VK_LBUTTON;
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      eventButton = VK_MBUTTON;
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
+      eventButton = VK_RBUTTON;
+      break;
+    default:
+      eventButton = 0;
+      break;
+  }
+
   // we're going to time double-clicks from mouse *up* to next mouse *down*
   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) {
     event.message = NS_MOUSE_LEFT_BUTTON_DOWN;
@@ -5145,6 +5170,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     DWORD pos = ::GetMessagePos();
     gLastMousePoint.x = GET_X_LPARAM(pos);
     gLastMousePoint.y = GET_Y_LPARAM(pos);
+    gLastMouseButton = eventButton;
   }
   else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN || aEventType == NS_MOUSE_MIDDLE_BUTTON_DOWN || aEventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
@@ -5153,7 +5179,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMouseDownTime, curMsgTime-gLastMouseDownTime, ::GetDoubleClickTime());
     printf("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
 #endif
-    if (((curMsgTime - gLastMouseDownTime) < (LONG)::GetDoubleClickTime()) && insideMovementThreshold) {
+    if (((curMsgTime - gLastMouseDownTime) < (LONG)::GetDoubleClickTime()) && insideMovementThreshold && eventButton == gLastMouseButton) {
       gLastClickCount ++;
     } else {
       // reset the click count, to count *this* click
