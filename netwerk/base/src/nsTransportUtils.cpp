@@ -13,12 +13,12 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is IBM, Corp.
- * Portions created by the Initial Developer are Copyright (C) 2003
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by IBM Corporation are Copyright (C) 2003
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darinf@us.ibm.com>
+ *   IBM Corp.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
