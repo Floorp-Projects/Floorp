@@ -31,7 +31,6 @@
 		<menu value="&toolsMenu.label;">
 		  <menupopup>
 			<menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
-			<menuitem value="&securityInfoCmd.label;" oncommand="toSecurityInfo()"/>
 			<menuitem value="&messageCenterCmd.label;" oncommand="toMessengerCenter()"/>
 			<menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
 			<menuitem value="&javaConsoleCmd.label;" oncommand="toJavaConsole()"/>
