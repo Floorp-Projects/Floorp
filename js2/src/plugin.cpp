@@ -144,9 +144,11 @@ NPBool nsPluginInstance::init(NPWindow* aWindow)
   // it in the window procedure
   SetWindowLong(mhWnd, GWL_USERDATA, (LONG)this);
 
+  printf("Pandora: starting up\n");
   world = new World();
   metadata = new JavaScript::MetaData::JS2Metadata(*world);
   spiderMonkeyClass = new (metadata) JS2SpiderMonkeyClass(&world->identifiers[widenCString("SpiderMonkey")]);
+  printf("Pandora: done starting up\n");
  
   mInitialized = TRUE;
 
@@ -159,7 +161,9 @@ void nsPluginInstance::shut()
   SubclassWindow(mhWnd, lpOldProc);
   mhWnd = NULL;
   mInitialized = FALSE;
+
   try {
+      printf("Pandora: shutting down\n");
       if (metadata) {
         delete metadata;
         metadata = NULL;
@@ -169,6 +173,7 @@ void nsPluginInstance::shut()
         delete world;
         world = NULL;
       }
+      printf("Pandora: done shutting down\n");
   }
   catch (Exception x) {
     report(x);
@@ -202,6 +207,8 @@ void nsPluginInstance::GetDocument(nsISupports * *aDocument)
 
 void nsPluginInstance::SetDocument(nsISupports *aDocument)
 {
+    printf("Pandora: setting document\n");
+
     NS_ADDREF(aDocument);
     doc = aDocument;
 
@@ -222,6 +229,7 @@ void nsPluginInstance::SetDocument(nsISupports *aDocument)
                         smInst->jsObject = obj;
                         smInst->pluginInstance = this;
                         metadata->createDynamicProperty(metadata->glob, "document", OBJECT_TO_JS2VAL(smInst), ReadWriteAccess, true, false);
+                        printf("Pandora: done setting document\n");
                     }
                 }
                 NS_RELEASE(aCurrentNativeCallContext);
@@ -243,6 +251,7 @@ NPError nsPluginInstance::NewStream(NPMIMEType type, NPStream* stream,
 
 void nsPluginInstance::StreamAsFile(NPStream* stream, const char* fname)
 {
+    printf("Pandora: compiling source\n");
     // compile the file, error reports need to go to the JS console
     // if succesful, script level functions get proxies generated
     try {
@@ -268,6 +277,8 @@ void nsPluginInstance::StreamAsFile(NPStream* stream, const char* fname)
                     
 						    std::string fstr(fnName.length(), char());
 						    std::transform(fnName.begin(), fnName.end(), fstr.begin(), narrow);
+
+                            printf("Pandora: adding wrapper for %s\n", fstr.c_str());
                 
 						    StringFormatter sf;
 						    printFormat(sf, "JavaScript:function %s() { return document.js2.invoke(\"%s\"); }", fstr.c_str(), fstr.c_str());
@@ -282,6 +293,7 @@ void nsPluginInstance::StreamAsFile(NPStream* stream, const char* fname)
 
             }		    
         }
+        printf("Pandora: done compiling source\n");
     }
     catch (Exception x) {
         report(x);
@@ -381,10 +393,8 @@ using namespace MetaData;
 
 js2val callJSFunction(JS2Metadata *meta, FunctionInstance *fnInst, const js2val thisValue, js2val *argv, uint32 argc)
 {
-//    ASSERT(JS2VAL_IS_OBJECT(thisValue) && !JS2VAL_IS_NULL(thisValue));
-//    JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
-//    ASSERT(obj->kind == SimpleInstanceKind);
-
+    printf("JS2SpiderMonkeyClass: callJSFunction \n");
+    
     SpiderMonkeyFunction *smFun = checked_cast<SpiderMonkeyFunction *>(fnInst);
     nsPluginInstance *plug = smFun->pluginInstance;
 
@@ -502,6 +512,12 @@ bool nsPluginInstance::convertJS2ValueToJSValue(JSContext *cx, js2val v, jsval *
 
 bool JS2SpiderMonkeyClass::Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
 {   
+    std::string str(multiname->name->length(), char());
+    std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
+
+    printf("JS2SpiderMonkeyClass: Reading property %s\n", str.c_str());
+    
+
     ASSERT(JS2VAL_IS_OBJECT(*base) && !JS2VAL_IS_NULL(*base));
     JS2Object *obj = JS2VAL_TO_OBJECT(*base);
     ASSERT(obj->kind == SimpleInstanceKind);
@@ -516,8 +532,6 @@ bool JS2SpiderMonkeyClass::Read(JS2Metadata *meta, js2val *base, Multiname *mult
             JSContext *aJSContext;
             if (NS_SUCCEEDED(aCurrentNativeCallContext->GetJSContext(&aJSContext))) {
                 jsval v;
-                std::string str(multiname->name->length(), char());
-                std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
                 if (JS_GetProperty(aJSContext, smInst->jsObject, str.c_str(), &v))
                     result = plug->convertJSValueToJS2Value(aJSContext, v, rval);
                 NS_RELEASE(aCurrentNativeCallContext);
@@ -533,6 +547,12 @@ bool JS2SpiderMonkeyClass::BracketRead(JS2Metadata *meta, js2val *base, js2val i
 }
 bool JS2SpiderMonkeyClass::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
 {
+    std::string str(multiname->name->length(), char());
+    std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
+
+    printf("JS2SpiderMonkeyClass: Writing property %s\n", str.c_str());
+    
+
     ASSERT(JS2VAL_IS_OBJECT(base) && !JS2VAL_IS_NULL(base));
     JS2Object *obj = JS2VAL_TO_OBJECT(base);
     ASSERT(obj->kind == SimpleInstanceKind);
@@ -548,8 +568,6 @@ bool JS2SpiderMonkeyClass::Write(JS2Metadata *meta, js2val base, Multiname *mult
             if (NS_SUCCEEDED(aCurrentNativeCallContext->GetJSContext(&aJSContext))) {
                 jsval v;
                 if (plug->convertJS2ValueToJSValue(aJSContext, newValue, &v)) {
-                    std::string str(multiname->name->length(), char());
-                    std::transform(multiname->name->begin(), multiname->name->end(), str.begin(), narrow);
                     if (JS_SetProperty(aJSContext, smInst->jsObject, str.c_str(), &v))
                         result = true;
                 }

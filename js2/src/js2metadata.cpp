@@ -5133,7 +5133,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     FunctionInstance::~FunctionInstance()
     {
-        if (fWrap)
+        if (fWrap && !isMethodClosure)
             delete fWrap;
     }
 
