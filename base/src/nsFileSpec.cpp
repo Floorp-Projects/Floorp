@@ -18,7 +18,6 @@
  
 #include "nsFileSpec.h"
 
-#include "nsFileStream.h"
 #include "nsDebug.h"
 #include "nsEscape.h"
 
@@ -596,13 +595,6 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 } // nsFileURL::operator =
 #endif
 
-//----------------------------------------------------------------------------------------
-nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& url)
-//----------------------------------------------------------------------------------------
-{
-    return (s << url.mURL);
-}
-
 //========================================================================================
 //                                nsFilePath implementation
 //========================================================================================
@@ -691,15 +683,12 @@ void nsFilePath::operator = (const nsFileSpec& inOther)
 }
 #endif // XP_UNIX
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
-#ifdef XP_MAC
-    mFileSpec = inString;
-    mPath = (const char*)nsFilePath(mFileSpec);
-#else
     mPath = inString;
 #ifdef XP_PC
     nsFileSpecHelpers::UnixToNative(mPath);
@@ -709,8 +698,8 @@ void nsFilePath::operator = (const char* inString)
 #ifdef XP_PC
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
-#endif // XP_MAC
 }
+#endif // XP_MAC
 
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
@@ -945,23 +934,6 @@ void nsFileSpec::operator = (const char* inString)
 }
 #endif //XP_UNIX
 
-#if (defined(XP_UNIX) || defined(XP_PC))
-//----------------------------------------------------------------------------------------
-nsOutputStream& operator << (nsOutputStream& s, const nsFileSpec& spec)
-//----------------------------------------------------------------------------------------
-{
-#ifdef NS_DEBUG
-    static PRBool warnedOnce = PR_FALSE;
-    if (!warnedOnce)
-    {
-        NS_WARNING("This is for debugging only.  Do not call this in shipped version!");
-        warnedOnce = PR_TRUE;
-    }
-#endif // NS_DEBUG
-    return (s << spec.GetCString());
-}
-#endif // DEBUG ONLY!
-
 //----------------------------------------------------------------------------------------
 nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
 //----------------------------------------------------------------------------------------
@@ -1078,6 +1050,20 @@ nsPersistentFileDescriptor::~nsPersistentFileDescriptor()
 } // nsPersistentFileDescriptor::~nsPersistentFileDescriptor
 
 //----------------------------------------------------------------------------------------
+void nsPersistentFileDescriptor::GetData(nsSimpleCharString& outData) const
+//----------------------------------------------------------------------------------------
+{
+    outData = mDescriptorString;
+}
+
+//----------------------------------------------------------------------------------------
+void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData)
+//----------------------------------------------------------------------------------------
+{
+    SetData(inData, inData.Length());
+}
+
+//----------------------------------------------------------------------------------------
 void nsPersistentFileDescriptor::GetData(nsSimpleCharString& outData, PRInt32& outSize) const
 //----------------------------------------------------------------------------------------
 {
@@ -1092,70 +1078,6 @@ void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData, PRInt
     mDescriptorString.CopyFrom((const char*)inData, inSize);
 }
 
-#define MAX_PERSISTENT_DATA_SIZE 1000
-
-//----------------------------------------------------------------------------------------
-nsresult nsPersistentFileDescriptor::Read(nsIInputStream* aStream)
-//----------------------------------------------------------------------------------------
-{
-    nsInputStream inputStream(aStream);
-    inputStream >> *this;
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-nsresult nsPersistentFileDescriptor::Write(nsIOutputStream* aStream)
-//----------------------------------------------------------------------------------------
-{
-    nsOutputStream outputStream(aStream);
-    outputStream << *this;
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------------------
-nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
-// reads the data from a file
-//----------------------------------------------------------------------------------------
-{
-    char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
-    // The first 8 bytes of the data should be a hex version of the data size to follow.
-    PRInt32 bytesRead = 8;
-    bytesRead = s.read(bigBuffer, bytesRead);
-    if (bytesRead != 8)
-        return s;
-    bigBuffer[8] = '\0';
-    sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
-    if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
-    {
-        // Try to tolerate encoded values with no length header
-        bytesRead = 8 + s.read(bigBuffer + 8, MAX_PERSISTENT_DATA_SIZE - 8);
-    }
-    else
-    {
-        // Now we know how many bytes to read, do it.
-        bytesRead = s.read(bigBuffer, bytesRead);
-    }
-    d.SetData(bigBuffer, bytesRead);
-    return s;
-}
-
-//----------------------------------------------------------------------------------------
-nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor& d)
-// writes the data to a file
-//----------------------------------------------------------------------------------------
-{
-    char littleBuf[9];
-    PRInt32 dataSize;
-    nsSimpleCharString data;
-    d.GetData(data, dataSize);
-    // First write (in hex) the length of the data to follow.  Exactly 8 bytes
-    sprintf(littleBuf, "%0.8x", dataSize);
-    s << littleBuf;
-    // Now write the data itself
-    s << (const char*)data;
-    return s;
-}
-
 //========================================================================================
 //    class nsAutoCString
 //========================================================================================
@@ -1168,11 +1090,11 @@ nsAutoCString::~nsAutoCString()
 }
 
 //========================================================================================
-//    class nsprPath
+//    class nsNSPRPath
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsprPath::operator const char*() const
+nsNSPRPath::operator const char*() const
 // NSPR expects a UNIX path on unix and Macintosh, but a native path on windows. NSPR
 // cannot be changed, so we have to do the dirty work.
 //----------------------------------------------------------------------------------------
@@ -1186,7 +1108,7 @@ nsprPath::operator const char*() const
         if (!unixPath)
             return nsnull;
 
-        ((nsprPath*)this)->modifiedNSPRPath
+        ((nsNSPRPath*)this)->modifiedNSPRPath
                 = nsCRT::strdup(*unixPath == '/' ? unixPath + 1: unixPath);
         
         // Replace the bar
@@ -1205,7 +1127,7 @@ nsprPath::operator const char*() const
 }
 
 //----------------------------------------------------------------------------------------
-nsprPath::~nsprPath()
+nsNSPRPath::~nsNSPRPath()
 //----------------------------------------------------------------------------------------
 {
 #ifdef XP_PC

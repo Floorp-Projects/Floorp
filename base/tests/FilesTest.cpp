@@ -43,6 +43,7 @@ struct FilesTest
     int CanonicalPath(const char* relativePath);
     int Persistence(const char* relativePath);
     int FileSpecEquality(const char *aFile, const char *bFile);
+    int FileSpecAppend(nsFileSpec& parent, const char* relativePath);
     int Copy(const char*  sourceFile, const char* targDir);
     int Move(const char*  sourceFile, const char*  targDir);
     int Rename(const char*  sourceFile, const char* newName);
@@ -51,12 +52,12 @@ struct FilesTest
 
     int SpecialSystemDirectories();
     
-    int NSPRCompatiblity(const char* sourceFile);
+    int NSPRCompatibility(const char* sourceFile);
 
     void Banner(const char* bannerString);
     int Passed();
     int Failed(const char* explanation = nsnull);
-    void Inspect();
+    int Inspect();
         
 	nsOutputConsoleStream mConsole;
 };
@@ -92,10 +93,11 @@ int FilesTest::Failed(const char* explanation)
 }
 
 //----------------------------------------------------------------------------------------
-void FilesTest::Inspect()
+int FilesTest::Inspect()
 //----------------------------------------------------------------------------------------
 {
     mConsole << nsEndl << "^^^^^^^^^^ PLEASE INSPECT OUTPUT FOR ERRORS" << nsEndl;
+    return 0; // for convenience
 }
 
 //----------------------------------------------------------------------------------------
@@ -136,12 +138,12 @@ void FilesTest::WriteStuff(nsOutputStream& s)
 } // WriteStuff
 
 //----------------------------------------------------------------------------------------
-int FilesTest::OutputStream(const char* relativePath)
+int FilesTest::OutputStream(const char* relativeUnixPath)
 //----------------------------------------------------------------------------------------
 {
-    nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
-    const char* pathAsString = (const char*)myTextFilePath;
+    nsFilePath myTextFilePath(relativeUnixPath, PR_TRUE); // convert to full path.
     nsFileSpec mySpec(myTextFilePath);
+    const char* pathAsString = (const char*)mySpec;
     {
         mConsole << "WRITING IDENTICAL OUTPUT TO " << pathAsString << nsEndl << nsEndl;
         nsOutputFileStream testStream(mySpec);
@@ -166,7 +168,7 @@ int FilesTest::OutputStream(const char* relativePath)
                 << nsEndl;
             return -1;
     }
-	FileSizeAndDate(relativePath);
+	FileSizeAndDate(relativeUnixPath);
     return Passed();
 }
 
@@ -310,8 +312,7 @@ int FilesTest::InputStream(const char* relativePath)
         testStream2.readline(line, sizeof(line));
         mConsole << line << nsEndl;
     }
-    Inspect();
-    return 0;
+    return Inspect();
 }
 
 //----------------------------------------------------------------------------------------
@@ -356,8 +357,7 @@ int FilesTest::Parent(
         << "\n or as a URL"
         << "\n\t" << (const char*)url
         << nsEndl;
-    Inspect();
-    return 0;
+    return Inspect();
 }
 
 //----------------------------------------------------------------------------------------
@@ -429,16 +429,17 @@ int FilesTest::CreateDirectory(nsFileSpec& dirSpec)
 int FilesTest::CreateDirectoryRecursive(const char* aPath)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec dirSpec(aPath, PR_TRUE);
+    nsFilePath dirPath(aPath, PR_TRUE);
 	mConsole
 		<< "Testing nsFilePath(X, PR_TRUE) using"
 		<< "\n\t" << (const char*)aPath
 		<< nsEndl;
-		
-    return Passed();
+	
+	nsFileSpec spec(dirPath);
+    if (spec.Valid())
+        return Passed();
+    return Failed();
 }
-
-
 
 //----------------------------------------------------------------------------------------
 int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
@@ -465,8 +466,7 @@ int FilesTest::IterateDirectoryChildren(nsFileSpec& startChild)
         mConsole << '\t' << itemName << nsEndl;
         nsCRT::free(itemName);
     }
-    Inspect();
-    return 0;
+    return Inspect();
 }
 
 //----------------------------------------------------------------------------------------
@@ -492,12 +492,37 @@ int FilesTest::CanonicalPath(
 }
 
 //----------------------------------------------------------------------------------------
+int FilesTest::FileSpecAppend(nsFileSpec& parent, const char* relativePath)
+//----------------------------------------------------------------------------------------
+{
+    nsFilePath initialPath(parent);
+    const char* initialPathString = (const char*)initialPath;
+    mConsole << "Initial nsFileSpec:\n\t\"" << initialPathString << "\"" << nsEndl;
+
+    nsFileSpec fileSpec(initialPath);
+
+    mConsole << "Appending:\t\"" << relativePath << "\"" << nsEndl;
+
+    fileSpec += relativePath;
+
+    nsFilePath resultPath(fileSpec);
+    const char* resultPathString = (const char*)resultPath;
+    mConsole << "Result:\n\t\"" << resultPathString << "\"" << nsEndl;
+
+    return Inspect();
+} // FilesTest::FileSpecAppend
+
+//----------------------------------------------------------------------------------------
 int FilesTest::FileSpecEquality(const char *aFile, const char *bFile)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec aFileSpec(aFile, PR_FALSE);
-    nsFileSpec bFileSpec(bFile, PR_FALSE);
-    nsFileSpec cFileSpec(bFile, PR_FALSE);  // this should == bFile
+    nsFilePath aFilePath(aFile, PR_TRUE);
+    nsFilePath bFilePath(bFile, PR_TRUE);
+
+
+    nsFileSpec aFileSpec(aFilePath);
+    nsFileSpec bFileSpec(bFilePath);
+    nsFileSpec cFileSpec(bFilePath);  // this should == bFile
     
     if (aFileSpec != bFileSpec &&
         bFileSpec == cFileSpec )
@@ -506,26 +531,26 @@ int FilesTest::FileSpecEquality(const char *aFile, const char *bFile)
     }
 
     return Failed();
-}
+} // FilesTest::FileSpecEquality
 
 //----------------------------------------------------------------------------------------
 int FilesTest::Copy(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec dirPath(dir, PR_TRUE);
+    nsFileSpec dirPath(nsFilePath(dir, PR_TRUE));
         
     dirPath.CreateDirectory();
     if (! dirPath.Exists())
         return Failed();
     
 
-    nsFileSpec mySpec(file, PR_TRUE); // relative path.
+    nsFileSpec mySpec(nsFilePath(file, PR_TRUE)); // relative path.
     {
         nsIOFileStream testStream(mySpec); // creates the file
         // Scope ends here, file gets closed
     }
     
-    nsFileSpec filePath(file);
+    nsFileSpec filePath(nsFilePath(file, PR_TRUE));
     if (! filePath.Exists())
         return Failed();
    
@@ -545,14 +570,14 @@ int FilesTest::Copy(const char* file, const char* dir)
 int FilesTest::Move(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec dirPath(dir, PR_TRUE);
+    nsFileSpec dirPath(nsFilePath(dir, PR_TRUE));
         
     dirPath.CreateDirectory();
     if (! dirPath.Exists())
         return Failed();
     
 
-    nsFileSpec srcSpec(file, PR_TRUE); // relative path.
+    nsFileSpec srcSpec(nsFilePath(file, PR_TRUE)); // relative path.
     {
        nsIOFileStream testStream(srcSpec); // creates the file
        // file gets closed here because scope ends here.
@@ -576,11 +601,12 @@ int FilesTest::Move(const char* file, const char* dir)
 int FilesTest::Execute(const char* appName, const char* args)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec appPath(appName, PR_FALSE);
-    if (!appPath.Exists())
+    mConsole << "Attempting to execute " << appName << nsEndl;
+    nsFileSpec appSpec(appName, PR_FALSE);
+    if (!appSpec.Exists())
         return Failed();
     
-    nsresult error = appPath.Execute(args);    
+    nsresult error = appSpec.Execute(args);    
     if (NS_FAILED(error))
         return Failed();
 
@@ -588,11 +614,13 @@ int FilesTest::Execute(const char* appName, const char* args)
 }
 
 //----------------------------------------------------------------------------------------
-int FilesTest::NSPRCompatiblity(const char* sourceFile)
+int FilesTest::NSPRCompatibility(const char* relativeUnixFilePath)
 //----------------------------------------------------------------------------------------
 {
 
-    nsFileSpec createTheFileSpec(sourceFile, PR_TRUE); // relative path.
+    nsFilePath filePath(relativeUnixFilePath, PR_TRUE); // relative path
+
+    nsFileSpec createTheFileSpec(filePath);
     {
        nsIOFileStream testStream(createTheFileSpec); // creates the file
        // file gets closed here because scope ends here.
@@ -600,10 +628,10 @@ int FilesTest::NSPRCompatiblity(const char* sourceFile)
     
 
 
-    nsFilePath filePath(sourceFile, PR_TRUE);
     PRFileDesc* fOut = NULL;
 
-    fOut = PR_Open( nsprPath(filePath), PR_RDONLY, 0 );
+    // From an nsFilePath
+    fOut = PR_Open( nsNSPRPath(filePath), PR_RDONLY, 0 );
     if ( fOut == NULL )
     {
         return Failed();
@@ -614,9 +642,10 @@ int FilesTest::NSPRCompatiblity(const char* sourceFile)
         fOut = NULL;
     }
 
+    // From an nsFileSpec
     nsFileSpec fileSpec(filePath);
     
-    fOut = PR_Open( nsprPath(fileSpec), PR_RDONLY, 0 );
+    fOut = PR_Open( nsNSPRPath(fileSpec), PR_RDONLY, 0 );
     if ( fOut == NULL )
     {
         return Failed();
@@ -627,9 +656,10 @@ int FilesTest::NSPRCompatiblity(const char* sourceFile)
         fOut = NULL;
     }
   
+    // From an nsFileURL
     nsFileURL fileURL(fileSpec);
     
-    fOut = PR_Open( nsprPath(fileURL), PR_RDONLY, 0 );
+    fOut = PR_Open( nsNSPRPath(fileURL), PR_RDONLY, 0 );
     if ( fOut == NULL )
     {
         return Failed();
@@ -887,84 +917,118 @@ int FilesTest::RunAllTests()
 // For use with DEBUG defined.
 //----------------------------------------------------------------------------------------
 {
-	// Test of mConsole output
-	
+	int rv = 0;
+
+	// Test of mConsole output	
 	mConsole << "WRITING TEST OUTPUT TO CONSOLE" << nsEndl << nsEndl;
 
 	// Test of nsFileSpec
 	
 	Banner("Interconversion");
 	WriteStuff(mConsole);
-	Inspect();
-		
+	rv = Inspect();
+	if (rv)
+	    return rv;
+	    
 	Banner("Canonical Path");
-	if (CanonicalPath("mumble/iotest.txt") != 0)
-		return -1;
+	rv = CanonicalPath("mumble/iotest.txt");
+	if (rv)
+	    return rv;
 
 	Banner("OutputStream");
-	if (OutputStream("mumble/iotest.txt") != 0)
-		return -1;
+	rv = OutputStream("mumble/iotest.txt");
+	if (rv)
+	    return rv;
 	
 	Banner("InputStream");
-	if (InputStream("mumble/iotest.txt") != 0)
-		return -1;
+	rv = InputStream("mumble/iotest.txt");
+	if (rv)
+	    return rv;
 	
 	Banner("IOStream");
-	if (IOStream("mumble/iotest.txt") != 0)
-		return -1;
+	rv = IOStream("mumble/iotest.txt");
+	if (rv)
+	    return rv;
 	FileSizeAndDate("mumble/iotest.txt");
 
-	if (InputStream("mumble/iotest.txt") != 0)
-		return -1;
+	rv = InputStream("mumble/iotest.txt");
+	if (rv)
+	    return rv;
 	
     Banner("StringStream");
-    if (StringStream() != 0)
-        return -1;
+    rv = StringStream();
+	if (rv)
+	    return rv;
         
 	Banner("Parent");
 	nsFileSpec parent;
-	if (Parent("mumble/iotest.txt", parent) != 0)
-		return -1;
+	rv = Parent("mumble/iotest.txt", parent);
+	if (rv)
+	    goto Clean;
 		
+	Banner("FileSpec Append using Unix relative path");
+	rv = FileSpecAppend(parent, "nested/unix/file.txt");
+	if (rv)
+	    goto Clean;
+	Banner("FileSpec Append using Native relative path");
+#ifdef XP_PC
+    rv = FileSpecAppend(parent, "nested\\windows\\file.txt");
+#elif defined(XP_MAC)
+    rv = FileSpecAppend(parent, ":nested:mac:file.txt");
+#else
+    rv = Passed();
+#endif // XP_MAC
+	if (rv)
+	    goto Clean;
+
 	Banner("Delete");
-	if (Delete(parent) != 0)
-		return -1;
+	rv = Delete(parent);
+	if (rv)
+	    goto Clean;
 		
 	Banner("CreateDirectory");
-	if (CreateDirectory(parent) != 0)
-		return -1;
+	rv = CreateDirectory(parent);
+	if (rv)
+	    goto Clean;
 
     Banner("CreateDirectoryRecursive Relative (using nsFileSpec)");
-	if (CreateDirectoryRecursive("mumble/dir1/dir2/dir3/") != 0)
-		return -1;
+	rv = CreateDirectoryRecursive("mumble/dir1/dir2/dir3/");
+	if (rv)
+	    goto Clean;
 #ifdef XP_PC
     Banner("CreateDirectoryRecursive Absolute (using nsFileSpec)");
-	if (CreateDirectoryRecursive("c:\\temp\\dir1\\dir2\\dir3\\") != 0)
-		return -1;
+	rv = CreateDirectoryRecursive("c:\\temp\\dir1\\dir2\\dir3\\");
+	if (rv)
+	    goto Clean;
 #endif
 
 	Banner("IterateDirectoryChildren");
-	if (IterateDirectoryChildren(parent) != 0)
-		return -1;
+	rv = IterateDirectoryChildren(parent);
+	if (rv)
+	    goto Clean;
     
     Banner("nsFileSpec equality");
-    if (FileSpecEquality("mumble/a", "mumble/b") != 0)
-        return -1;
+    rv = FileSpecEquality("mumble/a", "mumble/b");
+	if (rv)
+	    goto Clean;
 
     Banner("Copy");
-    if (Copy("mumble/copyfile.txt", "mumble/copy") != 0)
-        return -1;
+    rv = Copy("mumble/copyfile.txt", "mumble/copy");
+	if (rv)
+	    goto Clean;
     
     Banner("Move");
-    if (Move("mumble/moveFile.txt", "mumble/move") != 0)
-        return -1;
+    rv = Move("mumble/moveFile.txt", "mumble/move");
+	if (rv)
+	    goto Clean;
+
     Banner("Execute");
 #ifdef XP_MAC
     // This path is hard-coded to test on jrm's machine.  Finding an app
     // on an arbitrary Macintosh would cost more trouble than it's worth.
-    // Change path to suit.
-    if NS_FAILED(Execute("/Projects/Nav45_BRANCH/ns/cmd/macfe/"\
-        "projects/client45/Client45PPC", ""))
+    // Change path to suit. This is currently a native path, as you can see.
+    if NS_FAILED(Execute("Projects:Nav45_BRANCH:ns:cmd:macfe:"\
+        "projects:client45:Client45PPC", ""))
 #elif XP_PC
     if NS_FAILED(Execute("c:\\windows\\notepad.exe", ""))
 #else
@@ -972,23 +1036,26 @@ int FilesTest::RunAllTests()
 #endif
         return -1;
 
-    Banner("NSPR Compatiblity");
-    if (NSPRCompatiblity("mumble/aFile.txt") != 0)
-        return -1;
+    Banner("NSPR Compatibility");
+    rv = NSPRCompatibility("mumble/aFile.txt");
+	if (rv)
+	    goto Clean;
 
     Banner("Special System Directories");
-    if (SpecialSystemDirectories() != 0)
-        return -1;
+    rv = SpecialSystemDirectories();
+	if (rv)
+	    goto Clean;
 
 	Banner("Persistence");
- 	if (Persistence("mumble/filedesc.dat") != 0)
-		return -1;
+ 	rv = Persistence("mumble/filedesc.dat");
+	if (rv)
+	    goto Clean;
 
+Clean:
 	Banner("Delete again (to clean up our mess)");
-	if (Delete(parent) != 0)
-		return -1;
+	Delete(parent);
 		
-    return 0;
+    return rv;
 } // FilesTest::RunAllTests
 
 //----------------------------------------------------------------------------------------

@@ -29,6 +29,7 @@ EXPORTS =                       \
         nsISizeOfHandler.h      \
         nsEscape.h              \
         nsFileSpec.h            \
+        nsFileSpecStreaming.h   \
         nsFileStream.h          \
         nsIFileStream.h         \
         nsIString.h             \

@@ -78,6 +78,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsUnicharInputStream.obj	\
 	.\$(OBJDIR)\nsVoidArray.obj		\
 	.\$(OBJDIR)\nsFileSpec.obj \
+	.\$(OBJDIR)\nsFileSpecStreaming.obj \
 	.\$(OBJDIR)\nsFileStream.obj \
 	.\$(OBJDIR)\nsEscape.obj			\
 	.\$(OBJDIR)\nsIFileStream.obj       \
