@@ -249,14 +249,15 @@
   </label><br>
 [% END %]
 
-[% knum = knum + 1 %]
-<input id="knob-accept" type="radio" name="knob" value="accept">
-<label for="knob-accept">
-  Accept [% terms.bugs %] (change status to <b>ASSIGNED</b>)
-</label><br>
-
-[%# If all the bugs being changed are open, allow the user to close them. %]
+[%# If all the bugs being changed are open, allow the user to accept them,
+    clear their resolution or resolve them. %]
 [% IF !bugstatuses.containsany(closedstates) %]
+  [% knum = knum + 1 %]
+  <input id="knob-accept" type="radio" name="knob" value="accept">
+  <label for="knob-accept">
+    Accept [% terms.bugs %] (change status to <b>ASSIGNED</b>)
+  </label><br>
+
   [% knum = knum + 1 %]
   <input id="knob-clearresolution" type="radio" name="knob" value="clearresolution">
   <label for="knob-clearresolution">Clear the resolution</label><br>
