@@ -588,7 +588,7 @@ HRESULT RetrieveArchives()
     WritePrivateProfileString("Execution",        "exe",              siSDObject.szExe,             szFileIdiGetArchives);
     WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetArchives);
 
-    if((hResult = SdArchives(szFileIdiGetArchives, szTempDir)) == 1)
+    if((hResult = SdArchives(szFileIdiGetArchives, szTempDir)) != 0)
       return(hResult);
   }
 
