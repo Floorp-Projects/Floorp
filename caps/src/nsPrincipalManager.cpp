@@ -358,8 +358,7 @@ nsPrincipalManager *
 nsPrincipalManager::GetPrincipalManager()
 {
 	static nsPrincipalManager * prinMan = NULL;
-	if(!prinMan)
-		prinMan = new nsPrincipalManager();
+	if(!prinMan) prinMan = new nsPrincipalManager();
 	return prinMan;
 }
 

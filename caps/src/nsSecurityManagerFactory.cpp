@@ -159,7 +159,7 @@ NSRegisterSelf(nsISupports * aServMgr, const char * aPath)
 {
 	nsresult rv;
 #ifdef DEBUG
-	printf("*** Register Security\n");
+	printf("***Registering Security***\n");
 #endif
 	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID,& rv);
 	if (NS_FAILED(rv)) return rv;
@@ -173,7 +173,7 @@ NSUnregisterSelf(nsISupports * aServMgr, const char * aPath)
 {
 	nsresult rv;
 #ifdef DEBUG
-	printf("*** Unregister XPConnect\n");
+	printf("*** Unregistering Security***\n");
 #endif
 	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID,& rv);
 	if (NS_FAILED(rv)) return rv;

@@ -309,15 +309,16 @@ nsPrivilegeManager::EnablePrincipalPrivilegeHelper(nsIScriptContext * context, n
 		callerPrinArray->GetPrincipalArraySize(& i);
 		while (i-- > 0) {
 			callerPrinArray->GetPrincipalArrayElement(i, & callerPrin);
-			PRBool result;
-			callerPrin->Equals(preferredPrin, & result);
-			if (result
-//XXX ARIEL: update this code soon
-//      &&
-//          ((callerPrin->isCert() ||
-//            callerPrin->isCertFingerprint()))
+			PRBool prinEq;
+			PRInt16 prinType;
+			callerPrin->Equals(preferredPrin, & prinEq);
+			callerPrin->GetType(& prinType);
+			if (prinEq &&
+				((prinType == nsIPrincipal::PrincipalType_Certificate) ||
+				(prinType == nsIPrincipal::PrincipalType_CertificateFingerPrint) ||
+				(prinType == nsIPrincipal::PrincipalType_CertificateKey) ||
+				(prinType == nsIPrincipal::PrincipalType_CertificateChain))
 			) {
-
 				useThisPrin = callerPrin;
 				break;
 			}
@@ -362,106 +363,89 @@ nsPrivilegeManager::EnablePrincipalPrivilegeHelper(nsIScriptContext * context, n
 
 
 nsPrivilegeTable *
-nsPrivilegeManager::EnableScopePrivilegeHelper(nsITarget *target, PRInt32 callerDepth, void *data, PRBool helpingSetScopePrivilege, 
-                                               nsIPrincipal *prefPrin)
+nsPrivilegeManager::EnableScopePrivilegeHelper(nsITarget * target, PRInt32 callerDepth, void * data, PRBool helpingSetScopePrivilege, nsIPrincipal * prefPrin)
 {
-  return this->EnableScopePrivilegeHelper(NULL, target, callerDepth, data, 
-                                    helpingSetScopePrivilege, prefPrin);
+	return this->EnableScopePrivilegeHelper(NULL, target, callerDepth, data, helpingSetScopePrivilege, prefPrin);
 }
 
 
 nsPrivilegeTable *
-nsPrivilegeManager::EnableScopePrivilegeHelper(nsIScriptContext * context, nsITarget *target, PRInt32 callerDepth, 
-                                               void *data, PRBool helpingSetScopePrivilege, nsIPrincipal * prefPrin)
+nsPrivilegeManager::EnableScopePrivilegeHelper(nsIScriptContext * context, nsITarget * target, PRInt32 callerDepth, 
+												void * data, PRBool helpingSetScopePrivilege, nsIPrincipal * prefPrin)
 {
-  nsPrivilegeTable *privTable;
-  nsIPrivilege * allowedScope;
-  PRBool res;
-
-  nsITarget * targ = nsTarget::FindTarget(target);
-  if (targ != target) return NULL;
-    //throw new ForbiddenTargetException(target + " is not a registered target");
-  (prefPrin != NULL) ?
-  res = this->CheckPrivilegeGranted(target, prefPrin, data) :
+	nsPrivilegeTable * privTable;
+	nsIPrivilege * allowedScope;
+	PRBool res;
+	nsITarget * targ = nsTarget::FindTarget(target);
+	if (targ != target) return NULL;
+//throw new ForbiddenTargetException(target + " is not a registered target");
+	(prefPrin != NULL) ? res = this->CheckPrivilegeGranted(target, prefPrin, data) :
 	this->CheckPrivilegeGranted(context, target, callerDepth, data,& res);
-  if (res == PR_FALSE) return NULL;
-  privTable = this->GetPrivilegeTableFromStack(context, callerDepth, 
-                                         (helpingSetScopePrivilege ? PR_FALSE : PR_TRUE));
-  if (helpingSetScopePrivilege) {
-    if (privTable == NULL)  privTable = new nsPrivilegeTable();
-  }
-                
-  allowedScope = nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Scope);
-  this->UpdatePrivilegeTable(target, privTable, allowedScope);
-  return privTable;
+	if (res == PR_FALSE) return NULL;
+	privTable = this->GetPrivilegeTableFromStack(context, callerDepth, (helpingSetScopePrivilege ? PR_FALSE : PR_TRUE));
+	if (helpingSetScopePrivilege && privTable == NULL)  privTable = new nsPrivilegeTable();
+	allowedScope = nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Scope);
+	this->UpdatePrivilegeTable(target, privTable, allowedScope);
+	return privTable;
 }
 
 NS_IMETHODIMP
 nsPrivilegeManager::AskPermission(nsIPrincipal * useThisPrin, nsITarget * target, void * data, PRBool * result)
 {
-	/*
-  PRBool ret_val = PR_FALSE;
-  nsPrivilege* newPrivilege = NULL;
-//   Get the Lock to display the dialog 
-  nsCaps_lock();
-  nsIPrincipalArray* callerPrinArray = new nsIPrincipalArray();
-  callerPrinArray->Add(useThisPrin);
-  if (PR_TRUE == this->IsPermissionGranted(target, callerPrinArray, data)) {
-    ret_val = PR_TRUE;
-    goto done;
-  }
-  // Do a user dialog
-  newPrivilege = target->EnablePrivilege(useThisPrin, data);
-  // Forbidden for session is equivelent to decide later.
-  // If the privilege is DECIDE_LATER then throw exception.
-  // That is user should be prompted again when this applet 
-  // performs the same privileged operation
-  //
-  if ((!newPrivilege->IsAllowed()) &&
-      (newPrivilege->GetDuration() == nsIPrivilege::PrivilegeDuration_Session)) {
-    // "User didn't grant the " + target->getName() + " privilege.";
-    ret_val = PR_FALSE;
-    goto done;
-  }
-  this->SetPermission(useThisPrin, target, newPrivilege);
-  // if newPrivilege is FORBIDDEN then throw an exception
-  if (newPrivilege->IsForbidden()) {
-    // "User didn't grant the " + target->getName() + " privilege.";
-    ret_val = PR_FALSE;
-    goto done;
-  }
-
-  ret_val = PR_TRUE;
-
+	* result = PR_FALSE;
+	PRBool privAllowed = PR_FALSE, privForbidden = PR_FALSE;
+	PRInt16 privDuration;
+	nsIPrivilege * newPrivilege = NULL;
+// Get the Lock to display the dialog 
+	nsCaps_lock();
+	nsIPrincipalArray * callerPrinArray = (nsIPrincipalArray *)new nsPrincipalArray();
+	callerPrinArray->AddPrincipalArrayElement(useThisPrin);
+	if (this->IsPermissionGranted(target, callerPrinArray, data)) {
+		* result = PR_TRUE;
+		goto done;
+	}
+// Do a user dialog
+	target->EnablePrivilege(useThisPrin, data,& newPrivilege);
+// Forbidden for session is equivelent to decide later.
+// If the privilege is DECIDE_LATER then throw exception.
+// That is user should be prompted again when this applet 
+// performs the same privileged operation
+	newPrivilege->IsAllowed(& privAllowed);
+	newPrivilege->GetDuration(& privDuration);
+	if (!privAllowed && (privDuration == nsIPrivilege::PrivilegeDuration_Session)) {
+// "User didn't grant the " + target->getName() + " privilege.";
+	* result = PR_FALSE;
+	goto done;
+	}
+	this->SetPermission(useThisPrin, target, newPrivilege);
+// if newPrivilege is FORBIDDEN then throw an exception
+	newPrivilege->IsForbidden(& privForbidden);
+	if (privForbidden) {
+// "User didn't grant the " + target->getName() + " privilege.";
+	* result = PR_FALSE;
+	goto done;
+	}
+	* result = PR_TRUE;
 done:
-  delete callerPrinArray;
-  nsCaps_unlock();
-  */
-  return NS_OK;
+	delete callerPrinArray;
+	nsCaps_unlock();
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrivilegeManager::SetPermission(nsIPrincipal * useThisPrin, nsITarget * target, nsIPrivilege * newPrivilege)
 {
-	/*
-  registerPrincipalAndSetPrivileges(useThisPrin, target, newPrivilege);
+//	RegisterPrincipalAndSetPrivileges(useThisPrin, target, newPrivilege);
 //XXX ARIEL - THIS LOOKS SO WRONG, FIX IT!!!!!!!!!!!!!!!
-  //System.out.println("Privilege table modified for: " + 
-  // 		useThisPrin.toVerboseString() + " for target " + 
-  //		target + " Privilege " + newPrivilege);
-
-  // Save the signed applet's ACL to the persistence store
-//  char* err = useThisPrin->savePrincipalPermanently();
-  if ((err == NULL) && 
-      (newPrivilege->getDuration() == nsDurationState_Forever)) {
-
-    //XXX: How do we save permanent access for unsigned principals
-    ///
-	PRBool * result;
-	useThisPrin->Equals(theUnsignedPrincipal, result);
-    if (!result) save(useThisPrin, target, newPrivilege);
-  }
-  */
+//System.out.println("Privilege table modified for: " + useThisPrin.toVerboseString() + " for target " + 
+//target + " Privilege " + newPrivilege);
+// Save the signed applet's ACL to the persistence store
+//	char * err = useThisPrin->savePrincipalPermanently();
+//	if((err == NULL) && (newPrivilege->GetDuration() == nsIPrivilege::PrivilegeDuration_Forever)) {
+//		PRBool result;
+//		useThisPrin->Equals(theUnsignedPrincipal,& result);
+//		if (!result) Save(useThisPrin, target, newPrivilege);
+//	}
 	return NS_OK;
 }
 
