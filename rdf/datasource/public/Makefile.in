@@ -25,9 +25,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
+	nsIHistoryDataSource.h		\
 	nsIRDFFileSystem.h		\
 	nsIRDFFind.h			\
-	nsIRDFHistory.h			\
 	nsIXULContentSink.h		\
         $(NULL)
 

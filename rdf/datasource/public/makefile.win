@@ -21,10 +21,10 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
-	nsIRDFFileSystem.h      \
-	nsIRDFFind.h			\
-	nsIRDFHistory.h         \
-    nsIXULContentSink.h     \
+        nsIHistoryDataSource.h  \
+        nsIRDFFileSystem.h      \
+        nsIRDFFind.h		\
+        nsIXULContentSink.h     \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -16,56 +16,56 @@
  * Reserved.
  */
 
-#ifndef nsIRDFHistory_h__
-#define nsIRDFHistory_h__
+/*
+
+  The global history data source.
+
+ */
+
+#ifndef nsIHistoryDataSource_h__
+#define nsIHistoryDataSource_h__
 
 #include "nscore.h"
-#include "nsISupports.h"
-
-// {115CE051-A59D-11d2-80B6-006097B76B8E}
-#define NS_IRDFWEBPAGE_IID \
-{ 0x115ce051, 0xa59d, 0x11d2, { 0x80, 0xb6, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } }
+#include "nsIRDFDataSource.h"
+#include "prtime.h"
 
 // {1A880051-A59D-11d2-80B6-006097B76B8E}
-#define NS_IRDFHISTORYDATASOURCE_IID \
+#define NS_IHISTORYDATASOURCE_IID \
 { 0x1a880051, 0xa59d, 0x11d2, { 0x80, 0xb6, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } }
 
-
-class nsIRDFHistoryDataSource : public nsIRDFDataSource {
+class nsIHistoryDataSource : public nsIRDFDataSource
+{
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IRDFHISTORYDATASOURCE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IHISTORYDATASOURCE_IID; return iid; }
 
     /**
      * Add the specified item to history
      */
-    NS_IMETHOD AddPage (const char* uri, const char* referer, PRTime date) = 0;
+    NS_IMETHOD AddPage (const char* aURI, const char* aRefererURI, PRTime aDate) = 0;
 
     /**
      * Set the title of the page
      */
-    NS_IMETHOD SetPageTitle (const char* uri, PRUnichar* title) = 0;
+    NS_IMETHOD SetPageTitle (const char* aURI, const PRUnichar* aTitle) = 0;
 
     /**
      * Remove the page from history
      */
-    NS_IMETHOD RemovePage (nsIRDFResource* page) = 0;
+    NS_IMETHOD RemovePage (const char* aURI) = 0;
 
     /**
      * Get the uri's last visit date
      */
-    NS_IMETHOD LastVisitDate (const char* uri, uint32 *date) = 0;
+    NS_IMETHOD GetLastVisitDate (const char* aURI, uint32 *aDate) = 0;
 
     /** 
      * Get the preferred completion 
      */
-    NS_IMETHOD CompleteURL (const char* prefix, char** preferredCompletion) = 0;
+    NS_IMETHOD CompleteURL (const char* aPrefix, char** aPreferredCompletions) = 0;
 };
 
-#endif nsIRDFHistory_h
+nsresult
+NS_NewHistoryDataSource(nsIHistoryDataSource** result);
 
-
-
-
-
-
+#endif nsIHistoryDataSource_h__
 

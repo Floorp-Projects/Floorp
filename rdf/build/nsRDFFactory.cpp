@@ -23,6 +23,7 @@
  */
 
 #include "nsIFactory.h"
+#include "nsIHistoryDataSource.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFContentSink.h"
@@ -184,7 +185,7 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
             return rv;
     }
     else if (mClassID.Equals(kRDFHistoryDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFHistoryDataSource((nsIRDFDataSource**) &inst)))
+        if (NS_FAILED(rv = NS_NewHistoryDataSource((nsIHistoryDataSource**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kXULDocumentCID)) {
