@@ -118,7 +118,7 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 };
 
-class nsXULRadioGroupAccessible : public nsFormControlAccessible
+class nsXULRadioGroupAccessible : public nsAccessible
 {
 public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

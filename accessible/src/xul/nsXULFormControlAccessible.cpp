@@ -527,7 +527,7 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccParent(nsIAccessible **  aAccPar
 
 /** Constructor */
 nsXULRadioGroupAccessible::nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsFormControlAccessible(aNode, aShell)
+nsAccessible(aNode, aShell)
 { 
 }
 
