@@ -758,7 +758,12 @@ void GC_abort(msg)
 char * msg;
 {
     GC_err_printf1("%s\n", msg);
+#ifdef MACOS
+	debugstr(msg);
+	ExitToShell();
+#else    
     (void) abort();
+#endif
 }
 #endif
 
