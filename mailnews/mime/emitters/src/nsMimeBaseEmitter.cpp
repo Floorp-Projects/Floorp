@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Henrik Gemal <gemal@gemal.dk>
  */
 
 #include "nsCOMPtr.h"
@@ -626,13 +627,13 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   if (!newValue)
     return NS_OK;
 
-  mHTMLHeaders.Append("<TR>");
-  mHTMLHeaders.Append("<TD>");
+  mHTMLHeaders.Append("<tr>");
+  mHTMLHeaders.Append("<td>");
 
   if (mFormat == nsMimeOutput::nsMimeMessageSaveAs)
-    mHTMLHeaders.Append("<B>");
+    mHTMLHeaders.Append("<b>");
   else
-    mHTMLHeaders.Append("<DIV CLASS=\"headerdisplayname\" style=\"display:inline;\">");
+    mHTMLHeaders.Append("<div class=\"headerdisplayname\" style=\"display:inline;\">");
 
   // Here is where we are going to try to L10N the tagName so we will always
   // get a field name next to an emitted header value. Note: Default will always
@@ -653,16 +654,16 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 
   mHTMLHeaders.Append(": ");
   if (mFormat == nsMimeOutput::nsMimeMessageSaveAs)
-    mHTMLHeaders.Append("</B>");
+    mHTMLHeaders.Append("</b>");
   else
-    mHTMLHeaders.Append("</DIV>");
+    mHTMLHeaders.Append("</div>");
 
   // Now write out the actual value itself and move on!
   //
   mHTMLHeaders.Append(newValue);
-  mHTMLHeaders.Append("</TD>");
+  mHTMLHeaders.Append("</td>");
 
-  mHTMLHeaders.Append("</TR>");
+  mHTMLHeaders.Append("</tr>");
 
   PR_FREEIF(newValue);
   return NS_OK;
@@ -678,17 +679,17 @@ nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix()
      /* DO NOTHING */ ;   // rhp: Do nothing...leaving the conditional like this so its 
                           //      easier to see the logic of what is going on. 
   else
-    mHTMLHeaders.Append("<BR><HR WIDTH=\"90%\" SIZE=4><BR>");
+    mHTMLHeaders.Append("<br><hr width=\"90%\" size=4><br>");
 
   mFirstHeaders = PR_FALSE;
-  mHTMLHeaders.Append("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\">"); 
+  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\">"); 
   return NS_OK;
 }
 
 nsresult
 nsMimeBaseEmitter::WriteHeaderFieldHTMLPostfix()
 {
-  mHTMLHeaders.Append("</TABLE><BR>");
+  mHTMLHeaders.Append("</table><br>");
   return NS_OK;
 }
 
@@ -724,7 +725,7 @@ nsMimeBaseEmitter::WriteHTMLHeaders()
 nsresult
 nsMimeBaseEmitter::DumpSubjectFromDate()
 {
-  mHTMLHeaders.Append("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\" NAME=\"header-part1\" >");
+  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" name=\"header-part1\">");
 
     // This is the envelope information
     OutputGenericHeader(HEADER_SUBJECT);
@@ -736,7 +737,7 @@ nsMimeBaseEmitter::DumpSubjectFromDate()
          ( mFormat == nsMimeOutput::nsMimeMessageBodyQuoting ) )
       OutputGenericHeader(HEADER_TO);
 
-  mHTMLHeaders.Append("</TABLE>");
+  mHTMLHeaders.Append("</table>");
  
   return NS_OK;
 }
@@ -754,14 +755,14 @@ nsMimeBaseEmitter::DumpToCC()
   // which looked weird.
   if (toField || ccField || bccField || newsgroupField)
   {
-    mHTMLHeaders.Append("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\" NAME=\"header-part2\" >");
+    mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" name=\"header-part2\">");
 
     OutputGenericHeader(HEADER_TO);
     OutputGenericHeader(HEADER_CC);
     OutputGenericHeader(HEADER_BCC);
     OutputGenericHeader(HEADER_NEWSGROUPS);
 
-    mHTMLHeaders.Append("</TABLE>");
+    mHTMLHeaders.Append("</table>");
   }
 
   return NS_OK;
@@ -775,7 +776,7 @@ nsMimeBaseEmitter::DumpRestOfHeaders()
   if (mHeaderDisplayType != nsMimeHeaderDisplayTypes::AllHeaders)
     return NS_OK;
 
-  mHTMLHeaders.Append("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0 WIDTH=\"100%\" NAME=\"header-part3\" >");
+  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" name=\"header-part3\">");
   
   for (i=0; i<mHeaderArray->Count(); i++)
   {
@@ -794,7 +795,7 @@ nsMimeBaseEmitter::DumpRestOfHeaders()
     WriteHeaderFieldHTML(headerInfo->name, headerInfo->value);
   }
   
-  mHTMLHeaders.Append("</TABLE>");
+  mHTMLHeaders.Append("</table>");
   return NS_OK;
 }
 
