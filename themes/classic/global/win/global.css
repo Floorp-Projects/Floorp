@@ -25,6 +25,7 @@
 @import url(chrome://global/skin/textfield.css);
 @import url(chrome://global/skin/tabcontrol.css);
 @import url(chrome://global/skin/toolbar.css);
+@import url(chrome://global/skin/colorpicker.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 @namespace html url("http://www.w3.org/1999/xhtml"); 

@@ -34,6 +34,7 @@ install::
 	$(MAKE_INSTALL) checkbox.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) commonDialog.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) console.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) colorpicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) filepicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) global.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin

@@ -1,0 +1,29 @@
+
+colorpicker[type="button"] {
+  max-width: 35px;
+  max-height: 20px;
+  min-width: 35px;
+  min-height: 20px;
+  border: 1px outset #CCCCCC;
+}
+
+colorpicker[type="button"][menuactive="true"] {
+  border-style: inset;
+}
+
+.colorpicker-button-menu {
+  max-width: 35px;
+  max-height: 20px;
+  min-width: 35px;
+  min-height: 20px;
+  padding: 2px;
+}
+
+.colorpicker-button-colorbox {
+  max-width: 28px;
+  max-height: 13px;
+  min-width: 28px;
+  min-height: 13px;
+  border: 1px solid #000000;
+}
+

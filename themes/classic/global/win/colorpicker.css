@@ -1,0 +1,45 @@
+colorpicker[type="button"] {
+  max-width: 35px;
+  max-height: 20px;
+  min-width: 35px;
+  min-height: 20px;
+  border-left: 1px solid threedhighlight;
+  border-top: 1px solid threedhighlight;
+  border-right: 1px solid threeddarkshadow;
+  border-bottom: 1px solid threeddarkshadow;
+}
+
+colorpicker[type="button"][menuactive="true"] {
+  border-left: 1px solid threeddarkshadow;
+  border-top: 1px solid threeddarkshadow;
+  border-right: 1px solid threedhighlight;
+  border-bottom: 1px solid threedhighlight;
+}
+
+.colorpicker-button-menu {
+  max-width: 33px;
+  max-height: 18px;
+  min-width: 33px;
+  min-height: 18px;
+  border-left: 1px solid transparent;
+  border-top: 1px solid transparent;
+  border-right: 1px solid threedshadow;
+  border-bottom: 1px solid threedshadow;
+  padding: 1px;
+}
+
+.colorpicker-button-menu[open="true"]
+{
+  border-left: 1px solid threedshadow;
+  border-top: 1px solid threedshadow;
+  border-right: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
+
+.colorpicker-button-colorbox {
+  max-width: 28px;
+  max-height: 13px;
+  min-width: 28px;
+  min-height: 13px;
+  border: 1px solid #000000;
+}

@@ -3,6 +3,7 @@ skins\classic.jar:
     global\skin\button.css
     global\skin\checkbox.css
     global\skin\commonDialog.css
+    global\skin\colorpicker.css
     global\skin\console.css
     global\skin\filepicker.css
     global\skin\formatting.css

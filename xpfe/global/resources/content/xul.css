@@ -424,6 +424,10 @@ colorpicker {
   -moz-binding: url(chrome://global/content/xulBindings.xml#colorpicker);
 }
 
+colorpicker[type="button"] {
+  -moz-binding: url("chrome://global/content/xulBindings.xml#colorpickerButton");
+}
+
 /** Buttons with Menus:
  *  - menulist
  *  - menulist[editable="true"] (combobox)

@@ -35,6 +35,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	button.css \
 	checkbox.css \
 	commonDialog.css \
+	colorpicker.css \
 	console.css \
 	filepicker.css \
 	formatting.css \
