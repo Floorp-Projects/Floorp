@@ -1117,7 +1117,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
    if(loader != mDocLoader)
       return NS_OK;
 
-   nsresult rv = NS_ERROR_FAILURE;
+   nsresult rv = NS_OK;
    if(!channel)
       return NS_ERROR_NULL_POINTER;
 
@@ -1153,7 +1153,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
       }
 
    mEODForCurrentDocument = PR_TRUE;
-
    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
    if(!mDocLoaderObserver && mParent)
@@ -1180,8 +1179,9 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
    if(mDocLoader == loader && NS_FAILED(aStatus))
       {
       nsXPIDLCString host;
-      NS_ENSURE_SUCCESS(aURL->GetHost(getter_Copies(host)), NS_ERROR_FAILURE);
-
+      nsresult hostResult = aURL->GetHost(getter_Copies(host));
+      if (NS_SUCCEEDED(hostResult) && host)
+      {      
       CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
       nsCAutoString hostStr(buf);
       PRInt32 dotLoc = hostStr.FindChar('.');
@@ -1273,50 +1273,51 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          PRInt32 port = -1;
          NS_ENSURE_SUCCESS(aURL->GetPort(&port), NS_ERROR_FAILURE);
          
-         nsCOMPtr<nsIPrompt> prompter;
-         nsCOMPtr<nsIStringBundle> stringBundle;
-         GetPromptAndStringBundle(getter_AddRefs(prompter), 
-            getter_AddRefs(stringBundle));
-         NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
+           nsCOMPtr<nsIPrompt> prompter;
+           nsCOMPtr<nsIStringBundle> stringBundle;
+           GetPromptAndStringBundle(getter_AddRefs(prompter), 
+              getter_AddRefs(stringBundle));
+           NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
-         nsXPIDLString messageStr;
-         NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
-            NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(), 
-            getter_Copies(messageStr)), NS_ERROR_FAILURE);
+           nsXPIDLString messageStr;
+           NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
+              NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(), 
+              getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-         // build up the host:port string.
-         nsCAutoString combo(host);
-         if (port > 0) {
-             combo.Append(':');
-             combo.AppendInt(port);
-         }
-         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, combo.GetBuffer());
-         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
+           // build up the host:port string.
+           nsCAutoString combo(host);
+           if (port > 0) {
+               combo.Append(':');
+               combo.AppendInt(port);
+           }
+           PRUnichar *msg = nsTextFormatter::smprintf(messageStr, combo.GetBuffer());
+           if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
-         prompter->Alert(nsnull, msg);
-         nsTextFormatter::smprintf_free(msg);
-         } 
-      else if(aStatus == NS_ERROR_NET_TIMEOUT)
-         {// Doc failed to load because the socket function timed out.
-         // throw a timeout dialog
-         nsCOMPtr<nsIPrompt> prompter;
-         nsCOMPtr<nsIStringBundle> stringBundle;
-         GetPromptAndStringBundle(getter_AddRefs(prompter), 
-            getter_AddRefs(stringBundle));
-         NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
+           prompter->Alert(nsnull, msg);
+           nsTextFormatter::smprintf_free(msg);
+           } 
+        else if(aStatus == NS_ERROR_NET_TIMEOUT)
+           {// Doc failed to load because the socket function timed out.
+           // throw a timeout dialog
+           nsCOMPtr<nsIPrompt> prompter;
+           nsCOMPtr<nsIStringBundle> stringBundle;
+           GetPromptAndStringBundle(getter_AddRefs(prompter), 
+              getter_AddRefs(stringBundle));
+           NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
 
-         nsXPIDLString messageStr;
-         NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
-            NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(), 
-            getter_Copies(messageStr)), NS_ERROR_FAILURE);
+           nsXPIDLString messageStr;
+           NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(
+              NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(), 
+              getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
-         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
-         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
+           PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)host);
+           if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
-         prompter->Alert(nsnull, msg);            
-         nsTextFormatter::smprintf_free(msg);
-         } // end NS_ERROR_NET_TIMEOUT
+           prompter->Alert(nsnull, msg);            
+           nsTextFormatter::smprintf_free(msg);
+           } // end NS_ERROR_NET_TIMEOUT
+        } // if we have a host
       } // end mDocLoader == loader
 
       return rv;
