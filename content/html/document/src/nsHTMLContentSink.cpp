@@ -2236,6 +2236,7 @@ nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
       // XXX We have no way of indicating failure. Silently fail?
       rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
                                     d->mTitle, d->mMedia, d->mElement, d->mIndex);
+      NS_RELEASE(uin);
     }
   }
 
