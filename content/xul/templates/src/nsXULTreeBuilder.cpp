@@ -1997,7 +1997,7 @@ nsXULTreeBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aRight
                 r->GetLength(&rlen);
                 
                 mCollation->CompareRawSortKey(lval, llen, rval, rlen, &result);
-                return result;
+                return result * mSortDirection;
             }
         }
     }
