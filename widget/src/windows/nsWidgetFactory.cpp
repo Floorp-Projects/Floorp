@@ -34,25 +34,28 @@
 #include "nsTextWidget.h"
 #include "nsToolkit.h"
 #include "nsTabWidget.h"
+#include "nsTooltipWidget.h"
 #include "nsWindow.h"
 
-static NS_DEFINE_IID(kCWindow, NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild, NS_CHILD_CID);
-static NS_DEFINE_IID(kCButton, NS_BUTTON_CID);
-static NS_DEFINE_IID(kCCheckButton, NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCCombobox, NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCFileOpen, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCListbox, NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButton, NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCRadioGroup, NS_RADIOGROUP_CID);
+static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
+static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
+static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
+static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
+static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
+static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
+static NS_DEFINE_IID(kCRadioGroup,    NS_RADIOGROUP_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextArea, NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextField, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCTabWidget, NS_TABWIDGET_CID);
+static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
+static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
+static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+
+static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 
 class nsWidgetFactory : public nsIFactory
 {   
@@ -186,6 +189,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTabWidget)) {
         inst = (nsObject*)new nsTabWidget(aOuter);
+    }
+    else if (mClassID.Equals(kCTooltipWidget)) {
+        inst = (nsObject*)new nsTooltipWidget(aOuter);
     }
   
     if (inst == NULL) {  

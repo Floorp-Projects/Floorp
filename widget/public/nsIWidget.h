@@ -112,12 +112,15 @@ class nsIWidget : public nsISupports {
      * hook called synchronously. The return value determines whether
      * the event goes to the default window procedure or it is hidden
      * to the os. The assumption is that if the event handler returns
-     * false the widget does not see the event.
+     * false the widget does not see the event. The widget should not 
+     * automatically clear the window to the background color. The 
+     * calling code must handle paint messages and clear the background 
+     * itself. 
      *
-     * @param      parent or null if it's a top level window
+     * @param     parent or null if it's a top level window
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
-     * @param aInitData data that is used for widget initialization
+     * @param     aInitData data that is used for widget initialization
      *
      */
     virtual void Create(nsIWidget        *aParent,

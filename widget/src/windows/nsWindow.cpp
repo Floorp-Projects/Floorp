@@ -85,7 +85,6 @@ void nsWindow::AddTooltip(HWND hwndOwner,nsRect& aRect)
             (LPARAM) (LPTOOLINFO) &ti)) 
         return; 
 
-   // return hwndTT; 
 } 
 
 //-------------------------------------------------------------------------
@@ -1209,7 +1208,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         // say we've dealt with erase background if widget does
         // not need auto-erasing
         case WM_ERASEBKGND: 
-              if (! AutoErase()) {
+            if (! AutoErase()) {
               *aRetValue = 1;
               result = PR_TRUE;
             } 
@@ -1366,6 +1365,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 //-------------------------------------------------------------------------
 LPCTSTR nsWindow::WindowClass()
 {
+    const LPCTSTR className = "NetscapeWindowClass";
+
     if (!nsWindow::sIsRegistered) {
         WNDCLASS wc;
 
@@ -1378,12 +1379,12 @@ LPCTSTR nsWindow::WindowClass()
         wc.hCursor          = NULL;
         wc.hbrBackground    = NULL; 
         wc.lpszMenuName     = NULL;
-        wc.lpszClassName    = "NetscapeWindowClass";
+        wc.lpszClassName    = className;
     
         nsWindow::sIsRegistered = ::RegisterClass(&wc);
     }
 
-    return "NetscapeWindowClass";
+    return className;
 }
 
 

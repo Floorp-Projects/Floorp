@@ -28,6 +28,10 @@
 
 /**
  * Single or multi selection list of items.
+ * Unlike a nsIWidget, The the list widget must automatically clear 
+ * itself to the background color when paint messages are generated.
+ * The listbox always has a vertical scrollbar. It never has a
+ * horizontal scrollbar.
  */
 
 class nsIListBox : public nsIListWidget {
