@@ -110,6 +110,31 @@ ifeq ($(MOZ_PKG_FORMAT),DEB)
 PKG_SUFFIX	= .deb
 endif
 
+# dummy macro if we don't have PSM built
+SIGN_NSS		=
+ifdef MOZ_PSM
+SIGN_NSS		= @echo signing nss libraries;
+
+SIGN_ENV	= LD_LIBRARY_PATH=$(DIST)/bin:${LD_LIBRARY_PATH} \
+		LD_LIBRARYN32_PATH=$(DIST)/bin:${LD_LIBRARYN32_PATH} \
+		LD_LIBRARYN64_PATH=$(DIST)/bin:${LD_LIBRARYN64_PATH} \
+		LD_LIBRARY_PATH_64=$(DIST)/bin:${LD_LIBRARY_PATH_64} \
+		SHLIB_PATH=$(DIST)/bin:${SHLIB_PATH} LIBPATH=$(DIST)/bin:${LIBPATH} \
+		DYLD_LIBRARY_PATH=$(DIST)/bin:${DYLD_LIBRARY_PATH} \
+		LIBRARY_PATH=$(DIST)/bin:${LIBRARY_PATH}
+
+SIGN_CMD	= cd $(DIST)/$(MOZ_PKG_APPNAME) && $(SIGN_ENV) $(DIST)/bin/shlibsign -v -i
+
+SOFTOKN		= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
+FREEBL_HYBRID	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_hybrid_3$(DLL_SUFFIX)
+FREEBL_PURE	= $(DIST)/$(MOZ_PKG_APPNAME)/$(DLL_PREFIX)freebl_pure32_3$(DLL_SUFFIX)
+
+SIGN_NSS	+= $(SIGN_CMD) $(SOFTOKN); \
+        if test -f $(FREEBL_HYBRID); then $(SIGN_CMD) $(FREEBL_HYBRID); fi; \
+        if test -f $(FREEBL_PURE); then $(SIGN_CMD) $(FREEBL_PURE); fi;
+
+endif # MOZ_PSM
+
 TARGETS		= $(PACKAGE) $(SDK)
 
 NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
@@ -208,6 +233,7 @@ endif # DMG
 			! -name "*.reg" \
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
+	$(SIGN_NSS)
 ifeq (,$(filter mozilla MozillaFirebird,$(MOZ_PKG_APPNAME)))
 	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
 	cd $(DIST)/$(MOZ_PKG_APPNAME); if [ -f mozilla ]; then cp mozilla $(MOZ_PKG_APPNAME); fi
