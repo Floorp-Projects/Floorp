@@ -13,10 +13,13 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
+static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
 
 // nsProxyStream 
 // A helper class used for synchronous parsing of URLs.
@@ -251,7 +254,92 @@ NS_IMETHODIMP nsXBLService::GetBindingDocument(nsCAutoString& aURLStr, nsIDocume
 NS_IMETHODIMP
 nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
 {
+  // Initialize our out pointer to nsnull
   *aResult = nsnull;
+
+  // Create the XML document
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = nsComponentManager::CreateInstance(kXMLDocumentCID, nsnull,
+                                                   nsIDocument::GetIID(),
+                                                   getter_AddRefs(doc));
+
+  if (NS_FAILED(rv)) return rv;
+
+  // Now we have to synchronously load the binding file.
+  // Create an XML content sink and a parser.  Then kick off a load for
+  // the overlay.
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIXMLContentSink> sink;
+  NS_NewXMLContentSink(getter_AddRefs(sink), doc, aURI, nsnull);
+
+  nsCOMPtr<nsIParser> parser;
+  rv = nsComponentManager::CreateInstance(kParserCID,
+                                          nsnull,
+                                          NS_GET_IID(nsIParser),
+                                          getter_AddRefs(parser));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
+  if (NS_FAILED(rv)) return rv;
+
+  parser->SetCommand("view");
+
+  nsAutoString utf8("UTF-8");
+  parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+  parser->SetContentSink(sink); // grabs a reference to the parser
+
+  // Now do a blocking synchronous parse of the file.
+  nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = parser->Parse(aURI);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIInputStream> in;
+  PRUint32 sourceOffset = 0;
+  rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
+
+  // If we couldn't open the channel, then just return.
+  if (NS_FAILED(rv)) return NS_OK;
+
+  NS_ASSERTION(in != nsnull, "no input stream");
+  if (! in) return NS_ERROR_FAILURE;
+
+  rv = NS_ERROR_OUT_OF_MEMORY;
+  nsProxyStream* proxy = new nsProxyStream();
+  if (! proxy)
+    return NS_ERROR_FAILURE;
+
+  listener->OnStartRequest(channel, nsnull);
+  while (PR_TRUE) {
+    char buf[1024];
+    PRUint32 readCount;
+
+    if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
+        break; // error
+
+    if (readCount == 0)
+        break; // eof
+
+    proxy->SetBuffer(buf, readCount);
+
+    rv = listener->OnDataAvailable(channel, nsnull, proxy, sourceOffset, readCount);
+    sourceOffset += readCount;
+    if (NS_FAILED(rv))
+        break;
+  }
+  listener->OnStopRequest(channel, nsnull, NS_OK, nsnull);
+
+  // don't leak proxy!
+  proxy->Close();
+  delete proxy;
+
+  // The document is parsed. We now have a prototype document.
+  // Everything worked, so we can just hand this back now.
+  *aResult = doc;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
