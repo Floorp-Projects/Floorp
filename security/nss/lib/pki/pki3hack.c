@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.51 $ $Date: 2002/04/22 14:14:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.52 $ $Date: 2002/05/07 20:38:57 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -857,6 +857,11 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	     * object in order to store trust.  forcing it to be perm
 	     */
 	    NSSUTF8 *nickname = nssCertificate_GetNickname(c, NULL);
+	    NSSASCII7 *email = NULL;
+
+	    if (PK11_IsInternal(tok->pk11slot)) {
+		email = c->email;
+	    }
 	    newInstance = nssToken_ImportCertificate(tok, NULL,
 	                                             NSSCertificateType_PKIX,
 	                                             &c->id,
@@ -865,6 +870,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	                                             &c->issuer,
 	                                             &c->subject,
 	                                             &c->serial,
+						     email,
 	                                             PR_TRUE);
 	    if (!newInstance) {
 		return PR_FAILURE;

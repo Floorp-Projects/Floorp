@@ -605,7 +605,8 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
  	NSSLOWCERTCertTrust defTrust = 
 		{ CERTDB_TRUSTED_UNKNOWN, 
 			CERTDB_TRUSTED_UNKNOWN, CERTDB_TRUSTED_UNKNOWN };
-	char *label;
+	char *label = NULL;
+	char *email = NULL;
 	SECStatus rv;
 	PRBool inDB = PR_TRUE;
 
@@ -646,9 +647,27 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
 
 	if (label) PORT_Free(label);
 	pk11_FreeAttribute(attribute);
+
 	if (rv != SECSuccess) {
 	    nsslowcert_DestroyCertificate(cert);
 	    return CKR_DEVICE_ERROR;
+	}
+
+	/*
+	 * Add a NULL S/MIME profile if necessary.
+	 */
+	email = pk11_getString(object,CKA_NETSCAPE_EMAIL);
+	if (email) {
+	    certDBEntrySMime *entry;
+
+	    entry = nsslowcert_ReadDBSMimeEntry(slot->certDB,email);
+	    if (!entry) {
+	    	nsslowcert_SaveSMimeProfile(slot->certDB, email, 
+						&cert->derSubject, NULL, NULL);
+	    } else {
+		 nsslowcert_DestroyDBEntry((certDBEntry *)entry);
+	    }
+	    PORT_Free(email);
 	}
 	object->handle=pk11_mkHandle(slot,&cert->certKey,PK11_TOKEN_TYPE_CERT);
 	nsslowcert_DestroyCertificate(cert);
@@ -2053,7 +2072,7 @@ pk11_SlotFromID(CK_SLOT_ID slotID)
 PK11Slot *
 pk11_SlotFromSessionHandle(CK_SESSION_HANDLE handle)
 {
-    int slotIDIndex = (handle >> 24) & 0xff;
+    CK_ULONG slotIDIndex = (handle >> 24) & 0xff;
 
     if (slotIDIndex >= nscSlotCount) {
 	return NULL;
@@ -2313,7 +2332,7 @@ static void nscFreeAllSlots()
 	nscSlotHashTable = NULL;
 	nscSlotListSize = 0;
 
-	for (i=0; i < tmpSlotCount; i++) {
+	for (i=0; i < (int) tmpSlotCount; i++) {
 	    slotID = tmpSlotList[i];
 	    slot = (PK11Slot *)
 			PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
@@ -2721,7 +2740,7 @@ CK_RV NSC_InitPIN(CK_SESSION_HANDLE hSession,
     if (ulPinLen > PK11_MAX_PIN) {
 	return CKR_PIN_LEN_RANGE;
     }
-    if (ulPinLen < slot->minimumPinLen) {
+    if (ulPinLen < (CK_ULONG)slot->minimumPinLen) {
 	return CKR_PIN_LEN_RANGE;
     }
 
@@ -2796,7 +2815,7 @@ CK_RV NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     if ((ulNewLen > PK11_MAX_PIN) || (ulOldLen > PK11_MAX_PIN)) {
 	return CKR_PIN_LEN_RANGE;
     }
-    if (ulNewLen < slot->minimumPinLen) {
+    if (ulNewLen < (CK_ULONG)slot->minimumPinLen) {
 	return CKR_PIN_LEN_RANGE;
     }
 
