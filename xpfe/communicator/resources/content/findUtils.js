@@ -88,9 +88,11 @@ function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
     findInst.findBackwards = findService.findBackwards;
 
     var found = false;
-    if (findInst.searchString.length == 0)
+    if (findInst.searchString.length == 0) {
       // no previous find text
-      return findInPage(browser, rootSearchWindow, startSearchWindow);
+      findInPage(browser, rootSearchWindow, startSearchWindow);
+      return;
+    }
 
     found = findInst.findNext();
     if (!found) {
