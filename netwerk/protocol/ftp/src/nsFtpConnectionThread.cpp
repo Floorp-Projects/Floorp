@@ -1669,7 +1669,6 @@ nsFtpConnectionThread::Run() {
     } else {
         // build our own
         rv = mSTS->CreateTransport(host, port, mEventSinkGetter, host, getter_AddRefs(mCPipe)); // the command channel
-        nsAllocator::Free(host);
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
