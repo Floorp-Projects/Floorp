@@ -285,7 +285,7 @@ PluginViewerImpl::StartLoad(nsIURL* aURL, const char* aContentType,
   nsresult rv = mContainer->QueryCapability(kIPluginHostIID, (void **)&host);
   if (NS_OK == rv) {
     nsRect r;
-    mWindow->GetBounds(r);
+    mWindow->GetClientBounds(r);
     rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height), aResult);
     NS_RELEASE(host);
   }

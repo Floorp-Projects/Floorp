@@ -131,7 +131,7 @@ public:
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
-                  PRBool aIsSunkenBorder = PR_TRUE);
+                  PRBool aIsSunkenBorder = PR_FALSE);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h);
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
@@ -576,7 +576,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   mContentViewer = aContentViewer;
   NS_ADDREF(aContentViewer);
 
-  mWindow->GetBounds(bounds);
+  mWindow->GetClientBounds(bounds);
   bounds.x = bounds.y = 0;
   rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                             mDeviceContext, 
@@ -700,7 +700,7 @@ nsWebShell::GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h)
   NS_PRECONDITION(nsnull != mWindow, "null window");
   aResult.SetRect(0, 0, 0, 0);
   if (nsnull != mWindow) {
-    mWindow->GetBounds(aResult);
+    mWindow->GetClientBounds(aResult);
   }
   x = aResult.x;
   y = aResult.y;
@@ -715,15 +715,21 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   
+  nsRect rectClient(0,0,w,h);
+  PRInt32 borderWidth  = 0;
+  PRInt32 borderHeight = 0;
+
   if (nsnull != mWindow) {
+    mWindow->GetBorderSize(borderWidth, borderHeight);
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
     mWindow->Resize(x, y, w, h,
                     PR_FALSE);
   }
 
+  // Set the size of the content area, which is the size of the window minus the borders
   if (nsnull != mContentViewer) {
-    nsRect rr(0, 0, w, h);
+    nsRect rr(0, 0, w-(borderWidth*2), h-(borderHeight*2));
     mContentViewer->SetBounds(rr);
   }
 
