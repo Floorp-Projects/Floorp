@@ -131,7 +131,7 @@ function Recipients2CompFields(msgCompFields)
             case "addr_reply"   : addrReply += reply_Sep + fieldValue; reply_Sep = ",";     break;
             case "addr_newsgroups"  : addrNg += ng_Sep + fieldValue; ng_Sep = ",";          break;
             case "addr_followup"  : addrFollow += follow_Sep + fieldValue; follow_Sep = ",";    break;
-          case "addr_other"   : addrOther += other_header + ": " + fieldValue + "\n";     break;
+          case "addr_other"   : addrOther += sOther_header + ": " + fieldValue + "\n";     break;
           }
         }
         i ++;
