@@ -292,7 +292,7 @@ ContentListHashtableGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 PR_STATIC_CALLBACK(PLDHashNumber)
 ContentListHashtableHashKey(PLDHashTable *table, const void *key)
 {
-  const nsContentListKey* list = NS_STATIC_CAST(nsContentListKey *, key);
+  const nsContentListKey* list = NS_STATIC_CAST(const nsContentListKey *, key);
   return list->GetHash();
 }
 
