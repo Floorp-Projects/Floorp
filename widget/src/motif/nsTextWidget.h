@@ -28,14 +28,15 @@
  * Native Motif single line edit control wrapper. 
  */
 
-class nsTextWidget : public nsTextHelper
+//class nsTextWidget : public nsTextHelper
+class nsTextWidget : public nsWindow
 {
 
 public:
   nsTextWidget(nsISupports *aOuter);
   virtual ~nsTextWidget();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -71,7 +72,8 @@ public:
   virtual PRBool    AutoErase();
 
 protected:
-    PRBool  mIsPasswordCallBacksInstalled;
+    PRBool        mIsPasswordCallBacksInstalled;
+    nsTextHelper *mHelper;
 
 private:
   PRBool mMakeReadOnly;
