@@ -33,13 +33,10 @@ public:
 	nsMsgLocalMailFolder(const char* uri);
 	~nsMsgLocalMailFolder();
 
-	NS_IMETHOD QueryInterface(REFNSIID aIID,
-							void** aInstancePtr);
-	NS_IMETHOD_(nsrefcnt) AddRef(void);
-	NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_DECL_ISUPPORTS
 
 #ifdef HAVE_DB	
-	virtual MsgERR BeginCopyingMessages (MSG_FolderInfo *dstFolder, 
+	virtual nsresult BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
 																				MessageDB *sourceDB,
 																				IDArray *srcArray, 
 																				MSG_UrlQueue *urlQueue,

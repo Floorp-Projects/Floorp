@@ -8,17 +8,6 @@
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsIMsg.h"
 
-enum FolderType {
-  FOLDER_MAIL,
-  FOLDER_IMAPMAIL,
-  FOLDER_NEWSGROUP,
-  FOLDER_CONTAINERONLY,
-  FOLDER_CATEGORYCONTAINER,
-  FOLDER_IMAPSERVERCONTAINER,
-  FOLDER_UNKNOWN
-};
-
-
 /* starting interface nsIMsgFolder */
 
 /* {85e39ff0-b248-11d2-b7ef-00805f05ffa5} */
@@ -33,9 +22,6 @@ class nsIMsgFolder : public nsISupports {
     static nsIID iid = NS_IMSGFOLDER_IID;
     return iid;
   }
-
-  /*  <IDL>  */
-  NS_IMETHOD GetType(FolderType *aType) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
@@ -234,6 +220,7 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD GetExpansionArray(const nsISupportsArray *expansionArray) = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 /* starting interface nsIMsgMailFolder */
 
 /* {27D2DE40-BAF1-11d2-9578-00805F8AC615} */
@@ -253,5 +240,30 @@ class nsIMsgLocalMailFolder : public nsISupports {
   NS_IMETHOD GetPathName(char * *aPathName) = 0;
   NS_IMETHOD SetPathName(char * aPathName) = 0;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* {83ebf570-bfc6-11d2-8177-006008119d7a} */
+#define NS_IMSGIMAPMAILFOLDER_IID_STR "83ebf570-bfc6-11d2-8177-006008119d7a"
+#define NS_IMSGIMAPMAILFOLDER_IID                    \
+{ /* 83ebf570-bfc6-11d2-8177-006008119d7a */         \
+    0x83ebf570,                                      \
+    0xbfc6,                                          \
+    0x11d2,                                          \
+    {0x81, 0x77, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
+class nsIMsgImapMailFolder : public nsISupports {
+ public: 
+  static const nsIID& IID() {
+    static nsIID iid = NS_IMSGIMAPMAILFOLDER_IID;
+    return iid;
+  }
+
+  /*  <IDL>  */
+  NS_IMETHOD GetPathName(char * *aPathName) = 0;
+  NS_IMETHOD SetPathName(char * aPathName) = 0;
+};
+
 
 #endif /* __gen_nsIMsgFolder_h__ */

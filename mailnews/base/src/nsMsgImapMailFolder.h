@@ -36,7 +36,7 @@ public:
   NS_DECL_ISUPPORTS
 
 #ifdef HAVE_DB	
-	virtual MsgERR BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
+	virtual nsresult BeginCopyingMessages(MSG_FolderInfo *dstFolder, 
 																				MessageDB *sourceDB,
 																				IDArray *srcArray, 
 																				MSG_UrlQueue *urlQueue,

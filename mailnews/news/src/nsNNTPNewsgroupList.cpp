@@ -307,7 +307,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 #ifdef HAVE_NEWSDB
 	if (!m_newsDB)
 	{
-		if ((err = NewsGroupDB::Open(m_url, m_master, &m_newsDB)) != eSUCCESS)
+		if ((err = NewsGroupDB::Open(m_url, m_master, &m_newsDB)) != NS_OK)
             {
                 if (status) *status = ConvertMsgErrToMKErr(err);
                 return NS_ERROR_NOT_INITIALIZED;

@@ -26,7 +26,7 @@ class nsNewsDatabase : public nsMsgDatabase
 public:
 			nsNewsDatabase();
 	virtual ~nsNewsDatabase();
-	virtual  MsgERR MessageDBOpenUsingURL(const char * groupURL);
+	virtual  nsresult MessageDBOpenUsingURL(const char * groupURL);
 	char *GetGroupURL() { return m_groupURL; }
 	static nsresult	Open(const char * groupURL, MSG_Master *master,
 						 nsNewsDatabase** pMessageDB);

@@ -71,7 +71,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos)
 {
 #ifdef HAVE_PORT
-	MsgERR status = 0;
+	nsresult status = NS_OK;
 	*ppOutFolder = NULL;
 	*pOutPos = 0;
 	XP_StatStruct stat;
@@ -187,7 +187,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete ()
 #ifdef HAVE_PORT
   nsMsgDatabase   *db;
   // remove the summary file
-  MsgERR status = CloseDatabase (m_pathName, &db);
+  nsresult status = CloseDatabase (m_pathName, &db);
   if (0 == status)
   {
     if (db != NULL)
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename (const char *newName)
 {
 #ifdef HAVE_PORT
 	    // change the leaf name (stored separately)
-    MsgERR status = MSG_FolderInfo::Rename (newUserLeafName);
+    nsresult status = MSG_FolderInfo::Rename (newUserLeafName);
     if (status == 0)
     {
     	char *baseDir = XP_STRDUP(m_pathName);
@@ -300,7 +300,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename (const char *newName)
 NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos)
 {
 #ifdef HAVE_PORT
-		MsgERR err = eSUCCESS;
+  nsresult err = NS_OK;
 	XP_ASSERT (srcFolder->GetType() == GetType());	// we can only adopt the same type of folder
 	MSG_FolderInfoMail *mailFolder = (MSG_FolderInfoMail*) srcFolder;
 
@@ -325,7 +325,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint3
 			else
 				err = MK_COULD_NOT_CREATE_DIRECTORY;
 		}
-		if (eSUCCESS == err)
+		if (NS_OK == err)
 		{
 			m_flags |= MSG_FOLDER_FLAG_DIRECTORY;
 			m_flags |= MSG_FOLDER_FLAG_ELIDED;
@@ -336,7 +336,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint3
 	err = mailFolder->PropagateAdopt (m_pathName, m_depth);
 
 	// Add the folder to our tree in the right sorted position
-	if (eSUCCESS == err)
+	if (NS_OK == err)
 	{
 		XP_ASSERT(m_subFolders->FindIndex(0, srcFolder) == -1);
 		*pOutPos = m_subFolders->Add (srcFolder);

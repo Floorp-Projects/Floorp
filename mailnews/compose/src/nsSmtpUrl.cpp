@@ -257,10 +257,9 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 
 	if (rest)
 	{
-		rest = XP_STRTOK (rest, "&");
-		while (rest && *rest)
+        char *token = nsCRT::strtok(rest, "&", &rest);
+		while (token && *token)
 		{
-			char *token = rest;
 			char *value = 0;
 			char *eq = PL_strchr(token, '=');
 			if (eq)
@@ -367,7 +366,7 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 			
 			if (eq)
 				  *eq = '='; /* put it back */
-				rest = XP_STRTOK (0, "&");
+				token = nsCRT::strtok(rest, "&", &rest);
 		} // while we still have part of the url to parse...
 	} // if rest && *rest
 

@@ -228,7 +228,7 @@ public:
   NS_IMETHOD DisplayRecipients(PRBool *displayRecipients);
 
 #ifdef HAVE_SEMAPHORE
-  MsgERR AcquireSemaphore(void *semHolder);
+  nsresult AcquireSemaphore(void *semHolder);
   void ReleaseSemaphore(void *semHolder);
   PRBool TestSemaphore(void *semHolder);
   PRBool IsLocked() { return m_semaphoreHolder != NULL; }
@@ -243,8 +243,8 @@ public:
 #endif
 
 #ifdef HAVE_CACHE
-	virtual MsgERR WriteToCache(XP_File);
-	virtual MsgERR ReadFromCache(char *);
+	virtual nsresult WriteToCache(XP_File);
+	virtual nsresult ReadFromCache(char *);
 	virtual PRBool IsCachable();
 	void SkipCacheTokens(char **ppBuf, int numTokens);
 #endif

@@ -134,17 +134,18 @@ NS_IMETHODIMP nsMsgFolder::SetMaster(MSG_Master *master)
 #endif
 
 #ifdef DOES_FOLDEROPERATIONS
-NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
-                                             MSG_Pane* sourcePane, 
-											 nsMsgDatabase *sourceDB,
-                                             nsMsgKeyArray *srcArray,
-                                             int32 srcCount,
-                                             MWContext *currentContext,
-                                             MSG_UrlQueue *urlQueue,
-                                             PRBool deleteAfterCopy,
-                                             MessageKey nextKey = MSG_MESSAGEKEYNONE)
+NS_IMETHODIMP
+nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
+                                        MSG_Pane* sourcePane, 
+                                        nsMsgDatabase *sourceDB,
+                                        nsMsgKeyArray *srcArray,
+                                        int32 srcCount,
+                                        MWContext *currentContext,
+                                        MSG_UrlQueue *urlQueue,
+                                        PRBool deleteAfterCopy,
+                                        MessageKey nextKey = MSG_MESSAGEKEYNONE)
 {
-		// General note: If either the source or destination folder is an IMAP folder then we add the copy info struct
+  // General note: If either the source or destination folder is an IMAP folder then we add the copy info struct
 	// to the end of the current context's chain of copy info structs then fire off an IMAP URL.
 	// However, local folders don't work this way! We must add the copy info struct to the URL queue where it will be fired
 	// at its leisure. 
@@ -172,7 +173,7 @@ NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
 		copyInfo->moveState.imap_connection = 0;
 		copyInfo->moveState.haveUploadedMessageSize = FALSE;
       
-    MsgERR openErr = eSUCCESS;
+    nsresult openErr = NS_OK;
     PRBool wasCreated;
     if (dstFolder->GetType() == FOLDER_MAIL)
 			openErr = MailDB::Open (dstFolder->GetMailFolderInfo()->GetPathname(), FALSE, &copyInfo->moveState.destDB, FALSE);
@@ -181,7 +182,7 @@ NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
                                     sourcePane->GetMaster(), &wasCreated);
 
                   
-    if (!dstFolder->GetMailFolderInfo() || (openErr != eSUCCESS))
+    if (!dstFolder->GetMailFolderInfo() || (openErr != NS_OK))
         copyInfo->moveState.destDB = NULL;
       
       // let the front end know that we are starting a long update
@@ -204,8 +205,8 @@ NS_IMETHODIMP nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
       // shebang is handled as one IMAP url.  Previously the copy
       // happened with a mailbox url and IMAP url running together
       // in the same context.  This worked on mac only.
-      MsgERR copyErr = BeginCopyingMessages(dstFolder, sourceDB, srcArray,urlQueue,srcCount,copyInfo);
-      if (0 != copyErr)
+      nsresult copyErr = BeginCopyingMessages(dstFolder, sourceDB, srcArray,urlQueue,srcCount,copyInfo);
+      if (NS_OK != copyErr)
       {
       CleanupCopyMessagesInto(&currentContext->msgCopyInfo);
       

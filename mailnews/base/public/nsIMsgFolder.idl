@@ -19,6 +19,7 @@
 #include "nsISupportsArray.idl"
 #include "nsIMsg.idl"
 
+/* XXX replaced by QueryInterface for nsIMsgFolder subtypes:
 enum FolderType {
 	FOLDER_MAIL,
 	FOLDER_IMAPMAIL,
@@ -27,12 +28,12 @@ enum FolderType {
 	FOLDER_CATEGORYCONTAINER,
 	FOLDER_IMAPSERVERCONTAINER,
 	FOLDER_UNKNOWN
-};  
+};
+*/
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsISupports {
 
-	readonly attribute FolderType type;
 	readonly attribute string prettyName;
 	readonly attribute string name;  
 	void SetName(in string name);
@@ -129,10 +130,17 @@ interface nsIMsgFolder : nsISupports {
 
 };
 
-
+////////////////////////////////////////////////////////////////////////////////
 
 [uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
-interface nsIMsgMailFolder : nsISupports {
+interface nsIMsgLocalMailFolder : nsISupports {
 
 	attribute string pathName;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface nsIMsgImapMailFolder : nsISupports {
+
+};
+

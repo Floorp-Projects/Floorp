@@ -81,8 +81,6 @@ const int MK_MSG_OUTBOX_L10N_NAME_OLD = 0;
 
 #define FE_Alert(a, b)				/*NYI*/
 
-#define MsgERR						PRInt32
-
 /* The three ways to deliver a message.
  */
 typedef enum

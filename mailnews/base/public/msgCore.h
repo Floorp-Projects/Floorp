@@ -29,19 +29,6 @@
 
 /* Carriage return and linefeeds */
 
-#define CR '\015'
-#define LF '\012'
-#define VTAB '\013'
-#define FF '\014'
-#define TAB '\011'
-#define CRLF "\015\012"     /* A CR LF equivalent string */
-
-/* Right now, plstr.h does not implement strok yet, so we'll go through the string library for this.... */
-/* We need to fix this! strtok is not thread-safe on most platforms.
- * we need a better solution for this */
-#include <string.h>
-#define XP_STRTOK                 	strtok
-
 /* see mozilla/xpcom/public/nsError.h for details */
 #define NS_ERROR_MODULE_MAILNEWS 16
 
