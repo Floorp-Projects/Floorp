@@ -147,7 +147,7 @@ extern char * szLoadString (UINT iID, ResourceSwitcher *pSwticher = NULL);
 
 // Helper application handling functions
 //
-extern void fe_InitFileFormatTypes(void);
+extern void fe_MimeProtocolHelperInit(void);
 extern CHelperApp * fe_AddNewFileFormatType(const char *mime_type,const char *subtype); 
 extern void fe_CleanupFileFormatTypes(void);
 

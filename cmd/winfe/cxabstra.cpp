@@ -512,6 +512,8 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
 //	Returns:	int	As NET_GetURL
 //	Comments:	Use this instead of NET_GetURL
 
+    fe_MimeProtocolHelperInit();
+
     //  Determine URL type.  -1 is out of range.
     int iUrlType = -1;
     if(pUrl && pUrl->address) {
@@ -1437,5 +1439,4 @@ void CAbstractCX::ResetStopwatch()
 		m_ttStopwatch = theApp.GetTime();
 		m_ttOldwatch = m_ttStopwatch - 1;
 }
-
 

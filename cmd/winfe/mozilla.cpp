@@ -81,7 +81,6 @@ BOOL bIsGold = FALSE;
 
 #include "custom.h"
 #include "ngdwtrst.h"
-#include "oleregis.h"
 #include "sysinfo.h"
 #include "winproto.h"
 #include "cmdparse.h"
@@ -89,6 +88,7 @@ BOOL bIsGold = FALSE;
 #include "slavewnd.h"
 #include "feutil.h"
 #include "cxicon.h"
+#include "oleregis.h"
 #ifdef MOZ_FULLCIRCLE
 // Full Circle stuff - see http://www.fullsoft.com for more info
 #include "../../../ns/fullsoft/public/fullsoft.h"
@@ -1215,17 +1215,6 @@ BOOL CNetscapeApp::InitInstance()
 	m_bShowNetscapeButton = CUST_IsCustomAnimation(&iTmp);
 
 
-
-//BEGIN STREAM VODOO
-
-
-    // Add user configured MIME types and file extensions to the NETLIB lists.
-    // This sets up any user configured viewers also, by placing them in a list that
-    //      will be entered in the function external_viewer_disk_stream....  What a kludge.
-    // This also constructs a list of possible helper applications that are spawned off
-    //      in external_viewer_disk_stream read in from the INI file.
-    fe_InitFileFormatTypes();
-
 #ifdef XP_WIN32
 	// Check to see if we're the "default browser"
     if ( !m_bShowPrefsOnStartup ) {
@@ -1243,10 +1232,6 @@ BOOL CNetscapeApp::InitInstance()
 	PREF_RegisterCallback("mime.types.all_defined",WinFEPrefChangedFunc,NULL);
 	//End CRN_MIME
 
-    //  NEVER MODIFY THE BELOW unless NEW FO types appear.
-    //  NEVER CALL RealNET_RegisterContentTypeConverter ANYWHERE ELSE (exceptions in presentm.cpp).
-    //  INSTEAD USE NET_RegisterContentTypeConverter.
-    //  WE MUST INITIALIZE EVERY FO_Format_Out TO OUR PRESENTATION MANAGER.
     char *cp_wild = "*";
     //  Mocha src equal converter.
     NET_RegisterContentTypeConverter("application/x-javascript", FO_PRESENT, NULL, NET_CreateMochaConverter);
@@ -1288,7 +1273,6 @@ BOOL CNetscapeApp::InitInstance()
     NET_RegisterContentTypeConverter(cp_wild, FO_CACHE_AND_MULTIPART_IMAGE, NULL, NET_CacheConverter);
     NET_RegisterContentTypeConverter(cp_wild, FO_CACHE_AND_PRINT, NULL, NET_CacheConverter);
 
-    // Set up converters for our Presentation Manager.
     // Front end sets these up, only because the front end handles front end converters!
     // XP code is responsible for registering their proper converters in NET_RegisterMIMEDecoders
     NET_RegisterContentTypeConverter("text/*", FO_VIEW_SOURCE, NULL, memory_stream);      // */
@@ -1321,13 +1305,6 @@ BOOL CNetscapeApp::InitInstance()
 
     // Don't handle printing cases if we can't format it.
 //    NET_RegisterContentTypeConverter(cp_wild, FO_PRINT, NULL, null_stream);
-
-    //  Initialize our OLE viewers in WPM.
-    COleRegistry::RegisterIniViewers();
-    //  Initialize our OLE protocol handlers.
-    COleRegistry::RegisterIniProtocolHandlers();
-//END STREAM VODOO
-
 
 #ifdef MOZ_NGLAYOUT
   InitializeNGLayout();

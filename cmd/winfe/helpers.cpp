@@ -22,6 +22,7 @@
 #include "il_strm.h"
 #include "display.h"
 #include "prefapi.h" //CRN_MIME
+#include "oleregis.h"
 
 //  List of all helpers in our helper app struct.
 //  Static must be declared here.
@@ -595,24 +596,6 @@ ProcessFileExtension(const char *pExtension, const char *ccpMimeType)
 	return pNew;
 }
 
-// This routines looks at every file type association in the registry.
-// For each file extension it calls ProcessFileExtension()
-void registry_GenericFileTypes()
-{
-    char aExtension[MAX_PATH + 1];
-    memset(aExtension, 0, sizeof(aExtension));
-    DWORD dwExtKey = 0;
-    LONG lCheckEnum = ERROR_SUCCESS;
-
-    do  {
-        lCheckEnum = RegEnumKey(HKEY_CLASSES_ROOT, dwExtKey++, aExtension, sizeof(aExtension));
-        if(lCheckEnum == ERROR_SUCCESS && aExtension[0] == '.') {
-			ProcessFileExtension(&aExtension[1], NULL);
-        }
-    }
-    while(lCheckEnum == ERROR_SUCCESS);
-}
-
 #ifndef _WIN32
 // This routines looks at every file type association in the WIN.INI file.
 // For each file extenion it calls ProcessFileExtension()
@@ -899,50 +882,6 @@ void fe_UpdateMControlMimeTypes(void)
 
 }
 //End CRN_MIME
-
-// This routine updates the netlib list of NET_cdataStruct objects with information
-// found in the registry, WIN.INI file, and the Netscape specific information
-// (the Viewers and Suffixes section)
-void fe_InitFileFormatTypes(void) {
-	// See if there are any user defined MIME types that need to be added to the
-	// netlib list. These are stored in the Viewers section. Add them first so
-	// they're handled like the types in mktypes.h
-	//
-	// This way when we look in the registry we'll find shell execute handlers for them
-	fe_UserDefinedFileTypes();
-
-    // This call is going to look at every file extension in the registry and 
-    // update existing netlib structures that have matching file extenions and
-    // matching MIME types. It will also create a new netlib structure if necessary
-    registry_GenericFileTypes();
-
-#ifndef _WIN32
-    // This call is going to look at every file association in WIN.INI and 
-    // update existing netlib structures that have matching file extenions. It
-    // will also create a new netlib structure if necessary
-    winini_GenericFileTypes();
-#endif
-
-	NET_cdataStruct *cd_item;
-    XP_List   * infolist = cinfo_MasterListPointer();;  // Get beginning of the list
-
-	// The last thing we do is use the Netscape specific information. This means looking
-	// at the Viewers and Suffixes sections
-	//
-	// Do this for every entry in the netlib list
-	while ((cd_item = (NET_cdataStruct *)XP_ListNextObject(infolist))) {  // iterate through the list  
-		if (cd_item->ci.type) {  // if it is a mime type
-			// Look in the Viewers section to see how the MIME type should be configured.
-			// This allows us to override anything we found in the registry, e.g. user wants to
-			// Save to disk or open as an OLE server
-			fe_AddTypeToList(cd_item);
-
-			// Look in the Suffixes section to get the list of extensions associated with
-			// this MIME type
-			fe_SetExtensionList(cd_item);
-		}
-	}
-}
 
 void fe_CleanupFileFormatTypes(void) 
 {
@@ -1756,3 +1695,95 @@ BOOL  CopyRegKeys(HKEY  hKeyOldName,
 }
 
 #endif
+
+//  There are a lot of initializations having to do with helper
+//      applications and external protocol handlers that we
+//      put off until the last second for startup performance
+//      time.
+//  Most involve the netlib cdata lists.
+
+
+//  This routines looks at every file type association in the registry.
+//      For each file extension it calls ProcessFileExtension()
+//      For each protocol, it calls ProcessShellProtocol();
+void registry_Loop()
+{
+    char aExtension[MAX_PATH + 1];
+    memset(aExtension, 0, sizeof(aExtension));
+
+    DWORD dwExtKey = 0;
+    LONG lCheckEnum = ERROR_SUCCESS;
+
+    do  {
+        lCheckEnum = RegEnumKey(HKEY_CLASSES_ROOT, dwExtKey++, aExtension, sizeof(aExtension));
+        if(lCheckEnum == ERROR_SUCCESS) {
+            if(aExtension[0] == '.')    {
+                ProcessFileExtension(&aExtension[1], NULL);
+            }
+            else    {
+                //ProcessShellProtocol(&aExtension[0]);
+            }
+        }
+    }
+    while(lCheckEnum == ERROR_SUCCESS);
+}
+
+//  Little understood legacy code.
+void fe_LegacyNetlibInit(void)  {
+    NET_cdataStruct *cd_item = NULL;
+    XP_List *infolist = cinfo_MasterListPointer();
+
+    // Use the Netscape specific information. This means looking
+    // at the Viewers and Suffixes sections
+    // Do this for every entry in the netlib list
+    while((cd_item = (NET_cdataStruct *)XP_ListNextObject(infolist))) {  // iterate through the list  
+        if(cd_item->ci.type) {  // if it is a mime type
+            // Look in the Viewers section to see how the MIME type should be configured.
+            // This allows us to override anything we found in the registry, e.g. user wants to
+            // Save to disk or open as an OLE server
+            fe_AddTypeToList(cd_item);
+
+            // Look in the Suffixes section to get the list of extensions associated with
+            // this MIME type
+            fe_SetExtensionList(cd_item);
+        }
+    }
+}
+
+void fe_InitFileFormatTypes(void) {
+	//  See if there are any user defined MIME types stored in the
+    //      viewers section. Add them first so this way when we
+    //      look in the registry we'll find shell execute handlers.
+	fe_UserDefinedFileTypes();
+
+    //  Registry holds a lot of info.
+    registry_Loop();
+
+    //  Legacy init, not well understood.
+    fe_LegacyNetlibInit();
+}
+
+void fe_MimeProtocolHelperInit(void)	{
+    static BOOL bMPHI = TRUE;
+    if(bMPHI)   {
+        bMPHI = FALSE;
+
+        //  Empty the message queue before we hog the CPU.
+        MSG msg;
+        while(::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE))	{
+            BOOL bPumpVal = theApp.NSPumpMessage();
+            //  shouldn't be WM_QUIT here, but would like to know.
+            ASSERT(bPumpVal);
+        }
+
+        //  This sets up helper applications from the prefs and
+        //      from the system registry.
+        fe_InitFileFormatTypes();
+
+        //  Initialize our OLE streaming viewers.
+        COleRegistry::RegisterIniViewers();
+        //  Initialize our OLE protocol handlers.
+        COleRegistry::RegisterIniProtocolHandlers();
+    }
+}
+
