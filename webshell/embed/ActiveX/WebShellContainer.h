@@ -81,7 +81,7 @@ public:
 						 PRInt32 aXPos, PRInt32 aYPos, 
 						 const nsString& aPopupType, const nsString& anAnchorAlignment,
 						 const nsString& aPopupAlignment,
-						 nsIDOMWindow* aWindow);
+                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
