@@ -1074,10 +1074,16 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           desiredSize.width = priorSize.width;
           desiredSize.height = priorSize.height;
 
-          // Because we may have moved the frame we need to make sure any views are
-          // positioned properly. We have to do this, because any one of our parent
-          // frames could have moved and we have no way of knowing...
-          nsTableFrame::RePositionViews(aPresContext, kidFrame);
+          // if we are in a floated table, our position is not yet established, so we cannot reposition our views
+          // the containing glock will do this for us after positioning the table
+          const nsStyleDisplay *display;
+          aTableFrame.GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+          if (display && !display->IsFloating()) {
+            // Because we may have moved the frame we need to make sure any views are
+            // positioned properly. We have to do this, because any one of our parent
+            // frames could have moved and we have no way of knowing...
+            nsTableFrame::RePositionViews(aPresContext, kidFrame);
+          }
         }
         
         if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
