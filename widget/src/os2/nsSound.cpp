@@ -91,7 +91,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   nsCOMPtr<nsIFile> soundTmp;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(soundTmp));
   if (NS_FAILED(rv)) return rv;
-  rv = soundTmp->Append(nsDependentCString(kSoundTmpFileName));
+  rv = soundTmp->AppendNative(nsDependentCString(kSoundTmpFileName));
   nsCAutoString soundFilename;
   (void) soundTmp->GetNativePath(soundFilename);
   FILE *fp = fopen(soundFilename.get(), "wb+");
