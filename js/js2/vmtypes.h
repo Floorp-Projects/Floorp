@@ -271,7 +271,7 @@ namespace VM {
         
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "R" << mOp3 << " = " << registers[mOp3];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
             return f;
         }
     };
@@ -287,7 +287,7 @@ namespace VM {
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
     };
@@ -309,7 +309,8 @@ namespace VM {
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp2 << " = " << registers[mOp2];
+            if (mOp2 != NotARegister)
+                f << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
 
@@ -410,7 +411,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << ArgList(mOp3, registers);
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << ArgList(mOp3, registers);
             return f;
         }
     };
@@ -504,7 +505,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "R" << mOp3 << " = " << registers[mOp3];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
             return f;
         }
     };
@@ -520,7 +521,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
     };
@@ -551,7 +552,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1];
+            f << "R" << mOp1 << '=' << registers[mOp1];
             return f;
         }
     };
@@ -567,7 +568,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1];
+            f << "R" << mOp1 << '=' << registers[mOp1];
             return f;
         }
     };
@@ -583,7 +584,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
     };
@@ -608,7 +609,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1];
+            f << "R" << mOp1 << '=' << registers[mOp1];
             return f;
         }
     };
@@ -624,7 +625,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1];
+            f << "R" << mOp1 << '=' << registers[mOp1];
             return f;
         }
     };
@@ -655,7 +656,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
     };
@@ -671,7 +672,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1];
+            f << "R" << mOp1 << '=' << registers[mOp1];
             return f;
         }
     };
@@ -717,7 +718,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp2 << " = " << registers[mOp2];
+            f << "R" << mOp2 << '=' << registers[mOp2];
             return f;
         }
     };
@@ -733,7 +734,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "R" << mOp3 << " = " << registers[mOp3];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
             return f;
         }
     };
@@ -749,7 +750,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp3 << " = " << registers[mOp3];
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp3 << '=' << registers[mOp3];
             return f;
         }
     };
@@ -774,7 +775,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1];
+            f << "R" << mOp1 << '=' << registers[mOp1];
             return f;
         }
     };
