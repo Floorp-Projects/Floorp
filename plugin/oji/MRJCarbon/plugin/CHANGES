@@ -1,6 +1,9 @@
 Changes since 1.0b1:
 
-1. Fixed code that was causing recursive painting calls.
+1. Repaired Security Context code that was broken by the checkin for bug 124042. This code now
+uses standard character strings instead of Mozilla string classes.
+
+2. Fixed code that was causing recursive painting calls.
 
 Changes since 1.0d8:
 
