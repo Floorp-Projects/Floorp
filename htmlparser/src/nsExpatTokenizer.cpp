@@ -727,7 +727,7 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
   }
 
   // Return true if the url is a chrome url
-  res = (*aDTD)->SchemeIs(nsIURI::CHROME, &isLoadable);
+  res = (*aDTD)->SchemeIs("chrome", &isLoadable);
 
   // If the url is not a chrome url, check to see if a DTD file of the same name
   // exists in the special DTD directory

@@ -458,8 +458,8 @@ nsPresContext::SetShell(nsIPresShell* aShell)
         if (mBaseURL) {
             PRBool isChrome = PR_FALSE;
             PRBool isRes = PR_FALSE;
-            mBaseURL->SchemeIs(nsIURI::CHROME, &isChrome);
-            mBaseURL->SchemeIs(nsIURI::RESOURCE, &isRes);
+            mBaseURL->SchemeIs("chrome", &isChrome);
+            mBaseURL->SchemeIs("resource", &isRes);
 
           if (!isChrome && !isRes)
             mImageAnimationMode = mImageAnimationModePref;

@@ -2969,8 +2969,8 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     {
         PRBool isChrome = PR_FALSE;
         PRBool isResource = PR_FALSE;
-        if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) &&
-                NS_SUCCEEDED(aURI->SchemeIs(nsIURI::RESOURCE, &isResource)) &&
+        if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) &&
+                NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) &&
                 !isChrome && !isResource)
         {
             static const char top[] = "_top";
@@ -3182,7 +3182,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    if (aWindowTarget && *aWindowTarget) {
      PRBool isJSURL = PR_FALSE;
      // do it only for javascript urls!
-     if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::JAVASCRIPT, &isJSURL)) && isJSURL)
+     if (NS_SUCCEEDED(aURI->SchemeIs("javascript", &isJSURL)) && isJSURL)
      {
        nsAutoString targetName; targetName.AssignWithConversion(aWindowTarget);
 
@@ -3249,7 +3249,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
           nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
           if(ioChannel) // Might be a javascript: URL load, need to set owner
           {
-              aURI->SchemeIs(nsIURI::JAVASCRIPT, &isJSOrData);
+              aURI->SchemeIs("javascript", &isJSOrData);
           }
           else
           { // Also set owner for data: URLs
@@ -4181,8 +4181,8 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShould
    // to it.
    PRBool isHTTP = PR_FALSE;
    PRBool isHTTPS = PR_FALSE;
-   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::HTTP, &isHTTP), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::HTTPS, &isHTTPS), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("http", &isHTTP), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("https", &isHTTPS), NS_ERROR_FAILURE);
 
    if (isHTTP || isHTTPS)
    {
@@ -4195,10 +4195,10 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShould
    PRBool isNews = PR_FALSE;
    PRBool isMailbox = PR_FALSE;
 
-   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::ABOUT, &isAbout), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::IMAP, &isImap), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::NEWS, &isNews), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::MAILBOX, &isMailbox), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("about", &isAbout), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("imap", &isImap), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("news", &isNews), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs("mailbox", &isMailbox), NS_ERROR_FAILURE);
 
    if (isAbout || isImap || isNews || isMailbox)
       return NS_OK;

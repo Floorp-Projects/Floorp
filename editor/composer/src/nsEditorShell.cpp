@@ -565,7 +565,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
     // in the disk document, so that later saves save back to the same file.
     nsCOMPtr<nsIFileURL> pageFileURL(do_QueryInterface(aUrl));
     PRBool isFile=PR_FALSE;
-    rv = aUrl->SchemeIs(nsIURI::FILE, &isFile);
+    rv = aUrl->SchemeIs("file", &isFile);
     if (NS_SUCCEEDED(rv) && isFile && pageFileURL)
     {
       nsCOMPtr<nsIFile> pageFile;

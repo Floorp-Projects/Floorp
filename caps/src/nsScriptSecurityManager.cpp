@@ -526,8 +526,8 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
     // UniversalFileRead capability trump the above check.
     PRBool isFile = PR_FALSE;
     PRBool isRes = PR_FALSE;
-    if (NS_FAILED(aURI->SchemeIs(nsIURI::FILE, &isFile)) || 
-        NS_FAILED(aURI->SchemeIs(nsIURI::RESOURCE, &isRes)))
+    if (NS_FAILED(aURI->SchemeIs("file", &isFile)) || 
+        NS_FAILED(aURI->SchemeIs("resource", &isRes)))
         return NS_ERROR_FAILURE;
     if (isFile || isRes)
     {
