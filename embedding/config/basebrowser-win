@@ -39,7 +39,6 @@ jsdom.dll
 ; 
 xpcom.dll
 mozreg.dll     
-
 ; 
 ; Imaging:
 ; 
@@ -75,9 +74,8 @@ components\dom.xpt
 components\editor.dll                   
 components\editor.xpt
 
-; embedding                   
-components\mozbrwsr.dll                 
-components\mozbrwsr.xpt                 
+; embedding              
+components\webbrwsr.dll              
 components\webBrowser_core.xpt
 components\webBrowser_setup.xpt
 
@@ -146,6 +144,17 @@ components\unicharutil.xpt
 ; components\ucvtw2.dll for traditional chinese
 ; components\ucvibm.dll for ibm
 
+
+res\language.properties
+res\langGroups.properties
+res\charsetData.properties
+res\charsetalias.properties
+res\acceptlanguage.properties
+res\wincharset.properties
+res\strres.properties 
+
+
+
 ; uriloader
 components\urildr.dll
 components\uriloader.xpt
@@ -156,7 +165,6 @@ components\widget.xpt
 ; xpconnect
 components\xpc3250.dll
 components\xpconnect.xpt
-components\xpconnect_tests.xpt
 
 ; xpcom
 components\xpcom_base.xpt
@@ -186,4 +194,3 @@ chrome\locales\en-us\global\locale\*
 res\html.css   
 res\quirk.css  
 res\ua.css
-
