@@ -23,6 +23,8 @@
  *                 Colin Phillips <colinp@oeone.com> 
  *                 Chris Charabaruk <ccharabaruk@meldstar.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Chris Allen
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +43,7 @@
 
 
 /***** calendar/printDialog.js
-* AUTHOR
+* PRIMARY AUTHOR
 *   Chris Allen
 * REQUIRED INCLUDES 
 *   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
@@ -543,20 +545,15 @@ monthToStart=weekStart.getMonth();
 yearToStart=weekStart.getFullYear();
 var showprivate=document.getElementById("private-checkbox");
 var inMonth=true;
+var thisDaysDate=new Date(yearToStart, monthToStart, dayToStart);
 
 for (var w=0; w<6; w++)
 {
-  var testDate=new Date(yearToStart, monthToStart, dayToStart+(w*7));
-  if (testDate.getMonth() > currentDate.getMonth())
-     inMonth=false;
-  if (testDate.getFullYear() > currentDate.getFullYear())
-     inMonth=false;
   if (inMonth)
   {
      printwindow.document.write("<tr>");
      for (var i=0; i<7; i++)
      {
-      var thisDaysDate=new Date(yearToStart, monthToStart, dayToStart+i+(w*7));
       printwindow.document.write("<td align=left valign=top style='border:1px solid black;vertical-alignment:top;' >");
       printwindow.document.write("<table valign=top height=100 width=100 style='font-size:10px;'><tr valign=top><td valign=top width=20%>");
       if (thisDaysDate.getMonth()==currentDate.getMonth())
@@ -590,9 +587,14 @@ for (var w=0; w<6; w++)
          } // if it was in the month
         printwindow.document.write("</table>");
         printwindow.document.write("</td>")
+	  //advance to the next day
+	thisDaysDate.setDate(thisDaysDate.getDate()+1);
       } //end of each day
       printwindow.document.write("</tr>");
   } // ok it was in the month
+  if((thisDaysDate.getMonth() > currentDate.getMonth())||
+     (thisDaysDate.getFullYear() > currentDate.getFullYear()) )
+    inMonth=false;
 } // end of each week
 
 printwindow.document.write("</table>")
