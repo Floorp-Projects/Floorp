@@ -509,7 +509,8 @@ function utilityOnLoad(aEvent)
   var prefService = Components.classes["@mozilla.org/preferences-service;1"];
   prefService = prefService.getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch(null);
-  
+  prefBranch = prefBranch.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+
   prefBranch.addObserver("network.proxy.type", proxyTypeObserver, false);
 
   addEventListener("unload", utilityOnUnload, false);
@@ -528,6 +529,7 @@ function utilityOnUnload(aEvent)
   var prefService = Components.classes["@mozilla.org/preferences-service;1"];
   prefService = prefService.getService(Components.interfaces.nsIPrefService);
   var prefBranch = prefService.getBranch(null);
+  prefBranch = prefBranch.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   
   prefBranch.removeObserver("network.proxy.type", proxyTypeObserver);
 }
