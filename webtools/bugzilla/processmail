@@ -329,6 +329,7 @@ sub filterExcludeList ($$) {
             # match found, so we remove the entry
             if ($included eq $excluded) {
                 pop(@result);
+                last;
             }
         }
     }
