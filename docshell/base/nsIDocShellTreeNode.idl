@@ -22,7 +22,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIDocShell.idl"
+#include "nsIDocShellTreeItem.idl"
 
 /**
  * The nsIDocShellTreeNode supplies the methods for interacting with children
@@ -40,21 +40,21 @@ interface nsIDocShellTreeNode : nsISupports
 	readonly attribute long childCount;
 
 	/*
-	Add a new child DocShell.  Adds to the end of the list.
+	Add a new child DocShellTreeItem.  Adds to the end of the list.
 	*/
-	void AddChild(in nsIDocShell child);
+	void addChild(in nsIDocShellTreeItem child);
 
 	/*
-	Removes a child DocShell.
+	Removes a child DocShellTreeItem.
 	*/
-	void RemoveChild(in nsIDocShell child);
+	void removeChild(in nsIDocShellTreeItem child);
 
 	/* Return the child at the index requested.  This is 0-based.*/
-	void GetChildAt(in long index, out nsIDocShell child);
+	void getChildAt(in long index, out nsIDocShellTreeItem child);
 
 	/*
-	Return the child DocShell with the specified name.
+	Return the child DocShellTreeItem with the specified name.
 	*/
-	nsIDocShell FindChildWithName(in wstring name);
+	nsIDocShellTreeItem findChildWithName(in wstring name);
 };
 
