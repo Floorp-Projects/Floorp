@@ -73,7 +73,7 @@
 #include "nsIStringBundle.h"
 #include "nsEudoraSettings.h"
 #include "nsReadableUtils.h"
-
+#include "nsUnicharUtils.h"
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #include "nsEudoraWin32.h"
@@ -561,6 +561,11 @@ NS_IMETHODIMP ImportEudoraMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
 
 NS_IMETHODIMP ImportEudoraMailImpl::TranslateFolderName(const nsAString & aFolderName, nsAString & _retval)
 {
+    if (aFolderName.Equals(NS_LITERAL_STRING("Out"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestUnsentMessagesFolderName);
+    else if (aFolderName.Equals(NS_LITERAL_STRING("In"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestInboxFolderName);
+    else
     _retval = aFolderName; 
     return NS_OK;
 }

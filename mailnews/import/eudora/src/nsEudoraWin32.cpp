@@ -106,6 +106,7 @@ PRBool nsEudoraWin32::FindMailFolder( nsIFileSpec *pFolder)
 PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 {
 	PRBool	result = PR_FALSE;
+  PRBool  exists = PR_FALSE;
 
 	// look in the registry to see where eudora is installed?
 	HKEY	sKey;
@@ -116,7 +117,30 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 			nsCString str((const char *)pBytes);
 			delete [] pBytes;
 			
+      str.CompressWhitespace();
+			
 			// Command line is Eudora mailfolder eudora.ini
+      if (findIni) {
+        // find the string coming after the last space
+        PRInt32 index = str.RFind(" ");
+        if (index != -1) {
+          index++; // skip the space
+          nsCString	path;
+					str.Mid( path, index, str.Length() - index);
+
+          pFolder->SetNativePath( path.get());
+          pFolder->IsFile( &exists);
+          if (exists)
+					  result = exists;
+          else // it may just be the mailbox location....guess that there will be a eudora.ini file there
+          {
+            pFolder->AppendRelativeUnixPath("eudora.ini");
+            pFolder->IsFile( &exists);
+					  result = exists;
+          }       
+        } 
+      } // if findIni
+      else {
 			int	idx = -1;
 			if (str.CharAt( 0) == '"') {
 				idx = str.FindChar( '"', 1);
@@ -127,19 +151,6 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 				idx = str.FindChar( ' ');
 			}
 			
-			if ((idx != -1) && findIni) {
-				idx++;
-				while (str.CharAt( idx) == ' ') idx++;
-				int eIdx = -1;
-				if (str.CharAt( idx) == '"') {
-					eIdx = str.FindChar( '"', idx);
-				}
-				else {
-					eIdx = str.FindChar( ' ', idx);
-				}
-				idx = eIdx;
-			}
-
 			if (idx != -1) {
 				idx++;
 				while (str.CharAt( idx) == ' ') idx++;
@@ -154,32 +165,14 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 					nsCString	path;
 					str.Mid( path, idx, endIdx - idx);					
 					
-					/*  
-						For some reason, long long ago, it was necessary
-						to clean up the path to Eudora so that it didn't contain
-						a mix of short file names and long file names.  This is
-						no longer true.
-
-					ConvertPath( path);
-					
-					IMPORT_LOG1( "** GetShortPath returned: %s\n", path.get());
-					*/
-
 					pFolder->SetNativePath( path.get());
-					PRBool exists = PR_FALSE;
-					if (findIni) {
-						if (NS_SUCCEEDED( pFolder->IsFile( &exists))) {
-							result = exists;
-						}
-					}
-					else {
-						if (NS_SUCCEEDED( pFolder->IsDirectory( &exists))) {
+
+					  if (NS_SUCCEEDED( pFolder->IsDirectory( &exists)))
 							result = exists;
 						}
 					}
 				}
-			}
-		}
+    } // if pBytes
 		::RegCloseKey( sKey);
 	}
 

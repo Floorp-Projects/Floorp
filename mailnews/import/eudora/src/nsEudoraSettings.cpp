@@ -73,12 +73,10 @@ nsresult nsEudoraSettings::Create(nsIImportSettings** aImport)
 
 nsEudoraSettings::nsEudoraSettings()
 {
-	m_pLocation = nsnull;
 }
 
 nsEudoraSettings::~nsEudoraSettings()
 {
-	NS_IF_RELEASE( m_pLocation);
 }
 
 NS_IMPL_ISUPPORTS1(nsEudoraSettings, nsIImportSettings)
@@ -93,29 +91,24 @@ NS_IMETHODIMP nsEudoraSettings::AutoLocate(PRUnichar **description, nsIFileSpec 
 	
 	*description = nsnull;	
 	*_retval = PR_FALSE;	
-	*location = nsnull;
 
 	nsresult	rv;
-	if (NS_FAILED( rv = NS_NewFileSpec( location)))
-		return( rv);
+
+	if (NS_FAILED( rv = NS_NewFileSpec( getter_AddRefs(m_pLocation))))
+		return rv;
 	*description = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NAME);
 
 #if defined(XP_WIN) || defined(XP_OS2)
-	*_retval = nsEudoraWin32::FindSettingsFile( *location);
+	*_retval = nsEudoraWin32::FindSettingsFile( m_pLocation );
 #endif
 	
-	m_pLocation = *location;
-	NS_IF_ADDREF( m_pLocation);
-
-	return( NS_OK);
+  NS_IF_ADDREF(*location = m_pLocation);
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsEudoraSettings::SetLocation(nsIFileSpec *location)
 {
-	NS_IF_RELEASE( m_pLocation);
 	m_pLocation = location;
-	NS_IF_ADDREF( m_pLocation);
-
 	return( NS_OK);
 }
 
@@ -129,17 +122,15 @@ NS_IMETHODIMP nsEudoraSettings::Import(nsIMsgAccount **localMailAccount, PRBool 
 	// Get the settings file if it doesn't exist
 	if (!m_pLocation) {
 #if defined(XP_WIN) || defined(XP_OS2)
-		if (NS_SUCCEEDED( rv = NS_NewFileSpec( &m_pLocation))) {
+		if (NS_SUCCEEDED( rv = NS_NewFileSpec( getter_AddRefs(m_pLocation)))) {
 			if (!nsEudoraWin32::FindSettingsFile( m_pLocation)) {
-				NS_IF_RELEASE( m_pLocation);
 				m_pLocation = nsnull;
 			}
 		}
 #endif
 #if defined(XP_MAC) || defined(XP_MACOSX)
-		if (NS_SUCCEEDED( rv = NS_NewFileSpec( &m_pLocation))) {
+		if (NS_SUCCEEDED( rv = NS_NewFileSpec( getter_AddRefs(m_pLocation)))) {
 			if (!nsEudoraMac::FindSettingsFile( m_pLocation)) {
-				NS_IF_RELEASE( m_pLocation);
 				m_pLocation = nsnull;
 			}
 		}
