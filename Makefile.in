@@ -267,6 +267,14 @@ else
 
 DIRS		= $(BUILD_MODULE_DIRS)
 
+# Hack to generate xpidl Makefile
+ifneq ($(BUILD_MODULES),all)
+ifneq (,$(findstring xpcom, $(BUILD_MODULE_DIRS)))
+DIRS		:= xpcom/typelib $(DIRS)
+SUBMAKEFILES	:= xpcom/typelib/Makefile
+endif
+endif
+
 default: $(SUBMAKEFILES)
 	$(MAKE) export
 	$(MAKE) libs
