@@ -31,7 +31,7 @@ extern "C" {
 #include "mkstream.h"
 #include "cvchunk.h"
 #include "httpurl.h"
-}; /* end of extern "C" */
+} /* end of extern "C" */
 
 #include "netcache.h"
 #include "cookies.h"
@@ -110,7 +110,7 @@ extern const char *XP_AppLanguage;
 extern const char *XP_AppPlatform;
 #endif
 
-}; /* end of extern "C" */
+} /* end of extern "C" */
 
 static NS_DEFINE_IID(kIProtocolConnectionIID,  NS_IPROTOCOLCONNECTION_IID);
 
@@ -919,7 +919,7 @@ NS_NET nsresult NS_ShutdownINetService()
     return NS_OK;
 }
 
-}; /* extern "C" */
+} /* extern "C" */
 
 /*
  * This is the generic exit routine for all URLs loaded via the new
@@ -1005,14 +1005,13 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
   // XXX For now, resources are not in jar files 
   // Find base path name to the resource file
   char* resourceBase;
-  char* cp;
 
 #ifdef XP_PC
   // XXX For now, all resources are relative to the .exe file
   resourceBase = (char *)PR_Malloc(_MAX_PATH);;
   DWORD mfnLen = GetModuleFileName(g_hInst, resourceBase, _MAX_PATH);
   // Truncate the executable name from the rest of the path...
-  cp = strrchr(resourceBase, '\\');
+  char* cp = strrchr(resourceBase, '\\');
   if (nsnull != cp) {
     *cp = '\0';
   }
