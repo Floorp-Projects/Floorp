@@ -48,7 +48,7 @@ public class InterfaceRegistry {
         try {
             register(Class.forName(name));
         } catch (Exception e) {
-            debug(e.toString());
+            e.printStackTrace();
         }
     }
 
@@ -77,36 +77,57 @@ public class InterfaceRegistry {
             registerInterfaces(cl);
         }
     }
+
+    public static void unregister(IID iid) {
+        interfaces.remove(iid);
+        iMethods.remove(iid);
+    }
     
-    private static void registerInterfaces(Class cl) {
+    private static Hashtable registerInterfaces(Class cl) {
         try {
             Object iidStr = cl.getField(IID_STRING).get(cl);
             if (iidStr instanceof String) {
                 IID iid = new IID((String)iidStr);
-                String[] methodNames = Utilities.getInterfaceMethodNames((String)iidStr);
-                if (methodNames != null) {
-                    Method[] rmethods = new Method[methodNames.length];
-                    Class[] ifaces = new Class[]{cl};
-                    Hashtable mhash = new Hashtable(methodNames.length);
-                    // recursively get all parent interface methods                    
-                    do {
-                        Method[] methods = ifaces[0].getDeclaredMethods();
-                        for (int i = 0; i < methods.length; i++) {
-                            mhash.put(methods[i].getName(), methods[i]);
-                        }
-                        ifaces = ifaces[0].getInterfaces();
+                // if this iface hasn't been registered, yet
+                if (interfaces.get(iid) == null) {
+                    String[] methodNames = Utilities.getInterfaceMethodNames((String)iidStr);
+                    if (methodNames != null) {
+                        Method[] rmethods = new Method[methodNames.length];
+                        Class[] ifaces = cl.getInterfaces();
                         // check for single inheritance (xpcom)
-                    } while (ifaces.length == 1);
-
-                    for (int j = methodNames.length - 1; j >= 0; j--) {
-                        rmethods[j] = (Method)mhash.get(subscriptMethodName(methodNames[j]));
+                        if (ifaces.length < 2) {
+                            // recursively get all parent interface methods                    
+                            Hashtable mhash = null;
+                            Method[] methods = cl.getDeclaredMethods();
+                            // the very super iface
+                            if (ifaces.length == 0) {
+                                mhash = new Hashtable(methods.length);
+                            } else {
+                                mhash = new Hashtable(registerInterfaces(ifaces[0]));
+                            }
+                            for (int i = 0; i < methods.length; i++) {
+                                mhash.put(methods[i].getName(), methods[i]);
+                            }
+                        
+                            for (int j = methodNames.length - 1; j >= 0; j--) {
+                                rmethods[j] = (Method)mhash.get(subscriptMethodName(methodNames[j]));
+                            }
+                        
+                            interfaces.put(iid, cl);
+                            iMethods.put(iid, new MethodArray(rmethods, mhash));
+                            
+                            debug(cl.getName() + ": " + iid + "  ( " + cl + " )");
+                            printMethods(rmethods);
+                            
+                            return mhash;
+                        } 
+                    }   
+                // simply pass iface methods
+                } else {
+                    MethodArray m = (MethodArray)iMethods.get(iid);
+                    if (m != null) {            
+                        return m.names;
                     }
-
-                    interfaces.put(iid, cl);
-                    iMethods.put(iid, new MethodArray(rmethods));
-
-                    debug(cl.getName() + ": " + iid + "  ( " + cl + " )");
-                    printMethods(rmethods);
                 }
             }
         } catch (NoSuchFieldException e) {
@@ -115,11 +136,7 @@ public class InterfaceRegistry {
         } catch (IllegalAccessException e1) {
             debug("can't access field...");		
         }
-        // register interfaces extended by the interface
-        Class[] ifaces = cl.getInterfaces();
-        for (int i = 0; i < ifaces.length; i++) {
-            registerInterfaces(ifaces[i]);
-        }    
+        return new Hashtable();
     }
 
     public static Class getInterface(IID iid) {
@@ -151,7 +168,7 @@ public class InterfaceRegistry {
         MethodArray m = (MethodArray)iMethods.get(iid);
         if (m != null && m.methods != null) {            
             for (int i = 0; i < m.methods.length; i++) {
-                if (method.equals(m.methods[i])) {
+                if (m.methods[i] != null && method.equals(m.methods[i])) {
                     result = i;
                     break;
                 }
@@ -218,7 +235,9 @@ public class InterfaceRegistry {
 
 class MethodArray {
     Method[] methods;
-    MethodArray(Method[] _methods) {
+    Hashtable names;
+    MethodArray(Method[] _methods, Hashtable _names) {
         methods = _methods;
+        names = _names;
     }
 }
