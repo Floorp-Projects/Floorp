@@ -2128,6 +2128,24 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     nsIDOMEvent* domEvent = nsnull;
     if (DOM_EVENT_INIT == aFlags) {
         aDOMEvent = &domEvent;
+        // In order for the event to have a proper target for menus (which have no corresponding
+        // frame target in the visual model), we have to explicitly set the target of the
+        // event to prevent it from trying to retrieve the target from a frame.
+        nsString tagName;
+        GetTagName(tagName);
+        if (tagName == "menu" || tagName == "menuitem" ||
+            tagName == "menubar") {
+            nsCOMPtr<nsIEventListenerManager> listenerManager;
+            if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
+                NS_ERROR("Unable to instantiate a listener manager on a menu event.");
+                return ret;
+            }
+            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, aDOMEvent))) {
+                NS_ERROR("Menu event will fail without the ability to create the event early.");
+                return ret;
+            }
+            domEvent->SetTarget(this);
+        }
     }
   
     //Capturing stage
