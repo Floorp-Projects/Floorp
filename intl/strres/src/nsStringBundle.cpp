@@ -49,9 +49,13 @@
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
 
+#include "nsIChromeRegistry.h"
+
 #include "nsAcceptLang.h" // for nsIAcceptLang
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
@@ -554,7 +558,7 @@ nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** a
 
 struct bundleCacheEntry_t {
   PRCList list;
-  nsOpaqueKey *mHashKey;
+  nsStringKey *mHashKey;
   // do not use a nsCOMPtr - this is a struct not a class!
   nsIStringBundle* mBundle;
 };
@@ -573,13 +577,16 @@ private:
                            nsIStringBundle** aResult);
   
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
-                                      nsOpaqueKey *aHashKey);
+                                      nsStringKey *aHashKey);
 
   static void recycleEntry(bundleCacheEntry_t*);
   
   nsHashtable mBundleMap;
   PRCList mBundleCache;
   PLArenaPool mCacheEntryPool;
+
+  // reuse the same uri structure over and over
+  nsCOMPtr<nsIURI> mScratchUri;
 };
 
 nsStringBundleService::nsStringBundleService() :
@@ -594,6 +601,9 @@ nsStringBundleService::nsStringBundleService() :
   PL_InitArenaPool(&mCacheEntryPool, "srEntries",
                    sizeof(bundleCacheEntry_t)*MAX_CACHED_BUNDLES,
                    sizeof(bundleCacheEntry_t));
+
+  mScratchUri = do_CreateInstance(kStandardUrlCID);
+  NS_ASSERTION(mScratchUri, "Couldn't create scratch URI");
 }
 
 nsStringBundleService::~nsStringBundleService()
@@ -618,24 +628,31 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
                                        nsIStringBundle **aResult)
 {
   nsresult ret;
-  
-  nsAutoString lc_country;
-  nsAutoString lc_lang;
-  nsStringBundle::GetLangCountry(aLocale, lc_lang, lc_country);
-  
-  nsStringKey urlKey(aURLSpec);
-  nsStringKey countryKey(lc_country);
-  nsStringKey langKey(lc_lang);
 
-  // create a "composite" key by stuffing all the keys into an array
-  // and hashing that.
-  
-  PRUint32 opaqueValue[3];
-  opaqueValue[0] = urlKey.HashValue();
-  opaqueValue[1] = countryKey.HashValue();
-  opaqueValue[2] = langKey.HashValue();
+  const char *urlSpec = aURLSpec;
+  nsXPIDLCString newSpec;
 
-  nsOpaqueKey completeKey((char *)opaqueValue, sizeof(PRUint32)*3);
+  // chrome URL resolution might fail if there's no chrome registry
+  // so handle this gracefully
+  if (mScratchUri) {
+    // resolve the chrome URL to it's complete representation
+    mScratchUri->SetSpec(aURLSpec);
+    
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+      do_GetService(kChromeRegistryCID, &ret);
+    if (NS_SUCCEEDED(ret)) {
+    
+      ret = chromeRegistry->ConvertChromeURL(mScratchUri);
+      if (NS_SUCCEEDED(ret)) {
+      
+        // get resolved spec
+        ret = mScratchUri->GetSpec(getter_Copies(newSpec));
+        if (NS_SUCCEEDED(ret)) urlSpec = newSpec;
+      }
+    }
+  }
+
+  nsStringKey completeKey(urlSpec);
 
   bundleCacheEntry_t* cacheEntry =
     (bundleCacheEntry_t*)mBundleMap.Get(&completeKey);
@@ -672,18 +689,19 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
 bundleCacheEntry_t *
 nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
-                                       nsOpaqueKey* aHashKey)
+                                       nsStringKey* aHashKey)
 {
   bundleCacheEntry_t *cacheEntry;
   
   if (mBundleMap.Count() < MAX_CACHED_BUNDLES) {
-    // create a new entry
+    // cache not full - create a new entry
     
     void *cacheEntryArena;
     PL_ARENA_ALLOCATE(cacheEntryArena, &mCacheEntryPool, sizeof(bundleCacheEntry_t));
     cacheEntry = (bundleCacheEntry_t*)cacheEntryArena;
       
   } else {
+    // cache is full
     // take the last entry in the list, and recycle it.
     cacheEntry = (bundleCacheEntry_t*)PR_LIST_TAIL(&mBundleCache);
       
@@ -702,13 +720,8 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
   cacheEntry->mBundle = aBundle;
   NS_ADDREF(cacheEntry->mBundle);
 
-  // need to make a copy of it for the hashkey
-  char* opaqueValue = (char*)PR_Malloc(sizeof (PRUint32)*3);
-  nsCRT::memcpy(opaqueValue, aHashKey->GetKey(), sizeof(PRUint32)*3);
+  cacheEntry->mHashKey = (nsStringKey*)aHashKey->Clone();
   
-  cacheEntry->mHashKey = new nsOpaqueKey(opaqueValue,
-                                         aHashKey->GetKeyLength());
-
   // insert the entry into the cache and map, make it the MRU
   mBundleMap.Put(cacheEntry->mHashKey, cacheEntry);
 
@@ -718,7 +731,6 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
 void
 nsStringBundleService::recycleEntry(bundleCacheEntry_t *aEntry)
 {
-  PR_Free(NS_CONST_CAST(char *,aEntry->mHashKey->GetKey()));
   delete aEntry->mHashKey;
   NS_RELEASE(aEntry->mBundle);
 }
