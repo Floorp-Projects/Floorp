@@ -29,10 +29,10 @@
 #include "nsRadioButton.h"
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
+#include "nsFileWidget.h"
 
 //#include "nsScrollbar.h"
 //#include "nsTextAreaWidget.h"
-//#include "nsFileWidget.h"
 //#include "nsListBox.h"
 //#include "nsComboBox.h"
 //#include "nsLookAndFeel.h"
@@ -179,6 +179,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCTextWidgetCID)) {
         inst = new nsTextWidget();
     }
+    else if (mClassID.Equals(kCFileWidgetCID)) {
+        inst = new nsFileWidget();
+    }
     
     
     
@@ -201,9 +204,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCComboBoxCID)) {
         inst = new nsComboBox();
-    }
-    else if (mClassID.Equals(kCFileWidgetCID)) {
-        inst = new nsFileWidget();
     }
     else if (mClassID.Equals(kCLookAndFeelCID)) {
         nsLookAndFeel *laf = new nsLookAndFeel();
@@ -238,10 +238,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     if (res != NS_OK) {
         delete inst;         
     }
-    else {
-      NS_RELEASE(inst);
-    }
-        
     return res;
 }  
 
