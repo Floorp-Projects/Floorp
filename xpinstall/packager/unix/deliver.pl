@@ -37,6 +37,7 @@
 #   * URLPath must have a trailing slash
 #   * if you are not building a release version no need to pass any args
 #   * pass in "buildwizard" as the last arg to build the wizard too
+#   * you must be in deliver.pl's dir when calling it since it assumes DEPTH
 #==============================================================================
 
 use Cwd;
@@ -120,7 +121,7 @@ chdir("$TREETOP/xpinstall/packager");
 system("perl pkgcp.pl -o unix -s $TREETOP/dist -d $STAGE -f $TREETOP/xpinstall/packager/packages-unix -v");
 spew("Completed copying build files");
 
-#// cll xptlink.pl to make big .xpt files/component
+#// call xptlink.pl to make big .xpt files/component
 system("perl xptlink.pl -o unix -s $TREETOP/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
