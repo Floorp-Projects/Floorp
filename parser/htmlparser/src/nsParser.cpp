@@ -463,12 +463,12 @@ eParseMode DetermineParseMode(nsParser& aParser) {
       theSubIndex=theBufCopy.Find("HTML4.0",PR_TRUE,theIndex+8);
       if(kNotFound<theSubIndex) {
         if(theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)
-          return eParseMode_navigator;
+          return eParseMode_quirks;
         else if((theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex)>kNotFound) ||
                 (theBufCopy.Find("LATIN1", PR_TRUE,theSubIndex) >kNotFound) ||
                 (theBufCopy.Find("SYMBOLS",PR_TRUE,theSubIndex) >kNotFound) ||
                 (theBufCopy.Find("SPECIAL",PR_TRUE,theSubIndex) >kNotFound))
-          return eParseMode_navigator; // XXX -HACK- Set the appropriate mode.
+          return eParseMode_quirks; // XXX -HACK- Set the appropriate mode.
         else
           return eParseMode_noquirks;
       }
@@ -490,7 +490,7 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   if(theModeStr) 
     if(0==nsCRT::strcasecmp(other,theModeStr))
       return eParseMode_other;    
-  return eParseMode_navigator;
+  return eParseMode_quirks;
 }
 
 
@@ -521,6 +521,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
           mParserContext->mDTD->WillBuildModel( aFilename,
                                                 PRBool(0==mParserContext->mPrevContext),
                                                 mParserContext->mSourceType,
+                                                mParserContext->mParseMode,
                                                 mSink);
         }//if        
       }//if

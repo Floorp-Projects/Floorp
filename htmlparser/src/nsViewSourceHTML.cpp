@@ -331,7 +331,7 @@ eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aC
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 

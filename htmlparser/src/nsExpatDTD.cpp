@@ -196,7 +196,7 @@ eAutoDetectResult nsExpatDTD::CanParse(nsString& aContentType, nsString& aComman
  * @param 
  * @return
  */
-NS_IMETHODIMP nsExpatDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aString,nsIContentSink* aSink){
+NS_IMETHODIMP nsExpatDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
