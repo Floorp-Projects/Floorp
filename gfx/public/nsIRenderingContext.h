@@ -981,6 +981,10 @@ struct nsBoundingMetrics {
           to follow the current one. Depending on the font, this
           could be greater than or less than the right bearing. */
 
+  nsBoundingMetrics() {
+    Clear();
+  }
+
   //////////
   // Utility methods and operators:
 

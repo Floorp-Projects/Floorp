@@ -289,9 +289,9 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize, 
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
-  nsIFrame* fisrtChild;
-  aForFrame->FirstChild(aPresContext, nsnull, &fisrtChild);
-  nsIFrame* childFrame = fisrtChild;
+  nsIFrame* firstChild;
+  aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
+  nsIFrame* childFrame = firstChild;
   while (childFrame) {
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
@@ -337,7 +337,7 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
     mathMLFrame->GetPreferredStretchSize(aPresContext, *aReflowState.rendContext,
                                          0, /* i.e., without embellishments */
                                          stretchDir, containerSize);
-    childFrame = fisrtChild;
+    childFrame = firstChild;
     while (childFrame) {
       nsIMathMLFrame* mathmlChild;
       childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathmlChild);
@@ -376,10 +376,12 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   GetEmHeight(fm, em);
 
   // we need to center around the axis
-  nscoord delta = PR_MAX(containerSize.ascent - axisHeight, 
-                         containerSize.descent + axisHeight);
-  containerSize.ascent = delta + axisHeight;
-  containerSize.descent = delta - axisHeight;
+  if (firstChild) { // do nothing for an empty <mfenced></mfenced>
+    nscoord delta = PR_MAX(containerSize.ascent - axisHeight, 
+                           containerSize.descent + axisHeight);
+    containerSize.ascent = delta + axisHeight;
+    containerSize.descent = delta - axisHeight;
+  }
 
   /////////////////
   // opening fence ...
@@ -413,7 +415,7 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
     firstTime = PR_FALSE;
   }
 
-  childFrame = fisrtChild;
+  childFrame = firstChild;
   while (childFrame) {
     nsHTMLReflowMetrics childSize(nsnull);
     GetReflowAndBoundingMetricsFor(childFrame, childSize, bm);
