@@ -59,23 +59,22 @@ int CToken::GetTokenCount(){return TokenCount-DelTokenCount;}
  *  
  *  @update gess 7/21/98
  */
-CToken::CToken(PRInt32 aTag) 
-: mNewlineCount(0), 
-  mLineNumber(0), 
-  mTypeID(aTag),
-  mUseCount(1),
-  mFlags(NS_HTMLTOKENS_UNKNOWNFORM)
-  // Note that the use count starts with 1 instead of 0. This
-  // is because of the assumption that any token created is in
-  // use and therefore does not require an explicit addref, or
-  // rather IF_HOLD. This will make sure that tokens created 
-  // on the stack do not accidently hit the arena recycler.
-{
+CToken::CToken(PRInt32 aTag) {
   // Tokens are allocated through the arena ( not heap allocated..yay ).
   // We, therefore, don't need this macro anymore..
 #ifdef MATCH_CTOR_DTOR 
   MOZ_COUNT_CTOR(CToken);
 #endif 
+  mAttrCount=0;
+  mNewlineCount=0;
+  mLineNumber = 0;
+  mTypeID=aTag;
+  // Note that the use count starts with 1 instead of 0. This
+  // is because of the assumption that any token created is in
+  // use and therefore does not require an explicit addref, or
+  // rather IF_HOLD. This, also, will make sure that tokens created 
+  // on the stack do not accidently hit the arena recycler.
+  mUseCount=1;
 
 #ifdef NS_DEBUG
   ++TokenCount;
@@ -128,7 +127,7 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
   for(i=0;i<theLen;++i){
     anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
   }
-  anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << 0 << nsEndl;
+  anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;
 }
 
 /**
@@ -141,19 +140,6 @@ void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
 void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
   anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
 }
-
-/**
- *  retrieve this tokens classname.  
- *  
- *  @update gess 3/25/98
- *  @return char* containing name of class
- */
-const char*  
-CToken::GetClassName(void) 
-{
-  return "token";
-}
-
 #endif
 
 
@@ -163,7 +149,7 @@ CToken::GetClassName(void)
  * @update	gess5/11/98
  * @return  reference to string containing string value
  */
-void CToken::GetSource(nsAString& anOutputString){
+void CToken::GetSource(nsString& anOutputString){
   anOutputString.Assign(GetStringValue());
 }
 
@@ -193,9 +179,7 @@ void CToken::SetTypeID(PRInt32 aTypeID) {
  *  @update gess 3/25/98
  *  @return int containing ordinal value
  */
-PRInt32 
-CToken::GetTypeID(void) 
-{
+PRInt32 CToken::GetTypeID(void) {
   return mTypeID;
 }
 
@@ -205,10 +189,8 @@ CToken::GetTypeID(void)
  *  @update gess 3/25/98
  *  @return int containing attribute count
  */
-PRInt16 
-CToken::GetAttributeCount(void)
-{
-  return 0;
+PRInt16  CToken::GetAttributeCount(void) {
+  return mAttrCount;
 }
 
 
@@ -219,18 +201,28 @@ CToken::GetAttributeCount(void)
  *  @update gess 3/25/98
  *  @return int value containing token type.
  */
-PRInt32  
-CToken::GetTokenType(void) 
-{
+PRInt32  CToken::GetTokenType(void) {
   return -1;
 }
+
+/**
+ *  retrieve this tokens classname.  
+ *  
+ *  @update gess 3/25/98
+ *  @return char* containing name of class
+ */
+const char*  CToken::GetClassName(void) {
+  return "token";
+}
+
 
 /**
  *  
  *  @update gess 3/25/98
  */
-void CToken::SelfTest(void) 
-{
+void CToken::SelfTest(void) {
+#ifdef _DEBUG
+#endif
 }
 
 
