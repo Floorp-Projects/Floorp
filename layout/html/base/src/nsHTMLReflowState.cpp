@@ -1951,7 +1951,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     const nsStyleTextReset* st;
     frame->GetStyleData(eStyleStruct_TextReset,
                         (const nsStyleStruct*&)st);
-    mFlags.mBlinks = (st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK);
+    mFlags.mBlinks = 
+      ((st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) != 0);
   }
 }
 
