@@ -405,8 +405,11 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       && (!child->GetNextSibling()
           || !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY))
       && !aDesiredSize.mComputeMEW;
+    // If we need to pull up content from the prev-in-flow then this is not just
+    // a height shrink. The prev in flow will have set the dirty bit.
     PRBool skipResizeHeightShrink = shrinkingHeightOnly
-      && child->GetSize().height <= aConfig.mColMaxHeight;
+      && child->GetSize().height <= aConfig.mColMaxHeight
+      && !(child->GetStateBits() & NS_FRAME_IS_DIRTY);
     if (!reflowNext && (skipIncremental || skipResizeHeightShrink)) {
       // This child does not need to be reflowed, but we may need to move it
       MoveChildTo(this, child, childOrigin);
@@ -516,15 +519,14 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
                      "We have to create a continuation, but the block doesn't want us to reflow it?");
 
         // We need to create a continuing column
-        nsIFrame* continuation;
-        nsresult rv = CreateNextInFlow(GetPresContext(), this, child, continuation);
+        nsresult rv = CreateNextInFlow(GetPresContext(), this, child, kidNextInFlow);
         
         if (NS_FAILED(rv)) {
           NS_NOTREACHED("Couldn't create continuation");
           break;
         }
         
-        continuation->AddStateBits(NS_BLOCK_SPACE_MGR);
+        kidNextInFlow->AddStateBits(NS_BLOCK_SPACE_MGR);
 
         // Do an initial reflow if we're going to reflow this thing.
         aKidReason = eReflowReason_Initial;
@@ -533,6 +535,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       if (columnCount >= aConfig.mBalanceColCount) {
         // No more columns allowed here. Stop.
         aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+        kidNextInFlow->AddStateBits(NS_FRAME_IS_DIRTY);
         
         // Move any of our leftover columns to our overflow list. Our
         // next-in-flow will eventually pick them up.
