@@ -102,7 +102,9 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
 
   NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
-                                   nsString &outString) = 0;
+                                   nsAString &outString) = 0;
+  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
+                                   PRUnichar **outString) = 0;
   NS_IMETHOD PIPBundleFormatStringFromName(const PRUnichar *name,
                                            const PRUnichar **params,
                                            PRUint32 numParams,
@@ -152,7 +154,9 @@ public:
   NS_METHOD Init();
 
   NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
-                                   nsString &outString);
+                                   nsAString &outString);
+  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
+                                   PRUnichar **outString);
   NS_IMETHOD PIPBundleFormatStringFromName(const PRUnichar *name,
                                            const PRUnichar **params,
                                            PRUint32 numParams,
@@ -173,7 +177,6 @@ private:
   void InstallLoadableRoots();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
-  char * GetPK11String(const PRUnichar *name, PRUint32 len);
   nsresult RegisterPSMContentListener();
   nsresult RegisterObservers();
   static int PR_CALLBACK PrefChangedCallback(const char* aPrefName, void* data);

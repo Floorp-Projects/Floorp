@@ -308,23 +308,33 @@ nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
 
 NS_IMETHODIMP
 nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
-                                      nsString &outString)
+                                      nsAString &outString)
 {
-  PRUnichar *ptrv = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
 
   outString.SetLength(0);
   if (mPIPNSSBundle && name) {
-    rv = mPIPNSSBundle->GetStringFromName(name, &ptrv);
+    nsXPIDLString result;
+    rv = mPIPNSSBundle->GetStringFromName(name, getter_Copies(result));
     if (NS_SUCCEEDED(rv)) {
-      outString = ptrv;
+      outString = result;
       rv = NS_OK;
     }
   }
-  if (ptrv)
-    nsMemory::Free(ptrv);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
+                                      PRUnichar **outString)
+{
+  if (!mPIPNSSBundle || !name) {
+    *outString = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  return mPIPNSSBundle->GetStringFromName(name, outString);
 }
 
 NS_IMETHODIMP
@@ -404,91 +414,61 @@ nsNSSComponent::InstallLoadableRoots()
   }
 }
 
-#define SHORT_PK11_STRING 33
-#define LONG_PK11_STRING  65
-
-char *
-nsNSSComponent::GetPK11String(const PRUnichar *name, PRUint32 len)
-{
-  nsresult rv;
-  nsString nsstr;
-  char *tmpstr = NULL;
-  char *str = NULL;
-  int tmplen;
-  str = (char *)PR_Malloc(len+1);
-  rv = GetPIPNSSBundleString(name, nsstr);
-  if (NS_FAILED(rv)) return NULL;
-  tmpstr = ToNewCString(nsstr);
-  if (!tmpstr) return NULL;
-  tmplen = strlen(tmpstr);
-  if (len > tmplen) {
-    memcpy(str, tmpstr, tmplen);
-    memset(str + tmplen, ' ', len - tmplen);
-  } else {
-    memcpy(str, tmpstr, len);
-  }
-  str[len] = '\0';
-  PR_Free(tmpstr);
-  return str;
-}
-
 nsresult
 nsNSSComponent::ConfigureInternalPKCS11Token()
 {
-  char *manufacturerID             = NULL;
-  char *libraryDescription         = NULL;
-  char *tokenDescription           = NULL;
-  char *privateTokenDescription    = NULL;
-  char *slotDescription            = NULL;
-  char *privateSlotDescription     = NULL;
-  char *fipsSlotDescription        = NULL;
-  char *fipsPrivateSlotDescription = NULL; 
+  nsXPIDLString manufacturerID;
+  nsXPIDLString libraryDescription;
+  nsXPIDLString tokenDescription;
+  nsXPIDLString privateTokenDescription;
+  nsXPIDLString slotDescription;
+  nsXPIDLString privateSlotDescription;
+  nsXPIDLString fipsSlotDescription;
+  nsXPIDLString fipsPrivateSlotDescription;
 
-  manufacturerID = GetPK11String(NS_LITERAL_STRING("ManufacturerID").get(), 
-                                 SHORT_PK11_STRING);
-  if (manufacturerID == NULL) goto loser;
-  libraryDescription = 
-              GetPK11String(NS_LITERAL_STRING("LibraryDescription").get(), 
-                            SHORT_PK11_STRING);
-  if (libraryDescription == NULL) goto loser;
-  tokenDescription = GetPK11String(NS_LITERAL_STRING("TokenDescription").get(), 
-                                   SHORT_PK11_STRING);
-  if (tokenDescription == NULL) goto loser;
-  privateTokenDescription = 
-              GetPK11String(NS_LITERAL_STRING("PrivateTokenDescription").get(), 
-                            SHORT_PK11_STRING);
-  if (privateTokenDescription == NULL) goto loser;
-  slotDescription = GetPK11String(NS_LITERAL_STRING("SlotDescription").get(), 
-                                  LONG_PK11_STRING);
-  if (slotDescription == NULL) goto loser;
-  privateSlotDescription = 
-              GetPK11String(NS_LITERAL_STRING("PrivateSlotDescription").get(), 
-                                   LONG_PK11_STRING);
-  if (privateSlotDescription == NULL) goto loser;
-  fipsSlotDescription = 
-              GetPK11String(NS_LITERAL_STRING("FipsSlotDescription").get(),
-                            LONG_PK11_STRING);
-  if (fipsSlotDescription == NULL) goto loser;
-  fipsPrivateSlotDescription = 
-          GetPK11String(NS_LITERAL_STRING("FipsPrivateSlotDescription").get(), 
-                        LONG_PK11_STRING);
-  if (fipsPrivateSlotDescription == NULL) goto loser;
+  nsresult rv;
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("ManufacturerID").get(),
+                             getter_Copies(manufacturerID));
+  if (NS_FAILED(rv)) return rv;
 
-  PK11_ConfigurePKCS11(manufacturerID, libraryDescription, tokenDescription,
-                       privateTokenDescription, slotDescription, 
-                       privateSlotDescription, fipsSlotDescription, 
-                       fipsPrivateSlotDescription, 0, 0);
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("LibraryDescription").get(),
+                             getter_Copies(libraryDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("TokenDescription").get(),
+                             getter_Copies(tokenDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("PrivateTokenDescription").get(),
+                             getter_Copies(privateTokenDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("SlotDescription").get(),
+                             getter_Copies(slotDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("PrivateSlotDescription").get(),
+                             getter_Copies(privateSlotDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("FipsSlotDescription").get(),
+                            getter_Copies(fipsSlotDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = GetPIPNSSBundleString(NS_LITERAL_STRING("FipsPrivateSlotDescription").get(),
+                             getter_Copies(fipsPrivateSlotDescription));
+  if (NS_FAILED(rv)) return rv;
+
+  PK11_ConfigurePKCS11(NS_LossyConvertUCS2toASCII(manufacturerID).get(),
+                       NS_LossyConvertUCS2toASCII(libraryDescription).get(),
+                       NS_LossyConvertUCS2toASCII(tokenDescription).get(),
+                       NS_LossyConvertUCS2toASCII(privateTokenDescription).get(),
+                       NS_LossyConvertUCS2toASCII(slotDescription).get(),
+                       NS_LossyConvertUCS2toASCII(privateSlotDescription).get(),
+                       NS_LossyConvertUCS2toASCII(fipsSlotDescription).get(),
+                       NS_LossyConvertUCS2toASCII(fipsPrivateSlotDescription).get(),
+                       0, 0);
   return NS_OK;
-loser:
-  PR_Free(manufacturerID);
-  PR_Free(libraryDescription);
-  PR_Free(tokenDescription);
-  PR_Free(privateTokenDescription);
-  PR_Free(slotDescription);
-  PR_Free(privateSlotDescription);
-  PR_Free(fipsSlotDescription);
-  PR_Free(fipsPrivateSlotDescription); 
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
