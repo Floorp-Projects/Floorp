@@ -262,7 +262,7 @@ class nsIMsgImapMailFolder : public nsISupports {
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGIMAPMAILFOLDER_IID)
 
   /* readonly attribute nsNativeFileSpec pathName; */
-  NS_IMETHOD GetPathName(nsNativeFileSpec* *aPathName) = 0;
+  NS_IMETHOD GetPathName(nsNativeFileSpec& aPathName) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
