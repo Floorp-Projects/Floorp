@@ -1978,26 +1978,17 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
   nsHTMLValue value;
   aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-  if (eHTMLUnit_Enumerated == value.GetUnit()) {  
-    switch (value.GetIntValue()) {
-      case NS_FORM_INPUT_TEXT:
-      case NS_FORM_INPUT_PASSWORD:
-      case NS_FORM_INPUT_FILE:
-        nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
-        break;
-      case NS_FORM_INPUT_IMAGE:
-        nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
-        nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-        nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
-        // fall through
-      default:
-        nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
-        break;
-    }
+  if (value.GetUnit() == eHTMLUnit_Enumerated &&
+      value.GetIntValue() == NS_FORM_INPUT_IMAGE) {
+    nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
+    nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+    nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+    // Images treat align as "float"
+    nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
   } else {
-    // No type attr means this is a text input
+    // Everything else treats align as "text-align"
     nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
-  }    
+  }
 
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
