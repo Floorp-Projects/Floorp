@@ -115,6 +115,11 @@
 
         [image compositeToPoint:imageFrame.origin operation:NSCompositeSourceOver];
     }
+    // shift down cellFrame by 1px to better align w/in rect. For some reason the default
+    // doesn't center correctly.
+    cellFrame.origin.y++;
+    cellFrame.size.height--;
+    
     [super drawWithFrame:cellFrame inView:controlView];
 }
 
