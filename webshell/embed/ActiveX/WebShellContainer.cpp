@@ -112,16 +112,22 @@ CWebShellContainer::MoveTo(PRInt32 aX, PRInt32 aY)
 
 
 NS_IMETHODIMP
-CWebShellContainer::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
+CWebShellContainer::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
 	return NS_OK;
 }
 
 
 NS_IMETHODIMP
-CWebShellContainer::GetBounds(nsRect& aResult)
+CWebShellContainer::GetContentBounds(nsRect& aResult)
 {
-	NG_TRACE_METHOD(CWebShellContainer::GetBounds);
+	NG_TRACE_METHOD(CWebShellContainer::GetContentBounds);
 	return NS_OK;
 }
 
@@ -129,9 +135,17 @@ CWebShellContainer::GetBounds(nsRect& aResult)
 NS_IMETHODIMP
 CWebShellContainer::GetWindowBounds(nsRect& aResult)
 {
+	NG_TRACE_METHOD(CWebShellContainer::GetWindowBounds);
 	return NS_OK;
 }
 
+
+NS_IMETHODIMP
+CWebShellContainer::IsIntrinsicallySized(PRBool& aResult)
+{
+    aResult = PR_FALSE;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 CWebShellContainer::Show()
@@ -445,7 +459,7 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
 // nsIStreamObserver implementation
 #ifdef NECKO
 NS_IMETHODIMP
-CWebShellContainer::OnStartRequest(nsISupports* aContext)
+CWebShellContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStartRequest(...)\n"));
@@ -453,7 +467,7 @@ CWebShellContainer::OnStartRequest(nsISupports* aContext)
 }
 
 NS_IMETHODIMP
-CWebShellContainer::OnStopRequest(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStopRequest(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
