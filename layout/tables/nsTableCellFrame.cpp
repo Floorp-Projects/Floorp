@@ -171,7 +171,7 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a body pseudo frame
-    nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
+    NS_NewBodyFrame(mContent, this, mFirstChild);
     mChildCount = 1;
 
     // Resolve style and set the style context
