@@ -1884,12 +1884,6 @@ public class Interpreter extends LabelTable {
                 // security domain.
                 cx.interpreterSecurityDomain = theData.securityDomain;
             }
-            /* debug only, will be going soon
-            catch (ArrayIndexOutOfBoundsException oob) {
-                System.out.println("OOB @ " + pc + "  " + oob + " in " + theData.itsName + " " + oob.getMessage());
-                throw oob;
-            }
-            */
             catch (RuntimeException jx) {
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
