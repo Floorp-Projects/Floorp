@@ -896,9 +896,10 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   margin-right: 0px;
   width: 8px;
   text-align: center;
+  list-style-image: url("chrome://global/skin/menu-arrow.gif");
 }
 
-.menu-left {
+.menu-iconic-left {
   color: inherit;
   padding: 0px;
   margin-top: 0px;
@@ -906,6 +907,7 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   margin-right: 2px;
   width: 13px;
   text-align: center;
+  list-style-image: inherit;
 }
 
 .menubar-left {
@@ -917,7 +919,7 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   margin-right: 2px;
 }
 
-.menu-text, .menu-accel {
+.menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel {
   color: inherit;
   padding: 0px;
   border: 0px;
@@ -926,7 +928,16 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   margin-right: 2px;
 }
 
+.menu-text {
+  padding-left: 15px;
+}
+
 .menu-accel {
+  margin-left: 4px;
+  padding-right: 14px;
+}
+
+.menu-iconic-accel {
   margin-left: 4px;
 }
 
@@ -939,84 +950,28 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   margin-right: 2px;
 }
 
-menuitem > .menu-right {
-  list-style-image: none;
-}
-
-menuitem > .menu-left {
-  list-style-image: none;
-}
-
-menuitem[checked="true"] > .menu-left {
+menuitem[checked="true"] {
   list-style-image: url("chrome://global/skin/menu-check.gif");
 }
 
-menuitem[checked="true"][disabled="true"] > .menu-left {
+menuitem[checked="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu-check-disabled.gif");
 }
 
-menuitem[checked="true"][menuactive="true"] > .menu-left {
+menuitem[checked="true"][menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu-check-hover.gif");
 }
 
-menu > .menu-right {
-  list-style-image: url("chrome://global/skin/menu-arrow.gif");
-}
-
-menu[disabled="true"] > .menu-right {
+.menu-right[disabled="true"] {
   list-style-image: url("chrome://global/skin/menu-arrow-disabled.gif");
 }
 
-menu[menuactive="true"][disabled="true"] > .menu-right {
+.menu-right[menuactive="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu-arrow-disabled.gif");
 }
 
-menu[menuactive="true"] > .menu-right {
+.menu-right[menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu-arrow-hover.gif");
-}
-
-
-/******** Rules for menus on the standard toolbars ***************/
-
-menu.standard {
-  color: #99CCCC;
-}
-
-menu.standard > .menu-right {
-  list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
-}
-
-menu.standard:hover > .menu-right {
-  list-style-image: url("chrome://global/skin/toolbar-menu-arrow-hover.gif");
-}
-
-menu.standard[disabled="true"] > .menu-right {
-  list-style-image: url("chrome://global/skin/toolbar-menu-arrow-disabled.gif");
-}
-
-menuitem.standard {
-  color: #99CCCC;
-}
-
-menuseparator.standard {
-  border-top: none;
-  border-bottom: 1px #99CCCC solid; 
-}
-
-menupopup.standard {
-  color: #99CCCC;
-  background-color: #003366;
-  border: 1px #99CCCC solid; 
-}
-
-menupopup > menu[menuactive="true"].standard {
-  color: #003366;
-  background-color: #99CCCC;
-}
-
-menupopup > menuitem[menuactive="true"].standard {
-  color: #003366;
-  background-color: #99CCCC;
 }
 
 

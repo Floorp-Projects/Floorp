@@ -11,27 +11,27 @@ box#sidebar-parent {
  * Rules for 'hiding' portions of the chrome for special
  * kinds of browser windows.
  */
-window[chromehidden~="menubar"] [chromeclass="menubar"] {
+window[chromehidden~="menubar"] .chromeclass-menubar {
 	display: none;
 }
 
-window[chromehidden~="toolbar"] [chromeclass="toolbar"] {
+window[chromehidden~="toolbar"] .chromeclass-toolbar {
         display: none;
 }
 
-window[chromehidden~="location"] [chromeclass="location"] {
+window[chromehidden~="location"] .chromeclass-location {
         display: none;
 }
 
-window[chromehidden~="directories"] [chromeclass="directories"] {
+window[chromehidden~="directories"] .chromeclass-directories {
         display: none;
 }
 
-window[chromehidden~="status"] [chromeclass="status"] {
+window[chromehidden~="status"] .chromeclass-status {
         display: none;
 }
 
-window[chromehidden~="extrachrome"] [chromeclass="extrachrome"] {
+window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
         display: none;
 }
 
@@ -114,7 +114,7 @@ iframe#content-frame {
  min-height: 0px;
 }
 
-input[type="text"]#urlbar {
+#urlbar {
    min-width: 10em;
 }
 
@@ -155,7 +155,7 @@ toolbar#PersonalToolbar:-moz-drop-marker {
    color: white;
 }
 
-toolbar#PersonalToolbar #personaltoolbar-endcap { 
+#personaltoolbar-endcap { 
 	background-color: #CCCCCC;
 	min-width: 68px;
 	max-width: 68px;

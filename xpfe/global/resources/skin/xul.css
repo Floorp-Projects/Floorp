@@ -109,13 +109,37 @@ box.toolbar-holder[collapsed="true"] {
 
 
 menubar > menu {
-  behavior: url("resource:/chrome/xulBindings.xml#menusOnMenuBar");
+  behavior: url("resource:/chrome/xulBindings.xml#menu-menubar");
 }
 
-menu,menuitem {
-  behavior: url("resource:/chrome/xulBindings.xml#menus");
+menubar > menu.menu-iconic {
+  behavior: url("resource:/chrome/xulBindings.xml#menu-menubar-iconic");
 }
 
+menu {
+  behavior: url("resource:/chrome/xulBindings.xml#menu");
+}
+
+menu.menu-iconic {
+  behavior: url("resource:/chrome/xulBindings.xml#menu-iconic");
+}
+
+menuitem {
+  behavior: url("resource:/chrome/xulBindings.xml#menuitem");
+}
+
+menuitem.menuitem-iconic {
+  behavior: url("resource:/chrome/xulBindings.xml#menuitem-iconic");
+}
+
+menuitem[type="checkbox"],menuitem[type="radio"] {
+  behavior: url("resource:/chrome/xulBindings.xml#menuitem-iconic");
+}
+
+menulist > menupopup > menuitem {
+  behavior: url("resource:/chrome/xulBindings.xml#menuitem-iconic");
+}
+  
 menupopup {
   /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
   display: none;

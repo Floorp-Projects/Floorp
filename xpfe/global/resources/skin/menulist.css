@@ -29,7 +29,7 @@
     }
     
 /* icon display frame */
-  menulist > .menu-icon 
+  .menulist-icon 
     {
       border-left         : 1px outset #CCCCCC;
       border-top          : 1px outset #CCCCCC;
@@ -37,7 +37,7 @@
       padding             : 2px 0px 2px 0px;
     }  
 
-  menulist[open="true"] > .menu-icon 
+  menulist[open="true"] > .menulist-icon 
     {
       border-left         : 1px inset #CCCCCC;
       border-top          : 1px inset #CCCCCC;
@@ -46,7 +46,7 @@
     }
   
 /* text display frame */
-  menulist > .menu-text 
+  menulist > .menulist-text 
     {
       padding             : 2px 4px 2px 4px;
       border-top          : 1px outset #CCCCCC;
@@ -54,7 +54,7 @@
       margin-right        : 0px;
     }
     
-  menulist[open="true"] > .menu-text 
+  menulist[open="true"] > .menulist-text 
     {
       border-top          : 1px inset #CCCCCC;
       border-bottom       : 1px solid #CCCCCC;
@@ -62,7 +62,7 @@
     }
 
 /* drop marker display frame */
-  menulist > .menu-dropmarker 
+  menulist > .menulist-dropmarker 
     {
       border-top          : 1px outset #CCCCCC;
       border-right        : 1px outset #CCCCCC;
@@ -72,12 +72,12 @@
       padding             : 2px;
     }
   
-  menulist[disabled="true"] > .menu-dropmarker
+  menulist[disabled="true"] > .menulist-dropmarker
     {
       list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
     }
 
-  menulist[open="true"] > .menu-dropmarker 
+  menulist[open="true"] > .menulist-dropmarker 
     {
       border-top          : 1px inset #CCCCCC;
       border-right        : 1px inset #CCCCCC;
@@ -96,7 +96,7 @@
     }
 
 /* icon display frame */
-  menulist[editable="true"] > .menu-icon 
+  .menulist-editable-icon 
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
       background-color    : white;
@@ -108,7 +108,7 @@
     }
 
 /* text display frame */    
-  menulist[editable="true"] > .menu-text 
+  .menulist-editable-text 
     {
       border-left         : none;
       border-top          : 1px inset #CCCCCC;
@@ -118,12 +118,12 @@
     }
 
 /* drop marker display frame */
-  menulist[editable="true"] > .menu-dropmarker 
+  .menu-editable-dropmarker 
     {
       border              : 1px outset #CCCCCC;
     }
 
-  menulist[editable="true"][open="true"] > .menu-dropmarker 
+  menulist[editable="true"][open="true"] > .menu-editable-dropmarker 
     {
       border              : 1px inset #CCCCCC;
     }
@@ -139,14 +139,6 @@
       padding             : 0px;
     }
     
-  menulist > menupopup > .internal-box
-    {
-      border-left         : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-      border-top          : 0px;
-    }
-    
   menulist > menupopup > menuseparator 
     {
       border-bottom       : 2px groove #CCCCCC;
@@ -160,17 +152,12 @@
       max-width: auto;
     }
 
-  menulist > menupopup > menuitem > .menu-left 
-    {
-      width               : 13px;
-    }
-
-  menulist > menupopup > menuitem[selected="true"] > .menu-left
+  .menu-left[selected="true"]
     {
       list-style-image    : url(chrome://global/skin/menu-check.gif);
     }
   
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-left
+  .menu-left[menuactive="true"][selected="true"]
     {
       list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
     }
