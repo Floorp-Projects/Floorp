@@ -50,13 +50,6 @@ ifndef DEBUG_AUTOCONF_XCOMPILE
 include $(topsrcdir)/config/common.mk
 
 #
-# Important internal static macros
-#
-OS_ARCH		:= $(subst /,_,$(shell uname -s))
-OS_RELEASE	:= $(shell uname -r)
-OS_TEST		:= $(shell uname -m)
-
-#
 # Tweak the default OS_ARCH and OS_RELEASE macros as needed.
 #
 ifeq ($(OS_ARCH),AIX)
