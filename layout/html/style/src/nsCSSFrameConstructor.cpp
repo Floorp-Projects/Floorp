@@ -1154,15 +1154,19 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*          aPres
     outerFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame);
   }
 
+  // The caption frame is a floater container
+  nsFrameConstructorSaveState floaterSaveState;
+  aState.PushFloaterContainingBlock(aNewCaptionFrame, floaterSaveState);
+
+  // Process the child content
   nsFrameItems childItems;
-  nsAbsoluteItems floatingKids(aNewCaptionFrame);
   ProcessChildren(aPresContext, aState, aContent, aNewCaptionFrame, PR_TRUE,
                   childItems);
   aNewCaptionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-  if (floatingKids.childList) {
+  if (aState.mFloatedItems.childList) {
     aNewCaptionFrame->SetInitialChildList(*aPresContext,
                                           nsLayoutAtoms::floaterList,
-                                          floatingKids.childList);
+                                          aState.mFloatedItems.childList);
   }
 
   return rv;
@@ -1329,9 +1333,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
       TableProcessChildren(aPresContext, aState, aContent, aNewGroupFrame,
                            childItems, aTableCreator);
     } else {
-        nsAbsoluteItems floatingKids(nsnull);
       ProcessChildren(aPresContext, aState, aContent, aNewGroupFrame, PR_FALSE, childItems);
-        NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
     }
     aNewGroupFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   }
@@ -1492,10 +1494,8 @@ nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*          aPres
   aNewColFrame->Init(*aPresContext, aContent, aParentFrame, 
                      aStyleContext, nsnull);
   nsFrameItems colChildItems;
-  nsAbsoluteItems floatingKids(nsnull);
   rv = ProcessChildren(aPresContext, aState, aContent, aNewColFrame,
                        PR_FALSE, colChildItems);
-  NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
   if (NS_FAILED(rv)) return rv;
   aNewColFrame->SetInitialChildList(*aPresContext, nsnull,
                                     colChildItems.childList);
@@ -1610,16 +1610,20 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
                           bodyPseudoStyle, nsnull);
 
   if (aProcessChildren) {
+    // The area frame is a floater container
+    nsFrameConstructorSaveState floaterSaveState;
+    aState.PushFloaterContainingBlock(aNewCellBodyFrame, floaterSaveState);
+
+    // Process the child content
     nsFrameItems childItems;
-    nsAbsoluteItems floaterList(aNewCellBodyFrame);
     rv = ProcessChildren(aPresContext, aState, aContent, aNewCellBodyFrame,
                          PR_TRUE, childItems);
     if (NS_FAILED(rv)) return rv;
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-    if (floaterList.childList) {
+    if (aState.mFloatedItems.childList) {
       aNewCellBodyFrame->SetInitialChildList(*aPresContext,
                                              nsLayoutAtoms::floaterList,
-                                             floaterList.childList);
+                                             aState.mFloatedItems.childList);
     }
   }
   aNewCellFrame->SetInitialChildList(*aPresContext, nsnull, aNewCellBodyFrame);
@@ -1685,10 +1689,8 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*          aPresContext,
     const nsStyleDisplay* childDisplay = (const nsStyleDisplay*)
       childStyleContext->GetStyleData(eStyleStruct_Display);
     if (IsTableRelated(childDisplay->mDisplay)) {
-      nsAbsoluteItems floaterList(nsnull);
       rv = ConstructFrame(aPresContext, aState, aChildContent, aParentFrame,
                           PR_FALSE, aChildItems);
-      NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
     } else {
       nsCOMPtr<nsIAtom> tag;
       aChildContent->GetTag(*getter_AddRefs(tag));
@@ -1704,7 +1706,6 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*          aPresContext,
         // if the parent is a table, put the form in the outer table frame
         const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
           aParentStyleContext->GetStyleData(eStyleStruct_Display);
-        nsAbsoluteItems floaterList(nsnull);
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
           nsIFrame* outerFrame; 
           aParentFrame->GetParent(&outerFrame);
@@ -1715,7 +1716,6 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*          aPresContext,
           rv = ConstructFrame(aPresContext, aState, aChildContent, aParentFrame, 
                               PR_FALSE, aChildItems);
         }
-        NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
       // wrap it in a table cell, row, row group, table if it is a valid tag or display
       // and not whitespace. For example we don't allow map, head, body, etc.
       } else { 
@@ -2684,7 +2684,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
 
       // Process the child content if requested
       nsFrameItems childItems;
-      nsAbsoluteItems floaterList(newFrame);
       if (processChildren) {
         rv = ProcessChildren(aPresContext, aState, aContent, newFrame,
                              PR_TRUE, childItems);
@@ -2698,13 +2697,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
 
       // Set the frame's initial child list
       newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-
-      // Set the frame's floating child list, too
-      if (floaterList.childList) {
-        newFrame->SetInitialChildList(*aPresContext,
-                                      nsLayoutAtoms::floaterList,
-                                      floaterList.childList);
-      }
     }
 
     // If the frame is positioned, then create a placeholder frame
