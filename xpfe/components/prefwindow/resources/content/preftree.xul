@@ -139,6 +139,11 @@
         </treeitem>
         <treeitem>
           <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-http.xul" label="&httpnetworking.label;"/> 
+          </treerow>
+        </treeitem>        
+        <treeitem>
+          <treerow>
             <treecell url="chrome://communicator/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
           </treerow>
         </treeitem>
