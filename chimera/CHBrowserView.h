@@ -145,9 +145,14 @@ enum {
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
             wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;
 
+-(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem;
+
 -(IBAction)cut:(id)aSender;
+-(BOOL)canCut;
 -(IBAction)copy:(id)aSender;
+-(BOOL)canCopy;
 -(IBAction)paste:(id)aSender;
+-(BOOL)canPaste;
 -(IBAction)delete:(id)aSender;
 -(IBAction)selectAll:(id)aSender;
 -(IBAction)undo:(id)aSender;

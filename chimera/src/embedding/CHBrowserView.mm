@@ -1367,16 +1367,40 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     clipboard->CutSelection();
 }
 
+-(BOOL)canCut
+{
+  PRBool canCut = PR_FALSE;
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->CanCutSelection(&canCut);
+  return canCut;
+}
+
 -(IBAction)copy:(id)aSender
 {
     nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
     clipboard->CopySelection();
 }
 
+-(BOOL)canCopy
+{
+  PRBool canCut = PR_FALSE;
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->CanCopySelection(&canCut);
+  return canCut;
+}
+
 -(IBAction)paste:(id)aSender
 {
     nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
     clipboard->Paste();
+}
+
+-(BOOL)canPaste
+{
+  PRBool canCut = PR_FALSE;
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->CanPaste(&canCut);
+  return canCut;
 }
 
 -(IBAction)delete:(id)aSender
@@ -1544,6 +1568,26 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   return dragAccepted;
 }
 
+
+-(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
+{
+  // update first responder items based on the selection
+  SEL action = [aMenuItem action];
+  if (action == @selector(cut:))
+    return [self canCut];    
+  else if (action == @selector(copy:))
+    return [self canCopy];
+  else if (action == @selector(paste:))
+    return [self canPaste];
+  else if (action == @selector(delete:))
+    return NO;
+  else if (action == @selector(undo:))
+    return YES;
+  else if (action == @selector(selectAll:))
+    return YES;
+  
+  return NO;
+}
 
 @end
 
