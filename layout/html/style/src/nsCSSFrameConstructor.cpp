@@ -10169,7 +10169,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       if (frame) {
         nsCOMPtr<nsIFrameManager> frameManager;
         shell->GetFrameManager(getter_AddRefs(frameManager));
-        frameManager->DebugVerifyStyleTree(aPresContext, frame);
+        frameManager->DebugVerifyStyleTree(frame);
       }
     } else {
       NS_WARNING("Unable to test style tree integrity -- no content node");
