@@ -76,11 +76,6 @@ public:
   // see if we have a mime info object representing this content type. The user over ride information is contained
   // in a in memory data source....
   nsresult GetMIMEInfoForMimeTypeFromDS(const char * aContentType, nsIMIMEInfo ** aMIMEInfo);
-  
-  // GetMIMEInfoForExtensionFromDS --> Given an extension, look up the user override information to 
-  // see if we have a mime info object representing this extension. The user over ride information is contained
-  // in a in memory data source....
-  nsresult GetMIMEInfoForExtensionFromDS(const char * aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
