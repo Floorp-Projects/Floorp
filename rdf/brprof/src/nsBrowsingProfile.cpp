@@ -146,7 +146,7 @@ nsBrowsingProfile::Init(const char* userProfileName)
                                           (nsISupports**)&gRDFService);
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetDataSource("resource:/res/samples/directory.xml", &gCategoryDB);
+        rv = gRDFService->GetDataSource("resource:/res/samples/directory.rdf", &gCategoryDB);
         if (NS_FAILED(rv)) return rv;
 
         // get all the properties we'll need:
