@@ -854,15 +854,48 @@ static char *intlmime_decode_q(const char *in, unsigned length)
   return NULL;
 }
 
-static PRBool intl_is_legal_utf8(const char *input, unsigned len)
+static PRBool intl_is_utf8(const char *input, unsigned len)
 {
   PRInt32 c;
+  /*
+   * Input which contains legal HZ sequences should not be detected
+   * as UTF-8.
+   */
+  enum { hz_initial, /* No HZ seen yet */
+         hz_escaped, /* Inside an HZ ~{ escape sequence */
+         hz_seen, /* Have seen at least one complete HZ sequence */
+         hz_notpresent /* Have seen something that is not legal HZ */
+  } hz_state;
 
+  hz_state = hz_initial;
   while (len) {
     c = (unsigned char)*input++;
     len--;
     if (c == 0x1B) return PR_FALSE;
+    if (c == '~') {
+      switch (hz_state) {
+      case hz_initial:
+      case hz_seen:
+        if (*input == '{') {
+          hz_state = hz_escaped;
+        } else if (*input == '~') {
+          /* ~~ is the HZ encoding of ~.  Skip over second ~ as well */
+          hz_state = hz_seen;
+          input++;
+          len--;
+        } else {
+          hz_state = hz_notpresent;
+        }
+        break;
+
+      case hz_escaped:
+        if (*input == '}') hz_state = hz_seen;
+        break;
+      }
+      continue;
+    }
     if ((c & 0x80) == 0) continue;
+    hz_state = hz_notpresent;
     if ((c & 0xE0) == 0xC0) {
       if (len < 1 || (*input & 0xC0) != 0x80 ||
         ((c & 0x1F)<<6) + (*input & 0x3f) < 0x80) {
@@ -888,6 +921,7 @@ static PRBool intl_is_legal_utf8(const char *input, unsigned len)
       return PR_FALSE;
     }
   }
+  if (hz_state == hz_seen) return PR_FALSE;
   return PR_TRUE;
 }
 
@@ -904,7 +938,8 @@ static void intl_copy_uncoded_header(char **output, const char *input,
   }
 
   // Copy as long as it's US-ASCII.  An ESC may indicate ISO 2022
-  while (len && (c = (unsigned char)*input++) != 0x1B && !(c & 0x80)) {
+  // A ~ may indicate it is HZ
+  while (len && (c = (unsigned char)*input++) != 0x1B && c != '~' && !(c & 0x80)) {
     *dest++ = c;
     len--;
   }
@@ -914,9 +949,9 @@ static void intl_copy_uncoded_header(char **output, const char *input,
   }
   input--;
 
-  // If not legal UTF-8, treat as default charset
+  // If not UTF-8, treat as default charset
   nsAutoString tempUnicodeString;
-  if (!intl_is_legal_utf8(input, len) &&
+  if (!intl_is_utf8(input, len) &&
       NS_SUCCEEDED(ConvertToUnicode(default_charset, nsCAutoString(input, len).get(), tempUnicodeString))) {
     NS_ConvertUCS2toUTF8 utf8_text(tempUnicodeString);
     PRInt32 output_len = utf8_text.Length();
@@ -1081,7 +1116,7 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
 
   // If no MIME encoded then do nothing otherwise decode the input.
   if (PL_strstr(header, "=?") ||
-      (default_charset && !intl_is_legal_utf8(header, strlen(header)))) {
+      (default_charset && !intl_is_utf8(header, strlen(header)))) {
 	  result = intl_decode_mime_part2_str(header, default_charset, override_charset);
   } else if (eatContinuations && 
              (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {
