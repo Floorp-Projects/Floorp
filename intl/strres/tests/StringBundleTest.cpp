@@ -22,6 +22,7 @@
 
 #define NS_IMPL_IDS
 
+#include "nsCOMPtr.h"
 #include "nsIPersistentProperties.h"
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
@@ -73,11 +74,9 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 #include "nsILocale.h"
-#include "nsILocaleFactory.h"
+#include "nsILocaleService.h"
 #include "nsLocaleCID.h"
 
-NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 //
 //
 //
@@ -85,21 +84,20 @@ nsILocale*
 get_applocale(void)
 {
 	nsresult			result;
-	nsILocaleFactory*	localeFactory;
 	nsILocale*			locale;
 	nsString*			category;
 	nsString*			value;
 	PRUnichar *lc_name_unichar;
 
-	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
-										(nsIFactory**)&localeFactory);
-	NS_ASSERTION(localeFactory!=NULL,"nsLocaleTest: factory_create_interface failed.");
-	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_create_interface failed");
+	// get a locale service 
+	nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &result);
+	NS_ASSERTION(localeService!=NULL,"nsLocaleTest: get locale service failed.");
+	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale service failed");
 
 	//
 	// test GetApplicationLocale
 	//
-	result = localeFactory->GetApplicationLocale(&locale);
+	result = localeService->GetApplicationLocale(&locale);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
 	NS_ASSERTION(locale!=NULL,"nsLocaleTest: factory_get_locale failed");
 
@@ -120,7 +118,6 @@ get_applocale(void)
 	delete category;
 	delete value;
 
-	localeFactory->Release();
     return locale;
 }
 
