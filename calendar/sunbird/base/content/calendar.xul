@@ -453,12 +453,12 @@
                      observes="month_view_command"/>
 
       <spacer flex="1"/>
-      <hbox id="throbber-box" align="center">
-         <button id="navigator-throbber2"
+
+      <toolbaritem id="throbber-box" align="center" pack="center">
+         <button id="navigator-throbber2" 
                  oncommand="openAboutDialog();"
-                 tooltiptext="&aboutCmd.label;"
-                 style="list-style-image: url('chrome://calendar/content/sunbird_small.png');"/>
-      </hbox>
+                 tooltiptext="&aboutCmd.label;"/>
+      </toolbaritem>
    </toolbar>
 </toolbox>
 

@@ -281,6 +281,21 @@
     -moz-image-region: rect(0px 96px 21px 64px);
   }
 
+/*--------------------------------------------------------------------
+ *   Throbber button
+ *-------------------------------------------------------------------*/
+
+#navigator-throbber2 {
+  -moz-appearance: none;
+  -moz-user-focus: ignore;
+  margin: 0 !important;
+  border: none !important;
+  padding: 0px !important;
+  min-width: 0;
+  background-color: transparent;
+  list-style-image: url('chrome://calendar/content/sunbird_small.png');
+}
+
 /*
 *****************************
  MultiWeek
