@@ -333,7 +333,7 @@ void nsSpecialFileSpec::operator = (Type aType)
         case App_PreferencesFile50:
             {
                 *this = nsSpecialFileSpec(App_PrefsDirectory50);
-                *this += "prefs50.js";
+                *this += "prefs.js";
                 break;
             }
             break;    
