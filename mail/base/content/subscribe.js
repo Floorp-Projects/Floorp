@@ -185,6 +185,7 @@ function SubscribeOnLoad()
   msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
   msgWindow.statusFeedback = gStatusFeedback;
   msgWindow.SetDOMWindow(window);
+  msgWindow.rootDocShell.allowAuth = true;
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {
