@@ -52,7 +52,6 @@ var gWindowManager = null;
 
 function HistoryWindowInit()
 {
-    gSearchBox = document.getElementById("search-box");
     HistoryCommonInit();
     gHistoryTree.focus();
 }
@@ -64,6 +63,7 @@ function HistoryCommonInit()
     gDeleteByDomain =   document.getElementById("menu_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");
     gHistoryStatus =    document.getElementById("statusbar-display");
+    gSearchBox = document.getElementById("search-box");
 
     var treeController = new nsTreeController(gHistoryTree);
 
