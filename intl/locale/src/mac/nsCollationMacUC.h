@@ -54,16 +54,16 @@ public:
   virtual ~nsCollationMacUC(); 
     
   NS_IMETHOD CompareString(const nsCollationStrength strength, 
-                           const nsString& string1, 
-                           const nsString& string2, 
+                           const nsAString& string1, 
+                           const nsAString& string2, 
                            PRInt32* result) ;
 
   NS_IMETHOD GetSortKeyLen(const nsCollationStrength strength, 
-                           const nsString& stringIn, 
+                           const nsAString& stringIn, 
                            PRUint32* outLen);
 
   NS_IMETHOD CreateRawSortKey(const nsCollationStrength strength, 
-                              const nsString& stringIn, 
+                              const nsAString& stringIn, 
                               PRUint8* key, PRUint32* outLen);
 
   NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
