@@ -4064,15 +4064,16 @@ PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode, nsCSSDeclaration* aDe
         if (eCSSUnit_Enumerated == yUnit) {
           PRInt32 xValue = values[4].GetIntValue();
           PRInt32 yValue = values[5].GetIntValue();
-          if (0 != (xValue & (BG_LEFT | BG_CENTER | BG_RIGHT))) {  // x is really an x value
-            if (0 != (yValue & (BG_LEFT | BG_RIGHT))) { // y is also an x value
-              return PR_FALSE;
-            }
+          if (0 != (xValue & (BG_LEFT | BG_RIGHT)) &&  // x is really an x value
+              0 != (yValue & (BG_LEFT | BG_RIGHT))) {  // y is also an x value
+            return PR_FALSE;
           }
-          else {  // x is a y value
-            if (0 != (yValue & (BG_TOP | BG_BOTTOM))) { // y is also a y value
-              return PR_FALSE;
-            }
+          if (0 != (xValue & (BG_TOP | BG_BOTTOM)) &&  // x is really an y value
+              0 != (yValue & (BG_TOP | BG_BOTTOM))) {  // y is also an y value
+            return PR_FALSE;
+          }
+          if (0 != (xValue & (BG_TOP | BG_BOTTOM)) ||  // x is really a y value
+              0 != (yValue & (BG_LEFT | BG_RIGHT))) {  // or y is really an x value
             PRInt32 holdXValue = xValue;
             xValue = yValue;
             yValue = holdXValue;
