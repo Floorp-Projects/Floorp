@@ -118,6 +118,7 @@ struct Activation : public gc_base {
 
 JSValue Context::readEvalFile(FILE* in, const String& fileName)
 {
+    Context cx(mWorld, mGlobal);
     String buffer;
     string line;
     LineReader inReader(in);
@@ -147,7 +148,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
             // list of zero or more statements
             ICodeModule* icm = genCode(parsedStatements, fileName);
             if (icm) {
-                result = interpret(icm, emptyArgs);
+                result = cx.interpret(icm, emptyArgs);
                 delete icm;
             }
 
