@@ -813,8 +813,6 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   PR_SetSocketOption(fd, &sockopt);
 #endif
   
-  nsNSSSocketInfo *infoObject = (nsNSSSocketInfo*)fd->secret;
-  
   status = fd->lower->methods->connect(fd->lower, addr, 
 #if defined(XP_BEOS)  // bug 70217
                                        PR_INTERVAL_NO_TIMEOUT);
@@ -831,12 +829,7 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
 #endif
   }
   
-  PRBool forceHandshake, forTLSStepUp;
-  infoObject->GetForceHandshake(&forceHandshake);
-  infoObject->GetForTLSStepUp(&forTLSStepUp);
-  
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect: forceHandshake = %d, forTLSStepUp = %d\n",
-                                    (void*)fd, forceHandshake, forTLSStepUp));
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect\n", (void*)fd));
 
 #if defined(XP_BEOS)  // bug 70217
  loser:
