@@ -6,6 +6,7 @@ typedef struct s_component {
 	BOOL	selected;
 	BOOL	invisible;
 	BOOL	launchapp;
+	BOOL	additional;
 	} COMPONENT;
 
 extern "C" __declspec(dllexport) 

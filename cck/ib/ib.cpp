@@ -545,9 +545,16 @@ void init_components()
 
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
-		if ((strstr(w->value, Components[i].name) == NULL) && (!(Components[i].selected && Components[i].invisible)))
+	{
+		if ((strstr(w->value, Components[i].name) == NULL))
+		{
+			if (!(Components[i].selected && Components[i].invisible))
 			Components[i].selected = FALSE;
-
+		}
+		else 
+			if (Components[i].additional)
+			Components[i].selected = TRUE;
+	}
 }
 /*Post Beta - we will use the DISABLED key.
 Now this is implemented the round about way here.
@@ -583,6 +590,8 @@ void invisible()
 			Cee.Format("C%d", componentOrder);
 			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
+			if (Components[i].additional && !(Components[i].launchapp) && !(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes", "SELECTED|ADDITIONAL", iniDstPath);
 			componentOrder++;
 		}
 		else

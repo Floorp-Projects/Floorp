@@ -49,6 +49,8 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,int in
 		comps[*compNum].selected = (strstr(attr, "SELECTED") != NULL);
 		comps[*compNum].invisible = (strstr(attr, "INVISIBLE") != NULL);
 		comps[*compNum].launchapp = (strstr(attr, "LAUNCHAPP") != NULL);
+		comps[*compNum].additional = (strstr(attr, "ADDITIONAL") != NULL);
+
 		
 		if (!(comps[*compNum].selected && comps[*compNum].invisible && invisibleCount))
 		{
