@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
-#include "nsMsgUtils.h"
+#include "nsMsgCompUtils.h"
 #include "nsIPref.h"
 #include "prmem.h"
 #include "nsMsgSend.h"

@@ -38,7 +38,7 @@
 #include "nsIMimeURLUtils.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgEncoders.h"
-#include "nsMsgUtils.h"
+#include "nsMsgCompUtils.h"
 #include "nsMsgI18N.h"
 
 #include "nsMsgPrompts.h"

@@ -20,7 +20,7 @@
 #include "nsMsgCompPrefs.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgSend.h"
-#include "nsMsgUtils.h"
+#include "nsMsgCompUtils.h"
 #include "nsIPref.h"
 #include "nsMsgEncoders.h"
 #include "nsMsgI18N.h"

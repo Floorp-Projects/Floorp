@@ -34,6 +34,7 @@ EXPORTS=    nsSmtpUrl.h             \
             nsMsgZapIt.h \
             nsMsgCreate.h \
             nsMsgSendLater.h \
+	    nsMsgCompUtils.h \
             $(NULL)
 
 ################################################################################
@@ -65,7 +66,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj		\
         		.\$(OBJDIR)\nsMsgDeliveryListener.obj \
         		.\$(OBJDIR)\nsMsgComposeStringBundle.obj \
         		.\$(OBJDIR)\nsMsgEncoders.obj \
-        		.\$(OBJDIR)\nsMsgUtils.obj \
+        		.\$(OBJDIR)\nsMsgCompUtils.obj \
         		.\$(OBJDIR)\nsMsgI18N.obj \
         		.\$(OBJDIR)\nsMsgAttachmentHandler.obj \
         		.\$(OBJDIR)\nsMsgPrompts.obj \

@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef _nsMsgUtils_H_
-#define _nsMsgUtils_H_
+#ifndef _nsMsgCompUtils_H_
+#define _nsMsgCompUtils_H_
 
 #include "nscore.h"
 #include "nsMsgSend.h"
@@ -105,5 +105,5 @@ PRBool      nsMsgMIMEGetConformToStandard (void);
 NS_END_EXTERN_C
 
 
-#endif /* _nsMsgUtils_H_ */
+#endif /* _nsMsgCompUtils_H_ */
 

@@ -24,7 +24,7 @@
 #include "nsIMimeURLUtils.h"
 #include "nsMsgEncoders.h"
 #include "nsMsgI18N.h"
-#include "nsMsgUtils.h"
+#include "nsMsgCompUtils.h"
 
 #include "MsgCompGlue.h"
 
