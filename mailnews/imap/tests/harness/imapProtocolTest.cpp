@@ -267,7 +267,7 @@ protected:
 
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
 	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
-	void PrepareToAddHeadersToMailDB(const nsMsgKeyArray &keysToFetch, mailbox_spec *boxSpec);
+	void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch, mailbox_spec *boxSpec);
 
 };
 
@@ -366,7 +366,9 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		// if we pass in PR_TRUE for upgrading, the db code will ignore the summary out of date problem
+		// for now.
+		rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &mailDB, PR_TRUE);
 	}
 //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) 
@@ -462,12 +464,13 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 		}
 	   	if (keysToFetch.GetSize())
     	{			
-            PrepareToAddHeadersToMailDB(keysToFetch, aSpec);
+            PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
     	}
     	else 
     	{
             // let the imap libnet module know that we don't need headers
-            m_IMAP4Protocol->NotifyHdrsToDownload(NULL, 0);
+			if (aProtocol)
+				aProtocol->NotifyHdrsToDownload(NULL, 0);
 			// wait until we can get body id monitor before continuing.
 //			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, TRUE);
 			// I think the real fix for this is to seperate the header ids from body id's.
@@ -563,7 +566,7 @@ void nsIMAP4TestDriver::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKe
 	}
 }
 
-void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(const nsMsgKeyArray &keysToFetch,
+void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch,
                                                 mailbox_spec *boxSpec)
 {
     PRUint32 *theKeys = (PRUint32 *) PR_Malloc( keysToFetch.GetSize() * sizeof(PRUint32) );
@@ -601,11 +604,13 @@ void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(const nsMsgKeyArray &keysToF
 	        GetParseMailboxState()->BeginParsingFolder(0);
 #endif // 0 hook up parsing later.
 	        // the imap libnet module will start downloading message headers imap.h
-	        m_IMAP4Protocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
+			if (aProtocol)
+				aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
         }
         else
         {
-            m_IMAP4Protocol->NotifyHdrsToDownload(NULL, 0);
+			if (m_IMAP4Protocol)
+	            m_IMAP4Protocol->NotifyHdrsToDownload(NULL, 0);
         }
     }
 }
