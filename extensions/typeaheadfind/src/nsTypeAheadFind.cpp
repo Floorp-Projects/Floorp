@@ -147,6 +147,7 @@ nsTypeAheadFind::nsTypeAheadFind():
   mLinksOnlyPref(PR_FALSE), mStartLinksOnlyPref(PR_FALSE),
   mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), mCaretBrowsingOn(PR_FALSE),
   mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE),
+  mAllTheSameChar(PR_TRUE),
   mLinksOnlyManuallySet(PR_FALSE), mIsFindingText(PR_FALSE),
   mIsMenuBarActive(PR_FALSE), mIsMenuPopupActive(PR_FALSE),
   mIsFirstVisiblePreferred(PR_FALSE), mIsIMETypeAheadActive(PR_FALSE),
@@ -783,8 +784,7 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
   else if (bufferLength > 0) {
     if (mTypeAheadBuffer.First() != aChar) {
       mRepeatingMode = eRepeatingNone;
-    } else if (bufferLength == 1) {
-      mRepeatingMode = eRepeatingChar;
+      mAllTheSameChar = PR_FALSE;
     }
   }
 
@@ -873,16 +873,11 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     }
 
 #ifndef NO_LINK_CYCLE_ON_SAME_CHAR
-    if (NS_FAILED(rv) && !mLiteralTextSearchOnly &&
-        mRepeatingMode == eRepeatingChar) {
+    if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mAllTheSameChar) {
+      mRepeatingMode = eRepeatingChar;
       mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
       rv = FindItNow(nsnull, PR_TRUE, PR_TRUE, mIsFirstVisiblePreferred);
     }
-    else {
-      // Not using repeated character find
-      mRepeatingMode = eRepeatingNone;
-    }
-
 #endif
   }
 
@@ -1912,6 +1907,7 @@ nsTypeAheadFind::CancelFind()
   mBadKeysSinceMatch = 0;
   mIsBackspaceProtectOn = PR_FALSE;
   mLastBadChar = 0;
+  mAllTheSameChar = PR_TRUE; // Until at least 2 different chars are typed
 
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(mFocusedWindow));
   if (mManualFindWindows->IndexOf(windowSupports) >= 0) {

@@ -199,6 +199,9 @@ protected:
   PRBool mCaretBrowsingOn;
   PRPackedBool mLiteralTextSearchOnly;
   PRPackedBool mDontTryExactMatch;
+  // mAllTheSame Char starts out PR_TRUE, becomes false when 
+  // at least 2 different chars typed
+  PRPackedBool mAllTheSameChar;
   // mLinksOnlyManuallySet = PR_TRUE when the user has already 
   // typed / or '. This allows the next / or ' to get searched for.
   PRPackedBool mLinksOnlyManuallySet;
