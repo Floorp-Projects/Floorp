@@ -616,27 +616,6 @@ function UpdateSortIndicator(column,sortDirection)
   // this is obsolete
 }
 
-function SortFolderPane(column)
-{
-  var node = FindInSidebar(window, column);
-  if(!node)
-  {
-    dump('Couldnt find sort column\n');
-    return false;
-  }
-
-  try 
-  {
-    var folderTree = GetFolderTree();
-    folderTree.treeBoxObject.view.cycleHeader(column, node);
-  }
-  catch (ex) 
-  {
-    dump("failed to cycle header: " + ex + "\n");
-  }
-  return true;
-}
-
 function GetSelectedFolderResource()
 {
     var folderTree = GetFolderTree();

@@ -704,8 +704,6 @@ function OnLoadFolderPane()
     }
     folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
 
-    SortFolderPane("folderNameCol");
-
     //Add folderDataSource and accountManagerDataSource to folderPane
     accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
     folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);

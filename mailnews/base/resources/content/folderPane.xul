@@ -122,7 +122,9 @@
                    persist="width"
                    ignoreincolumnpicker="true"
                    primary="true"
-                   sort="?folderTreeNameSort"/>
+                   sort="?folderTreeNameSort"
+                   sortActive="true"
+                   sortDirection="ascending"/>
       <splitter class="tree-splitter"/>
       <treecol id="folderUnreadCol"
                    persist="hidden width"
