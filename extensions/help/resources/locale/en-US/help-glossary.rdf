@@ -67,12 +67,13 @@
         <rdf:li> <rdf:Description nc:name="object signing" nc:link="glossary.html#object_signing"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="object-signing certificate" nc:link="glossary.html#object-signing_certificate"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Online Certificate Status Protocol (OCSP)" nc:link="glossary.html#Online_Certificate_Status_Protocol"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="P3P" nc:link="glossary.html#p3p"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#password-based_authentication"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Password Manager" nc:link="glossary.html#Password_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Personal Toolbar" nc:link="glossary.html#personal_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#PKCS_11"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#PKCS_11_module"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="Platform for Privacy Preferences (P3P)" nc:link="glossary.html#p3p"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Platform for Privacy Preferences (P3P)" nc:link="glossary.html#platform_for_privacy_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="plug-in" nc:link="glossary.html#plug-in"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Post Office Protocol (POP)" nc:link="glossary.html#POP_glossary"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.html#private_key"/> </rdf:li>
