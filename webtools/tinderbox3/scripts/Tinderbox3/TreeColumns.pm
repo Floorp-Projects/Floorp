@@ -110,6 +110,7 @@ sub column_header {
 }
 
 sub column_header_2 {
+  return "";
 }
 
 sub cell {
