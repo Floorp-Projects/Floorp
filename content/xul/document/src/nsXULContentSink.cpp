@@ -40,6 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsForwardReference.h"
+#include "nsIChromeRegistry.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIContent.h"
@@ -116,6 +117,7 @@ static NS_DEFINE_CID(kXULContentUtilsCID,       NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,       NS_XULDOCUMENTINFO_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,        NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,    NS_XULTEMPLATEBUILDER_CID);
+static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -187,6 +189,7 @@ protected:
     void PushNameSpacesFrom(const nsIParserNode& aNode);
     void PopNameSpaces(void);
     nsresult GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace);
+    NS_IMETHOD GetChromeOverlays();
 
     nsVoidArray mNameSpaceStack;
     
@@ -299,6 +302,7 @@ protected:
 
     // Overlays
     nsCOMPtr<nsIDocument> mDocument;       // [OWNER]
+    nsCOMPtr<nsIDocument> mActualDocument;
     nsIParser*            mParser;         // [OWNER] We use regular pointer b/c of funky exports on nsIParser
     
     PRInt32            mUnprocessedOverlayCount;
@@ -882,6 +886,9 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
       
         // We're about to finish parsing. Now we want to kick off the processing
         // of our child overlays.
+
+        GetChromeOverlays();
+
         PRInt32 count;
         if ((count = mOverlayArray.Count()) != 0) {
             // Block the parser. It will only be unblocked after all
@@ -1270,6 +1277,8 @@ XULContentSinkImpl::Init(nsIDocument* aDocument)
         return NS_ERROR_NULL_POINTER;
     
     nsresult rv;
+
+    mActualDocument = aDocument;
 
     // We could potentially be an overlay; if we are, then our
     // nsIXULChildDocument interface will have a content sink set.
@@ -2497,6 +2506,60 @@ XULContentSinkImpl::UpdateOverlayCounters(PRInt32 aDelta)
 
     return NS_OK;
 }
+
+NS_IMETHODIMP XULContentSinkImpl::GetChromeOverlays()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mActualDocument, &rv);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIChannel> channel;
+  if (NS_FAILED(xuldoc->GetChannel(getter_AddRefs(channel))))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(channel->GetOriginalURI(getter_AddRefs(uri))))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> oe;
+  reg->GetOverlays(uri, getter_AddRefs(oe));
+
+  if (!oe)
+    return NS_OK;
+
+  PRBool moreElements;
+  oe->HasMoreElements(&moreElements);
+
+  while (moreElements)
+  {
+    nsCOMPtr<nsISupports> next;
+    oe->GetNext(getter_AddRefs(next));
+    if (!next)
+      return NS_OK;
+
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(next);
+    if (!uri)
+      return NS_OK;
+
+    char *spec;
+    uri->GetSpec(&spec);
+
+    nsString *str = new nsString(spec);
+
+    mOverlayArray.AppendElement(str);
+
+    oe->HasMoreElements(&moreElements);
+  }
+
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 

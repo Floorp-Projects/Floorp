@@ -43,6 +43,7 @@ class nsISupportsArray;
 class nsIRDFResource;
 class nsIDOMElement;
 class nsIDOMHTMLFormElement;
+class nsIChannel;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -99,6 +100,8 @@ public:
   NS_IMETHOD AddForwardReference(nsForwardReference* aForwardReference) = 0;
 
   NS_IMETHOD ResolveForwardReferences() = 0;
+
+  NS_IMETHOD GetChannel(nsIChannel **aResult) = 0;
 };
 
 // factory functions
