@@ -40,7 +40,7 @@ nsTableCol::nsTableCol(nsIAtom* aTag)
   : nsTableContent(aTag),
   mColGroup(0),
   mColIndex(0),
-  mRepeat(0)
+  mRepeat(1)
 {
   Init();
 }
@@ -49,7 +49,7 @@ nsTableCol::nsTableCol()
 : nsTableContent(NS_NewAtom(nsTablePart::kColTagString)),
   mColGroup(0),
   mColIndex(0),
-  mRepeat(0)
+  mRepeat(1)
 {
   Init();
 }
@@ -58,7 +58,7 @@ nsTableCol::nsTableCol (PRBool aImplicit)
   : nsTableContent(NS_NewAtom(nsTablePart::kColTagString)),
   mColGroup(0),
   mColIndex(0),
-  mRepeat(0)
+  mRepeat(1)
 {
   mImplicit = aImplicit;
   Init();

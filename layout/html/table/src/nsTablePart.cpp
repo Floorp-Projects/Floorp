@@ -41,9 +41,11 @@ static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
 static PRBool gsNoisyRefs = PR_FALSE;
+static PRBool gsDebugWarnings = PR_TRUE;
 #else
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
+static const PRBool gsDebugWarnings = PR_FALSE;
 #endif
 
 const char *nsTablePart::kCaptionTagString="CAPTION";
@@ -174,9 +176,11 @@ nsTablePart::AppendChildTo (nsIContent * aContent, PRBool aNotify)
   nsresult rv = aContent->QueryInterface(kITableContentIID, 
                                          (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
   if (NS_FAILED(rv))
-  { // create an implicit cell and return the result of adding it to the table
-    NS_ASSERTION(PR_FALSE, "non-table content insertion not implemented");
-    return NS_ERROR_FAILURE;
+  { // hold onto the non-table content, but do nothing with it
+    if (PR_TRUE==gsDebugWarnings)
+      printf ("non-table content inserted into table.");
+    rv = nsHTMLContainer::AppendChildTo(aContent, aNotify);
+    return rv;
   }
   else
   {
@@ -389,20 +393,31 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
   nsIAtom * tBodyTag = NS_NewAtom(kRowGroupBodyTagString); // tBodyTag: REFCNT++
   for (childIndex = 0; childIndex < childCount; childIndex++)
   {
-    nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex); // tableChild: REFCNT++
+    nsITableContent *tableContentInterface = nsnull;
+    nsIContent * child = ChildAt(childIndex); // tableChild: REFCNT++
+    nsresult rv = child->QueryInterface(kITableContentIID, 
+                                         (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+    if (NS_FAILED(rv))
+    {
+      NS_RELEASE(child);                                             // tableChild: REFCNT-- (a)
+      continue;
+    }
+    nsTableContent *tableChild = (nsTableContent *)tableContentInterface;
     const int tableChildType = tableChild->GetType();
     // if we've found caption or colgroup, then just skip it and keep going
     if ((tableChildType == nsITableContent::kTableCaptionType) ||
         (tableChildType == nsITableContent::kTableColGroupType))
     {
-      NS_RELEASE(tableChild);                                             // tableChild: REFCNT-- (a)
+      NS_RELEASE(child);                                             // tableChild: REFCNT-- (b)
+      NS_RELEASE(tableContentInterface);                                    // tableContentInterface: REFCNT--
       continue;
     }
     // if we've found a row group, our action depends on what kind of row group
     else if (tableChildType == nsITableContent::kTableRowGroupType)
     {
       nsIAtom * tableChildTag = tableChild->GetTag();
-      NS_RELEASE(tableChild);                                             // tableChild: REFCNT-- (b)
+      NS_RELEASE(child);                                             // tableChild: REFCNT-- (c)
+      NS_RELEASE(tableContentInterface);                                    // tableContentInterface: REFCNT--
       // if aContent is a header and the current child is a header, keep going
       if (tHeadTag==rowGroupTag && tHeadTag==tableChildTag)
       {
@@ -434,7 +449,8 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
     // otherwise we're already at the right spot, so stop
     else
     {
-      NS_RELEASE(tableChild);                                           // tableChild: REFCNT-- (c)
+      NS_RELEASE(child);                                           // tableChild: REFCNT-- (d)
+      NS_RELEASE(tableContentInterface);                                    // tableContentInterface: REFCNT--
       break;
     }
   }
@@ -465,9 +481,18 @@ PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
   int childCount = ChildCount ();
   for (childIndex = 0; childIndex < childCount; childIndex++)
   {
-    nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex); // tableChild: REFCNT++
-    const int tableChildType = tableChild->GetType();
-    NS_RELEASE(tableChild);                                             // tableChild: REFCNT--
+    nsIContent *child = ChildAt(childIndex);                            // child: REFCNT++
+    nsITableContent *tableContentInterface = nsnull;
+    nsresult rv = child->QueryInterface(kITableContentIID, 
+                                         (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+    if (NS_FAILED(rv))
+    {
+      NS_RELEASE(child);
+      continue;
+    }
+    const int tableChildType = tableContentInterface->GetType();
+    NS_RELEASE(child);                                                  // tableChild: REFCNT--
+    NS_RELEASE(tableContentInterface); 
     if (!((tableChildType == nsITableContent::kTableCaptionType) ||
          (tableChildType == nsITableContent::kTableColGroupType)))
       break;
@@ -513,13 +538,22 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
   int index = ChildCount ();
   while ((0 < index) && (PR_FALSE==foundColGroup))
   {
-    nsIContent *child = ChildAt (--index);    // child: REFCNT++
-    if (nsnull != child)
+    nsITableContent *tableContentInterface = nsnull;
+    nsIContent *child = ChildAt (--index);                          // child: REFCNT++
+    nsresult rv = child->QueryInterface(kITableContentIID, 
+                                         (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+    NS_RELEASE(child);                                            // tableChild: REFCNT-- (a)
+    if (NS_FAILED(rv))
     {
-      group = (nsTableColGroup *)child;
-      foundColGroup = (PRBool)
-        (group->GetType()==nsITableContent::kTableColGroupType);
-      NS_RELEASE(child);                      // child: REFCNT--
+      continue;
+    }
+
+    group = (nsTableColGroup *)tableContentInterface;
+    foundColGroup = (PRBool)
+      (group->GetType()==nsITableContent::kTableColGroupType);
+    if (PR_FALSE==foundColGroup)
+    { // release all the table contents that are not a col group
+      NS_RELEASE(tableContentInterface);                                    // tableContentInterface: REFCNT-- (a)
     }
   }
   PRBool groupIsImplicit = PR_FALSE;
@@ -537,6 +571,7 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
   if (NS_OK==rv)
     rv = group->AppendChildTo (aContent, PR_FALSE);
 
+  NS_IF_RELEASE(group);                                    // tableContentInterface: REFCNT-- (b)
   return (PRBool)(NS_OK==rv);
 }
 
@@ -553,9 +588,17 @@ PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
   int childCount = ChildCount ();
   for (childIndex = 0; childIndex < childCount; childIndex++)
   {
-    nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex);
-    const int tableChildType = tableChild->GetType();
-    NS_RELEASE(tableChild);
+    nsITableContent *tableContentInterface = nsnull;
+    nsIContent *child = ChildAt (childIndex);                          // child: REFCNT++
+    nsresult rv = child->QueryInterface(kITableContentIID, 
+                                         (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+    NS_RELEASE(child);                                            // tableChild: REFCNT-- (a)
+    if (NS_FAILED(rv))
+    {
+      continue;
+    }
+    const int tableChildType = tableContentInterface->GetType();
+    NS_RELEASE(tableContentInterface);
     if (tableChildType != nsITableContent::kTableCaptionType)
       break;
   }

@@ -574,9 +574,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       // need to find the generic way to stamp out this content, and ::AppendChildTo it
       // this might be ok.  no matter what my mcontent is, I know it needs a colgroup as a kid?
 
-      lastColGroup = new nsTableColGroup (PR_TRUE);
-      // XXX: how do I know whether AppendChildTo should notify or not?
-      mContent->AppendChildTo(lastColGroup, PR_FALSE);  // was AppendColGroup
+      lastColGroup = new nsTableColGroup (PR_TRUE);   // create an implicit colgroup
+      // XXX: instead of Append, maybe this should be insertAt(0)?
+      mContent->AppendChildTo(lastColGroup, PR_FALSE);  // add the implicit colgroup to my content
       NS_ADDREF(lastColGroup);                        // ADDREF a: lastColGroup++
       // Resolve style for the child
       nsIStyleContext* colGroupStyleContext =
@@ -616,10 +616,108 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
 
     PRInt32 excessColumns = GetColCount() - actualColumns;
     for ( ; excessColumns > 0; excessColumns--)
-    {//QQQ
+    { //QQQ
       // need to find the generic way to stamp out this content, and ::AppendChildTo it
       nsTableCol *col = new nsTableCol(PR_TRUE);
+      NS_ADDREF(col);
       lastColGroup->AppendChildTo (col, PR_FALSE);
+    }
+    NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
+    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
+  }
+}
+
+/** sum the columns represented by all nsTableColGroup objects
+  * if the cell map says there are more columns than this, 
+  * add extra implicit columns to the content tree.
+  */
+void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
+                                       nsIPresContext*      aPresContext,
+                                       nsReflowMetrics&     aDesiredSize,
+                                       const nsReflowState& aReflowState,
+                                       nsReflowStatus&      aStatus)
+{
+
+  if (nsnull!=mCellMap)
+    return; // we already have a cell map so this makes no sense
+
+  PRInt32 actualColumns = 0;
+  nsTableColGroupFrame *lastColGroupFrame = nsnull;
+  nsIFrame * firstRowGroupFrame=nsnull;
+  nsIFrame * prevSibFrame=nsnull;
+  nsIFrame * childFrame=mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
+    {
+      PRInt32 numCols = ((nsTableColGroupFrame*)childFrame)->GetColumnCount();
+      actualColumns += numCols;
+      lastColGroupFrame = (nsTableColGroupFrame *)childFrame;
+      if (actualColumns > aColIndex)
+        break;  // we gave enough col frames at this point
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
+             NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
+             NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
+    {
+      firstRowGroupFrame = childFrame;
+      break;
+    }
+    prevSibFrame = childFrame;
+    childFrame->GetNextSibling(childFrame);
+  }    
+  if (actualColumns <= aColIndex)
+  {
+    nsTableColGroup *lastColGroup=nsnull;
+    if (nsnull==lastColGroupFrame)
+    {
+      lastColGroup = new nsTableColGroup (PR_TRUE);     // create an implicit colgroup
+      mContent->AppendChildTo(lastColGroup, PR_FALSE);  // add the implicit colgroup to my content
+      NS_ADDREF(lastColGroup);                          // ADDREF a: lastColGroup++
+      // Resolve style for the child
+      nsIStyleContext* colGroupStyleContext =
+        aPresContext->ResolveStyleContextFor(lastColGroup, this, PR_TRUE);      // kidStyleContext: REFCNT++
+      nsIContentDelegate* kidDel = nsnull;
+      kidDel = lastColGroup->GetDelegate(aPresContext);                         // kidDel: REFCNT++
+      nsresult rv = kidDel->CreateFrame(aPresContext, lastColGroup, this,
+                                        colGroupStyleContext, (nsIFrame *&)lastColGroupFrame);
+      NS_RELEASE(kidDel);                                                       // kidDel: REFCNT--
+      NS_RELEASE(colGroupStyleContext);                                         // kidStyleContenxt: REFCNT--
+
+      // hook lastColGroupFrame into child list
+      if (nsnull==firstRowGroupFrame)
+      { // make lastColGroupFrame the last frame
+        nsIFrame *lastChild=nsnull;
+        LastChild(lastChild);
+        lastChild->SetNextSibling(lastColGroupFrame);
+      }
+      else
+      { // insert lastColGroupFrame before the first row group frame
+        if (nsnull!=prevSibFrame)
+        { // lastColGroupFrame is inserted between prevSibFrame and lastColGroupFrame
+          prevSibFrame->SetNextSibling(lastColGroupFrame);
+        }
+        else
+        { // lastColGroupFrame is inserted as the first child of this table
+          mFirstChild = lastColGroupFrame;
+        }
+        lastColGroupFrame->SetNextSibling(firstRowGroupFrame);
+      }
+      mChildCount++;
+    }
+    else
+    {
+      lastColGroupFrame->GetContent((nsIContent *&)lastColGroup);  // ADDREF b: lastColGroup++
+    }
+
+    PRInt32 excessColumns = aColIndex - actualColumns;
+    for ( ; excessColumns >= 0; excessColumns--)
+    {
+      nsTableCol *col = new nsTableCol(PR_TRUE);
+      NS_ADDREF(col);
+      lastColGroup->AppendChildTo(col, PR_FALSE);
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
     lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -1442,6 +1540,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
   nsReflowReason  reflowReason = aReflowState.reason;
+  nsIContent * prevKid; // do NOT hold a reference for this temp pointer!
 
   /* assumes that Table's children are in the following order:
    *  Captions
@@ -1456,6 +1555,14 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       result = NS_FRAME_COMPLETE;
       break;
     }
+
+    if (kid==prevKid)
+    { // we just saw this kid, but in it's processing someone inserted something in front of it
+      // (probably a colgroup).  So don't process it twice.
+      kidIndex++;
+      continue;
+    }
+    prevKid = kid;
 
     mLastContentIsComplete = PR_TRUE;
 

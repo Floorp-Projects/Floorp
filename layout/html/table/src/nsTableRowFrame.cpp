@@ -20,10 +20,12 @@
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsIHTMLAttributes.h"
+#include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
+#include "nsHTMLTagContent.h"
 #include "nsTableFrame.h"
-#include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIView.h"
 #include "nsIPtr.h"
@@ -500,6 +502,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize;
   PRInt32   kidIndex = 0;
+  PRInt32   colIndex = -1;
   nsIFrame* prevKidFrame = nsnull;
   nscoord   maxTopMargin = 0;
   nscoord   maxBottomMargin = 0;
@@ -513,6 +516,21 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
       break;  // no more content
     }
 
+    // what column does this cell span to?
+    nsHTMLValue value;
+    ((nsHTMLTagContent *)cell)->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Integer)
+      colIndex += value.GetIntValue();
+    else
+      colIndex += 1;
+
+    // create column frames if necessary
+    nsReflowStatus status;
+    aState.tableFrame->EnsureColumnFrameAt(colIndex,
+                                           &aPresContext,
+                                           aDesiredSize,
+                                           aState.reflowState,
+                                           status);
     // Create a child frame -- always an nsTableCell frame
     nsIStyleContext*    kidSC = aPresContext.ResolveStyleContextFor(cell, this, PR_TRUE);
     nsIContentDelegate* kidDel = cell->GetDelegate(&aPresContext);
@@ -569,8 +587,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     nsReflowMetrics kidSize(&kidMaxElementSize);
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Initial);
-    nsReflowStatus  status;
-
     kidFrame->WillReflow(aPresContext);
     if (gsDebug) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
     status = ReflowChild(kidFrame, &aPresContext, kidSize, kidReflowState);

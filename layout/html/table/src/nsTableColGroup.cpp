@@ -35,6 +35,8 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
+static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+
 
 nsTableColGroup::nsTableColGroup(nsIAtom* aTag, int aSpan)
   : nsTableContent(aTag),
@@ -251,18 +253,24 @@ nsTableColGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-/** support method to determine if the param aContent is a TableRow object */
+/** support method to determine if the param aContent is an nsTableCol object */
 PRBool nsTableColGroup::IsCol(nsIContent * aContent) const
 {
-  NS_ASSERTION(nsnull!=aContent, "bad arg");
   PRBool result = PR_FALSE;
   if (nsnull!=aContent)
   {
     // is aContent a col?
-    nsTableContent *tableContent = (nsTableContent *)aContent;
-    const int contentType = tableContent->GetType();
-    if (contentType == nsITableContent::kTableColType)
-      result = PR_TRUE;
+    nsITableContent *tableContentInterface = nsnull;
+    nsresult rv = aContent->QueryInterface(kITableContentIID, 
+                                           (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+
+    if (NS_SUCCEEDED(rv))
+    {
+      const int contentType = tableContentInterface->GetType();
+      NS_RELEASE(tableContentInterface);
+      if (contentType == nsITableContent::kTableColType)
+        result = PR_TRUE;
+    }
   }
   return result;
 }

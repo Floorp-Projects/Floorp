@@ -40,7 +40,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
 // nsTableContent checks aTag
@@ -294,10 +293,13 @@ PRBool nsTableRowGroup::IsRow(nsIContent * aContent) const
     nsresult rv = aContent->QueryInterface(kITableContentIID, 
                                            (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
 
-    const int contentType = tableContentInterface->GetType();
-    NS_RELEASE(tableContentInterface);
-    if (contentType == nsITableContent::kTableRowType)
-      result = PR_TRUE;
+    if (NS_SUCCEEDED(rv))
+    {
+      const int contentType = tableContentInterface->GetType();
+      NS_RELEASE(tableContentInterface);
+      if (contentType == nsITableContent::kTableRowType)
+        result = PR_TRUE;
+    }
   }
   return result;
 }
@@ -312,11 +314,13 @@ PRBool nsTableRowGroup::IsTableCell(nsIContent * aContent) const
     nsITableContent *tableContentInterface = nsnull;
     nsresult rv = aContent->QueryInterface(kITableContentIID, 
                                            (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
-
-    const int contentType = tableContentInterface->GetType();
-    NS_RELEASE(tableContentInterface);
-    if (contentType == nsITableContent::kTableCellType)
-      result = PR_TRUE;
+    if (NS_SUCCEEDED(rv))
+    {
+      const int contentType = tableContentInterface->GetType();
+      NS_RELEASE(tableContentInterface);
+      if (contentType == nsITableContent::kTableCellType)
+        result = PR_TRUE;
+    }
   }
   return result;
 }
