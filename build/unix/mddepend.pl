@@ -35,7 +35,7 @@ $outfile = shift @ARGV;
 
 @alldeps=();
 # Parse dependency files
-while ($line = <>) {
+while ($line = <STDIN>) {
   chomp $line;
   ($obj,$rest) = split /\s*:\s+/, $line, 2;
   next if $obj eq '';
