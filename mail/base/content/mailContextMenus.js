@@ -119,7 +119,11 @@ function fillThreadPaneContextMenu()
   EnableMenuItem("threadPaneContext-labels", (numSelected >= 1));
   EnableMenuItem("threadPaneContext-mark", (numSelected >= 1));
   SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
+#ifdef XP_MACOSX
+  SetupPrintPreviewMenuItem("threadPaneContext-printpreview", numSelected, true);
+#else
   SetupPrintPreviewMenuItem("threadPaneContext-printpreview", numSelected, false);
+#endif
   SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
   SetupDeleteMenuItem("threadPaneContext-delete", numSelected, false);
   SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
@@ -462,7 +466,12 @@ function fillMessagePaneContextMenu()
   SetupLabelsMenuItem("messagePaneContext-labels", numSelected, (numSelected == 0 || hideMailItems));
   SetupMarkMenuItem("messagePaneContext-mark", numSelected, (numSelected == 0 || hideMailItems));
   SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
+#ifdef XP_MACOSX
+  SetupPrintPreviewMenuItem("messagePaneContext-printpreview", numSelected, true);
+#else
   SetupPrintPreviewMenuItem("messagePaneContext-printpreview", numSelected, (numSelected == 0 || hideMailItems));
+#endif
+
   SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0 || hideMailItems));
   if (numSelected == 0 || hideMailItems)
     ShowMenuItem("messagePaneContext-delete", false)

@@ -1038,6 +1038,7 @@ function  CreateVirtualFolder(newName, parentFolder, searchFolderURIs, searchTer
     try
     {
       var newFolder = parentFolder.addSubfolder(newName);
+      newFolder.prettyName = newName;
       newFolder.setFlag(MSG_FOLDER_FLAG_VIRTUAL);
       var vfdb = newFolder.getMsgDatabase(msgWindow);
       var searchTermString = getSearchTermString(searchTerms);

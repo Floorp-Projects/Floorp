@@ -1823,14 +1823,18 @@
 
       <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/> 
 
-      <toolbarbutton id="button-print" type="menu-button" class="toolbarbutton-1" label="&printButton.label;"
-                  observes="button_print" oncommand="goDoCommand('cmd_print')" tooltiptext="&printButton.tooltip;">  
+#ifdef XP_MACOSX
+      <toolbarbutton id="button-print"  class="toolbarbutton-1" label="&printButton.label;"
+                  observes="button_print" oncommand="goDoCommand('cmd_print')" tooltiptext="&printButton.tooltip;"/>
+#else
+      <toolbarbutton id="button-print"  class="toolbarbutton-1" label="&printButton.label;"
+                  observes="button_print" oncommand="goDoCommand('cmd_print')" tooltiptext="&printButton.tooltip;" type="menu-button"> 
         <menupopup id="printMenu" onpopupshowing="goUpdateCommand('cmd_printpreview');">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
           <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="cmd_printpreview"/>
         </menupopup>
       </toolbarbutton>
-      
+#endif
       <toolbarbutton id="button-mark" type="menu-button" class="toolbarbutton-1" label="&markButton.label;" oncommand="goDoCommand('button_mark')"
                   observes="button_mark" tooltiptext="&markButton.tooltip;">  
             <menupopup onpopupshowing="InitMessageMark()">
