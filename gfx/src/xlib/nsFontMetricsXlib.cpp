@@ -1788,10 +1788,12 @@ public:
   virtual ~nsFontXlibNormal();
   
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
+#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength);
+#endif
 
 #ifdef USE_XPRINT
   virtual int DrawString(nsRenderingContextXp* aContext,
@@ -1843,6 +1845,7 @@ nsFontXlibNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   return textWidth;
 }
 
+#ifndef _IMPL_NS_XPRINT
 int
 nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
                              nsDrawingSurfaceXlib* aSurface,
@@ -1903,6 +1906,7 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return textWidth;
 }
+#endif
 
 #ifdef USE_XPRINT
 int
@@ -2024,10 +2028,12 @@ public:
   virtual ~nsFontXlibSubstitute();
 
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
+#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength);
+#endif
 #ifdef USE_XPRINT
   virtual int DrawString(nsRenderingContextXp* aContext,
                          nsXPrintContext* aSurface,
@@ -2139,6 +2145,7 @@ nsFontXlibSubstitute::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   return textWidth;
 }
 
+#ifndef _IMPL_NS_XPRINT
 int
 nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext, 
                                  nsDrawingSurfaceXlib* aSurface,
@@ -2164,6 +2171,7 @@ nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext,
     nsMemory::Free(p);
   return textWidth;
 }
+#endif
 
 #ifdef USE_XPRINT
 int
@@ -2233,10 +2241,12 @@ public:
 
   virtual PRBool Init(nsFontXlib* aFont);
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
+#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY, const PRUnichar* aString, 
                          PRUint32 aLength);
+#endif
 #ifdef USE_XPRINT
   virtual int DrawString(nsRenderingContextXp* aContext,
                          nsXPrintContext* aSurface,
@@ -2307,6 +2317,7 @@ nsFontXlibUserDefined::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   return textWidth;
 }
 
+#ifndef _IMPL_NS_XPRINT
 int
 nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
                                   nsDrawingSurfaceXlib* aSurface,
@@ -2334,6 +2345,7 @@ nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
   ENCODER_BUFFER_FREE_IF_NEEDED(p, buf);
   return textWidth;
 }
+#endif
 
 #ifdef USE_XPRINT
 int
