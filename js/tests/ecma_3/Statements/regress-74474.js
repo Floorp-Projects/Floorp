@@ -29,14 +29,14 @@ var UBound = 0;
 var bug = '74474';
 var summary = 'Testing switch statements with duplicate labels';
 var status = '';
-var statusList = [ ];
+var statusitems = [ ];
 var actual = '';
-var actualvalue = [ ];
+var actualvalues = [ ];
 var expect= '';
-var expectedvalue = [ ];
+var expectedvalues = [ ];
 
 
-// Section A: the string literal '1' as a duplicate label
+status = 'Section A of test: the string literal "1" as a duplicate label';
 actual = '';
 switch ('1')
 {
@@ -45,12 +45,11 @@ switch ('1')
   case '1':
     actual += 'b';
 }
-status = 'Section A of test: the string literal "1" as a duplicate label';
 expect = 'ab';
 addThis();
 
 
-//  Section B: the numeric literal 1 as a duplicate label
+status = 'Section B of test: the numeric literal 1 as a duplicate label';
 actual = '';
 switch (1)
 {
@@ -59,12 +58,11 @@ switch (1)
   case 1:
     actual += 'b';
 }
-status = 'Section B of test: the numeric literal 1 as a duplicate label';
 expect = 'ab';
 addThis();
 
 
-//  Section C: the numeric literal 1 as a duplicate label, via a function parameter
+status = 'Section C of test: the numeric literal 1 as a duplicate label, via a function parameter';
 tryThis(1);
 function tryThis(x)
 {
@@ -78,9 +76,9 @@ function tryThis(x)
       actual += 'b';
   }
 }
-status = 'Section C of test: the numeric literal 1 as a duplicate label, via a function parameter';
 expect = 'ab';
 addThis();
+
 
 
 //---------------------------------------------------------------------------------
@@ -88,11 +86,12 @@ test();
 //---------------------------------------------------------------------------------
 
 
+
 function addThis()
 {
-  statusList[UBound] = status;
-  actualvalue[UBound] = actual;
-  expectedvalue[UBound] = expect;
+  statusitems[UBound] = status;
+  actualvalues[UBound] = actual;
+  expectedvalues[UBound] = expect;
   UBound++;
 }
 
@@ -105,7 +104,7 @@ function test()
  
   for (var i = 0; i < UBound; i++)
   {
-    reportCompare(expectedvalue[i], actualvalue[i], getStatus(i));
+    reportCompare(expectedvalues[i], actualvalues[i], getStatus(i));
   }
 
   exitFunc ('test');
@@ -114,5 +113,5 @@ function test()
 
 function getStatus(i)
 {
-  return statusList[i];
+  return statusitems[i];
 }
