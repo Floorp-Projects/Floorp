@@ -1341,17 +1341,12 @@ typedef struct {
     int maxKid;
 } GreedyState;
 
+
 static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const jschar *previousKid)
 {
     const jschar *kidMatch;
     const jschar *match;
-    int num;
-
-/*
-*    when the kid match fails, we reset the parencount and run any 
-*    previously succesful kid in order to restablish it's paren
-*    contents.
-*/
+    int num = grState->state->parenCount;
 
 #ifdef XP_MAC
     if (StackSpace() < 16384) {
@@ -1361,31 +1356,42 @@ static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const
     }
 #endif
 
-    num = grState->state->parenCount;
+/*
+*    When the kid match fails, we reset the parencount and run any 
+*    previously succesful kid in order to restablish it's paren
+*    contents.
+*/
+
     kidMatch = matchRENodes(grState->state, grState->kid, grState->next, cp);
-    if (kidMatch == NULL) {
-        grState->state->parenCount = num;
-        if (previousKid != NULL)
-            matchRENodes(grState->state, grState->kid, grState->next, previousKid);
-        return matchRENodes(grState->state, grState->next, grState->stop, cp);
+    if (kidMatch == NULL) {        
+        match = matchRENodes(grState->state, grState->next, NULL, cp);
+        if (match) {
+            grState->state->parenCount = num;
+            if (previousKid != NULL)
+                matchRENodes(grState->state, grState->kid, grState->next, previousKid);
+            return cp;
+        }
+        else
+            return NULL;
     }
     else {
-        if (kidMatch == cp) return kidMatch;    /* no point pursuing an empty match forever */
+        if (kidMatch == cp) {
+            if (previousKid != NULL)
+                matchRENodes(grState->state, grState->kid, grState->next, previousKid);
+            return kidMatch;    /* no point pursuing an empty match forever */
+        }
         if ((grState->maxKid == 0) || (++grState->kidCount < grState->maxKid)) {
             match = greedyRecurse(grState, kidMatch, cp);
-            if (!grState->state->ok) return NULL;
-            if (match != NULL) return match;
+            if (match) return match;
             --grState->kidCount;
-            grState->state->parenCount = num;
-            matchRENodes(grState->state, grState->kid, grState->next, cp);
         }
-        match = matchRENodes(grState->state, grState->next, grState->stop, kidMatch);
-        if (match != NULL) return match;
-/* No subsequent kid could complete; final backtrack attempt with zero kids */        
         grState->state->parenCount = num;
-        if (previousKid != NULL)
-            matchRENodes(grState->state, grState->kid, grState->next, previousKid);
-        return matchRENodes(grState->state, grState->next, grState->stop, cp);
+        if (matchRENodes(grState->state, grState->next, NULL, kidMatch)) {
+            matchRENodes(grState->state, grState->kid, grState->next, cp);
+            return kidMatch;
+        }
+        else
+            return NULL;
     }
 }
 
@@ -1705,28 +1711,40 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           }
           if (num == ren->u.range.max) break;
           if ((ren->flags & RENODE_MINIMAL) == 0) {
-              kidMatch = matchGreedyKid(state, ren, stop, num, cp, lastKid);
-              return kidMatch;
+              cp2 = matchGreedyKid(state, ren, stop, num, cp, lastKid);
+              if (cp2)
+                  cp = cp2;
           }
-          cp = matchNonGreedyKid(state, ren, num,
+          else {
+              cp = matchNonGreedyKid(state, ren, num,
                               ren->u.range.max, cp);
-          if (cp == NULL) return NULL;
+              if (cp == NULL) return NULL;
+          }
           break;
         case REOP_PLUS:
           kidMatch = matchRENodes(state, (RENode *)ren->kid,
                                           ren->next, cp);
           if (kidMatch == NULL)
               return NULL;
-          if ((ren->flags & RENODE_MINIMAL) == 0)
-              return matchGreedyKid(state, ren, stop, 1, kidMatch, cp);
-          cp = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
+          if ((ren->flags & RENODE_MINIMAL) == 0) {
+              cp = matchGreedyKid(state, ren, stop, 1, kidMatch, cp);
+              if (cp == NULL) 
+                  cp = kidMatch;
+          }
+          else
+              cp = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
           if (cp == NULL) return NULL;
           break;
         case REOP_STAR:
-          if ((ren->flags & RENODE_MINIMAL) == 0)
-              return matchGreedyKid(state, ren, stop, 0, cp, NULL);
-          cp = matchNonGreedyKid(state, ren, 0, 0, cp);
-          if (cp == NULL) return NULL;
+          if ((ren->flags & RENODE_MINIMAL) == 0) {
+              cp2 = matchGreedyKid(state, ren, stop, 0, cp, NULL);
+              if (cp2)
+                  cp = cp2;
+          }
+          else {
+              cp = matchNonGreedyKid(state, ren, 0, 0, cp);
+              if (cp == NULL) return NULL;
+          }
           break;
         case REOP_OPT:
           num = state->parenCount;
@@ -1837,8 +1855,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           break;
         case REOP_DOTSTARMIN:
           for (cp2 = cp; cp2 < cpend; cp2++) {
-              const jschar *cp3 = matchRENodes(state, ren->next,
-                                                stop, cp2);
+              const jschar *cp3 = matchRENodes(state, ren->next, stop, cp2);
               if (cp3 != NULL) return cp3;
               if (*cp2 == '\n')
                   return NULL;
@@ -1848,14 +1865,16 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           for (cp2 = cp; cp2 < cpend; cp2++)
               if (*cp2 == '\n')
                   break;
+          if (cp2 == cp) return NULL;
           while (cp2 >= cp) {
-              const jschar *cp3 = matchRENodes(state, ren->next,
-                                              stop, cp2);
-              if (cp3 != NULL)
-                  return cp3;
+              const jschar *cp3 = matchRENodes(state, ren->next, NULL, cp2);
+              if (cp3 != NULL) {
+                  cp = cp2;
+                  break;
+              }
               cp2--;
           }
-          return NULL;
+          break;
        case REOP_WBDRY:
           if (((cp == state->cpbegin) || !JS_ISWORD(cp[-1]))
                   ^ ((cp >= cpend) || !JS_ISWORD(*cp)))
