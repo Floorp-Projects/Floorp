@@ -24,14 +24,10 @@ MODULE=history
 
 CPPSRCS=                                \
  nsGlobalHistory.obj                    \
- nsSHEntry.obj                          \
- nsSHTrasaction.obj                     \
  $(NULL)
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsGlobalHistory.obj        \
- .\$(OBJDIR)\nsSHEntry.obj              \
- .\$(OBJDIR)\nsSHTransaction.obj        \
  $(NULL)
 
 MAKE_OBJ_TYPE=DLL
