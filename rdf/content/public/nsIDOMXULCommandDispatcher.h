@@ -50,6 +50,9 @@ public:
   NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus)=0;
   NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus)=0;
 
+  NS_IMETHOD    GetSuppressFocusScroll(PRBool* aSuppressFocusScroll)=0;
+  NS_IMETHOD    SetSuppressFocusScroll(PRBool aSuppressFocusScroll)=0;
+
   NS_IMETHOD    GetActive(PRBool* aActive)=0;
   NS_IMETHOD    SetActive(PRBool aActive)=0;
 
@@ -72,6 +75,8 @@ public:
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow);  \
   NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus);  \
   NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus);  \
+  NS_IMETHOD    GetSuppressFocusScroll(PRBool* aSuppressFocusScroll);  \
+  NS_IMETHOD    SetSuppressFocusScroll(PRBool aSuppressFocusScroll);  \
   NS_IMETHOD    GetActive(PRBool* aActive);  \
   NS_IMETHOD    SetActive(PRBool aActive);  \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets);  \
@@ -89,6 +94,8 @@ public:
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
   NS_IMETHOD    GetSuppressFocus(PRBool* aSuppressFocus) { return _to GetSuppressFocus(aSuppressFocus); } \
   NS_IMETHOD    SetSuppressFocus(PRBool aSuppressFocus) { return _to SetSuppressFocus(aSuppressFocus); } \
+  NS_IMETHOD    GetSuppressFocusScroll(PRBool* aSuppressFocusScroll) { return _to GetSuppressFocusScroll(aSuppressFocusScroll); } \
+  NS_IMETHOD    SetSuppressFocusScroll(PRBool aSuppressFocusScroll) { return _to SetSuppressFocusScroll(aSuppressFocusScroll); } \
   NS_IMETHOD    GetActive(PRBool* aActive) { return _to GetActive(aActive); } \
   NS_IMETHOD    SetActive(PRBool aActive) { return _to SetActive(aActive); } \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
