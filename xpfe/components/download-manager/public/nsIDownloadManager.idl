@@ -52,7 +52,8 @@ interface nsIDownloadManager : nsISupports {
 
   /**
   * addDownload
-  * Adds a download to be managed by the download manager.
+  * Creates (and returns) an nsIDownloadItem with the given properties and adds
+  * it to the list of downloads being managed by the download manager.
   */
   
   nsIDownloadItem addDownload(in nsIURI aURI,

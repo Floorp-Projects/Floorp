@@ -57,6 +57,7 @@
 #include "nsIRequest.h"
 #include "nsIObserver.h"
 #include "nsIStringBundle.h"
+#include "nsIProgressDialog.h"
  
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIDOMEventListener,
@@ -107,6 +108,12 @@ protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
   nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
+  nsresult SetDialog(nsIProgressDialog* aDialog);
+  nsresult GetDialog(nsIProgressDialog** aDialog);
+  nsresult SetPersist(nsIWebBrowserPersist* aPersist);
+  nsresult SetTarget(nsILocalFile* aTarget);
+  nsresult SetSource(nsIURI* aSource);
+  nsresult SetPrettyName(const PRUnichar* aPrettyName);
 private:
   nsDownloadManager* mDownloadManager;
 
@@ -117,6 +124,7 @@ private:
   nsCOMPtr<nsIWebProgressListener> mDialogListener;
   nsCOMPtr<nsIWebBrowserPersist> mPersist;
   nsCOMPtr<nsIRequest> mRequest;
+  nsCOMPtr<nsIProgressDialog> mDialog;
   nsCOMPtr<nsIObserver> mObserver;
 
   PRInt32 mPercentComplete;
