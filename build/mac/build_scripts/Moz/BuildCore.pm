@@ -90,72 +90,6 @@ sub MakeLibAliases()
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// Regenerate DefinesOptions.h if necessary
-#//
-#//--------------------------------------------------------------------------------------------------
-
-sub UpdateConfigHeader($)
-{
-    my($config_path) = @_;
-    
-    my($config, $oldconfig) = ("", "");
-    my($define, $definevalue, $defines);
-    my($k, $l,);
-
-    foreach $k (keys(%main::options))
-    {
-        if ($main::options{$k})
-        {
-            foreach $l (keys(%{$main::optiondefines{$k}}))
-            {
-                $my::defines{$l} = $main::optiondefines{$k}{$l};
-                print "Setting up my::defines{$l}\n";
-            }
-        }
-    }
-
-    my $config_headerfile = current_directory().$config_path;
-    if (-e $config_headerfile)
-    {
-        open(CONFIG_HEADER, "< $config_headerfile") || die "$config_headerfile: $!\n";
-        my($line);
-        while ($line = <CONFIG_HEADER>)
-        {
-            $oldconfig .= $line;
-            if ($line =~ m/#define (.*) (.*)\n/)
-            {
-                $define = $1;
-                $definevalue = $2;
-                if (exists ($my::defines{$define}) and ($my::defines{$define} == $definevalue))
-                {
-                    delete $my::defines{$define};
-                    $config .= $line;
-                }
-            }
-        }
-        close(CONFIG_HEADER);
-    }
-
-    if (%my::defines)
-    {
-        foreach $k (keys(%my::defines))
-        {
-            $config .= "#define " . $k . " " . $my::defines{$k} . "\n";
-        }
-    }
-
-    if (($config ne $oldconfig) || (!-e $config_headerfile))
-    {
-        printf("Writing new DefinesOptions.h\n");
-        open(CONFIG_HEADER, "> $config_headerfile") || die "$config_headerfile: $!\n";
-        MacPerl::SetFileInfo("CWIE", "TEXT", $config_headerfile);
-        print CONFIG_HEADER ($config);
-        close(CONFIG_HEADER);
-    }
-}
-
-
-#//--------------------------------------------------------------------------------------------------
 #// ConfigureBuildSystem
 #//
 #// defines some build-system configuration variables.
@@ -178,13 +112,11 @@ sub ConfigureBuildSystem()
     {
         my($new_ic_folder_name) = Moz::CodeWarriorLib::getCodeWarriorPath("MacOS Support:(ICProgKit2.0.2)");
         rename ($ic_sdk_folder, $new_ic_folder_name);
-        # note that CodeWarrior doesn't descnet into folders with () the name
+        # note that CodeWarrior doesn't descend into folders with () the name
         print "Mozilla no longer needs the Internet Config SDK to build:\n  Renaming the 'ICProgKit2.0.2' folder to '(ICProgKit2.0.2)'\n";
     }
 
     printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $main::UNIVERSAL_INTERFACES_VERSION);
-
-    UpdateConfigHeader($main::DEFINESOPTIONS_FILE);
 
     # alias required CodeWarrior libs into the Essential Files folder (only the Profiler lib now)
     MakeLibAliases();
@@ -444,7 +376,7 @@ sub CheckoutModules($$$)
 sub ReadCheckoutModulesFile($$)
 {
     my($modules_file, $co_list) = @_;
-    
+
     my($checkout_file) = getScriptFolder().":".$modules_file;
     local(*CHECKOUT_FILE);  
     open(CHECKOUT_FILE, "< $checkout_file") || die "Error: failed to open checkout list $checkout_file\n";
@@ -585,7 +517,7 @@ sub RunBuild($$$$)
 
     my($build_start) = TimeStart();
 
-    # create generated headers
+    # check the build environment
     ConfigureBuildSystem();
 
     # here we load and call methods in the build module indirectly.
