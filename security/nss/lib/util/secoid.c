@@ -1428,7 +1428,7 @@ const static SECOidData oids[] = {
     OD( x520Pseudonym, SEC_OID_AVA_PSEUDONYM,
     	"X520 Pseudonym",     CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 
-    /* More PKIX OIDs */
+    /* More OIDs */
     OD( pkixCAIssuers, SEC_OID_PKIX_CA_ISSUERS,
         "PKIX CA issuers access method", 
         CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
