@@ -59,7 +59,7 @@ enum {
 
 enum {
 	kXPIDLModeHeader = 1,
-	kXPIDLModeStub,
+	kXPIDLModeJava,
 	kXPIDLModeTypelib,
 	kXPIDLModeDoc
 };

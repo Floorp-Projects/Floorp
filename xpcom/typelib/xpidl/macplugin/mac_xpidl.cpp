@@ -188,7 +188,7 @@ static CWResult	Compile(CWPluginContext context)
 		return (err);
 	
 	int argc = 3;
-	char* modes[] = { "header", "stub", "typelib", "doc" };
+	char* modes[] = { "header", "java", "typelib", "doc" };
 	char* argv[] = { "xpidl", "-m", modes[settings.mode - 1], NULL, NULL, NULL, NULL, };
 	if (settings.warnings) argv[argc++] = "-w";
 	if (settings.verbose) argv[argc++] = "-v";
