@@ -98,6 +98,39 @@ protected:
     */
   virtual PRBool AssignPreliminaryColumnWidths(nscoord aComputedWidth);
 
+  /** 
+    * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell
+    * spanning multiple columns. 
+    * @param aWidthIndex  - the width to calculate (see nsTableColFrame.h for enums)
+    * @param aCellFrame   - the frame of the cell with a colspan
+    * @param aColIndex    - the column index of the cell in the table
+    * @param aColSpan     - the colspan of the cell
+    * @param aConsiderPct - if true, consider columns that have pct widths and are spanned by the cell
+    */
+  void ComputeColspanWidths(PRInt32           aWidthIndex,
+                            nsTableCellFrame* aCellFrame,
+                            PRInt32           aColIndex,
+                            PRInt32           aColSpan,
+                            PRBool            aConsiderPct);
+
+  /** 
+    * main helper for above. For min width calculations, it can get called up to
+    * 3 times, 1st to let constrained (fix or pct) cols reach their limit, 2nd 
+    * to let auto cols reach their limit and 3rd to spread any remainder among 
+    * auto cols. If there are no auto cols then only constrained cols are considered.
+    * @param aCellWidth   - the width of the cell
+    * @param aLimitType   - value indicating which type of width is being targeted 
+    *                       to reach a limit
+    * @return             - true if the computation completed, false otherwise
+    */
+  PRBool ComputeColspanWidths(PRInt32           aWidthIndex,
+                              nsTableCellFrame* aCellFrame,
+                              nscoord           aCellWidth,
+                              PRInt32           aColIndex,
+                              PRInt32           aColSpan,
+                              PRBool            aConsiderPct,
+                              PRInt32           aLimitType);
+
   nscoord AssignPercentageColumnWidths(nscoord aBasis,
                                        PRBool  aTableIsAutoWidth);
 

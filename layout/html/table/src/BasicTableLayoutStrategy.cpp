@@ -35,12 +35,15 @@ static PRBool gsDebugBalance = PR_TRUE;
 
 PRBool CanAllocate(PRInt32          aTypeToAllocate,
                    PRInt32          aTypeAlreadyAllocated,
-                   nsTableColFrame* aColFrame)
+                   nsTableColFrame* aColFrame,
+                   PRBool&          aConsiderAdj)
 {
+  aConsiderAdj = PR_TRUE;
   if ((aTypeToAllocate == FIX_ADJ) && (aTypeAlreadyAllocated == FIX)) {
     return PR_TRUE;
   }
   if ((aTypeToAllocate == DES_CON) && (aTypeAlreadyAllocated == FIX_ADJ)) {
+    aConsiderAdj = PR_FALSE;
     return PR_TRUE;
   }
   if ((aTypeToAllocate == DES_CON) && (aTypeAlreadyAllocated == FIX) && 
@@ -229,12 +232,12 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
 
   // if the max width available is less than the min content width for auto table
   // that had no % cells/cols, we're done
-  if (tableIsAutoWidth && (maxWidth < mMinTableContentWidth) & (0 == perAdjTableWidth)) {
+  if (tableIsAutoWidth && (maxWidth < mMinTableContentWidth) && (0 == perAdjTableWidth)) {
     return BCW_Wrapup(this, mTableFrame, nsnull);
   }
 
   PRInt32 cellSpacingTotal;
-  // the following are of size NUM_WIDTHS, but only MIN_CON, DES_CON, FIX, PCT
+  // the following are of size NUM_WIDTHS, but only MIN_CON, DES_CON, FIX, FIX_ADJ, PCT
   // are used and they account for colspan ADJusted values
   PRInt32 totalWidths[NUM_WIDTHS]; // sum of col widths of a particular type 
   PRInt32 totalAvailWidths[NUM_WIDTHS]; 
@@ -367,13 +370,14 @@ void BasicTableLayoutStrategy::AllocateFully(nscoord&      aTotalAllocated,
     nscoord oldWidth = mTableFrame->GetColumnWidth(colX);
     nscoord newWidth = colFrame->GetWidth(aWidthType);
 
-    if (-1 != aAllocTypes[colX]) {
-      if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame)) {
+    PRBool useAdj;
+    if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame, useAdj)) {
+      if (-1 != aAllocTypes[colX]) {
         continue;
       }
     }
     // account for col span overrides with DES_CON and FIX
-    if (DES_CON == aWidthType) {
+    if ((DES_CON == aWidthType) && useAdj) {
       newWidth = PR_MAX(newWidth, colFrame->GetWidth(DES_ADJ));
     }
     else if (PCT == aWidthType) {
@@ -427,6 +431,268 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
       totalAllocated += addition;
     }
   }
+}
+
+nscoord GetConstrainedWidth(nsTableColFrame* colFrame,
+                            PRBool           aConsiderPct)
+                           
+{
+  nscoord conWidth = WIDTH_NOT_SET;
+  if (aConsiderPct) {
+    nscoord conWidth = colFrame->GetPctWidth();
+  }
+  if (conWidth <= 0 ) {
+    conWidth = colFrame->GetFixWidth();
+  }
+  return conWidth;
+}
+
+#define LIMIT_DES  0
+#define LIMIT_CON  1
+#define LIMIT_NONE 2
+
+void 
+BasicTableLayoutStrategy::ComputeColspanWidths(PRInt32           aWidthIndex,
+                                               nsTableCellFrame* aCellFrame,
+                                               PRInt32           aColIndex,
+                                               PRInt32           aColSpan,
+                                               PRBool            aConsiderPct)
+{
+  if (!aCellFrame || (aColIndex < 0) || (aColIndex < 0) || (aColSpan < 0)) {
+    NS_ASSERTION(PR_FALSE, "ComputeColspanWidths called incorrectly");
+    return;
+  }
+
+  nscoord cellWidth = 0;
+  if (MIN_CON == aWidthIndex) {
+    cellWidth = aCellFrame->GetPass1MaxElementSize().width;
+  }
+  else if (DES_CON == aWidthIndex) {
+    cellWidth = aCellFrame->GetPass1DesiredSize().width;
+  }
+  else { // FIX width
+    // see if the cell has a style width specified
+    const nsStylePosition* cellPosition;
+    aCellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+    if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
+      // need to add padding into fixed width
+      const nsStyleSpacing* spacing;
+      aCellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
+      nsMargin paddingMargin;
+      spacing->CalcPaddingFor(aCellFrame, paddingMargin); 
+      nscoord padding = paddingMargin.left + paddingMargin.right;
+      cellWidth = cellPosition->mWidth.GetCoordValue() + padding;
+      cellWidth = PR_MAX(cellWidth, aCellFrame->GetPass1MaxElementSize().width);
+    }
+  }
+
+  if (0 >= cellWidth) { 
+    return;
+  }
+
+  if (MIN_CON == aWidthIndex) {
+    // for min width, first allocate fixed cells up to their fixed value, then if 
+    // necessary allocate auto cells up to their auto value, then if necessary
+    // allocate auto cells. 
+    for (PRInt32 limitX = LIMIT_CON; limitX <= LIMIT_NONE; limitX++) { 
+      if (ComputeColspanWidths(aWidthIndex, aCellFrame, cellWidth, 
+                               aColIndex, aColSpan, aConsiderPct, limitX)) {
+        return;
+      }
+    }
+  } else {
+    // for des width, just allocate auto cells
+    ComputeColspanWidths(aWidthIndex, aCellFrame, cellWidth, 
+                         aColIndex, aColSpan, aConsiderPct, LIMIT_NONE);
+  }
+}
+
+
+PRBool 
+BasicTableLayoutStrategy::ComputeColspanWidths(PRInt32           aWidthIndex,
+                                               nsTableCellFrame* aCellFrame,
+                                               nscoord           aCellWidth,
+                                               PRInt32           aColIndex,
+                                               PRInt32           aColSpan,
+                                               PRBool            aConsiderPct,
+                                               PRInt32           aLimitType)
+{
+  PRBool result = PR_TRUE;
+  // skip DES_CON if there is a FIX since FIX is really the desired size
+  //if ((DES_CON == widthX) && (cellWidths[FIX] > 0)) 
+  nscoord spanCellSpacing = 0; // total cell spacing cells being spanned
+  nscoord spanTotal       = 0; // total width of type aWidthIndex of spanned cells
+  nscoord divisorCon      = 0; // the sum of constrained (fix or pct if specified) widths of spanned cells
+  nscoord divisorDes      = 0; // the sum of desired widths
+  // the following are only used for MIN_CON calculations. Takings differences between
+  // actual and target values allows target values to be reached and not exceeded. This
+  // is not as accurate as the method in AllocateConstrained, but it is a lot cheaper.
+  nscoord divisorConLimit = 0; // the sum of differences between constrained width and min width
+  nscoord divisorDesLimit = 0; // the sum of differences between desired width and min width
+
+  nscoord spacingX = mTableFrame->GetCellSpacingX();
+  PRInt32 spanX;
+  // accumulate the various divisors to be used later
+  for (spanX = 0; spanX < aColSpan; spanX++) {
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX);
+    nscoord colWidth = PR_MAX(colFrame->GetWidth(aWidthIndex), 
+                              colFrame->GetWidth(aWidthIndex + NUM_MAJOR_WIDTHS));
+    colWidth = PR_MAX(colWidth, 0);
+    if (aWidthIndex == DES_CON) {
+      nscoord conWidth = GetConstrainedWidth(colFrame, aConsiderPct); 
+      if (conWidth <= 0) {
+        divisorDes += colWidth;
+        spanTotal  += colWidth;
+      }
+      else {
+        divisorCon += conWidth;
+        spanTotal  += conWidth;
+      }
+    }
+    else if (aWidthIndex == MIN_CON) {
+      nscoord conWidth  = GetConstrainedWidth(colFrame, aConsiderPct);
+      nscoord desWidth  = colFrame->GetDesWidth();
+      if (conWidth > 0) {
+        divisorCon += conWidth;
+        divisorConLimit += PR_MAX(conWidth - colWidth, 0);
+      }
+      else {
+        divisorDes += desWidth;
+        divisorDesLimit += PR_MAX(desWidth - colWidth, 0);
+      }
+      spanTotal += colWidth;
+    }
+    else { // FIX width
+      if (colWidth > 0) {
+        divisorCon += colWidth;
+      }
+      else {
+        divisorDes += colFrame->GetDesWidth();
+      }
+      spanTotal += colWidth;
+    }
+    if ((spanX > 0) && (mTableFrame->GetNumCellsOriginatingInCol(aColIndex + spanX) > 0)) {
+      spanCellSpacing += spacingX;
+    }
+  }
+
+  if (MIN_CON != aWidthIndex) {
+    aLimitType = LIMIT_NONE; // just in case we were called incorrectly
+  }
+  else {
+    // this method gets called up to 3 times, first to let fixed cols reach their
+    // target, 2nd to let auto cols reach their target and 3rd to let auto cols
+    // fill out the remainder. Below are some optimizations which can skip steps.
+
+    // if there are no constrained cols to focus on, focus on auto cols
+    if ((LIMIT_CON == aLimitType) && (0 == divisorConLimit)) {
+      aLimitType = LIMIT_DES;
+    }
+    // if there are no auto cols to focus on, focus on nothing
+    if ((LIMIT_DES == aLimitType) && (0 == divisorDesLimit)) {
+      aLimitType = LIMIT_NONE;
+    }
+  }
+
+  nscoord availWidth = aCellWidth - spanTotal - spanCellSpacing;
+  // there are 2 cases where the target will not be reached
+  if ((LIMIT_CON == aLimitType) && (divisorConLimit < availWidth)) {
+    availWidth = divisorConLimit;
+    result = PR_FALSE;
+  }
+  if ((LIMIT_DES == aLimitType) && (divisorDesLimit < availWidth)) {
+    availWidth = divisorDesLimit;
+    result = PR_FALSE;
+  }
+  if (availWidth > 0) {
+    // get the correct numerator in a similar fashion to getting the divisor
+    for (spanX = 0; spanX < aColSpan; spanX++) {
+      nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX);
+      nscoord colWidth = PR_MAX(colFrame->GetWidth(aWidthIndex), 
+                                colFrame->GetWidth(aWidthIndex + NUM_MAJOR_WIDTHS));
+      nscoord minWidth = colFrame->GetMinWidth();
+
+      colWidth = PR_MAX(colWidth, 0);
+      nscoord numeratorDes      = 0;
+      nscoord numeratorCon      = 0;
+      nscoord numeratorConLimit = 0;
+      nscoord numeratorDesLimit = 0;
+      if (aWidthIndex == DES_CON) {
+        nscoord conWidth = GetConstrainedWidth(colFrame, aConsiderPct);
+        if (conWidth <= 0) {
+          numeratorDes = colWidth;
+        }
+        else {
+          numeratorCon = conWidth;
+        }
+      }
+      else if (aWidthIndex == MIN_CON) {
+        nscoord conWidth  = GetConstrainedWidth(colFrame, aConsiderPct);
+        nscoord desWidth  = colFrame->GetDesWidth();
+        if (conWidth > 0) {
+          numeratorCon = conWidth;
+          numeratorConLimit = PR_MAX(conWidth - colWidth, 0);
+        }
+        else {
+          numeratorDes = desWidth;
+          numeratorDesLimit = PR_MAX(desWidth - colWidth, 0);
+        }
+      }
+      else { // FIX width
+        if (colWidth <= 0) {
+          numeratorDes = colFrame->GetDesWidth();
+        }
+        else {
+          numeratorCon = colWidth;
+        }
+      }
+
+      nscoord divisor;
+      nscoord numerator;
+      if (divisorDes > 0) { // there were auto cols
+        divisor   = divisorDes;
+        numerator = numeratorDes;
+      }
+      else {                // there were only constrained cols
+        divisor   = divisorCon;
+        numerator = numeratorCon;
+      }
+      // let constrained cols reach their target 
+      if (LIMIT_CON == aLimitType) {
+        if (divisorConLimit > 0) {
+          divisor   = divisorConLimit;
+          numerator = numeratorConLimit;
+        }
+      }
+      // let auto cols reach their target 
+      else if (LIMIT_DES == aLimitType) {
+        if (divisorDesLimit > 0) {
+          divisor   = divisorDesLimit;
+          numerator = numeratorDesLimit;
+        }
+      }
+
+      // calculate the amount of additional width the col will get
+      nscoord addition = (0 >= divisor) 
+        ? NSToCoordRound( ((float)availWidth) / ((float)aColSpan) )
+        : NSToCoordRound( (((float)numerator) / ((float)divisor)) * availWidth);
+      if (addition > 0) {
+        nscoord newColAdjWidth = colWidth + addition;
+        if (newColAdjWidth > minWidth) {
+          if (FIX == aWidthIndex) {
+            // a colspan cannot fix a column below what a cell desires on its own
+            nscoord desCon = colFrame->GetWidth(DES_CON); // do not consider DES_ADJ
+            if (desCon > newColAdjWidth) {
+              newColAdjWidth = desCon;
+            }
+          }
+          colFrame->SetWidth(aWidthIndex + NUM_MAJOR_WIDTHS, newColAdjWidth);
+          colFrame->SetConstrainingCell(aCellFrame); // XXX is this right?
+        }
+      }
+    }
+  }
+  return result;
 }
 
 // Determine min, desired, fixed, and proportional sizes for the cols and 
@@ -599,94 +865,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
       if (!originates || (1 == colSpan)) {
         continue;
       }
-      nscoord cellWidths[NUM_WIDTHS];
-      cellWidths[MIN_CON] = cellFrame->GetPass1MaxElementSize().width;
-      cellWidths[DES_CON] = cellFrame->GetPass1DesiredSize().width;
-      cellWidths[FIX] = WIDTH_NOT_SET;
-      // see if the cell has a style width specified
-      const nsStylePosition* cellPosition;
-      cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
-      if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-        // need to add padding into fixed width
-        const nsStyleSpacing* spacing;
-        cellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
-        nsMargin paddingMargin;
-        spacing->CalcPaddingFor(cellFrame, paddingMargin); 
-        nscoord padding = paddingMargin.left + paddingMargin.right;
-        cellWidths[FIX] = cellPosition->mWidth.GetCoordValue() + padding;
-        cellWidths[FIX] = PR_MAX(cellWidths[FIX], cellWidths[MIN_CON]);
-      }
-
       // set MIN_ADJ, DES_ADJ, FIX_ADJ
-      nscoord spanCellSpacing = 0;
       for (PRInt32 widthX = 0; widthX < NUM_MAJOR_WIDTHS; widthX++) {
-        // skip DES_CON if there is a FIX since FIX is really the desired size
-        if ((DES_CON == widthX) && (cellWidths[FIX] > 0)) 
-          continue; 
-        nscoord spanTotal = 0;
-        nscoord divisor   = 0;
-        PRInt32 spanX;
-        for (spanX = 0; spanX < colSpan; spanX++) {
-          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-          nscoord colWidth = PR_MAX(colFrame->GetWidth(widthX), 
-                                    colFrame->GetWidth(widthX + NUM_MAJOR_WIDTHS));
-          // need to get a contribution for every cell 
-          colWidth = PR_MAX(colWidth, colFrame->GetMinWidth());
-          spanTotal += colWidth;
-          // accumulate divisor 
-          if (widthX == FIX) {
-            colWidth = PR_MAX(colWidth, colFrame->GetDesWidth());
-          }
-          else if (widthX == DES_CON) {
-            nscoord fixWidth = colFrame->GetFixWidth();
-            if (fixWidth > 0) {
-              colWidth = fixWidth;
-            }
-          }
-          else if (widthX == MIN_CON) {
-            colWidth = PR_MAX(colWidth, colFrame->GetFixWidth());
-          }
-          divisor += colWidth;
-          if ((0 == widthX) && (spanX > 0) && (mTableFrame->GetNumCellsOriginatingInCol(colX + spanX) > 0)) {
-            spanCellSpacing += spacingX;
-          }
-        }
-        spanTotal -= spanCellSpacing;
-        nscoord cellWidth = cellWidths[widthX] - spanCellSpacing;
-        if ((cellWidth > 0) && !((widthX == MIN_CON) && (cellWidth <= spanTotal))) {
-          for (spanX = 0; spanX < colSpan; spanX++) {
-            nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-            nscoord colWidth = PR_MAX(colFrame->GetWidth(widthX), 
-                                      colFrame->GetWidth(widthX + NUM_MAJOR_WIDTHS));
-            nscoord minWidth = colFrame->GetMinWidth();
-            // accumulate numerator similarly to divisor
-            colWidth = PR_MAX(colWidth, colFrame->GetMinWidth());
-            if (widthX == FIX) {
-              colWidth = PR_MAX(colWidth, colFrame->GetDesWidth());
-            }
-            else if (widthX == DES_CON) {
-              nscoord fixWidth = colFrame->GetFixWidth();
-              if (fixWidth > 0) {
-                colWidth = fixWidth;
-              }
-              //colWidth = PR_MAX(colWidth, colFrame->GetFixWidth());
-            }
-            else if (widthX == MIN_CON) {
-              colWidth = PR_MAX(colWidth, colFrame->GetFixWidth());
-            }
-            nscoord colAdjWidth = colFrame->GetWidth(widthX + NUM_MAJOR_WIDTHS);
-            nscoord newColAdjWidth = (0 >= spanTotal) 
-              ? NSToCoordRound( ((float)cellWidth) / ((float)colSpan) )
-              : NSToCoordRound( (((float)colWidth) / ((float)divisor)) * cellWidth);
-            if ((newColAdjWidth > colAdjWidth) && (newColAdjWidth > 0)) {
-              newColAdjWidth = PR_MAX(newColAdjWidth, minWidth);
-              if (newColAdjWidth > colFrame->GetWidth(widthX)) {
-                colFrame->SetWidth(widthX + NUM_MAJOR_WIDTHS, newColAdjWidth);
-                colFrame->SetConstrainingCell(cellFrame); // XXX is this right?
-              }
-            }
-          }
-        }
+        ComputeColspanWidths(widthX, cellFrame, colX, colSpan, PR_FALSE);
       }
     }
   }
@@ -731,7 +912,7 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
     nscoord fixWidthTotal = 0; // total of fixed widths of all cols
     float perTotal = 0.0f;     // total of percentage constrained cols and/or cells in cols
     PRInt32 numPerCols = 0;    // number of colums that have percentage constraints
-    nscoord desWidthTotal = 0; // total of desired widths of cols that don't have percentage constraints
+    nscoord prefWidthTotal = 0;// total of des/fix widths of cols that don't have percentage constraints
     basis = 0;                 // basis to use for percentages, computed considering percentage values
     for (colX = 0; colX < mNumCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
@@ -777,14 +958,19 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
         }
       }
       basis = PR_MAX(basis, colBasis);
+      nscoord fixWidth = colFrame->GetFixWidth();
+      fixWidthTotal += fixWidth;
       if (colBasis >= 0) {
         numPerCols++;
       }
       else {
-        desWidthTotal += colFrame->GetDesWidth();
+        prefWidthTotal += (fixWidth > 0) ? fixWidth : colFrame->GetDesWidth();
       }
-      fixWidthTotal += colFrame->GetFixWidth();
     } // end for (colX ..
+    // If there are no pct cells or cols, there is nothing to do.
+    if (0 == numPerCols) {
+      return 0;
+    }
     // If there is only one col and it is % based, it won't affect anything
     if ((1 == mNumCols) && (mNumCols == numPerCols)) {
       return 0;
@@ -792,11 +978,11 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
     // compute a basis considering total percentages and the desired width of everything else
     if (perTotal < 1.0f) {
       if (perTotal > 0.0f) {
-        nscoord otherBasis = NSToCoordRound((float)desWidthTotal / (1.0f - perTotal));
+        nscoord otherBasis = NSToCoordRound((float)prefWidthTotal / (1.0f - perTotal));
         basis = PR_MAX(basis, otherBasis);
       }
     }
-    else if (desWidthTotal > 0) { // make the basis as big as possible 
+    else if (prefWidthTotal > 0) { // make the basis as big as possible 
       basis = aBasisIn;
     }
 
@@ -936,9 +1122,13 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
             nscoord minWidth = colFrame->GetMinWidth();
             nscoord colWidth = PR_MAX(minWidth, colFrame->GetFixWidth());
             colWidth = PR_MAX(colWidth, colFrame->GetDesWidth()); // XXX check this
+            //float colPctAdj = (0 == spanTotal) 
+            //  ? cellPctWidth / ((float) colSpan)
+            //  : cellPct * ((float)colWidth) / (float)spanTotal;
+            float avail = (float)PR_MAX(cellPctWidth - colPctWidthTotal, 0);
             float colPctAdj = (0 == spanTotal) 
-              ? cellPctWidth / ((float) colSpan)
-              : cellPct * ((float)colWidth) / (float)spanTotal;
+              ? avail / ((float) colSpan)
+              : (avail / (float)basis) * (((float)colWidth) / (float)spanTotal);
             if (colPctAdj > 0) {
               nscoord colPctAdjWidth = colFrame->GetWidth(PCT_ADJ);
               nscoord newColPctAdjWidth = NSToCoordRound(colPctAdj * (float)basis);
@@ -1059,42 +1249,7 @@ PRBool BasicTableLayoutStrategy::RecomputeAdjMinIfNecessary()
       }
 
       if (cellSpansPercent) {
-        // recompute the ADJ_MIN width for every spanned col
-        nscoord spanTotal = 0;
-        nscoord divisor   = 0;
-        nscoord spanCellSpacing = 0;
-
-        for (spanX = 0; spanX < colSpan; spanX++) {
-          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-          nscoord colWidth = colFrame->GetWidth(MIN_CON);
-          spanTotal += colWidth;
-          colWidth = PR_MAX(colWidth, colFrame->GetWidth(FIX));
-          colWidth = PR_MAX(colWidth, colFrame->GetWidth(PCT));
-          divisor += colWidth;
-          if ((spanX > 0) && (mTableFrame->GetNumCellsOriginatingInCol(colX + spanX) > 0)) {
-            spanCellSpacing += spacingX;
-          }
-        }
-        spanTotal -= spanCellSpacing;
-        nscoord cellWidth = cellFrame->GetPass1MaxElementSize().width;
-        if ((cellWidth > 0) && (cellWidth > spanTotal)) {
-          for (spanX = 0; spanX < colSpan; spanX++) {
-            nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-            nscoord minWidth = colFrame->GetWidth(MIN_CON);
-            nscoord colWidth = PR_MAX(minWidth, colFrame->GetWidth(FIX));
-            colWidth = PR_MAX(colWidth, colFrame->GetWidth(PCT));
-            nscoord colAdjWidth = colFrame->GetWidth(MIN_ADJ);
-            nscoord newColAdjWidth = (0 >= spanTotal) 
-              ? NSToCoordRound( ((float)cellWidth) / ((float)colSpan) )
-              : NSToCoordRound( (((float)colWidth) / ((float)divisor)) * cellWidth);
-            if ((newColAdjWidth > colAdjWidth) && (newColAdjWidth > 0)) {
-              newColAdjWidth = PR_MAX(newColAdjWidth, minWidth);
-              if (newColAdjWidth > minWidth) {
-                colFrame->SetWidth(MIN_ADJ, newColAdjWidth);
-              }
-            }
-          }
-        }
+        ComputeColspanWidths(MIN_CON, cellFrame, colX, colSpan, PR_TRUE);
       }
     }
   }
@@ -1234,8 +1389,6 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32& aCellSpacing,
 }
 
 
-
-
 struct nsColInfo {
   nsColInfo(nsTableColFrame* aFrame,
             PRInt32          aIndex,
@@ -1353,17 +1506,18 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
 
   PRInt32 numConstrainedCols = 0;
   nscoord sumMaxConstraints  = 0;
+  PRBool useAdj = PR_TRUE;
   PRInt32 colX;
   for (colX = 0; colX < mNumCols; colX++) {
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    if (-1 != aAllocTypes[colX]) {
-      if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame)) {
+    if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame, useAdj)) {
+      if (-1 != aAllocTypes[colX]) {
         continue;
       }
     }
     numConstrainedCols++;
     nscoord width = colFrame->GetWidth(aWidthType);
-    if (DES_CON == aWidthType) {
+    if ((DES_CON == aWidthType) && useAdj) {
       width = PR_MAX(width, colFrame->GetWidth(DES_ADJ));
     }
     else if (PCT == aWidthType) {
@@ -1383,14 +1537,14 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   // set the col info entries for each constrained col
   for (colX = 0; colX < mNumCols; colX++) {
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    if (-1 != aAllocTypes[colX]) {
-      if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame)) {
+    if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame, useAdj)) {
+      if (-1 != aAllocTypes[colX]) {
         continue;
       }
     }
     nscoord minWidth = mTableFrame->GetColumnWidth(colX);
     nscoord maxWidth = colFrame->GetWidth(aWidthType);
-    if (DES_CON == aWidthType) {
+    if ((DES_CON == aWidthType) && useAdj) {
       maxWidth = PR_MAX(maxWidth, colFrame->GetWidth(DES_ADJ));
     }
     else if (PCT == aWidthType) {
