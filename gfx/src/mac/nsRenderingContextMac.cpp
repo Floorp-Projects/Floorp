@@ -823,8 +823,19 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 	mGS->mTMatrix.TransformCoord(&aX0,&aY0);
 	mGS->mTMatrix.TransformCoord(&aX1,&aY1);
+
+	// make the line one pixel shorter to match other platforms
+	nscoord diffX = aX1 - aX0;
+	if (diffX)
+		diffX -= (diffX > 0 ? 1 : -1);
+
+	nscoord diffY = aY1 - aY0;
+	if (diffY)
+		diffY -= (diffY > 0 ? 1 : -1);
+
+	// draw line
 	::MoveTo(aX0, aY0);
-	::LineTo(aX1, aY1);
+	::Line(diffX, diffY);
 
 	EndDraw();
 
