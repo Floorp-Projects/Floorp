@@ -568,7 +568,7 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
         }
         ::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 
                      (LPARAM)"Software\\Clients\\Mail");
-        RegisterServer(CLSID_CMapiImp, "Mozilla MAPI", "mozMapi", "mozMapi.1");
+        RegisterServer(CLSID_CMapiImp, "Mozilla MAPI", "MozillaMapi", "MozillaMapi.1");
         return desktopKeySet;
     }
     
@@ -651,7 +651,7 @@ nsresult nsMapiRegistryUtils::unsetDefaultMailClient() {
         }
         ::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 
                      (LPARAM)"Software\\Clients\\Mail");
-        UnregisterServer(CLSID_CMapiImp, "mozMapi", "mozMapi.1");
+        UnregisterServer(CLSID_CMapiImp, "MozillaMapi", "MozillaMapi.1");
         return desktopKeySet;
     }
     return mailKeySet;
