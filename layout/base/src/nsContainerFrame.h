@@ -293,13 +293,13 @@ protected:
 
   virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
 
-#ifdef NS_DEBUG
   /**
    * Return the number of children in the sibling list, starting at aChild.
    * Returns zero if aChild is nsnull.
    */
   static PRInt32 LengthOf(nsIFrame* aChild);
 
+#ifdef NS_DEBUG
   /**
    * Returns PR_TRUE if aChild is a child of this frame.
    */
