@@ -38,9 +38,12 @@
 
 
 /**
- * MODULE NOTES:
- * @update  gess 4/1/98
- * 
+ * @file nsHTMLTokenizer.cpp
+ * This is an implementation of the nsITokenizer interface.
+ * This file contains the implementation of a tokenizer to tokenize an HTML
+ * document. It attempts to do so, making tradeoffs between compatibility with
+ * older parsers and the SGML specification. Note that most of the real
+ * "tokenization" takes place in nsHTMLTokens.cpp.
  */
 
 #include "nsIAtom.h"
@@ -60,14 +63,13 @@ static NS_DEFINE_IID(kITokenizerIID,  NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,       NS_HTMLTOKENIZER_IID); 
 
 /**
- *  This method gets called as part of our COM-like interfaces.
- *  Its purpose is to create an interface to parser object
- *  of some type.
+ * This method gets called as part of our COM-like interfaces.
+ * Its purpose is to create an interface to parser object
+ * of some type.
  *  
- *  @update   gess 4/8/98
- *  @param    nsIID  id of object to discover
- *  @param    aInstancePtr ptr to newly discovered interface
- *  @return   NS_xxx result code
+ * @param    aIID  id of object to discover
+ * @param    aInstancePtr ptr to newly discovered interface
+ * @return   NS_xxx result code
  */
 nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
@@ -75,13 +77,13 @@ nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
 
-  if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
+  if(aIID.Equals(kISupportsIID))    {  // Do IUnknown...
     *aInstancePtr = (nsISupports*)(this);                                        
   }
-  else if(aIID.Equals(kITokenizerIID)) {  //do IParser base class...
+  else if(aIID.Equals(kITokenizerIID)) {  // Do ITokenizer base class...
     *aInstancePtr = (nsITokenizer*)(this);                                        
   }
-  else if(aIID.Equals(kClassIID)) {  //do this class...
+  else if(aIID.Equals(kClassIID)) {  // Do this class...
     *aInstancePtr = (nsHTMLTokenizer*)(this);                                        
   }                 
   else {
@@ -93,19 +95,21 @@ nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 /**
- *  This method is defined in nsHTMLTokenizer.h. It is used to 
- *  cause the COM-like construction of an HTMLTokenizer.
+ * This method is defined in nsHTMLTokenizer.h. It is used to 
+ * cause the COM-like construction of an HTMLTokenizer.
  *  
- *  @update  gess 4/8/98
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
+ * @param   aInstancePtrResult** ptr to newly instantiated parser
+ * @param   aFlag Parser flags the tokenizer should be aware of
+ * @param   aDocType The doctype of the current document.
+ * @param   aCommand The current command (view-source, fragment, etc).
+ * @return  NS_xxx error result
  */
 
 nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
-                                         PRInt32 aFlag,
-                                         eParserDocType aDocType, 
-                                         eParserCommands aCommand,
-                                         PRInt32 aFlags) 
+                             PRInt32 aFlag,
+                             eParserDocType aDocType, 
+                             eParserCommands aCommand,
+                             PRInt32 aFlags) 
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -124,11 +128,11 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
 
 
 /**
- *  Default constructor
- *   
- *  @update  gess 4/9/98
- *  @param   
- *  @return  
+ * Default constructor
+ * 
+ * @param  aParseMode The current mode the document is in (quirks, etc.)
+ * @param  aDocType The document type of the current document
+ * @param  aCommand What we are trying to do (view-source, parse a fragment, etc.)
  */
 nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
                                  eParserDocType aDocType,
@@ -174,13 +178,10 @@ nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
 
 
 /**
- *  Destructor
- *   
- *  @update  gess 4/9/98
- *  @param   
- *  @return  
+ * The destructor ensures that we don't leak any left over tokens.
  */
-nsHTMLTokenizer::~nsHTMLTokenizer(){
+nsHTMLTokenizer::~nsHTMLTokenizer()
+{
   if(mTokenDeque.GetSize()){
     CTokenDeallocator theDeallocator(mTokenAllocator->GetArenaPool());
     mTokenDeque.ForEach(theDeallocator);
@@ -192,7 +193,23 @@ nsHTMLTokenizer::~nsHTMLTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
-void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator) {
+/**
+ * Adds a token onto the end of the deque if aResult is a successful result.
+ * Otherwise, this function frees aToken and sets it to nsnull.
+ *
+ * @param aToken The token that wants to be added.
+ * @param aResult The error code that will be used to determine if we actually
+ *                want to push this token.
+ * @param aDeque The deque we want to push aToken onto.
+ * @param aTokenAllocator The allocator we use to free aToken in case aResult
+ *                        is not a success code.
+ */
+/* static */
+void nsHTMLTokenizer::AddToken(CToken*& aToken,
+                               nsresult aResult,
+                               nsDeque* aDeque,
+                               nsTokenAllocator* aTokenAllocator)
+{
   if(aToken && aDeque) {
     if(NS_SUCCEEDED(aResult)) {
       aDeque->Push(aToken);
@@ -204,11 +221,12 @@ void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,
 }
 
 /**
- * Retrieve a ptr to the global token recycler...
- * @update	gess8/4/98
- * @return  ptr to recycler (or null)
+ * Retrieve a pointer to the global token recycler...
+ *
+ * @return Pointer to recycler (or null)
  */
-nsTokenAllocator* nsHTMLTokenizer::GetTokenAllocator(void) {
+nsTokenAllocator* nsHTMLTokenizer::GetTokenAllocator(void)
+{
   return mTokenAllocator;
 }
 
@@ -216,10 +234,11 @@ nsTokenAllocator* nsHTMLTokenizer::GetTokenAllocator(void) {
 /**
  * This method provides access to the topmost token in the tokenDeque.
  * The token is not really removed from the list.
- * @update	gess8/2/98
- * @return  ptr to token
+ *
+ * @return Pointer to token
  */
-CToken* nsHTMLTokenizer::PeekToken() {
+CToken* nsHTMLTokenizer::PeekToken()
+{
   return (CToken*)mTokenDeque.PeekFront();
 }
 
@@ -227,10 +246,11 @@ CToken* nsHTMLTokenizer::PeekToken() {
 /**
  * This method provides access to the topmost token in the tokenDeque.
  * The token is really removed from the list; if the list is empty we return 0.
- * @update	gess8/2/98
- * @return  ptr to token or NULL
+ *
+ * @return Pointer to token or NULL
  */
-CToken* nsHTMLTokenizer::PopToken() {
+CToken* nsHTMLTokenizer::PopToken()
+{
   CToken* result=nsnull;
   result=(CToken*)mTokenDeque.PopFront();
   return result;
@@ -238,73 +258,82 @@ CToken* nsHTMLTokenizer::PopToken() {
 
 
 /**
+ * Pushes a token onto the front of our deque such that the next call to
+ * PopToken() or PeekToken() will return that token.
  * 
- * @update	gess8/2/98
- * @param 
- * @return
+ * @param theToken The next token to be processed
+ * @return theToken
  */
-CToken* nsHTMLTokenizer::PushTokenFront(CToken* theToken) {
+CToken* nsHTMLTokenizer::PushTokenFront(CToken* theToken)
+{
   mTokenDeque.PushFront(theToken);
   return theToken;
 }
 
 /**
+ * Pushes a token onto the deque.
  * 
- * @update	gess8/2/98
- * @param 
- * @return
+ * @param theToken the new token.
+ * @return theToken
  */
-CToken* nsHTMLTokenizer::PushToken(CToken* theToken) {
+CToken* nsHTMLTokenizer::PushToken(CToken* theToken)
+{
   mTokenDeque.Push(theToken);
   return theToken;
 }
 
 /**
- * 
- * @update	gess12/29/98
- * @param 
- * @return
+ * Returns the size of the deque.
+ *
+ * @return The number of remaining tokens.
  */
-PRInt32 nsHTMLTokenizer::GetCount(void) {
+PRInt32 nsHTMLTokenizer::GetCount(void)
+{
   return mTokenDeque.GetSize();
 }
 
 /**
- * 
- * @update	gess12/29/98
- * @param 
- * @return
+ * Allows access to an arbitrary token in the deque. The accessed token is left
+ * in the deque.
+ *
+ * @param anIndex The index of the target token. Token 0 would be the same as
+ *                the result of a call to PeekToken()
+ * @return The requested token.
  */
-CToken* nsHTMLTokenizer::GetTokenAt(PRInt32 anIndex){
+CToken* nsHTMLTokenizer::GetTokenAt(PRInt32 anIndex)
+{
   return (CToken*)mTokenDeque.ObjectAt(anIndex);
 }
 
 /**
- * @update	gess 12/29/98
- * @update	harishd 08/04/00
- * @param 
- * @return
+ * This method is part of the "sandwich" that occurs when we want to tokenize
+ * a document. This prepares us to be able to tokenize properly.
+ *
+ * @param aIsFinalChunk Whether this is the last chunk of data that we will
+ *                      get to see.
+ * @param aTokenAllocator The token allocator to use for this document.
+ * @return Our success in setting up.
  */
-nsresult nsHTMLTokenizer::WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)
+nsresult nsHTMLTokenizer::WillTokenize(PRBool aIsFinalChunk,
+                                       nsTokenAllocator* aTokenAllocator)
 {
   mTokenAllocator=aTokenAllocator;
   mIsFinalChunk=aIsFinalChunk;
-  mTokenScanPos=mTokenDeque.GetSize(); //cause scanDocStructure to search from here for new tokens...
+  // Cause ScanDocStructure to search from here for new tokens...
+  mTokenScanPos=mTokenDeque.GetSize();
   return NS_OK;
 }
 
 /**
- * 
- * @update	gess12/29/98
- * @param 
- * @return
+ * Pushes all of the tokens in aDeque onto the front of our deque so they
+ * get processed before any other tokens.
+ *
+ * @param aDeque The deque with the tokens in it.
  */
-void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
-
+void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque)
+{
   PRInt32 aCount=aDeque.GetSize();
   
-  //last but not least, let's check the misplaced content list.
-  //if we find it, then we have to push it all into the body before continuing...
   PRInt32 anIndex=0;
   for(anIndex=0;anIndex<aCount;++anIndex){
     CToken* theToken=(CToken*)aDeque.Pop();
@@ -315,14 +344,15 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
 
 /**
  * This is a utilty method for ScanDocStructure, which finds a given
- * tag in the stack.
+ * tag in the stack. The return value is meant to be used with
+ * nsDeque::ObjectAt() on aTagStack.
  *
- * @update	gess 08/30/00
  * @param   aTag -- the ID of the tag we're seeking
  * @param   aTagStack -- the stack to be searched
- * @return  index pos of tag in stack if found, otherwise kNotFound
+ * @return  index position of tag in stack if found, otherwise kNotFound
  */
-static PRInt32 FindLastIndexOfTag(eHTMLTags aTag,nsDeque &aTagStack) {
+static PRInt32 FindLastIndexOfTag(eHTMLTags aTag,nsDeque &aTagStack)
+{
   PRInt32 theCount=aTagStack.GetSize();
   
   while(0<theCount) {
@@ -344,19 +374,18 @@ static PRInt32 FindLastIndexOfTag(eHTMLTags aTag,nsDeque &aTagStack) {
  * skip doing residual style handling and allow inlines to contain block-level
  * elements.
  *
- * @update	gess 1Sep2000
- * @param 
- * @return
+ * @param aFinalChunk Is unused.
+ * @return Success (currently, this function cannot fail).
  */
-nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
+nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk)
+{
   nsresult result = NS_OK;
   if (!mTokenDeque.GetSize())
     return result;
 
   CHTMLToken* theToken = (CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos);
 
-    //*** start by finding the first start tag that hasn't been reviewed.
-
+  // Start by finding the first start tag that hasn't been reviewed.
   while(mTokenScanPos > 0) {
     if(theToken) {
       eHTMLTokenTypes theType = eHTMLTokenTypes(theToken->GetTokenType());  
@@ -369,23 +398,21 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
     theToken = (CHTMLToken*)mTokenDeque.ObjectAt(--mTokenScanPos);
   }
 
-  /*----------------------------------------------------------------------
-   *  Now that we know where to start, let's walk through the
-   *  tokens to see which are well-formed. Stop when you run out
-   *  of fresh tokens.
-   *---------------------------------------------------------------------*/
+  // Now that we know where to start, let's walk through the
+  // tokens to see which are well-formed. Stop when you run out
+  // of fresh tokens.
 
   nsDeque       theStack(0);
   nsDeque       tempStack(0);
   PRInt32       theStackDepth = 0;
-  //Don't bother if we get ridiculously deep.
+  // Don't bother if we get ridiculously deep.
   static  const PRInt32 theMaxStackDepth = 200;
 
   while(theToken && theStackDepth < theMaxStackDepth) {
     eHTMLTokenTypes theType = eHTMLTokenTypes(theToken->GetTokenType());
     eHTMLTags       theTag  = (eHTMLTags)theToken->GetTypeID();
 
-    if(nsHTMLElement::IsContainer(theTag)) { //bug 54117
+    if(nsHTMLElement::IsContainer(theTag)) { // Bug 54117
       PRBool theTagIsBlock  = gHTMLElements[theTag].IsMemberOf(kBlockEntity);
       PRBool theTagIsInline = (theTagIsBlock) ?
                                 PR_FALSE :
@@ -460,7 +487,7 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
             break;
           default:
             break; 
-        } //switch
+        }
       }
     }
 
@@ -470,24 +497,31 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
   return result;
 }
 
-nsresult nsHTMLTokenizer::DidTokenize(PRBool aFinalChunk) {
+/**
+ * This method is called after we're done tokenizing a chunk of data.
+ *
+ * @param aFinalChunk Tells us if this was the last chunk of data.
+ * @return Error result.
+ */
+nsresult nsHTMLTokenizer::DidTokenize(PRBool aFinalChunk)
+{
   return ScanDocStructure(aFinalChunk);
 }
 
 /**
- *  This method repeatedly called by the tokenizer. 
- *  Each time, we determine the kind of token were about to 
- *  read, and then we call the appropriate method to handle
- *  that token type.
+ * This method is repeatedly called by the tokenizer. 
+ * Each time, we determine the kind of token we're about to 
+ * read, and then we call the appropriate method to handle
+ * that token type.
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * @param  aScanner The source of our input.
+ * @param  aFlushTokens An OUT parameter to tell the caller whether it should
+ *                      process our queued tokens up to now (e.g., when we
+ *                      reach a <script>).
+ * @return Success or error
  */
-nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) {
-
+nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
+{
   PRUnichar theChar;
   CToken* theToken=0;
 
@@ -495,10 +529,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
 
   switch(result) {
     case kEOF:
-        //We convert from eof to complete here, because we never really tried to get data.
-        //All we did was try to see if data was available, which it wasn't.
-        //It's important to return process complete, so that controlling logic can know that
-        //everything went well, but we're done with token processing.
+      // Tell our caller that'we finished.
       return result;
 
     case NS_OK:
@@ -529,25 +560,30 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
         result=ConsumeWhitespace(theChar,theToken,aScanner);
       } 
       break; 
-  } //switch
+  }
 
   return result;
 }
 
 
 /**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of some kind of tagged 
- *  element. We don't know yet if it's a tag or a comment.
- *  
- *  @update  gess 5/12/98
- *  @param   aChar is the last char read
- *  @param   aScanner is represents our input source
- *  @param   aToken is the out arg holding our new token
- *  @return  error code.
+ * This method is called just after a "<" has been consumed 
+ * and we know we're at the start of some kind of tagged 
+ * element. We don't know yet if it's a tag or a comment.
+ * 
+ * @param   aChar is the last char read
+ * @param   aToken is the out arg holding our new token (the function allocates
+ *                 the return token using mTokenAllocator).
+ * @param   aScanner represents our input source
+ * @param   aFlushTokens is an OUT parameter use to tell consumers to flush
+ *                       the current tokens after processing the current one.
+ * @return  error code.
  */
-nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens) {
-
+nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,
+                                     CToken*& aToken,
+                                     nsScanner& aScanner,
+                                     PRBool& aFlushTokens)
+{
   PRUnichar theNextChar, oldChar;
   nsresult result=aScanner.Peek(aChar,1);
 
@@ -561,14 +597,15 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
           // Get the original "<" (we've already seen it with a Peek)
           aScanner.GetChar(oldChar);
 
-          // xml allow non ASCII tag name, consume as end tag. need to make xml view source work
+          // XML allows non ASCII tag names, consume this as an end tag. This
+          // is needed to make XML view source work
           PRBool isXML=(mFlags & NS_IPARSER_FLAG_XML);
           if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)|| 
              (isXML && (! nsCRT::IsAscii(theNextChar)))) { 
             result=ConsumeEndTag(aChar,aToken,aScanner);
           }
           else result=ConsumeComment(aChar,aToken,aScanner);
-        }//if
+        }
 
         break;
 
@@ -587,14 +624,14 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         }
         break;
 
-      case kQuestionMark: //it must be an XML processing instruction...
+      case kQuestionMark: // It must be an XML processing instruction...
         // Get the original "<" (we've already seen it with a Peek)
         aScanner.GetChar(oldChar);
         result=ConsumeProcessingInstruction(aChar,aToken,aScanner);
         break;
 
       default:
-        // xml allows non ASCII tag names, consume as a start tag.
+        // XML allows non ASCII tag names, consume this as a start tag.
         PRBool isXML=(mFlags & NS_IPARSER_FLAG_XML);
         if(nsCRT::IsAsciiAlpha(aChar) ||
             (isXML && (! nsCRT::IsAscii(aChar)))) { 
@@ -607,9 +644,8 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
           // char and leave the decision to ConsumeText().
           result=ConsumeText(aToken,aScanner);
         }
-    } //switch
-
-  } //if
+    }
+  }
  
   // Last ditch attempt to make sure we don't lose data.
   if (kEOF == result && !aScanner.IsIncremental()) {
@@ -622,18 +658,18 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
 }
 
 /**
- *  This method is called just after we've consumed a start
- *  tag, and we now have to consume its attributes.
- *  
- *  @update  rickg  03.23.2000
- *  @param   aChar: last char read
- *  @param   aScanner: see nsScanner.h
- *  @param   aLeadingWS: contains ws chars that preceeded the first attribute
- *  @return  
+ * This method is called just after we've consumed a start or end
+ * tag, and we now have to consume its attributes.
+ * 
+ * @param   aChar is the last char read
+ * @param   aToken is the start or end tag that "owns" these attributes.
+ * @param   aScanner represents our input source
+ * @return  Error result.
  */
 nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
                                             CToken* aToken,
-                                            nsScanner& aScanner) {
+                                            nsScanner& aScanner)
+{
   PRBool done=PR_FALSE;
   nsresult result=NS_OK;
   PRInt16 theAttrCount=0;
@@ -641,15 +677,18 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
 
   while((!done) && (result==NS_OK)) {
-    CAttributeToken* theToken= NS_STATIC_CAST(CAttributeToken*, theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown));
+    CAttributeToken* theToken =
+      NS_STATIC_CAST(CAttributeToken*,
+                     theAllocator->CreateTokenOfType(eToken_attribute,
+                                                     eHTMLTag_unknown));
     if(theToken){
-      result=theToken->Consume(aChar,aScanner,mFlags);  //tell new token to finish consuming text...    
+      // Tell the new token to finish consuming text...
+      result=theToken->Consume(aChar,aScanner,mFlags);
  
-      //Much as I hate to do this, here's some special case code.
-      //This handles the case of empty-tags in XML. Our last
-      //attribute token will come through with a text value of ""
-      //and a textkey of "/". We should destroy it, and tell the 
-      //start token it was empty.
+      // Much as I hate to do this, here's some special case code.
+      // This handles the case of empty-tags in XML. Our last
+      // attribute token will come through with a text value of ""
+      // and a textkey of "/". We should destroy it.
       if(NS_SUCCEEDED(result)) {
         PRBool isUsableAttr = PR_TRUE;
         const nsSubstring& key=theToken->GetKey();
@@ -669,16 +708,16 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
           IF_FREE(theToken, mTokenAllocator);
         }
       }
-      else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
+      else {
         IF_FREE(theToken, mTokenAllocator);
-        //Bad attributes are not a reason to set empty.
+        // Bad attributes are not a reason to set empty.
         if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result) {
           result=NS_OK;
         } else {
           aToken->SetEmpty(PR_TRUE);
         }
       }
-    }//if
+    }
     
 #ifdef DEBUG
     if(NS_SUCCEEDED(result)){
@@ -690,17 +729,17 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
     if (NS_SUCCEEDED(result)) {
       result = aScanner.Peek(aChar);
       if (NS_SUCCEEDED(result)) {
-        if (aChar == kGreaterThan) { //you just ate the '>'
-          aScanner.GetChar(aChar); //skip the '>'
+        if (aChar == kGreaterThan) { // You just ate the '>'
+          aScanner.GetChar(aChar); // Skip the '>'
           done = PR_TRUE;
         }
         else if(aChar == kLessThan) {
           aToken->SetInError(PR_TRUE);
           done = PR_TRUE;
         }
-      }//if
-    }//if
-  }//while
+      }
+    }
+  } // End while
 
   if (NS_FAILED(result)) {
     aToken->SetInError(PR_TRUE);
@@ -715,20 +754,31 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
 }
 
 /**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
+ * This method consumes a start tag and all of its attributes.
+ *
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token. (allocated
+ *               by the function using mTokenAllocator
+ * @param aScanner Our source of data
+ * @param aFlushTokens is an OUT parameter use to tell consumers to flush
+ *                     the current tokens after processing the current one.
+ * @return Error result.
  */
-nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens) {
-  PRInt32 theDequeSize=mTokenDeque.GetSize(); //remember this for later in case you have to unwind...
+nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
+                                          CToken*& aToken,
+                                          nsScanner& aScanner,
+                                          PRBool& aFlushTokens)
+{
+  // Remember this for later in case you have to unwind...
+  PRInt32 theDequeSize=mTokenDeque.GetSize();
   nsresult result=NS_OK;
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken=theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   
   if(aToken) {
-    result= aToken->Consume(aChar,aScanner,mFlags);     //tell new token to finish consuming text...    
+    // Tell the new token to finish consuming text...
+    result= aToken->Consume(aChar,aScanner,mFlags);
 
     if(NS_SUCCEEDED(result)) {
      
@@ -737,8 +787,8 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
 
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
 
-      //Good. Now, let's see if the next char is ">". 
-      //If so, we have a complete tag, otherwise, we have attributes.
+      // Good. Now, let's see if the next char is ">".
+      // If so, we have a complete tag, otherwise, we have attributes.
       result = aScanner.Peek(aChar);
       if (NS_FAILED(result)) {
         aToken->SetInError(PR_TRUE);
@@ -749,12 +799,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         return NS_OK;
       }
 
-      if(kGreaterThan != aChar) { //look for '>' 
+      if(kGreaterThan != aChar) { // Look for a '>'
         result = ConsumeAttributes(aChar, aToken, aScanner);
-      } //if
+      }
       else {
         aScanner.GetChar(aChar);
-      }        
+      }
 
       /*  Now that that's over with, we have one more problem to solve.
           In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
@@ -845,42 +895,48 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         }
       }
 
-      //EEEEECCCCKKKK!!! 
-      //This code is confusing, so pay attention.
-      //If you're here, it's because we were in the midst of consuming a start
-      //tag but ran out of data (not in the stream, but in this *part* of the stream.
-      //For simplicity, we have to unwind our input. Therefore, we pop and discard
-      //any new tokens we've cued this round. Later we can get smarter about this.
+      // This code is confusing, so pay attention.
+      // If you're here, it's because we were in the midst of consuming a start
+      // tag but ran out of data (not in the stream, but in this *part* of the
+      // stream. For simplicity, we have to unwind our input. Therefore, we pop
+      // and discard any new tokens we've cued this round. Later we can get 
+      // smarter about this.
       if(NS_FAILED(result)) {
         while(mTokenDeque.GetSize()>theDequeSize) {
           CToken* theToken=(CToken*)mTokenDeque.Pop();
           IF_FREE(theToken, mTokenAllocator);
         }
       }
-    } //if
+    }
     else IF_FREE(aToken, mTokenAllocator);
-  } //if
+  }
   return result;
 }
 
 /**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
+ * This method consumes an end tag and any "attributes" that may come after it.
+ *
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result
  */
-nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
- 
+nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,
+                                        CToken*& aToken,
+                                        nsScanner& aScanner)
+{ 
   // Get the "/" (we've already seen it with a Peek)
   aScanner.GetChar(aChar);
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken=theAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
-  PRInt32 theDequeSize=mTokenDeque.GetSize(); //remember this for later in case you have to unwind...
+  // Remember this for later in case you have to unwind...
+  PRInt32 theDequeSize=mTokenDeque.GetSize();
   nsresult result=NS_OK;
   
   if(aToken) {
-    result= aToken->Consume(aChar,aScanner,mFlags);  //tell new token to finish consuming text...    
+    // Tell the new token to finish consuming text...
+    result= aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
     NS_ENSURE_SUCCESS(result, result);
       
@@ -910,7 +966,7 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
         IF_FREE(theToken, mTokenAllocator);
       }
     }
-  } //if
+  }
   return result;
 }
 
@@ -918,15 +974,17 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
  *  This method is called just after a "&" has been consumed 
  *  and we know we're at the start of an entity.  
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result. 
  */
-nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
-   PRUnichar  theChar;
-   nsresult result=aScanner.Peek(theChar, 1);
+nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,
+                                        CToken*& aToken,
+                                        nsScanner& aScanner)
+{
+  PRUnichar  theChar;
+  nsresult result=aScanner.Peek(theChar, 1);
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   if (NS_SUCCEEDED(result)) {
@@ -939,15 +997,15 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
       }
       else {
         if (mIsFinalChunk && result == kEOF) {
-          result=NS_OK; //use as much of the entity as you can get.
+          result=NS_OK; // Use as much of the entity as you can get.
         }
         AddToken(aToken,result,&mTokenDeque,theAllocator);
         return result;
       }
     }
-    // oops, we're actually looking at plain text...
+    // Oops, we're actually looking at plain text...
     result = ConsumeText(aToken,aScanner);
-  }//if
+  }
   return result;
 }
 
@@ -956,13 +1014,15 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
  *  This method is called just after whitespace has been 
  *  consumed and we know we're at the start a whitespace run.  
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result.
  */
-nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
+nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,
+                                            CToken*& aToken,
+                                            nsScanner& aScanner)
+{
   // Get the whitespace character
   aScanner.GetChar(aChar);
 
@@ -980,13 +1040,15 @@ nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsSc
  *  This method is called just after a "<!" has been consumed 
  *  and we know we're at the start of a comment.  
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result.
  */
-nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,
+                                         CToken*& aToken,
+                                         nsScanner& aScanner)
+{
   // Get the "!"
   aScanner.GetChar(aChar);
 
@@ -1007,16 +1069,17 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
 }
 
 /**
- *  This method is called just after a known text char has
- *  been consumed and we should read a text run.
+ * This method is called just after a known text char has
+ * been consumed and we should read a text run. Note: we actually ignore the
+ * first character of the text run so that we can consume invalid markup 
+ * as text.
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result.
  */ 
-nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner){
+nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner)
+{
   nsresult result=NS_OK;
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   CTextToken* theToken = (CTextToken*)theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
@@ -1037,18 +1100,18 @@ nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner){
 }
 
 /**
- *  This method is called just after a "<!" has been consumed.
- *  NOTE: Here we might consume DOCTYPE and "special" markups. 
+ * This method is called just after a "<!" has been consumed.
+ * NOTE: Here we might consume DOCTYPE and "special" markups. 
  * 
- *  
- *  @update harishd 09/02/99
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result.
  */
-nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
-
+nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,
+                                               CToken*& aToken,
+                                               nsScanner& aScanner)
+{
   // Get the "!"
   aScanner.GetChar(aChar);
 
@@ -1087,15 +1150,17 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
 }
 
 /**
- *  This method is called just after a newline has been consumed. 
+ * This method is called just after a newline has been consumed. 
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  aToken is the newly created newline token that is parsing
- *  @return error code
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result.
  */
-nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,
+                                         CToken*& aToken,
+                                         nsScanner& aScanner)
+{
   // Get the newline character
   aScanner.GetChar(aChar);
 
@@ -1111,16 +1176,17 @@ nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScann
 
 
 /**
- *  This method is called just after a ? has been consumed. 
+ * This method is called just after a <? has been consumed. 
  *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  aToken is the newly created newline token that is parsing
- *  @return error code
+ * @param aChar The last character read from the scanner.
+ * @param aToken The OUT parameter that holds our resulting token.
+ * @param aScanner Our source of data
+ * @return Error result.
  */
-nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
-  
+nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,
+                                                       CToken*& aToken,
+                                                       nsScanner& aScanner)
+{
   // Get the "?"
   aScanner.GetChar(aChar);
 
