@@ -2181,10 +2181,10 @@ nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosit
 {
   if (IsInDropDownMode() == PR_TRUE) {
     nsWidgetInitData widgetData;
-    aView->SetZIndex(kMaxZ);
+    // aView->SetZIndex(kMaxZ);
+    aView->SetFloating(PR_TRUE);
     widgetData.mWindowType  = eWindowType_popup;
     widgetData.mBorderStyle = eBorderStyle_default;
-    
     
 #ifdef XP_MAC
     static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);

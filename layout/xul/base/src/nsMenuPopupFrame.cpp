@@ -148,6 +148,11 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   viewManager->GetRootView(rootView);
   viewManager->InsertChild(rootView, ourView, kMaxZ);
 
+  // XXX Hack. The menu's view should float above all other views,
+  // so we use the nsIView::SetFloating() to tell the view manager
+  // about that constraint.
+  ourView->SetFloating(PR_TRUE);
+
   // XXX Hack. Change our transparency to be non-transparent
   // until the bug related to update of transparency on show/hide
   // is fixed.

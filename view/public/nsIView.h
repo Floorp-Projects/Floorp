@@ -264,6 +264,17 @@ public:
   NS_IMETHOD  GetAutoZIndex(PRBool &aAutoZIndex) const = 0;
 
   /**
+   * Set/Get whether the view "floats" above all other views,
+   * which tells the compositor not to consider higher views in
+   * the view hierarchy that would geometrically intersect with
+   * this view. This is a hack, but it fixes some problems with
+   * views that need to be drawn in front of all other views.
+   * @result PR_TRUE if the view floats, PR_FALSE otherwise.
+   */
+  NS_IMETHOD SetFloating(PRBool aFloatingView) = 0;
+  NS_IMETHOD GetFloating(PRBool &aFloatingView) const = 0;
+
+  /**
    * Called to set the parent of the view.
    * @param aParent new parent
    */
@@ -539,5 +550,7 @@ private:
 #define NS_VIEW_PUBLIC_FLAG_DONT_BITBLT          0x0010
 // indicates that the view is using auto z-indexing
 #define NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX          0x0020
+// indicatest hat the view is a floating view.
+#define NS_VIEW_PUBLIC_FLAG_FLOATING             0x0040
 
 #endif
