@@ -28,11 +28,14 @@ include <$(DEPTH)\cck\InitDist.win>
 export::
 	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\nsetup32
 	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\nsetup32
+	$(MAKE_INSTALL) *.bat $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell\nsetup32
 	$(MAKE_INSTALL) part*.ini $(CCKDIST)\CCKTool\
 
 	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\nsetup32
 	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\nsetup32
+	$(MAKE_INSTALL) *.bat $(CCKDIST)\CCKTool\Configs\Default\Workspace\Autorun\Shell\nsetup32
 
 	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\nsetup32
 	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\nsetup32
+	$(MAKE_INSTALL) *.bat $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Autorun\Shell\nsetup32
 

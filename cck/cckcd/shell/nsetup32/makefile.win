@@ -28,3 +28,4 @@ include <$(DEPTH)\cck\InitDist.win>
 export::
 	$(MAKE_INSTALL) *.exe $(CCKDIST)\Shell\nsetup32
 	$(MAKE_INSTALL) *.ini $(CCKDIST)\Shell\nsetup32
+	$(MAKE_INSTALL) *.bat $(CCKDIST)\Shell\nsetup32
