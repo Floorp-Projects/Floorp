@@ -20,6 +20,7 @@
 // KEEPING AROUND FOR A FEW DAYS JUST TO MAKE SURE;
 // BUT IT'S NO LONGER PART OF THE BUILD.
 
+#include "nsIDOMDocumentFragment.h"
 #include "nsInsertHTMLTxn.h"
 #include "nsIDOMSelection.h"
 #include "nsIContent.h"

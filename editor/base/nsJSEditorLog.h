@@ -120,7 +120,7 @@ public:
   NS_IMETHOD Align(const nsString& aAlign);
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
+  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);

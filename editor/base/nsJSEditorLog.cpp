@@ -658,7 +658,7 @@ nsJSEditorLog::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)
+nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
   // XXX: Need to add code here to dump out the element
   // XXX: and it's children.

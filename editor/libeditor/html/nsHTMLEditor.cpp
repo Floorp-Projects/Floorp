@@ -2165,7 +2165,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   nsAutoJSEditorLogLock logLock(mJSEditorLog);
 
   if (mJSEditorLog)
-    mJSEditorLog->InsertElement(aElement, aDeleteSelection, aReturn);
+    mJSEditorLog->InsertElement(aElement, aDeleteSelection);
 #endif // ENABLE_JS_EDITOR_LOG
 
   nsresult res=NS_ERROR_NOT_INITIALIZED;
