@@ -37,7 +37,9 @@
 #ifndef _NS_X400_PARSER_H
 #define _NS_X400_PARSER_H
 
-class nsX400Parser
+#include "nscalexport.h"
+
+class NS_CALENDAR nsX400Parser
 {
 private:
   JulianString**  mppKeys;      /* keys are kept here */

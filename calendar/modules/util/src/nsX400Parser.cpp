@@ -281,13 +281,19 @@ nsresult nsX400Parser::Parse()
   JulianString* psKey;
   JulianString* psVal;
   
-  /*
-   * skip leading slash...
-   */
   if (0 == p)
     return NS_OK;     /* starting with an empty string */
 
-  for (iHead = 0; *p && '/' == p[iHead]; iHead++)
+  /*
+   * Don't start parsing until we find a slash...
+   */
+  for (iHead = 0; *p && '/' != p[iHead]; iHead++)
+    /* keep looking */ ;
+
+  /*
+   * now skip over the slashes...
+   */
+  for (; *p && '/' == p[iHead]; iHead++)
     /* keep looking */ ;
 
   if (0 == p[iHead])
@@ -305,7 +311,7 @@ nsresult nsX400Parser::Parse()
   /*
    *  Parse off parts until done...
    */
-  for (iTail = 0, ++iHead; iTail < iLen - 1; iHead = iTail+1)
+  for (iTail = 0; iTail < iLen - 1; iHead = iTail+1)
   {
     /*
      * grab the next "key=property" substring
@@ -314,24 +320,25 @@ nsresult nsX400Parser::Parse()
       iTail = iLen - 1;
     if (iHead == iTail)
       break;
-    sTemp = msValue.indexSubstr(iHead,iTail);
+    sTemp = msValue.indexSubstr(iHead,iTail-1);
 
     /*
      * key and value are separated by '='
      */
     if (-1 == (i = msValue.Find('=',iHead)))
       break;
-    if (iHead+1 >= i)
+    if (iHead+1 > i)
       break;
 
     /*
      * add this pair to the list...
      */
     psKey = new JulianString( msValue.indexSubstr(iHead,i-1) );
-    psVal = new JulianString( msValue.indexSubstr(i+1,iTail) );
+    psVal = new JulianString( msValue.indexSubstr(i+1,iTail-1) );
     EnsureSize(miLength + 1);
     mppKeys[miLength] = psKey;
     mppVals[miLength] = psVal;
+    ++miLength;
   }
 
   return NS_OK;
@@ -350,7 +357,7 @@ nsresult nsX400Parser::Assemble()
     msValue += *mppKeys[i];
     msValue += "=";
     msValue += *mppVals[i];
+    msValue += "/";
   }
-  msValue += "/";
   return NS_OK;
 }
