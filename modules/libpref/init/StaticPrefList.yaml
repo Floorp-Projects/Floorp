@@ -6039,8 +6039,6 @@
   mirror: always
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
-#elif defined(XP_WIN) && !defined(_ARM64_) && !defined(_X86_)
-  value: true
 #else
   value: false
 #endif
