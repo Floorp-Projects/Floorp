@@ -5,28 +5,7 @@
   <Description about="urn:mimetypes"> 
     <NC:MIME-types> 
 	    <Seq about="urn:mimetypes:root"> 
-		    <li resource="urn:mimetype:text/html"/> 
 	    </Seq> 
     </NC:MIME-types> 
-  </Description> 
-  
-  <Description about="urn:mimetype:text/html"> 
-    <NC:value>text/html</NC:value> 
-    <NC:description>HyperText Markup Language Document</NC:description> 
-    <NC:editable>false</NC:editable> 
-    <NC:fileExtensions>htm</NC:fileExtensions> 
-    <NC:fileExtensions>html</NC:fileExtensions> 
-    <NC:handlerProp>
-      <NC:handler about="urn:mimetype:handler:text/html"> 
-        <NC:saveToDisk>false</NC:saveToDisk> 
-        <NC:handleInternal>true</NC:handleInternal> 
-        <NC:externalApplicationProp>
-          <NC:externalApplication> 
-            <NC:prettyName></NC:prettyName> 
-            <NC:path></NC:path> 
-          </NC:externalApplication> 
-        </NC:externalApplicationProp>
-      </NC:handler> 
-    </NC:handlerProp> 
   </Description> 
 </RDF>
