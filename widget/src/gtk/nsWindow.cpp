@@ -61,6 +61,7 @@ nsWindow::nsWindow()
   mFont = nsnull;
   
   mMenuBar = nsnull;
+  mIsTooSmall = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -504,7 +505,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     if (mIsToplevel && mShell)
     {
 #if 0
-      printf("nsWidget::Show %s (%p) bState = %i, mWindowType = %i\n",
+      printf("nsWindow::Show %s (%p) bState = %i, mWindowType = %i\n",
              (const char *) debug_GetName(mWidget),
              this,
              bState, mWindowType);
@@ -660,7 +661,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   {
     if (mIsTooSmall)
     {
-      nNeedToShow = PR_TRUE;
+      // if we are not shown, we don't want to force a show here, so check and see if Show(TRUE) has been called
+      nNeedToShow = mShown;
       mIsTooSmall = PR_FALSE;
     }
   }
