@@ -118,7 +118,7 @@ public:
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
     
 	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
-	NS_IMETHOD AddSubfolder(nsAutoString *name, nsIMsgFolder **child);
+	NS_IMETHOD AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, nsIMsgFolder **child);
     
   NS_IMETHOD Compact();
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);

@@ -138,6 +138,11 @@ public:
 
 protected:
     virtual void    flags();
+	virtual void	envelope_data();
+	virtual void	xaolenvelope_data();
+	virtual void	parse_address(nsCAutoString &addressLine);
+	virtual void	internal_date();
+
     virtual void    response_data();
     virtual void    resp_text();
     virtual void    resp_cond_state();
@@ -179,6 +184,8 @@ protected:
 	// from the open socket.
 	virtual PRBool		GetNextLineForParser(char **nextLine);
 	virtual void    end_of_line();
+	// overriden to do logging
+    virtual void        SetSyntaxError(PRBool error);
 
 private:
     PRBool                   fProcessingTaggedResponse;

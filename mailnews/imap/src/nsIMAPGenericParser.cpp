@@ -156,18 +156,6 @@ void nsIMAPGenericParser::SetSyntaxError(PRBool error)
 	{
 		NS_ASSERTION(PR_FALSE, "syntax error in generic parser");	
 		fSyntaxErrorLine = PL_strdup(fCurrentLine);
-		if (!fSyntaxErrorLine)
-		{
-			HandleMemoryFailure();
-//			PR_LOG(IMAP, out, ("PARSER: Internal Syntax Error: <no line>"));
-		}
-		else
-		{
-//			if (!nsCRT::strcmp(fSyntaxErrorLine, CRLF))
-//				PR_LOG(IMAP, out, ("PARSER: Internal Syntax Error: <CRLF>"));
-//			else
-//				PR_LOG(IMAP, out, ("PARSER: Internal Syntax Error: %s", fSyntaxErrorLine));
-		}
 	}
 	else
 		fSyntaxErrorLine = NULL;
@@ -381,8 +369,10 @@ char *nsIMAPGenericParser::CreateAtom()
 // Regardless of type, call GetNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateNilString()
 {
-	if (!PL_strcasecmp(fNextToken, "NIL"))
+	if (!PL_strncasecmp(fNextToken, "NIL", 3))
 	{
+		if (nsCRT::strlen(fNextToken) != 3)
+			fNextToken += 3;
 		//fNextToken = GetNextToken();
 		return NULL;
 	}
@@ -473,14 +463,17 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 			// the quoted string was fully contained within fNextToken,
 			// and there is text after the quote in fNextToken that we
 			// still need
-			int charDiff = PL_strlen(fNextToken) - charIndex - 1;
-			fCurrentTokenPlaceHolder -= charDiff;
-			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-				fAtEndOfLine = PR_TRUE;
+//			int charDiff = PL_strlen(fNextToken) - charIndex - 1;
+//			fCurrentTokenPlaceHolder -= charDiff;
+//			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
+//				fAtEndOfLine = PR_TRUE;
+			AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + nsCRT::strlen(returnString) + 2);
+			if (!nsCRT::strcmp(fLineOfTokens, CRLF))
+				fAtEndOfLine = TRUE;
 		}
 		else
 		{
-			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 2 - PL_strlen(fNextToken);
+			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 1 - PL_strlen(fNextToken);
 			if (!*fCurrentTokenPlaceHolder)
 				*fCurrentTokenPlaceHolder = ' ';	// put the token delimiter back
 			/*	if (!nsCRT::strcmp(fNextToken, CRLF))
@@ -488,6 +481,8 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 			*/
 		}
 	}
+	else
+		NS_ASSERTION(PR_FALSE, "didn't find close quote");
 	
 	return PL_strdup(returnString.GetBuffer());
 }

@@ -221,7 +221,7 @@ nsShouldIgnoreFile(nsString& name)
     return PR_TRUE;
 }
 
-NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name, 
+NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, 
                                              nsIMsgFolder **child)
 {
   if(!child)
@@ -252,6 +252,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
   if (NS_FAILED(rv))
     return rv;        
 
+  folder->SetPath(dbPath);
     nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
 
     folder->GetFlags((PRUint32 *)&flags);
@@ -311,7 +312,6 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
   for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
   {
     nsFileSpec currentFolderPath = (nsFileSpec&)dir;
-
     folderName = currentFolderPath.GetLeafName();
     currentFolderNameStr = folderName;
     if (nsShouldIgnoreFile(currentFolderNameStr))
@@ -320,7 +320,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       continue;
     }
 
-    // OK, here we need to get the online name from the folder cache if we can.
+       // OK, here we need to get the online name from the folder cache if we can.
     // If we can, use that to create the sub-folder
 
     nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
@@ -328,7 +328,6 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
     nsCOMPtr <nsIFileSpec> dbFile;
 
     NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(dbFile));
-
     // don't strip off the .msf in currentFolderPath.
     currentFolderPath.SetLeafName(currentFolderNameStr);
     rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(curFolder));
@@ -367,8 +366,18 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
         }
       }
     }
+      // make the imap folder remember the file spec it was created with.
+    nsCAutoString leafName (currentFolderDBNameStr);
+    nsCOMPtr <nsIFileSpec> msfFileSpec;
+    rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
+    if (NS_SUCCEEDED(rv) && msfFileSpec)
+    {
+      // leaf name is the db name w/o .msf (nsShouldIgnoreFile strips it off)
+      // so this trims the .msf off the file spec.
+      msfFileSpec->SetLeafName(leafName);
+    }
     // use the utf7 name as the uri for the folder.
-    AddSubfolder(&utf7LeafName, getter_AddRefs(child));
+    AddSubfolderWithPath(&utf7LeafName, msfFileSpec, getter_AddRefs(child));
     if (child)
     {
       // use the unicode name as the "pretty" name. Set it so it won't be
@@ -376,17 +385,6 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       if (currentFolderNameStr.Length() > 0)
         child->SetName(currentFolderNameStr.GetUnicode());
 
-      // make the imap folder remember the file spec it was created with.
-      nsCAutoString leafName (currentFolderDBNameStr);
-      nsCOMPtr <nsIFileSpec> msfFileSpec;
-      rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
-      if (NS_SUCCEEDED(rv) && msfFileSpec)
-      {
-        // leaf name is the db name w/o .msf (nsShouldIgnoreFile strips it off)
-        // so this trims the .msf off the file spec.
-        msfFileSpec->SetLeafName(leafName);
-        child->SetPath(msfFileSpec);
-      }
     }
     PL_strfree(folderName);
     }
@@ -650,9 +648,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       }
 
       //Now let's create the actual new folder
-      rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
-      if (NS_SUCCEEDED(rv) && child)
-        child->SetPath(dbFileSpec);
+      rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
+//      if (NS_SUCCEEDED(rv) && child)
+//        child->SetPath(dbFileSpec);
 
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
       if (imapFolder)
@@ -1382,6 +1380,24 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     if (NS_FAILED(rv)) return rv;
 
     rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &isTrashFolder);
+
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    nsCOMPtr<nsIMsgFolder> trashFolder;
+
+	if (!isTrashFolder)
+	{
+        rv = GetRootFolder(getter_AddRefs(rootFolder));
+        if (NS_SUCCEEDED(rv) && rootFolder)
+        {
+            PRUint32 numFolders = 0;
+            rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
+                                                1, &numFolders,
+                                                getter_AddRefs(trashFolder));
+			// if we can't find the trash, we'll just have to do an imap delete and pretend this is the trash
+			if (NS_FAILED(rv) || !trashFolder)
+				isTrashFolder = PR_TRUE;
+		}
+	}
     if (NS_SUCCEEDED(rv) && isTrashFolder)
     {
         rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
@@ -1390,7 +1406,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
             if (mDatabase) 
       {
                 mDatabase->DeleteMessages(&srcKeyArray,NULL);
-        if(!isMove)
+//        if(!isMove)
         {
           NotifyDeleteOrMoveMessagesCompleted(this);
         }
@@ -1410,28 +1426,17 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     if (txnMgr) SetTransactionManager(txnMgr);
     }
         
-        nsCOMPtr<nsIMsgFolder> rootFolder;
-        rv = GetRootFolder(getter_AddRefs(rootFolder));
-        if (NS_SUCCEEDED(rv) && rootFolder)
-        {
-            nsCOMPtr<nsIMsgFolder> trashFolder;
-            PRUint32 numFolders = 0;
-            rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
-                                                1, &numFolders,
-                                                getter_AddRefs(trashFolder));
+      if(trashFolder)
+	  {
+        nsCOMPtr<nsIMsgFolder> srcFolder;
+        nsCOMPtr<nsISupports>srcSupport;
+        PRUint32 count = 0;
+        rv = messages->Count(&count);
 
-            if(NS_SUCCEEDED(rv) && trashFolder)
-            {
-                nsCOMPtr<nsIMsgFolder> srcFolder;
-                nsCOMPtr<nsISupports>srcSupport;
-                PRUint32 count = 0;
-                rv = messages->Count(&count);
-                
-                rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
-                                    getter_AddRefs(srcFolder));
+        rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
+						getter_AddRefs(srcFolder));
         rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull);
-            }
-        }
+	  }
     }
     return rv;
 }
@@ -1852,7 +1857,13 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
   nsresult rv = NS_OK;
 
   if (m_msgParser)
+  {
+    nsMailboxParseState parseState;
+    m_msgParser->GetState(&parseState);
+    if (parseState == nsIMsgParseMailMsgState::ParseHeadersState)
+    m_msgParser->ParseAFolderLine(CRLF, 2);
     m_msgParser->GetNewMsgHdr(getter_AddRefs(newMsgHdr));
+  }
   if (NS_SUCCEEDED(rv) && newMsgHdr)
   {
     char *headers;
@@ -2444,7 +2455,6 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
 void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsIImapFlagAndUidState *flagState)
 {
   PRBool showDeletedMessages = ShowDeletedMessages();
-
   int dbIndex=0; // current index into existingKeys
   PRInt32 existTotal, numberOfKnownKeys;
   PRInt32 messageIndex;

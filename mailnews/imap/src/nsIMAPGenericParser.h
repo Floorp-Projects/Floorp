@@ -93,11 +93,11 @@ protected:
     PRBool                   fAtEndOfLine;
 	PRBool					  fTokenizerAdvanced;
 
-private:
-
     char                     *fSyntaxErrorLine;
-    PRBool                   fDisconnected;
     PRBool                   fSyntaxError;
+private:
+    PRBool                   fDisconnected;
+
 
 };
 

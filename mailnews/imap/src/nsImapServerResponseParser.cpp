@@ -956,6 +956,7 @@ void nsImapServerResponseParser::numeric_mailbox_data()
 void nsImapServerResponseParser::msg_fetch()
 {
 	nsresult res;
+	PRBool bNeedEndMessageDownload = PR_FALSE;
 
 	// we have not seen a uid response or flags for this fetch, yet
 	fCurrentResponseUID = 0;
@@ -1022,6 +1023,7 @@ void nsImapServerResponseParser::msg_fetch()
 				// all of this message's headers
 				fNextToken = GetNextToken();
 				fDownloadingHeaders = PR_TRUE;
+				bNeedEndMessageDownload = PR_FALSE;
 				if (ContinueParse())
 					msg_fetch_headers(nsnull);
 			}
@@ -1033,6 +1035,7 @@ void nsImapServerResponseParser::msg_fetch()
 					fNextToken = GetNextToken();
 				if (ContinueParse())
 				{
+					bNeedEndMessageDownload = PR_FALSE;
 					fNextToken = GetNextToken();
 					if (ContinueParse())
 						msg_fetch_headers(nsnull);
@@ -1160,9 +1163,19 @@ void nsImapServerResponseParser::msg_fetch()
 			mime_data();
 		}
 		else if (!PL_strcasecmp(fNextToken, "ENVELOPE"))
-			skip_to_CRLF(); // I never ask for this
+		{
+			fDownloadingHeaders = PR_TRUE;
+			bNeedEndMessageDownload = PR_TRUE;
+			envelope_data(); 
+		}
 		else if (!PL_strcasecmp(fNextToken, "INTERNALDATE"))
-			skip_to_CRLF(); // I will need to implement this
+			internal_date(); 
+		else if (!PL_strcasecmp(fNextToken, "XAOL-ENVELOPE"))
+		{
+			xaolenvelope_data();
+			fDownloadingHeaders = PR_TRUE;
+			bNeedEndMessageDownload = PR_TRUE;
+		}
 		else
 			SetSyntaxError(PR_TRUE);
 
@@ -1177,7 +1190,207 @@ void nsImapServerResponseParser::msg_fetch()
 			
 		fNextToken = GetNextToken();	// eat the ')' ending token
 										// should be at end of line
+		if (bNeedEndMessageDownload)
+		{
+			if (ContinueParse())
+			{
+				nsresult rv;
+				rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
+															MESSAGE_RFC822);
+				if (NS_FAILED(rv))
+				{
+					skip_to_CRLF();
+					fServerConnection.PseudoInterrupt(PR_TRUE);
+					fServerConnection.AbortMessageDownLoad();
+					return;
+				}
+				// complete the message download
+				fServerConnection.NormalMessageEndDownload();
+			}
+			else
+				fServerConnection.AbortMessageDownLoad();
+		}
+
 	}
+}
+
+typedef enum _envelopeItemType
+{
+	envelopeString,
+	envelopeAddress
+} envelopeItemType;
+
+typedef struct 
+{
+	const char *name;
+	envelopeItemType type;
+} envelopeItem;
+
+static envelopeItem EnvelopeTable[] =
+{
+	{"Date", envelopeString},
+	{"Subject", envelopeString},
+	{"From", envelopeAddress},
+	{"Sender", envelopeAddress},
+	{"Reply-to", envelopeAddress},
+	{"To", envelopeAddress},
+	{"Cc", envelopeAddress},
+	{"Bcc", envelopeAddress},
+	{"In-reply-to", envelopeString},
+	{"Message-id", envelopeString}
+};
+
+void nsImapServerResponseParser::envelope_data()
+{
+	 //date, subject, from, sender,
+     // reply-to, to, cc, bcc, in-reply-to, and message-id.
+     // The date, subject, in-reply-to, and message-id
+     //fields are strings.  The from, sender, reply-to,
+     //to, cc, and bcc fields are addresses
+
+	fNextToken = GetNextToken();
+	fNextToken++; // eat '('
+	for (int tableIndex = 0; tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])); tableIndex++)
+	{
+		PRBool headerNonNil = PR_TRUE;
+
+		if (ContinueParse() && (*fNextToken != ')'))
+		{
+			nsCAutoString headerLine(EnvelopeTable[tableIndex].name);
+			headerLine += ": ";
+			if (EnvelopeTable[tableIndex].type == envelopeString)
+			{
+				char *strValue = CreateNilString();
+				if (strValue)
+				{
+					nsSubsumeCStr str(strValue, PR_TRUE);
+					headerLine += str;
+				}
+				else
+					headerNonNil = PR_FALSE;
+			}
+			else
+			{
+				nsCAutoString address;
+				parse_address(address);
+				headerLine += address;
+				if (address.Length() == 0)
+					headerNonNil = PR_FALSE;
+			}
+			if (headerNonNil)
+				fServerConnection.HandleMessageDownLoadLine(headerLine.GetBuffer(), PR_FALSE);
+		}
+		else
+			break;
+		fNextToken = GetNextToken();
+	}
+	fNextToken = GetNextToken();
+}
+
+void nsImapServerResponseParser::xaolenvelope_data()
+{
+	// eat the opening '('
+	fNextToken++;
+						     
+	if (ContinueParse() && (*fNextToken != ')'))
+	{
+		fNextToken = GetNextToken();
+		fNextToken++; // eat '('
+		nsSubsumeCStr subject(CreateNilString(), PR_TRUE);
+		nsCAutoString subjectLine("Subject: ");
+		subjectLine += subject;
+		fServerConnection.HandleMessageDownLoadLine(subjectLine.GetBuffer(), PR_FALSE);
+		fNextToken++; // eat the next '('
+		if (ContinueParse())
+		{
+			fNextToken = GetNextToken();
+			if (ContinueParse())
+			{
+				nsCAutoString fromLine("From: ");
+				parse_address(fromLine);
+				fServerConnection.HandleMessageDownLoadLine(fromLine.GetBuffer(), PR_FALSE);
+				if (ContinueParse())
+					fNextToken = GetNextToken();	// skip attachment size
+				if (ContinueParse())
+					fNextToken = GetNextToken();	// skip image size
+				if (ContinueParse())
+					fNextToken = GetNextToken();	// skip )
+			}
+		}
+	}
+}
+
+void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
+{
+	if (!nsCRT::strcmp(fNextToken, "NIL"))
+		return;
+	PRBool firstAddress = PR_TRUE;
+	// should really look at chars here
+	NS_ASSERTION(*fNextToken == '(', "address should start with '('");
+	fNextToken++; // eat the next '('
+	while (ContinueParse() && *fNextToken == '(')
+	{
+		NS_ASSERTION(*fNextToken == '(', "address should start with '('");
+		fNextToken++; // eat the next '('
+
+		if (!firstAddress)
+		{
+			addressLine += ", ";
+			firstAddress = PR_FALSE;
+		}
+		char *personalName = CreateNilString();
+		fNextToken = GetNextToken();
+		char *atDomainList = CreateNilString();
+		if (ContinueParse())
+		{
+			fNextToken = GetNextToken();
+			char *mailboxName = CreateNilString();
+			if (ContinueParse())
+			{
+				fNextToken = GetNextToken();
+				char *hostName = CreateNilString();
+				// our tokenizer doesn't handle "NIL)" quite like we
+				// expect, so we need to check specially for this.
+				if (hostName || *fNextToken != ')')
+					fNextToken = GetNextToken();	// skip hostName
+				addressLine += mailboxName;
+				if (hostName)
+				{
+					addressLine += '@';
+					addressLine += hostName;
+				}
+				if (personalName)
+				{
+					addressLine += " (";
+					addressLine += personalName;
+					addressLine += ')';
+				}
+			}
+		}
+		if (*fNextToken == ')')
+			fNextToken++;
+	}
+	if (*fNextToken == ')')
+		fNextToken++;
+//	fNextToken = GetNextToken();	// skip "))"
+}
+
+void nsImapServerResponseParser::internal_date()
+{
+	fNextToken = GetNextToken();
+	if (ContinueParse())
+	{
+		nsCAutoString dateLine("Date: ");
+		char *strValue = CreateNilString();
+		if (strValue)
+		{
+			dateLine += strValue;
+			nsCRT::free(strValue);
+		}
+		fServerConnection.HandleMessageDownLoadLine(dateLine.GetBuffer(), PR_FALSE);
+	}
+	// advance the parser.
+	fNextToken = GetNextToken();
 }
 
 void nsImapServerResponseParser::flags()
@@ -2372,5 +2585,26 @@ void
 nsImapServerResponseParser::ClearCopyResponseUID()
 {
     fCopyResponseKeyArray.RemoveAll();
+}
+
+
+void nsImapServerResponseParser::SetSyntaxError(PRBool error)
+{
+	nsIMAPGenericParser::SetSyntaxError(error);
+	if (error)
+	{
+		if (!fSyntaxErrorLine)
+		{
+			HandleMemoryFailure();
+			fServerConnection.Log("PARSER", ("Internal Syntax Error: <no line>"), nsnull);
+		}
+		else
+		{
+			if (!nsCRT::strcmp(fSyntaxErrorLine, CRLF))
+				fServerConnection.Log("PARSER", "Internal Syntax Error: <CRLF>", nsnull);
+			else
+				fServerConnection.Log("PARSER", "Internal Syntax Error: %s", fSyntaxErrorLine);
+		}
+	}
 }
 

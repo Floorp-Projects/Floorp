@@ -87,8 +87,8 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
-#define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
-
+//#define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
+#define IMAP_DB_HEADERS "Priority X-Priority References Newsgroups"
 static const PRInt32 kImapSleepTime = 1000000;
 static PRInt32 gPromoteNoopToCheckCount = 0;
 
@@ -2423,6 +2423,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
       {
         PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
+		PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
         PRBool useArbitraryHeaders = GetShouldDownloadArbitraryHeaders(); // checks filter headers, etc.
         if (/***** Fix me *** gOptimizedHeaders &&  */// preference -- able to turn it off
           useArbitraryHeaders)  // if it's ok -- no filters on any header, etc.
@@ -2436,16 +2437,19 @@ nsImapProtocol::FetchMessage(const char * messageIds,
           }
           else
           {
-            headersToDL = PR_smprintf("%s",IMAP_DB_HEADERS);
+			if (aolImapServer)
+				headersToDL = nsCRT::strdup(" XAOL-ENVELOPE INTERNALDATE)");
+			else
+				headersToDL = PR_smprintf("%s",IMAP_DB_HEADERS);
           }
           if (headersToDL)
           {
-            char *what = PR_smprintf(" BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
+			  char *what = (!aolImapServer) ? PR_smprintf(" ENVELOPE BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL) : nsCRT::strdup(headersToDL);
             if (what)
             {
               commandString.Append(" %s (UID ");
-			  if (server_capabilityFlags & kAOLImapCapability)
-				  commandString.Append("XAOL.SIZE");
+			  if (aolImapServer)
+				  commandString.Append(" XAOL.SIZE") ;
 			  else
 				commandString.Append("RFC822.SIZE");
 			  commandString.Append(" FLAGS");
@@ -3348,7 +3352,6 @@ PRBool  nsImapProtocol::GetShowAttachmentsInline()
   return (PL_strchr(messageIdString,',') != nsnull ||
         PL_strchr(messageIdString,':') != nsnull);
 }
-
 
 PRUint32 nsImapProtocol::CountMessagesInIdString(const char *idString)
 {
