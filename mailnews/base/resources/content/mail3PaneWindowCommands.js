@@ -726,7 +726,15 @@ function FillInFolderTooltip(cellNode)
 	var unreadCountProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#TotalUnreadMessages');
 	var totalCountProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#TotalMessages');
 
-	var nameResult = db.GetTarget(folderResource, nameProperty , true);
+	var nameResult;
+	try {
+		nameResult = db.GetTarget(folderResource, nameProperty , true);
+	}
+	catch (ex) {
+		//dump("failed to get the name of the folder for the tooltip: "+ex+"\n");
+		return;
+	}
+
 	nameResult = nameResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
 	var name = nameResult.Value;
 

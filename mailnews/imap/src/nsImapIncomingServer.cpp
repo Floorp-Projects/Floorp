@@ -634,10 +634,30 @@ NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
 NS_IMETHODIMP 
 nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
-#ifdef DEBUG_jefft
-	printf("jefft, implement me\n");
-#endif
-	return NS_OK;
+	nsresult rv;
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if (NS_FAILED(rv)) return rv;
+	if (!rootFolder) return NS_ERROR_FAILURE;
+	
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder,
+                                                                 &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!rootMsgFolder) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!imapService) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIEventQueue> queue;
+    // get the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+	if (!pEventQService) return NS_ERROR_FAILURE;
+ 
+    rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+    rv = imapService->DiscoverAllFolders(queue, rootMsgFolder, nsnull, nsnull);
+ 	return rv; 	
 }
 
 NS_IMETHODIMP nsImapIncomingServer::PerformBiff()

@@ -675,6 +675,19 @@ function FolderPaneOnClick(event)
 						server.PerformExpand(msgWindow);
 					}
 				}
+				else {
+					var isImap = (treeitem.getAttribute('ServerType') == "imap");
+					if (isImap) {
+		    			var uri = treeitem.getAttribute("id");
+						var folder = GetMsgFolderFromUri(uri);
+						if (folder) {
+							var imapFolder = folder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+							if (imapFolder) {
+								imapFolder.PerformExpand(msgWindow);
+							}
+						}
+					}
+				}
 			}
 		}
     }

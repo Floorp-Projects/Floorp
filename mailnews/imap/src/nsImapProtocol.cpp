@@ -1492,11 +1492,13 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     else if (isBusy)
     {
         nsImapState curUrlImapState;
-        m_runningUrl->GetRequiredImapState(&curUrlImapState);
-        if (curUrlImapState == nsIImapUrl::nsImapSelectedState)
-        {
-            curUrlFolderName = OnCreateServerSourceFolderPathString();
-            inSelectedState = PR_TRUE;
+		NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
+		if (m_runningUrl) {
+			m_runningUrl->GetRequiredImapState(&curUrlImapState);
+			if (curUrlImapState == nsIImapUrl::nsImapSelectedState) {
+				curUrlFolderName = OnCreateServerSourceFolderPathString();
+				inSelectedState = PR_TRUE;
+			}
         }
     }
 

@@ -66,6 +66,7 @@
 #include "nsIMessenger.h"
 #include "nsIImapMockChannel.h"
 #include "nsIProgressEventSink.h"
+#include "nsIMsgWindow.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -4058,3 +4059,10 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsAdded(PRBool bVal)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
+{
+#ifdef DEBUG_jefft
+	printf("jefft, finish me\n");
+#endif
+	return NS_OK;
+}

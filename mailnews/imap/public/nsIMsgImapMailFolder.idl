@@ -23,6 +23,8 @@
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
 
+interface nsIMsgWindow;
+
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
   void RemoveSubFolder(in nsIMsgFolder folder);
@@ -30,6 +32,8 @@ interface nsIMsgImapMailFolder : nsISupports {
   void List();
   void RenameLocal(in string newname);
   void PrepareToRename();
+  void PerformExpand(in nsIMsgWindow aMsgWindow);
+
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;
