@@ -59,6 +59,12 @@ public:
    */
   NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) { return NS_OK;}
 
+  /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContext.h
+   *	@update 05/01/00 dwc
+   */
+  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) { return NS_OK; }
+
 protected:
   virtual ~nsRenderingContextImpl();
 
