@@ -261,7 +261,7 @@ function loadCalendarEventDialog()
 
    document.getElementById( "categories-field" ).selectedIndex = -1;
    setFieldValue( "categories-field", gEvent.categories );
-
+   
    /* Server stuff */
    var serverList = opener.gCalendarWindow.calendarManager.calendars;
    

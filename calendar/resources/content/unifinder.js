@@ -628,6 +628,7 @@ treeView.prototype.setTree = function( tree )
 treeView.prototype.getCellText = function(row,column)
 {
    calendarEvent = this.eventArray[row];
+   var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    switch( column )
    {
       case "unifinder-search-results-tree-col-title":
@@ -665,6 +666,23 @@ treeView.prototype.getCellText = function(row,column)
             endText = endDate + " " + endTime;
          }
          return( endText );
+      break;
+      case "unifinder-search-results-tree-col-categories":
+         return( calendarEvent.categories );
+      break;
+      case "unifinder-search-results-tree-col-location":
+         return( calendarEvent.location );
+      break;
+      case "unifinder-search-results-tree-col-status":
+         switch( calendarEvent.status )
+         {
+            case calendarEvent.ICAL_STATUS_TENTATIVE:
+               return( calendarStringBundle.GetStringFromName( "Tentative" ) );
+            case calendarEvent.ICAL_STATUS_CONFIRMED:
+               return( calendarStringBundle.GetStringFromName( "Confirmed" ) );
+            case calendarEvent.ICAL_STATUS_CANCELLED:
+               return( calendarStringBundle.GetStringFromName( "Cancelled" ) );
+         }
       break;
    }
 }
