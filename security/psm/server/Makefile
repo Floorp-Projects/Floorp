@@ -142,11 +142,7 @@ NSPR_DYNAMIC_LIBS = \
 NSPR_LIBS = $(NSPR_DYNAMIC_LIBS)
 
 I18N_COMPONENTS = \
-	$(DIST)/lib/mimetype.dll \
 	$(DIST)/lib/necko.dll \
-	$(DIST)/lib/nkfile.dll \
-	$(DIST)/lib/nkres.dll \
-	$(DIST)/lib/nslocale.dll \
 	$(DIST)/lib/strres.dll \
 	$(DIST)/lib/ucharuti.dll \
 	$(DIST)/lib/uconv.dll \
@@ -154,6 +150,7 @@ I18N_COMPONENTS = \
 	$(NULL)
 
 XPCOM_LIBS = \
+	$(DIST)/lib/zlib.dll \
 	$(DIST)/lib/mozreg.dll \
 	$(DIST)/lib/xpcom.dll \
 	$(NULL)
@@ -200,11 +197,7 @@ NSPR_LIBS = \
 	$(DIST)/lib/libnspr4.$(DLL_SUFFIX)
 
 I18N_COMPONENTS = \
-	$(DIST)/lib/libmimetype.$(DLL_SUFFIX) \
 	$(DIST)/lib/libnecko.$(DLL_SUFFIX) \
-	$(DIST)/lib/libnecko_file.$(DLL_SUFFIX) \
-	$(DIST)/lib/libnecko_res.$(DLL_SUFFIX) \
-	$(DIST)/lib/libnslocale.$(DLL_SUFFIX) \
 	$(DIST)/lib/libstrres.$(DLL_SUFFIX) \
 	$(DIST)/lib/libunicharutil.$(DLL_SUFFIX) \
 	$(DIST)/lib/libuconv.$(DLL_SUFFIX) \
