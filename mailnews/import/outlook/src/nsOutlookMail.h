@@ -49,11 +49,9 @@ private:
 	BOOL	WriteMimeMsgHeader( nsIFileSpec *pDest, CMapiMessage *pMsg);
 	BOOL	WriteMimeBoundary( nsIFileSpec *pDest, CMapiMessage *pMsg, BOOL terminate);
 
-	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy);
 	nsresult	DeleteFile( nsIFileSpec *pSpec);
 	void		EmptyAttachments( void);
 	void		BuildAttachments( CMapiMessage& msg, int count);
-	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
 	void		DumpAttachments( void);
 
 private:

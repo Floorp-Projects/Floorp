@@ -140,10 +140,17 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 					nsCString	path;
 					str.Mid( path, idx, endIdx - idx);					
 					
-					ConvertPath( path);
+					/*  
+						For some reason, long long ago, it was necessary
+						to clean up the path to Eudora so that it didn't contain
+						a mix of short file names and long file names.  This is
+						no longer true.
 
-					IMPORT_LOG1( "** GetShortPath returned: %s\n", (const char *)path);
+					ConvertPath( path);
 					
+					IMPORT_LOG1( "** GetShortPath returned: %s\n", (const char *)path);
+					*/
+
 					pFolder->SetNativePath( path);
 					PRBool exists = PR_FALSE;
 					if (findIni) {
@@ -1399,6 +1406,10 @@ void nsEudoraWin32::ConvertPath( nsCString& str)
 		idx++;
 		idx = str.FindChar( '\\', PR_FALSE, idx);
 		start = 3;
+		if ((idx == -1) && (str.Length() > 3)) {
+			str.Right( temp, str.Length() - start);
+			path.Append( temp);
+		}
 	}
 	
 	WIN32_FIND_DATA findFileData;

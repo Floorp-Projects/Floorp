@@ -466,6 +466,18 @@ function ImportSettings( module, newAccount, error) {
 	return( result);
 }
 
+function CreateNewFileSpec( inFile)
+{
+	var file = Components.classes["component://netscape/filespec"].createInstance();
+	if (file != null) {
+		file = file.QueryInterface( Components.interfaces.nsIFileSpec);
+		if (file != null) {
+			file.fromFileSpec( inFile);
+		}
+	}
+
+	return( file);
+}
 
 function ImportMail( module, success, error) {
 	if (top.progressInfo.importInterface || top.progressInfo.intervalState) {
@@ -494,7 +506,7 @@ function ImportMail( module, success, error) {
 				if (filePicker != null) {
 					try {
 						filePicker.chooseDirectory( "Select mail directory");
-						mailInterface.SetLocation( filePicker.QueryInterface( Components.interfaces.nsIFileSpec));
+						mailInterface.SetData( "mailLocation", CreateNewFileSpec( filePicker.QueryInterface( Components.interfaces.nsIFileSpec)));
 					} catch( ex) {
 						// don't show an error when we return!
 						return( false);
@@ -618,6 +630,8 @@ function ImportAddress( module, success, error) {
 		if (file == null) {
 			return( false);
 		}
+		
+		file = CreateNewFileSpec( file);
 
 		addInterface.SetData( "addressLocation", file);
 	}

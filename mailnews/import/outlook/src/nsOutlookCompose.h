@@ -112,17 +112,35 @@ public:
 	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
 
+	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy);
+
+	static nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
+
 private:
 	nsresult	CreateComponents( void);
 	nsresult	CreateIdentity( void);
 	
-	void		GetNthHeader( PRInt32 n, nsString& header, nsString& val, PRBool unwrap);
-	void		GetHeaderValue( const char *pHeader, nsString& val);
+	void		GetNthHeader( const char *pData, PRInt32 dataLen, PRInt32 n, nsCString& header, nsCString& val, PRBool unwrap);
+	void		GetHeaderValue( const char *pData, PRInt32 dataLen, const char *pHeader, nsCString& val, PRBool unwrap = PR_TRUE);
+	void		GetHeaderValue( const char *pData, PRInt32 dataLen, const char *pHeader, nsString& val) {
+		val.Truncate();
+		nsCString	hVal;
+		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
+		val = hVal;
+	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);
 
 	nsMsgAttachedFile * GetLocalAttachments( void);
 	void				CleanUpAttach( nsMsgAttachedFile *a, PRInt32 count);
+
+	nsresult	ReadHeaders( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header);
+	PRInt32		FindNextEndLine( SimpleBuffer& data);
+	PRInt32		IsEndHeaders( SimpleBuffer& data);
+	PRInt32		IsSpecialHeader( const char *pHeader);
+	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBuffer& newHeaders);
+	PRBool		IsReplaceHeader( const char *pHeader);
+
 
 private:
 	nsVoidArray *			m_pAttachments;
@@ -136,6 +154,7 @@ private:
 	const char *			m_pHeaders;
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
+	SimpleBuffer			m_readHeaders;
 };
 
 

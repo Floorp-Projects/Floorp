@@ -24,71 +24,7 @@
 #include "nsVoidArray.h"
 #include "nsIFileSpec.h"
 #include "nsISupportsArray.h"
-
-typedef struct {
-	nsIFileSpec *	pAttachment;
-	char *			mimeType;
-	char *			description;
-} EudoraAttachment;
-
-typedef struct {
-	PRUint32		offset;
-	PRUint32		size;
-	nsIFileSpec *	pFile;
-} ReadFileState;
-
-class SimpleBuffer {
-public:
-	SimpleBuffer() {m_pBuffer = nsnull; m_size = 0; m_growBy = 4096; m_writeOffset = 0;
-					m_bytesInBuf = 0; m_convertCRs = PR_FALSE;}
-	~SimpleBuffer() { if (m_pBuffer) delete [] m_pBuffer;}
-	
-	PRBool Allocate( PRInt32 sz) { 
-		if (m_pBuffer) delete [] m_pBuffer; 
-		m_pBuffer = new char[sz]; 
-		if (m_pBuffer) { m_size = sz; return( PR_TRUE); }
-		else { m_size = 0; return( PR_FALSE);}
-	}
-
-	PRBool Grow( PRInt32 newSize) { if (newSize > m_size) return( ReAllocate( newSize)); else return( PR_TRUE);}
-	PRBool ReAllocate( PRInt32 newSize) {
-		if (newSize <= m_size) return( PR_TRUE);
-		char *pOldBuffer = m_pBuffer;
-		PRInt32	oldSize = m_size;
-		m_pBuffer = nsnull;
-		while (m_size < newSize) m_size += m_growBy;
-		if (Allocate( m_size)) {
-			if (pOldBuffer) { nsCRT::memcpy( m_pBuffer, pOldBuffer, oldSize); delete [] pOldBuffer;}
-			return( PR_TRUE);
-		}
-		else { m_pBuffer = pOldBuffer; m_size = oldSize; return( PR_FALSE);}
-	}
-	
-	PRBool Write( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten) {
-		*pWritten = len;
-		if (!len) return( PR_TRUE);
-		if (!Grow( offset + len)) return( PR_FALSE);
-		if (m_convertCRs)
-			return( SpecialMemCpy( offset, pData, len, pWritten));
-		nsCRT::memcpy( m_pBuffer + offset, pData, len);
-		return( PR_TRUE);
-	}
-	
-	PRBool Write( const char *pData, PRInt32 len) { 
-		PRInt32 written;
-		if (Write( m_writeOffset, pData, len, &written)) { m_writeOffset += written; return( PR_TRUE);}
-		else return( PR_FALSE);
-	}
-
-	PRBool	SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten);
-	
-	PRBool	m_convertCRs;
-	char *	m_pBuffer;
-	PRInt32	m_bytesInBuf;	// used when reading into this buffer
-	PRInt32	m_size;			// allocated size of buffer
-	PRInt32	m_growBy;		// duh
-	PRInt32	m_writeOffset;	// used when writing into and reading from the buffer
-};
+#include "nsEudoraCompose.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -124,12 +60,11 @@ protected:
 private:
 	nsresult	CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst);
 	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header, SimpleBuffer& body);
-	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
 	PRInt32		FindStartLine( SimpleBuffer& data);
 	PRInt32		FindNextEndLine( SimpleBuffer& data);
 	PRInt32		IsEndHeaders( SimpleBuffer& data);
-	nsresult	CopyComposedMessage( nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy);
 	nsresult	WriteFromSep( nsIFileSpec *pDst);
+	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
 	
 	void		EmptyAttachments( void);
 	nsresult	ExamineAttachment( SimpleBuffer& data);

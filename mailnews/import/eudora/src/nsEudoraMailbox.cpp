@@ -31,6 +31,8 @@
 
 #define	kWhitespace	" \t\b\r\n"
 
+const char *eudoraFromLine = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
+
 #ifdef IMPORT_DEBUG
 void DUMP_FILENAME( nsIFileSpec *pSpec, PRBool endLine);
 
@@ -211,7 +213,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	SimpleBuffer			body;
 	SimpleBuffer			copy;
 	PRInt32					written;
-	
+	nsCString				fromLine = eudoraFromLine;
 	
 	headers.m_convertCRs = PR_TRUE;
 	body.m_convertCRs = PR_TRUE;
@@ -251,11 +253,11 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 			compose.SetHeaders( headers.m_pBuffer, headers.m_writeOffset - 1);
 			compose.SetAttachments( &m_attachments);
 
-			rv = compose.SendMessage( compositionFile);
+			rv = compose.SendTheMessage( compositionFile);
 			if (NS_SUCCEEDED( rv)) {
 				/* IMPORT_LOG0( "Composed message in file: "); DUMP_FILENAME( compositionFile, PR_TRUE); */
 				// copy the resulting file into the destination file!
-				rv = CopyComposedMessage( compositionFile, pDst, copy);
+				rv = compose.CopyComposedMessage( fromLine, compositionFile, pDst, copy);
 				DeleteFile( compositionFile);
 				if (NS_FAILED( rv)) {
 					IMPORT_LOG0( "*** Error copying composed message to destination mailbox\n");
@@ -394,85 +396,9 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 	return( NS_OK);
 }
 
-nsresult nsEudoraMailbox::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
-{
-	if (read.m_writeOffset >= read.m_bytesInBuf) {
-		read.m_writeOffset = 0;
-		read.m_bytesInBuf = 0;
-	}
-	else if (read.m_writeOffset) {
-		nsCRT::memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
-		read.m_bytesInBuf -= read.m_writeOffset;
-		read.m_writeOffset = 0;
-	}
 
-	PRInt32	count = read.m_size - read.m_bytesInBuf;
-	if (((PRUint32)count + pState->offset) > pState->size)
-		count = pState->size - pState->offset;
-	if (count) {
-		PRInt32		bytesRead = 0;
-		char *		pBuffer = read.m_pBuffer + read.m_bytesInBuf;
-		nsresult	rv = pState->pFile->Read( &pBuffer, count, &bytesRead);
-		if (NS_FAILED( rv)) return( rv);
-		if (bytesRead != count) return( NS_ERROR_FAILURE);
-		read.m_bytesInBuf += bytesRead;
-		pState->offset += bytesRead;
-	}
 
-	return( NS_OK);
-}
 
-nsresult nsEudoraMailbox::CopyComposedMessage( nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy)
-{
-	copy.m_bytesInBuf = 0;
-	copy.m_writeOffset = 0;
-	ReadFileState	state;
-	state.pFile = pSrc;
-	state.offset = 0;
-	state.size = 0;
-	pSrc->GetFileSize( &state.size);
-	if (!state.size) {
-		IMPORT_LOG0( "*** Error, unexpected zero file size for composed message\n");
-		return( NS_ERROR_FAILURE);
-	}
-
-	nsresult rv = pSrc->OpenStreamForReading();
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Error, unable to open composed message file\n");
-		return( NS_ERROR_FAILURE);
-	}
-	
-	rv = WriteFromSep( pDst);
-
-	char	lastChar = 0;
-	PRInt32 written;
-	while ((state.offset < state.size) && NS_SUCCEEDED( rv)) {
-		rv = FillMailBuffer( &state, copy);
-		if (NS_SUCCEEDED( rv)) {
-			rv = pDst->Write( copy.m_pBuffer, copy.m_bytesInBuf, &written);
-			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
-			if (NS_SUCCEEDED( rv)) {
-				if (written != copy.m_bytesInBuf) {
-					rv = NS_ERROR_FAILURE;
-					IMPORT_LOG0( "*** Error writing to destination mailbox\n");
-				}
-				else
-					copy.m_writeOffset = copy.m_bytesInBuf;
-			}
-		}
-
-	}
-
-	pSrc->CloseStream();
-	
-	if (lastChar != 0x0A) {
-		rv = pDst->Write( "\x0D\x0A", 2, &written);
-		if (written != 2)
-			rv = NS_ERROR_FAILURE;
-	}
-
-	return( rv);
-}
 
 
 nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header, SimpleBuffer& body)
@@ -992,7 +918,6 @@ int nsEudoraMailbox::IsMonthStr( const char *pStr)
 	return( 0);
 }
 
-const char *eudoraFromLine = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
 nsresult nsEudoraMailbox::WriteFromSep( nsIFileSpec *pDst)
 {
 	if (!m_fromLen)
@@ -1007,9 +932,9 @@ nsresult nsEudoraMailbox::WriteFromSep( nsIFileSpec *pDst)
 void nsEudoraMailbox::EmptyAttachments( void)
 {
 	PRInt32 max = m_attachments.Count();
-	EudoraAttachment *	pAttach;
+	ImportAttachment *	pAttach;
 	for (PRInt32 i = 0; i < max; i++) {
-		pAttach = (EudoraAttachment *) m_attachments.ElementAt( i);
+		pAttach = (ImportAttachment *) m_attachments.ElementAt( i);
 		if (pAttach) {
 			NS_IF_RELEASE( pAttach->pAttachment);
 			nsCRT::free( pAttach->description);
@@ -1102,7 +1027,7 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 		return( PR_FALSE);
 	}
 
-	EudoraAttachment *a = new EudoraAttachment;
+	ImportAttachment *a = new ImportAttachment;
 	a->mimeType = mimeType.ToNewCString();
 	a->description = nsCRT::strdup( "Attached File");
 	a->pAttachment = pSpec;
@@ -1112,40 +1037,31 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 	return( PR_TRUE);
 }
 
-PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten)
+nsresult nsEudoraMailbox::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
 {
-	// Arg!!!!!  Mozilla can't handle plain CRs in any mail messages.  Particularly a 
-	// problem with Eudora since it doesn't give a rats a**
-	*pWritten = len;
-	PRInt32	sz = offset + len;
-	if (offset) {
-		if ((m_pBuffer[offset - 1] == 0x0D) && (*pData != 0x0A)) {
-			sz++;
-			if (!Grow( sz)) return( PR_FALSE);
-			m_pBuffer[offset] = 0x0A;
-			offset++;
-			(*pWritten)++;
-		}
+	if (read.m_writeOffset >= read.m_bytesInBuf) {
+		read.m_writeOffset = 0;
+		read.m_bytesInBuf = 0;
 	}
-	while (len > 0) {
-		if ((*pData == 0x0D) && (*(pData + 1) != 0x0A)) {
-			sz++;
-			if (!Grow( sz)) return( PR_FALSE);
-			m_pBuffer[offset] = 0x0D;
-			offset++;
-			m_pBuffer[offset] = 0x0A;								
-			(*pWritten)++;
-		}
-		else {
-			m_pBuffer[offset] = *pData;
-		}
-		offset++;
-		pData++;
-		len--;
+	else if (read.m_writeOffset) {
+		nsCRT::memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
+		read.m_bytesInBuf -= read.m_writeOffset;
+		read.m_writeOffset = 0;
 	}
-	
-	m_pBuffer[offset] = *pData;
-	
-	return( PR_TRUE);
+
+	PRInt32	count = read.m_size - read.m_bytesInBuf;
+	if (((PRUint32)count + pState->offset) > pState->size)
+		count = pState->size - pState->offset;
+	if (count) {
+		PRInt32		bytesRead = 0;
+		char *		pBuffer = read.m_pBuffer + read.m_bytesInBuf;
+		nsresult	rv = pState->pFile->Read( &pBuffer, count, &bytesRead);
+		if (NS_FAILED( rv)) return( rv);
+		if (bytesRead != count) return( NS_ERROR_FAILURE);
+		read.m_bytesInBuf += bytesRead;
+		pState->offset += bytesRead;
+	}
+
+	return( NS_OK);
 }
 

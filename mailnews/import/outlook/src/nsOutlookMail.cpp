@@ -272,7 +272,7 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 			if (msg.GetHeaderLen()) {
 				rv = compose.SendTheMessage( compositionFile);
 				if (NS_SUCCEEDED( rv)) {
-					rv = CopyComposedMessage( fromLine, compositionFile, pDest, copy);
+					rv = compose.CopyComposedMessage( fromLine, compositionFile, pDest, copy);
 					DeleteFile( compositionFile);
 					if (NS_FAILED( rv)) {
 						IMPORT_LOG0( "*** Error copying composed message to destination mailbox\n");
@@ -556,57 +556,7 @@ PRBool nsOutlookMail::WriteAttachment( nsIFileSpec *pDest, CMapiMessage *pMsg)
 
 
 
-nsresult nsOutlookMail::CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBuffer& copy)
-{
-	copy.m_bytesInBuf = 0;
-	copy.m_writeOffset = 0;
-	ReadFileState	state;
-	state.pFile = pSrc;
-	state.offset = 0;
-	state.size = 0;
-	pSrc->GetFileSize( &state.size);
-	if (!state.size) {
-		IMPORT_LOG0( "*** Error, unexpected zero file size for composed message\n");
-		return( NS_ERROR_FAILURE);
-	}
 
-	nsresult rv = pSrc->OpenStreamForReading();
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Error, unable to open composed message file\n");
-		return( NS_ERROR_FAILURE);
-	}
-	
-	PRInt32 written;
-	rv = pDst->Write( fromLine, fromLine.Length(), &written);
-
-	char	lastChar = 0;
-	while ((state.offset < state.size) && NS_SUCCEEDED( rv)) {
-		rv = FillMailBuffer( &state, copy);
-		if (NS_SUCCEEDED( rv)) {
-			rv = pDst->Write( copy.m_pBuffer, copy.m_bytesInBuf, &written);
-			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
-			if (NS_SUCCEEDED( rv)) {
-				if (written != copy.m_bytesInBuf) {
-					rv = NS_ERROR_FAILURE;
-					IMPORT_LOG0( "*** Error writing to destination mailbox\n");
-				}
-				else
-					copy.m_writeOffset = copy.m_bytesInBuf;
-			}
-		}
-
-	}
-
-	pSrc->CloseStream();
-	
-	if (lastChar != 0x0A) {
-		rv = pDst->Write( "\x0D\x0A", 2, &written);
-		if (written != 2)
-			rv = NS_ERROR_FAILURE;
-	}
-
-	return( rv);
-}
 
 
 nsresult nsOutlookMail::DeleteFile( nsIFileSpec *pSpec)
@@ -741,31 +691,4 @@ void nsOutlookMail::DumpAttachments( void)
 #endif
 }
 
-nsresult nsOutlookMail::FillMailBuffer( ReadFileState *pState, SimpleBuffer& read)
-{
-	if (read.m_writeOffset >= read.m_bytesInBuf) {
-		read.m_writeOffset = 0;
-		read.m_bytesInBuf = 0;
-	}
-	else if (read.m_writeOffset) {
-		nsCRT::memcpy( read.m_pBuffer, read.m_pBuffer + read.m_writeOffset, read.m_bytesInBuf - read.m_writeOffset);
-		read.m_bytesInBuf -= read.m_writeOffset;
-		read.m_writeOffset = 0;
-	}
-
-	PRInt32	count = read.m_size - read.m_bytesInBuf;
-	if (((PRUint32)count + pState->offset) > pState->size)
-		count = pState->size - pState->offset;
-	if (count) {
-		PRInt32		bytesRead = 0;
-		char *		pBuffer = read.m_pBuffer + read.m_bytesInBuf;
-		nsresult	rv = pState->pFile->Read( &pBuffer, count, &bytesRead);
-		if (NS_FAILED( rv)) return( rv);
-		if (bytesRead != count) return( NS_ERROR_FAILURE);
-		read.m_bytesInBuf += bytesRead;
-		pState->offset += bytesRead;
-	}
-
-	return( NS_OK);
-}
 
