@@ -24,7 +24,7 @@ Inc. All Rights Reserved.
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_equals
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
   (JNIEnv *env, jobject jthis, jobject nodeArg)
 {
   jboolean b_retFlag = JNI_FALSE;
@@ -74,7 +74,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_equals
   return b_retFlag;
 }
 
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_hashCode
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* p_thisNode = 
