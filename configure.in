@@ -760,6 +760,46 @@ if [ test -n "${PNG_DIR}" && test -d "${PNG_DIR}" && test "$SYSTEM_PNG" = 1 ]; t
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
+dnl system FullCircle/Talkback support
+dnl ========================================================
+
+AC_ARG_WITH(fullcircle,
+[  --with-fullcircle=\$dir        location of FullCircle headers and libraries],
+        FULLCIRCLE_DIR=$withval)
+
+if test "$FULLCIRCLE_DIR" = no; then
+    FULLCIRCLE_DIR=
+else
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
+LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
+
+AC_MSG_CHECKING("for FC_Initialize in -ltalkback");
+LIBS="-ltalkback $LIBS"
+AC_TRY_LINK(
+	#include "fullcircle.h",
+        #include <stdio.h>
+        int main () {
+            FC_Initialize();
+            exit(0);
+        }
+        , [FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
+        [MISSING_FULLCIRCLE=1 result="no"] ) 
+AC_MSG_RESULT("$result")
+
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+
+if [ test -n "$MISSING_FULLCIRCLE" ]; then
+    AC_MSG_ERROR([Could not find FullCircle Library]);
+fi
+
+fi
+
 dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
 dnl tells where to find nspr rather than whether to use it
