@@ -245,9 +245,9 @@ TypedRegister ICodeGenerator::newArray()
 
 
 
-TypedRegister ICodeGenerator::loadName(const StringAtom &name)
+TypedRegister ICodeGenerator::loadName(const StringAtom &name, JSType *t)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), t);
     LoadName *instr = new LoadName(dest, &name);
     iCode->push_back(instr);
     return dest;
@@ -444,10 +444,17 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1,
                             TypedRegister source2)
 {
     ASSERT(source1.first != NotARegister);    
-    ASSERT(source2.first != NotARegister);    
+    ASSERT(source2.first != NotARegister);
     TypedRegister dest(getTempRegister(), &Any_Type);
-    GenericBinaryOP *instr = new GenericBinaryOP(dest, BinaryOperator::mapICodeOp(op), source1, source2);
-    iCode->push_back(instr);
+    
+    if ((source1.second == &Number_Type) && (source2.second == &Number_Type)) {
+        Arithmetic *instr = new Arithmetic(op, dest, source1, source2);
+        iCode->push_back(instr);
+    }
+    else {
+        GenericBinaryOP *instr = new GenericBinaryOP(dest, BinaryOperator::mapICodeOp(op), source1, source2);
+        iCode->push_back(instr);
+    }
     return dest;
 } 
     
@@ -735,7 +742,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
         case Var:
             break;
         case Name:
-            v = loadName(name);
+            v = loadName(name, v.second);
             break;
         case Slot:
             v = getSlot(thisBase, slotIndex);
@@ -747,7 +754,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
         default:
             NOT_REACHED("Bad lvalue kind");
         }
-        ret = op(mapExprNodeToICodeOp(use), v, ret);
+        ret = binaryOp(mapExprNodeToICodeOp(use), v, ret);
         // fall thru...
     case ExprNode::assignment:
         switch (lValueKind) {
@@ -774,7 +781,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
             ret = v;
             break;
         case Name:
-            ret = loadName(name);
+            ret = loadName(name, v.second);
             break;
         case Slot:
             ret = getSlot(thisBase, slotIndex);
@@ -791,20 +798,20 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
     case ExprNode::preIncrement:
         switch (lValueKind) {
         case Var:
-            ret = op(xcrementOp, v, loadImmediate(1.0));
+            ret = binaryOp(xcrementOp, v, loadImmediate(1.0));
             break;
         case Name:
-            ret = loadName(name);
-            ret = op(xcrementOp, ret, loadImmediate(1.0));
+            ret = loadName(name, v.second);
+            ret = binaryOp(xcrementOp, ret, loadImmediate(1.0));
             saveName(name, ret);
             break;
         case Slot:
-            ret = op(xcrementOp, getSlot(thisBase, slotIndex), loadImmediate(1.0));
+            ret = binaryOp(xcrementOp, getSlot(thisBase, slotIndex), loadImmediate(1.0));
             setSlot(thisBase, slotIndex, ret);
             break;
         case Static:
         case Constructor:
-            ret = op(xcrementOp, getStatic(mClass, name), loadImmediate(1.0));
+            ret = binaryOp(xcrementOp, getStatic(mClass, name), loadImmediate(1.0));
             setStatic(mClass, name, ret);
             break;
         default:
@@ -900,7 +907,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 }
             }
             if ((lValueKind == Property) && (base.first == NotARegister))
-                base = loadName(baseName);
+                base = loadName(baseName, base.second);
         }
         else {
             base = genExpr(b->op1);
@@ -961,7 +968,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 ret = v;
                 break;
             }
-            ret = op(mapExprNodeToICodeOp(use), v, ret);
+            ret = binaryOp(mapExprNodeToICodeOp(use), v, ret);
             // fall thru...
         case ExprNode::assignment:
             switch (lValueKind) {
@@ -1000,15 +1007,15 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
             switch (lValueKind) {
             case Constructor:
             case Static:
-                ret = op(xcrementOp, getStatic(clazz, fieldName), loadImmediate(1.0));
+                ret = binaryOp(xcrementOp, getStatic(clazz, fieldName), loadImmediate(1.0));
                 setStatic(clazz, fieldName, ret);
                 break;
             case Property:
-                ret = op(xcrementOp, getProperty(base, fieldName), loadImmediate(1.0));
+                ret = binaryOp(xcrementOp, getProperty(base, fieldName), loadImmediate(1.0));
                 setProperty(base, fieldName, ret);
                 break;
             case Slot:
-                ret = op(xcrementOp, getSlot(base, slotIndex), loadImmediate(1.0));
+                ret = binaryOp(xcrementOp, getSlot(base, slotIndex), loadImmediate(1.0));
                 setSlot(base, slotIndex, ret);
                 break;
             default:
@@ -1182,7 +1189,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         TypedRegister base = genExpr(b->op1);
                         TypedRegister index = genExpr(b->op2);
                         ret = getElement(base, index);
-                        ret = op(xcrementOp, ret, loadImmediate(1.0));
+                        ret = binaryOp(xcrementOp, ret, loadImmediate(1.0));
                         setElement(base, index, ret);
                     }
                     else
@@ -1237,11 +1244,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-
-            if ((r1.second == &Integer_Type) && (r2.second == &Integer_Type)) {
-                op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
-            }
-
             ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
         }
         break;
@@ -1296,7 +1298,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         TypedRegister base = genExpr(lb->op1);
                         TypedRegister index = genExpr(lb->op2);
                         TypedRegister v = getElement(base, index);
-                        ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
+                        ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), v, ret);
                         setElement(base, index, ret);
                     }
                     else
@@ -1313,7 +1315,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);
@@ -1331,7 +1333,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = op(mapExprNodeToICodeOp(p->getKind()), r2, r1);   // will return reverse case
+            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r2, r1);   // will return reverse case
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);
@@ -1350,7 +1352,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);
@@ -1855,7 +1857,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             setLabel(nextCaseLabel);
                         nextCaseLabel = getLabel();
                         TypedRegister r = genExpr(c->expr);
-                        TypedRegister eq = op(COMPARE_EQ, r, sc);
+                        TypedRegister eq = binaryOp(COMPARE_EQ, r, sc);
                         lastBranch = branchFalse(nextCaseLabel, eq);
                     }
                     else {

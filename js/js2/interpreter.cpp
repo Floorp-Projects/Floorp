@@ -1011,49 +1011,182 @@ using JSString throughout.
                     }
                 }
                 break;
+
             case SHIFTLEFT:
-            case SHIFTRIGHT:
-            case USHIFTRIGHT:
-            case AND:
-            case OR:
-            case XOR:
-            case ADD:
-            case SUBTRACT:
-            case MULTIPLY:
-            case DIVIDE:
-            case REMAINDER:
-            case COMPARE_LT:
-            case COMPARE_LE:
-            case COMPARE_EQ:
-            case STRICT_EQ:
                 {
-                    //
-                    //  XXX if Package 'Operators' has not been seen, these operators cannot have been
-                    //  overridden, so we should use a different dispatch and execute the default
-                    //  behaviour inline instead,
-                    //
                     Arithmetic* a = static_cast<Arithmetic*>(instruction);
                     JSValue& dest = (*registers)[dst(a).first];
                     JSValue& r1 = (*registers)[src1(a).first];
                     JSValue& r2 = (*registers)[src2(a).first];
-                    const JSValue ovr = findBinaryOverride(r1, r2, BinaryOperator::mapICodeOp(instruction->op()));
-                    JSFunction *target = ovr.function;
-                    if (target->isNative()) {
-                        JSValues argv(2);
-                        argv[0] = r1;
-                        argv[1] = r2;
-                        dest = static_cast<JSBinaryOperator*>(target)->mCode(r1, r2);
-                        break;
-                    }
-                    else {
-                        mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, dst(a));
-                        mActivation = new Activation(target->getICode(), r1, r2);
-                        registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
-                        continue;
-                    }
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toUInt32());
+                    dest = JSValue(num1.i32 << (num2.u32 & 0x1F));
+                }
+                break;
+            case SHIFTRIGHT:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toUInt32());
+                    dest = JSValue(num1.i32 >> (num2.u32 & 0x1F));
+                }
+                break;
+            case USHIFTRIGHT:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    JSValue num1(r1.toUInt32());
+                    JSValue num2(r2.toUInt32());
+                    dest = JSValue(num1.u32 >> (num2.u32 & 0x1F));
+                }
+                break;
+            case AND:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toInt32());
+                    dest = JSValue(num1.i32 & num2.i32);
+                }
+                break;
+            case OR:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toInt32());
+                    dest = JSValue(num1.i32 | num2.i32);
+                }
+                break;
+            case XOR:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    JSValue num1(r1.toInt32());
+                    JSValue num2(r2.toInt32());
+                    dest = JSValue(num1.i32 ^ num2.i32);
+                }
+                break;
+            case ADD:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    dest = JSValue(r1.f64 + r2.f64);
+                }
+                break;
+            case SUBTRACT:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    dest = JSValue(r1.f64 - r2.f64);
+                }
+                break;
+            case MULTIPLY:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    dest = JSValue(r1.f64 * r2.f64);
+                }
+                break;
+            case DIVIDE:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    dest = JSValue(r1.f64 / r2.f64);
+                }
+                break;
+            case REMAINDER:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    dest = JSValue(fmod(r1.f64, r2.f64));
+                }
+                break;
+            case COMPARE_LT:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    if (r1.isNaN() || r2.isNaN())
+                        dest = JSValue();
+                    else
+                        dest = JSValue(r1.f64 < r2.f64);
+                }
+                break;
+            case COMPARE_LE:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    if (r1.isNaN() || r2.isNaN())
+                        dest = JSValue();
+                    else
+                        dest = JSValue(r1.f64 <= r2.f64);
+                }
+                break;
+            case COMPARE_EQ:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    if (r1.isNaN() || r2.isNaN())
+                        dest = JSValue();
+                    else
+                        dest = JSValue(r1.f64 == r2.f64);
+                }
+                break;
+            case STRICT_EQ:
+                {
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
+                    ASSERT(r1.isNumber());
+                    ASSERT(r2.isNumber());
+                    if (r1.isNaN() || r2.isNaN())
+                        dest = kFalseValue;
+                    else
+                        dest = JSValue(r1.f64 == r2.f64);
                 }
                 break;
 

@@ -265,7 +265,7 @@ namespace ICG {
         TypedRegister cast(TypedRegister arg, JSType *toType);
         
         TypedRegister super();
-        TypedRegister loadName(const StringAtom &name);
+        TypedRegister loadName(const StringAtom &name, JSType *t = &Any_Type);
         void saveName(const StringAtom &name, TypedRegister value);
         TypedRegister nameXcr(const StringAtom &name, ICodeOp op);
        

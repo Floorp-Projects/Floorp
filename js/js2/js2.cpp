@@ -171,6 +171,15 @@ static JSValue load(Context *cx, const JSValues &argv)
     return result;
 }
 
+#include <sys/timeb.h>
+static JSValue time(Context *cx, const JSValues &argv)
+{
+    struct _timeb timebuffer;
+    _ftime(&timebuffer);
+
+    return JSValue((double)timebuffer.time * 1000 + timebuffer.millitm);
+}
+
 static void readEvalPrint(FILE *in, World &world)
 {
     Context cx(world, &global);
@@ -180,6 +189,7 @@ static void readEvalPrint(FILE *in, World &world)
     global.defineNativeFunction(world.identifiers[widenCString("print")], print);
     global.defineNativeFunction(world.identifiers[widenCString("dump")], dump);
     global.defineNativeFunction(world.identifiers[widenCString("load")], load);
+    global.defineNativeFunction(world.identifiers[widenCString("time")], time);
 
     String buffer;
     string line;
