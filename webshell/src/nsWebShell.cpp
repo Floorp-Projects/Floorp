@@ -2900,12 +2900,6 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
                                 nsIURI* aURL, 
                                 const char* aCommand)
 {
-#if DEBUG_nisheeth
-  const char* spec;
-  aURL->GetSpec(&spec);
-  printf("nsWebShell::OnStartDocumentLoad:%p: loader=%p url=%s command=%s\n", this, loader, spec, aCommand);
-#endif
-
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -2958,12 +2952,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 #endif
-
-#if DEBUG_nisheeth
-  const char* spec;
-  aURL->GetSpec(&spec);
-  printf("nsWebShell::OnEndDocumentLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
-#endif  
 
   if (!mProcessedEndDocumentLoad) {
     mProcessedEndDocumentLoad = PR_TRUE;    
