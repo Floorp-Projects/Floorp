@@ -4,9 +4,9 @@
 <!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
 
 <!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE --> 
-<!ENTITY mainWindow.title "&brandShortName; {&buildId.label;}"> 
+<!ENTITY mainWindow.title "&brandShortName;"> 
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
-<!ENTITY mainWindow.titlemodifier "&brandShortName; {&buildId.label;}"> 
+<!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
