@@ -99,6 +99,9 @@ public:
   static NS_EXPORT JSBool nsGenericResolve(JSContext* aContext,
                                  JSObject* aObj, 
                                  jsval aId);
+
+  static NS_EXPORT nsISupports* nsGetNativeThis(JSContext* aContext,
+                                          JSObject* aObj);
 };
 
 #endif /* nsJSUtils_h__ */

@@ -439,3 +439,21 @@ nsJSUtils::nsGenericResolve(JSContext* aContext,
   return JS_TRUE;
 }
 
+/**
+ * due to some prototype chain hackery, we may have to walk the prototype chain
+ * until we find an object that has an nsISupports in its private field.
+ */
+
+NS_EXPORT nsISupports*
+nsJSUtils::nsGetNativeThis(JSContext* aContext, JSObject* aObj)
+{
+	while (aObj != nsnull) {
+		JSClass* js_class = JS_GetClass(aContext, aObj);
+		if (js_class != nsnull &&
+		   (js_class->flags & JSCLASS_HAS_PRIVATE) &&
+		   (js_class->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
+			return (nsISupports*) JS_GetPrivate(aContext, aObj);
+		aObj = JS_GetPrototype(aContext, aObj);
+	}
+	return nsnull;
+}
