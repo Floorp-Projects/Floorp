@@ -542,17 +542,39 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
     mOptions->AddOption(aContent);
   }
 
+  // Update the widget
+  nsIFormControlFrame* selectFrame = nsnull;
+  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, selectFrame);
+  if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+    nsString action("a");
+    action.Append(mOptions->IndexOf(aContent),10);
+    selectFrame->SetProperty(nsHTMLAtoms::option, action);
+  }
+  
+  // When first populating, GetPrimaryFrame will fail but it's ok
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
 {
+  // We can't get our index if we've already been replaced in the OptionList.
+  // If we couldn't get our index, pass -1, remove all options and recreate
+  PRInt32 index = mOptions->IndexOf(aContent);
   if (nsnull != mOptions) {
     mOptions->RemoveOption(aContent);
   }
 
-  return NS_OK;
+  // Update the widget
+  nsIFormControlFrame* selectFrame = nsnull;
+  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, selectFrame);
+  if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+    nsString action("r");
+    action.Append(index,10);
+    selectFrame->SetProperty(nsHTMLAtoms::option, action);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -902,7 +924,7 @@ nsOptionList::SetProperty(JSContext *aContext,
     PRInt32 length = mElements.Count();
 
     // If the index is within range
-    if ((index > 0) && (index <= length)) {
+    if ((index >= 0) && (index <= length)) {
 
       // if the value is null, remove this option
       if (JSVAL_IS_NULL(*aVp)) {
