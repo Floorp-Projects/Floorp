@@ -1012,7 +1012,6 @@ nsBrowserWindow::nsBrowserWindow()
 
 nsBrowserWindow::~nsBrowserWindow()
 {
-  NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mTableInspectorDialog);
   NS_IF_RELEASE(mImageInspectorDialog);
@@ -1081,7 +1080,6 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 
 nsresult
 nsBrowserWindow::Init(nsIAppShell* aAppShell,
-                      nsIPref* aPrefs,
                       const nsRect& aBounds,
                       PRUint32 aChromeMask,
                       PRBool aAllowPlugins)
@@ -1089,8 +1087,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mChromeMask = aChromeMask;
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
-  mPrefs = aPrefs;
-  NS_IF_ADDREF(mPrefs);
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
@@ -1132,7 +1128,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (docLoader) {
     docLoader->AddObserver(this);
   }
-  mDocShell->SetPrefs(aPrefs);
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   docShellWin->SetVisibility(PR_TRUE);
 
@@ -1170,7 +1165,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
 nsresult
 nsBrowserWindow::Init(nsIAppShell* aAppShell,
-                      nsIPref* aPrefs,
                       const nsRect& aBounds,
                       PRUint32 aChromeMask,
                       PRBool aAllowPlugins,
@@ -1180,8 +1174,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mChromeMask = aChromeMask;
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
-  mPrefs = aPrefs;
-  NS_IF_ADDREF(mPrefs);
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
@@ -1215,7 +1207,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (docLoader) {
     docLoader->AddObserver(this);
   }
-  mDocShell->SetPrefs(aPrefs);
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
     rv = CreateMenuBar(r.width);
@@ -1879,7 +1870,7 @@ nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
     browser->SetApp(mApp);
 
     // Assume no controls for now
-    rv = browser->Init(mAppShell, mPrefs, bounds, aChromeMask, mAllowPlugins);
+    rv = browser->Init(mAppShell, bounds, aChromeMask, mAllowPlugins);
     if (NS_OK == rv)
     {
       // Default is to startup hidden
@@ -2315,7 +2306,7 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
           nsIPresContext* presContext;
           docv->GetPresContext(presContext);
           presContext->GetDeviceContext(getter_AddRefs(dc));
-          printContext->Init(dc, mPrefs);
+          printContext->Init(dc);
           NS_RELEASE(presContext);
 
           // Make a window using that content viewer
@@ -2324,7 +2315,7 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
           // browser event handling code during processing of the NS_DESTROY event...
           nsBrowserWindow* bw = new nsNativeBrowserWindow;
           bw->SetApp(mApp);
-          bw->Init(mAppShell, mPrefs, nsRect(0, 0, 600, 400),
+          bw->Init(mAppShell, nsRect(0, 0, 600, 400),
                    NS_CHROME_MENU_BAR_ON, PR_TRUE, docv, printContext);
           bw->Show();
 
@@ -2370,7 +2361,7 @@ void nsBrowserWindow::DoPrintSetup()
                                              kIXPBaseWindowIID,
                                              (void**) &dialog);
   if (rv == NS_OK) {
-    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML,
+    dialog->Init(eXPBaseWindowType_dialog, mAppShell, printHTML,
                  title, rect, PRUint32(~0), PR_FALSE);
     dialog->SetVisible(PR_TRUE);
     if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**)&mXPDialog)) {
@@ -2453,7 +2444,7 @@ void nsBrowserWindow::DoTableInspector()
                                                      kIXPBaseWindowIID,
                                                      (void**) &xpWin);
     if (rv == NS_OK) {
-      xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
+      xpWin->Init(eXPBaseWindowType_dialog, mAppShell, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
       if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mTableInspectorDialog)) {
         mTableInspector = new nsTableInspectorDialog(this, domDoc); // ref counts domDoc
@@ -2484,7 +2475,7 @@ void nsBrowserWindow::DoImageInspector()
     nsXPBaseWindow * xpWin = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);
     if (rv == NS_OK) {
-      xpWin->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
+      xpWin->Init(eXPBaseWindowType_dialog, mAppShell, printHTML, title, rect, PRUint32(~0), PR_FALSE);
       xpWin->SetVisible(PR_TRUE);
       if (NS_OK == xpWin->QueryInterface(kIXPBaseWindowIID, (void**) &mImageInspectorDialog)) {
         mImageInspector = new nsImageInspectorDialog(this, domDoc); // ref counts domDoc
@@ -3062,12 +3053,13 @@ nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"null pref name");
 
-  if (nsnull != mPrefs && nsnull != aPrefName)
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_PROGID));
+  if (prefs && nsnull != aPrefName)
   {
     PRBool value;
-    mPrefs->GetBoolPref(aPrefName,&value);
-    mPrefs->SetBoolPref(aPrefName,!value);
-    mPrefs->SavePrefFile();
+    prefs->GetBoolPref(aPrefName,&value);
+    prefs->SetBoolPref(aPrefName,!value);
+    prefs->SavePrefFile();
     
     ForceRefresh();
   }
@@ -3325,10 +3317,11 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 void 
 nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
 {
-  if (nsnull != mPrefs) { 
+  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
+  if (pref) { 
     int32 prefInt = (aIsStandard) ? eCompatibility_Standard : eCompatibility_NavQuirks;
-    mPrefs->SetIntPref("nglayout.compatibility.mode", prefInt);
-    mPrefs->SavePrefFile();
+    pref->SetIntPref("nglayout.compatibility.mode", prefInt);
+    pref->SavePrefFile();
   }
 }
 

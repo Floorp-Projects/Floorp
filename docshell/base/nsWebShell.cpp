@@ -227,7 +227,6 @@ public:
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
-  NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
@@ -1044,12 +1043,6 @@ nsEventStatus PR_CALLBACK
 nsWebShell::HandleEvent(nsGUIEvent *aEvent)
 {
   return nsEventStatus_eIgnore;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetPrefs(nsIPref*& aPrefs)
-{
-   return nsDocShell::GetPrefs(&aPrefs);
 }
 
 NS_IMETHODIMP
@@ -3762,16 +3755,6 @@ NS_IMETHODIMP nsWebShell::SetLoadCookie(nsISupports * aLoadCookie)
 {
   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
   return mContentListener->SetLoadCookie(aLoadCookie);
-}
-
-NS_IMETHODIMP nsWebShell::GetPrefs(nsIPref** aPrefs)
-{
-   return nsDocShell::GetPrefs(aPrefs);
-}
-
-NS_IMETHODIMP nsWebShell::SetPrefs(nsIPref* aPrefs)
-{
-   return nsDocShell::SetPrefs(aPrefs);
 }
 
 NS_IMETHODIMP nsWebShell::GetZoom(float* aZoom)

@@ -338,24 +338,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   docShellAsItem->SetTreeOwner(mChromeTreeOwner);
   docShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
 
-  /*
-   * XXX:  How should preferences be supplied to the nsWebShellWindow?
-   *       Should there be the notion of a global preferences service?
-   *       Or should there be many preferences components based on 
-   *       the user profile...
-   */
-  // Initialize the webshell with the preferences service
-  nsIPref *prefs;
-
-  rv = nsServiceManager::GetService(kPrefCID, 
-                                    NS_GET_IID(nsIPref), 
-                                    (nsISupports **)&prefs);
-  if (NS_SUCCEEDED(rv)) {
-    // Set the prefs in the outermost webshell.
-    mWebShell->SetPrefs(prefs);
-    nsServiceManager::ReleaseService(kPrefCID, prefs);
-  }
-
   if (nsnull != aUrl)  {
     char *tmpStr = NULL;
     nsAutoString urlString;
@@ -1753,7 +1735,6 @@ nsWebShellWindow::DocumentWillBeDestroyed(nsIDocument *aDocument)
 
 /**************** nsIBrowserWindow interface ********************/
 NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
-                   nsIPref* aPrefs,
                    const nsRect& aBounds,
                    PRUint32 aChromeMask,
                    PRBool aAllowPlugins)

@@ -53,7 +53,6 @@ class nsViewerApp;
 class nsIDocumentViewer;
 class nsIPresContext;
 class nsIPresShell;
-class nsIPref;
 class nsIContentConnector;
 class nsWebCrawler;
 
@@ -78,7 +77,6 @@ public:
 
   // nsIBrowserWindow
   NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   PRUint32 aChromeMask,
                   PRBool aAllowPlugins = PR_TRUE);
@@ -219,7 +217,6 @@ public:
   // Initialize a second view on a different browser windows document
   // viewer.
   nsresult Init(nsIAppShell* aAppShell,
-                nsIPref* aPrefs,
                 const nsRect& aBounds,
                 PRUint32 aChromeMask,
                 PRBool aAllowPlugins,
@@ -269,7 +266,6 @@ public:
 
   //for creating more instances
   nsIAppShell* mAppShell;
-  nsIPref* mPrefs;
   PRBool mAllowPlugins;
 
   // Global window collection

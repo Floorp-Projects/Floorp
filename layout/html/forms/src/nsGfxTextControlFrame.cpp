@@ -1569,12 +1569,6 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
   nsCOMPtr<nsIWebShell> outerShell = do_QueryInterface(container);
   NS_ENSURE_TRUE(outerShell, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIPref> outerPrefs;  //connect the prefs
-  outerShell->GetPrefs(*getter_AddRefs(outerPrefs));
-  NS_ENSURE_TRUE(outerPrefs, NS_ERROR_UNEXPECTED);
-
-  mWebShell->SetPrefs(outerPrefs);
-
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
   nsCOMPtr<nsIPresShell> presShell;

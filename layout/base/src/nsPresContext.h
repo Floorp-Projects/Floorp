@@ -42,11 +42,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIPresContext methods
-  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs);
+  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext);
   NS_IMETHOD Stop(void);
   NS_IMETHOD SetShell(nsIPresShell* aShell);
   NS_IMETHOD GetShell(nsIPresShell** aResult);
-  NS_IMETHOD GetPrefs(nsIPref** aPrefsResult);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);

@@ -3348,9 +3348,7 @@ PresShell::VerifyIncrementalReflow()
   NS_ASSERTION(NS_OK == rv, "failed to create presentation context");
   nsCOMPtr<nsIDeviceContext> dc;
   mPresContext->GetDeviceContext(getter_AddRefs(dc));
-  nsCOMPtr<nsIPref> prefs; 
-  mPresContext->GetPrefs(getter_AddRefs(prefs));
-  cx->Init(dc, prefs);
+  cx->Init(dc);
 
   // Get our scrolling preference
   nsScrollPreference scrolling;

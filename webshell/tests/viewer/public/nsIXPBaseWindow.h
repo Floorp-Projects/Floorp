@@ -88,7 +88,6 @@ public:
 
   NS_IMETHOD Init(nsXPBaseWindowType aType,
                   nsIAppShell*       aAppShell,
-                  nsIPref*           aPrefs,
                   const nsString&    aDialogURL,
                   const nsString&    aTitle,
                   const nsRect&      aBounds,

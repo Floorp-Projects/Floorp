@@ -129,7 +129,6 @@ public:
   // nsIContentViewer
   NS_IMETHOD Init(nsNativeWidget aParent,
                   nsIDeviceContext* aDeviceContext,
-                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
@@ -287,7 +286,6 @@ PluginViewerImpl::GetContainer(nsISupports** aResult)
 NS_IMETHODIMP
 PluginViewerImpl::Init(nsNativeWidget aNativeParent,
                        nsIDeviceContext* aDeviceContext,
-                       nsIPref* aPrefs,
                        const nsRect& aBounds,
                        nsScrollPreference aScrolling)
 {

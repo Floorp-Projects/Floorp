@@ -78,7 +78,7 @@ public:
   /**
    * Initialize the presentation context from a particular device.
    */
-  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext) = 0;
 
   /**
    * Stop the presentation in preperation for destruction.
@@ -95,11 +95,6 @@ public:
    * Get the PresentationShell that this context is bound to.
    */
   NS_IMETHOD GetShell(nsIPresShell** aResult) = 0;
-
-  /**
-   * Get a reference to the prefs API for this context
-   */
-  NS_IMETHOD GetPrefs(nsIPref** aPrefsResult) = 0;
 
   /**
    * Access compatibility mode for this context

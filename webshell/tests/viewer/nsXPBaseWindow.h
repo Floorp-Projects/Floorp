@@ -58,7 +58,6 @@ public:
   // nsIBrowserWindow
   NS_IMETHOD Init(nsXPBaseWindowType aType,
                   nsIAppShell*       aAppShell,
-                  nsIPref*           aPrefs,
                   const nsString&    aDialogURL,
                   const nsString&    aTitle,
                   const nsRect&      aBounds,
@@ -141,7 +140,6 @@ protected:
 
   //for creating more instances
   nsIAppShell* mAppShell;       //not addref'ed!
-  nsIPref*     mPrefs;          //not addref'ed!
   PRBool       mAllowPlugins;
 
   nsXPBaseWindowType mWindowType;

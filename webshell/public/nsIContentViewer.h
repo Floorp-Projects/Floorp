@@ -26,9 +26,6 @@
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 
-class nsIWebShell;
-
-
 // Forward declarations... 
 class nsIDeviceContext;
 class nsIPref;
@@ -57,7 +54,6 @@ public:
    */
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   nsIDeviceContext* aDeviceContext,
-                  nsIPref* aPrefs,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto)=0;
 
