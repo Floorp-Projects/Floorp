@@ -339,7 +339,6 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libhook.a \
 		  $(DIST)/lib/libparse.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)pref.a \
-		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a \
 		  $(DIST)/lib/libpics.a \
 		  $(DIST)/lib/libpwcac.a \
 		  $(DIST)/lib/libreg.a \
@@ -555,18 +554,19 @@ BASIC_DSOS += \
 			$(XFE_JPEG_DSO) \
 			$(NULL)
 
-ifndef NO_MOCHA
 # XXX To a DSO...
 ifdef FULL_STATIC_BUILD
 BASIC_LIBS	+= $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a
 else
 BASIC_DSOS	+= -ljs -ljsj
 endif
-BASIC_LIBS	+= $(DIST)/lib/libmocha.a
+
+BASIC_LIBS	+= $(DIST)/lib/libmocha.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a
+
 ifdef DOM
 # the DOM code calls back into layout.
 BASIC_LIBS	+= $(DIST)/lib/liblay.a
-endif
 endif
 
 ifdef DOM
