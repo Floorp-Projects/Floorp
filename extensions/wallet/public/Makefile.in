@@ -32,6 +32,8 @@ XPIDLSRCS   = \
     nsIPasswordSink.idl \
     nsIKeyedStreamGenerator.idl \
     nsIWalletService.idl    \
+    nsIPassword.idl    \
+    nsIPasswordManager.idl    \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

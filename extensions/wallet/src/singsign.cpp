@@ -847,11 +847,36 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
   return PR_TRUE;
 }
 
-PUBLIC PRBool
-SINGSIGN_RemoveUser(const char *passwordRealm, const PRUnichar *userName) {
-  return si_RemoveUser(passwordRealm, nsAutoString(userName), PR_TRUE);
+PUBLIC nsresult
+SINGSIGN_RemoveUser(const char *host, const PRUnichar *user) {
+  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE);
+  return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
+PRIVATE void
+si_FreeReject(si_Reject * reject);
+
+PUBLIC nsresult
+SINGSIGN_RemoveReject(const char *host) {
+  si_Reject* reject;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  /* step backwards through all rejects */
+  si_lock_signon_list();
+  PRInt32 rejectCount = LIST_COUNT(si_reject_list);
+  while (rejectCount>0) {
+    rejectCount--;
+    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(rejectCount));
+    if (reject && !PL_strcmp(reject->passwordRealm, host)) {
+      si_FreeReject(reject);
+      si_signon_list_changed = PR_TRUE;
+      rv = NS_OK;
+    }
+  }
+  si_SaveSignonDataLocked();
+  si_unlock_signon_list();
+  return rv;
+}
 
 /* Determine if a specified url/user exists */
 PRIVATE PRBool
@@ -1174,9 +1199,6 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
   PR_Free(urls);
   return user;
 }
-
-PRIVATE void
-si_FreeReject(si_Reject * reject);
 
 /*
  * Remove all the signons and free everything
@@ -2573,121 +2595,8 @@ SI_FindValueInArgs(const nsAReadableString& results, const nsAReadableString& na
 
 PUBLIC void
 SINGSIGN_SignonViewerReturn(const nsString& results) {
-  si_SignonURLStruct *url;
-  si_SignonUserStruct* user;
-  si_SignonDataStruct* data;
-  si_Reject* reject;
-  PRInt32 signonNum;
-
-  /* get total number of signons so we can go through list backwards */
-  signonNum = 0;
-  PRInt32 count = LIST_COUNT(si_signon_list);
-  for (PRInt32 i=0; i<count; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    signonNum += url->signonUser_list.Count();
-  }
-
-  /*
-   * step backwards through all users and delete those that are in the sequence */
-  nsAutoString gone;
-  SI_FindValueInArgs(results, NS_LITERAL_STRING("|goneS|"), gone);
-  PRInt32 urlCount = LIST_COUNT(si_signon_list);
-  while (urlCount>0) {
-    urlCount--;
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(urlCount));
-    PRInt32 userCount = url->signonUser_list.Count();
-    while (userCount>0) {
-      userCount--;
-      signonNum--;
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list.ElementAt(userCount));
-      if (user && SI_InSequence(gone, signonNum)) {
-        /* get to first data item -- that's the user name */
-        data = NS_STATIC_CAST(si_SignonDataStruct *,
-                              user->signonData_list.ElementAt(0));
-        /* do the deletion */
-        nsAutoString userName;
-        if (NS_SUCCEEDED(si_Decrypt(data->value, userName))) {
-          si_RemoveUser(url->passwordRealm, userName, PR_TRUE);
-          si_signon_list_changed = PR_TRUE;
-        }
-      }
-    }
-  }
-  si_SaveSignonDataLocked();
-
-  /* step backwards through all rejects and delete those that are in the sequence */
-  SI_FindValueInArgs(results, NS_LITERAL_STRING("|goneR|"), gone);
-  si_lock_signon_list();
-  PRInt32 rejectCount = LIST_COUNT(si_reject_list);
-  while (rejectCount>0) {
-    rejectCount--;
-    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(rejectCount));
-    if (reject && SI_InSequence(gone, rejectCount)) {
-      si_FreeReject(reject);
-      si_signon_list_changed = PR_TRUE;
-    }
-  }
-  si_SaveSignonDataLocked();
-  si_unlock_signon_list();
-
-  /* now give wallet a chance to do its deletions */
+  /* give wallet a chance to do its deletions */
   Wallet_SignonViewerReturn(results);
-}
-
-#define BREAK '\001'
-
-PUBLIC void
-SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
-{
-  /* force loading of the signons file */
-  si_RegisterSignonPrefCallbacks();
-
-  nsAutoString buffer;
-  int signonNum = 0;
-  si_SignonURLStruct *url;
-  si_SignonUserStruct * user;
-  si_SignonDataStruct* data = nsnull;
-
-  PRInt32 urlCount = LIST_COUNT(si_signon_list);
-  for (PRInt32 i=0; i<urlCount; i++) {
-    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
-    PRInt32 userCount = url->signonUser_list.Count();
-    for (PRInt32 j=0; j<userCount; j++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list.ElementAt(j));
-
-      /* first non-password data item for user is the username */
-      PRInt32 dataCount = user->signonData_list.Count();
-      for (PRInt32 k=0; k<dataCount; k++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct *,
-                              user->signonData_list.ElementAt(k));
-        if (!(data->isPassword)) {
-          break;
-        }
-      }
-      nsAutoString userName;
-      if (NS_SUCCEEDED(si_Decrypt(data->value, userName))) {
-        buffer.AppendWithConversion(BREAK);
-        buffer.AppendWithConversion("<OPTION value=");
-        buffer.AppendInt(signonNum, 10);
-        buffer.AppendWithConversion(">");
-        buffer.AppendWithConversion(url->passwordRealm);
-        buffer.AppendWithConversion(":");
-        if (!data->isPassword) { /* need this test in case all fields are passwords */
-          buffer += userName;
-          if (data->value.CharAt(0) != '~') { /* this was an encrypted value */
-            buffer.AppendWithConversion("(encrypted)");
-          }
-        }
-        buffer.AppendWithConversion("</OPTION>\n");
-        signonNum++;
-      } else {
-        /* don't display saved signons if user couldn't unlock the database */
-        aSignonList.AssignWithConversion("."); /* a list of length 1 tells viewer that database was not unlocked */ 
-        return;
-      }
-    }
-  }
-  aSignonList = buffer;
 }
 
 PUBLIC PRBool
@@ -2729,32 +2638,6 @@ SINGSIGN_ReencryptAll()
   return PR_TRUE;
 }
 
-PUBLIC void
-SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
-{
-  nsAutoString buffer;
-  int rejectNum = 0;
-  si_Reject *reject;
-
-  /* force loading of the signons file */
-  si_RegisterSignonPrefCallbacks();
-
-  PRInt32 rejectCount = LIST_COUNT(si_reject_list);
-  for (PRInt32 i=0; i<rejectCount; i++) {
-    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-    buffer.AppendWithConversion(BREAK);
-    buffer.AppendWithConversion("<OPTION value=");
-    buffer.AppendInt(rejectNum, 10);
-    buffer.AppendWithConversion(">");
-    buffer.AppendWithConversion(reject->passwordRealm);
-    buffer.AppendWithConversion(":");
-    buffer += reject->userName;
-    buffer.AppendWithConversion("</OPTION>\n");
-    rejectNum++;
-  }
-  aRejectList = buffer;
-}
-
 PUBLIC nsresult
 SINGSIGN_HaveData(nsIPrompt* dialog, const char *passwordRealm, const PRUnichar *userName, PRBool *retval)
 {
@@ -2776,6 +2659,94 @@ SINGSIGN_HaveData(nsIPrompt* dialog, const char *passwordRealm, const PRUnichar 
   return NS_OK;
 }
 
+PUBLIC PRInt32
+SINGSIGN_HostCount() {
+  /* force loading of the signons file */
+  si_RegisterSignonPrefCallbacks();
+
+  if (!si_signon_list) {
+    return 0;
+  }
+  return si_signon_list->Count();
+}
+
+PUBLIC PRInt32
+SINGSIGN_UserCount(PRInt32 host) {
+  if (!si_signon_list) {
+    return 0;
+  }
+
+  si_SignonURLStruct *hostStruct;
+  hostStruct = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(host));
+  return hostStruct->signonUser_list.Count();
+}
+
+PUBLIC nsresult
+SINGSIGN_Enumerate
+    (PRInt32 hostNumber, PRInt32 userNumber, char **host, PRUnichar ** user) {
+
+  if (hostNumber > SINGSIGN_HostCount() || userNumber > SINGSIGN_UserCount(hostNumber)) {
+    return NS_ERROR_FAILURE;
+  }
+  si_SignonURLStruct *hostStruct;
+  si_SignonUserStruct * userStruct;
+  si_SignonDataStruct* data = nsnull;
+
+  hostStruct = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(hostNumber));
+  NS_ASSERTION(hostStruct, "corrupt singlesignon list");
+  *host = (char *) nsMemory::Clone
+    (hostStruct->passwordRealm, nsCRT::strlen(hostStruct->passwordRealm) + 1);
+  NS_ENSURE_ARG_POINTER(host);
+  userStruct = NS_STATIC_CAST
+    (si_SignonUserStruct*, hostStruct->signonUser_list.ElementAt(userNumber));
+
+  /* first non-password data item for user is the username */
+  PRInt32 dataCount = userStruct->signonData_list.Count();
+  for (PRInt32 k=0; k<dataCount; k++) {
+    data = NS_STATIC_CAST(si_SignonDataStruct *, userStruct->signonData_list.ElementAt(k));
+    if (!(data->isPassword)) {
+      break;
+    }
+  }
+
+  nsAutoString userName;
+  if (NS_SUCCEEDED(si_Decrypt(data->value, userName))) {
+    if ((!data->isPassword) /* need this test in case all fields are passwords */
+        && (data->value.CharAt(0) != '~')) {
+      /* this is an encrypted value */
+      userName.AppendWithConversion("(encrypted)");
+    }
+  } else {
+    /* don't display saved signons if user couldn't unlock the database */
+    return NS_ERROR_FAILURE;
+  }
+  if (!(*user = userName.ToNewUnicode())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+PUBLIC PRInt32
+SINGSIGN_RejectCount() {
+  if (!si_reject_list) {
+    return 0;
+  }
+  return si_reject_list->Count();
+}
+
+PUBLIC nsresult
+SINGSIGN_RejectEnumerate
+    (PRInt32 rejectNumber, char **host) {
+
+  si_Reject *reject;
+  reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(rejectNumber));
+  NS_ASSERTION(reject, "corrupt reject list");
+
+  *host = (char *) nsMemory::Clone
+    (reject->passwordRealm, nsCRT::strlen(reject->passwordRealm) + 1);
+  NS_ENSURE_ARG_POINTER(host);
+  return NS_OK;
+}
 
 #ifdef APPLE_KEYCHAIN
 /************************************

@@ -25,15 +25,19 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsWalletService.h"
+#include "nsPasswordManager.h"
 
 // Define the constructor function for the nsWalletlibService
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWalletlibService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPasswordManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSingleSignOnPrompt, Init)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { NS_WALLETSERVICE_CLASSNAME, NS_WALLETSERVICE_CID,
       NS_WALLETSERVICE_CONTRACTID, nsWalletlibServiceConstructor },
+    { NS_PASSWORDMANAGER_CLASSNAME, NS_PASSWORDMANAGER_CID,
+      NS_PASSWORDMANAGER_CONTRACTID, nsPasswordManagerConstructor },
     { NS_SINGLESIGNONPROMPT_CLASSNAME, NS_SINGLESIGNONPROMPT_CID,
       NS_SINGLESIGNONPROMPT_CONTRACTID, nsSingleSignOnPromptConstructor }
 };

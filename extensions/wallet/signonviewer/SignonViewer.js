@@ -26,8 +26,8 @@
 
 // globals 
 var signonviewer        = null;
-var signonList          = [];
-var rejectList          = [];
+var signons             = [];
+var rejects             = [];
 var nopreviewList       = [];
 var nocaptureList       = [];
 var goneSS              = ""; // signon
@@ -46,6 +46,9 @@ function Startup()
 {
   signonviewer = Components.classes["@mozilla.org/signonviewer/signonviewer-world;1"].createInstance();
   signonviewer = signonviewer.QueryInterface(Components.interfaces.nsISignonViewer);
+
+  passwordmanager = Components.classes["@mozilla.org/passwordmanager;1"].getService();
+  passwordmanager = passwordmanager.QueryInterface(Components.interfaces.nsIPasswordManager);
 
   doSetOKCancel(onOK, null);  // init ok event handler
 
@@ -82,6 +85,10 @@ function Startup()
     element.setAttribute("hidden", "true");
     element = document.getElementById("nocapture");
     element.setAttribute("hidden", "true");
+    if (!LoadSignons()) {
+      return; /* user failed to unlock the database */
+    }
+    LoadReject();
   } else if (tab == "W") {
     element = document.getElementById("signonviewer");
     element.setAttribute("title", element.getAttribute("alttitle"));
@@ -96,46 +103,51 @@ function Startup()
 
     element = document.getElementById("panel");
     element.setAttribute("index","2" );
+    LoadNopreview();
+    LoadNocapture();
   } else {
     /* invalid value for argument */
   }
-
-
-  if (!LoadSignons()) {
-    return; /* user failed to unlock the database */
-  }
-  LoadReject();
-  LoadNopreview();
-  LoadNocapture();
 }
 
 /*** =================== SAVED SIGNONS CODE =================== ***/
+
+// function : <SignonViewer.js>::AddSignonToList();
+// purpose  : creates an array of signon objects
+function AddSignonToList(count, host, user) {
+  signons[count] = new Signon(count, host, user);
+}
+
+// function : <SignonViewer.js>::Signon();
+// purpose  : an home-brewed object that represents a individual signon
+function Signon(number, host, user)
+{
+  this.number = number;
+  this.host = host;
+  this.user = user;
+}
 
 // function : <SignonViewer.js>::LoadSignons();
 // purpose  : reads signons from interface and loads into tree
 function LoadSignons()
 {
-  signonList = signonviewer.GetSignonValue();
-  if (signonList.length == 1) {
-    /* user supplied invalid database key */
-    window.close();
-    return false;
-  }
+  var enumerator = passwordmanager.enumerator;
+  var count = 0;
+  while (enumerator.hasMoreElements()) {
+    try {
+      var nextPassword = enumerator.getNext();
+    } catch(e) {
+      /* user supplied invalid database key */
+      window.close();
+      return false;
+    }
+    nextPassword = nextPassword.QueryInterface(Components.interfaces.nsIPassword);
 
-  if (signonList.length > 0) {
-    var delim = signonList[0];
-    signonList = signonList.split(delim);
-  }
-  for(var i = 1; i < signonList.length; i++)
-  {
-    var currSignon = TrimString(signonList[i]);
-    // TEMP HACK until morse fixes signon viewer functions
-    currSignon = RemoveHTMLFormatting(currSignon);
-    /* parameter passed in is url:username */
-    var site = currSignon.substring(0,currSignon.lastIndexOf(":"));
-    var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
+    var host = nextPassword.host;
+    var user = nextPassword.user;
+
     if (user == "") {
-      /* no username passed in, parse if out of url */
+      /* no username passed in, parse it out of url */
       var uri =
         Components.classes["@mozilla.org/network/standard-url;1"]
           .createInstance(Components.interfaces.nsIURI); 
@@ -146,9 +158,11 @@ function LoadSignons()
         user = "<>";
       }
     }
-    AddItem("savesignonlist",[site,user],"signon_",i-1);
+
+    AddSignonToList(count, host, user);
+    AddItem("savesignonlist", [host,user], "signon_", count++);
   }
-  if (deleted_signons_count >= signonList.length) {
+  if (count == 0) {
     document.getElementById("removeAllSignons").setAttribute("disabled","true");
   }
   return true;
@@ -161,7 +175,7 @@ function DeleteSignon()
   deleted_signons_count += document.getElementById("signonstree").selectedItems.length;
   goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');
   DoButtonEnabling("signonstree");
-  if (deleted_signons_count >= signonList.length) {
+  if (deleted_signons_count >= signons.length) {
     document.getElementById("removeAllSignons").setAttribute("disabled","true");
   }
 }
@@ -170,7 +184,7 @@ function DeleteSignon()
 // purpose  : deletes all the signons
 function DeleteAllSignons() {
   // delete selected item
-  goneSS += DeleteAllItems(signonList.length, "signon_", "savesignonlist");
+  goneSS += DeleteAllItems(signons.length, "signon_", "savesignonlist");
   if( !document.getElementById("removeSignon").disabled ) {
     document.getElementById("removeSignon").setAttribute("disabled", "true")
   }
@@ -179,27 +193,37 @@ function DeleteAllSignons() {
 
 /*** =================== IGNORED SIGNONS CODE =================== ***/
 
+// function : <SignonViewer.js>::AddRejectToList();
+// purpose  : creates an array of reject objects
+function AddRejectToList(count, host) {
+  rejects[count] = new Reject(count, host);
+}
+
+// function : <SignonViewer.js>::Reject();
+// purpose  : an home-brewed object that represents a individual reject
+function Reject(number, host)
+{
+  this.number = number;
+  this.host = host;
+}
+
 // function : <SignonViewer.js>::LoadReject();
 // purpose  : reads rejected sites from interface and loads into tree
 function LoadReject()
 {
-  rejectList = signonviewer.GetRejectValue();
-  if (rejectList.length > 0) {
-    var delim = rejectList[0];
-    rejectList = rejectList.split(delim);
+  var enumerator = passwordmanager.rejectEnumerator;
+  var count = 0;
+  while (enumerator.hasMoreElements()) {
+    var nextReject = enumerator.getNext();
+    nextReject = nextReject.QueryInterface(Components.interfaces.nsIPassword);
+    var host = nextReject.host;
+    AddRejectToList(count, host);
+    AddItem("ignoredlist", [host], "reject_", count++);
   }
-  for(var i = 1; i < rejectList.length; i++)
-  {
-    var currSignon = TrimString(rejectList[i]);
-    // TEMP HACK until morse fixes signon viewer functions
-    currSignon = RemoveHTMLFormatting(currSignon);
-    var site = currSignon.substring(0,currSignon.lastIndexOf(":"));
-    var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
-    AddItem("ignoredlist",[site],"reject_",i-1);
-  }
-  if (deleted_rejects_count >= rejectList.length) {
+  if (count == 0) {
     document.getElementById("removeAllSites").setAttribute("disabled","true");
   }
+  return true;
 }
 
 // function : <SignonViewer.js>::DeleteIgnoredSite();
@@ -209,7 +233,7 @@ function DeleteIgnoredSite()
   deleted_rejects_count += document.getElementById("ignoretree").selectedItems.length;
   goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');
   DoButtonEnabling("ignoretree");
-  if (deleted_rejects_count >= rejectList.length) {
+  if (deleted_rejects_count >= rejects.length) {
     document.getElementById("removeAllSites").setAttribute("disabled","true");
   }
 }
@@ -218,7 +242,7 @@ function DeleteIgnoredSite()
 // purpose  : deletes all the ignored sites
 function DeleteAllSites() {
   // delete selected item
-  goneIS += DeleteAllItems(rejectList.length, "reject_", "ignoredlist");
+  goneIS += DeleteAllItems(rejects.length, "reject_", "ignoredlist");
   if( !document.getElementById("removeIgnoredSite").disabled ) {
     document.getElementById("removeIgnoredSite").setAttribute("disabled", "true")
   }
@@ -231,7 +255,7 @@ function DeleteAllSites() {
 // purpose  : reads non-previewed forms from interface and loads into tree
 function LoadNopreview()
 {
-  nopreviewList = signonviewer.GetNopreviewValue();
+  nopreviewList = signonviewer.getNopreviewValue();
   if (nopreviewList.length > 0) {
     var delim = nopreviewList[0];
     nopreviewList = nopreviewList.split(delim);
@@ -277,7 +301,7 @@ function DeleteAllNopreviews() {
 // purpose  : reads non-captured forms from interface and loads into tree
 function LoadNocapture()
 {
-  nocaptureList = signonviewer.GetNocaptureValue();
+  nocaptureList = signonviewer.getNocaptureValue();
   if (nocaptureList.length > 0) {
     var delim = nocaptureList[0];
     nocaptureList = nocaptureList.split(delim);
@@ -323,9 +347,23 @@ function DeleteAllNocaptures() {
 // purpose  : dialog confirm & tidy up.
 function onOK()
 {
-  var result = "|goneS|"+goneSS+"|goneR|"+goneIS;
-  result += "|goneC|"+goneNC+"|goneP|"+goneNP+"|";
-  signonviewer.SetValue(result, window);
+  var deletedSignons = [];
+  deletedSignons = goneSS.split(",");
+  var signonCount;
+  for (signonCount=0; signonCount<deletedSignons.length-1; signonCount++) {
+    passwordmanager.removeUser(signons[deletedSignons[signonCount]].host,
+                             signons[deletedSignons[signonCount]].user);
+  }
+
+  var deletedRejects = [];
+  deletedRejects = goneIS.split(",");
+  var rejectCount;
+  for (rejectCount=0; rejectCount<deletedRejects.length-1; rejectCount++) {
+    passwordmanager.removeReject(rejects[deletedRejects[rejectCount]].host);
+  }
+
+  var result = "|goneC|"+goneNC+"|goneP|"+goneNP+"|";
+  signonviewer.setValue(result, window);
   return true;
 }
 

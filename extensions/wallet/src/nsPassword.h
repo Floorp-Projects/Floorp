@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -20,28 +20,29 @@
  * Contributor(s): 
  */
 
-/*
+#ifndef nsPassword_h__
+#define nsPassword_h__
 
-  A sample of XPConnect. This file contains a SignonViewer interface.
+#include "nsIPassword.h"
+#include "nsWeakReference.h"
 
- */
+////////////////////////////////////////////////////////////////////////////////
 
-#include "nsISupports.idl"
-#include "domstubs.idl"
-%{C++
-#include "nsIDOMWindowInternal.h"
-%}
+class nsPassword : public nsIPassword,
+                        public nsSupportsWeakReference {
+public:
 
-[scriptable, uuid(C425FAE0-20F0-11d3-ABAA-0080C787AD96)]
-interface nsISignonViewer : nsISupports
-{
-    void setValue(in wstring aValue, in nsIDOMWindowInternal win);
-    wstring getNopreviewValue();
-    wstring getNocaptureValue();
+  // nsISupports
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPASSWORD
+
+  nsPassword(char * host, PRUnichar * user);
+  nsPassword();
+  virtual ~nsPassword(void);
+  
+protected:
+  char * passwordHost;
+  PRUnichar * passwordUser;
 };
 
-%{ C++
-// {C425FAE1-20F0-11d3-ABAA-0080C787AD96}
-#define NS_SIGNONVIEWER_CID \
-{ 0xc425fae1, 0x20f0, 0x11d3, { 0xab, 0xaa, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 } }
-%}
+#endif /* nsPassword_h__ */

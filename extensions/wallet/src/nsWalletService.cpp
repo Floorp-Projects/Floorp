@@ -26,6 +26,7 @@
 #include "nsIServiceManager.h"
 #include "wallet.h"
 #include "singsign.h"
+#include "nsPassword.h"
 #include "nsIObserverService.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
@@ -50,6 +51,7 @@
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+
 
 nsWalletlibService::nsWalletlibService()
 {
@@ -181,16 +183,6 @@ NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsAutoString&
 
 NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsAutoString& aPrefillList){
   ::WLLT_GetPrefillListForViewer(aPrefillList);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::SI_GetSignonListForViewer(nsAutoString& aSignonList){
-  ::SINGSIGN_GetSignonListForViewer(aSignonList);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWalletlibService::SI_GetRejectListForViewer(nsAutoString& aRejectList){
-  ::SINGSIGN_GetRejectListForViewer(aRejectList);
   return NS_OK;
 }
 

@@ -48,42 +48,6 @@ SignonViewerImpl::~SignonViewerImpl()
 NS_IMPL_ISUPPORTS(SignonViewerImpl, NS_GET_IID(nsISignonViewer));
 
 NS_IMETHODIMP
-SignonViewerImpl::GetSignonValue(PRUnichar** aValue)
-{
-  NS_PRECONDITION(aValue != nsnull, "null ptr");
-  if (!aValue) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsresult res;
-  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
-  if (NS_FAILED(res)) return res;
-  nsAutoString signonList;
-  res = walletservice->SI_GetSignonListForViewer(signonList);
-  if (NS_SUCCEEDED(res)) {
-    *aValue = signonList.ToNewUnicode();
-  }
-  return res;
-}
-
-NS_IMETHODIMP
-SignonViewerImpl::GetRejectValue(PRUnichar** aValue)
-{
-  NS_PRECONDITION(aValue != nsnull, "null ptr");
-  if (!aValue) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsresult res;
-  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
-  if (NS_FAILED(res)) return res;
-  nsAutoString rejectList;
-  res = walletservice->SI_GetRejectListForViewer(rejectList);
-  if (NS_SUCCEEDED(res)) {
-    *aValue = rejectList.ToNewUnicode();
-  }
-  return res;
-}
-
-NS_IMETHODIMP
 SignonViewerImpl::GetNopreviewValue(PRUnichar** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");

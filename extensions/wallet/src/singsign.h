@@ -43,11 +43,20 @@
 class nsIPrompt;
 XP_BEGIN_PROTOS
 
-extern void
-SINGSIGN_GetSignonListForViewer (nsString& aSignonList);
+extern PRInt32
+SINGSIGN_HostCount();
 
-extern void
-SINGSIGN_GetRejectListForViewer (nsString& aRejectList);
+extern PRInt32
+SINGSIGN_UserCount(PRInt32 host);
+
+extern PRInt32
+SINGSIGN_RejectCount();
+
+extern nsresult
+SINGSIGN_Enumerate(PRInt32 hostNumber, PRInt32 userNumber, char **host, PRUnichar **user);
+
+extern nsresult
+SINGSIGN_RejectEnumerate(PRInt32 rejectNumber, char **host);
 
 extern void
 SINGSIGN_SignonViewerReturn(const nsString& results);
@@ -73,9 +82,13 @@ SINGSIGN_Prompt
      const char* passwordRealm, nsIPrompt* dialog, PRBool *returnValue,
      PRUint32 savePassword = SINGSIGN_SAVE_PASSWORD_PERMANENTLY);
 
-extern PRBool
+extern nsresult
 SINGSIGN_RemoveUser
     (const char* passwordRealm, const PRUnichar *userName);
+
+extern nsresult
+SINGSIGN_RemoveReject
+    (const char* host);
 
 extern PRBool
 SINGSIGN_StorePassword
