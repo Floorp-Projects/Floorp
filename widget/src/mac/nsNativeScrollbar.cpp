@@ -50,12 +50,6 @@
 
 #include "Sound.h"
 
-NS_INTERFACE_MAP_BEGIN(nsNativeScrollbar)
-  NS_INTERFACE_MAP_ENTRY(nsINativeScrollbar)
-NS_INTERFACE_MAP_END_INHERITING(nsWindow)
-
-NS_IMPL_ADDREF(nsNativeScrollbar);
-NS_IMPL_RELEASE(nsNativeScrollbar);
 
 //
 // StControlActionProcOwner
@@ -93,6 +87,8 @@ ScrollbarActionProc ( )
   return sActionProcOwner.ActionProc();
 }
 
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsWindow, nsINativeScrollbar);
 
 nsNativeScrollbar::nsNativeScrollbar()
   : nsMacControl()
@@ -371,7 +367,7 @@ nsNativeScrollbar::GetMaxRange(PRUint32* aMaxRange)
 //
 // SetPosition
 //
-// Set the current position of the slider and redraw the scrollbar
+// Set the current position of the slider and redraw
 //
 NS_IMETHODIMP
 nsNativeScrollbar::SetPosition(PRUint32 aPos)
@@ -390,10 +386,10 @@ nsNativeScrollbar::SetPosition(PRUint32 aPos)
   //   mValue = ((PRInt32)aPos) > mMaxValue ? mMaxValue : ((int)aPos);
   mValue = aPos;
   
-  // redraw the scrollbar. We can do the update later since we'll
-  // always redraw our parent when we're in a tight loop.
+  // redraw the scrollbar. It needs to be synchronous otherwise we end
+  // up drawing at 0,0, probably because of the associated view.
   if ( mValue != oldValue )
-    Invalidate(PR_FALSE);
+    Invalidate(PR_TRUE);
   
   return NS_OK;
 }
