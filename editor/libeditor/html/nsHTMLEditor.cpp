@@ -1232,7 +1232,6 @@ PRBool nsHTMLEditor::IsModifiable()
     return PR_FALSE;
 }
 
-
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  nsIHTMLEditor methods 
@@ -1796,14 +1795,16 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   nsReadingIterator<PRUnichar> endbody;
   aSourceString.BeginReading(beginbody);
   aSourceString.EndReading(endbody);
-  if (!FindInReadable(NS_LITERAL_STRING("<body"),beginbody,endbody))
+  if (!CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
+                                     beginbody, endbody))
     return NS_ERROR_FAILURE;
 
   nsReadingIterator<PRUnichar> beginhead;
   nsReadingIterator<PRUnichar> endhead;
   aSourceString.BeginReading(beginhead);
   aSourceString.EndReading(endhead);
-  if (!FindInReadable(NS_LITERAL_STRING("<head"),beginhead,endhead))
+  if (!CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<head"),
+                                     beginhead, endhead))
     return NS_ERROR_FAILURE;
 
   nsReadingIterator<PRUnichar> beginclosehead;
@@ -1812,7 +1813,8 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   aSourceString.EndReading(endclosehead);
 
   // Find the index after "<head>"
-  if (!FindInReadable(NS_LITERAL_STRING("</head"),beginclosehead,endclosehead))
+  if (!CaseInsensitiveFindInReadable(NS_LITERAL_STRING("</head"),
+                                     beginclosehead, endclosehead))
     beginclosehead = beginbody;
   // We'll be forgiving and assume head ends before body
   
@@ -3983,7 +3985,8 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsAString& aOutputString)
     aOutputString.BeginReading(findIter);
     aOutputString.EndReading(endFindIter);
     //counting on our parser to always lower case!!!
-    if (FindInReadable(NS_LITERAL_STRING("<body"),findIter,endFindIter))
+    if (CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
+                                      findIter, endFindIter))
     {
       nsReadingIterator<PRUnichar> beginIter;
       aOutputString.BeginReading(beginIter);
