@@ -126,7 +126,10 @@ Rights Reserved.
   </toolbox>
   
   <!-- msg header view -->
-  <vbox id="messagepanebox" flex="3" persist="collapsed">
+  <vbox id="messagepanebox" flex="3" persist="collapsed"
+        ondragover="nsDragAndDrop.dragOver(event, messagepaneObserver);"
+        ondragdrop="nsDragAndDrop.drop(event, messagepaneObserver);"
+        ondragexit="nsDragAndDrop.dragExit(event, messagepaneObserver);">
     <hbox id="msgHeaderView"/>
 
     <!-- message view -->

@@ -65,6 +65,63 @@ var folderListener = {
   }
 }
 
+var messagepaneObserver = {
+
+canHandleMultipleItems: false,
+
+  onDrop: function (aEvent, aData, aDragSession)
+  {
+    var sourceUri = aData.data; 
+    if (sourceUri != gCurrentMessageUri)
+    {
+      var msgHdr = GetMsgHdrFromUri(sourceUri);
+      var folderUri = msgHdr.folder.URI;
+      if (folderUri != gCurrentFolderUri)
+        UpdateDBView(folderUri);
+      SelectMessage(sourceUri);
+    }
+  },
+ 
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+  {
+    var messagepanebox = document.getElementById("messagepanebox");
+    messagepanebox.setAttribute("dragover", "true");
+  },
+ 
+  onDragExit: function (aEvent, aDragSession)
+  {
+    var messagepanebox = document.getElementById("messagepanebox");
+    messagepanebox.removeAttribute("dragover");
+  },
+
+  canDrop: function(aEvent, aDragSession)  //allow drop from mail:3pane window only - 4xp
+  {
+    var doc = aDragSession.sourceNode.ownerDocument;
+    var elem = doc.getElementById("messengerWindow");
+    return (elem && (elem.getAttribute("windowtype") == "mail:3pane"));
+  },
+  
+  getSupportedFlavours: function ()
+  {
+    var flavourSet = new FlavourSet();
+    flavourSet.appendFlavour("text/x-moz-message");
+    return flavourSet;
+  }
+};
+
+function UpdateDBView(folderUri)
+{
+  var dbview = GetDBView();  //close old folder view
+  if (dbview) {
+    dbview.close(); 
+  }
+
+  SelectFolder(folderUri);
+
+  CreateView(null);   //create new folder view
+} 
+  
+
 function nsMsgDBViewCommandUpdater()
 {}
 
@@ -187,6 +244,21 @@ function OnLoadMessageWindow()
       originalView = window.arguments[2];      
 	}	
 
+  CreateView(originalView)
+   
+  setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;", 0);
+
+  SetupCommandUpdateHandlers();
+  var messagePaneFrame = top.frames['messagepane'];
+  if(messagePaneFrame)
+	messagePaneFrame.focus();
+}
+
+function CreateView(originalView)
+{
+  
+  var msgFolder = GetLoadedMsgFolder();
+
   // extract the sort type, the sort order, 
   var sortType;
   var sortOrder;
@@ -200,8 +272,20 @@ function OnLoadMessageWindow()
     sortType = originalView.sortType;
     sortOrder = originalView.sortOrder;
   }
-  
-  var msgFolder = GetLoadedMsgFolder();
+  else if (msgFolder)
+  {
+    var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
+    if (msgDatabase)
+    {
+      var dbFolderInfo = msgDatabase.dBFolderInfo;
+      sortType = dbFolderInfo.sortType;
+      sortOrder = dbFolderInfo.sortOrder;
+      viewFlags = dbFolderInfo.viewFlags;
+      viewType = dbFolderInfo.viewType;
+      msgDatabase = null;
+      dbFolderInfo = null;
+   }
+  }
 
   // create a db view
   CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType, sortOrder); 
@@ -212,13 +296,6 @@ function OnLoadMessageWindow()
   else if (gCurrentFolderUri) {
     SetUpToolbarButtons(gCurrentFolderUri);
   }
- 
-  setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;", 0);
-
-  SetupCommandUpdateHandlers();
-  var messagePaneFrame = top.frames['messagepane'];
-  if(messagePaneFrame)
-	messagePaneFrame.focus();
 }
 
 function extractMsgKeyFromURI()
@@ -395,9 +472,14 @@ function SelectFolder(folderUri)
 	gCurrentFolderUri = folderUri;
 }
 
+function GetMsgHdrFromUri(messageUri)
+{
+  return messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+}
+
 function SelectMessage(messageUri)
 {
-  var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri)
+  var msgHdr = GetMsgHdrFromUri(messageUri);
   gDBView.loadMessageByMsgKey(msgHdr.messageKey);
 }
  
