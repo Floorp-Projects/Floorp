@@ -250,7 +250,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime time
     nonblocking = sockopt.value.non_blocking;
     
     sockopt.option = PR_SockOpt_Nonblocking;
-    sockopt.value.non_blocking = false;
+    sockopt.value.non_blocking = PR_FALSE;
     status = PR_SetSocketOption(fd, &sockopt);
     
     if (PR_SUCCESS != status) {
@@ -551,7 +551,7 @@ nsSOCKSIOLayerNewSocket(const char *host,
         nsSOCKSIOLayerMethods.listen	= nsSOCKSIOLayerListen;
         nsSOCKSIOLayerMethods.close	= nsSOCKSIOLayerClose;
         
-        firstTime			= false;
+        firstTime			= PR_FALSE;
     }
     
     
@@ -626,7 +626,7 @@ nsSOCKSIOLayerAddToSocket(const char *host,
         nsSOCKSIOLayerMethods.listen	= nsSOCKSIOLayerListen;
         nsSOCKSIOLayerMethods.close	= nsSOCKSIOLayerClose;
         
-        firstTime			= false;
+        firstTime			= PR_FALSE;
     }
     
     
