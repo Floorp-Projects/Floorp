@@ -50,8 +50,17 @@ PRInt32 _os2_highMask = 0;
 void
 _PR_MD_INTERVAL_INIT()
 {
-    ULONG timerFreq = 0; /* OS/2 high-resolution timer frequency in Hz */
-    APIRET rc = DosTmrQueryFreq(&timerFreq);
+    char *envp;
+    ULONG timerFreq;
+    APIRET rc;
+
+    if ((envp = getenv("NSPR_OS2_NO_HIRES_TIMER")) != NULL) {
+        if (atoi(envp) == 1)
+           return;
+    }
+
+    timerFreq = 0; /* OS/2 high-resolution timer frequency in Hz */
+    rc = DosTmrQueryFreq(&timerFreq);
     if (NO_ERROR == rc) {
         useHighResTimer = PR_TRUE;
         PR_ASSERT(timerFreq != 0);
