@@ -2873,6 +2873,44 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 			{
 				mInner->Unassert(kNC_LastSearchRoot, kNC_Child, child);
 			}
+
+			// *after* (so that we won't thrash the XUL template builder) unasserting
+			// child node, determine if there are any other references to the child
+			// node in the graph
+
+			PRBool hasInArcs = PR_FALSE;
+			nsCOMPtr<nsISimpleEnumerator>	inArcs;
+			if (NS_FAILED(mInner->ArcLabelsIn(child, getter_AddRefs(inArcs)) ||
+				(!inArcs)))
+				continue;
+			if (NS_FAILED(inArcs->HasMoreElements(&hasInArcs)) ||
+				(hasInArcs == PR_TRUE))
+				continue;
+
+			// no other references, so also unassert any outgoing arcs
+
+			nsCOMPtr<nsISimpleEnumerator>	outArcs;
+			if (NS_FAILED(mInner->ArcLabelsOut(child, getter_AddRefs(outArcs)) ||
+				(!outArcs)))
+				continue;
+			PRBool	hasMoreOutArcs = PR_TRUE;
+			while (hasMoreOutArcs == PR_TRUE)
+			{
+				if (NS_FAILED(outArcs->HasMoreElements(&hasMoreOutArcs)) ||
+					(hasMoreOutArcs == PR_FALSE))
+					break;
+				nsCOMPtr<nsISupports>	outArc;
+				if (NS_FAILED(outArcs->GetNext(getter_AddRefs(outArc))))
+					break;
+				nsCOMPtr<nsIRDFResource> property (do_QueryInterface(outArc));
+				if (!property)
+					continue;
+				nsCOMPtr<nsIRDFNode> target;
+				if (NS_FAILED(mInner->GetTarget(child, property, PR_TRUE,
+					getter_AddRefs(target))) || (!target))
+					continue;
+				mInner->Unassert(child, property, target);
+			}
 		}
 	}
 
