@@ -27,7 +27,7 @@ static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 static NS_IMETHODIMP
-NSConstructChromeRegistry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+NS_ConstructChromeRegistry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
     NS_ASSERTION(aOuter == nsnull, "no aggregation");
@@ -63,7 +63,7 @@ NSGetFactory(nsISupports* aServMgr,
                                  (void**)&factory);
     if (NS_FAILED(rv)) return rv;
 
-    rv = factory->SetConstructor(nsConstructChromeRegistry);
+    rv = factory->SetConstructor(NS_ConstructChromeRegistry);
     if (NS_FAILED(rv)) {
         delete factory;
         return rv;
