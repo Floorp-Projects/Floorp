@@ -151,6 +151,9 @@ public:
 
   nsresult SetLoadCookie(nsISupports *aCookie);
   nsresult GetLoadCookie(nsISupports **aResult);
+  // used when the docshell gets content that's being redirected (so we don't go through
+  // our own InternalLoad method) to reset the load type...
+  nsresult SetLoadType(nsDocShellInfoLoadType aLoadType);
 
 protected:
    // Object Management
@@ -199,9 +202,8 @@ protected:
 
    // Session History
    virtual PRBool ShouldAddToSessionHistory(nsIURI* aURI);
-
    virtual nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel *aChannel,
-                                        nsISHEntry **aNewEntry);
+                                        nsISHEntry **aNewEntry);   
 
    NS_IMETHOD UpdateCurrentSessionHistory();
 #ifdef SH_IN_FRAMES
@@ -269,11 +271,13 @@ protected:
    // Reference to the SHEntry for this docshell until the page is loaded
    // Somebody give me better name
    nsCOMPtr<nsISHEntry>       LSHE;
+
    // this flag is for bug #21358. a docshell may load many urls
    // which don't result in new documents being created (i.e. a new content viewer)
    // we want to make sure we don't call a on load event more than once for a given
    // content viewer. 
    PRBool                     mEODForCurrentDocument; 
+   PRBool                     mURIResultedInDocument;
 
    // used to keep track of whether user click links should be handle by us
    // or immediately kicked out to an external application. mscott: eventually
