@@ -36,6 +36,7 @@ import java.util.Hashtable;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
+import java.io.File;
 
 import javax.mail.Store;
 import javax.mail.URLName;
@@ -50,6 +51,7 @@ import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ListModel;
+import javax.swing.text.JTextComponent;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.ListDataEvent;
@@ -107,7 +109,6 @@ public class MailServerPrefsEditor implements PropertyEditor
 
     public void actionPerformed(ActionEvent aEvent) {
       String action = aEvent.getActionCommand();
-      System.out.println(action);
       if (action.equals(kNewKey)) {
         EditHostDialog hostDialog =
           new EditHostDialog(Util.GetParentFrame(fPanel), null);
@@ -144,10 +145,30 @@ public class MailServerPrefsEditor implements PropertyEditor
         }
       } else if (action.equals(kChooseKey)) {
         JFileChooser chooser = new JFileChooser(fPrefs.getMailDirectory());
-        // chooser.addChoosableFileFilter(new FileFilter[] 
-        // {FileFilter.SharedFolder});
+        DirectoryFilter filter = new DirectoryFilter();
+        File selected;
+        String path;
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setFileFilter(filter);
+        chooser.addChoosableFileFilter(filter);
         chooser.showDialog(fPanel, "Okay");
+        selected = chooser.getSelectedFile();
+        path = selected.getAbsolutePath();
+        ((JTextComponent)
+         fPanel.getCtrlByName(kMailDirectoryKey)).setText(path);
+        fPrefs.setMailDirectory(path);
+        fListeners.firePropertyChange(null, null, fPrefs);
       }
+    }
+  }
+
+  class DirectoryFilter extends FileFilter {
+    public boolean accept(File f) {
+      return f.isDirectory();
+    }
+
+    public String getDescription() {
+      return "Directories";
     }
   }
 
@@ -156,27 +177,27 @@ public class MailServerPrefsEditor implements PropertyEditor
     fHostListModel = new HostListModel();
 
     URL url = getClass().getResource("PrefDialogs.xml");
-    try {
-      fPanel = new PageUI(url, "id", "serverPrefs", fModel, getClass());
+    fPanel = new PageUI(url, "id", "serverPrefs", fModel, getClass());
 
-      JComponent c;
-      ChangeAction ca = new ChangeAction();
+    JComponent c;
+    ChangeAction ca = new ChangeAction();
+    Prefs prefs = new Prefs();
+    MailServerPrefs mail = prefs.getMailServerPrefs();
+    setValue(mail);
 
-      c = fPanel.getCtrlByName(kSMTPHostKey);
-      c.addPropertyChangeListener(ca);
+    c = fPanel.getCtrlByName(kSMTPHostKey);
+    c.addPropertyChangeListener(ca);
 
-      c = fPanel.getCtrlByName(kMailDirectoryKey);
-      c.addPropertyChangeListener(ca);
+    c = fPanel.getCtrlByName(kMailDirectoryKey);
+    c.addPropertyChangeListener(ca);
+      
+    c = fPanel.getCtrlByName(kChooseKey);
+    c.addPropertyChangeListener(ca);
 
-      c = fPanel.getCtrlByName(kHostListKey);
-      if (c instanceof JList) {
-        ((JList) c).setModel(fHostListModel);
-      }
-      c.addPropertyChangeListener(new ListListener());
+    c = fPanel.getCtrlByName(kHostListKey);
+    ((JList) c).setModel(fHostListModel);
+    c.addPropertyChangeListener(new ListListener());
 
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
   }
 
   public String getAsText() {
@@ -331,7 +352,6 @@ public class MailServerPrefsEditor implements PropertyEditor
 
   class ChangeAction implements PropertyChangeListener {
     void event(EventObject aEvent) {
-      getValue();
       fListeners.firePropertyChange(null, null, fPrefs);
     }
 
