@@ -113,7 +113,7 @@ untarred.
    The MySQL modules are all build using one make file which is generated
 by running:
 
-	make Makefile.PL
+	perl Makefile.PL
 
    The MakeMaker process will ask you a few questions about the desired
 compilation target and your MySQL installation.  For many of the questions
