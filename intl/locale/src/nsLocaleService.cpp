@@ -122,22 +122,17 @@ public:
 	//
     NS_DECL_NSILOCALESERVICE
 
-	//
-	// implementation methods
-	//
-	static nsresult GetLocaleService(nsILocaleService** localeService);
-
-protected:
 
 	nsLocaleService(void);
 	virtual ~nsLocaleService(void);
+
+protected:
 
 	nsresult SetSystemLocale(void);
 	nsresult SetApplicationLocale(void);
 
 	nsILocale*					mSystemLocale;
 	nsILocale*					mApplicationLocale;
-	static nsILocaleService*	gLocaleService;
 
 };
 
@@ -168,7 +163,6 @@ protected:
 };
 
 
-nsILocaleService* nsLocaleService::gLocaleService = nsnull;
 
 
 //
@@ -246,7 +240,7 @@ nsLocaleService::nsLocaleService(void)
                 int i;
                 nsString category;
                 nsLocale* resultLocale = new nsLocale();
-				if (resultLocale==NULL) { posixConverter->Release(); return; }
+				        if (resultLocale==NULL) { posixConverter->Release(); return; }
                 for(i=0;i<LocaleListLength;i++) {
                     char* lc_temp = setlocale(posix_locale_category[i],"");
                     category = LocaleList[i];
@@ -288,7 +282,6 @@ nsLocaleService::nsLocaleService(void)
 
 nsLocaleService::~nsLocaleService(void)
 {
-	gLocaleService = nsnull;
 	if (mSystemLocale) mSystemLocale->Release();
 	if (mApplicationLocale) mApplicationLocale->Release();
 }
@@ -464,25 +457,6 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   return result;
 }
 
-nsresult
-nsLocaleService::GetLocaleService(nsILocaleService** localeService)
-{
-	if (!gLocaleService)
-	{
-		nsLocaleService* locale_service = new nsLocaleService();
-		if (!locale_service)
-		{
-			*localeService = NS_STATIC_CAST(nsILocaleService*,locale_service);
-			return NS_ERROR_OUT_OF_MEMORY;
-		} 
-
-		gLocaleService = NS_STATIC_CAST(nsILocaleService*,locale_service);
-
-	}
-
-	*localeService = gLocaleService;
-	return NS_OK;
-}
 
 nsresult
 nsLocaleService::GetLocaleComponentForUserAgent(PRUnichar **_retval)
@@ -506,7 +480,10 @@ nsLocaleService::GetLocaleComponentForUserAgent(PRUnichar **_retval)
 nsresult
 NS_NewLocaleService(nsILocaleService** result)
 {
-	return nsLocaleService::GetLocaleService(result);
+  if(!result)
+    return NS_ERROR_NULL_POINTER;
+  *result = new nsLocaleService();
+  return (nsnull == *result) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 
