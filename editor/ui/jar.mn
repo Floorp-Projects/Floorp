@@ -224,6 +224,7 @@ comm.jar:
       content/editor/EditorPublishProgress.xul                 (dialogs/content/EditorPublishProgress.xul) 
       content/editor/EditorPublishProgress.js                  (dialogs/content/EditorPublishProgress.js) 
 
+#ifndef MOZ_XUL_APP
 en-US.jar:
       locale/en-US/editor/editor.dtd                           (composer/locale/en-US/editor.dtd)
 *     locale/en-US/editor/contents.rdf                         (composer/locale/en-US/contents.rdf)
@@ -274,3 +275,5 @@ en-US.jar:
 US.jar:
 *     locale/US/editor-region/contents.rdf                     (composer/locale/en-US/contents-region.rdf)
       locale/US/editor-region/region.properties                (composer/locale/en-US/region.properties)
+#endif
+
