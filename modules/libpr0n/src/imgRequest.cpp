@@ -166,6 +166,22 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
   mObservers.RemoveElement(NS_STATIC_CAST(void*, proxy));
 
+  /* Check mState below before we potentially call Cancel() below. Since
+     Cancel() may result in OnStopRequest being called back before Cancel()
+     returns, leaving mState in a different state then the one it was in at
+     this point.
+   */
+
+  // make sure that observer gets an OnStopDecode message sent to it
+  if (!(mState & onStopDecode)) {
+    proxy->OnStopDecode(nsnull, nsnull, NS_IMAGELIB_ERROR_FAILURE, nsnull);
+  }
+
+  // make sure that observer gets an OnStopRequest message sent to it
+  if (!(mState & onStopRequest)) {
+    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
+  }
+
   if (mObservers.Count() == 0) {
     if (mImage) {
       PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -190,16 +206,6 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
     /* break the cycle from the cache entry. */
     mCacheEntry = nsnull;
 #endif
-  }
-
-  if (!(mState & onStopDecode)) {
-    // make sure that observer gets an OnStopDecode message sent to it
-    proxy->OnStopDecode(nsnull, nsnull, NS_IMAGELIB_ERROR_FAILURE, nsnull);
-  }
-
-  if (!(mState & onStopRequest)) {
-    // make sure that observer gets an OnStopRequest message sent to it
-    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED);
   }
 
   return NS_OK;

@@ -139,13 +139,13 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 
   mCanceled = PR_TRUE;
 
-  nsresult rv = NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, status);
+  NS_REINTERPRET_CAST(imgRequest*, mOwner.get())->RemoveProxy(this, status);
 
   mOwner = nsnull;
 
   mListener = nsnull;
 
-  return rv;
+  return NS_OK;
 }
 
 /* void suspend (); */
