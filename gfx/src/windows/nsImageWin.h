@@ -26,6 +26,20 @@
 #include <windows.h>
 #include "nsIImage.h"
 
+/* for compatibility with VC++ 5 */
+#if !defined(AC_SRC_OVER)
+#define AC_SRC_OVER                 0x00
+#define AC_SRC_ALPHA                0x01
+#pragma pack(1)
+typedef struct {
+    BYTE   BlendOp;
+    BYTE   BlendFlags;
+    BYTE   SourceConstantAlpha;
+    BYTE   AlphaFormat;
+}BLENDFUNCTION;
+#pragma pack()
+#endif
+
 typedef BOOL (WINAPI *ALPHABLENDPROC)(
   HDC hdcDest,
   int nXOriginDest,
