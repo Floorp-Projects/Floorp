@@ -57,7 +57,7 @@ protected:
   nsresult  RemoveChild(nsMsgKey msgKey);
   nsresult  RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgDBHdr *oldRoot, nsIDBChangeAnnouncer *announcer);
 
-  nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child);
+  nsresult AddMsgHdrInDateOrder(nsIMsgDBHdr *child);
   nsresult ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,
                                                             nsIDBChangeAnnouncer *announcer);
 
