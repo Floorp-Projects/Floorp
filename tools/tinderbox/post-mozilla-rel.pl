@@ -358,9 +358,13 @@ sub packit_l10n {
       }
   
       # the one operation we care about saving status of
-      $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
-      if ($status != 0) {
-        $tinderstatus = 'busted';
+      if ($Settings::sea_installer || $Settings::stub_installer) {
+        $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
+        if ($status != 0) {
+          $tinderstatus = 'busted';
+        }
+      } else {
+        $status = 0;
       }
   
       if ($tinderstatus eq 'success') {
@@ -395,6 +399,10 @@ sub packit_l10n {
       if (is_windows()) {
         run_locale_shell_command "cp $package_location/../*$locale*.zip $stagedir/";
       } elsif (is_mac()) {
+        $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
+        if ($status != 0) {
+          $tinderstatus = 'busted';
+        }
         system("mkdir -p $package_location");
         system("mkdir -p $stagedir");
         run_locale_shell_command "cp $package_location/../*$locale*.dmg.gz $stagedir/";
