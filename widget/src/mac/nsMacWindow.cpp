@@ -169,12 +169,6 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 		
 		case kDragTrackingLeaveWindow:
 		{
-            // stop any drag tracking in this window
-            nsCOMPtr<nsIDragSession> session;
-            sDragService->GetCurrentSession ( getter_AddRefs(session) );
-            if ( session )
-              session->StopTracking();
-
 			// tell the drag service that we're done with it.
 			if ( sDragService ) {
 				sDragService->EndDragSession();
@@ -232,9 +226,6 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 		nsCOMPtr<nsIDragSession> dragSession;
 		dragService->GetCurrentSession ( getter_AddRefs(dragSession) );
 		if ( dragSession ) {
-            // stop any drag tracking in this window
-            dragSession->StopTracking();
-
 			// if the target has set that it can accept the drag, pass along
 			// to gecko, otherwise set phasers for failure.
 			PRBool canDrop = PR_FALSE;
