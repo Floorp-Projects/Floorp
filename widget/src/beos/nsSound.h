@@ -33,7 +33,7 @@ class nsSound : public nsISound {
 
   NS_IMETHOD Init(void);
 
-  NS_IMETHOD Play(const char *filename);
+  NS_IMETHOD Play(nsIFileSpec *filespec);
 
   NS_IMETHOD Beep(void);
 

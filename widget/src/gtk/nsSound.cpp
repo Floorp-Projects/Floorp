@@ -102,13 +102,19 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(const char *filename)
+NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 {
   if (lib)
   {
+    char *filename;
+    filespec->GetNativePath(&filename);
+
     g_print("there are some issues with playing sound right now, but this should work\n");
     EsdPlayFileType EsdPlayFile = (EsdPlayFileType) PR_FindSymbol(lib, "esd_play_file");
     (*EsdPlayFile)("mozilla", filename, 1);
+
+    nsCRT::free(filename);
+
     return NS_OK;
   }
   return NS_OK;

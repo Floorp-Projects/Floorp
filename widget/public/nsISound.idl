@@ -17,13 +17,14 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIFileSpec.idl"
 
 [scriptable, uuid(B148EED1-236D-11d3-B35C-00A0CC3C1CDE)]
 interface nsISound : nsISupports
 {
   void Init();
 
-  void Play(in string filename);
+  void Play(in nsIFileSpec filespec);
   //  void Stop();
 
   void Beep();
