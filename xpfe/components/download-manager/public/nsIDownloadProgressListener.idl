@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* A minimally extended progress listener used by download manager
+ * to update its default UI.
+ */
+
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 

@@ -217,10 +217,10 @@ nsDownloadProgressListener.prototype = {
     },
     onLocationChange: function(aWebProgress, aRequest, aLocation)
     {
-      // we can ignore this notification
     },
     onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
     {
+      // XXX error handling
     },
     onSecurityChange: function(aWebProgress, aRequest, state)
     {

@@ -54,6 +54,9 @@
 #include "nsIURI.h"
 #include "nsILocalFile.h"
 #include "nsHashtable.h"
+#include "nsIWebBrowserPersist.h"
+#include "nsIRequest.h"
+#include "nsIObserver.h"
  
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIRDFDataSource,
@@ -76,7 +79,7 @@ protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
   nsresult NotifyDownloadEnded(const char* aTargetPath);
-  PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
+  PRBool MustUpdateUI() { return mMustUpdateUI; }
 
 private:
   nsCOMPtr<nsIRDFDataSource> mInner;
@@ -85,11 +88,12 @@ private:
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsHashtable* mCurrDownloadItems;
 
+  PRBool mMustUpdateUI;
+
   friend class DownloadItem;
 };
 
-class DownloadItem : public nsIWebProgressListener,
-                     public nsIDownloadItem
+class DownloadItem : public nsIDownloadItem
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -105,6 +109,8 @@ protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
   nsresult SetInternalListener(nsIDownloadProgressListener* aInternalListener);
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
+  nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
+  nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
 private:
   nsIRDFResource* mDownloadItem;
   nsIRDFDataSource* mDataSource;
@@ -115,7 +121,10 @@ private:
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mListener;
   nsCOMPtr<nsIDownloadProgressListener> mInternalListener;
-  nsCOMPtr<nsIWebProgressListener> mPropertiesListener;
+  nsCOMPtr<nsIWebProgressListener> mDialogListener;
+  nsCOMPtr<nsIWebBrowserPersist> mPersist;
+  nsCOMPtr<nsIRequest> mRequest;
+  nsCOMPtr<nsIObserver> mObserver;
 
   PRInt32 mCurTotalProgress;
   PRInt32 mMaxTotalProgress;
@@ -124,5 +133,4 @@ private:
 
   friend class nsDownloadManager;
 };
-
 #endif
