@@ -25,6 +25,8 @@
 #include "nsIScriptContextOwner.h"
 
 /* rhp - for access to webshell */
+#include "prmem.h"
+#include "plstr.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -36,6 +38,7 @@
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#include "nsMsgCompPrefs.h"
 
 #include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
@@ -51,7 +54,10 @@ static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID);
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 
 static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
-static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
+static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
+
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+
 
 NS_BEGIN_EXTERN_C
 
@@ -276,14 +282,13 @@ nsComposeAppCore::SetWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
 {
-	mScript = *aScript;
+	mScript = aScript;
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsComposeAppCore::NewMessage(nsAutoString& aUrl)
 {
-	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 	char *  urlstr=nsnull;
 	nsresult rv;
@@ -321,6 +326,9 @@ done:
 NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
 									nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg)
 {
+	nsMsgCompPrefs pCompPrefs;
+	char* pUserEmail = nsnull;
+
 	if (nsnull == mScriptContext)
 		return NS_ERROR_FAILURE;
 
@@ -337,43 +345,22 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString&
 	nsIMsgCompFields *pMsgCompFields;
 	nsIMsgSend *pMsgSend;
 	nsresult res;
-
-	// register our dll
- /*
-	const char* compose_dll = "msgcompose.dll";
-	nsComponentManager::RegisterComponent(kMsgComposeCID,
-                                  "Netscape Mail Composer AppCore",
-				  NULL,
-                                  compose_dll,
-                                  PR_FALSE, PR_FALSE);
-	nsComponentManager::RegisterComponent(kMsgCompFieldsCID,
-                                  "Netscape Mail Composer Fields",
-  				  NULL,
-                                  compose_dll,
-                                  PR_FALSE, PR_FALSE);
-	nsComponentManager::RegisterComponent(kMsgSendCID,
-                                  "Netscape Mail Sender",
-				  NULL,
-                                  compose_dll,
-                                  PR_FALSE, PR_FALSE);
-*/
-
+	
 	res = nsComponentManager::CreateInstance(kMsgSendCID, 
                                                NULL, 
                                                kIMsgSendIID, 
                                                (void **) &pMsgSend); 
 
-	if (res == NS_OK && pMsgSend) { 
+	if (NS_SUCCEEDED(res) && pMsgSend) { 
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
-/* 		pMsgSend->Test(); */
 
 		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
 													NULL, 
 													kIMsgCompFieldsIID, 
 													(void **) &pMsgCompFields); 
-		if (res == NS_OK && pMsgCompFields) {
-            
-			pMsgCompFields->SetFrom("qatest02@netscape.com", NULL);	//JFD Need to use the prefs
+		if (NS_SUCCEEDED(NS_OK) && pMsgCompFields) { 
+			pMsgCompFields->SetFrom((char *)pCompPrefs.GetUserEmail(), NULL);
+			pMsgCompFields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
 			pMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
 			pMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
 			pMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
@@ -393,7 +380,15 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString&
 		PRBool isUndefined = PR_FALSE;
 		nsString rVal;
 		mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
-	} 
+	}
+
+	if (mWindow) {
+		mWindow->Close();	//JFD Doesn't work yet because mopener wasn't set!
+		NS_RELEASE(mWindow);
+	}
+
+	PR_FREEIF(pUserEmail);
+
 	return NS_OK;
 }
                               

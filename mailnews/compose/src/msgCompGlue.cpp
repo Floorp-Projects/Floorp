@@ -9,9 +9,6 @@ class MSG_Pane;
 
 void				FE_DestroyMailCompositionContext(MWContext*) {return;}
 const char *		FE_UsersSignature() {return NULL;}
-const char *		FE_UsersOrganization() {return NULL;}
-const char *		FE_UsersFullName() {return NULL;}
-const char *		FE_UsersMailAddress() {return PL_strdup("qatest02@netscape.com");}
 void				FE_UpdateCompToolbar(MSG_Pane*) {return;}
 void				FE_SetWindowLoading(MWContext *, URL_Struct *,Net_GetUrlExitFunc **) {return;}
 
@@ -77,7 +74,6 @@ int					strncasecomp (const char *, const char *, int ) {return NULL;}
 char *				strcasestr (const char * str, const char * substr) {return NULL;}
 
 XP_FILE_NATIVE_PATH WH_FileName (const char *, XP_FileType ) {return NULL;}
-char *				WH_TempName(XP_FileType type, const char * prefix) {return PL_strdup("c:\\temp\\nsmail01.txt");}
 
 HJ10196
 History_entry *		SHIST_GetCurrent(History *) {return NULL;}

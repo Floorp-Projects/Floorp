@@ -19,6 +19,7 @@
 #include "rosetta_mailnews.h"
 #include "nsMsgSend.h"
 #include "nsMsgComposeFact.h"
+#include "nsMsgCompPrefs.h"
 #include "nsMsgCompose.h"
 
 /*JFD
@@ -567,6 +568,7 @@ void nsMsgCompose::NotifyPrefsChange(NotifyCode) {
 
 int nsMsgCompose::CreateVcardAttachment ()
 {
+	nsMsgCompPrefs pCompPrefs;
 	char* name;
 	int status = 0;
 
@@ -582,8 +584,8 @@ int nsMsgCompose::CreateVcardAttachment ()
 			if (vCard)
 				PR_Free(vCard); // free our allocated VCardString...
 			char buf [ 2 * kMaxFullNameLength ];
-			if (FE_UsersFullName()) 
-				name = PL_strdup (FE_UsersFullName());
+			if (pCompPrefs.GetUserFullName()) 
+				name = PL_strdup (pCompPrefs.GetUserFullName());
 			// write out a content description string
 			XP_SPRINTF (buf, XP_GetString (MK_ADDR_BOOK_CARD), name);
 			PR_FREEIF(name);
@@ -678,6 +680,7 @@ int nsMsgCompose::CreateVcardAttachment ()
 char*
 nsMsgCompose::FigureBcc(PRBool newsBcc)
 {
+	nsMsgCompPrefs pCompPrefs;
 	char* result = NULL;
 	PRBool useBcc = PR_FALSE;
 
@@ -694,9 +697,9 @@ nsMsgCompose::FigureBcc(PRBool newsBcc)
 		if (!GetPrefs()->GetDefaultBccSelf(newsBcc)) {
 			result = PL_strdup(tmp ? tmp : "");
 		} else if (!tmp || !*tmp) {
-			result = PL_strdup(FE_UsersMailAddress());
+			result = PL_strdup(pCompPrefs.GetUserEmail());
 		} else {
-			result = PR_smprintf("%s, %s", FE_UsersMailAddress(), tmp);
+			result = PR_smprintf("%s, %s", pCompPrefs.GetUserEmail(), tmp);
 		}
 	}
 	return result;
@@ -971,10 +974,12 @@ HJ73123
 void
 nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* fields)
 {
+	nsMsgCompPrefs pCompPrefs;
+
 	PR_ASSERT(m_fields == NULL);
 	PR_ASSERT(m_initfields == NULL);
 
-	const char *real_addr = FE_UsersMailAddress ();
+	const char *real_addr = pCompPrefs.GetUserEmail();
 	char *real_return_address;
 	const char* sig;
 	PRBool forward_quoted;
@@ -1014,7 +1019,7 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 
 /*JFD
 	real_return_address = MIME_MakeFromField(old_context->win_csid);
-*/ real_return_address = (char *)FE_UsersMailAddress();/*JFD*/
+*/ real_return_address = (char *)pCompPrefs.GetUserEmail();/*JFD*/
 
 /*JFD
 	PR_ASSERT (m_context->type == MWContextMessageComposition);
@@ -1117,7 +1122,7 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 	HJ77855
 
 	if (!*m_fields->GetOrganization()) {
-		m_fields->SetOrganization((char *)FE_UsersOrganization(), NULL);
+		m_fields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
 	}
 
 	if (!*m_fields->GetReplyTo()) {

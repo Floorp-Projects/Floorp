@@ -15,6 +15,9 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsINetService.h"
 #include "nsISmtpService.h"  // for actually sending the message...
+#include "nsMsgCompPrefs.h"
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIdentity.h"
 #include "nsMsgSend.h"
 
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
@@ -232,6 +235,7 @@ extern OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec);
 extern void MSG_MimeNotifyCryptoAttachmentKludge(NET_StreamClass *stream);
 XP_END_PROTOS
 
+
 static char* NET_GetLocalFileFromURL(char *url)
 {
 	char * finalPath;
@@ -256,6 +260,40 @@ static char* NET_GetURLFromLocalFile(char *filename)
 }
 
 #endif /* XP_MAC */
+
+#include "nsIPref.h"
+
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+static char * WH_TempName(XP_FileType /*type*/, const char * prefix)
+{
+	nsresult res;
+	nsString tempPath = "c:\\temp\\";
+
+	#define PREF_LENGTH 128 
+	char prefValue[PREF_LENGTH];
+	PRInt32 prefLength = PREF_LENGTH;
+	nsIPref* prefs;
+	res = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+    if (prefs && NS_SUCCEEDED(res))
+	{
+		prefs->Startup("prefs.js");
+		res = prefs->GetCharPref("browser.download_directory", prefValue, &prefLength);
+		if (NS_SUCCEEDED(res) && prefLength > 0)
+			tempPath = PL_strdup(prefValue);
+		
+		nsServiceManager::ReleaseService(kPrefCID, prefs);
+	}
+	
+	if (tempPath.Last() != '\\')
+		tempPath += '\\';
+
+	tempPath += prefix;
+	tempPath += "01.txt";	//JFD, need to be smarter than that!
+
+	return tempPath.ToNewCString();
+}
 
 /* this function will be used by the factory to generate an Message Send Object....*/
 nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult)
@@ -2828,8 +2866,9 @@ char * msg_generate_message_id (void)
 {
 	time_t now = XP_TIME();
 	PRUint32 salt = 0;
+	nsMsgCompPrefs pCompPrefs;
 	const char *host = 0;
-	const char *from = FE_UsersMailAddress ();
+	const char *from = pCompPrefs.GetUserEmail();
 
 	RNG_GenerateGlobalRandomBytes((void *) &salt, sizeof(salt));
 
@@ -3590,8 +3629,9 @@ int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
   *new_post_url_return = 0;
 
  /*JFD
- fields = MSG_CreateCompositionFields(from, 0, to, cc, 0, 0, 0, 0,
-									   FE_UsersOrganization(), 0, 0,
+ 	nsMsgCompPrefs pCompPrefs;
+	fields = MSG_CreateCompositionFields(from, 0, to, cc, 0, 0, 0, 0,
+									   (char *)pCompPrefs.GetOrganization(), 0, 0,
 									   extra_headers, 0, 0, 0,
 									   encrypt_p, sign_p);
  */
