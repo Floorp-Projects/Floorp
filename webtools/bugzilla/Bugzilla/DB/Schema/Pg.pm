@@ -37,7 +37,7 @@ sub _initialize {
 
     my $self = shift;
 
-    $self = $self->SUPER::_initialize;
+    $self = $self->SUPER::_initialize(@_);
 
     # Remove FULLTEXT index types from the schemas.
     foreach my $table (keys %{ $self->{schema} }) {

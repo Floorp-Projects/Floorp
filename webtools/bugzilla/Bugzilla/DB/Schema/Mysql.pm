@@ -38,7 +38,7 @@ sub _initialize {
 
     my $self = shift;
 
-    $self = $self->SUPER::_initialize;
+    $self = $self->SUPER::_initialize(@_);
 
     $self->{db_specific} = {
 

@@ -310,6 +310,13 @@ sub bz_setup_database {
             $self->do($sql_statement);
         }
     }
+
+    # And now, if we haven't already stored the serialized schema,
+    # store the ABSTRACT_SCHEMA from Bugzilla::DB::Schema.
+    # XXX - The code is not ready for this yet, but once
+    #       all the deps of bug 285111 are checked-in and 
+    #       tested, this should be uncommented.
+    #$self->_bz_init_schema_storage();
 }
 
 #####################################################################
@@ -568,9 +575,109 @@ sub db_new {
     return $self;
 }
 
+#####################################################################
+# Private Methods
+#####################################################################
+
+=begin private
+
+=head1 PRIVATE METHODS
+
+These methods really are private. Do not override them in subclasses.
+
+=over 4
+
+=item C<_init_bz_schema_storage>
+
+ Description: Initializes the bz_schema table if it contains nothing.
+ Params:      none
+ Returns:     nothing
+
+=cut
+
+sub _bz_init_schema_storage {
+    my ($self) = @_;
+
+    my $table_size = $self->selectrow_array("SELECT COUNT(*) FROM bz_schema");
+
+    if ($table_size == 0) {
+        print "Initializing the new Schema storage...\n";
+        my $store_me = $self->_bz_schema->serialize_abstract();
+        my $schema_version = $self->_bz_schema->SCHEMA_VERSION;
+        $self->do("INSERT INTO bz_schema (schema_data, version) VALUES (?,?)",
+                  undef, ($store_me, $schema_version));
+    } 
+    # Sanity check
+    elsif ($table_size > 1) {
+        # We tell them to delete the newer one. Better to have checksetup
+        # run migration code too many times than to have it not run the
+        # correct migration code at all.
+        die "Attempted to initialize the schema but there are already "
+            . " $table_size copies of it stored.\nThis should never happen.\n"
+            . " Compare the two rows of the bz_schema table and delete the "
+            . "newer one.";
+    }
+}
+
+=item C<_bz_real_schema()>
+
+ Description: Returns a Schema object representing the database
+              that is being used in the current installation.
+ Params:      none
+ Returns:     A C<Bugzilla::DB::Schema> object representing the database
+              as it exists on the disk.
+=cut
+sub _bz_real_schema {
+    my ($self) = @_;
+    return $self->{private_real_schema} if exists $self->{private_real_schema};
+
+    my ($data, $version) = $self->selectrow_array(
+        "SELECT schema_data, version FROM bz_schema");
+
+    # XXX - Should I do the undef check here instead of in checksetup?
+
+    $self->{private_real_schema} = 
+        _bz_schema->deserialize_abstract($data, $version);
+
+    return $self->{private_real_schema};
+}
+
+
+=item C<_bz_store_real_schema()>
+
+ Description: Stores the _bz_real_schema structures in the database
+              for later recovery. Call this function whenever you make
+              a change to the _bz_real_schema.
+ Params:      none
+ Returns:     nothing
+
+ Precondition: $self->{_bz_real_schema} must exist.
+
+=cut
+sub _bz_store_real_schema {
+    my ($self) = @_;
+
+    # Make sure that there's a schema to update
+    my $table_size = $self->selectrow_array("SELECT COUNT(*) FROM bz_schema");
+
+    die "Attempted to update the bz_schema table but there's nothing "
+        . "there to update. Run checksetup." unless $table_size;
+
+    # We want to store the current object, not one
+    # that we read from the database. So we use the actual hash
+    # member instead of the subroutine call. If the hash
+    # member is not defined, we will (and should) fail.
+    my $store_me = $self->{_bz_real_schema}->serialize_abstract();
+    $self->do("UPDATE bz_schema SET schema_data = ?, version = ?",
+              undef, $store_me, Bugzilla::DB::Schema::SCHEMA_VERSION);
+}
+
 1;
 
 __END__
+=back
+
+=end private
 
 =head1 NAME
 

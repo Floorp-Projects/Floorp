@@ -32,7 +32,7 @@ package Bugzilla::DB::Schema;
 
 use strict;
 use Bugzilla::Error;
-use Storable qw(dclone);
+use Storable qw(dclone freeze thaw);
 
 =head1 NAME
 
@@ -64,6 +64,9 @@ Bugzilla::DB::Schema - Abstract database schema for Bugzilla
 
 This module implements an object-oriented, abstract database schema.
 It should be considered package-private to the Bugzilla::DB module.
+That means that CGI scripts should never call any function in this
+module directly, but should instead rely on methods provided by
+Bugzilla::DB.
 
 =cut
 #--------------------------------------------------------------------------
@@ -77,40 +80,58 @@ It should be considered package-private to the Bugzilla::DB module.
 
 The 'version' of the internal schema structure. This version number
 is incremented every time the the fundamental structure of Schema
-internals changes. 
+internals changes.
 
 This is NOT changed every time a table or a column is added. This 
 number is incremented only if the internal structures of this 
 Schema would be incompatible with the internal structures of a 
 previous Schema version.
 
-=begin undocumented
+In general, unless you are messing around with serialization
+and deserialization of the schema, you don't need to worry about
+this constant.
 
-As a guideline for whether or not to change this version number,
-you should think, "Will my changes make this structure fundamentally
-incompatible with the old structure?" Think about serialization
-of the data structures, because that's what this version number
-is used for.
+=begin private
 
-You should RARELY need to increment this version number.
+An example of the use of the version number:
 
-=end undocumented
+Today, we store all individual columns like this:
+
+column_name => { TYPE => 'SOMETYPE', NOTNULL => 1 }
+
+Imagine that someday we decide that NOTNULL => 1 is bad, and we want
+to change it so that the schema instead uses NULL => 0.
+
+But we have a bunch of Bugzilla installations around the world with a
+serialized schema that has NOTNULL in it! When we deserialize that 
+structure, it just WILL NOT WORK properly inside of our new Schema object.
+So, immediately after deserializing, we need to go through the hash 
+and change all NOTNULLs to NULLs and so on.
+
+We know that we need to do that on deserializing because we know that
+version 1.00 used NOTNULL. Having made the change to NULL, we would now
+be version 1.01.
+
+=end private
 
 =item C<ABSTRACT_SCHEMA>
 
 The abstract database schema structure consists of a hash reference
 in which each key is the name of a table in the Bugzilla database.
+
 The value for each key is a hash reference containing the keys
 C<FIELDS> and C<INDEXES> which in turn point to array references
-containing information on the table's fields and indexes. A field
-hash reference should must contain the key C<TYPE>. Optional field
-keys include C<PRIMARYKEY>, C<NOTNULL>, and C<DEFAULT>. The C<INDEXES>
-array reference contains index names and information regarding the
-index. If the index name points to an array reference, then the index
-is a regular index and the array contains the indexed columns. If the
-index name points to a hash reference, then the hash must contain
-the key C<FIELDS>. It may also contain the key C<TYPE>, which can be
-used to specify the type of index such as UNIQUE or FULLTEXT.
+containing information on the table's fields and indexes. 
+
+A field hash reference should must contain the key C<TYPE>. Optional field
+keys include C<PRIMARYKEY>, C<NOTNULL>, and C<DEFAULT>. 
+
+The C<INDEXES> array reference contains index names and information 
+regarding the index. If the index name points to an array reference,
+then the index is a regular index and the array contains the indexed
+columns. If the index name points to a hash reference, then the hash
+must contain the key C<FIELDS>. It may also contain the key C<TYPE>,
+which can be used to specify the type of index such as UNIQUE or FULLTEXT.
 
 =back
 
@@ -965,6 +986,16 @@ use constant ABSTRACT_SCHEMA => {
         ],
      },
 
+    # SCHEMA STORAGE
+    # --------------
+
+    bz_schema => {
+        FIELDS => [
+            schema_data => {TYPE => 'LONGBLOB', NOTNULL => 1},
+            version     => {TYPE => 'decimal(3,2)', NOTNULL => 1},
+        ],
+    },
+
 };
 #--------------------------------------------------------------------------
 
@@ -992,6 +1023,8 @@ sub new {
  Parameters:  $driver (optional) - Used to specify the type of database.
               This routine C<die>s if no subclass is found for the specified
               driver.
+              $schema (optional) - A reference to a hash. Callers external
+                  to this package should never use this parameter.
  Returns:     new instance of the Schema class or a database-specific subclass
 
 =cut
@@ -1030,15 +1063,25 @@ sub _initialize {
               define the database-specific implementation of the all
               abstract data types), and then call the C<_adjust_schema>
               method.
- Parameters:  none
+ Parameters:  $abstract_schema (optional) - A reference to a hash. If 
+                  provided, this hash will be used as the internal
+                  representation of the abstract schema instead of our
+                  default abstract schema. This is intended for internal 
+                  use only by deserialize_abstract.
  Returns:     the instance of the Schema class
 
 =cut
 
     my $self = shift;
+    my $abstract_schema = shift;
 
-    $self->{schema} = dclone(ABSTRACT_SCHEMA);
-    $self->{abstract_schema} = ABSTRACT_SCHEMA;
+    $abstract_schema ||= ABSTRACT_SCHEMA;
+
+    $self->{schema} = dclone($abstract_schema);
+    # While ABSTRACT_SCHEMA cannot be modified, 
+    # $self->{abstract_schema} can be. So, we dclone it to prevent
+    # anything from mucking with the constant.
+    $self->{abstract_schema} = dclone($abstract_schema);
 
     return $self;
 
@@ -1305,6 +1348,60 @@ sub _get_create_index_ddl {
 
 } #eosub--_get_create_index_ddl
 #--------------------------------------------------------------------------
+
+
+
+=head1 SERIALIZATION/DESERIALIZATION
+
+=item C<serialize_abstract()>
+
+ Description: Serializes the "abstract" schema into a format
+              that deserialize_abstract() can read in. This is
+              a method, called on a Schema instance.
+ Parameters:  none
+ Returns:     A scalar containing the serialized, abstract schema.
+              Do not attempt to manipulate this data directly,
+              as the format may change at any time in the future.
+              The only thing you should do with the returned value
+              is either store it somewhere or deserialize it.
+
+=cut
+sub serialize_abstract {
+    my ($self) = @_;
+    # We do this so that any two stored Schemas will have the
+    # same byte representation if they are identical.
+    # We don't need it currently, but it might make things
+    # easier in the future.
+    local $Storable::canonical = 1;
+    return freeze($self->{abstract_schema});
+}
+
+=item C<deserialize_abstract($serialized, $version)>
+
+ Description: Used for when you've read a serialized Schema off the disk,
+              and you want a Schema object that represents that data.
+ Params:      $serialized - scalar. The serialized data.
+              $version - A number in the format X.YZ. The "version"
+                  of the Schema that did the serialization.
+                  See the docs for C<SCHEMA_VERSION> for more details.
+ Returns:     A Schema object. It will have the methods of (and work 
+              in the same fashion as) the current version of Schema. 
+              However, it will represent the serialized data instead of
+              ABSTRACT_SCHEMA.
+=cut
+sub deserialize_abstract {
+    my ($class, $serialized, $version) = @_;
+
+    my %thawed_hash = thaw($serialized);
+
+    # At this point, we have no backwards-compatibility
+    # code to write, so $version is ignored.
+    # For what $version ought to be used for, see the
+    # "private" section of the SCHEMA_VERSION docs.
+
+    return $class->new(undef, \%thawed_hash);
+}
+
 1;
 __END__
 
