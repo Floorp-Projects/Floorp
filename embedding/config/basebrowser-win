@@ -180,7 +180,6 @@ components\editor.xpt
 
 ; find functionality
 ; Optional - only if your code uses nsIWebBrowserFind
-components\txtsvc.dll
 components\txtsvc.xpt
 
 ; netwerk
