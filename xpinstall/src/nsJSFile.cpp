@@ -63,7 +63,7 @@ extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                JSContext* aContext,
                                jsval aValue);
 
-
+extern JSObject *gFileSpecProto;
 //
 // Native method DirCreate
 //
@@ -157,9 +157,8 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   {
     /* Now create the new JSObject */
     JSObject *fileSpecObject;
-    JSObject *FileSpecProto = nsnull;
 
-    fileSpecObject = JS_NewObject(cx, &FileSpecObjectClass, FileSpecProto, NULL);
+    fileSpecObject = JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
     if (fileSpecObject == NULL)
       return JS_FALSE;
 
