@@ -81,19 +81,28 @@ else
   IS_FIRST_CHECKOUT := 1
 endif
 
-# Load options from mozconfig
-#   (See build pages, http://www.mozilla.org/build/unix.html, 
-#    for how to set up mozconfig)
+#######################################################################
+# Defines
+#
+
+####################################
+# Load mozconfig Options
+
+# See build pages, http://www.mozilla.org/build/unix.html, 
+# for how to set up mozconfig.
 MOZCONFIG2DEFS := build/autoconf/mozconfig2defs.sh
-FIND_MOZCONFIG := build/autoconf/find-mozconfig.sh
 run_for_side_effects := \
   $(shell cd $(TOPSRCDIR); \
           if test ! -f $(MOZCONFIG2DEFS); then \
-	    (cd ..; cvs co mozilla/$(MOZCONFIG2DEFS) mozilla/$(FIND_MOZCONFIG); ) \
+	    (cd ..; cvs co mozilla/$(MOZCONFIG2DEFS); ) \
 	  else true; \
 	  fi; \
 	  $(MOZCONFIG2DEFS) .client-defs.mk)
 include $(TOPSRCDIR)/.client-defs.mk
+
+
+####################################
+# OBJDIR
 
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
@@ -105,9 +114,9 @@ else
   endif
 endif
 
-# 
-# Step 1: CVS
-#
+
+####################################
+# CVS
 
 # Basic CVS flags
 ifdef MOZ_CVS_FLAGS
@@ -136,9 +145,9 @@ CVS		:= cvs $(CVS_CFLAGS)
 CVSCO		:= $(CVS) co $(CVS_COFLAGS) $(CVS_BRANCH_FLAGS)
 CVSCO_LOGFILE	:= $(ROOTDIR)/cvsco.log
 
-#
-# Step 2: NSPR
-#
+
+####################################
+# NSPR
 
 ifeq ($(MOZ_WITH_PTHREADS), 1)
 NSPR_PTHREAD_FLAG := USE_PTHREADS=1
@@ -176,9 +185,9 @@ NSPR_GMAKE_OPTIONS := \
 	$(NSPR_OPTIONS) \
 	$(NSPR_TARGET)
 
-#
-# Step 3: autoconf
-#
+
+####################################
+# Autoconf
 
 CONFIG_FLAGS :=
 
@@ -190,13 +199,17 @@ ifeq "$(origin MOZ_WITH_PTHREADS)" "environment"
 CONFIG_FLAGS += --with-pthreads
 endif
 
-#
+#######################################################################
 # Rules
 # 
 
+ifdef IS_FIRST_CHECKOUT
 all: checkout build
+else
+all: checkout depend build
+endif
 
-.PHONY: checkout nspr build clean realclean
+.PHONY: checkout nspr depend build clean realclean
 
 # Windows equivalents
 pull_all:     checkout
@@ -205,9 +218,9 @@ clobber:      clean
 clobber_all:  realclean
 pull_and_build_all: checkout build
 
-#
+####################################
 # CVS checkout
-#
+
 checkout:
 	@if test -f $(CVSCO_LOGFILE) ; then \
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
@@ -225,30 +238,30 @@ checkout:
 	else true; \
 	fi
 
-#
+####################################
 # Web configure
-#
+
 MOZCONFIG2URL := build/autoconf/mozconfig2url.sh
 webconfig:
 	@url=$(WEBCONFIG_URL); \
-	if test -f $(WEBCONFIG_FILE) ; then \
-          cd $(TOPSRCDIR); \
-          if test ! -f $(MOZCONFIG2URL); then \
-	    (cd ..; cvs co mozilla/$(MOZCONFIG2URL) mozilla/$(FIND_MOZCONFIG);) \
-	  else true; \
-	  fi; \
-	  url=$$url`$(MOZCONFIG2URL)`; \
+	cd $(TOPSRCDIR); \
+	if test ! -f $(MOZCONFIG2URL); then \
+	  (cd ..; cvs co mozilla/$(MOZCONFIG2URL);) \
 	else true; \
 	fi; \
+	url=$$url`$(MOZCONFIG2URL)`; \
 	echo Running netscape with the following url: ;\
 	echo ;\
 	echo $$url ;\
 	netscape -remote "openURL($$url)" || netscape $$url ;\
 	echo ;\
-	echo Fill out the form on the browser. ;\
-	echo Save the results to $(WEBCONFIG_FILE) when done.
+	echo   1. Fill out the form on the browser. ;\
+	echo   2. Save the results to $(WEBCONFIG_FILE).
 
 #	netscape -remote "saveAs($(WEBCONFIG_FILE))"
+
+#####################################################
+# First Checkout
 
 ifdef IS_FIRST_CHECKOUT
 # First time, do build target in a new process to pick up new files.
@@ -256,9 +269,12 @@ build:
 	$(MAKE) -f $(TOPSRCDIR)/client.mk build
 else
 
-#
+#####################################################
+# After First Checkout
+
+
+####################################
 # Configure
-#
 
 CONFIG_STATUS := $(wildcard $(OBJDIR)/config.status)
 CONFIG_CACHE  := $(wildcard $(OBJDIR)/config.cache)
@@ -291,12 +307,9 @@ $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
 	  CONFIG_FILES=config/autoconf.mk ./config.status
 endif
 
-#
-# Build it
-#
 
-build:  nspr $(OBJDIR)/Makefile 
-	cd $(OBJDIR); $(MAKE);
+####################################
+# NSPR
 
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
@@ -309,6 +322,26 @@ $(NSPR_INSTALL_DIR)/lib/libnspr3.so:
 
 # NSPR is pulled by SeaMonkeyEditor module
 #	cd $(ROOTDIR) && $(CVSCO) $(NSPR_BRANCH) NSPR
+
+
+####################################
+# Depend
+
+depend:
+	@if test -d $(OBJDIR)/dist; then \
+	    cd $(OBJDIR); $(MAKE) $@; \
+	else \
+	    echo "$(MAKE): Skipping depend. No $(OBJDIR)/dist." 2>&1 ;\
+	fi
+
+####################################
+# Build it
+
+build:  nspr $(OBJDIR)/Makefile 
+	cd $(OBJDIR); $(MAKE);
+
+####################################
+# Other targets
 
 # Pass these target onto the real build system
 clean realclean:
