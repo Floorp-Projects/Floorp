@@ -197,6 +197,9 @@ function UpdatePageReport(event)
     gReportButton.setAttribute("blocked", "true");
     if (pref && pref.getBoolPref("privacy.popups.firstTime")) {
       displayPageReportFirstTime();
+
+      // Now set the pref.
+      pref.setBoolPref("privacy.popups.firstTime", "false");
     }
   }
   else
