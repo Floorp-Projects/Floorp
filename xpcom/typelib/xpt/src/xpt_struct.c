@@ -117,11 +117,13 @@ XPT_NewHeader(PRUint16 num_interfaces)
     header->major_version = XPT_MAJOR_VERSION;
     header->minor_version = XPT_MINOR_VERSION;
     header->num_interfaces = num_interfaces;
-    header->interface_directory = XPT_CALLOC(num_interfaces *
-                                             sizeof(XPTInterfaceDirectoryEntry));
-    if (!header->interface_directory) {
-        XPT_DELETE(header);
-        return NULL;
+    if (num_interfaces) {
+        header->interface_directory = XPT_CALLOC(num_interfaces *
+                                                 sizeof(XPTInterfaceDirectoryEntry));
+        if (!header->interface_directory) {
+            XPT_DELETE(header);
+            return NULL;
+        }
     }
     header->data_pool = 0;      /* XXX do we even need this struct any more? */
     
@@ -172,7 +174,7 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     if (mode == XPT_DECODE)
         XPT_DataOffset(cursor->state, &header->data_pool);
 
-    if (mode == XPT_DECODE) {
+    if (mode == XPT_DECODE && header->num_interfaces) {
         header->interface_directory = 
             XPT_CALLOC(header->num_interfaces * 
                        sizeof(XPTInterfaceDirectoryEntry));
@@ -591,7 +593,7 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRUint8 flags, char *name,
     if (!name)
         return PR_FALSE;
     meth->num_args = num_args;
-    if (meth->num_args) {
+    if (num_args) {
         meth->params = XPT_CALLOC(num_args * sizeof(XPTParamDescriptor));
         if (!meth->params)
             goto free_name;
