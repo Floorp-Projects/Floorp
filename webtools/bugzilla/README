@@ -1,6 +1,17 @@
 This is Bugzilla.  See <http://www.mozilla.org/bugs/>.
 
+        =====================
+        BUGZILLA 2.12 RELEASE
+        =====================
 
+	* Release Notes for Bugzilla 2.12 are available at docs/rel_notes.txt.
+
+	* The new preferred documentation for Bugzilla is available in docs/, with
+a variety of document types available.  Please refer to these documents when 
+installing, configuring, and maintaining your Bugzilla installation.  The majority
+of the contents of this file is now considered to be largely deprecated and will
+go away in the 2.14 release.
+	
         ==========
         DISCLAIMER
         ==========
@@ -251,8 +262,13 @@ module, only the specific versions listed above will work. Earlier
 versions used GIF's, which are no longer supported by the latest
 versions of GD.
 
-1.9. HTTP server
+1.9. DB_File Perl module
 
+   DB_File is a module which allows Perl programs to make use of the facilities provided by 
+Berkeley DB version 1.x. This module is required by collectstats.pl which is used for 
+bug charting. If you plan to make use of bug charting, you must install this module.
+
+1.10. HTTP server
   You have a freedom of choice here - Apache, Netscape or any other
 server on UNIX would do.  You can easily run the web server on a different
 machine than MySQL, but need to adjust the MySQL "bugs" user permissions
