@@ -131,6 +131,8 @@ struct PK11SlotInfoStr {
     CK_FLAGS RSAInfoFlags;
     PRBool protectedAuthPath;
     PRBool isActiveCard;
+    PRIntervalTime lastLoginCheck;
+    unsigned int lastState;
     /* for Stan */
     NSSToken *nssToken;
 };
