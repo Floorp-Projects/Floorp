@@ -1990,7 +1990,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
     // MJA: bug 31816
     // if we are not using document fonts, but this is a XUL document,
     // then we use the document fonts anyway
-    mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts, useDocumentFonts);
+    useDocumentFonts =
+      mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
     if (!useDocumentFonts) {
       // check if the prefs have been disabled for this shell
       // - if prefs are disabled then we use the document fonts anyway (yet another override)
@@ -2224,15 +2225,13 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData,
     PRInt32 td = textData.mDecoration.GetIntValue();
     text->mTextDecoration = td;
     if (td & NS_STYLE_TEXT_DECORATION_PREF_ANCHORS) {
-      PRBool underlineLinks = PR_TRUE;
-      nsresult res = mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks, underlineLinks);
-      if (NS_SUCCEEDED(res)) {
-        if (underlineLinks) {
-          text->mTextDecoration |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        }
-        else {
-          text->mTextDecoration &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        }
+      PRBool underlineLinks =
+        mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
+      if (underlineLinks) {
+        text->mTextDecoration |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+      }
+      else {
+        text->mTextDecoration &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
       }
     }
   }

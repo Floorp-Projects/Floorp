@@ -2292,58 +2292,57 @@ nsresult PresShell::SetPrefColorRules(void)
   NS_ASSERTION(mPresContext,"null prescontext not allowed");
   if (mPresContext) {
     nsresult result = NS_OK;
-    PRBool useDocColors = PR_TRUE;
 
     // see if we need to create the rules first
-    if (NS_SUCCEEDED(mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors))) {
-      if (!useDocColors) {
+    PRBool useDocColors =
+      mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors);
+    if (!useDocColors) {
 
 #ifdef DEBUG_attinasi
-        printf(" - Creating rules for document colors\n");
+      printf(" - Creating rules for document colors\n");
 #endif
 
-        // OK, not using document colors, so we have to force the user's colors via style rules
-        if (!mPrefStyleSheet) {
-          result = CreatePreferenceStyleSheet();
-        }
+      // OK, not using document colors, so we have to force the user's colors via style rules
+      if (!mPrefStyleSheet) {
+        result = CreatePreferenceStyleSheet();
+      }
+      if (NS_SUCCEEDED(result)) {
+        NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+
+        nscolor bgColor = mPresContext->DefaultBackgroundColor();
+        nscolor textColor = mPresContext->DefaultColor();
+
+        // get the DOM interface to the stylesheet
+        nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
         if (NS_SUCCEEDED(result)) {
-          NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+          PRUint32 index = 0;
+          nsAutoString strColor, strBackgroundColor;
 
-          nscolor bgColor = mPresContext->DefaultBackgroundColor();
-          nscolor textColor = mPresContext->DefaultColor();
-          
-          // get the DOM interface to the stylesheet
-          nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
-          if (NS_SUCCEEDED(result)) {
-            PRUint32 index = 0;
-            nsAutoString strColor, strBackgroundColor;
+          // create a rule for background and foreground color and
+          // add it to the style sheet              
+          // - the rule is !important so it overrides all but author
+          //   important rules (when put into an agent stylesheet) and 
+          //   all (even author important) when put into an override stylesheet
 
-            // create a rule for background and foreground color and
-            // add it to the style sheet              
-            // - the rule is !important so it overrides all but author
-            //   important rules (when put into an agent stylesheet) and 
-            //   all (even author important) when put into an override stylesheet
+          ///////////////////////////////////////////////////////////////
+          // - default colors: ':root {color:#RRGGBB !important;
+          //                           background: #RRGGBB !important;}'
+          ColorToString(textColor,strColor);
+          ColorToString(bgColor,strBackgroundColor);
+          result = sheet->InsertRule(NS_LITERAL_STRING(":root {color:") +
+                                     strColor +
+                                     NS_LITERAL_STRING(" !important; ") +
+                                     NS_LITERAL_STRING("border-color: -moz-use-text-color !important; ") +
+                                     NS_LITERAL_STRING("background:") +
+                                     strBackgroundColor +
+                                     NS_LITERAL_STRING(" !important; }"),
+                                     sInsertPrefSheetRulesAt, &index);
+          NS_ENSURE_SUCCESS(result, result);
 
-            ///////////////////////////////////////////////////////////////
-            // - default colors: ':root {color:#RRGGBB !important;
-            //                           background: #RRGGBB !important;}'
-            ColorToString(textColor,strColor);
-            ColorToString(bgColor,strBackgroundColor);
-            result = sheet->InsertRule(NS_LITERAL_STRING(":root {color:") +
-                                       strColor +
-                                       NS_LITERAL_STRING(" !important; ") +
-                                       NS_LITERAL_STRING("border-color: -moz-use-text-color !important; ") +
-                                       NS_LITERAL_STRING("background:") +
-                                       strBackgroundColor +
-                                       NS_LITERAL_STRING(" !important; }"),
-                                       sInsertPrefSheetRulesAt, &index);
-            NS_ENSURE_SUCCESS(result, result);
-
-            ///////////////////////////////////////////////////////////////
-            // - everything else inherits the color, and has transparent background
-            result = sheet->InsertRule(NS_LITERAL_STRING("* {color: inherit !important; border-color: -moz-use-text-color !important; background: transparent !important;} "),
-                                       sInsertPrefSheetRulesAt, &index);
-          }
+          ///////////////////////////////////////////////////////////////
+          // - everything else inherits the color, and has transparent background
+          result = sheet->InsertRule(NS_LITERAL_STRING("* {color: inherit !important; border-color: -moz-use-text-color !important; background: transparent !important;} "),
+                                     sInsertPrefSheetRulesAt, &index);
         }
       }
     }
@@ -2403,8 +2402,8 @@ nsresult PresShell::SetPrefLinkRules(void)
   nscolor activeColor(mPresContext->DefaultActiveLinkColor());
   nscolor visitedColor(mPresContext->DefaultVisitedLinkColor());
   
-  PRBool useDocColors = PR_TRUE;
-  mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors);
+  PRBool useDocColors =
+    mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors);
   NS_NAMED_LITERAL_STRING(notImportantStr, "}");
   NS_NAMED_LITERAL_STRING(importantStr, "!important}");
   const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
@@ -2432,9 +2431,8 @@ nsresult PresShell::SetPrefLinkRules(void)
                          sInsertPrefSheetRulesAt, &index);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool underlineLinks = PR_TRUE;
-  rv = mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks, underlineLinks);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool underlineLinks =
+    mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
 
   if (underlineLinks) {
     // create a rule to make underlining happen
@@ -2469,9 +2467,7 @@ nsresult PresShell::SetPrefFocusRules(void)
     // get the DOM interface to the stylesheet
     nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
     if (NS_SUCCEEDED(result)) {
-      PRBool useFocusColors;
-      mPresContext->GetUseFocusColors(useFocusColors);
-      if (useFocusColors) {
+      if (mPresContext->GetUseFocusColors()) {
         nscolor focusBackground(mPresContext->FocusBackgroundColor());
         nscolor focusText(mPresContext->FocusTextColor());
 
@@ -2492,8 +2488,7 @@ nsresult PresShell::SetPrefFocusRules(void)
         result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
       }
       PRUint8 focusRingWidth = mPresContext->FocusRingWidth();
-      PRBool focusRingOnAnything;
-      mPresContext->GetFocusRingOnAnything(focusRingOnAnything);
+      PRBool focusRingOnAnything = mPresContext->GetFocusRingOnAnything();
 
       if ((NS_SUCCEEDED(result) && focusRingWidth != 1 && focusRingWidth <= 4 ) || focusRingOnAnything) {
         PRUint32 index = 0;

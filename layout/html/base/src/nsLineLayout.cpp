@@ -2921,7 +2921,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
       if (aShrinkWrapWidth) {
         return PR_FALSE;
       }
-      mPresContext->IsVisualMode(visualRTL);
+      visualRTL = mPresContext->IsVisualMode();
 
       if (bulletPfd) {
         bulletPfd->mBounds.x += maxX;

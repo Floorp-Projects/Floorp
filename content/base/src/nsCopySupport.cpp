@@ -152,12 +152,10 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
         context->IsArabicEncoding(arabicCharset);
         if (arabicCharset) {
           PRUint32 bidiOptions;
-          PRBool isVisual;
-          PRBool isBidiSystem;
+          PRBool isBidiSystem = context->IsBidiSystem();
+          PRBool isVisual = context->IsVisualMode();
 
           context->GetBidi(&bidiOptions);
-          context->IsVisualMode(isVisual);
-          context->GetIsBidiSystem(isBidiSystem);
           if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_LOGICAL)&&(isVisual)
              ) {
             nsAutoString newBuffer;

@@ -2822,8 +2822,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   PRBool canDrawBackgroundColor = PR_TRUE;
 
   if (aUsePrintSettings) {
-    aPresContext->GetBackgroundImageDraw(canDrawBackgroundImage); 
-    aPresContext->GetBackgroundColorDraw(canDrawBackgroundColor); 
+    canDrawBackgroundImage = aPresContext->GetBackgroundImageDraw();
+    canDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
   // Check to see if we have an appearance defined.  If so, we let the theme

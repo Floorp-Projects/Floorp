@@ -2522,9 +2522,7 @@ nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
     return PR_FALSE;
   }
 
-  PRBool isVisual;
-  aPresContext->IsVisualMode(isVisual);
-  if (!isVisual) {
+  if (!aPresContext->IsVisualMode()) {
     return PR_FALSE;
   }
 

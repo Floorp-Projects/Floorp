@@ -236,7 +236,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   if (aIsVisualFormControl) {
     isVisual = PR_FALSE;
   } else {
-    aPresContext->IsVisualMode(isVisual);
+    isVisual = aPresContext->IsVisualMode();
   }
   mSuccess = mBidiEngine->CountRuns(&runCount);
   if (NS_FAILED(mSuccess) ) {

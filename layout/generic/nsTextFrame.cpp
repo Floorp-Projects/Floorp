@@ -130,19 +130,17 @@
 // text is darkend
 inline PRBool CanDarken(nsIPresContext* aPresContext)
 {
-PRBool darken,haveBackground;
+  PRBool darken;
 
-    aPresContext->GetBackgroundColorDraw(haveBackground);
-    if(PR_TRUE == haveBackground){
+  if (aPresContext->GetBackgroundColorDraw()) {
+    darken = PR_FALSE;
+  } else {
+    if (aPresContext->GetBackgroundImageDraw()) {
       darken = PR_FALSE;
     } else {
-      aPresContext->GetBackgroundImageDraw(haveBackground);
-      if(PR_TRUE == haveBackground){
-        darken = PR_FALSE;
-      } else {
-        darken = PR_TRUE;
-      }
+      darken = PR_TRUE;
     }
+  }
 
   return darken;
 }
@@ -2021,13 +2019,11 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
     return NS_ERROR_FAILURE;
 
   aPresContext->IsPaginated(&aIsPaginated);
-  PRBool isRenderingOnlySelection;
-  aPresContext->IsRenderingOnlySelection(&isRenderingOnlySelection);
 
   (*aSelectionController)->GetDisplaySelection(&aSelectionValue);
 
   if(aIsPaginated){
-    aDisplayingSelection = isRenderingOnlySelection;
+    aDisplayingSelection = aPresContext->IsRenderingOnlySelection();
   } else {
     //if greater than hidden then we display some kind of selection
     aDisplayingSelection = (aSelectionValue > nsISelectionController::SELECTION_HIDDEN);
@@ -2170,9 +2166,7 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
   if (isPaginated) {
-    PRBool isRendingSelection;
-    aPresContext->IsRenderingOnlySelection(&isRendingSelection);
-    if (isRendingSelection) {
+    if (aPresContext->IsRenderingOnlySelection()) {
       // Check the quick way first
       PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
       if (isSelected) {
@@ -2257,7 +2251,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     aPresContext->GetBidiEnabled(&bidiEnabled);
     if (bidiEnabled) {
-      aPresContext->GetIsBidiSystem(isBidiSystem);
+      isBidiSystem = aPresContext->IsBidiSystem();
       GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
       GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
 

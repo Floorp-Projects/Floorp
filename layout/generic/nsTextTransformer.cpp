@@ -247,9 +247,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
         SetNeedsArabicShaping(PR_TRUE);
       }
       else {
-        PRBool isBidiSystem;
-        mPresContext->GetIsBidiSystem(isBidiSystem);
-        if (!isBidiSystem) {
+        if (!mPresContext->IsBidiSystem()) {
           SetNeedsArabicShaping(PR_TRUE);
         }
       }
@@ -1497,8 +1495,7 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
     return;
   
   PRInt32 newLen;
-  PRBool isVisual;
-  mPresContext->IsVisualMode(isVisual);
+  PRBool isVisual = mPresContext->IsVisualMode();
 
   nsAutoString buf;
   buf.SetLength(aTextLength);

@@ -3969,9 +3969,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     aState.mPresContext->GetBidiEnabled(&bidiEnabled);
 
     if (bidiEnabled) {
-      PRBool isVisual;
-      aState.mPresContext->IsVisualMode(isVisual);
-      if (!isVisual) {
+      if (!aState.mPresContext->IsVisualMode()) {
         nsBidiPresUtils* bidiUtils;
         aState.mPresContext->GetBidiUtils(&bidiUtils);
 

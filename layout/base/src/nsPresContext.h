@@ -78,11 +78,7 @@ public:
   NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult);
   NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk);
   virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const;
-  NS_IMETHOD GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue);
   NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue);
-
-  NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors);
-  NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything);
 
   virtual nsresult LoadImage(nsIURI* aURL,
                              nsIFrame* aTargetFrame,
@@ -105,14 +101,6 @@ public:
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType);
 
-  NS_IMETHOD SetIsRenderingOnlySelection(PRBool aVal) { mIsRenderingOnlySelection = aVal; return NS_OK; }
-  NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult);
-
-  NS_IMETHOD GetBackgroundImageDraw(PRBool &aCanDraw) { aCanDraw = mDrawImageBackground; return NS_OK; }
-  NS_IMETHOD SetBackgroundImageDraw(PRBool aCanDraw) { mDrawImageBackground = aCanDraw; return NS_OK; }
-  NS_IMETHOD GetBackgroundColorDraw(PRBool &aCanDraw) { aCanDraw = mDrawColorBackground; return NS_OK; }
-  NS_IMETHOD SetBackgroundColorDraw(PRBool aCanDraw) { mDrawColorBackground = aCanDraw; return NS_OK; }
-
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIFrame * aFrame, PRUint32 aColor);
@@ -126,8 +114,6 @@ public:
 #ifdef IBMBIDI
   NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const;
   NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) const;
-  NS_IMETHOD IsVisualMode(PRBool& aIsVisual) const;
-  NS_IMETHOD SetVisualMode(PRBool aIsVisual);
   NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils);
   NS_IMETHOD SetBidi(PRUint32 aSource, PRBool aForceReflow = PR_FALSE);
   NS_IMETHOD GetBidi(PRUint32* aDest) const;
@@ -136,8 +122,6 @@ public:
   NS_IMETHOD IsArabicEncoding(PRBool &aResult) const;
 
 //Mohamed  17-1-01
-  NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi);
-  NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const;
   NS_IMETHOD GetBidiCharset(nsACString &aCharSet) const;
 //Mohamed End
 #endif // IBMBIDI
@@ -168,28 +152,7 @@ protected:
   nsFont                mDefaultFantasyFont;
   nscoord               mMinimumFontSize;
 
-  PRPackedBool          mUseDocumentFonts;        // set in GetUserPrefs
-  PRPackedBool          mUseDocumentColors;       // set in GetUserPrefs
-  PRPackedBool          mUnderlineLinks;          // set in GetUserPrefs
-  PRPackedBool          mUseFocusColors;          // set in GetUserPrefs
-
-  PRPackedBool          mFocusRingOnAnything;     // set in GetUserPrefs
-
-  PRPackedBool          mDrawImageBackground;
-  PRPackedBool          mDrawColorBackground;
-
   nsSupportsHashtable   mImageLoaders;
-
-  PRPackedBool          mImageAnimationStopped;   // image animation stopped
-  PRPackedBool          mNeverAnimate;            // never animate images
-
-  PRPackedBool          mStopped;                 // loading stopped
-  PRPackedBool          mStopChrome;              // should we stop chrome?
-#ifdef IBMBIDI
-  PRPackedBool          mIsVisual;                // is the Bidi text mode visual
-  PRPackedBool          mIsBidiSystem;            // is the system capable of doing Bidi reordering
-#endif // IBMBIDI
-  PRPackedBool          mIsRenderingOnlySelection;
 
 #ifdef IBMBIDI
   nsBidiPresUtils*      mBidiUtils;
@@ -204,7 +167,6 @@ protected:
   PRUint16      mImageAnimationModePref;
 
   nsCOMPtr<nsITheme> mTheme;
-  PRBool mNoTheme;
 
 protected:
   void   GetUserPreferences();
