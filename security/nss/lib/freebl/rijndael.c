@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.4 2001/06/20 03:17:00 nelsonb%netscape.com Exp $
+ * $Id: rijndael.c,v 1.5 2001/09/20 17:11:08 ian.mcgreer%sun.com Exp $
  */
 
 #include "prerr.h"
@@ -441,6 +441,8 @@ rijndael_encryptBlock(AESContext *cx,
                       unsigned char *output,
                       const unsigned char *input)
 {
+    return SECFailure;
+#ifdef rijndael_large_blocks_fixed
     unsigned int j, r, Nb;
     unsigned int c2, c3;
     PRUint32 *roundkeyw;
@@ -473,6 +475,7 @@ rijndael_encryptBlock(AESContext *cx,
 	                     *roundkeyw++;
     }
     return SECSuccess;
+#endif
 }
 
 SECStatus 
@@ -480,6 +483,8 @@ rijndael_decryptBlock(AESContext *cx,
                       unsigned char *output,
                       const unsigned char *input)
 {
+    return SECFailure;
+#ifdef rijndael_large_blocks_fixed
     int j, r, Nb;
     int c2, c3;
     PRUint32 *roundkeyw;
@@ -513,6 +518,7 @@ rijndael_decryptBlock(AESContext *cx,
 	COLUMN(output, j) ^= *roundkeyw--;
     }
     return SECSuccess;
+#endif
 }
 
 /**************************************************************************
