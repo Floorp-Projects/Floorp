@@ -69,7 +69,7 @@ copyCharStarList (char** list)
 }
 
 
-
+#ifdef MOZILLA_CLIENT
 char *
 makeAbsoluteURL (char* p1, char* p2)
 {
@@ -77,6 +77,8 @@ makeAbsoluteURL (char* p1, char* p2)
 
 }
 
+
+#endif
 
 void
 addStyleSheet(XMLFile f, StyleSheet ss)
@@ -115,6 +117,7 @@ void XMLDOM_StartHandler (XMLFile f, const char* elementName, const char** attli
   xmle->attributes = copyCharStarList((char**)attlist);
   if (f->current)  addChild(f->current, xmle);
   f->current = xmle;
+#ifdef MOZILLA_CLIENT
   if (xmlgetAttributeValue(xmle->attributes, XLL) != NULL) {
     char* linkTag = xmlgetAttributeValue(xmle->attributes, XLL);
     char* hrefVal = xmlgetAttributeValue(xmle->attributes, href);
@@ -137,9 +140,10 @@ void XMLDOM_StartHandler (XMLFile f, const char* elementName, const char** attli
 #ifdef DOM
       ET_ReflectObject(f->mwcontext, f->transclusions[f->numTransclusions - 1], NULL, LO_DOCUMENT_LAYER_ID, 
 		  f->numTransclusions - 1, LM_TRANSCLUSIONS);
-#endif                       
+#endif
     }
   }
+#endif
 }
 
 
@@ -165,7 +169,7 @@ setAttribute (char** attlist, char* elName, char* elValue)
   return nattlist;
 }
 
-
+#ifdef MOZILLA_CLIENT
 void XMLSetTransclusionProperty( XMLFile f, uint index, char* propName, char* propValue ) {
   XMLElement el = f->transclusions[index];
   if (!el) return;
@@ -219,7 +223,10 @@ void * /* XMLElement */ XMLGetTransclusionByIndex( MWContext *context, uint inde
   return f->transclusions[index];
 }
 
+#endif
+
 void XMLDOM_PIHandler (XMLFile f, const char *elementName, const char *data) {  
+#ifdef MOZILLA_CLIENT
   if (startsWith("xml:stylesheet", elementName))   {
     char* url ; 
 	char* attlist[2*MAX_ATTRIBUTES+1];
@@ -245,7 +252,7 @@ void XMLDOM_PIHandler (XMLFile f, const char *elementName, const char *data) {
 	freeMem(xdata); 
     return;
   }
-  
+#endif  
 }
   
 

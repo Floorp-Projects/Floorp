@@ -26,10 +26,15 @@
 
 #include "xmlparse.h"
 
+#ifdef MOZILLA_CLIENT
 #include "jscompat.h"
 #include "lo_ele.h"
 #include "libevent.h"
 #include "libmocha.h"
+#include "net.h"
+#include "xp.h"
+#include "xp_str.h"
+#endif
 
 #ifdef XP_UNIX
 #include <sys/fcntl.h>
@@ -49,9 +54,6 @@
 #include "nspr.h"
 #include "plhash.h"
 #include "ntypes.h"
-#include "net.h"
-#include "xp.h"
-#include "xp_str.h"
 #include "utils.h"
 #include "xmlparse.h"
 
@@ -88,7 +90,9 @@ typedef struct _XMLFileStruct {
   void*   stream;
   int8    numOpenStreams;
   void*   urls;
+#ifdef MOZILLA_CLIENT
   MWContext*   mwcontext;
+#endif
   char*   address;
   char*   outputBuffer;
   XML_Parser parser;
@@ -125,7 +129,9 @@ typedef struct _XMLElementStruct {
   char*  tag;
   char** attributes;
   char* content;
+#ifdef MOZILLA_CLIENT
   JSObject *mocha_object;
+#endif
   struct _XMLElementStruct* parent;
   struct _XMLElementStruct* child;
   struct _XMLElementStruct* next;

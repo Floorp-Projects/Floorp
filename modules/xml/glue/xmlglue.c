@@ -27,6 +27,8 @@
    If you have questions, send them to guha@netscape.com
 */
 
+#ifdef MOZILLA_CLIENT
+
 #include "xmlglue.h"
 #include "xmlparse.h"
 #include "xmlss.h"
@@ -54,7 +56,7 @@ int xml_parse_abort (NET_StreamClass *stream) {
   StrAllocCopy(nurls->content_type, TEXT_HTML);
   newstream = NET_StreamBuilder(1,  nurls, (MWContext*)obj->mwcontext);
   sprintf(buff, "<B>Bad XML at line %i :</B><BR><P> ERROR = ", n);
-  (*(newstream->put_block))(newstream, buff, strlen(buff)); 
+   (*(newstream->put_block))(newstream, buff, strlen(buff)); 
   (*(newstream->put_block))(newstream, error, strlen(error)); 
   newstream->complete(newstream);
   freeMem(buff);
@@ -140,9 +142,6 @@ outputToStream (XMLFile f, char* s)
 	  } 
      return;
   }
-#ifdef DEBUG
-/*  FE_Trace(s); */
-#endif
   if (f->outputBuffer == NULL) f->outputBuffer = getMem(OUTPUT_BUFFER_SIZE+1);
   if ((strlen(s) > OUTPUT_BUFFER_SIZE)) {
     char* buff = copyString(s);
@@ -405,3 +404,5 @@ readHTML (char* url, XMLHTMLInclusion ss)
   urls->fe_data = ss;
   NET_GetURL(urls, FO_CACHE_AND_XMLHTML, ss->xml->mwcontext, xmlhtml_GetUrlExitFunc);
 }
+
+#endif

@@ -20,9 +20,9 @@
 
 DEPTH	= ..\..\..
 MODULE = xmlglue  
-CSRCS= xmlglue.c xmlss.c xmldom.c
+CSRCS= xmlglue.c xmlss.c xmldom.c test.c
 EXPORTS = xmlglue.h
-C_OBJS=.\$(OBJDIR)\xmlglue.obj .\$(OBJDIR)\xmlss.obj .\$(OBJDIR)\xmldom.obj
+C_OBJS=.\$(OBJDIR)\xmlglue.obj .\$(OBJDIR)\xmlss.obj .\$(OBJDIR)\xmldom.obj 
 
 LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\expat -I$(XPDIST)\public\js
      
