@@ -375,7 +375,7 @@ NS_IMETHODIMP nsXPBaseWindow::SetTitle(const PRUnichar* aTitle)
 }
 
 //---------------------------------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::GetTitle(PRUnichar** aResult)
+NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 {
   *aResult = mTitle;
   return NS_OK;
@@ -437,7 +437,7 @@ NS_IMETHODIMP nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName, nsIWe
   nsIWebShell *ws;
     
   if (NS_OK == GetWebShell(ws)) {
-    PRUnichar *name;
+    const PRUnichar *name;
     if (NS_OK == ws->GetName(&name)) {
       if (aNameStr.Equals(name)) {
         aResult = ws;

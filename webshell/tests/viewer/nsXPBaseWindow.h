@@ -79,7 +79,7 @@ public:
   NS_IMETHOD SetVisible(PRBool aIsVisible);
   NS_IMETHOD Close();
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-  NS_IMETHOD GetTitle(PRUnichar** aResult);
+  NS_IMETHOD GetTitle(const PRUnichar** aResult);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
   NS_IMETHOD GetPresShell(nsIPresShell*& aPresShell);
 

@@ -237,7 +237,7 @@ public:
   /**
    * Return the name of the current WebShell.
    */
-  NS_IMETHOD GetName(PRUnichar** aName) = 0;
+  NS_IMETHOD GetName(const PRUnichar** aName) = 0;
 
   /**
    * Set the name of the current WebShell.
@@ -300,12 +300,12 @@ public:
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
   NS_IMETHOD GetHistoryLength(PRInt32& aResult) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar **aURLResult) = 0;
+  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar **aURLResult) = 0;
 
   // Chrome api's
   NS_IMETHOD SetTitle(const PRUnichar *aTitle) = 0;
 
-  NS_IMETHOD GetTitle(PRUnichar **aResult) = 0;
+  NS_IMETHOD GetTitle(const PRUnichar **aResult) = 0;
   // SetToolBar
   // SetMenuBar
   // SetStatusBar

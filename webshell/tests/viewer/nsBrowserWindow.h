@@ -90,9 +90,9 @@ public:
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-  NS_IMETHOD GetTitle(PRUnichar** aResult);
+  NS_IMETHOD GetTitle(const PRUnichar** aResult);
   NS_IMETHOD SetStatus(const PRUnichar* aStatus);
-  NS_IMETHOD GetStatus(PRUnichar** aResult);
+  NS_IMETHOD GetStatus(const PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
 
