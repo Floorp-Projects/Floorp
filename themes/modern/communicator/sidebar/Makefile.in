@@ -38,7 +38,7 @@ EXPORT_RESOURCE_SAMPLES = \
         list-down-dis.gif  \
         preview.css  \
         sidebar.css \
-        list-down.gif \     
+        list-down.gif \
         sidebar-bottomright-cap.gif \
         sidebarOverlay.css \
         $(NULL)
