@@ -33,7 +33,7 @@
 		<titledbutton id="allEngines" onclick="doEngineClick(this)" class="engine" value="&allresults.title.label;" align="left" />
 	</box>
 
-	<tree id="internetresultstree" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+	<tree id="internetresultstree" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch" onclick="doResultClick(event.target.parentNode.parentNode)" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
 		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
@@ -56,7 +56,7 @@
                                 <treechildren>
 				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
 					<treerow>
-						<treecell onclick="doResultClick(this.parentNode.parentNode)" >
+						<treecell>
 							<treeindentation />
 							<titledbutton class="result" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
