@@ -327,22 +327,21 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
   if (mIsNews) {
     aHdr->GetLineCount(&msgSize);
     formattedSizeString.AppendInt(msgSize);
-    return NS_OK;
   }
- 
-  aHdr->GetMessageSize(&msgSize);
+  else {
+    aHdr->GetMessageSize(&msgSize);
 
 	if(msgSize < 1024)
 		msgSize = 1024;
 	
-  PRUint32 sizeInKB = msgSize/1024;
+    PRUint32 sizeInKB = msgSize/1024;
   
-  formattedSizeString.AppendInt(sizeInKB);
-  // XXX todo, fix this hard coded string?
-  formattedSizeString.Append(NS_LITERAL_STRING("KB"));
+    formattedSizeString.AppendInt(sizeInKB);
+    // XXX todo, fix this hard coded string?
+    formattedSizeString.Append(NS_LITERAL_STRING("KB"));
+  }
 
   *aSizeString = formattedSizeString.ToNewUnicode();
-
   return NS_OK;
 }
 
@@ -2068,7 +2067,12 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
 
   switch (sortType) {
     case nsMsgViewSortType::bySize:
-        rv = msgHdr->GetMessageSize(result);
+        if (mIsNews) {
+            rv = msgHdr->GetLineCount(result);
+        }
+        else {
+            rv = msgHdr->GetMessageSize(result);
+        }
         break;
     case nsMsgViewSortType::byPriority: 
         // want highest priority to have lowest value
