@@ -44,6 +44,7 @@
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
+class nsIDOMNSRange;
 
 /**
  * The HTML editor implementation.<br>
@@ -508,6 +509,17 @@ protected:
                                              const nsString& aContextStr,
                                              const nsString& aInfoStr);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode);
+  nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *nsrange,
+                                        const nsString& aInputString,
+                                        const nsString& aContextStr,
+                                        const nsString& aInfoStr,
+                                        nsCOMPtr<nsIDOMNode> *outFragNode,
+                                        PRInt32 *outRangeStartHint,
+                                        PRInt32 *outRangeEndHint);
+  nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
+                                      nsCOMPtr<nsISupportsArray> *outNodeList,
+                                      PRInt32 aRangeStartHint,
+                                      PRInt32 aRangeEndHint);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
