@@ -81,7 +81,8 @@ nsScrollViewFrame::Reflow(nsIPresContext&          aPresContext,
   // Create a view
   if (eReflowReason_Initial == aReflowState.reason) {
     // XXX It would be nice if we could do this sort of thing in our Init()
-    // member function instead of here...
+    // member function instead of here. Problem is the other frame code
+    // would have to do the same...
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, this,
                                              nsnull, PR_TRUE);
   }
@@ -250,6 +251,13 @@ nsScrollingViewFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Insert new view as a child of the parent view
     viewManager->InsertChild(parentView, view, 0);
+
+    // If the background is transparent then inform the view manager
+    const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
+    if (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) {
+      viewManager->SetViewContentTransparency(view, PR_TRUE);
+    }
     SetView(view);
     NS_RELEASE(viewManager);
   }
