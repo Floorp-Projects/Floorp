@@ -296,6 +296,7 @@ sub BuildDist()
    [":mozilla:dom:public:coreEvents:MANIFEST", "$distdirectory:dom:"],
    [":mozilla:dom:public:events:MANIFEST", "$distdirectory:dom:"],
    [":mozilla:dom:public:html:MANIFEST", "$distdirectory:dom:"],
+   [":mozilla:dom:src:jsurl:MANIFEST", "$distdirectory:dom:"],
 #HTMLPARSER
    [":mozilla:htmlparser:src:MANIFEST", "$distdirectory:htmlparser:"],
 
