@@ -31,8 +31,6 @@ $| = 1;
 
 print "Content-type: text/html\n\n<HTML>\n";
 
-EmitHtmlHeader("Notes");
-
 my $tree = $form{'tree'};
 my $start = $form{'start'};
 my $end = $form{'end'};
