@@ -159,6 +159,9 @@ NS_IMPL_RELEASE(nsHTMLImageElement)
 nsresult
 nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  // Note that this has to stay above the generic element
+  // QI macro, since it overrides the nsIJSScriptObject implementation
+  // from the generic element.
   if (aIID.Equals(kIJSScriptObjectIID)) {
     nsIJSScriptObject* tmp = this;
     *aInstancePtr = (void*) tmp;
