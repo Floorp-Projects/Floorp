@@ -31,6 +31,8 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 >
 
+<html:script src="chrome://global/content/treePopups.js"/>
+
 <tree datasources="rdf:null" id="threadTree" style="width: 100%; height: 100%"
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 			  onblur="goOnEvent(this,'blur')"
@@ -57,37 +59,51 @@ Rights Reserved.
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
+				<treecell/>
 	  		</treerow>
 		</treeitem>
           </treechildren>
 	</rule>
   </template>
 
-  <treecol persist="width" fixed="true" width="20" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
-  <treecol persist="width" width="7*" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
-  <treecol persist="width" width="4*" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
-  <treecol persist="width" fixed="true" width="20" id="UnreadButtonColumn"/>
-  <treecol persist="width" width="2*" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-  <treecol persist="width" width="1*" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
-  <treecol persist="width" fixed="true" width="20" id="FlaggedButtonColumn"/>
-  <treecol persist="width" width="1*" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
-  <treecol persist="width" width="1*" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
-  <treecol persist="width" width="1*" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol persist="width" width="1*" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treecolgroup id="theThreadColumns">
+	  <treecol persist="hidden width" fixed="true" width="20" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
+	  <treecol persist="hidden width" width="7*" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+	  <treecol persist="hidden width" width="4*" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+	  <treecol persist="hidden width" fixed="true" width="20" id="UnreadButtonColumn"/>
+	  <treecol persist="hidden width" width="2*" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+	  <treecol persist="hidden width" width="1*" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
+	  <treecol persist="hidden width" fixed="true" width="20" id="FlaggedButtonColumn"/>
+	  <treecol persist="hidden width" width="1*" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+	  <treecol persist="hidden width" width="1*" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
+	  <treecol persist="hidden width" width="1*" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+	  <treecol persist="hidden width" width="1*" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+	  <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
+  </treecolgroup>
+
   <treehead>
-    <treerow>
-		<treecell onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
+    <treerow id="headRow">
+		<treecell display="Thread" onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
 		<treecell value="&subjectColumn.label;" onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');"/>
 		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');" value="&senderColumn.label;"/>
-		<treecell class="readColumnHeader"/> 
+		<treecell display="Read" class="readColumnHeader"/> 
 		<treecell value="&dateColumn.label;" onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');"/>
 		<treecell value="&priorityColumn.label;" onclick="return top.SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');"/>
-		<treecell class="flagColumnHeader"/> 
+		<treecell display="Flag" class="flagColumnHeader"/> 
 		<treecell value="&statusColumn.label;" onclick="return top.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');"/>
 		<treecell value="&sizeColumn.label;" onclick="return top.SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size');"/>
 		<treecell value="&unreadColumn.label;" onclick="return top.SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages');"/>
 		<treecell value="&totalColumn.label;" onclick="return top.SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');"/>
-    </treerow>
+		<treecell allowevents="true" id="popupCell">
+		  <menu>
+		    <titledbutton src="chrome://global/skin/opentwisty.gif"/>
+			<menupopup popupanchor="bottomright" 
+			           popupalign="topright"
+					   oncreate="BuildTreePopup(document.getElementById('theThreadColumns'), document.getElementById('headRow'), this,
+			                                    document.getElementById('popupCell'))"/>
+		  </menu>
+		</treecell>
+	</treerow>
   </treehead>
 </tree>
 </overlay>
