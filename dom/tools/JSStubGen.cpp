@@ -96,6 +96,7 @@ JSStubGen::Generate(char *aFileName,
 
 static const char kIncludeDefaultsStr[] = "\n"
 "#include \"jsapi.h\"\n"
+"#include \"jsnum.h\"\n"
 "#include \"nsJSUtils.h\"\n"
 "#include \"nsDOMError.h\"\n"
 "#include \"nscore.h\"\n"
@@ -713,6 +714,9 @@ static const char kStringGetCaseStr[] =
 static const char kIntGetCaseStr[] = 
 "            *vp = INT_TO_JSVAL(prop);\n";
 
+static const char kFloatGetCaseStr[] = 
+"            *vp = DOUBLE_TO_JSVAL(js_NewDouble(cx, prop));\n";
+
 static const char kBoolGetCaseStr[] =
 "            *vp = BOOLEAN_TO_JSVAL(prop);\n";
 
@@ -748,6 +752,9 @@ JSStubGen::GeneratePropGetter(ofstream *file,
     case TYPE_INT:
     case TYPE_UINT:
       case_str = kIntGetCaseStr;
+      break;
+    case TYPE_FLOAT:
+      case_str = kFloatGetCaseStr;
       break;
     case TYPE_JSVAL:
       case_str = kJSValGetCaseStr;
@@ -1244,6 +1251,14 @@ static const char kMethodIntParamStr[] =
 #define JSGEN_GENERATE_INTPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodIntParamStr, paramNum, paramNum)
 
+static const char kMethodFloatParamStr[] =
+"    if (!JS_ValueToNumber(cx, argv[%d], &b%d)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);\n"
+"    }\n";
+
+#define JSGEN_GENERATE_FLOATPARAM(buffer, paramNum) \
+    sprintf(buffer, kMethodFloatParamStr, paramNum, paramNum)
+
 static const char kMethodFuncParamStr[] =
 #ifdef USE_COMPTR
 "    if (!nsJSUtils::nsConvertJSValToFunc(getter_AddRefs(b%d),\n"
@@ -1297,6 +1312,9 @@ static const char kMethodStringRetStr[] =
 
 static const char kMethodIntRetStr[] = 
 "    *rval = INT_TO_JSVAL(nativeRet);\n";
+
+static const char kMethodFloatRetStr[] = 
+"    *rval = DOUBLE_TO_JSVAL(js_NewDouble(cx, nativeRet));\n";
 
 static const char kMethodBoolRetStr[] =
 "    *rval = BOOLEAN_TO_JSVAL(nativeRet);\n";
@@ -1414,6 +1432,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
           case TYPE_UINT:
             JSGEN_GENERATE_INTPARAM(buf, p);
             break;
+          case TYPE_FLOAT:
+            JSGEN_GENERATE_FLOATPARAM(buf, p);
+            break;
           case TYPE_JSVAL:
             JSGEN_GENERATE_JSVALPARAM(buf, p);
             break;
@@ -1481,6 +1502,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
           case TYPE_INT:
           case TYPE_UINT:
             *file << kMethodIntRetStr;
+            break;
+          case TYPE_FLOAT:
+            *file << kMethodFloatRetStr;
             break;
           case TYPE_JSVAL:
             *file << kMethodJSValRetStr;
