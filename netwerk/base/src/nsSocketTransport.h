@@ -203,7 +203,7 @@ protected:
   PRIntervalTime                    mLastActiveTime;
   PRCList                           mListLink;
   PRUint32                          mLoadAttributes;
-  PRLock*                           mLock;
+  PRMonitor*                        mMonitor;
   PRNetAddr                         mNetAddress;
   nsCOMPtr<nsISupports>             mOpenContext;
   nsCOMPtr<nsIStreamObserver>       mOpenObserver;
