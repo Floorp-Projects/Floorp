@@ -62,7 +62,7 @@ Title=$ProductName$ $UserAgentShort$ Uninstaller
 Message0=This will uninstall %s from your system.  Click Uninstall to begin uninstallation.
 
 ;[Check Instance0]
-;Class Name=NetscapeWindowClass
+;Class Name=MozillaWindowClass
 ;Window Name=
 ;Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
 
