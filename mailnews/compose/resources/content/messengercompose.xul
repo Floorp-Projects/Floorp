@@ -120,6 +120,8 @@ Rights Reserved.
 	<key id="key_find" xulkey="true" key="&findCmd.key;"  observes="cmd_find"/>
 	<key id="key_findAgain" xulkey="true" key="&findAgainCmd.key;" observes="cmd_findAgain"/>
 	<key id="key_preferences"/>
+	<!-- Options Menu -->
+    <key id="key_checkspelling" xulkey="true" key="&checkSpellingCmd.key;" observes="cmd_spelling" />
 	
 </keyset>
 
@@ -291,6 +293,7 @@ END of Deprecated -->
 	<menu value="&optionsMenu.label;">
     <menupopup>	
 		<menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
+        <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
 		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>
 	    <menuseparator/>
 	    
@@ -382,7 +385,7 @@ END of Deprecated -->
 	 		<button class="button-toolbar-2 top" id="button_address" value="&addressButton.label;" onclick="SelectAddress()"/>
 	 		<button class="button-toolbar-2 top" id="button_attach" value="&attachButton.label;" onclick="AttachFile()"/>
 	 		<button class="button-toolbar-2 top" id="button_quote" disabled="true" value="&quoteButton.label;" onclick="QuoteMessage()"/>
-	 		<!--button class="button-toolbar-2 top" orient="vertical" id="button_spelling" value="&spellingButton.label;" onclick="Spelling()"/-->
+            <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
             <toolbarseparator/>
 	 		<button class="button-toolbar-2 top" id="button_save" value="&saveButton.label;" onclick="SaveAsDraft()"/>
 	 		<button class="button-toolbar-2 top" id="button_stop" disabled="true" value="&stopButton.label;" onclick="Stop()"/>

@@ -103,6 +103,10 @@
 	<!ENTITY selectAddressCmd.key "">
 	<!ENTITY selectAddressCmd.accesskey "c">
 
+<!ENTITY checkSpellingCmd.label "Check Spelling...">
+	<!ENTITY checkSpellingCmd.key "K">
+	<!ENTITY checkSpellingCmd.accesskey "S">
+
 <!ENTITY priorityMenu.label "Priority">
 <!ENTITY lowestPriorityCmd.label "Lowest">
 <!ENTITY lowPriorityCmd.label "Low">
