@@ -179,6 +179,7 @@ bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
 bin\components\xultmpl.xpt
 bin\components\xuldoc.xpt
+bin\components\xulapp.xpt
 
 ; Imaging:
 bin\components\imgicon.xpt
@@ -193,6 +194,7 @@ bin\components\caps.xpt
 
 ; glue: appshell, docshell, uriloader, chrome, components
 bin\components\appshell.xpt                                 
+bin\components\appstartup.xpt
 bin\components\docshell_base.xpt            
 bin\components\uriloader.xpt        
 bin\components\webBrowser_core.xpt

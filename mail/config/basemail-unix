@@ -217,7 +217,7 @@ components/caps.xpt
 
 components/libnsappshell.so
 components/appshell.xpt 
-
+components/appstartup.xpt
 
 ; cookies
 ;;components/libcookie.so                   
@@ -364,6 +364,7 @@ components/nsCloseAllWindows.js
 components/libxremoteservice.so
 components/libxremote_client.so
 components/xremoteservice.xpt
+components/xulapp.xpt
 components/libfileview.so
 
 ; plugins
