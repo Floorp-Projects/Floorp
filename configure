@@ -14911,12 +14911,6 @@ EOF
 
 
 . ${srcdir}/allmakefiles.sh
-case "$target_os" in
-msvc*|mksnt*|cygwin*|mingw*)
-    MAKEFILES=`echo $MAKEFILES | sed -e 's|/cygdrive/\(.\)/|\1:/|g'`
-    ;;
-*)
-esac
 echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
