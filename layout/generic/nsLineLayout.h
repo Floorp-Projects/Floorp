@@ -26,6 +26,7 @@ struct nsBlockReflowState;
 class nsPlaceholderFrame;
 struct nsStyleDisplay;
 struct nsStylePosition;
+struct nsStyleSpacing;
 
 // This structure represents a run of text. In mText are the
 // nsIFrame's that are considered text frames.
@@ -56,13 +57,42 @@ protected:
 
 class nsLineLayout {
 public:
-  nsLineLayout(nsIPresContext* aPresContext,
+  nsLineLayout(nsIPresContext& aPresContext,
                nsISpaceManager* aSpaceManager);
   ~nsLineLayout();
 
-  void Init(nsBlockReflowState* aReflowState) {
+  void Init(nsBlockReflowState* aReflowState) {/* XXX ctor arg really */
     mBlockReflowState = aReflowState;
   }
+
+  // Prepare this line-layout for the reflow of a new line
+  void Reset() {
+    mTotalPlacedFrames = 0;
+    mColumn = 0;
+    mSkipLeadingWS = PR_TRUE;
+#ifdef NS_DEBUG
+    mPlacedFrames.Clear();
+#endif
+  }
+
+  // Add to the placed-frame count
+#ifdef NS_DEBUG
+  void AddPlacedFrame(nsIFrame* aFrame) {
+    mTotalPlacedFrames++;
+    mPlacedFrames.AppendElement(aFrame);
+  }
+#else
+  void AddPlacedFrame() {
+    mTotalPlacedFrames++;
+  }
+#endif
+
+  // Get the placed-frame count
+  PRInt32 GetPlacedFrames() const {
+    return mTotalPlacedFrames;
+  }
+
+  //  --------------------------------------------------
 
   // Reset the text-run information in preparation for a FindTextRuns
   void ResetTextRuns();
@@ -78,13 +108,6 @@ public:
   // This returns the first nsTextRun found during a
   // FindTextRuns. The internal text-run state is reset.
   nsTextRun* TakeTextRuns();
-
-  // Prepare this line-layout for the reflow of a new line
-  void Prepare(nscoord aLeftEdge) {
-    mLeftEdge = aLeftEdge;
-    mColumn = 0;
-    mSkipLeadingWS = PR_TRUE;
-  }
 
   PRInt32 GetColumn() {
     return mColumn;
@@ -103,13 +126,13 @@ public:
   static PRBool TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
                                   const nsStylePosition* aPosition);
 
-  nsIPresContext* mPresContext;
+  nsIPresContext& mPresContext;
   nsISpaceManager* mSpaceManager;
   nsBlockReflowState* mBlockReflowState;
 
   PRBool mListPositionOutside;
   PRInt32 mLineNumber;
-  nscoord mLeftEdge;
+//  nscoord mLeftEdge;
   PRInt32 mColumn;
 
   //XXX temporary?
@@ -122,6 +145,11 @@ public:
   PRBool mSkipLeadingWS;
 
 protected:
+  PRInt32 mTotalPlacedFrames;
+#ifdef NS_DEBUG
+  nsVoidArray mPlacedFrames;
+#endif
+
   // These slots are used during FindTextRuns
   nsTextRun* mTextRuns;
   nsTextRun** mTextRunP;
