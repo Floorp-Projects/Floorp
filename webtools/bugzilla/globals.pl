@@ -1115,18 +1115,6 @@ sub UserCanBlessGroup {
     return $result; 
 }
 
-sub BugInGroup {
-    my ($bugid, $groupname) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT bug_group_map.bug_id != 0 FROM bug_group_map, groups 
-            WHERE bug_group_map.bug_id = $bugid
-            AND bug_group_map.group_id = groups.id
-            AND groups.name = " . SqlQuote($groupname));
-    my $bugingroup = FetchOneColumn();
-    PopGlobalSQLState();
-    return $bugingroup;
-}
-
 sub BugInGroupId {
     my ($bugid, $groupid) = (@_);
     PushGlobalSQLState();
