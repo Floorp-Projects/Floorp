@@ -73,14 +73,11 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
       nsCOMPtr<nsIContent> content(do_QueryInterface(aDomNode));
       shell->GetPrimaryFrameFor(content, &frame);
       nsIFrame *parentFrame = nsAccessible::GetParentBlockFrame(frame);
-      NS_ASSERTION(parentFrame, "Error: HypeText can't get parent block frame");
-      if (parentFrame) {
-        nsCOMPtr<nsIPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
-        nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
-        PRBool bSave = PR_FALSE;
-        GetAllTextChildren(presContext, childFrame, aDomNode, bSave);
-      }
+      nsCOMPtr<nsIPresContext> presContext;
+      shell->GetPresContext(getter_AddRefs(presContext));
+      nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
+      PRBool bSave = PR_FALSE;
+      GetAllTextChildren(presContext, childFrame, aDomNode, bSave);
     }
   }
 }
@@ -152,7 +149,7 @@ nsIDOMNode* nsAccessibleHyperText::FindTextNodeByOffset(PRInt32 aOffset, PRInt32
     nsAccessibleText accText(domNode);
     PRInt32 charCount;
     if (NS_SUCCEEDED(accText.GetCharacterCount(&charCount))) {
-      if (aOffset >= 0 && aOffset <= charCount) {
+      if (aOffset >= 0 && aOffset < charCount) {
         return domNode;
       }
       aOffset -= charCount;
@@ -409,18 +406,9 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
   for (index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
     nsCOMPtr<nsIDOMNode> parentNode;
-
-    // text node maybe a child (or grandchild, ...) of a link node
-    nsCOMPtr<nsILink> link;
+    // text node maybe a child of a link node
     domNode->GetParentNode(getter_AddRefs(parentNode));
-    while (parentNode) {
-      link = do_QueryInterface(parentNode);
-      if (link)
-        break; 
-      nsCOMPtr<nsIDOMNode> tmpNode = parentNode;
-      tmpNode->GetParentNode(getter_AddRefs(parentNode));
-    }
-
+    nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
     if (link) {
       if (linkCount++ == NS_STATIC_CAST(PRUint32, aIndex)) {
         nsCOMPtr<nsIWeakReference> weakShell;
