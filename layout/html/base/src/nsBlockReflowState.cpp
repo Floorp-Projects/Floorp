@@ -451,6 +451,7 @@ public:
   PRPackedBool mUnconstrainedHeight;
   PRPackedBool mShrinkWrapWidth;
   PRPackedBool mNeedResizeReflow;
+  PRPackedBool mIsInlineIncrReflow;
 
   // The content area to reflow child frames within. The x/y
   // coordinates are known to be mBorderPadding.left and
@@ -579,7 +580,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mPrevBottomMargin(0),
     mFreeLineList(nsnull),
     mLineNumber(0),
-    mNeedResizeReflow(PR_FALSE)
+    mNeedResizeReflow(PR_FALSE),
+    mIsInlineIncrReflow(PR_FALSE)
 {
   const nsMargin& borderPadding = BorderPadding();
 
@@ -1463,6 +1465,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsresult rv = NS_OK;
   PRBool isStyleChange = PR_FALSE;
+  state.mIsInlineIncrReflow = PR_FALSE;
   nsIFrame* target;
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
@@ -1518,6 +1521,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       // in the normal case, this just marks the line dirty
       // but, it causes an incremental reflow targeted at a frame
       // inside a continued span to get dropped on the floor.  see bug 25510
+      // This will be yanked as soon as we have high confidence in the enabled code below
       rv = PrepareChildIncrementalReflow(state); 
 #else
       // this code does a correct job of propogating incremental reflows (bug 25510)
@@ -1531,21 +1535,35 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       { 
         if (!isFloater) // punt if isFloater!  
         {
-          nsBlockReflowState incrState(aReflowState, aPresContext, this, aMetrics, 
-                                       NS_BLOCK_MARGIN_ROOT & mState); 
-          incrState.mNextRCFrame = state.mNextRCFrame; 
-          PRBool keepGoing; 
-          rv = ReflowLine(incrState, line, &keepGoing, PR_TRUE); 
-          line->RemoveFloatersFromSpaceManager(aReflowState.mSpaceManager);
-          state.mNextRCFrame = nsnull; 
+          // reflow the line containing the target of the incr. reflow
+          // first mark the line dirty and set up the state object
+          rv = PrepareChildIncrementalReflow(state);
+          state.mIsInlineIncrReflow = PR_TRUE;
+          state.mPrevLine = prevLine;
+          state.mCurrentLine = line;
+          state.mNextRCFrame = state.mNextRCFrame;
+          // let ReflowDirtyLines do all the work
+          rv = ReflowDirtyLines(state);
+          if (NS_FAILED(rv)) {
+            NS_ASSERTION(0, "Reflow failed\n");
+            return rv;
+          }
+          // compute the final size
+          ComputeFinalSize(aReflowState, state, aMetrics);
+
+          // finally, mark this block frame as having a dirty child and return
+          // XXX: we should be able to optimize this so we only call ReflowDirtyChild
+          //      if it's absolutely necessary:  something on the line changed size.
+          nsCOMPtr<nsIPresShell> shell;
+          aPresContext->GetShell(getter_AddRefs(shell));
+          rv = ReflowDirtyChild(shell, state.mNextRCFrame); 
+          //XXX: it's possible we need to do some work regarding incremental painting
+          //     here, see code below "ReflowDirtyLines() after this switch statement.
+          //     It might be right to factor the tail end of this method into a new method
+          //     and call that here before calling ReflowDirtyChild().
+          return rv;
         } 
       }
-      // XXX To Do: we need to check some metrics here to see if anything changed
-      // if nothing changed, we're done
-      // otherwise, we should mark the line and the previous line both dirty
-      // and do a resize reflow
-      // Now just mark the line dirty every time. We call PrepareChildIncrementalReflow
-      // because it includes a hack for floaters that we don't want to duplicate here.
       rv = PrepareChildIncrementalReflow(state);
 #endif
     }
@@ -1562,8 +1580,17 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     break;
   }
 
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(0, "setting up reflow failed.\n");
+    return rv;
+  }
+
   // Now reflow...
   rv = ReflowDirtyLines(state);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(0, "reflow dirty lines failed.\n");
+    return rv;
+  }
   aStatus = state.mReflowStatus;
   if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
@@ -2567,8 +2594,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.mReflowState.reflowCommand->GetType(type);
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": incrementally reflowing dirty lines: type=%s(%d)",
-             kReflowCommandType[type], type);
+      printf(": incrementally reflowing dirty lines: type=%s(%d) isInline=%s",
+             kReflowCommandType[type], type,
+             aState.mIsInlineIncrReflow ? "true" : "false");
     }
     else {
       IndentBy(stdout, gNoiseIndent);
@@ -2586,10 +2614,30 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
                               aState.mReflowState.reason ==
                               eReflowReason_Dirty;
   
+  nscoord deltaY = 0;
+
   // Reflow the lines that are already ours
   aState.mPrevLine = nsnull;
   nsLineBox* line = mLines;
-  nscoord deltaY = 0;
+  if (aState.mIsInlineIncrReflow && aState.mNextRCFrame)
+  {
+    const nsLineBox* incrTargetLine = aState.mCurrentLine;
+    aState.mCurrentLine = line;
+    aState.mPrevLine = nsnull;
+    while (line && (line != incrTargetLine))
+    {
+      nsRect  damageRect;
+      RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
+                       &damageRect : 0);
+      if (incrementalReflow && !damageRect.IsEmpty()) {
+        Invalidate(aState.mPresContext, damageRect);
+      }
+      aState.mPrevLine = line;
+      line = line->mNext;
+      aState.AdvanceToNextLine();
+    }
+  }
+  
   while (nsnull != line) {
 #ifdef DEBUG
     if (gNoisyReflow) {
@@ -2623,6 +2671,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       if (NS_FAILED(rv)) {
         return rv;
       }
+  if (!(NS_FRAME_IS_COMPLETE(aState.mReflowStatus)))
+  {
+    printf("line %p is not complete\n", line);
+  }
       if (!keepGoing) {
         if (0 == line->GetChildCount()) {
           DeleteLine(aState, line);
@@ -3522,7 +3574,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // Try to place the child block
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
     nscoord collapsedBottomMargin;
-    nsRect combinedArea;
+    nsRect combinedArea(0,0,0,0);
     *aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop, computedOffsets,
                                        &collapsedBottomMargin,
                                        aLine->mBounds, combinedArea);
@@ -4356,7 +4408,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     // Stop reflow and whack the reflow status if reflow hasn't
     // already been stopped.
     if (*aKeepReflowGoing) {
-      NS_ASSERTION(NS_FRAME_COMPLETE == aState.mReflowStatus,
+      NS_ASSERTION(NS_FRAME_COMPLETE == aState.mReflowStatus, 
                    "lost reflow status");
       aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
       *aKeepReflowGoing = PR_FALSE;
