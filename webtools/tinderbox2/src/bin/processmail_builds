@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.30 $ 
-# $Date: 2003/02/11 00:29:57 $ 
+# $Revision: 1.31 $ 
+# $Date: 2003/04/20 20:28:11 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -810,7 +810,6 @@ sub highlight_errors {
          'file' => $error[0],
          'line' => $error[1],
          'linktxt' =>  $line, 
-         'alt_linktxt' =>  $line, 
         );
     }
     
