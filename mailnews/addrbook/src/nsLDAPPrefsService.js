@@ -194,8 +194,12 @@ function () {
       }
     }
   }
-  gPrefInt.SetBoolPref("ldap_2.prefs_migrated", true);
-  gPrefInt.SavePrefFile(null);
+  try {
+    gPrefInt.SetBoolPref("ldap_2.prefs_migrated", true);
+    gPrefInt.savePrefFile(null);
+  }
+  catch (ex) {dump ("ERROR:" + ex + "\n");}
+    
   this.prefs_migrated = true;
 }
 

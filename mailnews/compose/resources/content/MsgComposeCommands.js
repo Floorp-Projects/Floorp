@@ -43,14 +43,18 @@ var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"
 promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
 //This migrates the LDAPServer Preferences from 4.x to mozilla format.
-var LDAPPrefsService = Components.classes[
+try {
+  var LDAPPrefsService = Components.classes[
                        "@mozilla.org/ldapprefs-service;1"].getService();
-LDAPPrefsService = LDAPPrefsService.QueryInterface(
+  LDAPPrefsService = LDAPPrefsService.QueryInterface(
                    Components.interfaces.nsILDAPPrefsService);
+} catch (ex) {dump ("ERROR:" + ex + "\n");}
 
+try {
 var ldapSession = Components.classes[
             "@mozilla.org/autocompleteSession;1?type=ldap"].createInstance().
             QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+} catch (ex) {dump ("ERROR:" + ex + "\n");}
 
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
