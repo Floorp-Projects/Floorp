@@ -424,6 +424,8 @@ public:
     NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);
     NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aResult);
     NS_IMETHOD    CreateRange(nsIDOMRange** aRange);
+    NS_IMETHOD    GetWidth(PRInt32* aWidth);
+    NS_IMETHOD    GetHeight(PRInt32* aHeight);
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT
@@ -2937,6 +2939,19 @@ XULDocumentImpl::CreateRange(nsIDOMRange** aRange)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP    
+XULDocumentImpl::GetWidth(PRInt32* aWidth)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+ 
+NS_IMETHODIMP    
+XULDocumentImpl::GetHeight(PRInt32* aHeight)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMXULDocument interface

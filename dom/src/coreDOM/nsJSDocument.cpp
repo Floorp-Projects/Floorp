@@ -88,7 +88,9 @@ enum Document_slots {
   DOCUMENT_DOCTYPE = -1,
   DOCUMENT_IMPLEMENTATION = -2,
   DOCUMENT_DOCUMENTELEMENT = -3,
-  NSDOCUMENT_STYLESHEETS = -4
+  NSDOCUMENT_WIDTH = -4,
+  NSDOCUMENT_HEIGHT = -5,
+  NSDOCUMENT_STYLESHEETS = -6
 };
 
 /***********************************************************************/
@@ -166,6 +168,58 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         else {
           return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case NSDOCUMENT_WIDTH:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.width", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRInt32 prop;
+        nsIDOMNSDocument* b;
+        if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetWidth(&prop);
+          if(NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        break;
+      }
+      case NSDOCUMENT_HEIGHT:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.height", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRInt32 prop;
+        nsIDOMNSDocument* b;
+        if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetHeight(&prop);
+          if(NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -849,6 +903,8 @@ static JSPropertySpec DocumentProperties[] =
   {"doctype",    DOCUMENT_DOCTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"implementation",    DOCUMENT_IMPLEMENTATION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"width",    NSDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"height",    NSDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"styleSheets",    NSDOCUMENT_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

@@ -66,7 +66,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
   if (context) {
     nsresult result = context->GetOwner(&owner);
-    if (NS_SUCCEEDED(result)) {
+    if (NS_SUCCEEDED(result) && owner) {
       const char* error;
       if (message) {
         error = message;
