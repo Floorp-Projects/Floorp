@@ -76,10 +76,10 @@ nsSVGDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
-    nsXPIDLCString referrer;
-    rv = httpChannel->GetResponseHeader("referrer", getter_Copies(referrer));
+    nsCAutoString referrer;
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("referrer"), referrer);
     if (NS_SUCCEEDED(rv)) {
-      mReferrer.AssignWithConversion(referrer);
+      mReferrer = NS_ConvertUTF8toUCS2(referrer);
     }
   }
 
