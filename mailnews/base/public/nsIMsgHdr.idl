@@ -58,7 +58,8 @@ interface nsIMsgHdr : nsISupports
        header in the db */
     [noscript] void getProperty(in string propertyName, in nsStringRef propertyValue);
     [noscript] void setProperty(in string propertyName, in nsStringRef propertyStr);
-
+    void setStringProperty(in string propertyName, in string propertyValue);
+    string getStringProperty(in string propertyName);
     unsigned long getUint32Property(in string propertyName);
     void setUint32Property(in string propertyName,
                            in unsigned long propertyVal);
