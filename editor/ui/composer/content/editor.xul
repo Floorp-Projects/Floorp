@@ -68,10 +68,7 @@
     <commandset id="composerEditMenuItems"/>
     <commandset id="composerSaveMenuItems"/>    
     <commandset id="composerStyleMenuItems"/>
-    <!-- Note that some commandsets (e.g.,composerTableMenuItems) are not
-         included because they update in menu create methods only
-         But if any command is placed on a toolbar, they should be included here
-     --> 
+    <commandset id="composerTableMenuItems"/>
   </commands>
 
   <!-- Use this when we abandon the default startup page -->

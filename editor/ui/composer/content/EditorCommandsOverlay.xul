@@ -28,11 +28,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- commands updated when the table menu gets created -->
-  <commandset id="composerTableMenuItems"
-					commandupdater="true"
-					events="create"
-					oncommandupdate="goUpdateTableMenuItems(this)"
-  >
+  <commandset id="composerTableMenuItems" oncommandupdate="goUpdateTableMenuItems(this)">
     <command id="cmd_SelectTable"         oncommand="goDoCommand('cmd_SelectTable')"/>
     <command id="cmd_SelectRow"           oncommand="goDoCommand('cmd_SelectRow')"/>
     <command id="cmd_SelectColumn"        oncommand="goDoCommand('cmd_SelectColumn')"/>
