@@ -141,7 +141,6 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
     return rv;
   }
   if (cookie) {
-    printf("\nRecieving ... %s\n", cookie);
     nsIURI* pURL;
     rv = pHTTPConnection->GetURI(&pURL);
     if (NS_FAILED(rv)) {
