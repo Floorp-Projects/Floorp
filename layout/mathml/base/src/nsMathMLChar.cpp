@@ -1477,7 +1477,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // XXXrbs get rid of this hardcoding - bug 118600
   PRUnichar uchar = mData[0];
   if (kSqrChar == uchar) {                        // Special to the sqrt char. Due to
-    fontName.Assign(NS_LITERAL_STRING("CMSY10")); // assumptions in the sqrt code, we need
+    fontName.Assign(NS_LITERAL_STRING("CMSY10,Math2")); // assumptions in the sqrt code, we need
     SetFirstFamily(theFont, fontName);         // to force precedence on this TeX font
   }
   aRenderingContext.SetFont(theFont, nsnull);
@@ -1953,7 +1953,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       PRUint32 len = PRUint32(mData.Length());
       PRUnichar uchar = mData[0];
       if ((1 == len) && (kSqrChar == uchar)) {        // Special to the sqrt char. Due to
-        fontName.Assign(NS_LITERAL_STRING("CMSY10")); // assumptions in the sqrt code, we need
+        fontName.Assign(NS_LITERAL_STRING("CMSY10,Math2")); // assumptions in the sqrt code, we need
         SetFirstFamily(theFont, fontName);        // to force precedence on this TeX font
       }
       aRenderingContext.SetFont(theFont, nsnull);
