@@ -21,6 +21,8 @@
 
 
 DEPTH=..\..
+include <$(DEPTH)/config/config.mak>
+
 DIRS= 	\
 	public                  \
 	mgr			\
