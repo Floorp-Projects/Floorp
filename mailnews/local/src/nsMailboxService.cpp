@@ -79,8 +79,67 @@ nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStrea
 	return rv;
 }
 
+
+nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
+						   nsIUrlListener * aUrlListener, nsIURL **aURL)
+{
+	nsMailboxUrl * mailboxUrl = nsnull;
+	nsIMailboxUrl * url = nsnull;
+	nsresult rv = NS_OK;
+	NS_LOCK_INSTANCE();
+
+	mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
+	if (mailboxUrl)
+	{
+		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &url);
+		if (NS_SUCCEEDED(rv) && url)
+		{
+			// okay now generate the url string
+			char * urlSpec = nsnull;
+			nsString folderURI;
+			nsFileSpec folderPath ("");
+			nsMsgKey msgKey;
+			nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
+			char *rootURI = folderURI.ToNewCString();
+			nsURI2Path(kMessageRootURI, rootURI, folderPath);
+
+			nsFilePath filePath(folderPath); // convert to file url representation...
+			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
+			
+			// set the url type to be a copy...
+			url->SetSpec(urlSpec);
+			PR_FREEIF(urlSpec);
+			
+			if (moveMessage)
+				url->SetMailboxAction(nsMailboxActionMoveMessage);
+			else
+				url->SetMailboxAction(nsMailboxActionCopyMessage);
+
+			url->SetMailboxCopyHandler(aMailboxCopyHandler);
+			
+			if (aUrlListener)
+				url->RegisterListener(aUrlListener);
+
+			// create a protocol instance to run the url..
+			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
+			if (protocol)
+				rv = protocol->LoadURL(url, nsnull);
+
+			if (aURL)
+				*aURL = url;
+			else
+				NS_IF_RELEASE(url); // otherwise release our ref count on it...
+		}
+	}
+
+	NS_UNLOCK_INSTANCE();
+
+	return rv;
+}
+
 nsresult nsMailboxService::DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
-										  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+										  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, 
+										  nsIURL ** aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
 	nsIMailboxUrl * url = nsnull;
