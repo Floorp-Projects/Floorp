@@ -311,7 +311,7 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    var startHour = calendarEventDisplay.displayDate.getHours();
    var startMinutes = calendarEventDisplay.displayDate.getMinutes();
 
-   eventDuration = ( ( calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate ) / (60 * 60 * 1000) );
+   var eventDuration = ( ( calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate ) / (60 * 60 * 1000) );
    
    var eventBox = document.createElement( "vbox" );
    
