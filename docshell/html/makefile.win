@@ -29,6 +29,8 @@ XPIDLSRCS=						\
 
 LIBRARY_NAME=htmldocshell_s
 
+LINCS=-I..\base
+
 CPP_OBJS=											\
 		.\$(OBJDIR)\nsHTMLDocShell.obj			\
 		$(NULL)

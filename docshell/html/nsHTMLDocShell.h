@@ -24,21 +24,14 @@
 #define nsHTMLDocShell_h__
 
 #include "nsCHTMLDocShell.h"
+#include "nsDocShellBase.h"
 
-class nsHTMLDocShell : public nsIDocShell, public nsIHTMLDocShell, 
-   public nsIDocShellEdit, public nsIDocShellFile, public nsIGenericWindow,
-   public nsIScrollable, public nsITextScroll
+class nsHTMLDocShell : public nsDocShellBase, public nsIHTMLDocShell
 {
 public:
    NS_DECL_ISUPPORTS
 
-   NS_DECL_NSIDOCSHELL
    NS_DECL_NSIHTMLDOCSHELL
-   NS_DECL_NSIDOCSHELLEDIT
-   NS_DECL_NSIDOCSHELLFILE
-   NS_DECL_NSIGENERICWINDOW
-   NS_DECL_NSISCROLLABLE
-   NS_DECL_NSITEXTSCROLL
 
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
