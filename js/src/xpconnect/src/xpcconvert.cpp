@@ -390,16 +390,13 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                 
                 if(!cString->IsVoid()) 
                 {
-                    // XXX There is an extra copy happening here.  When the
-                    // UTF8String implementation lands, it should contain
-                    // a mechanism to avoid this extra copy.  Jag will change
-                    // this code to use that new mechanism when he lands the
-                    // UTF8String changes.
-                    NS_ConvertUTF8toUCS2 unicodeString(*cString);
+                    PRUint32 len;
+                    jschar *p = (jschar *)UTF8ToNewUnicode(*cString, &len);
 
-                    JSString* jsString = JS_NewUCStringCopyN(cx,
-                                         (jschar*)unicodeString.get(),
-                                         unicodeString.Length());
+                    if(!p)
+                        return JS_FALSE;
+
+                    JSString* jsString = JS_NewUCString(cx, p, len);
 
                     if(!jsString)
                         return JS_FALSE; 
