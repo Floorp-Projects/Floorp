@@ -6084,9 +6084,8 @@ nsBlockFrame::PaintChildren(nsPresContext*      aPresContext,
 
 // XXXldb Does this handle all overlap cases correctly?  (How?)
 nsresult
-nsBlockFrame::GetClosestLine(nsILineIterator *aLI, 
-                             const nsPoint &aOrigin, 
-                             const nsPoint &aPoint, 
+nsBlockFrame::GetClosestLine(nsILineIterator *aLI,
+                             const nsPoint &aPoint,
                              PRInt32 &aClosestLine)
 {
   if (!aLI)
@@ -6123,8 +6122,6 @@ nsBlockFrame::GetClosestLine(nsILineIterator *aLI,
       break;//do not handle
 
     // Check to see if our point lies with the line's Y bounds.
-
-    rect+=aOrigin; //offset origin to get comparative coordinates
 
     y = aPoint.y - rect.y;
     if (y >=0 && (aPoint.y < (rect.y+rect.height)))
@@ -6203,21 +6200,20 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
     if (!shell)
       return NS_OK;
     nsCOMPtr<nsILineIterator> it( do_QueryInterface(mainframe, &result) );
-    nsIView* parentWithView;
-    nsPoint origin;
     nsPeekOffsetStruct pos;
+    nsPoint viewOffset;
+    nsIView* parentWithView;
+    GetOffsetFromView(viewOffset, &parentWithView);
 
     while(NS_OK == result)
-    { //we are starting aloop to allow us to "drill down to the one we want" 
-      mainframe->GetOffsetFromView(origin, &parentWithView);
-
-      if (NS_FAILED(result))
-        return NS_OK;//do not handle
+    { //we are starting aloop to allow us to "drill down to the one we want"
       PRInt32 closestLine;
 
-      if (NS_FAILED(result = GetClosestLine(it,origin,aEvent->point,closestLine)))
+      // aEvent->point is relative to our view. We need to make it relative to
+      // mainframe, via this frame.
+      if (NS_FAILED(result = GetClosestLine(it,
+          aEvent->point - viewOffset - mainframe->GetOffsetTo(this), closestLine)))
         return result;
-      
       
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again

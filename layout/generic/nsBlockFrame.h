@@ -286,14 +286,13 @@ protected:
 
   /**
    * GetClosestLine will return the line that VERTICALLY owns the point closest to aPoint.y
-   * aOrigin is the offset for this block frame to its frame.
-   * aPoint is the point to search for.
+   * aPoint is the point to search for, relative to the origin of the frame that aLI
+   * iterates over.
    * aClosestLine is the result.
    */
-  nsresult GetClosestLine(nsILineIterator *aLI, 
-                             const nsPoint &aOrigin, 
-                             const nsPoint &aPoint, 
-                             PRInt32 &aClosestLine);
+  nsresult GetClosestLine(nsILineIterator *aLI,
+                          const nsPoint &aPoint,
+                          PRInt32 &aClosestLine);
 
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aEndIterator,
