@@ -25,6 +25,7 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
@@ -504,6 +505,7 @@ var contextTarget = null; // Content element to which context menu applies.
             oncommand="BrowserSetDefaultCharacterSet('windows-1255');"/>
         </menupopup>
       </menu>
+      <menu id = "charsetMenu" />
     </menupopup>
   </menu>
   <menu accesskey="s" value="&searchMenu.label;">
