@@ -858,6 +858,7 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
+    HOST_BIN_SUFFIX=.exe
     ;;
 
 *-osf*)
