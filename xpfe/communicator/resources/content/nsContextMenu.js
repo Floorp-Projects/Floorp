@@ -129,7 +129,7 @@ nsContextMenu.prototype = {
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
-        this.showItem( "context-viewsource", !this.inDirList );
+        this.showItem( "context-viewsource", !( this.inDirList || this.onImage ) );
 
         // View frame source depends on whether we're in a frame.
         this.showItem( "context-viewframesource", this.inFrame );
