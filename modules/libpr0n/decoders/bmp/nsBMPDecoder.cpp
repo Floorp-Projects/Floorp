@@ -37,7 +37,8 @@
 /* I got the format description from http://www.daubnet.com/formats/BMP.html */
 
 /* This does not yet work in this version:
- * o) Compressed Bitmaps, including ones using bitfields
+ * o) Compressed Bitmaps
+ * o) Bitfields which are not 5-5-5 or 5-6-5
  * This decoder was tested on Windows, Linux and Mac. */
 
 /* This is a Cross-Platform BMP Decoder, which should work everywhere, including
@@ -54,8 +55,6 @@
 
 #include "imgILoad.h"
 
-#include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
-
 #include "ImageLogging.h"
 
 PRLogModuleInfo *gBMPLog = PR_NewLogModule("BMPDecoder");
@@ -68,7 +67,6 @@ nsBMPDecoder::nsBMPDecoder()
     mColors = nsnull;
     mRow = nsnull;
     mPos = mNumColors = mRowBytes = mCurLine = 0;
-    mLOH = 54;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
@@ -78,7 +76,6 @@ nsBMPDecoder::~nsBMPDecoder()
 NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::Init(%p)\n", aLoad));
-    NS_ENSURE_ARG_POINTER(aLoad);
     mObserver = do_QueryInterface(aLoad);
 
     mImage = do_CreateInstance("@mozilla.org/image/container;1");
@@ -91,6 +88,8 @@ NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
 
     nsresult rv = aLoad->SetImage(mImage);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    mLOH = 54;
 
     return NS_OK;
 }
@@ -114,7 +113,6 @@ NS_IMETHODIMP nsBMPDecoder::Close()
     }
     mImage = nsnull;
     mFrame = nsnull;
-    mLOH = 54;
     return NS_OK;
 }
 
@@ -127,8 +125,6 @@ NS_IMETHODIMP nsBMPDecoder::Flush()
 NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, PRUint32 *aRetval)
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::WriteFrom(%p, %lu, %p)\n", aInStr, aCount, aRetval));
-    NS_ENSURE_ARG_POINTER(aInStr);
-    NS_ENSURE_ARG_POINTER(aRetval);
 
     char* buffer = new char[aCount];
     if (!buffer) {
@@ -189,7 +185,6 @@ inline nsresult nsBMPDecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PR
 
 inline nsresult nsBMPDecoder::SetData(PRUint8* aData)
 {
-    NS_ENSURE_ARG_POINTER(aData);
     PRUint32 bpr;
     nsresult rv;
 
@@ -244,7 +239,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         ProcessInfoHeader();
         PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP image is %lux%lux%lu. compression=%lu\n",
             mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
-        if (mBIH.compression) {
+        if (mBIH.compression && mBIH.compression != BI_BITFIELDS) {
             PR_LOG(gBMPLog, PR_LOG_DEBUG, ("Don't yet support compressed BMPs\n"));
             return NS_ERROR_FAILURE;
         }
@@ -269,6 +264,15 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             mColors = new colorTable[mNumColors];
             if (!mColors)
                 return NS_ERROR_OUT_OF_MEMORY;
+        }
+        else if (mBIH.compression != BI_BITFIELDS && mBIH.bpp == 16) {
+            // Use default 5-5-5 format
+            mBitFields.red   = 0x7C00;
+            mBitFields.redshift = 7;
+            mBitFields.green = 0x03E0;
+            mBitFields.greenshift = 2;
+            mBitFields.blue  = 0x001F;
+            mBitFields.blueshift = 3; // is treated as -3
         }
 
         rv = mImage->Init(mBIH.width, mBIH.height, mObserver);
@@ -318,13 +322,47 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             at = (at + 1) % bpc;
         }
     }
+    else if (mBIH.compression == BI_BITFIELDS && mPos < (mLOH + 12)) {
+        PRUint32 toCopy = (mLOH + 12) - mPos;
+        if (toCopy > aCount)
+            toCopy = aCount;
+        nsCRT::memcpy(mRawBuf + (mPos - mLOH), aBuffer, toCopy);
+        mPos += toCopy;
+        aBuffer += toCopy;
+        aCount -= toCopy;
+    }
+    if (mBIH.compression == BI_BITFIELDS && mPos == mLOH+12) {
+        mBitFields.red = LITTLE_TO_NATIVE32(*(PRUint32*)mRawBuf);
+        mBitFields.green = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 4));
+        mBitFields.blue = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 8));
+        if (mBIH.bpp == 16) {
+            if (mBitFields.red == 0x7C00 && mBitFields.green == 0x03E0 && mBitFields.blue == 0x1F) {
+                // 5-5-5
+                mBitFields.redshift = 7;
+                mBitFields.greenshift = 2;
+                mBitFields.blueshift = 3;
+            }
+            else if (mBitFields.red == 0xF800 && mBitFields.green == 0x7E0 && mBitFields.blue == 0x1F) {
+                // 5-6-5
+                mBitFields.redshift = 8;
+                mBitFields.greenshift = 3;
+                mBitFields.blueshift = 3;
+            }
+            else
+                return NS_ERROR_FAILURE;
+        }
+        else if (mBIH.bpp == 32 && (mBitFields.red != 0xFF0000 || mBitFields.green != 0xFF00
+                 || mBitFields.blue != 0xFF))
+            // We only support 8-8-8 32 bit BMPs
+            return NS_ERROR_FAILURE;
+    }
     while (aCount && (mPos < mBFH.dataoffset)) { // Skip whatever is between header and data
         mPos++; aBuffer++; aCount--;
     }
     if (++mPos >= mBFH.dataoffset) {
-        if (!mBIH.compression) {
-            // Need to increment mPos, else we might get to mPos==mLOH again
-            // From now on, mPos is irrelevant
+        // Need to increment mPos, else we might get to mPos==mLOH again
+        // From now on, mPos is irrelevant
+        if (!mBIH.compression || mBIH.compression == BI_BITFIELDS) {
             PRUint32 rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // +7 to round up
             if (rowSize % 4)
                 rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
@@ -380,11 +418,12 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         break;
                       case 16:
                         while (lpos < mBIH.width) {
+                          PRUint16 val = LITTLE_TO_NATIVE16(*(PRUint16*)p);
                           SetPixel(d,
-                                  (p[1] & 124) << 1,
-                                  ((p[1] & 3) << 6) | ((p[0] & 224) >> 2),
-                                  (p[0] & 31) << 3);
-
+                                  (val & mBitFields.red) >> mBitFields.redshift,
+                                  (val & mBitFields.green) >> mBitFields.greenshift,
+                                  (val & mBitFields.blue) << mBitFields.blueshift);
+                          // Blue shift is always negative
                           ++lpos;
                           p+=2;
                         }
