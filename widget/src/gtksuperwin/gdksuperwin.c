@@ -435,7 +435,7 @@ gint gdk_superwin_check_expose_events (GdkSuperWin *superwin,
   *y = 0;
   *width = 0;
   *height = 0;
-  // check to see if we have any events
+  /* check to see if we have any events */
   if (XCheckIfEvent(GDK_DISPLAY(), xevent,
                     gdk_superwin_expose_predicate, (XPointer)superwin)) {
     switch (xevent->xany.type) {
@@ -455,7 +455,7 @@ gint gdk_superwin_check_expose_events (GdkSuperWin *superwin,
               tmp_list = tmp_list->next;
             }
         }
-      // set our return values
+      /* set our return values */
       *x = xevent->xexpose.x;
       *y = xevent->xexpose.y;
       *width = xevent->xexpose.width;
@@ -467,7 +467,7 @@ gint gdk_superwin_check_expose_events (GdkSuperWin *superwin,
     case ConfigureNotify:
       /* we got a configure notify. clear the xlate queue */
       gdk_superwin_clear_translate_queue(superwin, event_return.xany.serial);
-      // note that we are returning 1 here but was_expose is still FALSE
+      /* note that we are returning 1 here but was_expose is still FALSE */
       return 1;
       break;
     }
