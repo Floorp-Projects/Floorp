@@ -41,13 +41,14 @@ else
 # Tiers must be defined on module boundaries 
 #
 default: $(SUBMAKEFILES)
-	$(MAKE) tier_0
+	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
 ifdef MOZ_ENABLE_XFT
 	$(MAKE) freetype
 	$(MAKE) expat
 endif
+	$(MAKE) tier_0
 	$(MAKE) tier_1
 	$(MAKE) tier_2
 	$(MAKE) tier_9
