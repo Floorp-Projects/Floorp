@@ -22,19 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 LIBRARY_NAME = raptorxulbase_s
 
-DEFINES += -D_IMPL_NS_HTML
-
-INCLUDES += \
+LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../base/src		\
 	-I$(srcdir)/../../../html/table/src \
 	-I$(srcdir)/../../../html/style/src \
 	-I$(srcdir)/../../../html/base/src \
 	-I$(srcdir)/../../content/src \
-	-I$(DIST)/public/raptor			\
 	$(NULL)
 
 # Note the sophisticated alphabetical ordering :-|
@@ -47,14 +42,11 @@ CPPSRCS =				\
 	nsProgressMeterFrame.cpp \
 	$(NULL)
 
-EXPORTS = \
-	$(NULL)
+include $(topsrcdir)/config/config.mk
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+DEFINES += -D_IMPL_NS_HTML
 
 MODULE=layout
-
-REQUIRES = xpcom raptor dom
 
 MKSHLIB :=
 
@@ -63,11 +55,4 @@ NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 
-
-export::
-
-install:: $(TARGETS)
-
-
-clobber::
 
