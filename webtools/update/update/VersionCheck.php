@@ -37,10 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /// config bits:
-$db_server = "localhost";
-$db_user = "";
-$db_pass = "";
-$db_name = "";
+/// dbconfig.php sets up a connection for us, we should use it...
+include("../core/dbconfig.php");
 
 // map the mysql main.type enum into the right type
 $ext_typemap = array('T' => 'theme',
@@ -105,14 +103,6 @@ function vercmp ($a, $b) {
 
     return 0;
 }
-
-// XXX PUT VALUES IN
-mysql_connect($db_server, $db_user, $db_pass)
-    || bail ("Failed to connect to database.");
-
-mysql_select_db ($db_name)
-    || bail ("Failed to select database.");
-
 
 //
 // These are passed in the GET string
