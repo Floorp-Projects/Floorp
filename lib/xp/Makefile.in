@@ -25,61 +25,17 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 MODULE		= xp
-LIBRARY_NAME	= xp
-
-INHIBIT_STRIP_NOT_EXPORTED = 1
-
-#For MODULAR_NETLIB
-CSRCS		= xp_stub.c
+LIBRARY_NAME	= xp_s
 
 CSRCS		+= \
-		  xp_file.c \
-		  xp_list.c \
-		  xp_hash.c \
       xp_regexp.c \
-		  allxpstr.c \
 		  $(NULL)
 
-EXPORTS		= xp_linebuf.h
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+MKSHLIB :=
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
-REQUIRES	= js security img util jtools layer java lay style pref rdf privacy parse
+EXPORTS		= xp_linebuf.h
 
 include $(topsrcdir)/config/rules.mk
 
-#EMACS		= lemacs
-
-AUDIO_FILES	= $(wildcard $(srcdir)/*.au)
-GIF_FILES	= $(wildcard $(srcdir)/*.gif)
-JPEG_FILES	= $(wildcard $(srcdir)/*.jpg)
-
-GEN_OUT		= $(AUDIO_FILES:.au=.h) $(GIF_FILES:.gif=.h) $(JPEG_FILES:.jpg=.h)
-
-#
-# Uncomment these to (re)generate the headers.
-#
-#GARBAGE		+= $(GEN_OUT) $(wildcard *~)
-#
-#all:: $(GEN_OUT)
-
-$(LIBRARY): $(OBJS)
-
-#
-# Generate c header's for various binary files
-#
-.SUFFIXES: .au .gif .jpg
-
-.au.h:
-	@echo generating $*.h from $<...; \
-	CNAME=`echo $*_au`; \
-	$(EMACS) -batch -q -l bin-to-c.el -f batch-bin-to-c $$CNAME $< $*.h
-
-.gif.h:
-	@echo generating $*.h from $<...; \
-	CNAME=`echo $*_gif`; \
-	$(EMACS) -batch -q -l bin-to-c.el -f batch-bin-to-c $$CNAME $< $*.h
-
-.jpg.h:
-	@echo generating $*.h from $<...; \
-	CNAME=`echo $*_jpg`; \
-	$(EMACS) -batch -q -l bin-to-c.el -f batch-bin-to-c $$CNAME $< $*.h
