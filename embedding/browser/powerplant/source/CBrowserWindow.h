@@ -60,8 +60,6 @@ public:
 
     virtual void                FinishCreateSelf();
 
-    virtual void                ShowSelf();
-
     virtual void                ListenToMessage(MessageT        inMessage,
                                                  void*          ioParam);
 

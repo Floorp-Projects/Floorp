@@ -195,7 +195,6 @@ protected:
                                               
                                               
    NS_METHOD                CommonConstruct();
-   NS_METHOD                EnsureTopLevelWidget(nsIWidget **aWidget);
    
    void                     HandleMouseMoved(const EventRecord& inMacEvent);
    void                     AdjustFrame();

@@ -56,6 +56,16 @@ class nsICheckButton;
 class nsITooltipWidget;
 class nsITextWidget;
 
+#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
+// A top-level widget stores a reference to itself as a window property
+// with the following creator and tag. These constants are used by embedding
+// code in addition to widget code.
+enum {
+  kTopLevelWidgetPropertyCreator = 'MOSS',
+  kTopLevelWidgetRefPropertyTag  = 'GEKO'
+};
+#endif
+
 // These are a series of support methods which help in the creation
 // of widgets. They are not needed, but are provided as a convenience
 // mechanism when creating widgets

@@ -34,7 +34,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsRect.h"
-#include "nsIWidget.h"
 #include "nsIWebProgressListener.h"
 
 #include "CBrowserWindow.h"
@@ -170,21 +169,6 @@ void CBrowserWindow::FinishCreateSelf()
     UReanimator::LinkListenerToControls(this, this, view_BrowserToolBar);
     StartListening();
     StartBroadcasting();    
-}
-
-// ---------------------------------------------------------------------------
-//  ¥ ShowSelf
-// ---------------------------------------------------------------------------
-
-void CBrowserWindow::ShowSelf()
-{
-    Inherited::ShowSelf();
-
-    nsIWidget *widget = nsnull;
-
-    OSStatus err = ::GetWindowProperty(GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
-    if (err == noErr && widget)
-        widget->Show(PR_TRUE);
 }
 
 
