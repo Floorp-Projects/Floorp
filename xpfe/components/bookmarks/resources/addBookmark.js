@@ -254,16 +254,16 @@ function onOK()
 
     var url;
     if (addingGroup()) {
-      const group = kBMS.createGroup(gFld_Name.value, rFolder);
+      const group = kBMS.createGroupInContainer(gFld_Name.value, rFolder, -1);
       const groups = window.arguments[5];
       for (var i = 0; i < groups.length; ++i) {
         url = getNormalizedURL(groups[i].url);
-        kBMS.createBookmarkWithDetails(groups[i].name, url,
+        kBMS.createBookmarkInContainer(groups[i].name, url,
                                        groups[i].charset, group, -1);
       }
     } else {
       url = getNormalizedURL(gFld_URL.value);
-      var newBookmark = kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
+      var newBookmark = kBMS.createBookmarkInContainer(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
       if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
         window.arguments[5].newBookmark = newBookmark;
       }

@@ -130,15 +130,11 @@ protected:
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
   void AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool scheduleFlag);
   nsresult IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag);
+  nsresult InsertResource(nsIRDFResource* aResource, nsIRDFResource* aParentFolder, PRInt32 aIndex);
 
-	nsresult ChangeURL(nsIRDFResource* aOldURL,
-                           nsIRDFResource* aNewURL);
+  nsresult ChangeURL(nsIRDFResource* aOldURL, nsIRDFResource* aNewURL);
 
 	nsresult getLocaleString(const char *key, nsString &str);
-
-        nsresult CreateFolderWithDetails(const PRUnichar* aName, 
-                                         nsIRDFResource* aParentFolder, PRInt32 aIndex,
-                                         nsIRDFResource** aResult, PRBool aIsGroup);
 
 	nsresult LoadBookmarks();
 	nsresult initDatasource();

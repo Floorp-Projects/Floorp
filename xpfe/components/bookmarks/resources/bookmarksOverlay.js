@@ -910,7 +910,7 @@ var BookmarksUtils = {
 
     var ix = RDFC.IndexOf(aRelativeItem);
     var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
-    return BMSvc.createFolderWithDetails(aTitle, aParentFolder, ix);
+    return BMSvc.createFolderInContainer(aTitle, aParentFolder, ix);
   },
 
   addBookmarkForTabBrowser: function( aTabBrowser, aSelect )

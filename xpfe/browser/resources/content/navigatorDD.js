@@ -439,7 +439,7 @@ var personalToolbarDNDObserver = {
   {
     var children = aNode.childNodes;
     for (var i = 0; i < children.length; i++) {
-      if (children[i].id == "NC:PersonalToolbarFolder") {
+      if (children[i].id == "NC:PersonalToolbarFolder" && children[i].localName == "hbox") {
         this.onDragCloseMenu(children[i]);
       }
       else if (this.isContainer(children[i]) && children[i].getAttribute("open") == "true") {
@@ -458,7 +458,7 @@ var personalToolbarDNDObserver = {
       return
     }
     // The bookmark button is not a sibling of the folders in the PT
-    if (this.mCurrentDragOverTarget.parentNode.id == "NC:PersonalToolbarFolder")
+    if (this.mCurrentDragOverTarget.parentNode.id == "NC:PersonalToolbarFolder" && this.mCurrentDragOverTarget.parentNode.localName == "hbox")
       this.onDragCloseMenu(document.getElementById("PersonalToolbar"));
     else
       this.onDragCloseMenu(this.mCurrentDragOverTarget.parentNode);
@@ -582,6 +582,8 @@ var personalToolbarDNDObserver = {
   {
     if (aTarget.localName == "toolbar") {
       aTarget.lastChild.lastChild.removeAttribute("dragover-right");
+    } else if (aTarget.localName == "hbox") {
+      aTarget.lastChild.removeAttribute("dragover-right");
     } else {
       aTarget.removeAttribute("dragover-left");
       aTarget.removeAttribute("dragover-right");
@@ -701,7 +703,7 @@ var personalToolbarDNDObserver = {
     const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
     const kBMSIID = Components.interfaces.nsIBookmarksService;
     const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
-    kBMS.createBookmarkWithDetails(aTitle, aURL, aCharset, aFolderRes, aIndex);
+    kBMS.createBookmarkInContainer(aTitle, aURL, aCharset, aFolderRes, aIndex);
   }
 
 }
