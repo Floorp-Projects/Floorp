@@ -60,28 +60,3 @@ pascal void __NSTerminate()
 	GC_unregister_fragment(__data_start__, __data_end__ + sizeof(char*),
 	                       __code_start__, __code_end__);
 }
-
-#ifndef GC_LEAK_DETECTOR
-// stub implementations, when GC leak detection isn't on. these are needed so that
-// NSStdLib has something to export for these functions, even when the GC isn't used.
-void GC_register_fragment(char* dataStart, char* dataEnd,
-                          char* codeStart, char* codeEnd,
-                          const FSSpec* fragmentSpec) {}
-void GC_unregister_fragment(char* dataStart, char* dataEnd,
-                            char* codeStart, char* codeEnd) {}
-void GC_clear_roots() {}
-void GC_generic_init_threads() {}
-void GC_gcollect() {}
-FILE* GC_stdout = NULL;
-FILE* GC_stderr = NULL;
-
-int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset)
-{
-	return 0;
-}
-
-void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize)
-{
-	strncpy(unmangled_name, mangled_name, buffersize);
-}
-#endif

@@ -47,7 +47,7 @@ void GC_gcollect() {}
 FILE* GC_stdout = NULL;
 FILE* GC_stderr = NULL;
 
-int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset)
+int GC_address_to_source(char* codeAddr, char symbolName[256], char fileName[256], UInt32* fileOffset)
 {
 	return 0;
 }
