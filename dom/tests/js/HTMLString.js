@@ -25,22 +25,22 @@ function htmlString(node, indent)
     var html = ""
     indent += "  "
 
-    var type = node.GetNodeType()
+    var type = node.getNodeType()
     if (type == Node.ELEMENT) {
 
         // open tag
-        html += "\n" + indent + "<" + node.GetTagName()
+        html += "\n" + indent + "<" + node.getTagName()
 
         // dump the attributes if any
-        attributes = node.GetAttributes()
+        attributes = node.getAttributes()
         if (null != attributes) {
             html += " "
-            var countAttrs = attributes.GetLength()
+            var countAttrs = attributes.getLength()
             var index = 0
             while(index < countAttrs) {
-                att = attributes.Item(index)
+                att = attributes.item(index)
                 if (null != att) {
-                    html += att.ToString()
+                    html += att.toString()
                 }
                 index++
             }
@@ -50,21 +50,21 @@ function htmlString(node, indent)
         html += ">"
 
         // recursively dump the children
-        if (node.HasChildNodes()) {
+        if (node.hasChildNodes()) {
             // get the children
-            var children = node.GetChildNodes()
-            var length = children.GetLength()
-            var child = children.GetNextNode()
+            var children = node.getChildNodes()
+            var length = children.getLength()
+            var child = children.getNextNode()
             var count = 0;
             while(count < length) {
                 html += htmlString(child, indent)
-                child = children.GetNextNode()
+                child = children.getNextNode()
                 count++
             }
         }
 
         // close tag
-        html += "\n" + indent + "</" + node.GetTagName() + ">"
+        html += "\n" + indent + "</" + node.getTagName() + ">"
     }
     // if it's a piece of text just dump the text
     else if (type == Node.TEXT) {

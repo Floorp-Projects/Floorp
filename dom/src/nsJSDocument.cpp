@@ -138,16 +138,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeDocument(JSContext *cx, JSObject *obj)
 {
   nsIDOMDocument *document = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != document, "null pointer");
+  
+  if (nsnull != document) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == document->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == document->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+    document->Release();
   }
-
-  document->Release();
 }
 
 /***********************************************************************/
@@ -249,15 +250,15 @@ static JSPropertySpec documentProperties[] =
 // Document class methods
 //
 static JSFunctionSpec documentMethods[] = {
-  {"CreateDocumentContext",   CreateDocumentContext,  0},
-  {"CreateElement",           CreateElement,          2},
-  {"CreateTextNode",          CreateTextNode,         1},
-  {"CreateComment",           CreateComment,          1},
-  {"CreatePI",                CreatePI,               2},
-  {"CreateAttribute",         CreateAttribute,        2},
-  {"CreateAttributeList",     CreateAttributeList,    0},
-  {"CreateTreeIterator",      CreateTreeIterator,     1},
-  {"GetElementsByTagName",    GetElementsByTagName,   0},
+  {"createDocumentContext",   CreateDocumentContext,  0},
+  {"createElement",           CreateElement,          2},
+  {"createTextNode",          CreateTextNode,         1},
+  {"createComment",           CreateComment,          1},
+  {"createPI",                CreatePI,               2},
+  {"createAttribute",         CreateAttribute,        2},
+  {"createAttributeList",     CreateAttributeList,    0},
+  {"createTreeIterator",      CreateTreeIterator,     1},
+  {"getElementsByTagName",    GetElementsByTagName,   0},
   {0}
 };
 

@@ -80,16 +80,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeAttributeList(JSContext *cx, JSObject *obj)
 {
   nsIDOMAttributeList *attributeList = (nsIDOMAttributeList*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != attributeList, "null pointer");
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == attributeList->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+  if (nsnull != attributeList) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == attributeList->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
+
+    attributeList->Release();
   }
-
-  attributeList->Release();
 }
 
 /***********************************************************************/
@@ -275,11 +276,11 @@ JSClass attributeList = {
 // AttributeList class methods
 //
 static JSFunctionSpec attributeListMethods[] = {
-  {"GetAttribute",      GetAttribute,     1},
-  {"SetAttribute",      SetAttribute,     1},
-  {"Remove",            Remove,           1},
-  {"Item",              Item,             1},
-  {"GetLength",         GetLength,        0},
+  {"getAttribute",      GetAttribute,     1},
+  {"setAttribute",      SetAttribute,     1},
+  {"remove",            Remove,           1},
+  {"item",              Item,             1},
+  {"getLength",         GetLength,        0},
   {0}
 };
 

@@ -80,16 +80,17 @@ PR_STATIC_CALLBACK(void)
 FinalizeNode(JSContext *cx, JSObject *obj)
 {
   nsIDOMNode *node = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != node, "null pointer");
+  
+  if (nsnull != node) {
+    // get the js object
+    nsIScriptObjectOwner *owner = nsnull;
+    if (NS_OK == node->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+      owner->ResetScriptObject();
+      NS_RELEASE(owner);
+    }
 
-  // get the js object
-  nsIScriptObjectOwner *owner = nsnull;
-  if (NS_OK == node->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-    owner->ResetScriptObject();
-    NS_RELEASE(owner);
+    node->Release();
   }
-
-  node->Release();
 }
 
 /***********************************************************************/
@@ -418,16 +419,16 @@ JSClass node = {
 // Node class methods
 //
 static JSFunctionSpec nodeMethods[] = {
-  {"GetNodeType",         GetNodeType,          0},
-  {"GetParentNode",       GetParentNode,        0},
-  {"GetChildNodes",       GetChildNodes,        0},
-  {"HasChildNodes",       HasChildNodes,        0},
-  {"GetFirstChild",       GetFirstChild,        0},
-  {"GetPreviousSibling",  GetPreviousSibling,   0},
-  {"GetNextSibling",      GetNextSibling,       0},
-  {"InsertBefore",        InsertBefore,         2},
-  {"ReplaceChild",        ReplaceChild,         2},
-  {"RemoveChild",         RemoveChild,          1},
+  {"getNodeType",         GetNodeType,          0},
+  {"getParentNode",       GetParentNode,        0},
+  {"getChildNodes",       GetChildNodes,        0},
+  {"hasChildNodes",       HasChildNodes,        0},
+  {"getFirstChild",       GetFirstChild,        0},
+  {"getPreviousSibling",  GetPreviousSibling,   0},
+  {"getNextSibling",      GetNextSibling,       0},
+  {"insertBefore",        InsertBefore,         2},
+  {"replaceChild",        ReplaceChild,         2},
+  {"removeChild",         RemoveChild,          1},
   {0}
 };
 
