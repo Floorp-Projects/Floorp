@@ -24,8 +24,8 @@
 # variables substituted.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/04/25 00:55:49 $ 
+# $Revision: 1.8 $ 
+# $Date: 2003/08/04 17:15:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -73,7 +73,7 @@ use TreeData;
 # User configurable variables live in their own namespace so that they
 # will not contaminate the build script.  The buildscript will get the
 # values it needs via well known functions.  This package may also set
-# %ENV to effect the build programs.
+# %ENV to affect the build programs.
 
 
 
@@ -323,7 +323,7 @@ $BUILDS = {
 			  ],  # end lint
 	   
    
-	  }; # end %BUILDS
+	  }; # end $BUILDS
 
 return $BUILDS;
 }
@@ -377,7 +377,7 @@ sub build_name {
 sub build_administrator {
   my (%args) = @_;
 
-  return "your.mailing.addres\@company.com";
+  return "your.mailing.address\@company.com";
 }
 
 # addressing information for the build messages

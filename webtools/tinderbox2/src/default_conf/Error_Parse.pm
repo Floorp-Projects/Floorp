@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.14 $ 
-# $Date: 2002/05/07 20:01:44 $ 
+# $Revision: 1.15 $ 
+# $Date: 2003/08/04 17:15:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -58,7 +58,7 @@ $VERSION = '#tinder_version#';
 # particular types of builds.
 
 # If new types are added try and keep to a small set of colors or the
-# display will get confusing.  You may find it convienent to keep a
+# display will get confusing.  You may find it convenient to keep a
 # distinction between different kinds of warnings or different kinds
 # of tests but all warnings and all tests get the same color.
 
@@ -419,7 +419,7 @@ compilers on NT and vice versa.
 
 =item line_type
 
-returns a string discribing if the line has any errors or warnings.
+returns a string describing if the line has any errors or warnings.
 The list of types may grow in the future as some warnings become more
 important then others.  The possible return codes are:
 

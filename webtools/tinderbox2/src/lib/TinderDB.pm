@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.19 $ 
-# $Date: 2003/06/18 15:47:16 $ 
+# $Revision: 1.20 $ 
+# $Date: 2003/08/04 17:15:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -643,8 +643,8 @@ tinderbox server as text files which contain perl code to be
 evaluated.  Each data update is stored in a file with a known name and
 a unique extension.  The tinderbox server is run periodically in
 daemon_mode and will assimilate all outstanding updates then update
-the static html files which discribe the state of the build.  When
-tinderbox runs it looks for files with the known prefix then it reads
+the static html files which describe the state of the build.  When
+tinderbox runs it looks for files with the known prefix than it reads
 each one in turn, loads it into a common database then deletes the
 file.  To ensure that tinderbox never encounters a partially written
 file each file is written to the disk using a a name with a different
@@ -654,7 +654,7 @@ Unix systems, in the same directory, are atomic, tinderbox will never
 be confused by incomplete updates.
 
 
-The build module has several lists which the tinder server access via
+The build module has several lists which the tinder server accesses via
 known functions.  These are used to generate summary data in various
 formats.  (@LATEST_STATUS; @BUILD_NAMES; etc;)
 
@@ -672,7 +672,7 @@ build data pages using different configuration parameters then is
 standard.
 
 The tinderbox server does not use any information about the internal
-DB format.  Each module can use any convienent means to store and
+DB format.  Each module can use any convenient means to store and
 retrive the required data.  Different implementations of the same
 module may even use different methods of storage.  The tinderbox
 server will ask each module which is implemented to load their
@@ -692,7 +692,7 @@ for loading and saving databases.
 
 
 
-Each function discribed here builds an $out string.  If there are bugs
+Each function decribed here builds an $out string.  If there are bugs
 in the resulting HTML you can put your perl breakpoint on the return
 statement of any function and look at the completed string before it
 is returned.
@@ -742,7 +742,7 @@ and will periodically call trim_db_history()
 =item B<savetree_db>
 
 Save the current database to disk.  This should not be called
-directly, rather it is called everytime that apply_db_updates() is
+directly, rather it is called every time that apply_db_updates() is
 called.
 
 
@@ -754,8 +754,8 @@ called.
 
 Purge any history from this trees database which is older then the
 time given.  This should not be called directly, rather it is called
-everytime the number of updates by apply_db_updates() since the last
-purge is grater then $MAX_UPDATES_SINCE_TRIM.
+every time the number of updates made by apply_db_updates() since the
+last purge is greater then $MAX_UPDATES_SINCE_TRIM.
 
 
 =back

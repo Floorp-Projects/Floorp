@@ -6,8 +6,8 @@
 # tinderbox trees.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2002/01/29 01:11:10 $ 
+# $Revision: 1.4 $ 
+# $Date: 2003/08/04 17:15:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/ReqData.pm,v $ 
 # $Name:  $ 
@@ -44,7 +44,7 @@
 # list of field names) and that a subset of the fields will be of
 # interest to the tinderbox users (tinderbox is not the correct place
 # to display any sort of long comment field).  Tinderbox will display
-# the bug number and a popup window showing relevant fields discribing
+# the bug number and a popup window showing relevant fields describing
 # this bug.  If the users wishes more information they may click on
 # the link and be taken directly to the bugtracking system for more
 # information about the bug.  Bugs have their state change as the bug

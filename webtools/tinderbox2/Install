@@ -25,10 +25,19 @@ To install:
 It would be a good idea to have these modules installed:
 	 Storable, Date::Format,
 
+You can easily check if these are installed by executing these two
+commands.
+
+If the module is installed, you'll get no output:
+	 perl -e 'use Storable'
+	 perl -e 'use Date::Format'
+ 
+
+
 *) Read the Policies and Overview documents found in this directory to
 help you get a feel for the scope of this installation.
 
-*) The process id which receives and process the mail must be the the
+*) The process id which receives and process the mail must be the
 same id which runs the tinderbox cron job to prepare the web pages.  I
 prefer to manage my webserver so that all CGI scripts do not run as
 the same user.  Using one user id can cause security problems which
@@ -39,10 +48,10 @@ unix system users (daemon, nobody, bin) since this could cause
 security interactions with other programs which use these ids.
 
 It may take some thought as to how the user id will be configured to
-run when recieving mail and when recieving web requests and not be a
+run when receiving mail and when receiving web requests and not be a
 user id which will cause security problems.
 
-These products will help partion your web application to run as
+These products will help partition your web application to run as
 different users. (See http://www.w3.org/Security/Faq/wwwsf4.html for
 more info)
 
@@ -99,7 +108,7 @@ scripts we must substitute some values into the source code to make it
 executable.  You may wish to change the default directories in
 configure for some of the makefile variables.  Please read config.out
 and make any changes which need to be made for your system. Configure
-also excepts command line options to change some default variables.
+also accepts command line options to change some default variables.
 Please look at the configure source code for variable details, but the
 most common changes are:
 
@@ -143,7 +152,7 @@ can copy the *.cgi files to another directory if this is not the case.
 *) There are some gifs located in the gif directory which have
 historically been used by tinderbox.  The installation via 'make
 install' does not install these images.  Put them somewhere in your
-webservers html directory if you wish to use them.  Samples of their
+webserver's html directory if you wish to use them.  Samples of their
 use are in the configuration files.
 
 *) set up a cron job to run $cgi-bin/bin/tinder.cgi --daemon-mode 
@@ -159,10 +168,10 @@ incoming tinderbox mail.  The process id which receives and process
 the mail must be the the same id which runs the tinderbox cron job to
 prepare the web pages.  Usually this set up is accomplished by having
 the MTA (Sendmail) pass mail for particular accounts into a script.
-This can be configued via a global configuration file (Sendmail alias
+This can be configured via a global configuration file (Sendmail alias
 file) or via a .forward file (each account gets the same user id but a
 different home directory, each home directory gets a .forward to cause
-incomming mail to be delivered through the correct tinderbox mail
+incoming mail to be delivered through the correct tinderbox mail
 processing program).  
 
 I have used the following configurations for the mail server Postfix.
@@ -209,7 +218,7 @@ hostname/modules exactly as you wrote it in VCData.  Then copy your
 ~/.cvspass into the tinderbox server user id's home directory.  This
 must be the REAL home of the Tinderbox daemon, as listed in
 /etc/passwd/ and set in the $HOME environmental variable for
-tinder.cgi.  The file must not be world readble or writeable or
+tinder.cgi.  The file must not be world readable or writable or
 executable.
 
 
@@ -234,7 +243,7 @@ mailing to changes in ticket state not updates (edit) of a ticket.
 *) Check that the time on your webserver, your version control
 machine, your bug tracking machine and your build machines are all in
 sync.  Check that mail if build mail bounces on any of the above
-machines that it will be recieved by someone who can act on it.
+machines that it will be received by someone who can act on it.
 
 
 

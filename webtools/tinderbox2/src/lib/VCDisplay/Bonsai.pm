@@ -4,8 +4,8 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.10 $ 
-# $Date: 2003/02/11 00:16:34 $ 
+# $Revision: 1.11 $ 
+# $Date: 2003/08/04 17:15:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
@@ -85,7 +85,7 @@ $CVSGUESS = $BONSAI_URL."/cvsguess.cgi";
 
 # Bonsai wants the CVS root to be a local root.  i.e. use '/cvsroot'
 # not ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'.  Sometimes
-# it is convienent to keep the remote server information in the
+# it is convenient to keep the remote server information in the
 # tinderbox config so that we can run BOTH the CVS and Bosai TinderDB
 # modules at the same time.
 
@@ -167,10 +167,10 @@ sub prepare_bonsai_args {
               "maxdate: $args{'maxdate'}: ".time2bonsai($args{'maxdate'})."\n".
               ""));
 
-    # Convert times to a human readable date for the convience of the
-    # users.  Bonsai excepts data of form: 'mm/dd/yyyy hh:mm:ss' in
-    # addition to time format.
-    
+    # Convert times to a human readable date for the convenience of
+    # the users.  Bonsai excepts data of form: 'mm/dd/yyyy hh:mm:ss'
+    # in addition to time format.
+
     ($args{'mindate'}) &&
         (push @url_args, "mindate=".time2bonsai($args{'mindate'}) );
     

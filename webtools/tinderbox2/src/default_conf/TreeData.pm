@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.19 $ 
-# $Date: 2003/05/26 13:57:08 $ 
+# $Revision: 1.20 $ 
+# $Date: 2003/08/04 17:15:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -176,30 +176,30 @@ $VERSION = '#tinder_version#';
 
 #	    # these are dummy trees for testing.	    
 #
-#	    'Project_A' =>  {
-#                   root => '/cvsroot',
-#                   module => '',
-#                   branch => 'HEAD',
-#                  },
-#	    'Project_B' =>  {
-#                   root => '/cvsroot',
-#                   module => 'MozillaTinderboxAll',
-#                   branch => 'HEAD',
-#                  },
-#	    'Project_C' =>  {
-#                   root => '/cvsroot',
-#                   module => 'NSS',
-#                   branch => 'HEAD',
-#                  },
+	    'Project_A' =>  {
+                   root => '/cvsroot',
+                   module => '',
+                   branch => 'HEAD',
+                  },
+	    'Project_B' =>  {
+                   root => '/cvsroot',
+                   module => 'MozillaTinderboxAll',
+                   branch => 'HEAD',
+                  },
+	    'Project_C' =>  {
+                   root => '/cvsroot',
+                   module => 'NSS',
+                   branch => 'HEAD',
+                  },
 
 
 # ------------- Real Trees Go Here ---------- 
 #
 
-	    'SeaMonkey' =>  {
-                   root => '/cvsroot',
-                   module => 'MozillaTinderboxAll',
-                   branch => 'HEAD',
+#	    'SeaMonkey' =>  {
+#                   root => '/cvsroot',
+#                   module => 'MozillaTinderboxAll',
+#                   branch => 'HEAD',
 
                    # If you are using Perforce use perforce filespec
                    # to specify branche/module pairs. Perforce blurs
@@ -230,7 +230,7 @@ $VERSION = '#tinder_version#';
 
                    # branch => '//releases/v2.5',
                    # module => '/webmodule/...',
-                  },
+#                  },
 
 
 	   );

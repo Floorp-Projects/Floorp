@@ -9,12 +9,12 @@ Add support for historical Tinderbox images
 Mozilla layout preferences are now 
 standard 
 (non uniform row spacing, 
- truely empty cells, 
+ truly empty cells, 
  legend on bottom of page).
 	
 Allow users to backdate notices
 
-autmate regeneration of HTML when user uses CGI 
+automate regeneration of HTML when user uses CGI 
 interface
 	
 Put the C in all build cells.
@@ -22,7 +22,7 @@ Put the C in all build cells.
 VC code did the wrong thing when generating old pages and there was
 no TreeState data.
 
-Fix Spelling mistakes thoughout code.	
+Fix Spelling mistakes throughout code.	
 	
 Add support for build machines to tell the server to add text/links 
 into build cells (TinderboxPrint).
@@ -70,7 +70,7 @@ this an important feature.
 Allow Tinderbox to run via suid wrappers.  This is needed for some
 times of mail delivery systems
 	
-No longer exclude 'priveledged id's from running Tinderbox. 
+No longer exclude 'priviledged id's from running Tinderbox. 
 Now we require tinderbox to run as the id which the user specifies 
 is the tinderbox id.
 
@@ -84,9 +84,9 @@ Begin work to allow tinderbox admin pages to open and close bonsai trees
 
 fix code which allowed tinderbox to determine the state of bonsai trees
 
-Major bug in theh untainting code, fixed. This was a security
+Major bug in the untainting code, fixed. This was a security
 problem. I suspect people may have trouble with the fix but this was
-how the code was inteneded to work.  I do not understand how this got
+how the code was intended to work.  I do not understand how this got
 through my unit tests.
 
 Give a useful example of how use the new build script.
@@ -120,7 +120,7 @@ Release 0.8
 This release moved some files into new directories update with
 	cvs update -d -P
 
-Remove the strict time checking on mail, itcahsed too many problems.
+Remove the strict time checking on mail, it caused too many problems.
 
 Fix the Unmonitored Builds in admintree.cgi and in status.html page.
 
@@ -129,7 +129,7 @@ Storable.pm has been tested as a Persistence implementation.
 Improve the prediction of when builds will end by introducing the
 notion of 'deadtime'.
 
-Separate out the BuildStaus table for easier configuration of the
+Separate out the BuildStatus table for easier configuration of the
 status without changing the build display library.
 
 Better comments in the ReadMe files

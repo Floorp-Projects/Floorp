@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.13 $ 
-# $Date: 2002/05/09 18:16:56 $ 
+# $Revision: 1.14 $ 
+# $Date: 2003/08/04 17:15:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -109,7 +109,7 @@ sub load_bonsai_libs {
 
   $^W = 0;
 
-  # we should not depend on any directory being mounted, we are a deamon.
+  # we should not depend on any directory being mounted, we are a daemon.
   chdir ("/")	||
     die("Could not cd to /. $!\n");
   
@@ -276,7 +276,7 @@ sub get_checkin_data {
     my ($result) = &query_checkins();
 
     # we should not depend on any directory being mounted, we are a
-    # deamon.
+    # daemon.
 
     chdir ("/")	||
 	die("Could not cd to /. $!\n");

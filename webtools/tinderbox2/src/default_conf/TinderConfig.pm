@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.47 $ 
-# $Date: 2003/05/26 14:26:05 $ 
+# $Revision: 1.48 $ 
+# $Date: 2003/08/04 17:15:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -50,6 +50,7 @@ package TinderConfig;
 
 $ENV{'PATH'}=  (
                 '/bin'.
+':/home/kestes/mozilla/webtools/tinderbox2/build/test/vcsim'.
                 ':/usr/bin'.
                 ':/usr/local/bin'.
                 ':/opt/gnu/bin/'.
@@ -76,6 +77,8 @@ $ENV{'PATH'}=  (
 
 $TINDERBOX_UID=3310;
 $TINDERBOX_GID=3310;
+$TINDERBOX_UID=500;
+$TINDERBOX_GID=100;
 
 # The url to the tinderbox server binary directory
 
@@ -85,12 +88,14 @@ $URL_BIN = "http://lounge.mozilla.org/cgi-bin/cgiwrap/cgiwrap_exe/tbox";
 # The url to the tinderbox server HTML directory
 
 $URL_HTML = "http://lounge.mozilla.org/tinderbox2";
+$URL_HTML = "file:///tmp/tinderbox2";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the html will be written.
 
 #$TINDERBOX_HTML_DIR = "/home/httpd/html/tinderbox";
 $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
+$TINDERBOX_HTML_DIR = "/tmp/tinderbox2";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the data will be written.  For
@@ -104,6 +109,7 @@ $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 #$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
 #$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
 $TINDERBOX_DATA_DIR = "/export2/tbox2-data";
+$TINDERBOX_DATA_DIR = "/tmp/tinderbox2/tbox2-data";
 
 # Where to store the compressed HTML converted log files. Typically
 # this is either the DATA_DIR or the HTML dir, though it can be
@@ -131,11 +137,13 @@ $GLOBAL_INDEX_FILE = "index.html";
 # 'header_background_gif'.
 
 $GIF_URL = 'http://lounge.mozilla.org/tinderbox2/gif';
+$GIF_URL = 'file:////home/kestes/mozilla/webtools/tinderbox2/src/gif/';
 
 
 # Error log filename:
 
 $ERROR_LOG = "/var/log/tinderbox2/tinderbox2.log";
+$ERROR_LOG = "/tmp/tinderbox2/tinderbox2.log";
   
 # Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
@@ -199,12 +207,12 @@ $PopUpImpl = (
            # still have notices appear, they will just appear in the
            # other columns.
 
-#	   'TinderDB::Notice',
+	   'TinderDB::Notice',
 
            # version control systems
 
-#	   'TinderDB::VC_CVS',
-	   'TinderDB::VC_Bonsai',
+	   'TinderDB::VC_CVS',
+#	   'TinderDB::VC_Bonsai',
 #          'TinderDB::VC_Perforce',
 
 	   'TinderDB::Build',
@@ -306,7 +314,7 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
                # the version control system so use the generic version
                # if you do not use bonsai.
 
-#	       'TinderHeader::TreeState',
+	       'TinderHeader::TreeState',
 
                # Get states from Bonsai tool and set the Bonsai states via
                # Tinderbox admin page.
@@ -318,7 +326,7 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
                # known only to Tinderbox which can be set on our pages
                # and which override Bonsai for Tinderboxes use.
 
-	       'TinderHeader::TreeState_Bonsai_Plus',
+#	       'TinderHeader::TreeState_Bonsai_Plus',
 
 	      );
 
@@ -347,8 +355,8 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 # have time not to investigate it.
 
 $VCDisplayImpl = (
-		  #'VCDisplay::None',
-		  'VCDisplay::Bonsai',
+		  'VCDisplay::None',
+		  #'VCDisplay::Bonsai',
 		  #'VCDisplay::Perforce_P4DB',
 		 );
 
@@ -379,7 +387,7 @@ $PersistenceImpl = (
 # which the error parser found in the build logs? Use zero for no one
 # for yes.
 
-$DISPLAY_BUILD_ERRORS = 0;
+$DISPLAY_BUILD_ERRORS = 1;
 
 # If you your using one of the VCDisplay modules we need to know how
 # to make HTML to point to the bonsai CGI programs. We do not need to

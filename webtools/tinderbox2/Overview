@@ -37,12 +37,16 @@ and you can separately version the local configurations which you
 make.  It is also easy to see the local configurations since you have
 both the original and the modified code on the same server and can
 difference the two.  As an example you might need to change the
-BuildStatus I assume that you have the following possible build
+BuildStatus - I assume that you have the following possible build
 outcomes (Build in progress, Build failed, Build succeded but tests
 failed, Build and all tests were successful) You may have additional
 outcomes to specifiy which kind of tests failed (unit test failed, not
-enough unit test coverage, performance tests failed).  Similarly you may have unusual requirements for how the filesystem should be laied out.  I provide a 
- I suggest that you read through the files to see
+enough unit test coverage, performance tests failed).  Similarly you
+may have unusual requirements for how the filesystem should be laied
+out.  I provide a outcomes to specify which kind of tests failed (unit
+test failed, not enough unit test coverage, performance tests failed).
+Similarly you may have unusual requirements for how the filesystem
+should be laid out.  I suggest that you read through the files to see
 how they are laid out and what types of changes are possible.
 
 

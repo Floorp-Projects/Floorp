@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.63 $ 
-# $Date: 2003/08/04 14:32:41 $ 
+# $Revision: 1.64 $ 
+# $Date: 2003/08/04 17:15:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -481,7 +481,7 @@ sub loadtree_db {
 # remove all records from the database which are older then
 # $TinderDB::TRIM_SECONDS.  Since we are making a pass over all
 # data this is a good time to find the average run time of the build.
-# Both of these operations need not be run everytime the database is
+# Both of these operations need not be run every time the database is
 # updated.
 
 sub trim_db_history {
@@ -540,7 +540,7 @@ sub trim_db_history {
     pop @dead_times;
 
     # medians are a more robust statistical estimator then the mean.
-    # They will give us better answers then a typical "average"
+    # They will give us better answers than a typical "average"
 
     delete $DATABASE{$tree}{$buildname}{'average_buildtime'};
     my $run_avg = main::median(@run_times);
@@ -576,7 +576,7 @@ sub trim_db_history {
 
 
 
-# return a list of all the times where an even occured.
+# return a list of all the times where an event occured.
 
 sub event_times_vec {
   my ($self, $start_time, $end_time, $tree) = (@_);
@@ -685,8 +685,8 @@ sub debug_database {
 sub status_table_legend {
   my ($out)='';
 
-  # print user defined legend, this is typicaly all the possible links
-  # which can be included in a build log.
+  # print user defined legend, this is typically all the possible
+  # links which can be included in a build log.
 
   my $print_legend = BuildStatus::TinderboxPrintLegend();
 
@@ -803,7 +803,7 @@ sub status_table_header {
       ($IGNORE_BUILDS{$tree}{$buildname}) && 
         next;
 
-    # create popup text discribing how this build is progressing
+    # create popup text describing how this build is progressing
 
     my $avg_buildtime = $DATABASE{$tree}{$buildname}{'average_buildtime'};
     my $avg_deadtime = $DATABASE{$tree}{$buildname}{'average_deadtime'};

@@ -6,14 +6,14 @@
 # machines (clients) send their build logs to the server to report on
 # the status of the builds and this program accepts the mail (via an
 # MTA like sendmail) and acts as the MDA (mail delivery agent).  This
-# program process the build logs for the tinderbox server (tinder.cgi)
-# and enforms the server of any status updates.  It also stores the
+# program processes the build logs for the tinderbox server (tinder.cgi)
+# and informs the server of any status updates.  It also stores the
 # logs in compressed form for future references by the tinderbox
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.31 $ 
-# $Date: 2003/04/20 20:28:11 $ 
+# $Revision: 1.32 $ 
+# $Date: 2003/08/04 17:14:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -86,19 +86,19 @@ Informational Arguments
 
 --force-time	Ignore the: 'starttime', 'timenow' attributes of the mail 
 		message and set new ones based off the current time. This 
-		option is  to allow for easier testing the functionality of 
-		the program. This flag is not recomended for production use.
+		option is to allow for easier testing the functionality of 
+		the program. This flag is not recommended for production use.
 
 --skip-check	Turn off the strict checking of input files, to allow for
 		easier testing the functionality of the program. This flag is
-		not recomended for production use.
+		not recommended for production use.
 
 
 Synopsis
 
 
 This program handles mail acceptance for the tinderbox system.  The
-mail transerfer agent runs this program to deliver the mail.  Mail is
+mail transfer agent runs this program to deliver the mail.  Mail is
 recived on stdin, this makes it particularly easy to test this script.
 The script accepts no arguments and will exit with return code of zero
 if successful.  
@@ -110,7 +110,7 @@ is written to the error log and standard err.
 Mail is expected to consist of 
 
 	1) A set of tinderbox variables with values applicable to this
-	build this includes information on which regular expressions
+	build. This includes information on which regular expressions
 	to use when parsing the build log and whether the build was
 	successful or not.
 
@@ -131,7 +131,7 @@ information extracted from the mail message and any new variables
 derived while parsing the log file.
 
 The build logs are converted into HTML and are split into full and
-summary form and stored on the disk.  Both logs basnames are the same
+summary form and stored on the disk.  Both logs basenames are the same
 unique id which is found by using the time this program was stared and
 its pid.  The logs are stored in separate directories and compressed.
 The server knows how to contruct URLS to the log files because that
@@ -141,7 +141,7 @@ file is written to the disk with a unique name.  No locks are held by
 this code.
 
 Builds which take a long time to complete can send multiple status
-mails each one conaining the log file which has been completed so far.
+mails each one containing the log file which has been completed so far.
 All mails sent before the build is finished should have the status
 'building'.  The last mail must contain the results of the build.  The
 website will make each build log available so that everyone can see
@@ -159,7 +159,7 @@ variable must be 'END'.  We ignore the line following the variables,
 it should be blank.  Tinderbox variables are specified by a line which
 looks like this string:
 
-tinderbox: variablename: varaiblevalue
+tinderbox: variablename: variablevalue
 
 Any uuencoded binaries in the mail message are extracted and uudecoded
 and stored on disk in the filename specified by the tinderbox variable
@@ -171,7 +171,7 @@ customized with the set of regular expressions which describe the
 errors which are produced as part of the build process.  These regular
 expressions are stored in the module Error_Parse.pm.  Each mail
 contains the tinderbox variable 'errorparser' which chooses one set of
-regualar expressions to use when processing the mails contents.
+regular expressions to use when processing the mail's contents.
 
 
 Tinderbox Variables:
@@ -180,7 +180,7 @@ Tinderbox variables are name/value pairs which appear at the top of
 the mail message.  Lines can appear in any order but END should be the
 last line followed by one blank line. If the tinderbox variable name
 is repeated on different lines, then its value is taken to be the
-concatination of all values listed.
+concatenation of all values listed.
 
 The required tinderbox variable:
 
@@ -251,7 +251,7 @@ TinderboxPrint:
 Arbitrary links and text can be embedded in the tinderbox build
 cells. Any log file which contains a line beginning with
 "TinderboxPrint: " will be copied into the build cell.  If you are
-ebedding links, you should put exactly one link per TinderboxPrint
+embedding links, you should put exactly one link per TinderboxPrint
 command since the links are checked to ensure that they are well
 formed. Here are some examples of embedded performance numbers (and
 links to the web page relevant to these numbers) from one mozilla
@@ -284,7 +284,7 @@ The files are found in the directories
 
 Files:
 
-File names for the output files are contructed from the values returned by:
+File names for the output files are constructed from the values returned by:
 
 	FileStructure::get_filename(\$tree, 'brief-log')
 	FileStructure::get_filename(\$tree, 'build_bin_dir')
@@ -312,7 +312,7 @@ Time Format
 
 Most OS have an internal time format of "seconds since the epoch".
 This format is easiest to use if all your machines have the same OS or
-if you standarize on some epoch for the purposes of tinderbox
+if you standardize on some epoch for the purposes of tinderbox
 mails. Times can also be given in the format "MM/DD/YY HH:MM:SS" if
 this is more convenient.
 
@@ -459,7 +459,7 @@ sub backward_compatibility {
 
 =pod
 
-"errorparser" is a bad name, we want a "buildtools" which discribes
+"errorparser" is a bad name, we want a "buildtools" which describes
 the compilers and make programs.  The buildtools module is shared with
 the buildscript and the logparser.  We might want to have the
 configure output drive the choice of errorparser or tell configure
@@ -477,7 +477,7 @@ current time on client within 10 minutes.
 need to check that this update either 
 
   1) has the same starttime as the last update of this tree/build
-  2) has a starttime grater then min time between builds.
+  2) has a starttime greater then min time between builds.
 
 =cut
   ;
@@ -542,7 +542,7 @@ sub check_required_vars {
   
   # Note at this point we could have sourced only the implementation
   # of the error parser that we need.  I think programs which use an
-  # autoload for libaraies are messy since they cause variable run
+  # autoload for libraraies are messy since they cause variable run
   # time requirements.
 
   $TINDERBOX{'timenow'} = main::extract_digits($TINDERBOX{'timenow'});
@@ -580,7 +580,7 @@ sub check_required_vars {
     } else {
       $err_string .= (
                       "Variable: 'tinderbox: starttime:',".
-                      " is grater then the tinderbox: timenow.\n".
+                      " is greater than the tinderbox: timenow.\n".
                       "starttime: $TINDERBOX{'starttime'}, ".
                       "timenow: $TINDERBOX{'timenow'}".
                       "\n".
@@ -634,7 +634,7 @@ sub format_bloat_delta {
 sub process_bloat_data {
   my ($line, $func_line_type,) = @_;
   
-  # we have to call &highlight_errors() even thought there are no
+  # we have to call &highlight_errors() even though there are no
   # errors, or the line numbers will get messed up
   
   my ($line_type) = &$func_line_type($line);
@@ -837,7 +837,7 @@ sub parse_mail_body {
   # FULL:        a complete copy of the logfile with HTML markup.
   # BRIEF:       contains only the error messages with some lines of 
   #                 surrounding context and HTML markup.
-  # ERROR_PICK:  a list of html links to error messages, this will apear
+  # ERROR_PICK:  a list of html links to error messages, this will appear
   #                 on the top of both brief and full when our 
   #                 processing is complete. 
 
@@ -922,8 +922,8 @@ sub parse_mail_body {
         my $print = $1;
 
         # Long lines might get split by mailing software but then we
-        # can't reconstitute it, since we will not know how many lines
-        # to take.  Make sure refs, if they exist, are closed;
+        # can't reconstitute them, since we will not know how many
+        # lines to take.  Make sure refs, if they exist, are closed;
 
         my $good_line = (
                          ($print !~ m!<\s*a\s+!i) ||
@@ -1011,9 +1011,9 @@ sub parse_mail_body {
 
   } # while
 
-  # We always want to see the very last line of the build, wether or
+  # We always want to see the very last line of the build, whether or
   # not the build failed.  So treat the last line like an error and
-  # print the context surronding it.
+  # print the context surrounding it.
 
   my ($lines_context) = min( ($lines_since_error - $Error_Parse::LINES_AFTER_ERROR - 2),
                              $Error_Parse::LINES_BEFORE_ERROR);
@@ -1076,7 +1076,7 @@ sub parse_mail_body {
 
 sub assemble_files {
 
-# piece together the permanent files from the temparary ones.
+# piece together the permanent files from the temporary ones.
 
 # much of this could be done in shell scripts (cat) but we have more
 # error control in perl and it is more portable to non-unix OS.
@@ -1089,11 +1089,11 @@ sub assemble_files {
     # append the headers to the top of the full log and compress the result
     
     open(ERROR_PICK, "<$TMP_FILE{'errorpick'}") ||
-      die("Could not write to file: '$TMP_FILE{'errorpick'}'.\n");
+      die("Could not read from file: '$TMP_FILE{'errorpick'}'.\n");
     open(TMP_FULL, "<$TMP_FILE{'full-log'}") ||
-      die("Could not write to file: '$TMP_FILE{'full-log'}'.\n");
+      die("Could not read from file: '$TMP_FILE{'full-log'}'.\n");
     open(FULL, ">$FILE{'full-log'}") ||
-      die("Could not write to file: '$TMP_FILE{'full-log'}'.\n");
+      die("Could not write to file: '$FILE{'full-log'}'.\n");
     
     print FULL log_header('full');
     
@@ -1108,7 +1108,7 @@ sub assemble_files {
     print FULL log_footer('full');
     
     close(FULL) ||
-      die("Could not close file: '$FILE{'full-log'}': waitstaus: $? : $! \n");
+      die("Could not close file: '$FILE{'full-log'}': waitstatus: $? : $! \n");
     close(TMP_FULL) ||
       die("Could not close file: '$TMP_FILE{'full-log'}': $! \n");
     close(ERROR_PICK) ||
@@ -1120,11 +1120,11 @@ sub assemble_files {
     # append the headers to the top of the brief log
 
     open(ERROR_PICK, "<$TMP_FILE{'errorpick'}") ||
-      die("Could not write to file: '$TMP_FILE{'errorpick'}'.\n");
+      die("Could not read from file: '$TMP_FILE{'errorpick'}'.\n");
     open(TMP_BRIEF, "<$TMP_FILE{'brief-log'}") ||
-      die("Could not write to file: '$TMP_FILE{'brief-log'}'.\n");
+      die("Could not read from file: '$TMP_FILE{'brief-log'}'.\n");
     open(BRIEF, ">$FILE{'brief-log'}") ||
-      die("Could not write to file: '$TMP_FILE{'brief-log'}'.\n");
+      die("Could not write to file: '$FILE{'brief-log'}'.\n");
     
     print BRIEF log_header('brief');
 

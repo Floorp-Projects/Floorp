@@ -1,17 +1,17 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# mozilla.uinx.buildcf - this is an example buildcf which looks
+# mozilla.unix.buildcf - this is an example buildcf which looks
 # similar to the way in which the original tinderbox build clients
 # work.  It is untested and may not actually work but gives an idea
 # how I envision the buildcf working.  This configuration file shows
 # what I believe belongs in the the build script and what part of the
 # original build script should be moved to the Makefile. Run --test to
-# see the completed build script which has all the vairiables
+# see the completed build script which has all the variables
 # substituted.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2002/05/03 20:20:44 $ 
+# $Revision: 1.4 $ 
+# $Date: 2003/08/04 17:15:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/mozilla.unix.buildcf,v $ 
 # $Name:  $ 
@@ -104,7 +104,7 @@ sub GetSystemInfo {
 # The environmental variables for building at mozilla/netscape are
 # quite complicated, your needs may be much simpler. Putting all
 # environmental variable differences into a single function makes it
-# clearer exactly how the environment differes on different platforms.
+# clearer exactly how the environment differs on different platforms.
 
 sub build_environment{
   
@@ -282,7 +282,7 @@ sub build_scripts {
 
 
 
-# builds discribe a sequence of steps needed to perform a "build".
+# builds describe a sequence of steps needed to perform a "build".
 # Each build either succeeds or fails.  Builds can be used for running
 # tests and checking source code style in addition to creating binaries.
 
@@ -302,12 +302,12 @@ sub build_scripts {
 
 # Each phase must have the following entries:
 
-#	 phase_name: which discribes what the phase is.
+#	 phase_name: discribes what the phase is.
 
 #	 error_status: the tinderbox status which should be returned
 #	 if the phase fails.
 
-#	 script: a list of shell commands to be exectued in order
+#	 script: a list of shell commands to be exected in order
 #	 until one fails (each command in a separate shell, similar to make).
 
 #	 dir: the directory which will be local while the script is

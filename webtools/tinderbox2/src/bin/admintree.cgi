@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.23 $ 
-# $Date: 2002/05/03 03:29:14 $ 
+# $Revision: 1.24 $ 
+# $Date: 2003/08/04 17:14:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -65,11 +65,11 @@ use HTMLPopUp;
 #   unexpectedly. Scripting tags that can be embedded in this way
 #   include <SCRIPT>, <OBJECT>, <APPLET>, and <EMBED>.
 
-#    note that since we want some tags to be allowed (href) but not #
+#    note that we want some tags to be allowed (href) but not       #
 #    others.  This requirement breaks the taint perl mechanisms for #
 #    checking as we can not escape every '<>'.
 
-# However we trust our administrators not do put bad things in the web
+# However we trust our administrators not to put bad things in the web
 # pages and we wish to allow them to embed scripts.
 
 
@@ -475,7 +475,7 @@ sub change_ignore_builds {
 sub change_motd {
   my (@results) = ();
 
-  # remember new_motd could be empty.  As long as it is different then
+  # remember new_motd could be empty.  As long as it is different than
   # old_motd we should save it.
 
   ($NEW_MOTD eq $CURRENT_MOTD) &&

@@ -69,7 +69,7 @@ tinderbox: buildfamily: unix
 3) Perform the build, saving the output to a log file.
 
 4) Determine if the build was successful or failed. This could be done either
-by checking for the presence of a binary, or being using error codes returned
+by checking for the presence of a binary, or by using error codes returned
 from the compile command.
 
 5) Send a completion message to Tinderbox, identifying build success or

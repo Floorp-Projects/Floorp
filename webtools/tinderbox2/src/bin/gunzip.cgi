@@ -4,14 +4,14 @@
 
 # gunzip.cgi - This cgi script will gunzip a file and send the result
 # to standard out in a form that a webserver can display.  Filenames
-# are passed in via an abreviated form.  It is assumed that all files
+# are passed in via an abbreviated form.  It is assumed that all files
 # are either brief or full log files which are stored in known
 # Tinderbox directories.  The file id is the basename of the file
 # without the '.gz.html' extension.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/04/26 22:27:17 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/08/04 17:14:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 
@@ -80,7 +80,7 @@ Synopsis
 
 This cgi script will gunzip a file and send the result to standard out
 in a form that a webserver can display.  Filenames are passed in via
-an abreviated form.  It is assumed that all files are either brief or
+an abbreviated form.  It is assumed that all files are either brief or
 full log files which are stored in known Tinderbox directories.  The
 file id is the basename of the file without the '.gz.html' extension.
 

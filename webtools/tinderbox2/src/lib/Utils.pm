@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.36 $ 
-# $Date: 2003/05/26 13:30:43 $ 
+# $Revision: 1.37 $ 
+# $Date: 2003/08/04 17:15:11 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -207,14 +207,14 @@ sub get_env {
 
 sub chk_security {
 
-    # look at several potential security problems and die if they
-    # could cause us problems.
+  # Look at several potential security problems and die if they
+  # could cause us problems.
 
-  # Check  effective uid of the process to see if we have
+  # Check effective uid of the process to see if we have
   # been configured to run with too much privileges.
 
   # Ideally we do not want the tinderbox application running with the
-  # priveledges of a restricted user id (like: root, daemon, bin,
+  # privileges of a restricted user id (like: root, daemon, bin,
   # mail, adm) this should not happen because users configure it
   # (dangerous) or because of some security accident.
 
@@ -224,13 +224,13 @@ sub chk_security {
   ( $> == $tinderbox_uid ) ||
     die("Security Error. ".
         "Must not run this program using an effective user id ".
-        "which is different then the tinderbox user id. ".
+        "which is different than the tinderbox user id. ".
         "id: $> id must be $tinderbox_uid\n");
 
   ( $) == $tinderbox_gid) ||
     die("Security Error. ".
         "Must not run this program using effective group id ".
-        "different then tinderbox group id.".
+        "different than tinderbox group id.".
         "id: $) must be $tinderbox_gid\n");
 
 
@@ -445,8 +445,8 @@ sub fatal_error {
   }
   print LOG "\n";
 
-  # do not check for errors, the lock file may not exits and even if
-  # we have trouble removing the file we we will be exiting anyway.
+  # Do not check for errors, the lock file may not exist and even if
+  # we have trouble removing the file we will be exiting anyway.
 
   unlink ($LOCK_FILE);
 
@@ -514,7 +514,7 @@ sub overwrite_file {
   my ($dirname) = File::Basename::dirname($outfile);
   my ($basename) = File::Basename::basename($outfile);
 
-  # It is important that the tmp files have a Unique prefix so that #
+  # It is important that the tmp files have a Unique prefix so that
   # when the TinderDB globs for update files it does not find the half
   # written updates.
 
@@ -592,7 +592,7 @@ sub require_modules {
 
   foreach $impl (@impls) {
     
-    # '$impl' is not a bare word so we must preform this data
+    # '$impl' is not a bare word so we must perform this data
     # transformation which require normally does
     
     $impl =~ s!::!/!g;
@@ -669,7 +669,7 @@ sub fix_time_format {
 # ---------- 
 
 # The 'extract' functions will untaint their input data and return
-# only data which meets the extraction critireion.
+# only data which meets the extraction criterion.
 
 # ----------
 

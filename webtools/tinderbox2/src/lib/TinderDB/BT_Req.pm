@@ -3,16 +3,16 @@
 
 # TinderDB::BT_Req - A modified version of BT_Generic to allow
 # tinderbox to interface with the Req bug tracking system.
-# (http://www.draga.com/~jwise/minireq/) eventually the common code
-# should be factrored out into separate classes but I do not have time
+# (http://www.draga.com/~jwise/minireq/). Eventually the common code
+# should be factored out into separate classes but I do not have time
 # now and the files are only about 400 lines long.  The main
 # difference is that Req requires us to parse a log file for each
 # tree.  Thus we pull the data into our datastructures instead of
 # having the mail system push it in.  
 
 # The current design of these BT modules does not allow me to have two
-# copies of the same module (ie two colums both of thehm BT but
-# configured to use different bug tracking system. This is due to
+# copies of the same module (ie two colums both of them BT but
+# configured to use different bug tracking system). This is due to
 # global variables in the module and the way we configure the system
 # in TinderConfig and BTData.
 
@@ -42,8 +42,8 @@
 
 
 
-# $Revision: 1.5 $ 
-# $Date: 2002/05/10 21:18:52 $ 
+# $Revision: 1.6 $ 
+# $Date: 2003/08/04 17:15:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Req.pm,v $ 
 # $Name:  $ 
@@ -57,7 +57,7 @@ package TinderDB::BT_Req;
 
 #   $DATABASE{$tree}{$timenow}{$status}{$bug_id} = $record;
 
-# Where $rec is an anoymous hash of name vaule pairs from the bug
+# Where $rec is an anonymous hash of name vaule pairs from the bug
 # tracking system.
 
 # we also store information in the metadata structure
@@ -82,7 +82,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 

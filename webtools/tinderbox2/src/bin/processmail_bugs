@@ -5,10 +5,10 @@
 # processmail_bugs - The 'bug tracking' mail processing engine for
 # tinderbox.  The bug tracking server (bugzilla, aim, remedy, etc.)
 # should send mail to the tinderbox server, when bug tickets change
-# state. This program will parse the most common mail formats and and
+# state. This program will parse the most common mail formats and
 # tell the tinderbox server about the the database column Vs value
 # pairs.  This program should be run by the MTA (Sendmail,Fetchmail)
-# when ever mail for the tinderboxs bugtracking mail account arrives.
+# whenever mail for the tinderbox's bugtracking mail account arrives.
 # Tinderbox will display summary information about these tickets on
 # the same page as the build and version control information.  This
 # program should not need any local configuration.  All we assume is
@@ -23,8 +23,8 @@
 
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/04/24 03:20:34 $ 
+# $Revision: 1.13 $ 
+# $Date: 2003/08/04 17:14:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -228,7 +228,7 @@ sub clean_bug_input {
 sub parse_bt_vars {
 
   # Lines will be diffs, and this could cause the variables to appear
-  # twice in the data with different vaules.  We keep the LAST
+  # twice in the data with different values.  We keep the LAST
   # assignment of each variable.  This means that long variables can
   # not be split up to multiple lines.
 
@@ -269,7 +269,7 @@ sub parse_bt_vars {
       # We make a quick test to eliminate lines we do not want.
       
       # The lines we want:
-      # 1)  begin with a capital letter (but may be preceeded by 
+      # 1)  begin with a capital letter (but may be preceded by 
       #     diff characters).
       # 2)  have a colon followed by a space followed by data in them.
       
@@ -302,7 +302,7 @@ sub parse_bt_vars {
       # We make a quick test to eliminate lines we do not want.
       
       # The lines we want:
-      # 1)  begin with a capital letter (but may be preceeded by 
+      # 1)  begin with a capital letter (but may be preceded by 
       #     white space).
       # 2)  have exactly two pipes in them.
       
@@ -336,7 +336,7 @@ sub parse_bt_vars {
 
 sub set_tinderbox_variables {
 
-  # set known tinderbox fields based on the bug trackers variables.
+  # set known tinderbox fields based on the bug tracker's variables.
   my ($bug_id) = $TINDERBOX{$BTData::BUGID_FIELD_NAME};
 
   $TINDERBOX{'tinderbox_timenow'} = time();
@@ -386,7 +386,7 @@ sub set_tinderbox_variables {
     $TINDERBOX{'tinderbox_tree'} = $tree;
 
     # some updates do not have a status.  We can not do anything with
-    # them, and we probably only want to only report when the bug
+    # them, and we probably only want to report when the bug
     # changes state anyway.
 
     ($TINDERBOX{'tinderbox_status'}) ||

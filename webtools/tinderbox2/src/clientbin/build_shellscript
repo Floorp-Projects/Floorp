@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.14 $
-# $Date: 2002/01/02 18:09:59 $
+# $Revision: 1.15 $
+# $Date: 2003/08/04 17:15:02 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -129,7 +129,7 @@ software and the developer provided scripts which perform the build
 (Makefiles, configuration scripts, developer provided build scripts).
 Developers are responsible for ensuring that they keep their project
 related build scripts up to date so that the build interface does not
-change too rapidly.  The for a given project the build should always
+change too rapidly.  Then for a given project the build should always
 be performed using the same commands and any complex build processing
 should be performed inside developer maintained scripts (shell, perl
 Makefile).
@@ -215,14 +215,14 @@ sub set_static_vars {
   # to deliver mail directly if the build is running on the same
   # machine as the server.
 
-  $MAILER = '/usr/lib/sendmail -t';
+  $MAILER = '/usr/lib/sendmail -oi -t';
 
   $ERROR_LOG= "/var/log/tinderbox2/build.log";
 
   $BUILDCF = "buildcf";
 
   # minimum time between the start of consecutive builds.  Tinderbox
-  # requires this to be grater then 5 minutes.
+  # requires this to be greater then 5 minutes.
 
   $MINIMUM_BUILD_SECONDS = 8*60;
 
@@ -438,10 +438,10 @@ sub set_server_args {
   ($ADMINISTRATOR) ||
     die("Must define a build administrator.\n");
 
-  ($MAIL_FROM) ||
+  ($MAIL_TO) ||
     die("Must define a mailing address to send builds to.\n");
 
-  ($MAIL_TO) ||
+  ($MAIL_FROM) ||
     die("Must define an account to have the builds be sent from.\n");
 
 
@@ -528,14 +528,6 @@ EOF
   # mail systems (sendmail) require this.
 
   $message =~ s/([^\n]{$MAX_MAIL_LINE_LEN})/$1\n/g;    
-
-  # If any line is a dot on a line by itself, replace
-  # that with a blank line. This is to prevent cases
-  # where a <cr>.<cr> occurs in the log file.  Sendmail
-  # interprets that as the end of the mail, and
-  # truncates the log before it gets to Tinderbox.
-      
-  $message =~ s/^\.$/\.\./mg;
 
   # If we are testing then @CMD_LOG contains the list of commands we
   # would have executed. This is where they get printed. We do not
@@ -639,9 +631,9 @@ sub system3 {
 				    @{$args{'cmd_vec'}}
 				    );
   
-  # this check should be redundant but better safe then sorry
+  # this check should be redundant but better safe than sorry
   ($child_pid) || 
-      die ("Open3() did not start: '@{$cmd}'. $!\n");
+      die ("Open3() did not start: '@{$args{cmd_vec}'. $!\n");
   
   close($fh_in) || 
     die("Could not close child stdin: $!\n");
@@ -828,7 +820,7 @@ sub run_shell_commands {
 
 
 
-# This function ensures that build do not start too frequently.  It
+# This function ensures that builds do not start too frequently.  It
 # will sleep if and only if the last build finished too quickly.
 
 sub slow_build_speed {

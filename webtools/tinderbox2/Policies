@@ -6,7 +6,7 @@ policies you will need to set:
 To install tinderbox you will need some information about your
 existing computer systems and some idea about what your goals are.
 Here is a list of questions to help get you started, some of these
-ideas may not be apropriate for your environment.
+ideas may not be appropriate for your environment.
 
 
 The webserver will serve the tinderbox pages.  
@@ -40,8 +40,8 @@ The same user id must be used for running the scripts as for tinderbox
 mail delivery.  The Tinderbox Configuration files will define this
 user id and as a security precaution check that it is running as the
 required id.  It is suggested that this id not be a privileged id
-(higher ids are better, please make this number be grater then 10 and
-bigger then 100 is recommended).  Smaller ids are often assumed to
+(higher ids are better, please make this number be greater than 10 and
+bigger than 100 is recommended).  Smaller ids are often assumed to
 have more privileges on a Unix box then larger ids.  It is not a good
 idea for an unauthenticated user to have any privileges so a large id
 is recommended. It is also recommended that you not use the id 'nobody'

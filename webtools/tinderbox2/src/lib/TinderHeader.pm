@@ -8,8 +8,8 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.8 $ 
-# $Date: 2002/04/27 04:11:33 $ 
+# $Revision: 1.9 $ 
+# $Date: 2003/08/04 17:15:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
@@ -431,7 +431,7 @@ If some headers are not desired to run the 'use' statements for them
 may be safely commented out and a default value will automatically be
 provided.
 
-Each function discribed here builds an $out string.  If there are bugs
+Each function described here builds an $out string.  If there are bugs
 in the resulting HTML you can put your perl breakpoint on the return
 statement of any function and look at the completed string before it
 is returned.

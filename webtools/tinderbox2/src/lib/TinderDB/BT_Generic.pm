@@ -1,13 +1,13 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# TinderDB::BT_GENERIC - A generic methods to display the changes to
+# TinderDB::BT_GENERIC - A generic method to display the changes to
 # the bug tracking system.  I am hoping that we will not need to have
 # one specialized method per bug ticket system but can instead use
 # this method for all commonly used (Bug Tracking, Modification
 # Request) systems.  This module will display bugs which have been
 # 'closed' (developers close bugs when their latest version control
-# chceck in fixes them) or 'reopened' (since that means that
+# check in fixes them) or 'reopened' (since that means that
 # developers closed the bugs incorrectly).  BTData.pm contains all the
 # local settings which configure this module.
 
@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.21 $ 
-# $Date: 2003/05/26 13:41:12 $ 
+# $Revision: 1.22 $ 
+# $Date: 2003/08/04 17:15:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -52,7 +52,7 @@ package TinderDB::BT_Generic;
 
 #   $DATABASE{$tree}{$timenow}{$status}{$bug_id} = $record;
 
-# Where $rec is an anoymous hash of name vaule pairs from the bug
+# Where $rec is an anonymous hash of name vaule pairs from the bug
 # tracking system.
 
 # we also store information in the metadata structure
@@ -78,7 +78,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.21 $ )[1];
+$VERSION = ( qw $Revision: 1.22 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -182,7 +182,7 @@ sub status_table_header {
 }
 
 # where can people attach notices to?
-# Really this is the names the columns produced by this DB
+# Really this is the names of the columns produced by this DB
 
 sub notice_association {
     my ($self, $tree, ) = @_;
@@ -294,7 +294,7 @@ sub render_bug {
 
 
 # Return all the bug_ids which changed at any point between the two
-# row times which represent this cell.  Further the data msut be in
+# row times which represent this cell.  Further the data must be in
 # the column we are currently rendering, that means that the status
 # must map into the correct column.
 

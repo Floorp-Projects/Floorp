@@ -8,7 +8,7 @@ special needs.
 project and need a GUI to help change various types of project
 information (treestate, message of the day, etc).  They will also need
 summary pages which will show them the current status of all the
-projects which they are working on.  They may occassionally "drill
+projects which they are working on.  They may occasionally "drill
 down" into the detailed status page but this will not be their primary
 view of the tinderbox system.
 
@@ -18,7 +18,7 @@ build systems (bugzilla, cvs, bonsai, etc).  A GUI would not be
 helpful as local customizations may require small changes to the code.
 Configurations need to be kept (mostly) in files which are separate
 from the Tinderbox source code so that they can be version controled
-and will not get stepped on when tinderbox is upgradded.
+and will not get stepped on when tinderbox is upgraded.
 
 3) Developers: need to view the "state of development" and add notices
 to the notice board.
@@ -27,7 +27,7 @@ Improvements needed from Tinderbox1
 -----------------------------------
 
 highly configurable design with multiple Version Control systems
-possible (bonsai, raw cvs, perforce, continuious, clearcase) and
+possible (bonsai, raw cvs, perforce, continuous, clearcase) and
 multiple modes of running possible (with no version control system
 with no builds display).
 
@@ -53,7 +53,7 @@ all programmable configuration parameters should be stored easy change
 and configure for novice users.
 
 make better use of the perl data structures to mirror the way we wish
-to use the data.  This will allow easier maintainabilty and allow for
+to use the data.  This will allow easier maintainability and allow for
 more expansion of features.
 
 display should work on many different browsers.
@@ -61,7 +61,7 @@ display should work on many different browsers.
 popup windows should not be netscape specific.
 
 Permanent data should be stored via datadumper so that the data and
-datastrucutres are easy to read and debug. Currently this is a
+data strucutres are easy to read and debug. Currently this is a
 performance bottle neck with a large percentage of our cpu time during
 testing being spent in Data::Dumper::Dump.  The perl module Storable
 is much faster.  I wish to not add additional module requirements at
@@ -76,7 +76,7 @@ this time, this will be configurable.
 #	(out of 19.03 User/102.15 Elapsed Seconds)
 #	was spend in 32878 calls to Data::Dumper::_dump()
 
-#	System Time was negligable at 2.49 Seconds
+#	System Time was negligible at 2.49 Seconds
 
 All errors should be trapped and sent to log files.  Strange program
 states should be explicitly checked for.
@@ -86,7 +86,7 @@ to race conditions.
 
 All column modules (processmail, build, VC, Notices) should be able to
 be run individually.  Modules should accept well defined text files as
-input and produce text files as output.  This will greatly inhance the
+input and produce text files as output.  This will greatly enhance the
 ability to test each module in isolation and to quickly port modules
 to new architectures.
 
