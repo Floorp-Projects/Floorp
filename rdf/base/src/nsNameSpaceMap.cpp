@@ -61,6 +61,14 @@ nsNameSpaceMap::~nsNameSpaceMap()
 nsresult
 nsNameSpaceMap::Put(const nsAString& aURI, nsIAtom* aPrefix)
 {
+    nsCString uriUTF8;
+    AppendUTF16toUTF8(aURI, uriUTF8);
+    return Put(uriUTF8, aPrefix);
+}
+
+nsresult
+nsNameSpaceMap::Put(const nsCSubstring& aURI, nsIAtom* aPrefix)
+{
     Entry* entry;
 
     // Make sure we're not adding a duplicate
@@ -79,7 +87,7 @@ nsNameSpaceMap::Put(const nsAString& aURI, nsIAtom* aPrefix)
 }
 
 nsNameSpaceMap::const_iterator
-nsNameSpaceMap::GetNameSpaceOf(const nsAString& aURI) const
+nsNameSpaceMap::GetNameSpaceOf(const nsCSubstring& aURI) const
 {
     for (Entry* entry = mEntries; entry != nsnull; entry = entry->mNext) {
         if (StringBeginsWith(aURI, entry->mURI))

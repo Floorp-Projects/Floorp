@@ -37,13 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#include "nscore.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "rdf.h"
 
 #include "nsIServiceManager.h"
@@ -56,79 +56,56 @@
 #include <stdio.h>
 #endif
 
+/**
+ * RDF vocabulary describing assertions in inner datasource
+ *
+ * For a particular resource, we want to provide all arcs out and
+ * in that the inner datasource has.
+ * This is done by introducing helper resources for each triple of
+ * the form
+ *   x-moz-dsds:<subject-resource-pointer><predicate-resource-pointer>\
+ *              <object-node-pointer>
+ * For each triple, that has the resource in question as subject, a
+ * "arcsout" assertion goes from that resource to a x-moz-dsds resource.
+ * For each triple, that has the resource in question as object, a
+ * "arcsin" assertion goes from that resource to a x-moz-dsds resource.
+ * For each x-moz-dsds resource, there is a "subject" arc to the subject,
+ * a "predicate" arc to the predicate and a "object" arc to the object.
+ *
+ * The namespace of this vocabulary is
+ * "http://www.mozilla.org/rdf/vocab/dsds".
+ * 
+ * XXX we might want to add a "qname" resource from each resource to a
+ * somewhat canonical "prefix:localname" literal.
+ */
+
+#define NS_RDF_DSDS_NAMESPACE_URI "http://www.mozilla.org/rdf/vocab/dsds#"
+#define NS_RDF_ARCSOUT NS_RDF_DSDS_NAMESPACE_URI "arcsout"
+#define NS_RDF_ARCSIN NS_RDF_DSDS_NAMESPACE_URI "arcsin"
+#define NS_RDF_SUBJECT NS_RDF_DSDS_NAMESPACE_URI "subject"
+#define NS_RDF_PREDICATE NS_RDF_DSDS_NAMESPACE_URI "predicate"
+#define NS_RDF_OBJECT NS_RDF_DSDS_NAMESPACE_URI "object"
+
 #define NC_RDF_Name  NC_NAMESPACE_URI "Name"
 #define NC_RDF_Value NC_NAMESPACE_URI "Value"
 #define NC_RDF_Child NC_NAMESPACE_URI "child"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-class nsRDFDataSourceDataSource : public nsIRDFDataSource {
+class nsRDFDataSourceDataSource :
+    public nsIRDFDataSource,
+    public nsIRDFRemoteDataSource {
 public: 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIRDFDATASOURCE
+  NS_DECL_NSIRDFREMOTEDATASOURCE
 
   nsRDFDataSourceDataSource();
   virtual ~nsRDFDataSourceDataSource();
   
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(const char *uri);
-
-  /* readonly attribute string URI; */
-  NS_IMETHOD GetURI(char * *aURI);
-
-  /* nsIRDFResource GetSource (in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD GetSource(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, nsIRDFResource **_retval);
-
-  /* nsISimpleEnumerator GetSources (in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, nsISimpleEnumerator **_retval);
-
-  /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
-  NS_IMETHOD GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **_retval);
-
-  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
-  NS_IMETHOD GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsISimpleEnumerator **_retval);
-
-  /* void Assert (in nsIRDFResource aSource, in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD Assert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue);
-
-  /* void Unassert (in nsIRDFResource aSource, in nsIRDFResource aProperty, in nsIRDFNode aTarget); */
-  NS_IMETHOD Unassert(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget);
-
-  /* boolean HasAssertion (in nsIRDFResource aSource, in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD HasAssertion(nsIRDFResource *aSource, nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, PRBool *_retval);
-
-  /* void AddObserver (in nsIRDFObserver aObserver); */
-  NS_IMETHOD AddObserver(nsIRDFObserver *aObserver);
-
-  /* void RemoveObserver (in nsIRDFObserver aObserver); */
-  NS_IMETHOD RemoveObserver(nsIRDFObserver *aObserver);
-
-  /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
-  NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval);
-
-  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval);
-
-  /* nsISimpleEnumerator GetAllResources (); */
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
-
-  /* void Flush (); */
-  NS_IMETHOD Flush();
-
-  /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments, PRBool *_retval);
-
-  /* void DoCommand (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
-  NS_IMETHOD DoCommand(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments);
-
-  /* void beginUpdateBatch (); */
-  NS_IMETHOD BeginUpdateBatch();
-
-  /* void endUpdateBatch (); */
-  NS_IMETHOD EndUpdateBatch();
-
 private:
-  char *mURI;
-  nsIRDFDataSource* mDataSource;
+  nsCString mURI;
+  nsCOMPtr<nsIRDFDataSource> mDataSource;
 
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_Value;
@@ -141,19 +118,34 @@ nsIRDFResource* nsRDFDataSourceDataSource::kNC_Value=nsnull;
 nsIRDFResource* nsRDFDataSourceDataSource::kNC_Child=nsnull;
 
 
-nsRDFDataSourceDataSource::nsRDFDataSourceDataSource():
-  mURI(nsnull),
-  mDataSource(nsnull)
+nsRDFDataSourceDataSource::nsRDFDataSourceDataSource()
 {
 }
 
 nsRDFDataSourceDataSource::~nsRDFDataSourceDataSource()
 {
-  nsCRT::free(mURI);
 }
 
 
-NS_IMPL_ISUPPORTS1(nsRDFDataSourceDataSource, nsIRDFDataSource)
+NS_IMPL_ISUPPORTS2(nsRDFDataSourceDataSource,
+                   nsIRDFDataSource,
+                   nsIRDFRemoteDataSource)
+
+/**
+ * Implement nsIRDFRemoteDataSource
+ */
+
+/* readonly attribute boolean loaded; */
+NS_IMETHODIMP nsRDFDataSourceDataSource::GetLoaded(PRBool *aLoaded)
+{
+    nsCOMPtr<nsIRDFRemoteDataSource> remote =
+        do_QueryInterface(mDataSource);
+    if (remote) {
+        return remote->GetLoaded(aLoaded);
+    }
+    *aLoaded = PR_TRUE;
+    return NS_OK;
+}
 
 /* void Init (in string uri); */
 NS_IMETHODIMP
@@ -161,16 +153,31 @@ nsRDFDataSourceDataSource::Init(const char *uri)
 {
   nsresult rv;
 
-  if (mURI) nsCRT::free(mURI);
-  mURI = nsCRT::strdup(uri);
+  mURI = uri;
+
+  // cut off "rdf:datasource?"
+  NS_NAMED_LITERAL_CSTRING(prefix, "rdf:datasource");
+  nsCAutoString mInnerURI;
+  mInnerURI = Substring(mURI, prefix.Length() + 1);
+  // bail if datasorce is empty or we're trying to inspect ourself
+  if (mInnerURI.IsEmpty() || mInnerURI == prefix) {
+      mURI.Truncate();
+      return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+  rv = rdf->GetDataSource(mInnerURI.get(), getter_AddRefs(mDataSource));
+  if (NS_FAILED(rv)) {
+      mURI.Truncate();
+      NS_WARNING("Could not get inner datasource");
+      return rv;
+  }
 
   // get RDF resources
   
-  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (!kNC_Name) {
-    rdf->GetResource(NC_RDF_Name, &kNC_Name);
-    rdf->GetResource(NC_RDF_Child, &kNC_Child);
-    rdf->GetResource(NC_RDF_Value, &kNC_Value);
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_Name), &kNC_Name);
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_Child), &kNC_Child);
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_Value), &kNC_Value);
   }
 
 #ifdef DEBUG_alecf
@@ -180,6 +187,33 @@ nsRDFDataSourceDataSource::Init(const char *uri)
   return NS_OK;
 }
 
+/* void Refresh (in boolean aBlocking); */
+NS_IMETHODIMP nsRDFDataSourceDataSource::Refresh(PRBool aBlocking)
+{
+    nsCOMPtr<nsIRDFRemoteDataSource> remote =
+        do_QueryInterface(mDataSource);
+    if (remote) {
+        return remote->Refresh(aBlocking);
+    }
+    return NS_OK;
+}
+
+/* void Flush (); */
+NS_IMETHODIMP nsRDFDataSourceDataSource::Flush()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void FlushTo (in string aURI); */
+NS_IMETHODIMP nsRDFDataSourceDataSource::FlushTo(const char *aURI)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Implement nsIRDFDataSource
+ */
+
 /* readonly attribute string URI; */
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::GetURI(char * *aURI)
@@ -187,7 +221,7 @@ nsRDFDataSourceDataSource::GetURI(char * *aURI)
 #ifdef DEBUG_alecf
   printf("nsRDFDataSourceDataSource::GetURI()\n");
 #endif
-  *aURI = nsCRT::strdup(mURI);
+  *aURI = ToNewCString(mURI);
   
   return NS_OK;
 }
@@ -238,11 +272,11 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
                                       PRBool aTruthValue,
                                       nsISimpleEnumerator **_retval)
 {
-#ifdef DEBUG_alecf
   nsXPIDLCString sourceval;
-  nsXPIDLCString propval;
   aSource->GetValue(getter_Copies(sourceval));
+  nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
+#ifdef DEBUG_alecf
   printf("GetTargets(%s, %s,..)\n", (const char*)sourceval,
          (const char*)propval);
 #endif
@@ -252,21 +286,22 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
   nsCOMPtr<nsISupportsArray> arcs;
   nsISimpleEnumerator *enumerator;
   
-  if (NS_SUCCEEDED(aProperty.EqualsResource(kNC_Child, &isProp)) &&
+  if (NS_SUCCEEDED(aProperty->EqualsNode(kNC_Child, &isProp)) &&
       isProp) {
 
     // here we need to determine if we need to extract out the source
     // or use aSource?
-    if (!PL_strcmp(sourceval, "dsresource:", 11)) {
+    if (StringBeginsWith(sourceval, NS_LITERAL_CSTRING("dsresource:"))) {
       // somehow get the source
-      rv = mDataSource->ArcLabelsOut(realsource, &enumerator);      
+      // XXX ? rv = mDataSource->ArcLabelsOut(realsource, &enumerator);      
+      rv = mDataSource->ArcLabelsOut(aSource, &enumerator);      
     } else {
       rv = mDataSource->ArcLabelsOut(aSource, &enumerator);
     }
     // enumerate all the children and create the composite resources
     PRBool hasMoreArcs=PR_FALSE;
 
-    rv = enumerator->hasMoreElements(&hasMoreArcs);
+    rv = enumerator->HasMoreElements(&hasMoreArcs);
     while (NS_SUCCEEDED(rv) && hasMoreArcs) {
       
       // get the next arc
@@ -276,11 +311,11 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
 
       // get all the resources on the ends of the arc arcs
       nsCOMPtr<nsISimpleEnumerator> targetEnumerator;
-      rv = mDataSource->GetTargets(aSource, element, PR_TRUE,
+      rv = mDataSource->GetTargets(aSource, arc, PR_TRUE,
                                    getter_AddRefs(targetEnumerator));
 
       PRBool hasMoreTargets;
-      rv = targetEnumerator->hasMoreElements(&hasMoreTargets);
+      rv = targetEnumerator->HasMoreElements(&hasMoreTargets);
       while (NS_SUCCEEDED(rv) && hasMoreTargets) {
         // get the next target
         nsCOMPtr<nsISupports> targetSupports;
@@ -302,19 +337,17 @@ nsRDFDataSourceDataSource::GetTargets(nsIRDFResource *aSource,
 
       }
       
-      rv = enumerator->hasMoreElements(&hasMoreArcs);
+      rv = enumerator->HasMoreElements(&hasMoreArcs);
     }
     
-    nsIRDFResource *res = CreateCompositeResource(aSource, aProperty);
-
-  } else if (NS_SUCCEEDED(aProperty.EqualsResource(kNC_Name, &isProp)) &&
+  } else if (NS_SUCCEEDED(aProperty->EqualsNode(kNC_Name, &isProp)) &&
              isProp) {
-    if (!PL_strncmp(sourceval, "dsresource:", 11) {
+    if (StringBeginsWith(sourceval, NS_LITERAL_CSTRING("dsresource:"))) {
       // extract out the name
 
     }
     
-  } else if (NS_SUCCEEDED(aProperty.EqualsResource(kNC_Value, &isProp)) &&
+  } else if (NS_SUCCEEDED(aProperty->EqualsNode(kNC_Value, &isProp)) &&
              isProp) {
 
 
@@ -394,24 +427,9 @@ nsRDFDataSourceDataSource::ArcLabelsOut(nsIRDFResource *aSource,
   printf("ArcLabelsOut(%s)\n", (const char*)sourceval);
 #endif
   
-  // this is a terrible ugly hack, but it works.
-  // set the datasource if the URI begins with rdf:
-  if (!PL_strncmp((const char*)sourceval, "rdf:", 4)) {
-#ifdef DEBUG_alecf
-    printf("Ahah! This is a datasource node. Setting the datasource..");
-#endif
-    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-    rv = rdf->GetDataSource((const char*)sourceval, &mDataSource);
-    
-#ifdef DEBUG_alecf
-    printf("done.\n");
-#endif
-    
-  } else {
-    arcs->AppendElement(kNC_Name);
-    arcs->AppendElement(kNC_Value);
-    arcs->AppendElement(kNC_Child);
-  }
+  arcs->AppendElement(kNC_Name);
+  arcs->AppendElement(kNC_Value);
+  arcs->AppendElement(kNC_Child);
 
   nsArrayEnumerator* cursor =
     new nsArrayEnumerator(arcs);
@@ -427,13 +445,6 @@ nsRDFDataSourceDataSource::ArcLabelsOut(nsIRDFResource *aSource,
 /* nsISimpleEnumerator GetAllResources (); */
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::GetAllResources(nsISimpleEnumerator **_retval)
-{
-  return NS_RDF_NO_VALUE;
-}
-
-/* void Flush (); */
-NS_IMETHODIMP
-nsRDFDataSourceDataSource::Flush()
 {
   return NS_RDF_NO_VALUE;
 }

@@ -42,6 +42,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= rdf
+
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  $(NULL)
+
+
 LIBRARY_NAME	= rdfdsds
 IS_COMPONENT	= 1
 
