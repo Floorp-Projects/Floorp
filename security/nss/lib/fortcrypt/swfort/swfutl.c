@@ -45,7 +45,7 @@
 #include "secport.h"
 #include "secrng.h"
 #ifdef XP_OS2
-#include <stat.h> 	/* Needed for OS/2 emx */
+#include <sys/stat.h>
 #endif
 
 #ifdef XP_WIN
