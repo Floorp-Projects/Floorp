@@ -1068,17 +1068,7 @@ nsGenericDOMDataNode::GetTextLength(PRInt32* aLengthResult)
 NS_IMETHODIMP
 nsGenericDOMDataNode::CopyText(nsAString& aResult)
 {
-  if (mText.Is2b()) {
-    aResult.Assign(mText.Get2b(), mText.GetLength());
-  } else {
-    // Must use Substring() since nsDependentCString() requires null
-    // terminated strings.
-
-    const char *data = mText.Get1b();
-    CopyASCIItoUCS2(Substring(data, data + mText.GetLength()), aResult);
-  }
-
-  return NS_OK;
+  return GetData(aResult);
 }
 
 NS_IMETHODIMP
@@ -1096,15 +1086,23 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
+  PRBool haveMutationListeners =
+    mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+
+  nsCOMPtr<nsIAtom> oldValue;
+  if (haveMutationListeners) {
+    oldValue = GetCurrentValueAtom();
+  }
+    
   mText.SetTo(aBuffer, aLength);
 
   SetBidiStatus();
 
-  if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+  if (haveMutationListeners) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
     nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
-    // XXX Handle the setting of prevValue!
+    mutation.mPrevAttrValue = oldValue;
     nsDependentString newVal(aBuffer);
     if (!newVal.IsEmpty())
       mutation.mNewAttrValue = do_GetAtom(newVal);
@@ -1134,13 +1132,21 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
+  PRBool haveMutationListeners =
+    mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+
+  nsCOMPtr<nsIAtom> oldValue;
+  if (haveMutationListeners) {
+    oldValue = GetCurrentValueAtom();
+  }
+    
   mText.SetTo(aBuffer, aLength);
 
-  if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+  if (haveMutationListeners) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
     nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
-    // XXX Handle the setting of prevValue!
+    mutation.mPrevAttrValue = oldValue;
     if (*aBuffer)
       mutation.mNewAttrValue = do_GetAtom(aBuffer);
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1162,15 +1168,23 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
 {
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
+  PRBool haveMutationListeners =
+    mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+
+  nsCOMPtr<nsIAtom> oldValue;
+  if (haveMutationListeners) {
+    oldValue = GetCurrentValueAtom();
+  }
+    
   mText = aStr;
 
   SetBidiStatus();
 
-  if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+  if (haveMutationListeners) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
     nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
-    // XXX Handle the setting of prevValue!
+    mutation.mPrevAttrValue = oldValue;
     if (!aStr.IsEmpty())
       mutation.mNewAttrValue = do_GetAtom(aStr);
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1300,3 +1314,12 @@ void nsGenericDOMDataNode::SetBidiStatus()
     mDocument->SetBidiEnabled(PR_TRUE);
   }
 }
+
+already_AddRefed<nsIAtom>
+nsGenericDOMDataNode::GetCurrentValueAtom()
+{
+  nsAutoString val;
+  GetData(val);
+  return NS_NewAtom(val);
+}
+  

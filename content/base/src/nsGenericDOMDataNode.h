@@ -254,7 +254,8 @@ private:
 
   void SetBidiStatus();
 
-
+  already_AddRefed<nsIAtom> GetCurrentValueAtom();
+  
   void SetHasRangeList(PRBool aHasRangeList)
   {
     if (aHasRangeList) {
