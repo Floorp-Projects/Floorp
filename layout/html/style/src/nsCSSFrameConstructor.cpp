@@ -1281,27 +1281,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
       
       // Create some anonymous extras within the tree body.
       if (aTableCreator.IsTreeCreator()) {
-        // BEGIN ANONYMOUS
-        // See if our parent is a tree.
-         nsCOMPtr<nsIAtom> tag;
-         aContent->GetTag(*getter_AddRefs(tag));
-         
-         if (tag.get() == nsXULAtoms::treechildren) {
-            // See if our parent is a tree.
-            nsCOMPtr<nsIContent> grandPappy;
-            aContent->GetParent(*getter_AddRefs(grandPappy));
-            grandPappy->GetTag(*getter_AddRefs(tag));
-            nsCOMPtr<nsIDOMElement> element = do_QueryInterface(grandPappy);
-            nsString mode;
-            element->GetAttribute("mode", mode);
-            if (tag.get() == nsXULAtoms::tree) {
-              // We will want to have a scrollbar.
-              ((nsTreeRowGroupFrame*)aParentFrame)->SetFrameConstructor(this);
-              ((nsTreeRowGroupFrame*)aParentFrame)->SetShouldHaveScrollbar();
-            }
-          }
-        // END ANONYMOUS 
-		const nsStyleDisplay *parentDisplay;
+
+     		const nsStyleDisplay *parentDisplay;
         aParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)parentDisplay);
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
           // We're the child of another row group. If it's lazy, we're lazy.
@@ -1310,6 +1291,13 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
             ((nsTreeRowGroupFrame*)aNewGroupFrame)->MakeLazy();
             ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetFrameConstructor(this);
           }
+        }
+        else if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+          // We're the child of a table.
+          // See if our parent is a tree.
+          // We will want to have a scrollbar.
+          ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetFrameConstructor(this);
+          ((nsTreeRowGroupFrame*)aNewGroupFrame)->SetShouldHaveScrollbar();
         }
       }
 
@@ -1803,6 +1791,10 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treecolgroup    == tag.get())  ||
         (nsXULAtoms::treefoot        == tag.get())  ||
         (nsXULAtoms::treepusher      == tag.get())  ||
+        (nsXULAtoms::menu            == tag.get())  ||
+        (nsXULAtoms::menuitem        == tag.get())  ||
+        (nsXULAtoms::menubar         == tag.get())  ||
+        (nsXULAtoms::menubutton      == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
         (nsXULAtoms::deck            == tag.get())  ||
@@ -2793,6 +2785,53 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
     ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
   }
 
+#ifdef XP_MENUS
+  if (aTag == nsXULAtoms::menu) {
+    // Create a menu button child if the menu has no children or
+    // only a menuchildren tag as its child.
+    PRInt32 childCount;
+    aContent->ChildCount(childCount);
+    PRBool createButton = PR_FALSE;
+    if (childCount == 0)
+      createButton = PR_TRUE;
+    else if (childCount == 1) {
+      // Figure out if our child is a menuchildren tag.
+      nsCOMPtr<nsIContent> childContent;
+      aContent->ChildAt(0, *getter_AddRefs(childContent));
+      nsCOMPtr<nsIAtom> tag;
+      childContent->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::menuchildren)
+        createButton = PR_TRUE;
+    }
+
+    if (createButton) {
+      nsCOMPtr<nsIDocument> idocument;
+      aContent->GetDocument(*getter_AddRefs(idocument));
+
+      nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
+
+      // create a child button
+      nsCOMPtr<nsIDOMElement> node;
+      document->CreateElement("menubutton",getter_AddRefs(node));
+      nsCOMPtr<nsIContent> content;
+      //content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
+    
+      content = do_QueryInterface(node);
+
+      nsCOMPtr<nsIAtom> nameAtom = dont_AddRef(NS_NewAtom("name"));
+      nsCOMPtr<nsIAtom> valueAtom = dont_AddRef(NS_NewAtom("value"));
+
+      nsString result;
+      aContent->GetAttribute(kNameSpaceID_None, nameAtom, result);
+
+      content->SetAttribute(kNameSpaceID_None, valueAtom, result, PR_TRUE);
+      content->SetParent(aContent);
+
+      ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
+    }
+  }
+#endif // XP_MENUS
+
   return NS_OK;
 }
 
@@ -2956,6 +2995,29 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     }
     // End of PROGRESS METER CONSTRUCTION logic
 
+#ifdef XP_MENUS
+    // Menu Construction    
+    else if (aTag == nsXULAtoms::menu || aTag == nsXULAtoms::menuitem) {
+      // XXX Will eventually make a derived class box frame
+      // that has custom reflow to prevent menuchildren
+      // from becoming part of the flow.
+      processChildren = PR_TRUE; // Will need this to be custom.
+      isReplaced = PR_TRUE;
+      rv = NS_NewBoxFrame(&newFrame);
+    }
+    else if (aTag == nsXULAtoms::menubar) {
+      // XXX Will be a derived class toolbar frame.
+      processChildren = PR_TRUE;
+      rv = NS_NewToolbarFrame(&newFrame);
+    }
+    else if (aTag == nsXULAtoms::menubutton) {
+      // XXX Will be a derived class titledbutton frame
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewTitledButtonFrame(&newFrame);
+    }
+#endif // XP_MENUS
+
     // BOX CONSTRUCTION
     else if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol) {
       processChildren = PR_TRUE;
@@ -3096,7 +3158,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 
   return rv;
 }
-
 #endif
 
 nsresult
