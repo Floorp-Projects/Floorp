@@ -2325,16 +2325,16 @@ void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
       return;
     }
     aParsingStatus = SELECTOR_PARSING_ENDED_OK;
-    nsCSSSelector* newSel = new nsCSSSelector();
-    if (nsnull == aSelector.mNegations &&
-        ((eCSSToken_ID == mToken.mType) ||
-          mToken.IsSymbol('.') ||
-          mToken.IsSymbol(':') ||
-          mToken.IsSymbol('['))) {
-      // ID, class and attribute selectors and pseudo-classes are stored in
-      // the first mNegations attached to a selector
-      aSelector.mNegations = newSel;
+    if (!aSelector.mNegations) {
+      aSelector.mNegations = new nsCSSSelector();
+      if (!aSelector.mNegations) {
+        aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
     }
+    // ID, class and attribute selectors and pseudo-classes are stored in
+    // the first mNegations attached to a selector
     if (eCSSToken_ID == mToken.mType) {   // #id
       ParseIDSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
     }
@@ -2349,10 +2349,12 @@ void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
     }
     else {
       // then it should be a type element or universal selector
-      if (nsnull == aSelector.mNegations) {
-        aSelector.mNegations = newSel;
+      nsCSSSelector *newSel = new nsCSSSelector();
+      if (!newSel) {
+        aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
-      newSel = new nsCSSSelector();
       nsCSSSelector* negations = aSelector.mNegations;
       while (nsnull != negations->mNegations) {
         negations = negations->mNegations;
