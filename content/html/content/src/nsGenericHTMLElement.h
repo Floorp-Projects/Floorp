@@ -1257,12 +1257,6 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewHTMLBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
-inline nsresult
-NS_NewHTMLBaseElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
-}
-
 nsresult
 NS_NewHTMLBaseFontElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
@@ -1283,12 +1277,6 @@ NS_NewHTMLDirectoryElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLDivElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-inline nsresult
-NS_NewHTMLEmbedElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
-}
 
 nsresult
 NS_NewHTMLFieldSetElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1330,12 +1318,6 @@ NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
 nsresult
 NS_NewHTMLInsElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
-inline nsresult
-NS_NewHTMLIsIndexElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
-}
-
 nsresult
 NS_NewHTMLLIElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
@@ -1372,12 +1354,6 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewHTMLParagraphElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
-inline nsresult
-NS_NewHTMLParamElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
-}
-
 nsresult
 NS_NewHTMLPreElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
@@ -1390,12 +1366,6 @@ NS_NewHTMLScriptElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
                         PRBool aFromParser);
-
-inline nsresult
-NS_NewHTMLSpacerElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
-}
 
 nsresult
 NS_NewHTMLSpanElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1411,13 +1381,6 @@ NS_NewHTMLTableCellElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLTableColElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-inline nsresult
-NS_NewHTMLTableColGroupElement(nsIHTMLContent** aResult,
-                               nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLTableColElement(aResult, aNodeInfo);
-}
 
 nsresult
 NS_NewHTMLTableElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1448,12 +1411,5 @@ NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-inline nsresult
-NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
-{
-  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
-}
-
 
 #endif /* nsGenericHTMLElement_h___ */
