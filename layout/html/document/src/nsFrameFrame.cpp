@@ -1045,13 +1045,15 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 
   // determine if we are a printcontext
 
+  PRBool shouldCreateDoc = PR_TRUE;
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
   if  (thePrinterContext) {
     // we are printing
+    shouldCreateDoc = PR_FALSE;
   }
 
   
-  if (!mCreatingViewer) {
+  if (!mCreatingViewer && shouldCreateDoc) {
     // create the web shell
     // we do this even if the size is not positive (bug 11762)
     // we do this even if there is no src (bug 16218)

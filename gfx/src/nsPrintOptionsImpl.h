@@ -61,7 +61,7 @@ protected:
   PRInt16       mPageNumJust;
 
   PRInt16       mPrintFrameType;
-  PRBool        mIsPrintFrame;
+  PRBool        mHowToEnableFrameUI;
 
   nsFont*       mDefaultFont;
   nsString      mTitle;

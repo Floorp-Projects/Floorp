@@ -26,7 +26,9 @@ var printService       = null;
 var default_command    = "lpr";
 var default_file       = "mozilla.ps";
 var gPrintOptInterface = Components.interfaces.nsIPrintOptions;
+var doDebug            = false;
 
+//---------------------------------------------------
 function initDialog()
 {
   dialog = new Object;
@@ -82,6 +84,7 @@ function initDialog()
   dialog.enabled         = false;
 }
 
+//---------------------------------------------------
 function checkValid(elementID)
 {
   var editField = document.getElementById( elementID );
@@ -96,6 +99,7 @@ function checkValid(elementID)
   }
 }
 
+//---------------------------------------------------
 function doPrintToFile( value )
 {
   if (value ) {
@@ -113,6 +117,7 @@ function doPrintToFile( value )
   }
 }
 
+//---------------------------------------------------
 function doPrintRange( value )
 {
   if ( value) {
@@ -128,6 +133,7 @@ function doPrintRange( value )
   }
 }
 
+//---------------------------------------------------
 function getDoubleStr( val, dec )
 {
   var str = val.toString();
@@ -135,6 +141,7 @@ function getDoubleStr( val, dec )
   return str.substring(0, inx+dec+1);
 }
 
+//---------------------------------------------------
 function loadDialog()
 {
   var print_tofile        = false;
@@ -148,8 +155,8 @@ function loadDialog()
   var print_command       = default_command;
   var print_file          = default_file;
   var print_selection_radio_enabled = false;
-  var print_isFrame       = false;
   var print_frametype     = gPrintOptInterface.kSelectedFrame;
+  var print_howToEnableUI = gPrintOptInterface.kFrameEnableNone;
 
   try {
     printService = Components.classes["@mozilla.org/gfx/printoptions;1"];
@@ -175,27 +182,28 @@ function loadDialog()
     print_file      = printService.toFileName;
     print_tofile    = printService.printToFile;
     print_frametype = printService.printFrameType;
-    print_isFrame   = printService.isPrintFrame;
+    print_howToEnableUI = printService.howToEnableFrameUI;
     print_selection_radio_enabled = printService.GetPrintOptions(gPrintOptInterface.kPrintOptionsEnableSelectionRB);
-  } else {
-    dump("printService is null\n");
   }
-  dump("printReversed "+print_reversed+"\n");
-  dump("printInColor  "+print_color+"\n");
-  dump("paperSize     "+print_paper_size+"\n");
-  dump("printCommand  "+print_command+"\n");
-  dump("toFileName    "+print_file+"\n");
-  dump("printToFile   "+print_tofile+"\n");
-  dump("printToFile   "+print_tofile+"\n");
-  dump("print_frame   "+print_frametype+"\n");
-  dump("print_isFrame "+print_isFrame+"\n");
 
-  dump("selection_radio_enabled "+print_selection_radio_enabled+"\n");
+  if (doDebug) {
+    dump("printReversed "+print_reversed+"\n");
+    dump("printInColor  "+print_color+"\n");
+    dump("paperSize     "+print_paper_size+"\n");
+    dump("printCommand  "+print_command+"\n");
+    dump("toFileName    "+print_file+"\n");
+    dump("printToFile   "+print_tofile+"\n");
+    dump("printToFile   "+print_tofile+"\n");
+    dump("print_frame   "+print_frametype+"\n");
+    dump("print_howToEnableUI "+print_howToEnableUI+"\n");
 
-  dump("print_margin_top    "+print_margin_top+"\n");
-  dump("print_margin_left   "+print_margin_left+"\n");
-  dump("print_margin_right  "+print_margin_right+"\n");
-  dump("print_margin_bottom "+print_margin_bottom+"\n");
+    dump("selection_radio_enabled "+print_selection_radio_enabled+"\n");
+
+    dump("print_margin_top    "+print_margin_top+"\n");
+    dump("print_margin_left   "+print_margin_left+"\n");
+    dump("print_margin_right  "+print_margin_right+"\n");
+    dump("print_margin_bottom "+print_margin_bottom+"\n");
+  }
 
   if (print_file == "") {
     print_file = default_file;
@@ -256,34 +264,47 @@ function loadDialog()
   dialog.print.setAttribute("value",
   document.getElementById("printButton").getAttribute("value"));
 
+  if (doDebug) {
+    dump("print_howToEnableUI: "+print_howToEnableUI+"\n");
+  }
+
   // print frame
-  if ( print_isFrame ) {
-    dialog.aslayedoutRadio.removeAttribute("disabled"); 
+  if (print_howToEnableUI == gPrintOptInterface.kFrameEnableAll) {
+    // XXX this is just temporary until we have impemented "AsIs"
+    dialog.aslayedoutRadio.setAttribute("disabled","true" );
+    //dialog.aslayedoutRadio.removeAttribute("disabled"); 
+
     dialog.selectedframeRadio.removeAttribute("disabled"); 
     dialog.eachframesepRadio.removeAttribute("disabled"); 
     dialog.printrangeGroupLabel.removeAttribute("disabled"); 
 
-    if (print_frametype == gPrintOptInterface.kFramesAsIs) {
-      dialog.aslayedoutRadio.checked = true;
+    // initialize radio group
+    dialog.selectedframeRadio.checked = true;
 
-    } else if (print_frametype == gPrintOptInterface.kSelectedFrame) {
-      dialog.selectedframeRadio.checked = true;
+  } else if (print_howToEnableUI == gPrintOptInterface.kFrameEnableAsIsAndEach) {
+    // XXX this is just temporary until we have impemented "AsIs"
+    dialog.aslayedoutRadio.setAttribute("disabled","true" );
+    //dialog.aslayedoutRadio.removeAttribute("disabled");       //enable
 
-    } else if (print_frametype == gPrintOptInterface.kEachFrameSep) {
-      dialog.eachframesepRadio.checked = true;
-    }
+    dialog.selectedframeRadio.setAttribute("disabled","true" ); // disable
+    dialog.eachframesepRadio.removeAttribute("disabled");       // enable
+    dialog.printrangeGroupLabel.removeAttribute("disabled");    // enable
+
+    // initialize
+    dialog.eachframesepRadio.checked = true;
+    
   } else {
     dialog.aslayedoutRadio.setAttribute("disabled","true" );
     dialog.selectedframeRadio.setAttribute("disabled","true" );
     dialog.eachframesepRadio.setAttribute("disabled","true" );
     dialog.printrangeGroupLabel.setAttribute("disabled","true" );
-    
   }
 
 }
 
 var param;
 
+//---------------------------------------------------
 function onLoad()
 {
   // Init dialog.
@@ -302,10 +323,12 @@ function onLoad()
   loadDialog();
 }
 
+//---------------------------------------------------
 function onUnload()
 {
 }
 
+//---------------------------------------------------
 function onOK()
 {
   var print_paper_size = 0;
@@ -369,6 +392,7 @@ function onOK()
   return true;
 }
 
+//---------------------------------------------------
 function onCancel()
 {
   if (param) {
@@ -377,6 +401,7 @@ function onCancel()
   return true;
 }
 
+//---------------------------------------------------
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function onChooseFile()
 {

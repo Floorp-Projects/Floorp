@@ -78,6 +78,10 @@ interface nsIPrintOptions : nsISupports
   const short kSelectedFrame = 1;
   const short kEachFrameSep  = 2;
 
+  const short kFrameEnableNone        = 0;
+  const short kFrameEnableAll         = 1;
+  const short kFrameEnableAsIsAndEach = 2;
+
   /**
    * Show Native Print Options dialog, this may not be supported on all platforms
    */
@@ -125,7 +129,7 @@ interface nsIPrintOptions : nsISupports
   attribute wstring title;
   attribute wstring docURL;
 
-  attribute boolean isPrintFrame;
+  attribute short   howToEnableFrameUI;
   attribute short   printFrameType;
 
   /* Additional XP Related */

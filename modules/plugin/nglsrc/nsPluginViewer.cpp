@@ -662,7 +662,10 @@ PluginViewerImpl::GetPrintable(PRBool *aPrintable)
 
 
 NS_IMETHODIMP
-PluginViewerImpl::PrintContent(nsIWebShell *aParent, nsIDeviceContext *aDContext)
+PluginViewerImpl::PrintContent(nsIWebShell *      aParent,
+                               nsIDeviceContext * aDContext,
+                               nsIDOMWindow     * aDOMWin,
+                               PRBool             aIsSubDoc)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aDContext);

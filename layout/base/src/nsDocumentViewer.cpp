@@ -98,6 +98,14 @@
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
 
+// FrameSet
+#include "nsINodeInfo.h"
+#include "nsIDocument.h"
+#include "nsHTMLAtoms.h"
+#include "nsIHTMLContent.h"
+#include "nsINameSpaceManager.h"
+#include "nsIWebShell.h"
+
 //focus
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMFocusListener.h"
@@ -113,6 +121,7 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 #undef NOISY_VIEWER
 #endif
 
+//#define SPOOL_TO_ONE_DOC 1
 
 class DocumentViewerImpl;
 
@@ -246,11 +255,6 @@ public:
                                 void* aClosure);
   nsresult CallChildren(CallChildFunc aFunc, void* aClosure);
 
-  // get the currently infocus frame for the document viewer
-  nsresult FindFocusedWebShell(nsIDOMWindowInternal  **aCurFocusFrame);
-  // get the DOM window for a given document viewer
-  nsresult GetDOMWindow(nsIDOMWindow  **aCurDOMWindow);
-
   // nsIImageGroupObserver interface
   virtual void Notify(nsIImageGroup *aImageGroup,
                       nsImageGroupNotification aNotificationType);
@@ -264,10 +268,19 @@ private:
   nsresult MakeWindow(nsIWidget* aParentWidget,
                       const nsRect& aBounds);
 
-  nsresult GetDocumentSelection(nsISelection **aSelection);
-  nsresult GetDocumentSelection(nsIPresShell * aPresShell, nsISelection **aSelection);
+  nsresult GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell = nsnull);
   nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID);
-  PRBool   IsThereASelection();
+  PRBool   IsThereASelection(nsIDOMWindowInternal * aDOMWin);
+  PRBool   DoesContainFrameSet(nsIWebShell * aParent);
+  PRBool   IsThereAnIFrameSelected(nsIWebShell* aWebShell,
+                                   nsIDOMWindowInternal * aDOMWin,
+                                   PRBool& aDoesContainFrameset);
+  PRBool   IsWindowsInOurSubTree(nsIDOMWindowInternal * aDOMWindow);
+
+  // get the currently infocus frame for the document viewer
+  nsIDOMWindowInternal * FindFocusedDOMWindowInternal();
+  // get the DOM window for a given document viewer
+  nsIDOMWindow * GetDOMWindowForThisDV();
 
   //
   // The following three methods are used for printing...
@@ -275,6 +288,8 @@ private:
   void DocumentReadyForPrinting();
   //nsresult PrintSelection(nsIDeviceContextSpec * aDevSpec);
   nsresult GetSelectionDocument(nsIDeviceContextSpec * aDevSpec, nsIDocument ** aNewDoc);
+
+  PRUnichar* GetWebShellTitle(nsIWebShell * aWebShell);
 
   static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
   static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
@@ -317,10 +332,7 @@ protected:
   nsIPresShell                *mPrintPS;
   nsIViewManager              *mPrintVM;
   nsIView                     *mPrintView;
-  static nsIDOMWindowInternal *mCurFocusFrame;  // this is the currently focused frame for a single print job
   FILE                        *mFilePointer;    // a file where information can go to when printing
-  nsIDocument                 *mSelectionDoc;
-  nsIDocShell                 *mSelectionDocShell;
 
   nsCOMPtr<nsIPrintListener>  mPrintListener; // An observer for printing...
 
@@ -334,9 +346,6 @@ protected:
   nsCharsetSource mHintCharsetSource;
   nsString mForceCharacterSet;
 };
-
-nsIDOMWindowInternal* DocumentViewerImpl::mCurFocusFrame = 0;
-
 
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
@@ -366,7 +375,6 @@ DocumentViewerImpl::DocumentViewerImpl()
   mEnableRendering = PR_TRUE;
   mFilePointer = nsnull;
   mPrintListener = nsnull;
-  mSelectionDoc = nsnull;
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
@@ -1287,22 +1295,9 @@ static nsresult GetPageRangeForSelection(nsIPresShell *        aPresShell,
 }
 
 //-------------------------------------------------------
-nsresult
-DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
-                                 nsIDeviceContext * aDContext)
+PRBool 
+DocumentViewerImpl::DoesContainFrameSet(nsIWebShell * aParent)
 {
-
-  NS_ENSURE_ARG_POINTER(aParent);
-  NS_ENSURE_ARG_POINTER(aDContext);
-
-  nsCOMPtr<nsIStyleSet>       ss;
-  nsCOMPtr<nsIViewManager>    vm;
-  PRInt32                     width, height;
-  nsresult                    rv;
-  PRInt32                     count,i;
-  nsCOMPtr<nsIContentViewer>  viewer;
-  nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(aParent));
-
   // See if if the incoming doc is the root document
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParent));
   nsCOMPtr<nsIDocShellTreeItem> parentsParentDoc;
@@ -1323,16 +1318,13 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   PRBool doesContainFrameSet = PR_FALSE;
   // only check to see if there is a frameset if there is 
   // NO parent doc for this doc. meaning this parent is the root doc
-  if (!parentsParentDoc) {
+  //if (!parentsParentDoc) {
     nsCOMPtr<nsIPresShell> shell;
     mPresContext->GetShell(getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        if (mSelectionDoc) {
-          doc = mSelectionDoc;
-        }
         nsCOMPtr<nsIContent> rootContent = getter_AddRefs(doc->GetRootContent());
         if (rootContent) {
           if (NS_SUCCEEDED(FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
@@ -1341,13 +1333,106 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
         }
       }
     }
+  //}
+  return doesContainFrameSet;
+}
+
+//-------------------------------------------------------
+PRUnichar*
+DocumentViewerImpl::GetWebShellTitle(nsIWebShell * aWebShell)
+{
+  NS_ASSERTION(aWebShell != nsnull, "Must have a valid webshell!");
+
+  PRUnichar * docTitleStr = nsnull;
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
+  if (docShell) {
+    nsCOMPtr<nsIPresShell> presShell;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIDocument> doc;
+      presShell->GetDocument(getter_AddRefs(doc));
+      if (doc) {
+        const nsString* docTitle = doc->GetDocumentTitle();
+        if (docTitle != nsnull) {
+          docTitleStr = docTitle->ToNewUnicode();
+        }
+      }
+    }
+  }
+  return docTitleStr;
+}
+
+//-------------------------------------------------------
+nsresult
+DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
+                                 nsIDeviceContext * aDContext,
+                                 nsIDOMWindow     * aDOMWin,
+                                 PRBool             aIsSubDoc)
+{
+
+  NS_ENSURE_ARG_POINTER(aParent);
+  NS_ENSURE_ARG_POINTER(aDContext);
+
+  nsCOMPtr<nsIStyleSet>       ss;
+  nsCOMPtr<nsIViewManager>    vm;
+  PRInt32                     width, height;
+  nsresult                    rv;
+  PRInt32                     i;
+  nsCOMPtr<nsIContentViewer>  viewer;
+  nsCOMPtr<nsIDocShellTreeNode>  parentAsNode(do_QueryInterface(aParent));
+  nsCOMPtr<nsIDOMWindowInternal> domWinIntl(do_QueryInterface(aDOMWin));
+
+  PRInt16 printFrameType = nsIPrintOptions::kSelectedFrame; // XXX later this default to kFramesAsIs
+  PRInt16 printHowEnable = nsIPrintOptions::kFrameEnableNone; 
+  PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages;
+  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && printService) {
+    printService->GetPrintFrameType(&printFrameType);
+    printService->GetHowToEnableFrameUI(&printHowEnable);
+    printService->GetPrintRange(&printRangeType);
+  }
+
+#ifdef DEBUG_rods
+  PRUnichar * docStr = GetWebShellTitle(aParent);
+  if (docStr) {
+    printService->SetTitle(docStr);
+    nsString str;
+    str = docStr;
+    char * s = str.ToNewCString();
+    printf("***** Printing: %p - %s\n", aParent, s);
+    nsMemory::Free(s);
+    nsMemory::Free(docStr);
+  } else {
+    printf("***** Printing: %p - No Title\n", aParent);
+  }
+#endif
+
+  PRBool doesContainFrameSet;
+  PRBool isIFrameSelection = IsThereAnIFrameSelected(aParent, domWinIntl, doesContainFrameSet);
+
+  PRBool isSelection = IsThereASelection(domWinIntl);
+
+  // the root webshell is responsible for 
+  // starting and ending the printing
+#if SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
+                     // (this part needs to be added)
+  if (aIsSubDoc == nsnull) {
+    NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
+  }
+#endif
+
+  if (printFrameType == nsIPrintOptions::kFramesAsIs) {
+    // print frameset "as is " here and return
+    return NS_OK;
   }
 
   // print any child documents
   // like frameset frames or iframes
-  parentAsNode->GetChildCount(&count);
-  if(count> 0) {      
-    for(i=0;i<count;i++) {
+  PRInt32 childWebshellCount;
+  parentAsNode->GetChildCount(&childWebshellCount);
+  if(childWebshellCount > 0) {
+    for(i=0;i<childWebshellCount;i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
       parentAsNode->GetChildAt(i, getter_AddRefs(child));
       nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
@@ -1355,15 +1440,96 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
       nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
       if (viewerFile) {
         nsCOMPtr<nsIWebShell> childWebShell(do_QueryInterface(child));
-        NS_ENSURE_SUCCESS(viewerFile->PrintContent(childWebShell,aDContext), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(viewerFile->PrintContent(childWebShell, aDContext, aDOMWin, PR_TRUE), NS_ERROR_FAILURE);
       }
+    }
+#if SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
+                     // (this part needs to be added)
+    if (aIsSubDoc == nsnull) {
+      aDContext->EndDocument();
+    }
+#endif
+    if (doesContainFrameSet || (!doesContainFrameSet && isIFrameSelection)) {
+      return NS_OK;
     }
   }
  
+  //-----------------------------------------------------
+  // Now check to see if we can print this WebShell
+  //-----------------------------------------------------
 
+  // Check to see if printing frames is not on 
+  // and that we are printing a range or all pages
+  PRBool printAllPages  = (printRangeType == nsIPrintOptions::kRangeAllPages ||
+                           printRangeType == nsIPrintOptions::kRangeSpecifiedPageRange) && 
+                           printHowEnable == nsIPrintOptions::kFrameEnableNone;
 
-if (!doesContainFrameSet) {
+  // See if we are printing the selected frame
+  PRBool printEachFrame = printFrameType == nsIPrintOptions::kEachFrameSep;
+
+  // This is for when the current root WebShell is a Frameset
+  // and we need to see if the webshell being passed in 
+  // is the currently selected frame of the frameset
+  //
+  // The aDOMWin is the currently selected DOM window, 
+  // which could be a frameset frame or a IFrame
+  PRBool thisWebShellIsSelected = PR_FALSE;
+  nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWin));
+  if (scriptObj) {
+    nsCOMPtr<nsIDocShell> docShell;
+    scriptObj->GetDocShell(getter_AddRefs(docShell));
+    if (docShell) {
+      nsCOMPtr<nsIWebShell> webShellForParent(do_QueryInterface(docShell));
+      if (webShellForParent.get() == aParent) {
+        thisWebShellIsSelected = PR_TRUE;
+      }
+    }
+  }
+
+  // Check to make we can print the currently selected frame of a frameset
+  PRBool printSelectedFrame = thisWebShellIsSelected && 
+                              printFrameType == nsIPrintOptions::kSelectedFrame;
+
+  // Now see if we can print the selected IFrame
+  // When IFrames are selected all the frame UI is turned off
+  // and theuser prints it by selected the "Selection" radiobutton
+  // which turns on kRangeSelection
+  PRBool printSelectedIFrame  = PR_FALSE;
+  if (printHowEnable == nsIPrintOptions::kFrameEnableNone && 
+      printRangeType == nsIPrintOptions::kRangeSelection &&
+      thisWebShellIsSelected) {
+    printSelectedIFrame = PR_TRUE;
+    // check to see if we have a range selection, 
+    // as oppose to a insert selection
+    // this means if the user just clicked on the IFrame then 
+    // there will not be a selection so we want the entire page to print
+    //
+    // XXX this is sort of a hack right here to make the page 
+    // not try to reposition itself when printing selection
+    if (!IsThereASelection(domWinIntl)) {
+      printRangeType = nsIPrintOptions::kRangeAllPages;
+      printService->SetPrintRange(printRangeType);
+    }
+  }
+
+  // Get WebShell's Document title String 
+  PRUnichar * docTitleStr = GetWebShellTitle(aParent);
+  if (docTitleStr) {
+    printService->SetTitle(docTitleStr);
+  }
+
+  PRBool canPrintFrame = printAllPages || printEachFrame || printSelectedFrame || printSelectedIFrame;                                                          
+
+  if (!aIsSubDoc || (aIsSubDoc && canPrintFrame)) {
+#ifndef SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
+                         // (this part needs to be removed)
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
+#endif
+
+    if (docTitleStr != nsnull) {
+      nsMemory::Free(docTitleStr);
+    }
+
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
     // XXX - Hack Alert
@@ -1372,7 +1538,7 @@ if (!doesContainFrameSet) {
     // This means you can never print any selection that is longer than one page
     // put it keeps it from page breaking in the middle of your print of the selection
     // (see also nsSimplePageSequence.cpp)
-    if (IsThereASelection()) {
+    if (IsThereASelection(domWinIntl)) {
       height = 0x0FFFFFFF;
     }
 
@@ -1450,7 +1616,7 @@ if (!doesContainFrameSet) {
     nsCOMPtr<nsISelection> selectionPS;
     GetDocumentSelection(getter_AddRefs(selection));
     if (selection) {
-      GetDocumentSelection(ps, getter_AddRefs(selectionPS));
+      GetDocumentSelection(getter_AddRefs(selectionPS), ps);
       if (selectionPS) {
         PRInt32 cnt;
         selection->GetRangeCount(&cnt);
@@ -1500,11 +1666,7 @@ if (!doesContainFrameSet) {
       DumpLayoutData(cx, aDContext, rootFrame, aParent);
 #endif
 
-      NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
-      if (NS_SUCCEEDED(rv) && printService) {
-        PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages;
-        printService->GetPrintRange(&printRangeType);
-
+      if (printService) {
         // get the document title
         const nsString* docTitle = mDocument->GetDocumentTitle();
         if( docTitle != nsnull) {
@@ -1586,11 +1748,26 @@ if (!doesContainFrameSet) {
         return NS_ERROR_FAILURE;
       }
     }
-
+#ifndef SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
+                         // (this part needs to be removed)
     aDContext->EndDocument();
-
+#endif
     ps->EndObservingDocument();
   }
+
+  if (printSelectedIFrame) {
+    printService->SetPrintRange(nsIPrintOptions::kRangeSelection);
+  }
+
+#if SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
+                     // (this part needs to be added)
+  // Only root webshells/docs get to start and end 
+  // the printing of the entire document
+  if (aIsSubDoc == nsnull) {
+    aDContext->EndDocument();
+  }
+#endif
+
   return NS_OK;
 
 }
@@ -1817,21 +1994,22 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   return rv;
 }
 
-nsresult DocumentViewerImpl::GetDocumentSelection(nsIPresShell * aPresShell, nsISelection **aSelection)
+nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell)
 {
+  if (aPresShell == nsnull) {
+    if (!mPresShell) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    aPresShell = mPresShell;
+  }
   if (!aSelection) return NS_ERROR_NULL_POINTER;
   if (!aPresShell) return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsISelectionController> selcon;
   selcon = do_QueryInterface(aPresShell);
   if (selcon) 
     return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  
   return NS_ERROR_FAILURE;
-}
-
-nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection)
-{
-  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
-  return GetDocumentSelection(mPresShell, aSelection);
 }
 
 NS_IMETHODIMP
@@ -1905,12 +2083,16 @@ nsCOMPtr<nsIWebShell> webContainer;
       imageGroup->RemoveObserver(this);
     }
 
-    this->FindFocusedWebShell(&mCurFocusFrame);
-
+    // get the focused DOMWindow
+    nsCOMPtr<nsIDOMWindowInternal> curFocusDOMWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(curFocusDOMWin));
+    
     //
     // Send the document to the printer...
     //
-    nsresult rv = PrintContent(webContainer, mPrintDC);
+
+
+    nsresult rv = PrintContent(webContainer, mPrintDC, domWin, PR_FALSE);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "bad result from PrintConent");
 
     // printing is complete, clean up now
@@ -1921,12 +2103,10 @@ nsCOMPtr<nsIWebShell> webContainer;
     if (mPrintListener)
       mPrintListener->OnEndPrinting(NS_OK);
 
-    NS_IF_RELEASE(mCurFocusFrame);
     NS_RELEASE(mPrintPS);
     NS_RELEASE(mPrintVM);
     NS_RELEASE(mPrintSS);
     NS_RELEASE(mPrintDC);
-    NS_IF_RELEASE(mSelectionDoc);
     
   }
 }
@@ -2077,109 +2257,6 @@ DocumentViewerImpl::GetSaveable(PRBool *aSaveable)
 
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
-//------------------------------------------------------------------
-#include "nsINodeInfo.h"
-#include "nsIDocument.h"
-#include "nsHTMLAtoms.h"
-#include "nsIHTMLContent.h"
-#include "nsINameSpaceManager.h"
-#include "nsIWebShell.h"
-
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-
-#if 0
-nsresult
-DocumentViewerImpl::CreateDocShell(nsIPresContext* aPresContext, const nsSize& aSize)
-{
-  nsresult rv;
-  mSelectionDocShell = do_CreateInstance(kWebShellCID);
-  NS_ENSURE_TRUE(mSelectionDocShell, NS_ERROR_FAILURE);
-
-  // pass along marginwidth and marginheight so sub document can use it
-  mSelectionDocShell->SetMarginWidth(0);
-  mSelectionDocShell->SetMarginHeight(0);
-  
-  /* our parent must be a docshell.  we need to get our prefs from our parent */
-  nsCOMPtr<nsISupports> container;
-  aPresContext->GetContainer(getter_AddRefs(container));
-  NS_ENSURE_TRUE(container, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIDocShell> outerShell = do_QueryInterface(container);
-  NS_ENSURE_TRUE(outerShell, NS_ERROR_UNEXPECTED);
-
-  float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = aPresContext->GetShell(getter_AddRefs(presShell));     
-  if (NS_FAILED(rv)) { return rv; }
-
-  // create, init, set the parent of the view
-  nsIView* view;
-  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
-                                         (void **)&view);
-  if (NS_FAILED(rv)) { return rv; }
-
-  nsIView* parView;
-  nsPoint origin;
-  GetOffsetFromView(aPresContext, origin, &parView);  
-
-  nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
-#ifdef NOISY
-  printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height);
-#endif
-
-  nsCOMPtr<nsIViewManager> viewMan;
-  presShell->GetViewManager(getter_AddRefs(viewMan));  
-  rv = view->Init(viewMan, viewBounds, parView);
-  if (NS_FAILED(rv)) { return rv; }
-  viewMan->InsertChild(parView, view, 0);
-  rv = view->CreateWidget(kCChildCID);
-  if (NS_FAILED(rv)) { return rv; }
-  SetView(aPresContext, view);
-
-  // if the visibility is hidden, reflect that in the view
-  const nsStyleDisplay* display;
-  GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if (!display->IsVisible()) {
-    view->SetVisibility(nsViewVisibility_kHide);
-  }
-
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-  nsMargin border;
-  spacing->CalcBorderFor(this, border);
-
-  nsCOMPtr<nsIWidget> widget;
-  view->GetWidget(*getter_AddRefs(widget));
-
-  mSelectionDocShell->SetAllowPlugins(PR_FALSE);
-  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mSelectionDocShell));
-
-  PRInt32 x = NSToCoordRound(border.left * t2p);
-  PRInt32 y = NSToCoordRound(border.top * t2p);
-  PRInt32 cx = NSToCoordRound((aSize.width  - border.right) * t2p);
-  PRInt32 cy = NSToCoordRound((aSize.height - border.bottom) * t2p);
-  NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nsnull, widget, (x >= 0) ? x : 0,
-      (y >= 0) ? y : 0, cx, cy), NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(docShellAsWin->Create(), NS_ERROR_FAILURE);
-
-  // move the view to the proper location
-  viewMan->MoveViewTo(view, origin.x, origin.y);
-
-  mSelectionDocShell->SetDocLoaderObserver(mTempObserver);
- 
-  PRInt32 type;
-  GetType(&type);
-  if ((PR_FALSE==IsSingleLineTextControl()) || (NS_FORM_INPUT_PASSWORD == type)) {
-    docShellAsWin->SetVisibility(PR_TRUE);
-  }
-  return NS_OK;
-}
-#endif
-
-//nsresult DocumentViewerImpl::PrintSelection(nsIDeviceContextSpec * aDevSpec)
 nsresult DocumentViewerImpl::GetSelectionDocument(nsIDeviceContextSpec * aDevSpec, nsIDocument ** aNewDoc)
 {
   //NS_ENSURE_ARG_POINTER(*aDevSpec);
@@ -2248,12 +2325,47 @@ nsresult DocumentViewerImpl::GetSelectionDocument(nsIDeviceContextSpec * aDevSpe
 }
 
 PRBool 
-DocumentViewerImpl::IsThereASelection()
+DocumentViewerImpl::IsThereAnIFrameSelected(nsIWebShell*           aWebShell, 
+                                            nsIDOMWindowInternal * aDOMWin,
+                                            PRBool&                aDoesContainFrameset)
 {
+  aDoesContainFrameset = DoesContainFrameSet(aWebShell);
+  PRBool iFrameIsSelected = PR_FALSE;
+  // First, check to see if we are a frameset
+  if (!aDoesContainFrameset) {
+    // Check to see if there is a currenlt focused frame
+    // if so, it means the selected frame is either the main webshell
+    // or an IFRAME
+    if (aDOMWin != nsnull) {
+      // Get the main webshell's DOMWin to see if it matches 
+      // the frame that is selected
+      nsIDOMWindow* theDOMWindow = GetDOMWindowForThisDV();                                                
+      if (aDOMWin != nsnull && theDOMWindow != aDOMWin) {
+        // we have a selected IFRAME
+        iFrameIsSelected = PR_TRUE;
+      }
+      NS_IF_RELEASE(theDOMWindow);
+    }
+  }
+  return iFrameIsSelected;
+}
+
+
+PRBool 
+DocumentViewerImpl::IsThereASelection(nsIDOMWindowInternal * aDOMWin)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  if (aDOMWin != nsnull) {
+    nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWin));
+    nsCOMPtr<nsIDocShell> docShell;
+    scriptObj->GetDocShell(getter_AddRefs(docShell));
+    docShell->GetPresShell(getter_AddRefs(presShell));
+  }
+
   // check here to see if there is a range selection
   // so we know whether to turn on the "Selection" radio button
   nsCOMPtr<nsISelection> selection;
-  GetDocumentSelection(getter_AddRefs(selection));
+  GetDocumentSelection(getter_AddRefs(selection), presShell);
   if (selection) {
     PRInt32 count;
     selection->GetRangeCount(&count);
@@ -2281,10 +2393,35 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
   nsCOMPtr<nsIDeviceContextSpecFactory> factory;
   PRInt32                               width,height;
 
+  nsCOMPtr<nsIDOMWindowInternal> curFocusDOMWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+
+  // Get the webshell for this documentviewer
+  webContainer = do_QueryInterface(mContainer);
+
+  // first check to see if there is a "regular" selection
+  PRBool isSelection = IsThereASelection(curFocusDOMWin);
+
+  // Get whether the doc contains a frameset 
+  // Also, check to see if the currently focus webshell 
+  // is a child of this webshell
+  PRBool doesContainFrameSet;
+  PRBool isIFrameSelection = IsThereAnIFrameSelected(webContainer, curFocusDOMWin, doesContainFrameSet);
+
+  // Setup print options for UI
   nsresult  rv = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
-    printService->SetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, IsThereASelection());
+    if (doesContainFrameSet) {
+      if (curFocusDOMWin) {
+        printService->SetHowToEnableFrameUI(nsIPrintOptions::kFrameEnableAll);
+      } else {
+        printService->SetHowToEnableFrameUI(nsIPrintOptions::kFrameEnableAsIsAndEach);
+      }
+    } else {
+      printService->SetHowToEnableFrameUI(nsIPrintOptions::kFrameEnableNone);
+    }
+    // Now determine how to set up the Frame print UI
+    printService->SetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, isSelection || isIFrameSelection);
   }
 
   nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
@@ -2311,11 +2448,6 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
 
         NS_RELEASE(devspec);
 
-        nsCOMPtr<nsIDocument> printDoc;
-        printDoc = mDocument;
-
-        // Get the webshell for this documentviewer
-        webContainer = do_QueryInterface(mContainer);
         if(webContainer) {
           // load the document and do the initial reflow on the entire document
           nsCOMPtr<nsIPrintContext> printcon;
@@ -2336,13 +2468,13 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
           // on one page and then crop the page.
           // This means you can never print any selection that is longer than one page
           // put it keeps it from page breaking in the middle of your print of the selection
-          if (IsThereASelection()) {
+          if (isSelection) {
             height = 0x0FFFFFFF;
           }
 
           mPrintPC->Init(mPrintDC);
           mPrintPC->SetContainer(webContainer);
-          CreateStyleSet(printDoc,&mPrintSS);
+          CreateStyleSet(mDocument,&mPrintSS);
 
           rv = NS_NewPresShell(&mPrintPS);
           if(NS_FAILED(rv)){
@@ -2372,7 +2504,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
 
           // setup hierarchical relationship in view manager
           mPrintVM->SetRootView(mPrintView);
-          mPrintPS->Init(printDoc,mPrintPC,mPrintVM,mPrintSS);
+          mPrintPS->Init(mDocument,mPrintPC,mPrintVM,mPrintSS);
 
           nsCOMPtr<nsIImageGroup> imageGroup;
           mPrintPC->GetImageGroup(getter_AddRefs(imageGroup));
@@ -2461,7 +2593,9 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
     {
       return NS_ERROR_FAILURE;
     }
+
   }
+
   return NS_OK;
 }
 
@@ -2890,20 +3024,58 @@ nsDocViewerFocusListener::Init(DocumentViewerImpl *aDocViewer)
 }
 
 
+PRBool 
+DocumentViewerImpl::IsWindowsInOurSubTree(nsIDOMWindowInternal * aDOMWindow)
+{
+  PRBool found = PR_FALSE;
+  if(aDOMWindow) {
+    // now check to make sure it is in "our" tree of webshells
+    nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWindow));
+    if (scriptObj) {
+      nsCOMPtr<nsIDocShell> docShell;
+      scriptObj->GetDocShell(getter_AddRefs(docShell));
+      if (docShell) {
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+        if (docShellAsItem) {
+          // get this DocViewer webshell
+          nsCOMPtr<nsIWebShell> thisDVWebShell(do_QueryInterface(mContainer));
+          while (!found) {
+            nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+            docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+            if (docShellParent) {
+              nsCOMPtr<nsIWebShell> parentWebshell(do_QueryInterface(docShellParent));
+              if (parentWebshell) {
+                if (parentWebshell.get() == thisDVWebShell.get()) {
+                  found = PR_TRUE;
+                  break;
+                }
+              }
+            } else {
+              break; // at top of tree
+            }
+            docShellAsItem = docShellParent;
+          } // while
+        }
+      } // docshell
+    } // scriptobj
+  } // domWindow
+
+  return found;
+}
+
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
  *  
  */
-nsresult
-DocumentViewerImpl::FindFocusedWebShell(nsIDOMWindowInternal  **aCurFocusFrame)
+nsIDOMWindowInternal*
+DocumentViewerImpl::FindFocusedDOMWindowInternal()
 {
-nsCOMPtr<nsIDOMWindowInternal>  theDOMWin;
-nsCOMPtr<nsIDocument>           theDoc;
-nsCOMPtr<nsIScriptGlobalObject> theSGO;
-nsCOMPtr<nsIFocusController>    focusController;
-nsresult  theResult = NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMWindowInternal>  theDOMWin;
+  nsCOMPtr<nsIDocument>           theDoc;
+  nsCOMPtr<nsIScriptGlobalObject> theSGO;
+  nsCOMPtr<nsIFocusController>    focusController;
+  nsIDOMWindowInternal *          domWin = nsnull;
 
-  *aCurFocusFrame = nsnull;
   this->GetDocument(*getter_AddRefs(theDoc));  
   if(theDoc){
     theDoc->GetScriptGlobalObject(getter_AddRefs(theSGO));
@@ -2913,42 +3085,44 @@ nsresult  theResult = NS_ERROR_NULL_POINTER;
         theDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
         if(focusController){
           focusController->GetFocusedWindow(getter_AddRefs(theDOMWin));
-          *aCurFocusFrame = theDOMWin.get();
-          if(*aCurFocusFrame){
-            NS_ADDREF(*aCurFocusFrame);
-            theResult = NS_OK;
+          domWin = theDOMWin.get();
+          if(domWin != nsnull) {
+            if (IsWindowsInOurSubTree(domWin)){
+              NS_ADDREF(domWin);
+            } else {
+              domWin = nsnull;
+            }
           }
         }
       }
     }
   }
-  return theResult;
+  return domWin;
 }
 
 /** ---------------------------------------------------
  *  Get DOM Window represented by the document viewer
  *  
  */
-nsresult
-DocumentViewerImpl::GetDOMWindow(nsIDOMWindow  **aCurDOMWindow)
+nsIDOMWindow*
+DocumentViewerImpl::GetDOMWindowForThisDV()
 {
-nsCOMPtr<nsIDocument>           theDoc;
-nsCOMPtr<nsIScriptGlobalObject> theSGO;
-nsCOMPtr<nsIFocusController>    focusController;
-nsresult                        theResult = NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDocument>           theDoc;
+  nsCOMPtr<nsIScriptGlobalObject> theSGO;
+  nsCOMPtr<nsIFocusController>    focusController;
+  nsIDOMWindow *                  domWin = nsnull;
 
-  *aCurDOMWindow = nsnull;
   this->GetDocument(*getter_AddRefs(theDoc)); 
-  if(theDoc){ 
+  if (theDoc){ 
     theDoc->GetScriptGlobalObject(getter_AddRefs(theSGO));
-    if(theSGO){
+    if (theSGO){
       nsCOMPtr<nsIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
       if(theDOMWindow){
-        *aCurDOMWindow = theDOMWindow.get();
-        NS_ADDREF(*aCurDOMWindow);
-        theResult = NS_OK;
+        domWin = theDOMWindow.get();
+        NS_ADDREF(domWin);
       }
     }
   }
-  return theResult;
+
+  return domWin;
 }

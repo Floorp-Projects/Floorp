@@ -9,6 +9,7 @@
 #include "nsrootidl.h"
 #include "nsIWebShell.h"
 #include "nsIDeviceContext.h"
+#include "nsIDOMWindow.h"
 #include "nsIPrintListener.h"
 
 /* starting interface:    nsIContentViewerFile */
@@ -40,8 +41,11 @@ class nsIContentViewerFile : public nsISupports {
    */
   NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener = nsnull) = 0;
 
-  /* [noscript] void PrintContent (in nsIWebShell parent, in nsIDeviceContext DContext); */
-  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext) = 0;
+  /* [noscript] void PrintContent (in nsIWebShell parent, in nsIDeviceContext DContext, in nsIDOMWindow aDOMWin, PRBool aIsSubDoc); */
+  NS_IMETHOD PrintContent(nsIWebShell *      aParent,
+                          nsIDeviceContext * aDContext,
+                          nsIDOMWindow     * aDOMWin,
+                          PRBool             aIsSubDoc) = 0;
 
   /* readonly attribute boolean printable; */
   NS_IMETHOD GetPrintable(PRBool *aPrintable) = 0;
@@ -52,7 +56,7 @@ class nsIContentViewerFile : public nsISupports {
   NS_IMETHOD Save(void); \
   NS_IMETHOD GetSaveable(PRBool *aSaveable); \
   NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener); \
-  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext); \
+  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc); \
   NS_IMETHOD GetPrintable(PRBool *aPrintable); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
@@ -60,7 +64,7 @@ class nsIContentViewerFile : public nsISupports {
   NS_IMETHOD Save(void) { return _to ## Save(); } \
   NS_IMETHOD GetSaveable(PRBool *aSaveable) { return _to ## GetSaveable(aSaveable); } \
   NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener) { return _to ## Print(); } \
-  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext) { return _to ## PrintContent(parent, DContext); } \
+  NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc) { return _to ## PrintContent(parent, DContext, aDOMWin, aIsSubDoc); } \
   NS_IMETHOD GetPrintable(PRBool *aPrintable) { return _to ## GetPrintable(aPrintable); } 
 
 
