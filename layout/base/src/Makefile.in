@@ -44,7 +44,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  docshell \
 		  imglib2 \
-		  gfx2 \
 		  $(NULL)
 
 CPPSRCS		= \

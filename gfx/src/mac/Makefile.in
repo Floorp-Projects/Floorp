@@ -40,7 +40,6 @@ REQUIRES    = xpcom \
         uconv \
         necko \
         unicharutil \
-        gfx2 \
         mozcomps \
         content \
         layout \

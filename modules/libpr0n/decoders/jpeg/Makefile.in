@@ -36,7 +36,6 @@ MODULE_NAME	= nsJPEGDecoderModule
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
-		  gfx2 \
 		  imglib2 \
 		  $(JPEG_REQUIRES) \
 		  $(NULL)

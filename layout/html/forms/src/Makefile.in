@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  txmgr \
 		  xuldoc \
-		  gfx2 \
 		  imglib2 \
 		  accessibility \
 		  xpconnect \

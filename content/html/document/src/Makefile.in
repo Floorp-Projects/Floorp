@@ -53,7 +53,6 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  appcomps \
 		  lwbrk \
-		  gfx2 \
 		  imglib2 \
 		  xpconnect \
 		  unicharutil \

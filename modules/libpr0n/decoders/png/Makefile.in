@@ -36,7 +36,6 @@ EXTRA_DSO_LIBS	= gkgfx
 
 REQUIRES	= xpcom \
 		  gfx \
-		  gfx2 \
 		  imglib2 \
 		  $(PNG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \

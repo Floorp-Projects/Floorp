@@ -39,7 +39,6 @@ REQUIRES=   xpcom \
             locale \
             view \
             pref \
-            gfx2 \
             imglib2 \
             unicharutil \
             java \

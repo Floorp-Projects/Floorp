@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  xultmpl \
 		  rdf \
 		  necko \
-		  gfx2 \
 		  imglib2 \
 		  xpconnect \
 		  js \

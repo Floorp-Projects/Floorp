@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  webbrowserpersist \
 		  unicharutil \
 		  imglib2 \
-		  gfx2 \
 		  locale \
 		  $(NULL)
 

@@ -35,7 +35,6 @@ REQUIRES = \
   dom \
   editor \
   gfx \
-  gfx2 \
   htmlparser \
   imglib2 \
   intl \

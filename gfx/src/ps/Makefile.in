@@ -38,7 +38,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  uconv \
 		  view \
-		  gfx2 \
 		  necko \
 		  imglib2 \
 		  $(NULL)

@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  locale \
-		  gfx2 \
 		  necko \
 		  imglib2 \
 		  $(NULL)
