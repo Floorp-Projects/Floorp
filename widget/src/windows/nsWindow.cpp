@@ -53,6 +53,12 @@
 #include "prtime.h"
 #include "nsIRenderingContextWin.h"
 
+// accessibility only on Windows2000 and Windows98
+#if(WINVER >= 0x0400)
+#include "nsIAccessible.h"
+#include "Accessible.h"
+#endif
+
 #include <imm.h>
 #ifdef MOZ_AIMM
 #include "aimm.h"
@@ -207,8 +213,8 @@ extern HINSTANCE g_hinst;
     if (nsToolkit::gAIMMApp) \
       nsToolkit::gAIMMApp->GetContext(hWnd, &(hIMC)); \
     else { \
-      nsIMM &theIMM = nsIMM::LoadModule(); \
-      hIMC = theIMM.GetContext(hWnd); \
+      nsIMM& theIMM = nsIMM::LoadModule(); \
+      hIMC = (HIMC)theIMM.GetContext(hWnd);  \
     } \
   }
 
@@ -529,6 +535,7 @@ nsWindow::~nsWindow()
     nsMemory::Free(mIMEReconvertUnicode);
 
   NS_IF_RELEASE(mNativeDragTarget);
+
 }
 
 
@@ -3338,6 +3345,30 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
       } break;
 
+#ifdef IS_ACCESSIBLE
+        // accessibility only on Windows2000 and Windows98
+#ifdef WM_GETOBJECT
+      case WM_GETOBJECT: 
+      {
+        if (lParam == OBJID_CLIENT) {
+          nsCOMPtr<nsIAccessible> acc;
+          DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
+
+          // create the COM accessible object
+          if (acc) 
+          {
+            HWND wnd = GetWindowHandle();
+            IAccessible* pAcc = new Accessible(acc, wnd); // ref is 0            
+            LRESULT lAcc = LresultFromObject(IID_IAccessible, wParam, pAcc); // ref 1
+            *aRetValue = lAcc;
+            return PR_TRUE; // yes we handled it.
+          }
+        }
+      }
+      break;
+#endif
+#endif
+
       default: {
         // Handle both flavors of mouse wheel events.
         if ((msg == WM_MOUSEWHEEL) || (msg == uMSH_MOUSEWHEEL)) {
@@ -4097,6 +4128,41 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   return result;
 }
 
+//-------------------------------------------------------------------------
+//
+// Deal with all sort of mouse event
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAcc, nsPoint* aPoint)
+{
+  PRBool result = PR_FALSE;
+
+  if (nsnull == mEventCallback) {
+    return result;
+  }
+
+  *aAcc = nsnull;
+
+  nsAccessibleEvent event;
+  InitEvent(event, aEventType, aPoint);
+
+  event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
+  event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+  event.isMeta    = PR_FALSE;
+  event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+  event.eventStructType = NS_ACCESSIBLE_EVENT;
+  event.accessible = nsnull;
+
+  result = DispatchWindowEvent(&event);
+
+  // if the event returned an accesssible get it.
+  if (event.accessible)
+    *aAcc = event.accessible;
+
+  NS_RELEASE(event.widget);
+
+  return result;
+}
 //-------------------------------------------------------------------------
 //
 // Deal with focus messages

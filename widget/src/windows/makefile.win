@@ -26,6 +26,7 @@ LIBRARY_NAME = raptorwidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DMOZ_AIMM
 
 CPPSRCS =              \
+	Accessible.cpp      \
 	nsFontRetrieverService.cpp      \
 	nsFontSizeIterator.cpp      \
 	nsNativeDragTarget.cpp      \
@@ -50,6 +51,7 @@ CPPSRCS =              \
 MODULE=raptor 
 
 OBJS =                             \
+	.\$(OBJDIR)\Accessible.obj  \
 	.\$(OBJDIR)\nsFontRetrieverService.obj  \
 	.\$(OBJDIR)\nsFontSizeIterator.obj  \
 	.\$(OBJDIR)\nsNativeDragTarget.obj  \
@@ -86,7 +88,8 @@ LCFLAGS =                               \
 	$(NULL)
 
 WIN_LIBS=                        \
- ole32.lib                           
+ ole32.lib 
+
 
 include <$(DEPTH)\config\rules.mak>
 
