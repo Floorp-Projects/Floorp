@@ -52,7 +52,7 @@
         <div>
           <text class="label" value="&div.cookiesonsystem.label;"/>
           <spring style="height: 10px;"/>
-          <tree id="cookietree" class="inset" style="height: 150px; width: 380px;" align="vertical" 
+          <tree id="cookietree" class="inset" style="height: 15em; width: 380px;" align="vertical" 
             multiple="true" onselect="ViewCookieSelected(event);"
             onclick="ViewCookieSelected(event)"
             onkeypress="HandleKeyPress(event)">
@@ -123,7 +123,7 @@
         <div>
           <text class="label" value="&div.bannedservers.label;"/>
           <spring flex="5%"/>
-          <tree id="permissionstree" class="inset" style="height: 280px; width: 380px;" align="vertical"
+          <tree id="permissionstree" class="inset" style="height: 30em; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
                 multiple="true" onclick="ViewPermissionSelected();">
             <treehead>
@@ -151,7 +151,7 @@
         <div>
           <text class="label" value="&div.bannedimages.label;"/>
           <spring flex="5%"/>
-          <tree id="imagestree" class="inset" style="height: 280px; width: 380px;" align="vertical"
+          <tree id="imagestree" class="inset" style="height: 30em; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
                 multiple="true" onclick="ViewImageSelected();">
             <treehead>

@@ -54,7 +54,7 @@
         <div>
           <text class="label" value="&spiel.signonsstored.label;"/>
           <spring style="height: 10px;"/>
-          <tree id="signonstree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+          <tree id="signonstree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,0)">
             <treecol width="45%"/>
@@ -83,7 +83,7 @@
         <div>
           <text class="label" value="&spiel.signonsnotstored.label;"/>
           <spring style="height: 10px;"/>
-          <tree id="ignoretree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+          <tree id="ignoretree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,1)">
             <treecol width="100%"/>
@@ -110,7 +110,7 @@
         <div>
           <text class="label" value="&spiel.nopreview.label;"/>
           <spring style="height: 10px;"/>
-          <tree id="nopreviewtree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+          <tree id="nopreviewtree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,2)">
             <treecol width="100%"/>
@@ -137,7 +137,7 @@
         <div>
           <text class="label" value="&spiel.nocapture.label;"/>
           <spring style="height: 10px;"/>
-          <tree id="nocapturetree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+          <tree id="nocapturetree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,3)">
             <treecol width="100%"/>
