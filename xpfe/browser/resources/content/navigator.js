@@ -1128,9 +1128,8 @@ function postURLToNativeWidget()
 
 function checkForDirectoryListing()
 {
-  if ("HTTPIndex" in _content &&
-      typeof _content.HTTPIndex == "object" &&
-      !_content.HTTPIndex.constructor) {
+  if ( "HTTPIndex" in _content &&
+       _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
     _content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
     _content.parentWindow = window;
   }

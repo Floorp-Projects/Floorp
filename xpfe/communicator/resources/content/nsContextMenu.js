@@ -270,11 +270,8 @@ nsContextMenu.prototype = {
                // Convert background attribute to absolute URL.
                this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
                                                      this.target.getAttribute( "background" ) );
-            } else if ( window._content.HTTPIndex == "[xpconnect wrapped nsIHTTPIndex]"
-                        &&
-                        typeof window._content.HTTPIndex == "object"
-                        &&
-                        !window._content.HTTPIndex.constructor ) {
+            } else if ( "HTTPIndex" in _content &&
+                        _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
                 // The above test is a roundabout way of determining whether
                 // the content area contains chrome://global/content/directory/directory.xul.
                 this.inDirList = true;
