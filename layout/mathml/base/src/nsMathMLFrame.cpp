@@ -92,8 +92,45 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
   return isStretchy;
 }
 
+// helper to get the presentation data of a frame, by possibly walking up
+// the frame hierarchy if we happen to be surrounded by non-MathML frames.
+/* static */ void
+nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
+                                       nsPresentationData& aPresentationData)
+{
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    nsIMathMLFrame* mathMLFrame;
+    frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+      nsPresentationData presentationData;
+      mathMLFrame->GetPresentationData(presentationData);
+      aPresentationData.mstyle = presentationData.mstyle;
+      aPresentationData.scriptLevel = presentationData.scriptLevel;
+      if (NS_MATHML_IS_DISPLAYSTYLE(presentationData.flags)) {
+        aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      }
+      break;
+    }
+    // stop if we reach the root <math> tag
+    nsCOMPtr<nsIAtom> tag;
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+    content->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsMathMLAtoms::math) {
+      const nsStyleDisplay* display;
+      frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+        aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      }
+      break;
+    }
+    frame->GetParent(&frame);
+  }
+}
+
 // helper to get an attribute from the content or the surrounding <mstyle> hierarchy
-nsresult
+/* static */ nsresult
 nsMathMLFrame::GetAttribute(nsIContent* aContent,
                             nsIFrame*   aMathMLmstyleFrame,
                             nsIAtom*    aAttributeAtom,

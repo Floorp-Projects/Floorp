@@ -151,10 +151,6 @@ public:
     return NS_OK;
   }
 
-  // helper to check if a frame is embellished
-  static PRBool
-  IsEmbellishOperator(nsIFrame* aFrame);
-
   // helper to give a style context suitable for doing the stretching to the
   // MathMLChar. Frame classes that use this should make the extra style contexts
   // accessible to the Style System via Get/Set AdditionalStyleContext.
@@ -164,6 +160,18 @@ public:
                          nsIContent*      aContent,
                          nsIStyleContext* aParenStyleContext,
                          nsMathMLChar*    aMathMLChar);
+
+  // helper to check if a frame is embellished
+  static PRBool
+  IsEmbellishOperator(nsIFrame* aFrame);
+
+  // helper to get the presentation data of a frame. If we happen to
+  // be surrounded by non-MathML helper frames needed for our support,
+  // we walk up the frame hierarchy until we reach a MathML frame
+  // or the <root> math element.
+  static void
+  GetPresentationDataFrom(nsIFrame*           aFrame,
+                          nsPresentationData& aPresentationData);
 
   // helper to check if a content has an attribute. If content is nsnull or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
