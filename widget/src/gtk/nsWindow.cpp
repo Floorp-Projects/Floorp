@@ -2104,23 +2104,18 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
   char *platformText;
   PRInt32 platformLen;
 
-  static nsCOMPtr<nsIUnicodeEncoder> encoder;
-  static PRBool hasConverter = PR_FALSE;
-  if (!hasConverter) {
-    // get the charset
-    nsAutoString platformCharset;
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
-    if (NS_SUCCEEDED(rv))
-      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
-    if (NS_FAILED(rv))
-      platformCharset.AssignWithConversion("ISO-8859-1");
-    
-    // get the encoder
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
-    rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  // get the charset
+  nsAutoString platformCharset;
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+  if (NS_FAILED(rv))
+    platformCharset.AssignWithConversion("ISO-8859-1");
 
-    hasConverter = PR_TRUE;
-  }
+  // get the encoder
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+  rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
 
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do
   // the conversion.
