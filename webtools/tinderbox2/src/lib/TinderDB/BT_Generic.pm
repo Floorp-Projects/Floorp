@@ -37,6 +37,13 @@
 # Contributor(s): 
 
 
+# $Revision: 1.15 $ 
+# $Date: 2002/05/02 22:56:33 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
+# $Name:  $ 
+
+
 
 package TinderDB::BT_Generic;
 
@@ -69,7 +76,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.14 $ )[1];
+$VERSION = ( qw $Revision: 1.15 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 

@@ -42,6 +42,13 @@
 
 
 
+# $Revision: 1.4 $ 
+# $Date: 2002/05/02 22:56:33 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Req.pm,v $ 
+# $Name:  $ 
+
+
 package TinderDB::BT_Req;
 
 
@@ -75,7 +82,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
