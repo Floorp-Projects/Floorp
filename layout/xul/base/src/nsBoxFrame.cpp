@@ -104,6 +104,118 @@ nsBoxFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBoxFrame::FlowChildAt(nsIFrame* childFrame, 
+                     nsIPresContext& aPresContext,
+                     nsHTMLReflowMetrics&     desiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus,
+                     const nsSize& size,
+                     nsIFrame* incrementalChild)
+{
+      // subtract out the childs margin and border 
+      const nsStyleSpacing* spacing;
+      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                     (const nsStyleStruct*&) spacing);
+
+      nsMargin margin;
+      spacing->GetMargin(margin);
+      nsMargin border;
+      spacing->GetBorderPadding(border);
+      nsMargin total = margin + border;
+
+
+      const nsStylePosition* position;
+      rv = childFrame->GetStyleData(eStyleStruct_Position,
+                     (const nsStyleStruct*&) position);
+
+
+      // start off with an empty size
+      desiredSize.width = 0; 
+      desiredSize.height = 0;
+
+      nsReflowReason reason = aReflowState.reason;
+      PRBool shouldReflow = PR_TRUE;
+
+      if (nsnull != incrementalChild && incrementalChild != childFrame) {
+              // if we are flowing because of incremental and this is not
+              // the child then see if the size is already what we want.
+              // if it is then keep it and don't bother reflowing.
+              nsRect currentSize;
+              childFrame->GetRect(currentSize);
+
+              desiredSize.width = currentSize.width;
+              desiredSize.height = currentSize.height;
+
+              // XXX ok there needs to be a little more work here. The child
+              // could move another child out of the way causing a reflow of
+              // a different child. In this case we need to reflow the affected
+              // area. So yes we need to reflow. Make sure we change the reason
+              // so we don't lose the incremental reflow path.
+
+              PRBool wsame = (mHorizontal && NS_INTRINSICSIZE == size.width);
+              PRBool hsame = (!mHorizontal && NS_INTRINSICSIZE == size.height);
+
+              if ((wsame || currentSize.width == size.width) && (hsame || currentSize.height == size.height))
+                    shouldReflow = PR_FALSE;
+              else 
+                    reason = eReflowReason_StyleChange;
+   
+          
+      } 
+      
+      if (shouldReflow) {
+        // flow the child
+        const nsStylePosition* pos;
+        childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+
+        nsStyleCoord* w = (nsStyleCoord*)&pos->mWidth;
+        nsStyleCoord wcopy(*w);
+        *w = nsStyleCoord();
+        w->SetPercentValue(1);
+
+        nsStyleCoord* h = (nsStyleCoord*)&pos->mHeight;
+        nsStyleCoord hcopy(*h);
+        *h = nsStyleCoord();
+        h->SetPercentValue(1);
+
+        nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, size);
+        reflowState.reason = reason;
+
+        reflowState.computedWidth = size.width;
+        reflowState.computedHeight = size.height;
+
+        // only subrtact margin and border if the size is not intrinsic
+        if (NS_INTRINSICSIZE != reflowState.computedWidth) 
+          reflowState.computedWidth -= (total.left + total.right);
+
+
+        if (NS_INTRINSICSIZE != reflowState.computedHeight) 
+          reflowState.computedHeight -= (total.top + total.bottom);
+
+        nsIHTMLReflow*      htmlReflow;
+
+        rv = childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+        NS_ASSERTION(rv == NS_OK,"failed to get htmlReflow interface.");
+
+        htmlReflow->WillReflow(aPresContext);
+        htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+        NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+
+        *w = wcopy;
+        *h = hcopy;
+
+        // set the rect
+        childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
+      }
+
+      // add the margin back in. The child should add its border automatically
+      desiredSize.height += (margin.top + margin.bottom);
+      desiredSize.width += (margin.left + margin.right); 
+    
+      return NS_OK;
+}
+
 class nsBoxDataSpring {
 public:
     nscoord preferredSize;
@@ -128,89 +240,6 @@ public:
     }
 
 };
-
-
-NS_IMETHODIMP
-nsBoxFrame::FlowChildAt(nsIFrame* childFrame, 
-                     nsIPresContext& aPresContext,
-                     nsHTMLReflowMetrics&     desiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     const nsSize& size)
-{
-      // subtract out the childs margin and border 
-      const nsStyleSpacing* spacing;
-      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                     (const nsStyleStruct*&) spacing);
-
-      nsMargin margin;
-      spacing->GetMargin(margin);
-      nsMargin border;
-      spacing->GetBorderPadding(border);
-      nsMargin total = margin + border;
-
-
-      const nsStylePosition* position;
-      rv = childFrame->GetStyleData(eStyleStruct_Position,
-                     (const nsStyleStruct*&) position);
-
-
-      // start off with an empty size
-      desiredSize.width = 0; 
-      desiredSize.height = 0;
-
-      // flow the child
-      const nsStylePosition* pos;
-      childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-
-      nsStyleCoord* w = (nsStyleCoord*)&pos->mWidth;
-      nsStyleCoord wcopy(*w);
-      *w = nsStyleCoord();
-      w->SetPercentValue(1);
-
-      nsStyleCoord* h = (nsStyleCoord*)&pos->mHeight;
-      nsStyleCoord hcopy(*h);
-      *h = nsStyleCoord();
-      h->SetPercentValue(1);
-
-      nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, size);
-
-      reflowState.computedWidth = size.width;
-      reflowState.computedHeight = size.height;
-
-      // only subrtact margin and border if the size is not intrinsic
-      if (NS_INTRINSICSIZE != reflowState.computedWidth) 
-      {
-        reflowState.computedWidth -= (total.left + total.right);
-      }
-
-
-      if (NS_INTRINSICSIZE != reflowState.computedHeight) 
-      {
-        reflowState.computedHeight -= (total.top + total.bottom);
-      }
-      
-      nsIHTMLReflow*      htmlReflow;
-
-      rv = childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-      NS_ASSERTION(rv == NS_OK,"failed to get htmlReflow interface.");
-
-      htmlReflow->WillReflow(aPresContext);
-      htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-
-      *w = wcopy;
-      *h = hcopy;
-
-      // set the rect
-      childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
-
-      // add the margin back in. The child should add its border automatically
-      desiredSize.height += (margin.top + margin.bottom);
-      desiredSize.width += (margin.left + margin.right); 
-      
-      return NS_OK;
-}
 
 /**
  * Ok what we want to do here is get all the children, figure out
@@ -262,27 +291,18 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   if (NS_INTRINSICSIZE != availableSize.height)
      availableSize.height -= (inset.top + inset.bottom);
 
-
-  // Until I can handle incremental reflow correctly (or at all), I need to at
-  // least make sure that I don't be a bad citizen. This will certainly betray my 
-  // complete lack of understanding of the reflow code, but I think I need to
-  // make sure that I advance to the next reflow command to make everything down 
-  // the line matches up.
+  // handle incremental reflow
+  // get the child and only reflow it
+  nsIFrame* incrementalChild = nsnull;
   if ( aReflowState.reason == eReflowReason_Incremental ) {
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    if (this != target) {
-      // ignore the next reflow command and proceed as normal...
-      nsIFrame* ignore;
-      aReflowState.reflowCommand->GetNext(ignore);
-    }
+    aReflowState.reflowCommand->GetNext(incrementalChild);
   } 
 
   // ------ first pass build springs -------
-  
   nsBoxDataSpring springs[100];
+  nscoord totalCount = 0;
 
-  // go though each child
+    // go though each child
   nsHTMLReflowMetrics desiredSize = aDesiredSize;
   nsSize totalMinSize = availableSize;  
   nsSize minSize(0,0);
@@ -293,119 +313,121 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   nsIFrame* childFrame = mFrames.FirstChild(); 
   while (nsnull != childFrame) 
   {  
-    // create a spring
-    springs[count].init();
+      // create a spring
+      springs[count].init();
 
-    desiredSize.width = 0;
-    desiredSize.height = 0;
+      desiredSize.width = 0;
+      desiredSize.height = 0;
 
-    // get the preferred size
-    const nsStylePosition* position;
-    nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
-                  (const nsStyleStruct*&) position);
+      // get the preferred size
+      const nsStylePosition* position;
+      nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
+                    (const nsStyleStruct*&) position);
 
-    nsStyleUnit wunit = position->mWidth.GetUnit();
-    nsStyleUnit hunit = position->mHeight.GetUnit();
+      nsStyleUnit wunit = position->mWidth.GetUnit();
+      nsStyleUnit hunit = position->mHeight.GetUnit();
 
-    // if we don't know the exact width or height then
-    // get the instrinsic size for our preferred.    
-          // get the min and max size
-    const nsStyleCoord* minWidth;
-    const nsStyleCoord* minHeight;
-    const nsStyleCoord* maxWidth;
-    const nsStyleCoord* maxHeight;
+      // if we don't know the exact width or height then
+      // get the instrinsic size for our preferred.    
+            // get the min and max size
+      const nsStyleCoord* minWidth;
+      const nsStyleCoord* minHeight;
+      const nsStyleCoord* maxWidth;
+      const nsStyleCoord* maxHeight;
 
-    minWidth = &position->mMinWidth;
-    minHeight = &position->mMinHeight;
-    maxWidth = &position->mMaxWidth;
-    maxHeight = &position->mMaxHeight;
+      minWidth = &position->mMinWidth;
+      minHeight = &position->mMinHeight;
+      maxWidth = &position->mMaxWidth;
+      maxHeight = &position->mMaxHeight;
 
-    if (minWidth->GetUnit() == eStyleUnit_Coord) 
-      minSize.width = minWidth->GetCoordValue();
+      if (minWidth->GetUnit() == eStyleUnit_Coord) 
+        minSize.width = minWidth->GetCoordValue();
 
-    if (minHeight->GetUnit() == eStyleUnit_Coord) 
-      minSize.height = minHeight->GetCoordValue();
+      if (minHeight->GetUnit() == eStyleUnit_Coord) 
+        minSize.height = minHeight->GetCoordValue();
 
-    if (maxWidth->GetUnit() == eStyleUnit_Coord) 
-      maxSize.width = maxWidth->GetCoordValue();
+      if (maxWidth->GetUnit() == eStyleUnit_Coord) 
+        maxSize.width = maxWidth->GetCoordValue();
 
-    if (maxHeight->GetUnit() == eStyleUnit_Coord) 
-      maxSize.height = maxHeight->GetCoordValue();
+      if (maxHeight->GetUnit() == eStyleUnit_Coord) 
+        maxSize.height = maxHeight->GetCoordValue();
 
-    if (mHorizontal) {
-       springs[count].minSize = minSize.width;
-       springs[count].maxSize = maxSize.width;
-    } else {
-       springs[count].minSize = minSize.height;
-       springs[count].maxSize = maxSize.height;
-    }
+      if (mHorizontal) {
+         springs[count].minSize = minSize.width;
+         springs[count].maxSize = maxSize.width;
+      } else {
+         springs[count].minSize = minSize.height;
+         springs[count].maxSize = maxSize.height;
+      }
 
-    // get the greatest min size
-    if (minSize.height > totalMinSize.height) 
-      totalMinSize.height = minSize.height;
+      // get the greatest min size
+      if (minSize.height > totalMinSize.height) 
+        totalMinSize.height = minSize.height;
     
-    if (minSize.width > totalMinSize.width) 
-      totalMinSize.width = minSize.width;
+      if (minSize.width > totalMinSize.width) 
+        totalMinSize.width = minSize.width;
 
-    nsSize flexSize(totalMinSize);
-    if (mHorizontal)
-       flexSize.width = NS_INTRINSICSIZE;
-    else
-       flexSize.height = NS_INTRINSICSIZE;
+      nsSize flexSize(totalMinSize);
+      if (mHorizontal)
+         flexSize.width = NS_INTRINSICSIZE;
+      else
+         flexSize.height = NS_INTRINSICSIZE;
  
-        // get the content
-    nsCOMPtr<nsIContent> content;
-    childFrame->GetContent(getter_AddRefs(content));
+          // get the content
+      nsCOMPtr<nsIContent> content;
+      childFrame->GetContent(getter_AddRefs(content));
 
-    PRInt32 error;
-    nsString value;
+      PRInt32 error;
+      nsString value;
     
-    // get the spring constant
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
-    {
-      value.Trim("%");
-      float percent = value.ToFloat(&error);
-      springs[count].springConstant = percent;    
-    }
+      // get the spring constant
+      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
+      {
+        value.Trim("%");
+        float percent = value.ToFloat(&error);
+        springs[count].springConstant = percent;    
+      }
     
-    if (mHorizontal) {
-      if (wunit == eStyleUnit_Percent) 
-          springs[count].springConstant = position->mWidth.GetPercentValue();
-    } else {
-      if (hunit == eStyleUnit_Percent)  
-          springs[count].springConstant = position->mHeight.GetPercentValue();
-    }   
+      if (mHorizontal) {
+        if (wunit == eStyleUnit_Percent) 
+            springs[count].springConstant = position->mWidth.GetPercentValue();
+      } else {
+        if (hunit == eStyleUnit_Percent)  
+            springs[count].springConstant = position->mHeight.GetPercentValue();
+      }   
 
-    // only flow if fixed and width or height was not set
-    if (springs[count].springConstant == 0.0 && (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)) {
-       springs[count].wasFlowed = PR_TRUE;
-       FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize);
-    }
+      // only flow if fixed and width or height was not set
+      if (springs[count].springConstant == 0.0 && (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)) 
+      {
+           springs[count].wasFlowed = PR_TRUE;
+
+           FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize, incrementalChild);
+      }
   
-    if (desiredSize.height > maxDesiredSize.height) 
-      maxDesiredSize.height = desiredSize.height;
+      if (desiredSize.height > maxDesiredSize.height) 
+        maxDesiredSize.height = desiredSize.height;
     
-    if (desiredSize.width > maxDesiredSize.width) 
-      maxDesiredSize.width = desiredSize.width;
+      if (desiredSize.width > maxDesiredSize.width) 
+        maxDesiredSize.width = desiredSize.width;
     
-    if (wunit == eStyleUnit_Coord) 
-        desiredSize.width = position->mWidth.GetCoordValue();
+      if (wunit == eStyleUnit_Coord) 
+          desiredSize.width = position->mWidth.GetCoordValue();
 
-    if (hunit == eStyleUnit_Coord)  
-        desiredSize.height = position->mHeight.GetCoordValue();
+      if (hunit == eStyleUnit_Coord)  
+          desiredSize.height = position->mHeight.GetCoordValue();
 
-    if (NS_INTRINSICSIZE == desiredSize.width)
-         desiredSize.width = 0;
+      if (NS_INTRINSICSIZE == desiredSize.width)
+           desiredSize.width = 0;
 
-    if (NS_INTRINSICSIZE == desiredSize.height)
-         desiredSize.height = 0;
+      if (NS_INTRINSICSIZE == desiredSize.height)
+           desiredSize.height = 0;
 
-    if (mHorizontal)
-        springs[count].preferredSize = desiredSize.width;
-    else
-        springs[count].preferredSize = desiredSize.height;
+      if (mHorizontal)
+          springs[count].preferredSize = desiredSize.width;
+      else
+          springs[count].preferredSize = desiredSize.height;
 
-  
+    
   
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
@@ -425,7 +447,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   }  
 
   // total number of children
-  nscoord totalCount = count;
+  totalCount = count;
  
   // ------ second pass flow -------
 
@@ -463,10 +485,8 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
         childFrame->GetRect(r);
 
         if (springs[count].wasFlowed == PR_FALSE || (size.width != r.width || size.height!=r.height)) {
-
-          // flow child
-          FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, size);
-      
+          
+          FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, size, incrementalChild);
           // if its height greater than the max. Set the max to this height and set a flag
           // saying we will need to do another pass. But keep going there
           // may be another child that is bigger
