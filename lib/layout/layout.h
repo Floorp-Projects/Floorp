@@ -1642,7 +1642,7 @@ int32 lo_CalcTableWidthForPercentMode(LO_Element *pCellElement);
 int32 lo_GetCellTagWidth(LO_Element *pCellElement);
 
 /* Similar calculation for height. Unfortunately, there are differences from width.
- * e.g., the cell border must be subtracted from width, but not height! (a bug???)
+ * e.g., the cell border must be subtracted from width, but not height! (a bug?)
 */
 int32 lo_GetCellTagHeight(LO_Element *pCellElement);
 
