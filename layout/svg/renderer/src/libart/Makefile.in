@@ -92,16 +92,8 @@ LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/gfx/src/gtk \
 		-I$(topsrcdir)/gfx/src \
 		$(NULL)
-endif
-
-# mac:
-ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
-CPPSRCS += nsSVGLibartBitmapMac.cpp
-endif
-
-# default:
-ifeq (,$(filter gtk2x mac cocoa,$(MOZ_GFX_TOOLKIT)))
-CPPSRCS += nsSVGLibartBitmapDefault.cpp
+else
+CPPSRCS += nsSVGLibartBitmapAlpha.cpp
 endif
 
 # **********************************************************************

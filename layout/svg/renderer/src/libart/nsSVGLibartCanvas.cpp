@@ -225,6 +225,28 @@ nsSVGLibartCanvas::Clear(nscolor color)
         *dest++ = pixel;
       break;
     }
+    case nsISVGLibartBitmap::PIXEL_FORMAT_32_RGBA:
+    {
+      PRInt32 stride = mBitmap->GetLineStride();
+      PRInt32 width  = mBitmap->GetWidth();
+      PRUint8* buf = mBitmap->GetBits();
+      PRUint8* end = buf + stride*mBitmap->GetHeight();
+      for ( ; buf<end; buf += stride) {
+        art_rgb_run_alpha(buf, red, green, blue, 0x100, width);
+      }
+      break;
+    }
+    case nsISVGLibartBitmap::PIXEL_FORMAT_32_BGRA:
+    {
+      PRInt32 stride = mBitmap->GetLineStride();
+      PRInt32 width  = mBitmap->GetWidth();
+      PRUint8* buf = mBitmap->GetBits();
+      PRUint8* end = buf + stride*mBitmap->GetHeight();
+      for ( ; buf<end; buf += stride) {
+        art_rgb_run_alpha(buf, blue, green, red, 0x100, width);
+      }
+      break;
+    }
     default:
       NS_ERROR("Unknown pixel format");
       break;
@@ -246,6 +268,15 @@ nsSVGLibartCanvas::Flush()
 NS_IMETHODIMP_(ArtRender*)
 nsSVGLibartCanvas::NewRender()
 {
+  ArtAlphaType alphaType = ART_ALPHA_NONE;
+
+  if (mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR ||
+      mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_RGBA ||
+      mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_BGRA)
+  {
+      alphaType = ART_ALPHA_SEPARATE;
+  }
+
   return art_render_new(mDirtyRect.x, mDirtyRect.y, // x0,y0
                         mDirtyRect.x+mDirtyRect.width, // x1
                         mDirtyRect.y+mDirtyRect.height, // y1
@@ -253,7 +284,7 @@ nsSVGLibartCanvas::NewRender()
                         mBitmap->GetLineStride(), // rowstride
                         3, // n_chan
                         8, // depth
-                        mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR ? ART_ALPHA_SEPARATE : ART_ALPHA_NONE, // alpha_type
+                        alphaType, // alpha_type
                         NULL //alphagamma
                         );
 }
@@ -276,12 +307,21 @@ nsSVGLibartCanvas::NewRender(int x0, int y0, int x1, int y1)
 
   int offset = 3*(rx0-mDirtyRect.x) + mBitmap->GetLineStride()*(ry0-mDirtyRect.y);
   
+  ArtAlphaType alphaType = ART_ALPHA_NONE;
+
+  if (mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR ||
+      mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_RGBA ||
+      mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_BGRA)
+  {
+      alphaType = ART_ALPHA_SEPARATE;
+  }
+
   return art_render_new(rx0, ry0, rx1, ry1,
                         mBitmap->GetBits()+offset, // pixels
                         mBitmap->GetLineStride(),  // rowstride
                         3, // n_chan
                         8, // depth
-                        mBitmap->GetPixelFormat()==nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR ? ART_ALPHA_SEPARATE : ART_ALPHA_NONE, // alpha_type
+                        alphaType, // alpha_type
                         NULL //alphagamma
                         );
 }
@@ -297,12 +337,14 @@ nsSVGLibartCanvas::GetArtColor(nscolor rgb, ArtColor& artColor)
 {
   switch (mBitmap->GetPixelFormat()) {
     case nsISVGLibartBitmap::PIXEL_FORMAT_24_RGB:
+    case nsISVGLibartBitmap::PIXEL_FORMAT_32_RGBA:
       artColor[0] = ART_PIX_MAX_FROM_8(NS_GET_R(rgb));
       artColor[1] = ART_PIX_MAX_FROM_8(NS_GET_G(rgb));
       artColor[2] = ART_PIX_MAX_FROM_8(NS_GET_B(rgb));
       break;
     case nsISVGLibartBitmap::PIXEL_FORMAT_24_BGR:
     case nsISVGLibartBitmap::PIXEL_FORMAT_32_ABGR:
+    case nsISVGLibartBitmap::PIXEL_FORMAT_32_BGRA:
       artColor[0] = ART_PIX_MAX_FROM_8(NS_GET_B(rgb));
       artColor[1] = ART_PIX_MAX_FROM_8(NS_GET_G(rgb));
       artColor[2] = ART_PIX_MAX_FROM_8(NS_GET_R(rgb));

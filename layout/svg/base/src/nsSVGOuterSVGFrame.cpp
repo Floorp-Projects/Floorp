@@ -810,8 +810,6 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
   mRenderer->CreateCanvas(&aRenderingContext, aPresContext, dirtyRectPx,
                           getter_AddRefs(canvas));
 
-  canvas->Clear(NS_RGB(255,255,255));
-
   // paint children:
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
