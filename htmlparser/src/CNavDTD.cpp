@@ -758,6 +758,82 @@ PRBool DoesRequireBody(CToken* aToken,nsITokenizer* aTokenizer) {
  
   return result;
 }
+
+static void
+InPlaceConvertLineEndings( nsAString& aString )
+{
+    // go from '\r\n' or '\r' to '\n'
+  nsAString::iterator iter;
+  aString.BeginWriting(iter);
+
+  PRUnichar* S = iter.get();
+  size_t N = iter.size_forward();
+
+    // this fragment must be the entire string because
+    //  (a) no multi-fragment string is writable, so only an illegal cast could give us one, and
+    //  (b) else we would have to do more work (watching for |to| to fall off the end)
+  NS_ASSERTION(aString.Length() == N, "You cheated... multi-fragment strings are never writable!");
+
+    // we scan/convert in two phases (but only one pass over the string)
+    // until we have to skip a character, we only need to touch end-of-line chars
+    // after that, we'll have to start moving every character we want to keep
+
+    // use array indexing instead of pointers, because compilers optimize that better
+
+
+    // this first loop just converts line endings... no characters get moved
+  size_t i = 0;
+  PRBool just_saw_cr = PR_FALSE;
+  for ( ; i < N; ++i )
+    {
+        // if it's something we need to convert...
+      if ( S[i] == '\r' )
+        {
+          S[i] = '\n';
+          just_saw_cr = PR_TRUE;
+        }
+      else
+        {
+            // else, if it's something we need to skip...
+            //   i.e., a '\n' immediately following a '\r',
+            //   then we need to start moving any character we want to keep
+            //   and we have a second loop for that, so get out of this one
+          if ( S[i] == '\n' && just_saw_cr )
+            break;
+
+          just_saw_cr = PR_FALSE;
+        }
+    }
+
+
+    // this second loop handles the rest of the buffer, moving characters down
+    //  _and_ converting line-endings as it goes
+    //  start the loop at |from = i| so that that |just_saw_cr| gets cleared automatically
+  size_t to = i;
+  for ( size_t from = i; from < N; ++from )
+    {
+        // if it's something we need to convert...
+      if ( S[from] == '\r' )
+        {
+          S[to++] = '\n';
+          just_saw_cr = PR_TRUE;
+        }
+      else
+        {
+            // else, if it's something we need to copy...
+            //  i.e., NOT a '\n' immediately following a '\r'
+          if ( S[from] != '\n' || !just_saw_cr )
+            S[to++] = S[from];
+
+          just_saw_cr = PR_FALSE;
+        }
+    }
+
+    // if we chopped characters out of the string, we need to shorten it logically
+  if ( to < N )
+    aString.SetLength(to);
+}
+
 /**
  *  This big dispatch method is used to route token handler calls to the right place.
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 
