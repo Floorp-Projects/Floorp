@@ -59,8 +59,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Windowless Plugin Instance Peer Interface
 
+#define NS_IWINDOWLESSPLUGININSTANCEPEER_IID         \
+{ /* 57b4e2f0-019b-11d2-815b-006008119d7a */         \
+    0x57b4e2f0,                                      \
+    0x019b,                                          \
+    0x11d2,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 class nsIWindowlessPluginInstancePeer : public nsISupports {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWINDOWLESSPLUGININSTANCEPEER_IID)
 
     // (Corresponds to NPN_InvalidateRect.)
     NS_IMETHOD
@@ -73,16 +82,7 @@ public:
     // (Corresponds to NPN_ForceRedraw.)
     NS_IMETHOD
     ForceRedraw(void) = 0;
-
 };
-
-#define NS_IWINDOWLESSPLUGININSTANCEPEER_IID         \
-{ /* 57b4e2f0-019b-11d2-815b-006008119d7a */         \
-    0x57b4e2f0,                                      \
-    0x019b,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
