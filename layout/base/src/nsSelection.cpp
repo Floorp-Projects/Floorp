@@ -3581,7 +3581,6 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
   nsIScrollableView *scrollableView = 0;
 
   result = GetRootScrollableView(&scrollableView);
-
   if (NS_SUCCEEDED(result) && scrollableView)
   {
     //
@@ -3589,9 +3588,9 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
     //
 
     const nsIView *cView = 0;
-
+    nsIView *scrolledView;
     result = scrollableView->GetClipView(&cView);
-
+    scrollableView->GetScrolledView(scrolledView);
     if (NS_SUCCEEDED(result) && cView)
     {
       //
@@ -3623,16 +3622,15 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
         //
 
         nsIView *view = (nsIView*)frameView;
-        
         nscoord x, y;
 
-        while (view && view != cView)
+        while (view && view != scrolledView)
         {
           result = view->GetParent(view);
 
           if (NS_FAILED(result))
             view = 0;
-          else if (view && view != cView)
+          else if (view && view != scrolledView)
           {
             result = view->GetPosition(&x, &y);
 
@@ -3651,8 +3649,7 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
             }
           }
         }
-
-        if (view)
+        if (cView)
         {
           //
           // See if aPoint is outside the clip view's boundaries.
@@ -3661,7 +3658,7 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 
           nsRect bounds;
 
-          result = view->GetBounds(bounds);
+          result = cView->GetBounds(bounds);
           scrollableView->GetScrollPosition(bounds.x,bounds.y);
           if (NS_SUCCEEDED(result))
           {
