@@ -815,7 +815,7 @@ nsNntpService::RunNewsUrl(nsIURI * aUri, nsISupports * aConsumer)
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURI **_retval)
+NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
   if (!uri) {
 	return NS_ERROR_NULL_POINTER;
@@ -879,7 +879,10 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
 		nntpUrl->SetNewsAction(nsINntpUrl::ActionGetNewNews);
 	nsCOMPtr<nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aUrl);
 	if (mailNewsUrl)
+	{
 		mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+		mailNewsUrl->SetMsgWindow(aMsgWindow);
+	}
 
     rv = RunNewsUrl(aUrl, nsnull);  
 	

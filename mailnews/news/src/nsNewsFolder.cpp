@@ -889,7 +889,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
 #ifdef DEBUG_NEWS
   printf("Getting new news articles....\n");
 #endif
-  rv = nntpService->GetNewNews(nntpServer, mURI, this, nsnull);
+
+  rv = nntpService->GetNewNews(nntpServer, mURI, this, aWindow, nsnull);
   return rv;
 }
 

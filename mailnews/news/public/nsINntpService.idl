@@ -28,6 +28,7 @@ interface nsIURI;
 interface nsIStreamListener;  
 interface nsISupportsArray;
 interface nsIFileSpec;
+interface nsIMsgWindow;
 
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
@@ -36,7 +37,7 @@ interface nsINntpService : nsISupports {
 
   nsIURI PostMessage (in nsIFileSpec fileToPost, in string newsgroupNames, in nsIUrlListener aUrlListener);
 
-  nsIURI GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
+  nsIURI GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
   nsIURI CancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
 };
