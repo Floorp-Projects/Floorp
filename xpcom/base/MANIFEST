@@ -1,7 +1,6 @@
 nsAgg.h
 nsIAllocator.h
 nsMemory.h
-nsCOMPtr.h
 nsCom.h
 nsComObsolete.h
 nsCWeakReference.h
