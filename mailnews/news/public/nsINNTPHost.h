@@ -20,9 +20,7 @@
 
 class nsINNTPHost : public nsISupports {
  private:
-  void operator delete(void *); // NOT TO BE IMPLEMENTED
-
- public: 
+  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_INNTPHOST_IID;
     return iid;

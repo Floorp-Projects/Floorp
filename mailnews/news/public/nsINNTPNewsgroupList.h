@@ -17,9 +17,6 @@
     { 0xB7, 0xEA, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
 class nsINNTPNewsgroupList : public nsISupports {
- private:
-  void operator delete(void *); // NOT TO BE IMPLEMENTED
-
  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_INNTPNEWSGROUPLIST_IID;

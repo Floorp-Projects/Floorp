@@ -19,7 +19,6 @@
 
 class nsINNTPCategoryContainer : public nsISupports {
  private:
-  void operator delete(void *); // NOT TO BE IMPLEMENTED
 
  public: 
   static const nsIID& IID() {
