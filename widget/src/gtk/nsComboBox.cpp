@@ -356,8 +356,7 @@ nsComboBox::OnUnmapSignal(GtkWidget * aWidget)
 {
   if (!aWidget) return;
 
-  /* Generate and sent an NS_CONTROLCHANGE signal to frame here */
-  printf("Unmap - Bing!\n");
+  // Generate a NS_CONTROL_CHANGE event and send it to the frame
   nsGUIEvent event;
   event.eventStructType = NS_GUI_EVENT;
   nsPoint point(0,0);
