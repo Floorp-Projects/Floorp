@@ -63,8 +63,6 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
   mRDFService(nsnull),
   mHeaderParser(nsnull)
 {
-  NS_INIT_REFCNT();
-
   nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
                                              nsIRDFService::GetIID(),
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
@@ -90,6 +88,16 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
 	if(NS_SUCCEEDED(rv))
 		mailSession->AddFolderListener(this);
 	PR_ASSERT(NS_SUCCEEDED(rv));
+
+  // XXX This call should be moved to a NS_NewMsgFooDataSource()
+  // method that the factory calls, so that failure to construct
+  // will return an error code instead of returning a partially
+  // initialized object.
+  rv = Init();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
+  if (NS_FAILED(rv)) return /* rv */;
+
+  return /* NS_OK */;
 }
 
 nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
@@ -101,8 +109,6 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 
 	if(NS_SUCCEEDED(rv))
 		mailSession->RemoveFolderListener(this);
-
-	PL_strfree(mURI);
 
 	nsrefcnt refcnt;
 
@@ -120,35 +126,10 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 	mRDFService = nsnull;
 }
 
-
-NS_IMPL_ADDREF(nsMsgMessageDataSource)
-NS_IMPL_RELEASE(nsMsgMessageDataSource)
-
-NS_IMETHODIMP
-nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if(iid.Equals(nsIFolderListener::GetIID()))
-	{
-		*result = NS_STATIC_CAST(nsIFolderListener*, this);
-		NS_ADDREF(this);
-		return NS_OK;
-	}
-	else
-		return nsMsgRDFDataSource::QueryInterface(iid, result);
-}
-
- // nsIRDFDataSource methods
-NS_IMETHODIMP nsMsgMessageDataSource::Init(const char* uri)
+nsresult nsMsgMessageDataSource::Init()
 {
   if (mInitialized)
       return NS_ERROR_ALREADY_INITIALIZED;
-
-  if ((mURI = PL_strdup(uri)) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
 
   mRDFService->RegisterDataSource(this, PR_FALSE);
 
@@ -168,9 +149,30 @@ NS_IMETHODIMP nsMsgMessageDataSource::Init(const char* uri)
   return NS_OK;
 }
 
+NS_IMPL_ADDREF_INHERITED(nsMsgMessageDataSource, nsMsgRDFDataSource)
+NS_IMPL_RELEASE_INHERITED(nsMsgMessageDataSource, nsMsgRDFDataSource)
+
+NS_IMETHODIMP
+nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
+{
+	if (! result)
+		return NS_ERROR_NULL_POINTER;
+
+	*result = nsnull;
+	if(iid.Equals(nsIFolderListener::GetIID()))
+	{
+		*result = NS_STATIC_CAST(nsIFolderListener*, this);
+		NS_ADDREF(this);
+		return NS_OK;
+	}
+	else
+		return nsMsgRDFDataSource::QueryInterface(iid, result);
+}
+
+ // nsIRDFDataSource methods
 NS_IMETHODIMP nsMsgMessageDataSource::GetURI(char* *uri)
 {
-  if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+  if ((*uri = nsXPIDLCString::Copy("rdf:mailnewsmessages")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;
@@ -361,12 +363,6 @@ NS_IMETHODIMP
 nsMsgMessageDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
   NS_NOTYETIMPLEMENTED("sorry!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMsgMessageDataSource::Flush()
-{
-  PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -44,7 +44,32 @@ nsIRDFResource* nsMessageViewDataSource::kNC_Date;
 nsIRDFResource* nsMessageViewDataSource::kNC_Status;
 
 NS_IMPL_ADDREF(nsMessageViewDataSource)
-NS_IMPL_RELEASE(nsMessageViewDataSource)
+
+NS_IMETHODIMP_(nsrefcnt)
+nsMessageViewDataSource::Release()
+{
+    // We need a special implementation of Release(). The composite
+    // datasource holds a reference to mDataSource, and mDataSource
+    // holds a reference _back_ to the composite datasource by way of
+    // the "observer".
+    NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
+    --mRefCnt;
+
+    // When the number of references is one, we know that all that
+    // remains is the circular references from mDataSource back to
+    // us. Release it.
+    if (mRefCnt == 1 && mDataSource) {
+        mDataSource->RemoveObserver(this);
+        return 0;
+    }
+    else if (mRefCnt == 0) {
+        delete this;
+        return 0;
+    }
+    else {
+        return mRefCnt;
+    }
+}
 
 NS_IMETHODIMP
 nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
@@ -73,16 +98,20 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
 nsMessageViewDataSource::nsMessageViewDataSource(void)
 {
 	NS_INIT_REFCNT();
-	mURI = nsnull;
 	mObservers = nsnull;
 	mShowStatus = VIEW_SHOW_ALL;
 	mInitialized = PR_FALSE;
 	mShowThreads = PR_TRUE;
 
-	nsServiceManager::GetService(kRDFServiceCID,
-                               nsIRDFService::GetIID(),
-                               (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
-  
+  // XXX This call should be moved to a NS_NewMessageViewDataSource()
+  // method that the factory calls, so that failure to construct will
+  // return an error code instead of returning a partially initialized
+  // object.
+  nsresult rv = Init();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh. couldn't initialize.");
+  if (NS_FAILED(rv)) return /* rv */;
+
+  return /* NS_OK */;
 }
 
 nsMessageViewDataSource::~nsMessageViewDataSource (void)
@@ -90,10 +119,6 @@ nsMessageViewDataSource::~nsMessageViewDataSource (void)
 	mRDFService->UnregisterDataSource(this);
 
 	RemoveDataSource(mDataSource);
-	if(mURI)
-		PL_strfree(mURI);
-
-  delete mObservers; // we only hold a weak ref to each observer
 
 	nsrefcnt refcnt;
 	NS_RELEASE2(kNC_MessageChild, refcnt);
@@ -107,14 +132,18 @@ nsMessageViewDataSource::~nsMessageViewDataSource (void)
 }
 
 
-NS_IMETHODIMP nsMessageViewDataSource::Init(const char* uri)
+nsresult
+nsMessageViewDataSource::Init()
 {
 	if (mInitialized)
 		return NS_ERROR_ALREADY_INITIALIZED;
 
-	if ((mURI = PL_strdup(uri)) == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
+  nsresult rv;
+	rv = nsServiceManager::GetService(kRDFServiceCID,
+                               nsIRDFService::GetIID(),
+                               (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
+  if (NS_FAILED(rv)) return rv;
+  
 	mRDFService->RegisterDataSource(this, PR_FALSE);
 
 	if (! kNC_MessageChild) {
@@ -131,7 +160,7 @@ NS_IMETHODIMP nsMessageViewDataSource::Init(const char* uri)
 
 NS_IMETHODIMP nsMessageViewDataSource::GetURI(char* *uri)
 {
-	if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+	if ((*uri = nsXPIDLCString::Copy("rdf:mail-messageview")) == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 	else
 		return NS_OK;
@@ -290,6 +319,29 @@ NS_IMETHODIMP nsMessageViewDataSource::Unassert(nsIRDFResource* source,
 		return NS_OK;
 }
 
+NS_IMETHODIMP nsMessageViewDataSource::Change(nsIRDFResource* aSource,
+                                              nsIRDFResource* aProperty,
+                                              nsIRDFNode* aOldTarget,
+                                              nsIRDFNode* aNewTarget)
+{
+	if (mDataSource)
+		return mDataSource->Change(aSource, aProperty, aOldTarget, aNewTarget);
+	else
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMessageViewDataSource::Move(nsIRDFResource* aOldSource,
+                                            nsIRDFResource* aNewSource,
+                                            nsIRDFResource* aProperty,
+                                            nsIRDFNode* aTarget)
+{
+	if (mDataSource)
+		return mDataSource->Move(aOldSource, aNewSource, aProperty, aTarget);
+	else
+		return NS_OK;
+}
+
 NS_IMETHODIMP nsMessageViewDataSource::HasAssertion(nsIRDFResource* source,
 						  nsIRDFResource* property,
 						  nsIRDFNode* target,
@@ -305,8 +357,8 @@ NS_IMETHODIMP nsMessageViewDataSource::HasAssertion(nsIRDFResource* source,
 NS_IMETHODIMP nsMessageViewDataSource::AddObserver(nsIRDFObserver* n)
 {
 	if (! mObservers) {
-		if ((mObservers = new nsVoidArray()) == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+    if (NS_FAILED(rv)) return rv;
 	}
 	mObservers->AppendElement(n);
 	return NS_OK;
@@ -393,14 +445,6 @@ NS_IMETHODIMP nsMessageViewDataSource::GetAllResources(nsISimpleEnumerator** aCu
 		return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::Flush()
-{
-	if(mDataSource)
-		return mDataSource->Flush();
-	else
-		return NS_OK;
-}
-
 NS_IMETHODIMP nsMessageViewDataSource::GetAllCommands(nsIRDFResource* source,
 							nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
@@ -456,9 +500,14 @@ NS_IMETHODIMP nsMessageViewDataSource::OnAssert(nsIRDFResource* subject,
 						nsIRDFNode* object)
 {
 	if (mObservers) {
-    for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+    PRUint32 count;
+    nsresult rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = count - 1; i >= 0; --i) {
         nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
         obs->OnAssert(subject, predicate, object);
+        NS_RELEASE(obs);
     }
     }
     return NS_OK;
@@ -470,12 +519,57 @@ NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFResource* subject,
                           nsIRDFNode* object)
 {
     if (mObservers) {
-        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+        PRUint32 count;
+        nsresult rv = mObservers->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
             nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
             obs->OnUnassert(subject, predicate, object);
+            NS_RELEASE(obs);
         }
     }
     return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMessageViewDataSource::OnChange(nsIRDFResource* aSource,
+                                                nsIRDFResource* aProperty,
+                                                nsIRDFNode* aOldTarget,
+                                                nsIRDFNode* aNewTarget)
+{
+  if (mObservers) {
+    PRUint32 count;
+    nsresult rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+      nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+      obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+      NS_RELEASE(obs);
+    }
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMessageViewDataSource::OnMove(nsIRDFResource* aOldSource,
+                                              nsIRDFResource* aNewSource,
+                                              nsIRDFResource* aProperty,
+                                              nsIRDFNode* aTarget)
+{
+  if (mObservers) {
+    PRUint32 count;
+    nsresult rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
+      nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+      obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+      NS_RELEASE(obs);
+    }
+  }
+  return NS_OK;
 }
 
 

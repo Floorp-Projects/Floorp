@@ -31,6 +31,7 @@
 #include "nsIMsgMailSession.h"
 
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "plstr.h"
 #include "nsMsgBaseCID.h"
 
@@ -41,11 +42,13 @@ class nsMsgIdentityDataSource : public nsMsgRDFDataSource
 {
 
 public:
+  nsMsgIdentityDataSource();
+  virtual ~nsMsgIdentityDataSource();
+  virtual nsresult Init();
 
   // RDF datasource methods
   
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(const char *uri);
+  NS_IMETHOD GetURI(char* *aURI);
     
   /* nsIRDFNode GetTarget (in nsIRDFResource source, in nsIRDFResource property, in boolean aTruthValue); */
   NS_IMETHOD GetTarget(nsIRDFResource *source,
@@ -93,16 +96,47 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Server);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 
-/* void Init (in string uri); */
-NS_IMETHODIMP
-nsMsgIdentityDataSource::Init(const char *uri)
+nsMsgIdentityDataSource::nsMsgIdentityDataSource()
 {
-    nsMsgRDFDataSource::Init(uri);
+    nsresult rv;
+    rv = Init();
+
+    // XXX This call should be moved to a NS_NewMsgFooDataSource()
+    // method that the factory calls, so that failure to construct
+    // will return an error code instead of returning a partially
+    // initialized object.
+    NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
+    if (NS_FAILED(rv)) return /* rv */;
+
+    return /* NS_OK */;
+}
+
+
+nsMsgIdentityDataSource::~nsMsgIdentityDataSource()
+{
+    // XXX Release all the resources we acquired in Init()
+}
+
+nsresult
+nsMsgIdentityDataSource::Init()
+{
+    nsMsgRDFDataSource::Init();
     
     if (! kNC_Child) {
         getRDFService()->GetResource(kURINC_child, &kNC_Child);
         getRDFService()->GetResource(kURINC_Identity, &kNC_Identity);
     }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMsgIdentityDataSource::GetURI(char* *aURI)
+{
+    *aURI = nsXPIDLCString::Copy("rdf:msgidentities");
+    if (! *aURI)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     return NS_OK;
 }
 

@@ -16,10 +16,12 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIAbListener.h"
 #include "nsIAbCard.h"
+#include "nsISupportsArray.h"
 
 
 /**
@@ -29,8 +31,7 @@ class nsABCardDataSource : public nsIRDFDataSource,
 						 public nsIAbListener
 {
 private:
-	char*         mURI;
-	nsVoidArray*  mObservers;
+	nsCOMPtr<nsISupportsArray> mObservers;
 	PRBool		mInitialized;
 
 	// The cached service managers
@@ -43,10 +44,9 @@ public:
 
 	nsABCardDataSource(void);
 	virtual ~nsABCardDataSource (void);
-
+	nsresult Init();
 
 	// nsIRDFDataSource methods
-	NS_IMETHOD Init(const char* uri);
 
 	NS_IMETHOD GetURI(char* *uri);
 
@@ -79,6 +79,16 @@ public:
 					  nsIRDFResource* property,
 					  nsIRDFNode* target);
 
+  NS_IMETHOD Change(nsIRDFResource *aSource,
+                    nsIRDFResource *aProperty,
+                    nsIRDFNode *aOldTarget,
+                    nsIRDFNode *aNewTarget);
+
+  NS_IMETHOD Move(nsIRDFResource *aOldSource,
+                  nsIRDFResource *aNewSource,
+                  nsIRDFResource *aProperty,
+                  nsIRDFNode *aTarget);
+
 	NS_IMETHOD HasAssertion(nsIRDFResource* source,
 						  nsIRDFResource* property,
 						  nsIRDFNode* target,
@@ -96,8 +106,6 @@ public:
 						  nsISimpleEnumerator** labels); 
 
 	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor);
-
-	NS_IMETHOD Flush();
 
 	NS_IMETHOD GetAllCommands(nsIRDFResource* source,
 							nsIEnumerator/*<nsIRDFResource>*/** commands);
@@ -139,8 +147,8 @@ protected:
 	nsresult DoNewCard(nsIAbCard *directory,
 							  nsISupportsArray *arguments);
 
-	static PRBool assertEnumFunc(void *aElement, void *aData);
-	static PRBool unassertEnumFunc(void *aElement, void *aData);
+	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
+	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 
 	static nsIRDFResource* kNC_PersonName;
 	static nsIRDFResource* kNC_ListName;

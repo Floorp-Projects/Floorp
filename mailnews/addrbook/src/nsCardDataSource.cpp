@@ -155,17 +155,17 @@ void nsABCardDataSource::createNode(PRUint32 value, nsIRDFNode **node)
 }
 
 nsABCardDataSource::nsABCardDataSource():
-  mURI(nsnull),
   mObservers(nsnull),
   mInitialized(PR_FALSE),
   mRDFService(nsnull)
 {
   NS_INIT_REFCNT();
 
-  nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
-                                             (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
-
+  // XXX This call should be moved to a NS_NewMsgFooDataSource()
+  // method that the factory calls, so that failure to construct
+  // will return an error code instead of returning a partially
+  // initialized object.
+  nsresult rv = Init();
   PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -173,16 +173,6 @@ nsABCardDataSource::~nsABCardDataSource (void)
 {
   mRDFService->UnregisterDataSource(this);
 
-  PL_strfree(mURI);
-  if (mObservers) {
-
-	  PRInt32 i;
-      for (i = mObservers->Count() - 1; i >= 0; --i) {
-          nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-          NS_RELEASE(obs);
-      }
-      delete mObservers;
-  }
   nsrefcnt refcnt;
 
   NS_RELEASE2(kNC_PersonName, refcnt);
@@ -199,6 +189,36 @@ nsABCardDataSource::~nsABCardDataSource (void)
   nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
   mRDFService = nsnull;
 }
+
+nsresult nsABCardDataSource::Init()
+{
+  if (mInitialized)
+      return NS_ERROR_ALREADY_INITIALIZED;
+
+  nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                             nsIRDFService::GetIID(),
+                                             (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
+  if (NS_FAILED(rv)) return rv;
+
+  mRDFService->RegisterDataSource(this, PR_FALSE);
+
+  if (! kNC_PersonName) {
+   
+    mRDFService->GetResource(kURINC_PersonName,	&kNC_PersonName);
+    mRDFService->GetResource(kURINC_ListName,	&kNC_ListName);
+    mRDFService->GetResource(kURINC_Email,		&kNC_Email);
+    mRDFService->GetResource(kURINC_City,		&kNC_City);
+    mRDFService->GetResource(kURINC_Organization, &kNC_Organization);
+    mRDFService->GetResource(kURINC_WorkPhone,	&kNC_WorkPhone);
+    mRDFService->GetResource(kURINC_Nickname,	&kNC_Nickname);
+
+    mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
+    mRDFService->GetResource(kURINC_NewCard, &kNC_NewCard);
+  }
+  mInitialized = PR_TRUE;
+  return NS_OK;
+}
+
 
 
 NS_IMPL_ADDREF(nsABCardDataSource)
@@ -228,36 +248,9 @@ nsABCardDataSource::QueryInterface(REFNSIID iid, void** result)
 }
 
  // nsIRDFDataSource methods
-NS_IMETHODIMP nsABCardDataSource::Init(const char* uri)
-{
-  if (mInitialized)
-      return NS_ERROR_ALREADY_INITIALIZED;
-
-  if ((mURI = PL_strdup(uri)) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  mRDFService->RegisterDataSource(this, PR_FALSE);
-
-  if (! kNC_PersonName) {
-   
-    mRDFService->GetResource(kURINC_PersonName,	&kNC_PersonName);
-    mRDFService->GetResource(kURINC_ListName,	&kNC_ListName);
-    mRDFService->GetResource(kURINC_Email,		&kNC_Email);
-    mRDFService->GetResource(kURINC_City,		&kNC_City);
-    mRDFService->GetResource(kURINC_Organization, &kNC_Organization);
-    mRDFService->GetResource(kURINC_WorkPhone,	&kNC_WorkPhone);
-    mRDFService->GetResource(kURINC_Nickname,	&kNC_Nickname);
-
-    mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
-    mRDFService->GetResource(kURINC_NewCard, &kNC_NewCard);
-  }
-  mInitialized = PR_TRUE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsABCardDataSource::GetURI(char* *uri)
 {
-  if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+  if ((*uri = nsXPIDLCString::Copy("rdf:addresscard")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   else
     return NS_OK;
@@ -357,6 +350,21 @@ NS_IMETHODIMP nsABCardDataSource::Unassert(nsIRDFResource* source,
   return NS_RDF_ASSERTION_REJECTED;//NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsABCardDataSource::Change(nsIRDFResource *aSource,
+                                         nsIRDFResource *aProperty,
+                                         nsIRDFNode *aOldTarget,
+                                         nsIRDFNode *aNewTarget)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsABCardDataSource::Move(nsIRDFResource *aOldSource,
+                                       nsIRDFResource *aNewSource,
+                                       nsIRDFResource *aProperty,
+                                       nsIRDFNode *aTarget)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP nsABCardDataSource::HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
@@ -371,8 +379,8 @@ NS_IMETHODIMP nsABCardDataSource::HasAssertion(nsIRDFResource* source,
 NS_IMETHODIMP nsABCardDataSource::AddObserver(nsIRDFObserver* n)
 {
   if (! mObservers) {
-    if ((mObservers = new nsVoidArray()) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+    if (NS_FAILED(rv)) return rv;
   }
   mObservers->AppendElement(n);
   return NS_OK;
@@ -387,7 +395,7 @@ NS_IMETHODIMP nsABCardDataSource::RemoveObserver(nsIRDFObserver* n)
 }
 
 PRBool
-nsABCardDataSource::assertEnumFunc(void *aElement, void *aData)
+nsABCardDataSource::assertEnumFunc(nsISupports *aElement, void *aData)
 {
   nsAbRDFNotification *note = (nsAbRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
@@ -399,7 +407,7 @@ nsABCardDataSource::assertEnumFunc(void *aElement, void *aData)
 }
 
 PRBool
-nsABCardDataSource::unassertEnumFunc(void *aElement, void *aData)
+nsABCardDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
 {
   nsAbRDFNotification* note = (nsAbRDFNotification *)aData;
   nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
@@ -483,12 +491,6 @@ NS_IMETHODIMP
 nsABCardDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
   NS_NOTYETIMPLEMENTED("sorry!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsABCardDataSource::Flush()
-{
-  PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

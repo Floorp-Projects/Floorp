@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIAbListener.h"
@@ -23,6 +24,7 @@
 #include "nsIAbCard.h"
 #include "nsDirPrefs.h"
 #include "nsIAbListener.h"
+#include "nsISupportsArray.h"
 
 static const char kAddrBookRootURI[] = "abdirectory:/";
 
@@ -35,8 +37,7 @@ class nsABDirectoryDataSource : public nsIRDFDataSource,
 							    public nsIAbListener
 {
 private:
-  char*         mURI;
-  nsVoidArray*  mObservers;
+  nsCOMPtr<nsISupportsArray> mObservers;
   PRBool		mInitialized;
 
   // The cached service managers
@@ -49,11 +50,9 @@ public:
 
   nsABDirectoryDataSource(void);
   virtual ~nsABDirectoryDataSource (void);
-
+  nsresult Init();
 
   // nsIRDFDataSource methods
-  NS_IMETHOD Init(const char* uri);
-
   NS_IMETHOD GetURI(char* *uri);
 
   NS_IMETHOD GetSource(nsIRDFResource* property,
@@ -85,6 +84,16 @@ public:
                       nsIRDFResource* property,
                       nsIRDFNode* target);
 
+  NS_IMETHOD Change(nsIRDFResource *aSource,
+                    nsIRDFResource *aProperty,
+                    nsIRDFNode *aOldTarget,
+                    nsIRDFNode *aNewTarget);
+
+  NS_IMETHOD Move(nsIRDFResource *aOldSource,
+                  nsIRDFResource *aNewSource,
+                  nsIRDFResource *aProperty,
+                  nsIRDFNode *aTarget);
+
   NS_IMETHOD HasAssertion(nsIRDFResource* source,
                           nsIRDFResource* property,
                           nsIRDFNode* target,
@@ -102,8 +111,6 @@ public:
                           nsISimpleEnumerator** labels); 
 
   NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor);
-
-  NS_IMETHOD Flush();
 
   NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                             nsIEnumerator/*<nsIRDFResource>*/** commands);
@@ -151,8 +158,8 @@ protected:
   nsresult DoNewDirectory(nsIAbDirectory *directory,
 							  nsISupportsArray *arguments);
 
-  static PRBool assertEnumFunc(void *aElement, void *aData);
-  static PRBool unassertEnumFunc(void *aElement, void *aData);
+  static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
+  static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_DirName;

@@ -61,14 +61,12 @@ public:
     
   nsMsgAccountManagerDataSource();
   virtual ~nsMsgAccountManagerDataSource();
+  virtual nsresult Init();
+
   // service manager shutdown method
 
   // RDF datasource methods
   
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(const char *uri);
-    
-
   /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
   NS_IMETHOD GetTarget(nsIRDFResource *source,
                        nsIRDFResource *property,
@@ -130,6 +128,16 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
 #ifdef DEBUG_amds
   printf("nsMsgAccountManagerDataSource() being created\n");
 #endif
+
+  // XXX This call should be moved to a NS_NewMsgFooDataSource()
+  // method that the factory calls, so that failure to construct
+  // will return an error code instead of returning a partially
+  // initialized object.
+  nsresult rv = Init();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
+  if (NS_FAILED(rv)) return /* rv */;
+
+  return /* NS_OK */;
 }
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
@@ -139,11 +147,10 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
                                                     this);
 
 }
-/* void Init (in string uri); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::Init(const char *uri)
+
+nsresult
+nsMsgAccountManagerDataSource::Init()
 {
-    nsMsgRDFDataSource::Init(uri);
     nsresult rv=NS_OK;
 #ifdef DEBUG_amds
     printf("nsMsgAccountManagerDataSource::Init(%s)\n", uri ? uri : "(null)");

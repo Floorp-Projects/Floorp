@@ -24,7 +24,7 @@
 #include "nsIMsgFolder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include "nsIEnumerator.h"
 #include "nsIMessage.h"
 #include "nsIMsgThread.h"
@@ -37,8 +37,7 @@ class nsMessageViewDataSource : public nsIRDFCompositeDataSource, public nsIMess
 								public nsIRDFObserver
 {
 private:
-	char*			mURI;
-	nsVoidArray*	mObservers;
+	nsCOMPtr<nsISupportsArray> mObservers;
 	PRBool			mInitialized;
 	nsIRDFService * mRDFService;
 
@@ -48,11 +47,10 @@ public:
 
 	nsMessageViewDataSource(void);
 	virtual ~nsMessageViewDataSource (void);
+  virtual nsresult Init();
 
 
 	// nsIRDFDataSource methods
-	NS_IMETHOD Init(const char* uri);
-
 	NS_IMETHOD GetURI(char* *uri);
 
 	NS_IMETHOD GetSource(nsIRDFResource* property,
@@ -84,6 +82,16 @@ public:
 					  nsIRDFResource* property,
 					  nsIRDFNode* target);
 
+	NS_IMETHOD Change(nsIRDFResource* aSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aOldTarget,
+                    nsIRDFNode* aNewTarget);
+
+	NS_IMETHOD Move(nsIRDFResource* aOldSource,
+                  nsIRDFResource* aNewSource,
+                  nsIRDFResource* aProperty,
+                  nsIRDFNode* aTarget);
+
 	NS_IMETHOD HasAssertion(nsIRDFResource* source,
 						  nsIRDFResource* property,
 						  nsIRDFNode* target,
@@ -101,8 +109,6 @@ public:
 						  nsISimpleEnumerator** labels); 
 
 	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
-
-	NS_IMETHOD Flush();
 
 	NS_IMETHOD GetAllCommands(nsIRDFResource* source,
 							nsIEnumerator/*<nsIRDFResource>*/** commands);
@@ -131,6 +137,15 @@ public:
                           nsIRDFResource* predicate,
                           nsIRDFNode* object);
 
+    NS_IMETHOD OnChange(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget);
+
+    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
+                      nsIRDFResource* aNewSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget);
 	//nsIMessageView
 	NS_IMETHOD SetShowAll();
 	NS_IMETHOD SetShowUnread();

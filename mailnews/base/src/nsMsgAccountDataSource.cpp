@@ -28,6 +28,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
 
+#include "nsXPIDLString.h"
 #include "plstr.h"
 #include "nsMsgBaseCID.h"
 
@@ -41,12 +42,12 @@ class nsMsgAccountDataSource : public nsMsgRDFDataSource
 public:
   nsMsgAccountDataSource();
   virtual ~nsMsgAccountDataSource();
+  virtual nsresult Init();
   
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   
   // RDF datasource methods
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(const char *uri);
+  NS_IMETHOD GetURI(char* *aURI);
 
   /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
   NS_IMETHOD GetTarget(nsIRDFResource *source,
@@ -115,30 +116,28 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 nsMsgAccountDataSource::nsMsgAccountDataSource():
   mInitialized(PR_FALSE)
 {
-  NS_INIT_REFCNT();
-  
+    nsresult rv;
+    rv = Init();
+
+    // XXX This call should be moved to a NS_NewMsgFooDataSource()
+    // method that the factory calls, so that failure to construct
+    // will return an error code instead of returning a partially
+    // initialized object.
+    NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
+    if (NS_FAILED(rv)) return /* rv */;
+
+    return /* NS_OK */;
 }
 
 nsMsgAccountDataSource::~nsMsgAccountDataSource()
 {
 }
 
-NS_IMPL_ADDREF(nsMsgAccountDataSource)
-NS_IMPL_RELEASE(nsMsgAccountDataSource)
 
 nsresult
-nsMsgAccountDataSource::QueryInterface(const nsIID& iid, void **result)
+nsMsgAccountDataSource::Init()
 {
-
-  return NS_OK;
-}
-
-
-/* void Init (in string uri); */
-NS_IMETHODIMP
-nsMsgAccountDataSource::Init(const char *uri)
-{
-    nsMsgRDFDataSource::Init(uri);
+    nsMsgRDFDataSource::Init();
     
     if (! kNC_Child) {
             getRDFService()->GetResource(kURINC_child, &kNC_Child);
@@ -148,6 +147,28 @@ nsMsgAccountDataSource::Init(const char *uri)
     }
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+NS_IMPL_ADDREF_INHERITED(nsMsgAccountDataSource, nsMsgRDFDataSource)
+NS_IMPL_RELEASE_INHERITED(nsMsgAccountDataSource, nsMsgRDFDataSource)
+
+nsresult
+nsMsgAccountDataSource::QueryInterface(const nsIID& iid, void **result)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMsgAccountDataSource::GetURI(char* *aURI)
+{
+    *aURI = nsXPIDLCString::Copy("rdf:msgaccounts");
+    if (! *aURI)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
+
 
 /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
 NS_IMETHODIMP

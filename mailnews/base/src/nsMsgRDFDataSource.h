@@ -20,10 +20,11 @@
 #ifndef __nsMsgRDFDataSource_h
 #define __nsMsgRDFDataSource_h
 
+#include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIShutdownListener
@@ -31,13 +32,11 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
  public:
   nsMsgRDFDataSource();
   virtual ~nsMsgRDFDataSource();
+  virtual nsresult Init();
   
   NS_DECL_ISUPPORTS
     
   NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
-
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(const char *uri);
 
   /* readonly attribute string URI; */
   NS_IMETHOD GetURI(char * *aURI);
@@ -90,6 +89,25 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
                       nsIRDFResource *aProperty,
                       nsIRDFNode *aTarget);
 
+  /* void Change (in nsIRDFResource aSource,
+     in nsIRDFResource aProperty,
+     in nsIRDFNode aOldTarget,
+     in nsIRDFNode aNewTarget);
+     */
+  NS_IMETHOD Change(nsIRDFResource *aSource,
+                    nsIRDFResource *aProperty,
+                    nsIRDFNode *aOldTarget,
+                    nsIRDFNode *aNewTarget);
+
+  /* void Move (in nsIRDFResource aOldSource,
+     in nsIRDFResource aNewSource,
+     in nsIRDFResource aProperty,
+     in nsIRDFNode aTarget); */
+  NS_IMETHOD Move(nsIRDFResource *aOldSource,
+                  nsIRDFResource *aNewSource,
+                  nsIRDFResource *aProperty,
+                  nsIRDFNode *aTarget);
+
   /* boolean HasAssertion (in nsIRDFResource aSource,
      in nsIRDFResource aProperty,
      in nsIRDFNode aTarget,
@@ -117,9 +135,6 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   /* nsISimpleEnumerator GetAllResources (); */
   NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
 
-  /* void Flush (); */
-  NS_IMETHOD Flush();
-
   /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
   NS_IMETHOD GetAllCommands(nsIRDFResource *aSource,
                             nsIEnumerator **_retval);
@@ -141,17 +156,15 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 
 
  protected:
-  char *mURI;
-
 	nsIRDFService *getRDFService();
-	static PRBool assertEnumFunc(void *aElement, void *aData);
-	static PRBool unassertEnumFunc(void *aElement, void *aData);
+	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
+	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 								nsIRDFNode *object, PRBool assert);
 
  private:
   nsIRDFService *mRDFService;
-  nsVoidArray *mObservers;
+  nsCOMPtr<nsISupportsArray> mObservers;
 
 };
 
