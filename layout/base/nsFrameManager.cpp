@@ -228,6 +228,11 @@ public:
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
 
+  /** return PR_TRUE if this instance is prepared to process events 
+    * (specifically, CantRenderReplacedElement events.)
+    */
+  NS_IMETHOD CanProcessEvents() { return mCanProcessEvents; }
+
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
 
   NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
@@ -294,6 +299,9 @@ private:
   FrameHashTable*                 mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
   CantRenderReplacedElementEvent* mPostedEvents;
+  // keep around a flag that we use to prevent processing on event callbacks after 
+  // we've started the shutdown procedure
+  PRBool                          mCanProcessEvents;
   PropertyList*                   mPropertyList;
 
   void ReResolveStyleContext(nsIPresContext* aPresContext,
@@ -337,6 +345,7 @@ NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 FrameManager::FrameManager()
 {
   NS_INIT_REFCNT();
+  mCanProcessEvents = PR_TRUE;
 }
 
 NS_IMPL_ADDREF(FrameManager)
@@ -344,9 +353,15 @@ NS_IMPL_RELEASE(FrameManager)
 
 FrameManager::~FrameManager()
 {
+#ifdef NOISY_EVENTS
+  printf("%p ~FrameManager() start\n", this);
+#endif
   nsCOMPtr<nsIPresContext> presContext;
   mPresShell->GetPresContext(getter_AddRefs(presContext));
   
+  // first, mark this FM so it no longer can accept events
+  mCanProcessEvents = PR_FALSE;
+
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
 
@@ -362,6 +377,9 @@ FrameManager::~FrameManager()
   delete mPlaceholderMap;
   delete mUndisplayedMap;
   DestroyPropertyList(presContext);
+#ifdef NOISY_EVENTS
+  printf("%p ~FrameManager() end\n", this);
+#endif
 }
 
 nsresult
@@ -711,6 +729,9 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
 void
 FrameManager::RevokePostedEvents()
 {
+#ifdef NOISY_EVENTS
+  printf("%p ~RevokePostedEvents() start\n", this);
+#endif
   if (mPostedEvents) {
     mPostedEvents = nsnull;
 
@@ -732,6 +753,9 @@ FrameManager::RevokePostedEvents()
       }
     }
   }
+#ifdef NOISY_EVENTS
+  printf("%p ~RevokePostedEvents() end\n", this);
+#endif
 }
 
 CantRenderReplacedElementEvent**
@@ -788,13 +812,15 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
 
 void
 FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent) {
-
+#ifdef NOISY_EVENTS
+  printf("FrameManager::HandlePLEvent() start for FM %p\n", aEvent->owner);
+#endif
   FrameManager* frameManager = (FrameManager*)aEvent->owner;
 
     //adding a ptr check since talkback is complaining about a crash here.
     //I suspect that if the event->owner is really null, bad things will happen
     //elsewhere.
-  if(frameManager) { 
+  if(frameManager  &&  frameManager->CanProcessEvents()) { 
   
     // Remove the posted event from the linked list
     CantRenderReplacedElementEvent** events = &frameManager->mPostedEvents;
@@ -813,6 +839,9 @@ FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent) {
     frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
     frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);        
   }
+#ifdef NOISY_EVENTS
+  printf("FrameManager::HandlePLEvent() end for FM %p\n", aEvent->owner);
+#endif
 }
 
 void
@@ -835,6 +864,9 @@ NS_IMETHODIMP
 FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                         nsIFrame*       aFrame)
 {
+#ifdef NOISY_EVENTS
+  printf("%p FrameManager::CantRenderReplacedElement called\n", this);
+#endif
   nsIEventQueueService* eventService;
   nsresult              rv;
 
