@@ -147,7 +147,12 @@ endif
 ifeq ($(OS_ARCH), WINNT)
         LDAP_EXPORT_DEFS= $(srcdir)/../msdos/winsock/nsldap32.def
 else
+ifeq ($(OS_ARCH), OS2)
+        LDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libldap.def
+else
         LDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libldap.exp
+endif
+GARBAGE += $(LDAP_EXPORT_DEFS)
 endif
 
 LDAP_EXPORT_FLAGS=$(addprefix $(DLLEXPORTS_PREFIX), $(LDAP_EXPORT_DEFS))
@@ -233,7 +238,16 @@ $(LDAP_EXPORT_DEFS):: $(srcdir)/../libldap.ex
 ifeq ($(OS_ARCH), WINNT)
 	$(GENEXPORTS) Win32 Standard $< $(GENEXPARGS) > $@
 else
+ifeq ($(OS_ARCH), OS2)
+	echo LIBRARY $(LDAP_LIBNAME) INITINSTANCE TERMINSTANCE > $@
+	echo PROTMODE >> $@
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
+	echo EXPORTS >> $@
+	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) >> $@
+else
 	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) > $@
+endif
 endif
 endif # USE_DLL_EXPORTS_FILE
 
@@ -253,18 +267,7 @@ ltest::	$(LIBLDAP) test.o
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
 
-ifeq ($(OS_ARCH),OS2)
-DEF_FILE = $(LDAP_LIBNAME).def
-$(DEF_FILE):
-	echo LIBRARY $(LDAP_LIBNAME) INITINSTANCE TERMINSTANCE > $@
-	echo PROTMODE >> $@
-	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
-	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
-	echo EXPORTS >> $@
-	$(FILTER) $(OBJS) >> $@
-endif
-
-$(LIBLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS) $(DEF_FILE)
+$(LIBLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS)
 	@echo ======= making $(LIBLDAP)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
@@ -275,13 +278,13 @@ else
 ifeq ($(OS_ARCH),OS2)
 # create import library for OS/2
 	rm -f $@
-	$(IMPLIB) $@ $(DEF_FILE)
+	$(IMPLIB) $@ $(LDAP_EXPORT_DEFS)
 else
 	$(LINK_LIB) $(EXTRA_LIBS)
 endif
 endif
 
-$(DLLLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS) $(DEF_FILE)
+$(DLLLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS)
 	@echo ======= making $(DLLLDAP)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
@@ -295,7 +298,7 @@ ifeq ($(OS_ARCH), OpenVMS)
 	fi
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
 endif
-	$(LINK_DLL) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS) $(DEF_FILE)
+	$(LINK_DLL) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
 
 veryclean:: clean
 

@@ -240,6 +240,10 @@ USE_DLL_EXPORTS_FILE	= 1
 endif
 endif
 
+ifeq ($(OS_ARCH), OS2)
+USE_DLL_EXPORTS_FILE	= 1
+endif
+
 ifeq ($(OS_ARCH), SunOS)
 DLLEXPORTS_PREFIX=-Blocal -M
 USE_DLL_EXPORTS_FILE	= 1

@@ -80,7 +80,12 @@ endif
 ifeq ($(OS_ARCH), WINNT)
         PRLDAP_EXPORT_DEFS= $(srcdir)/../msdos/winsock/nsldappr32.def
 else
+ifeq ($(OS_ARCH), OS2)
+        PRLDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libprldap.def
+else
         PRLDAP_EXPORT_DEFS= $(OBJDIR_NAME)/libprldap.exp
+endif
+GARBAGE += $(LDAP_EXPORT_DEFS)
 endif
 
 PRLDAP_EXPORT_FLAGS=$(addprefix $(DLLEXPORTS_PREFIX), $(PRLDAP_EXPORT_DEFS))
@@ -153,13 +158,24 @@ OBJDEST = $(OBJDIR_NAME)
 
 ###########################################################################
 
+ifeq ($(USE_DLL_EXPORTS_FILE), 1)
 # recursive gmake rule to create exported symbols file
-$(OBJDIR_NAME)/libprldap.exp:: libprldap.ex
+$(PRLDAP_EXPORT_DEFS):: libprldap.ex
 ifeq ($(OS_ARCH), WINNT)
 	$(GENEXPORTS) Win32 Standard $< $(GENEXPARGS) > $@
 else
+ifeq ($(OS_ARCH), OS2)
+	echo LIBRARY $(PRLDAP_LIBNAME) INITINSTANCE TERMINSTANCE > $@
+	echo PROTMODE >> $@
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
+	echo EXPORTS >> $@
+	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) >> $@
+else
 	$(GENEXPORTS) $(OS_ARCH) Standard $< $(GENEXPARGS) > $@
 endif
+endif
+endif # USE_DLL_EXPORTS_FILE
 
 versiont.c:	Makefile.client Version.c
 	@$(RM) $@
@@ -174,18 +190,7 @@ export::    $(OBJDEST) $(LIBDIR) $(OBJS) $(DLLPRLDAP)
 $(LIBDIR):
 	$(MKDIR) $(LIBDIR)
 
-ifeq ($(OS_ARCH),OS2)
-DEF_FILE = $(PRLDAP_LIBNAME).def
-$(DEF_FILE):
-	echo LIBRARY $(PRLDAP_LIBNAME) INITINSTANCE TERMINSTANCE > $@
-	echo PROTMODE >> $@
-	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
-	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
-	echo EXPORTS >> $@
-	$(FILTER) $(OBJS) >> $@
-endif
-
-$(LIBPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS) $(DEF_FILE)
+$(LIBPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS)
 	@echo ======= making $(LIBPRLDAP)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
@@ -193,12 +198,12 @@ endif
 ifeq ($(OS_ARCH),OS2)
 # create import library for OS/2
 	rm -f $@
-	$(IMPLIB) $@ $(DEF_FILE)
+	$(IMPLIB) $@ $(PRLDAP_EXPORT_DEFS)
 else
 	$(LINK_LIB) $(EXTRA_LIBS)
 endif
 
-$(DLLPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS) $(DEF_FILE)
+$(DLLPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS)
 	@echo ======= making $(DLLPRLDAP)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
@@ -209,7 +214,7 @@ ifeq ($(OS_ARCH), OpenVMS)
 	    create_opt_uni $(OBJS); \
 	fi
 endif
-	$(LINK_DLL) $(PRLDAP_EXPORT_FLAGS) $(EXTRA_LIBS) $(DEF_FILE)
+	$(LINK_DLL) $(PRLDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
 
 veryclean:: clean
 

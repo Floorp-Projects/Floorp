@@ -11,7 +11,8 @@ $buildtype = $ARGV[3];
 
 if ( $type ne "Win16" && $type ne "Win16Rev" && $type ne "Win32" &&
 	$type ne "WinBC" && $type ne "AIX" && $type ne "IRIX" &&
-	$type ne "MacOS" && $type ne "SOLARIS" && $type ne "SunOS" ) {
+	$type ne "MacOS" && $type ne "SOLARIS" && $type ne "SunOS" &&
+	$type ne "OS2" ) {
     usage();
 }
 
@@ -78,7 +79,7 @@ print_exports {
 	if ( substr( $line, 0, 1 ) eq "#" ) {
 	    $line = substr( $line, 1 );
 	    $_ = $line;
-	    if ( /^[0-9]+[\t ]/ ) {
+	    if ( /^[0-9]+[\t ]/ && $type ne "OS2" ) {
 		&print_comment( $type, "" );
 		&print_export( $type, $line );
 	    } else {
@@ -98,17 +99,20 @@ print_exports {
 # print_comment( type, s )
 sub
 print_comment {
-    local( $type, $s ) = @_;
+# do not print comments for OS2
+    if ( $type ne "OS2" ) {
+      local( $type, $s ) = @_;
 
-    if ( $type eq "AIX" ) {
-	$prefix = "* ";
-    } elsif ( substr( $type, 0, 3 ) ne "Win" ) {
-	$prefix = "# ";
-    } else {
-	$prefix = "; ";
+      if ( $type eq "AIX" ) {
+          $prefix = "* ";
+      } elsif ( substr( $type, 0, 3 ) ne "Win" ) {
+          $prefix = "# ";
+      } else {
+          $prefix = "; ";
+      }
+
+      print $prefix,$s
     }
-
-    print $prefix,$s
 }
 
 
@@ -136,7 +140,7 @@ print_export {
     }
 
 # finally, print out an appropriate export line
-    if ( $type eq "Win32" ) {
+    if ( $type eq "Win32" || $type eq "OS2" ) {
 	if ( $symtype ne "G" ) {
 	    print "\t$symbol\t\t\@$ordinal\n";
 	}
