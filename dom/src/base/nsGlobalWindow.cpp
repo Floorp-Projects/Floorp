@@ -1113,16 +1113,17 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
   }
 
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
-      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+  mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+  NS_ENSURE_TRUE(topLevelWindow, NS_ERROR_FAILURE);
 
   //XXXWEBSHELL this should be a request off nsIInterfaceRequestor
   nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(topLevelWindow));
   /*XXXEMBEDDING If it fails to get a prompter, it should use an internal
   // one
   if(!prompter)
-  {
-  prompter = Create our internal prompter
+  {                           //XXX This create instance should be the progid
+  prompter = do_CreatInstance(NS_PROMPT_PROGID);
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
   }
   */
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -1146,16 +1147,17 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
   }
 
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
-      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+  mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+  NS_ENSURE_TRUE(topLevelWindow, NS_ERROR_FAILURE);
 
   //XXXWEBSHELL this should be a request off nsIInterfaceRequestor
   nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(topLevelWindow));
   /*XXXEMBEDDING If it fails to get a prompter, it should use an internal
   // one
   if(!prompter)
-  {
-  prompter = Create our internal prompter
+  {                           //XXX This create instance should be the progid
+  prompter = do_CreatInstance(NS_PROMPT_PROGID);
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
   }
   */
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -1183,16 +1185,17 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
   }
 
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  NS_ENSURE_SUCCESS(mWebShell->GetTopLevelWindow(
-      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
+  mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+  NS_ENSURE_TRUE(topLevelWindow, NS_ERROR_FAILURE);
 
   //XXXWEBSHELL this should be a request off nsIInterfaceRequestor
   nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(topLevelWindow));
   /*XXXEMBEDDING If it fails to get a prompter, it should use an internal
   // one
   if(!prompter)
-  {
-  prompter = Create our internal prompter
+  {                           //XXX This create instance should be the progid
+  prompter = do_CreatInstance(NS_PROMPT_PROGID);
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
   }
   */
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
@@ -2613,19 +2616,18 @@ GlobalWindowImpl::GetBrowserWindowInterface(
                     nsIBrowserWindow*& aBrowser,
                     nsIWebShell *aWebShell)
 {
-  aBrowser = nsnull;
-  
-  if (nsnull == aWebShell)
+   aBrowser = nsnull;
+
+   if (nsnull == aWebShell)
     aWebShell = mWebShell;
-  NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
+   NS_ENSURE_TRUE(aWebShell, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+   nsCOMPtr<nsIWebShellContainer> topLevelWindow;
 
-  // fix me! not returning NS_ERROR_FAILURE if topLevelWindow is null.
-  NS_ENSURE_SUCCESS(aWebShell->GetTopLevelWindow(
-      getter_AddRefs(topLevelWindow)), NS_ERROR_FAILURE);
-  if (!topLevelWindow) return NS_ERROR_FAILURE;
-  return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
+   aWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+   if(!topLevelWindow)
+      return NS_ERROR_FAILURE;
+   return topLevelWindow->QueryInterface(NS_GET_IID(nsIBrowserWindow), (void**)&aBrowser);
 }
 
 PRBool
