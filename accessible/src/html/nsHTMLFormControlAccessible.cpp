@@ -45,9 +45,6 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
 #include "nsISelectionController.h"
-#ifdef MOZ_XUL
-#include "nsIDOMXULTextboxElement.h"
-#endif
 
 // --- checkbox -----
 
@@ -331,13 +328,6 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
     return inputElement->GetValue(_retval);
   }
 
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIDOMXULTextboxElement> textBox(do_QueryInterface(mDOMNode));
-  if (textBox) {
-    return textBox->GetValue(_retval);
-  }
-#endif
-
   return NS_ERROR_FAILURE;
 }
 
@@ -345,22 +335,6 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *_retval)
 {
   // can be
   // focusable, focused, protected. readonly, unavailable, selected
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIDOMXULTextboxElement> textBox(do_QueryInterface(mDOMNode));
-  if (textBox) {
-    nsCOMPtr<nsIDOMHTMLInputElement> inputField;
-    textBox->GetInputField(getter_AddRefs(inputField));
-    if (!inputField) {
-      return NS_ERROR_FAILURE;
-    }
-    // Create a temporary accessible from the HTML text field
-    // to get the accessible state from. Doesn't add to cache
-    // because Init() is not called.
-    nsHTMLTextFieldAccessible tempAccessible(inputField, mWeakShell);
-    return tempAccessible.GetState(_retval);
-  }
-#endif
-
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node has been Shutdown()
   }

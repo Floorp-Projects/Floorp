@@ -71,6 +71,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
@@ -1240,21 +1241,28 @@ NS_IMETHODIMP nsAccessible::GetHTMLName(nsAString& _retval)
   */
 NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsAutoString label;
 
   // CASE #1 -- great majority of the cases
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-  rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), label) ;
+  nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(mDOMNode));
+  if (labeledEl) {
+    rv = labeledEl->GetLabel(label);
+  }
+  else {
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl(do_QueryInterface(mDOMNode));
+    if (itemEl) {
+      rv = itemEl->GetLabel(label);
+    }
+  }
 
   if (NS_FAILED(rv) || label.IsEmpty() ) {
-
     // CASE #2 ------ label as a child
-    nsCOMPtr<nsIDOMNodeList>labelChildren;
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
     NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
     nsAutoString nameSpaceURI;
     domElement->GetNamespaceURI(nameSpaceURI);
+    nsCOMPtr<nsIDOMNodeList>labelChildren;
     if (NS_SUCCEEDED(rv = domElement->GetElementsByTagNameNS(nameSpaceURI,
                                                              NS_LITERAL_STRING("label"),
                                                              getter_AddRefs(labelChildren)))) {
@@ -1315,7 +1323,8 @@ NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
   label.CompressWhitespace();
   if (label.IsEmpty()) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    return nsAccessible::AppendFlatStringFromSubtree(content, &_retval);
+    NS_ASSERTION(content, "No nsIContent for DOM node");
+    return GetNameFromSubtree(content, &_retval);
   }
   
   _retval.Assign(label);

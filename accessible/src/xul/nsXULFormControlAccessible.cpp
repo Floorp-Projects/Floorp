@@ -39,6 +39,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsXULFormControlAccessible.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
@@ -625,3 +626,43 @@ NS_IMETHODIMP nsXULToolbarSeparatorAccessible::GetState(PRUint32 *_retval)
   *_retval = 0;  // no special state flags for toolbar separator
   return NS_OK;
 }
+
+/**
+  * XUL Textfield
+  */
+
+nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
+ nsHTMLTextFieldAccessibleWrap(aNode, aShell)
+{
+}
+
+NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
+{
+  nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
+  if (textBox) {
+    return textBox->GetValue(aValue);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
+{
+  *aState = 0;
+  nsCOMPtr<nsIDOMXULTextBoxElement> textBox(do_QueryInterface(mDOMNode));
+  if (!textBox) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMHTMLInputElement> inputField;
+  textBox->GetInputField(getter_AddRefs(inputField));
+  if (!inputField) {
+    return NS_ERROR_FAILURE;
+  }
+  // Create a temporary accessible from the HTML text field
+  // to get the accessible state from. Doesn't add to cache
+  // because Init() is not called.
+  nsHTMLTextFieldAccessible tempAccessible(inputField, mWeakShell);
+  return tempAccessible.GetState(aState);
+}
+
+

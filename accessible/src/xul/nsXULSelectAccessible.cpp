@@ -42,6 +42,7 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULTextboxElement.h"
 #include "nsIServiceManager.h"
 #include "nsArray.h"
 
@@ -374,8 +375,7 @@ NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *_retval)
 }
 
 /**
-  * Our value is the value of our ( first ) selected child. nsIDOMXULSelectElement
-  *     returns this by default with GetValue().
+  * Our value is the label of our ( first ) selected child.
   */
 NS_IMETHODIMP nsXULListboxAccessible::GetValue(nsAString& _retval)
 {
@@ -506,26 +506,32 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetState(PRUint32 *_retval)
   if (menuList) {
     PRBool isOpen;
     menuList->GetOpen(&isOpen);
-    if (isOpen)
+    if (isOpen) {
       *_retval |= STATE_EXPANDED;
-    else
+    }
+    else {
       *_retval |= STATE_COLLAPSED;
+    }
+    PRBool isEditable;
+    menuList->GetEditable(&isEditable);
+    if (!isEditable) {
+      *_retval |= STATE_READONLY;
+    }
   }
 
-  *_retval |= STATE_HASPOPUP | STATE_READONLY | STATE_FOCUSABLE;
+  *_retval |= STATE_HASPOPUP | STATE_FOCUSABLE;
 
   return NS_OK;
 }
 
-/**
-  * Our value is the name of our ( first ) selected child. nsIDOMXULSelectElement
-  *     returns this by default with GetValue().
-  */
 NS_IMETHODIMP nsXULComboboxAccessible::GetValue(nsAString& _retval)
 {
-  // The first accessible child is the text accessible that contains the name of the selected element.
-  // This is our value
-  nsCOMPtr<nsIAccessible> firstChild;
-  GetFirstChild(getter_AddRefs(firstChild));
-  return firstChild->GetName(_retval);
+  _retval.Truncate();
+
+  // The MSAA/ATK value is the option or text shown entered in the combobox
+  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
+  if (menuList) {
+    return menuList->GetLabel(_retval);
+  }
+  return NS_ERROR_FAILURE;
 }

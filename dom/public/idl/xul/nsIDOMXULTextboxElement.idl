@@ -40,7 +40,7 @@
 interface nsIDOMHTMLInputElement;
 
 [scriptable, uuid(71135B6C-294E-4634-A8E4-A72398F1E72A)]
-interface nsIDOMXULTextboxElement : nsIDOMXULLabeledControlElement
+interface nsIDOMXULTextBoxElement : nsIDOMXULControlElement
 {
   readonly attribute nsIDOMHTMLInputElement inputField;
 

@@ -83,8 +83,7 @@
                             onget="return this.getAttribute('crop');"/>
       <property name="src"  onset="this.setAttribute('src',val); return val;"
                             onget="return this.getAttribute('src');"/>
-      <property name="label" onset="this.setAttribute('label',val); return val;"
-                             onget="return this.getAttribute('label');"/>
+      <property name="label" readonly="true" onget="return this.getAttribute('label');"/>
       <property name="description" onset="this.setAttribute('description',val); return val;"
                              onget="return this.getAttribute('description');"/>
       <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 

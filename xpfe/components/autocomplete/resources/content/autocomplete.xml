@@ -234,8 +234,11 @@
       <property name="accessible">
         <getter>
           <![CDATA[
+            // disablehistory="false": dropmarker shows up, so expose as a combobox.
+            // disablehistory="true" (default): no dropmarker, so expose as a textfield.
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULComboboxAccessible(this);
+            return (this.getAttribute("disablehistory") == 'true') ? accService.createXULTextBoxAccessible(this) : 
+                                                                     accService.createXULComboboxAccessible(this);
           ]]>
         </getter>
       </property>
@@ -247,8 +250,7 @@
       <property name="crop" onset="this.setAttribute('crop',val); return val;"
                             onget="return this.getAttribute('crop');"/>
 
-      <property name="label" onset="this.setAttribute('label',val); return val;"
-                             onget="return this.getAttribute('label');"/>
+      <property name="label" readonly="true" onget="return this.mInputElt.value;"/>
 
       <property name="open">
         <getter>
@@ -1356,8 +1358,18 @@
                onget="return this.tree.treeBoxObject.getPageLength();"/>
 
       <property name="selectedIndex"
-                onget="return this.textbox.view.selectedIndex"
-                onset="this.textbox.view.selectedIndex = val; return val;"/>
+                onget="return this.textbox.view.selectedIndex">
+        <setter><![CDATA[
+          this.textbox.view.selectedIndex = val;
+          // Fire DOM events necessary for translation into accessibility events
+          var event = document.createEvent("Events");
+          event.initEvent("ValueChange", true, true);
+          this.textbox.dispatchEvent(event);
+          event.initEvent("DOMMenuItemActive", true, true);
+          this.textbox.resultsPopup.tree.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
 
      <field name="mLastRows">0</field>
 
