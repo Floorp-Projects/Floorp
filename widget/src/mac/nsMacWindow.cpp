@@ -37,7 +37,6 @@
 
 #include "nsMacWindow.h"
 #include "nsMacEventHandler.h"
-#include "nsMacControl.h"
 #include "nsToolkit.h"
 
 #include "nsIServiceManager.h"    // for drag and drop
@@ -1485,18 +1484,12 @@ NS_IMETHODIMP nsMacWindow::SetTitle(const nsAString& aTitle)
 {
   nsAString::const_iterator begin;
   const PRUnichar *strTitle = aTitle.BeginReading(begin).get();
-  // Try to use the unicode friendly CFString version first
   CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)strTitle, aTitle.Length());
-  if(labelRef) {
+  if (labelRef) {
     ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
     ::CFRelease(labelRef);
-    return NS_OK;
   }
 
-  Str255 title;
-  // unicode to file system charset
-  nsMacControl::StringToStr255(aTitle, title);
-  ::SetWTitle(mWindowPtr, title);
   return NS_OK;
 }
 
