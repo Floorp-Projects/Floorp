@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -690,6 +691,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   
   // check up the ladder for divs with alignment
   nsCOMPtr<nsIDOMNode> temp = nodeToExamine;
+  PRBool isFirstNodeToExamine = PR_TRUE;
   while (nodeToExamine)
   {
     if (nsHTMLEditUtils::IsDiv(nodeToExamine))
@@ -716,6 +718,13 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
         }
       }
     }
+    if (!isFirstNodeToExamine && nsHTMLEditUtils::IsTable(nodeToExamine)) {
+      // the node to examine is a table and this is not the first node
+      // we examine; let's break here to materialize the 'inline-block'
+      // behaviour of html tables regarding to text alignment
+      return NS_OK;
+    }
+    isFirstNodeToExamine = PR_FALSE;
     res = nodeToExamine->GetParentNode(getter_AddRefs(temp));
     if (NS_FAILED(res)) temp = nsnull;
     nodeToExamine = temp; 
