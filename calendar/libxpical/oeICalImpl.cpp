@@ -440,7 +440,9 @@ END:VCALENDAR\n\
     icalfileset_add_component(stream,icalcalendar);
 
 	icalfileset_commit(stream);
+#ifdef ICAL_DEBUG
 	printf("Appended Event\n");
+#endif
     
     icalcomponent *fetchedcal = icalfileset_fetch( stream, uidstr );
     assert( fetchedcal != 0 );
@@ -448,49 +450,69 @@ END:VCALENDAR\n\
     icalcomponent *fetchedevent = icalcomponent_get_first_component( fetchedcal,ICAL_VEVENT_COMPONENT);
     assert( fetchedevent != 0 );
 
+#ifdef ICAL_DEBUG
     printf("Fetched Event\n");
+#endif
 	
     icalproperty *tmpprop;
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_UID_PROPERTY );
     assert( tmpprop != 0 );
+#ifdef ICAL_DEBUG
     printf("id: %s\n", icalproperty_get_uid( tmpprop ) );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_SUMMARY_PROPERTY );
     assert( tmpprop != 0 );
+#ifdef ICAL_DEBUG
     printf("Title: %s\n", icalproperty_get_summary( tmpprop ) );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_CATEGORIES_PROPERTY );
     assert( tmpprop != 0 );
+#ifdef ICAL_DEBUG
     printf("Category: %s\n", icalproperty_get_categories( tmpprop ) );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DESCRIPTION_PROPERTY );
     assert( tmpprop != 0 );
+#ifdef ICAL_DEBUG
     printf("Description: %s\n", icalproperty_get_description( tmpprop ) );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_LOCATION_PROPERTY );
     assert( tmpprop != 0 );
+#ifdef ICAL_DEBUG
     printf("Location: %s\n", icalproperty_get_location( tmpprop ) );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_CLASS_PROPERTY );
     assert( tmpprop != 0 );
+#ifdef ICAL_DEBUG
     printf("Class: %s\n", (icalproperty_get_class( tmpprop ) == ICAL_CLASS_PUBLIC) ? "PUBLIC" : "PRIVATE" );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DTSTART_PROPERTY );
     assert( tmpprop != 0 );
     start = icalproperty_get_dtstart( tmpprop );
+#ifdef ICAL_DEBUG
     printf("Start: %d-%d-%d %d:%d\n", start.year, start.month, start.day, start.hour, start.minute );
+#endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DTEND_PROPERTY );
     assert( tmpprop != 0 );
     end = icalproperty_get_dtstart( tmpprop );
+#ifdef ICAL_DEBUG
     printf("End: %d-%d-%d %d:%d\n", end.year, end.month, end.day, end.hour, end.minute );
+#endif
     //
     for( tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_X_PROPERTY );
             tmpprop != 0 ;
             tmpprop = icalcomponent_get_next_property( fetchedevent, ICAL_X_PROPERTY ) ) {
             icalparameter *tmppar = icalproperty_get_first_parameter( tmpprop, ICAL_MEMBER_PARAMETER );
+#ifdef ICAL_DEBUG
             printf("%s: %s\n", icalparameter_get_member( tmppar ), icalproperty_get_value_as_string( tmpprop ) );
+#endif
     }
 
     icalcomponent *newcomp = icalcomponent_new_clone( fetchedcal );
@@ -507,14 +529,18 @@ END:VCALENDAR\n\
     //
 
     icalfileset_commit(stream);
+#ifdef ICAL_DEBUG
 	printf("Event updated\n");
     printf( "New Title: %s\n", icalproperty_get_summary( tmpprop ) );
+#endif
 
     fetchedcal = icalfileset_fetch( stream, uidstr );
     assert( fetchedcal != 0 );
     icalfileset_remove_component( stream, fetchedcal );
 	
+#ifdef ICAL_DEBUG
     printf("Removed Event\n");
+#endif
 
     icalfileset_free(stream);
     return NS_OK;                                                                    
@@ -1077,8 +1103,6 @@ void oeICalImpl::SetupAlarmManager() {
 
     icaltimetype now = ConvertFromPrtime( todayinms );
 
-//    printf( "NOW IS: %s\n", icaltime_as_ctime( now ) );
-
     icaltimetype nextalarm = icaltime_null_time();
     EventList *tmplistptr = &m_eventlist;
     while( tmplistptr ) {
@@ -1092,7 +1116,9 @@ void oeICalImpl::SetupAlarmManager() {
                 if( icaltime_is_null_time( alarmtime ) )
                     break;
                 if( icaltime_compare( alarmtime, now ) <= 0 ) {
+#ifdef ICAL_DEBUG
                     printf( "ALARM WENT OFF: %s\n", icaltime_as_ctime( alarmtime ) );
+#endif
                     
                     for( int i=0; i<m_observerlist.size(); i++ ) {
                         m_observerlist[i]->OnAlarm( event );
@@ -1112,7 +1138,9 @@ void oeICalImpl::SetupAlarmManager() {
     if( m_alarmtimer && ( m_alarmtimer->GetDelay() != 0 ) )
         m_alarmtimer->Cancel();
     if( !icaltime_is_null_time( nextalarm ) ) {
+#ifdef ICAL_DEBUG
         printf( "NEXT ALARM IS: %s\n", icaltime_as_ctime( nextalarm ) );
+#endif
         time_t timediff = icaltime_as_timet( nextalarm ) - icaltime_as_timet( now );
         m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
     }
