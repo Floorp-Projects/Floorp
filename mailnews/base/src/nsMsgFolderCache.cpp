@@ -75,14 +75,12 @@ nsMsgFolderCache::~nsMsgFolderCache()
 		m_mdbStore->Release();
 	if (gMDBFactory)
 	{
-		gMDBFactory->CloseMdbObject(m_mdbEnv);
-//		gMDBFactory->CutStrongRef(GetEnv());
+		NS_RELEASE(gMDBFactory);
 	}
 	gMDBFactory = nsnull;
 	if (m_mdbEnv)
 	{
-		m_mdbEnv->CloseMdbObject(m_mdbEnv);
-//		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
+		m_mdbEnv->Release();
 	}
 }
 
@@ -195,7 +193,7 @@ nsresult nsMsgFolderCache::InitExistingDB()
 						break;
 
 					rv = AddCacheElement(nsnull, hdrRow, nsnull);
-//					rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
+                                        hdrRow->Release();
 					if (NS_FAILED(rv))
 						return rv;
 				}
@@ -257,7 +255,7 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 						else
 							ret = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 					}
-					oldFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+					NS_RELEASE(oldFile); // always release our file ref, store has own
 				}
 			}
 			if (NS_SUCCEEDED(ret) && thumb)
@@ -306,14 +304,11 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 						if (ret == NS_OK)
 							ret = InitNewDB();
 					}
-					newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+					NS_RELEASE(newFile); // always release our file ref, store has own
 				}
 
 			}
-			if(thumb)
-			{
-				thumb->CutStrongRef(m_mdbEnv);
-			}
+			NS_IF_RELEASE(thumb);
 			nsCRT::free(nativeFileName);
 		}
 	}
@@ -385,6 +380,7 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool crea
 				nsresult ret = AddCacheElement(pathKey, hdrRow, result);
 				if (*result)
 					(*result)->SetStringProperty("key", pathKey);
+                                hdrRow->Release();
 				return ret;
 			}
 		}
@@ -418,8 +414,7 @@ NS_IMETHODIMP nsMsgFolderCache::Commit(PRBool compress)
 		{
 			ret = commitThumb->DoMore(GetEnv(), &outTotal, &outCurrent, &outDone, &outBroken);
 		}
-		if(commitThumb)
-			commitThumb->CutStrongRef(m_mdbEnv);
+		NS_IF_RELEASE(commitThumb);
 	}
 	// ### do something with error, but clear it now because mork errors out on commits.
 	if (GetEnv())
@@ -486,7 +481,7 @@ nsresult nsMsgFolderCache::RowCellColumnToCharPtr(nsIMdbRow *hdrRow, mdb_token c
 				err = NS_ERROR_OUT_OF_MEMORY;
 
 			*resultPtr = result;
-			hdrCell->CutStrongRef(GetEnv()); // always release ref
+			hdrCell->Release(); // always release ref
 		}
 	}
 	return err;
