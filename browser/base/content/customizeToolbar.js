@@ -242,6 +242,26 @@ var dropObserver = {
   }
 }
 
+var paletteDropObserver = {
+  onDragOver: function(aEvent, aFlavour, aDragSession)
+  {
+    aDragSession.canDrop = !gDraggingFromPalette;
+  },
+  onDrop: function(aEvent, aXferData, aDragSession)
+  {
+
+  },
+  _flavourSet: null,
+  getSupportedFlavours: function ()
+  {
+    if (!this._flavourSet) {
+      this._flavourSet = new FlavourSet();
+      this._flavourSet.appendFlavour("text/button-id");
+    }
+    return this._flavourSet;
+  }
+}
+
 var trashObserver = {
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
