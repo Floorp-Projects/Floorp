@@ -1116,7 +1116,6 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
 {
-  PixMapHandle	      offscreenPM;
   PixMapPtr			      srcpix;
   PixMapPtr			      destpix;
   RGBColor			      rgbblack = {0x0000,0x0000,0x0000};
@@ -1154,15 +1153,17 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 	destpix = *((CGrafPtr)destport)->portPixMap;
 
-	offscreenPM = ::GetGWorldPixMap((GWorldPtr)aSrcSurf);
-	LockPixels(offscreenPM);
-	srcpix = (PixMapPtr)*offscreenPM;
-	::RGBForeColor(&rgbblack);
-	::RGBBackColor(&rgbwhite);
-	
-	::CopyBits((BitMap*)srcpix,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
-	UnlockPixels(offscreenPM);
-	
+  PixMapHandle offscreenPM = ::GetGWorldPixMap((GWorldPtr)aSrcSurf);
+  if ( offscreenPM ) {
+		LockPixels(offscreenPM);
+		srcpix = (PixMapPtr)*offscreenPM;
+		::RGBForeColor(&rgbblack);
+		::RGBBackColor(&rgbwhite);
+		
+		::CopyBits((BitMap*)srcpix,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
+		UnlockPixels(offscreenPM);
+  }
+		
   return NS_OK;
 }
 
