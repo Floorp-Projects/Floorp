@@ -549,7 +549,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
 
     if ( NS_SUCCEEDED( rv ) ) 
     {
-        registry->Open();
+        registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
         char buffer[256];
         char *cid = nsSoftwareUpdate::GetCID().ToString();
         PR_snprintf( buffer,
