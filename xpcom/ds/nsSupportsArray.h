@@ -33,10 +33,10 @@ public:
   // nsICollection methods:
   NS_IMETHOD_(PRUint32) Count(void) const { return mCount; }
   NS_IMETHOD AppendElement(nsISupports *aElement) {
-    return InsertElementAt(aElement, mCount);
+    return InsertElementAt(aElement, mCount) ? NS_OK : NS_ERROR_FAILURE;
   }
   NS_IMETHOD RemoveElement(nsISupports *aElement) {
-    return RemoveElement(aElement, 0);
+    return RemoveElement(aElement, 0) ? NS_OK : NS_ERROR_FAILURE;
   }
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
   NS_IMETHOD Clear(void);
