@@ -227,8 +227,14 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
         return NS_ERROR_FAILURE;
       }
       gdk_window_get_root_origin(mMozArea->window, &x, &y);
+#ifdef DEBUG_MOVE
+      printf("Got root origin = (%d,%d)\n", x, y);
+#endif
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
+#ifdef DEBUG_MOVE
+      printf("result = (%d,%d)\n", aNewRect.x, aNewRect.y);
+#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -2527,7 +2533,8 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 
 NS_IMETHODIMP nsWindow::GetScreenBounds(nsRect &aRect)
 {
-  WidgetToScreen(mBounds, aRect);
+  nsRect origin(0,0,mBounds.width,mBounds.height);
+  WidgetToScreen(origin, aRect);
   return NS_OK;
 }
 
