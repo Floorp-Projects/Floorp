@@ -96,7 +96,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 TOOLKIT_CPPSRCS		= nsWinMain.cpp JSConsole.cpp nsWidgetSupport.cpp 
 DIRS			+= windows
-VIEWER_TK_LIBS	= windows/$(LIB_PREFIX)viewer_windows_s.$(LIB_SUFFIX)
+VIEWER_TK_LIBS		= windows/$(LIB_PREFIX)viewer_windows_s.$(LIB_SUFFIX)
 endif # windows
 endif # unix
 
@@ -104,11 +104,13 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 GTK_GLUE		= -lgtksuperwin
 endif
 
-XP_DIST_LIBS		= $(call EXPAND_MOZLIBNAME,gkgfx)
+XP_DIST_LIBS		= \
+			-lgkgfx \
+			$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 RESFILE		= viewer.res
-XP_DIST_LIBS    += $(call EXPAND_MOZLIBNAME,dbgrobot widget_windows xpwidgets_s)
+XP_DIST_LIBS    += -lxpwidgets_s -ldbgrobot -lwidget_windows
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -119,13 +121,13 @@ endif
 
 ifdef MOZ_OJI
 ifeq ($(OS_ARCH),WINNT)
-XP_DIST_LIBS		+= $(call EXPAND_MOZLIBNAME,jsj$(MOZ_BITS)$(VERSION_NUMBER))
+XP_DIST_LIBS		+= -ljsj$(MOZ_BITS)$(VERSION_NUMBER)
 else
 XP_DIST_LIBS		+= -ljsj
 endif
 endif
 ifdef MOZ_PERF_METRICS
-XP_DIST_LIBS		+= $(call EXPAND_MOZLIBAME,mozutil_s)
+XP_DIST_LIBS		+= -lmozutil_s
 endif
 
 XP_DIST_LIBS		+= \

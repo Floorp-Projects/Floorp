@@ -81,16 +81,24 @@ else
   ELOG :=
 endif
 
+#
+# Library rules
+#
+# If BUILD_SHARED_LIBS or FORCE_SHARED_LIB is set and 
+#    FORCE_STATIC_LIB is not set, 
+#	the shared library will be built.
+# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, 
+#	the static library will  be built.
+#
+
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-_LIBNAME_RELATIVE_PATHS=1
+_EXTRA_DSO_RELATIVE_PATHS=1
 else
-ifeq ($(OS_ARCH),WINNT)
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifndef SRCS_IN_OBJDIR
 _NO_AUTO_VARS=1
 endif
-ifndef GNU_CC
-_LIBNAME_RELATIVE_PATHS=1
-endif
+_EXTRA_DSO_RELATIVE_PATHS=1
 endif
 endif
 
@@ -104,27 +112,14 @@ else
 _VPATH_SRCS = $<
 endif
 
-ifdef _LIBNAME_RELATIVE_PATHS
-EXPAND_LIBNAME = $(addsuffix .$(LIB_SUFFIX),$(1))
-EXPAND_MOZLIBNAME = $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(1)))
+ifdef _EXTRA_DSO_RELATIVE_PATHS
+EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(EXTRA_DSO_LIBS)))
+EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
+EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
+LIBS                := $(patsubst -l%,$(DIST)/lib/$(LIB_PREFIX)%.$(LIB_SUFFIX),$(LIBS))
 else
-EXPAND_LIBNAME = $(addprefix -l,$(1))
-EXPAND_MOZLIBNAME = $(addprefix -l,$(1))
+EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LIBS))
 endif
-
-ifdef EXTRA_DSO_LIBS
-EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
-endif
-
-#
-# Library rules
-#
-# If BUILD_SHARED_LIBS or FORCE_SHARED_LIB is set and 
-#    FORCE_STATIC_LIB is not set, 
-#	the shared library will be built.
-# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, 
-#	the static library will  be built.
-#
 
 ifndef LIBRARY
 ifdef LIBRARY_NAME
@@ -165,7 +160,7 @@ DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.$(LIB_SUFFIX))
+IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
 endif
 
 endif # MKSHLIB
