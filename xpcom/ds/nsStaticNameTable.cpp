@@ -43,7 +43,7 @@
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsStaticNameTable.h"
 
-struct nameTableEntry : public PLDHashEntryHdr
+struct NameTableEntry : public PLDHashEntryHdr
 {
     // no ownership here!
     const char *mKey;
@@ -54,8 +54,8 @@ PR_STATIC_CALLBACK(PRBool)
 matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                              const void* key)
 {
-    const nameTableEntry* entry =
-        NS_STATIC_CAST(const nameTableEntry *, aHdr);
+    const NameTableEntry* entry =
+        NS_STATIC_CAST(const NameTableEntry *, aHdr);
     const char *keyValue = NS_STATIC_CAST(const char*, key);
 
     return (nsCRT::strcasecmp(entry->mKey, keyValue)==0);
@@ -81,18 +81,10 @@ caseInsensitiveStringHashKey(PLDHashTable *table, const void *key)
     return h;
 }
 
-PR_STATIC_CALLBACK(const void*)
-getNameKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
-{
-    nameTableEntry* entry = NS_STATIC_CAST(nameTableEntry*, aHdr);
-
-    return entry->mKey;
-}
-
 static const struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    getNameKey,
+    PL_DHashGetKeyStub,
     caseInsensitiveStringHashKey,
     matchNameKeysCaseInsensitive,
     PL_DHashMoveEntryStub,
@@ -137,7 +129,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
 
     if (!PL_DHashTableInit(&mNameTable,
                            &nametable_CaseInsensitiveHashTableOps,
-                           nsnull, sizeof(nameTableEntry), Count)) {
+                           nsnull, sizeof(NameTableEntry), Count)) {
         mNameTable.ops = nsnull;
         return PR_FALSE;
     }
@@ -159,8 +151,8 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
         // use placement-new to initialize the string object
         new (&mNameArray[index]) nsDependentCString(raw);
 
-        nameTableEntry *entry =
-          NS_STATIC_CAST(nameTableEntry*,
+        NameTableEntry *entry =
+          NS_STATIC_CAST(NameTableEntry*,
                          PL_DHashTableOperate(&mNameTable, raw, PL_DHASH_ADD));
 
         if (!entry) continue;
@@ -177,11 +169,11 @@ inline PRInt32
 LookupFlatKeyword(const nsAFlatCString& aKeyword,
                   PLDHashTable& aTable)
 {
-    nameTableEntry *entry =
-      NS_STATIC_CAST(nameTableEntry*,
+    NameTableEntry *entry =
+      NS_STATIC_CAST(NameTableEntry*,
                      PL_DHashTableOperate(&aTable, aKeyword.get(), PL_DHASH_LOOKUP));
 
-    if (!entry || PL_DHASH_ENTRY_IS_FREE(entry))
+    if (PL_DHASH_ENTRY_IS_FREE(entry))
         return nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 
     return entry->mIndex;

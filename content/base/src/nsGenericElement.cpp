@@ -898,12 +898,13 @@ nsGenericElement::~nsGenericElement()
   // No calling GetFlags() beyond this point...
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 RangeListHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                        const void *key)
 {
   // Initialize the entry with placement new
   new (entry) RangeListMapEntry(key);
+  return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -915,12 +916,13 @@ RangeListHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   r->~RangeListMapEntry();
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                                   const void *key)
 {
   // Initialize the entry with placement new
   new (entry) EventListenerManagerMapEntry(key);
+  return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)

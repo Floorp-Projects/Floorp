@@ -310,26 +310,6 @@ static const PLDHashTableOps factory_DHashTableOps = {
     PL_DHashFinalizeStub,
 };
 
-PR_STATIC_CALLBACK(const void *)
-contractID_GetKey(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
-{
-    nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
-
-    return entry->mContractID;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-contractID_MatchEntry(PLDHashTable *aTable, const PLDHashEntryHdr *aHdr,
-                      const void *aKey)
-{
-    const nsContractIDTableEntry* entry =
-        NS_STATIC_CAST(const nsContractIDTableEntry*, aHdr);
-
-    const char* contractID = NS_REINTERPRET_CAST(const char*, aKey);
-
-    return strcmp(entry->mContractID, contractID) == 0;
-}
-
 PR_STATIC_CALLBACK(void)
 contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
@@ -351,9 +331,9 @@ contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 static const PLDHashTableOps contractID_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    contractID_GetKey,
+    PL_DHashGetKeyStub,
     PL_DHashStringKey,
-    contractID_MatchEntry,
+    PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,
     contractID_ClearEntry,
     PL_DHashFinalizeStub,

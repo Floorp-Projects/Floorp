@@ -296,7 +296,7 @@ typedef void
  * set yet, to avoid claiming the last free entry in a severely overloaded
  * table.
  */
-typedef void
+typedef PRBool
 (* PR_CALLBACK PLDHashInitEntry)(PLDHashTable *table,
                                      PLDHashEntryHdr *entry,
                                      const void *key);
@@ -310,6 +310,7 @@ typedef void
  *  allocTable          Allocate raw bytes with malloc, no ctors run.
  *  freeTable           Free raw bytes with free, no dtors run.
  *  initEntry           Call placement new using default key-based ctor.
+ *                      Return PR_TRUE on success, PR_FALSE on error.
  *  moveEntry           Call placement new using copy ctor, run dtor on old
  *                      entry storage.
  *  clearEntry          Run dtor on entry.
@@ -371,6 +372,11 @@ PL_DHashMatchEntryStub(PLDHashTable *table,
                        const PLDHashEntryHdr *entry,
                        const void *key);
 
+PR_EXTERN(PRBool)
+PL_DHashMatchStringKey(PLDHashTable *table,
+                       const PLDHashEntryHdr *entry,
+                       const void *key);
+
 PR_EXTERN(void)
 PL_DHashMoveEntryStub(PLDHashTable *table,
                       const PLDHashEntryHdr *from,
@@ -378,6 +384,9 @@ PL_DHashMoveEntryStub(PLDHashTable *table,
 
 PR_EXTERN(void)
 PL_DHashClearEntryStub(PLDHashTable *table, PLDHashEntryHdr *entry);
+
+PR_EXTERN(void)
+PL_DHashFreeStringKey(PLDHashTable *table, PLDHashEntryHdr *entry);
 
 PR_EXTERN(void)
 PL_DHashFinalizeStub(PLDHashTable *table);
@@ -474,8 +483,11 @@ typedef enum PLDHashOperator {
  *
  *  entry = PL_DHashTableOperate(table, key, PL_DHASH_ADD);
  *
- * If entry is null upon return, the table is severely overloaded, and new
- * memory can't be allocated for new entry storage via table->ops->allocTable.
+ * If entry is null upon return, then either the table is severely overloaded,
+ * and memory can't be allocated for entry storage via table->ops->allocTable;
+ * Or if table->ops->initEntry is non-null, the table->ops->initEntry op may
+ * have returned false.
+ *
  * Otherwise, entry->keyHash has been set so that PL_DHASH_ENTRY_IS_BUSY(entry)
  * is true, and it is up to the caller to initialize the key and value parts
  * of the entry sub-type, if they have not been set already (i.e. if entry was

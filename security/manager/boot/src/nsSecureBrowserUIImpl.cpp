@@ -106,12 +106,13 @@ RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->r == key;
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
   RequestHashEntry *entry = NS_STATIC_CAST(RequestHashEntry*, hdr);
   entry->r = (void*)key;
+  return PR_TRUE;
 }
 
 static PLDHashTableOps gMapOps = {

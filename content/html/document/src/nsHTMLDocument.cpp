@@ -281,7 +281,7 @@ IdAndNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   e->~IdAndNameMapEntry();
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                        const void *key)
 {
@@ -289,6 +289,7 @@ IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 
   // Inititlize the entry with placement new
   new (entry) IdAndNameMapEntry(*keyStr);
+  return PR_TRUE;
 }
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -3421,7 +3422,7 @@ nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
                                         PL_DHASH_LOOKUP));
 
-  if (!PL_DHASH_ENTRY_IS_LIVE(entry)) {
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
     return NS_OK;
   }
 
@@ -3468,7 +3469,7 @@ nsHTMLDocument::UpdateIdTableEntry(const nsAString& aId, nsIContent *aContent)
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aId,
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_LIVE(entry)) {
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     entry->mIdContent = aContent;
   }
 
@@ -3486,7 +3487,7 @@ nsHTMLDocument::RemoveFromNameTable(const nsAString& aName,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_LIVE(entry) && entry->mContentList) {
+  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mContentList) {
     entry->mContentList->RemoveElement(aContent);
   }
 
@@ -3514,7 +3515,7 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
                                                        &value),
                                         PL_DHASH_LOOKUP));
 
-  if (!PL_DHASH_ENTRY_IS_LIVE(entry) || entry->mIdContent != aContent) {
+  if (PL_DHASH_ENTRY_IS_FREE(entry) || entry->mIdContent != aContent) {
     return NS_OK;
   }
 

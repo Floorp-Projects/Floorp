@@ -61,12 +61,13 @@ ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->obj == NS_STATIC_CAST(const nsNSSShutDownObject*, key);
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
   ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
   entry->obj = NS_CONST_CAST(nsNSSShutDownObject*, NS_STATIC_CAST(const nsNSSShutDownObject*, key));
+  return PR_TRUE;
 }
 
 static PLDHashTableOps gSetOps = {

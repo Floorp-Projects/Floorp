@@ -326,18 +326,6 @@ struct nsDocumentMapReadEntry : public nsDocumentMapEntry {
                                         // mux schedule
 };
 
-PR_STATIC_CALLBACK(PRBool)
-strmap_MatchEntry(PLDHashTable *aTable,
-                  const PLDHashEntryHdr *aHdr,
-                  const void *aKey)
-{
-    const nsStringMapEntry* entry =
-        NS_STATIC_CAST(const nsStringMapEntry*, aHdr);
-    const char* string = NS_REINTERPRET_CAST(const char*, aKey);
-
-    return strcmp(entry->mString, string) == 0;
-}
-
 PR_STATIC_CALLBACK(void)
 strmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
@@ -354,7 +342,7 @@ static const PLDHashTableOps strmap_DHashTableOps = {
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
     PL_DHashStringKey,
-    strmap_MatchEntry,
+    PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,
     strmap_ClearEntry,
     PL_DHashFinalizeStub,

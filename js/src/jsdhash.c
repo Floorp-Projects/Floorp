@@ -104,6 +104,18 @@ JS_DHashMatchEntryStub(JSDHashTable *table,
     return stub->key == key;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_DHashMatchStringKey(JSDHashTable *table,
+                       const JSDHashEntryHdr *entry,
+                       const void *key)
+{
+    const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
+
+    /* XXX tolerate null keys on account of sloppy Mozilla callers. */
+    return stub->key == key ||
+           (stub->key && key && strcmp(stub->key, key) == 0);
+}
+
 JS_PUBLIC_API(void)
 JS_DHashMoveEntryStub(JSDHashTable *table,
                       const JSDHashEntryHdr *from,
@@ -115,6 +127,15 @@ JS_DHashMoveEntryStub(JSDHashTable *table,
 JS_PUBLIC_API(void)
 JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry)
 {
+    memset(entry, 0, table->entrySize);
+}
+
+JS_PUBLIC_API(void)
+JS_DHashFreeStringKey(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
+
+    free((void *) stub->key);
     memset(entry, 0, table->entrySize);
 }
 
@@ -519,8 +540,12 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
                 table->removedCount--;
                 keyHash |= COLLISION_FLAG;
             }
-            if (table->ops->initEntry)
-                table->ops->initEntry(table, entry, key);
+            if (table->ops->initEntry &&
+                !table->ops->initEntry(table, entry, key)) {
+                /* We haven't claimed entry yet; fail with null return. */
+                memset(entry + 1, 0, table->entrySize - sizeof *entry);
+                return NULL;
+            }
             entry->keyHash = keyHash;
             table->entryCount++;
         }

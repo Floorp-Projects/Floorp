@@ -123,7 +123,7 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   memset(&e->mGlobalName, 0, sizeof(nsGlobalNameStruct));
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                         const void *key)
 {
@@ -136,6 +136,7 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   // This will set e->mGlobalName.mType to
   // nsGlobalNameStruct::eTypeNotInitialized
   memset(&e->mGlobalName, 0, sizeof(nsGlobalNameStruct));
+  return PR_TRUE;
 }
 
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
@@ -177,7 +178,7 @@ nsScriptNameSpaceManager::GetConstructorProto(const nsGlobalNameStruct* aStruct)
                                           &aStruct->mAlias->mProtoName,
                                           PL_DHASH_LOOKUP));
 
-    if (PL_DHASH_ENTRY_IS_LIVE(proto)) {
+    if (PL_DHASH_ENTRY_IS_BUSY(proto)) {
       aStruct->mAlias->mProto = &proto->mGlobalName;
     }
   }

@@ -86,13 +86,14 @@ CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->key == key;
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
   new (hdr) CompareCacheHashEntry();
   CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
   entry->key = (void*)key;
+  return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -168,15 +169,9 @@ CompareCacheHashEntry *
 nsCertTree::getCacheEntry(void *cache, void *aCert)
 {
   PLDHashTable &aCompareCache = *NS_REINTERPRET_CAST(PLDHashTable*, cache);
-  PLDHashEntryHdr *entry = PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_LOOKUP);
-  if (PL_DHASH_ENTRY_IS_BUSY(entry))
-  {
-    return NS_STATIC_CAST(CompareCacheHashEntry*, entry);
-  }
-  else
-  {
-    return NS_STATIC_CAST(CompareCacheHashEntry*, PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_ADD));
-  }
+  return NS_STATIC_CAST(CompareCacheHashEntry*,
+                        PL_DHashTableOperate(&aCompareCache, aCert,
+                                             PL_DHASH_ADD));
 }
 
 void nsCertTree::RemoveCacheEntry(void *key)

@@ -1241,7 +1241,7 @@ SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   NS_IF_RELEASE(e->mSubDocument);
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
   SubDocMapEntry *e =
@@ -1253,6 +1253,7 @@ SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
   NS_ADDREF(e->mKey);
 
   e->mSubDocument = nsnull;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -1269,7 +1270,7 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
                        PL_DHashTableOperate(mSubDocuments, aContent,
                                             PL_DHASH_LOOKUP));
 
-      if (PL_DHASH_ENTRY_IS_LIVE(entry)) {
+      if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         entry->mSubDocument->SetParentDocument(nsnull);
 
         PL_DHashTableRawRemove(mSubDocuments, entry);
@@ -1336,7 +1337,7 @@ nsDocument::GetSubDocumentFor(nsIContent *aContent, nsIDocument** aSubDoc)
                      PL_DHashTableOperate(mSubDocuments, aContent,
                                           PL_DHASH_LOOKUP));
 
-    if (PL_DHASH_ENTRY_IS_LIVE(entry)) {
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
       *aSubDoc = entry->mSubDocument;
       NS_ADDREF(*aSubDoc);
     }

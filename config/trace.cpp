@@ -130,21 +130,12 @@ struct ModulesEntry {
     Node*                  byCount;
 };
 
-BOOL PR_CALLBACK
-ModuleMatchEntry(PLDHashTable* aTable, 
-                 const PLDHashEntryHdr* aEntry, 
-                 const void* aKey)
-{
-    ModulesEntry* mod = (ModulesEntry*) aEntry;
-    return ( !strcmp(mod->moduleName,(char*)aKey) );
-}
-
 static PLDHashTableOps ModOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
     PL_DHashStringKey,
-    ModuleMatchEntry,  // PL_DHashMatchEntryStub,  
+    PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
     PL_DHashFinalizeStub
@@ -168,15 +159,12 @@ static int initialized = 0;
             return;
     }
 
-    CallEntry* entry
-        = (CallEntry*) PL_DHashTableOperate(&Calls, addr, PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_FREE(&entry->hdr)) {
-        entry = (CallEntry*) PL_DHashTableOperate(&Calls, addr, PL_DHASH_ADD);
+    entry = (CallEntry*) PL_DHashTableOperate(&Calls, addr, PL_DHASH_ADD);
+    if (!entry)
+        return; // OOM
+
+    if (!entry->addr)
         entry->addr = addr;
-        entry->count = 0;
-        entry->hits = 0;
-        entry->tick = 0;
-    }
 
     //
     //  Another call recorded.
@@ -298,14 +286,13 @@ ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
         }
 
         ModulesEntry* mod
-            = (ModulesEntry*) PL_DHashTableOperate(&Modules, 
-                                                   module.ModuleName, 
-                                                   PL_DHASH_LOOKUP);
+            = (ModulesEntry*) PL_DHashTableOperate(&Modules,
+                                                   module.ModuleName,
+                                                   PL_DHASH_ADD);
+        if (!mod)
+            return PL_DHASH_STOP;       // OOM
 
-        if (PL_DHASH_ENTRY_IS_FREE(&mod->hdr)) {
-            mod = (ModulesEntry*) PL_DHashTableOperate(&Modules,
-                                                       module.ModuleName,
-                                                       PL_DHASH_ADD);
+        if (!mod->moduleName) {
             mod->moduleName = strdup(module.ModuleName);
             mod->byCount = new Node();
             mod->byCount->function = strdup(symbol->Name);

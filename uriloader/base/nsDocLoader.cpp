@@ -107,12 +107,13 @@ struct nsRequestInfo : public PLDHashEntryHdr
 };
 
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                          const void *key)
 {
   // Initialize the entry with placement new
   new (entry) nsRequestInfo(key);
+  return PR_TRUE;
 }
 
 

@@ -180,7 +180,7 @@ struct PropertyPolicy : public PLDHashEntryHdr
     SecurityLevel  mSet;
 };
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 InitPropertyPolicyEntry(PLDHashTable *table,
                      PLDHashEntryHdr *entry,
                      const void *key)
@@ -189,6 +189,7 @@ InitPropertyPolicyEntry(PLDHashTable *table,
     pp->key = (jsval)key;
     pp->mGet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
     pp->mSet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
+    return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -203,18 +204,9 @@ ClearPropertyPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 
 struct ClassPolicy : public PLDHashEntryHdr
 {
-    char*  key;
+    char* key;
     PLDHashTable* mPolicy;
 };
-
-PR_STATIC_CALLBACK(PRBool)
-MatchClassPolicyKey(PLDHashTable *table,
-                    const PLDHashEntryHdr *entry,
-                    const void *key)
-{
-    ClassPolicy* cp = (ClassPolicy *)entry;
-    return (cp->key == (char*)key) || (PL_strcmp(cp->key, (char*)key) == 0);
-}
 
 PR_STATIC_CALLBACK(void)
 ClearClassPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
@@ -228,7 +220,7 @@ ClearClassPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     PL_DHashTableDestroy(cp->mPolicy);
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 InitClassPolicyEntry(PLDHashTable *table,
                      PLDHashEntryHdr *entry,
                      const void *key)
@@ -248,9 +240,16 @@ InitClassPolicyEntry(PLDHashTable *table,
 
     ClassPolicy* cp = (ClassPolicy*)entry;
     cp->key = PL_strdup((const char*)key);
+    if (!cp->key)
+        return PR_FALSE;
     cp->mPolicy = PL_NewDHashTable(&classPolicyOps, nsnull,
-                  sizeof(PropertyPolicy), 16);
-    NS_ASSERTION(cp->mPolicy, "Failed to create hashtable - out of memory?");
+                                   sizeof(PropertyPolicy), 16);
+    if (!cp->mPolicy) {
+        PL_strfree(cp->key);
+        cp->key = nsnull;
+        return PR_FALSE;
+    }
+    return PR_TRUE;
 }
 
 // Domain Policy
@@ -270,7 +269,7 @@ public:
             PL_DHashFreeTable,
             PL_DHashGetKeyStub,
             PL_DHashStringKey,
-            MatchClassPolicyKey,
+            PL_DHashMatchStringKey,
             PL_DHashMoveEntryStub,
             ClearClassPolicyEntry,
             PL_DHashFinalizeStub,
