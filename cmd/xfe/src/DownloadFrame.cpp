@@ -451,7 +451,25 @@ void
 XFE_DownloadFrame::configureLogo()
 {
 }
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_DownloadFrame::doClose()
+{
+#ifdef notyet
+    /* We might be in an extend text selection on the text widgets.
+       If we destroy this now, we will dump core. So before destroying
+       we will disable extend of the selection. */
+    XtCallActionProc(m_url_value, "extend-end",
+                     NULL, NULL, 0);
+    /*XtCallActionProc(CONTEXT_DATA (context)->url_text, "extend-end",
+                     NULL, NULL, 0);*/
 
+    /* If we were downloading, cleanup the file we downloaded to. */
+    char *filename = fe_GetTextField(m_url_value);
+    XP_FileRemove(filename, xpTemporary);
+#endif
+    XFE_Frame::doClose();
+}
 //////////////////////////////////////////////////////////////////////////
 //
 // XFE_DownloadView
@@ -475,9 +493,6 @@ XFE_DownloadView::XFE_DownloadView(XFE_Component *toplevel, Widget parent,
 							XmNleftAttachment,		XmATTACH_FORM,
 							XmNbottomAttachment,	XmATTACH_NONE,
 							NULL);
-
-	CONTEXT_DATA(m_contextData)->top_area = form;
-	
 
 	m_logo = new XFE_Logo((XFE_Frame *) toplevel,form,"logo");
 	

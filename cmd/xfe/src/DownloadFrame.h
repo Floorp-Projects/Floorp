@@ -51,6 +51,9 @@ public:
  	virtual XFE_Logo *	getLogo			();
  	virtual void		configureLogo	();
 
+    // Override XFE_Frame method
+    void doClose();
+
 private:
 	Widget m_stopButton;
 
