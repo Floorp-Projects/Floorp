@@ -406,12 +406,15 @@ function serv_flush()
 CIRCServer.prototype.login =
 function serv_login(nick, name, desc)
 {
-    this.me = new CIRCUser (this, nick, name);
+    nick = nick.replace(" ", "_");
+    name = name.replace(" ", "_");
+
+    this.me = new CIRCUser(this, nick, name);
     if (this.password)
-       this.sendData ("PASS " + this.password + "\n");
-    this.sendData ("NICK " + nick + "\n");
-    this.sendData ("USER " + name + " foo bar :" +
-                   fromUnicode(desc, this) + "\n");
+       this.sendData("PASS " + this.password + "\n");
+    this.sendData("NICK " + nick + "\n");
+    this.sendData("USER " + name + " foo bar :" +
+                  fromUnicode(desc, this) + "\n");
 }
 
 CIRCServer.prototype.logout =
@@ -905,8 +908,8 @@ function serv_332 (e)
 CIRCServer.prototype.on311 =
 function serv_311 (e)
 {
-    e.user = new CIRCUser (this, e.params[2], e.params[3], e.params[4],
-                           e.params[6]);
+    e.user = new CIRCUser (this, e.params[2], e.params[3], e.params[4]);
+    e.user.desc = e.decodeParam(6, e.user);
     e.destObject = this.parent;
     e.set = "network";
 }
@@ -955,7 +958,7 @@ function serv_352 (e)
     if (8 in e.params)
     {
         var ary = e.params[8].match(/(?:\d+\s)?(.*)/);
-        e.user.desc = ary[1];
+        e.user.desc = fromUnicode(ary[1], e.user);
     }
     
     e.destObject = this.parent;
@@ -1351,7 +1354,8 @@ function serv_quit (e)
 CIRCServer.prototype.onPart = 
 function serv_part (e)
 {
-    e.channel = new CIRCChannel (this, e.params[1]);    
+    e.channel = new CIRCChannel (this, e.params[1]);
+    e.reason = (e.params.length > 1) ? e.decodeParam(2, e.channel) : "";
     e.user = new CIRCChanUser (e.channel, e.user.nick);
     if (userIsMe(e.user))
         e.channel.active = false;
@@ -1370,7 +1374,7 @@ function serv_kick (e)
     delete e.channel.users[e.lamer.nick];
     if (userIsMe(e.lamer))
         e.channel.active = false;
-    e.reason = e.decodeParam(3);
+    e.reason = e.decodeParam(3, e.channel);
     e.destObject = e.channel;
     e.set = "channel"; 
 
@@ -2037,11 +2041,10 @@ function chan_secret (f)
  * user
  */
 
-function CIRCUser (parent, nick, name, host, desc)
+function CIRCUser (parent, nick, name, host)
 {
     var properNick = nick;
     nick = nick.toLowerCase();
-    
     if (nick in parent.users)
     {
         var existingUser = parent.users[nick];
@@ -2049,8 +2052,6 @@ function CIRCUser (parent, nick, name, host, desc)
             existingUser.name = name;
         if (host)
             existingUser.host = host;
-        if (desc)
-            existingUser.desc = desc;
         return existingUser;
     }
 
@@ -2059,7 +2060,6 @@ function CIRCUser (parent, nick, name, host, desc)
     this.properNick = properNick;
     this.name = name;
     this.host = host;
-    this.desc = desc;
     this.connectionHost = null;
     this.modestr = this.parent.parent.INITIAL_UMODE;
     

@@ -177,7 +177,15 @@ function dumpObjectTree (o, recurse, compress, level)
                 break;
 
             case "object":
-                s += pfx + tee + i + " (object)\n";
+                s += pfx + tee + i + " (object)";
+                if (o[i] == null)
+                {
+                    s += " null\n";
+                    break;
+                }
+                
+                s += "\n";
+                
                 if (!compress)
                     s += pfx + "|\n";
                 if ((i != "parent") && (recurse))

@@ -608,6 +608,11 @@ function my_showtonet (e)
             this.updateHeader();
             client.updateHeader();
             updateStalkExpression(this);
+
+            var cmdary = this.prefs["autoperform"];
+            for (var i = 0; i < cmdary.length; ++i)
+                this.dispatch(cmdary[i])
+
             for (var v in client.viewsArray)
             {
                 // reconnect to any existing views
@@ -619,6 +624,7 @@ function my_showtonet (e)
                     gotoIRCURL(source.getURL());
                 }
             }
+
             if ("pendingURLs" in this)
             {
                 var url = this.pendingURLs.pop();
@@ -1267,8 +1273,8 @@ function my_caction (e)
 CIRCChannel.prototype.onUnknownCTCP =
 function my_unkctcp (e)
 {
-    this.display (getMsg("my_unkctcpMsg", [e.CTCPCode, e.CTCPData,
-                                           e.user.properNick]),
+    this.display (getMsg(MSG_UNKNOWN_CTCP, [e.CTCPCode, e.CTCPData,
+                                            e.user.properNick]),
                   "BAD-CTCP", e.user, this);
 }   
 
@@ -1323,9 +1329,19 @@ function my_cpart (e)
     }
     else
     {
-        this.display (getMsg(MSG_SOMEONE_LEFT,
-                             [e.user.properNick, e.channel.unicodeName]),
-                      "PART", e.user, this);
+        if (e.reason)
+        {
+            this.display (getMsg(MSG_SOMEONE_LEFT_REASON,
+                                 [e.user.properNick, e.channel.unicodeName,
+                                  e.reason]),
+                          "PART", e.user, this);
+        }
+        else
+        {
+            this.display (getMsg(MSG_SOMEONE_LEFT,
+                                 [e.user.properNick, e.channel.unicodeName]),
+                          "PART", e.user, this);
+        }
     }
 
     e.channel.updateHeader();
@@ -1370,7 +1386,7 @@ function my_cmode (e)
 {
     if ("user" in e)
     {
-        var msg = e.params.slice(1).join(" ");
+        var msg = e.decodeParam(1) + " " + e.params.slice(2).join(" ");
         this.display (getMsg(MSG_MODE_CHANGED, [msg, e.user.properNick]),
                       "MODE", e.user, this);
     }

@@ -1482,7 +1482,11 @@ function cmdLeave(e)
     if (e.channel && e.noDelete)
         e.channel.noDelete = true;
 
-    e.server.sendData("PART " + e.channelName + "\n");
+    if (!e.reason)
+        e.reason = "";
+    
+    e.server.sendData("PART " + e.channelName + " :" +
+                      fromUnicode(e.reason, e.channel) + "\n");
 }
 
 function cmdLoad (e)

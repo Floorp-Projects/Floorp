@@ -175,7 +175,8 @@ function getNetworkPrefManager(network)
          ["outputWindowURL",  defer],
          ["reconnect",        defer],
          ["username",         defer],
-         ["usermode",         defer]
+         ["usermode",         defer],
+         ["autoperform",      []]
         ];
 
     var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
@@ -184,10 +185,22 @@ function getNetworkPrefManager(network)
     prefManager.addPrefs(prefs);
     prefManager.onPrefChanged = onPrefChanged;
 
-    network.INITIAL_NICK  = prefManager.prefs["nickname"];
-    network.INITIAL_NAME  = prefManager.prefs["username"];
-    network.INITIAL_DESC  = prefManager.prefs["desc"];
-    network.INITIAL_UMODE = prefManager.prefs["usermode"];
+    var value = prefManager.prefs["nickname"];
+    if (value != CIRCNetwork.prototype.INITIAL_NICK)
+        network.INITIAL_NICK = value;
+    
+    value = prefManager.prefs["username"];
+    if (value != CIRCNetwork.prototype.INITIAL_NAME)
+        network.INITIAL_NAME = value;
+    
+    value = prefManager.prefs["desc"];
+    if (value != CIRCNetwork.prototype.INITIAL_DESC)
+        network.INITIAL_DESC = value;
+    
+    value = prefManager.prefs["usermode"];
+    if (value != CIRCNetwork.prototype.INITIAL_UMODE)
+        network.INITIAL_UMODE = value;
+
     network.stayingPower  = prefManager.prefs["reconnect"];
 
     client.prefManagers.push(prefManager);
