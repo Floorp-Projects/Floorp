@@ -101,6 +101,6 @@ treeitem[container="true"] > treerow > treecell > .tree-icon {
  list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-#bookmarks {
+treeitem > treerow > treecell > .tree-icon {
  list-style-image:url("chrome://bookmarks/skin/bookmark-item.gif");
 }
