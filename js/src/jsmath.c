@@ -412,4 +412,3 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 	return NULL;
     return proto;
 }
-

@@ -764,4 +764,3 @@ js_IsScopeLocked(JSScope *scope)
 #endif
 
 #endif /* JS_THREADSAFE */
-

@@ -118,7 +118,7 @@ static JSClass prop_iterator_class = {
  * Stack macros and functions.  These all use a local variable, jsval *sp, to
  * point to the next free stack slot.  SAVE_SP must be called before any call
  * to a function that may invoke the interpreter.  RESTORE_SP must be called
- * only after return from Call, because only Call changes fp->sp.
+ * only after return from js_Invoke, because only js_Invoke changes fp->sp.
  */
 #define PUSH(v)         (*sp++ = (v))
 #define POP()           (*--sp)
@@ -782,19 +782,18 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     frame.throwing = JS_FALSE;
     frame.dormantNext = NULL;
 
-
-    /* Here we wrap the call to js_Interpret with code to (conditionally)
+    /*
+     * Here we wrap the call to js_Interpret with code to (conditionally)
      * save and restore the old stack frame chain into a chain of 'dormant'
      * frame chains. Since we are replacing cx->fp we were running into the
-     * problem that if gc was called, then some of the objects associated 
-     * with the old frame chain (stored here in the C stack as 'oldfp') were 
+     * problem that if gc was called, then some of the objects associated
+     * with the old frame chain (stored here in the C stack as 'oldfp') were
      * not rooted and were being collected. This was bad. So, now we
      * preserve the links to these 'dormant' frame chains in cx before
      * calling js_Interpret and cleanup afterwards. gc walks these dormant
      * chains and marks objects in the same way that it marks object in the
      * primary cx->fp chain.
      */
-
     if (oldfp && oldfp != down) {
         PR_ASSERT(!oldfp->dormantNext);
         oldfp->dormantNext = cx->dormantFrameChain;
@@ -889,9 +888,9 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 		goto out;
 	    }
             /*
-             * The Closure() constructor resets the closure object's parent to be
-             * the current scope chain.  Set it to the object that the imported
-             * function is being defined in.
+             * The Closure() constructor resets the closure object's parent
+             * to be the current scope chain.  Set it to the object that the
+             * imported function is being defined in.
              */
             OBJ_SET_PARENT(cx, closure, obj);
 	    value = OBJECT_TO_JSVAL(closure);
@@ -1245,7 +1244,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
 	  do_forinloop:
 	    /*
-             * ECMA-compatible for/in bytecodes eval object just once, before loop.
+             * ECMA-compatible for/in evals the object just once, before loop.
              */
 	    if (cs->format & JOF_FOR2) {
 		obj = JSVAL_TO_OBJECT(sp[-1]);
@@ -2597,7 +2596,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    len = 0;
 	    CHECK_BRANCH(-1);
 	    break;
-	      
+
 	  case JSOP_EXCEPTION:
 	    PUSH(fp->exception);
 	    break;
@@ -2657,13 +2656,13 @@ js_Interpret(JSContext *cx, jsval *result)
 	            switch (handler(cx, script, pc, &rval,
 	        	            rt->debuggerHandlerData)) {
 	              case JSTRAP_ERROR:
-	        	    ok = JS_FALSE;
-	        	    goto out;
+			ok = JS_FALSE;
+			goto out;
 	              case JSTRAP_CONTINUE:
-	        	    break;
+			break;
 	              case JSTRAP_RETURN:
-	        	    fp->rval = rval;
-	        	    goto out;
+			fp->rval = rval;
+			goto out;
 	              default:;
 	            }
                 }

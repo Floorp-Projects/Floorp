@@ -263,7 +263,7 @@ SendSourceToJSDebugger(JSTokenStream *ts, jschar *str, size_t length)
             ts->jsdsrc = JSD_NewSourceText(ts->jsdc, filename);
         } else {
             ts->jsdsrc = JSD_FindSourceForURL(ts->jsdc, filename);
-            if (ts->jsdsrc && JSD_SOURCE_PARTIAL != 
+            if (ts->jsdsrc && JSD_SOURCE_PARTIAL !=
                 JSD_GetSourceStatus(ts->jsdc, ts->jsdsrc)) {
                 ts->jsdsrc = NULL;
             }
@@ -535,7 +535,6 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
 	fprintf(stderr, "%s:\n%s\n",message,
                 js_DeflateString(cx, ts->linebuf.base,
                                  ts->linebuf.limit - ts->linebuf.base));
-        
 #endif
     }
     if (lastc == '\n')
