@@ -23,9 +23,10 @@ Rights Reserved.
 <!ENTITY windowSettings.label             "General Settings">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail:">
 <!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
-<!ENTITY newMessage.label                 "When a new message arrives">
-<!ENTITY playSound.label                  "Play a sound">
-<!ENTITY playSound.accesskey              "p">
+<!ENTITY warnOnSendAccelKey.label         "Confirm when using keyboard shortcut to send message">
+<!ENTITY warnOnSendAccelKey.accesskey      "o">
+<!ENTITY playSound.label                  "Play a sound when new messages arrive">
+<!ENTITY playSound.accesskey              "P">
 <!ENTITY soundFile.label                  "Sound file:">
 <!ENTITY defaultSound.label               "Play default sound">
 <!ENTITY browse.label                     "Browse">

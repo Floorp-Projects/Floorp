@@ -36,7 +36,7 @@ Contributor(s):
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl",
-                       "newMailNotification" ];
+                       "newMailNotification", "mailWarnOnSendAccelKey" ];
   ]]>
   </script>
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
@@ -60,6 +60,19 @@ Contributor(s):
       <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
                 prefstring="mailnews.confirm.moveFoldersToTrash"/>
     </hbox>
+    <separator class="thin"/>
+    <hbox align="center">
+      <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
+                prefstring="mail.warn_on_send_accel_key"
+                accesskey="&warnOnSendAccelKey.accesskey;" />
+    </hbox>
+    <separator class="thin"/>
+    <hbox align="center">
+      <checkbox id="newMailNotification" label="&playSound.label;"
+                prefstring="mail.biff.play_sound"
+                accesskey="&playSound.accesskey;" />
+    </hbox>
+
     <hbox align="start" id="mapi"/>
 
   </groupbox>
@@ -89,13 +102,4 @@ Contributor(s):
 
   </groupbox>
   
-  <!-- Sound notification for new mail -->    
-        <groupbox>
-    <caption label="&newMessage.label;"/>
-    <hbox align="center">
-      <checkbox id="newMailNotification" label="&playSound.label;"
-                prefstring="mail.biff.play_sound"
-                accesskey="&playSound.accesskey;" />
-    </hbox>              
-        </groupbox> 
 </page>
