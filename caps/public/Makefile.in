@@ -17,14 +17,19 @@
 MODULE = caps
 
 DEPTH = ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeManager.h nsPrivilegeTable.h nsSystemPrivilegeTable.h nsTarget.h nsUserTarget.h jpermission.h nsUserDialogHelper.h admin.h nsCaps.h nsCapsEnums.h \
- nsCCapsManager.h       \
- nsCCertPrincipal.h     \
- nsCCodebasePrincipal.h \
- nsCCapsManagerFactory.h
+include $(DEPTH)/config/autoconf.mk
 
+EXPORTS	=  nsIPrincipal.h           \
+ nsICodebasePrincipal.h   \
+ nsICertPrincipal.h       \
+ nsICapsManager.h         \
+ nsICodeSourcePrincipal.h
 
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-include $(DEPTH)/config/rules.mk
+include $(topsrcdir)/config/rules.mk
 

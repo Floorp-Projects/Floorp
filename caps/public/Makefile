@@ -18,11 +18,11 @@ MODULE = caps
 
 DEPTH = ../..
 
-EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeManager.h nsPrivilegeTable.h nsSystemPrivilegeTable.h nsTarget.h nsUserTarget.h jpermission.h nsUserDialogHelper.h admin.h nsCaps.h nsCapsEnums.h \
- nsCCapsManager.h       \
- nsCCertPrincipal.h     \
- nsCCodebasePrincipal.h \
- nsCCapsManagerFactory.h
+EXPORTS	=  nsIPrincipal.h           \
+ nsICodebasePrincipal.h   \
+ nsICertPrincipal.h       \
+ nsICapsManager.h         \
+ nsICodeSourcePrincipal.h
 
 
 

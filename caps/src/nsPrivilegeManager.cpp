@@ -1029,9 +1029,14 @@ nsPrivilege *nsPrivilegeManager::getPrincipalPrivilege(nsTarget *target,
                                                        nsPrincipal *prin, 
                                                        void *data)
 {
+  if ( (prin == NULL) || (target == NULL) )
+  {
+    return nsPrivilege::findPrivilege(nsPermissionState_Blank, 
+                                      nsDurationState_Session);
+  }
   if (getSystemPrincipal() == prin) {
     return nsPrivilege::findPrivilege(nsPermissionState_Allowed, 
-                                      nsDurationState_Forever);
+                                      nsDurationState_Session);
   }
 
   PrincipalKey prinKey(prin);
@@ -1039,13 +1044,15 @@ nsPrivilege *nsPrivilegeManager::getPrincipalPrivilege(nsTarget *target,
     (nsPrivilegeTable *) itsPrinToPrivTable->Get(&prinKey);
   if (privTable == NULL) {
     // the principal isn't registered, so ignore it
-    return NULL;
+    return nsPrivilege::findPrivilege(nsPermissionState_Blank, 
+                                      nsDurationState_Session);
   }
 
   nsTarget *tempTarget = nsTarget::findTarget(target);
   if (tempTarget != target) {
     // Target is not registered, so ignore it
-    return NULL;
+    return nsPrivilege::findPrivilege(nsPermissionState_Blank, 
+                                      nsDurationState_Session);
   }
 
   return privTable->get(target);

@@ -16,6 +16,6 @@
 
 DEPTH = ..
 
-DIRS =	include src 
+DIRS =	public include src 
 
 include $(DEPTH)/config/rules.mk
