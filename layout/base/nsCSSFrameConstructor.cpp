@@ -10064,10 +10064,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
   
-  // Use NS_VMREFRESH_DEFERRED here so that any reflows that may be coming from
-  // the same restyle as called this function will get a chance to be processed
-  // before we do the widget invalidates from DoApplyRenderingChangeToTree.
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
+  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
 
 nsresult
@@ -10462,7 +10459,11 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
     if (namespaceID == kNameSpaceID_XUL &&
         (tag == nsXULAtoms::menupopup || tag == nsXULAtoms::popup ||
          tag == nsXULAtoms::tooltip)) {
+      nsIViewManager* viewManager = mPresShell->GetViewManager();
+      viewManager->BeginUpdateViewBatch();
       ProcessOneRestyle(aContent, rshint, hint);
+      viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+
       return result;
     }
   }
@@ -13673,6 +13674,12 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // already processing, sending us into an infinite loop.
   mPendingRestyles.Clear();
 
+  nsIViewManager* viewManager = mPresShell->GetViewManager();
+
+  // Put a view update batch around the whole thing so we only process
+  // view updates at the very end.  Note that this serves as the view
+  // update batch we need around our ProcessRestyledFrames calls too.
+  viewManager->BeginUpdateViewBatch();
   for (nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
          restylesToProcess;
        currentRestyle != lastRestyle;
@@ -13681,6 +13688,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
                       currentRestyle->mRestyleHint,
                       currentRestyle->mChangeHint);
   }
+  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   delete [] restylesToProcess;
 }

@@ -132,6 +132,8 @@ public:
 
   void WillDestroyFrameTree();
 
+  // Note: It's the caller's responsibility to make sure to wrap a
+  // ProcessRestyledFrames call in a view update batch.
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
 
   void ProcessOneRestyle(nsIContent* aContent, nsReStyleHint aRestyleHint,
