@@ -121,8 +121,7 @@ CheckFontExistence(nsIPresContext* aPresContext, const nsString& aFontName)
 {
   PRBool aliased;
   nsAutoString localName;
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+  nsIDeviceContext *deviceContext = aPresContext->DeviceContext();
   deviceContext->GetLocalFontName(aFontName, localName, aliased);
   PRBool rv = (aliased || (NS_OK == deviceContext->CheckFontExistence(localName)));
   // (see bug 35824 for comments about the aliased localName)

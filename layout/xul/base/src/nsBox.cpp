@@ -648,10 +648,8 @@ nsBox::GetBorder(nsMargin& aMargin)
         nsCOMPtr<nsIPresContext> context;
         shell->GetPresContext(getter_AddRefs(context));
         if (gTheme->ThemeSupportsWidget(context, frame, disp->mAppearance)) {
-          nsCOMPtr<nsIDeviceContext> dc;
-          context->GetDeviceContext(getter_AddRefs(dc));
           nsMargin margin(0,0,0,0);
-          gTheme->GetWidgetBorder(dc, frame, 
+          gTheme->GetWidgetBorder(context->DeviceContext(), frame, 
                                   disp->mAppearance, &margin);
           float p2t;
           context->GetScaledPixelsToTwips(&p2t);

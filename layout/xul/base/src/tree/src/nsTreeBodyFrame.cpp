@@ -1383,11 +1383,9 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
     // we add in borders and padding to the text dimension and give that back. 
     nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
 
-    nsCOMPtr<nsIDeviceContext> dc;
-
-    mPresContext->GetDeviceContext(getter_AddRefs(dc));
     nsCOMPtr<nsIFontMetrics> fm;
-    dc->GetMetricsFor(textContext->GetStyleFont()->mFont, *getter_AddRefs(fm));
+    mPresContext->DeviceContext()->
+      GetMetricsFor(textContext->GetStyleFont()->mFont, *getter_AddRefs(fm));
     nscoord height;
     fm->GetHeight(height);
 
@@ -2828,11 +2826,10 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   textRect.Deflate(bp);
 
   // Compute our text size.
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-
   nsCOMPtr<nsIFontMetrics> fontMet;
-  deviceContext->GetMetricsFor(textContext->GetStyleFont()->mFont, *getter_AddRefs(fontMet));
+  aPresContext->DeviceContext()->
+    GetMetricsFor(textContext->GetStyleFont()->mFont,
+                  *getter_AddRefs(fontMet));
 
   nscoord height, baseline;
   fontMet->GetHeight(height);

@@ -223,10 +223,8 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
 inline float
 TextZoomFor(nsIPresContext* aPresContext)
 {
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
   float textZoom;
-  dc->GetTextZoom(textZoom);
+  aPresContext->DeviceContext()->GetTextZoom(textZoom);
   return textZoom;
 }
 

@@ -130,7 +130,7 @@ ScreenImpl::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP
 ScreenImpl::GetPixelDepth(PRInt32* aPixelDepth)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsIDeviceContext* context = GetDeviceContext();
 
   if (!context) {
     *aPixelDepth = -1;
@@ -196,7 +196,7 @@ ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
   return rv;
 }
 
-already_AddRefed<nsIDeviceContext>
+nsIDeviceContext*
 ScreenImpl::GetDeviceContext()
 {
   if(!mDocShell)
@@ -214,7 +214,7 @@ ScreenImpl::GetDeviceContext()
 
   nsIDeviceContext* context = nsnull;
   if(presContext)
-    presContext->GetDeviceContext(&context);
+    context = presContext->DeviceContext();
 
   return context;
 }
@@ -222,7 +222,7 @@ ScreenImpl::GetDeviceContext()
 nsresult
 ScreenImpl::GetRect(nsRect& aRect)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsIDeviceContext *context = GetDeviceContext();
 
   if (!context) {
     return NS_ERROR_FAILURE;
@@ -247,7 +247,7 @@ ScreenImpl::GetRect(nsRect& aRect)
 nsresult
 ScreenImpl::GetAvailRect(nsRect& aRect)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsIDeviceContext *context = GetDeviceContext();
 
   if (!context) {
     return NS_ERROR_FAILURE;

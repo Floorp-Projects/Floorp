@@ -295,11 +295,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   // and if this Document is in the upper left hand corner
   // we need to suppress the top margin or it will reflow too small
   // Start by getting the actual printer page dimensions to see if we are not a whole page
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-  NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
   nscoord width, height;
-  dc->GetDeviceSurfaceDimensions(width, height);
+  aPresContext->DeviceContext()->GetDeviceSurfaceDimensions(width, height);
 
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
@@ -657,10 +654,6 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
   }
 
   // Begin printing of the document
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-  NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
-
   nsresult rv = NS_OK;
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
@@ -699,8 +692,8 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
   if (mDoingPageRange) {
     // XXX because of the hack for making the selection all print on one page
     // we must make sure that the page is sized correctly before printing.
-    PRInt32 width,height;
-    dc->GetDeviceSurfaceDimensions(width,height);
+    PRInt32 width, height;
+    aPresContext->DeviceContext()->GetDeviceSurfaceDimensions(width, height);
 
     PRInt32 pageNum = 1;
     nscoord y = 0;//mMargin.top;
@@ -811,8 +804,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
   mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &printOddPages);
 
   // Begin printing of the document
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+  nsIDeviceContext *dc = aPresContext->DeviceContext();
   NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
 
   nsIViewManager* vm = aPresContext->GetViewManager();
@@ -965,13 +957,9 @@ nsSimplePageSequenceFrame::DoPageEnd(nsIPresContext*  aPresContext)
 	nsresult rv = NS_OK;
 	
   if (mPrintThisPage) {
-    nsCOMPtr<nsIDeviceContext> dc;
-    aPresContext->GetDeviceContext(getter_AddRefs(dc));
-    NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
-
     if(mSkipPageEnd){
 	    PR_PL(("***************** End Page (DoPageEnd) *****************\n"));
-      nsresult rv = dc->EndPage();
+      nsresult rv = aPresContext->DeviceContext()->EndPage();
 	    if (NS_FAILED(rv)) {
 	      return rv;
       }

@@ -71,7 +71,7 @@ public:
 
 
 protected:
-  already_AddRefed<nsIDeviceContext> GetDeviceContext();
+  nsIDeviceContext* GetDeviceContext();
   nsresult GetRect(nsRect& aRect);
   nsresult GetAvailRect(nsRect& aRect);
 

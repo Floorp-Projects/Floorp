@@ -392,10 +392,9 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     nscoord offset;
     nscoord size;
     nscoord baseline;
-    nsCOMPtr<nsIDeviceContext> deviceContext;
     nsCOMPtr<nsIFontMetrics> fontMet;
-    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-    deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
+    aPresContext->DeviceContext()->GetMetricsFor(fontStyle->mFont,
+                                                 *getter_AddRefs(fontMet));
     fontMet->GetMaxAscent(baseline);
 
     if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
@@ -512,11 +511,9 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext*      aPresContext,
     if (mTitle.IsEmpty())
         return;
 
-    nsCOMPtr<nsIDeviceContext> deviceContext;
-    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-
     nsCOMPtr<nsIFontMetrics> fontMet;
-    deviceContext->GetMetricsFor(GetStyleFont()->mFont, *getter_AddRefs(fontMet));
+    aPresContext->DeviceContext()->GetMetricsFor(GetStyleFont()->mFont,
+                                                 *getter_AddRefs(fontMet));
     aRenderingContext.SetFont(fontMet);
 
     // see if the text will completely fit in the width given
@@ -789,11 +786,9 @@ void
 nsTextBoxFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                                 const nsString& aString, nsSize& aSize, nscoord& aAscent)
 {
-    nsCOMPtr<nsIDeviceContext> deviceContext;
-    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-
     nsCOMPtr<nsIFontMetrics> fontMet;
-    deviceContext->GetMetricsFor(GetStyleFont()->mFont, *getter_AddRefs(fontMet));
+    aPresContext->DeviceContext()->GetMetricsFor(GetStyleFont()->mFont,
+                                                 *getter_AddRefs(fontMet));
     fontMet->GetHeight(aSize.height);
     aRenderingContext.SetFont(fontMet);
     aRenderingContext.GetWidth(aString, aSize.width);

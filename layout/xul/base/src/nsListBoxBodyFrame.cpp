@@ -259,10 +259,9 @@ nsListBoxBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 
   nsBoxLayoutState boxLayoutState(aPresContext);
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
   nsCOMPtr<nsIFontMetrics> fm;
-  dc->GetMetricsFor(aContext->GetStyleFont()->mFont, *getter_AddRefs(fm));
+  aPresContext->DeviceContext()->GetMetricsFor(aContext->GetStyleFont()->mFont,
+                                               *getter_AddRefs(fm));
   fm->GetHeight(mRowHeight);
 
   return rv;
@@ -748,10 +747,10 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
               text->AppendTextTo(value);
             }
           }
-          nsCOMPtr<nsIDeviceContext> dc;
-          presContext->GetDeviceContext(getter_AddRefs(dc));
           nsCOMPtr<nsIFontMetrics> fm;
-          dc->GetMetricsFor(styleContext->GetStyleFont()->mFont, *getter_AddRefs(fm));
+          presContext->DeviceContext()->
+            GetMetricsFor(styleContext->GetStyleFont()->mFont,
+                          *getter_AddRefs(fm));
           rendContext->SetFont(fm);
 
           nscoord textWidth;

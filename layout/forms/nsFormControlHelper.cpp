@@ -146,11 +146,8 @@ nsresult nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext,
   const nsFont * font = nsnull;
   // Get frame font
   if (NS_SUCCEEDED(aFrame->GetFont(aPresContext, font))) {
-    nsCOMPtr<nsIDeviceContext> deviceContext;
-    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-    NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
-    if (font != nsnull) { // Get font metrics
-      return deviceContext->GetMetricsFor(*font, *aFontMet);
+    if (font) { // Get font metrics
+      return aPresContext->DeviceContext()->GetMetricsFor(*font, *aFontMet);
     }
   }
   return NS_ERROR_FAILURE;

@@ -1560,18 +1560,16 @@ nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
       case NS_STYLE_FONT_FIELD:         sysID = eSystemFont_Field;        break;
     }
 
-    nsCOMPtr<nsIDeviceContext> dc;
-    aPresContext->GetDeviceContext(getter_AddRefs(dc));
-    if (dc) {
-      // GetSystemFont sets the font face but not necessarily the size
-      aFont->mFont.size = defaultVariableFont->size;
-      if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
+    // GetSystemFont sets the font face but not necessarily the size
+    aFont->mFont.size = defaultVariableFont->size;
+
+    if (NS_FAILED(aPresContext->DeviceContext()->GetSystemFont(sysID,
+                                                             &aFont->mFont))) {
         aFont->mFont.name = defaultVariableFont->name;
-      }
-      // this becomes our cascading size
-      aFont->mSize = aFont->mFont.size
-          = nsStyleFont::ZoomText(aPresContext, aFont->mFont.size);
     }
+    // this becomes our cascading size
+    aFont->mSize = aFont->mFont.size =
+      nsStyleFont::ZoomText(aPresContext, aFont->mFont.size);
 
     aFont->mFont.familyNameQuirks = PR_FALSE;
 
