@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -448,10 +448,10 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
     double prob = (prod1 / (prod1 + prod2));
     bool isJunk = (prob >= 0.90);
     
-    if (listener)
-        listener->OnMessageClassified(messageURL, isJunk ? nsIJunkMailPlugin::JUNK : nsIJunkMailPlugin::GOOD);
-    
     delete[] tokens;
+
+    if (listener)
+        listener->OnMessageClassified(messageURL, isJunk ? PRInt32(nsIJunkMailPlugin::JUNK) : PRInt32(nsIJunkMailPlugin::GOOD));
 }
 
 /* void shutdown (); */
@@ -498,9 +498,11 @@ NS_IMETHODIMP nsBayesianFilter::ClassifyMessages(PRUint32 aCount, const char **a
 
 class MessageObserver : public TokenAnalyzer {
 public:
-    MessageObserver(nsBayesianFilter* filter, PRInt32 oldClassification, PRInt32 newClassification, nsIJunkMailClassificationListener* listener)
-        :   mFilter(filter), mSupports(filter), mOldClassification(oldClassification),
-            mNewClassification(newClassification), mListener(listener)
+    MessageObserver(nsBayesianFilter* filter, PRInt32 oldClassification, PRInt32 newClassification,
+                    nsIJunkMailClassificationListener* listener)
+        :   mFilter(filter), mSupports(filter), mListener(listener),
+            mOldClassification(oldClassification),
+            mNewClassification(newClassification)
     {
     }
     
@@ -676,7 +678,7 @@ static bool readTokens(FILE* stream, Tokenizer& tokenizer)
     return true;
 }
 
-static const char kMagicCookie[] = { 0xFE, 0xED, 0xFA, 0xCE };
+static const char kMagicCookie[] = { '\xFE', '\xED', '\xFA', '\xCE' };
 
 void nsBayesianFilter::writeTrainingData()
 {
