@@ -394,7 +394,7 @@ var toDoTreeView =
       }
       element.setAttribute("sortActive", sortActive);
       element.setAttribute("sortDirection", this.sortDirection);
-      gTaskArray.sort( sortEvents );
+      gTaskArray.sort( sortTasks );
       document.getElementById( ToDoUnifinderTreeName ).view = this;
    },
    setTree : function( tree ){this.tree = tree;},
@@ -406,7 +406,7 @@ var toDoTreeView =
       {
          this.selectedColumn = column;
          this.sortDirection = columnElement.getAttribute("sortDirection");
-         gTaskArray.sort(sortEvents);
+         gTaskArray.sort(sortTasks);
       }
    
       calendarToDo = gTaskArray[row];
@@ -441,7 +441,7 @@ var toDoTreeView =
    }
 }
 
-function sortEvents( TaskA, TaskB )
+function sortTasks( TaskA, TaskB )
 {
    var modifier = 1;
    if (toDoTreeView.sortDirection == "descending")

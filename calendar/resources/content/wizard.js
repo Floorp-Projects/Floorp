@@ -44,6 +44,37 @@ function checkInitialPage()
 }
 
 
+function onPageShow( PageId )
+{
+   switch( PageId )
+   {
+      case "import":
+      if( document.getElementById( "import-path-textbox" ).value.length == 0 )
+      {
+         document.getElementById( "calendar-wizard" ).canAdvance = false;
+      }
+      else
+      {
+         document.getElementById( "calendar-wizard" ).canAdvance = true;
+      }
+      break;
+
+   case "import-2":
+      buildCalendarsListbox( 'import-calendar-radiogroup' );
+      
+      if( document.getElementById( "import-calendar-radiogroup" ).selectedItem == null )
+      {
+         document.getElementById( "calendar-wizard" ).canAdvance = false;
+      }
+      else
+      {
+         document.getElementById( "calendar-wizard" ).canAdvance = true;
+      }
+      document.getElementById( "import-calendar-radiogroup" ).childNodes[0].setAttribute( "selected", "true" );
+      break;
+   }
+}
+
 function buildCalendarsListbox( ListBoxId )
 {
    document.getElementById( ListBoxId ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
@@ -53,10 +84,12 @@ function buildCalendarsListbox( ListBoxId )
 
 function doWizardFinish( )
 {
+   window.setCursor( "wait" );
+
    switch( gWizardType )
    {
       case "import":
-         return doWizardImport();
+         return true;
          break;
    
       case "export":
@@ -76,34 +109,68 @@ function doWizardFinish( )
 
 function doWizardImport()
 {
+   window.setCursor( "wait" );
+   
    var calendarEventArray;
 
    var fileName = document.getElementById( "import-path-textbox" ).value;
 
    var aDataStream = readDataFromFile( fileName, "UTF-8" );
 
-   if( fileName.indexOf( ".ics" ) == -1 )
-   {
-      calendarEventArray = parseIcalData( aDataStream );   
-   }
-   else if( fileName.indexOf( ".xcs" ) == -1 )
-   {
+   if( fileName.indexOf( ".ics" ) != -1 )
+      calendarEventArray = parseIcalData( aDataStream );
+   else if( fileName.indexOf( ".xcs" ) != -1 )
       calendarEventArray = parseXCSData( aDataStream );
-   }
-        
+   
    if( document.getElementById( "import-2-radiogroup" ).selectedItem.value == "silent" )
    {
-      addEventsToCalendar( calendarEventArray, true );
+      var ServerName = document.getElementById( "import-calendar-radiogroup" ).selectedItem.value;
+
+      doAddEventsToCalendar( calendarEventArray, true, ServerName );
    }
    else
    {
-      addEventsToCalendar( calendarEventArray, true );
+      doAddEventsToCalendar( calendarEventArray, true, null );
    }
-   
-
-   return( false ); //true will close the window
 }
 
+function doAddEventsToCalendar( calendarEventArray, silent, ServerName )
+{
+   gICalLib.batchMode = true;
+
+   for(var i = 0; i < calendarEventArray.length; i++)
+   {
+      calendarEvent = calendarEventArray[i];
+	       
+      // Check if event with same ID already in Calendar. If so, import event with new ID.
+      if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
+         calendarEvent.id = createUniqueID( );
+      }
+
+      // the start time is in zulu time, need to convert to current time
+      if(calendarEvent.allDay != true)
+      convertZuluToLocal( calendarEvent );
+
+      // open the event dialog with the event to add
+      if( silent )
+      {
+         if( ServerName == null || ServerName == "" || ServerName == false )
+            var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
+         
+         gICalLib.addEvent( calendarEvent, ServerName );
+         
+         document.getElementById( "import-progress-meter" ).setAttribute( "value", ( (i/calendarEventArray.length)*100 )+"%" );
+      }
+      else
+         editNewEvent( calendarEvent );
+   }
+
+   gICalLib.batchMode = false;
+   window.setCursor( "default" );
+
+   document.getElementById( "importing-box" ).setAttribute( "collapsed", "true" );
+   document.getElementById( "done-importing-box" ).removeAttribute( "collapsed" );
+}
 
 function doWizardExport()
 {
@@ -199,5 +266,7 @@ function launchFilePicker( Mode, ElementToGiveValueTo )
           filePath += extension;
       */
       document.getElementById( ElementToGiveValueTo ).value = fp.file.path;
+
+      document.getElementById( "calendar-wizard" ).canAdvance = true;
    }
 }

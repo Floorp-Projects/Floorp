@@ -160,8 +160,8 @@ function calendarInit()
    }
 
    //a bit of a hack since the menulist doesn't remember the selected value     
-
-   document.getElementById( 'event-filter-menulist' ).setAttribute( "label", document.getElementById( 'event-filter-menulist' ).selectedItem.getAttribute( 'label' ) );
+   var value = document.getElementById( 'event-filter-menulist' ).value;
+   document.getElementById( 'event-filter-menulist' ).selectedItem = document.getElementById( 'event-filter-'+value );
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 

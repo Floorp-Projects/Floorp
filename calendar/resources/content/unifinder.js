@@ -475,6 +475,7 @@ var treeView =
    getImageSrc : function(){return false;},
    cycleHeader : function( ColId, element )
    {
+      //dump( "\nin cycle header" );
       var sortActive;
       var treeCols;
    
@@ -507,7 +508,9 @@ var treeView =
       }
       element.setAttribute("sortActive", sortActive);
       element.setAttribute("sortDirection", this.sortDirection);
+      //dump( "\nabout to sort events "+gEventArray.length );
       gEventArray.sort( sortEvents );
+      //dump( "\nSORTED!");
       document.getElementById( UnifinderTreeName ).view = this;
    },
    setTree : function( tree ){this.tree = tree;},
@@ -527,11 +530,7 @@ var treeView =
       switch( column )
       {
          case "unifinder-search-results-tree-col-title":
-            if( calendarEvent.title == "" )
-               var titleText = "Untitled";
-            else  
-               var titleText = calendarEvent.title;
-            return( titleText );
+            return( calendarEvent.title );
          
          case "unifinder-search-results-tree-col-startdate":
             var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
@@ -588,11 +587,14 @@ function sortEvents( EventA, EventB )
 	{
 		modifier = -1;
 	}
-
+   //dump( "\nswitch on treeview.SelectedColumn which is "+treeView.selectedColumn );
    switch(treeView.selectedColumn)
    {
       case "unifinder-search-results-tree-col-title":
+      {
+         //dump( "\nreturning "+EventA.title +" > "+EventB.title );
          return( ((EventA.title > EventB.title) ? 1 : -1) * modifier );
+      }
       
       case "unifinder-search-results-tree-col-startdate":
          return( ((EventA.start.getTime() > EventB.start.getTime()) ? 1 : -1) * modifier );

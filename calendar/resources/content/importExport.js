@@ -174,7 +174,7 @@ function createUniqueID()
  * Takes an array of events and adds the evens one by one to the calendar
  */
  
-function addEventsToCalendar( calendarEventArray, silent )
+function addEventsToCalendar( calendarEventArray, silent, ServerName )
 {
    gICalLib.batchMode = true;
 
@@ -194,8 +194,10 @@ function addEventsToCalendar( calendarEventArray, silent )
       // open the event dialog with the event to add
       if( silent )
       {
-         var DefaultServer = gCalendarWindow.calendarManager.getDefaultServer();
-         gICalLib.addEvent( calendarEvent, DefaultServer );
+         if( ServerName == null || ServerName == "" || ServerName == false )
+            var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
+         
+         gICalLib.addEvent( calendarEvent, ServerName );
       }
       else
          editNewEvent( calendarEvent );
