@@ -3776,10 +3776,14 @@ loser:
 	PORT_SetError(SEC_ERROR_CRL_NOT_FOUND);
 	return NULL;
     }
-    *slot = PK11_ReferenceSlot(crl->object.instances[0]->token->pk11slot);
-    *crlHandle = crl->object.instances[0]->handle;
     if (crl->url) {
 	*url = PORT_Strdup(crl->url);
+	if (!*url) {
+	    nssCRL_Destroy(crl);
+	    return NULL;
+	}
+    } else {
+	*url = NULL;
     }
     rvItem = SECITEM_AllocItem(NULL, NULL, crl->encoding.size);
     if (!rvItem) {
@@ -3788,6 +3792,8 @@ loser:
 	return NULL;
     }
     memcpy(rvItem->data, crl->encoding.data, crl->encoding.size);
+    *slot = PK11_ReferenceSlot(crl->object.instances[0]->token->pk11slot);
+    *crlHandle = crl->object.instances[0]->handle;
     nssCRL_Destroy(crl);
     return rvItem;
 #endif

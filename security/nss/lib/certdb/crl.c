@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.33 2003/03/04 22:34:56 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.34 2003/07/08 18:41:25 wtc%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -575,10 +575,6 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
         return SECFailure;
     }
 
-    if (slot) {
-	PK11_ReferenceSlot(slot);
-    }
-
     /* XXX it would be really useful to be able to fetch the CRL directly into an
        arena. This would avoid a copy later on in the decode step */
     PORT_SetError(0);
@@ -593,6 +589,7 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
 	goto loser;
     }
     PORT_Assert(crlHandle != CK_INVALID_HANDLE);
+    /* PK11_FindCrlByName obtained a slot reference. */
     
     crl = CERT_DecodeDERCrlWithFlags(NULL, derCrl, type, decodeoptions);
     if (crl) {
@@ -610,11 +607,11 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
 	PORT_Free(url);
     }
 
-loser:
     if (slot) {
 	PK11_FreeSlot(slot);
     }
 
+loser:
     if (derCrl) {
         /* destroy the DER, unless a decoded CRL was returned with DER
            allocated on the heap. This is solely for cache purposes */
