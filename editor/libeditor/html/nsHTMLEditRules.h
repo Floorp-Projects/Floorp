@@ -192,6 +192,7 @@ protected:
   nsresult ConvertWhitespace(const nsAReadableString & inString, nsAWritableString & outString);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
+  PRBool   ListIsEmptyLine(nsISupportsArray *arrayOfNodes);
 
 // data members
 protected:

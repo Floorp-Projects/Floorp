@@ -2416,24 +2416,33 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kMakeBasicBlock);
   if (NS_FAILED(res)) return res;                                 
-                                     
-  // if no nodes, we make empty block.
-  PRUint32 listCount;
-  arrayOfNodes->Count(&listCount);
-  if (!listCount) 
+  
+  // if nothing visible in list, make an empty block
+  if (ListIsEmptyLine(arrayOfNodes))
   {
     nsCOMPtr<nsIDOMNode> parent, theBlock;
     PRInt32 offset;
     
     // get selection location
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
-    if (NS_FAILED(res)) return res;
-    
+    if (NS_FAILED(res)) return res;    
     // make sure we can put a block here
     res = SplitAsNeeded(aBlockType, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     res = mHTMLEditor->CreateNode(*aBlockType, parent, offset, getter_AddRefs(theBlock));
     if (NS_FAILED(res)) return res;
+    // delete anything that was in the list of nodes
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsIDOMNode> curNode;
+    while (isupports)
+    {
+      curNode = do_QueryInterface(isupports);
+      res = mHTMLEditor->DeleteNode(curNode);
+      if (NS_FAILED(res)) return res;
+      res = arrayOfNodes->RemoveElementAt(0);
+      if (NS_FAILED(res)) return res;
+      isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+    }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
     selectionResetter.Abort();  // to prevent selection reseter from overriding us.
@@ -2506,10 +2515,8 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
   res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kIndent);
   if (NS_FAILED(res)) return res;                                 
                                      
-  // if no nodes, we make empty block.
-  PRUint32 listCount;
-  arrayOfNodes->Count(&listCount);
-  if (!listCount) 
+  // if nothing visible in list, make an empty block
+  if (ListIsEmptyLine(arrayOfNodes))
   {
     nsCOMPtr<nsIDOMNode> parent, theBlock;
     PRInt32 offset;
@@ -2518,12 +2525,23 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
     // get selection location
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
-    
     // make sure we can put a block here
     res = SplitAsNeeded(&quoteType, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     res = mHTMLEditor->CreateNode(quoteType, parent, offset, getter_AddRefs(theBlock));
     if (NS_FAILED(res)) return res;
+    // delete anything that was in the list of nodes
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsIDOMNode> curNode;
+    while (isupports)
+    {
+      curNode = do_QueryInterface(isupports);
+      res = mHTMLEditor->DeleteNode(curNode);
+      if (NS_FAILED(res)) return res;
+      res = arrayOfNodes->RemoveElementAt(0);
+      if (NS_FAILED(res)) return res;
+      isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+    }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
     selectionResetter.Abort();  // to prevent selection reseter from overriding us.
@@ -2540,11 +2558,12 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
   
   // Ok, now go through all the nodes and put them in a blockquote, 
   // or whatever is appropriate.  Wohoo!
-
   PRInt32 i;
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curQuote;
   nsCOMPtr<nsIDOMNode> curList;
+  PRUint32 listCount;
+  arrayOfNodes->Count(&listCount);
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
@@ -5772,6 +5791,38 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
     }
   }
   return res;
+}
+
+PRBool 
+nsHTMLEditRules::ListIsEmptyLine(nsISupportsArray *arrayOfNodes)
+{
+  // we have a list of nodes which we are candidates for being moved
+  // into a new block.  Determine if it's anything more than a blank line.
+  // Look for editable content above and beyond one single BR.
+  if (!arrayOfNodes) return PR_TRUE;
+  PRUint32 listCount;
+  arrayOfNodes->Count(&listCount);
+  if (!listCount) return PR_TRUE;
+  nsCOMPtr<nsIDOMNode> somenode;
+  nsCOMPtr<nsISupports> isupports;
+  PRInt32 j, brCount=0;
+  arrayOfNodes->Count(&listCount);
+  for (j = 0; j < listCount; j++)
+  {
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(j));
+    somenode = do_QueryInterface(isupports);
+    if (somenode && mHTMLEditor->IsEditable(somenode))
+    {
+      if (nsTextEditUtils::IsBreak(somenode))
+      {
+        // first break doesn't count
+        if (brCount) return PR_FALSE;
+        brCount++;
+      }
+      else return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
 }
 
 
