@@ -230,16 +230,25 @@ typedef struct dlgReboot
 
 typedef struct setupStruct
 {
-  DWORD dwMode;
-  DWORD dwCustomType;
-  LPSTR szPath;
-  LPSTR szProductName;
-  LPSTR szProgramFolderName;
-  LPSTR szProgramFolderPath;
-  LPSTR szAlternateArchiveSearchPath;
-  LPSTR szSetupTitle0;
-  LPSTR szSetupTitle1;
-  LPSTR szSetupTitle2;
+  DWORD     dwMode;
+  DWORD     dwCustomType;
+  LPSTR     szPath;
+  LPSTR     szProductName;
+  LPSTR     szProgramFolderName;
+  LPSTR     szProgramFolderPath;
+  LPSTR     szAlternateArchiveSearchPath;
+  LPSTR     szSetupTitle0;
+  COLORREF  crSetupTitle0FontColor;
+  int       iSetupTitle0FontSize;
+  BOOL      bSetupTitle0FontShadow;
+  LPSTR     szSetupTitle1;
+  COLORREF  crSetupTitle1FontColor;
+  int       iSetupTitle1FontSize;
+  BOOL      bSetupTitle1FontShadow;
+  LPSTR     szSetupTitle2;
+  COLORREF  crSetupTitle2FontColor;
+  int       iSetupTitle2FontSize;
+  BOOL      bSetupTitle2FontShadow;
 } setupGen;
 
 typedef struct sinfoSmartDownload

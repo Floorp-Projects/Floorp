@@ -55,18 +55,21 @@ Program Folder Path=[COMMON_PROGRAMS]
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
 Default Setup Type=Setup Type 0
 
+; Default Font Size is 32
+; Default Font Color is WHITE (of BLACK and GREEN)
+; Default Font Shadow is TRUE
 Setup Title0=Mozilla Seamonkey Setup
 Setup Title0 Font Size=
 Setup Title0 Font Color=
 Setup Title0 Font Shadow=TRUE
 Setup Title1=Build $Version$
-Setup Title0 Font Size=
-Setup Title0 Font Color=
-Setup Title0 Font Shadow=TRUE
+Setup Title1 Font Size=12
+Setup Title1 Font Color=BLACK
+Setup Title1 Font Shadow=FALSE
 Setup Title2=
-Setup Title0 Font Size=
-Setup Title0 Font Color=
-Setup Title0 Font Shadow=TRUE
+Setup Title2 Font Size=
+Setup Title2 Font Color=
+Setup Title2 Font Shadow=TRUE
 
 ; HKey:              valid decryptable setup keys are [Mozilla Seamonkey CurrentVersion]
 ;                    and [Mozilla Seamonkey CurrentVersion].
