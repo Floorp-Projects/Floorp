@@ -26,6 +26,8 @@
                 fontRegionPopupClicked = id; 
                 monospaceFontChoiceButtonClicked = id; 
                 proportionalFontChoiceButtonClicked = id; 
+                resetColorsToDefaults = id; 
+                resetFontsToDefaults = id; 
                 showAdvancedFontsDialog = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceAppearance; 

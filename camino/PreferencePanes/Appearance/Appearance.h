@@ -88,4 +88,7 @@
 - (IBAction)showAdvancedFontsDialog:(id)sender;
 - (IBAction)advancedFontsDone:(id)sender;
 
+- (IBAction)resetColorsToDefaults:(id)sender;
+- (IBAction)resetFontsToDefaults:(id)sender;
+
 @end

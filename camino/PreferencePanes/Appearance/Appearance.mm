@@ -326,6 +326,9 @@
 
   if (fontName)
     [self setPref:[fontPrefName cString] toString:fontName];
+  else
+    // If the preferences were reset to defaults, this key could be gone.
+    [self clearPref:[fontPrefName cString]];
 }
 
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)regionDict
@@ -342,11 +345,16 @@
   int fixedSize = [[fontSizeDict objectForKey:@"fixed"] intValue];
   int minSize = [[fontSizeDict objectForKey:@"minimum"] intValue];
 
+  // If the preferences were reset to defaults, these keys could be gone.
   if (variableSize)
     [self setPref:[variableSizePref cString] toInt:variableSize];
+  else
+    [self clearPref:[variableSizePref cString]];
 
   if (fixedSize)
     [self setPref:[fixedSizePref cString] toInt:fixedSize];
+  else
+    [self clearPref:[fixedSizePref cString]];
 
   if (minSize)
     [self setPref:[minSizePref cString] toInt:minSize];
@@ -580,6 +588,66 @@ const int kDefaultFontSansSerifTag = 1;
   [NSApp endSheet:advancedFontsDialog];
 
   [self updateFontPreviews];
+}
+
+// Reset the "Colors and Links" tab to application factory defaults.
+- (IBAction)resetColorsToDefaults:(id)sender
+{
+  [self clearPref:"browser.underline_anchors"];
+  [self clearPref:"browser.display.use_document_colors"];
+  [self clearPref:"browser.display.background_color"];
+  [self clearPref:"browser.display.foreground_color"];
+  [self clearPref:"browser.anchor_color"];
+  [self clearPref:"browser.visited_color"];
+  
+  // update the UI of the Appearance pane
+  int state;
+  state = [self getBooleanPref:"browser.underline_anchors" withSuccess:NULL] ? NSOnState : NSOffState;
+  [checkboxUnderlineLinks setState:state];
+  state = [self getBooleanPref:"browser.display.use_document_colors" withSuccess:NULL] ? NSOffState : NSOnState;
+  [checkboxUseMyColors setState:state];
+  
+  [colorwellBackgroundColor setColor:[self getColorPref:"browser.display.background_color" withSuccess:NULL]];
+  [colorwellTextColor setColor:[self getColorPref:"browser.display.foreground_color" withSuccess:NULL]];
+  [colorwellUnvisitedLinks setColor:[self getColorPref:"browser.anchor_color" withSuccess:NULL]];
+  [colorwellVisitedLinks setColor:[self getColorPref:"browser.visited_color" withSuccess:NULL]];
+}
+
+// Reset the Fonts tab to application factory defaults.
+- (IBAction)resetFontsToDefaults:(id)sender
+{
+  // reset default font type
+  [defaultFontType release];
+  defaultFontType = @"serif"; // the default default font type...wish there were a constant for it ;)
+  [defaultFontType retain];
+  
+  // clear all the preferences for the font regions
+  for (unsigned int i = 0; i < [regionMappingTable count]; i++)
+  {
+    NSMutableDictionary* regionDict = [regionMappingTable objectAtIndex:i];
+    NSString* regionCode = [regionDict objectForKey:@"code"];
+    
+    // for each region, we reset the dictionaries to be empty.
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"serif"];
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"sans-serif"];
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"monospace"];
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"cursive"];
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"fantasy"];
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"fontsize"];
+  }
+
+  // commit the changes
+  // first, we clear the preferences by saving them. This clears the values that are returned by
+  // -[self getPref:].
+  [self saveFontPrefs];
+  // Since the rest of the Appearance code doesn't access the prefs by getPref directly,
+  // we need to re-store the default preference values in the region dicts.
+  [self loadFontPrefs];
+  
+  // Update the UI of the Appearance pane
+  // order is important here -- syncing the font panel depends on the font previews being correct.
+  [self updateFontPreviews];
+  [self syncFontPanel];
 }
 
 - (void)advancedFontsSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo
