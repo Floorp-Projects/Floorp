@@ -39,12 +39,16 @@
 #include "nsViewSourceHTML.h" 
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
+#include "nsICachingChannel.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsICharsetAlias.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
 #include "prenv.h" 
 #include "nsParserCIID.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
@@ -543,6 +547,13 @@ void nsParser::SetDocumentCharset(nsString& aCharset, nsCharsetSource aCharsetSo
      mParserContext->mScanner->SetDocumentCharset(aCharset, aCharsetSource);
 }
 
+void nsParser::SetSinkCharset(nsAWritableString& aCharset)
+{
+  if (mSink) {
+    mSink->SetDocumentCharset(aCharset);
+  }
+}
+
 /**
  *  This method gets called in order to set the content
  *  sink for this parser to dump nodes to.
@@ -613,14 +624,14 @@ nsDTDMode nsParser::GetParseMode(void){
 }
 
 
-
+template <class CharT>
 class CWordTokenizer {
 public:
-  CWordTokenizer(nsString& aString,PRInt32 aStartOffset,PRInt32 aMaxOffset) {
+  CWordTokenizer(const CharT* aBuffer,PRInt32 aStartOffset,PRInt32 aMaxOffset) {
     mLength=0;
     mOffset=aStartOffset;
     mMaxOffset=aMaxOffset;
-    mBuffer=aString.GetUnicode();
+    mBuffer=aBuffer;
     mEndBuffer=mBuffer+mMaxOffset;
   }
 
@@ -633,25 +644,33 @@ public:
   // Returns offset of nth word, or -1 (if out of words).
   //********************************************************************************
   
-  PRInt32 GetNextWord() {
+  PRInt32 GetNextWord(PRBool aSkipQuotes=PR_FALSE) {
 
-    const PRUnichar *cp=mBuffer+mOffset+mLength;  //skip last word
+    const CharT *cp=mBuffer+mOffset+mLength;  //skip last word
 
     mLength=0;  //reset this
     mOffset=-1; //reset this        
 
     //now skip whitespace...
 
-    PRUnichar target=0;
+    CharT target=0;
     PRBool    done=PR_FALSE;
 
     while((!done) && (cp++<mEndBuffer)) {
       switch(*cp) {
         case kSpace:  case kNewLine:
         case kCR:     case kTab:
+        case kEqual:
           continue;
 
         case kQuote:
+          target=*cp;
+          if (aSkipQuotes) {
+            cp++;
+          }
+          done=PR_TRUE;
+          break;
+
         case kMinus:
           target=*cp;
           done=PR_TRUE;
@@ -665,7 +684,7 @@ public:
 
     if(cp<mEndBuffer) {  
 
-      const PRUnichar *firstcp=cp; //hang onto this...      
+      const CharT *firstcp=cp; //hang onto this...      
       PRInt32 theDashCount=2;
 
       cp++; //just skip first letter to simplify processing...
@@ -693,7 +712,8 @@ public:
              (kGreaterThan==*cp) ||
              (kQuote==*cp) ||
              (kCR==*cp) ||
-             (kTab==*cp)) {
+             (kTab==*cp) || 
+             (kEqual == *cp)) {
             break;
           }
         }
@@ -707,11 +727,15 @@ public:
     return mOffset;
   }
 
+  PRInt32 GetLength() const {
+    return mLength;
+  }
+
   PRInt32     mOffset;
   PRInt32     mMaxOffset;
   PRInt32     mLength;
-  const PRUnichar*  mBuffer;
-  const PRUnichar*  mEndBuffer;
+  const CharT*  mBuffer;
+  const CharT*  mEndBuffer;
 };
 
 
@@ -848,7 +872,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
   if((kNotFound!=theGTPos) && (kNotFound!=theLTPos)) {  
 
     const PRUnichar*  theBuffer=aBuffer.GetUnicode();
-    CWordTokenizer theTokenizer(aBuffer,theLTPos,theGTPos);
+    CWordTokenizer<PRUnichar> theTokenizer(theBuffer,theLTPos,theGTPos);
     theOffset=theTokenizer.GetNextWord();  //try to find ?xml, !doctype, etc...
 
     if((kNotFound!=theOffset) && (kNotFound!=theDocTypePos)) {
@@ -2297,7 +2321,7 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
 #define UCS4_3412 "X-ISO-10646-UCS-4-3412"
 #define UTF8 "UTF-8"
 
-static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
+static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
  oCharset.SetLength(0);
  // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-oCharseting
@@ -2407,11 +2431,121 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
  return oCharset.Length() > 0;
 }
 
+static const char kHTTPEquivStr[] = "http-equiv";
+static const PRInt32 kHTTPEquivStrLen = sizeof(kHTTPEquivStr)-1;
+static const char kContentTypeStr[] = "Content-Type";
+static const PRInt32 kContentTypeStrLen = sizeof(kContentTypeStr)-1;
+static const char kContentStr[] = "content";
+static const PRInt32 kContentStrLen = sizeof(kContentStr)-1;
+static const char kCharsetStr[] = "charset";
+static const PRInt32 kCharsetStrLen = sizeof(kCharsetStr)-1;
+
+PRBool 
+nsParser::DetectMetaTag(const char* aBytes, 
+                        PRInt32 aLen, 
+                        nsString& aCharset, 
+                        nsCharsetSource& aCharsetSource) 
+{
+  PRBool foundContentType = PR_FALSE;
+  aCharsetSource= kCharsetFromMetaTag;
+  aCharset.SetLength(0);
+
+  // XXX Only look inside HTML documents for now. For XML
+  // documents we should be looking inside the XMLDecl.
+  if (!mParserContext->mMimeType.Equals(NS_ConvertASCIItoUCS2(kHTMLTextContentType))) {
+    return PR_FALSE;
+  }
+
+  // Fast and loose parsing to determine if we have a complete
+  // META tag in this block, looking upto 2k into it.
+  nsDependentCString str(aBytes, PR_MIN(aLen, 2048));
+  nsReadingIterator<char> begin, end;
+  
+  str.BeginReading(begin);
+  str.EndReading(end);
+  nsReadingIterator<char> tagStart(begin);
+  nsReadingIterator<char> tagEnd(end);
+  
+  do {
+    // Find the string META and make sure it's not right at the beginning
+    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("META"), tagStart, tagEnd) &&
+        (tagStart != begin)) {
+      // Back up one to confirm that this is a tag
+      if (*--tagStart == '<') {
+        const char* attrStart = tagEnd.get();
+        const char* attrEnd;
+        
+        // Find the end of the tag
+        FindInReadable(NS_LITERAL_CSTRING(">"), tagEnd, end);
+        attrEnd = tagEnd.get();
+        
+        CWordTokenizer<char> tokenizer(attrStart, 0, attrEnd-attrStart);
+        PRInt32 offset;
+        
+        // Start looking at the attributes
+        while ((offset = tokenizer.GetNextWord()) != kNotFound) {
+          // We need to have a HTTP-EQUIV attribute whose value is 
+          // "Content-Type"
+          if ((tokenizer.GetLength() >= kHTTPEquivStrLen) &&
+              (nsCRT::strncasecmp(attrStart+offset, 
+                                 kHTTPEquivStr, kHTTPEquivStrLen) == 0)) {
+            if (((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) &&
+                (tokenizer.GetLength() >= kContentTypeStrLen) &&
+                (nsCRT::strncasecmp(attrStart+offset, 
+                                    kContentTypeStr, kContentTypeStrLen) == 0)) {
+              foundContentType = PR_TRUE;
+            }
+            else {
+              break;
+            }
+          }
+          // And a CONTENT attribute
+          else if ((tokenizer.GetLength() >= kContentStrLen) &&
+                   (nsCRT::strncasecmp(attrStart+offset, 
+                                      kContentStr, kContentStrLen) == 0)) {
+            // The next word is the value which itself needs to be parsed
+            if ((offset = tokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
+              const char* contentStart = attrStart+offset;
+              CWordTokenizer<char> contentTokenizer(contentStart, 0, 
+                                                    tokenizer.GetLength());
+
+              // Read the content type
+              if (contentTokenizer.GetNextWord() != kNotFound) {
+                // Now see if we have a charset
+                if (((offset = contentTokenizer.GetNextWord()) != kNotFound) &&
+                    (contentTokenizer.GetLength() >= kCharsetStrLen) &&
+                    (nsCRT::strncasecmp(contentStart+offset,
+                                        kCharsetStr, kCharsetStrLen) == 0)) {
+                  // The next word is the charset
+                  if ((offset = contentTokenizer.GetNextWord()) != kNotFound) {
+                    aCharset.Assign(NS_ConvertASCIItoUCS2(contentStart+offset, 
+                                                          contentTokenizer.GetLength()));
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (foundContentType && (aCharset.Length() > 0)) {
+          return PR_TRUE;
+        }
+      }
+    }  
+   
+    tagStart = tagEnd;
+    tagEnd = end;
+  } while (tagStart != end);
+  
+  return PR_FALSE;
+}
+
 typedef struct {
-  PRBool mNeedCheckFirst4Bytes;
+  PRBool mNeedCharsetCheck;
   nsParser* mParser;
   nsIParserFilter* mParserFilter;
   nsScanner* mScanner;
+  nsIRequest* mRequest;
 } ParserWriteStruct;
 
 /*
@@ -2437,19 +2571,40 @@ ParserWriteFunc(nsIInputStream* in,
     return NS_ERROR_FAILURE;
   }
 
-  if(pws->mNeedCheckFirst4Bytes && (count >= 4)) { 
+  if(pws->mNeedCharsetCheck) { 
     nsCharsetSource guessSource; 
-    nsAutoString guess; 
+    nsAutoString guess, preferred; 
   
-    pws->mNeedCheckFirst4Bytes = PR_FALSE; 
-    if(detectByteOrderMark((const unsigned char*)buf, 
-                           theNumRead, guess, guessSource)) 
-      { 
+    pws->mNeedCharsetCheck = PR_FALSE; 
+    if(pws->mParser->DetectMetaTag(buf, theNumRead,
+                                   guess, guessSource) ||
+       ((count >= 4) && 
+        DetectByteOrderMark((const unsigned char*)buf, 
+                            theNumRead, guess, guessSource))) { 
 #ifdef DEBUG_XMLENCODING 
-        printf("xmlencoding detect- %s\n", guess.ToNewCString()); 
+      printf("xmlencoding detect- %s\n", guess.ToNewCString()); 
 #endif 
-        pws->mParser->SetDocumentCharset(guess, guessSource); 
-      } 
+      nsCOMPtr<nsICharsetAlias> alias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
+      result = alias->GetPreferred(guess, preferred);
+      if (NS_SUCCEEDED(result)) {
+        guess.Assign(preferred);
+      }
+      pws->mParser->SetDocumentCharset(guess, guessSource); 
+      pws->mParser->SetSinkCharset(guess);
+      nsCOMPtr<nsICachingChannel> channel(do_QueryInterface(pws->mRequest));
+      if (channel) {
+        nsCOMPtr<nsISupports> cacheToken;
+        channel->GetCacheToken(getter_AddRefs(cacheToken));
+        if (cacheToken) {
+          nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor(do_QueryInterface(cacheToken));
+          if (cacheDescriptor) {
+            nsresult rv = cacheDescriptor->SetMetaDataElement("charset",
+                                                              NS_ConvertUCS2toUTF8(guess).get());
+            NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
+          }
+        }
+      }
+    } 
   } 
 
   if(pws->mParserFilter) 
@@ -2503,11 +2658,12 @@ NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail
 
     PRUint32 totalRead;
     ParserWriteStruct pws;
-    pws.mNeedCheckFirst4Bytes = 
-              ((0 == sourceOffset) && (mCharsetSource<kCharsetFromAutoDetection)); 
+    pws.mNeedCharsetCheck = 
+              ((0 == sourceOffset) && (mCharsetSource<kCharsetFromMetaTag)); 
     pws.mParser = this;
     pws.mParserFilter = mParserFilter;
     pws.mScanner = theContext->mScanner;
+    pws.mRequest = request;
 
     result = pIStream->ReadSegments(ParserWriteFunc, (void*)&pws, aLength, &totalRead);
     if (NS_FAILED(result)) {

@@ -212,6 +212,7 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD FlushPendingNotifications();
+  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
@@ -5034,7 +5035,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       title.CompressWhitespace();
 
       element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
-
       element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
       media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
 
@@ -5117,6 +5117,16 @@ HTMLContentSink::FlushPendingNotifications()
   }
 
   return result;
+}
+
+NS_IMETHODIMP 
+HTMLContentSink::SetDocumentCharset(nsAWritableString& aCharset)
+{
+  if (mDocument) {
+    return mDocument->SetDocumentCharacterSet(aCharset);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -702,6 +702,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
             }
           }
     }
+
     nsresult rv_detect = NS_OK;
     if(! gInitDetector)
     {
@@ -732,6 +733,22 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     nsXPIDLCString urlSpec;
     aURL->GetSpec(getter_Copies(urlSpec));
 
+    if (cacheDescriptor && urlSpec)
+    {
+      if (kCharsetFromCache > charsetSource) 
+      {
+        nsXPIDLCString cachedCharset;
+        rv = cacheDescriptor->GetMetaDataElement("charset",
+                                                 getter_Copies(cachedCharset));
+        if (NS_SUCCEEDED(rv) && PL_strlen(cachedCharset) > 0)
+        {
+          charset.AssignWithConversion(cachedCharset);
+          charsetSource = kCharsetFromCache;
+        }
+      }    
+      rv = NS_OK;
+    }
+
     if (scheme && nsCRT::strcasecmp("about", scheme) && (kCharsetFromBookmarks > charsetSource))
     {
       nsCOMPtr<nsIRDFDataSource>  datasource;
@@ -756,22 +773,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
            }
        }
     } 
-
-    if (cacheDescriptor && urlSpec)
-    {
-      if (kCharsetFromCache > charsetSource) 
-      {
-        nsXPIDLCString cachedCharset;
-        rv = cacheDescriptor->GetMetaDataElement("charset",
-                                                 getter_Copies(cachedCharset));
-        if (NS_SUCCEEDED(rv) && PL_strlen(cachedCharset) > 0)
-        {
-          charset.AssignWithConversion(cachedCharset);
-          charsetSource = kCharsetFromCache;
-        }
-      }    
-      rv = NS_OK;
-    }
 
     if (kCharsetFromParentFrame > charsetSource) {
       if (dcInfo) {
