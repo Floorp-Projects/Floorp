@@ -395,6 +395,43 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
+{
+    PRBool enabled;
+
+    UpdateEnabled(&enabled);
+    if (!enabled)
+        return NS_OK;
+
+    VERSION              cVersion;
+    char*                tempCString;
+    REGERR               status;
+    
+    tempCString = component.ToNewCString();
+
+    status = VR_GetVersion( tempCString, &cVersion );
+
+    version.SetString("");
+
+    /* if we got the version */
+    if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK) 
+    {
+        nsInstallVersion regNameVersion;
+        
+        regNameVersion.Init(cVersion.major, 
+                            cVersion.minor, 
+                            cVersion.release, 
+                            cVersion.build);
+
+        regNameVersion.ToString(version);
+    }
+    
+    if (tempCString)
+        delete [] tempCString;
+
+    return NS_OK;
+}
 
 
 // this will take a nsIURI, and create a temporary file.  If it is local, we just us it.

@@ -488,6 +488,37 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
   return JS_TRUE;
 }
 
+//
+// Native method GetVersion
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
+  
+  nsAutoString regname;
+  nsAutoString version;
+
+  *rval = JSVAL_NULL;
+
+  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
+    return JS_FALSE;
+
+  // get the registry name argument
+  ConvertJSValToStr(regname, cx, argv[0]);
+
+  if(NS_OK != nativeThis->GetVersion(regname, version))
+  {
+        return JS_FALSE;
+  }
+  
+  if(version.Equals(""))
+      *rval = JSVAL_NULL;
+    else
+      ConvertStrToJSVal(version, cx, rval);
+
+  return JS_TRUE;
+}
 
 /***********************************************************************/
 //
@@ -516,6 +547,7 @@ static JSFunctionSpec InstallTriggerGlobalMethods[] =
   {"StartSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
   {"ConditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
   {"CompareVersion",            InstallTriggerGlobalCompareVersion,            5},
+  {"GetVersion",                InstallTriggerGlobalGetVersion,                2},
   {0}
 };
 

@@ -23,4 +23,5 @@ interface InstallTriggerGlobal
 
     long CompareVersion( in wstring regName, in wstring version );
 
+    wstring GetVersion( in wstring component );
 };

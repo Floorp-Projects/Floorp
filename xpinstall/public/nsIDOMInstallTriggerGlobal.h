@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #ifndef nsIDOMInstallTriggerGlobal_h__
 #define nsIDOMInstallTriggerGlobal_h__
@@ -57,6 +56,9 @@ public:
   NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)=0;
   NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)=0;
   NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)=0;
+
+  NS_IMETHOD    GetVersion(const nsString& component, nsString& version)=0;
+
 };
 
 
@@ -74,6 +76,7 @@ public:
   NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn);  \
   NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn);  \
   NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);  \
+  NS_IMETHOD    GetVersion(const nsString& component, nsString& version); \
 
 
 
@@ -91,6 +94,7 @@ public:
   NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn) { return _to##CompareVersion(aRegName, aMajor, aMinor, aRelease, aBuild, aReturn); }  \
   NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn) { return _to##CompareVersion(aRegName, aVersion, aReturn); }  \
   NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn) { return _to##CompareVersion(aRegName, aVersion, aReturn); }  \
+  NS_IMETHOD    GetVersion(const nsString& component, nsString& version); { return _to##GetVersion(component, version); }  \
 
 
 extern nsresult NS_InitInstallTriggerGlobalClass(nsIScriptContext *aContext, void **aPrototype);
