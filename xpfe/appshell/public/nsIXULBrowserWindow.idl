@@ -28,6 +28,8 @@
  * it's ui. 
  */
 
+interface nsIChannel;
+
 [scriptable, uuid(46B4015C-0121-11d4-9877-00C04FA0D27A)]
 interface nsIXULBrowserWindow : nsISupports
 {
@@ -52,14 +54,10 @@ interface nsIXULBrowserWindow : nsISupports
 	void setDefaultStatus(in wstring status);
 
 	/*
-	 Tells the browser window if there is network activity or not.
+	 Tells the browser window that there is a status change with the window.
+	 These status flags are specified in nsIWebProgress.
 	*/
-	void setNetworkActive(in boolean active);
-
-	/*
-	 Tells the browser window that there is activity in the window.
-	*/
-	void setWindowActive(in boolean active);
+	void onStatusChange(in nsIChannel aChannel, in unsigned long aProgressStatusFlags);
 
 	/*
 	 Tells the browser window that the location of the window has changed.
