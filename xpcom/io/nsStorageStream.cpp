@@ -34,11 +34,42 @@
 #include "nsCOMPtr.h"
 #include "prbit.h"
 
+#include "prlog.h"
+
+#if defined(PR_LOGGING)
+//
+// Log module for StorageStream logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=StorageStreamLog:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* StorageStreamLog = nsnull;
+
+#endif /* PR_LOGGING */
+
 nsStorageStream::nsStorageStream()
     : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(PR_FALSE),
       mLastSegmentNum(-1), mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0)
 {
     NS_INIT_REFCNT();
+
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for socket transport logging 
+    // if necessary...
+    //
+    if (nsnull == StorageStreamLog) {
+        StorageStreamLog = PR_NewLogModule("StorageStreamLog");
+    }
+#endif /* PR_LOGGING */
+
+  PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+         ("Creating nsStorageStream [%x].\n", this));
 }
 
 nsStorageStream::~nsStorageStream()
@@ -47,27 +78,9 @@ nsStorageStream::~nsStorageStream()
 	    delete mSegmentedBuffer;
 }
 
-NS_IMPL_ADDREF(nsStorageStream)
-NS_IMPL_RELEASE(nsStorageStream)
-
-// Multiple inheritance requires customized QI
-NS_IMETHODIMP
-nsStorageStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (aInstancePtr == nsnull)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(NS_GET_IID(nsIStorageStream)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        NS_ADDREF(this);
-        *aInstancePtr = NS_STATIC_CAST(nsIStorageStream*, this);
-        return NS_OK;
-    } else if (aIID.Equals(NS_GET_IID(nsIOutputStream))) {
-        NS_ADDREF(this);
-        *aInstancePtr = NS_STATIC_CAST(nsIOutputStream*, this);
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsStorageStream,
+                   nsIStorageStream,
+                   nsIOutputStream)
 
 NS_IMETHODIMP
 nsStorageStream::Init(PRUint32 segmentSize, PRUint32 maxSize,
@@ -129,6 +142,10 @@ nsStorageStream::Close()
     mWriteCursor = 0;
     mSegmentEnd = 0;
 
+    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+           ("nsStorageStream [%x] Close mWriteCursor=%x mSegmentEnd=%x\n",
+            this, mWriteCursor, mSegmentEnd));
+
     return NS_OK;
 }
 
@@ -148,19 +165,27 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
     NS_ENSURE_ARG_POINTER(aNumWritten);
     NS_ENSURE_ARG(aBuffer);
 
+    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+           ("nsStorageStream [%x] Write mWriteCursor=%x mSegmentEnd=%x aCount=%d\n",
+            this, mWriteCursor, mSegmentEnd, aCount));
+
     remaining = aCount;
     readCursor = aBuffer;
     while (remaining) {
         availableInSegment = mSegmentEnd - mWriteCursor;
         if (!availableInSegment) {
             mWriteCursor = mSegmentedBuffer->AppendNewSegment();
-            mLastSegmentNum++;
             if (!mWriteCursor) {
+                mSegmentEnd = 0;
                 rv = NS_ERROR_OUT_OF_MEMORY;
                 goto out;
             }
+            mLastSegmentNum++;
             mSegmentEnd = mWriteCursor + mSegmentSize;
             availableInSegment = mSegmentEnd - mWriteCursor;
+            PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+                   ("nsStorageStream [%x] Write (new seg) mWriteCursor=%x mSegmentEnd=%x\n",
+                    this, mWriteCursor, mSegmentEnd));
         }
 	
         count = PR_MIN(availableInSegment, remaining);
@@ -168,12 +193,18 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
         remaining -= count;
         readCursor += count;
         mWriteCursor += count;
+        PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+               ("nsStorageStream [%x] Writing mWriteCursor=%x mSegmentEnd=%x count=%d\n",
+                this, mWriteCursor, mSegmentEnd, count));
     };
 
  out:
     *aNumWritten = aCount - remaining;
     mLogicalLength += *aNumWritten;
 
+    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+           ("nsStorageStream [%x] Wrote mWriteCursor=%x mSegmentEnd=%x numWritten=%d\n",
+            this, mWriteCursor, mSegmentEnd, *aNumWritten));
     return rv;
 }
 
@@ -236,17 +267,26 @@ nsStorageStream::Seek(PRInt32 aPosition)
     if (aPosition == 0) {
         mWriteCursor = 0;
         mSegmentEnd = 0;
+        PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+               ("nsStorageStream [%x] Seek mWriteCursor=%x mSegmentEnd=%x\n",
+                this, mWriteCursor, mSegmentEnd));
         return NS_OK;
     }
 
     // Segment may have changed, so reset pointers
     mWriteCursor = mSegmentedBuffer->GetSegment(mLastSegmentNum);
+    NS_ASSERTION(mWriteCursor, "null mWriteCursor");
     mSegmentEnd = mWriteCursor + mSegmentSize;
     PRInt32 segmentOffset = SegOffset(aPosition);
     mWriteCursor += segmentOffset;
     
+    PR_LOG(StorageStreamLog, PR_LOG_DEBUG, 
+           ("nsStorageStream [%x] Seek mWriteCursor=%x mSegmentEnd=%x\n",
+            this, mWriteCursor, mSegmentEnd));
     return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // There can be many nsStorageInputStreams for a single nsStorageStream
 class nsStorageInputStream : public nsIInputStream
