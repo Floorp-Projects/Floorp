@@ -42,7 +42,8 @@
 
 #define SIMULATE_WIN95_ON_NT true
 #ifdef SIMULATE_WIN95_ON_NT
-#define IsRunningOnNT	FALSE
+static XP_Bool useSystemW = FALSE;
+#define IsRunningOnNT	useSystemW
 #else
 #define IsRunningOnNT	sysInfo.m_bWinNT
 #endif
@@ -958,8 +959,142 @@ BOOL CIntlWin::ExtTextOut(int16 wincsid, HDC pDC, int x, int y, UINT nOptions, L
 #endif /* MOZ_NGLAYOUT */
 }
 
+
+
+static int intlwin_SLDrawTextExW(
+	HDC hdc, LPWSTR text, int len,LPRECT lprc,UINT flag,LPDRAWTEXTPARAMS lpparam)
+{
+	// XP_ASSERT(DT_SINGLELINE & flag);
+	int ext = 0;
+	SIZE sz;
+	int x,y;
+	::GetTextExtentPoint32W(hdc, text, len, &sz);
+	if(flag & DT_CALCRECT)
+	{
+		lprc->top = 0;
+		lprc->left = 0;
+		lprc->right = sz.cx;
+		lprc->bottom = sz.cy;
+		return sz.cy;
+	}		
+	if(flag & DT_EXTERNALLEADING)
+	{
+		TEXTMETRIC tm;
+		GetTextMetrics( hdc, &tm);
+		ext = tm.tmExternalLeading;
+	}
+
+	//	Caculate X 
+	x = lprc->left;
+	if(flag & DT_CENTER)	
+		x = (lprc->left + lprc->right - sz.cx) / 2;
+	else if(flag & DT_RIGHT)
+		x = lprc->right - sz.cx;
+
+	//	Caculate Y
+	y = lprc->top ;
+	if(flag & DT_VCENTER)
+		y = ( lprc->top + lprc->bottom - sz.cy ) / 2;
+	else if(flag & DT_BOTTOM)
+		y = lprc->bottom - sz.cy;
+
+	return  ext + ::TextOutW(hdc, x, y, text, len);
+
+}
+static int intlwin_MLDrawTextExW(
+	HDC hdc, LPWSTR text, int len,LPRECT lprc,UINT flag,LPDRAWTEXTPARAMS lpparam)
+{
+	// Not implement yet. Call the 	intlwin_SLDrawTextExW for now.
+	return intlwin_SLDrawTextExW(hdc,text,len, lprc, flag, lpparam);
+}
+static LPWSTR intlwin_ExpandTabsAndCollapAmps(
+	LPWSTR text, int len, int* outLen, 	
+	XP_Bool expandTab, XP_Bool havePrefix, int tabstop )
+{
+	int tabs=0;
+	int i;
+	LPWSTR outText=NULL;
+	if(expandTab)
+	{
+		for(i = 0; i < len; i++)
+		{
+			if(0x0009 == text[i])
+				tabs++;
+		}
+	}
+	int alloclen = len + tabs * tabstop;
+	outText = (WCHAR*) XP_ALLOC(alloclen * sizeof(WCHAR));
+	
+	XP_ASSERT(outText != NULL);
+	if(NULL != outText)
+	{
+		int j=0;
+		for(i = 0; i < len; i++)
+		{
+			if(expandTab && ( 0x0009 == text[i] ))
+			{
+				for(int k = 0; k < tabstop; k++)
+					outText[j++] = 0x0020;
+			} else if(havePrefix && 
+				( i < (len-1)) && 
+				(0x0026 == text[i]) && 
+				(0x0026 == text[i+1])
+				)
+			{
+				outText[j++] = text[i];
+				i++;
+			} else {
+				outText[j++] = text[i];
+			}
+		}
+		*outLen = j;
+	}
+	else
+	{
+		*outLen = 0;
+	}
+	return outText;
+}
+
+static int intlwin_DrawTextExW(
+	HDC hdc, LPWSTR text, int len,LPRECT lprc,UINT flag,LPDRAWTEXTPARAMS lpparam)
+{
+	int h;
+	// Expand Tab and eat PREFIX here
+	LPWSTR exp = NULL;
+	
+	if((flag & DT_EXPANDTABS) || (DT_NOPREFIX != (flag & DT_NOPREFIX)))
+	{
+		int explen;
+		int ts = 8;
+		if(flag & DT_TABSTOP)
+		{
+			ts = (flag >> 8) & 0x00FF;
+			flag &= 0x00FF;
+		}
+			
+		
+		exp = intlwin_ExpandTabsAndCollapAmps(text, len, &explen,
+			((flag & DT_EXPANDTABS)? TRUE : FALSE),
+			((flag & DT_NOPREFIX)? FALSE : TRUE),
+			ts);
+		text = exp;
+		len = explen;
+	}
+
+	if(DT_SINGLELINE & flag)
+		h = intlwin_SLDrawTextExW(hdc, text, len, lprc, flag, lpparam);
+	else
+		h = intlwin_MLDrawTextExW(hdc, text, len, lprc, flag, lpparam);
+	XP_FREEIF(exp);
+	return h;
+}
+
+
 #ifdef XP_WIN32
-int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPRECT lprc,UINT dwDTFormat,LPDRAWTEXTPARAMS lpDTParams)
+int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, 
+			LPSTR lpchText, int cchText,
+			LPRECT lprc,UINT flag,LPDRAWTEXTPARAMS lpParams)
 {
 #ifdef MOZ_NGLAYOUT
   XP_ASSERT(0);
@@ -973,49 +1108,24 @@ int CIntlWin::DrawTextEx(int16 wincsid, HDC hdc, LPSTR lpchText, int cchText,LPR
 	if (cchText == -1)
 		cchText = strlen(lpchText);
 
-    if ( CIntlWin::UseUnicodeFontAPI(wincsid))
+	if ( CIntlWin::UseUnicodeFontAPI(wincsid))
 	{
 
 		// DrawTextExW and DrawTextW is not working on Win95 right now. See Note above
-		if( (IsRunningOnNT) && (wlen = MultiByteToWideChar(wincsid, lpchText, cchText)))
-		{
-			return ::DrawTextW(hdc, m_wConvBuf, wlen, lprc, dwDTFormat);
-		}
-		int x, y;
-		SIZE sz;
-		CIntlWin::GetTextExtentPoint(wincsid, hdc, lpchText, cchText, &sz);
+		wlen = MultiByteToWideChar(wincsid, lpchText, cchText);
 
-		if(dwDTFormat & DT_CALCRECT)
-		{
-			lprc->top = 0;
-			lprc->left = 0;
-			lprc->right = sz.cx;
-			lprc->bottom = sz.cy;
-			return sz.cy;
-		}		
+		if( IsRunningOnNT)
+			return ::DrawTextW(hdc, m_wConvBuf, wlen, lprc, flag);
+		else
+			return intlwin_DrawTextExW(hdc, m_wConvBuf, wlen, lprc, flag,lpParams);
 
-		//	Caculate X 
-		x = lprc->left;
-		if(dwDTFormat & DT_CENTER)	
-			x = (lprc->left + lprc->right - sz.cx) / 2;
-		else if(dwDTFormat & DT_RIGHT)
-			x = lprc->right - sz.cx;
-
-		//	Caculate Y
-		y = lprc->top ;
-		if(dwDTFormat & DT_VCENTER)
-			y = ( lprc->top + lprc->bottom - sz.cy ) / 2;
-		else if(dwDTFormat & DT_BOTTOM)
-			y = lprc->bottom - sz.cy;
-
-		return  CIntlWin::TextOut(wincsid, hdc, x, y, lpchText, cchText);
 	}
-    else
+	else
 	{
 		if (IsRunningOnNT)
-			iRetval =  ::DrawText(hdc, lpchText, cchText, lprc, dwDTFormat);
+			iRetval =  ::DrawText(hdc, lpchText, cchText, lprc, flag);
 		else
-			iRetval =  ::DrawTextEx(hdc, lpchText, cchText, lprc, dwDTFormat, lpDTParams);
+			iRetval =  ::DrawTextEx(hdc, lpchText, cchText, lprc, flag, lpParams);
 	}
 	return iRetval;
 #endif /* MOZ_NGLAYOUT */
