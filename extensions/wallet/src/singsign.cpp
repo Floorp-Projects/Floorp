@@ -83,6 +83,8 @@ PRIVATE int
 si_SaveSignonDataInKeychain();
 #endif
 
+#define USERNAMEFIELD "\\=username=\\"
+#define PASSWORDFIELD "\\=password=\\"
 
 /*************************************
  * Externs to Routines in Wallet.cpp *
@@ -2354,6 +2356,7 @@ PUBLIC void
 SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
+  nsAutoString correctedName;
 
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
@@ -2365,14 +2368,29 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
     si_UserHasBeenSelected = PR_FALSE;
   }
 
+  /* Correct the field name to avoid mistaking for fields in browser-generated form
+   *
+   *   Note that data saved for browser-generated logins (e.g. http authentication)
+   *   use artificial field names starting with * \= (see USERNAMEFIELD and PASSWORDFIELD.
+   *   To avoid mistakes whereby saved logins for http authentication is then prefilled
+   *   into a field on the html form at the same URL, we will prevent html field names
+   *   from starting with \=.  We do that by doubling up a backslash if it appears in the
+   *   first character position
+   */
+  if (*name == '\\') {
+    correctedName = nsAutoString('\\') + name;
+  } else {
+    correctedName = name;
+  }
+
   /* determine if name has been saved (avoids unlocking the database if not) */
   PRBool nameFound = PR_FALSE;
-  user = si_GetUser(URLName, PR_FALSE, nsAutoString(name));
+  user = si_GetUser(URLName, PR_FALSE, correctedName);
   if (user) {
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i=0; i<dataCount; i++) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-      if(name && data->name == name) {
+      if(correctedName.Length() && (data->name == correctedName)) {
         nameFound = PR_TRUE;
       }
     }
@@ -2396,7 +2414,7 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
     SI_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
     user = si_GetUser(URLName, PR_TRUE, NULL);
     data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0)); /* 1st item on form */
-    if(data->isPassword && name && PL_strcmp(data->name, name)==0) {
+    if(data->isPassword && correctedName.Length() && (data->name == correctedName)) {
       /* current item is first item on form and is a password */
       user = (URLName, MK_SIGNON_PASSWORDS_FETCH);
       if (user) {
@@ -2417,15 +2435,15 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
 
   /* restore the data from previous time this URL was visited */
 
-  user = si_GetUser(URLName, PR_FALSE, nsAutoString(name));
+  user = si_GetUser(URLName, PR_FALSE, correctedName);
   if (user) {
     SI_LoadSignonData(PR_TRUE); /* this destroys user so need to recaculate it */
-    user = si_GetUser(URLName, PR_FALSE, nsAutoString(name));
+    user = si_GetUser(URLName, PR_FALSE, correctedName);
     if (user) { /* will be 0 if user failed to unlock database in SI_LoadSignonData above */
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
       for (PRInt32 i=0; i<dataCount; i++) {
         data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-        if(name && data->name == name) {
+        if(correctedName.Length() && (data->name == correctedName)) {
           *value = (data->value).ToNewUnicode();
           si_unlock_signon_list();
           return;
@@ -2448,12 +2466,12 @@ si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsA
 
   nsVoidArray * signonData = new nsVoidArray();
   si_SignonDataStruct * data1 = new si_SignonDataStruct;
-  data1 -> name = nsAutoString("username");
+  data1 -> name = nsAutoString(USERNAMEFIELD);
   data1 -> value = nsAutoString(username);
   data1 -> isPassword = PR_FALSE;
   signonData->AppendElement(data1);
   si_SignonDataStruct * data2 = new si_SignonDataStruct;
-  data2 -> name = nsAutoString("password");
+  data2 -> name = nsAutoString(PASSWORDFIELD);
   data2 -> value = nsAutoString(password);
   data2 -> isPassword = PR_TRUE;
   signonData->AppendElement(data2);
@@ -2483,9 +2501,9 @@ si_RestoreOldSignonDataFromBrowser
   /* get the data from previous time this URL was visited */
   si_lock_signon_list();
   if (username.Length() != 0) {
-    user = si_GetSpecificUser(URLName, username, nsAutoString("username"));
+    user = si_GetSpecificUser(URLName, username, nsAutoString(USERNAMEFIELD));
   } else {
-    user = si_GetUser(URLName, pickFirstUser, nsAutoString("username"));
+    user = si_GetUser(URLName, pickFirstUser, nsAutoString(USERNAMEFIELD));
   }
   if (!user) {
     /* leave original username and password from caller unchanged */
@@ -2496,9 +2514,9 @@ si_RestoreOldSignonDataFromBrowser
   }
   SI_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
   if (username.Length() != 0) {
-    user = si_GetSpecificUser(URLName, username, nsAutoString("username"));
+    user = si_GetSpecificUser(URLName, username, nsAutoString(USERNAMEFIELD));
   } else {
-    user = si_GetUser(URLName, pickFirstUser, nsAutoString("username"));
+    user = si_GetUser(URLName, pickFirstUser, nsAutoString(USERNAMEFIELD));
   }
   if (!user) {
     /* user failed to unlock the database in SI_LoadSignonData above */
@@ -2510,9 +2528,9 @@ si_RestoreOldSignonDataFromBrowser
   PRInt32 dataCount = LIST_COUNT(user->signonData_list);
   for (PRInt32 i=0; i<dataCount; i++) {
     data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
-    if(data->name == "username") {
+    if(data->name == USERNAMEFIELD) {
       username = data->value;
-    } else if(data->name == "password") {
+    } else if(data->name == PASSWORDFIELD) {
       password = data->value;
     }
   }

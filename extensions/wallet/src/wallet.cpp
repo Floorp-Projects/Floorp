@@ -3840,7 +3840,21 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                       if (NS_SUCCEEDED(rv)) {
                         data = new si_SignonDataStruct;
                         data->value = value;
-                        data->name = field;
+                        if (field.CharAt(0) == '\\') {
+                          /*
+                           * Note that data saved for browser-generated logins (e.g. http
+                           * authentication) use artificial field names starting with
+                           * \= (see USERNAMEFIELD and PASSWORDFIELD in singsign.cpp).  To
+                           * avoid mistakes whereby saved logins for http authentication is
+                           * then prefilled into a field on the html form at the same URL,
+                           * we will prevent html field names from starting with \=.  We
+                           * do that by doubling up a backslash if it appears in the first
+                           * character position
+                           */
+                          data->name = nsAutoString('\\') + field;
+                        } else {
+                          data->name = field;
+                        }
                         data->isPassword = isPassword;
                         signonData->AppendElement(data);
 #ifdef AutoCapture
