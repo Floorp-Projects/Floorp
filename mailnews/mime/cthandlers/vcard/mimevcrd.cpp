@@ -218,7 +218,7 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
     res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
     if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
       PRInt32 srcLen = inLength;
-      res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
+      res = decoder->GetMaxLength(inBuffer, srcLen, &unicharLength);
       // temporary buffer to hold unicode string
       unichars = new PRUnichar[unicharLength];
       if (unichars == nsnull) {
