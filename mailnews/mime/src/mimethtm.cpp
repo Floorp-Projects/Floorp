@@ -155,20 +155,32 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
         PL_strncasestr(line, "CHARSET", length) 
         ) 
     { 
-      char *cp1 = PL_strncasestr(line, "CHARSET", length);
-      if (cp1)
+      char *workLine = (char *)PR_Malloc(length + 1);
+      if (workLine)
       {
-        char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-line)) ) + 1; 
+        nsCRT::memset(workLine, 0, length + 1);
+        PL_strncpy(workLine, line, length);
+        char *cp1 = PL_strncasestr(workLine, "CHARSET", length);
+        if (cp1)
+        {
+          char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-line)) ) + 1; 
 
-        char seps[]   = " \"\'"; 
-        char *token; 
-        char* newStr; 
-        token = nsCRT::strtok(cp, seps, &newStr); 
-        if (token != NULL) 
-        { 
-          textHTML->charset = nsCRT::strdup(token); 
-        } 
+          char seps[]   = " \"\'"; 
+          char *token; 
+          char* newStr; 
+          token = nsCRT::strtok(cp, seps, &newStr); 
+          if (token != NULL) 
+          { 
+            textHTML->charset = nsCRT::strdup(token); 
+          } 
+        }
+
+        PR_FREEIF(workLine);
       }
+
+      // Eat the META tag line that specifies CHARSET!
+      if (textHTML->charset)
+        return 0;
     }
   }
 

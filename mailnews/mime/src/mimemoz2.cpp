@@ -644,10 +644,6 @@ mime_display_stream_complete (nsMIMESession *stream)
     if ( (obj->options) && (obj->options->prefs) )
       nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
     
-    // Release the conversion object
-    if ( (obj->options) && (obj->options->conv) )
-      NS_RELEASE(obj->options->conv);
-
     if ((obj->options) && (obj->options->headers == MimeHeadersOnly))
       abortNow = PR_TRUE;
 
@@ -670,6 +666,11 @@ mime_display_stream_complete (nsMIMESession *stream)
         MimeFreeAttachmentList(attachments);
       }
     }
+
+    // Release the conversion object - this has to be done after
+    // we finish processing data.
+    if ( (obj->options) && (obj->options->conv) )
+      NS_RELEASE(obj->options->conv);
 
     // Destroy the object now.
     PR_ASSERT(msd->options == obj->options);
