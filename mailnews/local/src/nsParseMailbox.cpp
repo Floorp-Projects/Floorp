@@ -200,7 +200,7 @@ int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURL* aURL, nsIInputStream *
 		// OK, this sucks, but we're going to have to copy into our
 		// own byte buffer, and then pass that to the line buffering code,
 		// which means a couple buffer copies.
-		ret = aIStream->Read(m_inputStream.GetBuffer(), 0, aLength, &bytesRead);
+		ret = aIStream->Read(m_inputStream.GetBuffer(), aLength, &bytesRead);
 		if (ret == NS_OK)
 			ret = BufferInput(m_inputStream.GetBuffer(), m_inputStream.GetSize());
 	}
