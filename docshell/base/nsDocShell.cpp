@@ -2742,13 +2742,31 @@ NS_IMETHODIMP nsDocShell::EnsureGlobalHistory()
 NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, 
    PRBool* aShouldAdd)
 {
-   if(typeContent == mItemType)
+   *aShouldAdd = PR_FALSE;
+   if(!aURI || (typeContent != mItemType))
+      return NS_OK;
+
+   nsXPIDLCString scheme;
+   NS_ENSURE_SUCCESS(aURI->GetScheme(getter_Copies(scheme)), NS_ERROR_FAILURE);
+   
+   nsAutoString schemeStr(scheme);
+
+   // The model is really if we don't know differently then add which basically
+   // means we are suppose to try all the things we know not to allow in and
+   // then if we don't bail go on and allow it in.  But here lets compare
+   // against the most common case we know to allow in and go on and say yes
+   // to it.
+   if(schemeStr.Equals("http") || schemeStr.Equals("https"))
       {
       *aShouldAdd = PR_TRUE;
       return NS_OK;
       }
 
-   *aShouldAdd = PR_FALSE;
+   if(schemeStr.Equals("about") || schemeStr.Equals("imap") ||
+      schemeStr.Equals("news") || schemeStr.Equals("mailbox"))
+      return NS_OK;
+
+   *aShouldAdd = PR_TRUE;
 
    return NS_OK;
 }
