@@ -431,10 +431,12 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
          // Windows platform in widget/src/windows/nsWindow.cpp: See bug 16486
          // Note: if Shift is pressed at the same time, do not to_lower()
          // Because Ctrl+Shift has different function with Ctrl
-         if ( !anEvent.isShift &&
-              anEvent.charCode >= GDK_A &&
-              anEvent.charCode <= GDK_Z )
-           anEvent.charCode = gdk_keyval_to_lower(anEvent.charCode);
+        if ( (anEvent.charCode >= GDK_A && anEvent.charCode <= GDK_Z) ||
+             (anEvent.charCode >= GDK_a && anEvent.charCode <= GDK_z) ) {
+          anEvent.charCode = (anEvent.isShift) ? 
+            gdk_keyval_to_upper(anEvent.charCode) : 
+            gdk_keyval_to_lower(anEvent.charCode);
+        }
       }
     } else {
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
