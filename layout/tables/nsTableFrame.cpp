@@ -135,12 +135,14 @@ struct nsTableReflowState {
     if (NS_UNCONSTRAINEDSIZE != availSize.width) {
       availSize.width -= borderPadding.left + borderPadding.right
                          + (2 * cellSpacingX);
+      availSize.width = PR_MAX(0, availSize.width);
     }
 
     availSize.height = aAvailHeight;
     if (NS_UNCONSTRAINEDSIZE != availSize.height) {
       availSize.height -= borderPadding.top + borderPadding.bottom
                           + (2 * table->GetCellSpacingY());
+      availSize.height = PR_MAX(0, availSize.height);
     }
 
     footerFrame      = nsnull;
