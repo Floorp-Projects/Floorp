@@ -238,7 +238,7 @@ NS_IMETHODIMP nsAccessible::Init()
     nsCOMPtr<nsIDOM3Node> dom3Node(do_QueryInterface(content));
     if (dom3Node) {
       nsAutoString prefix;
-      NS_NAMED_LITERAL_STRING(kRolesWAI_Namespace, "http://www.w3.org/wai/pf/GUIRoleTaxonomy#");
+      NS_NAMED_LITERAL_STRING(kRolesWAI_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
       dom3Node->LookupPrefix(kRolesWAI_Namespace, prefix);
       prefix += ':';
       if (StringBeginsWith(roleString, prefix)) {
