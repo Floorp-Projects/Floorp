@@ -1637,7 +1637,7 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	if (aWidget->fieldlen.max_len)
 		aWidget->fieldlen.length = aWidget->fieldlen.max_len;
 	else if (aWidget->fieldlen.min_len)
-		aWidget->fieldlen.length = aWidget->fieldlen.min_len;
+		aWidget->fieldlen.length = MAX_SIZE;
 	else 
 		aWidget->fieldlen.length = MAX_SIZE;
 	
