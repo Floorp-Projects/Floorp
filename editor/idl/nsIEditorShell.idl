@@ -131,6 +131,10 @@ interface nsIEditorShell : nsISupports
   void FindNext();
 
   /* General Utilities */
+
+  /* UI updating */
+  void UpdateInterfaceState();
+
   /* Get string from the Editor's localized string bundle */
   wstring GetString(in wstring name);
 
