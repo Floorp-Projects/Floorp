@@ -1662,15 +1662,13 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
 
 /*
  * On some platforms, for example SunOS 4, struct tm has two additional
- * fields: tm_zone and tm_gmtoff.  The following code attempts to obtain
- * values for these two fields.
+ * fields: tm_zone and tm_gmtoff.
  */
 
-#if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS)
-    if (mktime(&a) == -1) {
-        PR_snprintf(buf, buflen, "can't get timezone");
-        return 0;
-    }
+#if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS) \
+        || defined(NETBSD)
+    a.tm_zone = NULL;
+    a.tm_gmtoff = tm->tm_params.tp_gmt_offset + tm->tm_params.tp_dst_offset;
 #endif
 
     return strftime(buf, buflen, fmt, &a);
