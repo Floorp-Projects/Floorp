@@ -1889,31 +1889,6 @@ function getTabForObject (source, create)
     
 }
 
-function retrieveURLFromData (aData, flavour)
-{
-    switch (flavour) 
-    {
-        case "text/unicode":
-            if (aData.search(client.linkRE) != -1)
-                return aData;
-            else
-                return null;
-
-        case "text/x-moz-url":
-            var data = aData.toString();
-            var separator = data.indexOf("\n");
-            if (separator != -1)
-                data = data.substr(0, separator);
-            return data;
-
-        case "application/x-moz-file":
-            return aData.URL;
-    }
-
-    return null;                                                   
-}
-
-
 var contentDropObserver = new Object();
 
 contentDropObserver.onDragOver =
@@ -1932,8 +1907,8 @@ function tabdnd_dover (aEvent, aFlavour, aDragSession)
 contentDropObserver.onDrop =
 function tabdnd_drop (aEvent, aXferData, aDragSession)
 {
-    var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
-    if (!url)
+    var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    if (!url || url.search(client.linkRE) == -1)
         return;
     
     if (url.search(/\.css$/i) != -1  && confirm (getMsg("tabdnd_drop", url)))

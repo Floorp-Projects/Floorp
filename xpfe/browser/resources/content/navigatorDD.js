@@ -114,7 +114,7 @@ var homeButtonObserver = {
 
   onDrop: function (aEvent, aXferData, aDragSession)
     {
-      var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
       setTimeout(openHomeDialog, 0, url);
     },
 
