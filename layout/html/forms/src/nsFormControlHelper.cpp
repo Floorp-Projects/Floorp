@@ -127,8 +127,8 @@ nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(&mode);
   if (eCompatibility_Standard == mode) {
-    char1 = 'm';
-    char2 = 'a';
+    char1 = 'W';
+    char2 = 'w';
     return eCompatibility_Standard;
   } else {
     char1 = 'W';
@@ -299,10 +299,23 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
       height += scrollbarHeight;
     }
     NS_RELEASE(content);
-
+  } else if (NS_FORM_INPUT_BUTTON == type ||
+             NS_FORM_INPUT_SUBMIT == type ||
+             NS_FORM_INPUT_RESET  == type) {
+    nscoord charWidth = GetTextSize(aPresContext, aFrame, *aSpec.mColDefaultValue, aSize, aRendContext);
+    aSize.width  = NSToCoordRound(aSize.width * t2p);
+    aSize.height = NSToCoordRound(aSize.height * t2p);
+    width  = 3 * aSize.width / 2;
+    height = 3 * aSize.height / 2;
+  } else if (NS_FORM_INPUT_HIDDEN == type) {
+    width  = 0;
+    height = 0;
+  } else {
+    width  = 0;
+    height = 0;
   }
 
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXXX
   printf("********* Nav Quirks: %d,%d  max:%d average:%d ascent:%d descent:%d\n", 
           width, height, maxCharWidth, average, ascent, descent);
 #endif
