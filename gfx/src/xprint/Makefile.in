@@ -81,8 +81,7 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 
 INCLUDES	+= \
-		-I$(srcdir)/../gtk \
+		-I$(srcdir) \
 		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \
-		-I$(srcdir)/../xprint \
 		$(NULL)
