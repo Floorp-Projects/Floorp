@@ -10,6 +10,7 @@ pref-colors.js
 pref-colors.xul
 pref-cookies.xul
 pref-themes.xul
+pref-themes.js
 pref-composer.js
 pref-composer.xul
 pref-debug.xul

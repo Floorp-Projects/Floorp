@@ -34,6 +34,7 @@ install::
 	$(MAKE_INSTALL) pref-colors.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-cookies.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-themes.xul  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-themes.js  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-charset.js  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-charset.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-composer.js  $(DIST)\bin\chrome\communicator\content\pref

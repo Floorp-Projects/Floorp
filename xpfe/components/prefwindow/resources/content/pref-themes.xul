@@ -22,121 +22,45 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
+
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        align="vertical">
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical">
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <script language="JavaScript" src="chrome://communicator/content/pref/pref-themes.js"></script>
+        
+  <box class="box-smallheader" title="&lHeader;"/>
 
-<tabcontrol flex="1" align="vertical">
-  <tabbox>
-    <tab selected="true">Theme View</tab>
-    <tab>Package View</tab>
-  </tabbox>
-  <tabpanel align="horizontal" flex="1">
-    <box flex="1" align="vertical">
-		<tree class="inset" flex="100%">
-			<treecol/>
-      <treehead>
-        <treerow>
-          <treecell value="Themes"/>
-        </treerow>
-      </treehead>
-			<treechildren>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Classic 4.x"/>
-				</treerow>
-			  </treeitem>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Purple and Blue"/>
-				</treerow>
-			  </treeitem>
-			  <treeitem>
-				<treerow>
-				  <treecell value="That 70's Chrome"/>
-				</treerow>
-			  </treeitem>
-			</treechildren>
-		  </tree>
-	  <spring style="width: 2px"/>
-	  <html:fieldset>
-	    <html:legend align="left">
-		  <html:div>Selected Theme: Purple and Blue</html:div> 
-		</html:legend>
-		<html:div>Author: Mozilla.org</html:div>
-		<html:div>Version: 1.0</html:div>
-		<html:div>Site: <html:a href="http://www.mozilla.org" target="_blank">http://www.mozilla.org</html:a></html:div>
-		<html:div>Preview Image:<html:br/>The thumbnail image would go here.</html:div>
-		<html:div>
-		    <titledbutton class="push dialog" value="Apply Theme"/>
-		    <titledbutton class="push dialog" value="Delete Theme"/>
-			<titledbutton class="push dialog" value="View Details"/>
-		</html:div>
-	  </html:fieldset>
-	</box>
-
-	<box flex="1" align="vertical">
-		<tree class="inset" flex="100%">
-			<treecol/>
-      <treehead>
-        <treerow>
-          <treecell value="Packages"/>
-        </treerow>
-      </treehead>
-			<treechildren>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Global"/>
-				</treerow>
-			  </treeitem>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Navigator"/>
-				</treerow>
-			  </treeitem>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Messenger"/>
-				</treerow>
-			  </treeitem>
-			</treechildren>
-		  </tree>
-	  <spring style="width: 2px"/>
-	  <html:fieldset>
-	    <html:legend align="left">Selected Package: Messenger</html:legend>
-		<html:div>Author: Mozilla.org</html:div>
-		<html:div>Version: 1.0</html:div>
-		<html:div>Site: <html:a href="http://www.mozilla.org" target="_blank">http://www.mozilla.org</html:a></html:div>
-		<tree class="inset" flex="100%">
-			  <treecol/>
-			  <treechildren>
-			  <treeitem selected="true">
-				<treerow>
-				  <treecell value="That 70's Chrome"/>
-				</treerow>
-			  </treeitem>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Star Trek"/>
-				</treerow>
-			  </treeitem>
-			  <treeitem>
-				<treerow>
-				  <treecell value="Candy Land"/>
-				</treerow>
-			  </treeitem>
-			  </treechildren>
-		    </tree>
-	  </html:fieldset>
-	</box>
-
-  </tabpanel>
-</tabcontrol>
-
+  <html>&skinIntro.label;</html>
+  
+  <tree class="inset" id="skinsTree" datasources="rdf:chrome" 
+         ref="urn:mozilla:skin:root" flex="1">
+    <treecolgroup>
+       <treecol/>
+    </treecolgroup>
+    <template>
+      <rule>
+        <treechildren>
+          <treeitem uri="..." author="rdf:http://www.mozilla.org/rdf/chrome#author"
+                    name="rdf:http://www.mozilla.org/rdf/chrome#name">
+            <treerow>
+              <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
+  </tree>
+   
+  <box autostretch="never">
+    <button value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="selectSkin();"/>
+    <button value="&deselectSkin.label;" accesskey="&deselectSkin.accesskey;" oncommand="deselectSkin();"/>
+    <button value="&installSkin.label;" accesskey="&installSkin.accesskey;" oncommand="installSkin();"/>
+  </box>
+  
 </window>

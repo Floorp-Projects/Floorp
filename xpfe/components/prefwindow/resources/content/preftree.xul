@@ -56,13 +56,11 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-colors.xul" value="&colors.label;"/> 
           </treerow>
         </treeitem>
-        <!--
 		    <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-themes.xul" value="&themes.label;"/> 
           </treerow>
         </treeitem>
-        -->
       </treechildren>
     </treeitem>
 
