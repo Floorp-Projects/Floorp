@@ -39,6 +39,10 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsICharsetConverterManager.h"
+#include "nsILocalFile.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+
 extern "C" {
 #include "nlslayer.h"
 }
@@ -302,3 +306,25 @@ extern "C" PRBool nlsASCIIToUnicode(unsigned char * inBuf, unsigned int inBufByt
 loser:
 	return ret;
 }
+
+extern "C" char *xpcomGetProcessDir(void)
+{
+    nsresult rv;
+    char *retVal = NULL;
+    
+    nsCOMPtr<nsILocalFile> mozFile;
+
+	NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);									
+    if (NS_FAILED(rv)) {
+        return NULL;
+    }    
+    										
+     directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
+                            NS_GET_IID(nsIFile), 
+                            getter_AddRefs(mozFile));
+    if (mozFile) {
+        mozFile->GetPath(&retVal);
+    }
+    return (retVal) ? PL_strdup(retVal) : NULL;
+}
+
