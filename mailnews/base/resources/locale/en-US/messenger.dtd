@@ -166,8 +166,8 @@ Rights Reserved.
 <!ENTITY sortBySubjectCmd.label "Subject">
 <!ENTITY sortBySubjectCmd.accesskey "S">
 <!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->
-<!ENTITY sortByUnreadCmd.label "Unread">
-<!ENTITY sortByUnreadCmd.accesskey "n">
+<!ENTITY sortByUnreadCmd.label "Read">
+<!ENTITY sortByUnreadCmd.accesskey "R">
 <!ENTITY sortByThreadCmd.label "Thread">
 <!ENTITY sortByThreadCmd.accesskey "T">
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">

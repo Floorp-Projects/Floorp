@@ -46,8 +46,8 @@ Rights Reserved.
 <!ENTITY statusColumn.tooltip "Click to sort by status">
 <!ENTITY sizeColumn.tooltip "Click to sort by size">
 <!ENTITY junkStatusColumn.tooltip "Click to sort by junk status">
-<!ENTITY unreadColumn.tooltip "Click to sort by unread">
-<!ENTITY totalColumn.tooltip "Click to sort by total">
+<!ENTITY unreadColumn.tooltip "Number of unread messages in thread">
+<!ENTITY totalColumn.tooltip "Total number of messages in thread">
 <!ENTITY readColumn.tooltip "Click to sort by read">
 <!ENTITY flagColumn.tooltip "Click to sort by flag">
 <!ENTITY locationColumn.tooltip "Click to sort by location">
