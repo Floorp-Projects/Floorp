@@ -18,14 +18,30 @@
 
 #include "nsIServiceManager.h"
 
-// Gee this seems simple! It's for testing for memory leaks.
+// Gee this seems simple! It's for testing for memory leaks with Purify.
 
-void main()
+void main(int argc, char* argv[])
 {
     nsresult rv;
     nsIServiceManager* servMgr;
     rv = NS_InitXPCOM(&servMgr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+
+    // try loading a component and releasing it to see if it leaks
+    if (argc > 1 && argv[1] != nsnull) {
+        nsISupports* obj = nsnull;
+        rv = nsComponentManager::CreateInstance(argv[1], nsnull,
+                                                nsCOMTypeInfo<nsISupports>::GetIID(),
+                                                (void**)&obj);
+        if (NS_SUCCEEDED(rv)) {
+            printf("Successfully created %s\n", argv[1]);
+            NS_RELEASE(obj);
+        }
+        else {
+            printf("Failed to create %s (%x)\n", argv[1], rv);
+        }
+    }
+
     rv = NS_ShutdownXPCOM(servMgr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     NS_RELEASE(servMgr);
