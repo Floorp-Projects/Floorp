@@ -506,7 +506,7 @@ nsWebShell::GetHistoryIndex(PRInt32& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetURL(PRInt32 aIndex, const PRUnichar** aURLResult)
+nsWebShell::GetURL(PRInt32 aIndex, PRUnichar** aURLResult)
 {
    NS_ENSURE_STATE(mSessionHistory);
    NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);

@@ -819,8 +819,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       PRInt32 theIndex;
       nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
       webShell->GetHistoryIndex(theIndex);
-      const PRUnichar* theURL;
-      webShell->GetURL(theIndex,&theURL);
+      nsXPIDLString theURL;
+      webShell->GetURL(theIndex, getter_Copies(theURL));
       nsAutoString theString(theURL);
       mApp->ViewSource(theString);
       //XXX Find out how the string is allocated, and perhaps delete it...

@@ -83,7 +83,7 @@ public:
     NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
     NS_IMETHOD GetHistoryLength(PRInt32& aResult);
     NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
-    NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
+    NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult);
 
     // nsIWebShellContainer
     NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
