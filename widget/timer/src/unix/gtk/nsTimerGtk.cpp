@@ -135,7 +135,7 @@ nsTimerGtk::Cancel()
   if (mTimerId)
     gtk_timeout_remove(mTimerId);
 
-//  NS_RELEASE(me);
+  NS_RELEASE(me);
 }
 
 gint nsTimerExpired(gpointer aCallData)
