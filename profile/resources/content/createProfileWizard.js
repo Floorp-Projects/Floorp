@@ -165,16 +165,16 @@ function processCreateProfileData( aProfName, aProfDir, langcode)
     // Adding code to see if the profile directory already exists....
     // XXXX - Further modifications like adding propmt dialog are required - XXXX
     var useExistingDir = false;
-    var fileSpec = Components.classes["component://netscape/filespec"].createInstance();
+    var fileSpec = Components.classes["component://mozilla/file/local"].createInstance();
     if ( fileSpec )
-        fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
+        fileSpec = fileSpec.QueryInterface( Components.interfaces.nsILocalFile );
 
     if (aProfDir == null)
-        fileSpec.nativePath = profile.defaultProfileParentDir.nativePath;
+        fileSpec.initWithUnicodePath(profile.defaultProfileParentDir.path);
     else
-        fileSpec.nativePath = aProfDir;
+        fileSpec.initWithUnicodePath(aProfDir);
 
-    fileSpec.appendRelativeUnixPath(aProfName);
+    fileSpec.appendUnicode(aProfName);
 
     if (fileSpec != null && fileSpec.exists())
       useExistingDir = true;
