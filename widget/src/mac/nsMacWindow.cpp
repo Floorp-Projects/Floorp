@@ -513,7 +513,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 }
 
 
-
+/*
 NS_METHOD nsWindow::Minimize(void)
 {
   return NS_OK;
@@ -528,7 +528,7 @@ NS_METHOD nsWindow::Restore(void)
 {
   return NS_OK;
 }
-
+*/
 
 //-------------------------------------------------------------------------
 //
