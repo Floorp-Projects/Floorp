@@ -2785,7 +2785,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   // but reflow somethimes gets upset when using max int
   // basically, we want to reflow a single page that is large 
   // enough to fit any atomic object like an IFrame
-  const PRInt32 kHundredPagesHigh = 100;
+  const PRInt32 kHundredPagesHigh = 5;
 
   // now, change the value for special cases
   if (mPrt->mPrintFrameType == nsIPrintOptions::kEachFrameSep) {
