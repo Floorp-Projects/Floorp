@@ -2149,10 +2149,6 @@ static PRUint16 PA_HackTable[] = {
 };
 #endif /* PA_REMAP_128_TO_160_ILLEGAL_NCR */
 
-#define H_SURROGATE(s)  ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) >> 10) + (PRUnichar)0xd800)
-#define L_SURROGATE(s)  ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) & 0x3ff) + (PRUnichar)0xdc00)
-#define IS_IN_BMP(ucs4)   ((ucs4) < 0x10000)
-
 static void AppendNCR(nsString& aString, PRInt32 aNCRValue)
 {
 #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR

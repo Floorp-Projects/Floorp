@@ -49,6 +49,7 @@
 #include "nsUUDll.h"
 #include "nsFileSpec.h"
 #include "nsIFile.h"
+#include "nsUnicodeNormalizer.h"
 
 // Functions used to create new instances of a given object by the
 // generic factory.
@@ -84,5 +85,6 @@ UNICHARUTIL_MAKE_CTOR(HankakuToZenkaku)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCaseConversionImp2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSaveAsCharset)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeNormalizer)
 
 #endif

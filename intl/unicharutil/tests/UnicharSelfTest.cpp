@@ -52,12 +52,15 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsIUnicodeNormalizer.h"
+#include "nsString.h"
 
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 NS_DEFINE_IID(kIPersistentPropertiesIID,NS_IPERSISTENTPROPERTIES_IID);
+NS_DEFINE_CID(kUnicodeNormalizerCID, NS_UNICODE_NORMALIZER_CID);
 
 #define TESTLEN 29
 #define T2LEN TESTLEN
@@ -516,6 +519,74 @@ static void TestSaveAsCharset()
   cout << "==============================\n\n";
 }
 
+static PRUnichar normStr[] = 
+{
+  0x00E1,   
+  0x0061,
+  0x0301,
+  0x0107,
+  0x0063,
+  0x0301,
+  0x0000
+};
+
+static PRUnichar nfdForm[] = 
+{
+  0x0061,
+  0x0301,
+  0x0061,
+  0x0301,
+  0x0063,
+  0x0301,
+  0x0063,
+  0x0301,
+  0x0000
+};
+
+void TestNormalization()
+{
+   cout << "==============================\n";
+   cout << "Start nsIUnicodeNormalizer Test \n";
+   cout << "==============================\n";
+   nsIUnicodeNormalizer *t = NULL;
+   nsresult res;
+   res = nsServiceManager::GetService(kUnicodeNormalizerCID,
+                                      NS_GET_IID(nsIUnicodeNormalizer),
+                                      (nsISupports**) &t);
+           
+   cout << "Test 1 - GetService():\n";
+   if(NS_FAILED(res) || ( t == NULL ) ) {
+     cout << "\t1st Norm GetService failed\n";
+   } else {
+     res = nsServiceManager::ReleaseService(kUnicodeNormalizerCID, t);
+   }
+
+   res = nsServiceManager::GetService(kUnicodeNormalizerCID,
+                                NS_GET_IID(nsIUnicodeNormalizer),
+                                (nsISupports**) &t);
+           
+   if(NS_FAILED(res) || ( t == NULL ) ) {
+     cout << "\t2nd GetService failed\n";
+   } else {
+    cout << "Test 2 - NormalizeUnicode(PRUint32, const nsAString&, nsAString&):\n";
+    nsAutoString resultStr;
+    res =  t->NormalizeUnicodeNFD(nsDependentString(normStr), resultStr);
+    if (resultStr.Equals(nfdForm)) {
+      cout << " Succeeded in NFD UnicodeNormalizer test. \n";
+    } else {
+      cout << " Failed in NFD UnicodeNormalizer test. \n";
+    }
+
+
+    res = nsServiceManager::ReleaseService(kUnicodeNormalizerCID, t);
+   }
+   cout << "==============================\n";
+   cout << "Finish nsIUnicodeNormalizer Test \n";
+   cout << "==============================\n";
+
+}
+
+
 int main(int argc, char** argv) {
    
    nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
@@ -537,6 +608,10 @@ int main(int argc, char** argv) {
    TestSaveAsCharset();
 
    // --------------------------------------------
+
+   TestNormalization();
+
+   // --------------------------------------------
    cout << "Finish All The Test Cases\n";
    nsresult res = NS_OK;
    res = nsComponentManager::FreeLibraries();
@@ -547,3 +622,4 @@ int main(int argc, char** argv) {
       cout << "nsComponentManager FreeLibraries Done\n";
    return 0;
 }
+
