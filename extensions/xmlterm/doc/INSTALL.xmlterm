@@ -1,12 +1,16 @@
 XMLterm installation instructions for Linux binaries
 ----------------------------------------------------
 
-*NOTE* This work in progress. User beware!
+*NOTE 1* This is work in progress. User beware!
 
-*NOTE* This plain text INSTALL file may be out date. Please check
-       <http://xmlterm.org/install.html> for the most recent information.
+*NOTE 2* If this file was already present in your "package" directory,
+         it means that xmlterm is included in your build! You don't need
+         to install it. Skip steps 1 & 2 and go directly to step 3.
 
-15 Mar 2000
+*NOTE 3* This plain text INSTALL file may be out date. Please check
+         <http://xmlterm.org/install.html> for the most recent information.
+
+20 Mar 2000
 
 1. First obtain the Mozilla Linux binary tar file
    ftp://ftp.mozilla.org/pub/mozilla/releases/m14/mozilla-i686-pc-linux-gnu-M14.tar.gz"
@@ -17,6 +21,11 @@ XMLterm installation instructions for Linux binaries
    in the "package" directory created above.
 
 3. Type the following command in the "package" directory:
+
+     ./xmlterm
+
+   "xmlterm" is shorthand for the following command, which you may also execute
+   directly
 
      ./mozilla -chrome chrome://xmlterm/content/xmlterm.xul
 
@@ -29,29 +38,11 @@ XMLterm installation instructions for Linux binaries
    "#$%>?", followed by a space. If this is not the case, many features will
    not work. This restriction will be relaxed in the future.
 
-4. To use the stand-alone XMLterm executable called "xmlterm",
-   type the following command in the "package" directory:
-
-   ./xmlterm
-
-   "xmlterm" is shorthand for the following command, which you may also execute
-   directly
-
-   ./mozilla -chrome chrome://xmlterm/content/xmlterm.xul
-
-   The above command(s) should create an XMLterm window. Click on that window
-   with the mouse to give it focus and start typing UNIX commands.
-
-   **NOTE**
-   The command prompt is assumed to be terminated by one of the characters
-   "#$%>?", followed by a space. If this is not the case, many features will
-   not work. This restriction will be relaxed in the future.
-
-5. The command line can be edited using EMACS-style key bindings.
+4. The command line can be edited using EMACS-style key bindings.
    Command completion should also work with TCSH and BASH, as should history
    recall.
 
-6. By default, blue coloring is used to indicate clickable display elements.
+5. By default, blue coloring is used to indicate clickable display elements.
    Note that the prompt and the input command line are clickable.
    (Of course, the appearance of XMLterm is completely configurable
    using the CSS stylesheet chrome://xmlterm/skin/default/xmlterm.css)
@@ -70,11 +61,11 @@ XMLterm installation instructions for Linux binaries
    profoundly affect your computing environment, depending upon what the
    command is.
 
-7. The sample Perl script "xls", the iconic/hypertext version of the Unix "ls"
+6. The sample Perl script "xls", the iconic/hypertext version of the Unix "ls"
    command, is in the "package" directory. Also in the "package" directory
    is "xcat", an XMLterm-aware version of the "cat" command.
 
-8. To use XMLterm most efficiently, add the mozilla "package" directory
+7. To use XMLterm most efficiently, add the mozilla "package" directory
    to your execution PATH variable by modifying your shell initialization file
    (.profile/.cshrc). This will enable you to use commands such as
    "xmlterm", "xls", and "xcat" easily.

@@ -145,16 +145,24 @@ function F9Key(isShift, isControl) {
 function ScrollHomeKey(isShift, isControl) {
   dump("ScrollHomeKey("+isShift+","+isControl+")\n");
 
-  ScrollWin(isShift,isControl).scroll(0,0);
-  return false;
+  if (isControl) {
+    return F1Key(isShift, 0);
+  } else {
+    ScrollWin(isShift,isControl).scroll(0,0);
+    return false;
+  }
 }
 
 // Scroll End key
 function ScrollEndKey(isShift, isControl) {
   dump("ScrollEndKey("+isShift+","+isControl+")\n");
 
-  ScrollWin(isShift,isControl).scroll(0,99999);
-  return false;
+  if (isControl) {
+    return F2Key(isShift, 0);
+  } else {
+    ScrollWin(isShift,isControl).scroll(0,99999);
+    return false;
+  }
 }
 
 // Scroll PageUp key
@@ -358,9 +366,12 @@ function DisplayAllOutput(flag) {
 //   textlink  - hyperlink
 //   prompt    - command prompt
 //   command   - command line
-//   execwin   - execute command with sendln/createln (doubleclick)
-//               (depending upon window.windowsMode)
-//   exec      - execute command with sendln only     (doubleclick)
+//
+//   (Following are inline or in new window depending upon window.windowsMode)
+//   cdxls     - change directory and list contents   (doubleclick)
+//   xcat      - display file                         (doubleclick)
+//   exec      - execute file                         (doubleclick)
+//
 //   send      - transmit arg to LineTerm
 //   sendln    - transmit arg+newline to LineTerm
 //   createln  - transmit arg+newline as first command to new XMLTerm
@@ -368,9 +379,9 @@ function DisplayAllOutput(flag) {
 // entryNumber: >=0 means process only if current entry
 //              <0  means process anytime
 //
-// arg1:    command/pathname string (without newline)
-// arg2:    alternate command line (for use in current entry only;
-//            uses relative pathnames assuming current working directory)
+// arg1:    relative pathname of file/directory
+// arg2:    absolute pathname prefix (for use outside current entry;
+//                      use relative pathname in current working directory)
 //
 function HandleEvent(eventObj, eventType, targetType, entryNumber,
                      arg1, arg2) {
@@ -413,12 +424,32 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
      // Use single click for "selection" and prompt expansion only
      // Windows-style
 
+     var currentEntryNumber = window.xmlterm.currentEntryNumber;
+
+     var currentCmdElement = document.getElementById("command"+currentEntryNumber);
+     var currentCommandEmpty = true;
+     if (currentCmdElement && currentCmdElement.hasChildNodes()) {
+
+       if (currentCmdElement.firstChild.nodeType == Node.TEXT_NODE) {
+         //dump("textLength = "+currentCmdElement.firstChild.data.length+"\n");
+         currentCommandEmpty = (currentCmdElement.firstChild.data.length == 0);
+
+       } else {
+         currentCommandEmpty = false;
+       }
+     }
+     //dump("empty = "+currentCommandEmpty+"\n");
+
      if (targetType === "command") {
        if (!dblClick)
          return false;
        var commandElement = document.getElementById(targetType+entryNumber);
        var command = commandElement.firstChild.data;
-       window.xmlterm.SendText("\025"+command+"\n", document.cookie);
+       if (currentCommandEmpty) {
+         window.xmlterm.SendText("\025"+command+"\n", document.cookie);
+       } else {
+         window.xmlterm.SendText(command, document.cookie);
+       }
 
      } else {
        // Targets which may be qualified only for current entry
@@ -429,52 +460,74 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
          return (false);
        }
 
-       var action;
+       var action, sendStr;
 
-       if (targetType === "execwin") {
-         // Execute command; inline or in a new window
+       if ( (targetType === "cdxls") ||
+            (targetType === "xcat")  ||
+            (targetType === "exec")    ) {
+         // Complex commands
+
          if (!dblClick)
            return false;
 
-         if (window.windowsMode === "on") {
-            action = "createln";
+         var filename;
+         var isCurrentCommand = (Math.abs(entryNumber)+1 ==
+                                 window.xmlterm.currentEntryNumber);
+
+         if (!isCurrentCommand && (arg2 != null)) {
+           filename = arg2+arg1;
          } else {
-            action = "sendln";
+           filename = arg1;
+           if (targetType === "exec")
+             filename = "./"+filename;
          }
 
-       } else if (targetType === "exec") {
-         // Execute command inline
-         if (!dblClick)
-           return false;
+         var prefix, suffix;
+         if (targetType === "cdxls") {
+           // Change directory and list contents
+           prefix = "cd ";
+           suffix = "; xls";
+         } else if (targetType === "xcat") {
+           // Display file
+           prefix = "xcat ";
+           suffix = "";
+         } else if (targetType === "exec") {
+           // Execute file
+           prefix = "";
+           suffix = "";
+         }
 
-         action = "sendln";
+         if (window.windowsMode === "on") {
+           action = "createln";
+           sendStr = prefix + filename + suffix;
+
+         } else if (currentCommandEmpty) {
+           action = "sendln";
+           sendStr = prefix + filename + suffix;
+
+         } else {
+           action = "send";
+           sendStr = filename + " ";
+         }
 
        } else {
          // Primitive action
          action = targetType;
+         sendStr = arg1;
        }
 
        // Primitive actions
        if (action === "send") {
-         dump("send = "+arg1+"\n");
-         window.xmlterm.SendText(arg1, document.cookie);
+         dump("send = "+sendStr+"\n");
+         window.xmlterm.SendText(sendStr, document.cookie);
 
        } else if (action === "sendln") {
-
-         if ((Math.abs(entryNumber)+1 == window.xmlterm.currentEntryNumber) &&
-          (arg2 != null)) {
-            // Current command
-            dump("sendln = "+arg2+"\n\n");
-            window.xmlterm.SendText("\025"+arg2+"\n", document.cookie);
-         } else {
-            // Not current command
-            dump("sendln = "+arg1+"\n\n");
-            window.xmlterm.SendText("\025"+arg1+"\n", document.cookie);
-         }
+         dump("sendln = "+sendStr+"\n\n");
+         window.xmlterm.SendText("\025"+sendStr+"\n", document.cookie);
 
        } else if (action === "createln") {
-         dump("createln = "+arg1+"\n\n");
-         newwin = NewXMLTerm(arg1+"\n");
+         dump("createln = "+sendStr+"\n\n");
+         newwin = NewXMLTerm(sendStr+"\n");
        }
     }
   }
