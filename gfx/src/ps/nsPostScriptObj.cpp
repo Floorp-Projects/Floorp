@@ -779,6 +779,78 @@ nsPostScriptObj::translate(int x, int y)
     XL_RESTORE_NUMERIC_LOCALE();
 }
 
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *  Special notes, this on window will blow up since we can not get the bits in a DDB
+ *	@update 2/1/99 dwc
+ */
+void 
+nsPostScriptObj::grayimage(nsIImage *aImage,int aX,int aY, int aWidth,int aHeight)
+{
+PRInt32 rowData,bytes_Per_Pix,x,y;
+PRInt32 width,height,bytewidth,cbits,n;
+PRUint8 *theBits,*curline;
+PRBool isTopToBottom;
+PRInt32 sRow, eRow, rStep; 
+
+  XL_SET_NUMERIC_LOCALE();
+  bytes_Per_Pix = aImage->GetBytesPix();
+
+  if(bytes_Per_Pix == 1)
+    return ;
+
+  rowData = aImage->GetLineStride();
+  height = aImage->GetHeight();
+  width = aImage->GetWidth();
+  bytewidth = 3*width;
+  cbits = 8;
+
+  XP_FilePrintf(mPrintContext->prSetup->out, "gsave\n");
+  XP_FilePrintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth);
+  translate(aX, aY + aHeight);
+  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
+  XP_FilePrintf(mPrintContext->prSetup->out, "%d %d ", width, height);
+  XP_FilePrintf(mPrintContext->prSetup->out, "%d ", cbits);
+  //XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 %d]\n", width,-height, height);
+  XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 0]\n", width,height);
+  XP_FilePrintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
+  XP_FilePrintf(mPrintContext->prSetup->out, " image\n");
+
+  theBits = aImage->GetBits();
+  n = 0;
+  if ( ( isTopToBottom = aImage->GetIsRowOrderTopToBottom()) == PR_TRUE ) {
+	sRow = height - 1;
+        eRow = 0;
+        rStep = -1;
+  } else {
+	sRow = 0;
+        eRow = height;
+        rStep = 1;
+  }
+
+  y = sRow;
+  while ( 1 ) {
+    curline = theBits + (y*rowData);
+    for(x=0;x<bytewidth;x+=3){
+      if (n > 71) {
+          XP_FilePrintf(mPrintContext->prSetup->out,"\n");
+          n = 0;
+      }
+      XP_FilePrintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline));
+      curline+=3; 
+      n += 2;
+    }
+    y += rStep;
+    if ( isTopToBottom == PR_TRUE && y < eRow ) break;
+    if ( isTopToBottom == PR_FALSE && y >= eRow ) break;
+  }
+
+  XP_FilePrintf(mPrintContext->prSetup->out, "\ngrestore\n");
+  XL_RESTORE_NUMERIC_LOCALE();
+
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
  *  Special notes, this on window will blow up since we can not get the bits in a DDB
@@ -790,10 +862,16 @@ nsPostScriptObj::colorimage(nsIImage *aImage,int aX,int aY, int aWidth,int aHeig
 PRInt32 rowData,bytes_Per_Pix,x,y;
 PRInt32 width,height,bytewidth,cbits,n;
 PRUint8 *theBits,*curline;
-  PRBool isTopToBottom;
-  PRInt32 sRow, eRow, rStep; 
+PRBool isTopToBottom;
+PRInt32 sRow, eRow, rStep; 
 
   XL_SET_NUMERIC_LOCALE();
+
+  if(mPrintSetup->color == PR_FALSE ){
+    this->grayimage(aImage,aX,aY,aWidth,aHeight);
+    return;
+  }
+
   bytes_Per_Pix = aImage->GetBytesPix();
 
   if(bytes_Per_Pix == 1)
