@@ -118,6 +118,10 @@ void nsImageUnix :: ComputePaletteSize(PRIntn nBitCount)
       mNumPalleteColors = 256;
       mNumBytesPixel = 1;
       break;
+    case 16:
+      mNumPalleteColors = 0;
+      mNumBytesPixel = 2;
+      break;
     case 24:
       mNumPalleteColors = 0;
       mNumBytesPixel = 3;
@@ -223,6 +227,7 @@ void nsImageUnix::ConvertImage(nsDrawingSurface aDrawingSurface)
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aDrawingSurface;
 PRUint8			*tempbuffer,*cursrc,*curdest;
 PRInt32			oldrowbytes,x,y;
+PRInt16			red,green,blue,*cur16;
   
   if((unixdrawing->depth==24) &&  (mDepth==8))
     {
@@ -269,6 +274,52 @@ PRInt32			oldrowbytes,x,y;
       memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
       }
     }
+
+
+  if((unixdrawing->depth==16) && (mDepth==8))
+    {
+    printf("Converting 8 to 16\n");
+
+    // convert this nsImage to a 24 bit image
+    oldrowbytes = mRowBytes;
+    mDepth = 16;
+
+    ComputePaletteSize(mDepth);
+
+    // create the memory for the image
+    ComputMetrics();
+    tempbuffer = (PRUint8*) new PRUint8[mSizeImage];
+
+    for(y=0;y<mHeight;y++)
+      {
+      cursrc = mImageBits+(y*oldrowbytes);
+      cur16 = (PRUint16*) (tempbuffer+(y*mRowBytes));
+
+      for(x=0;x<oldrowbytes;x++)
+        {
+        red = mColorMap->Index[(3*(*cursrc))+2];  // red
+        green = mColorMap->Index[(3*(*cursrc))+1];  // green
+        blue = mColorMap->Index[(3*(*cursrc))];  // blue
+//	blue = 255; red =0 ; green = 0;
+
+        *cur16 = ((red&0xf8)<<8)|((green&0xfc)<<3)| ((blue&0xf8)>>3);	
+        cur16++;
+        } 
+      }
+   
+    // assign the new buffer to this nsImage
+    delete[] (PRUint8*)mImageBits;
+    mImageBits = tempbuffer; 
+
+    if (mColorMap != nsnull)
+      {
+      mColorMap->NumColors = mNumPalleteColors;
+      mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
+      memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
+      }
+    }
+
+
 }
 
 //------------------------------------------------------------
@@ -292,8 +343,8 @@ printf("Optimize.................................\n");
 #endif
     ConvertImage(aDrawingSurface);
     CreateImage(aDrawingSurface);
-    delete[] (PRUint8*)mImageBits;
-    mImageBits = nsnull;
+ //   delete[] (PRUint8*)mImageBits;
+ //   mImageBits = nsnull;
     }
 }
 
