@@ -11334,6 +11334,20 @@ fi
 
 
 
+if test "$MOZ_STANDALONE_COMPOSER"; then
+   cat >> confdefs.h <<\EOF
+#define MOZ_STANDALONE_COMPOSER 1
+EOF
+
+   MOZ_XUL_APP=1
+   cat >> confdefs.h <<\EOF
+#define MOZ_XUL_APP 1
+EOF
+
+fi
+
+
+
 
 # Check whether --enable-freetype2 or --disable-freetype2 was given.
 if test "${enable_freetype2+set}" = set; then
@@ -15489,6 +15503,7 @@ s%@MOZ_MAIL_NEWS@%$MOZ_MAIL_NEWS%g
 s%@MOZ_STATIC_MAIL_BUILD@%$MOZ_STATIC_MAIL_BUILD%g
 s%@MOZ_PHOENIX@%$MOZ_PHOENIX%g
 s%@MOZ_THUNDERBIRD@%$MOZ_THUNDERBIRD%g
+s%@MOZ_STANDALONE_COMPOSER@%$MOZ_STANDALONE_COMPOSER%g
 s%@MOZ_XUL_APP@%$MOZ_XUL_APP%g
 s%@MOZ_ENABLE_FREETYPE2@%$MOZ_ENABLE_FREETYPE2%g
 s%@MOZ_XFT_CFLAGS@%$MOZ_XFT_CFLAGS%g

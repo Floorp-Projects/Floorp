@@ -63,6 +63,7 @@ IPC_CO_TAG = IPC_BRANCH_20030304
 TOOLKIT_CO_TAG =
 BROWSER_CO_TAG =
 MAIL_CO_TAG =
+STANDALONE_COMPOSER_CO_TAG =
 BUILD_MODULES = all
 
 #######################################################################
@@ -413,6 +414,28 @@ CHECKOUT_THUNDERBIRD := true
 endif
 
 ####################################
+# CVS defines for Standalone Composer (pulled and built if MOZ_STANDALONE_COMPOSER is set)
+#
+
+STANDALONE_COMPOSER_CO_FLAGS := -P
+ifdef MOZ_CO_FLAGS
+  STANDALONE_COMPOSER_CO_FLAGS := $(MOZ_CO_FLAGS)
+endif
+ifdef STANDALONE_COMPOSER_CO_TAG
+  STANDALONE_COMPOSER_CO_FLAGS := $(STANDALONE_COMPOSER_CO_FLAGS) -r $(STANDALONE_COMPOSER_CO_TAG)
+endif
+
+CVSCO_STANDALONE_COMPOSER := $(CVS) $(CVS_FLAGS) co $(STANDALONE_COMPOSER_CO_FLAGS) $(CVS_CO_DATE_FLAGS) mozilla/composer
+ifdef MOZ_STANDALONE_COMPOSER
+FASTUPDATE_STANDALONE_COMPOSER:= fast_update $(CVSCO_STANDALONE_COMPOSER)
+CHECKOUT_STANDALONE_COMPOSER:= cvs_co $(CVSCO_STANDALONE_COMPOSER)
+MOZ_XUL_APP = 1
+else
+FASTUPDATE_STANDALONE_COMPOSER:= true
+CHECKOUT_STANDALONE_COMPOSER:= true
+endif
+
+####################################
 # CVS defines for mozilla/toolkit (pulled and built if MOZ_XUL_APP is set)
 #
 
@@ -517,6 +540,7 @@ real_checkout:
 	$(CHECKOUT_MOZTOOLKIT) && \
 	$(CHECKOUT_PHOENIX) && \
 	$(CHECKOUT_THUNDERBIRD) && \
+	$(CHECKOUT_STANDALONE_COMPOSER) && \
 	$(CHECKOUT_CODESIGHS) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
@@ -584,6 +608,7 @@ real_fast-update:
 	$(FASTUPDATE_MOZTOOLKIT) && \
 	$(FASTUPDATE_PHOENIX) && \
 	$(FASTUPDATE_THUNDERBIRD) && \
+	$(FASTUPDATE_STANDALONE_COMPOSER) && \
 	$(FASTUPDATE_CODESIGHS) && \
 	fast_update $(CVSCO_SEAMONKEY)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)

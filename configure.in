@@ -3283,6 +3283,19 @@ AC_SUBST(MOZ_THUNDERBIRD)
 AC_SUBST(MOZ_XUL_APP)
 
 dnl ========================================================
+dnl = Standalone Composer
+dnl ========================================================
+if test "$MOZ_STANDALONE_COMPOSER"; then
+   AC_DEFINE(MOZ_STANDALONE_COMPOSER)
+   
+   MOZ_XUL_APP=1
+   AC_DEFINE(MOZ_XUL_APP)
+fi
+
+AC_SUBST(MOZ_STANDALONE_COMPOSER)
+AC_SUBST(MOZ_XUL_APP)
+
+dnl ========================================================
 dnl = FreeType2
 dnl = Enable freetype by default if building against X11 
 dnl = and freetype is available
