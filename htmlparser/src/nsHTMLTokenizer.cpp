@@ -162,9 +162,9 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
   
   mFlags |= (aCommand==eViewSource)? NS_IPARSER_FLAG_VIEW_SOURCE:NS_IPARSER_FLAG_VIEW_NORMAL;
 
-  mRecordTrailingContent=PR_FALSE;
-  mTokenAllocator=nsnull;
-  mTokenScanPos=0;
+  mTokenAllocator = nsnull;
+  mTokenScanPos = 0;
+  mPreserveTarget = eHTMLTag_unknown;
 }
 
 
@@ -306,6 +306,15 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
     PushTokenFront(theToken);
   }
 
+}
+
+NS_IMETHODIMP
+nsHTMLTokenizer::CopyState(nsITokenizer* aTokenizer)
+{
+  if (aTokenizer)
+     mPreserveTarget =
+       NS_STATIC_CAST(nsHTMLTokenizer*, aTokenizer)->mPreserveTarget;
+  return NS_OK;
 }
 
 /**
@@ -723,17 +732,17 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
         //XXX - Find a better soution to record content
         //Added _plaintext to fix bug 46054.
-        if((theTag == eHTMLTag_textarea  ||
+        if(mPreserveTarget == eHTMLTag_unknown && 
+           (theTag == eHTMLTag_textarea  ||
             theTag == eHTMLTag_xmp       || 
             theTag == eHTMLTag_plaintext || 
             theTag == eHTMLTag_noscript  ||
-            theTag == eHTMLTag_noframes) && 
-            !mRecordTrailingContent) {
-          mRecordTrailingContent=PR_TRUE;
+            theTag == eHTMLTag_noframes)) {
+          mPreserveTarget = theTag;
         }
           
-        if(mRecordTrailingContent) 
-          RecordTrailingContent(theStartToken,aScanner,origin);
+        if (mPreserveTarget != eHTMLTag_unknown) 
+          PreserveToken(theStartToken, aScanner, origin);
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
@@ -808,15 +817,11 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
       aScanner.GetChar(aChar);
     }        
 
-    if(NS_SUCCEEDED(result)) {
-      eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
-      if((theTag == eHTMLTag_textarea  || 
-          theTag == eHTMLTag_xmp       || 
-          theTag == eHTMLTag_plaintext || 
-          theTag == eHTMLTag_noscript  ||
-          theTag == eHTMLTag_noframes) && 
-          mRecordTrailingContent) {
-        mRecordTrailingContent=PR_FALSE;
+    if (NS_SUCCEEDED(result)) {
+      eHTMLTags theTag = (eHTMLTags)aToken->GetTypeID();
+      if (mPreserveTarget == theTag) {
+        // Target reached. Stop preserving content.
+        mPreserveTarget = eHTMLTag_unknown;
       }
     }
   } //if
@@ -1043,12 +1048,14 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
  *  
  */
 
-void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner& aScanner, nsReadingIterator<PRUnichar> aOrigin) {
+void nsHTMLTokenizer::PreserveToken(CStartToken* aStartToken, 
+                                    nsScanner& aScanner, 
+                                    nsReadingIterator<PRUnichar> aOrigin) {
   if(aStartToken) {
     nsReadingIterator<PRUnichar> theCurrentPosition;
     aScanner.CurrentPosition(theCurrentPosition);
 
-    nsString& trailingContent      =aStartToken->mTrailingContent;
+    nsString& trailingContent = aStartToken->mTrailingContent;
     PRUint32 oldLength = trailingContent.Length();
     trailingContent.SetLength(oldLength + Distance(aOrigin, theCurrentPosition));
 

@@ -1129,6 +1129,12 @@ nsExpatDriver::PrependTokens(nsDeque& aDeque)
 
 }
 
+NS_IMETHODIMP
+nsExpatDriver::CopyState(nsITokenizer* aTokenizer)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsExpatDriver::HandleToken(CToken* aToken,nsIParser* aParser)
 {
