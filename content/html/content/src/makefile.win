@@ -32,6 +32,7 @@ CPPSRCS=				\
 	nsHTMLBaseElement.cpp		\
 	nsHTMLBaseFontElement.cpp	\
 	nsHTMLBodyElement.cpp		\
+	nsHTMLButtonElement.cpp		\
 	nsHTMLDListElement.cpp		\
 	nsHTMLDelElement.cpp		\
 	nsHTMLDirectoryElement.cpp	\
@@ -39,14 +40,21 @@ CPPSRCS=				\
 	nsHTMLEmbedElement.cpp		\
 	nsHTMLFontElement.cpp		\
 	nsHTMLFormElement.cpp		\
+	nsHTMLFrameElement.cpp		\
+	nsHTMLFrameSetElement.cpp	\
 	nsHTMLHRElement.cpp		\
 	nsHTMLHeadElement.cpp		\
 	nsHTMLHeadingElement.cpp	\
 	nsHTMLHtmlElement.cpp		\
+	nsHTMLIFrameElement.cpp		\
+	nsHTMLImageElement.cpp		\
 	nsHTMLInputElement.cpp		\
 	nsHTMLInsElement.cpp		\
+	nsHTMLIsIndexElement.cpp	\
 	nsHTMLLIElement.cpp		\
+	nsHTMLLabelrElement.cpp		\
 	nsHTMLLayerElement.cpp		\
+	nsHTMLLegendElement.cpp		\
 	nsHTMLLinkElement.cpp		\
 	nsHTMLMapElement.cpp		\
 	nsHTMLMenuElement.cpp		\
@@ -55,6 +63,7 @@ CPPSRCS=				\
 	nsHTMLOListElement.cpp		\
 	nsHTMLObjectElement.cpp		\
 	nsHTMLOptionElement.cpp		\
+	nsHTMLOptGroupElement.cpp	\
 	nsHTMLParagraphElement.cpp	\
 	nsHTMLParamElement.cpp		\
 	nsHTMLPreElement.cpp		\
@@ -68,6 +77,7 @@ CPPSRCS=				\
 	nsHTMLTableColElement.cpp	\
 	nsHTMLTableRowElement.cpp	\
 	nsHTMLTableSectionElement.cpp	\
+	nsHTMLTextAreaElement.cpp	\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
 	$(NULL)
@@ -82,6 +92,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLBaseElement.obj		\
 	.\$(OBJDIR)\nsHTMLBaseFontElement.obj		\
 	.\$(OBJDIR)\nsHTMLBodyElement.obj		\
+	.\$(OBJDIR)\nsHTMLButtonElement.obj		\
 	.\$(OBJDIR)\nsHTMLDListElement.obj		\
 	.\$(OBJDIR)\nsHTMLDelElement.obj		\
 	.\$(OBJDIR)\nsHTMLDirectoryElement.obj		\
@@ -89,14 +100,21 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLEmbedElement.obj		\
 	.\$(OBJDIR)\nsHTMLFontElement.obj		\
 	.\$(OBJDIR)\nsHTMLFormElement.obj		\
+	.\$(OBJDIR)\nsHTMLFrameElement.obj		\
+	.\$(OBJDIR)\nsHTMLFrameSetElement.obj		\
 	.\$(OBJDIR)\nsHTMLHRElement.obj			\
 	.\$(OBJDIR)\nsHTMLHeadElement.obj		\
 	.\$(OBJDIR)\nsHTMLHeadingElement.obj		\
 	.\$(OBJDIR)\nsHTMLHtmlElement.obj		\
+	.\$(OBJDIR)\nsHTMLIFrameElement.obj		\
+	.\$(OBJDIR)\nsHTMLImageElement.obj		\
 	.\$(OBJDIR)\nsHTMLInputElement.obj		\
 	.\$(OBJDIR)\nsHTMLInsElement.obj		\
+	.\$(OBJDIR)\nsHTMLIsIndexElement.obj		\
 	.\$(OBJDIR)\nsHTMLLIElement.obj			\
+	.\$(OBJDIR)\nsHTMLLabelElement.obj		\
 	.\$(OBJDIR)\nsHTMLLayerElement.obj		\
+	.\$(OBJDIR)\nsHTMLLegendElement.obj		\
 	.\$(OBJDIR)\nsHTMLLinkElement.obj		\
 	.\$(OBJDIR)\nsHTMLMapElement.obj		\
 	.\$(OBJDIR)\nsHTMLMenuElement.obj		\
@@ -105,6 +123,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLOListElement.obj		\
 	.\$(OBJDIR)\nsHTMLObjectElement.obj		\
 	.\$(OBJDIR)\nsHTMLOptionElement.obj		\
+	.\$(OBJDIR)\nsHTMLOptGroupElement.obj		\
 	.\$(OBJDIR)\nsHTMLParagraphElement.obj		\
 	.\$(OBJDIR)\nsHTMLParamElement.obj		\
 	.\$(OBJDIR)\nsHTMLPreElement.obj		\
@@ -118,6 +137,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTableColElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableRowElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableSectionElement.obj	\
+	.\$(OBJDIR)\nsHTMLTextAreaElement.obj		\
 	.\$(OBJDIR)\nsHTMLTitleElement.obj		\
 	.\$(OBJDIR)\nsHTMLUListElement.obj		\
 	$(NULL)
