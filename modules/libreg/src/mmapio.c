@@ -117,6 +117,22 @@ PRInt32  mmio_FileWrite(MmioFile *mmio, const char *src, PRInt32 count)
         mmio->needSeek = PR_FALSE;
     }
 
+    /* If this system does not keep mmap() and write() synchronized, we can
+    ** force it to by doing an munmap() when we do a write.  This will
+    ** obviously slow things down but fortunatly we do not do that many
+    ** writes from within mozilla.  Platforms which need this may want to
+    ** use the new USE_BUFFERED_REGISTRY_IO code instead of this code though.
+    */
+#if MMAP_MISSES_WRITES
+    if(mmio->addr && mmio->msize) {
+	PR_ASSERT(mmio->fileMap);
+	PR_MemUnmap(mmio->addr, mmio->msize);
+	PR_CloseFileMap(mmio->fileMap);
+	mmio->addr  = NULL;
+	mmio->msize = 0;
+    }
+#endif
+
     wcode = PR_Write(mmio->fd, src, count);
 
     if(wcode>0) {
