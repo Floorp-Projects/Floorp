@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Bill Law    <law@netscape.com>
+ *  Bill Law     <law@netscape.com>
+ *  Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -801,12 +802,17 @@ nsresult FileTypeRegistryEntry::reset() {
 nsresult EditableFileTypeRegistryEntry::set() {
     nsresult rv = FileTypeRegistryEntry::set();
     if ( NS_SUCCEEDED( rv ) ) {
-        nsCAutoString editKey( "Software\\Classes\\" );
-        editKey += protocol;
-        editKey += "\\shell\\edit\\command";
-        nsCAutoString editor( thisApplication() );
-        editor += " -edit \"%1\"";
-        rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey.get(), "", editor.get() ).set();
+        // only set this if we support "-edit" on the command-line
+        nsCOMPtr<nsICmdLineHandler> editorService =
+            do_GetService( "@mozilla.org/commandlinehandler/general-startup;1?type=edit", &rv );
+        if ( NS_SUCCEEDED( rv) ) {
+            nsCAutoString editKey( "Software\\Classes\\" );
+            editKey += protocol;
+            editKey += "\\shell\\edit\\command";
+            nsCAutoString editor( thisApplication() );
+            editor += " -edit \"%1\"";
+            rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey.get(), "", editor.get() ).set();
+        }
     }
     return rv;
 }
