@@ -2274,8 +2274,8 @@ static nsresult dir_CreateTokenListFromWholePref(const char *pref, char ***outLi
 {
     nsresult result = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &result); 
-    if (NS_FAILED(result) || pPref == nsnull) 
-		return -1;
+    if (NS_FAILED(result)) 
+		return result;
 
 	char *commaSeparatedList = nsnull;
 
