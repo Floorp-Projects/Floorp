@@ -41,7 +41,6 @@
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsString.h"
 
 class nsIFile;
 

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGREDirServiceProvider.h"
-
+#include "nsEmbedString.h"
 #include "nsXPCOMPrivate.h"
 
 #include "nspr.h"
@@ -99,8 +99,11 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
   else if(strcmp(prop, NS_GRE_COMPONENT_DIR) == 0)
   {
     rv = GetGreDirectory(getter_AddRefs(localFile));
-    if(NS_SUCCEEDED(rv))
-      rv = localFile->AppendRelativeNativePath(NS_LITERAL_CSTRING("components"));
+    if(NS_SUCCEEDED(rv)) {
+      nsEmbedCString leaf;
+      leaf.Assign("components");
+      rv = localFile->AppendRelativeNativePath(leaf);
+    }
   }    
 
   if(!localFile || NS_FAILED(rv))
@@ -231,7 +234,9 @@ nsGREDirServiceProvider::GetGreDirectory(nsILocalFile **aLocalFile)
   char *pGreDir = GetGREDirectoryPath();
   if(pGreDir) {
     nsCOMPtr<nsILocalFile> tempLocal;
-    rv = NS_NewNativeLocalFile(nsDependentCString(pGreDir), PR_TRUE, getter_AddRefs(tempLocal));
+    nsEmbedCString leaf;
+    leaf.Assign(pGreDir);
+    rv = NS_NewNativeLocalFile(leaf, PR_TRUE, getter_AddRefs(tempLocal));
     
     if (NS_SUCCEEDED(rv)) {
       *aLocalFile = tempLocal;
