@@ -8,7 +8,7 @@
 *  1 is AddRef
 *  2 is Release
 */
-#if !defined(__ia64) || !defined(__hpux)
+#if !defined(__ia64) || (!defined(__hpux) && !defined(__linux__))
 XPTC_EXPORT NS_IMETHOD Stub3();
 XPTC_EXPORT NS_IMETHOD Stub4();
 XPTC_EXPORT NS_IMETHOD Stub5();
