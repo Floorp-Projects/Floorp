@@ -2759,7 +2759,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
       }
 
       // IFrame may or may not want the current document focused
-      if (focusDoc) {
+      if (focusDoc && (docType != eChrome)) {
         nsCOMPtr<nsIScriptGlobalObject> sgo;
         mDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
         nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
