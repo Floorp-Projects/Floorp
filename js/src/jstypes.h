@@ -195,7 +195,7 @@
 
 #if defined(XP_MAC) || defined(XP_PC)
 #    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #    include "jsautocfg.h"       /* Use auto-detected configuration */
 #    include "jsosdep.h"         /* ...and platform-specific flags */
 #else
