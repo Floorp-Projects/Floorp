@@ -52,8 +52,8 @@ viewer:Mozilla Profile Migration
 viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 ; viewer:NSPR Logging
-viewer:Plugins:MRJPlugin
-viewer:Plugins:MRJPlugin.jar
+viewer:Plug-ins:MRJPlugin
+viewer:Plug-ins:MRJPlugin.jar
 
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
