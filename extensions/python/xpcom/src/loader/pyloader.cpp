@@ -47,6 +47,10 @@
 
 #include "Python.h"
 
+#if (PY_VERSION_HEX >= 0x02030000)
+#define PYXPCOM_USE_PYGILSTATE
+#endif
+
 static char *PyTraceback_AsString(PyObject *exc_tb);
 
 #ifdef XP_WIN
@@ -125,6 +129,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 	}
 	// Get the Python interpreter state
 	NS_TIMELINE_START_TIMER("PyXPCOM: Python threadstate setup");
+#ifndef PYXPCOM_USE_PYGILSTATE
 	PyThreadState *threadStateCreated = NULL;
 	PyThreadState *threadState = PyThreadState_Swap(NULL);
 	if (threadState==NULL) {
@@ -139,7 +144,9 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 	}
 	PyEval_ReleaseLock();
 	PyEval_AcquireThread(threadState);
-
+#else
+	PyGILState_STATE state = PyGILState_Ensure();
+#endif // PYXPCOM_USE_PYGILSTATE
 	if (pfnEntryPoint == nsnull) {
 		PyObject *mod = PyImport_ImportModule("xpcom._xpcom");
 		if (mod==NULL) {
@@ -163,7 +170,8 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     // If the timeline service is installed, see if we can install our hooks.
     if (NULL==PyImport_ImportModule("timeline_hook"))
         PyErr_Clear(); // but don't care if we can't.
-#endif    
+#endif
+#ifndef PYXPCOM_USE_PYGILSTATE
 	// Abandon the thread-lock, as the first thing Python does
 	// is re-establish the lock (the Python thread-state story SUCKS!!!)
 	if (threadStateCreated) {
@@ -175,6 +183,10 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 		if (threadStateSave)
 			PyThreadState_Delete(threadStateSave);
 	}
+#else
+	PyGILState_Release(state);
+#endif 
+
 	NS_TIMELINE_STOP_TIMER("PyXPCOM: Python threadstate setup");
 	NS_TIMELINE_MARK_TIMER("PyXPCOM: Python threadstate setup");
 	NS_TIMELINE_START_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");

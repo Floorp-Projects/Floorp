@@ -38,16 +38,18 @@
 #endif
 
 static PRInt32 g_cLockCount = 0;
-static PyThreadState *ptsGlobal = nsnull;
-PyInterpreterState *PyXPCOM_InterpreterState = nsnull;
 static PRLock *g_lockMain = nsnull;
 
-PRUintn tlsIndex = 0;
-
+#ifndef PYXPCOM_USE_PYGILSTATE
 
 ////////////////////////////////////////////////////////////
 // Thread-state helpers/global functions.
+// Only used if there is no Python PyGILState_* API
 //
+static PyThreadState *ptsGlobal = nsnull;
+PyInterpreterState *PyXPCOM_InterpreterState = nsnull;
+PRUintn tlsIndex = 0;
+
 
 // This function must be called at some time when the interpreter lock and state is valid.
 // Called by init{module} functions and also COM factory entry point.
@@ -139,6 +141,7 @@ void PyXPCOM_ThreadState_Clear()
 	PyThreadState *thisThreadState = pData->ts;
 	PyThreadState_Clear(thisThreadState);
 }
+#endif // PYXPCOM_USE_PYGILSTATE
 
 ////////////////////////////////////////////////////////////
 // Lock/exclusion global functions.
@@ -177,8 +180,10 @@ void PyXPCOM_DLLAddRef(void)
 			// Must force Python to start using thread locks, as
 			// we are free-threaded (maybe, I think, sometimes :-)
 			PyEval_InitThreads();
+#ifndef PYXPCOM_USE_PYGILSTATE
 			// Release Python lock, as first thing we do is re-get it.
 			ptsGlobal = PyEval_SaveThread();
+#endif
 			// NOTE: We never finalize Python!!
 		}
 	}
@@ -190,23 +195,27 @@ void PyXPCOM_DLLRelease(void)
 
 void pyxpcom_construct(void)
 {
-	PRStatus status;
 	g_lockMain = PR_NewLock();
+#ifndef PYXPCOM_USE_PYGILSTATE
+	PRStatus status;
 	status = PR_NewThreadPrivateIndex( &tlsIndex, NULL );
 	NS_WARN_IF_FALSE(status==0, "Could not allocate TLS storage");
 	if (NS_FAILED(status)) {
 		PR_DestroyLock(g_lockMain);
 		return; // PR_FALSE;
 	}
+#endif // PYXPCOM_USE_PYGILSTATE
 	return; // PR_TRUE;
 }
 
 void pyxpcom_destruct(void)
 {
 	PR_DestroyLock(g_lockMain);
+#ifndef PYXPCOM_USE_PYGILSTATE
 	// I can't locate a way to kill this - 
 	// should I pass a dtor to PR_NewThreadPrivateIndex??
 	// TlsFree(tlsIndex);
+#endif // PYXPCOM_USE_PYGILSTATE
 }
 
 // Yet another attempt at cross-platform library initialization and finalization.
