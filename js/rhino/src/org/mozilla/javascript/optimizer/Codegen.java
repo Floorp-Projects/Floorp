@@ -527,9 +527,12 @@ public class Codegen extends Interpreter {
 
         namesVector.addElement(name);
         classFilesVector.addElement(bytes);
-    	classFile = null;
-    	
-    	return name;
+        
+        classFile = null;
+        namesVector = null;
+        classFilesVector = null;
+        
+        return name;
     }
 
     private void generateCodeFromNode(Node node, Node parent, int trueLabel, 
