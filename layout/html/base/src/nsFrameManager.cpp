@@ -68,6 +68,7 @@
 #include "nsIForm.h"
 #include "nsIContentList.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #define NEW_CONTEXT_PARENTAGE_INVARIANT
 
