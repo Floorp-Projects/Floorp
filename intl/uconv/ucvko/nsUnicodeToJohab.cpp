@@ -27,21 +27,21 @@
 // Global functions and data [declaration]
 
 
-static PRUint16 gJohabSymbolShiftTable[] =  {
+static const PRUint16 gJohabSymbolShiftTable[] =  {
   0, uJohabSymbolCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
-static PRUint16 gJohabHangulShiftTable[] =  {
+static const PRUint16 gJohabHangulShiftTable[] =  {
   0, uJohabHangulCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static PRUint16 *g_JohabMappingTable[2] = {
+static const PRUint16 *g_JohabMappingTable[2] = {
   g_HangulNullMapping,
   g_ufKSC5601Mapping
 };
 
-static PRUint16 *g_JohabShiftTable[2] =  {
+static const PRUint16 *g_JohabShiftTable[2] =  {
   gJohabHangulShiftTable,
   gJohabSymbolShiftTable
 };

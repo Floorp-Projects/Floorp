@@ -25,11 +25,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ufMappingTable[] = {
+static const PRUint16 g_ufMappingTable[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
 };
 
-static PRInt16 g_ufShiftTable[] =  {
+static const PRInt16 g_ufShiftTable[] =  {
   0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };

@@ -29,17 +29,17 @@
 
 
 
-static PRUint16 gBig5HKSCSShiftTable[] =  {
+static const PRUint16 gBig5HKSCSShiftTable[] =  {
   0, u2BytesCharset,
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
 
-static PRUint16 *g_Big5HKSCSMappingTable[] = {
+static const PRUint16 *g_Big5HKSCSMappingTable[] = {
   g_ufBig5HKSCSMapping
 };
 
-static PRUint16 *g_Big5HKSCSShiftTable[] =  {
+static const PRUint16 *g_Big5HKSCSShiftTable[] =  {
   gBig5HKSCSShiftTable
 };
 

@@ -25,11 +25,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_SJISMappingTable[] = {
+static const PRUint16 g_SJISMappingTable[] = {
 #include "sjis.uf"
 };
 
-static PRInt16 g_SJISShiftTable[] =  {
+static const PRInt16 g_SJISShiftTable[] =  {
   4, uMultibytesCharset,
   ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
   ShiftCell(u1ByteChar,   1, 0xA1, 0xDF, 0x00, 0xA1, 0x00, 0xDF),

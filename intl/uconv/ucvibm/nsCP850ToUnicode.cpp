@@ -38,11 +38,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_utMappingTable[] = {
+static const PRUint16 g_utMappingTable[] = {
 #include "cp850.ut"
 };
 
-static PRInt16 g_utShiftTable[] =  {
+static const PRInt16 g_utShiftTable[] =  {
   0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };

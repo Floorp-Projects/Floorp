@@ -26,45 +26,45 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ASCIIShiftTable[] =  {
+static const PRUint16 g_ASCIIShiftTable[] =  {
   0, u1ByteCharset,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
 #ifdef MS_EUCKR
-static PRUint16 g_EUCKRMappingTable[] = {
+static const PRUint16 g_EUCKRMappingTable[] = {
 #include "u20ksc.ut"
 };
 
-static PRUint16 g_EUCKRShiftTable[] =  {
+static const PRUint16 g_EUCKRShiftTable[] =  {
   0, u2BytesCharset,  
   ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
 };
 
-static uRange g_EUCKRRanges[] = {
+static const uRange g_EUCKRRanges[] = {
   { 0x00, 0x7E },
   { 0x81, 0xFE }
 };
 #else
 
-static PRUint16 g_EUCKRShiftTable[] =  {
+static const PRUint16 g_EUCKRShiftTable[] =  {
   0, u2BytesGRCharset,  
   ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
 };
 
-static uRange g_EUCKRRanges[] = {
+static const uRange g_EUCKRRanges[] = {
   { 0x00, 0x7E },
   { 0xA1, 0xFE }
 };
 #endif
 
 
-static PRUint16 *g_EUCKRShiftTableSet [] = {
+static const PRUint16 *g_EUCKRShiftTableSet [] = {
   g_ASCIIShiftTable,
   g_EUCKRShiftTable
 };
 
-static PRUint16 *g_EUCKRMappingTableSet [] ={
+static const PRUint16 *g_EUCKRMappingTableSet [] ={
   g_AsciiMapping,
   g_utKSC5601Mapping
 };

@@ -25,11 +25,11 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_MacCEMappingTable[] = {
+static const PRUint16 g_MacCEMappingTable[] = {
 #include "macce.ut"
 };
 
-static PRInt16 g_MacCEShiftTable[] =  {
+static const PRInt16 g_MacCEShiftTable[] =  {
   1, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };

@@ -23,10 +23,11 @@
 
 #include "nsUCvJaSupport.h"
 
-static PRUint16 gJis0208map[] = {
+static const PRUint16 gJis0208map[] = {
 #include "jis0208.ump" 
 };
-static PRUint16 gJis0212map[] = {
+
+static const PRUint16 gJis0212map[] = {
 #include "jis0212.ump" 
 };
 
@@ -36,7 +37,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
      PRUnichar * aDest, PRInt32 * aDestLen)
 {
-   static PRUint16 fbIdx[128] =
+   static const PRUint16 fbIdx[128] =
    {
      0xFFFD, 0,      188,    188*2,  188*3,  188*4,  188*5,  188*6,
      188*7,  188*8,  188*9,  188*10, 188*11, 188*12, 188*13, 188*14,
@@ -55,7 +56,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
      0xE000, 0xE000+188, 0xE000+188*2, 0xE000+188*3, 0xE000+188*4, 0xE000+188*5, 0xE000+188*6, 0xE000+188*7,
      0xE000+188*8, 0xE000+188*9, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
    };
-   static PRUint8 sbIdx[256] =
+   static const PRUint8 sbIdx[256] =
    {
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  /* 0x00 */
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  /* 0x08 */
@@ -192,7 +193,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
      PRUnichar * aDest, PRInt32 * aDestLen)
 {
-   static PRUint16 fbIdx[128] =
+   static const PRUint16 fbIdx[128] =
    {
 /* 0x8X */
      0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
@@ -219,7 +220,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
      94*79,  94*80,  94*81,  94*82,  94*83,  94*84,  94*85,  94*86,
      94*87,  94*88,  94*89,  94*90,  94*91,  94*92,  94*93,  0xFFFD,
    };
-   static PRUint8 sbIdx[256] =
+   static const PRUint8 sbIdx[256] =
    {
 /* 0x0X */
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
@@ -398,7 +399,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
    const char * aSrc, PRInt32 * aSrcLen,
      PRUnichar * aDest, PRInt32 * aDestLen)
 {
-   static PRUint16 fbIdx[128] =
+   static const PRUint16 fbIdx[128] =
    {
 /* 0x8X */
      0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
@@ -425,7 +426,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
      94*79,  94*80,  94*81,  94*82,  94*83,  94*84,  94*85,  94*86,
      94*87,  94*88,  94*89,  94*90,  94*91,  94*92,  94*93,  0xFFFD,
    };
-   static PRUint8 sbIdx[256] =
+   static const PRUint8 sbIdx[256] =
    {
 /* 0x0X */
      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

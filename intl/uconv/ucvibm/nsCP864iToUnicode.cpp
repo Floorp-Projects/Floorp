@@ -78,23 +78,14 @@
 
 
 
-static PRUint16 g_utMappingTable[] = {
-
+static const PRUint16 g_utMappingTable[] = {
 #include "864i.ut"
-
 };
 
-
-
-static PRInt16 g_utShiftTable[] =  {
-
+static const PRInt16 g_utShiftTable[] =  {
   0, u1ByteCharset ,
-
   ShiftCell(0,0,0,0,0,0,0,0)
-
 };
-
-
 
 //----------------------------------------------------------------------
 

@@ -27,27 +27,27 @@
 // Global functions and data [declaration]
 
 
-static PRInt16 g_BIG5ShiftTable[] =  {
+static const PRInt16 g_BIG5ShiftTable[] =  {
   0, u2BytesCharset,  
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-static PRInt16 g_ASCIIShiftTable[] =  {
+static const PRInt16 g_ASCIIShiftTable[] =  {
   0, u1ByteCharset,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-static PRInt16 *g_BIG5ShiftTableSet [] = {
+static const PRInt16 *g_BIG5ShiftTableSet [] = {
   g_ASCIIShiftTable,
   g_BIG5ShiftTable
 };
 
-static PRUint16 *g_BIG5MappingTableSet [] ={
+static const PRUint16 *g_BIG5MappingTableSet [] ={
   g_ASCIIMapping,
   g_utBIG5Mapping
 };
 
-static uRange g_BIG5Ranges[] = {
+static const uRange g_BIG5Ranges[] = {
   { 0x00, 0x7E },
   { 0x81, 0xFC }
 };

@@ -27,12 +27,12 @@
 // Global functions and data [declaration]
 
 // Shift Table
-static PRInt16 g0201ShiftTable[] =  {
+static const PRInt16 g0201ShiftTable[] =  {
         2, uMultibytesCharset,
         ShiftCell(u1ByteChar,           1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
         ShiftCell(u1BytePrefix8EChar, 2, 0x8E, 0x8E, 0x00, 0xA1, 0x00, 0xDF)
 };
-static PRInt16 g0208ShiftTable[] =  {
+static const PRInt16 g0208ShiftTable[] =  {
         0, u2BytesGRCharset,
         ShiftCell(0,0,0,0,0,0,0,0)
 };
@@ -42,7 +42,7 @@ static PRInt16 g0212ShiftTable[] =  {
         ShiftCell(0,0,0,0,0,0,0,0)
 };
 #define SIZE_OF_TABLES 5
-static PRInt16 *gShiftTables[SIZE_OF_TABLES] =  {
+static const PRInt16 *gShiftTables[SIZE_OF_TABLES] =  {
     g0208ShiftTable,
     g0208ShiftTable,
     g0201ShiftTable,
@@ -50,7 +50,7 @@ static PRInt16 *gShiftTables[SIZE_OF_TABLES] =  {
     g0212ShiftTable
 };
 
-static PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
+static const PRUint16 *gMappingTables[SIZE_OF_TABLES] = {
     g_uf0208Mapping,
     g_uf0208extMapping,
     g_uf0201Mapping,

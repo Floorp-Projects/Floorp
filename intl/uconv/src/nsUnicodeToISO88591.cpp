@@ -50,11 +50,11 @@ NS_IMETHODIMP NS_NewUnicodeToISO88591(nsISupports* aOuter,
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ufMappingTable[] = {
+static const PRUint16 g_ufMappingTable[] = {
 #include "8859-1.uf"
 };
 
-static PRInt16 g_ufShiftTable[] =  {
+static const PRInt16 g_ufShiftTable[] =  {
   0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
