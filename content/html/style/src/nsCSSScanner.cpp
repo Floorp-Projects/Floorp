@@ -689,7 +689,10 @@ PRInt32 nsCSSScanner::ParseEscape(nsresult& aErrorCode)
         // Whoops: error or premature eof
         break;
       }
-      if ((lexTable[ch] & IS_HEX_DIGIT) != 0) {
+      if (ch >= 256 || (lexTable[ch] & (IS_HEX_DIGIT | IS_WHITESPACE)) == 0) {
+        Unread();
+        break;
+      } else if ((lexTable[ch] & IS_HEX_DIGIT) != 0) {
         if ((lexTable[ch] & IS_DIGIT) != 0) {
           rv = rv * 16 + (ch - '0');
         } else {
@@ -698,18 +701,13 @@ PRInt32 nsCSSScanner::ParseEscape(nsresult& aErrorCode)
           // "relative to 10" value for computing the hex value.
           rv = rv * 16 + ((ch & 0x7) + 9);
         }
-      }
-      else if ((lexTable[ch] & IS_WHITESPACE) != 0) {  // single space ends escape
-        if (ch == '\r') { // if CR/LF, eat LF too
-          ch = Peek(aErrorCode);
-          if (ch == '\n') {
-            ch = Read(aErrorCode);
-          }
+      } else {
+        NS_ASSERTION((lexTable[ch] & IS_WHITESPACE) != 0, "bad control flow");
+        // single space ends escape
+        if (ch == '\r' && Peek(aErrorCode) == '\n') {
+          // if CR/LF, eat LF too
+          Read(aErrorCode);
         }
-        break;
-      }
-      else {
-        Unread();
         break;
       }
     }
