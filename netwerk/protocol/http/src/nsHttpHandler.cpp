@@ -76,7 +76,6 @@ static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #define UA_PREF_PREFIX          "general.useragent."
 #define UA_APPNAME              "Mozilla"
@@ -565,7 +564,7 @@ nsHttpHandler::GetMimeService(nsIMIMEService **result)
 {
     if (!mMimeService) {
         nsresult rv;
-        mMimeService = do_GetService(kMimeServiceCID, &rv);
+        mMimeService = do_GetService("@mozilla.org/mime;1", &rv);
         if (NS_FAILED(rv)) return rv;
     }
     *result = mMimeService;

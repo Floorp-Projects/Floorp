@@ -591,7 +591,9 @@ nsHttpResponseHead::ParseContentType(char *type)
     while (--p >= type)
         *p = nsCRT::ToLower(*p);
 
-    mContentType = nsCRT::strdup(type);
+    // If the server sent "*/*", it is meaningless, so do not store it.
+    if (PL_strcmp(type, "*/*"))
+        mContentType = nsCRT::strdup(type);
 }
 
 void

@@ -872,11 +872,6 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_CONTRACTID,nsCacheManagerConstructor },
 #endif
     // from netwerk/mime:
-    { "The MIME mapping service", 
-      NS_MIMESERVICE_CID,
-      "@mozilla.org/mimeold;1",
-      nsMIMEService::Create
-    },
     { "xml mime datasource", 
       NS_XMLMIMEDATASOURCE_CID,
       NS_XMLMIMEDATASOURCE_CONTRACTID,
