@@ -31,7 +31,7 @@
 <!ENTITY personalbarCmd.label "Bookmarks Toolbar">
 <!ENTITY personalbarCmd.accesskey "B">
 <!ENTITY taskbarCmd.label "Status Bar">
-<!ENTITY taskbarCmd.accesskey "S">
+<!ENTITY taskbarCmd.accesskey "B">
 
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
@@ -151,11 +151,9 @@
 <!ENTITY viewToolbarsMenu.label       "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey     "T"> 
 <!ENTITY viewSidebarMenu.label "Sidebar">
-<!ENTITY viewSidebarMenu.accesskey "S">
+<!ENTITY viewSidebarMenu.accesskey "e">
 <!ENTITY viewCustomizeToolbar.label       "Customize..."> 
 <!ENTITY viewCustomizeToolbar.accesskey     "C"> 
-<!ENTITY showTaskbarCmd.label         "Status Bar">  
-<!ENTITY showTaskbarCmd.accesskey       "B"> 
 
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
