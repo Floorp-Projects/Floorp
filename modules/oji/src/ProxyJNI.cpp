@@ -31,6 +31,7 @@
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
 #include "plstr.h"
+#include "ProxyClassLoader.h"
 
 #include "ProxyJNI.h"
 
