@@ -67,6 +67,7 @@
 #define HEADER_X_NEWSREADER				        	"X-Newsreader"
 #define HEADER_X_POSTING_SOFTWARE		      	"X-Posting-Software"
 #define HEADER_X_MOZILLA_STATUS	 		      	"X-Mozilla-Status"
+#define HEADER_X_MOZILLA_STATUS2	 		      "X-Mozilla-Status2"
 #define HEADER_X_MOZILLA_NEWSHOST		      	"X-Mozilla-News-Host"
 #define HEADER_X_MOZILLA_DRAFT_INFO		      "X-Mozilla-Draft-Info"
 #define HEADER_X_UIDL					            	"X-UIDL"
