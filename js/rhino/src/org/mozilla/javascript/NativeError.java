@@ -128,7 +128,12 @@ public class NativeError extends IdScriptable {
     }
 
     public String toString() {
-        return getName() + ": " + getMessage();
+        // The "name" property is usually just defined in the prototype,
+        // so use getProperty to fetch it.
+        Object name = ScriptableObject.getProperty(this, "name");
+        if (name == NOT_FOUND)
+            name = Undefined.instance;
+        return name + ": " + getMessage();
     }
     
     public String getName() {
