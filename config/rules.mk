@@ -357,6 +357,62 @@ $(NFSPWD):
 	cd $(@D); $(MAKE) $(@F)
 endif
 
+#
+# JDIRS -- like JSRCS, except you can give a list of directories and it will
+# compile all the out-of-date java files in those directories.
+#
+# NOTE: recursing through these can speed things up, but they also cause
+# some builds to run out of memory
+#
+ifneq ($(JDIRS),)
+ifeq ($(JAVA_OR_NSJVM),1)
+export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
+	@for d in $(JDIRS); do							\
+		if test -d $$d; then						\
+			$(EXIT_ON_ERROR)					\
+			files=`echo $$d/*.java`;				\
+			list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
+				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
+			if test "$${list}x" != "x"; then			\
+			    echo Building all java files in $$d;		\
+			    echo $(JAVAC) $$list;				\
+			    $(JAVAC) $$list;					\
+			else				\
+				true;			\
+			fi;							\
+			set +e;							\
+		else								\
+			echo "Skipping non-directory $$d...";			\
+		fi;	                                                        \
+	done
+endif
+endif
+
+
+ifneq ($(JDIRS),)
+ifeq ($(JAVA_OR_NSJVM),1)
+export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
+	@for d in $(JDIRS); do							\
+		if test -d $$d; then						\
+			$(EXIT_ON_ERROR)					\
+			files=`echo $$d/*.java`;				\
+			list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
+				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
+			if test "$${list}x" != "x"; then			\
+			    echo Building all java files in $$d;		\
+			    echo $(JAVAC) $$list;				\
+			    $(JAVAC) $$list;					\
+			else				\
+				true;			\
+			fi;							\
+			set +e;							\
+		else	\
+			echo "Skipping non-directory $$d...";			\
+		fi;								\
+	done
+endif
+endif
+
 # Target to only regenerate makefiles
 makefiles: $(SUBMAKEFILES)
 ifdef DIRS
@@ -767,38 +823,6 @@ all:: export
 clean clobber::
 	rm -f $(DIST)/classes/$(PACKAGE)/*.class
 
-endif
-endif
-
-#
-# JDIRS -- like JSRCS, except you can give a list of directories and it will
-# compile all the out-of-date java files in those directories.
-#
-# NOTE: recursing through these can speed things up, but they also cause
-# some builds to run out of memory
-#
-ifdef JDIRS
-ifdef JAVA_OR_NSJVM
-export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
-	@for d in $(JDIRS); do							\
-		if test -d $$d; then						\
-			set $(EXIT_ON_ERROR);					\
-			files=`echo $$d/*.java`;				\
-			list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
-				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
-			if test "$${list}x" != "x"; then			\
-			    echo Building all java files in $$d;		\
-			    echo $(JAVAC) $$list;				\
-			    $(JAVAC) $$list;					\
-			else				\
-				true;			\
-			fi;							\
-			set +e;							\
-		else								\
-			echo "Skipping non-directory $$d...";			\
-		fi;								\
-		$(CLICK_STOPWATCH);						\
-	done
 endif
 endif
 

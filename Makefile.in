@@ -33,6 +33,12 @@ ifdef MOZ_L10N
 DIRS        += l10n
 endif
 
+ifdef MOZ_JAVA_SUPPLEMENT
+DIRS += 			\
+  java/util			\
+  java/webclient		\
+  $(NULL)
+endif
 
 ifndef MOZ_NATIVE_NSPR
 ifdef USE_NSPR_AUTOCONF

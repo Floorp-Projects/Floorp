@@ -233,7 +233,11 @@ JAVA_PROG	= $(NS_BIN)java
 JAVAC_ZIP	= $(NS_LIB)/classes.zip
 else
 JAVA_PROG	= $(LOCAL_BIN)java
+ifdef JDKHOME
+JAVAC_ZIP	= $(JAVA_LIB)/classes.zip
+else
 JAVAC_ZIP	= $(JAVA_LIB)/javac.zip
+endif
 endif
 TAR		= tar
 endif
@@ -421,6 +425,10 @@ JAVAH_PROG	= $(DIST)/bin/javah
 endif
 else
 JAVAH_PROG	= $(JAVA) netscape.tools.jric.Main
+endif
+
+ifneq ($(JDKHOME),)
+JAVAH_PROG	= $(JDKHOME)/bin/javah
 endif
 
 ifeq ($(STAND_ALONE_JAVA),1)
