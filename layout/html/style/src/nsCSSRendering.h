@@ -37,7 +37,8 @@ public:
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          const nsStyleSpacing& aStyle,
+                          const nsStyleSpacing& aBorderStyle,
+						  nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0);
 
@@ -58,6 +59,7 @@ public:
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsBorderEdges * aBorderEdges,
+							   nsIStyleContext* aStyleContext,
                                PRIntn aSkipSides,
                                nsRect* aGap = 0);
 
@@ -107,8 +109,9 @@ public:
 
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
-                                nscolor baseColor,
-                                PRBool printing);
+                                nscolor aBackgroundColor,
+								nscolor aElementColor,
+								PRBool printing,PRBool aSpecialCase);
 
   static PRIntn MakeSide(nsPoint aPoints[],
                          nsIRenderingContext& aContext,
@@ -131,7 +134,9 @@ protected:
                        PRIntn whichSide,
                        const PRUint8 borderStyle,
                        const nscolor borderColor,
-                       const nsRect& borderOutside,
+					   const nscolor aElementColor, 
+                       const nscolor aBackgroundColor, 
+					   const nsRect& borderOutside,
                        const nsRect& borderInside,
                        PRBool printing,
                        nscoord twipsPerPixel,
