@@ -744,6 +744,15 @@ _MD_getpeername (PRFileDesc *fd, PRNetAddr *addr, PRUint32 *addrlen)
     rv = getpeername(fd->secret->md.osfd,
                      (struct sockaddr *) addr, (_PRSockLen_t *)addrlen);
 
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    if (rv == 0) {
+        /* ignore the sa_len field of struct sockaddr */
+        if (addr) {
+            addr->raw.family = ((struct sockaddr *) addr)->sa_family;
+        }
+    }
+#endif /* _PR_HAVE_SOCKADDR_LEN */
+
     if (rv < 0) {
         err = _MD_ERRNO();
         _PR_MD_MAP_GETPEERNAME_ERROR(err);
