@@ -23,11 +23,13 @@ LIBRARY_NAME=txtsvc
 CPPSRCS =				\
 	nsTextServicesDocument.cpp	\
 	nsTextServicesFactory.cpp	\
+	nsTSDNotifier.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsTextServicesDocument.obj	\
 	.\$(OBJDIR)\nsTextServicesFactory.obj	\
+	.\$(OBJDIR)\nsTSDNotifier.obj	\
 	$(NULL)
 
 MODULE=txtsvc 

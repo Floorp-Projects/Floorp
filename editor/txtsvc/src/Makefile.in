@@ -29,6 +29,7 @@ IS_COMPONENT = 1
 CPPSRCS =                      \
     nsTextServicesDocument.cpp \
     nsTextServicesFactory.cpp  \
+    nsTSDNotifier.cpp  \
     $(NULL)
 
 EXTRA_DSO_LDOPTS = \
