@@ -260,6 +260,7 @@ print "
 if (defined $::COOKIE{"Bugzilla_login"}) {
     if ($::COOKIE{"Bugzilla_login"} eq Param("maintainer")) {
         print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
+        print "<a href=editowners.cgi>Edit Bugzilla component owners</a><br>\n";
     }
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
