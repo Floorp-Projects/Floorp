@@ -33,7 +33,7 @@
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <tree id="folderTree" class="plain focusring" flex="1" seltype="single"
+  <tree id="folderTree" class="plain focusring" flex="1" seltype="single" selstyle="primary"
             disableKeyNavigation="true"
             datasources="rdf:null"
             statedatasource="rdf:mailnewsfolders"
