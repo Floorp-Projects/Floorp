@@ -18,5 +18,5 @@
   </RDF:Description>
 
   <RDF:Description about="urn:mozilla:skin:modern/1.0:inspector"
-    chrome:skinVersion="1.5"/>
+#expand     chrome:skinVersion="__MOZILLA_SKIN_VERSION__"/>
 </RDF:RDF>
