@@ -33,6 +33,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
+#include "nsCOMPtr.h"
 #else
 #include "nsIURLGroup.h"
 #endif // NECKO
@@ -2459,25 +2460,10 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
         nsString baseURL;
         nsresult rv;
 #ifdef NECKO
-        nsIURI* base;
-        if (baseURL.Length() == 0) {
-          rv = NS_NewURI(&base, baseURL);
-        }
-        else {
-          rv = mURL->Clone(&base);
-        }
-        if (NS_FAILED(rv)) return PR_FALSE;
-        
-        char* str = tk->mIdent.ToNewCString();
-        if (!str) {
-          NS_RELEASE(base);
-          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-          return PR_FALSE;
-        }
-
-        rv = NS_MakeAbsoluteURI(str, base, absURL);
-        NS_RELEASE(base);
-        delete [] str;
+		nsCOMPtr<nsIURI> base;
+		rv = mURL->Clone(getter_AddRefs(base));
+		if (NS_SUCCEEDED(rv))
+			rv = NS_MakeAbsoluteURI(nsCAutoString(tk->mIdent), base, absURL);
 #else
         rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
 #endif // NECKO
