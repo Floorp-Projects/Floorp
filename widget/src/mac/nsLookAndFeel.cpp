@@ -112,13 +112,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
+        aMetric = 4;
         break;
     case eMetric_TextVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 4;
         break;
     case eMetric_TextShouldUseVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
         aMetric = 1;
