@@ -292,6 +292,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 #ifdef rickgdebug
     rv = NS_New_HTML_ContentSinkStream(&sink);
 #else
+    NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
     aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
     rv = NS_NewHTMLContentSink(&sink, this, aURL, webShell);
     NS_IF_RELEASE(webShell);
