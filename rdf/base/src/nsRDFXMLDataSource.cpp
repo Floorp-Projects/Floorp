@@ -887,12 +887,13 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
         }
     }
 
-    nsresult rv;
+    if (! mURL)
+        return NS_ERROR_FAILURE;
     nsCOMPtr<nsIRDFXMLParser> parser = do_CreateInstance("@mozilla.org/rdf/xml-parser;1");
     if (! parser)
         return NS_ERROR_FAILURE;
 
-    rv = parser->ParseAsync(this, mURL, getter_AddRefs(mListener));
+    nsresult rv = parser->ParseAsync(this, mURL, getter_AddRefs(mListener));
     if (NS_FAILED(rv)) return rv;
 
     if (aBlocking) {
