@@ -280,22 +280,22 @@ CAPIStatus CAPI_DeleteEvent(
     JulianPtrArray* pEventList = 0;
 
     if (0 == pSession)
-        return CAPI_ERR_CORRUPT_SESSION;
+        return CAPI_ERR2_SESSION_BAD;
     if (0 == pHList)
-        return CAPI_ERR_CORRUPT_HANDLE;
+        return CAPI_ERR2_HANDLE_BAD;
 
     for (int i = 0; i < iHandleCount; i++)
     {
         pHandle = (PCAPIHANDLE*) pHList[i];
         if (0 == pHandle)
-            DEL_EXIT(CAPI_ERR_CORRUPT_HANDLE)
+            DEL_EXIT(CAPI_ERR2_HANDLE_BAD)
 
         /*
          *  create an NSCalendar, pCal
          */
         pCal = new NSCalendar(pLog);
         if (pCal == 0)
-            DEL_EXIT(CAPI_ERR_INTERNAL)
+            DEL_EXIT(CAPI_ERR1_INTERNAL)
 
         /*
          *  Try to load pHandle->psFile in pCal.
@@ -307,9 +307,9 @@ CAPIStatus CAPI_DeleteEvent(
             continue;
         pRedr = (ICalReader *) new ICalFileReader(pHandle->psFile, status);
         if (pRedr == 0)
-            DEL_EXIT(CAPI_ERR_INTERNAL)
+            DEL_EXIT(CAPI_ERR1_INTERNAL)
         if (FAILURE(status))
-            DEL_EXIT(CAPI_ERR_INTERNAL)
+            DEL_EXIT(CAPI_ERR1_INTERNAL)
 
         /*
          *  Load original datastore...
@@ -353,7 +353,7 @@ CAPIStatus CAPI_DeleteEvent(
         {
             pCal->export(pHandle->psFile, bWriteStatus);
             if (!bWriteStatus)
-                DEL_EXIT(CAPI_ERR_INTERNAL);
+                DEL_EXIT(CAPI_ERR1_INTERNAL);
         }
 
         delete pCal;
@@ -425,7 +425,7 @@ CAPIStatus CAPI_FetchEventsByAlarmRange(
     int iPropCount,             /* i: number of properties in *ppsPropList  */
     CAPIStream stream)          /* i: stream to which solution set will be written  */
 {
-    return CAPI_ERR_NOT_IMPLEMENTED;
+    return CAPI_ERR1_IMPLENTATION;
 }
 
 #define FBID_EXIT(x) {iRetStatus = x; goto FBID_EXIT;}
@@ -474,11 +474,11 @@ CAPIStatus CAPI_FetchEventsByID(
     char * pCopy = 0;
 
     if (0 == pSession)
-        return CAPI_ERR_CORRUPT_SESSION;
+        return CAPI_ERR2_SESSION_BAD;
     if (0 == pHandle)
-        return CAPI_ERR_CORRUPT_HANDLE;
+        return CAPI_ERR2_HANDLE_BAD;
     if (0 == pStream)
-        return CAPI_ERR_CORRUPT_STREAM;
+        return CAPI_ERR2_STREAM_BAD;
     
     /*
      *  For this trivial implementation, we're going to read
@@ -491,30 +491,30 @@ CAPIStatus CAPI_FetchEventsByID(
          */
         pCal = new NSCalendar(pLog);
         if (pCal == 0)
-            return CAPI_ERR_INTERNAL;
+            return CAPI_ERR1_INTERNAL;
         evtVctr = new JulianPtrArray();
         if (evtVctr == 0) 
-            FBID_EXIT(CAPI_ERR_INTERNAL);
+            FBID_EXIT(CAPI_ERR1_INTERNAL);
 
         /*
          *  Try to load pHandle->psFile in pCal
-         *  if file error, return CAPI_ERR_INTERNAL
+         *  if file error, return CAPI_ERR1_INTERNAL
          */
 
         if (CAPI_access(pHandle->psFile, 00 /*F_OK*/))
         {
             FILE *pFile = 0;
             if ( 0 == (pFile =CAPI_fopen(pHandle->psFile,"w")))
-                FBID_EXIT(CAPI_ERR_INTERNAL);
+                FBID_EXIT(CAPI_ERR1_INTERNAL);
 
             if (0 != CAPI_fclose(pFile))
-                FBID_EXIT(CAPI_ERR_INTERNAL);
+                FBID_EXIT(CAPI_ERR1_INTERNAL);
         }
         pRedr = (ICalReader *) new ICalFileReader(pHandle->psFile, status);
         if (pRedr == 0)
-                FBID_EXIT(CAPI_ERR_INTERNAL);
+                FBID_EXIT(CAPI_ERR1_INTERNAL);
         if (FAILURE(status))
-                FBID_EXIT(CAPI_ERR_INTERNAL);
+                FBID_EXIT(CAPI_ERR1_INTERNAL);
 
         /* parse reader */
         uFilename = pHandle->psFile;
@@ -562,14 +562,14 @@ CAPIStatus CAPI_FetchEventsByID(
                 {
                     iStatus = (*pStream->pfnRcvCallback)(pStream->userDataRcv,p,iLen,&iAmountHandled);
                     if (CAPI_CALLBACK_CONTINUE != iStatus)
-                        FBID_EXIT(CAPI_ERR_CALLBACK);
+                        FBID_EXIT(CAPI_ERR1_CALLBACK);
                     iLen -= iAmountHandled;     
                 }
                 delete [] pCopy; pCopy = 0;
             }
             else
             {
-                 FBID_EXIT(CAPI_ERR_CALLBACK);
+                 FBID_EXIT(CAPI_ERR1_CALLBACK);
             }
         }
 
@@ -600,13 +600,13 @@ CAPIStatus CAPI_FetchEventsByID(
             }
             pCopy = usEvt.toCString("");
             if (pCopy == 0)
-                FBID_EXIT(CAPI_ERR_NO_MEMORY);
+                FBID_EXIT(CAPI_ERR1_MEMORY);
     
             for(p = pCopy, iLen = CAPI_strlen(pCopy);iLen > 0; p += iAmountHandled)
             {
                 iStatus = (*pStream->pfnRcvCallback)(pStream->userDataRcv,p,iLen,&iAmountHandled);
                 if (CAPI_CALLBACK_CONTINUE != iStatus)
-                    FBID_EXIT(CAPI_ERR_CALLBACK);
+                    FBID_EXIT(CAPI_ERR1_CALLBACK);
                 iLen -= iAmountHandled;     
             }
             delete [] pCopy; pCopy = 0;
@@ -677,11 +677,11 @@ CAPIStatus CAPI_FetchEventsByRange(
     UnicodeString uTemp;
 
     if (0 == pSession)
-        return CAPI_ERR_CORRUPT_SESSION;
+        return CAPI_ERR2_SESSION_BAD;
     if (0 == pH)
-        return CAPI_ERR_CORRUPT_HANDLE;
+        return CAPI_ERR2_HANDLE_BAD;
     if (0 == pStream)
-        return CAPI_ERR_CORRUPT_STREAM;
+        return CAPI_ERR2_STREAM_BAD;
         
     /*
      *  For this trivial implementation, we're going to read
@@ -703,36 +703,36 @@ CAPIStatus CAPI_FetchEventsByRange(
             pHandle = (PCAPIHANDLE *) pH[i];
             if (pHandle == 0)
             {
-                return CAPI_ERR_CORRUPT_HANDLE;
+                return CAPI_ERR2_HANDLE_BAD;
             }
 
             pCal = new NSCalendar(pLog);
             if (pCal == 0)
-                FBRANGE_EXIT(CAPI_ERR_INTERNAL);
+                FBRANGE_EXIT(CAPI_ERR1_INTERNAL);
 
             evtVctr = new JulianPtrArray();
             if (evtVctr == 0)
-                FBRANGE_EXIT(CAPI_ERR_INTERNAL);
+                FBRANGE_EXIT(CAPI_ERR1_INTERNAL);
 
             /*
              *  Try to load pHandle->psFile in pCal
-             *  if file error, return CAPI_ERR_INTERNAL
+             *  if file error, return CAPI_ERR1_INTERNAL
              */
 
             if (CAPI_access(pHandle->psFile, 00 /*F_OK*/))
             {
                 FILE * pFile = 0;
                 if ( 0 == (pFile =CAPI_fopen(pHandle->psFile,"w")))
-                    FBRANGE_EXIT(CAPI_ERR_INTERNAL);
+                    FBRANGE_EXIT(CAPI_ERR1_INTERNAL);
                 if (0 != CAPI_fclose(pFile))
-                    FBRANGE_EXIT(CAPI_ERR_INTERNAL);
+                    FBRANGE_EXIT(CAPI_ERR1_INTERNAL);
             }
             
             pRedr = (ICalReader *) new ICalFileReader(pHandle->psFile, status);
             if (pRedr == 0)
-                FBRANGE_EXIT(CAPI_ERR_INTERNAL);
+                FBRANGE_EXIT(CAPI_ERR1_INTERNAL);
             if (FAILURE(status))
-                FBRANGE_EXIT(CAPI_ERR_INTERNAL);
+                FBRANGE_EXIT(CAPI_ERR1_INTERNAL);
 
             /* parse reader */
             uFilename = pHandle->psFile;
@@ -782,14 +782,14 @@ CAPIStatus CAPI_FetchEventsByRange(
                     {
                         iStatus = (*pStream->pfnRcvCallback)(pStream->userDataRcv,p,iLen,&iAmountHandled);                            
                         if (CAPI_CALLBACK_CONTINUE != iStatus)
-                            FBRANGE_EXIT(CAPI_ERR_CALLBACK);
+                            FBRANGE_EXIT(CAPI_ERR1_CALLBACK);
                         iLen -= iAmountHandled;     
                     }
                     delete [] pCopy; pCopy = 0;
                 }
                 else
                 {
-                    FBRANGE_EXIT(CAPI_ERR_CALLBACK);
+                    FBRANGE_EXIT(CAPI_ERR1_CALLBACK);
                 }
             }
             else
@@ -829,13 +829,13 @@ CAPIStatus CAPI_FetchEventsByRange(
 
                     pCopy = usEvt.toCString("");
                     if (pCopy == 0)
-                        FBRANGE_EXIT(CAPI_ERR_NO_MEMORY);
+                        FBRANGE_EXIT(CAPI_ERR1_MEMORY);
     
                     for(p = pCopy, iLen = CAPI_strlen(pCopy);iLen > 0; p += iAmountHandled)
                     {
                         iStatus = (*pStream->pfnRcvCallback)(pStream->userDataRcv,p,iLen,&iAmountHandled);
                         if (CAPI_CALLBACK_CONTINUE != iStatus)
-                            FBRANGE_EXIT(CAPI_ERR_CALLBACK);
+                            FBRANGE_EXIT(CAPI_ERR1_CALLBACK);
                         iLen -= iAmountHandled;     
                     }
                     delete [] pCopy; pCopy = 0;
@@ -900,10 +900,10 @@ CAPIStatus CAPI_GetHandle(
     PCAPISESSION* pSession = (PCAPISESSION *) s;
     PCAPIHANDLE* pHandle = (PCAPIHANDLE *) CAPI_malloc(sizeof(PCAPIHANDLE));
     if (0 == pSession)
-        return CAPI_ERR_NULL_PARAMETER;
+        return CAPI_ERR2_SESSION_NULL;
     *pH = 0;
     if (0 == pHandle)
-        return CAPI_ERR_NO_MEMORY;
+        return CAPI_ERR1_MEMORY;
     
     pHandle->pSession = pSession;
     pHandle->pCurl = new nsCurlParser(u);
@@ -949,7 +949,7 @@ CAPIStatus CAPI_Logoff(
         *s = 0;
         return CAPI_ERR_OK;
     }
-    return CAPI_ERR_NULL_PARAMETER;
+    return CAPI_ERR2_SESSION_NULL;
 }
     
 /**
@@ -965,7 +965,7 @@ CAPIStatus CAPI_Logon(
     PCAPISESSION* pSession = (PCAPISESSION *) CAPI_malloc(sizeof(PCAPISESSION));
     *ps = 0;
     if (0 == pSession)
-        return CAPI_ERR_NO_MEMORY;
+        return CAPI_ERR1_MEMORY;
     pSession->psUser = CAPI_strdup(psUser);
     pSession->psPassword = CAPI_strdup(psPassword);
     pSession->psHost = CAPI_strdup(psHost);
@@ -995,7 +995,7 @@ CAPIStatus CAPI_LogonCurl(
     PCAPISESSION* pSession = (PCAPISESSION *) CAPI_malloc(sizeof(PCAPISESSION));
     *ps = 0;
     if (0 == pSession)
-        return CAPI_ERR_NO_MEMORY;
+        return CAPI_ERR1_MEMORY;
     pSession->psPassword = CAPI_strdup(psPassword);
 
     pSession->pCurl = new nsCurlParser(psCurl);
@@ -1031,7 +1031,7 @@ CAPIStatus CAPI_SetStreamCallbacks (
     {
       pRet = (PCAPIStream *) CAPI_malloc(sizeof(PCAPIStream));
       if (0 == pRet)
-          return CAPI_ERR_NO_MEMORY;
+          return CAPI_ERR1_MEMORY;
       CAPI_memset(pRet,0,sizeof(PCAPIStream));
     }
 
@@ -1077,11 +1077,11 @@ CAPIStatus CAPI_StoreEvent(
     ErrorCode status = ZERO_ERROR;
 
     if (0 == pSession)
-        return CAPI_ERR_CORRUPT_SESSION;
+        return CAPI_ERR2_SESSION_BAD;
     if (0 == pHList)
-        return CAPI_ERR_CORRUPT_HANDLE;
+        return CAPI_ERR2_HANDLE_BAD;
     if (0 == pStream)
-        return CAPI_ERR_CORRUPT_STREAM;
+        return CAPI_ERR2_STREAM_BAD;
     
     /*
      *   import the user supplied stream into pCal.
@@ -1099,14 +1099,14 @@ CAPIStatus CAPI_StoreEvent(
     sprintf(sTemplate,"CAPIXXXXXX");
     psTempFile = CAPI_mktemp( sTemplate );
     if( 0 == psTempFile)
-        return CAPI_ERR_INTERNAL;
+        return CAPI_ERR1_INTERNAL;
     if( 0 == (pFile = CAPI_fopen(psTempFile,"w")))
-        return CAPI_ERR_INTERNAL;
+        return CAPI_ERR1_INTERNAL;
 
     iTempFileCreated = 1;
     pBuf = (char *) CAPI_malloc(iBufSize);
     if (0 == pBuf)
-        STOR_EXIT(CAPI_ERR_NO_MEMORY);
+        STOR_EXIT(CAPI_ERR1_MEMORY);
 
     for( iWorking = 1; iWorking != 0; )
     {
@@ -1117,7 +1117,7 @@ CAPIStatus CAPI_StoreEvent(
             &iLen);               /* how much data was put in the buffer */
         if (iStatus > 0)
         {
-            STOR_EXIT(CAPI_ERR_CALLBACK);
+            STOR_EXIT(CAPI_ERR1_CALLBACK);
         }
         else
         {
@@ -1126,7 +1126,7 @@ CAPIStatus CAPI_StoreEvent(
             if (iLen > 0)
             {
                 if (iLen != CAPI_fwrite(pBuf,1,iLen,pFile))
-                    STOR_EXIT(CAPI_ERR_CALLBACK);
+                    STOR_EXIT(CAPI_ERR1_CALLBACK);
             }
         }
     }
@@ -1136,7 +1136,7 @@ CAPIStatus CAPI_StoreEvent(
      *  of the caller supplied CAPI_handles
      */
     if (0 != CAPI_fclose(pFile))
-        STOR_EXIT(CAPI_ERR_INTERNAL);
+        STOR_EXIT(CAPI_ERR1_INTERNAL);
     pFile = 0;
     CAPI_free(pBuf);
     pBuf = 0;
@@ -1148,35 +1148,35 @@ CAPIStatus CAPI_StoreEvent(
         {
             pHandle = (PCAPIHANDLE*) pHList[i];
             if (0 == pHandle)
-                STOR_EXIT(CAPI_ERR_CORRUPT_HANDLE);
+                STOR_EXIT(CAPI_ERR2_HANDLE_BAD);
 
             /*
              *  create an NSCalendar, pCal
              */
             pCal = new NSCalendar(pLog);
             if (pCal == 0)
-                STOR_EXIT(CAPI_ERR_INTERNAL);
+                STOR_EXIT(CAPI_ERR1_INTERNAL);
 
             /*
              *  Try to load pHandle->psFile in pCal
-             *  if file error, return CAPI_ERR_INTERNAL
+             *  if file error, return CAPI_ERR1_INTERNAL
              */
 
             if (CAPI_access(pHandle->psFile, 00 /*F_OK*/))
             {
                 pFile = 0;
                 if ( 0 == (pFile =CAPI_fopen(pHandle->psFile,"w")))
-                    STOR_EXIT(CAPI_ERR_INTERNAL);
+                    STOR_EXIT(CAPI_ERR1_INTERNAL);
 
                 if (0 != CAPI_fclose(pFile))
-                    STOR_EXIT(CAPI_ERR_INTERNAL);
+                    STOR_EXIT(CAPI_ERR1_INTERNAL);
                 pFile = 0;
             }
             pRedr = (ICalReader *) new ICalFileReader(pHandle->psFile, status);
             if (pRedr == 0)
-                STOR_EXIT(CAPI_ERR_INTERNAL);
+                STOR_EXIT(CAPI_ERR1_INTERNAL);
             if (FAILURE(status))
-                STOR_EXIT(CAPI_ERR_INTERNAL);
+                STOR_EXIT(CAPI_ERR1_INTERNAL);
 
             /*
              *  Load original datastore...
@@ -1191,9 +1191,9 @@ CAPIStatus CAPI_StoreEvent(
              */
             pRedr = (ICalReader *) new ICalFileReader(psTempFile, status);
             if (pRedr == 0)
-                STOR_EXIT(CAPI_ERR_INTERNAL);
+                STOR_EXIT(CAPI_ERR1_INTERNAL);
             if (FAILURE(status))
-                STOR_EXIT(CAPI_ERR_INTERNAL);
+                STOR_EXIT(CAPI_ERR1_INTERNAL);
             uFilename = pHandle->psFile;
             pCal->parse(pRedr, uFilename);
             delete pRedr; pRedr = 0;
@@ -1203,7 +1203,7 @@ CAPIStatus CAPI_StoreEvent(
              */
             pCal->export(pHandle->psFile, bWriteStatus);
             if (!bWriteStatus)
-                STOR_EXIT(CAPI_ERR_INTERNAL);
+                STOR_EXIT(CAPI_ERR1_INTERNAL);
 
             delete pCal;
             pCal = 0;
@@ -1212,7 +1212,7 @@ CAPIStatus CAPI_StoreEvent(
     }
 
     if (0 != CAPI_unlink(psTempFile))
-        STOR_EXIT(CAPI_ERR_INTERNAL);
+        STOR_EXIT(CAPI_ERR1_INTERNAL);
     iTempFileCreated = 0;
 
 STOREVENT_EXIT:

@@ -44,6 +44,7 @@ typedef long CAPIStatus;
 #define CAPI_CALLBACK_CONTINUE  0
 #define CAPI_CALLBACK_DONE     -1
 
+#if 0
 #define CAPI_ERR_OK 0
 
 #define CAPI_ERR_CALLBACK 1
@@ -67,6 +68,7 @@ typedef long CAPIStatus;
 #define CAPI_ERR_SERVER 19
 #define CAPI_ERR_UID 20
 #define CAPI_ERR_USERNAME_PASSWORD 21
+#endif
 
 typedef int (*CAPICallback)( 
     void* pData,                /* i: caller-defined data, the value  */
@@ -191,5 +193,119 @@ NS_CALENDAR CAPIStatus CAPI_LogonCurl(
 #ifdef __cplusplus
 }
 #endif
+
+/* The ok error */ 
+#define CAPI_ERR_OK                   ((CAPIStatus) 0x00) 
+
+/* Masks for checking for fields of error codes */ 
+#define CAPI_ERRMASK_MODE_FIELD       ((CAPIStatus) 0xFF << 24) 
+#define CAPI_ERRMASK_TYPE_FIELD       ((CAPIStatus) 0x1F << 19) 
+#define CAPI_ERRMASK_ERR1_FIELD       ((CAPIStatus) 0x1F << 14) 
+#define CAPI_ERRMASK_ERR2_FIELD       ((CAPIStatus) 0x3F << 8) 
+#define CAPI_ERRMASK_VENDOR_FIELD     ((CAPIStatus) 0xFF) 
+
+/* Masks for checking for errors at various levels */ 
+
+#define CAPI_ERRMASK_TYPE    ((CAPIStatus) CAPI_ERRMASK_TYPE_FIELD) 
+#define CAPI_ERRMASK_ERR1    ((CAPIStatus) CAPI_ERRMASK_TYPE + CAPI_ERRMASK_ERR1_FIELD) 
+#define CAPI_ERRMASK_ERR2    ((CAPIStatus) CAPI_ERRMASK_ERR1 + CAPI_ERRMASK_ERR2_FIELD) 
+#define CAPI_ERRMASK_VENDOR  ((CAPIStatus) CAPI_ERRMASK_ERR2 + CAPI_ERRMASK_VENDOR_FIELD) 
+
+/* The non fatal error bit */ 
+
+#define CAPI_ERRMODE_FATAL      ((CAPIStatus) 0x1 << 24)) 
+
+/* The various error types (field 2) */ 
+#define CAPI_ERRTYPE_DATA       ((CAPIStatus) 0x1 << 19) 
+#define CAPI_ERRTYPE_SERVICE    ((CAPIStatus) 0x2 << 19) 
+#define CAPI_ERRTYPE_API        ((CAPIStatus) 0x3 << 19) 
+#define CAPI_ERRTYPE_SECURITY   ((CAPIStatus) 0x4 << 19) 
+#define CAPI_ERRTYPE_LIBRARY    ((CAPIStatus) 0x5 << 19) 
+
+/* Data errors  */ 
+
+/* field 3 values */ 
+#define CAPI_ERR1_ICAL    ((CAPIStatus) CAPI_ERRTYPE_DATA + (0x1 << 14 )) 
+#define CAPI_ERR1_MIME    ((CAPIStatus) CAPI_ERRTYPE_DATA + (0x2 << 14 )) 
+#define CAPI_ERR1_DATE    ((CAPIStatus) CAPI_ERRTYPE_DATA + (0x3 << 14 )) 
+#define CAPI_ERR1_ID      ((CAPIStatus) CAPI_ERRTYPE_DATA + (0x4 << 14 )) 
+
+/* field 4 values */ 
+#define CAPI_ERR2_MIME_NONE    ((CAPIStatus) CAPI_ERR1_MIME + (0x1 << 8)) 
+#define CAPI_ERR2_MIME_NOICAL  ((CAPIStatus) CAPI_ERR1_MIME + (0x2 << 8)) 
+
+#define CAPI_ERR2_DATE_RANGE   ((CAPIStatus) CAPI_ERR1_DATE + (0x1 << 8)) 
+#define CAPI_ERR2_DATE_FORMAT  ((CAPIStatus) CAPI_ERR1_DATE + (0x2 << 8)) 
+
+#define CAPI_ERR2_ID_USERID    ((CAPIStatus) CAPI_ERR1_ID +   (0x1 << 8)) 
+#define CAPI_ERR2_ID_HOSTNAME  ((CAPIStatus) CAPI_ERR1_ID +   (0x2 << 8)) 
+
+/* field 5 values (Vendor specific errors) */ 
+
+#define CAPI_ERR_IDUSERID_INIFILE ((CAPIStatus) CAPI_ERR2_ID_USERID + 0x01) 
+#define CAPI_ERR_IDUSERID_FORMAT  ((CAPIStatus) CAPI_ERR2_ID_USERID + 0x02) 
+#define CAPI_ERR_IDUSERID_NONE    ((CAPIStatus) CAPI_ERR2_ID_USERID + 0x03) 
+#define CAPI_ERR_IDUSERID_MANY    ((CAPIStatus) CAPI_ERR2_ID_USERID + 0x04) 
+#define CAPI_ERR_IDUSERID_NODE    ((CAPIStatus) CAPI_ERR2_ID_USERID + 0x05) 
+
+/* 
+ * Service errors 
+ */ 
+
+/* field 3 values */ 
+#define CAPI_ERR1_MEMORY    ((CAPIStatus) CAPI_ERRTYPE_SERVICE + (0x1 << 14 )) 
+#define CAPI_ERR1_FILE      ((CAPIStatus) CAPI_ERRTYPE_SERVICE + (0x2 << 14 )) 
+#define CAPI_ERR1_NETWORK   ((CAPIStatus) CAPI_ERRTYPE_SERVICE + (0x3 << 14 )) 
+
+/* field 4 values */ 
+#define CAPI_ERR2_NETWORK_TIMEOUT ((CAPIStatus) CAPI_ERR1_NETWORK + (0x1 << 8)) 
+  
+
+/* 
+ * API errors 
+ */ 
+
+/* field 3 values */ 
+#define CAPI_ERR1_FLAGS     ((CAPIStatus) CAPI_ERRTYPE_API + (0x1 << 14)) 
+#define CAPI_ERR1_NULLPARAM ((CAPIStatus) CAPI_ERRTYPE_API + (0x2 << 14)) 
+#define CAPI_ERR1_CALLBACK  ((CAPIStatus) CAPI_ERRTYPE_API + (0x3 << 14)) 
+#define CAPI_ERR1_HANDLE    ((CAPIStatus) CAPI_ERRTYPE_API + (0x4 << 14)) 
+#define CAPI_ERR1_SESSION   ((CAPIStatus) CAPI_ERRTYPE_API + (0x5 << 14)) 
+#define CAPI_ERR1_STREAM    ((CAPIStatus) CAPI_ERRTYPE_API + (0x6 << 14)) 
+
+/* field 4 values */ 
+#define CAPI_ERR2_HANDLE_NULL  ((CAPIStatus) CAPI_ERR1_HANDLE + (0x1 << 8)) 
+#define CAPI_ERR2_HANDLE_BAD   ((CAPIStatus) CAPI_ERR1_HANDLE + (0x2 << 8)) 
+
+#define CAPI_ERR2_SESSION_NULL ((CAPIStatus) CAPI_ERR1_SESSION + (0x1 << 8)) 
+#define CAPI_ERR2_SESSION_BAD  ((CAPIStatus) CAPI_ERR1_SESSION + (0x2 << 8)) 
+
+#define CAPI_ERR2_STREAM_NULL  ((CAPIStatus) CAPI_ERR1_STREAM + (0x1 << 8)) 
+#define CAPI_ERR2_STREAM_BAD   ((CAPIStatus) CAPI_ERR1_STREAM + (0x2 << 8)) 
+
+/* 
+ * Security errors 
+ */ 
+
+/* field 3 values */ 
+#define CAPI_ERR1_READ      ((CAPIStatus) CAPI_ERRTYPE_SECURITY + (0x1 << 14)) 
+#define CAPI_ERR1_WRITE     ((CAPIStatus) CAPI_ERRTYPE_SECURITY + (0x2 << 14)) 
+
+/* field 4 values */ 
+#define CAPI_ERR2_READ_PROPS   ((CAPIStatus) CAPI_ERR1_READ + (0x1 << 8)) 
+
+#define CAPI_ERR2_WRITE_AGENDA ((CAPIStatus) CAPI_ERR1_WRITE + (0x1 << 8)) 
+#define CAPI_ERR2_WRITE_EVENT  ((CAPIStatus) CAPI_ERR1_WRITE + (0x2 << 8)) 
+  
+
+/* 
+ * Library errors 
+ */ 
+/* field 3 values */ 
+#define CAPI_ERR1_INTERNAL      ((CAPIStatus) CAPI_ERRTYPE_LIBRARY + (0x1 << 14)) 
+#define CAPI_ERR1_IMPLENTATION  ((CAPIStatus) CAPI_ERRTYPE_LIBRARY + (0x2 << 14)) 
+
+/* field 4 values */ 
+#define CAPI_ERR2_INTERNALEXPIRY ((CAPIStatus) CAPI_ERR_INTERNAL + (0x1 << 8)) 
 
 #endif  /* __JULIAN_LOCAL_CAPI_H */
