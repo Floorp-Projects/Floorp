@@ -428,8 +428,9 @@ pref("network.prefetch-next", true);
 // post to the server specified by this pref.
 pref("network.hosts.nntp_server",           "news.mozilla.org");
 
-pref("network.image.enable",                true); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
-pref("network.image.enableForOriginatingWebsiteOnly", false);
+// 0-Accept, 1-dontAcceptForeign, 2-dontUse
+user_pref("network.image.imageBehavior",    0);
+
 pref("network.image.warnAboutImages",       false);
 pref("network.proxy.autoconfig_url",        "");
 pref("network.proxy.type",                  0);
