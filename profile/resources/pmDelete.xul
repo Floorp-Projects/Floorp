@@ -13,7 +13,8 @@
 <html:center>
 Confirm delete? 
 <html:br />
-<titledbutton value="Ok" class="push" onclick="opener.DeleteProfile();window.close();" />
+<titledbutton value="Delete Files" class="push" onclick="opener.DeleteProfile('true');window.close();" />
+<titledbutton value="Don't Delete Files" class="push" onclick="opener.DeleteProfile('false');window.close();" />
 <titledbutton value="Cancel" class="push" onclick="window.close();" />
 </html:center>
 

@@ -80,7 +80,7 @@ function RenameProfile(w)
 	this.location.href = "resource:/res/profile/pm.xul";
 }
 
-function DeleteProfile()
+function DeleteProfile(deleteFilesFlag)
 {
 	if (!selected)
 	{
@@ -92,7 +92,7 @@ function DeleteProfile()
 
 	var name = selected.getAttribute("rowName");
 	//dump("Delete '" + name + "'\n");
-	profileCore.DeleteProfile(name);
+	profileCore.DeleteProfile(name, deleteFilesFlag);
 	//this.location.replace(this.location);
 	//this.location.href = this.location;
 	this.location.href = "resource:/res/profile/pm.xul";
