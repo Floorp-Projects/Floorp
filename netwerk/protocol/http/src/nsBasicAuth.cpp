@@ -57,36 +57,27 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
     if (!oResult || !iUser)
         return NS_ERROR_NULL_POINTER;
 
-    // we work with ASCII around these here parts
-    nsCAutoString cUser, cPass;
-    cUser.AssignWithConversion(iUser);
-    if (iPass) {
-        cPass.AssignWithConversion(iPass);
-    }
-    PRUint32 nbytes = cUser.Length() + 1;
+    // we work with ASCII around here
+    nsCAutoString userpass;
+    userpass.AssignWithConversion(iUser);
     if (iPass)
-        nbytes += cPass.Length() + 1;
-    char* tempBuff = (char *)nsMemory::Alloc(nbytes);
-    if (!tempBuff)
-        return NS_ERROR_OUT_OF_MEMORY;
-    strcpy(tempBuff, cUser.GetBuffer());
-    if (iPass) {
-        strcat(tempBuff, ":");
-        strcat(tempBuff, cPass.GetBuffer());
+    {
+        userpass.Append(':');
+        userpass.AppendWithConversion(iPass);
     }
 
-    // <shaver> we use nbytes - 1 here to avoid encoding the trailing
-    // NUL
-    char *base64Buff = PL_Base64Encode(tempBuff, nbytes - 1, nsnull);
+    char *base64Buff = PL_Base64Encode(userpass.GetBuffer(),
+            userpass.Length(),
+            nsnull);
+    
     if (!base64Buff) {
-        nsMemory::Free(tempBuff);
         return NS_ERROR_FAILURE; // ??
     }
+
     nsCAutoString authString("Basic "); // , 6 + strlen(base64Buff));
     authString.Append(base64Buff);
     *oResult = authString.ToNewCString();
     PR_Free(base64Buff);
-    nsMemory::Free(tempBuff);
     return NS_OK;
 }
 

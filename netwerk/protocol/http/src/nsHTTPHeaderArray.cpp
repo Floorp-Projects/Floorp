@@ -156,8 +156,9 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
   // Append the new value to the existing string
   //
   else if (IsHeaderMultiple(aHeader)) {
-    if (nsHTTPAtoms::Set_Cookie == aHeader) {
-        // special case the set-cookie header and use a newline
+    if (nsHTTPAtoms::Set_Cookie == aHeader ||
+            nsHTTPAtoms::WWW_Authenticate == aHeader) {
+        // special case these headers and use a newline
         // delimiter to delimit the cookies from one another
         // we can't use the standard comma because there
         // set-cookie headers that include commas in the cookie value
