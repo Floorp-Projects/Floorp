@@ -373,7 +373,7 @@ PR_EXTERN(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b);
     (d) = -(d); \
 }
 
-#define LL_I2L(l, i)        { PRInt32 _i = (i) >> 31; (l).lo = (i); (l).hi = _i; }
+#define LL_I2L(l, i)        { PRInt32 _i = ((PRInt32)(i)) >> 31; (l).lo = (i); (l).hi = _i; }
 #define LL_UI2L(l, ui)      ((l).lo = (ui), (l).hi = 0)
 #define LL_F2L(l, f)        { double _d = (double)f; LL_D2L(l, _d); }
 
