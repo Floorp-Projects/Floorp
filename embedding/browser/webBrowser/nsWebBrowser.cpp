@@ -106,8 +106,7 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************   
 
-NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* aListener, 
-   PRInt32* cookie)
+NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* aListener)
 {                   
    if(!mListenerList)
       NS_ENSURE_SUCCESS(NS_NewISupportsArray(getter_AddRefs(mListenerList)), 
@@ -118,24 +117,13 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* aListen
 
    NS_ENSURE_SUCCESS(mListenerList->AppendElement(aListener), NS_ERROR_FAILURE);
 
-   if(cookie)
-      *cookie = (PRInt32)aListener;
-
-   if(mDocShell)
-      UpdateListeners();
-   
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* aListener,
-   PRInt32 cookie)
+NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* aListener)
 {
    NS_ENSURE_STATE(mListenerList);
-
-   if(!aListener)
-      aListener = (nsIInterfaceRequestor*)cookie;
-
-   NS_ENSURE_TRUE(aListener, NS_ERROR_INVALID_ARG);
+   NS_ENSURE_ARG(aListener);
 
    NS_ENSURE_TRUE(mListenerList->RemoveElement(aListener), NS_ERROR_INVALID_ARG);
 
@@ -417,20 +405,18 @@ NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
 // nsWebBrowser::nsIWebProgress
 //*****************************************************************************
 
-NS_IMETHODIMP nsWebBrowser::AddProgressListener(nsIWebProgressListener* aListener, 
-   PRInt32* aCookie)
+NS_IMETHODIMP nsWebBrowser::AddProgressListener(nsIWebProgressListener* aListener)
 {
    NS_ENSURE_STATE(mDocShell);
    
-   return mDocShellAsProgress->AddProgressListener(aListener, aCookie);
+   return mDocShellAsProgress->AddProgressListener(aListener);
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* aListener, 
-   PRInt32 aCookie)
+NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* aListener)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   return mDocShellAsProgress->RemoveProgressListener(aListener, aCookie);
+   return mDocShellAsProgress->RemoveProgressListener(aListener);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetProgressStatusFlags(PRInt32* aProgressStatusFlags)
@@ -933,13 +919,6 @@ NS_IMETHODIMP nsWebBrowser::ScrollByPages(PRInt32 aNumPages)
 //*****************************************************************************
 // nsWebBrowser: Listener Helpers
 //*****************************************************************************   
-
-void nsWebBrowser::UpdateListeners()
-{
-   // XXX
-   // Should walk the mListenerList and call each asking for our needed
-   // interfaces.
-}
 
 NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
 {
