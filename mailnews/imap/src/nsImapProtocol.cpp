@@ -3946,8 +3946,9 @@ nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
   {
     PRUnichar *progressString = nsnull;
     m_imapServerSink->GetImapStringByID(aMessageId, &progressString);
-
-        m_imapServerSink->FEAlert(progressString);
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+    GetMsgWindow(getter_AddRefs(msgWindow));
+    m_imapServerSink->FEAlert(progressString, msgWindow);
     PR_FREEIF(progressString);
   }
 }
@@ -3955,10 +3956,11 @@ nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
 void
 nsImapProtocol::AlertUserEvent(const char * message)
 {
-    if (m_imapServerSink)
+  if (m_imapServerSink)
   {
-    nsAutoString uniString; uniString.AssignWithConversion(message);
-        m_imapServerSink->FEAlert(uniString.GetUnicode());
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+    GetMsgWindow(getter_AddRefs(msgWindow));
+    m_imapServerSink->FEAlert(NS_LITERAL_STRING(message), msgWindow);
   }
 }
 
@@ -3966,7 +3968,11 @@ void
 nsImapProtocol::AlertUserEventFromServer(const char * aServerEvent)
 {
     if (m_imapServerSink)
-        m_imapServerSink->FEAlertFromServer(aServerEvent);
+    {
+      nsCOMPtr<nsIMsgWindow> msgWindow;
+      GetMsgWindow(getter_AddRefs(msgWindow));
+      m_imapServerSink->FEAlertFromServer(aServerEvent, msgWindow);
+    }
 }
 
 void nsImapProtocol::ResetProgressInfo()

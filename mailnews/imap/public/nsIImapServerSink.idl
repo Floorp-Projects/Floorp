@@ -42,8 +42,8 @@ interface nsIImapServerSink : nsISupports {
 	void LoadNextQueuedUrl(out boolean urlRun);
 
 	void GetImapStringByID(in long aMsgId, out wstring aString);
-	void FEAlert(in wstring aString);
-	void FEAlertFromServer(in string aString);
+	void FEAlert(in wstring aString, in nsIMsgWindow aMsgWindow);
+	void FEAlertFromServer(in string aString, in nsIMsgWindow aMsgWindow);
 	void CommitNamespaces();
 	void PromptForPassword(out string aString, in nsIMsgWindow aMsgWindow);
 	void SetUserAuthenticated(in boolean authenticated);
