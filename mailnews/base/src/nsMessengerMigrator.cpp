@@ -71,6 +71,8 @@
 #include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 
+#include "nsIPrefMigration.h"	// for NEW_LOCAL_MAIL_DIR_NAME
+
 #define BUF_STR_LEN 1024
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -112,9 +114,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #ifdef HAVE_MOVEMAIL
 #define MOVEMAIL_FAKE_HOST_NAME "movemail"
 #endif /* HAVE_MOVEMAIL */
-#define NEW_MAIL_DIR_NAME	"Mail"
-#define NEW_NEWS_DIR_NAME	"News"
-#define NEW_IMAPMAIL_DIR_NAME	"ImapMail"
 #define DEFAULT_4X_DRAFTS_FOLDER_NAME "Drafts"
 #define DEFAULT_4X_SENT_FOLDER_NAME "Sent"
 #define DEFAULT_4X_TEMPLATES_FOLDER_NAME "Templates"
@@ -419,11 +418,7 @@ nsMessengerMigrator::initializeStrings()
   // convert to unicode and ASCII
 
   mLocalFoldersName.Assign(localFolders);
-  // should we use utf8 here? or maybe the system charset?
-  // or if we switch to nsIFile, it won't matter?
-  // this string is only visible to the user when creating the root
-  // folder on disk
-  mLocalFoldersHostname.AssignWithConversion(localFolders);
+  mLocalFoldersHostname = NEW_LOCAL_MAIL_DIR_NAME;
 
   return NS_OK;
 }

@@ -155,16 +155,6 @@
 
 #define NEW_DIR_SUFFIX "5"
 
-/* sspitzer:  
- * TODO: these should come from the messenger back end, which gets them
- * from a string bundle somewhere 
- */
-/* these are the same for all platforms */
-#define NEW_MAIL_DIR_NAME "Mail"
-#define NEW_NEWS_DIR_NAME "News"
-#define NEW_IMAPMAIL_DIR_NAME "ImapMail"
-#define NEW_LOCAL_MAIL_DIR_NAME "Local Folders"
-
 /* who's going to win the file name battle? */
 #if defined(XP_UNIX)
 #define PREF_FILE_NAME_IN_4x "preferences.js"

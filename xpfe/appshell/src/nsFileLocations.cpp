@@ -50,6 +50,7 @@
 #endif
 
 #include "nsIProfile.h"
+#include "nsIPrefMigration.h" // for NEW_IMAPMAIL_DIR_NAME, etc
 
 #include "plstr.h"
 #include "prenv.h"
@@ -566,21 +567,21 @@ void nsSpecialFileSpec::operator = (Type aType)
         case App_MailDirectory50:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
-                *this += "Mail";
+                *this += NEW_MAIL_DIR_NAME;
                 break;
             }
             break;
         case App_ImapMailDirectory50:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
-                *this += "ImapMail";
+                *this += NEW_IMAPMAIL_DIR_NAME;
                 break;
             }
             break;
         case App_NewsDirectory50:
             {
                 *this = nsSpecialFileSpec(App_UserProfileDirectory50);
-                *this += "News";
+                *this += NEW_NEWS_DIR_NAME;
                 break;
             }
             break;

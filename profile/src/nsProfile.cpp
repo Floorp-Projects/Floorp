@@ -953,19 +953,19 @@ nsresult nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
     nsFileSpec tmpDir;
     
     tmpDir = profileDir;
-    tmpDir += "News";
+    tmpDir += NEW_NEWS_DIR_NAME;
 
     if (!tmpDir.Exists())
         tmpDir.CreateDirectory();
 
     tmpDir = profileDir;
-    tmpDir += "ImapMail";
+    tmpDir += NEW_IMAPMAIL_DIR_NAME;
 
     if (!tmpDir.Exists())
         tmpDir.CreateDirectory();
     
     tmpDir = profileDir;
-    tmpDir += "Mail";
+    tmpDir += NEW_MAIL_DIR_NAME;
 
     if (!tmpDir.Exists())
         tmpDir.CreateDirectory();
