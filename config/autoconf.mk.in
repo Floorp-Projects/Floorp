@@ -290,8 +290,6 @@ XPCOM_GLUE_LIBS	= @XPCOM_GLUE_LIBS@
 # UNIX98 iconv support
 LIBICONV = @LIBICONV@
 
-XPCOM_GLUE_LIBS	= @XPCOM_GLUE_LIBS@
-
 # MKSHLIB_FORCE_ALL is used to force the linker to include all object
 # files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker
 # to normal behavior. Makefile's that create shared libraries out of
