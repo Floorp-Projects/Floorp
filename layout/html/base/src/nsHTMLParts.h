@@ -251,6 +251,13 @@ extern nsresult
 NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
               nsIFrame*& aNewFrame);
 
+// <frame> and <iframe> 
+extern nsresult NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                                          nsIFrame*& aNewFrame);
+// <frameset>
+extern nsresult NS_NewHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                                        nsIFrame*& aNewFrame);
+
 extern nsresult
 NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                 nsIFrame*& aNewFrame);
@@ -346,17 +353,5 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aTargetFrame,
                         nsIReflowCommand::ReflowType aReflowType,
                         nsIFrame*                    aChildFrame = nsnull);
-
-extern nsresult
-NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIWebShell* aWebShell);
-
-extern nsresult
-NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag, nsIWebShell* aWebShell);
-
-extern nsresult
-NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
-                   nsIAtom* aTag, nsIWebShell* aWebShell);
 
 #endif /* nsHTMLParts_h___ */

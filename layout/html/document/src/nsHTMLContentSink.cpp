@@ -512,10 +512,10 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLFormElement(aResult, aAtom);
     break;
   case eHTMLTag_frame:
-    rv = NS_NewHTMLFrame(aResult, aAtom, aWebShell);/* XXX old style */
+    rv = NS_NewHTMLFrameElement(aResult, aAtom);
     break;
   case eHTMLTag_frameset:
-    rv = NS_NewHTMLFrameset(aResult, aAtom, aWebShell);/* XXX old style */
+    rv = NS_NewHTMLFrameSetElement(aResult, aAtom);
     break;
   case eHTMLTag_h1:
   case eHTMLTag_h2:
@@ -532,7 +532,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLHRElement(aResult, aAtom);
     break;
   case eHTMLTag_iframe:
-    rv = NS_NewHTMLIFrame(aResult, aAtom, aWebShell);/* XXX old style */
+    rv = NS_NewHTMLIFrameElement(aResult, aAtom);
     break;
   case eHTMLTag_img:
     rv = NS_NewHTMLImageElement(aResult, aAtom);

@@ -247,6 +247,13 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsString& aResult);
 
+  static PRBool ParseFrameborderValue(PRBool aStandardMode,
+                                      const nsString& aString,
+                                      nsHTMLValue& aResult);
+
+  static PRBool FrameborderValueToString(PRBool aStandardMode,
+                                         const nsHTMLValue& aValue,
+                                         nsString& aResult);
   static void MapCommonAttributesInto(nsIHTMLAttributes* aAttributes, 
                                       nsIStyleContext* aStyleContext,
                                       nsIPresContext* aPresContext);
@@ -267,6 +274,14 @@ public:
   static void MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes, 
                                           nsIStyleContext* aContext,
                                           nsIPresContext* aPresContext);
+
+  static PRBool ParseScrollingValue(PRBool aStandardMode,
+                                    const nsString& aString,
+                                    nsHTMLValue& aResult);
+
+  static PRBool ScrollingValueToString(PRBool aStandardMode,
+                                       const nsHTMLValue& aValue,
+                                       nsString& aResult);
 
   static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aFactory);
 
