@@ -17,4 +17,4 @@
     #1 will be replaced by the percentage of the file that has been saved -->
 <!ENTITY percentPrint "#1&#037;">
 
-<!ENTITY printComplete "Prnit is complete.">
+<!ENTITY printComplete "Print is complete.">
