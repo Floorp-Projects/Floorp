@@ -391,12 +391,16 @@ pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
 
-// <ruslan>
+// <http>
 pref("network.http.version", "1.1");	  // default
 // pref("network.http.version", "1.0");   // uncomment this out in case of problems
 // pref("network.http.version", "0.9");   // it'll work too if you're crazy
 // keep-alive option is effectively obsolete. Nevertheless it'll work with
 // some older 1.0 servers:
+
+pref("network.http.proxy.version", "1.1");    // default
+// pref("network.http.proxy.version", "1.0"); // uncomment this out in case of problems
+                                              // (required if using junkbuster proxy)
 
 // enable caching of http documents
 pref("network.http.use-cache", true);
@@ -458,7 +462,7 @@ pref("network.http.pipelining.firstrequest", false);
 pref("network.http.pipelining.maxrequests" , 4);
 
 pref("network.http.proxy.ssl.connect",true);
-// </ruslan>
+// </http>
 
 // This preference controls whether or not internationalized domain names (IDN)
 // are handled.  IDN requires a nsIIDNService implementation.

@@ -499,7 +499,7 @@ nsHttpTransaction::HandleContentStart()
 #endif
         // notify the connection, give it a chance to cause a reset.
         PRBool reset = PR_FALSE;
-        mConnection->OnHeadersAvailable(this, mResponseHead, &reset);
+        mConnection->OnHeadersAvailable(this, mRequestHead, mResponseHead, &reset);
 
         // looks like we should ignore this response, resetting...
         if (reset) {

@@ -4,6 +4,7 @@
 #include "nsISupports.h"
 
 class nsAHttpTransaction;
+class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpConnectionInfo;
 
@@ -18,6 +19,7 @@ public:
     // the connection can force the transaction to reset it's response headers,
     // and prepare for a new set of response headers, by setting |*reset=TRUE|.
     virtual nsresult OnHeadersAvailable(nsAHttpTransaction *,
+                                        nsHttpRequestHead *,
                                         nsHttpResponseHead *,
                                         PRBool *reset) = 0;
 

@@ -100,9 +100,10 @@ nsHttpHandler *nsHttpHandler::mGlobalInstance = 0;
 nsHttpHandler::nsHttpHandler()
     : mAuthCache(nsnull)
     , mHttpVersion(NS_HTTP_VERSION_1_1)
-    , mReferrerLevel(0xff) // by default we always send a referrer
+    , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
+    , mReferrerLevel(0xff) // by default we always send a referrer
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
@@ -1283,7 +1284,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("version"))) {
         nsXPIDLCString httpVersion;
         prefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
-	
         if (httpVersion) {
             if (!PL_strcmp(httpVersion, "1.1"))
                 mHttpVersion = NS_HTTP_VERSION_1_1;
@@ -1292,14 +1292,17 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             else
                 mHttpVersion = NS_HTTP_VERSION_1_0;
         }
+    }
 
-        if (mHttpVersion == NS_HTTP_VERSION_1_1) {
-            mCapabilities = NS_HTTP_ALLOW_KEEPALIVE;
-            mProxyCapabilities = NS_HTTP_ALLOW_KEEPALIVE;
-        }
-        else {
-            mCapabilities = 0;
-            mProxyCapabilities = 0;
+    if (PREF_CHANGED(HTTP_PREF("proxy.version"))) {
+        nsXPIDLCString httpVersion;
+        prefs->GetCharPref(HTTP_PREF("proxy.version"), getter_Copies(httpVersion));
+        if (httpVersion) {
+            if (!PL_strcmp(httpVersion, "1.1"))
+                mProxyHttpVersion = NS_HTTP_VERSION_1_1;
+            else
+                mProxyHttpVersion = NS_HTTP_VERSION_1_0;
+            // it does not make sense to issue a HTTP/0.9 request to a proxy server
         }
     }
 
@@ -1754,10 +1757,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsIChannel **result)
         }
     }
     
-    rv = NewProxiedChannel(uri,
-                           nsnull,
-                           result);
-    return rv;
+    return NewProxiedChannel(uri, nsnull, result);
 }
 
 NS_IMETHODIMP 
@@ -1787,16 +1787,28 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(httpChannel);
 
-    nsresult rv = httpChannel->Init(uri,
-                                    mCapabilities,
-                                    proxyInfo);
+    nsresult rv;
 
-    if (NS_SUCCEEDED(rv))
-        rv = httpChannel->
-                QueryInterface(NS_GET_IID(nsIChannel), (void **) result);
+    // select proxy caps if using a non-transparent proxy
+    PRInt8 caps = mCapabilities;
+    if (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http")) {
+        // SSL tunneling should not use proxy settings
+        PRBool isHTTPS;
+        rv = uri->SchemeIs("https", &isHTTPS);
+        if (NS_FAILED(rv)) return rv;
+        if (!isHTTPS)
+            caps = mProxyCapabilities;
+    }
 
-    NS_RELEASE(httpChannel);
-    return rv;
+    rv = httpChannel->Init(uri, caps, proxyInfo);
+
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(httpChannel);
+        return rv;
+    }
+
+    *result = httpChannel;
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

@@ -85,7 +85,8 @@ public:
 
     const nsAFlatCString &UserAgent();
 
-    nsHttpVersion  DefaultVersion()          { return mHttpVersion; }
+    nsHttpVersion  HttpVersion()             { return mHttpVersion; }
+    nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }
     PRUint8        ReferrerLevel()           { return mReferrerLevel; }
     PRBool         SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
     PRUint8        RedirectionLimit()        { return mRedirectionLimit; }
@@ -219,9 +220,10 @@ private:
     //
 
     PRUint8  mHttpVersion;
-    PRUint8  mReferrerLevel;
+    PRUint8  mProxyHttpVersion;
     PRUint8  mCapabilities;
     PRUint8  mProxyCapabilities;
+    PRUint8  mReferrerLevel;
 
     PRUint16 mIdleTimeout;
     PRUint16 mMaxRequestAttempts;

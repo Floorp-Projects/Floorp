@@ -163,6 +163,7 @@ nsHttpConnection::IsAlive()
 // called from the socket thread
 nsresult
 nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
+                                     nsHttpRequestHead *requestHead,
                                      nsHttpResponseHead *responseHead,
                                      PRBool *reset)
 {
@@ -186,7 +187,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         val = responseHead->PeekHeader(nsHttp::Proxy_Connection);
 
     if ((responseHead->Version() < NS_HTTP_VERSION_1_1) ||
-        (nsHttpHandler::get()->DefaultVersion() < NS_HTTP_VERSION_1_1)) {
+        (requestHead->Version() < NS_HTTP_VERSION_1_1)) {
         // HTTP/1.0 connections are by default NOT persistent
         if (val && !PL_strcasecmp(val, "keep-alive"))
             mKeepAlive = PR_TRUE;
@@ -490,7 +491,7 @@ nsHttpConnection::SetupSSLProxyConnect()
     // CONNECT host:port HTTP/1.1
     nsHttpRequestHead request;
     request.SetMethod(nsHttp::Connect);
-    request.SetVersion(nsHttpHandler::get()->DefaultVersion());
+    request.SetVersion(nsHttpHandler::get()->HttpVersion());
     request.SetRequestURI(buf.get());
     request.SetHeader(nsHttp::User_Agent, nsHttpHandler::get()->UserAgent());
 
