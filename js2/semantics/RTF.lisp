@@ -490,6 +490,8 @@
     ((:xi 1) (field (* fldinst "SYMBOL 120 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:psi 1) (field (* fldinst "SYMBOL 121 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:zeta 1) (field (* fldinst "SYMBOL 122 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+
+    ((:capital-omega 1) (field (* fldinst "SYMBOL 87 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     
     
     ;Styles
@@ -615,6 +617,10 @@
     (:action-name-num 46)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
+    
+    (:id-name-num 47)
+    (:id-name cs :id-name-num scaps :helvetica :no-language)
+    ((+ :styles) (* :id-name additive sbasedon :default-paragraph-font-num "Id Name;"))
     
 
     (:variable-num 50)
@@ -773,34 +779,29 @@
     ((read (&optional (eof-error-p t))
        (read-char stream eof-error-p nil))
      
-     (read-group (nested)
+     (read-group (nested contents-reverse)
        (let ((char (read nested)))
          (case char
-           ((nil) nil)
+           ((nil) (nreverse contents-reverse))
            (#\} (if nested
-                  nil
+                  (nreverse contents-reverse)
                   (error "Mismatched }")))
-           (#\{ (cons
-                 (read-group t)
-                 (read-group nested)))
-           (#\\ (append
-                 (read-control)
-                 (read-group nested)))
-           (#\newline (read-group nested))
-           (t (read-text nested (list char))))))
+           (#\{ (read-group nested (cons (read-group t nil) contents-reverse)))
+           (#\\ (read-group nested (nreconc (read-control) contents-reverse)))
+           (#\newline (read-group nested contents-reverse))
+           (t (read-text nested (list char) contents-reverse)))))
      
-     (read-text (nested chars)
+     (read-text (nested chars-reverse contents-reverse)
        (let ((char (read nested)))
          (case char
            ((nil)
-            (list (coerce (nreverse chars) 'string)))
+            (cons (coerce (nreverse chars-reverse) 'string) (nreverse contents-reverse)))
            ((#\{ #\} #\\)
-            (cons (coerce (nreverse chars) 'string)
-                  (progn
-                    (unread-char char stream)
-                    (read-group nested))))
-           (#\newline (read-text nested chars))
-           (t (read-text nested (cons char chars))))))
+            (let ((s (coerce (nreverse chars-reverse) 'string)))
+              (unread-char char stream)
+              (read-group nested (cons s contents-reverse))))
+           (#\newline (read-text nested chars-reverse contents-reverse))
+           (t (read-text nested (cons char chars-reverse) contents-reverse)))))
      
      (read-integer (value need-digit)
        (let* ((char (read))
@@ -821,6 +822,7 @@
              (setq value (+ (* value 16) digit))))
          value))
      
+     ; The result list may be destructively modified.
      (read-control ()
        (let ((char (read)))
          (if (rtf-control-word-char? char)
@@ -841,15 +843,15 @@
                (list control-symbol (read-hex 2))
                (list control-symbol))))))
      
-     (read-control-word (chars)
+     (read-control-word (chars-reverse)
        (let ((char (read)))
          (if (rtf-control-word-char? char)
-           (read-control-word (cons char chars))
+           (read-control-word (cons char chars-reverse))
            (progn
              (unread-char char stream)
-             (coerce (nreverse chars) 'string))))))
+             (coerce (nreverse chars-reverse) 'string))))))
     
-    (read-group nil)))
+    (read-group nil nil)))
 
 
 ; Read RTF from the text file with the given name (relative to the
