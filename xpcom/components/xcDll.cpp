@@ -33,7 +33,8 @@
 // MAC ONLY
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
+    m_persistentDescriptor(NULL), m_nativePath(NULL)
     
 {
     if (!codeDllName || !*codeDllName)
@@ -51,21 +52,27 @@ nsDll::nsDll(const char *codeDllName, int type)
 
 nsDll::nsDll(nsIFileSpec *dllSpec)
   : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
+    m_persistentDescriptor(NULL), m_nativePath(NULL)
+
 {
     Init(dllSpec);
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
+    m_persistentDescriptor(NULL), m_nativePath(NULL)
+
 {
     Init(libPersistentDescriptor);
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
+    m_persistentDescriptor(NULL), m_nativePath(NULL)
+
 {
     Init(libPersistentDescriptor);
 
@@ -149,6 +156,11 @@ nsDll::~nsDll(void)
         NS_RELEASE(m_dllSpec);
     if (m_dllName)
         nsCRT::free(m_dllName);
+    if (m_persistentDescriptor)
+        nsCRT::free(m_persistentDescriptor);
+    if (m_nativePath)
+        nsCRT::free(m_nativePath);
+
 }
 
 const char *
@@ -156,9 +168,10 @@ nsDll::GetNativePath()
 {
     if (m_dllName)
         return m_dllName;
-    char *nativePath = NULL;
-    m_dllSpec->GetNativePath(&nativePath);
-    return nativePath;
+    if (m_nativePath)
+        return m_nativePath;
+    m_dllSpec->GetNativePath(&m_nativePath);
+    return m_nativePath;
 }
 
 const char *
@@ -166,9 +179,10 @@ nsDll::GetPersistentDescriptorString()
 {
     if (m_dllName)
         return m_dllName;
-    char *persistentDescriptor = NULL;
-    m_dllSpec->GetPersistentDescriptorString(&persistentDescriptor);
-    return persistentDescriptor;
+    if (m_persistentDescriptor)
+        return m_persistentDescriptor;
+    m_dllSpec->GetPersistentDescriptorString(&m_persistentDescriptor);
+    return m_persistentDescriptor;
 }
 
 PRBool
