@@ -264,7 +264,6 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
 	}
 	mContext = aContext;
 
-	mDSBounds.Empty();
 	mTimer = nsnull;
 	mFrameRate = 0;
 	mTrueFrameRate = 0;
@@ -2339,7 +2338,7 @@ NS_IMETHODIMP nsViewManager :: DisableRefresh(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
+NS_IMETHODIMP nsViewManager :: EnableRefresh(PRUint32 aUpdateFlags)
 {
   if (mUpdateBatchCnt > 0)
     return NS_OK;
@@ -2349,13 +2348,17 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
   if (mUpdateCnt > 0)
     ProcessPendingUpdates(mRootView);
 
-  if (mTrueFrameRate > 0)
-  {
-    PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
+   
+    if (mTrueFrameRate > 0)
+    {
+      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
 
-    if (deltams > (1000 / (PRInt32)mTrueFrameRate))
-      Composite();
+      if (deltams > (1000 / (PRInt32)mTrueFrameRate))
+        Composite();
+    }
   }
+
 
   return NS_OK;
 }
@@ -2373,7 +2376,7 @@ NS_IMETHODIMP nsViewManager :: BeginUpdateViewBatch(void)
   return result;
 }
 
-NS_IMETHODIMP nsViewManager :: EndUpdateViewBatch(void)
+NS_IMETHODIMP nsViewManager :: EndUpdateViewBatch(PRUint32 aUpdateFlags)
 {
   nsresult result = NS_OK;
 
@@ -2388,7 +2391,7 @@ NS_IMETHODIMP nsViewManager :: EndUpdateViewBatch(void)
   }
 
   if (mUpdateBatchCnt == 0)
-    result = EnableRefresh();
+    result = EnableRefresh(aUpdateFlags);
 
   return result;
 }

@@ -4383,10 +4383,10 @@ nsresult nsEditor::EndUpdateViewBatch()
     if (0==mUpdateCount)
     {
 #ifdef HACK_FORCE_REDRAW
-      mViewManager->EnableRefresh();
+      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       HACKForceRedraw();
 #else
-      mViewManager->EndUpdateViewBatch();
+      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
 #endif
       presShell->EndBatchingReflows(PR_TRUE);
     }

@@ -115,10 +115,10 @@ public:
   NS_IMETHOD  SetQuality(nsContentQuality aQuality);
 
   NS_IMETHOD  DisableRefresh(void);
-  NS_IMETHOD  EnableRefresh(void);
+  NS_IMETHOD  EnableRefresh(PRUint32 aUpdateFlags);
 
   NS_IMETHOD  BeginUpdateViewBatch(void);
-  NS_IMETHOD  EndUpdateViewBatch(void);
+  NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
 
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);

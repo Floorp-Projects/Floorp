@@ -310,7 +310,7 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
         PRBool enabled;
         documentViewer->GetEnableRendering(&enabled);
         if (enabled) {
-          vm->EnableRefresh();
+          vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
         }
         NS_ENSURE_SUCCESS(vm->SetWindowDimensions(NSToCoordRound(r.width * p2t), 
                                                   NSToCoordRound(r.height * p2t)), 

@@ -315,7 +315,7 @@ nsImageDocument::StartLayout()
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-        vm->EnableRefresh();
+        vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }
 
       NS_RELEASE(shell);

@@ -404,6 +404,7 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   ::SetBkMode(aNewDC, TRANSPARENT);
   ::SetPolyFillMode(aNewDC, WINDING);
   ::SetStretchBltMode(aNewDC, COLORONCOLOR);
+  ::SetTextAlign(aNewDC, TA_BASELINE);
 
   if (nsnull != aOldDC)
   {
@@ -1760,7 +1761,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
   nscoord ascent;
   mFontMetrics->GetMaxAscent(ascent);
   aY += ascent;
-  ::SetTextAlign(mDC, TA_BASELINE);
 
   PRInt32 x = aX;
   PRInt32 y = aY;
@@ -1797,7 +1797,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
     nscoord ascent;
     mFontMetrics->GetMaxAscent(ascent);
     aY += ascent;
-    ::SetTextAlign(mDC, TA_BASELINE);
 
     PRInt32 x = aX;
     PRInt32 y = aY;
@@ -2588,7 +2587,6 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
     nscoord ascent;
     mFontMetrics->GetMaxAscent(ascent);
     aY += ascent;
-    ::SetTextAlign(mDC, TA_BASELINE);
 
     PRInt32 x = aX;
     PRInt32 y = aY;

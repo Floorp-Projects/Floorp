@@ -3231,7 +3231,7 @@ HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
       PRBool enabled;
       contentViewer->GetEnableRendering(&enabled);
       if (enabled) {
-        vm->EnableRefresh();
+        vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }
       NS_RELEASE(contentViewer); 
     }

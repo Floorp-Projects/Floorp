@@ -379,9 +379,10 @@ public:
   /**
    * allow the view manager to refresh. this may cause a synchronous
    * paint to occur inside the call.
+   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    * @return error status
    */
-  NS_IMETHOD EnableRefresh(void) = 0;
+  NS_IMETHOD EnableRefresh(PRUint32 aUpdateFlags) = 0;
 
   /**
    * prevents the view manager from refreshing. allows UpdateView()
@@ -394,10 +395,11 @@ public:
   /**
    * allow the view manager to refresh any damaged areas accumulated
    * after the BeginUpdateViewBatch() call.  this may cause a
-   * synchronous paint to occur inside the call.
+   * synchronous paint to occur inside the call if aUpdateFlags NS_VMREFRESH_IMMEDIATE is set
+   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    * @return error status
    */
-  NS_IMETHOD EndUpdateViewBatch(void) = 0;
+  NS_IMETHOD EndUpdateViewBatch(PRUint32 aUpdateFlags) = 0;
 
   /**
    * set the view that is is considered to be the root scrollable
