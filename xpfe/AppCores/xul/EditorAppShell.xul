@@ -1,51 +1,12 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="navigator.css" type="text/css"?> 
 
 <!DOCTYPE window> 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onload="Startup()"> 
-
-  <html:style>
-      #header {
-        position: fixed;
-        width: 100%;
-        height: 75px;
-        top: 0;
-        right: 0;
-        bottom: auto;
-        left: 0;
-      }
-      #main {
-        position: fixed;
-        width: auto;
-        height: auto;
-        top: 75px;
-        right: 0;
-        bottom: 34px;
-        left: 0;
-        overflow: auto;
-        padding: 2px .5em;
-        border: solid 0px black;
-      }
-      #footer {
-        position: fixed;
-        width: 100%;
-        height: 34px;
-        top: auto;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        margin-top: auto;
-      }
-
-      button {
-        background-color: green;
-        color: red;
-      }
-
-  </html:style>
+			  onload="Startup()" title="Editor">
 
   <html:script>
   function Startup()
@@ -58,17 +19,17 @@
       appCore = new EditorAppCore();
       if (appCore != null) {
         dump("EditorAppCore has been created.\n");
-        appCore.Init("EditorAppCore");
-	      appCore.setContentWindow(window.frames[0]);
-	      appCore.setWebShellWindow(window);
-	      appCore.setToolbarWindow(window);
-        dump("Adding EditorAppCore to AppCoreManager...\n");
-        XPAppCoresManager.Add(appCore);  
+		appCore.Init("EditorAppCore");
+		appCore.setContentWindow(window.frames[0]);
+		appCore.setWebShellWindow(window);
+		appCore.setToolbarWindow(window);
+		dump("Adding EditorAppCore to AppCoreManager...\n");
+		/* XPAppCoresManager.Add(appCore);  */
       }
     } else {
       dump("EditorAppCore has already been created! Why?\n");
     }
-	}
+  }
 
   function EditorBold()
   {
@@ -298,7 +259,7 @@
 
   </menubar>
   
-  <html:div html:id="header">
+  <box id="outer-box" align="vertical">
   <toolbox>
   
     <toolbar>
@@ -370,16 +331,38 @@
 		-->
     
   </toolbox>
-  </html:div>
 
-  <html:div html:id="main">
-     <html:iframe html:name="content" html:src="EditorInitPagePlain.html" html:width="100%" html:height="450"></html:iframe>
-  </html:div>
+  <html:iframe id="content-frame" html:name="content" html:src="EditorInitPagePlain.html" flex="100%" />
 
-  <html:div html:id="footer">
-     <html:iframe html:name="status" html:src="status.html" html:width="100%" html:height="34"></html:iframe>
-  </html:div>
+  <box align="horizontal" id="status-bar">
 
+  <toolbox>
+	  <toolbar id="taskbar">
+	  	  <box align="horizontal">
+  	 	     <titledbutton align="left" class="popup"  value="Web" />
+  	 	     <titledbutton align="left" class="popup"  value="Mail" />
+  	 	     <titledbutton align="left" class="popup"  value="Chat" />
+		  </box>
+		  <spring flex="100%"/>
+	 	  <box align="horizontal">
+  	 		<titledbutton align="left"  class="popup"  value="DayPlanner" />
+  	 		<titledbutton align="left"  class="popup"  value="Shopping" />
+  	 		<titledbutton align="left"  class="popup"  value="My Desk" />
+          </box>
+		  <spring flex="100%"/>
+	   	  <box align="horizontal">
+  			<titledbutton align="left" class="popup" value="Open Windows" />
+  	 		<titledbutton align="left" id="mini-nav" value="" />
+  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
+  	 		<titledbutton align="left" id="mini-addr" value="" />
+  	 		<titledbutton align="left" id="mini-comp" value="" />
+	      </box>
+	  </toolbar>
+	</toolbox>
+	
+  </box>
+  
+  </box>
 </window>
 
 
