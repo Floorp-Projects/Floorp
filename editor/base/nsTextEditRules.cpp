@@ -482,7 +482,11 @@ nsTextEditRules::CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
   }
   else
   {
-    printf("not yet implemented, undo font in an font context\n");
+    nsCOMPtr<nsIDOMNode>parent;
+    res = aNewTextNode->GetParentNode(getter_AddRefs(parent));
+	  if (NS_FAILED(res)) return res;
+	  if (!parent) return NS_ERROR_NULL_POINTER;
+    res = mEditor->RemoveTextPropertiesForNode (aNewTextNode, parent, 0, 0, nsIEditProperty::font, &aAttr);
   }
   return res;
 }
