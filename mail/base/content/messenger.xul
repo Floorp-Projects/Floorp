@@ -148,9 +148,11 @@
     
     <vbox id="folderPaneBox" minwidth="100" width="200" persist="collapsed width">
     
-      <sidebarheader id="folderPaneHeader" align="center">
+	  <hbox id="folderPaneHeaderContainer">
+      <sidebarheader id="folderPaneHeader" align="center" flex="1">
         <label id="folderpane-title" value="&folderPaneHeader.label;"/>
       </sidebarheader>
+    </hbox>
       
       <tree id="folderTree" class="plain focusring" flex="1" seltype="single" selstyle="primary"
             context="folderPaneContext"
@@ -241,7 +243,7 @@
       </tree>
     </vbox>
       
-    <splitter id="gray_vertical_splitter" collapse="before" persist="state"/>
+    <splitter id="folderpane_splitter" collapse="before" persist="state"/>
     
     <vbox flex="1">
       <hbox id="searchBox"/>

@@ -103,17 +103,14 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 
 #attachmentView
 {
-  border-right: 1px solid ThreeDShadow;
-  border-left: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDShadow;
+  border-bottom: none;
   background-color: -moz-Dialog;
 }
 
 /* ::::: msg header captions ::::: */
 
 #msgHeaderView {
-  border-right: 1px solid ThreeDShadow;
-  border-left: 1px solid ThreeDShadow;
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
 }
@@ -165,7 +162,9 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 /* ::::: email address twisty ::::: */
 
 .addresstwisty {
+
   padding-right: 5px;
+
   padding-top: 4px;
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }

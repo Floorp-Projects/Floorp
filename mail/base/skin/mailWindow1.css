@@ -37,13 +37,21 @@ treechildren::-moz-tree-image(folderNameCol) {
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
 }
 
+
 treechildren::-moz-tree-image(folderNameCol, selected, open) {
+
   list-style-image: url("chrome://messenger/skin/icons/folder-open.png");
+
 }
 
+
+
 treechildren::-moz-tree-image(folderNameCol, selected, open, newMessages-true) {
+
   list-style-image: url("chrome://messenger/skin/icons/folder-new-open.png");
+
 }
+
 
 treechildren::-moz-tree-image(folderNameCol, newMessages-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-new-closed.png");
@@ -95,7 +103,9 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
+
 /* ..... Servers  ..... */
+
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
@@ -125,9 +135,14 @@ treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isS
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
 }
 
+
+
 treechildren::-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true, isSecure-true) {
+
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock-new.png");
+
 }
+
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
   list-style-image: url("chrome://messenger/skin/icons/server-local.png");
@@ -195,6 +210,7 @@ treechildren::-moz-tree-cell-text(container, closed, hasUnread, read) {
 
 treecol.threadColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/thread-col.png");
+
   padding-right: 3px; 
 }
 
@@ -226,7 +242,9 @@ treechildren::-moz-tree-image(threadCol, container, hasUnread, open) {
 
 treecol.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol.png");
+
   padding-right: 5px;
+
   padding-bottom: 5px;
 }
 
@@ -242,6 +260,7 @@ treechildren::-moz-tree-image(unreadButtonColHeader, unread) {
 
 treecol.attachmentColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/attachment-col.png");
+
   padding-right: 5px; 
 }
 
@@ -253,6 +272,7 @@ treechildren::-moz-tree-image(attachmentCol, attach) {
 
 treecol.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flag-col.png");
+
   padding-right: 5px; 
 }
 
@@ -268,6 +288,7 @@ treechildren::-moz-tree-image(flaggedCol, flagged) {
 
 treecol.junkStatusHeader {
   list-style-image: url("chrome://messenger/skin/icons/junk-col.png");
+
   padding-right: 5px; 
 }
 
@@ -293,60 +314,110 @@ treechildren::-moz-tree-image(subjectCol) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail.png ");
 }
 
+
 treechildren::-moz-tree-image(subjectCol, read) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-read.png");
+
 }
+
 
 treechildren::-moz-tree-image(subjectCol, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-new.png");
 }
 
 treechildren::-moz-tree-image(subjectCol, forwarded) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded.png");
+
 }
+
+
 
 treechildren::-moz-tree-image(subjectCol, forwarded, read) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded-read.png");
+
 }
+
+
 
 treechildren::-moz-tree-image(subjectCol, replied) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied.png");
+
 }
+
+
 
 treechildren::-moz-tree-image(subjectCol, replied, read) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-read.png");
+
 }
+
+
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw.png");
+
 }
+
+
 
 treechildren::-moz-tree-image(subjectCol, replied, forwarded,read) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied-forw-read.png");
+
 }
+
+
 
 /* IMPORTANT: make sure the imap-deleted column always comes after the replied/forwarded style rules.
+
    This ensures that we show that the message is marked as deleted over status information. */
 
+
+
 treechildren::-moz-tree-image(subjectCol, imapdeleted) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.png");
+
 }
+
+
 
 /* IMPORTANT: make sure our style rules for news articles always come after the message replied/forward style rules.
+
    This ensures that we show news post artwork even when the article is replied to. We could probably also fix this
+
    by adding more qualifiers to our CSS */
 
+
+
 treechildren::-moz-tree-image(subjectCol, news) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-news.png");
+
 }
+
+
 
 treechildren::-moz-tree-image(subjectCol, news, attach, offline) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-news-attach-offl.gif");
+
 }
 
+
+
 treechildren::-moz-tree-image(subjectCol, news, new) {
+
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.png");
+
 }
+
 
 /* ..... new thread icons for watch and ignore ..... */
 
@@ -915,9 +986,29 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
   height: 0px;
 }
 
+/* ..... folder pane adjustments ..... */
+
+#folderPaneHeaderContainer {
+  border-left: 1px solid ThreeDShadow;  
+}
+
+#folderPaneHeader {
+  height: 28px;
+  border-bottom: none;
+  border-left: 1px solid ThreeDHighlight;
+  border-top: 1px solid ThreeDHighlight;
+}
+
 /* ::::: border adjustments for focus ring and joined splitters ::::: */
 
 /* ..... splitter adjustments ..... */
+
+#folderpane_splitter {
+  border-top: 1px solid ThreeDHighlight;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
 
 #gray_vertical_splitter,
 #threadpane-splitter {
@@ -932,9 +1023,9 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 }
 
 #searchBox {
-  border-top: 1px solid transparent;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid transparent;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 2px solid;
+  -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
 }
 
 /* ..... message pane adjustments ..... */
