@@ -1571,7 +1571,7 @@ public class Interpreter
         }
     }
 
-    static int[] getLineNumbers(InterpreterData data)    
+    static int[] getLineNumbers(InterpreterData data)
     {
         UintMap presentLines = new UintMap();
 
@@ -1590,8 +1590,8 @@ public class Interpreter
 
         return presentLines.getKeys();
     }
-    
-    static String getSourcePositionFromStack(Context cx, int[] linep)    
+
+    static String getSourcePositionFromStack(Context cx, int[] linep)
     {
         InterpreterData idata = cx.interpreterData;
         linep[0] = getShort(idata.itsICode, cx.interpreterLineIndex);

@@ -227,24 +227,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                 args[i] = x;
             }
         }
-        Object instance;
-        try {
-            instance = ctor.newInstance(args);
-        } catch (InstantiationException instEx) {
-            throw Context.reportRuntimeError2(
-                "msg.cant.instantiate",
-                instEx.getMessage(), classObject.getName());
-        } catch (IllegalArgumentException argEx) {
-            String signature = NativeJavaMethod.scriptSignature(args);
-            String ctorString = ctor.ctor().toString();
-            throw Context.reportRuntimeError3(
-                "msg.bad.ctor.sig", argEx.getMessage(), ctorString, signature);
-        } catch (IllegalAccessException accessEx) {
-            throw Context.reportRuntimeError1(
-                "msg.java.internal.private", accessEx.getMessage());
-        } catch (Exception ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
-        }
+        Object instance = ctor.newInstance(args);
         // we need to force this to be wrapped, because construct _has_
         // to return a scriptable
         return cx.getWrapFactory().wrapNewObject(cx, topLevel, instance);

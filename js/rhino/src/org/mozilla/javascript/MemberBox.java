@@ -41,8 +41,8 @@ import java.io.*;
 
 /**
  * Wrappper class for Method and Constructor instances to cache
- * getParameterTypes() results and to recover from IllegalAccessException
- * in some cases.
+ * getParameterTypes() results, recover from IllegalAccessException
+ * in some cases and provide serialization support.
  *
  * @author Igor Bukanov
  */
@@ -50,13 +50,15 @@ import java.io.*;
 final class MemberBox implements Serializable
 {
 
-    MemberBox(Method method)
+    MemberBox(Method method, GlobalScope scope)
     {
+        this.scope = scope;
         init(method);
     }
 
-    MemberBox(Constructor constructor)
+    MemberBox(Constructor constructor, GlobalScope scope)
     {
+        this.scope = scope;
         init(constructor);
     }
 
@@ -65,6 +67,25 @@ final class MemberBox implements Serializable
         this.memberObject = method;
         this.argTypes = method.getParameterTypes();
     }
+
+    void prepareInvokerOptimization()
+    {
+        if (scope.invokerOptimization) {
+            Invoker master = (Invoker)scope.invokerMaster;
+            if (master == null) {
+                master = Invoker.makeMaster();
+                if (master == null) {
+                    scope.invokerOptimization = false;
+                } else {
+                    scope.invokerMaster = master;
+                }
+            }
+            if (master != null) {
+                invoker = master.createInvoker(method(), argTypes);
+            }
+        }
+    }
+
 
     private void init(Constructor constructor)
     {
@@ -134,37 +155,58 @@ final class MemberBox implements Serializable
     }
 
     Object invoke(Object target, Object[] args)
-        throws IllegalAccessException, InvocationTargetException
     {
+        if (invoker != null) {
+            try {
+                return invoker.invoke(target, args);
+            } catch (Exception ex) {
+                throw ScriptRuntime.throwAsUncheckedException(ex);
+            } catch (LinkageError ex) {
+                invoker = null;
+            }
+        }
         Method method = method();
         try {
-            return method.invoke(target, args);
-        } catch (IllegalAccessException ex) {
-            Method accessible = searchAccessibleMethod(method, argTypes);
-            if (accessible != null) {
-                memberObject = accessible;
-                method = accessible;
-            } else {
-                if (!tryToMakeAccessible(method)) {
-                    throw ex;
+            try {
+                return method.invoke(target, args);
+            } catch (IllegalAccessException ex) {
+                Method accessible = searchAccessibleMethod(method, argTypes);
+                if (accessible != null) {
+                    memberObject = accessible;
+                    method = accessible;
+                } else {
+                    if (!tryToMakeAccessible(method)) {
+                        throw ScriptRuntime.throwAsUncheckedException(ex);
+                    }
                 }
+                // Retry after recovery
+                return method.invoke(target, args);
             }
-            return method.invoke(target, args);
+        } catch (IllegalAccessException ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
+        } catch (InvocationTargetException ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
     }
 
     Object newInstance(Object[] args)
-        throws InvocationTargetException, IllegalAccessException,
-               InstantiationException
     {
         Constructor ctor = ctor();
         try {
-            return ctor.newInstance(args);
-        } catch (IllegalAccessException ex) {
-            if (!tryToMakeAccessible(ctor)) {
-                throw ex;
+            try {
+                return ctor.newInstance(args);
+            } catch (IllegalAccessException ex) {
+                if (!tryToMakeAccessible(ctor)) {
+                    throw ScriptRuntime.throwAsUncheckedException(ex);
+                }
             }
             return ctor.newInstance(args);
+        } catch (IllegalAccessException ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
+        } catch (InvocationTargetException ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
+        } catch (InstantiationException ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
     }
 
@@ -230,7 +272,7 @@ final class MemberBox implements Serializable
         throws IOException, ClassNotFoundException
     {
         in.defaultReadObject();
-        Member member = FunctionObject.readMember(in);
+        Member member = readMember(in);
         if (member instanceof Method) {
             init((Method)member);
         } else {
@@ -241,11 +283,121 @@ final class MemberBox implements Serializable
     private void writeObject(ObjectOutputStream out)
         throws IOException
     {
-        FunctionObject.writeMember(out, memberObject);
+        writeMember(out, memberObject);
     }
 
+    /**
+     * Writes a Constructor or Method object.
+     *
+     * Methods and Constructors are not serializable, so we must serialize
+     * information about the class, the name, and the parameters and
+     * recreate upon deserialization.
+     */
+    private static void writeMember(ObjectOutputStream out, Member member)
+        throws IOException
+    {
+        if (member == null) {
+            out.writeBoolean(false);
+            return;
+        }
+        out.writeBoolean(true);
+        if (!(member instanceof Method || member instanceof Constructor))
+            throw new IllegalArgumentException("not Method or Constructor");
+        out.writeBoolean(member instanceof Method);
+        out.writeObject(member.getName());
+        out.writeObject(member.getDeclaringClass());
+        if (member instanceof Method) {
+            writeParameters(out, ((Method) member).getParameterTypes());
+        } else {
+            writeParameters(out, ((Constructor) member).getParameterTypes());
+        }
+    }
+
+    /**
+     * Reads a Method or a Constructor from the stream.
+     */
+    private static Member readMember(ObjectInputStream in)
+        throws IOException, ClassNotFoundException
+    {
+        if (!in.readBoolean())
+            return null;
+        boolean isMethod = in.readBoolean();
+        String name = (String) in.readObject();
+        Class declaring = (Class) in.readObject();
+        Class[] parms = readParameters(in);
+        try {
+            if (isMethod) {
+                return declaring.getMethod(name, parms);
+            } else {
+                return declaring.getConstructor(parms);
+            }
+        } catch (NoSuchMethodException e) {
+            throw new IOException("Cannot find member: " + e);
+        }
+    }
+
+    private static final Class[] primitives = {
+        Boolean.TYPE,
+        Byte.TYPE,
+        Character.TYPE,
+        Double.TYPE,
+        Float.TYPE,
+        Integer.TYPE,
+        Long.TYPE,
+        Short.TYPE,
+        Void.TYPE
+    };
+
+    /**
+     * Writes an array of parameter types to the stream.
+     *
+     * Requires special handling because primitive types cannot be
+     * found upon deserialization by the default Java implementation.
+     */
+    private static void writeParameters(ObjectOutputStream out, Class[] parms)
+        throws IOException
+    {
+        out.writeShort(parms.length);
+    outer:
+        for (int i=0; i < parms.length; i++) {
+            Class parm = parms[i];
+            out.writeBoolean(parm.isPrimitive());
+            if (!parm.isPrimitive()) {
+                out.writeObject(parm);
+                continue;
+            }
+            for (int j=0; j < primitives.length; j++) {
+                if (parm.equals(primitives[j])) {
+                    out.writeByte(j);
+                    continue outer;
+                }
+            }
+            throw new IllegalArgumentException("Primitive " + parm +
+                                               " not found");
+        }
+    }
+
+    /**
+     * Reads an array of parameter types from the stream.
+     */
+    private static Class[] readParameters(ObjectInputStream in)
+        throws IOException, ClassNotFoundException
+    {
+        Class[] result = new Class[in.readShort()];
+        for (int i=0; i < result.length; i++) {
+            if (!in.readBoolean()) {
+                result[i] = (Class) in.readObject();
+                continue;
+            }
+            result[i] = primitives[in.readByte()];
+        }
+        return result;
+    }
+
+    private GlobalScope scope;
     private transient Member memberObject;
     transient Class[] argTypes;
+    transient Invoker invoker;
 
     private static Method method_setAccessible;
 

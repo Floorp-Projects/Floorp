@@ -204,11 +204,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             args = new Object[] { this };
         }
 
-        try {
-            return slot.getter.invoke(getterThis, args);
-        } catch (Exception e) {
-            throw ScriptRuntime.throwAsUncheckedException(e);
-        }
+        return slot.getter.invoke(getterThis, args);
     }
 
     /**
@@ -285,7 +281,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Object[] args;
         Object setterResult;
         Context cx = Context.getContext();
-        Class pTypes[] = slot.setter.getParameterTypes();
+        Class pTypes[] = slot.setter.argTypes;
         Class desired = pTypes[pTypes.length - 1];
         // ALERT: cache tag since it is already calculated in defineProperty ?
         int tag = FunctionObject.getTypeTag(desired);
@@ -305,11 +301,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                               slot.stringKey);
         }
 
-        try {
-            setterResult = slot.setter.invoke(setterThis, args);
-        } catch (Exception e) {
-            throw ScriptRuntime.throwAsUncheckedException(e);
-        }
+        setterResult = slot.setter.invoke(setterThis, args);
 
         if (slot.setterReturnsValue) {
             // Replace Getter slot by a simple one
@@ -1158,15 +1150,19 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
         }
 
+        GlobalScope global = GlobalScope.get(this);
         GetterSlot slot = new GetterSlot();
         slot.delegateTo = delegateTo;
-        slot.getter = getter;
-        slot.setter = setter;
-        slot.setterReturnsValue = setter != null && setter.getReturnType() != Void.TYPE;
+        slot.getter = new MemberBox(getter, global);
+        slot.getter.prepareInvokerOptimization();
+        if (setter != null) {
+            slot.setter = new MemberBox(setter, global);
+            slot.setter.prepareInvokerOptimization();
+            slot.setterReturnsValue = setter.getReturnType() != Void.TYPE;
+        }
         slot.value = null;
         slot.attributes = (short) attributes;
         slot.flags = (byte)flags;
-
         Slot inserted = addSlot(propertyName, propertyName.hashCode(), slot);
         if (inserted != slot) {
             throw new RuntimeException("Property already exists");
@@ -1829,26 +1825,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         transient byte wasDeleted;
     }
 
-    static class GetterSlot extends Slot implements Serializable {
+    static class GetterSlot extends Slot
+    {
         Object delegateTo;  // OPT: merge with "value"
-        transient Method getter;
-        transient Method setter;
+        MemberBox getter;
+        MemberBox setter;
         boolean setterReturnsValue;
-
-        private void writeObject(ObjectOutputStream out)
-            throws IOException
-        {
-            out.defaultWriteObject();
-            FunctionObject.writeMember(out, getter);
-            FunctionObject.writeMember(out, setter);
-        }
-
-        private void readObject(ObjectInputStream in)
-            throws IOException, ClassNotFoundException
-        {
-            in.defaultReadObject();
-            getter = (Method) FunctionObject.readMember(in);
-            setter = (Method) FunctionObject.readMember(in);
-        }
     }
 }

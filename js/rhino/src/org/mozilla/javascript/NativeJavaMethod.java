@@ -67,7 +67,7 @@ public class NativeJavaMethod extends BaseFunction
 
     public NativeJavaMethod(Method method, String name)
     {
-        this(new MemberBox(method), name);
+        this(new MemberBox(method, null), name);
     }
 
     private static String scriptSignature(Object value)
@@ -198,17 +198,7 @@ public class NativeJavaMethod extends BaseFunction
             printDebug("Calling ", meth, args);
         }
 
-        Object retval;
-        try {
-            retval = meth.invoke(javaObject, args);
-        } catch (IllegalAccessException accessEx) {
-            throw Context.reportRuntimeError(
-                "While attempting to call \"" + meth.getName() +
-                "\" in class \"" + meth.getDeclaringClass().getName() +
-                "\" receieved " + accessEx.toString());
-        } catch (Exception ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
-        }
+        Object retval = meth.invoke(javaObject, args);
         Class staticType = meth.method().getReturnType();
 
         if (debug) {

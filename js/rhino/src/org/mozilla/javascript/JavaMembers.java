@@ -303,7 +303,7 @@ class JavaMembers
         makeBeanProperties(scope, false);
         makeBeanProperties(scope, true);
 
-        reflectCtors();
+        reflectCtors(scope);
     }
 
     private void reflectMethods(Scriptable scope)
@@ -459,26 +459,28 @@ class JavaMembers
         }
     }
 
-    private void reflectCtors()
+    private void reflectCtors(Scriptable scope)
     {
         Constructor[] constructors = cl.getConstructors();
         int N = constructors.length;
         ctors = new MemberBox[N];
+        GlobalScope global = GlobalScope.get(scope);
         for (int i = 0; i != N; ++i) {
-            ctors[i] = new MemberBox(constructors[i]);
+            ctors[i] = new MemberBox(constructors[i], global);
         }
     }
 
     private static void initNativeMethods(Hashtable ht, Scriptable scope)
     {
         Enumeration e = ht.keys();
+        GlobalScope global = GlobalScope.get(scope);
         while (e.hasMoreElements()) {
             String name = (String)e.nextElement();
             MemberBox[] methods;
             Object value = ht.get(name);
             if (value instanceof Method) {
                 methods = new MemberBox[1];
-                methods[0] = new MemberBox((Method)value);
+                methods[0] = new MemberBox((Method)value, global);
             } else {
                 ObjArray overloadedMethods = (ObjArray)value;
                 int N = overloadedMethods.size();
@@ -486,7 +488,7 @@ class JavaMembers
                 methods = new MemberBox[N];
                 for (int i = 0; i != N; ++i) {
                     Method method = (Method)overloadedMethods.get(i);
-                    methods[i] = new MemberBox(method);
+                    methods[i] = new MemberBox(method, global);
                 }
             }
             NativeJavaMethod fun = new NativeJavaMethod(methods);

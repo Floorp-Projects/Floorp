@@ -48,8 +48,10 @@ public abstract class Invoker {
     public abstract Object invoke(Object that, Object [] args);
 
     /** Factory method to get invoker for given method */
-    public Invoker createInvoker(Context cx, Method method, Class[] types) {
-        return null;
+    public Invoker createInvoker(Method method, Class[] types)
+    {
+        // should not be called unless master
+        throw new IllegalStateException();
     }
 
     public static Invoker makeMaster()

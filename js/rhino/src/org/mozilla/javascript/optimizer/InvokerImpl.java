@@ -51,12 +51,13 @@ import org.mozilla.classfile.ClassFileWriter;
  */
 public class InvokerImpl extends Invoker {
 
-    public Invoker createInvoker(Context cx, Method method, Class[] types) {
+    public Invoker createInvoker(Method method, Class[] types) {
 
         Invoker result;
         int classNum;
         synchronized (this) {
             if (invokersCache == null) {
+                Context cx = Context.getCurrentContext();
                 ClassLoader parentLoader = cx.getApplicationClassLoader();
                 classLoader = cx.createClassLoader(parentLoader);
                 // Initialize invokersCache after creation of classloader

@@ -115,20 +115,17 @@ public class FunctionObject extends BaseFunction
     public FunctionObject(String name, Member methodOrConstructor,
                           Scriptable scope)
     {
-        String methodName;
-        Class[] types;
+        GlobalScope global = GlobalScope.get(scope);
         if (methodOrConstructor instanceof Constructor) {
-            ctor = (Constructor) methodOrConstructor;
+            member = new MemberBox((Constructor) methodOrConstructor, global);
             isStatic = true; // well, doesn't take a 'this'
-            types = ctor.getParameterTypes();
-            methodName = ctor.getName();
         } else {
-            method = (Method) methodOrConstructor;
-            isStatic = Modifier.isStatic(method.getModifiers());
-            types = method.getParameterTypes();
-            methodName = method.getName();
+            member = new MemberBox((Method) methodOrConstructor, global);
+            isStatic = member.isStatic();
         }
+        String methodName = member.getName();
         this.functionName = name;
+        Class[] types = member.argTypes;
         int arity = types.length;
         if (arity == 4 && (types[1].isArray() || types[2].isArray())) {
             // Either variable args or an error.
@@ -170,7 +167,8 @@ public class FunctionObject extends BaseFunction
             }
         }
 
-        if (method != null) {
+        if (member.isMethod()) {
+            Method method = member.method();
             Class returnType = method.getReturnType();
             if (returnType == Void.TYPE) {
                 hasVoidReturn = true;
@@ -182,8 +180,9 @@ public class FunctionObject extends BaseFunction
                         returnType.getName(), methodName);
                 }
             }
+            member.prepareInvokerOptimization();
         } else {
-            Class ctorType = ctor.getDeclaringClass();
+            Class ctorType = member.getDeclaringClass();
             if (!ScriptRuntime.ScriptableClass.isAssignableFrom(ctorType)) {
                 throw Context.reportRuntimeError1(
                     "msg.bad.ctor.return", ctorType.getName());
@@ -191,31 +190,6 @@ public class FunctionObject extends BaseFunction
         }
 
         ScriptRuntime.setFunctionProtoAndParent(scope, this);
-
-        if (method != null) {
-            GlobalScope global = GlobalScope.get(scope);
-            if (global.invokerOptimization) {
-                Invoker master = (Invoker)global.invokerMaster;
-                if (master == null) {
-                    master = Invoker.makeMaster();
-                    if (master == null) {
-                        global.invokerOptimization = false;
-                    } else {
-                        global.invokerMaster = master;
-                    }
-                }
-                if (master != null) {
-                    Context cx = Context.getContext();
-                    try {
-                        invoker = master.createInvoker(cx, method, types);
-                    } catch (SecurityException ex) {
-                        // Ignore invoker optimization in case of
-                        // SecurityException which can be the case if class
-                        // loader creation is disabled.
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -299,10 +273,10 @@ public class FunctionObject extends BaseFunction
      */
     public Member getMethodOrConstructor()
     {
-        if (method != null) {
-            return method;
+        if (member.isMethod()) {
+            return member.method();
         } else {
-            return ctor;
+            return member.ctor();
         }
     }
 
@@ -423,9 +397,8 @@ public class FunctionObject extends BaseFunction
         if (parmsLength < 0) {
             return callVarargs(cx, thisObj, args);
         }
-        if (!isStatic && method != null) {
-            // OPT: cache "clazz"?
-            Class clazz = method.getDeclaringClass();
+        if (!isStatic) {
+            Class clazz = member.getDeclaringClass();
             if (!clazz.isInstance(thisObj)) {
                 boolean compatible = false;
                 if (thisObj == scope) {
@@ -475,21 +448,12 @@ public class FunctionObject extends BaseFunction
         }
 
         Object result;
-        if (invoker != null) {
-            if (method == null) Context.codeBug();
-            try {
-                result = invoker.invoke(thisObj, invokeArgs);
-            } catch (Exception ex) {
-                throw ScriptRuntime.throwAsUncheckedException(ex);
-            }
+        if (member.isMethod()) {
+            result = member.invoke(thisObj, invokeArgs);
         } else {
-            try {
-                result = (method == null) ? ctor.newInstance(invokeArgs)
-                                          : method.invoke(thisObj, invokeArgs);
-            } catch (Exception ex) {
-                throw ScriptRuntime.throwAsUncheckedException(ex);
-            }
+            result = member.newInstance(invokeArgs);
         }
+
         return hasVoidReturn ? Undefined.instance : result;
     }
 
@@ -500,12 +464,12 @@ public class FunctionObject extends BaseFunction
      * new objects.
      */
     public Scriptable createObject(Context cx, Scriptable scope) {
-        if (method == null || parmsLength == VARARGS_CTOR) {
+        if (member.isCtor() || parmsLength == VARARGS_CTOR) {
             return null;
         }
         Scriptable result;
         try {
-            result = (Scriptable) method.getDeclaringClass().newInstance();
+            result = (Scriptable) member.getDeclaringClass().newInstance();
         } catch (Exception ex) {
             throw ScriptRuntime.throwAsUncheckedException(ex);
         }
@@ -517,21 +481,17 @@ public class FunctionObject extends BaseFunction
 
     private Object callVarargs(Context cx, Scriptable thisObj, Object[] args)
     {
-        try {
-            if (parmsLength == VARARGS_METHOD) {
-                Object[] invokeArgs = { cx, thisObj, args, this };
-                Object result = method.invoke(null, invokeArgs);
-                return hasVoidReturn ? Undefined.instance : result;
-            } else {
-                boolean inNewExpr = (thisObj == null);
-                Boolean b = inNewExpr ? Boolean.TRUE : Boolean.FALSE;
-                Object[] invokeArgs = { cx, args, this, b };
-                return (method == null)
-                       ? ctor.newInstance(invokeArgs)
-                       : method.invoke(null, invokeArgs);
-            }
-        } catch (Exception ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
+        if (parmsLength == VARARGS_METHOD) {
+            Object[] invokeArgs = { cx, thisObj, args, this };
+            Object result = member.invoke(null, invokeArgs);
+            return hasVoidReturn ? Undefined.instance : result;
+        } else {
+            boolean inNewExpr = (thisObj == null);
+            Boolean b = inNewExpr ? Boolean.TRUE : Boolean.FALSE;
+            Object[] invokeArgs = { cx, args, this, b };
+            return (member.isCtor())
+                   ? member.newInstance(invokeArgs)
+                   : member.invoke(null, invokeArgs);
         }
     }
 
@@ -543,145 +503,17 @@ public class FunctionObject extends BaseFunction
         return parmsLength == VARARGS_CTOR;
     }
 
-    private void writeObject(ObjectOutputStream out)
-        throws IOException
-    {
-        out.defaultWriteObject();
-        boolean hasConstructor = ctor != null;
-        Member member = hasConstructor ? (Member)ctor : (Member)method;
-        writeMember(out, member);
-    }
-
     private void readObject(ObjectInputStream in)
         throws IOException, ClassNotFoundException
     {
         in.defaultReadObject();
-        Member member = readMember(in);
-        if (member instanceof Method) {
-            method = (Method) member;
-        } else {
-            ctor = (Constructor) member;
-        }
         if (parmsLength > 0) {
-            Class[] types;
-            if (method != null) {
-                types = method.getParameterTypes();
-            } else {
-                types = ctor.getParameterTypes();
-            }
+            Class[] types = member.argTypes;
             typeTags = new byte[parmsLength];
             for (int i = 0; i != parmsLength; ++i) {
                 typeTags[i] = (byte)getTypeTag(types[i]);
             }
         }
-    }
-
-    /**
-     * Writes a Constructor or Method object.
-     *
-     * Methods and Constructors are not serializable, so we must serialize
-     * information about the class, the name, and the parameters and
-     * recreate upon deserialization.
-     */
-    static void writeMember(ObjectOutputStream out, Member member)
-        throws IOException
-    {
-        if (member == null) {
-            out.writeBoolean(false);
-            return;
-        }
-        out.writeBoolean(true);
-        if (!(member instanceof Method || member instanceof Constructor))
-            throw new IllegalArgumentException("not Method or Constructor");
-        out.writeBoolean(member instanceof Method);
-        out.writeObject(member.getName());
-        out.writeObject(member.getDeclaringClass());
-        if (member instanceof Method) {
-            writeParameters(out, ((Method) member).getParameterTypes());
-        } else {
-            writeParameters(out, ((Constructor) member).getParameterTypes());
-        }
-    }
-
-    /**
-     * Reads a Method or a Constructor from the stream.
-     */
-    static Member readMember(ObjectInputStream in)
-        throws IOException, ClassNotFoundException
-    {
-        if (!in.readBoolean())
-            return null;
-        boolean isMethod = in.readBoolean();
-        String name = (String) in.readObject();
-        Class declaring = (Class) in.readObject();
-        Class[] parms = readParameters(in);
-        try {
-            if (isMethod) {
-                return declaring.getMethod(name, parms);
-            } else {
-                return declaring.getConstructor(parms);
-            }
-        } catch (NoSuchMethodException e) {
-            throw new IOException("Cannot find member: " + e);
-        }
-    }
-
-    private static final Class[] primitives = {
-        Boolean.TYPE,
-        Byte.TYPE,
-        Character.TYPE,
-        Double.TYPE,
-        Float.TYPE,
-        Integer.TYPE,
-        Long.TYPE,
-        Short.TYPE,
-        Void.TYPE
-    };
-
-    /**
-     * Writes an array of parameter types to the stream.
-     *
-     * Requires special handling because primitive types cannot be
-     * found upon deserialization by the default Java implementation.
-     */
-    static void writeParameters(ObjectOutputStream out, Class[] parms)
-        throws IOException
-    {
-        out.writeShort(parms.length);
-    outer:
-        for (int i=0; i < parms.length; i++) {
-            Class parm = parms[i];
-            out.writeBoolean(parm.isPrimitive());
-            if (!parm.isPrimitive()) {
-                out.writeObject(parm);
-                continue;
-            }
-            for (int j=0; j < primitives.length; j++) {
-                if (parm.equals(primitives[j])) {
-                    out.writeByte(j);
-                    continue outer;
-                }
-            }
-            throw new IllegalArgumentException("Primitive " + parm +
-                                               " not found");
-        }
-    }
-
-    /**
-     * Reads an array of parameter types from the stream.
-     */
-    static Class[] readParameters(ObjectInputStream in)
-        throws IOException, ClassNotFoundException
-    {
-        Class[] result = new Class[in.readShort()];
-        for (int i=0; i < result.length; i++) {
-            if (!in.readBoolean()) {
-                result[i] = (Class) in.readObject();
-                continue;
-            }
-            result[i] = primitives[in.readByte()];
-        }
-        return result;
     }
 
     private static final short VARARGS_METHOD = -1;
@@ -697,9 +529,7 @@ public class FunctionObject extends BaseFunction
     public static final int JAVA_SCRIPTABLE_TYPE  = 5;
     public static final int JAVA_OBJECT_TYPE      = 6;
 
-    transient Method method;
-    transient Constructor ctor;
-    transient Invoker invoker;
+    MemberBox member;
     transient private byte[] typeTags;
     private int parmsLength;
     private boolean hasVoidReturn;
