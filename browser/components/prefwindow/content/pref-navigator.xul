@@ -88,10 +88,8 @@
      var prefs = parent.winHooks.prefs;
      if (prefs.isHandlingHTTP  &&
          prefs.isHandlingHTTPS &&
-         prefs.isHandlingFTP   &&
          prefs.isHandlingHTML  &&
-         prefs.isHandlingXHTML &&
-         prefs.isHandlingXML) {
+         prefs.isHandlingXHTML) {
        // The user *wants* us to be the default, apparently.
        // We test the registry settings using a scratch copy of the
        // settings because we don't care about some of them, but we
@@ -101,20 +99,8 @@
        // Test that these are set.
        testSettings.isHandlingHTTP  = true;
        testSettings.isHandlingHTTPS = true;
-       testSettings.isHandlingFTP   = true;
        testSettings.isHandlingHTML  = true;
        testSettings.isHandlingXHTML = true;
-       testSettings.isHandlingXML   = true;
-       // Ignore the rest.
-       testSettings.isHandlingCHROME = false;
-       testSettings.isHandlingGOPHER = false;
-       testSettings.isHandlingJPEG   = false;
-       testSettings.isHandlingGIF    = false;
-       testSettings.isHandlingMNG    = false;
-       testSettings.isHandlingPNG    = false;
-       testSettings.isHandlingBMP    = false;
-       testSettings.isHandlingICO    = false;
-       testSettings.isHandlingXUL    = false;
      }
      // Return true to tell caller to process the standard pref fields.
      return true;
@@ -128,10 +114,8 @@
      // Turn on all "default browser" settings.
      settings.isHandlingHTTP  = true;
      settings.isHandlingHTTPS = true;
-     settings.isHandlingFTP   = true;
      settings.isHandlingHTML  = true;
      settings.isHandlingXHTML = true;
-     settings.isHandlingXML   = true;
 
      // Register callback that will be called when and if the
      // user presses the OK button.
