@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Ashu Kulkarni
+ *                 Ron Capelli (capelli@us.ibm.com)
  */
 
 
@@ -28,6 +29,8 @@
 #include <jni.h>
 #include <jawt_md.h>
 #include <jawt.h>
+
+typedef jboolean (JNICALL *PJAWT_GETAWT)(JNIEnv*, JAWT*);
 
 #include "Win32BrowserControlCanvas.h"
 #include "ns_util.h" //for throwing Exceptions to Java
@@ -45,21 +48,46 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_win32_Win32Bro
     JAWT_DrawingSurfaceInfo* dsi;
     JAWT_Win32DrawingSurfaceInfo* dsi_win;
     HWND handle_win;
+    HMODULE _hAWT;     // JAWT module handle
     jint lock;
 
+    PJAWT_GETAWT pJAWT_GetAWT;  // JAWT_GetAWT function pointer
+
     //Get the AWT
+    _hAWT = LoadLibrary("jawt.dll");
+    if (!_hAWT) {
+	 printf(" +++ No jawt.dll... Trying awt.dll +++ \n");
+	 _hAWT = LoadLibrary("awt.dll");   // IBM Java 1.3.x packages JAWT_GetAWT in awt.dll
+    }
+    if (!_hAWT) {
+        printf(" +++ JAWT DLL Not Found +++ \n");
+	::util_ThrowExceptionToJava(env, "Exception: JAWT DLL Not Found");
+	return 0;
+    }
+
+    pJAWT_GetAWT = (PJAWT_GETAWT)GetProcAddress(_hAWT, "_JAWT_GetAWT@8");
+    printf ("Debug (RBC): pJAWT_GetAWT: %08x\n", pJAWT_GetAWT);
+    if (!pJAWT_GetAWT) {
+        printf(" +++ JAWT_GetAWT Entry Not Found +++ \n");
+	::util_ThrowExceptionToJava(env, "Exception: JAWT_GetAWT Entry Not Found");
+	FreeLibrary(_hAWT);
+	return 0;
+    }
+
     awt.version = JAWT_VERSION_1_3;
-    if (JAWT_GetAWT(env, &awt) == JNI_FALSE) {
+    if (pJAWT_GetAWT(env, &awt) == JNI_FALSE) {
         printf(" +++ AWT Not Found +++ \n");
         ::util_ThrowExceptionToJava(env, "Exception: AWT Not Found");
+	FreeLibrary(_hAWT);
         return 0;
     }
-    
+
     //Get the Drawing Surface
     ds = awt.GetDrawingSurface(env, canvas);
     if (ds == NULL) {
         printf(" +++ NULL Drawing Surface +++ \n");
         ::util_ThrowExceptionToJava(env, "Exception: Null Drawing Surface");
+	FreeLibrary(_hAWT);
         return 0;
     }
 
@@ -69,6 +97,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_win32_Win32Bro
         printf(" +++ Error Locking Surface +++ \n");
         ::util_ThrowExceptionToJava(env, "Exception: Error Locking Surface");
         awt.FreeDrawingSurface(ds);
+	FreeLibrary(_hAWT);
         return 0;
     }
 
@@ -79,9 +108,10 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_win32_Win32Bro
         ::util_ThrowExceptionToJava(env, "Exception: Error Getting Surface Info");
         ds->Unlock(ds);
         awt.FreeDrawingSurface(ds);
+	FreeLibrary(_hAWT);
         return 0;
     }
-    
+
     //Get the Platform specific Drawing Info
     dsi_win = (JAWT_Win32DrawingSurfaceInfo*)dsi->platformInfo;
 
@@ -92,8 +122,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_win32_Win32Bro
     ds->FreeDrawingSurfaceInfo(dsi);
     ds->Unlock(ds);
     awt.FreeDrawingSurface(ds);
+    FreeLibrary(_hAWT);
 
     //return the native peer handle
     return (jint) handle_win;
-
 }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Glenn Barney <gbarney@uiuc.edu>
+ *                 Ron Capelli <capelli@us.ibm.com>
  */
 
 
@@ -34,10 +35,10 @@
                       // pulls in ../src_share/jni_util_export.h
 #include <Exdisp.h>
 #include <atlbase.h> //for CComPtr
-#include <AtlApp.h> // for CAppModule decl WTL
+//#include <AtlApp.h> // for CAppModule decl WTL
 
-
-extern CAppModule _Module;
+//extern CAppModule _Module;
+extern CComModule _Module;
 #include <Atlwin.h> // for AtlWin 
 #include <Atlcom.h>
 
@@ -48,7 +49,7 @@ extern CAppModule _Module;
 
 #include <atlhost.h>
 //#include <atlframe.h>//WTL
-#include <atlctrls.h>//WTL
+//#include <atlctrls.h>//WTL
 //#include <atlctrlw.h>//WTL
 //#include <atlmisc.h> //WTL
 //#include <atlimpl.cpp>
@@ -58,23 +59,22 @@ class CMyDialog;
 
 extern const char *gSupportedListenerInterfaces[]; // defined in ie_util.cpp
 
-struct WebShellInitContext {
-
-    HWND		parentHWnd;
-    HWND                browserHost;
-    JNIEnv          *   env;
-    jobject             nativeEventThread;
-    const wchar_t *			wcharURL;
-	int					initComplete;
-	int					initFailCode;
-	int					x;
-	int					y;
-	int					w;
-	int					h;
-	jboolean	canForward;
-	jboolean	canBack;
+struct WebShellInitContext
+{
+    HWND	parentHWnd;
+    HWND        browserHost;
+    JNIEnv *	env;
+    jobject     nativeEventThread;
+    const wchar_t *	wcharURL;
+    int		initComplete;
+    int		initFailCode;
+    int		x;
+    int		y;
+    int		w;
+    int		h;
+    jboolean	canForward;
+    jboolean	canBack;
     CMyDialog   *browserObject;
-
 };
 
 #endif // ie_util_h

@@ -27,7 +27,7 @@
  *               Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  *               Brian Satterfield <bsatterf@atl.lmco.com>
  *               Anthony Sizer <sizera@yahoo.com>
- *               Ron Capelli <capelli@acm.org>
+ *               Ron Capelli <capelli@us.ibm.com>
  */
 
 /*
@@ -159,9 +159,11 @@ wsLoadFromStreamEvent::handleEvent ()
         // Kick off a LoadStream.  This will cause
         // InputStreamShim::Read() to be called, 
         
+	printf ("debug: capelli: LoadStream - mContentType: %s  mUriString: %s\n", 
+	                                      mContentType,     mUriString.get());
+	
         rv = mInitContext->docShell->LoadStream(mShim, uri, 
-						nsDependentCString(mContentType, 
-                                                		   mShim->getContentLength()),
+						nsDependentCString(mContentType),
 					        NS_LITERAL_CSTRING(""),
                                                 nsnull);
         if (mProperties) {

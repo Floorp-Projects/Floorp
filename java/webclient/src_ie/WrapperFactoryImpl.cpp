@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -18,46 +18,16 @@
  * Rights Reserved.
  *
  * Contributor(s): Glenn Barney <gbarney@uiuc.edu>
+ *                 Ron Capelli <capelli@us.ibm.com>
  */
 
 #include "WrapperFactoryImpl.h"
 #include "ie_util.h"
 #include "ie_globals.h"
 
-
-#include "prenv.h"
-
-
-#ifdef XP_PC
-
-
-// All this stuff is needed to initialize the history
-
-#define APPSHELL_DLL "appshell.dll"
-#define BROWSER_DLL  "nsbrowser.dll"
-#define EDITOR_DLL "ender.dll"
-
-#else
-
-#ifdef XP_MAC
-
-#define APPSHELL_DLL "APPSHELL_DLL"
-#define EDITOR_DLL  "ENDER_DLL"
-
-#else
-
-// XP_UNIX || XP_BEOS
-#define APPSHELL_DLL  "libnsappshell"MOZ_DLL_SUFFIX
-#define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
-#define EDITOR_DLL  "libender"MOZ_DLL_SUFFIX
-
-#endif // XP_MAC
-
-#endif // XP_PC
-
 //
 // file data
-// 
+//
 
 const char *gImplementedInterfaces[] = {
         "webclient.WindowControl",
@@ -74,40 +44,38 @@ const char *gImplementedInterfaces[] = {
 
 
 //
-// Functions to hook into mozilla
-// 
+// Functions to hook into Explorer
+//
 
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize
 (JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath)
 {
 
-
 }
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeTerminate
 (JNIEnv *env, jobject obj)
 {
-    
+
 }
 
-JNIEXPORT jboolean JNICALL 
+JNIEXPORT jboolean JNICALL
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeDoesImplement
 (JNIEnv *env, jobject obj, jstring interfaceName)
 {
-
-    const char *iName = (const char *) ::util_GetStringUTFChars(env, 
+    const char *iName = (const char *) ::util_GetStringUTFChars(env,
                                                                 interfaceName);
     jboolean result = JNI_FALSE;
-    
+
     int i = 0;
-    
+
     if (nsnull == iName) {
         return result;
     }
-    
+
     while (nsnull != gImplementedInterfaces[i]) {
         if (0 == strcmp(gImplementedInterfaces[i++], iName)) {
             result = JNI_TRUE;
@@ -115,6 +83,6 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeDoesImplemen
         }
     }
     ::util_ReleaseStringUTFChars(env, interfaceName, iName);
-    
+
     return result;
 }

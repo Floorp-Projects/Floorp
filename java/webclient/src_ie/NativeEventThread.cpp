@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -18,11 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): Glenn Barney <gbarney@uiuc.edu>
+ *                 Ron Capelli <capelli@us.ibm.com>
  */
 
 #define IDD_MYDIALOG  128
 #define _WIN32_WINNT  0x0400
-#define _WIN32_IE	0x0400
+#define _WIN32_IE     0x0400
 
 #include "NativeEventThread.h"
 
@@ -33,8 +34,8 @@
 
 #include <atlbase.h> //for CComPtr
 
- CAppModule _Module;
- 
+CComModule _Module;
+
 
 #include <Atlwin.h> // for AtlWin
 #include <Atlcom.h>
@@ -44,16 +45,13 @@
 
 #include <atlhost.h>
 //#include <atlframe.h>//WTL
-#include <atlctrls.h>//WTL
+//#include <atlctrls.h>//WTL
 //#include <atlctrlw.h>//WTL
 //#include <atlmisc.h>//WTL
 //#include <atlimpl.cpp>
 #include <objbase.h>
 
-
-#ifdef XP_PC
 #include <windows.h>
-#endif
 
 #include <stdio.h>
 
@@ -92,33 +90,29 @@ char * errorMessages[] = {
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeInitialize
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-	
-	WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
-	if (NULL == initContext) {
-	   ::util_ThrowExceptionToJava (env,
-			   "NULL webShellPtr passed to nativeInitialize.");
-	   return;
-	}
+    WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
+    if (NULL == initContext) {
+	::util_ThrowExceptionToJava (env,
+	                             "NULL webShellPtr passed to nativeInitialize.");
+	return;
+    }
 
+    InitIEStuff (initContext);
+}
 
-	InitIEStuff (initContext);
-
-} 
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeProcessEvents
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
-
     WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
-    
+
     if (nsnull == initContext) {
-	    ::util_ThrowExceptionToJava(env, 
+	::util_ThrowExceptionToJava(env,
                                     "NULL webShellPtr passed to nativeProcessEvents.");
         return;
     }
+
     processEventLoop(initContext);
-
-
 }
 
  /**
@@ -143,35 +137,35 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
  */
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener, 
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener,
  jstring listenerString)
 {
     WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
-    
+
     if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
-        return;
+	::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
+	return;
     }
-    
+
     if (nsnull == initContext->nativeEventThread) {
         // store the java EventRegistrationImpl class in the initContext
-        initContext->nativeEventThread = 
+	initContext->nativeEventThread =
             ::util_NewGlobalRef(env, obj); // VERY IMPORTANT!!
-        
-        // This enables the listener to call back into java
+
+	// This enables the listener to call back into java
     }
-    
+
     jclass clazz = nsnull;
     int listenerType = 0;
-    const char *listenerStringChars = ::util_GetStringUTFChars(env, 
+    const char *listenerStringChars = ::util_GetStringUTFChars(env,
                                                                listenerString);
     if (listenerStringChars == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeAddListener: Can't get className for listener.");
         return;
     }
-    
+
     while (nsnull != gSupportedListenerInterfaces[listenerType]) {
-        if (0 == strcmp(gSupportedListenerInterfaces[listenerType], 
+        if (0 == strcmp(gSupportedListenerInterfaces[listenerType],
                         listenerStringChars)) {
             // We've got a winner!
             break;
@@ -180,32 +174,31 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     }
     ::util_ReleaseStringUTFChars(env, listenerString, listenerStringChars);
     listenerStringChars = nsnull;
-    
+
     if (LISTENER_NOT_FOUND == (LISTENER_CLASSES) listenerType) {
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't find listener \n\tclass for argument");
         return;
     }
-    
+
     jobject globalRef = nsnull;
-    
+
     // PENDING(edburns): make sure do DeleteGlobalRef on the removeListener
     if (nsnull == (globalRef = ::util_NewGlobalRef(env, typedListener))) {
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't create NewGlobalRef\n\tfor argument");
         return;
     }
     util_Assert(initContext->browserObject);
-    
+
     switch(listenerType) {
     case DOCUMENT_LOAD_LISTENER:
-        initContext->browserObject->AddDocumentLoadListener(globalRef); 
+        initContext->browserObject->AddDocumentLoadListener(globalRef);
         break;
     }
 
     return;
-    
 }
 
-JNIEXPORT void JNICALL 
+JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener,
  jstring listenerString)
@@ -216,60 +209,57 @@ Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListene
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeCleanUp
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
+    WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
 
-  WebShellInitContext * initContext = (WebShellInitContext *) webShellPtr;
-  	
-  //AtlAdviseSinkMap(&browserHome, false)
-  
-	//_Module.RemoveMessageLoop();
+    //AtlAdviseSinkMap(&browserHome, false)
+
+    //_Module.RemoveMessageLoop();
     initContext->browserObject->DispEventUnadvise(initContext->browserObject->spUnk);
-  	_Module.Term();
+    _Module.Term();
     ::CoUninitialize();
-  
 }
 
 
 int processEventLoop(WebShellInitContext * initContext)
 {
-
-	HRESULT hr;
+    HRESULT hr;
     MSG msg;
 
-
     if (::PeekMessage(&msg, nsnull, 0, 0, PM_NOREMOVE)) {
-        if (::GetMessage(&msg, nsnull, 0, 0)) {
-			
-			switch (msg.message)
-			{
-			case WM_REFRESH:
-				hr = (initContext->browserObject->m_pWB)->Refresh();
-				break;
-			case WM_NAVIGATE:
- 				hr = (initContext->browserObject->m_pWB)->Navigate(CComBSTR(initContext->wcharURL), NULL, NULL, NULL, NULL);
-                free((void *) initContext->wcharURL);
-                initContext->wcharURL = NULL;
-				break;
-			case WM_BACK:
-				hr = (initContext->browserObject->m_pWB)->GoBack();
-				break;
-			case WM_FORWARD:
-				hr = (initContext->browserObject->m_pWB)->GoForward();
-				break;
-			case WM_STOP:
-				hr = (initContext->browserObject->m_pWB)->Stop();
-				break;
-			case WM_RESIZE :
-				hr = MoveWindow(initContext->browserHost, initContext->x, initContext->y, initContext->w, initContext->h, TRUE);
-				break;
-			case WM_BIGTEST:
-				hr = ::MessageBox(initContext->browserHost, "command state changed", "youknow", MB_OK);
-				break;
-			
-			}
-			::TranslateMessage(&msg);
+	if (::GetMessage(&msg, nsnull, 0, 0)) {
+
+	    switch (msg.message)
+	    {
+		case WM_REFRESH:
+		    hr = (initContext->browserObject->m_pWB)->Refresh();
+		    break;
+		case WM_NAVIGATE:
+		    hr = (initContext->browserObject->m_pWB)->Navigate(CComBSTR(initContext->wcharURL), NULL, NULL, NULL, NULL);
+		    free((void *) initContext->wcharURL);
+		    initContext->wcharURL = NULL;
+		    break;
+		case WM_BACK:
+		    hr = (initContext->browserObject->m_pWB)->GoBack();
+		    break;
+		case WM_FORWARD:
+		    hr = (initContext->browserObject->m_pWB)->GoForward();
+		    break;
+		case WM_STOP:
+		    hr = (initContext->browserObject->m_pWB)->Stop();
+		    break;
+		case WM_RESIZE :
+		    hr = MoveWindow(initContext->browserHost, initContext->x, initContext->y, initContext->w, initContext->h, TRUE);
+		    break;
+		case WM_BIGTEST:
+		    hr = ::MessageBox(initContext->browserHost, "command state changed", "youknow", MB_OK);
+		    break;
+	    }
+
+	    ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
-            }
+	}
     }
+
     initContext->canForward = initContext->browserObject->GetForwardState();
     initContext->canBack = initContext->browserObject->GetBackState();
     return 1;
@@ -277,17 +267,16 @@ int processEventLoop(WebShellInitContext * initContext)
 
 HRESULT InitIEStuff (WebShellInitContext * initContext)
 {
-
-	HRESULT hr;
+    HRESULT hr;
     HWND m_hWndClient;
     RECT rect;
 
-	HWND localParent = initContext->parentHWnd;
-	HWND localChild = initContext->browserHost;
+    HWND localParent = initContext->parentHWnd;
+    HWND localChild = initContext->browserHost;
 
-   	HRESULT hRes = CoInitializeEx(NULL,  COINIT_APARTMENTTHREADED);
-	ATLASSERT(SUCCEEDED(hRes));
-  
+    HRESULT hRes = CoInitializeEx(NULL,  COINIT_APARTMENTTHREADED);
+    ATLASSERT(SUCCEEDED(hRes));
+
 
 /*if (_WIN32_IE >= 0x0300)
 	INITCOMMONCONTROLSEX iccx;
@@ -298,60 +287,55 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
 	ATLASSERT(bRet);
 #else
 */
-  ::InitCommonControls();
+//  ::InitCommonControls();
 //#endif
 
     GetClientRect(initContext->parentHWnd, &rect);
-   
-    HINSTANCE newInst = GetModuleHandleA(NULL);
-	hRes = _Module.Init(NULL, newInst);
-	ATLASSERT(SUCCEEDED(hRes));
 
-    
+    HINSTANCE newInst = GetModuleHandleA(NULL);
+    hRes = _Module.Init(NULL, newInst);
+    ATLASSERT(SUCCEEDED(hRes));
+
+
     AtlAxWinInit();
 
-	m_hWndClient = initContext->browserObject->Create(
-		initContext->parentHWnd, 
-		rect,
-		_T("about:blank"), 
-		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
-			WS_VSCROLL | WS_HSCROLL, 
-		WS_EX_CLIENTEDGE, 
-	    ID_WEBBROWSER);
+    m_hWndClient = initContext->browserObject->Create(
+				initContext->parentHWnd,
+				rect,
+				_T("about:blank"),
+				WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+				WS_VSCROLL | WS_HSCROLL,
+				WS_EX_CLIENTEDGE,
+				ID_WEBBROWSER);
 
-	hr = initContext->browserObject->QueryControl(&(initContext->browserObject->m_pWB));
-	
+    hr = initContext->browserObject->QueryControl(&(initContext->browserObject->m_pWB));
 
-	if FAILED(hr)
-        {
-           ATLTRACE(_T("Couldn't retrieve webbrowser"));
-           return (-1);
-        }
+    if FAILED(hr)
+    {
+	ATLTRACE(_T("Couldn't retrieve webbrowser"));
+	return (-1);
+    }
 
-  if SUCCEEDED(hr)
-        {
-	     
-	     ATLTRACE(_T("Browser succesfully retrieved"));
-            
-        }
+    if SUCCEEDED(hr)
+    {
+	ATLTRACE(_T("Browser succesfully retrieved"));
+    }
 
     (initContext->browserHost) = m_hWndClient;
 
-	if (!initContext->browserObject->spUnk) {    
+    if (!initContext->browserObject->spUnk) {
 	hr = initContext->browserObject->QueryControl(&(initContext->browserObject->spUnk));
 	hr = initContext->browserObject->DispEventAdvise(initContext->browserObject->spUnk);
-	}
+    }
 
-	if FAILED(hr)
-	{
-		ATLTRACE(_T("Couldn't establish connection points"));
-		return -1;
-	}
+    if FAILED(hr)
+    {
+	ATLTRACE(_T("Couldn't establish connection points"));
+	return -1;
+    }
 
     processEventLoop(initContext);
- 
 
-	return 0;
-
+    return 0;
 }
 

@@ -395,6 +395,9 @@ InputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32
 NS_IMETHODIMP 
 InputStreamShim::IsNonBlocking(PRBool *_retval)
 {
-    NS_NOTREACHED("IsNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
+//    NS_NOTREACHED("IsNonBlocking");
+//    return NS_ERROR_NOT_IMPLEMENTED;
+
+    *_retval = PR_FALSE;
+    return NS_OK;
 }
