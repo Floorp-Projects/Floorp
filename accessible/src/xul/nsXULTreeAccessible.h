@@ -43,18 +43,24 @@
 #include "nsITreeView.h"
 #include "nsITreeColumns.h"
 #include "nsXULSelectAccessible.h"
+#include "nsIAccessibleTreeCache.h"
+
 
 /*
  * A class the represents the XUL Tree widget.
  */
-class nsXULTreeAccessible : public nsXULSelectableAccessible
+const PRUint32 kDefaultTreeCacheSize = 256;
+
+class nsXULTreeAccessible : public nsXULSelectableAccessible,
+                            public nsIAccessibleTreeCache
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
+  NS_DECL_NSIACCESSIBLETREECACHE
 
   nsXULTreeAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULTreeAccessible() {}
+  virtual ~nsXULTreeAccessible();
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetRole(PRUint32 *_retval);
@@ -70,6 +76,7 @@ public:
 protected:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
+  nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *mAccessNodeCache;
 
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };
