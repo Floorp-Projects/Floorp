@@ -109,6 +109,14 @@ interface nsIBrowserHistory : nsISupports
      */
 
     void hidePage(in string url);
+
+    /**
+     * markPageAsTyped
+     * Designate the url as having been explicitly typed in by
+     * the user, so it's okay to be an autocomplete result.
+     */
+
+    void markPageAsTyped(in string url);
 };
 
 %{ C++

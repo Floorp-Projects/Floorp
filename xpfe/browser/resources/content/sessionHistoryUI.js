@@ -41,6 +41,8 @@ const MAX_HISTORY_MENU_ITEMS = 15;
 const MAX_HISTORY_ITEMS = 100;
 var gRDF = null;
 var gRDFC = null;
+var gGlobalHistory = null;
+var gURIFixup = null;
 var gLocalStore = null;
 
 function FillHistoryMenu(aParent, aMenu)
@@ -164,6 +166,13 @@ function addToUrlbarHistory()
      gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                       .getService(Components.interfaces.nsIRDFService);
 
+  if (!gGlobalHistory)
+    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                               .getService(Components.interfaces.nsIBrowserHistory);
+  
+  if (!gURIFixup)
+    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                          .getService(Components.interfaces.nsIURIFixup);
   if (!gLocalStore)
      gLocalStore = gRDF.GetDataSource("rdf:local-store");
 
@@ -248,6 +257,8 @@ function addToUrlbarHistory()
        // Otherwise, we've got a new URL in town. Add it!
        // Put the value as it was typed by the user in to RDF
        // Insert it to the beginning of the list.
+       var fixedUpURI = gURIFixup.createFixupURI(entryToAdd.Value, 0);
+       gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
        entries.InsertElementAt(entryToAdd, 1, true);
 
        // Remove any expired history items so that we don't let
