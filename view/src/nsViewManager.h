@@ -167,13 +167,13 @@ private:
 	 * Returns the nearest parent view with an attached widget. Can be the
 	 * same view as passed-in.
 	 */
-	nsIView* GetWidgetView(nsIView *aView);
+	nsIView* GetWidgetView(nsIView *aView) const;
 
 	/**
 	 * Transforms a rectangle from specified view's coordinate system to
 	 * the first parent that has an attached widget.
 	 */
-	void ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect);
+	void ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect) const;
 	// void WidgetToView(nsIView* aView, nsRect &aWidgetRect);
 
 private:

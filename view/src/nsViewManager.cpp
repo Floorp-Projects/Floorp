@@ -2698,7 +2698,7 @@ void nsViewManager :: RestartTimer(void)
   SetFrameRate(mTrueFrameRate);
 }
 
-nsIView* nsViewManager::GetWidgetView(nsIView *aView)
+nsIView* nsViewManager::GetWidgetView(nsIView *aView) const
 {
 	while (aView != nsnull) {
 		PRBool hasWidget;
@@ -2710,7 +2710,7 @@ nsIView* nsViewManager::GetWidgetView(nsIView *aView)
 	return nsnull;
 }
 
-void nsViewManager::ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect)
+void nsViewManager::ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect) const
 {
 	while (aView != aWidgetView) {
 		nscoord x, y;
