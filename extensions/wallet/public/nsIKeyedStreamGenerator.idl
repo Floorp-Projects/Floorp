@@ -31,7 +31,7 @@ interface nsIKeyedStreamGenerator: nsISupports {
   readonly attribute string signature;      
   
   /* consumer will be a nsIPasswordSink for now, but not limited to that. */
-  void setup(in long salt, in nsISupports consumer);    
+  void setup(in unsigned long salt, in nsISupports consumer);    
     
   /* the "quality level" of this stream 
    * why a float?  if we assign 1 and 2, what do we do when something comes
@@ -40,5 +40,5 @@ interface nsIKeyedStreamGenerator: nsISupports {
   readonly attribute float level;           
   
   /* get the byte at position "index" in the stream */
-  octet getByte(in long index);  
+  octet getByte(in unsigned long position);  
 };
