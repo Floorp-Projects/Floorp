@@ -421,7 +421,8 @@ il_get_container(IL_GroupContext *img_cx,
 {
     PRUint32 urlhash, hash;
     il_container *ic=NULL;
-    
+    PRBool isChromeAlready = PR_FALSE; 
+ 
     urlhash = hash = il_hash(image_url);
 
     /*
@@ -450,21 +451,24 @@ il_get_container(IL_GroupContext *img_cx,
         /* 2) Their namespace crosses document boundaries, so caching    */
         /*    could result in incorrect behavior.                        */
 
-            else if(cache_reload_policy == DONT_USE_IMG_CACHE){
-		ILTRACE(2,("il:  il_get_container: DONT_USE_IMG_CACHE ic=0x%08x discarding\n", ic)); 
-            /* Don't use old copy and purge it from cache.*/
-            if (!ic->is_in_use) {
-                il_removefromcache(ic);
-                il_delete_container(ic);
-            }
-            ic = NULL;
-            
-        }
-    }
-
-    /* Reorder the cache list so it remains in LRU order*/
-    if (ic)
-        il_removefromcache(ic);
+ 	// if it is chrome, record that fact, and ensure it is not purged
+ 
+         if(cache_reload_policy == DONT_USE_IMG_CACHE && ic->moz_type != TYPE_CHROME){
+  		ILTRACE(2,("il:  il_get_container: DONT_USE_IMG_CACHE ic=0x%08x discarding\n", ic)); 
+              /* Don't use old copy and purge it from cache.*/
+             	if (!ic->is_in_use) {
+                 	il_removefromcache(ic);
+                 	il_delete_container(ic);
+             	}
+             	ic = NULL;
+          }
+      }
+      /* Reorder the cache list so it remains in LRU order*/
+     if (ic && ic->moz_type != TYPE_CHROME)
+          il_removefromcache(ic);
+     else if (ic && ic->moz_type == TYPE_CHROME)
+          isChromeAlready = PR_TRUE;
+  
 
     /* There's no existing matching container.  Make a new one. */
     if (!ic) {
@@ -490,7 +494,7 @@ il_get_container(IL_GroupContext *img_cx,
         /* Allocate the destination image structure.  A destination mask
            structure will be allocated later if the image is determined to
            be transparent and no background_color has been provided. */
-    if (!(ic->image = PR_NEWZAP(IL_Pixmap))) {
+    	if (!(ic->image = PR_NEWZAP(IL_Pixmap))) {
             IL_ReleaseColorSpace(ic->src_header->color_space);
             PR_FREEIF(ic->src_header);
             PR_FREEIF(ic);
@@ -523,6 +527,13 @@ il_get_container(IL_GroupContext *img_cx,
         }
 
         ILTRACE(2, ("il: create ic=0x%08x\n", ic));
+
+        if (nsCRT::strncmp(image_url,"chrome", 6) == 0) {
+		ic->moz_type = TYPE_CHROME;
+	}
+	else {
+		ic->moz_type = TYPE_DEFAULT;
+	}
 
         ic->hash = hash;
         ic->urlhash = urlhash;
@@ -570,13 +581,15 @@ il_get_container(IL_GroupContext *img_cx,
           return NULL;
         }
         imgdcb->SetContainer(ic);
-        ic->imgdcb = imgdcb;
-    }
+          ic->imgdcb = imgdcb;
+      }
+ 
+     if ( isChromeAlready == PR_FALSE )  // image is new, or existing and type is
+ 				 // not TYPE_CHROME
+ 	    il_addtocache(ic);
   
-    il_addtocache(ic);
-
-    ic->is_in_use = PR_TRUE;
-    
+      ic->is_in_use = PR_TRUE;
+        
     return ic;
 }
 
@@ -694,6 +707,9 @@ il_removefromcache(il_container *ic)
     PR_ASSERT(ic); 
     if (ic)
     {
+    	NS_ASSERTION(ic->moz_type != TYPE_CHROME, "removing a chrome image from the image cache"); 
+	if ( ic->moz_type == TYPE_CHROME )
+		printf( "Image type is chrome\n" );	
         ILTRACE(2,("il: remove ic=0x%08x from cache\n", ic));
         PR_ASSERT(ic->next || ic->prev || (il_cache.head == il_cache.tail));
 
@@ -824,7 +840,7 @@ IL_ShrinkCache(void)
 
     for (ic = il_cache.tail; ic; ic = ic->prev)
     {
-        if (ic->is_in_use) {
+        if (ic->is_in_use || ic->moz_type == TYPE_CHROME) {
             continue;
         }
 
@@ -844,7 +860,7 @@ IL_FlushCache(void)
     il_container *ic = il_cache.head;
     while (ic)
     {
-        if (ic->is_in_use) {
+        if (ic->is_in_use || ic->moz_type == TYPE_CHROME) {
 #ifdef DEBUG_kipp
             printf("IL_FlushCache: il_container %p in use '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
@@ -881,7 +897,7 @@ IL_UnCache(IL_Pixmap *pixmap)
             /* Check the pixmap argument against both the image and mask
                pixmaps of the container. */
             if (((ic->image == pixmap) || (ic->mask == pixmap)) &&
-                !ic->is_in_use)
+                !ic->is_in_use || ic->moz_type != TYPE_CHROME)
             {
                 il_removefromcache(ic);
                 il_delete_container(ic);
@@ -1055,6 +1071,7 @@ IL_Shutdown()
     {
         ic_next = ic->next;
         il_delete_all_clients(ic);
+        ic->moz_type = TYPE_DEFAULT;
         il_removefromcache(ic);
         il_delete_container(ic);
     }
@@ -1080,13 +1097,14 @@ IL_DestroyImage(IL_ImageReq *image_req)
     if (!image_req)
         return;
 
-    /* Notify observers that the image request is being destroyed.  This
-       provides an opportunity for observers to remove themselves from the
-       observer callback list and to do any related cleanup. */
-    il_image_destroyed_notify(image_req);
-    
-    /* Get the container and context for this image request. */
     ic = image_req->ic;
+
+    // leave chrome images alone
+
+    if (ic->moz_type == TYPE_CHROME)
+	return;
+
+    /* Get the container and context for this image request. */
     img_cx = image_req->img_cx;
 
     /* Certain requests, such as requests for internal image icons, do not
@@ -1108,6 +1126,11 @@ IL_DestroyImage(IL_ImageReq *image_req)
     if (!ic_list)
         return;
 
+    /* Notify observers that the image request is being destroyed.  This
+       provides an opportunity for observers to remove themselves from the
+       observer callback list and to do any related cleanup. */
+    il_image_destroyed_notify(image_req);
+    
     /* Delete the image request from the container's list of clients. */
     client_deleted = il_delete_client(ic, image_req);
     PR_ASSERT(client_deleted);
@@ -1134,8 +1157,8 @@ IL_DestroyImage(IL_ImageReq *image_req)
     }
 
     if ((ic->state != IC_COMPLETE) || ic->multi ||
-        ic->rendered_with_custom_palette
-        ) {
+        ic->rendered_with_custom_palette ) {
+
         il_removefromcache(ic);
         il_delete_container(ic);
         return;
@@ -1149,6 +1172,7 @@ IL_DestroyImage(IL_ImageReq *image_req)
             il_delete_container(ic2);
         }
     }
+
 
     ic->is_in_use = PR_FALSE;
 }
@@ -1185,8 +1209,10 @@ IL_DestroyImageGroup(IL_GroupContext *img_cx)
         }
             
         }
+#if 0	// XXX now that we don't delete chrome images, this will fire
         PR_ASSERT(img_cx->num_containers == 0);
         PR_ASSERT(img_cx->container_list == NULL);
+#endif
     }
   
     ILTRACE(1, ("il: IL_DestroyImageGroup\n"));
