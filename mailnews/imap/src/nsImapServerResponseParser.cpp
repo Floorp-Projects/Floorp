@@ -409,7 +409,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 		if (fZeroLengthMessageUidString.Length())
 		{
 			// "Deleting zero length message");
-			fServerConnection.Store(fZeroLengthMessageUidString, "+Flags (\\Deleted)", PR_TRUE);
+			fServerConnection.Store(fZeroLengthMessageUidString.get(), "+Flags (\\Deleted)", PR_TRUE);
 			if (LastCommandSuccessful())
 				fServerConnection.Expunge();
 
@@ -1287,11 +1287,11 @@ void nsImapServerResponseParser::envelope_data()
 			headerLine += ": ";
 			if (EnvelopeTable[tableIndex].type == envelopeString)
 			{
-				char *strValue = CreateNilString();
+				nsXPIDLCString strValue;
+				strValue.Adopt(CreateNilString());
 				if (strValue)
 				{
-					nsSubsumeCStr str(strValue, PR_TRUE);
-					headerLine += str;
+					headerLine.Append(strValue);
 				}
 				else
 					headerNonNil = PR_FALSE;
@@ -1326,7 +1326,8 @@ void nsImapServerResponseParser::xaolenvelope_data()
 	{
 		fNextToken = GetNextToken();
 		fNextToken++; // eat '('
-		nsSubsumeCStr subject(CreateNilString(), PR_TRUE);
+		nsXPIDLCString subject;
+		subject.Adopt(CreateNilString());
 		nsCAutoString subjectLine("Subject: ");
 		subjectLine += subject;
 		fServerConnection.HandleMessageDownLoadLine(subjectLine.get(), PR_FALSE);

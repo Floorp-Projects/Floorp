@@ -29,6 +29,8 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 #include "nsIServiceManager.h"
@@ -376,18 +378,15 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
            is always ASCII and I save 2 conversions this way. */
 
       // Convert to HTML
-      PRUnichar* citeTagsResultUnichar = nsnull;
+      nsXPIDLString citeTagsResultUnichar;
       rv = conv->ScanTXT(citeTagsSource.get(), 0 /* no recognition */,
-                         &citeTagsResultUnichar);
+                         getter_Copies(citeTagsResultUnichar));
       if (NS_FAILED(rv)) return -1;
 
       // Convert to char* and write out
-      nsSubsumeStr citeTagsResultStr(citeTagsResultUnichar,
-                                     PR_TRUE /* assume ownership */);
-      char* citeTagsResultCStr = citeTagsResultStr.ToNewCString();
-
+      nsCAutoString citeTagsResultCStr;
+      CopyUCS2toASCII(citeTagsResultUnichar, citeTagsResultCStr);
       prefaceResultStr += citeTagsResultCStr;
-      Recycle(citeTagsResultCStr);
       if (!plainHTML)
         prefaceResultStr += "</span>";
     }
@@ -412,13 +411,13 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
     /* This is the main TXT to HTML conversion:
        escaping (very important), eventually recognizing etc. */
-    PRUnichar* lineResultUnichar = nsnull;
+    nsXPIDLString lineResultUnichar;
 
     if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
         !mailCharset || !nsMsgI18Nstateful_charset(mailCharset))
     {
       rv = conv->ScanTXT(lineSourceStr.get() + logicalLineStart,
-                         whattodo, &lineResultUnichar);
+                         whattodo, getter_Copies(lineResultUnichar));
       if (NS_FAILED(rv)) return -1;
     }
     else
@@ -432,19 +431,17 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
       rv = nsMsgI18NConvertToUnicode(mailCharsetStr, cstr, ustr);
       if (NS_SUCCEEDED(rv))
       {
-        PRUnichar *u;
-        rv = conv->ScanTXT(ustr.get() + logicalLineStart, whattodo, &u);
+        nsXPIDLString u;
+        rv = conv->ScanTXT(ustr.get() + logicalLineStart, whattodo, getter_Copies(u));
         if (NS_SUCCEEDED(rv))
         {
           ustr.Assign(u);
-          Recycle(u);
           rv = nsMsgI18NConvertFromUnicode(mailCharsetStr, ustr, cstr);
           if (NS_SUCCEEDED(rv))
           {
             // create PRUnichar* which contains NON unicode 
             // as the following code expecting it
-            ustr.AssignWithConversion(cstr);                                                  
-            lineResultUnichar = ustr.ToNewUnicode();
+            lineResultUnichar.Adopt(ToNewUnicode(cstr));
             if (!lineResultUnichar) return -1;
           }
         }
@@ -454,21 +451,14 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     }
 
 
-    // avoid an extra string copy by using nsSubsumeStr, this transfers
-    // ownership of wresult to strresult so don't try to free wresult later.
-    nsSubsumeStr lineResultStr(lineResultUnichar,
-                               PR_TRUE /* assume ownership */);
-
     if (!(text->mIsSig && quoting))
     {
-      char* tmp = prefaceResultStr.ToNewCString();
-      status = MimeObject_write(obj, tmp, prefaceResultStr.Length(), PR_TRUE);
+      status = MimeObject_write(obj, NS_CONST_CAST(char*, prefaceResultStr.get()), prefaceResultStr.Length(), PR_TRUE);
       if (status < 0) return status;
-      Recycle(tmp);
-      tmp = lineResultStr.ToNewCString();
-      status = MimeObject_write(obj, tmp, lineResultStr.Length(), PR_TRUE);
+      nsCAutoString lineResultCStr;
+      CopyUCS2toASCII(lineResultUnichar, lineResultCStr);
+      status = MimeObject_write(obj, NS_CONST_CAST(char*, lineResultCStr.get()), lineResultCStr.Length(), PR_TRUE);
       if (status < 0) return status;
-      Recycle(tmp);
     }
     else
     {

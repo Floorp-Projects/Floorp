@@ -1485,13 +1485,6 @@ int CStringTester::TestSubsumables(){
   int result=0;
   char* buf="hello rick";
 
-/* NOT WORKING YET...
-  nsSubsumeStr s1(buf,PR_FALSE);
-  nsString ns1(s1);
-
-//  nsSubsumeCStr s2(ns1);
-//  nsCString c1(s2);
-*/
   return result;
 }
 

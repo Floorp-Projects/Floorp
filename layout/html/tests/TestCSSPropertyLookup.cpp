@@ -51,7 +51,7 @@ int TestProps() {
     PL_strcpy(tagName, *et);
     index = nsCSSProperty(PRInt32(index) + 1);
 
-    id = nsCSSProps::LookupProperty(nsSubsumeCStr(tagName, PR_FALSE));
+    id = nsCSSProps::LookupProperty(nsCString(tagName));
     if (id == eCSSProperty_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
       rv = -1;
@@ -118,7 +118,7 @@ int TestKeywords() {
     }
     index = nsCSSKeyword(PRInt32(index) + 1);
 
-    id = nsCSSKeywords::LookupKeyword(nsSubsumeCStr(tagName, PR_FALSE));
+    id = nsCSSKeywords::LookupKeyword(nsCString(tagName));
     if (id <= eCSSKeyword_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
       rv = -1;
@@ -132,7 +132,7 @@ int TestKeywords() {
     if (('a' <= tagName[0]) && (tagName[0] <= 'z')) {
       tagName[0] = tagName[0] - 32;
     }
-    id = nsCSSKeywords::LookupKeyword(nsSubsumeCStr(tagName, PR_FALSE));
+    id = nsCSSKeywords::LookupKeyword(nsCString(tagName));
     if (id <= eCSSKeyword_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
       rv = -1;
