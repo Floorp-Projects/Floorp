@@ -504,6 +504,47 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 }
 #endif
 
+/**
+  * Helper to find identifiers that can terminate an entity
+  *
+  * harishd 06/23/00
+  *
+  * @param aSource      - Search for entity terminator in this string
+  * @param aChar        - Holds the terminated character
+  * @param aStartOffset - Beings search, in aSource, from this offset.
+  */
+ 
+PRInt32
+GetEntityTerminator(nsString& aSource,PRUnichar& aChar,PRInt32 aStartOffset=0) {
+ 
+  PRUnichar         theChar=aChar=0;
+  PRInt32           theOffset=aStartOffset;
+  PRInt32           theLength=aSource.Length();
+  PRBool            found=PR_FALSE; 
+
+  while(theOffset<theLength) {
+ 
+    theChar=aSource[theOffset++];
+
+    if(('a'<=theChar) && (theChar<='z'))
+      found=PR_TRUE;
+    else if(('A'<=theChar) && (theChar<='Z'))
+      found=PR_TRUE;
+    else if(('0'<=theChar) && (theChar<='9'))
+      found=PR_TRUE;
+    else if('#'==theChar) 
+      found=PR_TRUE;
+    else 
+      found=PR_FALSE;
+
+    if(!found) {
+      aChar=theChar;
+      return theOffset-1;
+    }
+  }
+  return -1;
+}
+
 
 void HTMLContentSink::ReduceEntities(nsString& aString) {
   if (mParser) {
@@ -525,7 +566,12 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
       PRInt32 theLen=aString.Length();
       PRInt32 theAmpPos = aString.FindChar('&');
       PRInt32 theStartPos=0;
+      PRInt32 theTermPos=-1;
+      PRUnichar theTermChar='\0';
       const PRUnichar *theBuf=aString.GetUnicode();
+  
+      nsDTDMode mode;
+      mHTMLDocument->GetDTDMode(mode);
 
       while(-1!=theAmpPos) { 
 
@@ -534,19 +580,19 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
           theOutString.Append(&theBuf[theStartPos],theAmpPos-theStartPos);
         }
 
-        PRInt32 theSemiPos=aString.FindChar(';',PR_FALSE,theAmpPos+1);
+        theTermPos=GetEntityTerminator(aString,theTermChar,theAmpPos+1);
         
-        if(-1!=theSemiPos) {
+        if(-1!=theTermPos) {
           //having found a semi, copy chars between amppos and semipos;
-          aString.Mid(theNCRStr,theAmpPos+1,theSemiPos-theAmpPos-1);
+          aString.Mid(theNCRStr,theAmpPos+1,theTermPos-theAmpPos-1);
         }
         else {
           aString.Mid(theNCRStr,theAmpPos+1,theLen-theAmpPos-1);
           PRInt32 theNewAmpPos=aString.FindChar('&',PR_FALSE,theAmpPos+1);
-          theSemiPos=(-1==theNewAmpPos) ? theLen+1 : theNewAmpPos-1;
+          theTermPos=(-1==theNewAmpPos) ? theLen+1 : theNewAmpPos-1;
         }
 
-        theStartPos=theSemiPos+1;
+        theStartPos=theTermPos+1;
 
         PRUnichar theChar=(theLen>theAmpPos+1) ? aString.CharAt(theAmpPos+1) : '\0';
         PRUnichar theEntity=0;
@@ -564,24 +610,33 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
           default:
             if(nsCRT::IsAsciiAlpha(theChar)) {
               dtd->ConvertEntityToUnicode(theNCRStr, &theNCRValue);
+              if (eDTDMode_strict!=mode) {
+                // XXX - Hack - Nav. does not support entity values > 255
+                // on the other hand IE supports entity values > 255 with a
+                // semicolon. I think it's reasonable to emulate IE than Nav.
+                if(theNCRValue>255 && theTermChar!=';') break;
+              }
               if(-1!=theNCRValue) {
                 theEntity=PRUnichar(theNCRValue);
               }
-            }
-            if(!theEntity) {
-              //what looked like an entity is not really one.
-              //so let's copy the ncrstring back to the output string
-              aString.Mid(theNCRStr,theAmpPos,theSemiPos-theAmpPos+1);
-              theOutString.Append(theNCRStr);
             }
             break;
         } //switch
         
         if(theEntity) {
           theOutString.Append(theEntity);
+          if(theTermChar!='\0' && theTermChar!='&' && theTermChar!=';') {
+            theOutString.Append(theTermChar);
+          }
         }
-        theAmpPos = aString.FindChar('&',PR_FALSE,theSemiPos+1);
-
+        else {
+          //what looked like an entity is not really one.
+          //so let's copy the ncrstring back to the output string
+          if(theTermChar!='&') { theTermPos++; }
+          aString.Mid(theNCRStr,theAmpPos,theTermPos-theAmpPos);
+          theOutString.Append(theNCRStr);
+        }
+        theAmpPos = aString.FindChar('&',PR_FALSE,theTermPos);
       } //while
 
       if(0<theOutString.Length()) {
