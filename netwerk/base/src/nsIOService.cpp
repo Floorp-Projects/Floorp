@@ -267,6 +267,7 @@ nsIOService::MakeAbsolute(const char *aSpec,
     char* scheme;
     rv = GetScheme(aSpec, &scheme);
     if (NS_SUCCEEDED(rv)) {
+        nsAllocator::Free(scheme);
         // if aSpec has a scheme, then it's already absolute
         *result = nsCRT::strdup(aSpec);
         return (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
