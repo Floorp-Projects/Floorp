@@ -654,6 +654,8 @@ class nsCOMPtr
 
       nsCOMPtr<T>*
       get_address() const
+          // This is not intended to be used by clients.  See |address_of|
+          // below.
         {
           return NS_CONST_CAST(nsCOMPtr<T>*, this);
         }
@@ -662,12 +664,16 @@ class nsCOMPtr
 
       nsCOMPtr<T>*
       get_address()
+          // This is not intended to be used by clients.  See |address_of|
+          // below.
         {
           return this;
         }
 
       const nsCOMPtr<T>*
       get_address() const
+          // This is not intended to be used by clients.  See |address_of|
+          // below.
         {
           return this;
         }
@@ -677,7 +683,7 @@ class nsCOMPtr
       // This is going to become private soon, once all users of
       // nsCOMPtr stop using it.  It may even become:
       // void operator&() const {}
-//  private:
+    private:
       const nsCOMPtr<T>*
       operator&() const
           // This is private to prevent accidental use of |operator&|
@@ -699,7 +705,7 @@ class nsCOMPtr
           return this;
         }
 
-//  public:
+    public:
       nsDerivedSafe<T>&
       operator*() const
         {
@@ -869,6 +875,8 @@ class nsCOMPtr<nsISupports>
 
       nsCOMPtr<nsISupports>*
       get_address() const
+          // This is not intended to be used by clients.  See |address_of|
+          // below.
         {
           return NS_CONST_CAST(nsCOMPtr<nsISupports>*, this);
         }
@@ -877,12 +885,16 @@ class nsCOMPtr<nsISupports>
 
       nsCOMPtr<nsISupports>*
       get_address()
+          // This is not intended to be used by clients.  See |address_of|
+          // below.
         {
           return this;
         }
 
       const nsCOMPtr<nsISupports>*
       get_address() const
+          // This is not intended to be used by clients.  See |address_of|
+          // below.
         {
           return this;
         }
@@ -892,7 +904,7 @@ class nsCOMPtr<nsISupports>
       // This is going to become private soon, once all users of
       // nsCOMPtr stop using it.  It may even become:
       // void operator&() const {}
-//  private:
+    private:
       const nsCOMPtr<nsISupports>*
       operator&() const
           // This is private to prevent accidental use of |operator&|
@@ -914,7 +926,7 @@ class nsCOMPtr<nsISupports>
           return this;
         }
 
-//  public:
+    public:
 
       nsDerivedSafe<nsISupports>&
       operator*() const
@@ -1141,14 +1153,27 @@ operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
   }
 
 
-#ifndef NSCAP_NSCOMPTR_TO_RAW_COMPARISONS_ARE_AMBIGUOUS
+  // Some compilers incorrectly consider the top-level cv-qualifiers in
+  // overload resolution.  This leads to ambiguities with builtin
+  // |operator==| because the |const| makes the |operator==|
+  // defined here, which would otherwise have a better or equally
+  // good conversion for all parameters, have a worse conversion
+  // for one parameter because of the |const|.  Since the |const|'s
+  // only purpose is to make the argument |const| when used within
+  // the function, we'll remove it for those compilers since we know
+  // we're doing the right thing anyway.  See bug 65664 for details.
+#ifdef CPP_CV_QUALIFIERS_CAUSE_AMBIGUITY
+#define NSCAP_CONST_PARAM
+#else
+#define NSCAP_CONST_PARAM const
+#endif
 
   // Comparing an |nsCOMPtr| to a raw pointer
 
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator==( const nsCOMPtr<T>& lhs, const U* rhs )
+operator==( NSCAP_CONST_PARAM nsCOMPtr<T>& lhs, NSCAP_CONST_PARAM U* rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) == NS_STATIC_CAST(const void*, rhs);
   }
@@ -1156,7 +1181,7 @@ operator==( const nsCOMPtr<T>& lhs, const U* rhs )
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator==( const U* lhs, const nsCOMPtr<T>& rhs )
+operator==( NSCAP_CONST_PARAM U* lhs, NSCAP_CONST_PARAM nsCOMPtr<T>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs) == NS_STATIC_CAST(const void*, rhs.get());
   }
@@ -1164,7 +1189,7 @@ operator==( const U* lhs, const nsCOMPtr<T>& rhs )
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
+operator!=( NSCAP_CONST_PARAM nsCOMPtr<T>& lhs, NSCAP_CONST_PARAM U* rhs )
   {
     return NS_STATIC_CAST(const void*, lhs.get()) != NS_STATIC_CAST(const void*, rhs);
   }
@@ -1172,11 +1197,10 @@ operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
 template <class T, class U>
 inline
 NSCAP_BOOL
-operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
+operator!=( NSCAP_CONST_PARAM U* lhs, NSCAP_CONST_PARAM nsCOMPtr<T>& rhs )
   {
     return NS_STATIC_CAST(const void*, lhs) != NS_STATIC_CAST(const void*, rhs.get());
   }
-#endif // !defined(NSCAP_NSCOMPTR_TO_RAW_COMPARISONS_ARE_AMBIGUOUS)
 
 
 
