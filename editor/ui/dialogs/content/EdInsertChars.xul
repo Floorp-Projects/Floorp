@@ -56,15 +56,19 @@
     </radiogroup> 
     <spacer class="spacer"/>
   </groupbox>
-  <hbox>
+  <hbox equalsize="always">
     <vbox flex="1">
       <!-- value is set in JS from editor.properties strings -->
       <label id="LatinL_Label" control="LatinL" value="&letter.label;" accesskey="&letter.accessKey;"/>
-      <menulist class="larger" flex="1" id="LatinL" oncommand="SelectLatinLetter()"/>
+      <menulist class="larger" flex="1" id="LatinL" oncommand="SelectLatinLetter()">
+        <menupopup/>
+      </menulist>
     </vbox>
     <vbox flex="1">
       <label id="LatinM_Label" control="LatinM" value="&character.label;" accesskey="&character.accessKey;"/>
-      <menulist class="larger" flex="1" id="LatinM" oncommand="SelectLatinModifier()"/>
+      <menulist class="larger" flex="1" id="LatinM" oncommand="SelectLatinModifier()">
+        <menupopup/>
+      </menulist>
     </vbox>
   </hbox>
   <separator class="groove"/>

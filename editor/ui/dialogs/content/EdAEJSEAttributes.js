@@ -48,7 +48,7 @@ function BuildJSEAttributeNameList()
       }
 
       for (i = 0; i < attNames.length; i++)
-        AppendStringToMenulist(gDialog.AddJSEAttributeNameList, attNames[i]);
+        gDialog.AddJSEAttributeNameList.appendItem(attNames[i], attNames[i]);
 
       popup = gDialog.AddJSEAttributeNameList.firstChild;
       if (popup)
@@ -74,7 +74,7 @@ function BuildJSEAttributeNameList()
         popup.appendChild(sep);
     }
     else
-      AppendStringToMenulist(gDialog.AddJSEAttributeNameList, gCoreJSEvents[i]);
+      gDialog.AddJSEAttributeNameList.appendItem(gCoreJSEvents[i], gCoreJSEvents[i]);
   }
   
   gDialog.AddJSEAttributeNameList.selectedIndex = 0;
@@ -133,20 +133,13 @@ function onSelectJSETreeItem()
   var tree = gDialog.AddJSEAttributeTree;
   if (tree && tree.treeBoxObject.selection.count)
   {
-    var name = GetTreeItemAttributeStr(getSelectedItem(tree));
-
     // Select attribute name in list
-    if (gDialog.AddJSEAttributeNameList.firstChild)
-    {
-      var arr = gDialog.AddJSEAttributeNameList.firstChild.getElementsByAttribute('label', name);
-      if (arr && arr.length)
-        gDialog.AddJSEAttributeNameList.selectedItem = arr[0];
+    gDialog.AddJSEAttributeNameList.value = GetTreeItemAttributeStr(getSelectedItem(tree));
 
-      // Set value input to that in tree (no need to update this in the tree)
-      gUpdateTreeValue = false;
-      gDialog.AddJSEAttributeValueInput.value =  GetTreeItemValueStr(getSelectedItem(tree));
-      gUpdateTreeValue = true;
-    }
+    // Set value input to that in tree (no need to update this in the tree)
+    gUpdateTreeValue = false;
+    gDialog.AddJSEAttributeValueInput.value =  GetTreeItemValueStr(getSelectedItem(tree));
+    gUpdateTreeValue = true;
   }
 }
 

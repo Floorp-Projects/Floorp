@@ -74,7 +74,7 @@
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
       <vbox>
-        <tree id="HTMLATree"  class="AttributesTree"
+        <tree id="HTMLATree" class="AttributesTree" flex="1"
           hidecolumnpicker="true" seltype="single"
           onselect="onSelectHTMLTreeItem();"
           onclick="onSelectHTMLTreeItem();"
@@ -118,13 +118,12 @@
             </row>
           </rows>
         </grid>
-        <spacer class="spacer" flex="1"/>
       </vbox>
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
       <vbox>
-        <tree id="CSSATree" class="AttributesTree"
+        <tree id="CSSATree" class="AttributesTree" flex="1"
           hidecolumnpicker="true" seltype="single"
           onselect="onSelectCSSTreeItem();"
           onclick="onSelectCSSTreeItem();"
@@ -159,13 +158,12 @@
             </row>
           </rows>
         </grid>
-        <spacer class="spacer" flex="1"/>
       </vbox>
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
       <vbox>
-        <tree id="JSEATree" class="AttributesTree"
+        <tree id="JSEATree" class="AttributesTree" flex="1"
           hidecolumnpicker="true" seltype="single"
           onselect="onSelectJSETreeItem();"
           onclick="onSelectJSETreeItem();"
@@ -194,13 +192,14 @@
             <row align="top" equalsize="always">
               <!-- List is built at runtime -->
               <menulist id="AddJSEAttributeNameList" flex="1"
-                oncommand="onSelectJSEAttribute();"/>
+                oncommand="onSelectJSEAttribute();">
+                <menupopup/>
+              </menulist>
           	  <textbox id="AddJSEAttributeValueInput" flex="1"
                 oninput="onInputJSEAttributeValue();"/>
             </row>
           </rows>
         </grid>
-        <spacer class="spacer" flex="1"/>
       </vbox>
     </tabpanels>
   </tabbox>

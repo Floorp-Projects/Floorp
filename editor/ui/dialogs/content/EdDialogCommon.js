@@ -20,12 +20,13 @@
  * Contributor(s):
  *   Pete Collins
  *   Brian King
+ *   Charles Manske (cmanske@netscape.com)
+ *   Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
-var gEditor;
 
 // Object to attach commonly-used widgets (all dialogs should use this)
 var gDialog = {};
@@ -53,6 +54,10 @@ var gLocation;
 // The element being edited - so AdvancedEdit can have access to it
 var globalElement;
 
+//XXX THIS METHOD IS GOING AWAY SOON! 
+// We are removing all editorShell calls
+// Use GetCurrentEditor() to get the nsIEditor/nsIHTMLEditor interface
+// Do not modify it or rely on it in any way!
 function InitEditorShell()
 {
     // get the editor shell from the parent window
@@ -70,7 +75,6 @@ function InitEditorShell()
   // Save as a property of the window so it can be used by child dialogs
 
   window.editorShell = editorShell;
-  gEditor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
   return true;
 }
 
@@ -639,7 +643,7 @@ function SetMetaElementContent(metaElement, content, insertNew)
       if(!content || content == "")
       {
         if (!insertNew)
-          editor.deleteElement(metaElement);
+          editor.deleteNode(metaElement);
       }
       else
       {
@@ -1074,7 +1078,7 @@ function FillLinkMenulist(linkMenulist, headingsArray)
           linkMenulist.appendItem(text);
 
           // Save nodes in an array so we can create anchor node under it later
-          headingsArray[NamedAnchorCount++] = heading;
+          headingsArray[text] = heading;
         }
       }
     }

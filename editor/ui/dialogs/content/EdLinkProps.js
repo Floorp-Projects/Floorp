@@ -18,8 +18,11 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *    Charles Manske (cmanske@netscape.com)
+ *    Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
+var gActiveEditor;
 var anchorElement = null;
 var imageElement = null;
 var insertNew = false;
@@ -28,7 +31,7 @@ var insertLinkAtCaret;
 var needLinkText = false;
 var href;
 var newLinkText;
-var gHNodeArray = [];
+var gHNodeArray = {};
 var gHaveNamedAnchors = false;
 var gHaveHeadings = false;
 var gCanChangeHeadingSelected = true;
@@ -42,9 +45,13 @@ var tagName = "href";
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  gActiveEditor = GetCurrentEditor();
+  if (!gActiveEditor)
+  {
+    dump("Failed to get active editor!\n");
+    window.close();
     return;
-
+  }
   // Message was wrapped in a <label> or <div>, so actual text is a child text node
   gDialog.linkTextCaption     = document.getElementById("linkTextCaption");
   gDialog.linkTextMessage     = document.getElementById("linkTextMessage");
@@ -53,19 +60,13 @@ function Startup()
   gDialog.makeRelativeLink    = document.getElementById("MakeRelativeLink");
   gDialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
 
-  var selection = editorShell.editorSelection;
-  if (selection)
-    dump("There is a selection: collapsed = "+selection.isCollapsed+"\n");
-  else
-    dump("Failed to get selection\n");
-
   // See if we have a single selected image
-  imageElement = editorShell.GetSelectedElement("img");
+  imageElement = gActiveEditor.getSelectedElement("img");
 
   if (imageElement)
   {
     // Get the parent link if it exists -- more efficient than GetSelectedElement()
-    anchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
+    anchorElement = gActiveEditor.getElementOrParentByTagName("href", imageElement);
     if (anchorElement)
     {
       if (anchorElement.childNodes.length > 1)
@@ -83,13 +84,12 @@ function Startup()
   {
     // Get an anchor element if caret or
     //   entire selection is within the link.
-    anchorElement = editorShell.GetSelectedElement(tagName);
+    anchorElement = gActiveEditor.getSelectedElement(tagName);
 
     if (anchorElement)
     {
       // Select the entire link
-      editorShell.SelectElement(anchorElement);
-      selection = editorShell.editorSelection;
+      gActiveEditor.selectElement(anchorElement);
     }
     else
     {
@@ -100,9 +100,9 @@ function Startup()
       //   link and making 2 links. 
       // Note that this isn't a problem with images, handled above
 
-      anchorElement = editorShell.GetElementOrParentByTagName("href", selection.anchorNode);
+      anchorElement = gActiveEditor.getElementOrParentByTagName("href", gActiveEditor.selection.anchorNode);
       if (!anchorElement)
-        anchorElement = editorShell.GetElementOrParentByTagName("href", selection.focusNode);
+        anchorElement = gActiveEditor.getElementOrParentByTagName("href", gActiveEditor.selection.focusNode);
 
       if (anchorElement)
       {
@@ -118,7 +118,7 @@ function Startup()
   if(!anchorElement)
   {
     // No existing link -- create a new one
-    anchorElement = editorShell.CreateElementWithDefaults(tagName);
+    anchorElement = gActiveEditor.createElementWithDefaults(tagName);
     insertNew = true;
     // Hide message about removing existing link
     //document.getElementById("RemoveLinkMsg").setAttribute("hidden","true");
@@ -131,7 +131,7 @@ function Startup()
   } 
 
   // We insert at caret only when nothing is selected
-  insertLinkAtCaret = selection.isCollapsed;
+  insertLinkAtCaret = gActiveEditor.selection.isCollapsed;
   
   var selectedText;
   if (insertLinkAtCaret)
@@ -251,7 +251,6 @@ function doEnabling()
 function ChangeLinkLocation()
 {
   SetRelativeCheckbox();
-
   // Set OK button enable state
   doEnabling();
 }
@@ -307,21 +306,21 @@ function onAccept()
     if (href.length > 0)
     {
       // Copy attributes to element we are changing or inserting
-      editorShell.CloneAttributes(anchorElement, globalElement);
+      gActiveEditor.cloneAttributes(anchorElement, globalElement);
 
       // Coalesce into one undo transaction
-      editorShell.BeginBatchChanges();
+      gActiveEditor.beginTransaction();
 
       // Get text to use for a new link
       if (insertLinkAtCaret)
       {
         // Append the link text as the last child node 
         //   of the anchor node
-        var textNode = editorShell.editorDocument.createTextNode(newLinkText);
+        var textNode = gActiveEditor.document.createTextNode(newLinkText);
         if (textNode)
           anchorElement.appendChild(textNode);
         try {
-          editorShell.InsertElementAtSelection(anchorElement, false);
+          gActiveEditor.insertElementAtSelection(anchorElement, false);
         } catch (e) {
           dump("Exception occured in InsertElementAtSelection\n");
           return true;
@@ -332,33 +331,33 @@ function onAccept()
         //  so insert a link node as parent of this
         //  (may be text, image, or other inline content)
         try {
-          editorShell.InsertLinkAroundSelection(anchorElement);
+          gActiveEditor.insertLinkAroundSelection(anchorElement);
         } catch (e) {
           dump("Exception occured in InsertElementAtSelection\n");
           return true;
         }
       }
       // Check if the link was to a heading 
-      if (href[0] == "#")
+      if (href in gHNodeArray)
       {
-        var index = gDialog.hrefInput.selectedIndex;
-        if (index in gHNodeArray && gHNodeArray[index])
+        var anchorNode = gActiveEditor.createElementWithDefaults("a");
+        if (anchorNode)
         {
-          var anchorNode = editorShell.editorDocument.createElement("a");
-          if (anchorNode)
-          {
-            anchorNode.name = href.substr(1);
-            // Remember to use editorShell method so it is undoable!
-            editorShell.InsertElement(anchorNode, gHNodeArray[index], 0, false);
-          }
+          anchorNode.name = href.substr(1);
+
+          // Insert the anchor into the document, 
+          //  but don't let the transaction change the selection
+          gActiveEditor.setShouldTxnSetSelection(false);
+          gActiveEditor.insertNode(anchorNode, gHNodeArray[href], 0);
+          gActiveEditor.setShouldTxnSetSelection(true);
         }
       }
-      editorShell.EndBatchChanges();
+      gActiveEditor.endTransaction();
     } 
     else if (!insertNew)
     {
       // We already had a link, but empty HREF means remove it
-      editorShell.RemoveTextProperty("a", "");
+      EditorRemoveTextProperty("href", "");
     }
     SaveWindowLocation();
     return true;

@@ -21,22 +21,27 @@
  */
 
 //Cancel() is in EdDialogCommon.js
-var tagName = "table"
-var tableElement = null;
-var rowElement = null;
-var cellElement = null;
-var rows;
-var columns;
-var prefs = GetPrefs();
+var gTableElement = null;
+var gRows;
+var gColumns;
+var gActiveEditor;
 
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  gActiveEditor = GetCurrentEditor();
+  if (!gActiveEditor)
+  {
+    dump("Failed to get active editor!\n");
+    window.close();
     return;
+  }
 
-  tableElement = editorShell.CreateElementWithDefaults(tagName);
-  if(!tableElement)
+  try {
+    gTableElement = gActiveEditor.createElementWithDefaults("table");
+  } catch (e) {}
+
+  if(!gTableElement)
   {
     dump("Failed to create a new table!\n");
     window.close();
@@ -50,11 +55,16 @@ function Startup()
   gDialog.OkButton = document.documentElement.getButton("accept");
 
   // Make a copy to use for AdvancedEdit
-  globalElement = tableElement.cloneNode(false);
-  if (prefs.getBoolPref("editor.use_css") && (editorShell.editorType == "html")) {
-    // only for Composer and not for htmlmail
-    globalElement.setAttribute("style", "text-align: left;");
-  }
+  globalElement = gTableElement.cloneNode(false);
+  try {
+    if (GetPrefs().getBoolPref("editor.use_css") && isHTMLEditor()
+        && !(gActiveEditor.flags & Components.interfaces.nsIPlaintextEditor.eEditorMailMask))
+    {
+      // only for Composer and not for htmlmail
+      globalElement.setAttribute("style", "text-align: left;");
+    }
+  } catch (e) {}
+
   // Initialize all widgets with image attributes
   InitDialog();
 
@@ -111,11 +121,11 @@ function ChangeRowOrColumn(id)
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  rows = ValidateNumber(gDialog.rowsInput, null, 1, gMaxRows, null, null, true)
+  gRows = ValidateNumber(gDialog.rowsInput, null, 1, gMaxRows, null, null, true)
   if (gValidationError)
     return false;
 
-  columns = ValidateNumber(gDialog.columnsInput, null, 1, gMaxColumns, null, null, true)
+  gColumns = ValidateNumber(gDialog.columnsInput, null, 1, gMaxColumns, null, null, true)
   if (gValidationError)
     return false;
 
@@ -137,89 +147,88 @@ function onAccept()
 {
   if (ValidateData())
   {
-    editorShell.BeginBatchChanges();
-    editorShell.CloneAttributes(tableElement, globalElement);
-
-    // Create necessary rows and cells for the table
-    var tableBody = editorShell.CreateElementWithDefaults("tbody");
-    if (tableBody)
-    {
-      tableElement.appendChild(tableBody);
+    gActiveEditor.beginTransaction();
+    try {
+      gActiveEditor.cloneAttributes(gTableElement, globalElement);
 
       // Create necessary rows and cells for the table
-      for (var i = 0; i < rows; i++)
+      var tableBody = gActiveEditor.createElementWithDefaults("tbody");
+      if (tableBody)
       {
-        var newRow = editorShell.CreateElementWithDefaults("tr");
-        if (newRow)
+        gTableElement.appendChild(tableBody);
+
+        // Create necessary rows and cells for the table
+        for (var i = 0; i < gRows; i++)
         {
-          tableBody.appendChild(newRow);
-          for (var j = 0; j < columns; j++)
+          var newRow = gActiveEditor.createElementWithDefaults("tr");
+          if (newRow)
           {
-            var newCell = editorShell.CreateElementWithDefaults("td");
-            if (newCell)
+            tableBody.appendChild(newRow);
+            for (var j = 0; j < gColumns; j++)
             {
-              newRow.appendChild(newCell);
+              var newCell = gActiveEditor.createElementWithDefaults("td");
+              if (newCell)
+              {
+                newRow.appendChild(newCell);
+              }
             }
           }
         }
       }
-    }
-    // Detect when entire cells are selected:
-      // Get number of cells selected
-    var tagNameObj = { value: "" };
-    var countObj = { value: 0 };
-    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
-    var deletePlaceholder = false;
+      // Detect when entire cells are selected:
+        // Get number of cells selected
+      var tagNameObj = { value: "" };
+      var countObj = { value: 0 };
+      var element = gActiveEditor.getSelectedOrParentTableElement(tagNameObj, countObj);
+      var deletePlaceholder = false;
 
-    if (tagNameObj.value == "table")
-    {
-      //Replace entire selected table with new table, so delete the table
-      editorShell.DeleteTable();
-    }
-    else if (tagNameObj.value == "td")
-    {
-      if (countObj.value >= 1)
+      if (tagNameObj.value == "table")
       {
-        if (countObj.value > 1)
+        //Replace entire selected table with new table, so delete the table
+        gActiveEditor.deleteTable();
+      }
+      else if (tagNameObj.value == "td")
+      {
+        if (countObj.value >= 1)
         {
-          // Assume user wants to replace a block of
-          //  contiguous cells with a table, so
-          //  join the selected cells
-          editorShell.JoinTableCells(false);
+          if (countObj.value > 1)
+          {
+            // Assume user wants to replace a block of
+            //  contiguous cells with a table, so
+            //  join the selected cells
+            gActiveEditor.joinTableCells(false);
           
-          // Get the cell everything was merged into
-          element = editorShell.GetFirstSelectedCell();
+            // Get the cell everything was merged into
+            element = gActiveEditor.getFirstSelectedCell();
           
-          // Collapse selection into just that cell
-          editorShell.editorSelection.collapse(element,0);
-        }
+            // Collapse selection into just that cell
+            gActiveEditor.selection.collapse(element,0);
+          }
 
-        if (element)
-        {
-          // Empty just the contents of the cell
-          editorShell.DeleteTableCellContents();
+          if (element)
+          {
+            // Empty just the contents of the cell
+            gActiveEditor.deleteTableCellContents();
           
-          // Collapse selection to start of empty cell...
-          editorShell.editorSelection.collapse(element,0);
-          // ...but it will contain a <br> placeholder
-          deletePlaceholder = true;
+            // Collapse selection to start of empty cell...
+            gActiveEditor.selection.collapse(element,0);
+            // ...but it will contain a <br> placeholder
+            deletePlaceholder = true;
+          }
         }
       }
-    }
 
-    try {
       // true means delete selection when inserting
-      editorShell.InsertElementAtSelection(tableElement, true);
-    } catch (e) {
-      dump("Exception occured in InsertElementAtSelection\n");
-    }
-    if (deletePlaceholder && tableElement && tableElement.nextSibling)
-    {
-      // Delete the placeholder <br>
-      editorShell.DeleteElement(tableElement.nextSibling);
-    }
+      gActiveEditor.insertElementAtSelection(gTableElement, true);
 
-    editorShell.EndBatchChanges();
+      if (deletePlaceholder && gTableElement && gTableElement.nextSibling)
+      {
+        // Delete the placeholder <br>
+        gActiveEditor.deleteNode(gTableElement.nextSibling);
+      }
+    } catch (e) {}
+
+    gActiveEditor.endTransaction();
 
     SaveWindowLocation();
     return true;

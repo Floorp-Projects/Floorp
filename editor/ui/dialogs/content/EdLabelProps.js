@@ -40,8 +40,12 @@ var labelElement;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog.editText = document.getElementById("EditText");
   gDialog.labelText = document.getElementById("LabelText");
@@ -55,7 +59,7 @@ function Startup()
 
   InitDialog();
 
-  editorShell.SelectElement(labelElement);
+  editor.selectElement(labelElement);
   gDialog.labelText.value = GetSelectionAsText();
   if (/</.test(labelElement.innerHTML))
   {
@@ -110,23 +114,25 @@ function onAccept()
   // All values are valid - copy to actual element in doc
   ValidateData();
 
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+  editor.beginTransaction();
 
-  editorShell.CloneAttributes(labelElement, globalElement);
-
-  if (gDialog.editText.checked)
-  {
-    var editor = editorShell.editor;
-    while (labelElement.firstChild)
-      editor.deleteNode(labelElement.firstChild);
-    if (gDialog.labelText.value) {
-      var textNode = editorShell.editorDocument.createTextNode(gDialog.labelText.value);
-      editor.insertNode(textNode, labelElement, 0);
-      editorShell.SelectElement(labelElement);
+  try {
+    if (gDialog.editText.checked)
+    {
+      while (labelElement.firstChild)
+        editor.deleteNode(labelElement.firstChild);
+      if (gDialog.labelText.value) {
+        var textNode = editor.document.createTextNode(gDialog.labelText.value);
+        editor.insertNode(textNode, labelElement, 0);
+        editor.selectElement(labelElement);
+      }
     }
-  }
 
-  editorShell.EndBatchChanges();
+    editor.cloneAttributes(labelElement, globalElement);
+  } catch(e) {}
+
+  editor.endTransaction();
 
   SaveWindowLocation();
 

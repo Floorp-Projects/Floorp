@@ -21,7 +21,7 @@
  */
 
 var tagName = "hr";
-var hLineElement;
+var gHLineElement;
 var width;
 var height;
 var align;
@@ -31,13 +31,18 @@ const gMaxHRSize = 1000; // This is hard-coded in nsHTMLHRElement::StringToAttri
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
+  try {
+    // Get the selected horizontal line
+    gHLineElement = editor.getSelectedElement(tagName);
+  } catch (e) {}
 
-  // Get the selected horizontal line
-  hLineElement = editorShell.GetSelectedElement(tagName);
-
-  if (!hLineElement) {
+  if (!gHLineElement) {
     // We should never be here if not editing an existing HLine
     window.close();
     return;
@@ -52,7 +57,7 @@ function Startup()
   gDialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
 
   // Make a copy to use for AdvancedEdit and onSaveDefault
-  globalElement = hLineElement.cloneNode(false);
+  globalElement = gHLineElement.cloneNode(false);
 
   // Initialize control values based on existing attributes
   InitDialog()
@@ -86,7 +91,7 @@ function InitDialog()
 
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menulist (adds pixel and percent menuitems elements)
-  gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
+  gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, gHLineElement, "width","pixelOrPercentMenulist");
 
   var marginLeft  = GetHTMLOrCSSStyleValue(globalElement, "align", "margin-left").toLowerCase();
   var marginRight = GetHTMLOrCSSStyleValue(globalElement, "align", "margin-right").toLowerCase();
@@ -186,7 +191,9 @@ function ValidateData()
   if (align)
     globalElement.setAttribute("align", align);
   else
-    gEditor.removeAttributeOrEquivalent(globalElement, "align", true);
+    try {
+      GetCurrentEditor().removeAttributeOrEquivalent(globalElement, "align", true);
+    } catch (e) {}
 
   if (gDialog.shading.checked) {
     shading = true;
@@ -203,7 +210,9 @@ function onAccept()
   if (ValidateData())
   {
     // Copy attributes from the globalElement to the document element
-    editorShell.CloneAttributes(hLineElement, globalElement);
+    try {
+      GetCurrentEditor().cloneAttributes(gHLineElement, globalElement);
+    } catch (e) {}
     return true;
   }
   return false;

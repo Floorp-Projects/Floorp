@@ -41,8 +41,12 @@ var buttonElement;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog = {
     buttonType:       document.getElementById("ButtonType"),
@@ -58,7 +62,7 @@ function Startup()
 
   // Get a single selected button element
   var tagName = "button";
-  buttonElement = editorShell.GetSelectedElement(tagName);
+  buttonElement = editor.getSelectedElement(tagName);
 
   if (buttonElement)
     // We found an element and don't need to insert one
@@ -70,7 +74,7 @@ function Startup()
     // We don't have an element selected,
     //  so create one with default attributes
 
-    buttonElement = editorShell.CreateElementWithDefaults(tagName);
+    buttonElement = editor.createElementWithDefaults(tagName);
     if (!buttonElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -78,7 +82,7 @@ function Startup()
       return;
     }
     // Hide button removing existing button
-    gDialog.RemoveButton.setAttribute("hidden", "true");
+    gDialog.RemoveButton.hidden = true;
   }
 
   // Make a copy to use for AdvancedEdit
@@ -150,12 +154,14 @@ function onAccept()
   //   element created to insert
   ValidateData();
 
-  editorShell.CloneAttributes(buttonElement, globalElement);
+  var editor = GetCurrentEditor();
+
+  editor.cloneAttributes(buttonElement, globalElement);
 
   if (insertNew && !InsertElementAroundSelection(buttonElement))
   {
-    buttonElement.innerHTML = editorShell.GetContentsAs("text/html", 1); // OutputSelectionOnly (see nsIDocumentEncoder.h)
-    editorShell.InsertElementAtSelection(buttonElement, true);
+    buttonElement.innerHTML = editor.outputToString("text/html", 1); // OutputSelectionOnly (see nsIDocumentEncoder.h)
+    editor.insertElementAtSelection(buttonElement, true);
   }
 
   SaveWindowLocation();

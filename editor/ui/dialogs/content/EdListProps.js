@@ -39,10 +39,16 @@ const gHundredsArray = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "C
 const gThousandsArray = ["", "M", "MM", "MMM", "MMMM", "MMMMM", "MMMMMM", "MMMMMMM", "MMMMMMMM", "MMMMMMMMM"];
 const gRomanDigits = {I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000};
 const A = "A".charCodeAt(0);
-const g_I = "I";
-const g_i = "i";
-const g_A = "A";
-const g_a = "a";
+const gArabic = "1";
+const gUpperRoman = "I";
+const gLowerRoman = "i";
+const gUpperLetters = "A";
+const gLowerLetters = "a";
+const gDecimalCSS = "decimal";
+const gUpperRomanCSS = "upper-roman";
+const gLowerRomanCSS = "lower-roman";
+const gUpperAlphaCSS = "upper-alpha";
+const gLowerAlphaCSS = "lower-alpha";
 
 // dialog initialization code
 function Startup()
@@ -127,22 +133,23 @@ function InitDialog()
   }
   else if (gListType == "ol")
   {
+    // Translate CSS property strings
     switch (type.toLowerCase())
     {
-      case "decimal":
-        type = "1";
+      case gDecimalCSS:
+        type = gArabic;
         break;
-      case "upper-roman":
-        type = g_I;
+      case gUpperRomanCSS:
+        type = gUpperRoman;
         break;
-      case "lower-roman":
-        type = g_i;
+      case gLowerRomanCSS:
+        type = gLowerRoman;
         break;
-      case "upper-alpha":
-        type = g_A;
+      case gUpperAlphaCSS:
+        type = gUpperLetters;
         break;
-      case "lower-alpha":
-        type = g_a;
+      case gLowerAlphaCSS:
+        type = gLowerLetters;
         break;
     }
     if (type)
@@ -163,16 +170,16 @@ function ConvertStartAttrToUserString(startAttr, type)
 {
   switch (type)
   {
-    case g_I:
+    case gUpperRoman:
       startAttr = ConvertArabicToRoman(startAttr);
       break;
-    case g_i:
+    case gLowerRoman:
       startAttr = ConvertArabicToRoman(startAttr).toLowerCase();
       break;
-    case g_A:
+    case gUpperLetters:
       startAttr = ConvertArabicToLetters(startAttr);
       break;
-    case g_a:
+    case gLowerLetters:
       startAttr = ConvertArabicToLetters(startAttr).toLowerCase();
       break;
   }
@@ -209,11 +216,11 @@ function BuildBulletStyleList()
     label = GetString("NumberStyle");
 
     gDialog.BulletStyleList.appendItem(GetString("Automatic"), "");
-    gDialog.BulletStyleList.appendItem(GetString("Style_1"), "1");
-    gDialog.BulletStyleList.appendItem(GetString("Style_I"), g_I);
-    gDialog.BulletStyleList.appendItem(GetString("Style_i"), g_i);
-    gDialog.BulletStyleList.appendItem(GetString("Style_A"), g_A);
-    gDialog.BulletStyleList.appendItem(GetString("Style_a"), g_a);
+    gDialog.BulletStyleList.appendItem(GetString("Style_1"), gArabic);
+    gDialog.BulletStyleList.appendItem(GetString("Style_I"), gUpperRoman);
+    gDialog.BulletStyleList.appendItem(GetString("Style_i"), gLowerRoman);
+    gDialog.BulletStyleList.appendItem(GetString("Style_A"), gUpperLetters);
+    gDialog.BulletStyleList.appendItem(GetString("Style_a"), gLowerLetters);
 
     gDialog.BulletStyleList.value = gNumberStyleType;
   } 
@@ -287,12 +294,15 @@ function ValidateData()
 
   if (globalElement)
   {
+    var editor = GetCurrentEditor();
     if (gListType == "ul")
     {
       if (gBulletStyleType && gDialog.ChangeAllRadio.selected)
         globalElement.setAttribute("type", gBulletStyleType);
       else
-        gEditor.removeAttributeOrEquivalent(globalElement, "type", true);
+        try {
+          editor.removeAttributeOrEquivalent(globalElement, "type", true);
+        } catch (e) {}
 
     } 
     else if (gListType == "ol")
@@ -300,7 +310,9 @@ function ValidateData()
       if (gBulletStyleType)
         globalElement.setAttribute("type", gBulletStyleType);
       else
-        gEditor.removeAttributeOrEquivalent(globalElement, "type", true);
+        try {
+          editor.removeAttributeOrEquivalent(globalElement, "type", true);
+        } catch (e) {}
       
       var startingNumber = ConvertUserStringToStartAttr(gBulletStyleType);
       if (startingNumber)
@@ -318,14 +330,14 @@ function ConvertUserStringToStartAttr(type)
 
   switch (type)
   {
-    case g_I:
-    case g_i:
+    case gUpperRoman:
+    case gLowerRoman:
       // If the input isn't an integer, assume it's a roman numeral. Convert it.
       if (!Number(startingNumber))
         startingNumber = ConvertRomanToArabic(startingNumber);
       break;
-    case g_A:
-    case g_a:
+    case gUpperLetters:
+    case gLowerLetters:
       // Get the number equivalent of the letters
       if (!Number(startingNumber))
         startingNumber = ConvertLettersToArabic(startingNumber);

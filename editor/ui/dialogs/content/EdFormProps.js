@@ -41,8 +41,12 @@ var formActionWarning;
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gForm = {
     Name:     document.getElementById("FormName"),
@@ -57,11 +61,11 @@ function Startup()
 
   // Get a single selected form element
   var tagName = "form";
-  formElement = editorShell.GetSelectedElement(tagName);
+  formElement = editor.getSelectedElement(tagName);
   if (!formElement)
-    formElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.anchorNode);
+    formElement = editor.getElementOrParentByTagName(tagName, editor.selection.anchorNode);
   if (!formElement)
-    formElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.focusNode);
+    formElement = editor.getElementOrParentByTagName(tagName, editor.selection.focusNode);
 
   if (formElement)
   {
@@ -77,7 +81,7 @@ function Startup()
     // We don't have an element selected,
     //  so create one with default attributes
 
-    formElement = editorShell.CreateElementWithDefaults(tagName);
+    formElement = editor.createElementWithDefaults(tagName);
     if (!formElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -85,7 +89,7 @@ function Startup()
       return;
     }
     // Hide button removing existing form
-    gDialog.RemoveForm.setAttribute("hidden", "true");
+    gDialog.RemoveForm.hidden = true;
   }
 
   // Make a copy to use for AdvancedEdit
@@ -138,7 +142,9 @@ function onAccept()
   //   element created to insert
   ValidateData();
 
-  editorShell.CloneAttributes(formElement, globalElement);
+  var editor = GetCurrentEditor();
+
+  editor.cloneAttributes(formElement, globalElement);
 
   if (insertNew)
     InsertElementAroundSelection(formElement);

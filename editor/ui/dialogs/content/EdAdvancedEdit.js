@@ -18,7 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Ben "Count XULula" Goodger
+ *    Ben "Count XULula" Goodger
+ *    Charles Manske (cmanske@netscape.com)
+ *    Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
 /**************         GLOBALS         **************/
@@ -47,20 +49,19 @@ var gUpdateTreeValue = true;
  **/
 function Startup()
 {
+  var editor = GetCurrentEditor();
+
+  // Element to edit is passed in
+  if (!editor || !window.arguments[1])
+  {
+    dump("Advanced Edit: No editor or element to edit not supplied\n");
+    window.close();
+    return;
+  }
   // This is the return value for the parent,
   // who only needs to know if OK was clicked
   window.opener.AdvancedEditOK = false;
 
-  if (!InitEditorShell())
-    return;
-
-  // Element to edit is passed in
-  if (!window.arguments[1])
-  {
-    dump("Advanced Edit: Element to edit not supplied\n");
-    window.close();
-    return;
-  }
   // The actual element edited (not a copy!)
   gElement = window.arguments[1];
 
@@ -106,14 +107,15 @@ function Startup()
 }
 
 /**
- * function   : bool onOK ( void );
+ * function   : bool onAccept ( void );
  * parameters : none
  * returns    : boolean true to close the window
  * desc.      : event handler for ok button
  **/
 function onAccept()
 {
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+  editor.beginTransaction();
   try {
     // Update our gElement attributes
     UpdateHTMLAttributes();
@@ -122,7 +124,7 @@ function onAccept()
   } catch(ex) {
     dump(ex);
   }
-  editorShell.EndBatchChanges();
+  editor.endTransaction();
 
   window.opener.AdvancedEditOK = true;
   SaveWindowLocation();
@@ -135,18 +137,24 @@ function onAccept()
 // (Temporary element from a property dialog won't have a parent node)
 function doRemoveAttribute(attrib)
 {
-  if (gElement.parentNode)
-    editorShell.RemoveAttribute(gElement, attrib);
-  else
-    gElement.removeAttribute(attrib);
+  try {
+    var editor = GetCurrentEditor();
+    if (gElement.parentNode)
+      editor.removeAttribute(gElement, attrib);
+    else
+      gElement.removeAttribute(attrib);
+  } catch(ex) {}
 }
 
 function doSetAttribute(attrib, value)
 {
-  if (gElement.parentNode)
-    editorShell.SetAttribute(gElement, attrib, value);
-  else
-    gElement.setAttribute(attrib, value);
+  try {
+    var editor = GetCurrentEditor();
+    if (gElement.parentNode)
+      editor.setAttribute(gElement, attrib, value);
+    else
+      gElement.setAttribute(attrib, value);
+  } catch(ex) {}
 }
 
 /**
