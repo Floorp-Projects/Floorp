@@ -17,10 +17,7 @@
  */
 
 #include "nsBaseClipboard.h"
-#include <windows.h>
-#include <OLE2.h>
 
-#include "nsDataObj.h"
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsIDataFlavor.h"
@@ -28,8 +25,6 @@
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
-
-#include "DDCOMM.h"
 
 // interface definitions
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
