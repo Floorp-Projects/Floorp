@@ -43,7 +43,7 @@
 #endif
 #include "prmem.h"
 
-#define RICKG_DEBUG 0
+#define RICKG_DEBUG 1
 #ifdef  RICKG_DEBUG
 #include  <fstream.h>  
 #endif
@@ -481,6 +481,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   return result;
 }
 
+CTokenRecycler* gRecycler=0;
 
 /**
   * This is called when it's time to read as many tokens from the tokenizer
@@ -498,18 +499,12 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
     mParser=(nsParser*)aParser;
-    nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
     mSink=(nsIHTMLContentSink*)aSink;
+    gRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
     while(NS_OK==result){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) { 
         result=HandleToken(theToken,aParser);
-        if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-          theRecycler->RecycleToken(theToken);
-        }
-        else if(NS_ERROR_HTMLPARSER_MISPLACED!=result)
-          mTokenizer->PushTokenFront(theToken);
-        else result=NS_OK;
       }
       else break;
     }//while
@@ -608,29 +603,40 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
     eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
 
-
-  //Ok, now the real work begins.
-  //First, find out which section of the document the tag is supposed to go into.
-  //If that section is not open, push this tag (and it's attributes) onto the misplacedContent deque.
-
-    static eHTMLTags docElements[]=
-      {eHTMLTag_html,eHTMLTag_body,eHTMLTag_head,eHTMLTag_frameset,eHTMLTag_comment,eHTMLTag_newline,eHTMLTag_whitespace};
-    if(!mHadBodyOrFrameset){
-      PRBool isHeadChild=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag);
-      if((!isHeadChild) && (mHasOpenScript || (!FindTagInSet(theTag,docElements,sizeof(docElements)/sizeof(eHTMLTag_unknown))))){
-          //really we want to push the token and all its skipped content and attributes...
-        mMisplacedContent.Push(theToken);
-        theToken=0; //force us to fall to bottom of this method...
-        result=NS_ERROR_HTMLPARSER_MISPLACED;
+    static eHTMLTags passThru[]= {eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_script};
+    if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
+      if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
+        if(!mHadBodyOrFrameset){
+          if(mHasOpenHead) {
+            //just fall through and handle current token
+            if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)){
+              mMisplacedContent.Push(aToken);
+              return result;
+            }
+          }
+          else {
+            if(gHTMLElements[eHTMLTag_body].SectionContains(theTag,PR_TRUE)){
+              mTokenizer->PushTokenFront(aToken); //put this token back...
+              mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
+              theToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body);
+              //now open a body...
+            }
+          }
+        } 
       }
-    } 
+    }
     
     if(theToken){
-
       CITokenHandler* theHandler=GetTokenHandler(theType);
       if(theHandler) {
         mParser=(nsParser*)aParser;
         result=(*theHandler)(theToken,this);
+        if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
+          gRecycler->RecycleToken(theToken);
+        }
+        else if(NS_ERROR_HTMLPARSER_MISPLACED!=result)
+          mTokenizer->PushTokenFront(theToken);
+        else result=NS_OK;
         if (mDTDDebug) {
            //mDTDDebug->Verify(this, mParser, mBodyContext->GetCount(), mBodyContext->mTags, mFilename);
         }
@@ -846,6 +852,7 @@ PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsTagStack& aTagS
    * 1.   <UL><LI>..<B>..<LI>           inner <LI> closes outer <LI>
    * 2.   <CENTER><DL><DT><A><CENTER>   allow nested <CENTER>
    * 3.   <TABLE><TR><TD><TABLE>...     allow nested <TABLE>
+   * 4.   <FRAMESET> ... <FRAMESET>
    */
 
   //Note: This method is going away. First we need to get the elementtable to do closures right, and
@@ -861,7 +868,9 @@ PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsTagStack& aTagS
     PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aTagStack,aChildTag);
     PRInt32 theBaseIndex=(theRootIndex<theChildIndex) ? theRootIndex : theChildIndex;
 
-    result=PRBool(theRootIndex>theChildIndex);
+    if((theRootIndex==theChildIndex) && (gHTMLElements[aChildTag].CanContainSelf()))
+      result=PR_TRUE;
+    else result=PRBool(theRootIndex>theChildIndex);
   }
 
   return result;
@@ -1154,17 +1163,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
                 return result;
             }
             break;
-          case eHTMLTag_frameset:
-            if(mHasOpenBody) {
-              result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
-              return result;
-            }
-            break;
           default:
-            if(HasOpenContainer(theChildTag)) {
-              result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
-              return result;
-            }              
+            break;
         }
       }
 
@@ -1605,6 +1605,7 @@ CITokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
  *  @return  
  */
 void CNavDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
+/*
   if(aTokenizer){
     if(!mHadBodyOrFrameset){
       int index=0;
@@ -1613,12 +1614,19 @@ void CNavDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
       for(index=0;index<max;index++){
         CToken* theToken=(CToken*)mMisplacedContent.ObjectAt(index);
         if(theToken){
-          eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID();
-        
-          static eHTMLTags frameTags[]={eHTMLTag_frame,eHTMLTag_noframes,eHTMLTag_frameset};
-          if(FindTagInSet(theTag,frameTags,sizeof(frameTags)/sizeof(eHTMLTag_unknown))) {
-            isBodyContent=PR_FALSE;
-            break;
+          eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID();    
+          if(gHTMLElements[theTag].IsWhitespaceTag(theTag)){
+            //ignore it...
+          }
+          if(gHTMLElements[eHTMLTag_body].SectionContains(theTag,PR_TRUE)){
+            break; //stop, since you now know for sure to open the body...
+          }
+          else {
+            static eHTMLTags frameTags[]={eHTMLTag_frame,eHTMLTag_noframes,eHTMLTag_frameset};
+            if(FindTagInSet(theTag,frameTags,sizeof(frameTags)/sizeof(eHTMLTag_unknown))) {
+              isBodyContent=PR_FALSE;
+              break;
+            }
           }
         }
       } //for
@@ -1629,8 +1637,9 @@ void CNavDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
         //mMisplacedContent.PushFront(theBodyToken);
       }
     }
-    aTokenizer->PrependTokens(mMisplacedContent);
   }
+*/
+  aTokenizer->PrependTokens(mMisplacedContent);
 }
 
 /**
@@ -1723,9 +1732,15 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
  */
 PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
 
-  eHTMLTags theReqAncestor=gHTMLElements[aChild].mRequiredAncestor;
-  if(eHTMLTag_unknown!=theReqAncestor){
-    return !HasOpenContainer(theReqAncestor);
+  eHTMLTags theAncestor=gHTMLElements[aChild].mExcludingAncestor;
+  if(eHTMLTag_unknown!=theAncestor){
+    if(HasOpenContainer(theAncestor))
+      return PR_TRUE;
+  }
+
+  theAncestor=gHTMLElements[aChild].mRequiredAncestor;
+  if(eHTMLTag_unknown!=theAncestor){
+    return !HasOpenContainer(theAncestor);
   }
 
   if(gHTMLElements[aParent].HasSpecialProperty(kOmitWS)) {
