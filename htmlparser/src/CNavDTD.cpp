@@ -2334,7 +2334,11 @@ PRBool CNavDTD::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
   eHTMLTags theTag=(eHTMLTags)aTagID;
 
   if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
-    result=gHTMLElements[theTag].IsBlockEntity();
+    result=((gHTMLElements[theTag].IsMemberOf(kBlock))       || 
+            (gHTMLElements[theTag].IsMemberOf(kBlockEntity)) || 
+            (gHTMLElements[theTag].IsMemberOf(kHeading))     || 
+            (gHTMLElements[theTag].IsMemberOf(kPreformatted))|| 
+            (gHTMLElements[theTag].IsMemberOf(kList))); 
   }
 
   return result;
@@ -2354,7 +2358,11 @@ PRBool CNavDTD::IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const {
   eHTMLTags theTag=(eHTMLTags)aTagID;
 
   if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
-    result=nsHTMLElement::IsInlineEntity(theTag);
+    result=((gHTMLElements[theTag].IsMemberOf(kInlineEntity))|| 
+            (gHTMLElements[theTag].IsMemberOf(kFontStyle))   || 
+            (gHTMLElements[theTag].IsMemberOf(kPhrase))      || 
+            (gHTMLElements[theTag].IsMemberOf(kSpecial))     || 
+            (gHTMLElements[theTag].IsMemberOf(kFormControl)));
   }
 
   return result;
