@@ -54,6 +54,7 @@
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMComment.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSDocument.h"
@@ -1482,9 +1483,6 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         if (nodeFixup)
             nodeFixup->mWebBrowserPersist = this;
 
-        // Remove document base so relative links work on the persisted version
-        SetDocumentBase(docData->mDocument, nsnull);
-
         nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(docData->mDocument);
 
         // Get the content type
@@ -1505,9 +1503,6 @@ nsresult nsWebBrowserPersist::SaveDocuments()
             contentType,
             charType,
             mEncodingFlags);
-
-        // Restore the document's BASE URL
-        SetDocumentBase(docData->mDocument, docData->mBaseURI);
 
         if (NS_FAILED(rv))
             break;
@@ -2529,6 +2524,34 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         }
     }
 
+    // BASE elements are replaced by a comment so relative links are not hosed.
+
+    if (!(mPersistFlags & PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS))
+    {
+        nsCOMPtr<nsIDOMHTMLBaseElement> nodeAsBase = do_QueryInterface(aNodeIn);
+        if (nodeAsBase)
+        {
+            nsCOMPtr<nsIDOMDocument> ownerDocument;
+            nodeAsBase->GetOwnerDocument(getter_AddRefs(ownerDocument));
+            if (ownerDocument)
+            {
+                nsAutoString href;
+                nodeAsBase->GetHref(href); // Doesn't matter if this fails
+                nsCOMPtr<nsIDOMComment> comment;
+                nsAutoString commentText; commentText.Assign(NS_LITERAL_STRING(" base "));
+                if (!href.IsEmpty())
+                {
+                    commentText += NS_LITERAL_STRING("href=\"") + href + NS_LITERAL_STRING("\" ");
+                }
+                rv = ownerDocument->CreateComment(commentText, getter_AddRefs(comment));
+                if (comment)
+                {
+                    return comment->QueryInterface(NS_GET_IID(nsIDOMNode), (void **) aNodeOut);
+                }
+            }
+        }
+    }
+
     // Fix up href and file links in the elements
 
     nsCOMPtr<nsIDOMHTMLAnchorElement> nodeAsAnchor = do_QueryInterface(aNodeIn);
@@ -3228,6 +3251,8 @@ nsWebBrowserPersist::SetDocumentBase(
         return NS_OK;
     }
 
+    NS_ENSURE_ARG_POINTER(aBaseURI);
+
     nsCOMPtr<nsIDOMXMLDocument> xmlDoc;
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
     if (!htmlDoc)
@@ -3318,8 +3343,8 @@ nsWebBrowserPersist::SetDocumentBase(
         baseElement = do_QueryInterface(baseNode);
     }
 
-    // Add or remove the BASE element
-    if (aBaseURI)
+    // Add the BASE element
+    if (!baseElement)
     {
         if (!baseElement)
         {
@@ -3337,23 +3362,15 @@ nsWebBrowserPersist::SetDocumentBase(
             }
             headElement->AppendChild(baseElement, getter_AddRefs(newNode));
         }
-        if (!baseElement)
-        {
-            return NS_ERROR_FAILURE;
-        }
-        nsCAutoString uriSpec;
-        aBaseURI->GetSpec(uriSpec);
-        NS_ConvertUTF8toUCS2 href(uriSpec);
-        baseElement->SetAttribute(NS_LITERAL_STRING("href"), href);
     }
-    else
+    if (!baseElement)
     {
-        if (baseElement)
-        {
-            nsCOMPtr<nsIDOMNode> node;
-            headElement->RemoveChild(baseElement, getter_AddRefs(node));
-        }
+        return NS_ERROR_FAILURE;
     }
+    nsCAutoString uriSpec;
+    aBaseURI->GetSpec(uriSpec);
+    NS_ConvertUTF8toUCS2 href(uriSpec);
+    baseElement->SetAttribute(NS_LITERAL_STRING("href"), href);
 
     return NS_OK;
 }
