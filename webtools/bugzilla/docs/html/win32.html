@@ -73,7 +73,9 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="win32">4.3. Win32 Installation Notes</H1
+NAME="win32"
+></A
+>4.3. Win32 Installation Notes</H1
 ><P
 >This section covers installation on Microsoft Windows. 
     Bugzilla has been made to work on Win32 platforms, but the Bugzilla team
@@ -150,7 +152,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="wininstall">4.3.1. Win32 Installation: Step-by-step</H2
+NAME="wininstall"
+></A
+>4.3.1. Win32 Installation: Step-by-step</H2
 ><DIV
 CLASS="note"
 ><P
@@ -385,7 +389,9 @@ CLASS="command"
 ><DIV
 CLASS="example"
 ><A
-NAME="AEN989"><P
+NAME="AEN1028"
+></A
+><P
 ><B
 >Example 4-1. Installing ActivePerl ppd Modules on Microsoft
             Windows</B
@@ -443,7 +449,9 @@ TARGET="_top"
           <DIV
 CLASS="example"
 ><A
-NAME="AEN1002"><P
+NAME="AEN1041"
+></A
+><P
 ><B
 >Example 4-2. Installing OpenInteract ppd Modules manually on Microsoft
             Windows</B
@@ -1383,122 +1391,6 @@ system ("C:\\perl\\bin\\perl", "processmail", @ARGLIST);
 >
           </P
 ></LI
-><LI
-><P
->Add 
-          <TT
-CLASS="function"
->binmode()</TT
->
-
-          calls so attachments will work (
-          <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
-TARGET="_top"
->bug
-          62000</A
->
-
-          ).</P
-><P
->Because Microsoft Windows based systems handle binary files
-          different than Unix based systems, you need to add the following
-          lines to 
-          <TT
-CLASS="filename"
->createattachment.cgi</TT
->
-
-          and 
-          <TT
-CLASS="filename"
->showattachment.cgi</TT
->
-
-          before the 
-          <TT
-CLASS="function"
->require 'CGI.pl';</TT
->
-
-          line.</P
-><P
->&#13;            <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;
-binmode(STDIN);
-binmode(STDOUT);
-
-            </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-          </P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->According to 
-            <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
-TARGET="_top"
->&#13;            bug 62000</A
->
-
-            , the perl documentation says that you should always use 
-            <TT
-CLASS="function"
->binmode()</TT
->
-
-            when dealing with binary files, but never when dealing with text
-            files. That seems to suggest that rather than arbitrarily putting
-            
-            <TT
-CLASS="function"
->binmode()</TT
->
-
-            at the beginning of the attachment files, there should be logic
-            to determine if 
-            <TT
-CLASS="function"
->binmode()</TT
->
-
-            is needed or not.</P
-></TD
-></TR
-></TABLE
-></DIV
-></LI
 ></OL
 ></DIV
 ><DIV
@@ -1557,7 +1449,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="addlwintips">4.3.2. Additional Windows Tips</H2
+NAME="addlwintips"
+></A
+>4.3.2. Additional Windows Tips</H2
 ><DIV
 CLASS="tip"
 ><P
@@ -1581,7 +1475,9 @@ VALIGN="TOP"
 ><P
 >From Andrew Pearson: 
         <A
-NAME="AEN1172"><BLOCKQUOTE
+NAME="AEN1195"
+></A
+><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
 >You can make Bugzilla work with Personal Web Server for
@@ -1664,7 +1560,9 @@ VALIGN="TOP"
         <DIV
 CLASS="example"
 ><A
-NAME="AEN1184"><P
+NAME="AEN1207"
+></A
+><P
 ><B
 >Example 4-3. Removing encrypt() for Windows NT Bugzilla version 2.12 or
           earlier</B

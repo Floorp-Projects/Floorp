@@ -73,13 +73,17 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="stepbystep">4.1. Step-by-step Install</H1
+NAME="stepbystep"
+></A
+>4.1. Step-by-step Install</H1
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN492">4.1.1. Introduction</H2
+NAME="AEN492"
+></A
+>4.1.1. Introduction</H2
 ><P
 >Bugzilla has been successfully installed under Solaris, Linux,
       and Win32. Win32 is not yet officially supported, but many people
@@ -97,7 +101,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN496">4.1.2. Package List</H2
+NAME="AEN496"
+></A
+>4.1.2. Package List</H2
 ><DIV
 CLASS="note"
 ><P
@@ -175,6 +181,15 @@ TARGET="_top"
 >Template</A
 >
         (v2.07)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="http://www.perldoc.com/perl5.6/lib/File/Temp.html"
+TARGET="_top"
+>&#13;	File::Temp</A
+> (v1.804) (Prerequisite for Template)
       </P
 ></LI
 ><LI
@@ -475,7 +490,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="install-mysql">4.1.3. MySQL</H2
+NAME="install-mysql"
+></A
+>4.1.3. MySQL</H2
 ><P
 >Visit the MySQL homepage at 
       <A
@@ -577,7 +594,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="install-perl">4.1.4. Perl</H2
+NAME="install-perl"
+></A
+>4.1.4. Perl</H2
 ><P
 >Any machine that doesn't have Perl on it is a sad machine indeed.
       Perl can be got in source form from 
@@ -594,7 +613,9 @@ TARGET="_top"
 ><DIV
 CLASS="tip"
 ><A
-NAME="bundlebugzilla"><P
+NAME="bundlebugzilla"
+></A
+><P
 ></P
 ><TABLE
 CLASS="tip"
@@ -659,7 +680,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="perl-modules">4.1.5. Perl Modules</H2
+NAME="perl-modules"
+></A
+>4.1.5. Perl Modules</H2
 ><P
 > 
       All Perl modules can be found on the
@@ -822,7 +845,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN642">4.1.5.1. DBI</H3
+NAME="AEN645"
+></A
+>4.1.5.1. DBI</H3
 ><P
 >The DBI module is a generic Perl module used the
       MySQL-related modules. As long as your Perl installation was done
@@ -835,7 +860,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN645">4.1.5.2. Data::Dumper</H3
+NAME="AEN648"
+></A
+>4.1.5.2. Data::Dumper</H3
 ><P
 >The Data::Dumper module provides data structure persistence for
       Perl (similar to Java's serialization). It comes with later
@@ -847,7 +874,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN648">4.1.5.3. MySQL-related modules</H3
+NAME="AEN651"
+></A
+>4.1.5.3. MySQL-related modules</H3
 ><P
 >The Perl/MySQL interface requires a few mutually-dependent Perl
       modules. These modules are grouped together into the the
@@ -871,7 +900,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN653">4.1.5.4. TimeDate modules</H3
+NAME="AEN656"
+></A
+>4.1.5.4. TimeDate modules</H3
 ><P
 >Many of the more common date/time/calendar related Perl modules
       have been grouped into a bundle similar to the MySQL modules bundle.
@@ -885,7 +916,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN656">4.1.5.5. GD (optional)</H3
+NAME="AEN659"
+></A
+>4.1.5.5. GD (optional)</H3
 ><P
 >The GD library was written by Thomas Boutell a long while ago to
       programatically generate images in C. Since then it's become the
@@ -938,7 +971,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN663">4.1.5.6. Chart::Base (optional)</H3
+NAME="AEN666"
+></A
+>4.1.5.6. Chart::Base (optional)</H3
 ><P
 >The Chart module provides Bugzilla with on-the-fly charting
       abilities. It can be installed in the usual fashion after it has been
@@ -951,7 +986,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN666">4.1.5.7. Template Toolkit</H3
+NAME="AEN669"
+></A
+>4.1.5.7. Template Toolkit</H3
 ><P
 >When you install Template Toolkit, you'll get asked various
       questions about features to enable. The defaults are fine, except
@@ -967,7 +1004,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN669">4.1.6. HTTP Server</H2
+NAME="AEN672"
+></A
+>4.1.6. HTTP Server</H2
 ><P
 >You have a freedom of choice here - Apache, Netscape or any other
       server on UNIX would do. You can run the web server on a
@@ -1009,8 +1048,12 @@ VALIGN="TOP"
 >
       </P
 ><P
->You'll want to make sure that your web server will run any file
-      with the .cgi extension as a CGI and not just display it. If you're
+>You'll want to make sure that your web server will <EM
+>run</EM
+>
+      any file
+      with the .cgi extension as a CGI program and not simply display the source
+      code. If you're
       using Apache that means uncommenting the following line in the httpd.conf
       file: 
       <TABLE
@@ -1023,7 +1066,8 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->AddHandler cgi-script .cgi</PRE
+>&#13;AddHandler cgi-script .cgi
+      </PRE
 ></FONT
 ></TD
 ></TR
@@ -1032,7 +1076,7 @@ CLASS="programlisting"
       </P
 ><P
 >With Apache you'll also want to make sure that within the
-      httpd.conf file the line: 
+      httpd.conf file these lines: 
       <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -1043,14 +1087,16 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->Options ExecCGI AllowOverride Limit</PRE
+>&#13;Options +ExecCGI 
+AllowOverride Limit
+</PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
 >
 
-      is in the stanza that covers the directories into which you intend to
+      are in the stanza that covers the directories into which you intend to
       put the bugzilla .html and .cgi files.
 
         <DIV
@@ -1078,7 +1124,7 @@ VALIGN="TOP"
           .htaccess file generated by checksetup.pl</P
 ><P
 >Users of older versions of Apache may find the above lines 
-          in the srm.conf and access.conf files, respecitvely.</P
+          in the srm.conf and access.conf files, respectively.</P
 ></TD
 ></TR
 ></TABLE
@@ -1112,12 +1158,7 @@ VALIGN="TOP"
 CLASS="QUOTE"
 >"data"</SPAN
 >
-        and 
-        <SPAN
-CLASS="QUOTE"
->"shadow"</SPAN
->
-        directories and the 
+        directory and the 
         <SPAN
 CLASS="QUOTE"
 >"localconfig"</SPAN
@@ -1141,7 +1182,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN688">4.1.7. Bugzilla</H2
+NAME="AEN691"
+></A
+>4.1.7. Bugzilla</H2
 ><P
 >You should untar the Bugzilla files into a directory that you're
       willing to make writable by the default web server user (probably 
@@ -1219,6 +1262,64 @@ CLASS="filename"
       for Perl. This can be done using the following Perl one-liner, but 
       I suggest using the symlink approach to avoid upgrade hassles.
       </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+><SPAN
+CLASS="QUOTE"
+>"Bonsaitools"</SPAN
+> is the name Terry Weissman, the
+	original author of Bugzilla, created
+	for his suite of webtools at the time he created Bugzilla and several
+	other tools in use at mozilla.org.  He created a directory, 
+	<TT
+CLASS="filename"
+>/usr/bonsaitools</TT
+> to house his specific versions
+	of perl and other utilities.  This usage is still current at
+	<A
+HREF="http://bugzilla.mozilla.org/"
+TARGET="_top"
+>bugzilla.mozilla.org</A
+>,
+	but in general most other places do not use it.  You can either edit
+	the paths at the start of each perl file to the correct location of
+	perl on your system, or simply bow to history and create a
+	<TT
+CLASS="filename"
+>/usr/bonsaitools</TT
+> and <TT
+CLASS="filename"
+>/usr/bonsaitools/bin
+	</TT
+> directory, placing a symlink to perl on your system
+	inside <TT
+CLASS="filename"
+>/usr/bonsaitools/bin</TT
+>
+	</P
+></TD
+></TR
+></TABLE
+></DIV
 ><P
 > 
         <TABLE
@@ -1231,9 +1332,8 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->perl -pi -e
-        's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm
-        processmail syncshadowdb</PRE
+>&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm processmail syncshadowdb
+        </PRE
 ></FONT
 ></TD
 ></TR
@@ -1252,7 +1352,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN705">4.1.8. Setting Up the MySQL Database</H2
+NAME="AEN716"
+></A
+>4.1.8. Setting Up the MySQL Database</H2
 ><P
 >After you've gotten all the software installed and working you're
       ready to start preparing the database for its life as the back end to
@@ -1423,7 +1525,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN741">4.1.9. <TT
+NAME="AEN752"
+></A
+>4.1.9. <TT
 CLASS="filename"
 >checksetup.pl</TT
 ></H2
@@ -1574,7 +1678,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN773">4.1.10. Securing MySQL</H2
+NAME="AEN784"
+></A
+>4.1.10. Securing MySQL</H2
 ><P
 >If you followed the installation instructions for setting up your
       "bugs" and "root" user in MySQL, much of this should not apply to you.
@@ -1850,7 +1956,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN839">4.1.11. Configuring Bugzilla</H2
+NAME="AEN850"
+></A
+>4.1.11. Configuring Bugzilla</H2
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 

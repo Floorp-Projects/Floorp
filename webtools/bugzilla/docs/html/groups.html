@@ -73,7 +73,9 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="groups">5.5. Groups and Group Security</H1
+NAME="groups"
+></A
+>5.5. Groups and Group Security</H1
 ><P
 >Groups allow the administrator
     to isolate bugs or products that should only be seen by certain people.
@@ -112,10 +114,46 @@ TYPE="1"
 ></LI
 ><LI
 ><P
->Fill out the "New Name", "New Description", and 
-        "New User RegExp" fields. "New User RegExp" allows you to automatically
+>Fill out the "Group", "Description", and 
+        "User RegExp" fields. "New User RegExp" allows you to automatically
          place all users who fulfill the Regular Expression into the new group. 
          When you have finished, click "Add".</P
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The User Regexp is a perl regexp and, if not anchored, will match 
+           any part of an address.  So, if you do not want to grant access
+           into 'mycompany.com' to 'badperson@mycompany.com.hacker.net', use 
+           '@mycompany\.com$' as the regexp.</P
+></TD
+></TR
+></TABLE
+></DIV
+></LI
+><LI
+><P
+>After you add your new group, edit the new group.  On the
+        edit page, you can specify other groups that should be included
+        in this group and which groups should be permitted to add and delete
+        users from this group.</P
 ></LI
 ></OL
 ><P
@@ -128,40 +166,6 @@ TYPE="1"
 ><P
 >Turn on "usebuggroups" and "usebuggroupsentry" in the "Edit
         Parameters" screen.</P
-><DIV
-CLASS="warning"
-><P
-></P
-><TABLE
-CLASS="warning"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/warning.gif"
-HSPACE="5"
-ALT="Warning"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->XXX is this still true?
-          "usebuggroupsentry" has the capacity to prevent the
-          administrative user from directly altering bugs because of
-          conflicting group permissions. If you plan on using
-          "usebuggroupsentry", you should plan on restricting
-          administrative account usage to administrative duties only. In
-          other words, manage bugs with an unpriveleged user account, and
-          manage users, groups, Products, etc. with the administrative
-          account.</P
-></TD
-></TR
-></TABLE
-></DIV
 ></LI
 ><LI
 ><P
@@ -172,35 +176,6 @@ VALIGN="TOP"
         same name as the Product.</P
 ></LI
 ></OL
-><DIV
-CLASS="warning"
-><P
-></P
-><TABLE
-CLASS="warning"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/warning.gif"
-HSPACE="5"
-ALT="Warning"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Bugzilla currently has a limit of 64 groups per installation. If
-      you have more than about 50 products, you should consider
-      running multiple Bugzillas. Ask in the newsgroup for other
-      suggestions for working around this restriction.</P
-></TD
-></TR
-></TABLE
-></DIV
 ><P
 >&#13;      Note that group permissions are such that you need to be a member
       of <EM

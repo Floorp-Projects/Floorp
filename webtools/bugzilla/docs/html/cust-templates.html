@@ -16,8 +16,8 @@ REL="PREVIOUS"
 TITLE="Bugzilla Security"
 HREF="security.html"><LINK
 REL="NEXT"
-TITLE="Upgrading to New Releases"
-HREF="upgrading.html"></HEAD
+TITLE="Change Permission Customisation"
+HREF="cust-change-permissions.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -59,7 +59,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="upgrading.html"
+HREF="cust-change-permissions.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -73,7 +73,9 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="cust-templates">5.7. Template Customisation</H1
+NAME="cust-templates"
+></A
+>5.7. Template Customisation</H1
 ><P
 >&#13;      One of the large changes for 2.16 was the templatisation of the
       entire user-facing UI, using the 
@@ -97,7 +99,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1539">5.7.1. What to Edit</H2
+NAME="AEN1553"
+></A
+>5.7.1. What to Edit</H2
 ><P
 >&#13;        There are two different ways of editing of Bugzilla's templates,
         and which you use depends mainly on how you upgrade Bugzilla. The
@@ -210,7 +214,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1558">5.7.2. How To Edit Templates</H2
+NAME="AEN1572"
+></A
+>5.7.2. How To Edit Templates</H2
 ><P
 >&#13;        The syntax of the Template Toolkit language is beyond the scope of
         this guide. It's reasonably easy to pick up by looking at the current 
@@ -290,7 +296,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1568">5.7.3. Template Formats</H2
+NAME="AEN1582"
+></A
+>5.7.3. Template Formats</H2
 ><P
 >&#13;        Some CGIs have the ability to use more than one template. For
         example, buglist.cgi can output bug lists as RDF or two
@@ -350,7 +358,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1581">5.7.4. Particular Templates</H2
+NAME="AEN1595"
+></A
+>5.7.4. Particular Templates</H2
 ><P
 >&#13;        There are a few templates you may be particularly interested in
         customising for your installation.
@@ -402,6 +412,21 @@ CLASS="command"
         This is a message that appears near the top of the bug reporting page.
         By modifying this, you can tell your users how they should report
         bugs.
+      </P
+><P
+>&#13;        <B
+CLASS="command"
+>bug/process/midair.html.tmpl</B
+>:
+        This is the page used if two people submit simultaneous changes to the
+        same bug.  The second person to submit their changes will get this page
+        to tell them what the first person did, and ask if they wish to
+        overwrite those changes or go back and revisit the bug.  The default
+        title and header on this page read "Mid-air collision detected!"  If
+        you work in the aviation industry, or other environment where this
+        might be found offensive (yes, we have true stories of this happening)
+        you'll want to change this to something more appropriate for your
+        environment.
       </P
 ><P
 >&#13;        <B
@@ -552,7 +577,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="upgrading.html"
+HREF="cust-change-permissions.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -576,7 +601,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Upgrading to New Releases</TD
+>Change Permission Customisation</TD
 ></TR
 ></TABLE
 ></DIV

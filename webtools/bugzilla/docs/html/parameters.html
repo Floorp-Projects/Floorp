@@ -73,7 +73,9 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="parameters">5.1. Bugzilla Configuration</H1
+NAME="parameters"
+></A
+>5.1. Bugzilla Configuration</H1
 ><P
 >Bugzilla is configured by changing various parameters, accessed
     from the "Edit parameters" link in the page footer. Here are
@@ -165,8 +167,14 @@ CLASS="command"
         write locking. What this means is that if someone needs to make a
         change to a bug, they will lock the entire table until the operation
         is complete. Locking for write also blocks reads until the write is
-        complete. The 
-        <SPAN
+        complete. Note that more recent versions of mysql support row level
+        locking using different table types. These types are slower than the
+        standard type, and Bugzilla does not yet take advantage of features
+        such as transactions which would justify this speed decrease. The
+        Bugzilla team are, however, happy to hear about any experiences with
+        row level locking and Bugzilla</P
+><P
+>The <SPAN
 CLASS="QUOTE"
 >"shadowdb"</SPAN
 >
@@ -186,49 +194,10 @@ CLASS="QUOTE"
         Bugzilla bug changes and comments per day.</P
 ><P
 >The value of the parameter defines the name of the 
-        shadow bug database. 
-        Set "shadowdb" to e.g. "bug_shadowdb" if you will be running a
-        *very* large installation of Bugzilla. 
-        <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Enabling "shadowdb" can adversely affect the stability of
-          your installation of Bugzilla. You should regularly check that your
-          database is in sync. It is often advisable to force a shadow
-          database sync nightly via 
-          <SPAN
-CLASS="QUOTE"
->"cron"</SPAN
->.
-          </P
-></TD
-></TR
-></TABLE
-></DIV
->
-        </P
-><P
->If you use the "shadowdb" option, it is only natural that you
-        should turn the "queryagainstshadowdb" option on as well. Otherwise
-        you are replicating data into a shadow database for no reason!</P
+        shadow bug database. You will need to set the host and port settings
+        from the params page, and set up replication in your database server
+        so that updates reach this readonly mirror. Consult your database
+        documentation for more detail.</P
 ></LI
 ><LI
 ><P
@@ -258,6 +227,23 @@ CLASS="command"
 >Add any text you wish to the "passwordmail" parameter box. For
         instance, many people choose to use this box to give a quick training
         blurb about how to use Bugzilla at your site.</P
+></LI
+><LI
+><P
+>&#13;	<B
+CLASS="command"
+>movebugs</B
+>:
+
+	This option is an undocumented feature to allow moving bugs
+	between separate Bugzilla installations.  You will need to understand
+	the source code in order to use this feature.  Please consult
+	<TT
+CLASS="filename"
+>movebugs.pl</TT
+> in your Bugzilla source tree for
+	further documentation, such as it is.
+	</P
 ></LI
 ><LI
 ><P

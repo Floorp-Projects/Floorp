@@ -73,13 +73,17 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="extraconfig">4.2. Optional Additional Configuration</H1
+NAME="extraconfig"
+></A
+>4.2. Optional Additional Configuration</H1
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN845">4.2.1. Dependency Charts</H2
+NAME="AEN856"
+></A
+>4.2.1. Dependency Charts</H2
 ><P
 >As well as the text-based dependency graphs, Bugzilla also
       supports dependency graphing, using a package called 'dot'.
@@ -141,7 +145,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN860">4.2.2. Bug Graphs</H2
+NAME="AEN871"
+></A
+>4.2.2. Bug Graphs</H2
 ><P
 >As long as you installed the GD and Graph::Base Perl modules you
       might as well turn on the nifty Bugzilla bug reporting graphs.</P
@@ -198,7 +204,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN873">4.2.3. The Whining Cron</H2
+NAME="AEN884"
+></A
+>4.2.3. The Whining Cron</H2
 ><P
 >By now you have a fully functional Bugzilla, but what good are
       bugs if they're not annoying? To help make those bugs more annoying you
@@ -267,7 +275,8 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->man 5 crontab</PRE
+>&#13;man 5 crontab
+	</PRE
 ></FONT
 ></TD
 ></TR
@@ -284,7 +293,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="bzldap">4.2.4. LDAP Authentication</H2
+NAME="bzldap"
+></A
+>4.2.4. LDAP Authentication</H2
 ><P
 >&#13;        <DIV
 CLASS="warning"
@@ -369,13 +380,67 @@ TARGET="_top"
       primary email address. On most directory servers available, this is
       "mail", but you may need to change this.
       </P
+><P
+>You can also try using <A
+HREF="http://www.openldap.org/"
+TARGET="_top"
+>&#13;      OpenLDAP</A
+> with Bugzilla, using any of a number of administration
+      tools.  You should apply the patch attached this bug:
+      <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=158630"
+TARGET="_top"
+>&#13;      http://bugzilla.mozilla.org/show_bug.cgi?id=158630</A
+>, then set
+      the following object classes for your users:
+
+      <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>objectClass: person</P
+></LI
+><LI
+><P
+>objectClass: organizationalPerson</P
+></LI
+><LI
+><P
+>objectClass: inetOrgPerson</P
+></LI
+><LI
+><P
+>objectClass: top</P
+></LI
+><LI
+><P
+>objectClass: posixAccount</P
+></LI
+><LI
+><P
+>objectClass: shadowAccount</P
+></LI
+></OL
+>
+
+      Please note that this patch <EM
+>has not</EM
+> yet been
+      accepted by the Bugzilla team, and so you may need to do some
+      manual tweaking.  That said, it looks like Net::LDAP is probably
+      the way to go in the future.
+      </P
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="content-type">4.2.5. Preventing untrusted Bugzilla content from executing malicious
+NAME="content-type"
+></A
+>4.2.5. Preventing untrusted Bugzilla content from executing malicious
       Javascript code</H2
 ><P
 >It is possible for a Bugzilla to execute malicious Javascript
@@ -403,7 +468,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; charset=ISO-8859-1/i" *.cgi *.pl
+>&#13;bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; charset=ISO-8859-1/i" *.cgi *.pl
         </PRE
 ></FONT
 ></TD
@@ -445,7 +510,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="htaccess">4.2.6. <TT
+NAME="htaccess"
+></A
+>4.2.6. <TT
 CLASS="filename"
 >.htaccess</TT
 >
@@ -551,7 +618,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;  &#60;Directory /usr/local/bugzilla/&#62;
+>&#13;&#60;Directory /usr/local/bugzilla/&#62;
   Options +FollowSymLinks +Indexes +Includes +ExecCGI
   AllowOverride All
 &#60;/Directory&#62;
@@ -615,7 +682,53 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="mod-throttle">4.2.7. <TT
+NAME="directoryindex"
+></A
+>4.2.7. <TT
+CLASS="filename"
+>directoryindex</TT
+> for the Bugzilla default page.</H2
+><P
+>You should modify the &#60;DirectoryIndex&#62; parameter for
+      the Apache virtual host running your Bugzilla installation to
+      allow <TT
+CLASS="filename"
+>index.cgi</TT
+> as the index page for a
+      directory, as well as the usual <TT
+CLASS="filename"
+>index.html</TT
+>,
+      <TT
+CLASS="filename"
+>index.htm</TT
+>, and so forth. </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="mod_perl"
+></A
+>4.2.8. Bugzilla and <TT
+CLASS="filename"
+>mod_perl</TT
+></H2
+><P
+>Bugzilla is unsupported under mod_perl.  Effort is underway
+      to make it work cleanly in a mod_perl environment, but it is
+      slow going.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="mod-throttle"
+></A
+>4.2.9. <TT
 CLASS="filename"
 >mod_throttle</TT
 >

@@ -13,8 +13,8 @@ REL="UP"
 TITLE="The Bugzilla Database"
 HREF="database.html"><LINK
 REL="PREVIOUS"
-TITLE="Database Schema Chart"
-HREF="dbschema.html"><LINK
+TITLE="Modifying Your Running System"
+HREF="dbmodify.html"><LINK
 REL="NEXT"
 TITLE="Useful Patches and Utilities for Bugzilla"
 HREF="patches.html"></HEAD
@@ -45,7 +45,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="dbschema.html"
+HREF="dbmodify.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -73,7 +73,9 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="dbdoc">B.2. MySQL Bugzilla Database Introduction</H1
+NAME="dbdoc"
+></A
+>B.2. MySQL Bugzilla Database Introduction</H1
 ><P
 >This information comes straight from my life. I was forced to learn
     how Bugzilla organizes database because of nitpicky requests from users
@@ -133,7 +135,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN2077">B.2.1. Bugzilla Database Basics</H2
+NAME="AEN2119"
+></A
+>B.2.1. Bugzilla Database Basics</H2
 ><P
 >If you were like me, at this point you're totally clueless about
       the internals of MySQL, and if it weren't for this executive order from
@@ -247,7 +251,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN2104">B.2.1.1. Bugzilla Database Tables</H3
+NAME="AEN2146"
+></A
+>B.2.1.1. Bugzilla Database Tables</H3
 ><P
 >Imagine your MySQL database as a series of spreadsheets, and
         you won't be too far off. If you use this command:</P
@@ -301,7 +307,6 @@ CLASS="programlisting"
 | products          |
 | profiles          |
 | profiles_activity |
-| shadowlog         |
 | tokens            |
 | versions          |
 | votes             |
@@ -399,10 +404,6 @@ sshh...&nbsp;don't&nbsp;tell&nbsp;your&nbsp;users!)<br>
 profiles_activity:&nbsp;&nbsp;Need&nbsp;to&nbsp;know&nbsp;who&nbsp;did&nbsp;what&nbsp;when&nbsp;to&nbsp;who's&nbsp;profile?&nbsp;&nbsp;This'll<br>
 tell&nbsp;you,&nbsp;it's&nbsp;a&nbsp;pretty&nbsp;complete&nbsp;history.<br>
 <br>
-shadowlog:&nbsp;&nbsp;I&nbsp;could&nbsp;be&nbsp;mistaken&nbsp;here,&nbsp;but&nbsp;I&nbsp;believe&nbsp;this&nbsp;table&nbsp;tells&nbsp;you&nbsp;when<br>
-your&nbsp;shadow&nbsp;database&nbsp;is&nbsp;updated&nbsp;and&nbsp;what&nbsp;commands&nbsp;were&nbsp;used&nbsp;to&nbsp;update&nbsp;it.&nbsp;&nbsp;We<br>
-don't&nbsp;use&nbsp;a&nbsp;shadow&nbsp;database&nbsp;at&nbsp;our&nbsp;site&nbsp;yet,&nbsp;so&nbsp;it's&nbsp;pretty&nbsp;empty&nbsp;for&nbsp;us.<br>
-<br>
 versions:&nbsp;&nbsp;Version&nbsp;information&nbsp;for&nbsp;every&nbsp;product<br>
 <br>
 votes:&nbsp;&nbsp;Who&nbsp;voted&nbsp;for&nbsp;what&nbsp;when<br>
@@ -498,7 +499,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="dbschema.html"
+HREF="dbmodify.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -526,7 +527,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Database Schema Chart</TD
+>Modifying Your Running System</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

@@ -73,13 +73,17 @@ CLASS="section"
 ><H1
 CLASS="section"
 ><A
-NAME="useradmin">5.2. User Administration</H1
+NAME="useradmin"
+></A
+>5.2. User Administration</H1
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="defaultuser">5.2.1. Creating the Default User</H2
+NAME="defaultuser"
+></A
+>5.2.1. Creating the Default User</H2
 ><P
 >When you first run checksetup.pl after installing Bugzilla, it
       will prompt you for the administrative username (email address) and
@@ -107,60 +111,11 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->If you wish to add more administrative users, you must use the
-        MySQL interface. Run "mysql" from the command line, and use these
-        commands: 
-        <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-            <B
-CLASS="command"
->use bugs;</B
->
-          </TD
-></TR
-><TR
-><TD
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->&#13;              update profiles set groupset=0x7ffffffffffffff where login_name =
-              "(user's login name)";
-            </B
->
-          </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
+>If you wish to add more administrative users, add them to 
+        the "admin" group and, optionally, add edit the tweakparams, editusers,
+        creategroups, editcomponents, and editkeywords groups to add the
+        entire admin group to those groups.
         </P
-><P
->Yes, that is 
-        <EM
->fourteen</EM
->
-
-        <SPAN
-CLASS="QUOTE"
->"f"</SPAN
->
-
-        's. A whole lot of f-ing going on if you want to create a new
-        administator.</P
 ></TD
 ></TR
 ></TABLE
@@ -171,13 +126,17 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="manageusers">5.2.2. Managing Other Users</H2
+NAME="manageusers"
+></A
+>5.2.2. Managing Other Users</H2
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="createnewusers">5.2.2.1. Creating new users</H3
+NAME="createnewusers"
+></A
+>5.2.2.1. Creating new users</H3
 ><P
 >Your users can create their own user accounts by clicking the
         "New Account" link at the bottom of each page (assuming they
@@ -248,7 +207,9 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="modifyusers">5.2.2.2. Modifying Users</H3
+NAME="modifyusers"
+></A
+>5.2.2.2. Modifying Users</H3
 ><P
 >To see a specific user, search for their login name
         in the box provided on the "Edit Users" page. To see all users, 
