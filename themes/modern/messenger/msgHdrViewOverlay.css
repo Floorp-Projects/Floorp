@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Scott MacGregor (mscott@netscape.com)
  *   Joe Hewitt (hewitt@netscape.com)
  */
 
@@ -33,22 +34,8 @@
   border-bottom: 1px solid #000000;
 }
 
-#msgHeaderView > toolbar > .toolbar-holder {
-  border: none;
-}
-
 .header-part1 {
   background-color: #EEEEEE;
-  color: #000000;
-}
-
-.header-part2 {
-  background-color: #C2D0D0;
-  color: #000000;
-}
-
-.header-part3 {
-  background-color: #C2D0D0;
   color: #000000;
 }
 
@@ -66,7 +53,7 @@
 
 /* ::::: msg header captions ::::: */
 
-.headerBox {
+.headerBox  {
   overflow: hidden;
   min-width: 50px;
 }
@@ -86,10 +73,15 @@ html.subjectvalue {
   font-weight: bold;
 }
 
+text.subjectvalue {
+  font-weight: bold;
+}
+
 text.headerdisplayname {
   margin-right: .5em;
   margin-left: .5em;
-  min-height: 18px;
+  max-height: 16px;
+  min-height: 16px;
   font-weight: bold;
 }
 
@@ -102,7 +94,8 @@ mail-emailaddress {
 
 .emailDisplayButton {
   cursor: pointer;
-  max-height: 15px;
+  max-height: 16px;
+  min-height: 16px;
   color: blue;
   text-decoration: underline;
 }
@@ -114,18 +107,14 @@ mail-emailaddress {
 /* ::::: email address twisty ::::: */
 
 .showMoreAddressesButton {
-  list-style-image: url("chrome://messenger/skin/icons/twisty-more.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
 
 .showFewerAddressesButton {
-  list-style-image: url("chrome://messenger/skin/icons/twisty-less.gif");
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
 /* ::::: miscellaneous ::::: */
-
-[hide] {
-  visibility: collapse;
-}
 
 .buttonTopSpacer {
   height: .3em;
@@ -133,4 +122,56 @@ mail-emailaddress {
 
 .buttonSpacer {
   width: .5em;
+}
+
+/* ::::: view expand and collapse twisties  ::::: */
+
+.expandHeaderViewButton {
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+  margin-left: .5em;
+  margin-right: .5em;
+}
+
+.collapsedHeaderViewButton  {
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+  margin-left: .5em;
+}
+
+/* ::::: collapsed view styles ::::: */
+
+.collapsedToggleHdrBox {
+   vertical-align: middle;
+}
+
+#collapsedAttachmentBox {
+  text-align: center;
+}
+
+#collapseddateValue {
+  margin-left: .7em;
+}
+
+#collapsedfromBox {
+  width: 18em;
+}
+
+#collapseddateBox {
+  width: 12em;
+}
+
+text.collapsedHeaderDisplayName { 
+  font-weight: bold; 
+  margin-left: .7em;
+  max-height: 16px;
+  min-height: 16px;
+}
+
+.collapsedAttachmentButton {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
+  margin-right: .5em;
+  margin-left: 1em;
+}
+
+[hide] {
+  visibility: hidden;
 }
