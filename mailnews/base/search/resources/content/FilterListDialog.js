@@ -30,12 +30,19 @@ const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 var gFilterBundle;
 var gPromptService;
 var gFilterListDialogAlreadyOpen = false;
+var gFilterListMsgWindow = null;
+
 function onLoad()
 {
     rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
     var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+
+    var msgWindowContractID = "@mozilla.org/messenger/msgwindow;1";
+    var nsIMsgWindow = Components.interfaces.nsIMsgWindow;
+    gFilterListMsgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
+    gFilterListMsgWindow.SetDOMWindow(window); 
 
     gFilterBundle = document.getElementById("bundle_filter");
 
@@ -47,6 +54,8 @@ function onLoad()
     doSetOKCancel(onOk, onCancel);
 
     updateButtons();
+
+    moveToAlertPosition();
 
     // get the selected server if it can have filters.
     var firstItem = getSelectedServerForFilters();
@@ -60,8 +69,6 @@ function onLoad()
     if (firstItem) {
         selectServer(firstItem);
     }
-
-    moveToAlertPosition();
 
     if (("arguments" in window) && window.arguments[0] && ("prefillValue" in window.arguments[0])) 
         onNewFilter(window.arguments[0].prefillValue);
@@ -99,6 +106,16 @@ function onServerClick(event)
 // roots the tree at the specified server
 function setServer(uri)
 {
+   var resource = rdf.GetResource(uri);
+   var msgFolder =  resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+   //Calling getFilterList will detect any errors in rules.dat, backup the file, and alert the user
+   //we need to do this because tree.setAttribute will cause rdf to call getFilterList and there is 
+   //no way to pass msgWindow in that case. 
+
+   if (msgFolder)
+     msgFolder.getFilterList(gFilterListMsgWindow);
+
     var tree = document.getElementById("filterTree");
     tree.setAttribute("ref", uri);
     updateButtons();
@@ -124,9 +141,7 @@ function selectServer(uri)
     // update the server menu
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", uri);
-
     serverMenu.selectedItem = menuitems[0];
-
     setServer(uri);
 }
 
@@ -152,9 +167,7 @@ function currentFilterList()
 {
     var serverMenu = document.getElementById("serverMenu");
     var serverUri = serverMenu.value;
-
     var filterList = rdf.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
-
     return filterList;
 }
 
@@ -350,4 +363,3 @@ function onFilterDoubleClick(event)
     if (t.parentNode.parentNode.localName == "treeitem")
         onEditFilter();
 }
-

@@ -1407,7 +1407,7 @@ nsParseNewMailState::nsParseNewMailState()
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
 
 nsresult
-nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream)
+nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
 {
     nsresult rv;
 	m_position = folder.GetFileSize();
@@ -1434,8 +1434,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = rootMsgFolder->GetServer(getter_AddRefs(server));
     if (NS_SUCCEEDED(rv))
-        rv = server->GetFilterList(getter_AddRefs(m_filterList));
-
+      rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
     m_logFile = nsnull;
 #ifdef DOING_MDN
 	if (m_filterList)

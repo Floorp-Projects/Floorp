@@ -59,7 +59,7 @@ public:
     virtual ~nsNoIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
-    NS_IMETHOD GetFilterList(nsIMsgFilterList **aResult);
+    NS_IMETHOD GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult);
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 };
 

@@ -125,7 +125,7 @@ nsMsgFilterDelegateFactory::getFilterListDelegate(nsIRDFResource *aOuter,
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIMsgFilterList> filterList;
-    rv = folder->GetFilterList(getter_AddRefs(filterList));
+    rv = folder->GetFilterList(nsnull, getter_AddRefs(filterList));
     NS_ENSURE_SUCCESS(rv, rv);
     
     *aResult = filterList;

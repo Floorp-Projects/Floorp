@@ -86,6 +86,7 @@
 #include "nsImapUrl.h"
 #include "nsFileStream.h"
 #include "nsIMsgProtocolInfo.h"
+#include "nsIMsgMailSession.h"
 
 #include "nsITimer.h"
 #include "nsMsgUtils.h"
@@ -902,15 +903,10 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 {
 	nsresult rv;
-
-	nsCOMPtr<nsIFolder> rootFolder;
-	rv = GetRootFolder(getter_AddRefs(rootFolder));
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
-		if(rootMsgFolder)
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+  if(NS_SUCCEEDED(rv) && rootMsgFolder)
 			rv = rootMsgFolder->GetNewMessages(nsnull, nsnull);
-	}
 
 	return rv;
 }
@@ -3454,7 +3450,7 @@ nsImapIncomingServer::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
   nsresult rv = NS_OK;      //for now checking for filters is enough
   nsCOMPtr <nsIMsgFilterList> filterList;  //later on we might have to check for MDN                              ;
   if (!mFilterList)       
-    GetFilterList(getter_AddRefs(filterList));
+    GetFilterList(nsnull, getter_AddRefs(filterList));
   if (mFilterList)
     rv = mFilterList->GetShouldDownloadArbitraryHeaders(aResult);
   else

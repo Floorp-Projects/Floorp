@@ -290,7 +290,7 @@ function checkUserServerChanges(showAlert) {
       var filterList;
       if (account && (newType != "nntp")) {
         var server = account.incomingServer;
-        filterList = server.filterList;
+        filterList = server.getFilterList(null);
       }
       var userChangeText, serverChangeText;
       if ( (oldHost != newHost) && (filterList != undefined) && filterList.filterCount )

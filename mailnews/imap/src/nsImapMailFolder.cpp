@@ -617,6 +617,11 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   nsresult rv = NS_ERROR_NULL_POINTER;
   PRBool selectFolder = PR_FALSE;
 
+  if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
+  {
+    rv = GetFilterList(msgWindow, getter_AddRefs(m_filterList));
+  }
+
   nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv)); 
 
   if (NS_FAILED(rv)) return rv;
@@ -2432,13 +2437,6 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
   if (!mDatabase)
     GetDatabase(nsnull);
 
-  if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
-  {
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      rv = GetServer(getter_AddRefs(server));
-      if (NS_SUCCEEDED(rv) && server)
-          server->GetFilterList(getter_AddRefs(m_filterList));
-  }
   m_nextMessageByteLength = aSize;
   if (!m_msgParser)
   {

@@ -231,7 +231,7 @@ public:
 	nsParseNewMailState();
 	virtual ~nsParseNewMailState();
 	NS_DECL_ISUPPORTS_INHERITED
-    nsresult Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream);
+    nsresult Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow);
 
 	virtual void	DoneParsingFolder(nsresult status);
 	virtual void	SetUsingTempDB(PRBool usingTempDB, char *tmpDBName);

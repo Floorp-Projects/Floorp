@@ -1200,8 +1200,15 @@ nsPop3Protocol::GetStat()
         // write to somewhere we dont have write access error to (See bug 62480)
         // (Note: This is only a temp hack until the underlying XPCOM is fixed
         // to return errors)
+
         nsresult rv;
-        rv = m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull,
+        nsCOMPtr <nsIMsgWindow> msgWindow;
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+        if (mailnewsUrl)
+          rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+	      NS_ASSERTION(NS_SUCCEEDED(rv) && msgWindow, "no msg window");
+
+        rv = m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull, msgWindow,
                                                       &m_pop3ConData->msg_del_started);
         if (NS_FAILED(rv))
           if (rv == NS_MSG_FOLDER_BUSY)

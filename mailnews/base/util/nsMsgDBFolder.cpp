@@ -1589,7 +1589,7 @@ nsMsgDBFolder::MatchOrChangeFilterDestination(nsIMsgFolder *newFolder, PRBool ca
           rv = server->GetCanHaveFilters(&canHaveFilters);
           if (NS_SUCCEEDED(rv) && canHaveFilters) 
           {
-            rv = server->GetFilterList(getter_AddRefs(filterList));
+            rv = server->GetFilterList(nsnull, getter_AddRefs(filterList));
             if (filterList && NS_SUCCEEDED(rv))
             {
               rv = filterList->MatchOrChangeFilterTarget(oldUri, newUri, caseInsensitive, found);

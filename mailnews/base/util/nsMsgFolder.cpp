@@ -2129,13 +2129,11 @@ NS_IMETHODIMP nsMsgFolder::GetRootFolder(nsIMsgFolder * *aRootFolder)
 	// if this happens, bail.
 	if (!server) return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIFolder> aRoot;
-	rv = server->GetRootFolder(getter_AddRefs(aRoot));
-
-	if (NS_FAILED(rv)) return rv;
-	if (!aRoot) return NS_ERROR_NULL_POINTER;
-
-	return aRoot->QueryInterface(NS_GET_IID(nsIMsgFolder), (void**)aRootFolder);
+  rv = server->GetRootMsgFolder(aRootFolder);
+  if (!aRootFolder)
+    return NS_ERROR_NULL_POINTER;
+  else
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -2523,24 +2521,15 @@ nsMsgFolder::RecursiveSetDeleteIsMoveToTrash(PRBool bVal)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::GetFilterList(nsIMsgFilterList **aResult)
+nsMsgFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
   nsresult rv;
-
-  // only get filters for root folders in the base class
-#ifdef NS_DEBUG
-  PRBool isServer=PR_FALSE;
-  rv = GetIsServer(&isServer);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "error getting serverness");
-  NS_ASSERTION(isServer, "Getting filter for non-server?");
-#endif
-
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
 
-  return server->GetFilterList(aResult);
+  return server->GetFilterList(aMsgWindow, aResult);
 }
 
 /* void enableNotifications (in long notificationType, in boolean enable); */

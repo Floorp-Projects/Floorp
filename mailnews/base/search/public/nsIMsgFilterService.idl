@@ -20,17 +20,17 @@
 
 #include "nsISupports.idl"
 #include "nsIMsgFilterList.idl"
+#include "nsIMsgWindow.idl"
 
 [scriptable, uuid(6673cad0-072e-11d3-8d70-00805f8a6617)]
 interface nsIMsgFilterService : nsISupports {
 
-    nsIMsgFilterList OpenFilterList(in nsIFileSpec filterFile, in nsIMsgFolder rootFolder);
+    nsIMsgFilterList OpenFilterList(in nsIFileSpec filterFile, in nsIMsgFolder rootFolder, in nsIMsgWindow msgWindow);
     void CloseFilterList(in nsIMsgFilterList filterList);
 
     void SaveFilterList(in nsIMsgFilterList filterList,
                         in nsIFileSpec filterFile);
     
     void CancelFilterList(in nsIMsgFilterList filterList);
-
 };
 

@@ -40,6 +40,8 @@
 
 #include "nsIMsgFilterService.h"
 
+class nsIMsgWindow;
+class nsIStringBundle;
 
 
 
@@ -59,6 +61,12 @@ public:
    with dialog boxes. To apply the new list call MSG_CloseFilterList.
 
 */
+  nsresult BackUpFilterFile(nsIFileSpec *aFilterFile, nsIMsgWindow *aMsgWindow);
+  nsresult AlertBackingUpFilterFile(nsIMsgWindow *aMsgWindow);
+  nsresult ThrowAlertMsg(const char*aMsgName, nsIMsgWindow *aMsgWindow);
+  nsresult GetStringFromBundle(const char *aMsgName, PRUnichar **aResult);
+  nsresult GetFilterStringBundle(nsIStringBundle **aBundle);
+
 };
 
 #endif  // _nsMsgFilterService_H_

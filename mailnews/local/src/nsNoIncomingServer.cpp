@@ -240,7 +240,7 @@ NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlLis
 // the "none" server does not support filters, because
 // it doesn't support incoming messages!
 NS_IMETHODIMP
-nsNoIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
+nsNoIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
     *aResult = nsnull;
     return NS_ERROR_NOT_IMPLEMENTED;

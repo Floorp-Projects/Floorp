@@ -440,7 +440,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                       }
                     }
                     rv = newMailParser->Init(serverFolder, inbox, 
-                                               fileSpec, outFileStream);
+                                               fileSpec, outFileStream, nsnull);
                     if (NS_FAILED(rv))
                         goto freebuff_and_unlock;
                         

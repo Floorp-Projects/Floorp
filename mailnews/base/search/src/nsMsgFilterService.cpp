@@ -43,6 +43,12 @@
 #include "nsFileStream.h"
 #include "nsMsgFilterList.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIPrompt.h"
+#include "nsIDocShell.h"
+#include "nsIMsgWindow.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIStringBundle.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
@@ -55,7 +61,7 @@ nsMsgFilterService::~nsMsgFilterService()
 {
 }
 
-NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsgFolder *rootFolder, nsIMsgFilterList **resultFilterList)
+NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsgFolder *rootFolder, nsIMsgWindow *aMsgWindow, nsIMsgFilterList **resultFilterList)
 {
 	nsresult ret = NS_OK;
 
@@ -93,7 +99,18 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
     }
   }
 	else
+  {
 		NS_RELEASE(filterList);
+    if (ret == NS_MSG_FILTER_PARSE_ERROR && aMsgWindow)
+    {
+      ret = BackUpFilterFile(filterFile, aMsgWindow);
+      NS_ENSURE_SUCCESS(ret, ret);
+      ret = filterFile->Truncate(0);
+      NS_ENSURE_SUCCESS(ret, ret);
+      return OpenFilterList(filterFile, rootFolder, aMsgWindow, resultFilterList);
+    }
+  }
+		
 	return ret;
 }
 
@@ -156,5 +173,91 @@ NS_IMETHODIMP nsMsgFilterService::CancelFilterList(nsIMsgFilterList *filterList)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsMsgFilterService::BackUpFilterFile(nsIFileSpec *aFilterFile, nsIMsgWindow *aMsgWindow)
+{
+  nsresult rv;
+  AlertBackingUpFilterFile(aMsgWindow);
+  aFilterFile->CloseStream();
 
+  nsCOMPtr<nsILocalFile> localFilterFile;
+  nsFileSpec filterFileSpec;
+  aFilterFile->GetFileSpec(&filterFileSpec);
+  rv = NS_FileSpecToIFile(&filterFileSpec, getter_AddRefs(localFilterFile));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsILocalFile> localParentDir;
+  nsCOMPtr <nsIFileSpec> parentDir;
+  rv = aFilterFile->GetParent(getter_AddRefs(parentDir));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsFileSpec parentDirSpec;
+  parentDir->GetFileSpec(&parentDirSpec);
+
+  rv = NS_FileSpecToIFile(&parentDirSpec, getter_AddRefs(localParentDir));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  //if back-up file exists delete the back up file otherwise copy fails. 
+  nsCOMPtr <nsILocalFile> backupFile;
+  rv = NS_FileSpecToIFile(&parentDirSpec, getter_AddRefs(backupFile));
+  NS_ENSURE_SUCCESS(rv,rv);
+  backupFile->Append("rulesbackup.dat");
+  PRBool exists;
+  backupFile->Exists(&exists);
+  if (exists)
+    backupFile->Remove(PR_FALSE);
+
+  return localFilterFile->CopyTo(localParentDir, "rulesbackup.dat");
+}
+
+nsresult nsMsgFilterService::AlertBackingUpFilterFile(nsIMsgWindow *aMsgWindow)
+{
+  return ThrowAlertMsg("filterListBackUpMsg", aMsgWindow);
+}
+
+nsresult //Do not use this routine if you have to call it very often because it creates a new bundle each time
+nsMsgFilterService::GetStringFromBundle(const char *aMsgName, PRUnichar **aResult)
+{ 
+  nsresult rv=NS_OK;
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsCOMPtr <nsIStringBundle> bundle;
+  rv = GetFilterStringBundle(getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv) && bundle)
+    rv=bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aMsgName).get(), aResult);
+  return rv;
+  
+}
+
+nsresult
+nsMsgFilterService::GetFilterStringBundle(nsIStringBundle **aBundle)
+{
+  nsresult rv=NS_OK;
+  NS_ENSURE_ARG_POINTER(aBundle);
+  nsCOMPtr<nsIStringBundleService> bundleService =
+         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  if (bundleService && NS_SUCCEEDED(rv))
+    bundleService->CreateBundle("chrome://messenger/locale/filter.properties",
+                                 getter_AddRefs(bundle));
+  NS_IF_ADDREF(*aBundle = bundle);
+  return rv;
+}
+
+nsresult
+nsMsgFilterService::ThrowAlertMsg(const char*aMsgName, nsIMsgWindow *aMsgWindow)
+{
+  nsXPIDLString alertString;
+  nsresult rv = GetStringFromBundle(aMsgName, getter_Copies(alertString));
+  if (NS_SUCCEEDED(rv) && alertString && aMsgWindow)
+  {
+    nsCOMPtr <nsIDocShell> docShell;
+    aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    if (docShell)
+    {
+      nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (dialog && alertString)
+        dialog->Alert(nsnull, alertString);
+  }
+  }
+  return rv;
+}
 

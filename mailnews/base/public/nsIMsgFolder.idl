@@ -144,8 +144,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
 	readonly attribute nsIMsgFolder rootFolder;
 
-  /* filter for this folder */
-  readonly attribute nsIMsgFilterList filterList;
+  /* function to get the filter list on folder's server */
+  nsIMsgFilterList getFilterList( in nsIMsgWindow msgWindow);
   
 	void ForceDBClosed ();
 	void Delete ();

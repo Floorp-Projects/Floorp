@@ -169,7 +169,8 @@ interface nsIMsgIncomingServer : nsISupports {
   /* empty trash on exit */
   attribute boolean emptyTrashOnExit;
 
-  readonly attribute nsIMsgFilterList filterList;
+  /* get filter list */
+  nsIMsgFilterList getFilterList(in nsIMsgWindow aMsgWindow);
 
   /* we use this to set the default local path.  we use this when migrating prefs */
   void SetDefaultLocalPath(in nsIFileSpec aDefaultLocalPath);

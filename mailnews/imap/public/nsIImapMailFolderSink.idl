@@ -43,6 +43,7 @@
 
 interface nsIMsgMailNewsUrl;
 interface nsIImapMockChannel;
+interface nsIMsgWindow;
 
 typedef long ImapOnlineCopyState;
 

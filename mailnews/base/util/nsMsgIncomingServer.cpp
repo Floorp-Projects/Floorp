@@ -998,9 +998,8 @@ nsMsgIncomingServer::clearPrefEnum(const char *aPref, void *aClosure)
 }
 
 nsresult
-nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
+nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
-
   nsresult rv;
   
   if (!mFilterList) {
@@ -1024,7 +1023,7 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
           do_GetService(kMsgFilterServiceCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       
-      rv = filterService->OpenFilterList(mFilterFile, msgFolder, getter_AddRefs(mFilterList));
+      rv = filterService->OpenFilterList(mFilterFile, msgFolder, aMsgWindow, getter_AddRefs(mFilterList));
       NS_ENSURE_SUCCESS(rv, rv);
   }
   
