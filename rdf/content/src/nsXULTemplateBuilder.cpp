@@ -1751,8 +1751,10 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         nsXPIDLCString resourceCStr;
         rv = aChild->GetValue(getter_Copies(resourceCStr));
         if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagStr(tag->GetUnicode());
+        
+        PRUnichar *unicodeString;
+        tag->GetUnicode(&unicodeString);
+        nsAutoString tagStr(unicodeString);
         char* tagCStr = tagStr.ToNewCString();
 
         PR_LOG(gLog, PR_LOG_DEBUG,
@@ -1875,7 +1877,10 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
                 nsCOMPtr<nsIHTMLContent> element;
                 //nsAutoString tagName(tag->GetUnicode());
-                rv = factory->CreateInstanceByTag(tag->GetUnicode(), getter_AddRefs(element));
+                PRUnichar *unicodeString;
+                tag->GetUnicode(&unicodeString);
+
+                rv = factory->CreateInstanceByTag(unicodeString, getter_AddRefs(element));
                 if (NS_FAILED(rv)) return rv;
 
                 realKid = do_QueryInterface(element);
@@ -2778,7 +2783,9 @@ RDFGenericBuilderImpl::GetResource(PRInt32 aNameSpaceID,
     gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
 
     // XXX check to see if we need to insert a '/' or a '#'
-    nsAutoString tag(aNameAtom->GetUnicode());
+    PRUnichar *unicodeString;
+    aNameAtom->GetUnicode(&unicodeString);
+    nsAutoString tag(unicodeString);
     if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
         uri.Append('#');
 

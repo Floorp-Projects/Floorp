@@ -1639,7 +1639,7 @@ PRBool nsString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
   return Equals(aString,PR_TRUE,aLength);
 }
 
-PRBool nsString::EqualsIgnoreCase(const nsIAtom *aAtom) const {
+PRBool nsString::EqualsIgnoreCase(nsIAtom *aAtom) const {
   return Equals(aAtom,PR_TRUE);
 }
 
@@ -1715,15 +1715,18 @@ PRBool nsString::Equals(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCou
  * @param  aLength -- length of given string.
  * @return TRUE if equal
  */
-PRBool nsString::Equals(const nsIAtom* aAtom,PRBool aIgnoreCase) const{
+PRBool nsString::Equals(nsIAtom* aAtom,PRBool aIgnoreCase) const{
   NS_ASSERTION(0!=aAtom,kNullPointerError);
   PRBool result=PR_FALSE;
   if(aAtom){
     PRInt32 cmp=0;
+    PRUnichar* unicode;
+    if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
+        return PR_FALSE;
     if (aIgnoreCase)
-      cmp=nsCRT::strcasecmp(mUStr,aAtom->GetUnicode());
+      cmp=nsCRT::strcasecmp(mUStr,unicode);
     else
-      cmp=nsCRT::strcmp(mUStr,aAtom->GetUnicode());
+      cmp=nsCRT::strcmp(mUStr,unicode);
     result=PRBool(0==cmp);
   }
 

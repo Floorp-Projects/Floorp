@@ -62,19 +62,24 @@ void* AtomImpl::operator new(size_t size, const PRUnichar* us, PRInt32 uslen)
   return ii;
 }
 
-void AtomImpl::ToString(nsString& aBuf) const
+NS_IMETHODIMP 
+AtomImpl::ToString(nsString& aBuf) 
 {
   aBuf.SetLength(0);
   aBuf.Append(mString, nsCRT::strlen(mString));
+  return NS_OK;
 }
 
-const PRUnichar* AtomImpl::GetUnicode() const
+NS_IMETHODIMP 
+AtomImpl::GetUnicode( PRUnichar** _retval ) 
 {
-  return mString;
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = mString;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-AtomImpl::SizeOf(nsISizeOfHandler* aHandler) const
+AtomImpl::SizeOf(nsISizeOfHandler* aHandler) 
 {
   aHandler->Add(sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar));
   return NS_OK;

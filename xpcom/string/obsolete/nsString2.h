@@ -724,12 +724,12 @@ PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCoun
 PRBool  Equals(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 PRBool  Equals(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-PRBool  Equals(const nsIAtom* anAtom,PRBool aIgnoreCase) const;   
+PRBool  Equals(nsIAtom* anAtom,PRBool aIgnoreCase) const;   
 PRBool  Equals(const PRUnichar* s1, const PRUnichar* s2,PRBool aIgnoreCase=PR_FALSE) const;
 
 PRBool  EqualsIgnoreCase(const nsString& aString) const;
 PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
-PRBool  EqualsIgnoreCase(const nsIAtom *aAtom) const;
+PRBool  EqualsIgnoreCase(nsIAtom *aAtom) const;
 PRBool  EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const;
 
 /**
