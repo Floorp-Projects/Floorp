@@ -1688,6 +1688,8 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
 
+#if 0
+//  removing redirect.xul for loop. bugs 44153, 56523, 58658
     nsXPIDLCString spec1;
     nsXPIDLCString spec2;
 
@@ -1703,6 +1705,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     
         checkSecurity = PR_FALSE;
     }
+#endif
   }
 
 
