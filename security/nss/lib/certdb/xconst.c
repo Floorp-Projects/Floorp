@@ -176,7 +176,7 @@ CERT_DecodeAltNameExtension(PRArenaPool *arena, SECItem *EncodedAltName)
     if (rv == SECFailure) {
 	goto loser;
     }
-    if (encodedContext.encodedGenName)
+    if (encodedContext.encodedGenName && encodedContext.encodedGenName[0])
 	return cert_DecodeGeneralNames(arena, encodedContext.encodedGenName);
     /* Extension contained an empty GeneralNames sequence */
     /* Treat as extension not found */
