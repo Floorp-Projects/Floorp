@@ -86,7 +86,7 @@ if ( !defined $::FORM{'buglist'} ) {
 
 my $exporter = $::COOKIE{"Bugzilla_login"};
 my $movers = Param("movers");
-$movers =~ s/\w?,\w?/|/g;
+$movers =~ s/\s?,\s?/|/g;
 $movers =~ s/@/\@/g;
 unless ($exporter =~ /($movers)/) {
   print "Content-type: text/html\n\n";
@@ -149,7 +149,7 @@ $from =~ s/@/\@/;
 $msg .= "From: Bugzilla <" . $from . ">\n";
 $msg .= "Subject: Moving bug(s) $buglist\n\n";
 
-$template->process("bug/show.xml.tmpl", { bugs => \@bugs }, \$msg)
+$template->process("bug/show.xml.tmpl", { user => { login => $exporter }, bugs => \@bugs }, \$msg)
   || ThrowTemplateError($template->error());
 
 $msg .= "\n";

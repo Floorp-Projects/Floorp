@@ -362,6 +362,8 @@ sub user {
     $self->{'user'} = {};
 
     my $movers = Param("movers");
+    $movers =~ s/\s?,\s?/|/g;
+    $movers =~ s/@/\@/g;
     $self->{'user'}->{'canmove'} = Param("move-enabled") 
       && (defined $::COOKIE{"Bugzilla_login"}) 
         && ($::COOKIE{"Bugzilla_login"} =~ /$movers/);
