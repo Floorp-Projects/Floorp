@@ -66,7 +66,7 @@ nsWebBrowser::~nsWebBrowser()
    InternalDestroy();
 }
 
-PRBool deleteListener(void *aElement, void *aData) {
+PRBool PR_CALLBACK deleteListener(void *aElement, void *aData) {
     nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)aElement;
     NS_DELETEXPCOM(state);
     return PR_TRUE;
