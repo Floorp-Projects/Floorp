@@ -134,10 +134,10 @@ interface nsIPluginManager : nsISupports
      * @param pluginInst - the plugin making the request. If NULL, the URL
      *   is fetched in the background.
      * @param url - the URL to fetch
-     * @param target - the target window into which to load the URL
-     * @param notifyData - when present, URLNotify is called passing the
-     *   notifyData back to the client. When NULL, this call behaves like
-     *   NPN_GetURL.
+     * @param target - the target window into which to load the URL, or NULL if
+     *   the data should be returned to the plugin via streamListener.
+     * @param streamListener - a stream listener to be used to return data to
+     *   the plugin. May be NULL if target is not NULL.
      * @param altHost - an IP-address string that will be used instead of the 
      *   host specified in the URL. This is used to prevent DNS-spoofing 
      *   attacks. Can be defaulted to NULL meaning use the host in the URL.
@@ -166,15 +166,15 @@ interface nsIPluginManager : nsISupports
      * @param pluginInst - the plugin making the request. If NULL, the URL
      *   is fetched in the background.
      * @param url - the URL to fetch
-     * @param target - the target window into which to load the URL
      * @param postDataLength - the length of postData (if non-NULL)
      * @param postData - the data to POST. NULL specifies that there is not post
      *   data
      * @param isFile - whether the postData specifies the name of a file to 
      *   post instead of data. The file will be deleted afterwards.
-     * @param notifyData - when present, URLNotify is called passing the 
-     *   notifyData back to the client. When NULL, this call behaves like 
-     *   NPN_GetURL.
+     * @param target - the target window into which to load the URL, or NULL if
+     *   the data should be returned to the plugin via streamListener.
+     * @param streamListener - a stream listener to be used to return data to
+     *   the plugin. May be NULL if target is not NULL.
      * @param altHost - an IP-address string that will be used instead of the 
      *   host specified in the URL. This is used to prevent DNS-spoofing 
      *   attacks. Can be defaulted to NULL meaning use the host in the URL.
