@@ -5879,13 +5879,13 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
   }
 
   // If the frame is a list-item and the frame implements our
-  // block frame API then get it's bullet and set the list item
+  // block frame API then get its bullet and set the list item
   // ordinal.
   const nsStyleDisplay* display;
   kid->GetStyleData(eStyleStruct_Display,
                     (const nsStyleStruct*&) display);
   if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
-    // Make certain that the frame isa block-frame in case
+    // Make certain that the frame is a block frame in case
     // something foreign has crept in.
     nsBlockFrame* listItem;
     nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**)&listItem);
@@ -5901,7 +5901,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
 
       // XXX temporary? if the list-item has child list-items they
       // should be numbered too; especially since the list-item is
-      // itself (ASSUMED!) not to be a counter-reseter.
+      // itself (ASSUMED!) not to be a counter-resetter.
       PRBool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal, aDepth + 1);
       if (meToo) {
         kidRenumberedABullet = PR_TRUE;
@@ -5915,27 +5915,13 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
       // it.
     }
     else {
-      // If the display=block element ISA block-frame then go
-      // ahead and recurse into it as it might have child
-      // list-items.
+      // If the display=block element is a block frame then go ahead
+      // and recurse into it, as it might have child list-items.
       nsBlockFrame* kidBlock;
       nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
       if (NS_SUCCEEDED(rv)) {
         kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock, aOrdinal, aDepth + 1);
       }
-    }
-  } else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
-    // XXX temporary code: after ib work is done in frame construction
-    // code this can be removed.
-
-    // If the display=inline element ISA nsInlineFrame then go
-    // ahead and recurse into it as it might have child
-    // list-items.
-    nsInlineFrame* kidInline;
-    nsresult rv = kid->QueryInterface(nsInlineFrame::kInlineFrameCID,
-                                       (void**) &kidInline);
-    if (NS_SUCCEEDED(rv)) {
-      kidRenumberedABullet = RenumberListsIn(aPresContext, kid, aOrdinal, aDepth + 1);
     }
   }
   return kidRenumberedABullet;
