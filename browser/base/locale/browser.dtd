@@ -165,6 +165,8 @@
 <!ENTITY viewMenu.accesskey       "V"> 
 <!ENTITY viewToolbarsMenu.label       "Show/Hide"> 
 <!ENTITY viewToolbarsMenu.accesskey     "w"> 
+<!ENTITY viewCustomizeToolbar.label       "Customize Toolbar..."> 
+<!ENTITY viewCustomizeToolbar.accesskey     "t"> 
 <!ENTITY showTaskbarCmd.label         "Status Bar">  
 <!ENTITY showTaskbarCmd.accesskey       "S"> 
 

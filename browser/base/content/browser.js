@@ -3542,4 +3542,8 @@ function goAboutDialog()
 }
 
 
+function BrowserCustomizeToolbar()
+{
+  window.openDialog("chrome://browser/content/customizeToolbar.xul", "Customize Toolbar", "modal,chrome,resizable=yes");
+}
 
