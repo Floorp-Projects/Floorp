@@ -38,15 +38,19 @@
 #include <map>
 #include <stack>
 
-#include "jstypes.h"
 #include "gc_allocator.h"
-#include "vmtypes.h"
-#include "icodegenerator.h"
+#include "utilities.h"
+
+/* forward declare classes from JavaScript::ICG */
+namespace JavaScript {
+namespace ICG {
+    class ICodeModule;
+} /* namespace ICG */
+} /* namespace JavaScript */
 
 namespace JavaScript {
 namespace JSTypes {
-    using namespace VM;
-    using namespace ICG;
+    using ICG::ICodeModule;
     
     class JSObject;
     class JSArray;
@@ -55,26 +59,43 @@ namespace JSTypes {
     /**
      * All JavaScript data types.
      */        
-    union JSValue {
-        int8 i8;
-        uint8 u8;
-        int16 i16;
-        uint16 u16;
-        int32 i32;
-        uint32 u32;
-        int64 i64;
-        uint64 u64;
-        float32 f32;
-        float64 f64;
-        JSObject* object;
-        JSArray* array;
-        JSFunction *function;
+    struct JSValue {
+        union {
+            int8 i8;
+            uint8 u8;
+            int16 i16;
+            uint16 u16;
+            int32 i32;
+            uint32 u32;
+            int64 i64;
+            uint64 u64;
+            float32 f32;
+            float64 f64;
+            JSObject* object;
+            JSArray* array;
+            JSFunction *function;
+        };
         
-        JSValue() : f64(0.0) {}
-            
-        explicit JSValue(float64 f64) : f64(f64) {}
-        explicit JSValue(JSObject* obj) : object(obj) {}
+        enum {
+            i8_tag, u8_tag, i16_tag, u16_tag, i32_tag, u32_tag, i64_tag, u64_tag, f32_tag, f64_tag,
+            object_tag, array_tag, function_tag, undefined_tag
+        } tag;
+          
+        JSValue() : f64(0.0), tag(undefined_tag) {}
+        explicit JSValue(int32 i32) : i32(i32), tag(i32_tag) {}
+        explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
+        explicit JSValue(JSObject* object) : object(object), tag(object_tag) {}
+        explicit JSValue(JSArray* array) : array(array), tag(array_tag) {}
+        explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
+        
+        int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
+        float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
+        JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
+        JSArray*& operator=(JSArray* array)             { return (tag = array_tag, this->array = array); }
+        JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
     };
+
+    Formatter& operator<<(Formatter& f, const JSValue& value);
 
 #if defined(XP_MAC)
     // copied from default template parameters in map.
@@ -161,17 +182,16 @@ namespace JSTypes {
      */
     class JSObject : public JSMap {
     public:
-        JSValue& defineProperty(const String& name, JSValue &v)
+        JSValue& defineProperty(const String& name, const JSValue& value)
         {
-            return (mProperties[name] = v);
+            return (mProperties[name] = value);
         }
                 
         // FIXME:  need to copy the ICodeModule's instruction stream.    
         JSValue& defineFunction(const String& name, ICodeModule* iCode)
         {
-            JSValue value;
-            value.function = new JSFunction(iCode);
-            return mProperties[name] = value;
+            JSValue value(new JSFunction(iCode));
+            return defineProperty(name, value);
         }
     };
     
