@@ -86,7 +86,7 @@ ExprResult* ElementAvailableFunctionCall::evaluate(Node* context, ContextState* 
                          localName.isEqual(OTHERWISE) ||
                          localName.isEqual(OUTPUT) ||
                          localName.isEqual(PARAM) ||
-                         localName.isEqual(PI) ||
+                         localName.isEqual(PROC_INST) ||
                          localName.isEqual(PRESERVE_SPACE) ||
                          localName.isEqual(SORT) ||
                          localName.isEqual(STRIP_SPACE) ||

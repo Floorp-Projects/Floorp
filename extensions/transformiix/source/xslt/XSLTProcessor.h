@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.15 2001/04/08 14:32:59 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.h,v 1.16 2001/05/12 12:00:43 peterv%netscape.com Exp $
  */
 
 
@@ -63,7 +63,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.15 $ $Date: 2001/04/08 14:32:59 $
+ * @version $Revision: 1.16 $ $Date: 2001/05/12 12:00:43 $
 **/
 class XSLTProcessor
 #ifdef MOZ_XSL
@@ -368,7 +368,7 @@ public:
         OTHERWISE,
         OUTPUT,
         PARAM,
-        PI,
+        PROC_INST,
         PRESERVE_SPACE,
         SORT,
         STRIP_SPACE,

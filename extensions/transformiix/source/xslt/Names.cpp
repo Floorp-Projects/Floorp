@@ -28,14 +28,14 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
  *
- * $Id: Names.cpp,v 1.9 2001/01/12 20:06:42 axel%pike.org Exp $
+ * $Id: Names.cpp,v 1.10 2001/05/12 12:00:11 peterv%netscape.com Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2001/01/12 20:06:42 $
+ * @version $Revision: 1.10 $ $Date: 2001/05/12 12:00:11 $
 **/
 #include "Names.h"
 
@@ -68,7 +68,7 @@ const String NUMBER             = "number";
 const String OTHERWISE          = "otherwise";
 const String OUTPUT             = "output";
 const String PARAM              = "param";
-const String PI                 = "processing-instruction";
+const String PROC_INST          = "processing-instruction";
 const String PRESERVE_SPACE     = "preserve-space";
 const String SORT               = "sort";
 const String STRIP_SPACE        = "strip-space";
