@@ -83,6 +83,10 @@ HBITMAP             srcbits,dstbits;
     BuildDIB(&mDstbinfo,&mDstBytes,mDstInfo.bmWidth,mDstInfo.bmHeight,mDstInfo.bmBitsPixel);
     numbytes = ::GetDIBits(dstdc,dstbits,0,mDstInfo.bmHeight,mDstBytes,(LPBITMAPINFO)mDstbinfo,DIB_RGB_COLORS);
     
+    mSRowBytes = CalcBytesSpan(mSrcInfo.bmWidth,mSrcInfo.bmBitsPixel);
+
+    mDRowBytes = CalcBytesSpan(mDstInfo.bmWidth,mDstInfo.bmBitsPixel);
+
     // put the old stuff back
     ::SelectObject(srcdc,srcbits);
     ::SelectObject(dstdc,dstbits);
@@ -297,7 +301,7 @@ PRInt32   startx,starty;
   if (irect.IntersectRect(srect, drect))
     {
     // calculate destination information
-    *aDLSpan = aDestInfo->bmWidthBytes;
+    *aDLSpan = mDRowBytes;
     *aNumbytes = this->CalcBytesSpan(irect.width,aDestInfo->bmBitsPixel);
     *aNumlines = irect.height;
     startx = irect.x;
@@ -310,7 +314,8 @@ PRInt32   startx,starty;
     drect.MoveBy(-aSrcUL->x, -aSrcUL->y);
 
     drect.IntersectRect(drect,srect);
-    *aSLSpan = aSrcInfo->bmWidthBytes;
+    //*aSLSpan = aSrcInfo->bmWidthBytes;
+    *aSLSpan = mSRowBytes;
     startx = drect.x;
     starty = aSrcInfo->bmHeight - (drect.y + drect.height);
     *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aDestInfo->bmBitsPixel/8) * startx);
@@ -572,7 +577,7 @@ void
 nsBlenderWin::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
 {
 PRUint16    *d1,*d2,*s1,*s2;
-PRUint32    val1,val2,red,green,blue;
+PRUint32    val1,val2,red,green,blue,t1,t2;
 PRInt32     x,y,numlines,xinc,yinc;
 PRUint16    *saveptr,*sv2;
 PRInt16     dspan,sspan,span,savesp;
@@ -604,32 +609,41 @@ PRInt16     dspan,sspan,span,savesp;
 
       for(x=0;x<span;x++)
         {
-        red = ((PRUint32)(RED16(*d2))*val1+(PRUint32)(RED16(*s2)*val2))>>8;
+        t1 = RED16(*d2);
+        t2 = RED16(*s2);
+        red = (t1*val1+t2*val2)>>8;
         if(red>255)
           red = 255;
          
-        green = ((PRUint32)(GREEN16(*d2))*val1+(PRUint32)(GREEN16(*s2)*val2))>>8;
+        t1 = GREEN16(*d2);
+        t2 = GREEN16(*s2);
+        green = (t1*val1+t2*val2)>>8;
         if(green>255)
           green = 255;
 
-        blue = ((PRUint32)(BLUE16(*d2))*val1+(PRUint32)(BLUE16(*s2)*val2))>>8;
+        t1 = BLUE16(*d2);
+        t2 = BLUE16(*s2);
+
+        blue = (t1*val1+t2*val2)>>8;
         if(blue>255)
           blue = 255;
 
 
         *sv2 = *d2;
+        //red = 255;green = 0;blue=0;
         *d2 = ((red&0xF8)<<7) | ((green&0xF8)<<2) | (blue&0xF8)>>3;
         sv2++;
         d2++;
         s2++;
         }
 
-       
       s1 += sspan;
+      //s1+=458;
       d1 += dspan;
       saveptr += savesp;
       }
     }
+#ifdef NEVER
   else
     {
     for(y = 0; y < aNumlines; y++)
@@ -660,7 +674,7 @@ PRInt16     dspan,sspan,span,savesp;
       d1 += aDLSpan;
       }
     }
-
+#endif
 }
 
 //------------------------------------------------------------
