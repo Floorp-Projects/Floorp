@@ -44,7 +44,6 @@ CopyListener::CopyListener(void)
 
 CopyListener::~CopyListener(void) 
 {
-  this;
 }
 
 nsresult
@@ -427,10 +426,10 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
     return PR_TRUE;
 
   rv = dstServer->GetType(getter_Copies(aType));
-  if (NS_FAILED(rv) || !aType)
+  if (NS_FAILED(rv) || !(const char*)aType)
     return PR_TRUE;
 
-  if ((aType) && (*aType))
+  if ((aType) && (*(const char*)aType))
   {
     if (PL_strcasecmp(aType, "POP3") == 0)
       return PR_TRUE;
