@@ -1,2 +1,5 @@
 Makefile
 .deps
+TestQGeckoEmbed
+mainwindow
+moc_*.cpp

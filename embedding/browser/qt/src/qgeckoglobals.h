@@ -67,6 +67,8 @@ public:
     static int  startupProfile(void);
     static void shutdownProfile(void);
 
+    static int registerAppComponents();
+
     static void addEngine(QGeckoEmbed *embed);
     static void removeEngine(QGeckoEmbed *embed);
     static QGeckoEmbed *findPrivateForBrowser(nsIWebBrowserChrome *aBrowser);

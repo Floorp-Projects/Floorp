@@ -41,6 +41,7 @@
 
 #include "qgeckoembed.h"
 #include "EmbedWindow.h"
+#include "QtPromptService.h"
 
 #include "nsIAppShell.h"
 #include <nsIDocShell.h>
@@ -81,6 +82,20 @@ nsVoidArray *QGeckoGlobals::sWindowList  = nsnull;
 nsIDirectoryServiceProvider *QGeckoGlobals::sAppFileLocProvider = nsnull;
 nsProfileDirServiceProvider *QGeckoGlobals::sProfileDirServiceProvider = nsnull;
 
+#define NS_PROMPTSERVICE_CID \
+ {0x95611356, 0xf583, 0x46f5, {0x81, 0xff, 0x4b, 0x3e, 0x01, 0x62, 0xc6, 0x19}}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(QtPromptService)
+
+static const nsModuleComponentInfo defaultAppComps[] = {
+  {
+    "Prompt Service",
+    NS_PROMPTSERVICE_CID,
+    "@mozilla.org/embedcomp/prompt-service;1",
+    QtPromptServiceConstructor
+  }
+};
+
 void
 QGeckoGlobals::pushStartup()
 {
@@ -110,6 +125,9 @@ QGeckoGlobals::pushStartup()
 
         rv = startupProfile();
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to start up profiles.\n");
+
+        rv = registerAppComponents();
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
 
         // XXX startup appshell service?
 
@@ -250,6 +268,32 @@ QGeckoGlobals::shutdownProfile(void)
         NS_RELEASE(sPrefs);
         sPrefs = 0;
     }
+}
+
+/* static */
+int
+QGeckoGlobals::registerAppComponents()
+{
+  nsCOMPtr<nsIComponentRegistrar> cr;
+  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int numAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
+  for (int i = 0; i < numAppComps; ++i) {
+    nsCOMPtr<nsIGenericFactory> componentFactory;
+    rv = NS_NewGenericFactory(getter_AddRefs(componentFactory),
+                              &(defaultAppComps[i]));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Unable to create factory for component");
+      continue;  // don't abort registering other components
+    }
+
+    rv = cr->RegisterFactory(defaultAppComps[i].mCID, defaultAppComps[i].mDescription,
+                             defaultAppComps[i].mContractID, componentFactory);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
+  }
+
+  return rv;
 }
 
 void QGeckoGlobals::initializeGlobalObjects()
