@@ -283,13 +283,6 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
 
     NS_ASSERTION(mConnection, "Connection disappeared!");
 
-    //
-    // Get the stream containing the POST data (if any).  This will be
-    // written to the server after the request has been written...
-    //
-    rv = mConnection->GetPostDataStream(getter_AddRefs(mPostDataStream));
-    if (NS_FAILED(rv)) return rv;
-
     // Currently nsIPostStreamData contains the header info and the data.
     // So we are forced to putting this here in the end. 
     // This needs to change! since its possible for someone to modify it
@@ -427,11 +420,6 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n",
                 this));
-        //
-        // Make sure that the stream is closed, so the transport will know
-        // when all of the POST data has been read...
-        //
-        mPostDataStream->Close();
 
         rv = mTransport->AsyncWrite(mPostDataStream, 0, -1, mConnection, this);
 
