@@ -150,14 +150,14 @@ function fillFolder(aPopup, aFolder, aDepth)
   RDFC.Init(BMDS, aFolder);
   var children = RDFC.GetElements();
   while (children.hasMoreElements()) {
-    var curr = children.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    var curr = children.getNext();
     if (RDFCU.IsContainer(BMDS, curr)) {
+      curr = curr.QueryInterface(Components.interfaces.nsIRDFResource);
       var element = document.createElementNS(XUL_NS, "menuitem");
       var name = BMDS.GetTarget(curr, gNameArc, true).QueryInterface(kRDFLITIID).Value;
       element.setAttribute("label", name);
       element.setAttribute("id", curr.Value);
       aPopup.appendChild(element);
-      dump(curr.Value +","+gSelectedFolder+"\n")
       if (curr.Value == gSelectedFolder)
         gList.selectedItem = element;
       fillFolder(aPopup, curr, ++aDepth);
@@ -185,7 +185,6 @@ function fillSelectFolderMenupopup ()
   fillFolder(popup, folder, 0);
   if (gList.selectedIndex == -1)
     gList.selectedIndex=0;
-  dump("selected"+gList.selectedItem.id+"\n")
 }
 
 function selectFolder(aEvent)
