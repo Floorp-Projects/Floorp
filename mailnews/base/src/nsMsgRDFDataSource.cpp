@@ -47,8 +47,6 @@ nsMsgRDFDataSource::Init()
     
     getRDFService();
     
-    rv = mRDFService->RegisterDataSource(this, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
     
 	//Create Empty Enumerator
 
