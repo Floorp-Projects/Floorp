@@ -469,3 +469,91 @@ JSS_PK11_getKeyType(JNIEnv *env, jobject keyTypeObj)
 finish:
     return nullKey;
 }
+
+/***********************************************************************
+ * importPrivateKey
+ */
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
+    (   JNIEnv *env,
+        jclass clazz,
+        jbyteArray keyArray,
+        jobject tokenObj
+    )
+{
+    SECItem derPK;
+    jthrowable excep;
+    SECStatus status;
+    SECItem nickname;
+    jobject keyObj = NULL;
+    SECKEYPrivateKey* privk = NULL;
+    PK11SlotInfo *slot = NULL;
+
+    /*
+     * initialize so we can goto finish
+     */
+    derPK.data = NULL;
+    derPK.len = 0;
+
+
+    PR_ASSERT(env!=NULL && clazz!=NULL);
+
+    if(keyArray == NULL) {
+        JSS_throw(env, NULL_POINTER_EXCEPTION);
+        goto finish;
+    }
+
+    /*
+     * copy the java byte array into a local copy
+     */
+    derPK.len = (*env)->GetArrayLength(env, keyArray);
+    if(derPK.len <= 0) {
+        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION, "Key array is empty");
+        goto finish;
+    }
+    derPK.data = (unsigned char*)
+            (*env)->GetByteArrayElements(env, keyArray, NULL);
+    if(derPK.data == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    /*
+     * get the slot
+     */
+    if( JSS_PK11_getTokenSlotPtr(env, tokenObj, &slot) != PR_SUCCESS) {
+		PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+		goto finish;
+	}
+
+    nickname.len = 0;
+    nickname.data = NULL;
+
+    status = PK11_ImportDERPrivateKeyInfoAndReturnKey(slot, &derPK, &nickname,
+                NULL /*public value*/, PR_FALSE /*isPerm*/,
+                PR_TRUE /*isPrivate*/, 0 /*keyUsage*/, &privk, NULL /*wincx*/);
+    if(status != SECSuccess) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to import private key info");
+        goto finish;
+    }
+
+    PR_ASSERT(privk != NULL);
+    keyObj = JSS_PK11_wrapPrivKey(env, &privk);
+
+finish:
+    /* Save any exceptions */
+    if( (excep=(*env)->ExceptionOccurred(env)) ) {
+        (*env)->ExceptionClear(env);
+    }
+    if(derPK.data != NULL) {
+        (*env)->ReleaseByteArrayElements(   env,
+                                            keyArray,
+                                            (jbyte*) derPK.data,
+                                            JNI_ABORT           );
+    }
+    /* now re-throw the exception */
+    if( excep ) {
+        (*env)->Throw(env, excep);
+    }
+    return keyObj;
+}

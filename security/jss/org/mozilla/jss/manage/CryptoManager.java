@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.9 $ $Date: 2001/09/12 18:55:03 $ 
+ * @version $Revision: 1.10 $ $Date: 2002/01/08 20:10:48 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -792,7 +792,7 @@ public final class CryptoManager implements TokenSupplier
         }
         if( values.installJSSProvider ) {
 		    int position = java.security.Security.insertProviderAt(
-							new org.mozilla.jss.provider.Provider(),
+							new JSSProvider(),
 							1);
 		    if(position==-1) {
 			    Debug.trace(Debug.ERROR,
@@ -1222,14 +1222,6 @@ public final class CryptoManager implements TokenSupplier
         return new PK11SecureRandom();
     }
 
-    // Policy Type indices.  These must be kept in sync with the
-    // policy type array in CryptoManager.c.
-    public static final int NULL_POLICY=0;
-    public static final int DOMESTIC_POLICY=1;
-    public static final int EXPORT_POLICY=2;
-    public static final int FRANCE_POLICY=3;
-
-
     /********************************************************************/
     /* The following VERSION Strings should be updated in the following */
     /* files everytime a new release of JSS is generated:               */
@@ -1276,5 +1268,49 @@ public final class CryptoManager implements TokenSupplier
         }
     }
     static private boolean mNativeLibrariesLoaded = false;
+
+    // Hashtable is synchronized.
+    private Hashtable perThreadTokenTable = new Hashtable();
+
+    /**
+     * Sets the default token for the current thread. This token will
+     * be used when JSS is called through the JCA interface, which has
+     * no means of specifying which token to use.
+     *
+     * <p>If no token is set, the InternalCryptoToken will be used. Setting
+     * this thread's token to <tt>null</tt> will also cause the
+     * InternalCryptoToken to be used.
+     *
+     * @param The token to use for crypto operations. Specifying <tt>null</tt>
+     * will cause the InternalCryptoToken to be used.
+     */
+    public void setThreadToken(CryptoToken token) {
+        if( token != null ) {
+            perThreadTokenTable.put(Thread.currentThread(), token);
+        } else {
+            perThreadTokenTable.remove(Thread.currentThread());
+        }
+    }
+
+    /**
+     * Returns the default token for the current thread. This token will
+     * be used when JSS is called through the JCA interface, which has
+     * no means of specifying which token to use.
+     *
+     * <p>If no token is set, the InternalCryptoToken will be used. Setting
+     * this thread's token to <tt>null</tt> will also cause the
+     * InternalCryptoToken to be used.
+     *
+     * @return The default token for this thread. If it has not been specified,
+     * it will be the InternalCryptoToken.
+     */
+    public CryptoToken getThreadToken() {
+        CryptoToken tok =
+            (CryptoToken) perThreadTokenTable.get(Thread.currentThread());
+        if( tok == null ) {
+            tok = getInternalCryptoToken();
+        }
+        return tok;
+    }
 
 }

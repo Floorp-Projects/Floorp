@@ -84,6 +84,10 @@ public class INTEGER extends BigInteger implements ASN1Value {
     public INTEGER(long val) {
         super( BigInteger.valueOf(val).toByteArray() );
     }
+
+    public INTEGER(BigInteger bi) {
+        super( bi.toByteArray() );
+    }
         
     public static final Tag TAG = new Tag(Tag.Class.UNIVERSAL, 2);
     public Tag getTag() {

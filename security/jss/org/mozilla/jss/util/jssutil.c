@@ -781,7 +781,6 @@ jbyteArray
 JSS_SECItemToByteArray(JNIEnv *env, SECItem *item)
 {
     jbyteArray array=NULL;
-    jbyte* bytes=NULL;
 
     PR_ASSERT(env!=NULL && item!=NULL);
     PR_ASSERT(item->len >= 0);
@@ -793,19 +792,9 @@ JSS_SECItemToByteArray(JNIEnv *env, SECItem *item)
         goto finish;
     }
 
-    bytes = (*env)->GetByteArrayElements(env, array, NULL);
-    if(bytes == NULL) {
-        ASSERT_OUTOFMEM(env);
-        array = NULL; /* so the caller knows there was an error */
-        goto finish;
-    }
-
-    memcpy(bytes, item->data, item->len);
+    (*env)->SetByteArrayRegion(env, array, 0, item->len, item->data);
 
 finish:
-    if(bytes!=NULL) {
-        (*env)->ReleaseByteArrayElements(env, array, bytes, 0);
-    }
     return array;
 }
 /***********************************************************************

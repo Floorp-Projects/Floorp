@@ -87,3 +87,4 @@ LINK_DLL += -LIBPATH:$(JAVA_HOME)/$(JAVA_LIBDIR)
 LINK_DLL += $(foreach file,$(LD_LIBS),-DEFAULTLIB:"$(notdir $(file))")
 endif
 
+CFLAGS += -I$(JAVA_HOME)/include

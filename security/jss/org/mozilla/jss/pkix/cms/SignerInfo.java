@@ -37,7 +37,6 @@ import java.io.*;
 import org.mozilla.jss.asn1.*;
 import org.mozilla.jss.util.Assert;
 import org.mozilla.jss.pkix.primitive.*;
-import org.mozilla.jss.pkix.cert.*;
 import org.mozilla.jss.crypto.*;
 import java.util.Vector;
 import java.math.BigInteger;
@@ -47,6 +46,8 @@ import java.security.SignatureException;
 import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
 import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.crypto.X509Certificate;
+import org.mozilla.jss.pkix.cert.*;
 import org.mozilla.jss.*;
 import java.security.PublicKey;
 

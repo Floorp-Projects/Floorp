@@ -67,15 +67,33 @@ public class PK11PubKey extends org.mozilla.jss.pkcs11.PK11Key
     public static PK11PubKey fromRaw(PrivateKey.Type type, byte[] rawKey)
         throws InvalidKeyFormatException
     {
-        if( type == PrivateKey.RSA ) {
-            return RSAFromRaw(rawKey);
-        } else {
-            Assert.assert( type == PrivateKey.DSA );
-            return DSAFromRaw(rawKey);
-        }
+        return fromRawNative( type.getPKCS11Type(), rawKey );
     }
 
+    /**
+     * param type The PKCS #11 type of the key (CKK_).
+     */
+    private static native PK11PubKey fromRawNative(int type, byte[] rawKey)
+        throws InvalidKeyFormatException;
+
+    /**
+     * Creates a PK11PubKey from a SubjectPublicKeyInfo.
+     *
+     * @param spki The BER-encoded SubjectPublicKeyInfo.
+     * @exception InvalidKeyFormatException If the SPKI could not be
+     *      decoded.
+     */
+    public static native PK11PubKey fromSPKI(byte[] spki)
+        throws InvalidKeyFormatException;
+
+    /**
+     * deprecated Use fromRawNative instead.
+     */
     private static native PK11PubKey RSAFromRaw(byte[] rawKey);
+
+    /**
+     * deprecated Use fromRawNative instead.
+     */
     private static native PK11PubKey DSAFromRaw(byte[] rawKey);
 
     /**

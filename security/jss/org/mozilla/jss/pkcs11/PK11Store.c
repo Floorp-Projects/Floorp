@@ -476,114 +476,6 @@ finish:
 
 #define DER_DEFAULT_CHUNKSIZE (2048)
 
-/***********************************************************************
- * passwordToSecitem
- * 
- * Converts a Java Password object to a SECItem, first hashing with
- * global salt. The Java Password object will be cleared.
- * Returns NULL iff an exception was thrown.
- */
-static SECItem*
-passwordToSecitem(JNIEnv *env, jobject pwObject, jbyteArray globalSaltArray)
-{
-    jclass passwordClass;
-    jmethodID getByteCopyMethod;
-    jmethodID clearMethod;
-    jbyteArray pwArray;
-    SECItem *ret=NULL;
-    jbyte *pwChars;
-    jthrowable excep;
-    SECItem *salt = NULL;
-
-    PR_ASSERT(env!=NULL && pwObject!=NULL);
-
-    ret = (SECItem*) PR_NEW(SECItem);
-    if(ret == NULL) {
-        JSS_throw(env, OUT_OF_MEMORY_ERROR);
-        goto finish;
-    }
-
-    /*****************************************
-     * Get Password class and methods
-     *****************************************/
-    passwordClass = (*env)->GetObjectClass(env, pwObject);
-    if(passwordClass == NULL) {
-        goto finish;
-    }
-    getByteCopyMethod = (*env)->GetMethodID(
-                                            env,
-                                            passwordClass,
-                                            PW_GET_BYTE_COPY_NAME,
-                                            PW_GET_BYTE_COPY_SIG);
-    clearMethod = (*env)->GetMethodID(  env,
-                                        passwordClass,
-                                        PW_CLEAR_NAME,
-                                        PW_CLEAR_SIG);
-    if(getByteCopyMethod==NULL || clearMethod==NULL) {
-        goto finish;
-    }
-
-    /***************************************************
-     * Get the salt
-     ***************************************************/
-    salt = PR_NEW(SECItem);
-    if( salt == NULL ) {
-        JSS_throw(env, OUT_OF_MEMORY_ERROR);
-        goto finish;
-    }
-    salt->len = (*env)->GetArrayLength(env, globalSaltArray);
-    PR_ASSERT(salt->len > 0);
-    salt->data = (unsigned char*)
-                    (*env)->GetByteArrayElements(env, globalSaltArray, NULL);
-    if( salt->data == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-
-    /************************************************
-     * Get the bytes from the password, then clear it
-     ***********************************************/
-    pwArray = (*env)->CallObjectMethod( env, pwObject, getByteCopyMethod);
-    (*env)->CallVoidMethod(env, pwObject, clearMethod);
-    if(pwArray == NULL) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-
-    /*************************************************************
-     * Copy the characters out of the byte array,
-     *************************************************************/
-    pwChars = (*env)->GetByteArrayElements(env, pwArray, NULL);
-    if(pwChars == NULL) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-    /* hash the password into a SECItem */
-    ret = SECKEY_HashPassword( (char*) pwChars, salt);
-
-    /***************************************************
-     * Clear the array.
-     ***************************************************/
-    memset(pwChars, 0, ret->len);
-    (*env)->ReleaseByteArrayElements(env, pwArray, pwChars, 0);
-
-finish:
-    if( (excep=(*env)->ExceptionOccurred(env)) ) {
-        (*env)->ExceptionClear(env);
-    }
-    if(salt) {
-        if(salt->data) {
-            (*env)->ReleaseByteArrayElements(env, globalSaltArray,
-                                             (jbyte*) salt->data, JNI_ABORT);
-        }
-        PR_Free(salt);
-    }
-    if( excep ) {
-        (*env)->Throw(env, excep);
-    }
-    return ret;
-}
-
 int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
 
 /***********************************************************************
@@ -675,6 +567,7 @@ finish:
     }
 }
 
+extern const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[];
 
 /***********************************************************************
  * PK11Store.importdPrivateKey

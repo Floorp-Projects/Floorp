@@ -43,6 +43,4 @@ DIRS =  org     \
         lib     \
         $(NULL)
 
-PACKAGE_DIR = _TOP
- 
 RELEASE = jss

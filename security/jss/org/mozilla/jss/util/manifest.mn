@@ -48,49 +48,6 @@ PRIVATE_EXPORTS =   jssutil.h               \
                     jssver.h                \
                     $(NULL)
 
-JNI_GEN =   										\
-                org.mozilla.jss.util.Debug         \
-				org.mozilla.jss.util.Password		\
-				$(NULL)
-
-JSRCS =	                                    \
-            Assert.java                     \
-            AssertionException.java         \
-			Base64OutputStream.java			\
-            ConsolePasswordCallback.java    \
-            Debug.java                      \
-            IncorrectPasswordException.java \
-            InvalidDERException.java        \
-			InvalidNicknameException.java   \
-            NativeProxy.java                \
-			NotImplementedException.java	\
-            NullPasswordCallback.java       \
-            ObjectNotFoundException.java    \
-			Password.java                   \
-			PasswordCallback.java           \
-			PasswordCallbackInfo.java       \
-            Tunnel.java                     \
-			UTF8Converter.java				\
-            $(NULL)
-
-CLASSES =									\
-			Assert             				\
-			AssertionException 				\
-			Base64OutputStream				\
-            ConsolePasswordCallback         \
-			Debug              				\
-            IncorrectPasswordException      \
-			InvalidNicknameException		\
-			NativeProxy        				\
-			NotImplementedException			\
-            NullPasswordCallback            \
-			Password                        \
-			PasswordCallback                \
-			PasswordCallbackInfo            \
-            Tunnel                          \
-			UTF8Converter					\
-			$(NULL)
-
 CSRCS =     jssutil.c                    \
             jssver.c                     \
             errstrings.c                 \

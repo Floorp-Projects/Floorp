@@ -37,10 +37,13 @@ import org.mozilla.jss.crypto.Algorithm;
 import org.mozilla.jss.crypto.PrivateKey;
 import org.mozilla.jss.crypto.CryptoToken;
 import org.mozilla.jss.crypto.TokenException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import org.mozilla.jss.util.*;
 
-final class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
+public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
 	implements PrivateKey {
+
+    private PK11PrivKey() { }
 
     protected PK11PrivKey(byte[] pointer) {
         Assert.assert(pointer!=null);
@@ -80,6 +83,29 @@ final class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
      * Returns -1 for other types of keys.
      */
     public native int getStrength();
+
+    /**
+     * Imports a PrivateKeyInfo, storing it as a temporary PrivateKey
+     * on the given token.
+     * The key will be a temporary (session) key until it is imported
+     * into a KeyStore, at which point it will be made a permanent (token)
+     * object.
+     */
+    public static PK11PrivKey
+    fromPrivateKeyInfo(PKCS8EncodedKeySpec spec, CryptoToken token)
+    {
+        return fromPrivateKeyInfo(spec.getEncoded(), token);
+    }
+
+    /**
+     * Imports a PrivateKeyInfo, storing it as a temporary PrivateKey
+     * on the given token.
+     * The key will be a temporary (session) key until it is imported
+     * into a KeyStore, at which point it will be made a permanent (token)
+     * object.
+     */
+    public static native PK11PrivKey
+    fromPrivateKeyInfo(byte[] pki, CryptoToken token);
 }
 
 class PrivateKeyProxy extends KeyProxy {

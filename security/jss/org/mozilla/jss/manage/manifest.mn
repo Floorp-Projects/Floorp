@@ -40,29 +40,6 @@ REQUIRES =      nspr20 security
 
 PACKAGE =       org/mozilla/jss
 
-JNI_GEN =                                           \
-            org.mozilla.jss.DatabaseCloser         \
-            org.mozilla.jss.CryptoManager			\
-            $(NULL)
-
-CLASSES = 											\
-            CertDatabaseException                   \
-			CRLImportException			            \
-			CryptoManager							\
-            KeyDatabaseException                    \
-            NoSuchTokenException                    \
-            DatabaseCloser                          \
-			$(NULL)
-
-JSRCS = 											\
-            CertDatabaseException.java              \
-			CRLImportException.java  		        \
-			CryptoManager.java						\
-            KeyDatabaseException.java               \
-            NoSuchTokenException.java               \
-            DatabaseCloser.java                     \
-			$(NULL)
-
 CSRCS =                             \
             CryptoManager.c         \
             PK11Finder.c            \

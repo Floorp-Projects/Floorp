@@ -41,66 +41,6 @@ REQUIRES = security
 
 PACKAGE =       org/mozilla/jss/ssl
 
-JNI_GEN = \
-    org.mozilla.jss.ssl.SSLSocket \
-    org.mozilla.jss.ssl.SSLServerSocket \
-    org.mozilla.jss.ssl.SocketBase \
-		$(NULL)
-
-JSRCS =	\
-        SocketProxy.java \
-        SocketBase.java \
-        SSLHandshakeCompletedEvent.java \
-		SSLSecurityStatus.java          \
-		SSLHandshakeCompletedListener.java \
-        SSLServerSocket.java            \
-		SSLSocket.java                  \
-        SSLInputStream.java             \
-        SSLOutputStream.java             \
-		PrintOutputStreamWriter.java    \
-		SSLCertificateApprovalCallback.java    \
-		SSLClientCertificateSelectionCallback.java    \
-		$(NULL)
-
-PRIVATE_JSRCS = \
-        SSLClient.java     \
-        SSLServer.java     \
-        SSLTest.java             \
-		TestCertApprovalCallback.java \
-		TestClientCertificateSelectionCallback.java \
-        $(NULL)
-
-#PRIVATE_JSRCS = SSLServer.java     \
-		#SSLClient.java     \
-		#TestCertApprovalCallback.java \
-		#TestClientCertificateSelectionCallback.java \
-		#$(NULL)
-
-CLASSES =	SSLHandshakeCompletedEvent    \
-		SSLSecurityStatus             \
-		SSLHandshakeCompletedListener \
-        SSLServerSocket                 \
-		SSLSocket                     \
-        SSLOutputStream                 \
-		PrintOutputStreamWriter       \
-		SSLCertificateApprovalCallback   \
-		SSLClientCertificateSelectionCallback \
-        SocketBase \
-        SocketProxy \
-        SSLInputStream \
-		$(NULL)
-
-PRIVATE_CLASSES = \
-            SSLServer         \
-            SSLClient \
-            SSLTest \
-            $(NULL)
-
-			#SSLClient         \
-			#ServerHandshakeCB \
-			#ClientHandshakeCB \
-			#$(NULL)
-
 CSRCS =	SSLSocket.c \
         callbacks.c \
         SSLServerSocket.c \

@@ -48,21 +48,7 @@ JAVADOC_TARGETS=                                                        \
                     org.mozilla.jss.provider                            \
                     org.mozilla.jss.ssl                                 \
                     org.mozilla.jss.tests                               \
-                    org.mozilla.jss.util.Assert                         \
-                    org.mozilla.jss.util.AssertionException             \
-                    org.mozilla.jss.util.Base64OutputStream             \
-                    org.mozilla.jss.util.ConsolePasswordCallback        \
-                    org.mozilla.jss.util.IncorrectPasswordException     \
-                    org.mozilla.jss.util.InvalidNicknameException       \
-                    org.mozilla.jss.util.NativeProxy                    \
-                    org.mozilla.jss.util.NotImplementedException        \
-                    org.mozilla.jss.util.NullPasswordCallback           \
-                    org.mozilla.jss.util.Password                       \
-                    org.mozilla.jss.util.PasswordCallback               \
-                    org.mozilla.jss.util.PasswordCallbackInfo           \
-                    org.mozilla.jss.util.Tunnel                         \
-                    org.mozilla.jss.util.UTF8Converter                  \
-                    util/Debug.java                                     \
+                    org.mozilla.jss.util                                \
                     $(NULL)
 
 ifneq ($(HTML_HEADER),)

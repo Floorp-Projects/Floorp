@@ -39,7 +39,7 @@ NS_USE_JDK = 1
 
 REQUIRES =      nspr20 security
 
-PACKAGE =       org/mozilla/jss/
+PACKAGE =       org/mozilla/jss/provider/java/security
 
 JNI_GEN =											\
 			$(NULL)
@@ -49,6 +49,9 @@ PRIVATE_EXPORTS =                                   \
 
 CLASSES =	                                        \
             org.mozilla.jss.provider.java.security.KeyFactorySpi1_2 \
+            org.mozilla.jss.provider.java.security.GenericKeyPairGeneratorSpi \
+            org.mozilla.jss.provider.java.security.RSAKeyPairGeneratorSpi \
+            org.mozilla.jss.provider.java.security.DSAKeyPairGeneratorSpi \
             $(NULL)
 
 PRIVATE_CLASSES =							\
@@ -56,6 +59,9 @@ PRIVATE_CLASSES =							\
 
 JSRCS =	                                        \
             KeyFactorySpi1_2.java                  \
+            GenericKeyPairGeneratorSpi.java                  \
+            RSAKeyPairGeneratorSpi.java                  \
+            DSAKeyPairGeneratorSpi.java                  \
             $(NULL)
 
 ifdef JDK_1_4

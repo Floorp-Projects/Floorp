@@ -47,7 +47,7 @@ import org.mozilla.jss.pkcs11.PK11PubKey;
  * A <i>SubjectPublicKeyInfo</i>, which stores information about a public key.
  * This class implements <code>java.security.PublicKey</code>.
  */
-public class SubjectPublicKeyInfo
+public class SubjectPublicKeyInfo extends java.security.spec.X509EncodedKeySpec
     implements ASN1Value, java.security.PublicKey {
 
     private AlgorithmIdentifier algorithm;
@@ -60,10 +60,6 @@ public class SubjectPublicKeyInfo
             // unknown algorithm
             return null;
         }
-    }
-
-    public String getFormat() {
-        return "X.509";
     }
 
     public byte[] getEncoded() {
@@ -83,11 +79,12 @@ public class SubjectPublicKeyInfo
         return subjectPublicKey;
     }
 
-    private SubjectPublicKeyInfo() { }
+    private SubjectPublicKeyInfo() { super(null);}
 
     public SubjectPublicKeyInfo(AlgorithmIdentifier algorithm,
         BIT_STRING subjectPublicKey)
     {
+        super( null );
         this.algorithm = algorithm;
         this.subjectPublicKey = subjectPublicKey;
     }
@@ -95,6 +92,7 @@ public class SubjectPublicKeyInfo
     public SubjectPublicKeyInfo(PublicKey pubk)
             throws InvalidBERException, IOException
     {
+        super( null );
         SubjectPublicKeyInfo spki = (SubjectPublicKeyInfo)
             ASN1Util.decode( getTemplate(), pubk.getEncoded() );
         algorithm = spki.algorithm;

@@ -383,7 +383,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_getPort(JNIEnv *env,
     PRNetAddr addr;
 
     if( JSSL_getSockAddr(env, self, &addr, PEER_SOCK) == PR_SUCCESS ) {
-        return addr.inet.port;
+        return ntohs(addr.inet.port);
     } else {
         return 0;
     }

@@ -480,7 +480,7 @@ pubkFromRaw(JNIEnv *env, CK_KEY_TYPE type, jbyteArray rawBA)
     SECItem *pubkDER=NULL;
 
     /* validate args */
-    PR_ASSERT(env!=NULL && (type == CKK_RSA || type == CKK_DSA));
+    PR_ASSERT(env!=NULL);
     if( rawBA == NULL ) {
         JSS_throw(env, NULL_POINTER_EXCEPTION);
         goto finish;
@@ -511,10 +511,22 @@ finish:
     }
     return pubkObj;
 }
+
+/***********************************************************************
+ *
+ * PK11PubKey.fromRawNative
+ */
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11PubKey_fromRawNative
+    (JNIEnv *env, jclass clazz, jint type, jbyteArray rawBA)
+{
+    return pubkFromRaw(env, type, rawBA);
+}
  
 /***********************************************************************
  *
  * PK11PubKey.RSAfromRaw
+ * Deprecated: call fromRawNative instead.
  */
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11PubKey_RSAFromRaw
@@ -525,7 +537,8 @@ Java_org_mozilla_jss_pkcs11_PK11PubKey_RSAFromRaw
 
 /***********************************************************************
  *
- * PK11PubKey.RSAfromRaw
+ * PK11PubKey.DSAfromRaw
+ * Deprecated: call fromRawNative instead.
  */
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11PubKey_DSAFromRaw
@@ -571,4 +584,62 @@ finish:
         SECITEM_FreeItem(spkiDER, PR_TRUE /*freeit*/);
     }
     return encodedBA;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11PubKey_fromSPKI
+    (JNIEnv *env, jobject this, jbyteArray spkiBA)
+{
+    jobject pubkObj = NULL;
+    SECItem *spkiItem = NULL;
+    CERTSubjectPublicKeyInfo *spki = NULL;
+    SECKEYPublicKey *pubk = NULL;
+
+    /*
+     * convert byte array to SECItem
+     */
+    spkiItem = JSS_ByteArrayToSECItem(env, spkiBA);
+    if( spkiItem == NULL ) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    /*
+     * convert SECItem to SECKEYPublicKey
+     */
+    spki = SECKEY_DecodeDERSubjectPublicKeyInfo(spkiItem);
+    if( spki == NULL ) {
+        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION,
+            "Unable to decode DER-encoded SubjectPublicKeyInfo: "
+            "invalid DER encoding");
+        goto finish;
+    }
+    pubk = SECKEY_ExtractPublicKey(spki);
+    if( pubk == NULL ) {
+        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION,
+            "Unable to decode SubjectPublicKeyInfo: DER encoding problem, or"
+            " unrecognized key type ");
+        goto finish;
+    }
+
+    /*
+     * put a Java wrapper around it
+     */
+    pubkObj = JSS_PK11_wrapPubKey(env, &pubk); /* this clears pubk */
+    if( pubkObj == NULL ) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+finish:
+    if( spkiItem != NULL ) {
+        SECITEM_FreeItem(spkiItem, PR_TRUE /*freeit*/);
+    }
+    if( spki != NULL ) {
+        SECKEY_DestroySubjectPublicKeyInfo(spki);
+    }
+    if( pubk != NULL ) {
+        SECKEY_DestroyPublicKey(pubk);
+    }
+    return pubkObj;
 }

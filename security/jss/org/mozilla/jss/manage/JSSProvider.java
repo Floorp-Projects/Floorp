@@ -42,7 +42,8 @@ public class JSSProvider extends java.security.Provider {
         // Signature
         /////////////////////////////////////////////////////////////
 
-        put("Signature.SHA1withDSA", "org.mozilla.jss.provider.DSASignature");
+        put("Signature.SHA1withDSA",
+            "org.mozilla.jss.provider.java.security.DSASignatureSpi");
 
         put("Alg.Alias.Signature.DSA", "SHA1withDSA");
         put("Alg.Alias.Signature.DSS", "SHA1withDSA");
@@ -52,10 +53,12 @@ public class JSSProvider extends java.security.Provider {
         put("Alg.Alias.Signature.DSAWithSHA1", "SHA1withDSA");
         put("Alg.Alias.Signature.SHAwithDSA", "SHA1withDSA");
 
-        put("Signature.MD5/RSA", "org.mozilla.jss.provider.MD5RSASignature");
-        put("Signature.MD2/RSA", "org.mozilla.jss.provider.MD2RSASignature");
+        put("Signature.MD5/RSA",
+            "org.mozilla.jss.provider.java.security.MD5RSASignatureSpi");
+        put("Signature.MD2/RSA",
+            "org.mozilla.jss.provider.java.security.MD2RSASignatureSpi");
         put("Signature.SHA-1/RSA",
-            "org.mozilla.jss.provider.SHA1RSASignature");
+            "org.mozilla.jss.provider.java.security.SHA1RSASignatureSpi");
 
         put("Alg.Alias.Signature.SHA1/RSA", "SHA-1/RSA");
 
@@ -64,11 +67,11 @@ public class JSSProvider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
 
         put("MessageDigest.SHA-1",
-                "org.mozilla.jss.provider.SHA1MessageDigest");
+                "org.mozilla.jss.provider.java.security.SHA1MessageDigestSpi");
         put("MessageDigest.MD2",
-                "org.mozilla.jss.provider.MD2MessageDigest");
+                "org.mozilla.jss.provider.java.security.MD2MessageDigestSpi");
         put("MessageDigest.MD5",
-                "org.mozilla.jss.provider.MD5MessageDigest");
+                "org.mozilla.jss.provider.java.security.MD5MessageDigestSpi");
 
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");

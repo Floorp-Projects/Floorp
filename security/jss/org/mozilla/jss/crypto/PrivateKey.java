@@ -47,6 +47,7 @@ public interface PrivateKey extends java.security.PrivateKey
 
     public static final Type RSA = Type.RSA;
     public static final Type DSA = Type.DSA;
+    public static final Type DiffieHellman = Type.DiffieHellman;
 
     /**
      * Returns the type (RSA or DSA) of this private key.
@@ -81,13 +82,15 @@ public interface PrivateKey extends java.security.PrivateKey
     public static final class Type {
         private OBJECT_IDENTIFIER oid;
         private String name;
+        private int pkcs11Type;
 
         private Type() { }
 
-        private Type(OBJECT_IDENTIFIER oid, String name) {
+        private Type(OBJECT_IDENTIFIER oid, String name, int pkcs11Type) {
             this.oid = oid;
             this.name = name;
             Object old = oidMap.put(oid, this);
+            this.pkcs11Type = pkcs11Type;
             Assert.assert( old == null );
         }
 
@@ -115,10 +118,26 @@ public interface PrivateKey extends java.security.PrivateKey
         public OBJECT_IDENTIFIER toOID() {
             return oid;
         }
+
+        public int getPKCS11Type() {
+            return pkcs11Type;
+        }
+
+        // OID for DiffieHellman, from RFC 2459 7.3.2.
+        public static OBJECT_IDENTIFIER DH_OID =
+            new OBJECT_IDENTIFIER( new long[] {1, 2, 840, 10046, 2, 1} );
+
+        // From PKCS #11
+        private static int CKK_RSA = 0x0;
+        private static int CKK_DSA = 0x1;
+        private static int CKK_DH = 0x2;
         
         public static final Type RSA = new Type(
-                OBJECT_IDENTIFIER.PKCS1.subBranch(1), "RSA" );
+                OBJECT_IDENTIFIER.PKCS1.subBranch(1), "RSA", CKK_RSA );
         public static final Type DSA = new Type(
-                Algorithm.ANSI_X9_ALGORITHM.subBranch(1), "DSA" ); 
+                Algorithm.ANSI_X9_ALGORITHM.subBranch(1), "DSA", CKK_DSA); 
+        public static final Type DiffieHellman = new Type(
+                DH_OID, "DiffieHellman", CKK_DH );
+                
     }
 }

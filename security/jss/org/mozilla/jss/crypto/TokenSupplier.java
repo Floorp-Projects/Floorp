@@ -42,4 +42,7 @@ package org.mozilla.jss.crypto;
 public interface TokenSupplier {
     public CryptoToken getInternalCryptoToken();
     public JSSSecureRandom getSecureRNG();
+
+    public CryptoToken getThreadToken();
+    public void setThreadToken(CryptoToken token);
 }

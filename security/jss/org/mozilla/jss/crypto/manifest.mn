@@ -41,119 +41,13 @@ REQUIRES =      nspr20 security
 
 PACKAGE =       org/mozilla/jss/crypto
 
-JNI_GEN =											\
-			org.mozilla.jss.crypto.Algorithm		\
-			org.mozilla.jss.crypto.EncryptionAlgorithm		\
-			org.mozilla.jss.crypto.PQGParams       \
-			$(NULL)
-
 PRIVATE_EXPORTS =                                   \
                     Algorithm.h                     \
                     $(NULL)
 
-CLASSES =	                                        \
-            Algorithm                      \
-			AlreadyInitializedException	\
-            BadPaddingException             \
-            Cipher                         \
-            CryptoStore                    \
-            CryptoToken                    \
-            DigestAlgorithm                \
-            EncryptionAlgorithm            \
-            HMACAlgorithm                       \
-            IllegalBlockSizeException       \
-			InvalidDERException					\
-            InvalidKeyFormatException       \
-            InternalCertificate              \
-            IVParameterSpec                 \
-			KeyAlreadyImportedException     \
-            KeyGenAlgorithm                 \
-            KeyGenerator                   \
-			KeyPairAlgorithm				\
-			KeyPairGenerator				\
-			KeyPairGeneratorSpi				\
-            KeyWrapAlgorithm                    \
-            KeyWrapper                          \
-            JSSMessageDigest                       \
-            NoSuchItemOnTokenException      \
-            NoSuchPaddingException              \
-			ObjectNotFoundException				\
-            PBEAlgorithm                        \
-            PBEKeyGenParams                     \
-            PrivateKey                   \
-            PQGParams                           \
-            PQGParamGenException                \
-            RSAParameterSpec                    \
-            JSSSecureRandom                        \
-            ShortBufferException            \
-            Signature                       \
-            SignatureSpi                       \
-            SignatureAlgorithm             \
-            SymmetricKey                        \
-            TokenCertificate              \
-            TokenException                 \
-            TokenSupplier			\
-            TokenSupplierManager		\
-            Tunnel                          \
-            X509Certificate              \
-            $(NULL)
-
-PRIVATE_CLASSES =							\
-			$(NULL)
-
-JSRCS =	                                        \
-            Algorithm.java                      \
-			AlreadyInitializedException.java	\
-            BadPaddingException.java             \
-            Cipher.java                         \
-            CryptoStore.java                    \
-            CryptoToken.java                    \
-            DigestAlgorithm.java                \
-            EncryptionAlgorithm.java            \
-            HMACAlgorithm.java                  \
-            IllegalBlockSizeException.java       \
-			InvalidDERException.java				\
-            InvalidKeyFormatException.java          \
-            InternalCertificate.java             \
-            IVParameterSpec.java                 \
-			KeyAlreadyImportedException.java    \
-            KeyGenAlgorithm.java                \
-            KeyGenerator.java                   \
-            KeyPairAlgorithm.java               \
-            KeyPairGenerator.java               \
-            KeyPairGeneratorSpi.java            \
-            KeyWrapAlgorithm.java               \
-            KeyWrapper.java                     \
-            JSSMessageDigest.java                  \
-            NoSuchItemOnTokenException.java		\
-            NoSuchPaddingException.java         \
-			ObjectNotFoundException.java		\
-            PBEAlgorithm.java                   \
-            PBEKeyGenParams.java                \
-            PrivateKey.java                  \
-            PQGParams.java                      \
-            PQGParamGenException.java           \
-            RSAParameterSpec.java               \
-            JSSSecureRandom.java                   \
-            ShortBufferException.java            \
-            Signature.java                      \
-            SignatureAlgorithm.java             \
-            SignatureSpi.java                   \
-            SymmetricKey.java                   \
-            TokenCertificate.java             \
-            TokenException.java                 \
-            Tunnel.java                         \
-            TokenSupplier.java                   \
-            TokenSupplierManager.java            \
-            X509Certificate.java             \
-            $(NULL)
-
-PRIVATE_JSRCS =                                 \
-                $(NULL)
-
-
-CSRCS =		Algorithm.c							\
+CSRCS =		Algorithm.c		\
             PQGParams.c                         \
+            SecretDecoderRing.c                \
 			$(NULL)
 
 

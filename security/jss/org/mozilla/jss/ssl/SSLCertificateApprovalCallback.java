@@ -87,6 +87,7 @@ public interface SSLCertificateApprovalCallback {
 
 class ValidityStatus {
 
+	public static final int  EXPIRED_CERTIFICATE    = -8192 + 11;
 	public static final int  REVOKED_CERTIFICATE    = -8192 + 12;
 	public static final int  INADEQUATE_KEY_USAGE   = -8192 + 90;
 	public static final int  INADEQUATE_CERT_TYPE   = -8192 + 91;

@@ -68,3 +68,7 @@ JSRCS = 											     \
                     SHA1RSASignature.java                \
                     PKCS11SecureRandom.java              \
 			        $(NULL)
+
+DIRS =  \
+        java                                    \
+        $(NULL)

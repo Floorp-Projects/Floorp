@@ -37,7 +37,9 @@ package org.mozilla.jss.crypto;
  * An exception of this type is thrown if an encoded private key
  * cannot be decoded.
  */
-public class InvalidKeyFormatException extends Exception {
+public class InvalidKeyFormatException
+        extends java.security.spec.InvalidKeySpecException
+{
     public InvalidKeyFormatException() {
         super();
     }

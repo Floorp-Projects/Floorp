@@ -59,6 +59,7 @@ abstract class PK11Key {
      */
     public byte[] getEncoded() {
 		Assert.notYetImplemented("PK11Key.getEncoded");
+        // !!!
         return null;
     }
 
@@ -68,6 +69,7 @@ abstract class PK11Key {
      */
     public String getFormat() {
 		Assert.notYetImplemented("PK11Key.getFormat");
+        // !!!
         return null;
     }
 

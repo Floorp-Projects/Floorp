@@ -56,7 +56,8 @@ import java.io.FileInputStream;
 /**
  * An X.509 signed certificate.
  */
-public class Certificate implements ASN1Value {
+public class Certificate implements ASN1Value
+{
 
     private CertificateInfo info;
     private byte[] infoEncoding;
@@ -152,7 +153,7 @@ public class Certificate implements ASN1Value {
      */
     public void verify()
         throws InvalidKeyException, CryptoManager.NotInitializedException,
-        NoSuchAlgorithmException, CertificateException, TokenException,
+        NoSuchAlgorithmException, CertificateException,
         SignatureException, InvalidKeyFormatException
     {
         verify( info.getSubjectPublicKeyInfo().toPublicKey() );
@@ -163,12 +164,16 @@ public class Certificate implements ASN1Value {
      * Does not indicate the certificate is valid at any specific time.
      */
     public void verify(PublicKey key)
-        throws InvalidKeyException, CryptoManager.NotInitializedException,
-        NoSuchAlgorithmException, CertificateException, TokenException,
+        throws InvalidKeyException,
+        NoSuchAlgorithmException, CertificateException,
         SignatureException
     {
+      try {
         CryptoManager cm = CryptoManager.getInstance();
         verify(key, cm.getInternalCryptoToken());
+      } catch( CryptoManager.NotInitializedException e ) {
+        throw new SignatureException("CryptoManager not initialized");
+      }
     }
 
     /**
@@ -177,9 +182,10 @@ public class Certificate implements ASN1Value {
      * any specific time.
      */
     public void verify(PublicKey key, CryptoToken token)
-        throws NoSuchAlgorithmException, CertificateException, TokenException,
+        throws NoSuchAlgorithmException, CertificateException,
             SignatureException, InvalidKeyException
     {
+      try {
         Signature sig = token.getSignatureContext(
             SignatureAlgorithm.fromOID( info.getSignatureAlgId().getOID() ) );
 
@@ -188,6 +194,9 @@ public class Certificate implements ASN1Value {
         if( ! sig.verify(signature) ) {
             throw new CertificateException("Signature is invalid");
         }
+      } catch(TokenException e) {
+        throw new SignatureException("PKCS #11 token error: " + e.getMessage());
+      }
     }
 
 
