@@ -521,6 +521,7 @@ PK11_UnwrapPrivKey;
 PK11_VerifyRecover;
 PK11_WrapPrivKey;
 SEC_CertNicknameConflict;
+SEC_PKCS5GetIV;
 SECMOD_DeleteInternalModule;
 SECMOD_DestroyModule;
 SECMOD_GetDefaultModuleList;
@@ -538,7 +539,6 @@ SECKEY_HashPassword;
 SECKEY_ImportDERPublicKey;
 SECKEY_NewPrivateKeyList;
 SECKEY_RemovePrivateKeyListNode;
-SEC_PKCS5GetIV;
 VFY_EndWithSignature;
 ;+    local:
 ;+       *;
