@@ -640,6 +640,7 @@ public:
 // } ===== end nsIMdbFactory methods =====
 };
 
+extern nsIMdbFactory *MakeMdbFactory();
 
 /*| nsIMdbPort: a readonly interface to a specific database file. The mutable
 **| nsIMdbStore interface is a subclass that includes writing behavior, but
@@ -975,7 +976,6 @@ public:
 
   // { ----- begin row methods -----
    mdb_err NewRowWithOid(nsIMdbEnv* ev, // new row w/ caller assigned oid
-    mdb_scope inRowScope,   // row scope for row ids
     const mdbOid* inOid,   // caller assigned oid
     nsIMdbRow** acqRow) ; // create new row
 
