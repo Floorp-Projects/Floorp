@@ -277,7 +277,7 @@ tier_50_dirs	+= security/manager
 endif
 
 ifdef MOZ_STORAGE
-tier_50_dirs += db/sqlite3/src storage
+tier_50_dirs += storage
 endif
 
 ifdef MOZ_LDAP_XPCOM
