@@ -485,8 +485,7 @@ nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILoca
     char* ptrLanguage[NSILOCALE_MAX_ACCEPT_LANGUAGE];
     char* ptrSwap;
 
-    /* cPtr = STRTOK(input,"," CPTR2); */
-    cPtr = strtok(input,",");
+    cPtr = nsCRT::strtok(input,",",&cPtr2);
     while (cPtr) {
       qvalue[countLang] = 1.0f;
       /* add extra parens to get rid of warning */
@@ -499,8 +498,7 @@ nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILoca
         ptrLanguage[countLang++] = cPtr;
         if (countLang>=NSILOCALE_MAX_ACCEPT_LANGUAGE) break; /* quit if too many */
       }
-      /* cPtr = STRTOK(NULL,"," CPTR2); */
-      cPtr = strtok(NULL,",");
+      cPtr = nsCRT::strtok(cPtr2,",",&cPtr2);
     }
 
     /* sort according to decending qvalue */
@@ -524,15 +522,13 @@ nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILoca
   } else {
     /* simple case: no quality values */
 
-    /* cPtr = STRTOK(input,"," CPTR2); */
-    cPtr = strtok(input,",");
+    cPtr = nsCRT::strtok(input,",",&cPtr2);
     while (cPtr) {
       if (strlen(cPtr)<NSILOCALE_MAX_ACCEPT_LENGTH) {        /* ignore if too long */
         strcpy(acceptLanguageList[countLang++],cPtr);
         if (countLang>=NSILOCALE_MAX_ACCEPT_LENGTH) break; /* quit if too many */
       }
-      /* cPtr = STRTOK(NULL,"," CPTR2); */
-      cPtr = strtok(NULL,",");
+      cPtr = nsCRT::strtok(cPtr2,",",&cPtr2);
     }
   }
 
