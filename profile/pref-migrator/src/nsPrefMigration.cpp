@@ -2186,7 +2186,7 @@ nsPrefConverter::ConvertPrefsToUTF8IfNecessary()
   if (NS_FAILED(rv)) return rv;
 
   for (PRUint32 i = 0; prefsToConvert[i]; i++) {
-    nsCString prefnameStr = prefsToConvert[i];
+    nsCString prefnameStr( prefsToConvert[i] );
     prefsToMigrate.AppendCString(prefnameStr);
   }
 

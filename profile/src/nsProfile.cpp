@@ -800,7 +800,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
                 tmpFileSpec.CreateDirectory();
 
             // append profile name
-            tmpFileSpec += profileName;
+            tmpFileSpec += NS_ConvertUCS2toUTF8(profileName);
 
             // Create New Directory. PersistentDescriptor needs an existing object.
             if (!tmpFileSpec.Exists())
@@ -1021,7 +1021,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
             dirSpec.CreateDirectory();
 
         // append profile name
-        dirSpec += profileName;
+        dirSpec += NS_ConvertUCS2toUTF8(profileName);
 
         // Make profile directory unique only when the user 
         // decides to not use an already existing profile directory
@@ -1029,12 +1029,12 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
             dirSpec.MakeUnique();
     }
     else {
-        dirSpec = nativeProfileDir;
+        dirSpec = NS_ConvertUCS2toUTF8(nativeProfileDir);
 
         // this prevents people from choosing there profile directory
         // or another directory, and remove it when they delete the profile.
         // append profile name
-        dirSpec += profileName;
+        dirSpec += NS_ConvertUCS2toUTF8(profileName);
 
         // Make profile directory unique only when the user 
         // decides to not use an already existing profile directory
@@ -1079,7 +1079,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
         // caller prefers locale subdir
         nsFileSpec tmpdir; 
         tmpdir = defaultsDirSpec;
-        tmpdir += langcode;
+        tmpdir += NS_ConvertUCS2toUTF8(langcode);
 
         if (tmpdir.Exists())
             defaultsDirSpec = tmpdir;
@@ -1458,7 +1458,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
         return NS_ERROR_FAILURE;
 
     newSpec->GetFileSpec(&newProfDir);
-    newProfDir += profileName;
+    newProfDir += NS_ConvertUCS2toUTF8(profileName);
     newProfDir.MakeUnique();
     if (newProfDir.Exists()) {
 #ifdef DEBUG_profile
@@ -1687,9 +1687,8 @@ nsProfile::ShowProfileWizard(void)
                           kAppShellServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        nsCString profURLStr = PROFILE_WIZARD_URL;
         nsCOMPtr<nsIURI> profURI;
-        rv = NS_NewURI(getter_AddRefs(profURI), (const char *)profURLStr);
+        rv = NS_NewURI(getter_AddRefs(profURI), NS_LITERAL_CSTRING(PROFILE_WIZARD_URL));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIXULWindow> newWindow;
@@ -1768,7 +1767,7 @@ nsresult nsProfile::RenameProfileDir(const PRUnichar* newProfileName)
     if (NS_FAILED(rv)) return rv;
     
     nsFileSpec renamedDirSpec = dirSpec;
-    renamedDirSpec.SetLeafName(newProfileName);
+    renamedDirSpec.SetLeafName(NS_ConvertUCS2toUTF8(newProfileName));
     renamedDirSpec.MakeUnique();
 
     // rename the directory
@@ -1816,7 +1815,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
         // hash profileName  (will MakeUnique do that for us?)
         // don't allow special characters (like ..)
         // make acceptable length (will MakeUnique do that for us?)
-        newProfileDir += newProfile;
+        newProfileDir += NS_ConvertUCS2toUTF8(newProfile);
         newProfileDir.MakeUnique();
 
         if (newProfileDir.Exists()) {

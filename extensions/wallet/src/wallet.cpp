@@ -362,7 +362,7 @@ InputConsumer::Init(nsFileSpec dirSpec, const char *out)
   mFileName = nsCRT::strdup(out);
   mFileSpec = dirSpec + mFileName;
   // Create a temp download filename
-  nsCAutoString downloadFilename = mFileName;
+  nsCAutoString downloadFilename( mFileName );
   downloadFilename.Append(",d");
   mDownloadFileSpec = dirSpec + downloadFilename;
   return NS_OK;
@@ -702,7 +702,7 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
     return retval;
   } 
 
-  const nsAutoString message = szMessage;
+  const nsAutoString message( szMessage );
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
   return retval;
@@ -803,7 +803,7 @@ wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
     return;     // XXX should return the error
   } 
 
-  const nsAutoString message = szMessage;
+  const nsAutoString message( szMessage );
   PRUnichar * title = Wallet_Localize("CaveatTitle");
   res = dialog->Alert(title, message.GetUnicode());
   Recycle(title);
@@ -814,7 +814,7 @@ PRIVATE void
 wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
 {
   nsresult res;  
-  const nsAutoString message = szMessage;
+  const nsAutoString message( szMessage );
   PRUnichar * title = Wallet_Localize("CaveatTitle");
   res = dialog->Alert(title, message.GetUnicode());
   Recycle(title);
@@ -2084,7 +2084,7 @@ wallet_GetSelectIndex(
           nsAutoString optionText;
           optionElement->GetValue(optionValue);
           optionElement->GetText(optionText);
-          nsAutoString valueLC = value;
+          nsAutoString valueLC( value );
           valueLC.ToLowerCase();
           optionValue.ToLowerCase();
           optionText.ToLowerCase();
@@ -2832,7 +2832,7 @@ WLLT_PostEdit(const nsString& walletList)
     return;
   }
 
-  nsAutoString tail = walletList;
+  nsAutoString tail( walletList );
   nsAutoString head, temp;
   PRInt32 separator;
 

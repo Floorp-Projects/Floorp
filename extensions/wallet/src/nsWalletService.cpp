@@ -403,7 +403,7 @@ nsWalletlibService::HaveData(nsIPrompt* dialog, const char *key, const PRUnichar
 
 NS_IMETHODIMP
 nsWalletlibService::WALLET_Encrypt (const PRUnichar *text, char **crypt) {
-  nsAutoString textAutoString = text;
+  nsAutoString textAutoString( text );
   nsAutoString cryptAutoString;
   PRBool rv = ::Wallet_Encrypt(textAutoString, cryptAutoString);
   *crypt = cryptAutoString.ToNewCString();

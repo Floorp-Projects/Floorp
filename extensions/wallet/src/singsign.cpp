@@ -2389,7 +2389,7 @@ SINGSIGN_Prompt
 PUBLIC PRBool
 SI_InSequence(const nsString& sequence, PRInt32 number)
 {
-  nsAutoString tail = sequence;
+  nsAutoString tail( sequence );
   nsAutoString head, temp;
   PRInt32 separator;
 

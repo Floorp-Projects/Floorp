@@ -76,7 +76,7 @@ WalletEditorImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
   nsresult res;
   NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
   if (NS_FAILED(res)) return res;
-  nsAutoString walletList = aValue;
+  nsAutoString walletList( aValue );
   res = walletservice->WALLET_PostEdit(walletList);
   return res;
 }
