@@ -206,9 +206,9 @@ typedef enum {
 /* function pointer type for password callback function.
  * This type is passed in to PK11_SetPasswordFunc() 
  */
-typedef char *(*PK11PasswordFunc)(PK11SlotInfo *slot, PRBool retry, void *arg);
-typedef PRBool (*PK11VerifyPasswordFunc)(PK11SlotInfo *slot, void *arg);
-typedef PRBool (*PK11IsLoggedInFunc)(PK11SlotInfo *slot, void *arg);
+typedef char *(PR_CALLBACK *PK11PasswordFunc)(PK11SlotInfo *slot, PRBool retry, void *arg);
+typedef PRBool (PR_CALLBACK *PK11VerifyPasswordFunc)(PK11SlotInfo *slot, void *arg);
+typedef PRBool (PR_CALLBACK *PK11IsLoggedInFunc)(PK11SlotInfo *slot, void *arg);
 
 /*
  * PKCS #11 key structures
