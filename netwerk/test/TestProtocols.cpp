@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=2 sw=2 et cindent: */
+/* vim: set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,6 +44,7 @@
     -Gagan Saksena 04/29/99
 */
 
+#define FORCE_PR_LOG
 #include <stdio.h>
 #ifdef WIN32 
 #include <windows.h>
@@ -66,6 +67,7 @@
 #include "nsIResumableEntityID.h"
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIHttpEventSink.h" 
 #include "nsIInterfaceRequestor.h" 
@@ -79,6 +81,7 @@
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
+#include "prtime.h"
 
 #if defined(PR_LOGGING)
 //
@@ -98,6 +101,10 @@ static nsIEventQueue* gEventQ = nsnull;
 static PRBool gAskUserForInput = PR_FALSE;
 static PRBool gResume = PR_FALSE;
 static PRUint32 gStartAt = 0;
+
+static const char* gLastMod = NULL;
+static const char* gETag = NULL;
+static PRUint32 gTotalSize = PR_UINT32_MAX;
 
 //-----------------------------------------------------------------------------
 // Set proxy preferences for testing
@@ -357,6 +364,7 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
   if (channel) {
     nsresult status;
     channel->GetStatus(&status);
+    LOG(("Channel Status: %08x\n", status));
     if (NS_SUCCEEDED(status)) {
       LOG(("Channel Info:\n"));
 
@@ -381,6 +389,13 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
     LOG(("\tChannel Owner: %x\n", owner.get()));
   }
 
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInt(do_QueryInterface(request));
+  if (httpChannelInt) {
+      PRUint32 majorVer, minorVer;
+      nsresult rv = httpChannelInt->GetResponseVersion(&majorVer, &minorVer);
+      if (NS_SUCCEEDED(rv))
+          LOG(("HTTP Response version: %u.%u\n", majorVer, minorVer));
+  }
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
     HeaderVisitor *visitor = new HeaderVisitor();
@@ -409,18 +424,18 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
               LOG(("\tSize: %d\n", size));
           else
               LOG(("\tSize: Unknown\n"));
-          PRTime lastModified;
-          if (NS_SUCCEEDED(entityID->GetLastModified(&lastModified)) &&
-              lastModified != -1) {
-              PRExplodedTime exploded;
-              PR_ExplodeTime(lastModified, PR_LocalTimeParameters, &exploded);
-
-              char buf[100];
-              PR_FormatTime(buf, 100, "%c", &exploded);
-
-              LOG(("\tLast Modified: %s\n", buf));
-          } else
+          nsCAutoString lastModified;
+          if (NS_SUCCEEDED(entityID->GetLastModified(lastModified)) &&
+              !lastModified.IsEmpty())
+              LOG(("\tLast Modified: %s\n", lastModified.get()));
+          else
               LOG(("\tLast Modified: Unknown\n"));
+          nsCAutoString etag;
+          if (NS_SUCCEEDED(entityID->GetEntityTag(etag)) &&
+                !etag.IsEmpty())
+              LOG(("\tETag: %s\n", etag.get()));
+          else
+              LOG(("\tEtag: Unknown\n"));
       }
   }
 
@@ -647,10 +662,24 @@ nsresult StartLoadingURL(const char* aUrlString)
                 NS_ERROR("Channel is not resumable!");
                 return NS_ERROR_UNEXPECTED;
             }
+            nsCOMPtr<nsIResumableEntityID> id;
+            if (gETag || gLastMod || gTotalSize != PR_UINT32_MAX) {
+                id = do_CreateInstance(NS_RESUMABLEENTITYID_CONTRACTID);
+                if (!id) {
+                    fprintf(stderr, "Error creating entityid\n");
+                }
+                else {
+                    if (gETag)
+                        id->SetEntityTag(nsDependentCString(gETag));
+                    if (gLastMod)
+                        id->SetLastModified(nsDependentCString(gLastMod));
+                    id->SetSize(gTotalSize);
+                }
+            }
             rv = res->AsyncOpenAt(listener,
                                   info,
                                   gStartAt,
-                                  nsnull);
+                                  id);
         } else {            
             rv = pChannel->AsyncOpen(listener,  // IStreamListener consumer
                                      info);
@@ -732,7 +761,7 @@ main(int argc, char* argv[])
 {
     nsresult rv= (nsresult)-1;
     if (argc < 2) {
-        printf("usage: %s [-verbose] [-file <name>] <url> <url> ... \n", argv[0]);
+        printf("usage: %s [-verbose] [-file <name>] [-resume <startoffset> [-etag <etag>] [-lastmod <lastmod (string)>] [-totalsize <size>] [-proxy <proxy>] [-console] <url> <url> ... \n", argv[0]);
         return -1;
     }
 
@@ -779,6 +808,21 @@ main(int argc, char* argv[])
             if (PL_strcasecmp(argv[i], "-resume") == 0) {
                 gResume = PR_TRUE;
                 gStartAt = atoi(argv[++i]);
+                continue;
+            }
+
+            if (PL_strcasecmp(argv[i], "-etag") == 0) {
+                gETag = argv[++i];
+                continue;
+            }
+
+            if (PL_strcasecmp(argv[i], "-lastmod") == 0) {
+                gLastMod = argv[++i];
+                continue;
+            }
+
+            if (PL_strcasecmp(argv[i], "-totalsize") == 0) {
+                gTotalSize = atoi(argv[++i]);
                 continue;
             }
 

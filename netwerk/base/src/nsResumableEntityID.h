@@ -16,7 +16,6 @@
  *
  * The Initial Developer of the Original Code is Bradley Baetz
  * Portions created by the Initial Developer are Copyright (C) 2002
- * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
@@ -36,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIResumableEntityID.h"
+#include "nsString.h"
 
 class nsResumableEntityID : public nsIResumableEntityID {
 public:
@@ -43,9 +43,10 @@ public:
     NS_DECL_NSIRESUMABLEENTITYID
 
     nsResumableEntityID();
-    virtual ~nsResumableEntityID();
+    ~nsResumableEntityID();
 
 private:
     PRUint32 mSize;
-    PRTime mLastModified;
+    nsCString mLastModified;
+    nsCString mEntityTag;
 };

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-// vim:expandtab:ts=4 sw=4:
+/* vim:set expandtab ts=4 sw=4 sts=4: */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +19,8 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *   Darin Fisher <darin@netscape.com> (original author)
+ *   Darin Fisher <darin@meer.net> (original author)
+ *   Christian Biesinger <cbiesinger@web.de>
  */
 
 #include "nsHttpChannel.h"
@@ -52,6 +53,7 @@
 #include "prprf.h"
 #include "nsEscape.h"
 #include "nsICookieService.h"
+#include "nsIResumableChannel.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -83,6 +85,7 @@ nsHttpChannel::nsHttpChannel()
     , mPostID(0)
     , mRequestTime(0)
     , mAuthContinuationState(nsnull)
+    , mStartPos(0)
     , mRedirectionLimit(gHttpHandler->RedirectionLimit())
     , mIsPending(PR_FALSE)
     , mApplyConversion(PR_TRUE)
@@ -94,6 +97,7 @@ nsHttpChannel::nsHttpChannel()
     , mTransactionReplaced(PR_FALSE)
     , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
+    , mResuming(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -287,6 +291,12 @@ nsHttpChannel::Connect(PRBool firstTime)
         ioService->GetOffline(&offline);
         if (offline)
             mLoadFlags |= LOAD_ONLY_FROM_CACHE;
+
+        // Don't allow resuming when cache must be used
+        if (mResuming && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
+            LOG(("Resuming from cache is not supported yet"));
+            return NS_ERROR_DOCUMENT_NOT_CACHED;
+        }
 
         // open a cache entry for this channel...
         rv = OpenCacheEntry(offline, &delayed);
@@ -518,6 +528,28 @@ nsHttpChannel::SetupTransaction()
             mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), PR_TRUE);
     }
 
+    if (mResuming) {
+        char buf[32];
+        PR_snprintf(buf, sizeof(buf), "bytes=%u-", mStartPos);
+        mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
+
+        if (mEntityID) {
+            // Also, we want an error if this resource changed in the meantime
+            nsCAutoString entityTag;
+            rv = mEntityID->GetEntityTag(entityTag);
+            if (NS_SUCCEEDED(rv) && !entityTag.IsEmpty()) {
+                mRequestHead.SetHeader(nsHttp::If_Match, entityTag);
+            }
+
+            nsCAutoString lastMod;
+            rv = mEntityID->GetLastModified(lastMod);
+            if (NS_SUCCEEDED(rv) && !lastMod.IsEmpty()) {
+                mRequestHead.SetHeader(nsHttp::If_Unmodified_Since, lastMod);
+
+            }
+        }
+    }
+
     if (!mEventQ) {
         // grab a reference to the calling thread's event queue.
         nsCOMPtr<nsIEventQueueService> eqs;
@@ -662,6 +694,14 @@ nsHttpChannel::ProcessResponse()
     switch (httpStatus) {
     case 200:
     case 203:
+        // Per RFC 2616, 14.35.2, "A server MAY ignore the Range header".
+        // So if a server does that and sends 200 instead of 206 that we
+        // expect, notify our caller.
+        if (mResuming) {
+            Cancel(NS_ERROR_NOT_RESUMABLE);
+            rv = CallOnStartRequest();
+            break;
+        }
         // these can normally be cached
         rv = ProcessNormal();
         break;
@@ -713,6 +753,14 @@ nsHttpChannel::ProcessResponse()
             rv = ProcessNormal();
         }
         break;
+    case 412: // Precondition failed
+    case 416: // Invalid range
+        if (mResuming) {
+            Cancel(NS_ERROR_NOT_RESUMABLE);
+            rv = CallOnStartRequest();
+            break;
+        }
+        // fall through
     default:
         CloseCacheEntry(NS_ERROR_ABORT);
         rv = ProcessNormal();
@@ -761,6 +809,24 @@ nsHttpChannel::ProcessNormal()
     if (mCacheEntry) {
         rv = InitCacheEntry();
         if (NS_FAILED(rv)) return rv;
+    }
+
+    // Check that the server sent us what we were asking for
+    if (mResuming) {
+        // Create an entity id from the response
+        nsCOMPtr<nsIResumableEntityID> id;
+        rv = GetEntityID(getter_AddRefs(id));
+        if (NS_FAILED(rv)) {
+            // If creating an entity id is not possible -> error
+            Cancel(NS_ERROR_NOT_RESUMABLE);
+        }
+        // If we were passed an entity id, verify it's equal to the server's
+        else if (mEntityID) {
+            PRBool equal;
+            rv = mEntityID->Equals(id, &equal);
+            if (NS_FAILED(rv) || !equal)
+                Cancel(NS_ERROR_NOT_RESUMABLE);
+        }
     }
 
     rv = CallOnStartRequest();
@@ -1095,7 +1161,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     }
     else if (mRequestHead.PeekHeader(nsHttp::Range)) {
         // we don't support caching for byte range requests initiated
-        // by our clients.
+        // by our clients or via nsIResumableChannel.
         // XXX perhaps we could munge their byte range into the cache
         // key to make caching sort'a work.
         return NS_OK;
@@ -2509,6 +2575,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
     NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
+    NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
 NS_INTERFACE_MAP_END
@@ -3644,6 +3711,51 @@ nsHttpChannel::IsFromCache(PRBool *value)
               mCachedContentIsValid && !mCachedContentIsPartial;
 
     return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIResumableChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::AsyncOpenAt(nsIStreamListener* aListener,
+                           nsISupports* aCtxt,
+                           PRUint32 aStartPos,
+                           nsIResumableEntityID* aEntityID)
+{
+    mEntityID = aEntityID;
+    mStartPos = aStartPos;
+    mResuming = PR_TRUE;
+    return AsyncOpen(aListener, aCtxt);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetEntityID(nsIResumableEntityID** aEntityID)
+{
+    // Don't return an entity ID for HTTP/1.0 servers
+    if (mResponseHead && (mResponseHead->Version() < NS_HTTP_VERSION_1_1)) {
+        *aEntityID = nsnull;
+        return NS_OK;
+    }
+    // Neither return one for Non-GET requests which require additional data
+    if (mRequestHead.Method() != nsHttp::Get) {
+        *aEntityID = nsnull;
+        return NS_OK;
+    }
+
+    PRUint32 size = PR_UINT32_MAX;
+    nsCAutoString etag, lastmod;
+    if (mResponseHead) {
+        size = mResponseHead->TotalEntitySize();
+        const char* cLastMod = mResponseHead->PeekHeader(nsHttp::Last_Modified);
+        if (cLastMod)
+            lastmod = cLastMod;
+        const char* cEtag = mResponseHead->PeekHeader(nsHttp::ETag);
+        if (cEtag)
+            etag = cEtag;
+    }
+
+    return NS_NewResumableEntityID(aEntityID, size, lastmod, etag);
 }
 
 //-----------------------------------------------------------------------------

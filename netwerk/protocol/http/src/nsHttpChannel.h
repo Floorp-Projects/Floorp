@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set et cin ts=4 sw=4 sts=4: */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -53,11 +54,13 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStreamPump.h"
 #include "nsIPrompt.h"
+#include "nsIResumableChannel.h"
 
 class nsHttpResponseHead;
 class nsAHttpConnection;
 class nsIHttpAuthenticator;
 class nsIProxyInfo;
+class nsIResumableEntityID;
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel
@@ -71,6 +74,7 @@ class nsHttpChannel : public nsIHttpChannel
                     , public nsICacheListener
                     , public nsIEncodedChannel
                     , public nsITransportEventSink
+                    , public nsIResumableChannel
 {
 public:
     NS_DECL_ISUPPORTS
@@ -85,6 +89,7 @@ public:
     NS_DECL_NSIENCODEDCHANNEL
     NS_DECL_NSIHTTPCHANNELINTERNAL
     NS_DECL_NSITRANSPORTEVENTSINK
+    NS_DECL_NSIRESUMABLECHANNEL
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -208,6 +213,10 @@ private:
     nsHttpAuthIdentity                mIdent;
     nsHttpAuthIdentity                mProxyIdent;
 
+    // Resumable channel specific data
+    nsCOMPtr<nsIResumableEntityID>    mEntityID;
+    PRUint32                          mStartPos;
+
     // redirection specific data.
     PRUint8                           mRedirectionLimit;
 
@@ -222,6 +231,7 @@ private:
     PRUint32                          mTransactionReplaced      : 1;
     PRUint32                          mUploadStreamHasHeaders   : 1;
     PRUint32                          mAuthRetryPending         : 1;
+    PRUint32                          mResuming                 : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {
