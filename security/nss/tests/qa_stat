@@ -341,6 +341,18 @@ qa_errorlist()
         grep -v '0 cache hits; 1 cache misses, 0 cache not reusable' | 
         grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' | 
         grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
+    grep -i error */output.log |
+        grep -vi "write to SSL socket" |
+        grep -vi "HDX PR_Read returned error" |
+        grep -vi "no error" |
+        grep -vi "12285"
+    grep -i failed */output.log | 
+        grep -vi "write to SSL socket" | 
+        grep -vi "peer cannot verify" | 
+        grep -vi "error" |
+        grep -vi "fatal" |
+        grep -vi "TCP connection reset"
+    grep -i fatal */output.log
         #grep -v '999 cache hits; 1 cache misses, 0 cache not reusable'
     #if [ "$1" = "1" ]
     #then
