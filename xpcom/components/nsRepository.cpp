@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
 * The contents of this file are subject to the Netscape Public License
 * Version 1.0 (the "NPL"); you may not use this file except in
@@ -564,12 +564,20 @@ nsresult nsRepository::loadFactory(FactoryEntry *aEntry,
 	nsFactoryProc proc = (nsFactoryProc) aEntry->dll->FindSymbol("NSGetFactory");
 	if (proc != NULL)
 	{
+        char* className = NULL;
+        char* progID = NULL;
+        (void)CLSIDToProgID(&aEntry->cid, &className, &progID);
+
 		nsIServiceManager* serviceMgr = NULL;
 		nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-		if (res == NS_OK)
-		{
-			res = proc(aEntry->cid, serviceMgr, aFactory);
-		}
+        NS_ASSERTION(res == NS_OK, "no service manager");
+
+        res = proc(serviceMgr, aEntry->cid, className, progID, aFactory);
+
+        if (className)
+            delete[] className;
+        if (progID)
+            delete[] progID;
 		return res;
 	}
 	PR_LOG(logmodule, PR_LOG_ERROR, 
@@ -639,7 +647,7 @@ nsresult nsRepository::FindFactory(const nsCID &aClass,
 
 
 nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
-                                   nsCID *aClass) 
+                                     nsCID *aClass) 
 {
 	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef USE_REGISTRY
@@ -697,6 +705,88 @@ nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
 	return res;
 }
 
+nsresult nsRepository::CLSIDToProgID(nsCID *aClass,
+                                     char* *aClassName,
+                                     char* *aProgID)
+{
+	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef USE_REGISTRY
+	HREG hreg;
+    char* classnameString;
+    char* progidString;
+
+	checkInitialized();
+    char* cidStr = aClass->ToString();
+	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
+	{
+		PR_LogPrint("nsRepository: CLSIDToProgID(%s)", cidStr);
+	}
+	
+	PR_ASSERT(aClass != NULL);
+	
+	REGERR err = NR_RegOpen(NULL, &hreg);
+	if (err != REGERR_OK)
+	{
+		res = NS_ERROR_FAILURE;
+        goto done1;
+	}
+
+	RKEY classesKey;
+	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes", &classesKey) != REGERR_OK)
+	{
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+
+	RKEY key;
+	err = NR_RegGetKey(hreg, classesKey, cidStr, &key);
+	if (err != REGERR_OK)
+	{
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+
+	classnameString = new char[MAXREGNAMELEN];
+    if (classnameString == NULL) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+        goto done2;
+    }
+	err = NR_RegGetEntryString(hreg, key, "ClassName", classnameString, MAXREGNAMELEN);
+	if (err != REGERR_OK)
+	{
+        delete[] classnameString;
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+    *aClassName = classnameString;
+
+	progidString = new char[MAXREGNAMELEN];
+    if (progidString == NULL) {
+        delete[] classnameString;
+        res = NS_ERROR_OUT_OF_MEMORY;
+        goto done2;
+    }
+	err = NR_RegGetEntryString(hreg, key, "ProgID", progidString, MAXREGNAMELEN);
+	if (err != REGERR_OK)
+	{
+        delete[] progidString;
+        delete[] classnameString;
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+
+    *aProgID = progidString; 
+	res = NS_OK;
+#endif /* USE_REGISTRY */
+
+  done2:	
+	NR_RegClose(hreg);
+  done1:
+    delete[] cidStr;
+	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: CLSIDToProgID() %s",
+		res == NS_OK ? "succeeded" : "FAILED"));
+	return res;
+}
 
 nsresult nsRepository::checkInitialized(void) 
 {
@@ -768,6 +858,17 @@ nsresult nsRepository::CreateInstance(const nsCID &aClass,
 
 	PR_LOG(logmodule, PR_LOG_ALWAYS, ("\t\tCreateInstance() FAILED."));
 	return NS_ERROR_FACTORY_NOT_REGISTERED;
+}
+
+nsresult nsRepository::CreateInstance(const char *aProgID,
+                                      nsISupports *aDelegate,
+                                      const nsIID &aIID,
+                                      void **aResult)
+{
+    nsCID clsid;
+    nsresult rv = ProgIDToCLSID(aProgID, &clsid);
+    if (NS_FAILED(rv)) return rv; 
+    return CreateInstance(clsid, aDelegate, aIID, aResult);
 }
 
 
@@ -939,11 +1040,11 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 
 
 nsresult nsRepository::RegisterComponent(const nsCID &aClass,
-                                       const char *aClassName,
-                                       const char *aProgID,
-                                       const char *aLibrary,
-                                       PRBool aReplace,
-                                       PRBool aPersist)
+                                         const char *aClassName,
+                                         const char *aProgID,
+                                         const char *aLibrary,
+                                         PRBool aReplace,
+                                         PRBool aPersist)
 {
 	checkInitialized();
 	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
@@ -1158,14 +1259,18 @@ static PRBool freeLibraryEnum(nsHashKey *aKey, void *aData, void* closure)
 		nsCanUnloadProc proc = (nsCanUnloadProc) entry->dll->FindSymbol("NSCanUnload");
 		if (proc != NULL)
 		{
-			PRBool res = proc();
-			if (res)
-			{
-				PR_LOG(logmodule, PR_LOG_ALWAYS, 
-					("nsRepository: + Unloading \"%s\".", entry->dll->GetFullPath()));
-				entry->dll->Unload();
-			}
-		}    
+            nsIServiceManager* serviceMgr = NULL;
+            nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+            NS_ASSERTION(res == NS_OK, "no service manager");
+
+            res = proc(serviceMgr);
+            if (res)
+            {
+                PR_LOG(logmodule, PR_LOG_ALWAYS, 
+                       ("nsRepository: + Unloading \"%s\".", entry->dll->GetFullPath()));
+                entry->dll->Unload();
+            }
+        }
 	}
 	
 	return PR_TRUE;
@@ -1433,25 +1538,29 @@ nsresult nsRepository::SyncComponentsInFile(const char *fullname)
 				dll->FindSymbol("NSCanUnload");
 			if (proc != NULL)
 			{
-				PRBool res = proc(/*PR_TRUE*/);
-				if (res)
-				{
-					PR_LOG(logmodule, PR_LOG_ALWAYS, 
-						("nsRepository: + Unloading \"%s\".",
-						dll->GetFullPath()));
-					dll->Unload();
-				}
-				else
-				{
-					// THIS IS THE WORST SITUATION TO BE IN.
-					// Dll doesn't want to be unloaded. Cannot re-register
-					// this dll.
-					PR_LOG(logmodule, PR_LOG_ALWAYS,
-						("nsRepository: *** Dll already loaded. "
-						"Cannot unload either. Hence cannot re-register "
-						"\"%s\". Skipping...", dll->GetFullPath()));
-					return (NS_ERROR_FAILURE);
-				}
+                nsIServiceManager* serviceMgr = NULL;
+                nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+                NS_ASSERTION(rv == NS_OK, "no service manager");
+
+                PRBool res = proc(serviceMgr /*, PR_TRUE*/);
+                if (res)
+                {
+                    PR_LOG(logmodule, PR_LOG_ALWAYS, 
+                           ("nsRepository: + Unloading \"%s\".",
+                            dll->GetFullPath()));
+                    dll->Unload();
+                }
+                else
+                {
+                    // THIS IS THE WORST SITUATION TO BE IN.
+                    // Dll doesn't want to be unloaded. Cannot re-register
+                    // this dll.
+                    PR_LOG(logmodule, PR_LOG_ALWAYS,
+                           ("nsRepository: *** Dll already loaded. "
+                            "Cannot unload either. Hence cannot re-register "
+                            "\"%s\". Skipping...", dll->GetFullPath()));
+                    return (NS_ERROR_FAILURE);
+                }
 			}
 			else
 			{
@@ -1563,10 +1672,9 @@ nsresult nsRepository::SelfRegisterDll(nsDll *dll)
 		// Call the NSRegisterSelfProc to enable dll registration
 		nsIServiceManager* serviceMgr = NULL;
 		res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-		if (res == NS_OK)
-		{
-			res = regproc(/* serviceMgr, */ dll->GetFullPath());
-		}
+        NS_ASSERTION(res == NS_OK, "no service manager");
+
+        res = regproc(serviceMgr, dll->GetFullPath());
 	}
 	dll->Unload();
 	return (res);
@@ -1604,10 +1712,9 @@ nsresult nsRepository::SelfUnregisterDll(nsDll *dll)
 		// Call the NSUnregisterSelfProc to enable dll de-registration
 		nsIServiceManager* serviceMgr = NULL;
 		res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-		if (res == NS_OK)
-		{
-			res = unregproc(/* serviceMgr, */dll->GetFullPath());
-		}
+        NS_ASSERTION(res == NS_OK, "no service manager");
+
+        res = unregproc(serviceMgr, dll->GetFullPath());
 	}
 	dll->Unload();
 	return (res);

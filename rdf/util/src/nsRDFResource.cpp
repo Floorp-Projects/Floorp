@@ -27,8 +27,8 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsRDFResource::nsRDFResource(const char* uri)
-    : mURI(nsCRT::strdup(uri))
+nsRDFResource::nsRDFResource(void)
+    : mURI(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -44,7 +44,7 @@ nsRDFResource::~nsRDFResource(void)
 
     PR_ASSERT(NS_SUCCEEDED(rv));
     if (NS_SUCCEEDED(rv)) {
-        mgr->UnCacheResource(this);
+        mgr->UnregisterResource(this);
         nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
     }
 
@@ -76,6 +76,15 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRDFNode methods:
+
+NS_IMETHODIMP
+nsRDFResource::Init(const char* uri)
+{
+    mURI = nsCRT::strdup(uri);
+    if (mURI == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result) const

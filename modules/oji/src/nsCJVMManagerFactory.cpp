@@ -41,7 +41,11 @@ nsIServiceManager  *g_pNSIServiceManager = NULL;
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
     nsresult res = NS_OK;    
     if (!aClass.Equals(kCJVMManagerCID)) {
@@ -50,9 +54,9 @@ NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
     nsCJVMManagerFactory* factory = new nsCJVMManagerFactory();
     if (factory == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    factory->AddRef();
+    NS_ADDREF(factory);
     *aFactory = factory;
-    res = servMgr->QueryInterface(kIServiceManagerIID, (void**)&g_pNSIServiceManager);
+    res = serviceMgr->QueryInterface(kIServiceManagerIID, (void**)&g_pNSIServiceManager);
     if ((NS_OK == res) && (nsnull != g_pNSIServiceManager))
     {
       return NS_OK;
@@ -61,7 +65,7 @@ NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 }
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
     return PR_FALSE;
 }

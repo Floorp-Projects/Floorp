@@ -48,13 +48,13 @@ static NS_DEFINE_IID(kAppCoresManagerCID, NS_APPCORESMANAGER_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
     return PRBool (gInstanceCnt == 0 && gLockCnt == 0);
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(const char *path)
+NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores is being registered\n");
     nsRepository::RegisterFactory(kAppCoresManagerCID, path, PR_TRUE, PR_TRUE);
@@ -68,7 +68,7 @@ NSRegisterSelf(const char *path)
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char *path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
     printf("*** AppCores is being unregistered\n");
     
@@ -86,7 +86,11 @@ NSUnregisterSelf(const char *path)
 
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
 
     if (aFactory == NULL)
@@ -144,7 +148,7 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
         delete inst;
     }
 
-    return res;
+  return res;
 
 }
 

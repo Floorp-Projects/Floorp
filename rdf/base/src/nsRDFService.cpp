@@ -23,17 +23,7 @@
   TO DO
   -----
 
-  1) Figure out a better way to do "pluggable resources." Currently,
-     we have two _major_ hacks:
-
-       RegisterBuiltInNamedDataSources()
-       RegisterBuiltInResourceFactories()
-
-     These introduce dependencies on the datasource directory. You'd
-     like to have this stuff discovered dynamically at startup or
-     something. Maybe from the registry.
-
-  2) Implement the CreateDataBase() methods.
+  1) Implement the CreateDataBase() methods.
      
  */
 
@@ -43,8 +33,10 @@
 #include "nsIRDFService.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsString.h"
+#include "nsRepository.h"
 #include "plhash.h"
 #include "plstr.h"
+#include "prprf.h"
 #include "prlog.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -221,6 +213,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFNode
+    NS_IMETHOD Init(const char* uri);
     NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
 
     // nsIRDFLiteral
@@ -260,6 +253,15 @@ LiteralImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_OK;
     }
     return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+LiteralImpl::Init(const char* uri)
+{
+    // Literals should always be constructed by calling nsIRDFService::GetLiteral,
+    // so this method should never get called.
+    NS_NOTREACHED("RDF LiteralImpl::Init");
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -318,16 +320,12 @@ class ServiceImpl : public nsIRDFService
 protected:
     PrefixMap    mResourceFactories;
     PLHashTable* mNamedDataSources;
-    PLHashTable* mDataSourceConstructors;
     PLHashTable* mResources;
 
     ServiceImpl(void);
     virtual ~ServiceImpl(void);
 
     static nsIRDFService* gRDFService; // The one-and-only RDF service
-
-    static void RegisterBuiltInResourceFactories();
-    static void RegisterBuiltInNamedDataSources();
 
 public:
 
@@ -340,15 +338,10 @@ public:
     NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
     NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
     NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
-    NS_IMETHOD UnCacheResource(nsIRDFResource* resource);
-
-    NS_IMETHOD RegisterResourceFactory(const char* aURIPrefix, nsIRDFResourceFactory* aFactory);
-    NS_IMETHOD UnRegisterResourceFactory(const char* aURIPrefix);
-
-    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource);
+    NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE);
+    NS_IMETHOD UnregisterResource(nsIRDFResource* aResource);
+    NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource, PRBool replace = PR_FALSE);
     NS_IMETHOD UnregisterDataSource(nsIRDFDataSource* dataSource);
-    NS_IMETHOD RegisterDataSourceConstructor(const char* uri, NSDataSourceConstructorCallback fn);
-    NS_IMETHOD UnregisterDataSourceConstructor(const char* uri);
     NS_IMETHOD GetDataSource(const char* uri, nsIRDFDataSource** dataSource);
     NS_IMETHOD CreateDatabase(const char** uris, nsIRDFDataBase** dataBase);
     NS_IMETHOD CreateBrowserDatabase(nsIRDFDataBase** dataBase);
@@ -373,21 +366,11 @@ ServiceImpl::ServiceImpl(void)
                                         PL_CompareStrings,
                                         PL_CompareValues,
                                         nsnull, nsnull);
-
-    mDataSourceConstructors = PL_NewHashTable(23,
-                                              PL_HashString,
-                                              PL_CompareStrings,
-                                              PL_CompareValues,
-                                              nsnull, nsnull);
 }
 
 
 ServiceImpl::~ServiceImpl(void)
 {
-    if (mDataSourceConstructors) {
-        PL_HashTableDestroy(mDataSourceConstructors);
-        mDataSourceConstructors = nsnull;
-    }
     if (mNamedDataSources) {
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nsnull;
@@ -403,13 +386,12 @@ ServiceImpl::~ServiceImpl(void)
 nsresult
 ServiceImpl::GetRDFService(nsIRDFService** mgr)
 {
+    nsresult rv;
     if (! gRDFService) {
-        gRDFService = new ServiceImpl();
-        if (! gRDFService)
+        ServiceImpl* serv = new ServiceImpl();
+        if (! serv)
             return NS_ERROR_OUT_OF_MEMORY;
-
-        RegisterBuiltInResourceFactories();
-        RegisterBuiltInNamedDataSources();
+        gRDFService = serv;
     }
 
     NS_ADDREF(gRDFService);
@@ -440,41 +422,52 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
 {
     nsIRDFResource* result =
         NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
-
-    if (! result) {
-        nsIRDFResourceFactory* factory =
-            NS_STATIC_CAST(nsIRDFResourceFactory*,
-                           NS_CONST_CAST(void*, mResourceFactories.Find(uri)));
-
-        PR_ASSERT(factory != nsnull);
-        if (! factory)
-            return NS_ERROR_FAILURE; // XXX
-
-        nsresult rv;
-
-        if (NS_FAILED(rv = factory->CreateResource(uri, &result)))
-            return rv;
-
-        const char* uri;
-        result->GetValue(&uri);
-
-        // This is a little trick to make storage more efficient. For
-        // the "key" in the table, we'll use the string value that's
-        // stored as a member variable of the nsIRDFResource object.
-        PL_HashTableAdd(mResources, uri, result);
-
-        // *We* don't AddRef() the resource: that way, the resource
-        // can be garbage collected when the last refcount goes
-        // away. The single addref that the CreateResource() call made
-        // will be owned by the callee.
-    }
-    else {
+    
+    if (result) {
         // Addref for the callee.
         NS_ADDREF(result);
+        *resource = result;
+        return NS_OK;
+    }        
+        
+    nsresult rv;
+    nsAutoString uriStr = uri;
+    PRInt32 pos = uriStr.Find(':');
+    if (pos < 0) {
+        // no colon, so try the default resource factory
+        rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
+                                          nsnull, nsIRDFResource::IID(),
+                                          (void**)&result);
+        if (NS_FAILED(rv)) return rv;
     }
+    else {
+        nsAutoString prefix;
+        uriStr.Left(prefix, pos);      // truncate
+        char* prefixStr = prefix.ToNewCString();
+        if (prefixStr == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        char* progID = PR_smprintf(NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "%s",
+                                   prefixStr);
+        delete[] prefixStr;
+        if (progID == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        rv = nsRepository::CreateInstance(progID, nsnull,
+                                          nsIRDFResource::IID(),
+                                          (void**)&result);
+        PR_smprintf_free(progID);
+        if (NS_FAILED(rv)) {
+            // if we failed, try the default resource factory
+            rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
+                                              nsnull, nsIRDFResource::IID(),
+                                              (void**)&result);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+    rv = result->Init(uri);
+    if (NS_FAILED(rv)) return rv;
 
     *resource = result;
-    return NS_OK;
+    return RegisterResource(result);
 }
 
 
@@ -502,7 +495,41 @@ ServiceImpl::GetLiteral(const PRUnichar* uri, nsIRDFLiteral** literal)
 }
 
 NS_IMETHODIMP
-ServiceImpl::UnCacheResource(nsIRDFResource* resource)
+ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
+{
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    const char* uri;
+    rv = aResource->GetValue(&uri);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIRDFResource* prevRes =
+        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
+    if (prevRes != nsnull) {
+        if (replace)
+            NS_RELEASE(prevRes);
+        else
+            return NS_ERROR_FAILURE;    // already registered
+    }
+
+    // This is a little trick to make storage more efficient. For
+    // the "key" in the table, we'll use the string value that's
+    // stored as a member variable of the nsIRDFResource object.
+    PL_HashTableAdd(mResources, uri, aResource);
+
+    // *We* don't AddRef() the resource: that way, the resource
+    // can be garbage collected when the last refcount goes
+    // away. The single addref that the CreateResource() call made
+    // will be owned by the callee.
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceImpl::UnregisterResource(nsIRDFResource* resource)
 {
     nsresult rv;
 
@@ -515,31 +542,7 @@ ServiceImpl::UnCacheResource(nsIRDFResource* resource)
 }
 
 NS_IMETHODIMP
-ServiceImpl::RegisterResourceFactory(const char* aURIPrefix, nsIRDFResourceFactory* aFactory)
-{
-    if (! mResourceFactories.Add(aURIPrefix, aFactory))
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    NS_ADDREF(aFactory); // XXX should we addref?
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceImpl::UnRegisterResourceFactory(const char* aURIPrefix)
-{
-    nsIRDFResourceFactory* factory =
-        NS_STATIC_CAST(nsIRDFResourceFactory*,
-                       NS_CONST_CAST(void*, mResourceFactories.Remove(aURIPrefix)));
-
-    if (! factory)
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    NS_RELEASE(factory); // XXX should we addref?
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource)
+ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
     if (! aDataSource)
@@ -551,7 +554,15 @@ ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource)
     if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
         return rv;
 
-    // XXX check for dups, etc.
+    nsIRDFDataSource* ds =
+        NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
+
+    if (ds) {
+        if (replace)
+            NS_RELEASE(ds);
+        else
+            return NS_ERROR_FAILURE;    // already registered
+    }
 
     PL_HashTableAdd(mNamedDataSources, uri, aDataSource);
     return NS_OK;
@@ -581,21 +592,6 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 }
 
 NS_IMETHODIMP
-ServiceImpl::RegisterDataSourceConstructor(const char* uri, NSDataSourceConstructorCallback fn)
-{
-    // XXX check for dups, etc.
-    PL_HashTableAdd(mDataSourceConstructors, uri, fn);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceImpl::UnregisterDataSourceConstructor(const char* uri)
-{
-    PL_HashTableRemove(mDataSourceConstructors, uri);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 {
     nsIRDFDataSource* ds =
@@ -606,41 +602,27 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         *aDataSource = ds;
         return NS_OK;
     }
-
-    // Otherwise, see if we have a lazy constructor
-    NSDataSourceConstructorCallback constructor =
-        (NSDataSourceConstructorCallback)
-        PL_HashTableLookup(mDataSourceConstructors, uri);
-
-    if (constructor) {
-        // Yep, so try to construct it on the fly...
-        nsresult rv;
-
-        if (NS_FAILED(rv = constructor(&ds))) {
-#ifdef DEBUG
-            printf("error constructing built-in datasource %s\n", uri);
-#endif
-            return rv;
-        }
-
-        // If it wants to register itself, it should do so in the Init() method.
-        if (NS_FAILED(rv = ds->Init(uri))) {
-#ifdef DEBUG
-            printf("error initializing named datasource %s\n", uri);
-#endif
-            NS_RELEASE(ds);
-            return rv;
-        }
-
-        // constructor did an implicit addref
-        *aDataSource = ds;
-        return NS_OK;
-    }
-
-    // XXX at this point, we might want to try to construct a
-    // stream URI and load it that way...
-    return NS_ERROR_ILLEGAL_VALUE;
-
+    nsresult rv;
+    nsAutoString dataSourceName = uri;
+    PRInt32 pos = dataSourceName.Find(':');
+    if (pos < 0) return NS_ERROR_FAILURE;       // bad URI
+    dataSourceName.Right(dataSourceName, pos + 1);
+    char* name = dataSourceName.ToNewCString();
+    if (name == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    char* progID = PR_smprintf(NS_RDF_DATASOURCE_PROGID_PREFIX "%s",
+                               name);
+    delete[] name;
+    if (progID == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    rv = nsRepository::CreateInstance(progID, nsnull,
+                                      nsIRDFDataSource::IID(),
+                                      (void**)aDataSource);
+    PR_smprintf_free(progID);
+    if (NS_FAILED(rv)) return rv;
+    rv = (*aDataSource)->Init(uri);
+    if (NS_FAILED(rv)) return rv;
+    return RegisterDataSource(*aDataSource);
 }
 
 NS_IMETHODIMP
@@ -657,97 +639,6 @@ ServiceImpl::CreateBrowserDatabase(nsIRDFDataBase** dataBase)
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
-////////////////////////////////////////////////////////////////////////
-//
-//   This is Big Hack #1. Depedencies on all builtin resource
-//   factories are *here*, in the ResourceFactoryTable.
-//
-
-struct ResourceFactoryTable {
-    const char* mPrefix;
-    nsresult (*mFactoryConstructor)(nsIRDFResourceFactory** result);
-};
-
-void
-ServiceImpl::RegisterBuiltInResourceFactories(void)
-{
-    extern nsresult NS_NewRDFDefaultResourceFactory(nsIRDFResourceFactory** result);
-//    extern nsresult NS_NewRDFMailResourceFactory(nsIRDFResourceFactory** result);
-//    extern nsresult NS_NewRDFMailAccountResourceFactory(nsIRDFResourceFactory** result);
-    extern nsresult NS_NewRDFFileResourceFactory(nsIRDFResourceFactory** result);
-
-    static ResourceFactoryTable gTable[] = {
-        "",                NS_NewRDFDefaultResourceFactory,
-//        "mailaccount:",    NS_NewRDFMailAccountResourceFactory,
-//        "mailbox:",        NS_NewRDFMailResourceFactory,
-        nsnull,     nsnull
-    };
-
-    nsresult rv;
-    for (ResourceFactoryTable* entry = gTable; entry->mPrefix != nsnull; ++entry) {
-        nsIRDFResourceFactory* factory;
-    
-        if (NS_FAILED(rv = (entry->mFactoryConstructor)(&factory)))
-            continue;
-
-        rv = gRDFService->RegisterResourceFactory(entry->mPrefix, factory);
-        PR_ASSERT(NS_SUCCEEDED(rv));
-
-        NS_RELEASE(factory);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-//
-//   This is Big Hack #2. Dependencies on all builtin datasources are
-//   *here*, in the DataSourceTable.
-//
-//   FWIW, I don't particularly like this interface *anyway*, because
-//   it requires each built-in data source to be constructed "up
-//   front". Not only does it cause the service manager to be
-//   re-entered (which may be a problem), but it's wasteful: I think
-//   these data sources should be created on demand, and released when
-//   you're done with them.
-//
-
-struct DataSourceTable {
-    const char* mURI;
-    nsresult (*mDataSourceConstructor)(nsIRDFDataSource** result);
-};
-
-void
-ServiceImpl::RegisterBuiltInNamedDataSources(void)
-{
-    extern nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
-    extern nsresult NS_NewRDFHistoryDataSource(nsIRDFDataSource** result);
-    extern nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
-//    extern nsresult NS_NewRDFMailDataSource(nsIRDFDataSource** result);
-
-    static DataSourceTable gTable[] = {
-        "rdf:bookmarks",      NS_NewRDFBookmarkDataSource,
-        "rdf:files",          NS_NewRDFFileSystemDataSource,
-//        "rdf:mail",           NS_NewRDFMailDataSource, 
-#if 0
-        "rdf:history",        NS_NewRDFHistoryDataSource,
-#endif
-        nsnull,               nsnull
-    };
-
-    nsresult rv;
-    for (DataSourceTable* entry = gTable; entry->mURI != nsnull; ++entry) {
-        if (NS_FAILED(rv = gRDFService->RegisterDataSourceConstructor(entry->mURI, entry->mDataSourceConstructor))) {
-#ifdef DEBUG
-            printf("error registering built-in datasource constructor for %s\n", entry->mURI);
-#endif
-            continue;
-        }
-    }
-}
-
-
-////////////////////////////////////////////////////////////////////////
 
 nsresult
 NS_NewRDFService(nsIRDFService** mgr)

@@ -130,8 +130,8 @@ nsresult TestFactory::CreateInstance(nsISupports *aDelegate,
  */
 
 extern "C" void RegisterTestFactories() {
-  nsRepository::RegisterFactory(kTestFactoryCID, new TestFactory(),
-                                PR_FALSE);
+  nsRepository::RegisterFactory(kTestFactoryCID, 0, 0,
+                                new TestFactory(), PR_FALSE);
 
   // Windows can use persistant registry  
 #ifndef USE_NSREG

@@ -36,18 +36,21 @@ extern "C" PRInt32 g_LockCount = 0;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-extern "C" NS_EXPORT PRBool NSCanUnload()
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
   if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
 
   // the converter manager
-  if (aCID.Equals(kCharsetConverterManagerCID)) {
+  if (aClass.Equals(kCharsetConverterManagerCID)) {
     nsManagerFactory *factory = new nsManagerFactory();
     nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
 
@@ -60,7 +63,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
   }
 
   // the Unicode Encode helper
-  if (aCID.Equals(kUnicodeEncodeHelperCID)) {
+  if (aClass.Equals(kUnicodeEncodeHelperCID)) {
     nsEncodeHelperFactory *factory = new nsEncodeHelperFactory();
     nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
 
@@ -72,7 +75,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
     return res;
   }
 
-  if (aCID.Equals(kPlatformCharsetCID)) {
+  if (aClass.Equals(kPlatformCharsetCID)) {
     nsIFactory *factory = NEW_PLATFORMCHARSETFACTORY();
 	nsresult res = factory->QueryInterface(kIFactoryIID, (void**) aFactory);
     if (NS_FAILED(res)) {
@@ -86,7 +89,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
   return NS_NOINTERFACE;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char * path)
 {
   nsresult res;
 
@@ -103,7 +106,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
   return res;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
 {
   nsresult res;
 

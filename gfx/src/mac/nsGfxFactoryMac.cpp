@@ -175,9 +175,17 @@ nsresult nsGfxFactoryMac::LockFactory(PRBool aLock)
 
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_GFX nsresult NSGetFactory_GFXWIN_DLL(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+extern "C" NS_GFX nsresult NSGetFactory_GFXWIN_DLL(nsISupports* servMgr,
+                                                   const nsCID &aClass,
+                                                   const char *aClassName,
+                                                   const char *aProgID,
+                                                   nsIFactory **aFactory)
 #else
-extern "C" NS_GFX nsresult NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+extern "C" NS_GFX nsresult NSGetFactory(nsISupports* servMgr,
+                                        const nsCID &aClass,
+                                        const char *aClassName,
+                                        const char *aProgID,
+                                        nsIFactory **aFactory)
 #endif
 {
   if (nsnull == aFactory) {

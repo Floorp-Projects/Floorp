@@ -508,7 +508,11 @@ NS_IMPL_RELEASE(SimplePlugin);
 SimplePlugin* gPlugin = NULL;
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
+             nsIFactory **aFactory)
 {
     if (aClass.Equals(kIPluginIID)) {
         if (gPlugin) {
@@ -528,7 +532,7 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
 }
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(void)
+NSCanUnload(nsISupports* serviceMgr)
 {
     return gPluginObjectCount == 1 && !gPluginLocked;
 }
