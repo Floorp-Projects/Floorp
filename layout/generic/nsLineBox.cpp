@@ -438,6 +438,10 @@ nsLineBox::RemoveFloatersFromSpaceManager(nsSpaceManager* aSpaceManager)
 
       while (floaterCache) {
         nsIFrame* floater = floaterCache->mPlaceholder->GetOutOfFlowFrame();
+#ifdef NOISY_SPACEMANAGER
+        nsFrame::ListTag(stdout, floater);
+        printf(": Removing from space manager\n");
+#endif
         aSpaceManager->RemoveRegion(floater);
         floaterCache = floaterCache->Next();        
       }
