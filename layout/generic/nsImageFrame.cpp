@@ -318,7 +318,7 @@ NS_NewImageFrame(nsIContent* aContent,
                  nsIFrame* aParentFrame,
                  nsIFrame*& aResult)
 {
-  ImageFrame* frame = new ImageFrame(aContent, aParentFrame);
+  nsImageFrame* frame = new nsImageFrame(aContent, aParentFrame);
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -326,17 +326,17 @@ NS_NewImageFrame(nsIContent* aContent,
   return NS_OK;
 }
 
-ImageFrame::ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+nsImageFrame::nsImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
 {
 }
 
-ImageFrame::~ImageFrame()
+nsImageFrame::~nsImageFrame()
 {
 }
 
 NS_METHOD
-ImageFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsImageFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   NS_IF_RELEASE(mImageMap);
 
@@ -347,15 +347,15 @@ ImageFrame::DeleteFrame(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-ImageFrame::SizeOf(nsISizeOfHandler* aHandler) const
+nsImageFrame::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
-  ImageFrame::SizeOfWithoutThis(aHandler);
+  nsImageFrame::SizeOfWithoutThis(aHandler);
   return NS_OK;
 }
 
 void
-ImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+nsImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 {
   ImageFrameSuper::SizeOfWithoutThis(aHandler);
   mImageLoader.SizeOf(aHandler);
@@ -386,9 +386,9 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
 }
 
 void
-ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                           const nsHTMLReflowState& aReflowState,
-                           nsHTMLReflowMetrics& aDesiredSize)
+nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             nsHTMLReflowMetrics& aDesiredSize)
 {
   if (mSizeFrozen) {
     aDesiredSize.width = mRect.width;
@@ -426,17 +426,55 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 }
 
+void
+nsImageFrame::GetInnerArea(nsIPresContext* aPresContext,
+                           nsRect& aInnerArea) const
+{
+  aInnerArea.x = mBorderPadding.left;
+  aInnerArea.y = mBorderPadding.top;
+  aInnerArea.width = mRect.width -
+    (mBorderPadding.left + mBorderPadding.right);
+  aInnerArea.height = mRect.height -
+    (mBorderPadding.top + mBorderPadding.bottom);
+}
+
+NS_IMETHODIMP
+nsImageFrame::Reflow(nsIPresContext&          aPresContext,
+                     nsHTMLReflowMetrics&     aMetrics,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus)
+{
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                 ("enter nsImageFrame::Reflow: aMaxSize=%d,%d",
+                  aReflowState.maxSize.width, aReflowState.maxSize.height));
+
+  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, mBorderPadding);
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
+  }
+  aStatus = NS_FRAME_COMPLETE;
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                 ("exit nsImageFrame::Reflow: size=%d,%d",
+                  aMetrics.width, aMetrics.height));
+  return NS_OK;
+}
+
 // Computes the width of the specified string. aMaxWidth specifies the maximum
 // width available. Once this limit is reached no more characters are measured.
 // The number of characters that fit within the maximum width are returned in
 // aMaxFit. NOTE: it is assumed that the fontmetrics have already been selected
 // into the rendering context before this is called (for performance). MMP
 nscoord
-ImageFrame::MeasureString(const PRUnichar*     aString,
-                          PRInt32              aLength,
-                          nscoord              aMaxWidth,
-                          PRUint32&            aMaxFit,
-                          nsIRenderingContext& aContext)
+nsImageFrame::MeasureString(const PRUnichar*     aString,
+                            PRInt32              aLength,
+                            nscoord              aMaxWidth,
+                            PRUint32&            aMaxFit,
+                            nsIRenderingContext& aContext)
 {
   nscoord totalWidth = 0;
   nscoord spaceWidth;
@@ -495,10 +533,10 @@ ImageFrame::MeasureString(const PRUnichar*     aString,
 // Formats the alt-text to fit within the specified rectangle. Breaks lines
 // between words if a word would extend past the edge of the rectangle
 void
-ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
-                           nsIRenderingContext& aRenderingContext,
-                           const nsString&      aAltText,
-                           const nsRect&        aRect)
+nsImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsString&      aAltText,
+                             const nsRect&        aRect)
 {
   const nsStyleColor* color =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -563,9 +601,9 @@ struct nsRecessedBorder : public nsStyleSpacing {
 };
 
 void
-ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
-                               nsIRenderingContext& aRenderingContext,
-                               PRInt32              aIconId)
+nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 PRInt32              aIconId)
 {
   // Display a recessed one pixel border in the inner area
   PRBool clipState;
@@ -622,9 +660,9 @@ ImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
 }
 
 NS_METHOD
-ImageFrame::Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect)
+nsImageFrame::Paint(nsIPresContext& aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect)
 {
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
@@ -679,7 +717,7 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
 }
 
 nsIImageMap*
-ImageFrame::GetImageMap()
+nsImageFrame::GetImageMap()
 {
   if (nsnull == mImageMap) {
     nsAutoString usemap;
@@ -714,10 +752,10 @@ ImageFrame::GetImageMap()
 }
 
 void
-ImageFrame::TriggerLink(nsIPresContext& aPresContext,
-                        const nsString& aURLSpec,
-                        const nsString& aTargetSpec,
-                        PRBool aClick)
+nsImageFrame::TriggerLink(nsIPresContext& aPresContext,
+                          const nsString& aURLSpec,
+                          const nsString& aTargetSpec,
+                          PRBool aClick)
 {
   nsILinkHandler* handler = nsnull;
   aPresContext.GetLinkHandler(&handler);
@@ -732,14 +770,14 @@ ImageFrame::TriggerLink(nsIPresContext& aPresContext,
 }
 
 PRBool
-ImageFrame::IsServerImageMap()
+nsImageFrame::IsServerImageMap()
 {
   nsAutoString ismap;
   return NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("ismap", ismap);
 }
 
 PRIntn
-ImageFrame::GetSuppress()
+nsImageFrame::GetSuppress()
 {
   nsAutoString s;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("suppress", s)) {
@@ -754,9 +792,9 @@ ImageFrame::GetSuppress()
 
 // XXX what should clicks on transparent pixels do?
 NS_METHOD
-ImageFrame::HandleEvent(nsIPresContext& aPresContext,
-                        nsGUIEvent* aEvent,
-                        nsEventStatus& aEventStatus)
+nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent* aEvent,
+                          nsEventStatus& aEventStatus)
 {
   nsIImageMap* map;
   aEventStatus = nsEventStatus_eIgnore; 
@@ -847,9 +885,9 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-ImageFrame::GetCursor(nsIPresContext& aPresContext,
-                      nsPoint& aPoint,
-                      PRInt32& aCursor)
+nsImageFrame::GetCursor(nsIPresContext& aPresContext,
+                        nsPoint& aPoint,
+                        PRInt32& aCursor)
 {
   //XXX This will need to be rewritten once we have content for areas
   nsIImageMap* map = GetImageMap();
@@ -884,10 +922,10 @@ ImageFrame::GetCursor(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ImageFrame::AttributeChanged(nsIPresContext* aPresContext,
-                             nsIContent* aChild,
-                             nsIAtom* aAttribute,
-                             PRInt32 aHint)
+nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent* aChild,
+                               nsIAtom* aAttribute,
+                               PRInt32 aHint)
 {
   nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
                                               aAttribute, aHint);
@@ -908,7 +946,7 @@ ImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       oldSRC.ToCString(oldcbuf, sizeof(oldcbuf));
       newSRC.ToCString(newcbuf, sizeof(newcbuf));
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("ImageFrame::AttributeChanged: new image source; old='%s' new='%s'",
+         ("nsImageFrame::AttributeChanged: new image source; old='%s' new='%s'",
           oldcbuf, newcbuf));
 #endif
 
@@ -922,7 +960,7 @@ ImageFrame::AttributeChanged(nsIPresContext* aPresContext,
                                   PR_FALSE, loadStatus);
 
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                     ("ImageFrame::AttributeChanged: loadImage status=%x",
+                     ("nsImageFrame::AttributeChanged: loadImage status=%x",
                       loadStatus));
 
       // If the image is already ready then we need to trigger a
