@@ -535,7 +535,7 @@ print "
 ";
 
 StringSearch("Summary", "short_desc");
-StringSearch("Description", "long_desc");
+StringSearch("A description entry", "long_desc");
 StringSearch("URL", "bug_file_loc");
 
 if (Param("usestatuswhiteboard")) {
