@@ -50,6 +50,56 @@ public:
 };
 
 
+/*
+ * This class maintains the data associated with each entry in the EventQueue
+ * service's hash table...
+ *
+ * It derives from nsISupports merely as a convienence since the entries are
+ * reference counted...
+ */
+class EventQueueEntry : public nsISupports 
+{
+public:
+  EventQueueEntry();
+  ~EventQueueEntry();
+
+  // nsISupports interface...
+  NS_DECL_ISUPPORTS
+
+  PLEventQueue* GetEventQueue(void);
+
+private: 
+  PLEventQueue* mEventQueue; 
+};
+
+/* nsISupports interface implementation... */
+NS_IMPL_ISUPPORTS(EventQueueEntry,kISupportsIID);
+
+EventQueueEntry::EventQueueEntry()
+{
+  NS_INIT_REFCNT();
+
+#ifdef XP_PC
+  // XXX: For now only use the main eventQ...  When the event queue is
+  //      created via PL_CreateNativeEventQueue(...) this can go away...
+  PL_InitializeEventsLib("");
+  mEventQueue = PL_GetMainEventQueue();
+#else
+  mEventQueue = PL_CreateEventQueue("Thread event queue...", PR_GetCurrentThread());
+#endif
+}
+
+EventQueueEntry::~EventQueueEntry()
+{
+  if (NULL != mEventQueue) {
+    PL_DestroyEventQueue(mEventQueue);
+  }
+}
+
+PLEventQueue* EventQueueEntry::GetEventQueue(void)
+{
+  return mEventQueue;
+}
 
 
 
@@ -77,13 +127,29 @@ private:
 
 nsEventQueueServiceImpl::nsEventQueueServiceImpl()
 {
+  NS_INIT_REFCNT();
+
   mEventQTable   = new nsHashtable(16);
   mEventQMonitor = PR_NewMonitor();
 }
 
+static PRBool
+DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
+{
+  EventQueueEntry* evQueueEntry = (EventQueueEntry*)aData;
+
+  if (NULL != evQueueEntry) {
+    delete evQueueEntry;
+  }
+  return PR_TRUE;
+}
+
 nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
 {
+  // Destroy any remaining PLEventQueue's still in the hash table...
+  mEventQTable->Enumerate(DeleteEntry);
   delete mEventQTable;
+
   PR_DestroyMonitor(mEventQMonitor);
 }
 
@@ -97,30 +163,23 @@ nsEventQueueServiceImpl::CreateThreadEventQueue(void)
 {
   nsresult rv = NS_OK;
   ThreadKey  key(PR_GetCurrentThread());
-  PLEventQueue* evQueue;
+  EventQueueEntry* evQueueEntry;
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
   /* Only create one event queue per thread... */
-  if (NULL != mEventQTable->Get(&key)) {
-  // XXX: Need error code for creating an event queue more than once...
-    rv = NS_ERROR_FAILURE;
-    goto done;
-  }
-  
-  evQueue = PL_CreateEventQueue("Thread event queue...", PR_GetCurrentThread());
-#ifdef XP_PC
-  // XXX: For now only use the main eventQ...  When the event queue is
-  //      created via PL_CreateNativeEventQueue(...) this can go away...
-  PL_InitializeEventsLib("");
-#endif
-  if (NULL == evQueue) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+  evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
+  if (NULL == evQueueEntry) {
+    evQueueEntry = new EventQueueEntry();  
+    if (NULL == evQueueEntry) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+    }
 
-  mEventQTable->Put(&key, evQueue);
+    mEventQTable->Put(&key, evQueueEntry);
+  }
+  NS_ADDREF(evQueueEntry);
 
 done:
   // Release the EventQ lock...
@@ -133,16 +192,21 @@ nsEventQueueServiceImpl::DestroyThreadEventQueue(void)
 {
   nsresult rv = NS_OK;
   ThreadKey key(PR_GetCurrentThread());
-  PLEventQueue* evQueue;
+  EventQueueEntry* evQueueEntry;
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
-  evQueue = (PLEventQueue*)mEventQTable->Remove(&key);
-  if (NULL != evQueue) {
-    PL_DestroyEventQueue(evQueue);
+  evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
+  if (NULL != evQueueEntry) {
+    nsrefcnt refcnt;
+
+    NS_RELEASE2(evQueueEntry, refcnt);
+    // Remove the entry from the hash table if this was the last reference...
+    if (0 == refcnt) {
+      mEventQTable->Remove(&key);
+    }
   } else {
-  // XXX: Need error code for destroying an event queue more than once...
     rv = NS_ERROR_FAILURE;
   }
 
@@ -156,7 +220,7 @@ NS_IMETHODIMP
 nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, PLEventQueue** aResult)
 {
   nsresult rv = NS_OK;
-  PLEventQueue* evQueue;
+  EventQueueEntry* evQueueEntry;
   ThreadKey key(aThread);
 
   /* Enter the lock which protects the EventQ hashtable... */
@@ -168,14 +232,9 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, PLEventQueue** a
     goto done;
   }
 
-  evQueue = (PLEventQueue*)mEventQTable->Get(&key);
-  if (NULL != evQueue) {
-    *aResult = evQueue;
-#ifdef XP_PC
-    // XXX: For now only use the main eventQ...  When the event queue is
-    //      created via PL_CreateNativeEventQueue(...) this can go away...
-    *aResult = PL_GetMainEventQueue();
-#endif
+  evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
+  if (NULL != evQueueEntry) {
+    *aResult = evQueueEntry->GetEventQueue();
   } else {
     // XXX: Need error code for requesting an event queue when none exists...
     rv = NS_ERROR_FAILURE;
@@ -190,12 +249,67 @@ done:
 
 //----------------------------------------------------------------------
 
+static nsEventQueueServiceImpl* gServiceInstance = NULL;
+
+class nsEventQueueServiceFactory : public nsFactory<nsEventQueueServiceImpl>
+{
+public:
+  NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                            const nsIID &aIID,
+                            void **aResult);
+};
+
+NS_IMETHODIMP
+nsEventQueueServiceFactory::CreateInstance(nsISupports *aOuter,
+                                           const nsIID &aIID,
+                                           void **aResult)
+{
+  nsresult rv;
+  nsISupports* inst;
+
+  // Parameter validation...
+  if (NULL == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+    goto done;
+  }
+  // Do not support aggregatable components...
+  *aResult = NULL;
+  if (NULL != aOuter) {
+    rv = NS_ERROR_NO_AGGREGATION;
+    goto done;
+  }
+
+  if (NULL == gServiceInstance) {
+    // Create a new instance of the component...
+    NS_NEWXPCOM(gServiceInstance, nsEventQueueServiceImpl);
+    if (NULL == gServiceInstance) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+    }
+    NS_ADDREF(gServiceInstance);
+  }
+
+  // If the QI fails, the component will be destroyed...
+  //
+  // Use a local copy so the NS_RELEASE() will not null the global
+  // pointer...
+  inst = gServiceInstance;
+
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+done:
+  return rv;
+}
+
+
 // Entry point to create nsEventQueueService factory instances...
 
 nsresult NS_NewEventQueueServiceFactory(nsIFactory** aResult)
 {
   nsresult rv = NS_OK;
-  nsIFactory* inst = new nsFactory<nsEventQueueServiceImpl>();
+  nsIFactory* inst = new nsEventQueueServiceFactory();
   if (NULL == inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
