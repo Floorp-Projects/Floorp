@@ -75,6 +75,7 @@ extern PRLogModuleInfo* gPIPNSSLog;
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
+NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -347,7 +348,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
                                       nsnull, PR_FALSE, PR_TRUE);
   }
   if (!tmpCert) {
-    NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
+    NS_ERROR("Couldn't create cert from DER blob\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -389,15 +390,23 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   if (srv != SECSuccess)
     return NS_ERROR_FAILURE;
 
-  // Now it's time to add the rest of the certs we just downloaded.
-  // Since we didn't prompt the user about any of these certs, we
-  // won't set any trust bits for them.
-  nsNSSCertTrust defaultTrust;
-  defaultTrust.SetValidCA();
-  defaultTrust.AddCATrust(0,0,0);
+  // Import additional delivered certificates that can be verified.
+
+  // build a CertList for filtering
+  CERTCertList *certList = CERT_NewCertList();
+  if (certList == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CERTCertListCleaner listCleaner(certList);
+
+  // get all remaining certs into temp store
+
   for (PRUint32 i=0; i<numCerts; i++) {
-    if (i == selCertIndex)
+    if (i == selCertIndex) {
+      // we already processed that one
       continue;
+    }
 
     certToShow = do_QueryElementAt(x509Certs, i);
     certToShow->GetRawDER(&der.len, (PRUint8 **)&der.data);
@@ -409,13 +418,11 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
       NS_ASSERTION(0, "Couldn't create temp cert from DER blob\n");
       continue;  // Let's try to import the rest of 'em
     }
-    nickname.Adopt(CERT_MakeCANickname(tmpCert2));
-    CERT_AddTempCertToPerm(tmpCert2, NS_CONST_CAST(char*,nickname.get()), 
-                           defaultTrust.GetTrust());
-    CERT_DestroyCertificate(tmpCert2);
+    
+    CERT_AddCertToListTail(certList, tmpCert2);
   }
-  
-  return NS_OK;  
+
+  return ImportValidCACertsInList(certList, ctx);
 }
 
 /*
@@ -486,8 +493,13 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
   nsNSSShutDownPreventionLock locker;
   SECStatus srv = SECFailure;
   nsresult nsrv = NS_OK;
-  CERTCertificate * cert;
-  SECItem **rawCerts;
+  CERTCertDBHandle *certdb;
+  CERTCertificate **certArray = NULL;
+  CERTCertList *certList = NULL;
+  CERTCertListNode *node;
+  PRTime now;
+  SECCertUsage certusage;
+  SECItem **rawArray;
   int numcerts;
   int i;
  
@@ -500,35 +512,100 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
     PORT_FreeArena(arena, PR_FALSE);
     return NS_ERROR_FAILURE;
   }
-  cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certCollection->rawCerts,
-                          (char *)NULL, PR_FALSE, PR_TRUE);
-  if (!cert) {
-    nsrv = NS_ERROR_FAILURE;
-    goto loser;
-  }
+
+  certdb = CERT_GetDefaultCertDB();
+  certusage = certUsageEmailRecipient;
+
   numcerts = certCollection->numcerts;
-  rawCerts = (SECItem **) PORT_Alloc(sizeof(SECItem *) * numcerts);
-  if ( !rawCerts ) {
+
+  rawArray = (SECItem **) PORT_Alloc(sizeof(SECItem *) * numcerts);
+  if ( !rawArray ) {
     nsrv = NS_ERROR_FAILURE;
     goto loser;
   }
 
-  for ( i = 0; i < numcerts; i++ ) {
-    rawCerts[i] = &certCollection->rawCerts[i];
+  for (i=0; i < numcerts; i++) {
+    rawArray[i] = &certCollection->rawCerts[i];
   }
- 
-  srv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageEmailSigner,
-             numcerts, rawCerts, NULL, PR_TRUE, PR_FALSE,
-             NULL);
-  if ( srv != SECSuccess ) {
+
+  srv = CERT_ImportCerts(certdb, certusage, numcerts, rawArray, 
+                         &certArray, PR_FALSE, PR_FALSE, NULL);
+
+  PORT_Free(rawArray);
+  rawArray = NULL;
+
+  if (srv != SECSuccess) {
     nsrv = NS_ERROR_FAILURE;
     goto loser;
   }
-  srv = CERT_SaveSMimeProfile(cert, NULL, NULL);
-  PORT_Free(rawCerts);
+
+  // build a CertList for filtering
+  certList = CERT_NewCertList();
+  if (certList == NULL) {
+    nsrv = NS_ERROR_FAILURE;
+    goto loser;
+  }
+  for (i=0; i < numcerts; i++) {
+    CERTCertificate *cert = certArray[i];
+    if (cert)
+      cert = CERT_DupCertificate(cert);
+    if (cert)
+      CERT_AddCertToListTail(certList, cert);
+  }
+
+  /* filter out the certs we don't want */
+  srv = CERT_FilterCertListByUsage(certList, certusage, PR_FALSE);
+  if (srv != SECSuccess) {
+    nsrv = NS_ERROR_FAILURE;
+    goto loser;
+  }
+
+  /* go down the remaining list of certs and verify that they have
+   * valid chains, then import them.
+   */
+  now = PR_Now();
+  for (node = CERT_LIST_HEAD(certList);
+       !CERT_LIST_END(node,certList);
+       node = CERT_LIST_NEXT(node)) {
+    if (CERT_VerifyCert(certdb, node->cert, 
+        PR_TRUE, certusage, now, ctx, NULL) != SECSuccess) {
+      continue;
+    }
+
+    CERTCertificateList *certChain = CERT_CertChainFromCert(node->cert, certusage, PR_FALSE);
+    if (!certChain) {
+      continue;
+    }
+
+    CERTCertificateListCleaner chainCleaner(certChain);
+
+    /*
+     * CertChain returns an array of SECItems, import expects an array of
+     * SECItem pointers. Create the SECItem Pointers from the array of
+     * SECItems.
+     */
+    rawArray = (SECItem **) PORT_Alloc(certChain->len * sizeof(SECItem *));
+    if (!rawArray) {
+      continue;
+    }
+    for (i=0; i < certChain->len; i++) {
+      rawArray[i] = &certChain->certs[i];
+    }
+    CERT_ImportCerts(certdb, certusage, certChain->len, 
+                            rawArray,  NULL, PR_TRUE, PR_FALSE, NULL);
+
+    CERT_SaveSMimeProfile(node->cert, NULL, NULL);
+
+    PORT_Free(rawArray);
+  }
+
 loser:
-  if (cert)
-    CERT_DestroyCertificate(cert);
+  if (certArray) {
+    CERT_DestroyCertArray(certArray, numcerts);
+  }
+  if (certList) {
+    CERT_DestroyCertList(certList);
+  }
   if (arena) 
     PORT_FreeArena(arena, PR_TRUE);
   return nsrv;
@@ -600,6 +677,109 @@ loser:
   return nsrv;
 }
 
+nsresult
+nsNSSCertificateDB::ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx)
+{
+  CERTCertList *certList = NULL;
+  SECItem **rawArray;
+
+  // build a CertList for filtering
+  certList = CERT_NewCertList();
+  if (certList == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CERTCertListCleaner listCleaner(certList);
+
+  // get all certs into temp store
+  SECStatus srv = SECFailure;
+  CERTCertificate **certArray = NULL;
+
+  rawArray = (SECItem **) PORT_Alloc(sizeof(SECItem *) * numCACerts);
+  if ( !rawArray ) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (int i=0; i < numCACerts; i++) {
+    rawArray[i] = &CACerts[i];
+  }
+
+  srv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageAnyCA, numCACerts, rawArray, 
+                         &certArray, PR_FALSE, PR_TRUE, NULL);
+
+  PORT_Free(rawArray);
+  rawArray = NULL;
+
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (int i2=0; i2 < numCACerts; i2++) {
+    CERTCertificate *cacert = certArray[i2];
+    if (cacert)
+      cacert = CERT_DupCertificate(cacert);
+    if (cacert)
+      CERT_AddCertToListTail(certList, cacert);
+  }
+
+  CERT_DestroyCertArray(certArray, numCACerts);
+
+  return ImportValidCACertsInList(certList, ctx);
+}
+
+nsresult
+nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfaceRequestor *ctx)
+{
+  SECItem **rawArray;
+
+  /* filter out the certs we don't want */
+  SECStatus srv = CERT_FilterCertListByUsage(certList, certUsageAnyCA, PR_TRUE);
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  /* go down the remaining list of certs and verify that they have
+   * valid chains, if yes, then import.
+   */
+  PRTime now = PR_Now();
+  CERTCertListNode *node;
+  for (node = CERT_LIST_HEAD(certList);
+       !CERT_LIST_END(node,certList);
+       node = CERT_LIST_NEXT(node)) {
+    if (CERT_VerifyCert(CERT_GetDefaultCertDB(), node->cert, 
+        PR_TRUE, certUsageVerifyCA, now, ctx, NULL) != SECSuccess) {
+      continue;
+    }
+
+    CERTCertificateList *certChain = CERT_CertChainFromCert(node->cert, certUsageAnyCA, PR_FALSE);
+    if (!certChain) {
+      continue;
+    }
+
+    CERTCertificateListCleaner chainCleaner(certChain);
+
+    /*
+     * CertChain returns an array of SECItems, import expects an array of
+     * SECItem pointers. Create the SECItem Pointers from the array of
+     * SECItems.
+     */
+    rawArray = (SECItem **) PORT_Alloc(certChain->len * sizeof(SECItem *));
+    if (!rawArray) {
+      continue;
+    }
+    for (int i=0; i < certChain->len; i++) {
+      rawArray[i] = &certChain->certs[i];
+    }
+    CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageAnyCA, certChain->len, 
+                            rawArray,  NULL, PR_TRUE, PR_TRUE, NULL);
+
+    PORT_Free(rawArray);
+  }
+  
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx)
 {
@@ -652,13 +832,13 @@ nsNSSCertificateDB::ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInt
     goto loser;
   }
   PK11_FreeSlot(slot);
-  numCACerts = collectArgs->numcerts - 1;
 
+  rv = NS_OK;
+
+  numCACerts = collectArgs->numcerts - 1;
   if (numCACerts) {
     CACerts = collectArgs->rawCerts+1;
-    if ( ! CERT_ImportCAChain(CACerts, numCACerts, certUsageUserCertImport) ) {
-      rv = NS_OK;
-    }
+    rv = ImportValidCACerts(numCACerts, CACerts, ctx);
   }
   
 loser:

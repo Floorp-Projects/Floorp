@@ -2031,7 +2031,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
            node = CERT_LIST_NEXT(node), i++) {
         derCerts[i] = node->cert->derCert;
       }
-      CERT_ImportCAChain(derCerts, numCAs, certUsageUserCertImport);
+      nsNSSCertificateDB::ImportValidCACerts(numCAs, derCerts, ctx);
       nsMemory::Free(derCerts);
     }
     
