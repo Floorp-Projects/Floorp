@@ -773,7 +773,7 @@ nsresult nsMsgFolderDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, ns
 		nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 		if(NS_SUCCEEDED(rv))
 		{
-			//Notify folders that a message was added or deleted.
+			//Notify folders that a folder was added or deleted.
 			NotifyObservers(parentResource, kNC_Child, itemNode, added, PR_FALSE);
 		}
 	}
