@@ -636,7 +636,6 @@
       <method name="onPopupClick">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          this.mInput.mEnterEvent = aEvent;
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
           controller.handleEnter();
         ]]></body>
