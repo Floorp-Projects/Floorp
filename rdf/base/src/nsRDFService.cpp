@@ -695,31 +695,7 @@ RDFServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aReso
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    char buf[128];
-    char* uri = buf;
-
-    PRUint32 len = nsCRT::strlen(aURI);
-    if (len >= sizeof(buf)) {
-        uri = (char *)nsAllocator::Alloc(len + 1);
-        if (! uri) return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    /* CopyChars2To1(uri, 0, aURI, 0, len); // XXX not exported */
-    const PRUnichar* src = aURI;
-    char* dst = uri;
-    while (*src) {
-        *dst = (*src < 256) ? char(*src) : '.';
-        ++src;
-        ++dst;
-    }
-    *dst = '\0';
-
-    nsresult rv = GetResource(uri, aResource);
-
-    if (uri != buf)
-        nsCRT::free(uri);
-
-    return rv;
+    return GetResource(NS_ConvertUCS2toUTF8(aURI), aResource);
 }
 
 
