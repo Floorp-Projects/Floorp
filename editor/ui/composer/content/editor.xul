@@ -169,7 +169,9 @@
     <box autostretch="never">
       <!-- from editorOverlay -->
       <menulist id="ParagraphSelect"/>
+<!-- remove font dropdown list from toolbar (bug #47506)
       <menulist id="FontFaceSelect"/>
+-->
       <stack id="ColorButtons"/>
     </box>
 
