@@ -564,8 +564,8 @@ NS_IMETHODIMP mozXMLTermStream::Write(const PRUnichar* buf)
 
   XMLT_WARNING("mozXMLTermStream::Write: str=%s\n", mUTF8Buffer.get());
 
-  XMLT_LOG(mozXMLTermStream::Write,51,("returning mUTF8Offset=%d\n",
-                                       mUTF8Offset));
+  XMLT_LOG(mozXMLTermStream::Write,51,
+           ("returning mUTF8Offset=%u\n", mUTF8Offset));
 
   return NS_OK;
 }
