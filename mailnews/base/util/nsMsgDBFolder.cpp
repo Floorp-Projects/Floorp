@@ -248,8 +248,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 	rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
 	if(NS_SUCCEEDED(rv))
 	{
-		nsAutoString charset(aCharset);
-		rv = folderInfo->SetCharacterSet(&charset);
+		rv = folderInfo->SetCharacterSet(aCharset);
 		db->Commit(nsMsgDBCommitType::kLargeCommit);
 		mCharset.Assign(aCharset);  // synchronize member variable
 	}
@@ -812,20 +811,20 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
 
 NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 {
-	//PRInt32 numTotalMessages;
+  PRInt32 numTotalMessages;
 
-	if (!retval)
-		return NS_ERROR_NULL_POINTER;
-  *retval = PR_TRUE;
+  if (!retval)
+    return NS_ERROR_NULL_POINTER;
+//  *retval = PR_TRUE;
 
   // is there any reason to return false?
-//	if (!mDatabase)
-//		*retval = PR_TRUE;
-//	else if (NS_SUCCEEDED(GetTotalMessages(PR_FALSE, &numTotalMessages)) && numTotalMessages <= 0)
-//		*retval = PR_TRUE;
-//	else
-//		*retval = PR_FALSE;
-	return NS_OK;
+  if (!mDatabase)
+    *retval = PR_TRUE;
+  else if (NS_SUCCEEDED(GetTotalMessages(PR_FALSE, &numTotalMessages)) && numTotalMessages <= 0)
+    *retval = PR_TRUE;
+  else
+    *retval = PR_FALSE;
+  return NS_OK;
 }
 
 nsresult nsMsgDBFolder::MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result)
