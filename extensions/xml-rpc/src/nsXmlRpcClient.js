@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.24 $
+ *  Version: $Revision: 1.25 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.24 2002/03/26 07:09:26 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.25 2002/06/16 06:14:31 samuel%sieb.net Exp $
  */
 
 /*
@@ -1285,8 +1285,8 @@ function toScriptableStream(input) {
 /* format a Date object into a iso8601 datetime string, UTC time */
 function iso8601Format(date) {
     var datetime = date.getUTCFullYear();
-    var month = date.getUTCMonth() + 1;
-    datetime += (month < 10 ?  '0' + month : month);
+    var month = String(date.getUTCMonth() + 1);
+    datetime += (month.length == 1 ?  '0' + month : month);
     var day = date.getUTCDate();
     datetime += (day < 10 ? '0' + day : day);
 
