@@ -76,13 +76,15 @@
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <listbox  rows="6" id="SuggestedList" onselect="SelectSuggestedWord()" ondblclick="Replace();"/>
+        <listbox  rows="6" id="SuggestedList" onselect="SelectSuggestedWord()"
+                  ondblclick="if (gAllowSelectWord) Replace(event.target.getAttribute('label'));"/>
         <vbox>
           <grid flex="1">
             <columns><column class="spell-check" flex="1"/><column class="spell-check" flex="1"/></columns>
             <rows>
               <row>
-                <button id="Replace" oncommand="Replace();" label="&replaceButton.label;"
+                <button id="Replace" label="&replaceButton.label;"
+                        oncommand="Replace(gDialog.ReplaceWordInput.value);"
                         accesskey="&replaceButton.accessKey;"/>
                 <button id="Ignore"  oncommand="Ignore();" label="&ignoreButton.label;"
                         accesskey="&ignoreButton.accessKey;"/>
