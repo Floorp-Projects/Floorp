@@ -31,10 +31,10 @@
 #include "zig.h"
 #include "secnav.h"
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "navhook.h"
 #include "jarutil.h"
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
 /* XXX: Hack to determine the system principal */
 
@@ -172,7 +172,7 @@ static nsVector* getTempCertificates(const unsigned char **certChain,
                                      PRUint32 *certChainLengths, 
                                      PRUint32 noOfCerts)
 {
-#ifdef NO_SECURITY
+#ifndef MOZ_SECURITY
   return NULL;
 #else
   CERTCertificate *cert;
@@ -212,7 +212,7 @@ static nsVector* getTempCertificates(const unsigned char **certChain,
      return NULL;
   }
   return certArray;
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 }
 
 
@@ -738,7 +738,7 @@ nsPrincipal::getCertAttribute(int attrib)
       char *attributeStr;
       CERTCertificate *cert = (CERTCertificate *)itsCertArray->Get(0);
       switch (attrib) {
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
       case ZIG_C_COMPANY:
         attributeStr = SECNAV_GetJarCertInfo(cert, snjSubjectName);
         break;
@@ -757,7 +757,7 @@ nsPrincipal::getCertAttribute(int attrib)
       case ZIG_C_FP:
         attributeStr = SECNAV_GetJarCertInfo(cert, snjFingerprint);
         break;
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
       default:
         return NULL;
       }
