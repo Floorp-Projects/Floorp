@@ -244,6 +244,8 @@ Contributor(s): ______________________________________. -->
 <!ENTITY xptk6Cmd.label "Tab">
 <!ENTITY xptk7Cmd.label "Beep">
 <!ENTITY xptk8Cmd.label "Sound">
+<!ENTITY xptk9Cmd.label "XP Menus">
+
 
 <!ENTITY QA.label "QA">
 <!ENTITY QABugCmd.label "Bug Writing">
@@ -672,6 +674,7 @@ Contributor(s): ______________________________________. -->
         <menuitem name="&xptk6Cmd.label;" onclick="window.content.location.href='resource:/res/samples/tab.xul'"/>
         <menuitem name="&xptk7Cmd.label;" onclick="window.content.location.href='resource:/res/samples/beeptest.html'"/>
         <menuitem name="&xptk8Cmd.label;" onclick="window.content.location.href='resource:/res/samples/soundtest.html'"/>
+        <menuitem name="&xptk9Cmd.label;" onclick="window.content.location.href='resource:/res/samples/xpmenu.xul'"/>
       </menu>
 
     </menu>
