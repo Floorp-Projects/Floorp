@@ -76,17 +76,6 @@ sub url_encode2 {
     return $s;
 }
 
-sub url_encode3 {
-    local( $s ) = @_;
-
-    $s =~ s/\n/\%0a/g;
-    $s =~ s/\r//g;
-    $s =~ s/\"/\%22/g;
-    $s =~ s/\+/\%2b/g;
-    return $s;
-}
-
-
 @weekdays = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
 @months = ('Jan','Feb','Mar','Apr','May','Jun',
            'Jul','Aug','Sep','Oct','Nov','Dec');

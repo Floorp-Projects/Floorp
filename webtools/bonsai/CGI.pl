@@ -75,16 +75,6 @@ sub url_encode2 {
     return $s;
 }
 
-sub url_encode3 {
-    my ($s) = @_;
-
-    $s =~ s/\n/\%0a/g;
-    $s =~ s/\r//g;
-    $s =~ s/\"/\%22/g;
-    $s =~ s/\+/\%2b/g;
-    return $s;
-}
-
 # Make sure CVS revisions are in a specific format
 sub sanitize_revision {
     my ($rev) = @_;

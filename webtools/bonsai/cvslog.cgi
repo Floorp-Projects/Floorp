@@ -48,6 +48,9 @@ sub sillyness {
 require 'CGI.pl';
 require 'cvsblame.pl';
 
+use Date::Parse;
+use Date::Format;
+
 # Some Globals
 #
 $| = 1;
@@ -138,10 +141,6 @@ if ($browse_revtag eq 'HEAD') {
 } else {
     $start_rev = map_tag_to_revision($browse_revtag);
 }
-print "Content-Type:text/html\n";
-print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$start_rev}), "GMT")."\n";
-print "Expires: ".time2str("%a, %d %b %Y %T %Z", time+1200, "GMT")."\n";
-print "\n";
 
 # Handle the "mark" argument
 #
@@ -161,12 +160,32 @@ $author_arg = $::FORM{'author'} if defined($::FORM{'author'});
 foreach my $author (split(',',$author_arg)) {
     $use_author{$author} = 1;
 }
+my $url_author_arg = url_quote($author_arg);
 
 
 # Handle the "sort" argument
 my $opt_sort = '';
 $opt_sort = $::FORM{'sort'} if defined $::FORM{'sort'};
+my $sortstr = $opt_sort eq "author" ? "&sort=author" : "";
 
+print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$start_rev}), "GMT")."\n";
+print "Expires: ".time2str("%a, %d %b %Y %T %Z", time+1200, "GMT")."\n";
+
+my $ctype = $::FORM{ctype};
+if ($ctype eq "rss") {
+    print "Content-Type: application/rss+xml\n\n";
+    display_rss();
+}
+else {
+    print "Content-Type: text/html\n\n";
+    display_html();
+}
+
+exit;
+
+## END of main script
+
+sub display_html {
 
 # Start printing out the page
 #
@@ -237,6 +256,12 @@ print qq(
         </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>
+       </TR><TR>
+        <TD>
+         <A HREF="cvslog.cgi?file=$url_filename&root=$root$revstr$sortstr&author=$url_author_arg&ctype=rss">RSS</A>&nbsp;
+        </TD><TD NOWRAP>
+         Get an RSS version of this page.
+        </TD>
 $graph_cell
        </TR>
       </TABLE>
@@ -255,12 +280,11 @@ $graph_cell
 my $table_tag = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3 WIDTH='100%'>";
 my $table_header_tag = "";
 if ($opt_sort eq 'author') {
-    $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=revision&author=$author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=date&author=$author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
+    $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=revision&author=$url_author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=date&author=$url_author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
 } else {
-    $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=author&author=$author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
+    $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=author&author=$url_author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
 }
 
-$table_header_tag = &url_encode3($table_header_tag);
 print "$table_tag$table_header_tag";
 
 # Print each line of the revision, preceded by its annotation.
@@ -302,25 +326,7 @@ foreach $revision (@revisions)
     }
 
     $output .= "<TR$bgcolor VALIGN=TOP><TD>"
-        ."<A NAME=$revision>";
-
-    my $anchor = "<A HREF=cvsview2.cgi";
-
-    if (defined($::prev_revision{$revision})) {
-        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$url_file_tail&branch=$::opt_rev"
-            ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
-            ."&rev1=$::prev_revision{$revision}&rev2=$revision";
-    } else {
-        $anchor .= "?files=$url_file_tail"
-            ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
-        $anchor .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
-    }
-
-    $anchor = &url_encode3($anchor);
-
-    $output .= $anchor;
-
-    $output .= ">$revision</A>"
+        ."<A NAME=$revision><A HREF=".value_quote(revision_link($revision)).">$revision</A>"
         .'&nbsp' x ($max_rev_length - length($revision)).'</TD>';
 
     $output .= "<TD>".$author
@@ -359,8 +365,124 @@ foreach $revision (@revisions)
 }
 print "</TABLE>";
 &print_bottom;
+}
 
-## END of main script
+sub display_rss {
+    my @revisions = ($start_rev, ancestor_revisions($start_rev));
+    @revisions = sort by_author @revisions if $opt_sort eq 'author';
+
+    # The escaped path+name of the file; included in the channel title.
+    my $html_filename = html_quote($filename);
+
+    # The canonical URL of the file; we use a link to its revision history,
+    # but arguably this should be a link to the LXR page or, for web pages,
+    # a link to the actual web page.
+    my $link = Param("urlbase") . "cvslog.cgi?file=$url_filename";
+    $link .= "&root=$root" if $::FORM{'root'} ne "";
+    $link .= $revstr;
+    $link .= $sortstr;
+    $link .= "&author=$url_author_arg" if $author_arg ne "";
+    $link = value_quote($link);
+
+    print <<"END";
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns="http://purl.org/rss/1.0/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
+
+  <channel rdf:about="$link">
+    <title>Revision History for $html_filename</title>
+    <link>$link</link>
+    <description>Revision History for $html_filename</description>
+    <items>
+      <rdf:Seq>
+END
+
+    # We loop over revisions twice.  The first time, here, it's just to populate
+    # the "items" list of revisions inside the channel tag.  All we need to know
+    # is whether to skip this author and the link to the revision.
+    foreach my $revision (@revisions) {
+        next unless $author_arg eq '' || $use_author{$::revision_author{$revision}};
+        my $link = value_quote(revision_link($revision));
+        print <<"END";
+        <rdf:li resource="$link"/>
+END
+    }
+
+    print <<"END";
+      </rdf:Seq>
+    </items>
+  </channel>
+END
+
+    # The second time we loop over revisions, it's to generate "item" resources
+    # for each one.
+    foreach my $revision (@revisions) {
+        my $author = $::revision_author{$revision};
+        next unless $author_arg eq '' || $use_author{$author};
+        $author = html_quote($author);
+
+        my $link = value_quote(revision_link($revision));
+
+        my $log = $::revision_log{$revision};
+        $log = html_quote($log);
+        $log = MarkUpText($log);
+        $log =~ s/\n|\r|\r\n/<BR>/g;
+
+        my $date = date_to_w3cdtf($::revision_ctime{$revision});
+
+        print <<"END";
+  <item rdf:about="$link">
+      <title>Version $revision</title>
+      <link>$link</link>
+      <description><![CDATA[$log]]></description>
+      <dc:creator>$author</dc:creator>
+      <dc:date>$date</dc:date>
+  </item>
+END
+    }
+
+    print <<"END";
+</rdf:RDF>
+END
+
+}
+
+sub revision_link {
+    my $revision = shift;
+
+    my $link = Param('urlbase') . "cvsview2.cgi";
+    if (defined($::prev_revision{$revision})) {
+        $link .= "?diff_mode=context&whitespace_mode=show&file=$url_file_tail"
+                 . "&branch=$::opt_rev&root=$root&subdir=$rcs_path"
+                 . "&command=DIFF_FRAMESET&rev1=$::prev_revision{$revision}"
+                 . "&rev2=$revision";
+    } else {
+        $link .= "?files=$url_file_tail&root=$root&subdir=$rcs_path"
+                 . "\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
+        $link .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
+    }
+
+    return $link;
+}
+
+# Format a date/time in W3CDTF per http://www.w3.org/TR/NOTE-datetime
+sub date_to_w3cdtf {
+    my ($date) = @_;
+
+    $date = str2time($date);
+
+    # Date::Format returns timezone offsets without a colon, while W3CDTF
+    # requires a colon between the hour and minute offsets, so we have to
+    # convert the timezone specially.
+    my $timezone = time2str("%z", $date);
+    $timezone =~ s/([+-])(\d\d)(\d\d)/$1$2:$3/;
+
+    $date = time2str("%Y-%m-%dT%R", $date) . $timezone;
+
+    return $date;
+}
 
 sub by_revision {
     my (@a_parts) = split(/\./,$a);
@@ -380,11 +502,6 @@ sub by_author {
 
     return $a_author cmp $b_author if $a_author ne $b_author;
     return by_revision;
-}
-
-sub revision_pad {
-    my ($revision) = @_;
-    return '&nbsp' x ($max_rev_length - length($revision));
 }
 
 sub sprint_author {
