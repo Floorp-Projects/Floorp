@@ -69,7 +69,7 @@ interface nsIProgress : nsISupports
 				NS_INVALID_ARG - The listener passed in was either nsnull, 
 						or was already registered with this progress interface.
 	 */
-	void addListener(in nsIProgressListener listener, out long cookie);
+	void addProgressListener(in nsIProgressListener listener, out long cookie);
 
 	/* 
 	Removes a previously registered listener of Progress Events
@@ -85,7 +85,7 @@ interface nsIProgress : nsISupports
 				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
 					to a previously registered listener.
 	*/
-	void removeListener(in nsIProgressListener listener, in long cookie);
+	void removeProgressListener(in nsIProgressListener listener, in long cookie);
 
 	/*
 	Current connection Status of the browser.  This will be one of the enumerated

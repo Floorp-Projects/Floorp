@@ -63,7 +63,7 @@ NS_IMPL_ISUPPORTS6(nsWebBrowser, nsIWebBrowser, nsIWebBrowserNav, nsIProgress,
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************   
 
-NS_IMETHODIMP nsWebBrowser::AddListener(nsIInterfaceRequestor* listener, 
+NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIInterfaceRequestor* listener, 
    PRInt32* cookie)
 {                   
    if(!m_ListenerList)
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsWebBrowser::AddListener(nsIInterfaceRequestor* listener,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveListener(nsIInterfaceRequestor* listener,
+NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* listener,
    PRInt32 cookie)
 {
    NS_ENSURE_STATE(m_ListenerList);
@@ -101,8 +101,12 @@ NS_IMETHODIMP nsWebBrowser::RemoveListener(nsIInterfaceRequestor* listener,
 
 NS_IMETHODIMP nsWebBrowser::GetDocShell(nsIDocShell** docShell)
 {
-   //XXX Implement
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(docShell);
+
+   *docShell = m_DocShell;
+   NS_IF_ADDREF(*docShell);
+
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -205,19 +209,19 @@ NS_IMETHODIMP nsWebBrowser::SetDocument(nsIDOMDocument* document)
 
 NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** document)
 {
-   //XXX First Check
-	/*
-	Retrieves or sets the current Document for the WebBrowser.  When setting
-	this will simulate the normal load process.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(document);
+   NS_ENSURE_STATE(m_DocShell);
+
+   NS_ENSURE_SUCCESS(m_DocShell->GetDocument(document), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 //*****************************************************************************
 // nsWebBrowser::nsIProgress
 //*****************************************************************************
 
-NS_IMETHODIMP nsWebBrowser::AddListener(nsIProgressListener* listener, 
+NS_IMETHODIMP nsWebBrowser::AddProgressListener(nsIProgressListener* listener, 
    PRInt32* cookie)
 {
    //XXX First Check
@@ -238,7 +242,7 @@ NS_IMETHODIMP nsWebBrowser::AddListener(nsIProgressListener* listener,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveListener(nsIProgressListener* listener, 
+NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIProgressListener* listener, 
    PRInt32 cookie)
 {
    //XXX First Check
