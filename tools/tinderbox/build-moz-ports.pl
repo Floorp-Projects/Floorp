@@ -85,7 +85,7 @@ sub SetupPath {
 	$ENV{'PATH'} = '/builds/local/bin:' . $ENV{'PATH'} . ':/usr/lpp/xlC/bin';
 	$ConfigureArgs .= '--x-includes=/usr/include/X11 --x-libraries=/usr/lib --disable-shared';
 	$ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
-	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1'
+	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
     }
 
     if ( $OS eq 'BSD_OS' ) {
@@ -94,7 +94,7 @@ sub SetupPath {
 	$ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
 	$mail = '/usr/ucb/mail';
 	$MakeOverrides = 'CPP_PROG_LINK=0 CCF=shlicc2'; # because ld dies if it encounters -include
-	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE='
+	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
     }
 
     if ( $OS eq 'FreeBSD' ) {
@@ -110,20 +110,30 @@ sub SetupPath {
 	$ConfigureArgs .= '--disable-gtktest --x-includes=/usr/include/X11 --x-libraries=/usr/lib';
 	$ConfigureEnvArgs = 'CC="cc -Ae" CXX="aCC -ext"';
 	# Use USE_PTHREADS=1 instead of CLASSIC_NSPR if you've got DCE installed.
-	$NSPRArgs .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1'
+	$NSPRArgs .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1';
     }
 
     if ( $OS eq 'OSF1' ) {
 	$ENV{'PATH'} = '/usr/gnu/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
 	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
-	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1'
+	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
     }
 
     if ( $OS eq 'SunOS' ) {
 	$ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
 	$ConfigureArgs .= '--with-pthreads';
-	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE= USE_PTHREADS=1'
+	if ( $CPU eq 'i86pc' ) {
+	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
+	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
+	    $ConfigureEnvArgs = '';
+	    # This may just be an NSPR bug, but if USE_PTHREADS is defined, then
+	    # _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and libnspr21 doesn't work.
+	    $NSPRArgs .= 'CLASSIC_NSPR=1';
+	} else {
+	    $NSPRArgs .= 'USE_PTHREADS=1';
+	}
+	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
     }
 
     $Path = $ENV{PATH};
@@ -205,6 +215,9 @@ sub GetSystemInfo {
 	if ( $CPU eq 'alpha' ) {
 	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	} elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
+	    $ObjDir = 'obj-arm-unknown-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/arm' . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} else {
 	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
 	}
@@ -217,9 +230,11 @@ sub GetSystemInfo {
 
     if ( $OS eq 'SunOS' ) {
 	if ( $CPU eq 'i86pc' ) {
-	    $ObjDir = 'obj-i386-sun-solaris' . $OSVer;
+	    $ObjDir = 'obj-i386-pc-solaris' . $OSVer;
+	    $BuildName = $host . ' ' . $OS . '/' . i386 . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} else {
 	    $ObjDir = 'obj-sparc-sun-solaris' . $OSVer;
+	    $BuildName = $host . ' ' . $OS . '/' . sparc . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	}
 	$ObjDir =~ s/s5\./s2./o;
     }
