@@ -70,6 +70,7 @@ CSRCS = \
 	des.c \
 	$(MPI_SRCS) \
 	dh.c \
+	dsa.c \
 	$(NULL)
 endif
 
