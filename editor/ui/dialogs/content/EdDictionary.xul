@@ -26,6 +26,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
 <dialog buttons="cancel" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    persist="screenX screenY"
     onload = "Startup()"
     ondialogcancel="return onClose();">
 
@@ -35,13 +36,6 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDictionary.js"/>
   
   <broadcaster id="args" value=""/>
-  <spacer id="location" offsetX="10" offsetY="10" persist="offsetX offsetY"/>
-  <keyset id="keys">
-    <key keycode="VK_ENTER"  oncommand="Close()"/>
-    <key keycode="VK_RETURN" oncommand="Close()"/>
-    <key keycode="VK_ESCAPE" oncommand="Close()"/>
-  </keyset>
-
   <grid>
     <columns><column style="width: 15em" flex="1"/><column flex="1"/></columns>
     <rows>
@@ -58,16 +52,14 @@
         <spacer/>
       </row>
       <row>
-        <tree rows="8" class="list" id="DictionaryList" flex="1">
-          <treecolgroup><treecol flex="1"/></treecolgroup>
-        </tree>
+        <listbox rows="8" id="DictionaryList" flex="1"/>
         <vbox flex="1">
           <button  id="ReplaceWord" oncommand="ReplaceWord()" label="&ReplaceButton.label;"/>
           <spacer class="spacer"/>
           <button  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
           <spacer class="spacer"/>
           <spacer flex="1"/>
-          <button dlgtype="cancel" class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  
+          <button dlgtype="cancel" class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="onClose();"/>  
         </vbox>
       </row>
     </rows>

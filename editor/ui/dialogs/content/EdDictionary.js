@@ -49,8 +49,6 @@ function Startup()
   // Select the supplied word if it is already in the list
   SelectWordToAddInList();
   SetTextboxFocus(gDialog.WordInput);
-
-  SetWindowLocation();
 }
 
 function ValidateWordToAdd()
@@ -66,11 +64,13 @@ function ValidateWordToAdd()
 
 function SelectWordToAddInList()
 {
-  for (var index = 0; index < gDialog.DictionaryList.getAttribute("length"); index++)
+  for (var i = 0; i < gDialog.DictionaryList.getRowCount(); i++)
   {
-    if (gWordToAdd == GetTreelistValueAt(gDialog.DictionaryList,index))
+
+    var wordInList = gDialog.DictionaryList.getItemAtIndex(i);
+    if (wordInList && gWordToAdd == wordInList.label)
     {
-      gDialog.DictionaryList.selectedIndex = index;
+      gDialog.DictionaryList.selectedIndex = i;
       break;
     }
   }
@@ -99,16 +99,20 @@ function ReplaceWord()
 {
   if (ValidateWordToAdd())
   {
-    var selIndex = gDialog.DictionaryList.selectedIndex;
-    if (selIndex >= 0)
+    var selItem = gDialog.DictionaryList.selectedItem;
+    if (selItem)
     {
-      gSpellChecker.RemoveWordFromDictionary(GetSelectedTreelistValue(gDialog.DictionaryList));
+      try {
+        gSpellChecker.RemoveWordFromDictionary(selItem.label);
+      } catch (e) {}
+
       try {
         // Add to the dictionary list
         gSpellChecker.AddWordToDictionary(gWordToAdd);
+
         // Just change the text on the selected item
         //  instead of rebuilding the list
-        ReplaceStringInTreeList(gDialog.DictionaryList, selIndex, gWordToAdd);
+        selItem.label = gWordToAdd; 
       } catch (e) {
         // Rebuild list and select the word - it was probably already in the list
         dump("Exception occured adding word in ReplaceWord\n");
@@ -124,10 +128,10 @@ function RemoveWord()
   var selIndex = gDialog.DictionaryList.selectedIndex;
   if (selIndex >= 0)
   {
-    var word = GetSelectedTreelistValue(gDialog.DictionaryList);
+    var word = gDialog.DictionaryList.selectedItem.label;
 
     // Remove word from list
-    RemoveSelectedTreelistItem(gDialog.DictionaryList);
+    gDialog.DictionaryList.removeItemAt(selIndex);
 
     // Remove from dictionary
     try {
@@ -148,7 +152,8 @@ function FillDictionaryList()
   var selIndex = gDialog.DictionaryList.selectedIndex;
 
   // Clear the current contents of the list
-  ClearTreelist(gDialog.DictionaryList);
+  ClearListbox(gDialog.DictionaryList);
+
   // Get the list from the spell checker
   gSpellChecker.GetPersonalDictionary()
 
@@ -159,22 +164,22 @@ function FillDictionaryList()
     var word = gSpellChecker.GetPersonalDictionaryWord();
     if (word != "")
     {
-      AppendStringToTreelist(gDialog.DictionaryList, word);
+      gDialog.DictionaryList.appendItem(word, "");
       haveList = true;
     }
   } while (word != "");
   
-  //XXX: BUG 74467: If list is empty, tree doesn't layout to full height correctly
+  //XXX: BUG 74467: If list is empty, it doesn't layout to full height correctly
   //     (ignores "rows" attribute) (bug is latered, so we are fixing here for now)
   if (!haveList)
-    AppendStringToTreelist(gDialog.DictionaryList, " ");
+      gDialog.DictionaryList.appendItem("", "");
 
   ResetSelectedItem(selIndex);
 }
 
 function ResetSelectedItem(index)
 {
-  var lastIndex = gDialog.DictionaryList.getAttribute("length") - 1;
+  var lastIndex = gDialog.DictionaryList.getRowCount() - 1;
   if (index > lastIndex)
     index = lastIndex;
 
@@ -183,14 +188,10 @@ function ResetSelectedItem(index)
   if (index == -1 && lastIndex >= 0)
     index = 0;
 
-dump("ResetSelectedItem to index="+index+"\n");
-
   gDialog.DictionaryList.selectedIndex = index;
 }
 
-function Close()
+function onClose()
 {
-  // Close the dialog
-  SaveWindowLocation();
-  window.close();
+  return true;
 }
