@@ -23,13 +23,12 @@
 #ifndef nsMenuFrame_h__
 #define nsMenuFrame_h__
 
-
-#include "nsLeafFrame.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
 #include "nsBoxFrame.h"
+#include "nsFrameList.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult) ;
 
@@ -39,8 +38,11 @@ class nsMenuFrame : public nsBoxFrame
 public:
   nsMenuFrame();
 
-protected:
+  NS_IMETHODIMP FirstChild(nsIAtom*   aListName,
+                           nsIFrame** aFirstChild) const;
 
+protected:
+  nsFrameList mPopupFrames;
 }; // class nsMenuFrame
 
 #endif

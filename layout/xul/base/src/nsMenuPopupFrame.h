@@ -23,8 +23,6 @@
 #ifndef nsMenuPopupFrame_h__
 #define nsMenuPopupFrame_h__
 
-
-#include "nsLeafFrame.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
