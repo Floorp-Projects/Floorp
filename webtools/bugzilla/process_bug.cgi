@@ -352,6 +352,11 @@ empowered user, may make that change to the $f field.
 
 # Confirm that the reporter of the current bug can access the bug we are duping to.
 sub DuplicateUserConfirm {
+    # if we've already been through here, then exit
+    if (defined $::FORM{'confirm_add_duplicate'}) {
+        return;
+    }
+
     my $dupe = trim($::FORM{'id'});
     my $original = trim($::FORM{'dup_id'});
     
@@ -360,45 +365,13 @@ sub DuplicateUserConfirm {
     SendSQL("SELECT profiles.groupset FROM profiles WHERE profiles.userid =".SqlQuote($reporter));
     my $reportergroupset = FetchOneColumn();
 
-    SendSQL("SELECT ((groupset & $reportergroupset) = groupset) , reporter , assigned_to , qa_contact , 
-                    reporter_accessible , assignee_accessible , qacontact_accessible , cclist_accessible 
-             FROM   bugs 
-             WHERE  bug_id = $original");
-
-    my ($isauthorized, $originalreporter, $assignee, $qacontact, $reporter_accessible, 
-        $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
-
-    # If reporter is authorized via the database, or is the original reporter, assignee,
-    # or QA Contact, we'll automatically confirm they can be added to the cc list
-    if ($isauthorized 
-        || ($reporter_accessible && $originalreporter == $reporter)
-          || ($assignee_accessible && $assignee == $reporter)
-            || ($qacontact_accessible && $qacontact == $reporter)) {
-            
+    if (CanSeeBug($original, $reporter, $reportergroupset)) {
         $::FORM{'confirm_add_duplicate'} = "1";
-        return;    
-    }
-
-    # Try to authorize the user one more time by seeing if they are on 
-    # the cc: list.  If so, finish validation and return.
-    if ($cclist_accessible ) {
-        my @cclist;
-        SendSQL("SELECT cc.who 
-                 FROM   bugs , cc
-                 WHERE  bugs.bug_id = $original
-                 AND    cc.bug_id = bugs.bug_id
-                ");
-        while (my ($ccwho) = FetchSQLData()) {
-            if ($reporter == $ccwho) {
-                $::FORM{'confirm_add_duplicate'} = "1";
-                return;
-            }
-        }
-    }
-
-    if (defined $::FORM{'confirm_add_duplicate'}) {
         return;
     }
+
+    SendSQL("SELECT cclist_accessible FROM bugs WHERE bug_id = $original");
+    my $cclist_accessible = FetchOneColumn();
     
     # Once in this part of the subroutine, the user has not been auto-validated
     # and the duper has not chosen whether or not to add to CC list, so let's
@@ -985,6 +958,7 @@ foreach my $id (@idlist) {
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+            "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");

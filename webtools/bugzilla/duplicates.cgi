@@ -33,6 +33,12 @@ require "CGI.pl";
 ConnectToDatabase(1);
 GetVersionTable();
 
+quietly_check_login();
+
+# Silly used-once warnings
+$::userid = $::userid;
+$::usergroupset = $::usergroupset;
+
 my %dbmcount;
 my %count;
 my $dobefore = 0;
@@ -195,10 +201,10 @@ $i = 0;
 foreach (@sortedcount)
 {
   my $id = $_;
-  SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset, bug_status, resolution" .
-                 " FROM bugs WHERE bug_id = $id");
-  my ($component, $severity, $op_sys, $milestone, $summary, $groupset, $bug_status, $resolution) = FetchSQLData();
-  next unless $groupset == 0;
+  SendSQL(SelectVisible("SELECT component, bug_severity, op_sys, target_milestone, short_desc, bug_status, resolution" .
+                 " FROM bugs WHERE bugs.bug_id = $id", $::userid, $::usergroupset));
+  next unless MoreSQLData();
+  my ($component, $severity, $op_sys, $milestone, $summary, $bug_status, $resolution) = FetchSQLData();
   $summary = html_quote($summary);
 
   # Show all bugs except those CLOSED _OR_ VERIFIED but not INVALID or WONTFIX.

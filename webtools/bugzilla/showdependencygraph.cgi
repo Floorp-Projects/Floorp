@@ -29,7 +29,9 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-$::usergroupset = $::usergroupset; # More warning suppression silliness.
+# More warning suppression silliness.
+$::userid = $::userid;
+$::usergroupset = $::usergroupset;
 
 ######################################################################
 # Begin Data/Security Validation
@@ -122,7 +124,9 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
         my $summary = "";
         my $stat;
         if ($::FORM{'showsummary'}) {
-            SendSQL("select bug_status, short_desc from bugs where bug_id = $k and bugs.groupset & $::usergroupset = bugs.groupset");
+            SendSQL(SelectVisible("select bug_status, short_desc from bugs where bug_id = $k",
+                                  $::userid,
+                                  $::usergroupset));
             ($stat, $summary) = (FetchSQLData());
             $stat = "NEW" if !defined $stat;
             $summary = "" if !defined $summary;

@@ -32,6 +32,7 @@ require "CGI.pl";
 sub sillyness {
     my $zz;
     $zz = $::legal_keywords;
+    $zz = $::userid;
     $zz = $::usergroupset;
     $zz = %::FORM;
 }
@@ -68,12 +69,12 @@ select
   bugs.status_whiteboard,
   bugs.keywords
 from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
-bugs.groupset & $::usergroupset = bugs.groupset and";
+where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
 
 $::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
-    SendSQL("$generic_query bugs.bug_id = $bug");
+    SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug",
+                          $::userid, $::usergroupset));
 
     my @row;
     if (@row = FetchSQLData()) {

@@ -258,88 +258,20 @@ sub ValidateBugID {
     # setting those local variables to the default value of zero if
     # the global variables are undefined.
 
-    # "usergroupset" stores the set of groups the user is a member of,
-    # while "userid" stores the user's unique ID.  These variables are
-    # set globally by either confirm_login() or quietly_check_login(),
-    # one of which should be run before calling this function; otherwise
-    # this function will treat the user as if they were not logged in
-    # and throw an error if they try to access a bug that requires
-    # permissions/authorization to access.
-    my $usergroupset = $::usergroupset || 0;
-    my $userid = $::userid || 0;
+    # First check that the bug exists
+    SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
 
-    # Query the database for the bug, retrieving a boolean value that
-    # represents whether or not the user is authorized to access the bug.  
-
-    # Users are authorized to access bugs if they are a member of all 
-    # groups to which the bug is restricted.  User group membership and 
-    # bug restrictions are stored as bits within bitsets, so authorization
-    # can be determined by comparing the intersection of the user's
-    # bitset with the bug's bitset.  If the result matches the bug's bitset
-    # the user is a member of all groups to which the bug is restricted
-    # and is authorized to access the bug.
-
-    # A user is also authorized to access a bug if she is the reporter, 
-    # assignee, QA contact, or member of the cc: list of the bug and the bug 
-    # allows users in those roles to see the bug.  The boolean fields 
-    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
-    # cclist_accessible identify whether or not those roles can see the bug.
-
-    # Bit arithmetic is performed by MySQL instead of Perl because bitset
-    # fields in the database are 64 bits wide (BIGINT), and Perl installations
-    # may or may not support integers larger than 32 bits.  Using bitsets
-    # and doing bitset arithmetic is probably not cross-database compatible,
-    # however, so these mechanisms are likely to change in the future.
-
-    # Get data from the database about whether or not the user belongs to
-    # all groups the bug is in, and who are the bug's reporter and qa_contact
-    # along with which roles can always access the bug.
-    SendSQL("SELECT ((groupset & $usergroupset) = groupset) , reporter , assigned_to , qa_contact , 
-                    reporter_accessible , assignee_accessible , qacontact_accessible , cclist_accessible 
-             FROM   bugs 
-             WHERE  bug_id = $id");
-
-    # Make sure the bug exists in the database.
-    MoreSQLData()
+    FetchOneColumn()
       || DisplayError("Bug #$id does not exist.")
-      && exit;
+        && exit;
 
-    my ($isauthorized, $reporter, $assignee, $qacontact, $reporter_accessible, 
-        $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
-
-    # Finish validation and return if the user is a member of all groups to which the bug belongs.
-    return if $isauthorized;
-
-    # Finish validation and return if the user is in a role that has access to the bug.
-    if ($userid) {
-        return 
-          if ($reporter_accessible && $reporter == $userid)
-            || ($assignee_accessible && $assignee == $userid)
-              || ($qacontact_accessible && $qacontact == $userid);
-    }
-
-    # Try to authorize the user one more time by seeing if they are on 
-    # the cc: list.  If so, finish validation and return.
-    if ( $cclist_accessible ) {
-        my @cclist;
-        SendSQL("SELECT cc.who 
-                 FROM   bugs , cc
-                 WHERE  bugs.bug_id = $id
-                 AND    cc.bug_id = bugs.bug_id
-                ");
-        while (my ($ccwho) = FetchSQLData()) {
-            # more efficient to just check the var here instead of
-            # creating a potentially huge array to grep against
-            return if ($userid == $ccwho);
-        }
-
-    }
+    return if CanSeeBug($id, $::userid, $::usergroupset);
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.
     # The error the user sees depends on whether or not they are logged in
-    # (i.e. $userid contains the user's positive integer ID).
-    if ($userid) {
+    # (i.e. $::userid contains the user's positive integer ID).
+    if ($::userid) {
         DisplayError("You are not authorized to access bug #$id.");
     } else {
         DisplayError(

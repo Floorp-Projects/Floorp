@@ -113,10 +113,9 @@ sub initBug  {
       groupset, delta_ts, sum(votes.count)
     from bugs left join votes using(bug_id)
     where bugs.bug_id = $bug_id
-    and bugs.groupset & $usergroupset = bugs.groupset
     group by bugs.bug_id";
 
-  &::SendSQL($query);
+  &::SendSQL(&::SelectVisible($query, $user_id, $usergroupset));
   my @row;
 
   if (@row = &::FetchSQLData()) {
@@ -445,6 +444,7 @@ sub Collision {
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
+               "cc AS selectVisible_cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ, attachments READ, products READ");

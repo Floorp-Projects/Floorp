@@ -34,7 +34,9 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-$::usergroupset = $::usergroupset; # More warning suppression silliness.
+# More warning suppression silliness.
+$::userid = $::userid;
+$::usergroupset = $::usergroupset;
 
 ######################################################################
 # Begin Data/Security Validation
@@ -128,10 +130,10 @@ sub DumpKids {
             my ($bugid, $stat, $milestone) = ("", "", "");
             my ($userid, $short_desc) = ("", "");
             if (Param('usetargetmilestone')) {
-                SendSQL("select bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+                SendSQL(SelectVisible("select bugs.bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $::userid, $::usergroupset));
                 ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
             } else {
-                SendSQL("select bug_id, bug_status, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+                SendSQL(SelectVisible("select bugs.bug_id, bug_status, assigned_to, short_desc from bugs where bugs.bug_id = $kid", $::userid, $::usergroupset));
                 ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
 
             }

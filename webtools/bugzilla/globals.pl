@@ -20,6 +20,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Jake <jake@acutex.net>
+#                 Bradley Baetz <bbaetz@cs.mcgill.ca>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -71,8 +72,9 @@ use Date::Parse;               # For str2time().
 #use Carp;                       # for confess
 use RelationSet;
 
-# $ENV{PATH} is not taint safe
+# Some environment variables are not taint safe
 delete $ENV{PATH};
+delete $ENV{BASH_ENV};
 
 # Contains the version string for the current running Bugzilla.
 $::param{'version'} = '2.15';
@@ -704,6 +706,98 @@ sub GenerateRandomPassword {
     return $password;
 }
 
+sub SelectVisible {
+    my ($query, $userid, $usergroupset) = @_;
+
+    # Run the SQL $query with the additional restriction that
+    # the bugs can be seen by $userid. $usergroupset is provided
+    # as an optimisation when this is already known, eg from CGI.pl
+    # If not present, it will be obtained from the db.
+    # Assumes that 'bugs' is mentioned as a table name. You should
+    # also make sure that bug_id is qualified bugs.bug_id!
+    # Your query must have a WHERE clause. This is unlikely to be a problem.
+
+    # Also, note that mySQL requires aliases for tables to be locked, as well
+    # This means that if you change the name from selectVisible_cc (or add
+    # additional tables), you will need to update anywhere which does a
+    # LOCK TABLE, and then calls routines which call this
+
+    $usergroupset = 0 unless $userid;
+
+    unless (defined($usergroupset)) {
+        PushGlobalSQLState();
+        SendSQL("SELECT groupset FROM profiles WHERE userid = $userid");
+        $usergroupset = FetchOneColumn();
+        PopGlobalSQLState();
+    }
+
+    # Users are authorized to access bugs if they are a member of all 
+    # groups to which the bug is restricted.  User group membership and 
+    # bug restrictions are stored as bits within bitsets, so authorization
+    # can be determined by comparing the intersection of the user's
+    # bitset with the bug's bitset.  If the result matches the bug's bitset
+    # the user is a member of all groups to which the bug is restricted
+    # and is authorized to access the bug.
+
+    # A user is also authorized to access a bug if she is the reporter, 
+    # assignee, QA contact, or member of the cc: list of the bug and the bug 
+    # allows users in those roles to see the bug.  The boolean fields 
+    # reporter_accessible, assignee_accessible, qacontact_accessible, and 
+    # cclist_accessible identify whether or not those roles can see the bug.
+
+    # Bit arithmetic is performed by MySQL instead of Perl because bitset
+    # fields in the database are 64 bits wide (BIGINT), and Perl installations
+    # may or may not support integers larger than 32 bits.  Using bitsets
+    # and doing bitset arithmetic is probably not cross-database compatible,
+    # however, so these mechanisms are likely to change in the future.
+
+    my $replace = " ";
+
+    if ($userid) {
+        $replace .= "LEFT JOIN cc selectVisible_cc ON 
+                     bugs.bug_id = selectVisible_cc.bug_id AND 
+                     selectVisible_cc.who = $userid "
+    }
+
+    $replace .= "WHERE ((bugs.groupset & $usergroupset) = bugs.groupset ";
+
+    if ($userid) {
+        # There is a mysql bug affecting v3.22 and 3.23 (at least), where this will
+        # cause all rows to be returned! We work arround this by adding an not isnull
+        # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
+        # Its needed, even though it shouldn't be
+        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
+                   OR (bugs.assignee_accessible = 1 AND bugs.assigned_to = $userid) 
+                   OR (bugs.qacontact_accessible = 1 AND bugs.qa_contact = $userid) 
+                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
+    }
+
+    $replace .= ") AND ";
+
+    $query =~ s/\sWHERE\s/$replace/i;
+
+    return $query;
+}
+
+sub CanSeeBug {
+    # Note that we pass in the usergroupset, since this is known
+    # in most cases (ie viewing bugs). Maybe make this an optional
+    # parameter?
+
+    my ($id, $userid, $usergroupset) = @_;
+
+    # Query the database for the bug, retrieving a boolean value that
+    # represents whether or not the user is authorized to access the bug.
+
+    PushGlobalSQLState();
+    SendSQL(SelectVisible("SELECT bugs.bug_id FROM bugs WHERE bugs.bug_id = $id",
+                          $userid, $usergroupset));
+
+    my $ret = defined(FetchSQLData());
+    PopGlobalSQLState();
+
+    return $ret;
+}
 
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's
@@ -835,16 +929,22 @@ sub DBNameToIdAndCheck {
     exit(0);
 }
 
-# Use detaint_string() when you know that there is no way that the data
+# Use trick_taint() when you know that there is no way that the data
 # in a scalar can be tainted, but taint mode still bails on it.
 # WARNING!! Using this routine on data that really could be tainted
 #           defeats the purpose of taint mode.  It should only be
 #           used on variables that cannot be touched by users.
 
-sub detaint_string {
-    my ($str) = @_;
-    $str =~ m/^(.*)$/s;
-    $str = $1;
+sub trick_taint {
+    $_[0] =~ /^(.*)$/s;
+    $_[0] = $1;
+    return (defined($_[0]));
+}
+
+sub detaint_natural {
+    $_[0] =~ /^(\d+)$/;
+    $_[0] = $1;
+    return (defined($_[0]));
 }
 
 # This routine quoteUrls contains inspirations from the HTML::FromText CPAN
@@ -983,7 +1083,9 @@ sub GetBugLink {
     $link_text = value_quote($link_text);
     $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
     if ($bug_res ne "") {$link_return .= " $bug_res"}
-    if ($bug_grp == 0) { $link_return .= " - $bug_desc" }
+    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+        $link_return .= " - $bug_desc";
+    }
     $link_return .= qq{">$link_text</a>};
     if ($bug_res ne "") { $link_return .= "</strike>" }
     if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
@@ -1128,7 +1230,7 @@ sub SqlQuote {
     $str =~ s/([\\\'])/\\$1/g;
     $str =~ s/\0/\\0/g;
     # If it's been SqlQuote()ed, then it's safe, so we tell -T that.
-    $str = detaint_string($str);
+    trick_taint($str);
     return "'$str'";
 }
 

@@ -37,6 +37,7 @@ sub sillyness {
     $zz = $::db_name;
     $zz = $::defaultqueryname;
     $zz = $::unconfirmedstate;
+    $zz = $::userid;
     $zz = @::components;
     $zz = @::default_column_list;
     $zz = @::legal_keywords;
@@ -162,9 +163,7 @@ sub GenerateSQL {
              "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid"));
     unshift(@wherepart,
             ("bugs.assigned_to = map_assigned_to.userid",
-             "bugs.reporter = map_reporter.userid",
-             "bugs.groupset & $::usergroupset = bugs.groupset"));
-
+             "bugs.reporter = map_reporter.userid"));
 
     my $minvotes;
     if (defined $F{'votes'}) {
@@ -805,10 +804,14 @@ sub GenerateSQL {
             $suppseen{$str} = 1;
         }
     }
+
     my $query =  ("SELECT " . join(', ', @fields) .
                   " FROM $suppstring" .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
                   " GROUP BY bugs.bug_id");
+
+    $query = SelectVisible($query, $::userid, $::usergroupset);
+
     if ($debug) {
         print "<P><CODE>" . value_quote($query) . "</CODE><P>\n";
         exit();
@@ -1069,8 +1072,6 @@ ReconnectToShadowDatabase();
 
 my $query = GenerateSQL(\@fields, undef, undef, $::buffer);
 
-
-
 if ($::COOKIE{'LASTORDER'}) {
     if ((!$::FORM{'order'}) || $::FORM{'order'} =~ /^reuse/i) {
         $::FORM{'order'} = url_decode($::COOKIE{'LASTORDER'});
@@ -1132,6 +1133,7 @@ if ($::FORM{'debug'} && $serverpush) {
 if (Param('expectbigqueries')) {
     SendSQL("set option SQL_BIG_TABLES=1");
 }
+
 SendSQL($query);
 
 my $count = 0;

@@ -111,8 +111,8 @@ sub ProcessOneBug {
     }
     my ($start, $end) = (@row);
     # $start and $end are considered safe because users can't touch them
-    $start = detaint_string($start);
-    $end = detaint_string($end);
+    trick_taint($start);
+    trick_taint($end);
 
     my $ccSet = new RelationSet();
     $ccSet->mergeFromDB("SELECT who FROM cc WHERE bug_id = $id");
@@ -644,31 +644,26 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     if ($nomail{$person}) {
       return;
     }
+
         
-    # Sanitize $values{'groupset'}
-    if ($values{'groupset'} =~ m/(\d+)/) {
-        $values{'groupset'} = $1;
-    } else {
-        $values{'groupset'} = 0;
-    }
-    SendSQL("SELECT userid, groupset & $values{'groupset'} " .
+    SendSQL("SELECT userid, groupset " .
             "FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid, $groupset) =  (FetchSQLData());
-    
+
     $seen{$person} = 1;
 
+    detaint_natural($userid);
+    detaint_natural($groupset);
 
     # if this person doesn't have permission to see info on this bug, 
     # return.
     #
-    # XXX - I _think_ this currently means that if a bug is suddenly given
+    # XXX - This currently means that if a bug is suddenly given
     # more restrictive permissions, people without those permissions won't
     # see the action of restricting the bug itself; the bug will just 
     # quietly disappear from their radar.
     #
-    if ($groupset ne $values{'groupset'}) {
-      return;
-    }
+    return unless CanSeeBug($id, $userid, $groupset);
     
     my %mailhead = %defmailhead;
     
@@ -824,9 +819,10 @@ if ($ARGV[0] eq "rescanall") {
         push @list, $row[0];
     }
     foreach my $id (@list) {
-        $ARGV[0] = $id;
-        print "<br> Doing bug $id\n";
-        ProcessOneBug($ARGV[0]);
+        if (detaint_natural($id)) {
+            print "<br> Doing bug $id\n";
+            ProcessOneBug($id);
+        }
     }
 } else {
     my $bugnum;
