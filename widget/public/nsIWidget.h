@@ -181,17 +181,7 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_se_resize,
                 eCursor_ne_resize,
                 eCursor_sw_resize,
-                  // The _arrow_ ones are not used AFAICT - can be removed?
-                eCursor_arrow_north,
-                eCursor_arrow_north_plus,
-                eCursor_arrow_south,
-                eCursor_arrow_south_plus,
-                eCursor_arrow_west,
-                eCursor_arrow_west_plus,
-                eCursor_arrow_east,
-                eCursor_arrow_east_plus,
                 eCursor_crosshair,
-                //Don't know what 'move' cursor should be.  See CSS2.
                 eCursor_move,
                 eCursor_help,
                 eCursor_copy, // CSS3
@@ -201,9 +191,6 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_grab,
                 eCursor_grabbing,
                 eCursor_spinning,
-                eCursor_count_up,
-                eCursor_count_down,
-                eCursor_count_up_down,
                 eCursor_zoom_in,
                 eCursor_zoom_out,
                 eCursor_not_allowed,

@@ -476,9 +476,6 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword__moz_grab, NS_STYLE_CURSOR_GRAB,
   eCSSKeyword__moz_grabbing, NS_STYLE_CURSOR_GRABBING,
   eCSSKeyword__moz_spinning, NS_STYLE_CURSOR_SPINNING,
-  eCSSKeyword__moz_count_up, NS_STYLE_CURSOR_COUNT_UP,
-  eCSSKeyword__moz_count_down, NS_STYLE_CURSOR_COUNT_DOWN,
-  eCSSKeyword__moz_count_up_down, NS_STYLE_CURSOR_COUNT_UP_DOWN,
   eCSSKeyword__moz_zoom_in, NS_STYLE_CURSOR_MOZ_ZOOM_IN,
   eCSSKeyword__moz_zoom_out, NS_STYLE_CURSOR_MOZ_ZOOM_OUT,
   -1,-1

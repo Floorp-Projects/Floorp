@@ -40,14 +40,6 @@
 #include <dlgs.h>
 
 IDC_SELECTANCHOR        CURSOR  DISCARDABLE     "res/select.cur"
-IDC_ARROWSOUTH          CURSOR  DISCARDABLE     "res/arrow_south.cur"
-IDC_ARROWNORTH          CURSOR  DISCARDABLE     "res/arrow_north.cur"
-IDC_ARROWEAST           CURSOR  DISCARDABLE     "res/arrow_east.cur"
-IDC_ARROWWEST           CURSOR  DISCARDABLE     "res/arrow_west.cur"
-IDC_ARROWSOUTHPLUS      CURSOR  DISCARDABLE     "res/arrow_south_plus.cur"
-IDC_ARROWNORTHPLUS      CURSOR  DISCARDABLE     "res/arrow_north_plus.cur"
-IDC_ARROWEASTPLUS       CURSOR  DISCARDABLE     "res/arrow_east_plus.cur"
-IDC_ARROWWESTPLUS       CURSOR  DISCARDABLE     "res/arrow_west_plus.cur"
 IDC_GRAB                CURSOR  DISCARDABLE     "res/grab.cur"
 IDC_GRABBING            CURSOR  DISCARDABLE     "res/grabbing.cur"
 IDC_CELL                CURSOR  DISCARDABLE     "res/cell.cur"

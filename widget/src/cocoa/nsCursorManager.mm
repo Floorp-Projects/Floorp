@@ -153,12 +153,6 @@ static BOOL isPantherOrLater()
       return [nsCursorManager createNSCursor: @selector(closedHandCursor) orThemeCursor: kThemeClosedHandCursor];
     case eCursor_spinning:
       return [nsMacCursor cursorWithResources: 200 lastFrame: 203]; // better than kThemeSpinningCursor        
-    case eCursor_count_up:
-      return [nsMacCursor cursorWithThemeCursor: kThemeCountingUpHandCursor];
-    case eCursor_count_down:
-      return [nsMacCursor cursorWithThemeCursor: kThemeCountingDownHandCursor];
-    case eCursor_count_up_down:
-      return [nsMacCursor cursorWithThemeCursor: kThemeCountingUpAndDownHandCursor];
     case eCursor_zoom_in:
       return [nsMacCursor cursorWithImageNamed: @"zoomIn" hotSpot: NSMakePoint(6,6)];
     case eCursor_zoom_out:
@@ -171,35 +165,27 @@ static BOOL isPantherOrLater()
     case eCursor_no_drop:
       return [nsMacCursor cursorWithThemeCursor: kThemeNotAllowedCursor];
 
-    // Arrow Cursors:
+    // Resize Cursors:
     //North
     case eCursor_n_resize:
-    case eCursor_arrow_north:
-    case eCursor_arrow_north_plus:
         return [nsCursorManager createNSCursor: @selector(resizeUpCursor) orImageCursor: @"arrowN" withHotspot: NSMakePoint(7,7)];
     //North East
     case eCursor_ne_resize:
         return [nsMacCursor cursorWithImageNamed: @"sizeNE" hotSpot: NSMakePoint(8,7)];
     //East
     case eCursor_e_resize:        
-    case eCursor_arrow_east:
-    case eCursor_arrow_east_plus:
         return [nsCursorManager createNSCursor: @selector(resizeRightCursor) orThemeCursor: kThemeResizeRightCursor];
     //South East
     case eCursor_se_resize:
         return [nsMacCursor cursorWithImageNamed: @"sizeSE" hotSpot: NSMakePoint(8,8)];
     //South
     case eCursor_s_resize:
-    case eCursor_arrow_south:
-    case eCursor_arrow_south_plus:
         return [nsCursorManager createNSCursor: @selector(resizeDownCursor) orImageCursor: @"arrowS" withHotspot: NSMakePoint(7,7)];
     //South West
     case eCursor_sw_resize:
         return [nsMacCursor cursorWithImageNamed: @"sizeSW" hotSpot: NSMakePoint(6,8)];
     //West
     case eCursor_w_resize:
-    case eCursor_arrow_west:
-    case eCursor_arrow_west_plus:
         return [nsCursorManager createNSCursor: @selector(resizeLeftCursor) orThemeCursor: kThemeResizeLeftCursor];
     //North West
     case eCursor_nw_resize:

@@ -871,26 +871,6 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
         newCursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
         break;
 
-      case eCursor_arrow_north:
-      case eCursor_arrow_north_plus:
-        newCursor = gdk_cursor_new(GDK_TOP_SIDE);
-        break;
-
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
-        break;
-
-      case eCursor_arrow_west:
-      case eCursor_arrow_west_plus:
-        newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
-        break;
-
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
-        newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
-        break;
-
       case eCursor_crosshair:
         newCursor = gdk_cursor_new(GDK_CROSSHAIR);
         break;
@@ -923,12 +903,6 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 
       case eCursor_spinning:
         newCursor = gdk_cursor_new(GDK_EXCHANGE);
-        break;
-
-      case eCursor_count_up:
-      case eCursor_count_down:
-      case eCursor_count_up_down:
-        // XXX: these -moz- cursors need to be implemented
         break;
 
       case eCursor_zoom_in:

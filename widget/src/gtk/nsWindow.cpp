@@ -1155,22 +1155,6 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
     case eCursor_sw_resize:
       gdkcursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
       break;
-    case eCursor_arrow_north:
-    case eCursor_arrow_north_plus:
-      gdkcursor = gdk_cursor_new(GDK_TOP_SIDE);
-      break;
-    case eCursor_arrow_south:
-    case eCursor_arrow_south_plus:
-      gdkcursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
-      break;
-    case eCursor_arrow_west:
-    case eCursor_arrow_west_plus:
-      gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
-      break;
-    case eCursor_arrow_east:
-    case eCursor_arrow_east_plus:
-      gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
-      break;
     case eCursor_crosshair:
       gdkcursor = gdk_cursor_new(GDK_CROSSHAIR);
       break;
@@ -1200,12 +1184,6 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
       break;
     case eCursor_spinning:
       newType = MOZ_CURSOR_SPINNING;
-      break;
-    case eCursor_count_up:
-    case eCursor_count_down:
-    case eCursor_count_up_down:
-      // XXX: these -moz- cursors need to be implemented
-      gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
       break;
     case eCursor_zoom_in:
       newType = MOZ_CURSOR_ZOOM_IN;

@@ -2437,38 +2437,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_SIZENESW);
       break;
 
-    case eCursor_arrow_north:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTH));
-      break;
-
-    case eCursor_arrow_north_plus:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWNORTHPLUS));
-      break;
-
-    case eCursor_arrow_south:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWSOUTH));
-      break;
-
-    case eCursor_arrow_south_plus:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWSOUTHPLUS));
-      break;
-
-    case eCursor_arrow_east:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWEAST));
-      break;
-
-    case eCursor_arrow_east_plus:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWEASTPLUS));
-      break;
-
-    case eCursor_arrow_west:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWEST));
-      break;
-
-    case eCursor_arrow_west_plus:
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_ARROWWESTPLUS));
-      break;
-
     case eCursor_crosshair:
       newCursor = ::LoadCursor(NULL, IDC_CROSS);
       break;
@@ -2507,12 +2475,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
     case eCursor_context_menu:
       // XXX this CSS3 cursor needs to be implemented
-      break;
-
-    case eCursor_count_up:
-    case eCursor_count_down:
-    case eCursor_count_up_down:
-      // XXX these -moz- cursors needs to be implemented
       break;
 
     case eCursor_zoom_in:

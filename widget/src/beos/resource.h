@@ -35,12 +35,4 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #define IDC_SELECTANCHOR                4100
-#define IDC_ARROWSOUTH                  4101
-#define IDC_ARROWNORTH                  4102
-#define IDC_ARROWEAST                   4103
-#define IDC_ARROWWEST                   4104
-#define IDC_ARROWSOUTHPLUS              4105
-#define IDC_ARROWNORTHPLUS              4106
-#define IDC_ARROWEASTPLUS               4107
-#define IDC_ARROWWESTPLUS               4108
 

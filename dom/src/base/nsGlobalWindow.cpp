@@ -5661,12 +5661,6 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     cursor = NS_STYLE_CURSOR_GRABBING;
   else if (cursorString.Equals("spinning"))
     cursor = NS_STYLE_CURSOR_SPINNING;
-  else if (cursorString.Equals("count-up"))
-    cursor = NS_STYLE_CURSOR_COUNT_UP;
-  else if (cursorString.Equals("count-down"))
-    cursor = NS_STYLE_CURSOR_COUNT_DOWN;
-  else if (cursorString.Equals("count-up-down"))
-    cursor = NS_STYLE_CURSOR_COUNT_UP_DOWN;
   else if (cursorString.Equals("-moz-zoom-in"))
     cursor = NS_STYLE_CURSOR_MOZ_ZOOM_IN;
   else if (cursorString.Equals("-moz-zoom-out"))
