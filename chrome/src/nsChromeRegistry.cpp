@@ -556,10 +556,10 @@ nsChromeRegistry::GetBaseURL(const nsACString& aPackage,
 
   // Follow the "selectedSkin" or "selectedLocale" arc.
   nsCOMPtr<nsIRDFResource> arc;
-  if (aProvider.Equals(NS_LITERAL_CSTRING("skin"))) {
+  if (aProvider.EqualsLiteral("skin")) {
     arc = mSelectedSkin;
   }
-  else if (aProvider.Equals(NS_LITERAL_CSTRING("locale"))) {
+  else if (aProvider.EqualsLiteral("locale")) {
     arc = mSelectedLocale;
   }
   else
@@ -643,8 +643,8 @@ nsChromeRegistry::GetOverrideURL(const nsACString& aPackage,
   // skins and locales get their name tacked on, like
   // skin/modern/foo.css or
   // locale/en-US/navigator.properties
-  if (aProvider.Equals(NS_LITERAL_CSTRING("skin")) ||
-      aProvider.Equals(NS_LITERAL_CSTRING("locale"))) {
+  if (aProvider.EqualsLiteral("skin") ||
+      aProvider.EqualsLiteral("locale")) {
 
     // little hack here to get the right arc
     nsIRDFResource* providerArc;
@@ -1244,7 +1244,7 @@ nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
     const PRUnichar *s;
     rv = literal->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
-    aResult.Assign(NS_ConvertUCS2toUTF8(s));
+    CopyUTF16toUTF8(s, aResult);
   }
   else {
     // This should _never_ happen.
@@ -2301,8 +2301,8 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
   // Get the literal for our loc type.
   nsAutoString locstr;
   if (aUseProfile)
-    locstr.Assign(NS_LITERAL_STRING("profile"));
-  else locstr.Assign(NS_LITERAL_STRING("install"));
+    locstr.AssignLiteral("profile");
+  else locstr.AssignLiteral("install");
   nsCOMPtr<nsIRDFLiteral> locLiteral;
   rv = mRDFService->GetLiteral(locstr.get(), getter_AddRefs(locLiteral));
   if (NS_FAILED(rv)) return rv;
@@ -2431,7 +2431,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
 
         // See if we're a packages seq in a skin/locale.  If so, we need to set up the baseURL, allowScripts
         // and package arcs.
-        if (val.Find(":packages") != -1 && !aProviderType.Equals(NS_LITERAL_CSTRING("package"))) {
+        if (val.Find(":packages") != -1 && !aProviderType.EqualsLiteral("package")) {
           PRBool doAppendPackage = appendPackage;
           PRInt32 perProviderPackageCount;
           container->GetCount(&perProviderPackageCount);
@@ -2488,7 +2488,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
 
               rv = nsChromeRegistry::UpdateArc(installSource, entry, mBaseURL, baseLiteral, aRemove);
               if (NS_FAILED(rv)) return rv;
-              if (aProviderType.Equals(NS_LITERAL_CSTRING("skin")) && !aAllowScripts) {
+              if (aProviderType.EqualsLiteral("skin") && !aAllowScripts) {
                 rv = nsChromeRegistry::UpdateArc(installSource, entry, mAllowScripts, scriptLiteral, aRemove);
                 if (NS_FAILED(rv)) return rv;
               }
@@ -2916,10 +2916,12 @@ nsChromeRegistry::GetProfileRoot(nsACString& aFileURL)
        defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("chrome"));
        defaultUserChromeFile->AppendNative(NS_LITERAL_CSTRING("userChrome-example.css"));
 
+       const nsAFlatCString& empty = EmptyCString();
+
        // copy along
        // It aint an error if these files dont exist
-       (void) defaultUserContentFile->CopyToNative(userChromeDir, NS_LITERAL_CSTRING(""));
-       (void) defaultUserChromeFile->CopyToNative(userChromeDir, NS_LITERAL_CSTRING(""));
+       defaultUserContentFile->CopyToNative(userChromeDir, empty);
+       defaultUserChromeFile->CopyToNative(userChromeDir, empty);
      }
    }
    if (NS_FAILED(rv))
@@ -3057,10 +3059,10 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet)
 {
   *aSheet = nsnull;
-  
+
   nsCOMPtr<nsICSSLoader> cssLoader = do_GetService(kCSSLoaderCID);
   if (!cssLoader) return NS_ERROR_FAILURE;
-  
+
   return cssLoader->LoadAgentSheet(aURL, aSheet);
 }
 
