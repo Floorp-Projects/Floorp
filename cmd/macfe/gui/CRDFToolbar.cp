@@ -187,20 +187,27 @@ CRDFToolbar :: LayoutButtons ( )
 	HT_Resource item = NULL;
 	while (item = HT_GetNextItem(cursor)) {
 		CRDFToolbarItem* button = reinterpret_cast<CRDFToolbarItem*>(HT_GetNodeFEData(item));
-		Uint32 hDelta = 0;
 		if ( button ) {
-			if ( iconOnTop ) {
-				button->ResizeFrameTo ( 50, 50, false );
+			Uint32 hDelta = 0;
+			if ( HT_IsURLBar(item) ) {
+				button->ResizeFrameTo ( 300, 50, false );
 				button->PlaceInSuperFrameAt ( horiz, 5, false );
-				hDelta = 50;
+				hDelta = 300;			
 			}
 			else {
-				button->ResizeFrameTo ( 80, 20, false );
-				button->PlaceInSuperFrameAt ( horiz, 5, false );
-				hDelta = 80;
-			}			
+				if ( iconOnTop ) {
+					button->ResizeFrameTo ( 50, 50, false );
+					button->PlaceInSuperFrameAt ( horiz, 5, false );
+					hDelta = 50;
+				}
+				else {
+					button->ResizeFrameTo ( 80, 20, false );
+					button->PlaceInSuperFrameAt ( horiz, 5, false );
+					hDelta = 80;
+				}			
+			}
+			horiz += hDelta;
 		}
-		horiz += hDelta;
 	}
 	Refresh();
 
@@ -222,9 +229,6 @@ CRDFToolbar :: AddHTButton ( HT_Resource inNode )
 	string nodeName = HT_GetNodeName(inNode);
 	string commandURL = HT_GetNodeURL(inNode);
 	
-//	DebugStr(LStr255(nodeName.c_str()));
-//	DebugStr(LStr255(commandURL.c_str()));
-		
 	CRDFToolbarItem* newItem = NULL;
 	if (HT_IsURLBar(inNode))
 		newItem = new CRDFURLBar(inNode);
@@ -237,16 +241,11 @@ CRDFToolbar :: AddHTButton ( HT_Resource inNode )
 		newItem->ResizeFrameTo ( 50, 50, false );		// give it a default size
 	}
 	
-/*
-	pButton->Create(this, GetDisplayMode(), CSize(60,42), CSize(85, 25), csAmpersandString,
-					tooltipText, statusBarText, CSize(23,17), 
-					m_nMaxToolbarButtonChars, m_nMinToolbarButtonChars, bookmark,
-					item, (HT_IsContainer(item) ? TB_HAS_DRAGABLE_MENU | TB_HAS_IMMEDIATE_MENU : 0));
-*/
-
-	HT_SetNodeFEData(inNode, newItem);
+	// IMPORTANT: these must be done AFTER PutInside()
+	newItem->FinishCreate();
+	newItem->HookUpToListeners();				
 	
-	//еее deal with computing height/width??? They do on WinFE
+	HT_SetNodeFEData(inNode, newItem);
 	
 } // AddHTButton
 
