@@ -610,15 +610,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 *profileDirSet = PR_FALSE;
             }
             else {
-                nsCOMPtr<nsIFile> aFile;
-                rv = GetProfileDir(currProfileName.GetUnicode(), getter_AddRefs(aFile));
-                if (NS_SUCCEEDED(rv)){
+                rv = SetCurrentProfile(currProfileName.GetUnicode());
+                if (NS_SUCCEEDED(rv))
                     *profileDirSet = PR_TRUE;
-                    mCurrentProfileAvailable = PR_TRUE;
-
-                    // Need to load new profile prefs.
-                    rv = LoadNewProfilePrefs();
-                }
             }
         }
     }
@@ -994,6 +988,13 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         // Phase 3: Notify observers of a profile change
         observerService->Notify(subject, PROFILE_BEFORE_CHANGE_TOPIC, nsnull);        
     }
+
+    // Flush the stringbundle cache
+    NS_WITH_SERVICE(nsIStringBundleService, bundleService, NS_STRINGBUNDLE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = bundleService->FlushBundles();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to flush bundle cache");
+    }
     
     // Do the profile switch    
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
@@ -1028,6 +1029,10 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     }
     else
       rv = LoadNewProfilePrefs();
+      
+    // Now that a profile is established, set the profile defaults dir for the locale of this profile
+    rv = DefineLocaleDefaultsDir();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsProfile::DefineLocaleDefaultsDir failed");
       
     return NS_OK;
 }
@@ -1570,27 +1575,9 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
     }
 #endif
 
-    // flush the stringbundle cache first
-#if defined(DEBUG_tao)
-    printf("\n--> nsProfile::StartApprunner: FlushBundles() \n");
-#endif
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(kStringBundleServiceCID, &rv);
+    rv = SetCurrentProfile(profileName);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set profile");
 
-    if (NS_SUCCEEDED(rv)) {
-        rv = bundleService->FlushBundles();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to flush bundle cache");
-    }
-
-    gProfileDataAccess->SetCurrentProfile(profileName);
-    mCurrentProfileAvailable = PR_TRUE;
-
-    // Update registry entries
-    gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry(nsnull);
-    
-    // Need to load new profile prefs.
-    rv = LoadNewProfilePrefs();
     return rv;
 }
 
@@ -1704,6 +1691,31 @@ nsProfile::EnsureProfileFileExists(nsIFile *aFile)
     return rv;
 }
 
+nsresult
+nsProfile::DefineLocaleDefaultsDir()
+{
+    nsresult rv;
+    
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    NS_ENSURE_TRUE(directoryService, NS_ERROR_FAILURE);    
+
+    nsCOMPtr<nsIFile> localeDefaults;
+    rv = directoryService->Get(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(localeDefaults));
+    if (NS_SUCCEEDED(rv))
+    {
+        NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, kChromeRegistryCID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLString localeName;
+            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator"), getter_Copies(localeName));
+            if (NS_SUCCEEDED(rv))
+                rv = localeDefaults->AppendUnicode(localeName);
+        }
+        (void) directoryService->Undefine(NS_APP_PROFILE_DEFAULTS_50_DIR);
+        rv = directoryService->Define(NS_APP_PROFILE_DEFAULTS_50_DIR, localeDefaults);
+    }
+    return rv;
+}
 
 // Migrate a selected profile
 // Set the profile to the current profile....debatable.

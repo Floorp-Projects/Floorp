@@ -64,6 +64,7 @@ private:
 								
 	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
     nsresult AddLevelOfIndirection(nsIFile *aDir);
+    nsresult DefineLocaleDefaultsDir();
 
     PRBool mAutomigrate;
     PRBool mOutofDiskSpace;
