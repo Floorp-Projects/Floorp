@@ -728,6 +728,12 @@ nsAutoCompleteController::StopSearch()
 nsresult
 nsAutoCompleteController::StartSearchTimer()
 {
+  // Don't create a new search timer if we're already waiting for one to fire.
+  // If we don't check for this, we won't be able to cancel the original timer
+  // and may crash when it fires (bug 236659).
+  if (mTimer)
+    return NS_OK;
+
   PRUint32 timeout;
   mInput->GetTimeout(&timeout);
 
