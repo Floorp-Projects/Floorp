@@ -213,6 +213,10 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 					 uint32 param_count, char** param_names, char** param_values)
 {
 	uint32 count;
+#if !defined(OJI)
+    int32 typeIndex;
+    int32 classidIndex;
+#endif
 
     LO_NVList_Init(&embed->attributes);
 
