@@ -29,7 +29,7 @@
 
 /* Primary cursor is text I-beam */
 
-* {
+*:scrolled-content {
   cursor: text;
 }
 
