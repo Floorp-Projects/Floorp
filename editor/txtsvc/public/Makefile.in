@@ -27,7 +27,6 @@ DEFINES =
 EXPORTS =						\
     nsITextService.h			\
     nsITextServicesDocument.h	\
-    nsITextServicesDocumentInternal.h	\
     nsTextServicesCID.h			\
     $(NULL)
 
