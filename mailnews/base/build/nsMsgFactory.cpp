@@ -27,9 +27,6 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 
-#include "nsIMessenger.h"
-#include "nsMessenger.h"
-
 #include "nsMsgGroupRecord.h"
 
 #include "nsMsgAppCore.h"
@@ -57,7 +54,6 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
-static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
 static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
 
 static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
@@ -178,10 +174,6 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	else if (mClassID.Equals(kCMessengerBootstrapCID)) 
 	{
 		return NS_NewMessengerBootstrap(aIID, aResult);
-	}
-	else if (mClassID.Equals(kCMessengerCID)) 
-	{
-		return NS_NewMessenger(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCUrlListenerManagerCID))
 	{
@@ -337,12 +329,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                        path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCMessengerCID,
-                                       "Netscape Messenger",
-                                       "component://netscape/messenger/application",
-                                       path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-  
   rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
                                        "Netscape Messenger Bootstrapper",
                                        "component://netscape/messenger",
@@ -459,8 +445,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kCUrlListenerManagerCID, path);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kCMessengerCID, path);
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMessengerBootstrapCID, path);
   if (NS_FAILED(rv)) goto done;
