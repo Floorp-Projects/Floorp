@@ -32,8 +32,8 @@
 #include "nsRDFDOMNodeList.h"
 #include "nsIEditorShell.h"
 
-class nsXULEditorElement : public nsXULElement,
-                         public nsIDOMXULEditorElement
+class nsXULEditorElement : public nsXULAggregateElement,
+                           public nsIDOMXULEditorElement
 {
 public:
     nsXULEditorElement(nsIDOMXULElement* aOuter);

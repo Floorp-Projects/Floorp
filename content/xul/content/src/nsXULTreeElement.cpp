@@ -36,8 +36,8 @@
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
 int                  nsXULTreeElement::gRefCnt = 0;
 
-NS_IMPL_ADDREF_INHERITED(nsXULTreeElement, nsXULElement);
-NS_IMPL_RELEASE_INHERITED(nsXULTreeElement, nsXULElement);
+NS_IMPL_ADDREF_INHERITED(nsXULTreeElement, nsXULAggregateElement);
+NS_IMPL_RELEASE_INHERITED(nsXULTreeElement, nsXULAggregateElement);
 
 nsresult
 nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
@@ -53,7 +53,7 @@ nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
         *aResult = NS_STATIC_CAST(nsIXULTreeContent*, this);
     }
     else {
-        return nsXULElement::QueryInterface(aIID, aResult);
+        return nsXULAggregateElement::QueryInterface(aIID, aResult);
     }
 
     NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, *aResult));
@@ -62,7 +62,7 @@ nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
 
 
 nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
-:nsXULElement(aOuter)
+  : nsXULAggregateElement(aOuter)
 {
   if (gRefCnt++ == 0) {
     kSelectedAtom    = NS_NewAtom("selected");
