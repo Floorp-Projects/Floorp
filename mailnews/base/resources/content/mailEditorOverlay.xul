@@ -8,37 +8,19 @@
 <overlay id="mailEditorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
-  <![CDATA[
-
-    function sendPage()
-      {
-        var pageUrl = window._content.location.href;
-        var pageTitle =  window._content.document.title;
-        window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                           "chrome,all,dialog=no", 
-                           "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +
-                           "',subject='" + pageTitle + "',bodyislink=true");
-      }
-  
-  ]]>
-  </script>         
-
-  <!-- editor specific commands -->
-  <broadcasterset id="broadcasterset">
-  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
-  </broadcasterset>
-
   <!-- editor specific UI items -->
   <menupopup id="menu_NewPopup">
+    <!-- Command nodes and implemention are in mailOverlay.xul -->
     <menuitem id="menu_newMessage" key="key_newMessage" observes="cmd_newMessage" position="2"/>
-    <menuitem id="menu_newCard"      observes="cmd_newCard" position="3"/>
+    <menuitem id="menu_newCard"    observes="cmd_newCard" position="3"/>
   </menupopup>
 
   <menupopup id="menu_FilePopup">
-    <menuitem id="menu_sendPage" observes="cmd_sendPage" position="11"/>
-  </menupopup>  
-  
+    <!-- The command node cmd_editSendPage is in editorOverlay.xul. 
+         Implementation is in ComposerCommands.js
+    -->
+    <menuitem id="menu_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" observes="cmd_editSendPage" position="13"/>
+  </menupopup>
 
 </overlay>
 
