@@ -1346,48 +1346,48 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
-  nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 
-  //
-  // First:
-  //
-  // Call the consumer OnStopRequest(...) to end the request...
-  if (aListener) {
-    rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aMsg);
+    //
+    // First:
+    //
+    // Call the consumer OnStopRequest(...) to end the request...
+    if (aListener)
+    {
+        rv = aListener -> OnStopRequest (this, mResponseContext, aStatus, aMsg);
 
-    if (NS_FAILED(rv)) {
-      PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-             ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
-              "\tOnStopRequest to consumer failed! Status:%x\n",
-              this, rv));
+        if (NS_FAILED (rv))
+        {
+            PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
+                "\tOnStopRequest to consumer failed! Status:%x\n",
+                this, rv));
+        }
     }
-  }
 
-  //
-  // After the consumer has been notified, remove the channel from its 
-  // load group...  This will trigger an OnStopRequest from the load group.
-  //
-  if (mLoadGroup) {
-    (void)mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
-  }
+    //
+    // After the consumer has been notified, remove the channel from its 
+    // load group...  This will trigger an OnStopRequest from the load group.
+    //
+    
+    if (mLoadGroup)
+        mLoadGroup -> RemoveChannel (this, nsnull, aStatus, nsnull);
 
-  //
-  // Finally, notify the OpenObserver that the request has completed.
-  //
-  if (mOpenObserver) {
-      (void) mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
-  }
+    //
+    // Finally, notify the OpenObserver that the request has completed.
+    //
+    if (mOpenObserver)
+        mOpenObserver -> OnStopRequest (this, mOpenContext, aStatus, aMsg);
 
-  // Null out pointers that are no longer needed...
+    // Null out pointers that are no longer needed...
 
-// rjc says: don't null out mResponseContext;
-// it needs to be valid for the life of the channel
-//  mResponseContext = 0;
+    // rjc says: don't null out mResponseContext;
+    // it needs to be valid for the life of the channel
+    //  mResponseContext = 0;
 
-  mResponseDataListener = 0;
-  NS_IF_RELEASE(mCachedResponse);
+    mResponseDataListener = 0;
+    NS_IF_RELEASE (mCachedResponse);
 
-  return rv;
+    return rv;
 }
 
 nsresult nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
@@ -1775,8 +1775,12 @@ nsHTTPChannel::ProcessStatusCode(void)
 }
 
 nsresult
-nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
+nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
 {
+    // if there is no cached entry - bail right away
+    if (!mCachedResponse)
+        return NS_OK;
+
     nsresult rv;
     NS_ASSERTION(!mCachedContentIsValid, 
             "We should never have cached a 304 response");

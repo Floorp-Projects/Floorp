@@ -127,6 +127,7 @@ public:
     nsHTTPRequest*                      mRequest;
     nsHTTPResponseListener*             mHTTPServerListener;
     nsCOMPtr<nsISupports>               mResponseContext;
+    nsHTTPResponse*                     mCachedResponse;
 
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
@@ -150,7 +151,6 @@ protected:
     
     // Cache-related members
     nsCOMPtr<nsICachedNetData>          mCacheEntry;
-    nsHTTPResponse*                     mCachedResponse;
     PRBool                              mCachedContentIsAvailable;
     PRBool                              mCachedContentIsValid;
     
