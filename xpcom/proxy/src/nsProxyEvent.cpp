@@ -235,8 +235,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
             continue;
 
         if ( (convertType == convertOutParameters && paramInfo.IsOut())  || 
-             (convertType == convertInParameters && paramInfo.IsIn())    || 
-             (convertType == convertAllParameters))  //TODO: need to remove.
+             (convertType == convertInParameters && paramInfo.IsIn())    )
         {
             // We found an out parameter which is a interface, check for proxy
             if (params[i].val.p == nsnull)
@@ -255,8 +254,8 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
 
             nsISupports *aProxyObject;
 
-							// I wish I could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
-						static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
+			// ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
+            static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
             rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aProxyObject);
         
             if (NS_FAILED(rv))
@@ -362,10 +361,17 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                     if (NS_FAILED(rv))
                         return rv;
 
+                    // stuff the new proxies into the val.p.  If it is an OUT parameter, release once
+                    // the real object to force the proxy to be the owner.
                     if (paramInfo.IsOut())
+                    {
+                        anInterface->Release();    
                         *((void**)params[i].val.p) = ((void*)aProxyObject);
+                    }
                     else
+                    {
                         (params[i].val.p)  = ((void*)aProxyObject);                    
+                    }
                 }
                 else
                 {   
@@ -376,6 +382,18 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
             else
             {
                 // It already is a proxy!
+            }
+        }
+        else if ( (convertType == convertOutParameters) && paramInfo.IsIn() )
+        {
+            // we need to Release() any |in| parameters that we created proxies for
+            // and replace the proxied object with the real object on the stack.
+            nsProxyEventObject* replaceInterface = ((nsProxyEventObject*)params[i].val.p);
+            if (replaceInterface)
+            {
+                nsISupports* realObject = replaceInterface->GetRealObject();
+                replaceInterface->Release();   
+                (params[i].val.p)  = ((void*)realObject);  
             }
         }
     }
