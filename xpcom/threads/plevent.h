@@ -162,8 +162,8 @@ to ensure that all events are removed from the queue for that owner,
 and to ensure that no more events will be delivered for that owner.
 **********************************************************************/
 
-#ifndef prevent_h___
-#define prevent_h___
+#ifndef plevent_h___
+#define plevent_h___
 
 #include "prtypes.h"
 #include "prclist.h"
@@ -492,6 +492,42 @@ PR_EXTERN(HWND)
 
 #endif /* XP_PC */
 
+#if defined(NO_NSPR_10_SUPPORT)
+#else
+/********* ???????????????? FIX ME       ??????????????????????????? *****/
+/********************** Some old definitions *****************************/
+
+/* Re: prevent.h->plevent.h */
+#define PREvent PLEvent
+#define PREventQueue PLEventQueue
+#define PR_CreateEventQueue PL_CreateEventQueue
+#define PR_DestroyEventQueue PL_DestroyEventQueue
+#define PR_GetEventQueueMonitor PL_GetEventQueueMonitor
+#define PR_ENTER_EVENT_QUEUE_MONITOR PL_ENTER_EVENT_QUEUE_MONITOR
+#define PR_EXIT_EVENT_QUEUE_MONITOR PL_EXIT_EVENT_QUEUE_MONITOR
+#define PR_PostEvent PL_PostEvent
+#define PR_PostSynchronousEvent PL_PostSynchronousEvent
+#define PR_GetEvent PL_GetEvent
+#define PR_EventAvailable PL_EventAvailable
+#define PREventFunProc PLEventFunProc
+#define PR_MapEvents PL_MapEvents
+#define PR_RevokeEvents PL_RevokeEvents
+#define PR_ProcessPendingEvents PL_ProcessPendingEvents
+#define PR_WaitForEvent PL_WaitForEvent
+#define PR_EventLoop PL_EventLoop
+#define PR_GetEventQueueSelectFD PL_GetEventQueueSelectFD
+#define PRHandleEventProc PLHandleEventProc
+#define PRDestroyEventProc PLDestroyEventProc
+#define PR_InitEvent PL_InitEvent
+#define PR_GetEventOwner PL_GetEventOwner
+#define PR_HandleEvent PL_HandleEvent
+#define PR_DestroyEvent PL_DestroyEvent
+#define PR_DequeueEvent PL_DequeueEvent
+#define PR_GetMainEventQueue PL_GetMainEventQueue
+
+/********* ????????????? End Fix me ?????????????????????????????? *****/
+#endif /* NO_NSPR_10_SUPPORT */
+
 PR_END_EXTERN_C
 
-#endif /* prevent_h___ */
+#endif /* plevent_h___ */

@@ -31,6 +31,7 @@ EXPORTS =                      \
         nsAutoLock.h           \
         nsIEventQueue.h        \
         nsIEventQueueService.h \
+        plevent.h              \
         $(NULL)			
 
 NO_XPT_GEN=1
@@ -52,6 +53,10 @@ LINCS =                   \
 	$(NULL)
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
+
+C_OBJS =                                    \
+        .\$(OBJDIR)\plevent.obj             \
+        $(NULL)
 
 CPP_OBJS =                                  \
         .\$(OBJDIR)\nsAutoLock.obj          \

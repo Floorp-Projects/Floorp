@@ -132,34 +132,6 @@ typedef PRWord prword_t;
 #define PR_ArenaCountRelease PL_ArenaCountRelease
 #define PR_ArenaCountRetract PL_ArenaCountRetract
 
-/* Re: prevent.h->plevent.h */
-#define PREvent PLEvent
-#define PREventQueue PLEventQueue
-#define PR_CreateEventQueue PL_CreateEventQueue
-#define PR_DestroyEventQueue PL_DestroyEventQueue
-#define PR_GetEventQueueMonitor PL_GetEventQueueMonitor
-#define PR_ENTER_EVENT_QUEUE_MONITOR PL_ENTER_EVENT_QUEUE_MONITOR
-#define PR_EXIT_EVENT_QUEUE_MONITOR PL_EXIT_EVENT_QUEUE_MONITOR
-#define PR_PostEvent PL_PostEvent
-#define PR_PostSynchronousEvent PL_PostSynchronousEvent
-#define PR_GetEvent PL_GetEvent
-#define PR_EventAvailable PL_EventAvailable
-#define PREventFunProc PLEventFunProc
-#define PR_MapEvents PL_MapEvents
-#define PR_RevokeEvents PL_RevokeEvents
-#define PR_ProcessPendingEvents PL_ProcessPendingEvents
-#define PR_WaitForEvent PL_WaitForEvent
-#define PR_EventLoop PL_EventLoop
-#define PR_GetEventQueueSelectFD PL_GetEventQueueSelectFD
-#define PRHandleEventProc PLHandleEventProc
-#define PRDestroyEventProc PLDestroyEventProc
-#define PR_InitEvent PL_InitEvent
-#define PR_GetEventOwner PL_GetEventOwner
-#define PR_HandleEvent PL_HandleEvent
-#define PR_DestroyEvent PL_DestroyEvent
-#define PR_DequeueEvent PL_DequeueEvent
-#define PR_GetMainEventQueue PL_GetMainEventQueue
-
 /* Re: prhash.h->plhash.h */
 #define PRHashEntry PLHashEntry
 #define PRHashTable PLHashTable
