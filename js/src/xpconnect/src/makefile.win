@@ -40,7 +40,6 @@ MODULE_NAME=xpconnect
 REQUIRES	= xpcom \
 		  string \
 		  js \
-		  dom \
 		  caps \
 !ifdef XPC_TOOLS_SUPPORT
 		  xpctools \
