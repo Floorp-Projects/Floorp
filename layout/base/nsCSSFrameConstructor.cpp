@@ -49,7 +49,6 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
-#include "nsDeque.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITextContent.h"
@@ -333,16 +332,17 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
  **  BEGIN TABLE SECTION
  ****************************************************/
 
-// too bad nsDeque requires such a class 
-class nsBenignFunctor: public nsDequeFunctor{
-  public:
-    virtual void* operator()(void* aObject) {
-      return aObject;
-    }
+struct nsTableList {
+  nsTableList() {
+    mInner = mChild = nsnull;
+  }
+  void Set(nsIFrame* aInner, nsIFrame* aChild) {
+    mInner = aInner;
+    mChild = aChild;
+  }
+  nsIFrame* mInner;
+  nsIFrame* mChild;
 };
-
-//static nsBenignFunctor* gBenignFunctor = new nsBenignFunctor;
-
 
 // Construct the outer, inner table frames and the children frames for the table. 
 // Tables can have any table-related child.
@@ -404,8 +404,9 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIContent> childContent;
     
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
-      nsIFrame*                 childFrame = nsnull;
-      nsIFrame*                 ignore;
+      nsIFrame* childFrame = nsnull;
+      nsIFrame* ignore1;
+      nsIFrame* ignore2;
       nsCOMPtr<nsIStyleContext> childStyleContext;
 
       // Resolve the style context and get its display
@@ -420,7 +421,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
         if (nsnull == captionFrame) {  // only allow one caption
           // XXX should absolute items be passed along?
           rv = ConstructTableCaptionFrame(aPresContext, childContent, aNewFrame, childStyleContext,
-                                          aAbsoluteItems, ignore, captionFrame, aFixedItems, aTableCreator);
+                                          aAbsoluteItems, ignore1, captionFrame, aFixedItems, aTableCreator);
         }
         break;
 
@@ -431,23 +432,23 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
       {
         PRBool isRowGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP != styleDisplay->mDisplay);
         rv = ConstructTableGroupFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                      aAbsoluteItems, isRowGroup, childFrame, ignore, aFixedItems, aTableCreator);
+                                      aAbsoluteItems, isRowGroup, childFrame, ignore1, aFixedItems, aTableCreator);
         break;
       }
       case NS_STYLE_DISPLAY_TABLE_ROW:
         rv = ConstructTableRowFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                    aAbsoluteItems, childFrame, ignore, aFixedItems, aTableCreator);
+                                    aAbsoluteItems, childFrame, ignore1, aFixedItems, aTableCreator);
         break;
 
       case NS_STYLE_DISPLAY_TABLE_COLUMN:
         rv = ConstructTableColFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                    aAbsoluteItems, childFrame, ignore, aFixedItems, aTableCreator);
+                                    aAbsoluteItems, childFrame, ignore1, aFixedItems, aTableCreator);
         break;
 
 
       case NS_STYLE_DISPLAY_TABLE_CELL:
         rv = ConstructTableCellFrame(aPresContext, childContent, innerFrame, childStyleContext, 
-                                     aAbsoluteItems, childFrame, ignore, aFixedItems, aTableCreator);
+                                     aAbsoluteItems, childFrame, ignore1, ignore2, aFixedItems, aTableCreator);
         break;
       default:
         //nsIFrame* nonTableRelatedFrame;
@@ -489,43 +490,131 @@ nsresult
 nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresContext, 
                                                      nsIContent*      aContent, 
                                                      nsIFrame*        aParentFrame, 
+                                                     nsIFrame*&       aNewTopFrame,
                                                      nsIFrame*&       aOuterFrame, 
-                                                     nsIFrame*&       aInnerFrame, 
+                                                     nsIFrame*&       aInnerFrame,
+                                                     nsAbsoluteItems& aAbsoluteItems,
                                                      nsAbsoluteItems& aFixedItems,
                                                      nsTableCreator&  aTableCreator)
 {
-  nsresult result = NS_OK;
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIStyleContext> parentStyleContext;
-    result = aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
-    if (NS_SUCCEEDED(result)) {
-      // create the outer table frames
-      nsCOMPtr<nsIStyleContext> outerStyleContext;
-      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo, 
-                                                 parentStyleContext,
-                                                 PR_FALSE,
-                                                 getter_AddRefs(outerStyleContext));
-      result = NS_NewTableOuterFrame(aOuterFrame);
-      if (NS_SUCCEEDED(result)) {
-        aOuterFrame->Init(*aPresContext, aContent, aParentFrame, outerStyleContext,
-                          nsnull);
+  nsresult rv = NS_OK;
 
-        // create the inner table frames
-        nsCOMPtr<nsIStyleContext> innerStyleContext;
-        aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tablePseudo, 
-                                                   outerStyleContext,
-                                                   PR_FALSE,
-                                                   getter_AddRefs(innerStyleContext));
-        result = aTableCreator.CreateTableFrame(aInnerFrame);
-        if (NS_SUCCEEDED(result)) {
-          aInnerFrame->Init(*aPresContext, aContent, aOuterFrame, innerStyleContext,
-                            nsnull);
-        }
-      }
+  nsCOMPtr<nsIStyleContext> parentStyleContext;
+  aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
+  const nsStyleDisplay* parentDisplay = 
+   (const nsStyleDisplay*) parentStyleContext->GetStyleData(eStyleStruct_Display);
+
+  PRBool cellIsParent = PR_TRUE;
+  nsIFrame* cellFrame;
+  nsIFrame* cellBodyFrame;
+  nsCOMPtr<nsIStyleContext> cellStyleContext;
+  nsIFrame* ignore;
+
+  // construct the ancestors of anonymous table frames
+  switch(parentDisplay->mDisplay) {
+  case NS_STYLE_DISPLAY_TABLE_CELL:
+    break;
+  case NS_STYLE_DISPLAY_TABLE_ROW: // construct a cell
+    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo, parentStyleContext,
+                                               PR_FALSE, getter_AddRefs(cellStyleContext));
+    rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, cellStyleContext, aAbsoluteItems,
+                                 aNewTopFrame, cellFrame, cellBodyFrame, aFixedItems, aTableCreator, PR_FALSE); 
+    break;
+  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP: // construct a row & a cell
+  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+    {
+      nsIFrame* rowFrame;
+      nsCOMPtr<nsIStyleContext> rowStyleContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo, 
+                                                 parentStyleContext, PR_FALSE, 
+                                                 getter_AddRefs(rowStyleContext));
+      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, rowStyleContext, 
+                                  aAbsoluteItems, aNewTopFrame, rowFrame, aFixedItems, 
+                                  aTableCreator);
+      if (NS_FAILED(rv)) return rv;
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo, parentStyleContext,
+                                                 PR_FALSE, getter_AddRefs(cellStyleContext));
+      rv = ConstructTableCellFrame(aPresContext, aContent, rowFrame, cellStyleContext, 
+                                   aAbsoluteItems, ignore, cellFrame, cellBodyFrame, 
+                                   aFixedItems, aTableCreator, PR_FALSE);
+      rowFrame->SetInitialChildList(*aPresContext, nsnull, cellFrame);
+      break;
+    }
+  case NS_STYLE_DISPLAY_TABLE: // construct a row group, a row, & a cell
+    {
+      nsIFrame* groupFrame;
+      nsCOMPtr<nsIStyleContext> groupStyleContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowGroupPseudo, 
+                                                 parentStyleContext, PR_FALSE, 
+                                                 getter_AddRefs(groupStyleContext));
+      rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, groupStyleContext, 
+                                    aAbsoluteItems, PR_TRUE, aNewTopFrame, groupFrame, aFixedItems, 
+                                    aTableCreator);
+      if (NS_FAILED(rv)) return rv;
+      nsIFrame* rowFrame;
+      nsCOMPtr<nsIStyleContext> rowStyleContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo, 
+                                                 parentStyleContext, PR_FALSE, 
+                                                 getter_AddRefs(rowStyleContext));
+      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, rowStyleContext, 
+                                  aAbsoluteItems, ignore, rowFrame, aFixedItems, 
+                                  aTableCreator);
+      if (NS_FAILED(rv)) return rv;
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo, parentStyleContext,
+                                               PR_FALSE, getter_AddRefs(cellStyleContext));
+      rv = ConstructTableCellFrame(aPresContext, aContent, rowFrame, cellStyleContext, 
+                                   aAbsoluteItems, ignore, cellFrame, cellBodyFrame,
+                                   aFixedItems, aTableCreator, PR_FALSE);
+      rowFrame->SetInitialChildList(*aPresContext, nsnull, cellFrame);
+      groupFrame->SetInitialChildList(*aPresContext, nsnull, rowFrame);
+      break;
+    }
+  default:
+    cellIsParent = PR_FALSE;
+  }
+
+  // create the outer table, inner table frames and make the cell frame the parent of the 
+  // outer frame
+  if (NS_SUCCEEDED(rv)) {
+    // create the outer table frame
+    nsIFrame* tableParent = nsnull;
+    nsIStyleContext* tableParentSC;
+    if (cellIsParent) {
+      tableParent = cellFrame;
+      tableParentSC = cellStyleContext;
+    } else {
+      tableParent = aParentFrame;
+      tableParentSC = parentStyleContext;
+    }
+    nsCOMPtr<nsIStyleContext> outerStyleContext;
+    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo, 
+                                               tableParentSC, PR_FALSE,
+                                               getter_AddRefs(outerStyleContext));
+    rv = NS_NewTableOuterFrame(aOuterFrame);
+    if (NS_FAILED(rv)) return rv;
+    aOuterFrame->Init(*aPresContext, aContent, tableParent, outerStyleContext,
+                      nsnull);
+
+    // create the inner table frame
+    nsCOMPtr<nsIStyleContext> innerStyleContext;
+    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tablePseudo, 
+                                               outerStyleContext, PR_FALSE,
+                                               getter_AddRefs(innerStyleContext));
+    rv = aTableCreator.CreateTableFrame(aInnerFrame);
+    if (NS_FAILED(rv)) return rv;
+    aInnerFrame->Init(*aPresContext, aContent, aOuterFrame, innerStyleContext,
+                      nsnull);
+    aOuterFrame->SetInitialChildList(*aPresContext, nsnull, aInnerFrame);
+
+    if (cellIsParent) {
+      cellBodyFrame->SetInitialChildList(*aPresContext, nsnull, aOuterFrame);
+    } else {
+      aNewTopFrame = aOuterFrame;
     }
   }
 
-  return result;
+  return rv;
 }
 
 // if aParentFrame is a table, it is assummed that it is an outer table and the inner
@@ -536,45 +625,43 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
                                                   nsIFrame*        aParentFrame,
                                                   nsIStyleContext* aStyleContext,
                                                   nsAbsoluteItems& aAbsoluteItems,
-                                                  nsIFrame*&       aNewTopMostFrame,
+                                                  nsIFrame*&       aNewTopFrame,
                                                   nsIFrame*&       aNewCaptionFrame,
                                                   nsAbsoluteItems& aFixedItems,
                                                   nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_NewAreaFrame(aNewCaptionFrame, 0);
-  if (NS_SUCCEEDED(rv)) {
-    const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
-    nsIFrame* innerFrame;
+  if (NS_FAILED(rv)) return rv;
 
-    if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an outer table
-      aParentFrame->FirstChild(nsnull, &innerFrame);
-      aNewCaptionFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
-                             nsnull);
-      innerFrame->SetNextSibling(aNewCaptionFrame);
-      // the caller is responsible for calling SetInitialChildList on the outer, inner frames
-      aNewTopMostFrame = aNewCaptionFrame;
-    } else { // parent is not a table, need to create a new table
-      nsIFrame* outerFrame;
-      ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, outerFrame,
-                                   innerFrame, aFixedItems, aTableCreator);
-      nsCOMPtr<nsIStyleContext> outerStyleContext;
-      outerFrame->GetStyleContext(getter_AddRefs(outerStyleContext));
-      nsCOMPtr<nsIStyleContext> adjStyleContext;
-      aPresContext->ResolveStyleContextFor(aContent, outerStyleContext,
-                                           PR_FALSE,
-                                           getter_AddRefs(adjStyleContext));
-      aNewCaptionFrame->Init(*aPresContext, aContent, outerFrame, adjStyleContext,
-                             nsnull);
-      innerFrame->SetNextSibling(aNewCaptionFrame);
-      outerFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame);
-      innerFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
-      aNewTopMostFrame = outerFrame;
-    }
-    nsFrameItems childItems;
-    ProcessChildren(aPresContext, aContent, aNewCaptionFrame, aAbsoluteItems, 
-                    childItems, aFixedItems);
-    aNewCaptionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
+  nsIFrame* innerFrame;
+
+  if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an outer table
+    aParentFrame->FirstChild(nsnull, &innerFrame);
+    aNewCaptionFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                           nsnull);
+    innerFrame->SetNextSibling(aNewCaptionFrame);
+    // the caller is responsible for calling SetInitialChildList on the outer, inner frames
+    aNewTopFrame = aNewCaptionFrame;
+  } else { // parent is not a table, need to create a new table
+    nsIFrame* outerFrame;
+    ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, aNewTopFrame,
+                                 outerFrame, innerFrame, aAbsoluteItems, aFixedItems, 
+                                 aTableCreator);
+    nsCOMPtr<nsIStyleContext> outerStyleContext;
+    outerFrame->GetStyleContext(getter_AddRefs(outerStyleContext));
+    nsCOMPtr<nsIStyleContext> adjStyleContext;
+    aPresContext->ResolveStyleContextFor(aContent, outerStyleContext,
+                                         PR_FALSE, getter_AddRefs(adjStyleContext));
+    aNewCaptionFrame->Init(*aPresContext, aContent, outerFrame, 
+                           adjStyleContext, nsnull);
+    innerFrame->SetNextSibling(aNewCaptionFrame);
   }
+  nsFrameItems childItems;
+  ProcessChildren(aPresContext, aContent, aNewCaptionFrame, aAbsoluteItems, 
+                  childItems, aFixedItems);
+  aNewCaptionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+
   return rv;
 }
 
@@ -586,67 +673,69 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
                                                 nsIStyleContext* aStyleContext,
                                                 nsAbsoluteItems& aAbsoluteItems,
                                                 PRBool           aIsRowGroup,
-                                                nsIFrame*&       aNewTopMostFrame, 
+                                                nsIFrame*&       aNewTopFrame, 
                                                 nsIFrame*&       aNewGroupFrame,
                                                 nsAbsoluteItems& aFixedItems,
                                                 nsTableCreator&  aTableCreator,
-                                                nsDeque*         aToDo)   
+                                                nsTableList*     aToDo)   
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
     aStyleContext->GetStyleData(eStyleStruct_Display);
+  nsCOMPtr<nsIStyleContext> styleContext( dont_QueryInterface(aStyleContext) );
+
+  // TRUE if we are being called from above, FALSE if from below (e.g. row)
   PRBool contentDisplayIsGroup = 
     (aIsRowGroup) ? (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == styleDisplay->mDisplay) ||
                     (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == styleDisplay->mDisplay) ||
                     (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == styleDisplay->mDisplay)
                   : (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == styleDisplay->mDisplay);
+  if (!contentDisplayIsGroup) {
+    NS_ASSERTION(aToDo, "null nsTableList when constructing from below");
+  }
 
-  nsCOMPtr<nsIStyleContext> styleContext( dont_QueryInterface(aStyleContext) );
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
   const nsStyleDisplay* parentDisplay = 
    (const nsStyleDisplay*) parentStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an inner table
-    if (!contentDisplayIsGroup) { // content is from some (soon to be) child of ours
+    if (!contentDisplayIsGroup) { // called from row below
       nsIAtom* pseudoGroup = (aIsRowGroup) ? nsHTMLAtoms::tableRowGroupPseudo : nsHTMLAtoms::tableColGroupPseudo;
       aPresContext->ResolvePseudoStyleContextFor(aContent, pseudoGroup, parentStyleContext,
-                                                 PR_FALSE,
-                                                 getter_AddRefs(styleContext));
+                                                 PR_FALSE, getter_AddRefs(styleContext));
     }
+    // only process the group's children if we're called from above
     rv = ConstructTableGroupFrameOnly(aPresContext, aContent, aParentFrame, styleContext, 
-                                      aAbsoluteItems, aIsRowGroup, contentDisplayIsGroup,
-                                      aNewTopMostFrame, aNewGroupFrame, aFixedItems, aTableCreator);
-  } else { // construct anonymous table frames
+                                      aAbsoluteItems, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
+                                      aFixedItems, aTableCreator, contentDisplayIsGroup);
+  } else { // construct anonymous frames
     nsIFrame* innerFrame;
     nsIFrame* outerFrame;
-    ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, outerFrame, innerFrame, aFixedItems, aTableCreator);
+
+    ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, aNewTopFrame, outerFrame, 
+                                 innerFrame, aAbsoluteItems, aFixedItems, aTableCreator);
     nsCOMPtr<nsIStyleContext> innerStyleContext;
     innerFrame->GetStyleContext(getter_AddRefs(innerStyleContext));
-    if (contentDisplayIsGroup) {
+    if (contentDisplayIsGroup) { // called from above
       aPresContext->ResolveStyleContextFor(aContent, innerStyleContext, PR_FALSE,
                                            getter_AddRefs(styleContext));
-    } else {
+    } else { // called from row below
       nsIAtom* pseudoGroup = (aIsRowGroup) ? nsHTMLAtoms::tableRowGroupPseudo : nsHTMLAtoms::tableColGroupPseudo;
       aPresContext->ResolvePseudoStyleContextFor(aContent, pseudoGroup, innerStyleContext,
-                                                 PR_FALSE,
-                                                 getter_AddRefs(styleContext));
+                                                 PR_FALSE, getter_AddRefs(styleContext));
     }
+    nsIFrame* topFrame;
+    // only process the group's children if we're called from above
     rv = ConstructTableGroupFrameOnly(aPresContext, aContent, innerFrame, styleContext,
-                                      aAbsoluteItems, aIsRowGroup, contentDisplayIsGroup,
-                                      aNewTopMostFrame, aNewGroupFrame, aFixedItems, aTableCreator);
-    if (NS_SUCCEEDED(rv)) {
-      if (aToDo) { // some descendant will set the table's child lists later
-        aToDo->Push(innerFrame);
-        aToDo->Push(aNewTopMostFrame);
-        aToDo->Push(outerFrame);
-        aToDo->Push(innerFrame);
-      } else { // set the table's child lists now
-        innerFrame->SetInitialChildList(*aPresContext, nsnull, aNewTopMostFrame);
-        outerFrame->SetInitialChildList(*aPresContext, nsnull, innerFrame);
-      }
+                                      aAbsoluteItems, aIsRowGroup, topFrame, aNewGroupFrame, 
+                                      aFixedItems, aTableCreator, contentDisplayIsGroup);
+    if (NS_FAILED(rv)) return rv;
+    if (contentDisplayIsGroup) { // called from above
+      innerFrame->SetInitialChildList(*aPresContext, nsnull, topFrame);
+    } else { // called from row below
+      aToDo->Set(innerFrame, topFrame);
     }
-    aNewTopMostFrame = outerFrame;
   }
 
   return rv;
@@ -659,11 +748,11 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
                                                     nsIStyleContext* aStyleContext,
                                                     nsAbsoluteItems& aAbsoluteItems,
                                                     PRBool           aIsRowGroup,
-                                                    PRBool           aProcessChildren,
-                                                    nsIFrame*&       aNewTopMostFrame, 
+                                                    nsIFrame*&       aNewTopFrame, 
                                                     nsIFrame*&       aNewGroupFrame,
                                                     nsAbsoluteItems& aFixedItems,
-                                                    nsTableCreator&  aTableCreator) 
+                                                    nsTableCreator&  aTableCreator,
+                                                    PRBool           aProcessChildren) 
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* styleDisplay = 
@@ -671,54 +760,46 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
 
   if (IsScrollable(aPresContext, styleDisplay)) {
     // Create a scroll frame and initialize it
-    rv = NS_NewScrollFrame(aNewTopMostFrame);
-    if (NS_SUCCEEDED(rv)) {
-      aNewTopMostFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
-                             nsnull);
+    rv = NS_NewScrollFrame(aNewTopFrame);
+    if (NS_FAILED(rv)) return rv;
+    aNewTopFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
-      // The scroll frame gets the original style context, the scrolled frame gets  
-      // a pseudo element style context that inherits the background properties
-      nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
-      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::scrolledContentPseudo,
-                                                 aStyleContext,
-                                                 PR_FALSE,
-                                                 getter_AddRefs(scrolledPseudoStyle));
+    // The scroll frame gets the original style context, the scrolled frame gets  
+    // a pseudo element style context that inherits the background properties
+    nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
+    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::scrolledContentPseudo,
+                                               aStyleContext, PR_FALSE,
+                                               getter_AddRefs(scrolledPseudoStyle));
 
-      // Create an area container for the frame
-      rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewGroupFrame)
-                         : aTableCreator.CreateTableColGroupFrame(aNewGroupFrame);
-      if (NS_SUCCEEDED(rv)) {
-
-        // Initialize the frame and force it to have a view
-        aNewGroupFrame->Init(*aPresContext, aContent, aNewTopMostFrame, scrolledPseudoStyle,
-                             nsnull);
-        nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewGroupFrame,
-                                                 scrolledPseudoStyle, PR_TRUE);
-        aNewTopMostFrame->SetInitialChildList(*aPresContext, nsnull, aNewGroupFrame);
-      }
-    }
+    // Create an area container for the frame
+    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewGroupFrame)
+                       : aTableCreator.CreateTableColGroupFrame(aNewGroupFrame);
+    if (NS_FAILED(rv)) return rv;
+    // Initialize the frame and force it to have a view
+    aNewGroupFrame->Init(*aPresContext, aContent, aNewTopFrame, scrolledPseudoStyle,
+                         nsnull);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewGroupFrame,
+                                             scrolledPseudoStyle, PR_TRUE);
+    aNewTopFrame->SetInitialChildList(*aPresContext, nsnull, aNewGroupFrame);
   } else {
-    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewTopMostFrame)
-                       : aTableCreator.CreateTableColGroupFrame(aNewTopMostFrame);
-    if (NS_SUCCEEDED(rv)) {
-      aNewTopMostFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
-                             nsnull);
-      aNewGroupFrame = aNewTopMostFrame;
-    }
+    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewTopFrame)
+                       : aTableCreator.CreateTableColGroupFrame(aNewTopFrame);
+    if (NS_FAILED(rv)) return rv;
+    aNewTopFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                       nsnull);
+    aNewGroupFrame = aNewTopFrame;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    if (aProcessChildren) {
-      nsFrameItems childItems;
-      if (aIsRowGroup) {
-        TableProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
-                             childItems, aFixedItems, aTableCreator);
-      } else {
-        ProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
-                        childItems, aFixedItems);
-      }
-      aNewGroupFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  if (aProcessChildren) {
+    nsFrameItems childItems;
+    if (aIsRowGroup) {
+      TableProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
+                           childItems, aFixedItems, aTableCreator);
+    } else {
+      ProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
+                      childItems, aFixedItems);
     }
+    aNewGroupFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   }
 
   return rv;
@@ -730,18 +811,22 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                               nsIFrame*        aParentFrame,
                                               nsIStyleContext* aStyleContext,
                                               nsAbsoluteItems& aAbsoluteItems,
-                                              nsIFrame*&       aNewTopMostFrame,
+                                              nsIFrame*&       aNewTopFrame,
                                               nsIFrame*&       aNewRowFrame,
                                               nsAbsoluteItems& aFixedItems,
                                               nsTableCreator&  aTableCreator,
-                                              nsDeque*         aToDo)
+                                              nsTableList*     aToDo)
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* display = (const nsStyleDisplay*)
     aStyleContext->GetStyleData(eStyleStruct_Display);
-  PRBool contentDisplayIsRow = (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay);
 
-  // if groupStyleContext gets set, both it and styleContext need to be released
+  // TRUE if we are being called from above, FALSE if from below (e.g. cell)
+  PRBool contentDisplayIsRow = (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay);
+  if (!contentDisplayIsRow) {
+    NS_ASSERTION(aToDo, "null nsTableList when constructing from below");
+  }
+
   nsCOMPtr<nsIStyleContext> groupStyleContext;
   nsCOMPtr<nsIStyleContext> styleContext( dont_QueryInterface(aStyleContext) );
 
@@ -753,46 +838,41 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
       aParentFrame = TableGetAsNonScrollFrame(aPresContext, aParentFrame, parentDisplay); 
       aParentFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo,
-                                                 groupStyleContext,
-                                                 PR_FALSE,
+                                                 groupStyleContext, PR_FALSE,
                                                  getter_AddRefs(styleContext));
     }
-    // only process the row's children if the content display is row
+    // only process the row's children if we're called from above
     rv = ConstructTableRowFrameOnly(aPresContext, aContent, aParentFrame, styleContext, 
-                                    aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, aFixedItems, aTableCreator);
-    aNewTopMostFrame = aNewRowFrame;
+                                    aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, 
+                                    aFixedItems, aTableCreator);
+    aNewTopFrame = aNewRowFrame;
   } else { // construct an anonymous row group frame
     nsIFrame* groupFrame;
-    nsDeque* toDo = (aToDo) ? aToDo : new nsDeque(0);
+    nsTableList localToDo;
+    nsTableList* toDo = (aToDo) ? aToDo : &localToDo;
+
+    // it may also need to create a table frame
     rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, styleContext,
-                                  aAbsoluteItems, PR_TRUE, aNewTopMostFrame, groupFrame,
+                                  aAbsoluteItems, PR_TRUE, aNewTopFrame, groupFrame,
                                   aFixedItems, aTableCreator, toDo);
-    if (NS_SUCCEEDED(rv)) {
-      groupFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
-      if (contentDisplayIsRow) {
-        aPresContext->ResolveStyleContextFor(aContent, groupStyleContext,
-                                             PR_FALSE,
-                                             getter_AddRefs(styleContext));
-      } else {
-        aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo,
-                                                   groupStyleContext,
-                                                   PR_FALSE,
-                                                   getter_AddRefs(styleContext));
-      }
-      rv = ConstructTableRowFrameOnly(aPresContext, aContent, groupFrame, styleContext, 
-                                      aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, aFixedItems, aTableCreator);
-      if (NS_SUCCEEDED(rv)) {
-        aNewRowFrame->Init(*aPresContext, aContent, groupFrame, styleContext,
-                           nsnull);
-        if (aToDo) {
-          aToDo->Push(groupFrame);
-          aToDo->Push(aNewRowFrame);
-        } else {
-          groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewRowFrame);
-          TableProcessChildLists(aPresContext, toDo);
-          delete toDo;
-        }
-      }
+    if (NS_FAILED(rv)) return rv;
+    groupFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
+    if (contentDisplayIsRow) { // called from above
+      aPresContext->ResolveStyleContextFor(aContent, groupStyleContext,
+                                           PR_FALSE, getter_AddRefs(styleContext));
+    } else { // called from cell below
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableRowPseudo,
+                                                 groupStyleContext, PR_FALSE,
+                                                 getter_AddRefs(styleContext));
+    }
+    // only process the row's children if we're called from above
+    rv = ConstructTableRowFrameOnly(aPresContext, aContent, groupFrame, styleContext, 
+                                    aAbsoluteItems, contentDisplayIsRow, aNewRowFrame, 
+                                    aFixedItems, aTableCreator);
+    if (NS_FAILED(rv)) return rv;
+    groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewRowFrame);
+    if (contentDisplayIsRow) { // called from above
+      TableProcessTableList(aPresContext, *toDo);
     }
   }
 
@@ -812,18 +892,17 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
                                                   nsTableCreator&  aTableCreator)
 {
   nsresult rv = aTableCreator.CreateTableRowFrame(aNewRowFrame);
-  if (NS_SUCCEEDED(rv)) {
-    aNewRowFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
-                       nsnull);
-    if (aProcessChildren) {
-      nsFrameItems childItems;
-      rv = TableProcessChildren(aPresContext, aContent, aNewRowFrame, aAbsoluteItems, 
-                                childItems, aFixedItems, aTableCreator);
-      if (NS_SUCCEEDED(rv)) {
-        aNewRowFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-      }
-    }
+  if (NS_FAILED(rv)) return rv;
+  aNewRowFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                     nsnull);
+  if (aProcessChildren) {
+    nsFrameItems childItems;
+    rv = TableProcessChildren(aPresContext, aContent, aNewRowFrame, aAbsoluteItems, 
+                              childItems, aFixedItems, aTableCreator);
+    if (NS_FAILED(rv)) return rv;
+    aNewRowFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   }
+
   return rv;
 }
 
@@ -834,7 +913,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
                                               nsIFrame*        aParentFrame,
                                               nsIStyleContext* aStyleContext,
                                               nsAbsoluteItems& aAbsoluteItems,
-                                              nsIFrame*&       aNewTopMostFrame,
+                                              nsIFrame*&       aNewTopFrame,
                                               nsIFrame*&       aNewColFrame,
                                               nsAbsoluteItems& aFixedItems,
                                               nsTableCreator&  aTableCreator)
@@ -846,11 +925,11 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
     rv = aTableCreator.CreateTableColFrame(aNewColFrame);
     aNewColFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
                        nsnull);
-    aNewTopMostFrame = aNewColFrame;
+    aNewTopFrame = aNewColFrame;
   } else { // construct anonymous col group frame
     nsIFrame* groupFrame;
     rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, aStyleContext,
-                                  aAbsoluteItems, PR_FALSE, aNewTopMostFrame, 
+                                  aAbsoluteItems, PR_FALSE, aNewTopFrame, 
                                   groupFrame, aFixedItems, aTableCreator);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIStyleContext> groupStyleContext; 
@@ -885,15 +964,18 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                                nsIFrame*        aParentFrame,
                                                nsIStyleContext* aStyleContext,
                                                nsAbsoluteItems& aAbsoluteItems,
-                                               nsIFrame*&       aNewTopMostFrame,
+                                               nsIFrame*&       aNewTopFrame,
                                                nsIFrame*&       aNewCellFrame,
+                                               nsIFrame*&       aNewCellBodyFrame,
                                                nsAbsoluteItems& aFixedItems,
-                                               nsTableCreator&  aTableCreator)
+                                               nsTableCreator&  aTableCreator,
+                                               PRBool           aProcessChildren)
 {
   nsresult rv = NS_OK;
 
   const nsStyleDisplay* display = (const nsStyleDisplay*)
     aStyleContext->GetStyleData(eStyleStruct_Display);
+  // FALSE if we are being called to wrap a cell around the content
   PRBool contentDisplayIsCell = (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay);
 
   nsCOMPtr<nsIStyleContext> parentStyleContext;
@@ -906,41 +988,41 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
 
   if (NS_STYLE_DISPLAY_TABLE_ROW == parentDisplay->mDisplay) {
     nsCOMPtr<nsIStyleContext> styleContextRelease;
-    if (!contentDisplayIsCell) {
+    if (!contentDisplayIsCell) { // need to wrap
       aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo,
                                                  parentStyleContext,
                                                  PR_FALSE,
                                                  getter_AddRefs(styleContext));
-      wrapContent = PR_TRUE;
+      wrapContent = PR_TRUE; 
     }
     rv = ConstructTableCellFrameOnly(aPresContext, aContent, aParentFrame, styleContext,
-                                     wrapContent, aAbsoluteItems, aNewCellFrame, aFixedItems, aTableCreator);
-    aNewTopMostFrame = aNewCellFrame;
-  } else { // construct anonymous row frame
+                                     aAbsoluteItems, aNewCellFrame, aNewCellBodyFrame,
+                                     aFixedItems, aTableCreator, aProcessChildren);
+    aNewTopFrame = aNewCellFrame;
+  } else { // the cell needs some ancestors to be fabricated
+    nsTableList toDo;
     nsIFrame* rowFrame;
-    nsDeque toDo(0);
     rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext,
-                                aAbsoluteItems, aNewTopMostFrame, rowFrame, aFixedItems, aTableCreator, &toDo);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIStyleContext> rowStyleContext; 
-      rowFrame->GetStyleContext(getter_AddRefs(rowStyleContext));
-      if (contentDisplayIsCell) {
-        aPresContext->ResolveStyleContextFor(aContent, rowStyleContext,
-                                             PR_FALSE,
-                                             getter_AddRefs(styleContext));
-      } else {
-        wrapContent = PR_TRUE;
-        aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo,
-                                                   rowStyleContext, PR_FALSE,
-                                                   getter_AddRefs(styleContext));
-      }
-      rv = ConstructTableCellFrameOnly(aPresContext, aContent, rowFrame, styleContext,
-                                       wrapContent, aAbsoluteItems, aNewCellFrame, aFixedItems, aTableCreator);
-      if (NS_SUCCEEDED(rv)) {
-        rowFrame->SetInitialChildList(*aPresContext, nsnull, aNewCellFrame);
-        TableProcessChildLists(aPresContext, &toDo);
-      }
+                                aAbsoluteItems, aNewTopFrame, rowFrame, aFixedItems, 
+                                aTableCreator, &toDo);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStyleContext> rowStyleContext; 
+    rowFrame->GetStyleContext(getter_AddRefs(rowStyleContext));
+    if (contentDisplayIsCell) {
+      aPresContext->ResolveStyleContextFor(aContent, rowStyleContext,
+                                           PR_FALSE, getter_AddRefs(styleContext));
+    } else {
+      wrapContent = PR_TRUE; // XXX
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableCellPseudo,
+                                                 rowStyleContext, PR_FALSE,
+                                                 getter_AddRefs(styleContext));
     }
+    rv = ConstructTableCellFrameOnly(aPresContext, aContent, rowFrame, styleContext,
+                                     aAbsoluteItems, aNewCellFrame, aNewCellBodyFrame,
+                                     aFixedItems, aTableCreator, aProcessChildren);
+    if (NS_FAILED(rv)) return rv;
+    rowFrame->SetInitialChildList(*aPresContext, nsnull, aNewCellFrame);
+    TableProcessTableList(aPresContext, toDo);
   }
 
   return rv;
@@ -951,52 +1033,47 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
                                                    nsIContent*      aContent,
                                                    nsIFrame*        aParentFrame,
                                                    nsIStyleContext* aStyleContext,
-                                                   PRBool           aWrapContent,
                                                    nsAbsoluteItems& aAbsoluteItems,
-                                                   nsIFrame*&       aNewFrame,
+                                                   nsIFrame*&       aNewCellFrame,
+                                                   nsIFrame*&       aNewCellBodyFrame,
                                                    nsAbsoluteItems& aFixedItems,
-                                                   nsTableCreator&  aTableCreator)
+                                                   nsTableCreator&  aTableCreator,
+                                                   PRBool           aProcessChildren)
 {
   nsresult rv;
 
   // Create a table cell frame
-  rv = aTableCreator.CreateTableCellFrame(aNewFrame);
-  if (NS_SUCCEEDED(rv)) {
-    // Initialize the table cell frame
-    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+  rv = aTableCreator.CreateTableCellFrame(aNewCellFrame);
+  if (NS_FAILED(rv)) return rv;
+ 
+  // Initialize the table cell frame
+  aNewCellFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
+                      nsnull);
 
-    // Create an area frame that will format the cell's content
-    nsIFrame*   cellBodyFrame;
-
-    rv = NS_NewAreaFrame(cellBodyFrame, 0);
-    if (NS_FAILED(rv)) {
-      aNewFrame->DeleteFrame(*aPresContext);
-      aNewFrame = nsnull;
-      return rv;
-    }
-  
-    // Resolve pseudo style and initialize the body cell frame
-    nsCOMPtr<nsIStyleContext>  bodyPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::cellContentPseudo,
-                                               aStyleContext, PR_FALSE,
-                                               getter_AddRefs(bodyPseudoStyle));
-    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, bodyPseudoStyle, nsnull);
-
-    nsFrameItems childItems;
-    if (aWrapContent) {
-      // construct a new frame for the content, which is not <TD> content
-      rv = ConstructFrame(aPresContext, aContent, cellBodyFrame, aAbsoluteItems, childItems, aFixedItems);
-    } else {
-      // Process children and set the body cell frame's initial child list
-      rv = ProcessChildren(aPresContext, aContent, cellBodyFrame, aAbsoluteItems,
-                           childItems, aFixedItems);
-    }
-    if (NS_SUCCEEDED(rv)) {
-      cellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-      // Set the table cell frame's initial child list
-      aNewFrame->SetInitialChildList(*aPresContext, nsnull, cellBodyFrame);
-    }
+  // Create an area frame that will format the cell's content
+  rv = NS_NewAreaFrame(aNewCellBodyFrame, 0);
+  if (NS_FAILED(rv)) {
+    aNewCellFrame->DeleteFrame(*aPresContext);
+    aNewCellFrame = nsnull;
+    return rv;
   }
+  
+  // Resolve pseudo style and initialize the body cell frame
+  nsCOMPtr<nsIStyleContext>  bodyPseudoStyle;
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::cellContentPseudo,
+                                             aStyleContext, PR_FALSE,
+                                             getter_AddRefs(bodyPseudoStyle));
+  aNewCellBodyFrame->Init(*aPresContext, aContent, aNewCellFrame, 
+                          bodyPseudoStyle, nsnull);
+
+  if (aProcessChildren) {
+    nsFrameItems childItems;
+    rv = ProcessChildren(aPresContext, aContent, aNewCellBodyFrame, aAbsoluteItems,
+                         childItems, aFixedItems);
+    if (NS_FAILED(rv)) return rv;
+    aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  }
+  aNewCellFrame->SetInitialChildList(*aPresContext, nsnull, aNewCellBodyFrame);
 
   return rv;
 }
@@ -1094,10 +1171,12 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
             NS_RELEASE(domData);
           }
           if (needCell) {
+            nsIFrame* cellBodyFrame;
             nsIFrame* cellFrame;
             nsIFrame* childFrame; // XXX: Need to change the ConstructTableCell function to return lists of frames. - DWH
             rv = ConstructTableCellFrame(aPresContext, aChildContent, aParentFrame, childStyleContext, 
-                                         aAbsoluteItems, childFrame, cellFrame, aFixedItems, aTableCreator);
+                                         aAbsoluteItems, childFrame, cellFrame, cellBodyFrame,
+                                         aFixedItems, aTableCreator);
             aChildItems.AddChild(childFrame);
           }
         }
@@ -1174,21 +1253,17 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::TableProcessChildLists(nsIPresContext* aPresContext,
-                                              nsDeque* aParentChildPairs)
+nsCSSFrameConstructor::TableProcessTableList(nsIPresContext* aPresContext,
+                                             nsTableList& aTableList)
 {
-  if (aParentChildPairs) {
-    nsIFrame* child;
-    nsIFrame* parent = (nsIFrame*)aParentChildPairs->PopFront();
-    while (nsnull != parent) {
-      child = (nsIFrame*)aParentChildPairs->PopFront();
-      parent->SetInitialChildList(*aPresContext, nsnull, child);
-      parent = (nsIFrame*)aParentChildPairs->PopFront();
-    }
+  nsresult rv = NS_OK;
+  nsIFrame* inner = (nsIFrame*)aTableList.mInner;
+  if (inner) {
+    nsIFrame* child = (nsIFrame*)aTableList.mChild;
+    rv = inner->SetInitialChildList(*aPresContext, nsnull, child);
   }
-  return NS_OK;
+  return rv;
 }
-
 
 nsIFrame*
 nsCSSFrameConstructor::TableGetAsNonScrollFrame(nsIPresContext*       aPresContext, 
@@ -1963,14 +2038,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
   else if (aTag == nsXULAtoms::treecell)
   {
     // We make a tree cell frame and process the children.
-	// Find out what the attribute value for event allowance is.
-	nsString attrValue;
+	  // Find out what the attribute value for event allowance is.
+	  nsString attrValue;
     nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, nsXULAtoms::treeallowevents, attrValue);
     attrValue.ToLowerCase();
     PRBool allowEvents =  (result == NS_CONTENT_ATTR_NO_VALUE ||
 					      (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+    nsIFrame* ignore2;
     rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                 aAbsoluteItems, newFrame, ignore, aFixedItems, treeCreator);
+                                 aAbsoluteItems, newFrame, ignore, ignore2, aFixedItems, 
+                                 treeCreator);
     aFrameItems.AddChild(newFrame);
 	((nsTreeCellFrame*)newFrame)->SetAllowEvents(allowEvents);
     return rv;
@@ -2407,10 +2484,14 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       return rv;
   
     case NS_STYLE_DISPLAY_TABLE_CELL:
-      rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                   aAbsoluteItems, newFrame, ignore, aFixedItems, tableCreator);
-      aFrameItems.AddChild(newFrame);
-      return rv;
+      {
+        nsIFrame* ignore2;
+        rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
+                                     aAbsoluteItems, newFrame, ignore, ignore2, 
+                                     aFixedItems, tableCreator);
+        aFrameItems.AddChild(newFrame);
+        return rv;
+      }
   
     default:
       // Don't create any frame for content that's not displayed...
