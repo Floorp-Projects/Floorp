@@ -62,48 +62,6 @@ finish:
     return;
 }
 
-static void
-throwTimeoutException(JNIEnv *env, jint bytesTransferred)
-{
-    jclass clazz = NULL;
-    jmethodID constructor = NULL;
-    jobject excep = NULL;
-    jfieldID bytesTransferredField = NULL;
-    jint result;
-
-    clazz = (*env)->FindClass(env, INTERRUPTED_IO_EXCEPTION);
-    if( clazz == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        return;
-    }
-
-    constructor = (*env)->GetMethodID(env, clazz,
-        PLAIN_CONSTRUCTOR, PLAIN_CONSTRUCTOR_SIG);
-    PR_ASSERT(constructor != NULL);
-    if( constructor == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        return;
-    }
-
-    excep = (*env)->NewObject(env, clazz, constructor);
-    if( excep == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        return;
-    }
-
-    bytesTransferredField = (*env)->GetFieldID(env, clazz,
-        "bytesTransferred", "I");
-    if( bytesTransferredField == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        return;
-    }
-    (*env)->SetIntField(env, excep, bytesTransferredField, bytesTransferred);
-
-    result = (*env)->Throw(env, excep);
-    PR_ASSERT(result == 0);
-}
-
-
 JNIEXPORT jbyteArray JNICALL
 Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
     (JNIEnv *env, jobject self, jobject newSock, jint timeout,
@@ -142,9 +100,6 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
               case PR_PENDING_INTERRUPT_ERROR:
               case PR_IO_PENDING_ERROR:
                 break; /* out of the switch and loop again */
-              case PR_IO_TIMEOUT_ERROR:
-                throwTimeoutException(env, 0);
-                goto finish;
               default:
                 JSSL_throwSSLSocketException(env,
                     "Failed to accept new connection");
