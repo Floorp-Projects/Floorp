@@ -364,7 +364,7 @@ NS_IMETHODIMP nsDeviceContextSpecMac::Init(nsIPrintSettings* aPS, PRBool aQuiet)
   
   // see if we have a print record
   void* printRecordData = nsnull;
-  rv = printOptionsService->GetNativeData(nsIPrintSettings::kNativeDataPrintRecord, &printRecordData);
+  rv = printOptionsService->GetNativeData(nsIPrintOptions::kNativeDataPrintRecord, &printRecordData);
   if (NS_SUCCEEDED(rv) && printRecordData)
   {
     ::BlockMoveData(printRecordData, *hPrintRec, sizeof(TPrint));
