@@ -56,8 +56,6 @@ public:
 	NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
 																 GenericInfo* aInfo) = 0;
-	NS_IMETHOD GetPasswordForUser(nsIImapProtocol* aProtocol,
-																const char* userName) = 0;
 	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
 																	 nsMsgBiffState biffState) = 0;
 	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
