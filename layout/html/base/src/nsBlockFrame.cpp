@@ -86,6 +86,8 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
 
+static const int MIN_LINES_NEEDING_CURSOR = 20;
+
 #ifdef DEBUG
 #include "nsPrintfCString.h"
 #include "nsBlockDebugFlags.h"
@@ -635,6 +637,11 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       return NS_OK;
     }
   }
+
+  // OK, some lines may be reflowed. Blow away any saved line cursor because
+  // we may invalidate the nondecreasing combinedArea.y/yMost invariant,
+  // and we may even delete the line with the line cursor.
+  ClearLineCursor();
 
   if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
 #ifdef DEBUG_kipp
@@ -5319,6 +5326,55 @@ nsBlockFrame::PaintFloats(nsIPresContext* aPresContext,
   }
 }
 
+#ifdef DEBUG
+static void DebugOutputDrawLine(nsFramePaintLayer aWhichLayer, PRInt32 aDepth,
+                                nsLineBox* aLine, PRBool aDrawn) {
+  if (nsBlockFrame::gNoisyDamageRepair &&
+      (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
+    nsFrame::IndentBy(stdout, aDepth+1);
+    nsRect lineArea = aLine->GetCombinedArea();
+    printf("%s line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+           aDrawn ? "draw" : "skip",
+           NS_STATIC_CAST(void*, aLine),
+           aLine->mBounds.x, aLine->mBounds.y,
+           aLine->mBounds.width, aLine->mBounds.height,
+           lineArea.x, lineArea.y,
+           lineArea.width, lineArea.height);
+  }
+}
+#endif
+
+static inline void
+PaintLine(const nsRect& aLineArea, const nsRect& aDirtyRect,
+          nsBlockFrame::line_iterator& aLine, PRInt32 aDepth,
+          PRInt32& aDrawnLines, nsIPresContext* aPresContext, 
+          nsIRenderingContext& aRenderingContext,
+          nsFramePaintLayer aWhichLayer, nsBlockFrame* aFrame) {
+  // If the line's combined area (which includes child frames that
+  // stick outside of the line's bounding box or our bounding box)
+  // intersects the dirty rect then paint the line.
+  if (aLineArea.Intersects(aDirtyRect)) {
+#ifdef DEBUG
+    DebugOutputDrawLine(aWhichLayer, aDepth, aLine.get(), PR_TRUE);
+    if (nsBlockFrame::gLamePaintMetrics) {
+      aDrawnLines++;
+    }
+#endif
+    nsIFrame* kid = aLine->mFirstChild;
+    PRInt32 n = aLine->GetChildCount();
+    while (--n >= 0) {
+      aFrame->PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid,
+                         aWhichLayer);
+      kid = kid->GetNextSibling();
+    }
+  }
+#ifdef DEBUG
+  else {
+    DebugOutputDrawLine(aWhichLayer, aDepth, aLine.get(), PR_FALSE);
+  }
+#endif  
+}
+
 void
 nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
@@ -5326,6 +5382,7 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
                             nsFramePaintLayer    aWhichLayer,
                             PRUint32             aFlags)
 {
+  PRInt32 drawnLines; // Will only be used if set (gLamePaintMetrics).
 #ifdef DEBUG
   PRInt32 depth = 0;
   if (gNoisyDamageRepair) {
@@ -5334,59 +5391,56 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
     }
   }
   PRTime start = LL_ZERO; // Initialize these variables to silence the compiler.
-  PRInt32 drawnLines = 0; // They will only be used if set (gLamePaintMetrics).
   if (gLamePaintMetrics) {
     start = PR_Now();
     drawnLines = 0;
   }
 #endif
 
-  for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end;
-       ++line) {
-    // If the line's combined area (which includes child frames that
-    // stick outside of the line's bounding box or our bounding box)
-    // intersects the dirty rect then paint the line.
-    if (line->CombinedAreaIntersects(aDirtyRect)) {
-#ifdef DEBUG
-      if (gNoisyDamageRepair &&
-          (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
-        nsRect lineCombinedArea(line->GetCombinedArea());
-        nsFrame::IndentBy(stdout, depth+1);
-        printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
-               NS_STATIC_CAST(void*, line.get()),
-               line->mBounds.x, line->mBounds.y,
-               line->mBounds.width, line->mBounds.height,
-               lineCombinedArea.x, lineCombinedArea.y,
-               lineCombinedArea.width, lineCombinedArea.height);
-      }
-      if (gLamePaintMetrics) {
-        drawnLines++;
-      }
-#endif
-      nsIFrame* kid = line->mFirstChild;
-      PRInt32 n = line->GetChildCount();
-      while (--n >= 0) {
-        PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid,
-                   aWhichLayer);
-        kid = kid->GetNextSibling();
+  nsLineBox* cursor = GetFirstLineContaining(aDirtyRect.y);
+  line_iterator line_end = end_lines();
+
+  if (cursor) {
+    for (line_iterator line = mLines.begin(cursor);
+         line != line_end;
+         ++line) {
+      nsRect lineArea = line->GetCombinedArea();
+      if (!lineArea.IsEmpty()) {
+        // Because we have a cursor, the combinedArea.ys are non-decreasing.
+        // Once we've passed aDirtyRect.YMost(), we can never see it again.
+        if (lineArea.y >= aDirtyRect.YMost()) {
+          break;
+        }
+        PaintLine(lineArea, aDirtyRect, line, depth, drawnLines, aPresContext,
+                  aRenderingContext, aWhichLayer, this);
       }
     }
-#ifdef DEBUG
-    else {
-      if (gNoisyDamageRepair &&
-          (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
-        nsRect lineCombinedArea(line->GetCombinedArea());
-        nsFrame::IndentBy(stdout, depth+1);
-        printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
-               NS_STATIC_CAST(void*, line.get()),
-               line->mBounds.x, line->mBounds.y,
-               line->mBounds.width, line->mBounds.height,
-               lineCombinedArea.x, lineCombinedArea.y,
-               lineCombinedArea.width, lineCombinedArea.height);
+  } else {
+    PRBool nonDecreasingYs = PR_TRUE;
+    PRInt32 lineCount = 0;
+    nscoord lastY = PR_INT32_MIN;
+    nscoord lastYMost = PR_INT32_MIN;
+    for (line_iterator line = begin_lines();
+         line != line_end;
+         ++line) {
+      nsRect lineArea = line->GetCombinedArea();
+      if (!lineArea.IsEmpty()) {
+        if (lineArea.y < lastY
+            || lineArea.YMost() < lastYMost) {
+          nonDecreasingYs = PR_FALSE;
+        }
+        lastY = lineArea.y;
+        lastYMost = lineArea.YMost();
+
+        PaintLine(lineArea, aDirtyRect, line, depth, drawnLines, aPresContext,
+                  aRenderingContext, aWhichLayer, this);
       }
+      lineCount++;
     }
-#endif  
+
+    if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
+      SetupLineCursor();
+    }
   }
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
@@ -5625,6 +5679,163 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
+void nsBlockFrame::ClearLineCursor() {
+  if (!(GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR)) {
+    return;
+  }
+
+  GetProperty(GetPresContext(), nsLayoutAtoms::lineCursorProperty, PR_TRUE);
+  RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
+}
+
+void nsBlockFrame::SetupLineCursor() {
+  if (GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR
+      || mLines.empty()) {
+    return;
+  }
+   
+  SetProperty(GetPresContext(), nsLayoutAtoms::lineCursorProperty,
+              mLines.front(), nsnull);
+  AddStateBits(NS_BLOCK_HAS_LINE_CURSOR);
+}
+
+nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
+  if (!(GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR)) {
+    return nsnull;
+  }
+
+  nsLineBox* property = NS_STATIC_CAST(nsLineBox*,
+    GetProperty(GetPresContext(), nsLayoutAtoms::lineCursorProperty, PR_FALSE));
+  line_iterator cursor = mLines.begin(property);
+  nsRect cursorArea = cursor->GetCombinedArea();
+
+  while ((cursorArea.IsEmpty() || cursorArea.YMost() > y)
+         && cursor != mLines.front()) {
+    cursor = cursor.prev();
+    cursorArea = cursor->GetCombinedArea();
+  }
+  while ((cursorArea.IsEmpty() || cursorArea.YMost() <= y)
+         && cursor != mLines.back()) {
+    cursor = cursor.next();
+    cursorArea = cursor->GetCombinedArea();
+  }
+
+  if (cursor.get() != property) {
+    SetProperty(GetPresContext(), nsLayoutAtoms::lineCursorProperty,
+                cursor.get(), nsnull);
+  }
+
+  return cursor.get();
+}
+
+static inline void
+GetFrameFromLine(const nsRect& aLineArea, const nsPoint& aTmp,
+                 nsBlockFrame::line_iterator& aLine, nsIPresContext* aPresContext,
+                 nsFramePaintLayer aWhichLayer, nsIFrame** aFrame) {
+  if (aLineArea.Contains(aTmp)) {
+    nsIFrame* kid = aLine->mFirstChild;
+    PRInt32 n = aLine->GetChildCount();
+    while (--n >= 0) {
+      nsIFrame *hit;
+      nsresult rv = kid->GetFrameForPoint(aPresContext, aTmp, aWhichLayer, &hit);
+      
+      if (NS_SUCCEEDED(rv) && hit) {
+        *aFrame = hit;
+      }
+      kid = kid->GetNextSibling();
+    }
+  }
+}
+
+// Optimized function that uses line combined areas to skip lines
+// we know can't contain the point
+nsresult
+nsBlockFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
+                                    const nsPoint& aPoint,
+                                    nsIAtom*       aList,
+                                    nsFramePaintLayer aWhichLayer,
+                                    PRBool         aConsiderSelf,
+                                    nsIFrame**     aFrame)
+{
+  if (aList) {
+    return nsContainerFrame::GetFrameForPointUsing(aPresContext,
+      aPoint, aList, aWhichLayer, aConsiderSelf, aFrame);
+  }
+
+  PRBool inThisFrame = mRect.Contains(aPoint);
+
+  if (! ((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame ) ) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aFrame = nsnull;
+  nsPoint tmp(aPoint.x - mRect.x, aPoint.y - mRect.y);
+
+  nsPoint originOffset;
+  nsIView *view = nsnull;
+  nsresult rv = GetOriginToViewOffset(aPresContext, originOffset, &view);
+
+  if (NS_SUCCEEDED(rv) && view)
+    tmp += originOffset;
+
+  nsLineBox* cursor = GetFirstLineContaining(tmp.y);
+  line_iterator line_end = end_lines();
+
+  if (cursor) {
+    // This is the fast path for large blocks
+    for (line_iterator line = mLines.begin(cursor);
+         line != line_end;
+         ++line) {
+      nsRect lineArea = line->GetCombinedArea();
+      // Because we have a cursor, the combinedArea.ys are non-decreasing.
+      // Once we've passed tmp.y, we can never see it again.
+      if (!lineArea.IsEmpty()) {
+        if (lineArea.y > tmp.y) {
+          break;
+        }
+        GetFrameFromLine(lineArea, tmp, line, aPresContext, aWhichLayer, aFrame);
+      }
+    }
+  } else {
+    PRBool nonDecreasingYs = PR_TRUE;
+    PRInt32 lineCount = 0;
+    nscoord lastY = PR_INT32_MIN;
+    nscoord lastYMost = PR_INT32_MIN;
+    for (line_iterator line = mLines.begin();
+         line != line_end;
+         ++line) {
+      nsRect lineArea = line->GetCombinedArea();
+      if (!lineArea.IsEmpty()) {
+        if (lineArea.y < lastY
+            || lineArea.YMost() < lastYMost) {
+          nonDecreasingYs = PR_FALSE;
+        }
+        lastY = lineArea.y;
+        lastYMost = lineArea.YMost();
+
+        GetFrameFromLine(lineArea, tmp, line, aPresContext, aWhichLayer, aFrame);
+      }
+      lineCount++;
+    }
+
+    if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
+      SetupLineCursor();
+    }
+  }
+  
+  if (*aFrame) {
+    return NS_OK;
+  }
+
+  if ( inThisFrame && aConsiderSelf ) {
+    if (GetStyleVisibility()->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,

@@ -68,6 +68,7 @@ class nsIChannel;
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
 #define NS_BLOCK_SPACE_MGR                  0x00800000
+#define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
 #define NS_BLOCK_FLAGS_MASK                 0xFFF00000
 
 // Factory method for creating a content iterator for generated
