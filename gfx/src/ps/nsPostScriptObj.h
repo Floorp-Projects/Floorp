@@ -221,6 +221,7 @@ struct PrintSetup_ {
   void* carg;                   /* Data saved for completion routine */
   int status;                   /* Status of URL on completion */
   const char *print_cmd;        /* print command */
+  int num_copies;               /* Number of copies of job to print */
 
 	/* "other" font is for encodings other than iso-8859-1 */
   char *otherFontName[N_FONTS];		   
