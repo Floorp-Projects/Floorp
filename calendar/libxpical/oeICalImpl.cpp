@@ -11,15 +11,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ * The Original Code is OEone Calendar Code, released
+ * October 31st, 2001.
  *
  * The Initial Developer of the Original Code is
  * OEone Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
- * Cristian Tapus <cristian_tapus@yahoo.com>
+ * Contributor(s):
+ *   Mostafa Hosseini <mostafah@oeone.com>
+ *   Cristian Tapus <cristian_tapus@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
