@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIContent.h"
+#include "nsAbsoluteFrame.h"
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIPtr.h"
@@ -23,7 +23,6 @@
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsAbsoluteFrame.h"
 #include "nsBodyFrame.h"
 #include "nsStyleConsts.h"
 #include "nsViewsCID.h"
