@@ -3881,9 +3881,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
             content->GetTag(getter_AddRefs(tag));
             if ((tag != nsLayoutAtoms::textTagName) && 
                 (tag != nsLayoutAtoms::commentTagName)) {
-              newdata =
-                  new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
-                                                                  curdata->mRuleWalker, &compat);
+              newdata = new (curdata->mPresContext)
+                          RuleProcessorData(curdata->mPresContext, content,
+                                            curdata->mRuleWalker, &compat);
               curdata->mPreviousSiblingData = newdata;    
               break;
             }
@@ -3898,8 +3898,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
       if (!newdata) {
         nsIContent *content = curdata->mContent->GetParent();
         if (content) {
-          newdata = new (curdata->mPresContext) RuleProcessorData(curdata->mPresContext, content,
-                                                                    curdata->mRuleWalker, &compat);
+          newdata = new (curdata->mPresContext)
+                      RuleProcessorData(curdata->mPresContext, content,
+                                        curdata->mRuleWalker, &compat);
           curdata->mParentData = newdata;    
         }
       }
