@@ -1,0 +1,256 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsMediaDocument.h"
+#include "nsIPluginDocument.h"
+#include "nsHTMLAtoms.h"
+#include "nsIPresShell.h"
+#include "nsIObjectFrame.h"
+#include "nsIPluginInstance.h"
+#include "nsIDocShellTreeItem.h"
+
+class nsPluginDocument : public nsMediaDocument,
+                         public nsIPluginDocument
+{
+public:
+  nsPluginDocument();
+  virtual ~nsPluginDocument();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPLUGINDOCUMENT
+
+  NS_IMETHOD StartDocumentLoad(const char*         aCommand,
+                               nsIChannel*         aChannel,
+                               nsILoadGroup*       aLoadGroup,
+                               nsISupports*        aContainer,
+                               nsIStreamListener** aDocListener,
+                               PRBool              aReset = PR_TRUE,
+                               nsIContentSink*     aSink = nsnull);
+
+protected:
+  nsresult CreateSyntheticDocument(nsACString &aMimeType);
+
+  nsCOMPtr<nsIHTMLContent>                 mPluginContent;
+  nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
+};
+
+nsPluginDocument::nsPluginDocument()
+{
+}
+nsPluginDocument::~nsPluginDocument()
+{
+}
+
+NS_IMPL_ADDREF_INHERITED(nsPluginDocument, nsHTMLDocument)
+NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsHTMLDocument)
+
+NS_INTERFACE_MAP_BEGIN(nsPluginDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIPluginDocument)
+NS_INTERFACE_MAP_END_INHERITING(nsHTMLDocument)
+
+
+NS_IMETHODIMP
+nsPluginDocument::StartDocumentLoad(const char*         aCommand,
+                                    nsIChannel*         aChannel,
+                                    nsILoadGroup*       aLoadGroup,
+                                    nsISupports*        aContainer,
+                                    nsIStreamListener** aDocListener,
+                                    PRBool              aReset,
+                                    nsIContentSink*     aSink)
+{
+  nsresult rv = nsMediaDocument::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
+                                                   aContainer, aDocListener, aReset,
+                                                   aSink);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCAutoString mimeType;
+  rv = aChannel->GetContentType(mimeType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Create synthetic document
+  rv = CreateSyntheticDocument(mimeType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mStreamListener = new nsMediaDocumentStreamListener(this);
+  if (!mStreamListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ASSERTION(aDocListener, "null aDocListener");
+  NS_ADDREF(*aDocListener = mStreamListener);
+
+  return rv;
+}
+
+nsresult nsPluginDocument::CreateSyntheticDocument(nsACString &aMimeType)
+{
+  // do not allow message panes to host full-page plugins
+  // returning an error causes helper apps to take over
+  nsCOMPtr<nsIDocShellTreeItem> dsti (do_QueryReferent(mDocumentContainer));
+  if (dsti) {
+    PRBool isMsgPane = PR_FALSE;
+    dsti->NameEquals(NS_LITERAL_STRING("messagepane").get(), &isMsgPane);
+    if (isMsgPane)
+      return NS_ERROR_FAILURE;
+  }
+
+  // make our generic document
+  nsresult rv = nsMediaDocument::CreateSyntheticDocument();
+  NS_ENSURE_SUCCESS(rv, rv);
+  // then attach our plugin
+
+  nsCOMPtr<nsIHTMLContent> body = do_QueryInterface(mBodyContent);
+  if (!body) {
+    NS_WARNING("no body on plugin document!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // remove margins from body
+  nsHTMLValue zero(0, eHTMLUnit_Pixel);
+  body->SetHTMLAttribute(nsHTMLAtoms::marginwidth, zero, PR_FALSE);
+  body->SetHTMLAttribute(nsHTMLAtoms::marginheight, zero, PR_FALSE);
+
+
+  // make plugin content
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::embed, nsnull,
+                                     kNameSpaceID_None,
+                                    *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = NS_NewHTMLSharedLeafElement(getter_AddRefs(mPluginContent), nodeInfo);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mPluginContent->SetDocument(this, PR_FALSE, PR_TRUE);
+
+  // make it a named element
+  nsHTMLValue name(NS_ConvertUTF8toUCS2("plugin"));
+  mPluginContent->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
+
+  // fill viewport and auto-reize
+  nsHTMLValue percent100 ((float)1.0);
+  mPluginContent->SetHTMLAttribute(nsHTMLAtoms::width, percent100, PR_FALSE);
+  mPluginContent->SetHTMLAttribute(nsHTMLAtoms::height, percent100, PR_FALSE);
+
+  // set URL
+  nsCAutoString src;
+  mDocumentURL->GetSpec(src);
+
+  NS_ConvertUTF8toUCS2 srcString(src);
+  nsHTMLValue val(srcString);
+  mPluginContent->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
+
+  // set mime type
+  val.SetStringValue(NS_ConvertUTF8toUCS2(aMimeType));
+  mPluginContent->SetHTMLAttribute(nsHTMLAtoms::type, val, PR_FALSE);
+
+  body->AppendChildTo(mPluginContent, PR_FALSE, PR_FALSE);
+
+  return NS_OK;
+
+
+}
+
+NS_IMETHODIMP
+nsPluginDocument::SetStreamListener(nsIStreamListener *aListener)
+{
+  if (mStreamListener)
+    mStreamListener->SetStreamListener(aListener);
+
+  nsAutoString title;
+  SetTitle(title);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginDocument::Print()
+{
+  NS_ENSURE_TRUE(mPluginContent, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
+  if (shell) {
+
+    nsIFrame* frame = nsnull;
+    shell->GetPrimaryFrameFor(mPluginContent, &frame);
+
+    nsIObjectFrame* objectFrame = nsnull;
+    CallQueryInterface(frame,&objectFrame);
+
+    if (objectFrame) {
+      nsCOMPtr<nsIPluginInstance> pi;
+      objectFrame->GetPluginInstance(*getter_AddRefs(pi));
+      if (pi) {
+
+        nsPluginPrint npprint;
+        npprint.mode = nsPluginMode_Full;
+        npprint.print.fullPrint.pluginPrinted = PR_FALSE;
+        npprint.print.fullPrint.printOne = PR_FALSE;
+        npprint.print.fullPrint.platformPrint = nsnull;
+
+        pi->Print(&npprint);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+NS_NewPluginDocument(nsIDocument** aResult)
+{
+  nsPluginDocument* doc = new nsPluginDocument();
+  if (!doc) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsresult rv = doc->Init();
+
+  if (NS_FAILED(rv)) {
+    delete doc;
+    return rv;
+  }
+
+  NS_ADDREF(*aResult = doc);
+
+  return NS_OK;
+}
