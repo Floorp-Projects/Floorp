@@ -45,190 +45,168 @@
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
+#include "nsMemory.h"
+#include "nsCRT.h"
 
-#define LOCALE_HASH_SIZE	0xFF
+#define LOCALE_HASH_SIZE  0xFF
 
 
 /* nsILocale */
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocale, nsILocale)
 
 nsLocale::nsLocale(void)
-:	fHashtable(nsnull), fCategoryCount(0)
+:  fHashtable(nsnull), fCategoryCount(0)
 {
-	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
-		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);
-	NS_ASSERTION(fHashtable!=NULL,"nsLocale: failed to allocate PR_Hashtable");
+  fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
+                               &nsLocale::Hash_CompareNSString,
+                               &nsLocale::Hash_CompareNSString, NULL, NULL);
+  NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
 }
 
-nsLocale::nsLocale(nsLocale* other)
-:	fHashtable(nsnull), fCategoryCount(0)
+nsLocale::nsLocale(nsLocale* other) : fHashtable(nsnull), fCategoryCount(0)
 {
-	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
-		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);
-	NS_ASSERTION(fHashtable!=NULL,"nsLocale: failed to allocate PR_Hashtable");
+  fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
+                               &nsLocale::Hash_CompareNSString,
+                               &nsLocale::Hash_CompareNSString, NULL, NULL);
+  NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
 
-	//
-	// enumerate Hash and copy
-	//
-	PL_HashTableEnumerateEntries(other->fHashtable,&nsLocale::Hash_EnumerateCopy,fHashtable);
+  //
+  // enumerate Hash and copy
+  //
+  PL_HashTableEnumerateEntries(other->fHashtable, 
+                               &nsLocale::Hash_EnumerateCopy, fHashtable);
 }
 
 
-nsLocale::nsLocale(nsString** categoryList,nsString** valueList, PRUint32 count)
-:	fHashtable(NULL),
-	fCategoryCount(0)
+nsLocale::nsLocale(const nsStringArray& categoryList, 
+                   const nsStringArray& valueList) 
+                  : fHashtable(NULL), fCategoryCount(0)
 {
+  PRInt32 i;
+  PRUnichar* key, *value;
 
-	PRUint32	i;
-	nsString*	key, *value;
+  fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
+                               &nsLocale::Hash_CompareNSString,
+                               &nsLocale::Hash_CompareNSString,
+                               NULL, NULL);
+  NS_ASSERTION(fHashtable, "nsLocale: failed to allocate PR_Hashtable");
 
-	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
-		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);
-	NS_ASSERTION(fHashtable!=NULL,"nsLocale: failed to allocate PR_Hashtable");
-
-	if (fHashtable!=NULL)
-	{
-		for(i=0;i<count;i++) 
-		{
-			key = new nsString(*categoryList[i]);
-			NS_ASSERTION(key!=NULL,"nsLocale: failed to allocate internal hash key");
-			value = new nsString(*valueList[i]);
-			NS_ASSERTION(value!=NULL,"nsLocale: failed to allocate internal hash value");
-			(void)PL_HashTableAdd(fHashtable,key,value);
-		}
-	}
-	
+  if (fHashtable)
+  {
+    for(i=0; i < categoryList.Count(); ++i) 
+    {
+      key = ToNewUnicode(*categoryList.StringAt(i));
+      NS_ASSERTION(key, "nsLocale: failed to allocate internal hash key");
+      value = ToNewUnicode(*valueList.StringAt(i));
+      NS_ASSERTION(value, "nsLocale: failed to allocate internal hash value");
+      if (!PL_HashTableAdd(fHashtable,key,value)) {
+          nsMemory::Free(key);
+          nsMemory::Free(value);
+      }
+    }
+  }
 }
 
 nsLocale::~nsLocale(void)
-{	
+{
+  // enumerate all the entries with a delete function to
+  // safely delete all the keys and values
+  PL_HashTableEnumerateEntries(fHashtable, &nsLocale::Hash_EnumerateDelete,
+                               NULL);
 
-	// enumerate all the entries with a delete function to
-	// safely delete all the keys and values
-	PL_HashTableEnumerateEntries(fHashtable,&nsLocale::Hash_EnmerateDelete,NULL);
-
-	PL_HashTableDestroy(fHashtable);
-		
+  PL_HashTableDestroy(fHashtable);
 }
 
 NS_IMETHODIMP
-nsLocale::GetCategory(const nsString* category,nsString* result)
+nsLocale::GetCategory(const nsAString& category, nsAString& result)
 {
+  const PRUnichar *value = (const PRUnichar*) 
+    PL_HashTableLookup(fHashtable, PromiseFlatString(category).get());
 
-	const nsString*	value;
+  if (value)
+  {
+    result.Assign(value);
+    return NS_OK;
+  }
 
-	value = (const nsString*)PL_HashTableLookup(fHashtable,category);
-	if (value!=NULL)
-	{
-		(*result)=(*value);
-		return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
-
-}
-
-
-NS_IMETHODIMP
-nsLocale::GetCategory(const PRUnichar *category,PRUnichar **result)
-{
-
-	nsString aCategory(category);
-	const nsString*	value;
-
-	value = (const nsString*)PL_HashTableLookup(fHashtable,&aCategory);
-	if (value!=NULL)
-	{
-		(*result) = ToNewUnicode(*value);
-		return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
-
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsLocale::AddCategory(const PRUnichar *category, const PRUnichar *value)
+nsLocale::AddCategory(const nsAString &category, const nsAString &value)
 {
-	nsString* new_key = new nsString(category);
-	if (!new_key) return NS_ERROR_OUT_OF_MEMORY;
-	
-	nsString* new_value = new nsString(value);
-	if (!new_value) return NS_ERROR_OUT_OF_MEMORY;
+  PRUnichar* newKey = ToNewUnicode(category);
+  if (!newKey)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	(void)PL_HashTableAdd(fHashtable,new_key,new_value);
+  PRUnichar* newValue = ToNewUnicode(value);
+  if (!newValue) {
+    nsMemory::Free(newKey);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-	return NS_OK;
+  if (!PL_HashTableAdd(fHashtable, newKey, newValue)) {
+    nsMemory::Free(newKey);
+    nsMemory::Free(newValue);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
 }
 
 
 PLHashNumber
 nsLocale::Hash_HashFunction(const void* key)
 {
-	const nsString*		stringKey;
-	PLHashNumber		hash;
-	PRInt32				length;
+  const PRUnichar* ptr = (const PRUnichar *) key;
+  PLHashNumber hash;
 
-	stringKey	= (const nsString*)key;
+  hash = (PLHashNumber)0;
 
-	hash = (PLHashNumber)0;
-	length = stringKey->Length();
+  while (*ptr)
+    hash += (PLHashNumber) *ptr++;
 
-	for(length-=1;length>=0;length--)
-		hash += (PLHashNumber)stringKey->CharAt(length);
-
-	return hash;
+  return hash;
 }
 
 
 PRIntn
 nsLocale::Hash_CompareNSString(const void* s1, const void* s2)
 {
-	const nsString* string1;
-	const nsString* string2;
-
-	string1 = (const nsString*)s1;
-	string2 = (const nsString*)s2;
-
-	return string1->Equals(*string2);
+  return !nsCRT::strcmp((const PRUnichar *) s1, (const PRUnichar *) s2);
 }
 
 
 PRIntn
-nsLocale::Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg)
+nsLocale::Hash_EnumerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg)
 {
-	nsString*	key, *value;
+  // delete an entry
+  nsMemory::Free((PRUnichar *)he->key);
+  nsMemory::Free((PRUnichar *)he->value);
 
-	key = (nsString*)he->key;
-	value = (nsString*)he->value;
-
-	// delete the keys
-	delete key;
-	delete value;
-	
-
-	return (HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE);
+  return (HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE);
 }
 
 PRIntn
 nsLocale::Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void* arg)
 {
-	nsString	*new_key, *new_value;
+  PRUnichar* newKey = ToNewUnicode(nsDependentString((PRUnichar *)he->key));
+  if (!newKey) 
+    return HT_ENUMERATE_STOP;
 
-	new_key = new nsString(*((nsString*)he->key));
-	if (!new_key)
-		return HT_ENUMERATE_STOP;
+  PRUnichar* newValue = ToNewUnicode(nsDependentString((PRUnichar *)he->value));
+  if (!newValue) {
+    nsMemory::Free(newKey);
+    return HT_ENUMERATE_STOP;
+  }
 
-	new_value = new nsString(*((nsString*)he->value));
-	if (!new_value)
-		return HT_ENUMERATE_STOP;
+  if (!PL_HashTableAdd((PLHashTable*)arg, newKey, newValue)) {
+    nsMemory::Free(newKey);
+    nsMemory::Free(newValue);
+    return HT_ENUMERATE_STOP;
+  }
 
-	(void)PL_HashTableAdd((PLHashTable*)arg,new_key,new_value);
-
-	return (HT_ENUMERATE_NEXT);
+  return (HT_ENUMERATE_NEXT);
 }
-
-
-
-
 

@@ -39,6 +39,8 @@
 #include "nsILocale.h"
 #include "plhash.h"
 
+class nsStringArray;
+
 class nsLocale : public nsILocale {
 	friend class nsLocaleDefinition;
 	friend class nsLocaleService;
@@ -46,22 +48,20 @@ class nsLocale : public nsILocale {
 
 public:
 	nsLocale(void);
-	nsLocale(nsString** categoryList,nsString** valueList, PRUint32 count);
+	nsLocale(const nsStringArray& categoryList, const nsStringArray& valueList);
 	nsLocale(nsLocale* other);
 	virtual ~nsLocale(void);
 	
-	NS_IMETHOD GetCategory(const nsString* category, nsString* result);
-
-  /* Declare methods from nsILocale */
-  NS_DECL_NSILOCALE
+	/* Declare methods from nsILocale */
+	NS_DECL_NSILOCALE
 
 protected:
 	
-	NS_IMETHOD AddCategory(const PRUnichar* category, const PRUnichar* value);
+	NS_IMETHOD AddCategory(const nsAString& category, const nsAString& value);
 
 	static PLHashNumber PR_CALLBACK Hash_HashFunction(const void* key);
 	static PRIntn PR_CALLBACK Hash_CompareNSString(const void* s1, const void* s2);
-	static PRIntn PR_CALLBACK Hash_EnmerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
+	static PRIntn PR_CALLBACK Hash_EnumerateDelete(PLHashEntry *he, PRIntn hashIndex, void *arg);
 	static PRIntn PR_CALLBACK Hash_EnumerateCopy(PLHashEntry *he, PRIntn hashIndex, void *arg);
 
 	PLHashTable*	fHashtable;

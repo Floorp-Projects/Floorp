@@ -72,15 +72,14 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   nsresult res;
 
   mCollation = new nsCollation;
-  if (mCollation == NULL) {
+  if (!mCollation) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   OSVERSIONINFO os;
   os.dwOSVersionInfoSize = sizeof(os);
   ::GetVersionEx(&os);
-  if (VER_PLATFORM_WIN32_NT == os.dwPlatformId &&
-      os.dwMajorVersion >= 4) {
+  if (VER_PLATFORM_WIN32_NT == os.dwPlatformId && os.dwMajorVersion >= 4) {
     mW_API = PR_TRUE;
   }
   else {
@@ -90,50 +89,44 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   // default LCID (en-US)
   mLCID = 1033;
 
-  PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"));
+  nsAutoString localeStr;
 
   // get locale string, use app default if no locale specified
-  if (locale == nsnull) {
+  if (!locale) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
-    if (NS_SUCCEEDED(res)) {
-      nsILocale *appLocale;
-      res = localeService->GetApplicationLocale(&appLocale);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID);
+    if (localeService) {
+      nsCOMPtr<nsILocale> appLocale;
+      res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
-        appLocale->Release();
+        res = appLocale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), 
+                                     localeStr);
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
+    res = locale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), 
+                              localeStr);
   }
 
   // Get LCID and charset name from locale, if available
-  if (NS_SUCCEEDED(res)) {
-    nsString aLocale;
-    aLocale.Assign(aLocaleUnichar);
-    if (NULL != aLocaleUnichar) {
-      nsMemory::Free(aLocaleUnichar);
-    }
-
-    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(NS_WIN32LOCALE_CONTRACTID, &res);
+  nsCOMPtr <nsIWin32Locale> win32Locale = 
+      do_GetService(NS_WIN32LOCALE_CONTRACTID);
+  if (win32Locale) {
+    LCID lcid;
+    res = win32Locale->GetPlatformLocale(localeStr, &lcid);
     if (NS_SUCCEEDED(res)) {
-      LCID lcid;
-  	  res = win32Locale->GetPlatformLocale(&aLocale, &lcid);
-      if (NS_SUCCEEDED(res)) {
-        mLCID = lcid;
-      }
+      mLCID = lcid;
     }
+  }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
+  nsCOMPtr <nsIPlatformCharset> platformCharset = 
+      do_GetService(NS_PLATFORMCHARSET_CONTRACTID);
+  if (platformCharset) {
+    nsCAutoString mappedCharset;
+    res = platformCharset->GetDefaultCharsetForLocale(localeStr, mappedCharset);
     if (NS_SUCCEEDED(res)) {
-      nsCAutoString mappedCharset;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), mappedCharset);
-      if (NS_SUCCEEDED(res)) {
-        mCollation->SetCharset(mappedCharset.get());
-      }
+      mCollation->SetCharset(mappedCharset.get());
     }
   }
 

@@ -120,8 +120,8 @@ protected:
 	nsresult SetSystemLocale(void);
 	nsresult SetApplicationLocale(void);
 
-	nsILocale*					mSystemLocale;
-	nsILocale*					mApplicationLocale;
+	nsCOMPtr<nsILocale>				mSystemLocale;
+	nsCOMPtr<nsILocale>				mApplicationLocale;
 
 };
 
@@ -141,7 +141,7 @@ public:
 	//
 	// nsILocaleDefintion
 	//
-	NS_IMETHOD SetLocaleCategory(const PRUnichar *category, const PRUnichar *value);
+	NS_IMETHOD SetLocaleCategory(const nsAString &category, const nsAString &value);
 
 protected:
 
@@ -157,46 +157,44 @@ protected:
 //
 // nsLocaleService methods
 //
-nsLocaleService::nsLocaleService(void)
-:	mSystemLocale(nsnull), mApplicationLocale(nsnull)
+nsLocaleService::nsLocaleService(void) 
+    : mSystemLocale(0), mApplicationLocale(0)
 {
 #if defined(XP_WIN)
-    nsresult result;
-	nsCOMPtr<nsIWin32Locale> win32Converter
-        = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &result);
+    nsCOMPtr<nsIWin32Locale> win32Converter = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID);
 
-	nsString		xpLocale;
-	NS_ASSERTION(win32Converter!=NULL,"nsLocaleService: can't get win32 converter\n");
-	if (NS_SUCCEEDED(result) && win32Converter) {
-		
-		//
-		// get the system LCID
-		//
-		LCID win_lcid = GetSystemDefaultLCID();
-		if (win_lcid==0) { return;}
-		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
-		if (NS_FAILED(result)) { return;}
-		result = NewLocale(xpLocale.get(), &mSystemLocale);
-		if (NS_FAILED(result)) { return;}
+    NS_ASSERTION(win32Converter, "nsLocaleService: can't get win32 converter\n");
 
-		//
-		// get the application LCID
-		//
-		win_lcid = GetUserDefaultLCID();
-		if (win_lcid==0) { return;}
-		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
-		if (NS_FAILED(result)) { return;}
-		result = NewLocale(xpLocale.get(), &mApplicationLocale);
-		if (NS_FAILED(result)) { return;}
-	}
+    nsAutoString        xpLocale;
+    if (win32Converter) {
+        
+        nsresult result;
+        //
+        // get the system LCID
+        //
+        LCID win_lcid = GetSystemDefaultLCID();
+        if (win_lcid==0) { return;}
+            result = win32Converter->GetXPLocale(win_lcid, xpLocale);
+        if (NS_FAILED(result)) { return;}
+            result = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
+        if (NS_FAILED(result)) { return;}
+
+        //
+        // get the application LCID
+        //
+        win_lcid = GetUserDefaultLCID();
+        if (win_lcid==0) { return;}
+            result = win32Converter->GetXPLocale(win_lcid, xpLocale);
+        if (NS_FAILED(result)) { return;}
+            result = NewLocale(xpLocale, getter_AddRefs(mApplicationLocale));
+        if (NS_FAILED(result)) { return;}
+    }
 #endif
 #if (defined(XP_UNIX) || defined(XP_BEOS)) && !defined(XP_MACOSX)
-    nsresult result;
-    nsCOMPtr<nsIPosixLocale> posixConverter =
-        do_CreateInstance(NS_POSIXLOCALE_CONTRACTID, &result);
+    nsCOMPtr<nsIPosixLocale> posixConverter = do_CreateInstance(NS_POSIXLOCALE_CONTRACTID);
 
     nsAutoString xpLocale, platformLocale;
-    if (NS_SUCCEEDED(result) && posixConverter) {
+    if (posixConverter) {
         nsAutoString category, category_platform;
         nsLocale* resultLocale;
         int i;
@@ -206,46 +204,40 @@ nsLocaleService::nsLocaleService(void)
             return; 
         }
         for( i = 0; i < LocaleListLength; i++ ) {
-            char* lc_temp = nsCRT::strdup(setlocale(posix_locale_category[i],""));
+            nsresult result;
+            char* lc_temp = setlocale(posix_locale_category[i], "");
             category.AssignWithConversion(LocaleList[i]);
             category_platform.AssignWithConversion(LocaleList[i]);
             category_platform.Append(NS_LITERAL_STRING("##PLATFORM"));
             if (lc_temp != nsnull) {
-                result = posixConverter->GetXPLocale(lc_temp,&xpLocale);
+                result = posixConverter->GetXPLocale(lc_temp, xpLocale);
                 platformLocale.AssignWithConversion(lc_temp);
             } else {
                 char* lang = getenv("LANG");
                 if ( lang == nsnull ) {
-                    nsCAutoString langcstr("en-US");
                     platformLocale.Assign(NS_LITERAL_STRING("en_US"));
-                    lang = ToNewCString(langcstr);
-                    result = posixConverter->GetXPLocale(lang,&xpLocale);
-                    nsCRT::free(lang); 
-	        }
+                    result = posixConverter->GetXPLocale("eu-US", xpLocale);
+            }
                 else {
-                    result = posixConverter->GetXPLocale(lang,&xpLocale); 
+                    result = posixConverter->GetXPLocale(lang, xpLocale); 
                     platformLocale.AssignWithConversion(lang);
                 }
             }
             if (NS_FAILED(result)) {
-                nsCRT::free(lc_temp);
                 return;
             }
-            resultLocale->AddCategory(category.get(),xpLocale.get());
-            resultLocale->AddCategory(category_platform.get(),platformLocale.get());
-            nsCRT::free(lc_temp);
+            resultLocale->AddCategory(category, xpLocale);
+            resultLocale->AddCategory(category_platform, platformLocale);
         }
-        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mSystemLocale);
-        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mApplicationLocale);
+        mSystemLocale = do_QueryInterface(resultLocale);
+        mApplicationLocale = do_QueryInterface(resultLocale);
     }  // if ( NS_SUCCEEDED )...
        
 #endif // XP_UNIX || XP_BEOS
 #if defined(XP_OS2)
-    nsresult result;
-    nsCOMPtr<nsIOS2Locale> os2Converter
-        = do_CreateInstance(NS_OS2LOCALE_CONTRACTID, &result);
+    nsCOMPtr<nsIOS2Locale> os2Converter = do_CreateInstance(NS_OS2LOCALE_CONTRACTID);
     nsAutoString xpLocale;
-    if (NS_SUCCEEDED(result) && os2Converter) {
+    if (os2Converter) {
         nsAutoString category;
         nsLocale* resultLocale;
         int i;
@@ -270,30 +262,28 @@ nsLocaleService::nsLocaleService(void)
                                  UNI_MBS_STRING_POINTER,
                                  (void **)&lc_temp);
             category.AssignWithConversion(LocaleList[i]);
+            nsresult result;
             if (lc_temp != nsnull)
-                result = os2Converter->GetXPLocale(lc_temp,&xpLocale);
+                result = os2Converter->GetXPLocale(lc_temp, xpLocale);
             else {
                 char* lang = getenv("LANG");
                 if ( lang == nsnull ) {
-                    nsCAutoString langcstr("en-US");
-                    lang = ToNewCString(langcstr);
-                    result = os2Converter->GetXPLocale(lang,&xpLocale);
-                    nsCRT::free(lang); 
-	        }
+                    result = os2Converter->GetXPLocale("en-US", xpLocale);
+                }
                 else
-                    result = os2Converter->GetXPLocale(lang,&xpLocale); 
+                    result = os2Converter->GetXPLocale(lang, xpLocale); 
             }
             if (NS_FAILED(result)) {
                 UniFreeMem(lc_temp);
                 UniFreeLocaleObject(locale_object);
                 return;
             }
-            resultLocale->AddCategory(category.get(),xpLocale.get());
+            resultLocale->AddCategory(category, xpLocale);
             UniFreeMem(lc_temp);
         }
         UniFreeLocaleObject(locale_object);
-        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mSystemLocale);
-        (void)resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)&mApplicationLocale);
+        mSystemLocale = do_QueryInterface(resultLocale);
+        mApplicationLocale = do_QueryInterface(resultLocale);
     }  // if ( NS_SUCCEEDED )...
 
 #endif
@@ -302,17 +292,15 @@ nsLocaleService::nsLocaleService(void)
 	long script = GetScriptManagerVariable(smSysScript);
 	long lang = GetScriptVariable(smSystemScript,smScriptLang);
 	long region = GetScriptManagerVariable(smRegionCode);
-    nsresult result;
-	nsCOMPtr<nsIMacLocale> macConverter
-        = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &result);
-	if (NS_SUCCEEDED(result) && macConverter) {
-		nsString xpLocale;
-		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
+	nsCOMPtr<nsIMacLocale> macConverter = do_CreateInstance(NS_MACLOCALE_CONTRACTID);
+	if (macConverter) {
+		nsresult result;
+		nsAutoString xpLocale;
+		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region, xpLocale);
 		if (NS_SUCCEEDED(result)) {
-			result = NewLocale(xpLocale.get(),&mSystemLocale);
+			result = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
 			if (NS_SUCCEEDED(result)) {
-				mApplicationLocale = mSystemLocale;
-				mApplicationLocale->AddRef();
+				NS_ADDREF(mApplicationLocale = mSystemLocale);
 			}
 		}
 	}
@@ -321,14 +309,12 @@ nsLocaleService::nsLocaleService(void)
 
 nsLocaleService::~nsLocaleService(void)
 {
-	if (mSystemLocale) mSystemLocale->Release();
-	if (mApplicationLocale) mApplicationLocale->Release();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleService, nsILocaleService)
 
 NS_IMETHODIMP
-nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
+nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 {
 	int		i;
 	nsresult result;
@@ -340,7 +326,7 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 
 	for(i=0;i<LocaleListLength;i++) {
 		nsString category; category.AssignWithConversion(LocaleList[i]);
-		result = resultLocale->AddCategory(category.get(),aLocale);
+		result = resultLocale->AddCategory(category, aLocale);
 		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
 
@@ -364,8 +350,7 @@ NS_IMETHODIMP
 nsLocaleService::GetSystemLocale(nsILocale **_retval)
 {
 	if (mSystemLocale) {
-		mSystemLocale->AddRef();
-		*_retval = mSystemLocale;
+		NS_ADDREF(*_retval = mSystemLocale);
 		return NS_OK;
 	}
 
@@ -377,8 +362,7 @@ NS_IMETHODIMP
 nsLocaleService::GetApplicationLocale(nsILocale **_retval)
 {
 	if (mApplicationLocale) {
-		mApplicationLocale->AddRef();
-		*_retval = mApplicationLocale;
+		NS_ADDREF(*_retval = mApplicationLocale);
 		return NS_OK;
 	}
 
@@ -480,7 +464,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   //
   result = NS_ERROR_FAILURE;
   if (countLang>0) {
-	  result = NewLocale(NS_ConvertASCIItoUCS2(acceptLanguageList[0]).get(),_retval);
+	  result = NewLocale(NS_ConvertASCIItoUTF16(acceptLanguageList[0]), _retval);
   }
 
   //
@@ -492,20 +476,20 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
 
 
 nsresult
-nsLocaleService::GetLocaleComponentForUserAgent(PRUnichar **_retval)
+nsLocaleService::GetLocaleComponentForUserAgent(nsAString& retval)
 {
-	nsCOMPtr<nsILocale>		system_locale;
-	nsresult				result;
+    nsCOMPtr<nsILocale>     system_locale;
+    nsresult                result;
 
-	result = GetSystemLocale(getter_AddRefs(system_locale));
-	if (NS_SUCCEEDED(result))
-	{
-		nsString	lc_messages; lc_messages.AssignWithConversion(NSILOCALE_MESSAGE);
-		result = system_locale->GetCategory(lc_messages.get(),_retval);
-		return result;
-	}
+    result = GetSystemLocale(getter_AddRefs(system_locale));
+    if (NS_SUCCEEDED(result))
+    {
+        result = system_locale->
+                 GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), retval);
+        return result;
+    }
 
-	return result;
+    return result;
 }
 
 
@@ -543,7 +527,7 @@ nsLocaleDefinition::~nsLocaleDefinition(void)
 }
 
 NS_IMETHODIMP
-nsLocaleDefinition::SetLocaleCategory(const PRUnichar *category, const PRUnichar *value)
+nsLocaleDefinition::SetLocaleCategory(const nsAString &category, const nsAString &value)
 {
 	if (mLocaleDefinition)
 		return mLocaleDefinition->AddCategory(category,value);

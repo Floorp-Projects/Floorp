@@ -68,35 +68,21 @@
 //
 //
 nsresult
-getCountry(PRUnichar *lc_name_unichar, PRUnichar **aCountry)
+getCountry(const nsAString &lc_name, nsAString &aCountry)
 {
-
-  nsresult        result = NS_OK;
-  nsAutoString  	category(NS_LITERAL_STRING("NSILOCALE_MESSAGES"));
-
-  nsAutoString	  lc_name;
-  lc_name.Assign(lc_name_unichar);
-  // nsMemory::Free(lc_name_unichar);
-
   PRInt32   dash = lc_name.FindChar('-');
   if (dash > 0) {
-    /* 
-     */
-    nsAutoString lang;
-    nsAutoString country;
-    PRInt32 count = 0;
-    count = lc_name.Left(lang, dash);
-    count = lc_name.Right(country, (lc_name.Length()-dash-1));
-    *aCountry = ToNewUnicode(country);
+    aCountry = lc_name;
+    aCountry.Cut(dash, (lc_name.Length()-dash-1));
   }
   else
-    result = NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
 
 nsresult
-getUILangCountry(PRUnichar** aUILang, PRUnichar** aCountry)
+getUILangCountry(nsAString& aUILang, nsAString& aCountry)
 {
 	nsresult	 result;
 	// get a locale service 
@@ -104,7 +90,8 @@ getUILangCountry(PRUnichar** aUILang, PRUnichar** aCountry)
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale service failed");
 
   result = localeService->GetLocaleComponentForUserAgent(aUILang);
-  result = getCountry(*aUILang, aCountry);
+  NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale component failed");
+  result = getCountry(aUILang, aCountry);
   return result;
 }
 
@@ -127,14 +114,12 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  PRUnichar *uiLang = nsnull;
-  PRUnichar *country = nsnull;
-  ret = getUILangCountry(&uiLang, &country);
+  nsAutoString uiLang;
+  nsAutoString country;
+  ret = getUILangCountry(uiLang, country);
 #if DEBUG_tao
-  nsAutoString uaStr(uiLang); // testing only
-  nsAutoString countryStr(country); // testing only
-  cout << "\n uaStr=" << ToNewCString(uaStr) 
-       << ", country=" << ToNewCString(countryStr) 
+  cout << "\n uiLang=" << NS_LossyConvertUTF16toASCII(uiLang).get()
+       << ", country=" << NS_LossyConvertUTF16toASCII(country).get()
        << "\n" << endl;
 #endif
 

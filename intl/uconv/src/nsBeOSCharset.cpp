@@ -59,7 +59,7 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& aResult
 }
 
 NS_IMETHODIMP
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString& aResult)
+nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& aResult)
 {
   aResult = mCharset;
   return NS_OK;
@@ -90,9 +90,9 @@ nsPlatformCharset::InitGetCharset(nsACString &aString)
 }
 
 nsresult
-nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAString& aResult)
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale, nsACString& aResult)
 {
-  CopyASCIItoUCS2(mCharset, aResult);
+  aResult = mCharset;
   return NS_OK;
 }
 

@@ -55,28 +55,25 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat)
 // init this interface to a specified locale
 nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 {
-  PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory;
-  aCategory.Assign(NS_LITERAL_STRING("NSILOCALE_TIME##PLATFORM"));
+  nsAutoString localeStr;
+  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_TIME##PLATFORM");
   nsresult res = NS_OK;
 
   // use cached info if match with stored locale
   if (NULL == locale) {
-    if (mLocale.Length() &&
+    if (!mLocale.IsEmpty() &&
         mLocale.Equals(mAppLocale, nsCaseInsensitiveStringComparator())) {
       return NS_OK;
     }
   }
   else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
-    if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+    res = locale->GetCategory(aCategory, localeStr);
+    if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
       if (!mLocale.IsEmpty() &&
-          mLocale.Equals(aLocaleUnichar,
+          mLocale.Equals(localeStr,
                          nsCaseInsensitiveStringComparator())) {
-        nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }
-      nsMemory::Free(aLocaleUnichar);
     }
   }
 
@@ -88,36 +85,34 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     nsCOMPtr<nsILocaleService> localeService = 
              do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      nsILocale *appLocale;
-      res = localeService->GetApplicationLocale(&appLocale);
+      nsCOMPtr<nsILocale> appLocale;
+      res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
-        if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+        res = appLocale->GetCategory(aCategory, localeStr);
+        if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
           NS_ASSERTION(NS_SUCCEEDED(res), "failed to get app locale info");
-          mAppLocale = aLocaleUnichar; // cache app locale name
+          mAppLocale = localeStr; // cache app locale name
         }
-        appLocale->Release();
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory, localeStr);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to get locale info");
   }
 
-  if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-    mLocale = aLocaleUnichar; // cache locale name
-    nsMemory::Free(aLocaleUnichar);
+  if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
+    mLocale = localeStr; // cache locale name
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale);
+      res = posixLocale->GetPlatformLocale(mLocale, mPlatformLocale);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsCAutoString mappedCharset;
-      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale, mappedCharset);
       if (NS_SUCCEEDED(res)) {
         mCharset = mappedCharset;
       }

@@ -235,27 +235,25 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatMac, nsIDateTimeFormat)
 
 nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 {
-  PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory(NS_LITERAL_STRING("NSILOCALE_TIME"));
+  nsAutoString localeStr;
+  nsAutoString category(NS_LITERAL_STRING("NSILOCALE_TIME"));
   nsresult res;
 
   // use cached info if match with stored locale
-  if (NULL == locale) {
-    if (mLocale.Length() &&
+  if (nsnull == locale) {
+    if (!mLocale.IsEmpty() &&
         mLocale.Equals(mAppLocale, nsCaseInsensitiveStringComparator())) {
       return NS_OK;
     }
   }
   else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
-    if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
+    res = locale->GetCategory(category, localeStr);
+    if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
       if (!mLocale.IsEmpty() &&
-          mLocale.Equals(aLocaleUnichar,
+          mLocale.Equals(localeStr,
                          nsCaseInsensitiveStringComparator())) {
-        nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }
-      nsMemory::Free(aLocaleUnichar);
     }
   }
 
@@ -269,41 +267,38 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   nsCOMPtr<nsILocaleService> localeService = 
            do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    nsILocale *appLocale;
-    res = localeService->GetApplicationLocale(&appLocale);
+    nsCOMPtr<nsILocale> appLocale;
+    res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
     if (NS_SUCCEEDED(res)) {
-      res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
-      if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-        mAppLocale.Assign(aLocaleUnichar); // cache app locale name
+      res = appLocale->GetCategory(category, localeStr);
+      if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
+        mAppLocale = localeStr; // cache app locale name
       }
-      appLocale->Release();
     }
   }
   
   // use app default if no locale specified
-  if (NULL == locale) {
+  if (nsnull == locale) {
     mUseDefaultLocale = true;
   }
   else {
     mUseDefaultLocale = false;
-    nsMemory::Free(aLocaleUnichar);
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
+    res = locale->GetCategory(category, localeStr);
   }
     
   // Get a script code and charset name from locale, if available
-  if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-    mLocale.Assign(aLocaleUnichar); // cache locale name
-    nsMemory::Free(aLocaleUnichar);
+  if (NS_SUCCEEDED(res) && !loceleStr.IsEmpty()) {
+    mLocale.Assign(localeStr); // cache locale name
 
     nsCOMPtr <nsIMacLocale> macLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      res = macLocale->GetPlatformLocale(&mLocale, &mScriptcode, &mLangcode, &mRegioncode);
+      res = macLocale->GetPlatformLocale(mLocale, &mScriptcode, &mLangcode, &mRegioncode);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsCAutoString  mappedCharset;
-      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale, mappedCharset);
       if (NS_SUCCEEDED(res)) {
         mCharset = mappedCharset;
       }

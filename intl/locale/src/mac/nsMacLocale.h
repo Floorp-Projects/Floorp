@@ -55,8 +55,8 @@ public:
   nsMacLocale();
   virtual ~nsMacLocale();
 
-  NS_IMETHOD GetPlatformLocale(const nsString* locale,short* scriptCode, short* langCode, short* regionCode);
-  NS_IMETHOD GetXPLocale(short scriptCode, short langCode, short regionCode, nsString* locale);
+  NS_IMETHOD GetPlatformLocale(const nsAString& locale,short* scriptCode, short* langCode, short* regionCode);
+  NS_IMETHOD GetXPLocale(short scriptCode, short langCode, short regionCode, nsAString& locale);
   
 protected:
   inline PRBool ParseLocaleString(const char* locale_string, char* language, char* country, char* region, char separator);

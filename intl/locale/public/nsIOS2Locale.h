@@ -40,7 +40,7 @@ class nsIOS2Locale : public nsISupports
 
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOS2LOCALE_IID)
    NS_IMETHOD GetPlatformLocale(PRUnichar* os2Locale,size_t length)=0;
-   NS_IMETHOD GetXPLocale(const char* os2Locale, nsString* locale)=0;
+   NS_IMETHOD GetXPLocale(const char* os2Locale, nsAString& locale)=0;
 };
 
 #endif

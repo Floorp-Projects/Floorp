@@ -839,9 +839,8 @@ getUILangCountry(nsAString& aUILang, nsAString& aCountry)
   nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &result);
   NS_ASSERTION(NS_SUCCEEDED(result),"getUILangCountry: get locale service failed");
 
-  nsXPIDLString uiLang;
-  result = localeService->GetLocaleComponentForUserAgent(getter_Copies(uiLang));
-  aUILang = uiLang;
+  result = localeService->GetLocaleComponentForUserAgent(aUILang);
+  NS_ASSERTION(NS_SUCCEEDED(result), "getUILangCountry: get locale component failed");
   result = getCountry(aUILang, aCountry);
   return result;
 }

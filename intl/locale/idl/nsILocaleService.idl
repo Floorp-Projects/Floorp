@@ -41,7 +41,7 @@
 
 [scriptable, uuid(7c094410-4558-11d3-91cd-00105aa3f7dc)]
 interface nsILocaleDefinition : nsISupports {
-	void SetLocaleCategory(in wstring category, in wstring value);
+	void setLocaleCategory(in AString category, in AString value);
 };
 
 // The Locale service interface. This is a singleton object, and should be
@@ -49,12 +49,12 @@ interface nsILocaleDefinition : nsISupports {
 [scriptable, uuid(48ab1fa0-4550-11d3-91cd-00105aa3f7dc)]
 interface nsILocaleService : nsISupports {
 
-	nsILocale NewLocale(in wstring aLocale);
-	nsILocale NewLocaleObject(in nsILocaleDefinition localeDefinition);
-	nsILocale GetSystemLocale();
-	nsILocale GetApplicationLocale();
-	nsILocale GetLocaleFromAcceptLanguage(in string acceptLanguage);
-	wstring GetLocaleComponentForUserAgent();
+	nsILocale newLocale(in AString aLocale);
+	nsILocale newLocaleObject(in nsILocaleDefinition localeDefinition);
+	nsILocale getSystemLocale();
+	nsILocale getApplicationLocale();
+	nsILocale getLocaleFromAcceptLanguage(in string acceptLanguage);
+	AString getLocaleComponentForUserAgent();
 };
 
 %{C++

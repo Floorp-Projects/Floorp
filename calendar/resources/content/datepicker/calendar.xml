@@ -160,7 +160,7 @@
 
 				var bundleURL = "chrome://calendar/locale/dateFormat.properties";
 				var dateBundle = stringBundleService.createBundle(
-					bundleURL, localeService.GetApplicationLocale()
+					bundleURL, localeService.getApplicationLocale()
 				);
 
 				// Reset the headers

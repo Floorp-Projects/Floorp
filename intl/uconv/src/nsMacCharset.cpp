@@ -154,15 +154,14 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, nsACString &oResult)
+nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString &oResult)
 {
   nsresult rv;
   nsCOMPtr<nsIMacLocale> pMacLocale;
   pMacLocale = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsAutoString localeAsString(localeName);
     short script, language, region;
-    rv = pMacLocale->GetPlatformLocale(&localeAsString, &script, &language, &region);
+    rv = pMacLocale->GetPlatformLocale(localeName, &script, &language, &region);
     if (NS_SUCCEEDED(rv)) {
       if (NS_SUCCEEDED(MapToCharset(script, region, oResult))) {
         return NS_OK;
@@ -194,7 +193,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
 }
 
 nsresult
-nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAString& oResult)
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale, nsACString& oResult)
 {
   return NS_OK;
 }

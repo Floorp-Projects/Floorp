@@ -150,34 +150,31 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   // locale -> script code + charset name
   m_scriptcode = smRoman;
 
-  PRUnichar *aLocaleUnichar; 
-  nsAutoString aCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"));
+  nsAutoString localeStr;
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
     nsCOMPtr<nsILocaleService> localeService = 
              do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      nsILocale *appLocale;
-      res = localeService->GetApplicationLocale(&appLocale);
+      nsCOMPtr<nsILocale> appLocale;
+      res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
-        appLocale->Release();
+        res = appLocale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), 
+                                     localeStr);
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
+    res = locale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), 
+                              localeStr);
   }
 
   if (NS_SUCCEEDED(res)) {
-    nsAutoString aLocale(aLocaleUnichar);
-    nsMemory::Free(aLocaleUnichar);
-
     short scriptcode, langcode, regioncode;
     nsCOMPtr <nsIMacLocale> macLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
+      if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(localeStr, &scriptcode, &langcode, &regioncode))) {
         m_scriptcode = scriptcode;
       }
     }
@@ -185,7 +182,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsCAutoString mappedCharset;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(localeStr, mappedCharset);
       if (NS_SUCCEEDED(res)) {
         res = mCollation->SetCharset(mappedCharset.get());
       }

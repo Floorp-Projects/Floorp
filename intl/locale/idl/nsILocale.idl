@@ -52,5 +52,5 @@
 [scriptable, uuid(21035ee0-4556-11d3-91cd-00105aa3f7dc)]
 interface nsILocale : nsISupports {
 	
-	wstring GetCategory (in wstring category);
+	AString getCategory (in AString category);
 };
