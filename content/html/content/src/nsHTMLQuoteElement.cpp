@@ -44,7 +44,7 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLQuoteElement : public nsGenericHTMLContainerElement,
+class nsHTMLQuoteElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLQuoteElement
 {
 public:
@@ -55,13 +55,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLQuoteElement
   NS_DECL_NSIDOMHTMLQUOTEELEMENT
@@ -107,8 +107,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLQuoteElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLQuoteElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLQuoteElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLQuoteElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLQuoteElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLQuoteElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -133,7 +132,7 @@ nsHTMLQuoteElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 

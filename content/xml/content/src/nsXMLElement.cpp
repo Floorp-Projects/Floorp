@@ -507,7 +507,7 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   rv = CallQueryInterface(it, aReturn);
   NS_RELEASE(it);

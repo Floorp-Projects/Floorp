@@ -90,7 +90,7 @@ public:
 
 //----------------------------------------------------------------------
 
-class nsHTMLBodyElement : public nsGenericHTMLContainerElement,
+class nsHTMLBodyElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLBodyElement
 {
 public:
@@ -101,13 +101,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLBodyElement
   NS_DECL_NSIDOMHTMLBODYELEMENT
@@ -318,7 +318,7 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult,
 
 
 nsHTMLBodyElement::nsHTMLBodyElement()
-  : nsGenericHTMLContainerElement(),
+  : nsGenericHTMLElement(),
     mContentStyleRule(nsnull)
 {
 }
@@ -337,8 +337,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 
 // QueryInterface implementation for nsHTMLBodyElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBodyElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBodyElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLBodyElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLBodyElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -363,7 +362,7 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -475,7 +474,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::alink) ||
       (aAttribute == nsHTMLAtoms::vlink)) {
     if (aResult.ParseColor(aValue,
-                           nsGenericHTMLContainerElement::GetOwnerDocument())) {
+                           nsGenericHTMLElement::GetOwnerDocument())) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -504,8 +503,7 @@ nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     // destroy old style rule since the sheet will probably change
     NS_RELEASE(mContentStyleRule);
   }
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 }
 
 static 
@@ -569,7 +567,7 @@ nsHTMLBodyElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRu
 NS_IMETHODIMP
 nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
-  nsGenericHTMLContainerElement::WalkContentStyleRules(aRuleWalker);
+  nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
 
   if (!mContentStyleRule && mDocument) {
     mContentStyleRule = new BodyRule(this, mDocument->GetAttributeStyleSheet());

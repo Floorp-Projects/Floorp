@@ -50,7 +50,7 @@
 #include "nsRuleNode.h"
 
 
-class nsHTMLSharedContainerElement : public nsGenericHTMLContainerElement,
+class nsHTMLSharedContainerElement : public nsGenericHTMLElement,
                                      public nsIDOMHTMLDirectoryElement,
                                      public nsIDOMHTMLMenuElement,
                                      public nsIDOMHTMLModElement,
@@ -66,13 +66,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLModElement and nsIDOMHTMLQuoteElement
   NS_DECL_NSIDOMHTMLMODELEMENT
@@ -141,7 +141,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSharedContainerElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLSharedContainerElement
 NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedContainerElement,
-                                             nsGenericHTMLContainerElement,
+                                             nsGenericHTMLElement,
                                              nsIDOMHTMLDirectoryElement)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMHTMLElement,
                                    nsIDOMHTMLDirectoryElement)
@@ -184,7 +184,7 @@ nsHTMLSharedContainerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMHTMLModElement *, it);
 
@@ -275,8 +275,7 @@ nsHTMLSharedContainerElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::StringToAttribute(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::StringToAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
@@ -318,14 +317,13 @@ nsHTMLSharedContainerElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP_(PRBool)
 nsHTMLSharedContainerElement::HasAttributeDependentStyle(const nsIAtom* aAttr) const
 {
-  if (nsGenericHTMLContainerElement::HasAttributeDependentStyle(aAttr)) {
+  if (nsGenericHTMLElement::HasAttributeDependentStyle(aAttr)) {
     return PR_TRUE;
   }
 
@@ -437,5 +435,5 @@ nsHTMLSharedContainerElement::GetAttributeMappingFunction(nsMapRuleToAttributesF
   }
 
   return
-    nsGenericHTMLContainerElement::GetAttributeMappingFunction(aMapRuleFunc);
+    nsGenericHTMLElement::GetAttributeMappingFunction(aMapRuleFunc);
 }

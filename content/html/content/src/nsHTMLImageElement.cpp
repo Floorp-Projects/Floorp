@@ -83,7 +83,7 @@
 
 // XXX nav attrs: suppress
 
-class nsHTMLImageElement : public nsGenericHTMLLeafElement,
+class nsHTMLImageElement : public nsGenericHTMLElement,
                            public nsImageLoadingContent,
                            public nsIDOMHTMLImageElement,
                            public nsIDOMNSHTMLImageElement,
@@ -97,13 +97,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLImageElement
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
@@ -218,8 +218,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLImageElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement,
-                                    nsGenericHTMLLeafElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLImageElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLImageElement)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
@@ -248,7 +247,7 @@ nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -454,9 +453,8 @@ nsHTMLImageElement::SetHeight(PRInt32 aHeight)
   nsAutoString val;
   val.AppendInt(aHeight);
 
-  return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::height,
-                                           val, PR_TRUE);
+  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::height,
+                                       val, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -473,9 +471,8 @@ nsHTMLImageElement::SetWidth(PRInt32 aWidth)
   nsAutoString val;
   val.AppendInt(aWidth);
 
-  return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::width,
-                                           val, PR_TRUE);
+  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::width,
+                                       val, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -519,8 +516,7 @@ nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
-                                                     aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void
@@ -540,8 +536,7 @@ nsHTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                            nsChangeHint& aHint) const
 {
   nsresult rv =
-    nsGenericHTMLLeafElement::GetAttributeChangeHint(aAttribute,
-                                                     aModType, aHint);
+    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
   if (aAttribute == nsHTMLAtoms::usemap ||
       aAttribute == nsHTMLAtoms::ismap) {
     NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
@@ -589,9 +584,8 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  return nsGenericHTMLLeafElement::HandleDOMEvent(aPresContext, aEvent,
-                                                  aDOMEvent, aFlags,
-                                                  aEventStatus);
+  return nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                              aFlags, aEventStatus);
 }
 
 nsresult
@@ -609,8 +603,8 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     ImageURIChanged(aValue);
   }
     
-  return nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                           aValue, aNotify);
+  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                       aNotify);
 }
 
 void
@@ -619,8 +613,7 @@ nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 {
   PRBool documentChanging = aDocument && (aDocument != mDocument);
   
-  nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
-                                        aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   if (documentChanging && GetParent()) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -635,7 +628,7 @@ nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 void
 nsHTMLImageElement::SetParent(nsIContent* aParent)
 {
-  nsGenericHTMLLeafElement::SetParent(aParent);
+  nsGenericHTMLElement::SetParent(aParent);
   if (aParent && mDocument) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -716,8 +709,8 @@ nsHTMLImageElement::SetSrc(const nsAString& aSrc)
     }
   }
   
-  return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::src, aSrc, PR_TRUE);
+  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
+                                       aSrc, PR_TRUE);
 }
 
 NS_IMETHODIMP

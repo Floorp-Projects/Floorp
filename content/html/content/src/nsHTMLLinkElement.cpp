@@ -58,7 +58,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsParserUtils.h"
 
-class nsHTMLLinkElement : public nsGenericHTMLLeafElement,
+class nsHTMLLinkElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLLinkElement,
                           public nsILink,
                           public nsStyleLinkElement
@@ -71,13 +71,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLLinkElement
   NS_DECL_NSIDOMHTMLLINKELEMENT
@@ -162,8 +162,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLLinkElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLinkElement,
-                                    nsGenericHTMLLeafElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLinkElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLLinkElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
   NS_INTERFACE_MAP_ENTRY(nsILink)
@@ -191,7 +190,7 @@ nsHTMLLinkElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -254,8 +253,7 @@ nsHTMLLinkElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          NS_LITERAL_STRING("DOMLinkRemoved"));
 
   // Do the removal and addition into the new doc.
-  nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
-                                        aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   UpdateStyleSheet(oldDoc);
 		
   CreateAndDispatchEvent(mDocument, rel, rev,
@@ -303,8 +301,8 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     SetLinkState(eLinkState_Unknown);
   }
 
-  nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                                  aValue, aNotify);
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -316,8 +314,8 @@ nsresult
 nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID, aAttribute,
-                                                    aNotify);
+  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
+                                                aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }

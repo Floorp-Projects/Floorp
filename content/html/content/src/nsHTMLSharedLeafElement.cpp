@@ -51,7 +51,7 @@
 #include "nsStyleContext.h"
 
 
-class nsHTMLSharedLeafElement : public nsGenericHTMLLeafElement,
+class nsHTMLSharedLeafElement : public nsGenericHTMLElement,
                                 public nsImageLoadingContent,
                                 public nsIDOMHTMLEmbedElement,
                                 public nsIDOMHTMLIsIndexElement,
@@ -66,13 +66,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLEmbedElement
   NS_DECL_NSIDOMHTMLEMBEDELEMENT
@@ -145,7 +145,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSharedLeafElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLSharedLeafElement
 NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedLeafElement,
-                                             nsGenericHTMLLeafElement,
+                                             nsGenericHTMLElement,
                                              nsIDOMHTMLEmbedElement)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMHTMLElement, nsIDOMHTMLEmbedElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
@@ -184,7 +184,7 @@ nsHTMLSharedLeafElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMHTMLEmbedElement *, it);
 
@@ -213,7 +213,9 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedLeafElement, Prompt, prompt)
 NS_IMETHODIMP
 nsHTMLSharedLeafElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return FindForm(aForm);
+  *aForm = FindForm().get();
+
+  return NS_OK;
 }
 
 // nsIDOMHTMLBaseElement
@@ -252,8 +254,7 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLLeafElement::StringToAttribute(aAttribute, aValue,
-                                                     aResult);
+  return nsGenericHTMLElement::StringToAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
@@ -279,8 +280,7 @@ nsHTMLSharedLeafElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
-                                                     aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void
@@ -423,7 +423,7 @@ nsHTMLSharedLeafElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) c
     return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
   }
 
-  return nsGenericHTMLLeafElement::HasAttributeDependentStyle(aAttribute);
+  return nsGenericHTMLElement::HasAttributeDependentStyle(aAttribute);
 }
 
 NS_IMETHODIMP

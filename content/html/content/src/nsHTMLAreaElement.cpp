@@ -52,7 +52,7 @@
 #include "nsReadableUtils.h"
 #include "nsIDocument.h"
 
-class nsHTMLAreaElement : public nsGenericHTMLLeafElement,
+class nsHTMLAreaElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLAreaElement,
                           public nsIDOMNSHTMLAreaElement,
                           public nsILink
@@ -65,13 +65,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLAreaElement
   NS_DECL_NSIDOMHTMLAREAELEMENT
@@ -153,8 +153,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLAreaElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAreaElement,
-                                    nsGenericHTMLLeafElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAreaElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsILink)
@@ -181,7 +180,7 @@ nsHTMLAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = it;
 
@@ -338,7 +337,7 @@ nsHTMLAreaElement::GetProtocol(nsAString& aProtocol)
 
   // XXX this should really use GetHrefURI and not do so much string stuff
   return GetProtocolFromHrefString(href, aProtocol,
-                                   nsGenericHTMLLeafElement::GetOwnerDocument());
+                                   nsGenericHTMLElement::GetOwnerDocument());
 }
 
 NS_IMETHODIMP

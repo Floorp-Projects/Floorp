@@ -156,7 +156,7 @@ public:
   /**
    * An object implementing nsIDOMNodeList for this content (childNodes)
    * @see nsIDOMNodeList
-   * @see nsGenericHTMLLeafElement::GetChildNodes
+   * @see nsGenericHTMLElement::GetChildNodes
    */
   nsRefPtr<nsChildContentList> mChildNodes;
 
@@ -391,8 +391,6 @@ public:
   virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
-  // Declare these here so we can consolidate the implementations.
-  // Subclasses that don't want to implement these should override.
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify, PRBool aDeepSetDocument);
   virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -400,7 +398,6 @@ public:
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-
 
   // nsIStyledContent interface methods
   NS_IMETHOD GetID(nsIAtom** aResult) const;
@@ -463,6 +460,28 @@ public:
   NS_IMETHOD IsSupported(const nsAString& aFeature,
                          const nsAString& aVersion, PRBool* aReturn);
   NS_IMETHOD HasAttributes(PRBool* aHasAttributes);
+  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
+  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                          nsIDOMNode** aReturn)
+  {
+    return doInsertBefore(this, aNewChild, aRefChild, aReturn);
+  }
+  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                          nsIDOMNode** aReturn)
+  {
+    return doReplaceChild(this, aNewChild, aOldChild, aReturn);
+  }
+  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+  {
+    return doRemoveChild(this, aOldChild, aReturn);
+  }
+  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+  {
+    return doInsertBefore(this, aNewChild, nsnull, aReturn);
+  }
 
   // nsIDOMElement method implementation
   NS_IMETHOD GetTagName(nsAString& aTagName);
@@ -601,29 +620,6 @@ public:
 
 protected:
   /**
-   * InsertChildAt/ReplaceChildAt/AppendChildTo/RemoveChildAt subclass
-   * hooks.  These methods are called to perform the actual moving
-   * around of content nodes in child lists.  The return value should
-   * be true if something changed, false otherwise.
-   *
-   * These methods should not change the refcount on the kids in question;
-   * that's handled by the
-   * InsertChildAt/ReplaceChildAt/AppendChildTo/RemoveChildAt functions.
-   */
-  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return PR_FALSE;
-  }
-  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return PR_FALSE;
-  }
-  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return PR_FALSE;
-  }
-  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    return PR_FALSE;
-  }
-
-  /**
    * Internal hook for converting an attribute name-string to an atomized name
    */
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const = 0;
@@ -740,6 +736,11 @@ protected:
    * member.
    */
   PtrBits mFlagsOrSlots;
+
+  /**
+   * Array containing all attributes and children for this element
+   */
+  nsAttrAndChildArray mAttrsAndChildren;
 };
 
 /**
@@ -754,49 +755,8 @@ public:
    * @param aDest the destination object
    * @param aDeep whether to copy children
    */
-  // XXX This can probably be static
-  NS_IMETHOD CopyInnerTo(nsIContent* aSrcContent,
-                         nsGenericContainerElement* aDest,
+  NS_IMETHOD CopyInnerTo(nsGenericContainerElement* aDest,
                          PRBool aDeep);
-
-  // nsIDOMElement methods
-  NS_METHOD GetAttribute(const nsAString& aName,
-                         nsAString& aReturn) 
-  {
-    return nsGenericElement::GetAttribute(aName, aReturn);
-  }
-  NS_METHOD SetAttribute(const nsAString& aName,
-                         const nsAString& aValue)
-  {
-    return nsGenericElement::SetAttribute(aName, aValue);
-  }
-
-  // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD HasChildNodes(PRBool* aHasChildNodes);
-  NS_IMETHOD GetFirstChild(nsIDOMNode** aFirstChild);
-  NS_IMETHOD GetLastChild(nsIDOMNode** aLastChild);
-  
-  NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                          nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doInsertBefore(this, aNewChild, aRefChild,
-                                            aReturn);
-  }
-  NS_IMETHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                          nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doReplaceChild(this, aNewChild, aOldChild,
-                                            aReturn);
-  }
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doRemoveChild(this, aOldChild, aReturn);
-  }
-  NS_IMETHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doInsertBefore(this, aNewChild, nsnull, aReturn);
-  }
 
   // Remainder of nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -823,33 +783,11 @@ public:
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
 
-  // Child list modification hooks
-  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return NS_SUCCEEDED(mAttrsAndChildren.InsertChildAt(aKid, aIndex));
-  }
-  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
-    return PR_TRUE;
-  }
-  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return NS_SUCCEEDED(mAttrsAndChildren.AppendChild(aKid));
-  }
-  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    mAttrsAndChildren.RemoveChildAt(aIndex);
-    return PR_TRUE;
-  }
-  
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
 #ifdef DEBUG
   void ListAttributes(FILE* out) const;
 #endif
-
-protected:
-  /**
-   * Array containing all attributes and children for this element
-   */
-  nsAttrAndChildArray mAttrsAndChildren;
 };
 
 

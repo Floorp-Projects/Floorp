@@ -51,7 +51,7 @@
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
-class nsHTMLTableSectionElement : public nsGenericHTMLContainerElement,
+class nsHTMLTableSectionElement : public nsGenericHTMLElement,
                                   public nsIDOMHTMLTableSectionElement
 {
 public:
@@ -62,13 +62,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLTableSectionElement
   NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
@@ -133,7 +133,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableSectionElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLTableSectionElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableSectionElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableSectionElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableSectionElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -158,7 +158,7 @@ nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -311,8 +311,7 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (aResult.ParseColor(aValue,
-                           nsGenericHTMLContainerElement::GetOwnerDocument())) {
+    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -347,8 +346,7 @@ nsHTMLTableSectionElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static 

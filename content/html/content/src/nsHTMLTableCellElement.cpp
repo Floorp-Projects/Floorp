@@ -49,7 +49,7 @@
 #include "nsRuleNode.h"
 #include "nsIDocument.h"
 
-class nsHTMLTableCellElement : public nsGenericHTMLContainerElement,
+class nsHTMLTableCellElement : public nsGenericHTMLElement,
                                public nsIHTMLTableCellElement,
                                public nsIDOMHTMLTableCellElement
 {
@@ -61,13 +61,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLTableCellElement
   NS_DECL_NSIDOMHTMLTABLECELLELEMENT
@@ -137,8 +137,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTableCellElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableCellElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableCellElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableCellElement)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLTableCellElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableCellElement)
@@ -164,7 +163,7 @@ nsHTMLTableCellElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -267,8 +266,7 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 NS_IMETHODIMP
 nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
-  nsresult rv = 
-    nsGenericHTMLContainerElement::WalkContentStyleRules(aRuleWalker);
+  nsresult rv = nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add style information from the mapped attributes of the table
@@ -392,8 +390,7 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (aResult.ParseColor(aValue,
-                           nsGenericHTMLContainerElement::GetOwnerDocument())) {
+    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -438,8 +435,7 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static 

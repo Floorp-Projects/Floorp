@@ -48,7 +48,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIFormControl.h"
 
-class nsHTMLObjectElement : public nsGenericHTMLContainerFormElement,
+class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsImageLoadingContent,
                             public nsIDOMHTMLObjectElement
 {
@@ -60,13 +60,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
@@ -130,7 +130,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLObjectElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
-                                    nsGenericHTMLContainerFormElement)
+                                    nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLObjectElement)
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
@@ -157,7 +157,7 @@ nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -169,7 +169,7 @@ nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 // nsIFormControl
@@ -275,19 +275,19 @@ nsHTMLObjectElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP_(PRBool)

@@ -89,7 +89,7 @@ class nsFormControlList;
 
 // nsHTMLFormElement
 
-class nsHTMLFormElement : public nsGenericHTMLContainerElement,
+class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsSupportsWeakReference,
                           public nsIDOMHTMLFormElement,
                           public nsIDOMNSHTMLFormElement,
@@ -116,13 +116,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLFormElement
   NS_DECL_NSIDOMHTMLFORMELEMENT
@@ -437,7 +437,7 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
 nsresult
 nsHTMLFormElement::Init(nsINodeInfo *aNodeInfo)
 {
-  nsresult rv = nsGenericHTMLContainerElement::Init(aNodeInfo);
+  nsresult rv = nsGenericHTMLElement::Init(aNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mControls = new nsFormControlList(this);
@@ -480,8 +480,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFormElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFormElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFormElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormElement)
@@ -511,7 +510,7 @@ nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsresult rv = it->Init(mNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -544,8 +543,8 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
     ForgetCurrentSubmission();
   }
-  return nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                                aValue, aNotify);
+  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                       aNotify);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
@@ -660,8 +659,7 @@ nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute,
-                                                          aValue, aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 void
@@ -669,8 +667,7 @@ nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
   nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(mDocument);
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   
   nsCOMPtr<nsIHTMLDocument> newDocument = do_QueryInterface(mDocument);
   if (oldDocument != newDocument) {
@@ -722,11 +719,9 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
 
-  nsresult rv = nsGenericHTMLContainerElement::HandleDOMEvent(aPresContext,
-                                                              aEvent,
-                                                              aDOMEvent,
-                                                              aFlags,
-                                                              aEventStatus); 
+  nsresult rv = nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent,
+                                                     aDOMEvent, aFlags,
+                                                     aEventStatus); 
   if (aEvent->message == NS_FORM_SUBMIT) {
     // let the form know not to defer subsequent submissions
     mDeferSubmission = PR_FALSE;

@@ -74,7 +74,7 @@
 /**
  * Implementation of &lt;option&gt;
  */
-class nsHTMLOptionElement : public nsGenericHTMLContainerElement,
+class nsHTMLOptionElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLOptionElement,
                             public nsIDOMNSHTMLOptionElement,
                             public nsIJSNativeInitializer,
@@ -88,13 +88,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLOptionElement
   NS_DECL_NSIDOMHTMLOPTIONELEMENT
@@ -215,8 +215,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLOptionElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptionElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptionElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptionElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLOptionElement)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
@@ -244,7 +243,7 @@ nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -385,8 +384,7 @@ nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
 NS_IMETHODIMP                                                      
 nsHTMLOptionElement::GetLabel(nsAString& aValue)
 {                                                                  
-  nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
-                                         nsHTMLAtoms::label, aValue);
+  nsGenericHTMLElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, aValue);
   return NS_OK;
 }         
                                                          
@@ -395,9 +393,8 @@ nsHTMLOptionElement::SetLabel(const nsAString& aValue)
 {                                                                  
   nsresult result;
 
-  result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
-                                                  nsHTMLAtoms::label,
-                                                  aValue, PR_TRUE);
+  result = nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::label,
+                                         aValue, PR_TRUE);
   // XXX Why does this only happen to the combobox?  and what about
   // when the text gets set and label is blank?
   if (NS_SUCCEEDED(result)) {
@@ -495,8 +492,7 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                             nsChangeHint& aHint) const
 {
   nsresult rv =
-    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
-                                                          aModType, aHint);
+    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
 
   if (aAttribute == nsHTMLAtoms::label ||
       aAttribute == nsHTMLAtoms::text) {
@@ -599,9 +595,8 @@ nsresult
 nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify, PRBool aDeepSetDocument)
 {
-  nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex,
-                                                             aNotify,
-                                                             aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
+                                                    aDeepSetDocument);
   NotifyTextChanged();
   return rv;
 }
@@ -610,9 +605,8 @@ nsresult
 nsHTMLOptionElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                PRBool aNotify, PRBool aDeepSetDocument)
 {
-  nsresult rv = nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex,
-                                                              aNotify,
-                                                              aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::ReplaceChildAt(aKid, aIndex, aNotify,
+                                                     aDeepSetDocument);
   NotifyTextChanged();
   return rv;
 }
@@ -620,9 +614,8 @@ nsHTMLOptionElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
 nsresult
 nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDocument)
 {
-  nsresult rv = nsGenericHTMLContainerElement::AppendChildTo(aKid,
-                                                             aNotify,
-                                                             aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify,
+                                                    aDeepSetDocument);
   NotifyTextChanged();
   return rv;
 }
@@ -630,8 +623,7 @@ nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDee
 nsresult
 nsHTMLOptionElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex,
-                                                             aNotify);
+  nsresult rv = nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
   NotifyTextChanged();
   return rv;
 }
@@ -718,9 +710,9 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*,
                                                JS_GetStringChars(jsstr)));
 
-        result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
-                                                        nsHTMLAtoms::value,
-                                                        value, PR_FALSE);
+        result = nsGenericHTMLElement::SetAttr(kNameSpaceID_None,
+                                               nsHTMLAtoms::value, value,
+                                               PR_FALSE);
         if (NS_FAILED(result)) {
           return result;
         }

@@ -45,7 +45,7 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleNode.h"
 
-class nsHTMLOListElement : public nsGenericHTMLContainerElement,
+class nsHTMLOListElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLOListElement
 {
 public:
@@ -56,13 +56,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLOListElement
   NS_DECL_NSIDOMHTMLOLISTELEMENT
@@ -118,8 +118,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOListElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLOListElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOListElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOListElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOListElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOListElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -144,7 +143,7 @@ nsHTMLOListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -228,8 +227,7 @@ nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

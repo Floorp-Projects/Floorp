@@ -64,13 +64,6 @@ nsSVGElement::nsSVGElement()
 
 nsSVGElement::~nsSVGElement()
 {
-
-  PRInt32 count = mChildren.Count();
-  PRInt32 index;
-  for (index = 0; index < count; index++) {
-    mChildren[index]->SetParent(nsnull);
-  }
-
   if (mAttributes)
     NS_RELEASE(mAttributes);  
 }
@@ -138,19 +131,19 @@ nsSVGElement::CanContainChildren() const
 PRUint32
 nsSVGElement::GetChildCount() const
 {
-  return mChildren.Count();
+  return mAttrsAndChildren.ChildCount();
 }
 
 nsIContent *
 nsSVGElement::GetChildAt(PRUint32 aIndex) const
 {
-  return mChildren.SafeObjectAt(aIndex);
+  return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }
 
 PRInt32
 nsSVGElement::IndexOf(nsIContent* aPossibleChild) const
 {
-  return mChildren.IndexOf(aPossibleChild);
+  return mAttrsAndChildren.IndexOfChild(aPossibleChild);
 }
 
 nsIAtom *
@@ -379,62 +372,25 @@ nsSVGElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsSVGElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-  if (GetParent()) {
-    return CallQueryInterface(GetParent(), aParentNode);
-  }
-  if (mDocument) {
-    // we're the root content
-    return CallQueryInterface(mDocument, aParentNode);
-  }
-
-  // A standalone element (i.e. one without a parent or a document)
-  *aParentNode = nsnull;
-  return NS_OK;
+  return nsGenericElement::GetParentNode(aParentNode);
 }
 
 NS_IMETHODIMP
 nsSVGElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    if (!slots->mChildNodes) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-
-  return NS_OK;
+  return nsGenericElement::GetChildNodes(aChildNodes);
 }
 
 NS_IMETHODIMP
 nsSVGElement::GetFirstChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = mChildren.SafeObjectAt(0);
-  if (child) {
-    nsresult res = CallQueryInterface(child, aNode);
-    NS_ASSERTION(NS_SUCCEEDED(res), "Must be a DOM Node"); // must be a DOM Node
-    return res;
-  }
-
-  *aNode = nsnull;
-  return NS_OK;
+  return nsGenericElement::GetFirstChild(aNode);
 }
 
 NS_IMETHODIMP
 nsSVGElement::GetLastChild(nsIDOMNode** aNode)
 {
-  PRInt32 count = mChildren.Count();
-  if (count) {
-    nsresult res = CallQueryInterface(mChildren[count - 1], aNode);
-    NS_ASSERTION(NS_SUCCEEDED(res), "Must be a DOM Node"); // must be a DOM Node
-    return res;
-  }
-
-  *aNode = nsnull;
-  return NS_OK;
+  return nsGenericElement::GetLastChild(aNode);
 }
 
 NS_IMETHODIMP
@@ -514,7 +470,7 @@ nsSVGElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsSVGElement::HasChildNodes(PRBool* aReturn)
 {
-  if (0 != mChildren.Count()) {
+  if (0 != mAttrsAndChildren.ChildCount()) {
     *aReturn = PR_TRUE;
   }
   else {
@@ -679,13 +635,9 @@ nsSVGElement::CopyNode(nsSVGElement* dest, PRBool deep)
 
   if (deep) {
     // copy children:
-    PRInt32 count = mChildren.Count();
+    PRInt32 count = mAttrsAndChildren.ChildCount();
     for (PRInt32 i = 0; i < count; ++i) {
-      nsIContent* child = mChildren[i];
-      
-      NS_ASSERTION(child != nsnull, "null ptr");
-      if (!child)
-        return NS_ERROR_UNEXPECTED;
+      nsIContent* child = mAttrsAndChildren.ChildAt(i);
       
       nsCOMPtr<nsIDOMNode> domchild = do_QueryInterface(child);
       NS_ASSERTION(domchild != nsnull, "child is not a DOM node");

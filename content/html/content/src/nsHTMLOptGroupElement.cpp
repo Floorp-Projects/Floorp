@@ -52,7 +52,7 @@
 /**
  * The implementation of &lt;optgroup&gt;
  */
-class nsHTMLOptGroupElement : public nsGenericHTMLContainerElement,
+class nsHTMLOptGroupElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLOptGroupElement
 {
 public:
@@ -63,13 +63,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLOptGroupElement
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
@@ -139,7 +139,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLOptGroupElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptGroupElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptGroupElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptGroupElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -164,7 +164,7 @@ nsHTMLOptGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -207,9 +207,8 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  return nsGenericHTMLContainerElement::HandleDOMEvent(aPresContext, aEvent,
-                                                       aDOMEvent, aFlags,
-                                                       aEventStatus);
+  return nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                              aFlags, aEventStatus);
 }
 
 void
@@ -238,9 +237,7 @@ nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   }
 
   // Actually perform the append
-  return nsGenericHTMLContainerElement::AppendChildTo(aKid,
-                                                      aNotify,
-                                                      aDeepSetDocument);
+  return nsGenericHTMLElement::AppendChildTo(aKid, aNotify, aDeepSetDocument);
 }
 
 nsresult
@@ -253,10 +250,8 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     sel->WillAddOptions(aKid, this, aIndex);
   }
 
-  return nsGenericHTMLContainerElement::InsertChildAt(aKid,
-                                                      aIndex,
-                                                      aNotify,
-                                                      aDeepSetDocument);
+  return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
+                                             aDeepSetDocument);
 }
 
 nsresult
@@ -270,10 +265,8 @@ nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
     sel->WillAddOptions(aKid, this, aIndex);
   }
 
-  return nsGenericHTMLContainerElement::ReplaceChildAt(aKid,
-                                                       aIndex,
-                                                       aNotify,
-                                                       aDeepSetDocument);
+  return nsGenericHTMLElement::ReplaceChildAt(aKid, aIndex, aNotify,
+                                              aDeepSetDocument);
 }
 
 nsresult
@@ -285,8 +278,5 @@ nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     sel->WillRemoveOptions(this, aIndex);
   }
 
-  nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex,
-                                                             aNotify);
-
-  return rv;
+  return nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
 }

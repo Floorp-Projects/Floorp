@@ -99,20 +99,6 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif // DEBUG
   
-  // Child list modification hooks
-  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.InsertObjectAt(aKid, aIndex);
-  }
-  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.ReplaceObjectAt(aKid, aIndex);
-  }
-  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return mChildren.AppendObject(aKid);
-  }
-  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    return mChildren.RemoveObjectAt(aIndex);
-  }
-
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
   virtual nsresult SetBindingParent(nsIContent* aParent);
@@ -152,7 +138,6 @@ protected:
   nsresult CopyNode(nsSVGElement* dest, PRBool deep);
   virtual void ParentChainChanged(){}; 
   
-  nsCOMArray<nsIContent>       mChildren;
   nsSVGAttributes*             mAttributes;
   nsCOMPtr<nsISVGStyleValue>   mStyle;
 };

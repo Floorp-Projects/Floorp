@@ -47,7 +47,7 @@
 #include "nsIFormControl.h"
 
 
-class nsHTMLLegendElement : public nsGenericHTMLContainerFormElement,
+class nsHTMLLegendElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLLegendElement
 {
 public:
@@ -58,13 +58,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLLegendElement
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
@@ -129,7 +129,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLLegendElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLegendElement,
-                                    nsGenericHTMLContainerFormElement)
+                                    nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLLegendElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLLegendElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -155,7 +155,7 @@ nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -167,7 +167,7 @@ nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 
@@ -210,8 +210,8 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerFormElement::AttributeToString(aAttribute,
-                                                              aValue, aResult);
+  return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 NS_IMETHODIMP
@@ -220,8 +220,8 @@ nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                             nsChangeHint& aHint) const
 {
   nsresult rv =
-    nsGenericHTMLContainerFormElement::GetAttributeChangeHint(aAttribute,
-                                                              aModType, aHint);
+    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
+                                                     aHint);
   if (aAttribute == nsHTMLAtoms::align) {
     NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
   }

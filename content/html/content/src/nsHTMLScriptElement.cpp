@@ -307,7 +307,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
 }
 
 
-class nsHTMLScriptElement : public nsGenericHTMLContainerElement,
+class nsHTMLScriptElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLScriptElement,
                             public nsIScriptLoaderObserver,
                             public nsIScriptElement
@@ -320,13 +320,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLScriptElement
   NS_DECL_NSIDOMHTMLSCRIPTELEMENT
@@ -428,8 +428,7 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLScriptElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLScriptElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLScriptElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLScriptElement)
   NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIScriptElement)
@@ -446,9 +445,8 @@ nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
                              PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
-                                                       aPrefix, aValue,
-                                                       aNotify);
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNameSpaceID != kNameSpaceID_None) {
@@ -466,8 +464,7 @@ void
 nsHTMLScriptElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   if (aDocument) {
     MaybeProcessScript();
   }
@@ -477,9 +474,8 @@ nsresult
 nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify, PRBool aDeepSetDocument)
 {
-  nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex,
-                                                             aNotify,
-                                                             aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
+                                                    aDeepSetDocument);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }
@@ -491,8 +487,8 @@ nsresult
 nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                    PRBool aDeepSetDocument)
 {
-  nsresult rv = nsGenericHTMLContainerElement::AppendChildTo(aKid, aNotify,
-                                                             aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify,
+                                                    aDeepSetDocument);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }
@@ -519,7 +515,7 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 

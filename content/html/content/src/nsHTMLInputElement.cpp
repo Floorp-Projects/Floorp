@@ -131,7 +131,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
                                         ? ((bitfield) |=  (0x01 << (field))) \
                                         : ((bitfield) &= ~(0x01 << (field))))
 
-class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
+class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsImageLoadingContent,
                            public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
@@ -147,13 +147,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafFormElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
@@ -206,9 +206,8 @@ public:
   {
     BeforeSetAttr(aNameSpaceID, aName, &aValue, aNotify);
 
-    nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
-                                                        aPrefix, aValue,
-                                                        aNotify);
+    nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName,
+                                                    aPrefix, aValue, aNotify);
 
     AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
     return rv;
@@ -219,8 +218,7 @@ public:
   {
     BeforeSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
 
-    nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
-                                                      aAttribute,
+    nsresult rv = nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                       aNotify);
 
     AfterSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
@@ -354,7 +352,7 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = NS_STATIC_CAST(nsGenericHTMLElement *, it)->Init(aNodeInfo);
+  nsresult rv = it->Init(aNodeInfo);
 
   if (NS_FAILED(rv)) {
     delete it;
@@ -393,7 +391,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLInputElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
-                                    nsGenericHTMLLeafFormElement)
+                                    nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
@@ -421,12 +419,12 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
-  nsresult rv = NS_STATIC_CAST(nsGenericHTMLElement *, it)->Init(mNodeInfo);
+  nsresult rv = it->Init(mNodeInfo);
 
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   switch (mType) {
     case NS_FORM_INPUT_TEXT:
@@ -587,7 +585,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 NS_IMETHODIMP
 nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLLeafFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 NS_IMETHODIMP 
@@ -863,9 +861,9 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
   }
 
   // Treat value == defaultValue for other input elements.
-  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_None,
-                                               nsHTMLAtoms::value,
-                                               aValue, PR_TRUE);
+  return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
+                                           nsHTMLAtoms::value, aValue,
+                                           PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -1499,11 +1497,9 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Try script event handlers first if its not a focus/blur event
   //we dont want the doc to get these
-  rv = nsGenericHTMLLeafFormElement::HandleDOMEvent(aPresContext,
-                                                    aEvent,
-                                                    aDOMEvent,
-                                                    aFlags,
-                                                    aEventStatus);
+  rv = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
+                                                aDOMEvent, aFlags,
+                                                aEventStatus);
 
   if (!(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK) {
@@ -1743,8 +1739,8 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     WillRemoveFromRadioGroup();
   }
 
-  nsGenericHTMLLeafFormElement::SetDocument(aDocument, aDeep,
-                                            aCompileEventHandlers);
+  nsGenericHTMLFormElement::SetDocument(aDocument, aDeep,
+                                        aCompileEventHandlers);
 
   if (mType == NS_FORM_INPUT_IMAGE &&
       documentChanging && aDocument && GetParent()) {
@@ -1774,7 +1770,7 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 void
 nsHTMLInputElement::SetParent(nsIContent* aParent)
 {
-  nsGenericHTMLLeafFormElement::SetParent(aParent);
+  nsGenericHTMLFormElement::SetParent(aParent);
   if (mType == NS_FORM_INPUT_IMAGE && aParent && mDocument) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -1932,8 +1928,8 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLLeafFormElement::AttributeToString(aAttribute, aValue,
-                                                         aResult);
+  return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 static void
@@ -1944,17 +1940,17 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   aAttributes->GetAttribute(nsHTMLAtoms::type, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated &&
       value.GetIntValue() == NS_FORM_INPUT_IMAGE) {
-    nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
-    nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-    nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+    nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aData);
     // Images treat align as "float"
-    nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aData);
   } else {
     // Everything else treats align as "text-align"
-    nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElement::MapDivAlignAttributeInto(aAttributes, aData);
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -1963,8 +1959,8 @@ nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                            nsChangeHint& aHint) const
 {
   nsresult rv =
-    nsGenericHTMLLeafFormElement::GetAttributeChangeHint(aAttribute,
-                                                         aModType, aHint);
+    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
+                                                     aHint);
   if (aAttribute == nsHTMLAtoms::type) {
     NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
   } else if (aAttribute == nsHTMLAtoms::value) {

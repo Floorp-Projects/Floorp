@@ -60,7 +60,7 @@
 #include "nsUnicharUtils.h"
 
 
-class nsHTMLButtonElement : public nsGenericHTMLContainerFormElement,
+class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLButtonElement,
                             public nsIDOMNSHTMLButtonElement
 {
@@ -72,13 +72,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLButtonElement
   NS_DECL_NSIDOMHTMLBUTTONELEMENT
@@ -98,10 +98,6 @@ public:
                                nsIContent* aSubmitElement);
 
   // nsIContent overrides...
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsAString& aResult) const;
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAString& aValue, PRBool aNotify);
   virtual void SetFocus(nsIPresContext* aPresContext);
   virtual void RemoveFocus(nsIPresContext* aPresContext);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
@@ -173,48 +169,11 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLButtonElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLButtonElement,
-                                    nsGenericHTMLContainerFormElement)
+                                    nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLButtonElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLButtonElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLButtonElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
-
-
-NS_IMETHODIMP
-nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  nsAString& aResult) const
-{
-  if (aName == nsHTMLAtoms::disabled) {
-    nsresult rv = nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, aResult);
-    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-      aResult.Assign(NS_LITERAL_STRING("false"));
-    } else {
-      aResult.Assign(NS_LITERAL_STRING("true"));
-    }
-
-    return rv;
-  }
-
-  return nsGenericHTMLContainerFormElement::GetAttr(aNameSpaceID, aName,
-                                                    aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAString& aValue,
-                                  PRBool aNotify)
-{
-  nsAutoString value(aValue);
-
-  if (aName == nsHTMLAtoms::disabled &&
-      value.Equals(NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator())) {
-    return UnsetAttr(aNameSpaceID, aName, aNotify);
-  }
-
-  return nsGenericHTMLContainerFormElement::SetAttr(aNameSpaceID, aName,
-                                                    aValue, aNotify);
-}
-
 
 // nsIDOMHTMLButtonElement
 
@@ -237,7 +196,7 @@ nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -252,7 +211,7 @@ nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 NS_IMETHODIMP
@@ -329,10 +288,7 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None,
-                                                nsHTMLAtoms::disabled,
-                                                disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return;
   }
 
@@ -420,8 +376,8 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerFormElement::AttributeToString(aAttribute,
-                                                              aValue, aResult);
+  return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 nsresult
@@ -471,10 +427,9 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Try script event handlers first
   nsresult ret;
-  ret = nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext,
-                                                          aEvent, aDOMEvent,
-                                                          aFlags,
-                                                          aEventStatus);
+  ret = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
+                                                 aDOMEvent, aFlags,
+                                                 aEventStatus);
 
   // mForm is null if the event handler removed us from the document (bug 194582).
   if (bInSubmitClick && mForm) {

@@ -48,7 +48,7 @@
 // XXX missing nav attributes
 
 
-class nsHTMLParagraphElement : public nsGenericHTMLContainerElement,
+class nsHTMLParagraphElement : public nsGenericHTMLElement,
                                public nsIDOMHTMLParagraphElement
 {
 public:
@@ -59,13 +59,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLParagraphElement
   NS_DECL_NSIDOMHTMLPARAGRAPHELEMENT
@@ -122,7 +122,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLParagraphElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLParagraphElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLParagraphElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLParagraphElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -147,7 +147,7 @@ nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -185,8 +185,7 @@ nsHTMLParagraphElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

@@ -180,7 +180,7 @@ NS_IMPL_ISUPPORTS0(nsSelectState)
 /**
  * Implementation of &lt;select&gt;
  */
-class nsHTMLSelectElement : public nsGenericHTMLContainerFormElement,
+class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLSelectElement,
                             public nsIDOMNSHTMLSelectElement,
                             public nsIDOMNSXBLFormControl,
@@ -194,13 +194,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLSelectElement
   NS_DECL_NSIDOMHTMLSELECTELEMENT
@@ -431,7 +431,7 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = NS_STATIC_CAST(nsGenericHTMLElement *, it)->Init(aNodeInfo);
+  nsresult rv = it->Init(aNodeInfo);
 
   if (NS_FAILED(rv)) {
     delete it;
@@ -478,7 +478,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLSelectElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
-                                    nsGenericHTMLContainerFormElement)
+                                    nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLSelectElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSXBLFormControl)
@@ -503,12 +503,12 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
-  nsresult rv = NS_STATIC_CAST(nsGenericHTMLElement *, it)->Init(mNodeInfo);
+  nsresult rv = it->Init(mNodeInfo);
 
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -520,7 +520,7 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 
@@ -532,9 +532,8 @@ nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   WillAddOptions(aKid, this, GetChildCount());
 
   // Actually perform the append
-  return nsGenericHTMLContainerFormElement::AppendChildTo(aKid,
-                                                          aNotify,
-                                                          aDeepSetDocument);
+  return nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify,
+                                                 aDeepSetDocument);
 }
 
 nsresult
@@ -543,10 +542,8 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   WillAddOptions(aKid, this, aIndex);
 
-  return nsGenericHTMLContainerFormElement::InsertChildAt(aKid,
-                                                          aIndex,
-                                                          aNotify,
-                                                          aDeepSetDocument);
+  return nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify,
+                                                 aDeepSetDocument);
 }
 
 nsresult
@@ -556,10 +553,8 @@ nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
   WillRemoveOptions(this, aIndex);
   WillAddOptions(aKid, this, aIndex);
 
-  return nsGenericHTMLContainerFormElement::ReplaceChildAt(aKid,
-                                                           aIndex,
-                                                           aNotify,
-                                                           aDeepSetDocument);
+  return nsGenericHTMLFormElement::ReplaceChildAt(aKid, aIndex, aNotify,
+                                                  aDeepSetDocument);
 }
 
 nsresult
@@ -567,8 +562,7 @@ nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   WillRemoveOptions(this, aIndex);
 
-  return nsGenericHTMLContainerFormElement::RemoveChildAt(aIndex,
-                                                          aNotify);
+  return nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
 }
 
 
@@ -1667,9 +1661,9 @@ nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
   nsAutoString disabled;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_None,
-                                                 nsHTMLAtoms::disabled,
-                                                 disabled)) {
+      nsGenericHTMLFormElement::GetAttr(kNameSpaceID_None,
+                                        nsHTMLAtoms::disabled,
+                                        disabled)) {
     return;
   }
 
@@ -1833,8 +1827,8 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -1843,8 +1837,8 @@ nsHTMLSelectElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                             nsChangeHint& aHint) const
 {
   nsresult rv =
-    nsGenericHTMLContainerFormElement::GetAttributeChangeHint(aAttribute,
-                                                              aModType, aHint);
+    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
+                                                     aHint);
   if (aAttribute == nsHTMLAtoms::multiple ||
       aAttribute == nsHTMLAtoms::size) {
     NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
@@ -1912,10 +1906,9 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
     formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
   }
 
-  return nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext,
-                                                           aEvent, aDOMEvent,
-                                                           aFlags,
-                                                           aEventStatus);
+  return nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
+                                                  aDOMEvent, aFlags,
+                                                  aEventStatus);
 }
 
 // nsIFormControl
