@@ -54,7 +54,7 @@ else
   endif
 endif
 JNDILIB:=$(BASEDIR)/ldapsp/lib/jndi.jar
-JAVACLASSPATH:=$(CLASS_DEST)$(SEP)$(BASEDIR)/ldapsp$(SEP)$(JDKLIB)$(SEP)$(JNDILIB)$(SEP)$(CLASSPATH)
+JAVACLASSPATH:=$(CLASS_DEST)$(SEP)$(BASEDIR)/ldapsp$(SEP)$(JDK)/lib/classes.zip$(SEP)$(JNDILIB)$(SEP)$(CLASSPATH)
 
 SRCDIR=com/netscape/jndi/ldap
 DISTDIR=$(MCOM_ROOT)/dist
