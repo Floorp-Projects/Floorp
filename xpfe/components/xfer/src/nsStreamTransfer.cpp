@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-#include "nsIOutputStream.h"
 #include "nsIStreamTransfer.h"
 
 #include "nsIAppShellComponentImpl.h"
