@@ -162,7 +162,7 @@ sub show_graph {
 
   # Highlight a point, e.g. 2002:03:21:06:52:28,4087
   if($SHOWPOINT) {
-    my @xy = split(",",$SHOWPOINT);
+    my @xy = split("#",$SHOWPOINT);
 
     open POINTFILE, ">db/$TESTNAME/point.$$";
     print POINTFILE "$xy[0]\t$xy[1]\n";
