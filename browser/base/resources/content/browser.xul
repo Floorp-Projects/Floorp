@@ -75,7 +75,7 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/policy/policy.js"/>
+  <!--<script type="application/x-javascript" src="chrome://browser/content/policy/policy.js"/>-->
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
