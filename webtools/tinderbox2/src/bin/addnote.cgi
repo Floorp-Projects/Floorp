@@ -3,11 +3,11 @@
 #
 
 # addnote.cgi - the webform via which users enter notices to be 
-#		 on the tinderbox status page.
+#		 displayed on the tinderbox status page.
 
 
-# $Revision: 1.22 $ 
-# $Date: 2003/08/04 17:14:56 $ 
+# $Revision: 1.23 $ 
+# $Date: 2003/08/16 18:31:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 

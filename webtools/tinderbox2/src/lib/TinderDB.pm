@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.20 $ 
-# $Date: 2003/08/04 17:15:10 $ 
+# $Revision: 1.21 $ 
+# $Date: 2003/08/16 18:31:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -644,7 +644,7 @@ evaluated.  Each data update is stored in a file with a known name and
 a unique extension.  The tinderbox server is run periodically in
 daemon_mode and will assimilate all outstanding updates then update
 the static html files which describe the state of the build.  When
-tinderbox runs it looks for files with the known prefix than it reads
+tinderbox runs it looks for files with the known prefix then it reads
 each one in turn, loads it into a common database then deletes the
 file.  To ensure that tinderbox never encounters a partially written
 file each file is written to the disk using a a name with a different
@@ -692,7 +692,7 @@ for loading and saving databases.
 
 
 
-Each function decribed here builds an $out string.  If there are bugs
+Each function described here builds an $out string.  If there are bugs
 in the resulting HTML you can put your perl breakpoint on the return
 statement of any function and look at the completed string before it
 is returned.
@@ -776,7 +776,7 @@ implementation puts into the build table.
 
 =item B<status_table_header>
 
-return a header line appropriate for theset of columns this
+return a header line appropriate for the set of columns this
 implementation puts into the build table.
 
 

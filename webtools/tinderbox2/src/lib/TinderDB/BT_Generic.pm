@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.22 $ 
-# $Date: 2003/08/04 17:15:14 $ 
+# $Revision: 1.23 $ 
+# $Date: 2003/08/16 18:31:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -52,7 +52,7 @@ package TinderDB::BT_Generic;
 
 #   $DATABASE{$tree}{$timenow}{$status}{$bug_id} = $record;
 
-# Where $rec is an anonymous hash of name vaule pairs from the bug
+# Where $rec is an anonymous hash of name value pairs from the bug
 # tracking system.
 
 # we also store information in the metadata structure
@@ -78,7 +78,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.22 $ )[1];
+$VERSION = ( qw $Revision: 1.23 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 

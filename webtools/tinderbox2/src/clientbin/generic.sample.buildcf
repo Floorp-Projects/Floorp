@@ -5,7 +5,7 @@
 # especially if you are running builds on many different OS and platforms
 # which require different command sequences.  Each build type
 # (construct, test, lint) defines a sequence of commands which is the
-# same on all build machines.  They types each have different commands
+# same on all build machines.  The types each have different commands
 # to run but the commands are simple because all the difficult work is
 # performed inside makefiles and shell scripts.  There is one parser
 # on the tinderbox server for each type of build.  This cf file will
@@ -24,8 +24,8 @@
 # variables substituted.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2003/08/04 17:15:02 $ 
+# $Revision: 1.9 $ 
+# $Date: 2003/08/16 18:31:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -196,7 +196,7 @@ sub build_scripts {
   }
 
     # pass these variables to the Makefile.orig so that the
-    # buildid can contain this information.
+    # build id can contain this information.
 
     $ENV{'BUILD_CVS_D_TIME'} = $filename_time_str;
     $ENV{'BUILD_BRANCH'} = $branch;
@@ -397,7 +397,7 @@ sub mail_from {
 
 
 # Tell the tinderbox webserver what page to display the build
-# information.  In our case we use the same build instructions for
+# information on.  In our case we use the same build instructions for
 # several different products so this information must be passed in on
 # the command line.  We must have this information or the build can
 # not be displayed on the webserver, so it is a fatal error not to

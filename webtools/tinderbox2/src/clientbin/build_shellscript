@@ -5,7 +5,7 @@
 # This script does not need to run under taint perl.
 
 # A generic build script for tinderbox.  This script will run any
-# sequence of shell command for building or testing an application.
+# sequence of shell commands for building or testing an application.
 # Users create a configuration file which defines the steps needed to
 # build, the build environmental variables and other information which
 # tinderbox will need.
@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.15 $
-# $Date: 2003/08/04 17:15:02 $
+# $Revision: 1.16 $
+# $Date: 2003/08/16 18:31:05 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -131,7 +131,7 @@ Developers are responsible for ensuring that they keep their project
 related build scripts up to date so that the build interface does not
 change too rapidly.  Then for a given project the build should always
 be performed using the same commands and any complex build processing
-should be performed inside developer maintained scripts (shell, perl
+should be performed inside developer maintained scripts (shell, perl,
 Makefile).
 
 Different sequences of build instructions have different 'build

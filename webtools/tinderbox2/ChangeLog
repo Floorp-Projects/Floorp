@@ -70,7 +70,7 @@ this an important feature.
 Allow Tinderbox to run via suid wrappers.  This is needed for some
 times of mail delivery systems
 	
-No longer exclude 'priviledged id's from running Tinderbox. 
+No longer exclude 'privileged id's from running Tinderbox. 
 Now we require tinderbox to run as the id which the user specifies 
 is the tinderbox id.
 

@@ -61,7 +61,7 @@ display should work on many different browsers.
 popup windows should not be netscape specific.
 
 Permanent data should be stored via datadumper so that the data and
-data strucutres are easy to read and debug. Currently this is a
+data structures are easy to read and debug. Currently this is a
 performance bottle neck with a large percentage of our cpu time during
 testing being spent in Data::Dumper::Dump.  The perl module Storable
 is much faster.  I wish to not add additional module requirements at

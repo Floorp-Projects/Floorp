@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.32 $ 
-# $Date: 2003/08/04 17:14:58 $ 
+# $Revision: 1.33 $ 
+# $Date: 2003/08/16 18:31:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -117,7 +117,7 @@ Mail is expected to consist of
 	2) The build/test log as output by the tool which was run to
 	generate the build.
 
-	3) The binary which results form the build, if desired.
+	3) The binary which results from the build, if desired.
 
 Mail messages are parsed to extract the tinderbox variables and
 database update files are written for the tinderbox server to pickup
@@ -131,27 +131,27 @@ information extracted from the mail message and any new variables
 derived while parsing the log file.
 
 The build logs are converted into HTML and are split into full and
-summary form and stored on the disk.  Both logs basenames are the same
-unique id which is found by using the time this program was stared and
-its pid.  The logs are stored in separate directories and compressed.
-The server knows how to contruct URLS to the log files because that
-information is passed in the database update files.  There may be
-serveral instances of this program running so each database update
-file is written to the disk with a unique name.  No locks are held by
-this code.
+summary form and stored on the disk.  Both logs' basenames are the
+same unique id which is found by using the time this program was
+started and its pid.  The logs are stored in separate directories and
+compressed.  The server knows how to contruct URLS to the log files
+because that information is passed in the database update files.
+There may be serveral instances of this program running so each
+database update file is written to the disk with a unique name.  No
+locks are held by this code.
 
 Builds which take a long time to complete can send multiple status
-mails each one containing the log file which has been completed so far.
-All mails sent before the build is finished should have the status
-'building'.  The last mail must contain the results of the build.  The
-website will make each build log available so that everyone can see
-the log file and get a feel for how far into the compilation the build
-machine has progressed.
+mails each one containing the log file which has been completed so
+far.  All mails sent before the build is finished should have the
+status 'building'.  The last mail must contain the results of the
+build.  The website will make each build log available so that
+everyone can see the log file and get a feel for how far into the
+compilation the build machine has progressed.
 
 
 Mail Format
 
-The mail has a very simple format and is not MIME encoded and has not
+The mail has a very simple format and is not MIME encoded and has no
 attachments. 
 
 The tinderbox variables must be at the top of the mail and the last
@@ -397,7 +397,7 @@ sub set_filenames {
 
 
 # If the field is a date prefer the output of fix_time_format to what
-# is passed into the program.  We may recieve human readable strings
+# is passed into the program.  We may receive human readable strings
 # and these need to be converted to time() format.
 
 
@@ -477,7 +477,7 @@ current time on client within 10 minutes.
 need to check that this update either 
 
   1) has the same starttime as the last update of this tree/build
-  2) has a starttime greater then min time between builds.
+  2) has a starttime greater than min time between builds.
 
 =cut
   ;
@@ -542,7 +542,7 @@ sub check_required_vars {
   
   # Note at this point we could have sourced only the implementation
   # of the error parser that we need.  I think programs which use an
-  # autoload for libraraies are messy since they cause variable run
+  # autoload for libraries are messy since they cause variable run
   # time requirements.
 
   $TINDERBOX{'timenow'} = main::extract_digits($TINDERBOX{'timenow'});
@@ -843,7 +843,7 @@ sub parse_mail_body {
 
   # it is a bug in processing should this function be called before
   # the tinderbox variables are set. We intentionally leave off the \n
-  # on some of thed die's to get tracebacks of internal errors.
+  # on some of the die's to get tracebacks of internal errors.
 
   # We must use HTMLPopUp::escapeHTML to clean up any embedded HTML in the
   # mail messege to prevent attacks.  Though it may be more friendly

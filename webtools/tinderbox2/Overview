@@ -40,9 +40,9 @@ difference the two.  As an example you might need to change the
 BuildStatus - I assume that you have the following possible build
 outcomes (Build in progress, Build failed, Build succeded but tests
 failed, Build and all tests were successful) You may have additional
-outcomes to specifiy which kind of tests failed (unit test failed, not
+outcomes to specify which kind of tests failed (unit test failed, not
 enough unit test coverage, performance tests failed).  Similarly you
-may have unusual requirements for how the filesystem should be laied
+may have unusual requirements for how the filesystem should be laid
 out.  I provide a outcomes to specify which kind of tests failed (unit
 test failed, not enough unit test coverage, performance tests failed).
 Similarly you may have unusual requirements for how the filesystem

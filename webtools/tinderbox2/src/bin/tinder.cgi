@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.33 $ 
-# $Date: 2003/08/04 17:14:59 $ 
+# $Revision: 1.34 $ 
+# $Date: 2003/08/16 18:31:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -133,10 +133,11 @@ databases.  This requires the user to specify a single tree which the
 page will represent and pass in any additional arguments which the
 user wishes to be different from the defaults.
 
-New data is pushed into the system via administrative web forms and 
-specified format.  Additional data is gathed by having the program
-query the Version Control Software to find any updates which have
-happend recently.
+New data is pushed into the system via administrative web forms and
+via mail which is delivered to the helper program processmail and has
+the specified format.  Additional data is gathered by having the
+program query the Version Control Software to find any updates which
+have happended recently.
 
 Errors are logged to the logfile: $ERROR_LOG
 
