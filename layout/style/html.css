@@ -458,7 +458,10 @@ input {
   border: 2px inset rgb(204, 204, 204);
   color: black;
 	background-color: white;
+  box-sizing: border-box;
+  font-family:-moz-fixed;
 }
+
 input[type=hidden] {
   border: none;
   visibility: collapse;
@@ -974,7 +977,6 @@ select, select[size="1"] {
   padding-bottom: 0px;
   margin: 0px 0px 0px 0px;
   vertical-align: bottom;
-  background-color:rgb(204, 204, 204);  
   color:black;
   white-space:nowrap;
   text-align: left; 
