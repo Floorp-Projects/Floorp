@@ -97,8 +97,10 @@ nsBuildID.h: nsBuildID.h.in build_number
 elf-dynstr-gc: elf-dynstr-gc.c Makefile Makefile.in
 	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) $(GLIB_LIBS) $(LDFLAGS) -o $@ $<
 
+ifdef USE_ELF_DYNSTR_GC
 install:: elf-dynstr-gc
 	$(INSTALL) -m 555 elf-dynstr-gc $(DIST)/bin
+endif
 
 FORCE:
 
