@@ -29,7 +29,8 @@
 
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 2)
                              (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
-                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (:narrow . 1) (:select . 1)))
+                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (:narrow . 1) (:select . 1)
+                             (let-local-var . 2)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -299,13 +300,6 @@
                  (error "max of empty character-set"))))
 
 
-(defun integer-set-member (elt intset)
-  (intset-member? intset elt))
-
-(defun character-set-member (elt intset)
-  (intset-member? intset (char-code elt)))
-
-
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; CODE GENERATION
 
@@ -500,6 +494,26 @@
     (second expr)
     (let ((args (intern-n-vars-with-prefix "_" n-args nil)))
       (list 'lambda args (apply #'gen-apply expr args)))))
+
+
+; Generate a local variable for holding the value of expr.  Optimize the case where expr
+; is an identifier or a number.
+(defun gen-local-var (expr)
+  (if (or (symbolp expr) (numberp expr))
+    expr
+    (gensym "L")))
+
+
+; var should have been obtained from calling gen-local-var on expr.  Return
+; `(let ((,var ,expr)) ,body-code),
+; optimizing the cases that gen-local-var optimizes.
+(defmacro let-local-var (var expr body-code)
+  (let ((body (gensym "BODY")))
+    `(let ((,body ,body-code))
+       (if (eql ,var ,expr)
+         ,body
+         (list 'let (list (list ,var ,expr)) ,body)))))
+       
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -804,11 +818,13 @@
 ;;;                     annotated-stmts is a list of generated annotated statements
 ;;;   :special-form  expression code generation function ((world type-env id . form-arg-list) -> code, type, annotated-expr)
 ;;;                  if this identifier is a special form like 'tag or 'in
+;;;   :condition     boolean condition code generation function ((world type-env id . form-arg-list) -> code, annotated-expr, true-type-env, false-type-env)
+;;;                  if this identifier is a condition form like 'and or 'in
 ;;;
 ;;;   :primitive     primitive structure if this identifier is a primitive
 ;;;
 ;;;   :type-constructor  expression code generation function ((world allow-forward-references . form-arg-list) -> type) if this
-;;;                  identifier is a type constructor like '->, 'vector, 'set, 'tag, or 'union
+;;;                  identifier is a type constructor like '->, 'vector, 'range-set, 'tag, or 'union
 ;;;   :deftype       type if this identifier is a type; nil if this identifier is a forward-referenced type
 ;;;
 ;;;   <value>        value of this identifier if it is a variable of type other than ->
@@ -817,6 +833,7 @@
 ;;;   :type          type of this identifier if it is a variable
 ;;;   :type-expr     unparsed expression defining the type of this identifier if it is a variable
 ;;;   :tag           tag structure if this identifier is a tag
+;;;   :tag-hidden    a flag that, if true, indicates that this tag's name should not be visible
 ;;;   :tag=          a two-argument function that takes two values with this tag and compares them
 ;;;
 ;;;   :action        list of (grammar-info . grammar-symbol) that declare this action if this identifier is an action name
@@ -942,7 +959,8 @@
 
 ; Define a new tag.  Signal an error if the name is already used.  Return the tag.
 ; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
-(defun add-tag (world name mutable fields link)
+; If hidden is true, mark the tag as hidden so that its name cannot be used to access it.
+(defun add-tag (world name mutable fields link hidden)
   (assert-true (member link '(nil :reference :external)))
   (let ((name (scan-name world name)))
     (when (symbol-tag name)
@@ -956,6 +974,8 @@
         (setf (get name :tag=) #'eq))
       (let ((tag (make-tag name keyword mutable fields =-name link)))
         (setf (symbol-tag name) tag)
+        (when hidden
+          (setf (get name :tag-hidden) t))
         (export-symbol name)
         tag))))
 
@@ -992,9 +1012,12 @@
 
 ; Return the tag with the given un-world-interned name.  Signal an error if one wasn't found.
 (defun scan-tag (world tag-name)
-  (let ((name (world-find-symbol world tag-name)))
-    (or (symbol-tag name)
-        (error "No tag ~A defined" tag-name))))
+  (let* ((name (world-find-symbol world tag-name))
+         (tag (symbol-tag name))
+         (hidden (get name :tag-hidden)))
+    (unless tag
+      (error "No tag ~A defined" tag-name))
+    (if hidden nil tag)))
 
 
 ; Scan label to produce a label that is present in the given tag.
@@ -1037,7 +1060,8 @@
            :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
            :string    ;nil              ;(character)
            :vector    ;nil              ;(element-type)
-           :set       ;nil              ;(element-type)
+           :list-set  ;nil              ;(element-type)
+           :range-set ;nil              ;(element-type)
            :tag       ;tag              ;nil
            :denormalized-tag ;tag       ;nil
            :union))   ;nil              ;(type ... type) sorted by ascending serial numbers
@@ -1093,13 +1117,23 @@
   (car (type-parameters type)))
 
 
-(declaim (inline make-set-type))
-(defun make-set-type (world element-type)
-  (make-type world :set nil (list element-type) 'intset= nil))
+(declaim (inline make-list-set-type))
+(defun make-list-set-type (world element-type)
+  (make-type world :list-set nil (list element-type) nil nil))
+
+(declaim (inline make-range-set-type))
+(defun make-range-set-type (world element-type)
+  (make-type world :range-set nil (list element-type) intset=-name nil))
 
 (declaim (inline set-element-type))
 (defun set-element-type (type)
-  (assert-true (eq (type-kind type) :set))
+  (assert-true (member (type-kind type) '(:list-set :range-set)))
+  (car (type-parameters type)))
+
+
+(declaim (inline collection-element-type))
+(defun collection-element-type (type)
+  (assert-true (member (type-kind type) '(:vector :string :list-set :range-set)))
   (car (type-parameters type)))
 
 
@@ -1124,12 +1158,15 @@
   (make-type world :denormalized-tag tag nil 'always-true 'always-false))
 
 
-; Return three values:
-;   the one-based position of the type's field corresponding to the given label or nil if the label is not present;
-;   the type the field; 
-;   true if the field is mutable.
-(defun type-find-field (type label)
-  (tag-find-field (type-tag type) label))
+; Return true if the type is a tag type or a union of tag types all of which have a field with
+; the given label.
+(defun type-has-field (type label)
+  (flet ((test (type)
+           (and (eq (type-kind type) :tag)
+                (tag-find-field (type-tag type) label))))
+    (case (type-kind type)
+      (:tag (test type))
+      (:union (every #'test (type-parameters type))))))
 
 
 ; Equivalent types are guaranteed to be eq to each other.
@@ -1230,11 +1267,11 @@
                       (list 'union-finite64-to-rational code)
                       code)))
                  (t (type-mismatch)))))
-            (:vector
-             (unless (eq kind :vector)
+            ((:vector :list-set)
+             (unless (eq kind (type-kind supertype))
                (type-mismatch))
              (let* ((par (gensym "PAR"))
-                    (element-coercion-code (widening-coercion-code world (vector-element-type supertype) (vector-element-type type) par expr)))
+                    (element-coercion-code (widening-coercion-code world (collection-element-type supertype) (collection-element-type type) par expr)))
                (if (eq element-coercion-code par)
                  code
                  `(mapcar #'(lambda (,par) ,element-coercion-code) code))))
@@ -1301,7 +1338,8 @@
    (t (make-type world :union nil types nil nil))))
 
 
-; Return the union of type1 and type2.
+; Return the union U of type1 and type2.  Note that a value of type1 or type2 might need to be coerced to
+; be treated as a member of type U.
 (defun type-union (world type1 type2)
   (labels
     ((numeric-kind (kind)
@@ -1323,15 +1361,43 @@
               (setq types (merge-type-lists (remove-if #'numeric-type types) (list (world-rational-type world)))))
             (assert-true (type-list-sorted types))
             (reduce-union-type world types t)))
+         ((and (eq kind1 :vector) (eq kind2 :vector))
+          (make-vector-type world (type-union world (vector-element-type type1) (vector-element-type type2))))
+         ((and (eq kind1 :list-set) (eq kind2 :list-set))
+          (make-list-set-type world (type-union world (set-element-type type1) (set-element-type type2))))
          (t (error "No union of types ~A and ~A" (print-type-to-string type1) (print-type-to-string type2))))))))
 
 
-; Return the most specific common supertype of the types.
+; Return the most specific common supertype of the types.  Note that a value of one of the given types may need to be
+; coerced to be treated as a member of type U.
 (defun make-union-type (world &rest types)
   (if types
     (reduce #'(lambda (type1 type2) (type-union world type1 type2))
             types)
     (world-bottom-type world)))
+
+
+; Return the intersection I of type1 and type2.  Note that a value of type I might need to be coerced to
+; be treated as a member of type1 or type2.
+; Not all intersections have been implemented yet.
+(defun type-intersection (world type1 type2)
+  (declare (ignore world))
+  (if (type= type1 type2)
+    type1
+    (let ((kind1 (type-kind type1))
+          (kind2 (type-kind type2)))
+      (cond
+       ((eq kind1 :bottom) type1)
+       ((eq kind2 :bottom) type2)
+       (t (error "No intersection of types ~A and ~A" (print-type-to-string type1) (print-type-to-string type2)))))))
+
+
+; Return the most specific common supertype of the types.  Note that a value of the intersection type may need to be
+; coerced to be treated as a member of one of the given types.
+(defun make-intersection-type (world &rest types)
+  (assert-true types)
+  (reduce #'(lambda (type1 type2) (type-intersection world type1 type2))
+          types))
 
 
 ; Ensure that subtype is a subtype of type.  subtype must not be the bottom type.
@@ -1495,9 +1561,12 @@
       (:vector (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                  (format stream "vector ~@_")
                  (print-type (vector-element-type type) stream)))
-      (:set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
-              (format stream "set ~@_")
-              (print-type (set-element-type type) stream)))
+      (:list-set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                   (format stream "list-set ~@_")
+                   (print-type (set-element-type type) stream)))
+      (:range-set (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                    (format stream "range-set ~@_")
+                    (print-type (set-element-type type) stream)))
       (:tag (let ((tag (type-tag type)))
               (pprint-logical-block (stream nil :prefix "(" :suffix ")")
                 (format stream "tag ~@_~A" (tag-name tag)))))
@@ -1611,9 +1680,13 @@
   (make-vector-type world (scan-type world element-type allow-forward-references)))
 
 
-; (set <element-type>)
-(defun scan-set (world allow-forward-references element-type)
-  (make-set-type world (scan-type world element-type allow-forward-references)))
+; (list-set <element-type>)
+(defun scan-list-set (world allow-forward-references element-type)
+  (make-list-set-type world (scan-type world element-type allow-forward-references)))
+
+; (range-set <element-type>)
+(defun scan-range-set (world allow-forward-references element-type)
+  (make-range-set-type world (scan-type world element-type allow-forward-references)))
 
 
 ; (tag <tag> ... <tag>)
@@ -1757,6 +1830,14 @@
 ;;; COMPARISONS
 
 
+; Return (:test <type-equality-function>), simplifying to nil if the equality function is eql.
+(defun element-test (world type)
+  (let ((test (get-type-=-name world type)))
+    (if (eq test 'eql)
+      nil
+      `(:test #',test))))
+
+
 ; Return non-nil if the values are equal.  value1 and value2 must both belong to a union type.
 (defun union= (value1 value2)
   (or (eql value1 value2)
@@ -1779,6 +1860,18 @@
                                     (and (= (length a) (length b))
                                          (every #',(get-type-=-name world element-type) a b))))
            =-name)))))
+
+
+; Create an equality comparison function for elements of the given :list-set type.
+; Return the name of the function and also set it in the type.
+(defun compute-list-set-type-=-name (world type)
+  (let* ((element-type (set-element-type type))
+         (=-name (gentemp (format nil "~A_LISTSET_=" (type-name element-type)) (world-package world))))
+    (setf (type-=-name type) =-name) ;Must do this now to prevent runaway recursion.
+    (quiet-compile =-name `(lambda (a b)
+                             (and (= (length a) (length b))
+                                  (subsetp a b ,@(element-test world element-type)))))
+    =-name))
 
 
 ; Create an equality comparison function for elements of the given :tag type.
@@ -1817,6 +1910,7 @@
   (or (type-=-name type)
       (case (type-kind type)
         (:vector (compute-vector-type-=-name world type))
+        (:list-set (compute-list-set-type-=-name world type))
         (:tag (compute-tag-type-=-name world type))
         (:union
          (setf (type-=-name type) 'union=) ;Must do this now to prevent runaway recursion.
@@ -1879,7 +1973,7 @@
 ;   (expander preprocessor-state id arg1 arg2 ... argn)           if property is :preprocess
 ;   (expander world grammar-info-var arg1 arg2 ... argn)          if property is :command
 ;   (expander world type-env rest last id arg1 arg2 ... argn)     if property is :statement
-;   (expander world type-env id arg1 arg2 ... argn)               if property is :special-form
+;   (expander world type-env id arg1 arg2 ... argn)               if property is :special-form or :condition
 ;   (expander world allow-forward-references arg1 arg2 ... argn)  if property is :type-constructor
 ; expander must be a function or a function symbol.
 ;
@@ -1899,6 +1993,7 @@
   (let ((emit-property (cdr (assoc property '((:command . :depict-command)
                                               (:statement . :depict-statement)
                                               (:special-form . :depict-special-form)
+                                              (:condition)
                                               (:type-constructor . :depict-type-constructor))))))
     (assert-true (or emit-property (not depictor)))
     (assert-type symbol identifier)
@@ -1960,7 +2055,7 @@
   (unless (identifier? name)
     (error "~S should be an identifier" name))
   (let ((symbol (world-intern world name)))
-    (when (get-properties (symbol-plist symbol) '(:command :statement :special-form :primitive :type-constructor))
+    (when (get-properties (symbol-plist symbol) '(:command :statement :special-form :condition :primitive :type-constructor))
       (error "~A is reserved" symbol))
     symbol))
 
@@ -1993,7 +2088,11 @@
 (defstruct (type-env-local (:type list) (:constructor make-type-env-local (name type mode)))
   name      ;World-interned name of the local variable
   type      ;That variable's type
-  mode)     ;:const if the variable is read-only; :var if it's writable; :function if it's bound by flet; :unused if it's defined but shouldn't be used
+  mode)     ;:const if the variable is read-only;
+;           ;:var if it's writable;
+;           ;:function if it's bound by flet;
+;           ;:reserved if it's bound by reserve;
+;           ;:unused if it's defined but shouldn't be used
 
 (defstruct (type-env-action (:type list) (:constructor make-type-env-action (key local-symbol type general-grammar-symbol)))
   key                     ;(action symbol . index)
@@ -2037,7 +2136,7 @@
   (assert-true (and
                 (symbolp name)
                 (type? type)
-                (member mode '(:const :var :function :unused))))
+                (member mode '(:const :var :function :reserved :unused))))
   (unless shadow
     (let ((binding (type-env-get-local type-env name)))
       (when binding
@@ -2045,6 +2144,14 @@
                name (print-type-to-string type)
                (type-env-local-name binding) (print-type-to-string (type-env-local-type binding))))))
   (cons (make-type-env-local name type mode) type-env))
+
+
+; Define the reserved name as a :const binding.
+(defun type-env-unreserve-binding (type-env name type)
+  (let ((binding (type-env-get-local type-env name)))
+    (unless (and binding (eq (type-env-local-mode binding) :reserved))
+      (error "Local variable ~A:~A needs to be reserved first" name (print-type-to-string type)))
+    (type-env-add-binding type-env name type :const t)))
 
 
 ; Nondestructively shadow the type of the binding of name in type-env and return the new type-env.
@@ -2089,6 +2196,12 @@
   (cdr (assoc flag type-env)))
 
 
+; Ensure that sub-type-env is derived from base-type-env.
+(defun ensure-narrowed-type-env (base-type-env sub-type-env)
+  (unless (tailp base-type-env sub-type-env)
+    (error "The type environment ~S isn't narrower than ~S" sub-type-env base-type-env)))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; VALUES
 
@@ -2102,7 +2215,8 @@
 ;;;   A function (represented by a lisp function)
 ;;;   A string
 ;;;   A vector (represented by a list)
-;;;   A set (represented by an intset of its elements converted to integers)
+;;;   A list-set (represented by an unordered list of its elements)
+;;;   A range-set of integers or characters (represented by an intset of its elements converted to integers)
 ;;;   A tag (represented by either a keyword or a list (keyword [serial-num] field-value1 ... field-value n));
 ;;;     serial-num is a unique integer present only on mutable tag instances.
 
@@ -2146,19 +2260,24 @@
     (:character (characterp value))
     (:-> (functionp value))
     (:string (stringp value))
-    (:vector (let ((element-type (vector-element-type type)))
-               (labels
-                 ((test (value)
-                    (or (null value)
-                        (and (consp value)
-                             (or shallow (value-has-type (car value) element-type))
-                             (test (cdr value))))))
-                 (test value))))
-    (:set (valid-intset? value))
+    (:vector (value-list-has-type value (vector-element-type type) shallow))
+    (:list-set (value-list-has-type value (set-element-type type) shallow))
+    (:range-set (valid-intset? value))
     (:tag (value-has-tag value (type-tag type) shallow))
     (:union (some #'(lambda (subtype) (value-has-type value subtype shallow))
                   (type-parameters type)))
     (t (error "Bad typekind ~S" (type-kind type)))))
+
+
+; Return true if the value is a list of elements that appear to have the given type.  This function
+; may return false positives (return true when the value doesn't actually
+; have the given type) but never false negatives.
+; If shallow is true, only check the list structure -- don't test that the elements have the given type.
+(defun value-list-has-type (values type shallow)
+  (or (null values)
+      (and (consp values)
+           (or shallow (value-has-type (car values) type))
+           (value-list-has-type (cdr values) type shallow))))
 
 
 ; Print the value nicely on the given stream.  type is the value's type.
@@ -2178,18 +2297,29 @@
                    (print-value (pprint-pop) element-type stream)
                    (pprint-exit-if-list-exhausted)
                    (format stream " ~:_")))))
-    (:set (let ((converter (set-out-converter (set-element-type type))))
-            (pprint-logical-block (stream value :prefix "{" :suffix "}")
-              (pprint-exit-if-list-exhausted)
-              (loop
-                (let* ((values (pprint-pop))
-                       (value1 (car values))
-                       (value2 (cdr values)))
-                  (if (= value1 value2)
-                    (write (funcall converter value1) :stream stream)
-                    (write (list (funcall converter value1) (funcall converter value2)) :stream stream))))
-              (pprint-exit-if-list-exhausted)
-              (format stream " ~:_"))))
+    (:list-set
+     (let ((element-type (set-element-type type))
+           (elements (if (eq (type-kind type) :list-set)
+                       value
+                       (hash-table-keys value))))
+       (pprint-logical-block (stream elements :prefix "{" :suffix "}")
+         (pprint-exit-if-list-exhausted)
+         (loop
+           (print-value (pprint-pop) element-type stream)
+           (pprint-exit-if-list-exhausted)
+           (format stream " ~:_")))))
+    (:range-set (let ((converter (range-set-out-converter (set-element-type type))))
+                  (pprint-logical-block (stream value :prefix "{" :suffix "}")
+                    (pprint-exit-if-list-exhausted)
+                    (loop
+                      (let* ((values (pprint-pop))
+                             (value1 (car values))
+                             (value2 (cdr values)))
+                        (if (= value1 value2)
+                          (write (funcall converter value1) :stream stream)
+                          (write (list (funcall converter value1) (funcall converter value2)) :stream stream))))
+                    (pprint-exit-if-list-exhausted)
+                    (format stream " ~:_"))))
     (:tag (let ((tag (type-tag type)))
             (if (tag-keyword tag)
               (write value :stream stream)
@@ -2345,7 +2475,7 @@
                (values (list 'function (type-env-local-name symbol-binding))
                        (type-env-local-type symbol-binding)
                        (list 'expr-annotation:local symbol)))
-             (:unused (error "Unused variable ~A referenced" symbol)))
+             ((:reserved :unused) (error "Unused variable ~A referenced" symbol)))
            (let ((primitive (symbol-primitive symbol)))
              (if primitive
                (values (primitive-value-code primitive) (primitive-type primitive) (list 'expr-annotation:primitive symbol))
@@ -2431,16 +2561,30 @@
     (values value type annotated-expr)))
 
 
-; Same as scan-value except that ensure that the value is a tag type.
+; Same as scan-value except that ensure that the value is a set type.
 ; Return three values:
 ;   The expression's value (a lisp expression)
 ;   The expression's type
 ;   The annotated value-expr
-(defun scan-tag-value (world type-env value-expr)
+(defun scan-set-value (world type-env value-expr)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
-    (unless (eq (type-kind type) :tag)
-      (error "Value ~S:~A should be a tag" value-expr (print-type-to-string type)))
+    (unless (member (type-kind type) '(:list-set :range-set))
+      (error "Value ~S:~A should be a set" value-expr (print-type-to-string type)))
     (values value type annotated-expr)))
+
+
+; Same as scan-value except that ensure that the value is a vector or set type.
+; Return three values:
+;   The expression's value (a lisp expression)
+;   The expression's type kind
+;   The expression's element type
+;   The annotated value-expr
+(defun scan-collection-value (world type-env value-expr)
+  (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
+    (let ((kind (type-kind type)))
+      (unless (member kind '(:string :vector :list-set :range-set))
+        (error "Value ~S:~A should be a vector or a set" value-expr (print-type-to-string type)))
+      (values value kind (collection-element-type type) annotated-expr))))
 
 
 ; Same as scan-value except that ensure that the value is a tag type or a union of tag types.
@@ -2453,18 +2597,37 @@
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
     (flet ((bad-type ()
              (error "Value ~S:~A should be a tag or union of tags" value-expr (print-type-to-string type))))
-      (let ((kind (type-kind type))
-            (tags nil))
-        (cond
-         ((eq kind :tag)
-          (setq tags (list (type-tag type))))
-         ((eq kind :union)
-          (setq tags (mapcar #'(lambda (type2) (if (eq (type-kind type2) :tag)
-                                                 (type-tag type2)
-                                                 (bad-type)))
-                             (type-parameters type))))
-         (t (bad-type)))
+      (let ((tags nil))
+        (case (type-kind type)
+          (:tag
+            (setq tags (list (type-tag type))))
+          (:union
+           (setq tags (mapcar #'(lambda (type2) (if (eq (type-kind type2) :tag)
+                                                  (type-tag type2)
+                                                  (bad-type)))
+                              (type-parameters type))))
+          (t (bad-type)))
         (values value type tags annotated-expr)))))
+
+
+; Generate a lisp expression that will compute the boolean condition expression in condition-expr.
+; type-env is the type environment.  The expression may refer to free variables present in the type-env.
+; Return four values:
+;   The code for the condition;
+;   The annotated code for the condition;
+;   A type-env to use if the condition is true;
+;   A type-env to use if the condition is false.
+(defun scan-condition (world type-env condition-expr)
+  (when (consp condition-expr)
+    (let ((first (first condition-expr)))
+      (when (identifier? first)
+        (let* ((symbol (world-intern world first))
+               (handler (get symbol :condition)))
+          (when handler
+            (return-from scan-condition (assert-four-values (apply handler world type-env symbol (rest condition-expr)))))))))
+  (multiple-value-bind (condition-code condition-annotated-expr)
+                       (scan-typed-value world type-env condition-expr (world-boolean-type world))
+    (values condition-code condition-annotated-expr type-env type-env)))
 
 
 ; Return the code for computing value-expr, which will be assigned to the symbol.  Check that the
@@ -2647,21 +2810,21 @@
                 (orders-and-exprs (cddr orders-and-exprs)))
            (multiple-value-bind (code2 annotated-expr2) (scan-typed-value world type-env expr2 type)
              (if orders-and-exprs
-               (let ((v2 (gensym "L")))
+               (let ((v2 (gen-local-var code2)))
                  (multiple-value-bind (codes annotations) (cascade v2 orders-and-exprs)
                    (values
-                    `(let ((,v2 ,code2))
-                       (and ,(get-type-order-code world type order v1 v2) ,codes))
+                    (let-local-var v2 code2
+                      `(and ,(get-type-order-code world type order v1 v2) ,codes))
                     (list* order-name annotated-expr2 annotations))))
                (values
                 (get-type-order-code world type order v1 code2)
                 (list order-name annotated-expr2)))))))
       
       (multiple-value-bind (code1 annotated-expr1) (scan-typed-value world type-env expr1 type)
-        (let ((v1 (gensym "L")))
+        (let ((v1 (gen-local-var code1)))
           (multiple-value-bind (codes annotations) (cascade v1 orders-and-exprs)
             (values
-             `(let ((,v1 ,code1)) ,codes)
+             (let-local-var v1 code1 codes)
              (world-boolean-type world)
              (list* 'expr-annotation:special-form special-form annotated-expr1 annotations))))))))
 
@@ -2690,6 +2853,59 @@
      (gen-poly-op op identity codes)
      (world-boolean-type world)
      (list* 'expr-annotation:special-form special-form op annotated-exprs))))
+
+
+; (not <expr>)
+(defun scan-not-condition (world type-env special-form expr)
+  (multiple-value-bind (expr-code expr-annotated-expr expr-true-type-env expr-false-type-env)
+                       (scan-condition world type-env expr)
+    (values
+     (list 'not expr-code)
+     (list 'expr-annotation:call (list 'expr-annotation:primitive special-form) expr-annotated-expr)
+     expr-false-type-env
+     expr-true-type-env)))
+
+
+; (and <expr> ... <expr>)
+; Short-circuiting logical AND.
+(defun scan-and-condition (world type-env special-form expr &rest exprs)
+  (multiple-value-bind (code1 annotated-expr1 true-type-env false-type-env)
+                       (scan-condition world type-env expr)
+    (let ((codes (list code1))
+          (annotated-exprs (list annotated-expr1)))
+      (dolist (expr2 exprs)
+        (multiple-value-bind (code2 annotated-expr2 true-type-env2 false-type-env2)
+                             (scan-condition world true-type-env expr2)
+          (push code2 codes)
+          (push annotated-expr2 annotated-exprs)
+          (setq true-type-env true-type-env2)
+          (ensure-narrowed-type-env false-type-env false-type-env2)))
+      (values
+       (gen-poly-op 'and t (nreverse codes))
+       (list* 'expr-annotation:special-form special-form 'and (nreverse annotated-exprs))
+       true-type-env
+       false-type-env))))
+
+
+; (or <expr> ... <expr>)
+; Short-circuiting logical OR.
+(defun scan-or-condition (world type-env special-form expr &rest exprs)
+  (multiple-value-bind (code1 annotated-expr1 true-type-env false-type-env)
+                       (scan-condition world type-env expr)
+    (let ((codes (list code1))
+          (annotated-exprs (list annotated-expr1)))
+      (dolist (expr2 exprs)
+        (multiple-value-bind (code2 annotated-expr2 true-type-env2 false-type-env2)
+                             (scan-condition world false-type-env expr2)
+          (push code2 codes)
+          (push annotated-expr2 annotated-exprs)
+          (setq false-type-env false-type-env2)
+          (ensure-narrowed-type-env true-type-env true-type-env2)))
+      (values
+       (gen-poly-op 'or nil (nreverse codes))
+       (list* 'expr-annotation:special-form special-form 'or (nreverse annotated-exprs))
+       true-type-env
+       false-type-env))))
 
 
 ; (begin . <statements>)
@@ -2766,10 +2982,10 @@
 
 ; (if <condition-expr> <true-expr> <false-expr>)
 (defun scan-if-expr (world type-env special-form condition-expr true-expr false-expr)
-  (multiple-value-bind (condition-code condition-annotated-expr)
-                       (scan-typed-value world type-env condition-expr (world-boolean-type world))
-    (multiple-value-bind (true-code true-type true-annotated-expr) (scan-value world type-env true-expr)
-      (multiple-value-bind (false-code false-type false-annotated-expr) (scan-value world type-env false-expr)
+  (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                       (scan-condition world type-env condition-expr)
+    (multiple-value-bind (true-code true-type true-annotated-expr) (scan-value world true-type-env true-expr)
+      (multiple-value-bind (false-code false-type false-annotated-expr) (scan-value world false-type-env false-expr)
         (handler-bind (((or error warning)
                         #'(lambda (condition)
                             (declare (ignore condition))
@@ -2778,7 +2994,9 @@
                                     false-expr (print-type-to-string false-type)))))
           (let ((type (type-union world true-type false-type)))
             (values
-             (list 'if condition-code true-code false-code)
+             (list 'if condition-code
+                   (widening-coercion-code world type true-type true-code condition-expr)
+                   (widening-coercion-code world type false-type false-code condition-expr))
              type
              (list 'expr-annotation:special-form special-form condition-annotated-expr true-annotated-expr false-annotated-expr))))))))
 
@@ -2825,45 +3043,6 @@
       (make-vector-expr world special-form element-type element-codes element-annotated-exprs))))
 
 
-; (empty <vector-expr>)
-; Returns true if the vector has zero elements.
-; This is equivalent to (= (length <vector-expr>) 0) and depicts the same as the latter but
-; is implemented more efficiently.
-(defun scan-empty (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
-    (values
-     (if (eq vector-type (world-string-type world))
-       `(= (length ,vector-code) 0)
-       (list 'endp vector-code))
-     (world-boolean-type world)
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
-; (nonempty <vector-expr>)
-; Returns true if the vector does not have zero elements.
-; This is equivalent to (/= (length <vector-expr>) 0) and depicts the same as the latter but
-; is implemented more efficiently.
-(defun scan-nonempty (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
-    (values
-     (if (eq vector-type (world-string-type world))
-       `(/= (length ,vector-code) 0)
-       vector-code)
-     (world-boolean-type world)
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
-; (length <vector-expr>)
-; Returns the number of elements in the vector.
-(defun scan-length (world type-env special-form vector-expr)
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
-    (declare (ignore vector-type))
-    (values
-     (list 'length vector-code)
-     (world-integer-type world)
-     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
-
-
 ; (nth <vector-expr> <n-expr>)
 ; Returns the nth element of the vector.  Throws an error if the vector's length is less than n.
 (defun scan-nth (world type-env special-form vector-expr n-expr)
@@ -2875,9 +3054,9 @@
          `(char ,vector-code ,n-code))
         ((eql n-code 0)
          `(car (non-empty-vector ,vector-code "first")))
-        (t (let ((n (gensym "N")))
-             `(let ((,n ,n-code))
-                (car (non-empty-vector (nthcdr ,n ,vector-code) "nth"))))))
+        (t (let ((n (gen-local-var n-code)))
+             (let-local-var n n-code
+               `(car (non-empty-vector (nthcdr ,n ,vector-code) "nth"))))))
        (vector-element-type vector-type)
        (list 'expr-annotation:special-form special-form vector-annotated-expr n-annotated-expr)))))
 
@@ -2947,81 +3126,76 @@
          (list 'expr-annotation:special-form special-form vector-annotated-expr n-annotated-expr value-annotated-expr))))))
 
 
-; (map <vector-expr> <var> <value-expr> [<condition-expr>])
-(defun scan-map (world type-env special-form vector-expr var-source value-expr &optional (condition-expr 'true))
-  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
-    (let* ((var (scan-name world var-source))
-           (element-type (vector-element-type vector-type))
-           (local-type-env (type-env-add-binding type-env var element-type :const)))
-      (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env value-expr)
-        (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
-          (let* ((result-type (make-vector-type world value-type))
-                 (source-is-string (eq element-type (world-character-type world)))
-                 (destination-is-string (eq value-type (world-character-type world)))
-                 (destination-sequence-type (if destination-is-string 'string 'list))
-                 (result-annotated-expr (list 'expr-annotation:special-form special-form vector-annotated-expr var value-annotated-expr condition-annotated-expr)))
-            (cond
-             ((eq condition-code 't)
-              (values
-               (if (or source-is-string destination-is-string)
-                 `(map ',destination-sequence-type #'(lambda (,var) ,value-code) ,vector-code)
-                 `(mapcar #'(lambda (,var) ,value-code) ,vector-code))
-               result-type
-               (nbutlast result-annotated-expr)))
-             ((eq value-expr var-source)
-              (assert-true (eq value-type element-type))
-              (values
-               `(remove-if-not #'(lambda (,var) ,condition-code) ,vector-code)
-               result-type
-               result-annotated-expr))
-             (t 
-              (values
-               (if (or source-is-string destination-is-string)
-                 `(filter-map ',destination-sequence-type #'(lambda (,var) ,condition-code) #'(lambda (,var) ,value-code) ,vector-code)
-                 `(filter-map-list #'(lambda (,var) ,condition-code) #'(lambda (,var) ,value-code) ,vector-code))
-               result-type
-               result-annotated-expr)))))))))
-
-
 ;;; Sets
 
-; Return a function that converts values of the given element-type to integers for storage in a set.
-(defun set-in-converter (element-type)
-  (ecase (type-kind element-type)
-    (:integer #'identity)
-    (:character #'char-code)))
+(defun make-list-set-expr (world special-form element-type element-codes element-annotated-exprs)
+  (values
+   (cond
+    ((endp element-codes) nil)
+    ((endp (cdr element-codes)) (cons 'list element-codes))
+    (t `(delete-duplicates (list ,@element-codes) ,@(element-test world element-type))))
+   (make-list-set-type world element-type)
+   (list* 'expr-annotation:special-form special-form element-annotated-exprs)))
+
+; (list-set <element-expr> ... <element-expr>)
+; Makes a set of one or more elements.
+(defun scan-list-set-expr (world type-env special-form element-expr &rest element-exprs)
+  (multiple-value-bind (element-code element-type element-annotated-expr) (scan-value world type-env element-expr)
+    (multiple-value-map-bind (rest-codes rest-annotated-exprs)
+                             #'(lambda (element-expr)
+                                 (scan-typed-value world type-env element-expr element-type))
+                             (element-exprs)
+      (make-list-set-expr world special-form element-type (cons element-code rest-codes) (cons element-annotated-expr rest-annotated-exprs)))))
+
+; (list-set-of <element-type> <element-expr> ... <element-expr>)
+; Makes a set of zero or more elements of the given type.
+(defun scan-list-set-of (world type-env special-form element-type-expr &rest element-exprs)
+  (let ((element-type (scan-type world element-type-expr)))
+    (multiple-value-map-bind (element-codes element-annotated-exprs)
+                             #'(lambda (element-expr)
+                                 (scan-typed-value world type-env element-expr element-type))
+                             (element-exprs)
+      (make-list-set-expr world special-form element-type element-codes element-annotated-exprs))))
 
 
 ; expr is the source code of an expression that generates a value of the given element-type.  Return
-; the source code of an expression that generates the corresponding integer for storage in a set of
+; the source code of an expression that generates the corresponding integer for storage in a range-set of
 ; the given element-type.
-(defun set-in-converter-expr (element-type expr)
+(defun range-set-in-converter-expr (element-type expr)
   (ecase (type-kind element-type)
     (:integer expr)
     (:character (list 'char-code expr))))
 
 
-; Return a function that converts integers to values of the given element-type for retrieval from a set.
-(defun set-out-converter (element-type)
+; expr is the source code of an expression that generates an integer.  Return the source code that undoes
+; the transformation done by range-set-in-converter-expr.
+(defun range-set-out-converter-expr (element-type expr)
+  (ecase (type-kind element-type)
+    (:integer expr)
+    (:character (list 'code-char expr))))
+
+
+; Return a function that converts integers to values of the given element-type for retrieval from a range-set.
+(defun range-set-out-converter (element-type)
   (ecase (type-kind element-type)
     (:integer #'identity)
     (:character #'code-char)))
 
 
-; (set-of <element-type> <element-expr> ... <element-expr>)  ==>
-; (set-of-ranges <element-type> <element-expr> nil ... <element-expr> nil)
-(defun scan-set-of (world type-env special-form element-type-expr &rest element-exprs)
-  (apply #'scan-set-of-ranges
+; (range-set-of <element-type> <element-expr> ... <element-expr>)  ==>
+; (range-set-of-ranges <element-type> <element-expr> nil ... <element-expr> nil)
+(defun scan-range-set-of (world type-env special-form element-type-expr &rest element-exprs)
+  (apply #'scan-range-set-of-ranges
     world type-env special-form element-type-expr
     (mapcan #'(lambda (element-expr)
                 (list element-expr nil))
             element-exprs)))
 
 
-; (set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
+; (range-set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
 ; Makes a set of zero or more elements or element ranges.  Each <high-expr> can be null to indicate a
 ; one-element range.
-(defun scan-set-of-ranges (world type-env special-form element-type-expr &rest element-exprs)
+(defun scan-range-set-of-ranges (world type-env special-form element-type-expr &rest element-exprs)
   (let* ((element-type (scan-type world element-type-expr))
          (high t))
     (multiple-value-map-bind (element-codes element-annotated-exprs)
@@ -3031,47 +3205,289 @@
                                    (values nil nil)
                                    (multiple-value-bind (element-code element-annotated-expr)
                                                         (scan-typed-value world type-env element-expr element-type)
-                                     (values (set-in-converter-expr element-type element-code)
+                                     (values (range-set-in-converter-expr element-type element-code)
                                              element-annotated-expr))))
                              (element-exprs)
       (unless high
-        (error "Odd number of set-of-ranges elements: ~S" element-exprs))
+        (error "Odd number of range-set-of-ranges elements: ~S" element-exprs))
       (values
        (cons 'intset-from-ranges element-codes)
-       (make-set-type world element-type)
-       (list* 'expr-annotation:special-form special-form element-type-expr element-annotated-exprs)))))
+       (make-range-set-type world element-type)
+       (list* 'expr-annotation:special-form special-form element-annotated-exprs)))))
 
 
-;;; Tags
+; (set* <set-expr> <set-expr>)
+; Returns the intersection of the two sets, which must have the same kind.
+(defun scan-set* (world type-env special-form set1-expr set2-expr)
+  (multiple-value-bind (set1-code set-type set1-annotated-expr) (scan-set-value world type-env set1-expr)
+    (multiple-value-bind (set2-code set2-annotated-expr) (scan-typed-value world type-env set2-expr set-type)
+      (values
+       (ecase (type-kind set-type)
+         (:list-set (list* 'intersection set1-code set2-code (element-test world (set-element-type set-type))))
+         (:range-set (list 'intset-intersection set1-code set2-code)))
+       set-type
+       (list 'expr-annotation:special-form special-form set1-annotated-expr set2-annotated-expr)))))
 
-(defparameter *tag-counter* 0)
 
-; (tag <tag> <field-expr1> ... <field-exprn>)
-(defun scan-tag-expr (world type-env special-form tag-name &rest value-exprs)
-  (let* ((tag (scan-tag world tag-name))
-         (type (make-tag-type world tag))
+; (set+ <set-expr> <set-expr>)
+; Returns the union of the two sets, which must have the same kind.
+(defun scan-set+ (world type-env special-form set1-expr set2-expr)
+  (multiple-value-bind (set1-code set-type set1-annotated-expr) (scan-set-value world type-env set1-expr)
+    (multiple-value-bind (set2-code set2-annotated-expr) (scan-typed-value world type-env set2-expr set-type)
+      (values
+       (ecase (type-kind set-type)
+         (:list-set (list* 'union set1-code set2-code (element-test world (set-element-type set-type))))
+         (:range-set (list 'intset-union set1-code set2-code)))
+       set-type
+       (list 'expr-annotation:special-form special-form set1-annotated-expr set2-annotated-expr)))))
+
+
+; (set- <set-expr> <set-expr>)
+; Returns the difference of the two sets, which must have the same kind.
+(defun scan-set- (world type-env special-form set1-expr set2-expr)
+  (multiple-value-bind (set1-code set-type set1-annotated-expr) (scan-set-value world type-env set1-expr)
+    (multiple-value-bind (set2-code set2-annotated-expr) (scan-typed-value world type-env set2-expr set-type)
+      (values
+       (ecase (type-kind set-type)
+         (:list-set (list* 'set-difference set1-code set2-code (element-test world (set-element-type set-type))))
+         (:range-set (list 'intset-difference set1-code set2-code)))
+       set-type
+       (list 'expr-annotation:special-form special-form set1-annotated-expr set2-annotated-expr)))))
+
+
+; (set-in <elt-expr> <set-expr>)
+; Returns true if <elt-expr> is a member of the set <set-expr>.
+(defun scan-set-in (world type-env special-form elt-expr set-expr)
+  (multiple-value-bind (set-code set-type set-annotated-expr) (scan-set-value world type-env set-expr)
+    (let ((elt-type (set-element-type set-type)))
+      (multiple-value-bind (elt-code elt-annotated-expr) (scan-typed-value world type-env elt-expr elt-type)
+        (values
+         (ecase (type-kind set-type)
+           (:list-set (list* 'member elt-code set-code (element-test world elt-type)))
+           (:range-set (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code)))
+         (world-boolean-type world)
+         (list 'expr-annotation:special-form special-form :member-10 elt-annotated-expr set-annotated-expr))))))
+
+
+; (set-not-in <elt-expr> <set-expr>)
+; Returns true if <elt-expr> is not a member of the set <set-expr>.
+(defun scan-set-not-in (world type-env special-form elt-expr set-expr)
+  (multiple-value-bind (set-code set-type set-annotated-expr) (scan-set-value world type-env set-expr)
+    (let ((elt-type (set-element-type set-type)))
+      (multiple-value-bind (elt-code elt-annotated-expr) (scan-typed-value world type-env elt-expr elt-type)
+        (values
+         (ecase (type-kind set-type)
+           (:list-set (list 'not (list* 'member elt-code set-code (element-test world elt-type))))
+           (:range-set (list 'not (list 'intset-member? (range-set-in-converter-expr elt-type elt-code) set-code))))
+         (world-boolean-type world)
+         (list 'expr-annotation:special-form special-form :not-member-10 elt-annotated-expr set-annotated-expr))))))
+
+
+(defun elt-of (set)
+  (if set
+    (car set)
+    (error "elt-of called on empty set")))
+
+(defun range-set-elt-of (set)
+  (or (intset-min set)
+      (error "elt-of called on empty set")))
+
+; (elt-of <elt-expr>)
+; Returns any element of <set-expr>, which must be a nonempty set.
+(defun scan-elt-of (world type-env special-form set-expr)
+  (multiple-value-bind (set-code set-type set-annotated-expr) (scan-set-value world type-env set-expr)
+    (let ((elt-type (set-element-type set-type)))
+      (values
+       (ecase (type-kind set-type)
+         (:list-set (list 'elt-of set-code))
+         (:range-set (range-set-out-converter-expr elt-type (list 'range-set-elt-of set-code))))
+       elt-type
+       (list 'expr-annotation:special-form special-form set-annotated-expr)))))
+
+
+;;; Vectors or Sets
+
+; (empty <vector-or-set-expr>)
+; Returns true if the vector or set has zero elements.
+; This is equivalent to (= (length <vector-or-set-expr>) 0) but is implemented more efficiently.
+(defun scan-empty (world type-env special-form collection-expr)
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (declare (ignore element-type))
+    (values
+     (ecase collection-kind
+       (:string `(zerop (length ,collection-code)))
+       ((:vector :list-set) (list 'endp collection-code))
+       (:range-set (list 'intset-empty collection-code)))
+     (world-boolean-type world)
+     (list 'expr-annotation:special-form special-form collection-kind collection-annotated-expr))))
+
+
+; (nonempty <vector-or-set-expr>)
+; Returns true if the vector or set does not have zero elements.
+; This is equivalent to (/= (length <vector-or-set-expr>) 0) but is implemented more efficiently.
+(defun scan-nonempty (world type-env special-form collection-expr)
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (declare (ignore element-type))
+    (values
+     (ecase collection-kind
+       (:string `(/= (length ,collection-code) 0))
+       ((:vector :list-set) collection-code)
+       (:range-set `(not (intset-empty ,collection-code))))
+     (world-boolean-type world)
+     (list 'expr-annotation:special-form special-form collection-kind collection-annotated-expr))))
+
+
+; (length <vector-or-set-expr>)
+; Returns the number of elements in the vector or set.
+(defun scan-length (world type-env special-form collection-expr)
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (declare (ignore element-type))
+    (values
+     (ecase collection-kind
+       ((:string :vector :list-set) (list 'length collection-code))
+       (:range-set (list 'intset-length collection-code)))
+     (world-integer-type world)
+     (list 'expr-annotation:special-form special-form collection-annotated-expr))))
+
+
+; (some <vector-or-set-expr> <var> <condition-expr>)
+; Return true if there exists an element <var> of <vector-or-set-expr> on which <condition-expr> is true.
+; Not implemented on range-sets.
+(defun scan-some (world type-env special-form collection-expr var-source condition-expr)
+  (multiple-value-bind (code annotated-expr true-type-env false-type-env)
+                       (scan-some-condition world type-env special-form collection-expr var-source condition-expr)
+    (declare (ignore true-type-env false-type-env))
+    (values code (world-boolean-type world) annotated-expr)))
+
+
+; (some <vector-or-set-expr> <var> <condition-expr> [:define-true])
+; Return true if there exists an element <var> of <vector-or-set-expr> on which <condition-expr> is true.
+; If :define-true is given, set <var> to be any such element (the first if in a vector) in the true branch; <var> must have been reserved.
+; Not implemented on range-sets.
+(defun scan-some-condition (world type-env special-form collection-expr var-source condition-expr &optional define-true)
+  (unless (member define-true '(nil :define-true))
+    (error "~S must be :define-true"))
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (unless (member collection-kind '(:vector :string :list-set))
+      (error "Not implemented"))
+    (let* ((var (scan-name world var-source))
+           (local-type-env (if define-true
+                             (type-env-unreserve-binding type-env var element-type)
+                             (type-env-add-binding type-env var element-type :const))))
+      (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+        (let ((result-annotated-expr (list 'expr-annotation:special-form special-form 'some collection-annotated-expr var condition-annotated-expr))
+              (coerced-collection-code (if (eq collection-kind :string) `(coerce ,collection-code 'list) collection-code)))
+          (if define-true
+            (values
+             (let ((v (gensym "V")))
+               `(dolist (,v ,coerced-collection-code)
+                  (when (let ((,var ,v)) ,condition-code)
+                    (setq ,var ,v)
+                    (return t))))
+             result-annotated-expr
+             local-type-env
+             type-env)
+            (values
+             `(some #'(lambda (,var) ,condition-code) ,coerced-collection-code)
+             result-annotated-expr
+             type-env
+             type-env)))))))
+
+
+; (every <vector-or-set-expr> <var> <condition-expr>)
+; Return true if every element <var> in <vector-or-set-expr> satisfies <condition-expr>.
+; Not implemented on range-sets.
+(defun scan-every (world type-env special-form collection-expr var-source condition-expr)
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (unless (member collection-kind '(:vector :string :list-set))
+      (error "Not implemented"))
+    (let* ((var (scan-name world var-source))
+           (local-type-env (type-env-add-binding type-env var element-type :const)))
+      (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+        (let ((coerced-collection-code (if (eq collection-kind :string) `(coerce ,collection-code 'list) collection-code)))
+          (values
+           `(every #'(lambda (,var) ,condition-code) ,coerced-collection-code)
+           (world-boolean-type world)
+           (list 'expr-annotation:special-form special-form 'every collection-annotated-expr var condition-annotated-expr)))))))
+
+
+; (map <vector-or-set-expr> <var> <value-expr> [<condition-expr>])
+; Return a vector or set of <value-expr> applied to all elements <var> of <vector-or-set-expr> on which <condition-expr> is true.
+; The map produces a vector if given a vector or a list-set if given a list-set.
+; Not implemented on range-sets.
+(defun scan-map (world type-env special-form collection-expr var-source value-expr &optional (condition-expr 'true))
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (let* ((var (scan-name world var-source))
+           (local-type-env (type-env-add-binding type-env var element-type :const)))
+      (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env value-expr)
+        (multiple-value-bind (condition-code condition-annotated-expr) (scan-typed-value world local-type-env condition-expr (world-boolean-type world))
+          (let* ((source-is-vector (member collection-kind '(:string :vector)))
+                 (source-is-string (eq collection-kind :string))
+                 (destination-is-string (and source-is-vector (eq value-type (world-character-type world))))
+                 (result-type (ecase collection-kind
+                                ((:string :vector) (make-vector-type world value-type))
+                                (:list-set (make-list-set-type world value-type))
+                                (:range-set (error "Map not implemented on range-sets"))))
+                 (destination-sequence-type (if destination-is-string 'string 'list))
+                 (result-annotated-expr (list 'expr-annotation:special-form special-form collection-kind collection-annotated-expr var value-annotated-expr condition-annotated-expr)))
+            (cond
+             ((eq condition-code 't)
+              (values
+               (let ((mapcar-code `(mapcar #'(lambda (,var) ,value-code) ,collection-code)))
+                 (cond
+                  ((or source-is-string destination-is-string) `(map ',destination-sequence-type ,@(cdr mapcar-code)))
+                  (source-is-vector mapcar-code)
+                  (t (list* 'delete-duplicates mapcar-code (element-test world value-type)))))
+               result-type
+               (nbutlast result-annotated-expr)))
+             ((eq value-expr var-source)
+              (assert-true (eq value-type element-type))
+              (values
+               `(remove-if-not #'(lambda (,var) ,condition-code) ,collection-code)
+               result-type
+               result-annotated-expr))
+             (t 
+              (values
+               (let ((filter-map-list-code `(filter-map-list #'(lambda (,var) ,condition-code) #'(lambda (,var) ,value-code) ,collection-code)))
+                 (cond
+                  ((or source-is-string destination-is-string) `(filter-map ',destination-sequence-type ,@(cdr filter-map-list-code)))
+                  (source-is-vector filter-map-list-code)
+                  (t (list* 'delete-duplicates filter-map-list-code (element-test world value-type)))))
+               result-type
+               result-annotated-expr)))))))))
+
+
+;;; Tuples and Records
+
+(defparameter *record-counter* 0)
+
+; (new <type> <field-expr1> ... <field-exprn>)
+; Used to create both tuples and records.
+(defun scan-new (world type-env special-form type-name &rest value-exprs)
+  (let* ((type (scan-kinded-type world type-name :tag))
+         (tag (type-tag type))
          (fields (tag-fields tag)))
     (unless (= (length value-exprs) (length fields))
-      (error "Wrong number of ~A fields given in constructor: ~S" tag-name value-exprs))
+      (error "Wrong number of ~A fields given in constructor: ~S" type-name value-exprs))
+    (when (tag-keyword tag)
+      (error "Don't use new to create tag ~A; refer to the tag directly instead" type-name))
     (multiple-value-map-bind (value-codes value-annotated-exprs)
                              #'(lambda (field value-expr)
                                  (scan-typed-value world type-env value-expr (field-type field)))
                              (fields value-exprs)
       (values
-       (or (tag-keyword tag)
-           (let ((name (tag-name tag)))
-             (if (tag-mutable tag)
-               (list* 'list (list 'quote name) '(incf *tag-counter*) value-codes)
-               (list* 'list (list 'quote name) value-codes))))
+       (let ((name (tag-name tag)))
+         (if (tag-mutable tag)
+           (list* 'list (list 'quote name) '(incf *record-counter*) value-codes)
+           (list* 'list (list 'quote name) value-codes)))
        type
-       (list* 'expr-annotation:special-form special-form tag value-annotated-exprs)))))
+       (list* 'expr-annotation:special-form special-form type type-name value-annotated-exprs)))))
 
 
 ; (& <label> <record-expr>)
-; Return the tag field's value.
+; Return the tuple or record field's value.
 (defun scan-& (world type-env special-form label record-expr)
   (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
-    (declare (ignore record-type))
     (let ((position-alist nil)
           (field-types nil))
       (dolist (tag tags)
@@ -3086,41 +3502,96 @@
             (push field-type field-types))))
       (assert-true position-alist)
       (setq position-alist (sort position-alist #'< :key #'car))
-      (values
-       (if (endp (cdr position-alist))
-         (gen-nth-code (caar position-alist) record-code)
-         (let ((var (gensym "GET")))
-           `(let ((,var ,record-code))
-              (case (car ,var)
-                ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
-                          position-alist)))))
-       (apply #'make-union-type world field-types)
-       (list 'expr-annotation:special-form special-form tags label record-annotated-expr)))))
+      (let ((result-type (apply #'make-union-type world field-types)))
+        (dolist (field-type field-types)
+          (unless (eq (widening-coercion-code world result-type field-type 'test 'test) 'test)
+            (error "Type coercions in & are not implemented yet")))
+        (values
+         (if (endp (cdr position-alist))
+           (gen-nth-code (caar position-alist) record-code)
+           (let ((var (gen-local-var record-code)))
+             (let-local-var var record-code
+               `(case (car ,var)
+                  ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
+                            position-alist)))))
+         result-type
+         (list 'expr-annotation:special-form special-form record-type label record-annotated-expr))))))
+
 
 
 ;;; Unions
 
-; (in <type> <expr>)
-(defun scan-in (world type-env special-form type-expr value-expr)
+; (in <expr> <type>)
+(defun scan-in (world type-env special-form value-expr type-expr)
   (let ((type (scan-type world type-expr)))
     (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
       (type-difference world value-type type)
       (values
-       (if (symbolp value-code)
-         (type-member-test-code world type value-type value-code)
-         (let ((var (gensym "IN")))
-           `(let ((,var ,value-code))
-              ,(type-member-test-code world type value-type var))))
+       (let ((var (gen-local-var value-code)))
+         (let-local-var var value-code
+           (type-member-test-code world type value-type var)))
        (world-boolean-type world)
-       (list 'expr-annotation:special-form special-form type type-expr value-annotated-expr)))))
+       (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr)))))
 
-; (not-in <type> <expr>)
-(defun scan-not-in (world type-env special-form type-expr value-expr)
-  (multiple-value-bind (code type annotated-expr) (scan-in world type-env special-form type-expr value-expr)
+
+; (in <var> <type> <criteria>)
+; <criteria> is one of:
+;    nil            Don't constrain the type of <var>, which can also be an expression in this case only
+;    :narrow-true   Constrain the type of <var> in the true branch
+;    :narrow-false  Constrain the type of <var> in the false branch
+;    :narrow-both   Constrain the type of <var> in both branches
+(defun scan-in-condition (world type-env special-form var-expr type-expr &optional criteria)
+  (cond
+   ((null criteria)
+    (multiple-value-bind (code type annotated-expr) (scan-in world type-env special-form var-expr type-expr)
+      (declare (ignore type))
+      (values code annotated-expr type-env type-env)))
+   ((not (identifier? var-expr))
+    (error "~S must be a variable" var-expr))
+   ((not (member criteria '(:narrow-true :narrow-false :narrow-both)))
+    (error "Bad criteria ~S" criteria))
+   (t (let ((type (scan-type world type-expr)))
+        (multiple-value-bind (var var-type var-annotated-expr) (scan-value world type-env var-expr)
+          (multiple-value-bind (true-type false-type) (type-difference world var-type (scan-type world type-expr))
+            (assert-true (symbolp var))
+            (values
+             (type-member-test-code world type var-type var)
+             (list 'expr-annotation:special-form special-form var-annotated-expr type type-expr)
+             (if (member criteria '(:narrow-true :narrow-both))
+               (type-env-narrow-binding type-env var true-type)
+               type-env)
+             (if (member criteria '(:narrow-false :narrow-both))
+               (type-env-narrow-binding type-env var false-type)
+               type-env))))))))
+
+
+; (not-in <expr> <type>)
+(defun scan-not-in (world type-env special-form value-expr type-expr)
+  (multiple-value-bind (code type annotated-expr) (scan-in world type-env special-form value-expr type-expr)
     (values
      (list 'not code)
      type
      annotated-expr)))
+
+
+; (not-in <var> <type> <criteria>)
+; <criteria> is one of:
+;    nil            Don't constrain the type of <var>, which can also be an expression in this case only
+;    :narrow-true   Constrain the type of <var> in the true branch
+;    :narrow-false  Constrain the type of <var> in the false branch
+;    :narrow-both   Constrain the type of <var> in both branches
+(defun scan-not-in-condition (world type-env special-form var-expr type-expr &optional criteria)
+  (let ((reverse-criteria (assoc criteria '((nil . nil) (:narrow-true . :narrow-false) (:narrow-false . :narrow-true) (:narrow-both . :narrow-both)))))
+    (unless reverse-criteria
+      (error "Bad criteria ~S" criteria))
+    (multiple-value-bind (code annotated-expr true-type-env false-type-env)
+                         (scan-in-condition world type-env special-form var-expr type-expr (cdr reverse-criteria))
+      (values
+       (list 'not code)
+       annotated-expr
+       false-type-env
+       true-type-env))))
+
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -3277,6 +3748,21 @@
            (cons (list special-form name type-expr value-annotated-expr) rest-annotated-stmts)))))))
 
 
+; (reserve <name>)
+; Used to reserve <name> as a variable that can be later defined by a (some <name> ... :define-true) expression.
+(defun scan-reserve (world type-env rest-statements last special-form name)
+  (declare (ignore special-form))
+  (let* ((symbol (scan-name world name))
+         (local-type-env (type-env-add-binding type-env symbol (world-void-type world) :reserved)))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                         (scan-statements world local-type-env rest-statements last t)
+      (values
+       (list `(let (,symbol)
+                ,@rest-codes))
+       rest-live
+       rest-annotated-stmts))))
+
+
 ; (function (<name> (<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <result-type> . <statements>)
 (defun scan-function (world type-env rest-statements last special-form name-and-arg-binding-exprs result-type-expr &rest body-statements)
   (unless (consp name-and-arg-binding-exprs)
@@ -3315,20 +3801,44 @@
 
 ; (&= <record-expr> <value-expr>)
 ; Writes the value of the field.
-; ***** Update to handle unions just as in &.
 (defun scan-&= (world type-env rest-statements last special-form label record-expr value-expr)
-  (multiple-value-bind (record-code record-type record-annotated-expr) (scan-tag-value world type-env record-expr)
-    (let ((tag (type-tag record-type)))
-      (multiple-value-bind (position field-type mutable) (scan-label tag label)
-        (unless mutable
-          (error "Attempt to write to immutable field ~S of ~S" label (tag-name tag)))
-        (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr field-type)
+  (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
+    (let ((position-alist nil)
+          (field-types nil))
+      (dolist (tag tags)
+        (multiple-value-bind (position field-type mutable) (scan-label tag label)
+          (unless mutable
+            (error "Attempt to write to immutable field ~S of ~S" label (tag-name tag)))
+          (let ((entry (assoc position position-alist)))
+            (unless entry
+              (setq entry (cons position nil))
+              (push entry position-alist))
+            (assert-true (null (tag-keyword tag)))
+            (push (tag-name tag) (cdr entry))
+            (push field-type field-types))))
+      (assert-true position-alist)
+      (setq position-alist (sort position-alist #'< :key #'car))
+      (let ((destination-type (apply #'make-intersection-type world field-types)))
+        (dolist (field-type field-types)
+          (unless (eq (widening-coercion-code world field-type destination-type 'test 'test) 'test)
+            (error "Type coercions in &= are not implemented yet")))
+        (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr destination-type)
           (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
                                (scan-statements world type-env rest-statements last t)
             (values
-             (cons (list 'setf (gen-nth-code position record-code) value-code) rest-codes)
+             (cons
+              (if (endp (cdr position-alist))
+                (list 'setf (gen-nth-code (caar position-alist) record-code) value-code)
+                (let ((var (gen-local-var record-code))
+                      (val (gen-local-var value-code)))
+                  (let-local-var var record-code
+                    (let-local-var val value-code
+                      `(case (car ,var)
+                         ,@(mapcar #'(lambda (entry) (list (cdr entry) (list 'setf (gen-nth-code (car entry) var) val)))
+                                   position-alist))))))
+              rest-codes)
              rest-live
-             (cons (list special-form tag label record-annotated-expr value-annotated-expr) rest-annotated-stmts))))))))
+             (cons (list special-form record-type label record-annotated-expr value-annotated-expr) rest-annotated-stmts))))))))
 
 
 ; (return [<value-expr>])
@@ -3353,84 +3863,11 @@
      (list (list special-form value-annotated-expr)))))
 
 
-; condition-expr is either (in <type> <var>) or (not-in <type> <var>), a condition expression that constrains
-; the type of var in the true branch if criteria is :narrow-true or :narrow-both and in the false branch
-; if criteria is :narrow-false or :narrow-both.
-; Return two values:
-;   A type-env to use if the condition is true;
-;   A type-env to use if the condition is false.
-(defun scan-narrowing-in-or-not-in (world type-env criteria condition-expr)
-  (unless (structured-type? condition-expr '(tuple (member in not-in) t identifier))
-    (error "Bad narrowing condition ~S" condition-expr))
-  (let ((test (first condition-expr))
-        (type-expr (second condition-expr))
-        (var-expr (third condition-expr)))
-    (multiple-value-bind (var var-type var-annotated-expr) (scan-value world type-env var-expr)
-      (declare (ignore var-annotated-expr))
-      (assert-true (symbolp var))
-      (multiple-value-bind (true-type false-type) (type-difference world var-type (scan-type world type-expr))
-        (ecase test
-          (in)
-          (not-in (rotatef true-type false-type)))
-        (values (if (member criteria '(:narrow-true :narrow-both))
-                  (type-env-narrow-binding type-env var true-type)
-                  type-env)
-                (if (member criteria '(:narrow-false :narrow-both))
-                  (type-env-narrow-binding type-env var false-type)
-                  type-env))))))
-
-
-; Scan a boolean expression <condition-expr>, which can be one of the following:
-;  <expr>         Condition expression <expr>
-;  (<key> (in <type> <var>))
-;  (<key> (not-in <type> <var>))
-;  (:narrow-true (and ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
-;  (:narrow-false (or ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
-;        where key is :narrow-true, :narrow-false, or :narrow-both
-;     Condition expression that constrains the type of var in the true branch if key is :narrow-true or :narrow-both
-;     and in the false branch if key is :narrow-false or :narrow-both.
-;
-; Return four values:
-;   The code for the condition;
-;   The annotated code for the condition;
-;   A type-env to use if the condition is true;
-;   A type-env to use if the condition is false.
-(defun scan-narrowing-condition (world type-env condition-expr)
-  (if (and (consp condition-expr)
-           (member (first condition-expr) '(:narrow-true :narrow-false :narrow-both)))
-    (if (structured-type? condition-expr '(tuple t (cons (member in not-in and or) t)))
-      (let ((criteria (first condition-expr))
-            (condition-expr (second condition-expr)))
-        (multiple-value-bind (condition-code condition-annotated-expr)
-                             (scan-typed-value world type-env condition-expr (world-boolean-type world))
-          (multiple-value-bind
-            (true-type-env false-type-env)
-            (ecase (first condition-expr)
-              ((in not-in) (scan-narrowing-in-or-not-in world type-env criteria condition-expr))
-              (and (unless (eq criteria :narrow-true)
-                     (error "Only :narrow-true may be used with a conjunction"))
-                   (let ((true-type-env type-env))
-                     (dolist (subcondition-expr (cdr condition-expr))
-                       (setq true-type-env (scan-narrowing-in-or-not-in world true-type-env criteria subcondition-expr)))
-                     (values true-type-env type-env)))
-              (or (unless (eq criteria :narrow-false)
-                    (error "Only :narrow-false may be used with a disjunction"))
-                  (let ((false-type-env type-env))
-                    (dolist (subcondition-expr (cdr condition-expr))
-                      (setq false-type-env (nth-value 1 (scan-narrowing-in-or-not-in world false-type-env criteria subcondition-expr))))
-                    (values type-env false-type-env))))
-            (values condition-code condition-annotated-expr true-type-env false-type-env))))
-      (error "Bad narrowing condition ~S" condition-expr))
-    (multiple-value-bind (condition-code condition-annotated-expr)
-                         (scan-typed-value world type-env condition-expr (world-boolean-type world))
-      (values condition-code condition-annotated-expr type-env type-env))))
-
-
 ; (rwhen <condition-expr> . <true-statements>)
 ; Same as when except that checks that true-statements cannot fall through and generates more efficient code.
 (defun scan-rwhen (world type-env rest-statements last special-form condition-expr &rest true-statements)
   (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
-                       (scan-narrowing-condition world type-env condition-expr)
+                       (scan-condition world type-env condition-expr)
     (multiple-value-bind (true-codes true-live true-annotated-stmts) (scan-statements world true-type-env true-statements last t)
       (when true-live
         (error "rwhen statements ~S must not fall through" true-statements))
@@ -3467,10 +3904,10 @@
 ;  nil            Always true; used for an "else" clause
 ;  true           Same as nil
 ;  <expr>         Condition expression <expr>
-;  (<key> (in <type> <var>))
-;  (<key> (not-in <type> <var>))
-;  (:narrow-true (and ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
-;  (:narrow-false (or ([not-]in <type> <var>) ... ([not-]in <type> <var>)))
+;  (<key> (in <var> <type>))
+;  (<key> (not-in <var> <type>))
+;  (:narrow-true (and ([not-]in <var> <type>) ... ([not-]in <var> <type>)))
+;  (:narrow-false (or ([not-]in <var> <type>) ... ([not-]in <var> <type>)))
 ;        where key is :narrow-true, :narrow-false, or :narrow-both
 ;     Condition expression that constrains the type of var in the true branch if key is :narrow-true or :narrow-both
 ;     and in the false branch if key is :narrow-false or :narrow-both.
@@ -3492,7 +3929,7 @@
         (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
                              (if (member condition-expr '(nil true))
                                (values t nil local-type-env local-type-env)
-                               (scan-narrowing-condition world local-type-env condition-expr))
+                               (scan-condition world local-type-env condition-expr))
           (when (eq condition-code t)
             (if (cdr cases)
               (setq found-default-case t)
@@ -3676,21 +4113,38 @@
   (declare (ignore world grammar-info-var rest)))
 
 
-; (deftag <name> (<name1> <type1>) ... (<namen> <typen>))
+; (deftag <name>)
 ; Create the immutable tag in the world and set its contents.
 ; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
-(defun scan-deftag (world grammar-info-var name &rest fields)
+(defun scan-deftag (world grammar-info-var name)
   (declare (ignore grammar-info-var))
-  (add-tag world name nil fields :reference))
+  (add-tag world name nil nil :reference nil))
+
+
+(defun scan-deftuple-or-defrecord (world record name fields)
+  (let* ((tag (add-tag world name record fields :reference t))
+         (symbol (tag-name tag))
+         (type (make-tag-type world tag)))
+    (add-type-name world type symbol t)))
+
+
+; (deftuple <name> (<name1> <type1>) ... (<namen> <typen>))
+; Create the immutable tuple and tag in the world and set its contents.
+; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
+(defun scan-deftuple (world grammar-info-var name &rest fields)
+  (declare (ignore grammar-info-var))
+  (unless fields
+    (error "A tuple must have at least one field; use a tag instead"))
+  (scan-deftuple-or-defrecord world nil name fields))
 
 
 ; (defrecord <name> (<name1> <type1> [:const | :var]) ... (<namen> <typen> [:const | :var]))
-; Create the mutable tag in the world and set its contents.
+; Create the mutable record and tag in the world and set its contents.
 ; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
 ; Fields are immutable unless :var is specified.
 (defun scan-defrecord (world grammar-info-var name &rest fields)
   (declare (ignore grammar-info-var))
-  (add-tag world name t fields :reference))
+  (scan-deftuple-or-defrecord world t name fields))
 
 
 ; (deftype <name> <type>)
@@ -3795,7 +4249,8 @@
      (%charclass scan-% depict-%charclass)
      (%print-actions scan-% depict-%print-actions)
      (deftag scan-deftag depict-deftag)
-     (defrecord scan-defrecord depict-deftag)
+     (deftuple scan-deftuple depict-deftuple)
+     (defrecord scan-defrecord depict-deftuple)
      (deftype scan-deftype depict-deftype)
      (define scan-define depict-define)
      (defun scan-define depict-defun)    ;Occurs from desugaring a function define
@@ -3810,6 +4265,7 @@
      (exec scan-exec depict-exec)
      (const scan-var depict-var)
      (var scan-var depict-var)
+     (reserve scan-reserve nil)
      (function scan-function depict-function)
      (<- scan-<- depict-<-)
      (&= scan-&= depict-&=)
@@ -3843,36 +4299,57 @@
      (or scan-or depict-and-or-xor)
      (xor scan-xor depict-and-or-xor)
      (lambda scan-lambda depict-lambda)
-   #|(if scan-if-expr depict-if-expr)|# ;Fully functional but turned off for stylistic reasons
+     (if scan-if-expr depict-if-expr)
      
      ;;Vectors
      (vector scan-vector-expr depict-vector-expr)
      (vector-of scan-vector-of depict-vector-expr)
-     (empty scan-empty depict-empty)
-     (nonempty scan-nonempty depict-nonempty)
-     (length scan-length depict-length)
      (nth scan-nth depict-nth)
      (subseq scan-subseq depict-subseq)
      (append scan-append depict-append)
      (set-nth scan-set-nth depict-set-nth)
-     (map scan-map depict-map)
      
      ;;Sets
-     (set-of scan-set-of depict-set-of-ranges)
-     (set-of-ranges scan-set-of-ranges depict-set-of-ranges)
+     (list-set scan-list-set-expr depict-list-set-expr)
+     (list-set-of scan-list-set-of depict-list-set-expr)
+     (range-set-of scan-range-set-of depict-range-set-of-ranges)
+     (range-set-of-ranges scan-range-set-of-ranges depict-range-set-of-ranges)
+     (set* scan-set* depict-set*)
+     (set+ scan-set+ depict-set+)
+     (set- scan-set- depict-set-)
+     (set-in scan-set-in depict-set-in)
+     (set-not-in scan-set-not-in depict-set-in)
+     (elt-of scan-elt-of depict-elt-of)
      
-     ;;Tags
-     (tag scan-tag-expr depict-tag-expr)
+     ;;Vectors or Sets
+     (empty scan-empty depict-empty)
+     (nonempty scan-nonempty depict-nonempty)
+     (length scan-length depict-length)
+     (some scan-some depict-some)
+     (every scan-every depict-some)
+     (map scan-map depict-map)
+     
+     ;;Tuples and Records
+     (new scan-new depict-new)
      (& scan-& depict-&)
      
      ;;Unions
      (in scan-in depict-in)
      (not-in scan-not-in depict-not-in))
     
+    (:condition
+     (not scan-not-condition)
+     (and scan-and-condition)
+     (or scan-or-condition)
+     (some scan-some-condition)
+     (in scan-in-condition)
+     (not-in scan-not-in-condition))
+    
     (:type-constructor
      (-> scan--> depict-->)
      (vector scan-vector depict-vector)
-     (set scan-set depict-set)
+     (list-set scan-list-set depict-set)
+     (range-set scan-range-set depict-set)
      (tag scan-tag-type depict-tag-type)
      (union scan-union depict-union))))
 
@@ -3914,21 +4391,10 @@
     (code-to-character (-> (integer) character) #'code-char)
     (character-to-code (-> (character) integer) #'char-code)
     
-    (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
     (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
     (integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
-    (integer-set-intersection (-> (integer-set integer-set) integer-set) #'intset-intersection :infix :intersection-10 t %factor% %factor% %factor%)
-    (integer-set-union (-> (integer-set integer-set) integer-set) #'intset-union :infix :union-10 t %term% %term% %term%)
-    (integer-set-difference (-> (integer-set integer-set) integer-set) #'intset-difference :infix :minus t %term% %term% %factor%)
-    (integer-set-member (-> (integer integer-set) boolean) #'integer-set-member :infix :member-10 t %relational% %term% %term%)
-    
-    (character-set-length (-> (character-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
     (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
     (character-set-max (-> (character-set) character) #'character-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
-    (character-set-intersection (-> (character-set character-set) character-set) #'intset-intersection :infix :intersection-10 t %factor% %factor% %factor%)
-    (character-set-union (-> (character-set character-set) character-set) #'intset-union :infix :union-10 t %term% %term% %term%)
-    (character-set-difference (-> (character-set character-set) character-set) #'intset-difference :infix :minus t %term% %term% %factor%)
-    (character-set-member (-> (character character-set) boolean) #'character-set-member :infix :member-10 t %relational% %term% %term%)
     
     (digit-value (-> (character) integer) #'digit-char-36)
     (is-initial-identifier-character (-> (character) boolean) #'initial-identifier-character?)
@@ -3940,17 +4406,14 @@
 (def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), tag<...>, |e|, action
 (def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), a[i], a[i...j], a[i<-v], a.l
 (def-partial-order-element *primitive-level* %prefix% %primary%)                                 ;-e, new tag<...>, a^b
-(def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max
+(def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max, elt-of
 (def-partial-order-element *primitive-level* %unary% %suffix% %prefix%)                          ;
+(def-partial-order-element *primitive-level* %not% %unary%)                                      ;not
 (def-partial-order-element *primitive-level* %factor% %unary%)                                   ;/, *, intersection
 (def-partial-order-element *primitive-level* %term% %factor%)                                    ;+, -, append, union, set difference
-(def-partial-order-element *primitive-level* %relational% %term% %min-max%)                      ;<, <=, >, >=, =, /=, is, member
-(def-partial-order-element *primitive-level* %not% %relational%)                                 ;not
-(def-partial-order-element *primitive-level* %and% %not%)                                        ;and
-(def-partial-order-element *primitive-level* %or% %not%)                                         ;or
-(def-partial-order-element *primitive-level* %xor% %not%)                                        ;xor
-(def-partial-order-element *primitive-level* %logical% %and% %or% %xor%)                         ;
-(def-partial-order-element *primitive-level* %expr% %logical%)                                   ;if
+(def-partial-order-element *primitive-level* %relational% %term% %min-max% %not%)                ;<, <=, >, >=, =, /=, is, member
+(def-partial-order-element *primitive-level* %logical% %relational%)                             ;and, or, xor
+(def-partial-order-element *primitive-level* %expr% %logical%)                                   ;?:, some, every
 
 
 ; Return the tail end of the lambda list for make-primitive.  The returned list always starts with
@@ -4007,11 +4470,11 @@
     
     ;Define simple types
     (add-type-name world
-                   (setf (world-false-type world) (make-tag-type world (setf (world-false-tag world) (add-tag world 'false nil nil nil))))
+                   (setf (world-false-type world) (make-tag-type world (setf (world-false-tag world) (add-tag world 'false nil nil nil nil))))
                    (world-intern world 'false-type)
                    nil)
     (add-type-name world
-                   (setf (world-true-type world) (make-tag-type world (setf (world-true-tag world) (add-tag world 'true nil nil nil))))
+                   (setf (world-true-type world) (make-tag-type world (setf (world-true-tag world) (add-tag world 'true nil nil nil nil))))
                    (world-intern world 'true-type)
                    nil)
     (setf (world-denormalized-false-type world) (make-denormalized-tag-type world (world-false-tag world)))
@@ -4033,17 +4496,17 @@
       (let ((string-type (make-type world :string nil (list (world-character-type world)) 'string= 'string/=)))
         (add-type-name world string-type (world-intern world 'string) nil)
         (setf (world-string-type world) string-type)))
-    (add-type-name world (make-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
-    (add-type-name world (make-set-type world (world-character-type world)) (world-intern world 'character-set) nil)
+    (add-type-name world (make-range-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
+    (add-type-name world (make-range-set-type world (world-character-type world)) (world-intern world 'character-set) nil)
     
     ;Define order and floating-point types
     (let ((order-types (mapcar
                         #'(lambda (tag-name)
-                            (make-tag-type world (add-tag world tag-name nil nil nil)))
+                            (make-tag-type world (add-tag world tag-name nil nil nil nil)))
                         '(less equal greater unordered)))
           (float64-tag-types (mapcar
                               #'(lambda (tag-name)
-                                  (make-tag-type world (add-tag world tag-name nil nil nil)))
+                                  (make-tag-type world (add-tag world tag-name nil nil nil nil)))
                               '(+zero -zero +infinity -infinity nan))))
       (add-type-name world (apply #'make-union-type world order-types) (world-intern world 'order) nil)
       (add-type-name world (apply #'make-union-type world (world-finite64-type world) float64-tag-types)
@@ -4088,6 +4551,8 @@
          :statement "Special Forms:" "::" #'default-print-contents)
         (print-symbols-and-contents
          :special-form "Special Forms:" "::" #'default-print-contents)
+        (print-symbols-and-contents
+         :condition "Conditions:" "::" #'default-print-contents)
         (print-symbols-and-contents
          :primitive "Primitives:" ":"
          #'(lambda (symbol primitive stream)

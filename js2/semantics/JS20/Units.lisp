@@ -85,16 +85,15 @@
          (production (:unit-factor :sigma) (#\1 (:white-space wsopt) #\^ (:white-space wsopt) :signed-integer (:white-space :sigma)) unit-factor-one-exponent
            (value (vector-of unit-factor)))
          (production (:unit-factor :sigma) (:identifier (:white-space :sigma)) unit-factor-identifier
-           (value (vector (tag unit-factor (name :identifier) 1))))
+           (value (vector (new unit-factor (name :identifier) 1))))
          (production (:unit-factor :sigma) (:identifier (:white-space wsopt) #\^ (:white-space wsopt) :signed-integer (:white-space :sigma)) unit-factor-identifier-exponent
-           (value (vector (tag unit-factor (name :identifier) (integer-value :signed-integer))))))
+           (value (vector (new unit-factor (name :identifier) (integer-value :signed-integer))))))
        
-       (deftag unit-factor (identifier string) (exponent integer))
-       (deftype unit-factor (tag unit-factor))
+       (deftuple unit-factor (identifier string) (exponent integer))
        (deftype unit-list (vector unit-factor))
        
        (define (unit-reciprocal (value unit-list)) unit-list
-         (return (map value f (tag unit-factor (& identifier f) (neg (& exponent f))))))
+         (return (map value f (new unit-factor (& identifier f) (neg (& exponent f))))))
        
        (%print-actions)
        

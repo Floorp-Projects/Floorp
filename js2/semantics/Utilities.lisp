@@ -211,6 +211,10 @@
 (defmacro assert-three-values (expr)
   `(assert-n-values 3 ,expr))
 
+; Assert that expr returns four values.  Return those values.
+(defmacro assert-four-values (expr)
+  `(assert-n-values 4 ,expr))
+
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; STRUCTURED TYPES
@@ -563,12 +567,12 @@
 
 
 ; Return true if value is a member of the intset.
-(defun intset-member? (intset value)
+(defun intset-member? (value intset)
   (if (endp intset)
     nil
     (let ((first-range (first intset)))
       (if (> value (cdr first-range))
-        (intset-member? (rest intset) value)
+        (intset-member? value (rest intset))
         (>= value (car first-range))))))
 
 
@@ -647,6 +651,14 @@
 (declaim (inline intset=))
 (defun intset= (intset1 intset2)
   (equal intset1 intset2))
+
+(defconstant intset=-name 'equal)
+
+
+; Return true if the intset is empty.
+(declaim (inline intset-empty))
+(defun intset-empty (intset)
+  (endp intset))
 
 
 ; Return the number of elements in the intset.

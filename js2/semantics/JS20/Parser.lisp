@@ -18,11 +18,11 @@
     (deftag argument-mismatch-error)
     (deftype semantic-error (tag syntax-error reference-error type-error property-not-found-error argument-mismatch-error))
     
-    (deftag go-break (value object) (label string))
-    (deftag go-continue (value object) (label string))
-    (deftag go-return (value object))
-    (deftag go-throw (value object))
-    (deftype early-exit (tag go-break go-continue go-return go-throw))
+    (deftuple go-break (value object) (label string))
+    (deftuple go-continue (value object) (label string))
+    (deftuple go-return (value object))
+    (deftuple go-throw (value object))
+    (deftype early-exit (union go-break go-continue go-return go-throw))
     
     (deftype semantic-exception (union early-exit semantic-error))
     
@@ -39,10 +39,9 @@
     
     (%subsection :semantics "Namespaces")
     (defrecord namespace (name string))
-    (deftype namespace (tag namespace))
     (deftype namespace-opt (union null namespace))
     
-    (define public-namespace namespace (tag namespace "public"))
+    (define public-namespace namespace (new namespace "public"))
     
     
     (%subsection :semantics "Attributes")
@@ -62,8 +61,8 @@
     (deftag override)
     (deftype override-modifier (tag null may-override override))
     
-    (deftag attribute
-      (namespaces (vector namespace)) ;***** Should be a set of namespaces
+    (deftuple attribute
+      (namespaces (list-set namespace))
       (local boolean)
       (extend class-opt)
       (enumerable boolean)
@@ -72,36 +71,33 @@
       (override-mod override-modifier)
       (prototype boolean)
       (unused boolean))
-    (deftype attribute (tag attribute))
     
     
     (%subsection :semantics "Classes")
     (%text :comment "The first " (:type object) " is the this value, the " (:type (vector object)) " are the positional arguments, and the "
-           (:type (vector named-argument)) " are the named arguments.")
-    (deftype invoker (-> (object (vector object) (vector named-argument)) object))
+           (:type (list-set named-argument)) " are the named arguments.")
+    (deftype invoker (-> (object (vector object) (list-set named-argument)) object))
     
     (defrecord class
       (super class-opt)
       (prototype object)
-      (global-members (vector global-member) :var)
-      (instance-members (vector instance-member) :var)
-      (definition-namespaces (vector namespace))
+      (global-members (list-set global-member) :var)
+      (instance-members (list-set instance-member) :var)
       (class-mod class-modifier)
       (primitive boolean)
       (private-namespace namespace)
       (call invoker)
       (construct invoker))
-    (deftype class (tag class))
     (deftype class-opt (union null class))
     
     (define (make-built-in-class (superclass class-opt) (class-mod class-modifier) (primitive boolean)) class
-      (const private-namespace namespace (tag namespace "private"))
-      (function (call (this object :unused) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+      (const private-namespace namespace (new namespace "private"))
+      (function (call (this object :unused) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
         (todo))
-      (function (construct (this object :unused) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+      (function (construct (this object :unused) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
         (todo))
-      (return (tag class superclass null (vector-of global-member) (vector-of instance-member)
-                   (vector private-namespace) class-mod primitive private-namespace call construct)))
+      (return (new class superclass null (list-set-of global-member) (list-set-of instance-member)
+                   class-mod primitive private-namespace call construct)))
     
     (define object-class class (make-built-in-class null dynamic true))
     (define undefined-class class (make-built-in-class object-class fixed true))
@@ -118,7 +114,7 @@
     (%text :comment "Return an ordered list of class " (:local d) :apostrophe "s ancestors, including " (:local d) " itself.")
     (define (ancestors (c class)) (vector class)
       (const s class-opt (& super c))
-      (if (:narrow-false (in (tag null) s))
+      (if (in s (tag null) :narrow-false)
         (return (vector c))
         (return (append (ancestors s) (vector c)))))
     
@@ -127,7 +123,7 @@
       (cond
        ((= c d class) (return true))
        (nil (const s class-opt (& super d))
-            (rwhen (:narrow-false (in (tag null) s))
+            (rwhen (in s (tag null) :narrow-false)
               (return false))
             (return (is-ancestor c s)))))
     
@@ -137,10 +133,9 @@
     
     
     (%subsection :semantics "Method Closures")
-    (deftag method-closure
+    (deftuple method-closure
       (this object)
       (method method))
-    (deftype method-closure (tag method-closure))
     
     
     (%subsection :semantics "General Instances")
@@ -150,15 +145,13 @@
       (call invoker)
       (construct invoker)
       (typeof-string string)
-      (slots (vector slot) :var)
-      (dynamic-properties (vector dynamic-property) :var))
-    (deftype instance (tag instance))
+      (slots (list-set slot) :var)
+      (dynamic-properties (list-set dynamic-property) :var))
     (deftype instance-opt (union null instance))
     
     (defrecord dynamic-property 
       (name string)
       (value object))
-    (deftype dynamic-property (tag dynamic-property))
     
     
     (%subsection :semantics "Objects")
@@ -201,7 +194,7 @@
       (case o
         (:select (union undefined null) (return false))
         (:narrow boolean (return o))
-        (:narrow float64 (return (not-in (tag +zero -zero nan) o)))
+        (:narrow float64 (return (not-in o (tag +zero -zero nan))))
         (:narrow string (return (/= o "" string)))
         (:select (union namespace attribute class method-closure) (return true))
         (:select instance (todo))))
@@ -241,7 +234,7 @@
         (return (- i (expt 2 32)))))
     
     (define (to-u-int32 (x float64)) integer
-      (rwhen (:narrow-false (in (tag +infinity -infinity nan) x))
+      (rwhen (in x (tag +infinity -infinity nan) :narrow-false)
         (return 0))
       (return (mod (truncate-finite-float64 x) (expt 2 32))))
     
@@ -269,133 +262,110 @@
     
     (%subsection :semantics "Slots")
     (defrecord slot-id (type class))
-    (deftype slot-id (tag slot-id))
     
     (defrecord slot
       (id slot-id)
       (value object :var))
-    (deftype slot (tag slot))
     
     (define (find-slot (o object) (id slot-id)) slot
-      (rwhen (:narrow-false (not-in instance o))
+      (rwhen (not-in o instance :narrow-false)
         (bottom))
-      (const matching-slots (vector slot)
+      (const matching-slots (list-set slot)
         (map (& slots o) s s (= (& id s) id slot-id)))
       (assert (= (length matching-slots) 1))
-      (return (nth matching-slots 0)))
+      (return (elt-of matching-slots)))
     
     (defrecord global-slot
       (type class)
       (value object :var))
-    (deftype global-slot (tag global-slot))
     
     
     (%subsection :semantics "Signatures")
-    (deftag signature
+    (deftuple signature
       (required-positional (vector class))
       (optional-positional (vector class))
-      (required-named (vector named-parameter))
-      (optional-named (vector named-parameter))
+      (optional-named (list-set named-parameter))
       (rest class-opt)
       (rest-allows-names boolean)
       (return-type class))
-    (deftype signature (tag signature))
     
-    (deftag named-parameter
+    (deftuple named-parameter
       (name string)
       (type class))
-    (deftype named-parameter (tag named-parameter))
     
     
     (%subsection :semantics "Members")
     (defrecord method
       (type signature)
       (f instance-opt)) ;Method code (may be undefined)
-    (deftype method (tag method))
     
     (defrecord accessor
       (type class)
       (f instance)) ;Getter or setter function code
-    (deftype accessor (tag accessor))
     
     (deftype instance-category (tag abstract virtual final))
     (deftype instance-data (union slot-id method accessor))
     
     (defrecord instance-member 
       (name string)
-      (namespaces (vector namespace))
+      (namespaces (list-set namespace))
       (category instance-category)
       (readable boolean)
       (writable boolean)
       (indexable boolean)
       (enumerable boolean)
       (data (union instance-data namespace)))
-    (deftype instance-member (tag instance-member))
     
     (deftype global-category (tag static constructor))
     (deftype global-data (union global-slot method accessor))
     
     (defrecord global-member
       (name string)
-      (namespaces (vector namespace))
+      (namespaces (list-set namespace))
       (category global-category)
       (readable boolean)
       (writable boolean)
       (indexable boolean)
       (enumerable boolean)
       (data (union global-data namespace)))
-    (deftype global-member (tag global-member))
     (deftype member (union instance-member global-member))
     (deftype member-data (union instance-data global-data))
     (deftype member-data-opt (union null member-data))
     
-    (deftag qualified-name (namespace namespace) (name string))
-    (deftype qualified-name (tag qualified-name))
+    (deftuple qualified-name (namespace namespace) (name string))
     
     
     (define (most-specific-member (c class) (global boolean) (name string) (ns namespace) (indexable-only boolean)) member-data-opt
       (function (test (m member)) boolean
         (return (and (& readable m)
                      (= name (& name m) string)
-                     (namespace-in (& namespaces m) ns)
+                     (set-in ns (& namespaces m))
                      (or (not indexable-only) (& indexable m)))))
       (var ns2 namespace ns)
-      (var members (vector member) (& instance-members c))
-      (when global
-        (<- members (& global-members c)))
-      (const matches (vector member) (map members m m (test m)))
+      (const members (list-set member) (if global (& global-members c) (& instance-members c)))
+      (const matches (list-set member) (map members m m (test m)))
       (when (nonempty matches)
         (assert (= (length matches) 1))
-        (const d (union member-data namespace) (& data (nth matches 0)))
-        (rwhen (:narrow-both (not-in namespace d))
+        (const d (union member-data namespace) (& data (elt-of matches)))
+        (rwhen (not-in d namespace :narrow-both)
           (return d))
         (<- ns2 d))
       (const s class-opt (& super c))
-      (rwhen (:narrow-true (not-in (tag null) s))
+      (rwhen (not-in s (tag null) :narrow-true)
         (return (most-specific-member s global name ns2 indexable-only)))
       (return null))
     
-    (%text :comment "Temporary hack until I get sets of namespaces working")
-    (define (namespace-in (v (vector namespace)) (ns namespace)) boolean
-      (const d (vector namespace) (map v n n (= n ns namespace)))
-      (return (nonempty d)))
-    
-    (define (namespace-intersection (v (vector namespace) :unused) (w (vector namespace) :unused)) (vector namespace)
-      (todo))
-    
     (define (read-qualified-property (o object) (name string) (ns namespace) (indexable-only boolean)) object
-      (when (:narrow-true (in instance o))
-        (when (= ns public-namespace namespace)
-          (const d (vector dynamic-property) (map (& dynamic-properties o) p p (= name (& name p) string)))
-          (rwhen (nonempty d)
-            (assert (= (length d) 1))
-            (return (& value (nth d 0)))))
-        (rwhen (not-in (tag null) (& model o))
+      (when (in o instance :narrow-true)
+        (reserve p)
+        (rwhen (and (= ns public-namespace namespace)
+                    (some (& dynamic-properties o) p (= name (& name p) string) :define-true))
+          (return (& value p)))
+        (rwhen (not-in (& model o) (tag null))
           (return (read-qualified-property (& model o) name ns indexable-only))))
-      (var d member-data-opt null)
-      (if (:narrow-true (in class o))
-        (<- d (most-specific-member o true name ns indexable-only))
-        (<- d (most-specific-member (object-type o) false name ns indexable-only)))
+      (const d member-data-opt (if (in o class :narrow-true)
+                                 (most-specific-member o true name ns indexable-only)
+                                 (most-specific-member (object-type o) false name ns indexable-only)))
       (case d
         (:select (tag null)
           (rwhen (= (& class-mod (object-type o)) dynamic class-modifier)
@@ -404,44 +374,41 @@
         (:narrow global-slot (return (& value d)))
         (:narrow slot-id (return (& value (find-slot o d))))
         (:narrow method
-          (return (tag method-closure o d)))
+          (return (new method-closure o d)))
         (:narrow accessor
-          (return ((& call (& f d)) o (vector-of object) (vector-of named-argument))))))
+          (return ((& call (& f d)) o (vector-of object) (list-set-of named-argument))))))
     
-    (define (resolve-member-namespace (c class) (global boolean) (name string) (uses (vector namespace))) namespace-opt
+    (define (resolve-member-namespace (c class) (global boolean) (name string) (uses (list-set namespace))) namespace-opt
       (const s class-opt (& super c))
-      (when (:narrow-true (not-in (tag null) s))
+      (when (not-in s (tag null) :narrow-true)
         (const ns namespace-opt (resolve-member-namespace s global name uses))
-        (rwhen (:narrow-true (not-in (tag null) ns))
+        (rwhen (not-in ns (tag null) :narrow-true)
           (return ns)))
       (function (test (m member)) boolean
         (return (and (& readable m)
                      (= name (& name m) string)
-                     (nonempty (namespace-intersection uses (& namespaces m))))))
-      (var members (vector member) (& instance-members c))
-      (when global
-        (<- members (& global-members c)))
-      (const matches (vector member) (map members m m (test m)))
+                     (nonempty (set* uses (& namespaces m))))))
+      (const members (list-set member) (if global (& global-members c) (& instance-members c)))
+      (const matches (list-set member) (map members m m (test m)))
       (rwhen (nonempty matches)
         (rwhen (> (length matches) 1)
           (throw property-not-found-error))
-        (const matching-namespaces (vector namespace) (namespace-intersection uses (& namespaces (nth matches 0))))
-        (return (nth matching-namespaces 0)))
+        (const matching-namespaces (list-set namespace) (set* uses (& namespaces (elt-of matches))))
+        (return (elt-of matching-namespaces)))
       (return null))
     
-    (define (resolve-object-namespace (o object) (name string) (uses (vector namespace))) namespace
-      (when (:narrow-true (in instance o))
-        (rwhen (not-in (tag null) (& model o))
+    (define (resolve-object-namespace (o object) (name string) (uses (list-set namespace))) namespace
+      (when (in o instance :narrow-true)
+        (rwhen (not-in (& model o) (tag null))
           (return (resolve-object-namespace (& model o) name uses))))
-      (var ns namespace-opt null)
-      (if (:narrow-true (in class o))
-        (<- ns (resolve-member-namespace o true name uses))
-        (<- ns (resolve-member-namespace (object-type o) false name uses)))
-      (rwhen (:narrow-true (not-in (tag null) ns))
+      (const ns namespace-opt (if (in o class :narrow-true)
+                                (resolve-member-namespace o true name uses)
+                                (resolve-member-namespace (object-type o) false name uses)))
+      (rwhen (not-in ns (tag null) :narrow-true)
         (return ns))
       (return public-namespace))
     
-    (define (read-unqualified-property (o object) (name string) (uses (vector namespace))) object
+    (define (read-unqualified-property (o object) (name string) (uses (list-set namespace))) object
       (const ns namespace (resolve-object-namespace o name uses))
       (return (read-qualified-property o name ns false)))
     
@@ -453,18 +420,17 @@
     
     
     (%subsection :semantics "Verification Environments")
-    (deftag verify-env
+    (deftuple verify-env
       (enclosing-class class-opt)
       (labels (vector string))
       (can-return boolean)
       (constants (vector definition)))
-    (deftype verify-env (tag verify-env))
     
-    (define initial-verify-env verify-env (tag verify-env null (vector-of string) false (vector-of definition)))
+    (define initial-verify-env verify-env (new verify-env null (vector-of string) false (vector-of definition)))
     
     (%text :comment "Return a " (:type verify-env) " with label " (:local label) " prepended to " (:local s) ".")
     (define (add-label (t verify-env) (label string)) verify-env
-      (return (tag verify-env (& enclosing-class t) (append (vector label) (& labels t)) (& can-return t) (& constants t))))
+      (return (new verify-env (& enclosing-class t) (append (vector label) (& labels t)) (& can-return t) (& constants t))))
     
     (%text :comment "Return " (:tag true) " if this code is inside a class body.")
     (define (inside-class (s verify-env)) boolean
@@ -479,23 +445,21 @@
       (reader-passthroughs (vector qualified-name) :var)
       (writer-definitions (vector definition) :var)
       (writer-passthroughs (vector qualified-name) :var))
-    (deftype dynamic-env (tag dynamic-env))
     (deftype dynamic-env-opt (union null dynamic-env))
     
     (%text :comment "If the " (:type dynamic-env) " is from within a class" :apostrophe "s body, return that class; otherwise, return " (:tag null) ".")
     (define (lexical-class (e dynamic-env :unused)) class-opt
       (todo))
     
-    (define initial-dynamic-env dynamic-env (tag dynamic-env null null
+    (define initial-dynamic-env dynamic-env (new dynamic-env null null
                                                  (vector-of definition) (vector-of qualified-name)
                                                  (vector-of definition) (vector-of qualified-name)))
     
     
-    (deftag definition 
+    (deftuple definition 
       (name qualified-name)
       (type class)
       (data (union slot object accessor)))
-    (deftype definition (tag definition))
     
     
     (define (lookup-variable (e dynamic-env :unused) (name string :unused) (internal-is-namespace boolean :unused)) reference
@@ -506,23 +470,20 @@
     
     
     (%subsection :semantics "Unary Operators")
-    (deftag named-argument (name string) (value object))
-    (deftype named-argument (tag named-argument))
+    (deftuple named-argument (name string) (value object))
     
-    (deftag unary-method 
+    (deftuple unary-method 
       (operand-type class)
-      (op (-> (object object (vector object) (vector named-argument)) object)))
-    (deftype unary-method (tag unary-method))
+      (op (-> (object object (vector object) (list-set named-argument)) object)))
     
     (defrecord unary-table
-      (methods (vector unary-method) :var))
-    (deftype unary-table (tag unary-table))
+      (methods (list-set unary-method) :var))
     
     (%text :comment "Return " (:tag true) " if " (:local v) " is a member of class " (:local c) " and, if "
            (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
     (define (limited-instance-of (v object) (c class) (limit class-opt)) boolean
       (if (instance-of v c)
-        (if (:narrow-false (in (tag null) limit))
+        (if (in limit (tag null) :narrow-false)
           (return true)
           (return (is-proper-ancestor c limit)))
         (return false)))
@@ -530,103 +491,99 @@
     (%text :comment "Dispatch the unary operator described by " (:local table) " applied to the " (:character-literal "this")
            " value " (:local this) ", the first argument " (:local op)
            ", a vector of zero or more additional positional arguments " (:local positional-args)
-           ", and a vector of zero or more named arguments " (:local named-args)
+           ", and a set of zero or more named arguments " (:local named-args)
            ". If " (:local limit) " is non-" (:tag null)
            ", restrict the lookup to operators defined on the proper ancestors of " (:local limit) ".")
     (define (unary-dispatch (table unary-table) (limit class-opt) (this object) (op object) (positional-args (vector object))
-                            (named-args (vector named-argument))) object
-      (const applicable-ops (vector unary-method)
+                            (named-args (list-set named-argument))) object
+      (const applicable-ops (list-set unary-method)
         (map (& methods table) m m (limited-instance-of op (& operand-type m) limit)))
-      (const best-ops (vector unary-method)
-        (map applicable-ops m m
-             (empty (map applicable-ops m2 m2 (not (is-ancestor (& operand-type m2) (& operand-type m)))))))
-      (rwhen (empty best-ops)
-        (throw property-not-found-error))
-      (assert (= (length best-ops) 1))
-      (return ((& op (nth best-ops 0)) this op positional-args named-args)))
+      (reserve best)
+      (if (some applicable-ops best
+                (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
+        (return ((& op best) this op positional-args named-args))
+        (throw property-not-found-error)))
     
     
     (%subsection :semantics "Unary Operator Tables")
     
-    (define (plus-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+    (define (plus-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
       (return (to-number a)))
     
-    (define (minus-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+    (define (minus-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
       (return (float64-negate (to-number a))))
     
-    (define (bitwise-not-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+    (define (bitwise-not-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
       (const i integer (to-int32 (to-number a)))
       (return (real-to-float64 (bitwise-xor i -1))))
     
-    (define (increment-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+    (define (increment-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
       (const x object (unary-plus a))
       (return (binary-dispatch add-table null null x 1.0)))
     
-    (define (decrement-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
+    (define (decrement-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
       (const x object (unary-plus a))
       (return (binary-dispatch subtract-table null null x 1.0)))
     
-    (define (call-object (this object) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
+    (define (call-object (this object) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
       (case a
         (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
         (:narrow (union class instance) (return ((& call a) this positional-args named-args)))
         (:narrow method-closure (return (call-object (& this a) (& f (& method a)) positional-args named-args)))))
     
-    (define (construct-object (this object) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
+    (define (construct-object (this object) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
       (case a
         (:select (union undefined null boolean float64 string namespace attribute method-closure) (throw type-error))
         (:narrow (union class instance) (return ((& construct a) this positional-args named-args)))))
     
-    (define (bracket-read-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
-      (rwhen (or (/= (length positional-args) 1) (not (empty named-args)))
+    (define (bracket-read-object (this object :unused) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
+      (rwhen (or (/= (length positional-args) 1) (nonempty named-args))
         (throw argument-mismatch-error))
       (const name string (to-string (nth positional-args 0)))
       (return (read-qualified-property a name public-namespace true)))
     
-    (define (bracket-write-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
-      (rwhen (or (/= (length positional-args) 2) (not (empty named-args)))
+    (define (bracket-write-object (this object :unused) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
+      (rwhen (or (/= (length positional-args) 2) (nonempty named-args))
         (throw argument-mismatch-error))
       (const new-value object (nth positional-args 0))
       (const name string (to-string (nth positional-args 1)))
       (write-qualified-property a name public-namespace true new-value)
       (return new-value))
     
-    (define (bracket-delete-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
-      (rwhen (or (/= (length positional-args) 1) (not (empty named-args)))
+    (define (bracket-delete-object (this object :unused) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
+      (rwhen (or (/= (length positional-args) 1) (nonempty named-args))
         (throw argument-mismatch-error))
       (const name string (to-string (nth positional-args 0)))
       (return (delete-qualified-property a name public-namespace true)))
     
     
-    (define plus-table unary-table (tag unary-table (vector (tag unary-method object-class plus-object))))
-    (define minus-table unary-table (tag unary-table (vector (tag unary-method object-class minus-object))))
-    (define bitwise-not-table unary-table (tag unary-table (vector (tag unary-method object-class bitwise-not-object))))
-    (define increment-table unary-table (tag unary-table (vector (tag unary-method object-class increment-object))))
-    (define decrement-table unary-table (tag unary-table (vector (tag unary-method object-class decrement-object))))
-    (define call-table unary-table (tag unary-table (vector (tag unary-method object-class call-object))))
-    (define construct-table unary-table (tag unary-table (vector (tag unary-method object-class construct-object))))
-    (define bracket-read-table unary-table (tag unary-table (vector (tag unary-method object-class bracket-read-object))))
-    (define bracket-write-table unary-table (tag unary-table (vector (tag unary-method object-class bracket-write-object))))
-    (define bracket-delete-table unary-table (tag unary-table (vector (tag unary-method object-class bracket-delete-object))))
+    (define plus-table unary-table (new unary-table (list-set (new unary-method object-class plus-object))))
+    (define minus-table unary-table (new unary-table (list-set (new unary-method object-class minus-object))))
+    (define bitwise-not-table unary-table (new unary-table (list-set (new unary-method object-class bitwise-not-object))))
+    (define increment-table unary-table (new unary-table (list-set (new unary-method object-class increment-object))))
+    (define decrement-table unary-table (new unary-table (list-set (new unary-method object-class decrement-object))))
+    (define call-table unary-table (new unary-table (list-set (new unary-method object-class call-object))))
+    (define construct-table unary-table (new unary-table (list-set (new unary-method object-class construct-object))))
+    (define bracket-read-table unary-table (new unary-table (list-set (new unary-method object-class bracket-read-object))))
+    (define bracket-write-table unary-table (new unary-table (list-set (new unary-method object-class bracket-write-object))))
+    (define bracket-delete-table unary-table (new unary-table (list-set (new unary-method object-class bracket-delete-object))))
     
     
     (define (unary-plus (a object)) object
-      (return (unary-dispatch plus-table null null a (vector-of object) (vector-of named-argument))))
+      (return (unary-dispatch plus-table null null a (vector-of object) (list-set-of named-argument))))
     
     (define (unary-not (a object)) object
       (return (not (to-boolean a))))
     
     
     (%subsection :semantics "Binary Operators")
-    (deftag binary-method
+    (deftuple binary-method
       (left-type class)
       (right-type class)
       (op (-> (object object) object)))
-    (deftype binary-method (tag binary-method))
     
     (defrecord binary-table
-      (methods (vector binary-method) :var))
-    (deftype binary-table (tag binary-table))
+      (methods (list-set binary-method) :var))
     
     
     (%text :comment "Return " (:tag true) " if " (:local m1) " is at least as specific as " (:local m2) ".")
@@ -640,16 +597,14 @@
            " for the left operand. Similarly, if " (:local right-limit) " is non-" (:tag null)
            ", restrict the lookup to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
     (define (binary-dispatch (table binary-table) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
-      (const applicable-ops (vector binary-method)
+      (const applicable-ops (list-set binary-method)
         (map (& methods table) m m (and (limited-instance-of left (& left-type m) left-limit)
                                         (limited-instance-of right (& right-type m) right-limit))))
-      (const best-ops (vector binary-method)
-        (map applicable-ops m m
-             (empty (map applicable-ops m2 m2 (not (is-binary-descendant m m2))))))
-      (rwhen (empty best-ops)
-        (throw property-not-found-error))
-      (assert (= (length best-ops) 1))
-      (return ((& op (nth best-ops 0)) left right)))
+      (reserve best)
+      (if (some applicable-ops best
+                (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
+        (return ((& op best) left right))
+        (throw property-not-found-error)))
     
     
     (%subsection :semantics "Binary Operator Tables")
@@ -657,7 +612,7 @@
     (define (add-objects (a object) (b object)) object
       (const ap object (to-primitive a null))
       (const bp object (to-primitive b null))
-      (if (or (in string ap) (in string bp))
+      (if (or (in ap string) (in bp string))
         (return (append (to-string ap) (to-string bp)))
         (return (float64-add (to-number ap) (to-number bp)))))
     
@@ -677,23 +632,23 @@
     (define (less-objects (a object) (b object)) object
       (const ap object (to-primitive a null))
       (const bp object (to-primitive b null))
-      (if (:narrow-true (and (in string ap) (in string bp)))
+      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
         (return (< ap bp string))
         (return (= (float64-compare (to-number ap) (to-number bp)) less order))))
     
     (define (less-or-equal-objects (a object) (b object)) object
       (const ap object (to-primitive a null))
       (const bp object (to-primitive b null))
-      (if (:narrow-true (and (in string ap) (in string bp)))
+      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
         (return (<= ap bp string))
-        (return (in (tag less equal) (float64-compare (to-number ap) (to-number bp))))))
+        (return (in (float64-compare (to-number ap) (to-number bp)) (tag less equal)))))
     
     (define (equal-objects (a object) (b object)) object
       (case a
         (:select (union undefined null)
-          (return (in (union undefined null) b)))
+          (return (in b (union undefined null))))
         (:narrow boolean
-          (if (:narrow-true (in boolean b))
+          (if (in b boolean :narrow-true)
             (return (= a b boolean))
             (return (equal-objects (to-number a) b))))
         (:narrow float64
@@ -718,7 +673,7 @@
                 (:select (union boolean float64 string) (return (equal-objects ap b)))))))))
     
     (define (strict-equal-objects (a object) (b object)) object
-      (if (:narrow-true (and (in float64 a) (in float64 b)))
+      (if (and (in a float64 :narrow-true) (in b float64 :narrow-true))
         (return (= (float64-compare a b) equal order))
         (return (= a b object))))
     
@@ -754,21 +709,21 @@
       (return (real-to-float64 (bitwise-or i j))))
     
     
-    (define add-table binary-table (tag binary-table (vector (tag binary-method object-class object-class add-objects))))
-    (define subtract-table binary-table (tag binary-table (vector (tag binary-method object-class object-class subtract-objects))))
-    (define multiply-table binary-table (tag binary-table (vector (tag binary-method object-class object-class multiply-objects))))
-    (define divide-table binary-table (tag binary-table (vector (tag binary-method object-class object-class divide-objects))))
-    (define remainder-table binary-table (tag binary-table (vector (tag binary-method object-class object-class remainder-objects))))
-    (define less-table binary-table (tag binary-table (vector (tag binary-method object-class object-class less-objects))))
-    (define less-or-equal-table binary-table (tag binary-table (vector (tag binary-method object-class object-class less-or-equal-objects))))
-    (define equal-table binary-table (tag binary-table (vector (tag binary-method object-class object-class equal-objects))))
-    (define strict-equal-table binary-table (tag binary-table (vector (tag binary-method object-class object-class strict-equal-objects))))
-    (define shift-left-table binary-table (tag binary-table (vector (tag binary-method object-class object-class shift-left-objects))))
-    (define shift-right-table binary-table (tag binary-table (vector (tag binary-method object-class object-class shift-right-objects))))
-    (define shift-right-unsigned-table binary-table (tag binary-table (vector (tag binary-method object-class object-class shift-right-unsigned-objects))))
-    (define bitwise-and-table binary-table (tag binary-table (vector (tag binary-method object-class object-class bitwise-and-objects))))
-    (define bitwise-xor-table binary-table (tag binary-table (vector (tag binary-method object-class object-class bitwise-xor-objects))))
-    (define bitwise-or-table binary-table (tag binary-table (vector (tag binary-method object-class object-class bitwise-or-objects))))
+    (define add-table binary-table (new binary-table (list-set (new binary-method object-class object-class add-objects))))
+    (define subtract-table binary-table (new binary-table (list-set (new binary-method object-class object-class subtract-objects))))
+    (define multiply-table binary-table (new binary-table (list-set (new binary-method object-class object-class multiply-objects))))
+    (define divide-table binary-table (new binary-table (list-set (new binary-method object-class object-class divide-objects))))
+    (define remainder-table binary-table (new binary-table (list-set (new binary-method object-class object-class remainder-objects))))
+    (define less-table binary-table (new binary-table (list-set (new binary-method object-class object-class less-objects))))
+    (define less-or-equal-table binary-table (new binary-table (list-set (new binary-method object-class object-class less-or-equal-objects))))
+    (define equal-table binary-table (new binary-table (list-set (new binary-method object-class object-class equal-objects))))
+    (define strict-equal-table binary-table (new binary-table (list-set (new binary-method object-class object-class strict-equal-objects))))
+    (define shift-left-table binary-table (new binary-table (list-set (new binary-method object-class object-class shift-left-objects))))
+    (define shift-right-table binary-table (new binary-table (list-set (new binary-method object-class object-class shift-right-objects))))
+    (define shift-right-unsigned-table binary-table (new binary-table (list-set (new binary-method object-class object-class shift-right-unsigned-objects))))
+    (define bitwise-and-table binary-table (new binary-table (list-set (new binary-method object-class object-class bitwise-and-objects))))
+    (define bitwise-xor-table binary-table (new binary-table (list-set (new binary-method object-class object-class bitwise-xor-objects))))
+    (define bitwise-or-table binary-table (new binary-table (list-set (new binary-method object-class object-class bitwise-or-objects))))
     
     
     (%section "Terminal Actions")
@@ -801,7 +756,7 @@
         ((verify (s :unused)) (todo))
         ((eval e)
          (const a object (read-reference (lookup-variable e (name :identifier) true)))
-         (rwhen (:narrow-false (not-in namespace a)) (throw type-error))
+         (rwhen (not-in a namespace :narrow-false) (throw type-error))
          (return a)))
       (production :qualifier (public) qualifier-public
         ((verify (s :unused)))
@@ -812,7 +767,7 @@
            (throw syntax-error)))
         ((eval e)
          (const q class-opt (& enclosing-class e))
-         (rwhen (:narrow-false (in null q)) (bottom))
+         (rwhen (in q null :narrow-false) (bottom))
          (return (& private-namespace q)))))
     
     (rule :simple-qualified-identifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
@@ -832,7 +787,7 @@
          (todo))
         ((eval e)
          (const a object (read-reference ((eval :parenthesized-expression) e)))
-         (rwhen (:narrow-false (not-in namespace a)) (throw type-error))
+         (rwhen (not-in a namespace :narrow-false) (throw type-error))
          (return (lookup-qualified-variable e a (name :identifier))))))
     
     (rule :qualified-identifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
@@ -1093,7 +1048,7 @@
          (const r reference ((eval :postfix-expression-or-super) e))
          (const a object (read-reference r))
          (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch increment-table sa null a (vector-of object) (vector-of named-argument)))
+         (const b object (unary-dispatch increment-table sa null a (vector-of object) (list-set-of named-argument)))
          (write-reference r b)
          (return b)))
       (production :unary-expression (-- :postfix-expression-or-super) unary-expression-decrement
@@ -1102,7 +1057,7 @@
          (const r reference ((eval :postfix-expression-or-super) e))
          (const a object (read-reference r))
          (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch decrement-table sa null a (vector-of object) (vector-of named-argument)))
+         (const b object (unary-dispatch decrement-table sa null a (vector-of object) (list-set-of named-argument)))
          (write-reference r b)
          (return b)))
       (production :unary-expression (+ :unary-expression-or-super) unary-expression-plus
@@ -1110,19 +1065,19 @@
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch plus-table sa null a (vector-of object) (vector-of named-argument)))))
+         (return (unary-dispatch plus-table sa null a (vector-of object) (list-set-of named-argument)))))
       (production :unary-expression (- :unary-expression-or-super) unary-expression-minus
         (verify (verify :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch minus-table sa null a (vector-of object) (vector-of named-argument)))))
+         (return (unary-dispatch minus-table sa null a (vector-of object) (list-set-of named-argument)))))
       (production :unary-expression (~ :unary-expression-or-super) unary-expression-bitwise-not
         (verify (verify :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch bitwise-not-table sa null a (vector-of object) (vector-of named-argument)))))
+         (return (unary-dispatch bitwise-not-table sa null a (vector-of object) (list-set-of named-argument)))))
       (production :unary-expression (! :unary-expression) unary-expression-logical-not
         (verify (verify :unary-expression))
         ((eval e)
@@ -1785,10 +1740,8 @@
         ((verify s) ((verify :substatement) (add-label s (name :identifier))))
         ((eval e d)
          (catch ((return ((eval :substatement) e d)))
-           (x) (if (:narrow-true (in (tag go-break) x))
-                 (if (= (& label x) (name :identifier) string)
-                   (return (& value x))
-                   (throw x))
+           (x) (if (and (in x go-break :narrow-true) (= (& label x) (name :identifier) string))
+                 (return (& value x))
                  (throw x))))))
     (%print-actions)
     
@@ -1875,18 +1828,18 @@
     (rule :continue-statement ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
       (production :continue-statement (continue) continue-statement-unlabeled
         ((verify (s :unused)) (todo))
-        ((eval (e :unused) d) (throw (tag go-continue d ""))))
+        ((eval (e :unused) d) (throw (new go-continue d ""))))
       (production :continue-statement (continue :no-line-break :identifier) continue-statement-labeled
         ((verify (s :unused)) (todo))
-        ((eval (e :unused) d) (throw (tag go-continue d (name :identifier))))))
+        ((eval (e :unused) d) (throw (new go-continue d (name :identifier))))))
     
     (rule :break-statement ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
       (production :break-statement (break) break-statement-unlabeled
         ((verify (s :unused)) (todo))
-        ((eval (e :unused) d) (throw (tag go-break d ""))))
+        ((eval (e :unused) d) (throw (new go-break d ""))))
       (production :break-statement (break :no-line-break :identifier) break-statement-labeled
         ((verify (s :unused)) (todo))
-        ((eval (e :unused) d) (throw (tag go-break d (name :identifier))))))
+        ((eval (e :unused) d) (throw (new go-break d (name :identifier))))))
     (%print-actions)
     
     
@@ -1896,13 +1849,13 @@
         ((verify s)
          (when (not (& can-return s))
            (throw syntax-error)))
-        ((eval (e :unused)) (throw (tag go-return undefined))))
+        ((eval (e :unused)) (throw (new go-return undefined))))
       (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression
         ((verify s)
          (when (not (& can-return s))
            (throw syntax-error))
          ((verify :list-expression) s))
-        ((eval e) (throw (tag go-return (read-reference ((eval :list-expression) e)))))))
+        ((eval e) (throw (new go-return (read-reference ((eval :list-expression) e)))))))
     (%print-actions)
     
     

@@ -8,16 +8,16 @@
        
        (define (x-digit-value (c character)) integer
          (cond
-          ((character-set-member c (set-of-ranges character #\0 #\9))
+          ((set-in c (range-set-of-ranges character #\0 #\9))
            (return (- (character-to-code c) (character-to-code #\0))))
-          ((character-set-member c (set-of-ranges character #\A #\Z))
+          ((set-in c (range-set-of-ranges character #\A #\Z))
            (return (+ (- (character-to-code c) (character-to-code #\A)) 10)))
-          ((character-set-member c (set-of-ranges character #\a #\z))
+          ((set-in c (range-set-of-ranges character #\a #\z))
            (return (+ (- (character-to-code c) (character-to-code #\a)) 10)))
           (nil (bottom))))
        
        (define (x-real-to-float64 (x rational)) float64
-         (const s (set integer) (set-of integer (neg (expt 2 1024)) 0 (expt 2 1024)))
+         (const s (range-set integer) (range-set-of integer (neg (expt 2 1024)) 0 (expt 2 1024)))
          (const a integer (integer-set-min s))
          (cond
           ((= a (expt 2 1024)) (return +infinity))
@@ -27,7 +27,7 @@
           (nil (return +zero))))
        
        (define (x-truncate-finite-float64 (x finite-float64)) integer
-         (rwhen (:narrow-false (in (tag +zero -zero) x))
+         (rwhen (in x (tag +zero -zero) :narrow-false)
            (return 0))
          (if (> x 0 rational)
            (return (floor x))
