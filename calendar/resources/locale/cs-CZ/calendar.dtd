@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Upravit" >
 <!ENTITY calendar.menu.options.remove           "Vymazat" >
 <!ENTITY calendar.menu.options.close            "Zavřít okno" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "Z" >
 
 <!ENTITY calendar.main.tab.label        "Události" >

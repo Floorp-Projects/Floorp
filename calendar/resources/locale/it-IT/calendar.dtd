@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Modifica" >
 <!ENTITY calendar.menu.options.remove           "Elimina" >
 <!ENTITY calendar.menu.options.close            "Chiudi Finestra" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Eventi" >

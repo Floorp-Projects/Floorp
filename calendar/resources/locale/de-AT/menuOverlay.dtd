@@ -20,6 +20,7 @@
    -
    - Contributor(s):
    -   Robert Kaiser <KaiRo@KaiRo.at>
+   -   Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,127 +37,146 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- Event Menu -->
-<!ENTITY event.menu.title   "Ereignis">
-<!ENTITY eventMenuCmd.accesskey     "r">
+<!ENTITY event.menu.title                       "Ereignis">
+<!ENTITY eventMenuCmd.accesskey                 "r">
 
-<!ENTITY event.new.event           "Neues Ereignis…">
-<!ENTITY event.new.event.accesskey "N">
+<!ENTITY event.new.event                        "Neues Ereignis…">
+<!ENTITY event.new.event.key                    "N">
+<!ENTITY event.new.event.accesskey              "N">
 
-<!ENTITY event.new.todo     "Neue Aufgabe…">
-<!ENTITY event.new.todo.accesskey "f">
+<!ENTITY event.new.todo                         "Neue Aufgabe…">
+<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.accesskey               "f">
 
-<!ENTITY calendar.new.server.label "Neuer Kalender Datei…">
-<!ENTITY calendar.new.server.accesskey "l">
+<!ENTITY calendar.new.server.label              "Neuer Kalender Datei…">
+<!ENTITY calendar.new.server.key                "L">
+<!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label "Öffnen Kalender Datei…">
-<!ENTITY calendar.open.file.accesskey "O">
+<!ENTITY calendar.open.file.label               "Öffnen Kalender Datei…">
+<!ENTITY calendar.open.file.accesskey           "O">
 
-<!ENTITY event.edit.event   "Bearbeiten…">
-<!ENTITY event.edit.event.accesskey "e">
+<!ENTITY event.edit.event                       "Bearbeiten…">
+<!ENTITY event.edit.event.key                   "E">
+<!ENTITY event.edit.event.accesskey             "e">
 
-<!ENTITY event.delete.event "Gewählte(s) Ereignis löschen">
-<!ENTITY event.delete.event.accesskey   "L">
+<!ENTITY event.delete.event                     "Gewählte(s) Ereignis löschen">
+<!ENTITY event.delete.event.accesskey           "L">
 
-<!ENTITY event.delete.tasks "Gewählte Aufgabe(n) löschen">
-<!ENTITY event.delete.tasks.accesskey   "A">
+<!ENTITY event.delete.tasks                     "Gewählte Aufgabe(n) löschen">
+<!ENTITY event.delete.tasks.accesskey           "A">
 
-<!ENTITY event.mail.event   "Ausgewählte(s) Ereignis(se) per E-Mail senden…">
-<!ENTITY event.mail.event.accesskey "M">
+<!ENTITY event.mail.event                       "Ausgewählte(s) Ereignis(se) per E-Mail senden…">
+<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.accesskey             "M">
 
-<!ENTITY calendar.print.label   "Aktive Kalender drucken...">
-<!ENTITY calendar.print.accesskey   "D">
+<!ENTITY calendar.print.label                   "Aktive Kalender drucken...">
+<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.accesskey               "D">
 
-<!ENTITY calendar.printpreview.label    "Druckvorschau">
-<!ENTITY calendar.printpreview.accesskey    "v">
+<!ENTITY calendar.printpreview.label            "Druckvorschau">
+<!ENTITY calendar.printpreview.accesskey        "v">
 
-<!ENTITY calendar.pagesetup.label   "Seite einrichten...">
-<!ENTITY calendar.pagesetup.accesskey   "i">
+<!ENTITY calendar.pagesetup.label               "Seite einrichten...">
+<!ENTITY calendar.pagesetup.accesskey           "i">
 
-<!ENTITY calendar.import.label  "Aus Datei importieren...">
-<!ENTITY calendar.import.accesskey  "I">
+<!ENTITY calendar.import.label                  "Aus Datei importieren...">
+<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label  "Assistenten starten">
-<!ENTITY calendar.wizard.accesskey  "A">
+<!ENTITY calendar.wizard.label                  "Assistenten starten">
+<!ENTITY calendar.wizard.accesskey              "A">
 
-<!ENTITY calendar.export.label  "Ausgewählte Ereignisse exportieren...">
-<!ENTITY calendar.export.accesskey  "E">
+<!ENTITY calendar.export.label                  "Ausgewählte Ereignisse exportieren...">
+<!ENTITY calendar.export.key                    "O">
+<!ENTITY calendar.export.accesskey              "E">
 
-<!ENTITY calendar.subscribe.label "Entfernten Kalender abonnieren...">
-<!ENTITY calendar.subscribe.accesskey "b">
+<!ENTITY calendar.subscribe.label               "Entfernten Kalender abonnieren...">
+<!ENTITY calendar.subscribe.accesskey           "b">
 
-<!ENTITY calendar.publish.label "Gewählte Ereignisse publizieren...">
-<!ENTITY calendar.publish.accesskey "p">
+<!ENTITY calendar.publish.label                 "Gewählte Ereignisse publizieren...">
+<!ENTITY calendar.publish.accesskey             "p">
 
-<!ENTITY calendar.about.label   "Über Kalender">
-<!ENTITY calendar.about.accesskey   "b">
+<!ENTITY calendar.about.label                   "Über Kalender">
+<!ENTITY calendar.about.accesskey               "b">
 
-<!ENTITY calendar.cut.label "Ausschneiden">
-<!ENTITY calendar.cut.accesskey "A">
+<!ENTITY calendar.cut.label                     "Ausschneiden">
+<!ENTITY calendar.cut.key                       "X">
+<!ENTITY calendar.cut.accesskey                 "A">
 
-<!ENTITY calendar.copy.label    "Kopieren">
-<!ENTITY calendar.copy.accesskey    "k">
+<!ENTITY calendar.copy.label                    "Kopieren">
+<!ENTITY calendar.copy.key                      "C">
+<!ENTITY calendar.copy.accesskey                "k">
 
-<!ENTITY calendar.paste.label   "Einfügen">
-<!ENTITY calendar.paste.accesskey   "E">
+<!ENTITY calendar.paste.label                   "Einfügen">
+<!ENTITY calendar.paste.key                     "V">
+<!ENTITY calendar.paste.accesskey               "E">
 
-<!ENTITY calendar.selectall.label   "Alles Auswählen">
-<!ENTITY calendar.selectall.accesskey   "u">
+<!ENTITY calendar.selectall.label               "Alles Auswählen">
+<!ENTITY calendar.selectall.key                 "A">
+<!ENTITY calendar.selectall.accesskey           "u">
 
-<!ENTITY calendar.preferences.label "Einstellungen...">
-<!ENTITY calendar.preferences.accesskey "n">
+<!ENTITY calendar.preferences.label             "Einstellungen...">
+<!ENTITY calendar.preferences.accesskey         "n">
 
-<!ENTITY goMenu.label                   "Gehe">
-<!ENTITY goMenu.accesskey               "G">
+<!ENTITY goMenu.label                           "Gehe">
+<!ENTITY goMenu.accesskey                       "G">
 
-<!ENTITY goTodayCmd.label               "Zu Heute gehen">
-<!ENTITY goTodayCmd.accesskey           "H">
+<!ENTITY goTodayCmd.label                       "Zu Heute gehen">
+<!ENTITY goTodayCmd.accesskey                   "H">
 
-<!ENTITY goDateCmd.label                "Zu Datum gehen">
-<!ENTITY goDateCmd.accesskey            "D">
+<!ENTITY goDateCmd.label                        "Zu Datum gehen">
+<!ENTITY goDateCmd.accesskey                    "D">
 
-<!ENTITY goPreviousCmd.label            "Vorheriges">
-<!ENTITY goPreviousCmd.accesskey        "V">
+<!ENTITY goPreviousCmd.label                    "Vorheriges">
+<!ENTITY goPreviousCmd.accesskey                "V">
 
-<!ENTITY goNextCmd.label                "Nächstes">
-<!ENTITY goNextCmd.accesskey            "N">
+<!ENTITY goNextCmd.label                        "Nächstes">
+<!ENTITY goNextCmd.accesskey                    "N">
 
-<!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.label                         "Tasks">
+<!ENTITY taskMenu.accesskey                     "T">
 
-<!ENTITY toolsMenu.label                "Extras">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.label                        "Tools">
+<!ENTITY toolsMenu.accesskey                    "o">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript-Konsole">
-<!ENTITY javaScriptConsoleCmd.accesskey "S">
+<!ENTITY javaScriptConsoleCmd.label             "JavaScript-Konsole">
+<!ENTITY javaScriptConsoleCmd.accesskey         "S">
 
-<!ENTITY navigatorCmd.label     "Browser">
-<!ENTITY navigatorCmd.accesskey "B">
+<!ENTITY navigatorCmd.label                     "Browser">
+<!ENTITY navigatorCmd.accesskey                 "B">
 
-<!ENTITY messengerCmd.label     "Mail">
-<!ENTITY messengerCmd.accesskey "M">
+<!ENTITY messengerCmd.label                     "Mail">
+<!ENTITY messengerCmd.accesskey                 "M">
 
-<!ENTITY addressBookCmd.label     "Adressbuch">
-<!ENTITY addressBookCmd.accesskey "A">
+<!ENTITY addressBookCmd.label                   "Adressbuch">
+<!ENTITY addressBookCmd.accesskey               "A">
 
-<!ENTITY helpMenu.label         "Hilfe"> 
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.label                         "Hilfe">
+<!ENTITY helpMenu.accesskey                     "H">
 
-<!ENTITY walletPasswordManager.label     "Passwort-Manager">
-<!ENTITY walletPasswordManager.accesskey "P">
+<!ENTITY walletPasswordManager.label            "Passwort-Manager">
+<!ENTITY walletPasswordManager.accesskey        "P">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "Datei"> 
-<!ENTITY fileMenu.accesskey       "D">
+<!ENTITY fileMenu.label                         "Datei">
+<!ENTITY fileMenu.accesskey                     "D">
 
-<!ENTITY editMenu.label         "Bearbeiten"> 
-<!ENTITY editMenu.accesskey       "e"> 
-<!ENTITY preferencesCmd.label       "Optionen...">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY editMenu.label                         "Bearbeiten">
+<!ENTITY editMenu.accesskey                     "e">
+<!ENTITY preferencesCmd.label                   "Optionen...">
+<!ENTITY preferencesCmd.accesskey               "O">
 
-<!ENTITY viewMenu.label         "Ansicht"> 
-<!ENTITY viewMenu.accesskey       "A"> 
+<!ENTITY viewMenu.label                         "Ansicht">
+<!ENTITY viewMenu.accesskey                     "A">
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "Über &brandFullName;">
-<!ENTITY aboutCmd.accesskey       "Ü">
+<!ENTITY releaseCmd.label                       "Release Notes">
+<!ENTITY releaseCmd.accesskey                   "R">
+<!ENTITY aboutCmd.label                         "Über &brandFullName;">
+<!ENTITY aboutCmd.accesskey                     "Ü">
+
+<!-- Mac OS X "Window" menu items -->
+<!ENTITY windowMenu.label                       "Window">
+<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY minimizeWindow.key                     "M">
+<!ENTITY bringAllToFront.label                  "Bring All to Front">

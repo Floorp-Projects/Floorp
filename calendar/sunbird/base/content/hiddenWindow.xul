@@ -1,31 +1,81 @@
 <?xml version="1.0"?>
-# -*- Mode: HTML -*-
-#
-# The contents of this file are subject to the Netscape Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
-# The Original Code is Mozilla Communicator client code, released
-# March 31, 1998.
-#
-# The Initial Developer of the Original Code is Netscape
-# Communications Corporation. Portions created by Netscape are
-# Copyright (C) 1998-2000 Netscape Communications Corporation. All
-# Rights Reserved.
-#
-# Contributor(s):
-#   David Hyatt <hyatt@mozilla.org> (Original Author)
-#
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): David Hyatt <hyatt@mozilla.org>
+   -                 Matthew Willis (mattwillis@gmail.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
 #ifdef XP_MACOSX
-<window id="main-window"
+
+<!-- Overlays -->
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<?xul-overlay href="chrome://calendar/content/dayView.xul"?>
+<?xul-overlay href="chrome://calendar/content/weekView.xul"?>
+<?xul-overlay href="chrome://calendar/content/monthView.xul"?>
+<?xul-overlay href="chrome://calendar/content/multiweekView.xul"?>
+
+<!-- All DTD information is stored in a separate file so that it can be shared by
+     hiddenWindow.xul. -->
+#include calendar-doctype.inc
+
+<!-- The Window  -->
+<window id="hidden-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="hiddenWindowStartup();">
+
+<!-- All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go
+     into the calendar-sets.inc file for sharing with hiddenWindow.xul. -->
+#include calendar-sets.inc
+
+<!-- All JS files that calendar.xul wishes to include *must* go into the calendar-scripts.inc
+     file so that they can be shared by hiddenWindow.xul. -->
+#include calendar-scripts.inc
+
+  <toolbox id="calendar-toolbox" class="toolbox-top">
+    <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar"
+             customizable="true" defaultset="menubar-items"
+             mode="icons" iconsize="small">--> <!-- context="toolbar-context-menu"> -->
+      <toolbaritem id="menubar-items" align="center">
+<!-- The entire main menubar is placed into calendar-menubar.inc, so that it can be shared by
+     hiddenWindow.xul. -->
+#include calendar-menubar.inc
+
+      </toolbaritem>
+    </toolbar>
+  </toolbox>
 </window>
 
 #endif

@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Wobdźěłać" >
 <!ENTITY calendar.menu.options.remove           "Wotstronić" >
 <!ENTITY calendar.menu.options.close            "Woknješko začinić" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Podawki" >

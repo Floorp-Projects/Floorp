@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Modifier" >
 <!ENTITY calendar.menu.options.remove           "Supprimer" >
 <!ENTITY calendar.menu.options.close            "Fermer la fenêtre" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "F" >
 
 <!ENTITY calendar.main.tab.label        "Événements" >

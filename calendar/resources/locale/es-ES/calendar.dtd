@@ -280,6 +280,7 @@
 <!ENTITY calendar.menu.options.modify           "Editar" >
 <!ENTITY calendar.menu.options.remove           "Borrar" >
 <!ENTITY calendar.menu.options.close            "Cerrar ventana" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Eventos" >

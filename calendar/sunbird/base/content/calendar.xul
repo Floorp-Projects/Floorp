@@ -50,24 +50,15 @@
 
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/menuOverlay.xul"?>
 
 <?xul-overlay href="chrome://calendar/content/dayView.xul"?>
 <?xul-overlay href="chrome://calendar/content/weekView.xul"?>
 <?xul-overlay href="chrome://calendar/content/monthView.xul"?>
 <?xul-overlay href="chrome://calendar/content/multiweekView.xul"?>
 
-<!-- DTDs -->
-
-<!-- DTD File with all strings specific to the calendar -->
-<!DOCTYPE window 
-[
-  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
-  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-  <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
-]>
-
+<!-- All DTD information is stored in a separate file so that it can be shared by
+     hiddenWindow.xul. -->
+#include calendar-doctype.inc
 
 <!-- The Window  -->
 
@@ -81,149 +72,14 @@
         persist="screenX screenY width height sizemode"
         height="550"
         width="710">
-<broadcasterset id="calendar_broadcasters">
-  <broadcaster id="is_editable" hidden="false"/>
-</broadcasterset> 
-<commandset id="calendar_commands">
-  <command id="new_command" oncommand="newEventCommand( event )"/>
-  <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="modify_command" oncommand="editEventCommand()" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="print_command" oncommand="print()"/>
-  <command id="cut_command" oncommand="cutToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="copy_command" oncommand="copyToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
-  <command id="paste_command" oncommand="pasteFromClipboard()"/>
-  <command id="select_all_command" oncommand="selectAllEvents()"/>
 
-  <command id="new_todo_command" oncommand="newToDoCommand()"/>
-  <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
-  <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
+<!-- All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go
+     into the calendar-sets.inc file for sharing with hiddenWindow.xul. -->
+#include calendar-sets.inc
 
-  <command id="new_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchNewCalendarFileDialog()"/>
-  <command id="open_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchOpenCalendarFileDialog()"/>
-  <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
-  <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
-  <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
-  <command id="delete_server_command" oncommand="deleteCalendar()"/>
-  <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
-
-  <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
-  <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
-  <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
-  <command id="go_date_command" oncommand="gCalendarWindow.pickAndGoToDate()"/>
-
-  <command id="day_view_command"  oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
-  <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
-  <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
-  <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()" disabled="false"/>
-
-  <command id="import_command" oncommand="startImport()"/>
-  <command id="export_command" oncommand="saveEventsToFile()" disabled="true" disabledwhennoeventsselected="true"/>
-
-  <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
-  <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
-  <command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
-
-<!--
-  <command id="change_display_todo_in_view" oncommand="" checked="true"/>
--->
-  <command id="close_calendar_command" oncommand="closeCalendar()"/>
-
-  <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
-
-  <command id="cmd_CustomizeToolbars" oncommand="CalendarCustomizeToolbar()"/>
-</commandset>
-
-<keyset>
-  <key id="delete_key" keycode="VK_DELETE" observes="delete_command_no_confirm"/>
-  <key id="new_event_key" key="N" modifiers="accel" observes="new_command"/>
-  <key id="new_todo_key" key="T" modifiers="accel" observes="new_todo_command"/>
-  <key id="modify_event_key" key="E" modifiers="accel" observes="modify_command"/>
-  <key id="print_key" key="P" modifiers="accel" observes="print_command"/>
-  <key id="import_key" key="I" modifiers="accel" observes="import_command"/>
-  <key id="export_key" key="O" modifiers="accel" observes="export_command"/>
-  <key id="send_event_key" key="M" modifiers="accel" observes="send_event_command"/>
-  
-  <key id="key_selectAll" key="A" modifiers="accel" observes="select_all_command"/>
-  <key id="key_cut" key="X" modifiers="accel" observes="cut_command"/>
-  <key id="key_copy" key="C" modifiers="accel" observes="copy_command"/>
-  <key id="key_paste" key="V" modifiers="accel" observes="paste_command"/>
-  
-  <key id="view_day_key"  keycode="VK_F1" observes="day_view_command"/>
-  <key id="view_week_key"  keycode="VK_F2" observes="week_view_command"/>
-  <key id="view_multiweek_key" keycode="VK_F3" observes="multiweek_view_command"/>
-  <key id="view_month_key" keycode="VK_F4" observes="month_view_command"/>
-  
-  <key id="go_backward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
-  <key id="go_forward_key"  keycode="VK_PAGE_DOWN" observes="next_command"/>
-  <key id="go_to_today_key"  keycode="VK_DOWN" modifiers="accel" observes="go_today_command"/>
-  <key id="go_to_date_key" keycode="VK_UP" modifiers="accel" observes="go_date_command"/>
-  
-  <key id="key_close" key="W" modifiers="accel" observes="close_calendar_command"/>
-</keyset>
-
-<keyset id="tasksKeys"/>
-
-<!-- Javascript DTD To Variable -->
-<script type="application/x-javascript">
-  var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
-  var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
-  var defaultCalendarFileName = "&calendar.file.default.name;";
-</script>
-
-<!-- STRING BUNDLE for calendar properties -->
-<stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
-  <stringbundle id="bundle_calendar_email" src="chrome://calendar/locale/email.properties"/>
-</stringbundleset>
-<script type="application/x-javascript">
-  var gCalendarBundle = document.getElementById("bundle_calendar");
-  var gCalendarEmailBundle = document.getElementById("bundle_calendar_email");
-</script>  
-
-<!-- Javascript includes -->
-
-<script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
-
-<!-- NEEDED FOR DRAG AND DROP SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
-
-<!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarManager.js"/>
-
-<!-- NEEDED FOR CLIPBOARD SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
-
-<!-- NEEDED FOR IMPORT / EXPORT SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/importExport.js"/>
-
-<!-- NEEDED FOR MAIL SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
-
-<!-- NEEDED FOR PUBLICATION SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
-
-<!-- NEEDED FOR DATE UTILS -->
-<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-
-<script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarSelection.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarWindow.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/mouseoverPreviews.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/unifinderToDo.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
-
-<!--<script type="application/x-javascript" src="chrome://calendar/content/email.js"/>-->
-
-<!-- NEEDED ALARMS ERIC -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarOverlay.js"/>
-
-<!-- NEEDED FOR APPLICATION SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
-<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<!-- All JS files that calendar.xul wishes to include *must* go into the calendar-scripts.inc
+     file so that they can be shared by hiddenWindow.xul. -->
+#include calendar-scripts.inc
 
 <!-- GENERAL CONTEXT MENU -->
 <popup id="context-menu"
@@ -412,7 +268,11 @@
   <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar" customizable="true"
            defaultset="menubar-items"
            mode="icons" iconsize="small" context="toolbar-context-menu">
-    <toolbaritem id="menubar-items" align="center"/>
+    <toolbaritem id="menubar-items" align="center">
+<!-- The entire main menubar is placed into calendar-menubar.inc, so that it can be shared by
+     hiddenWindow.xul. -->
+#include calendar-menubar.inc
+    </toolbaritem>
   </toolbar>
 
   <toolbarpalette id="calendarToolbarPalette">

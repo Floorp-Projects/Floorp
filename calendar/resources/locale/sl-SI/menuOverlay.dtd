@@ -21,6 +21,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,127 +38,146 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- Menu dogodkov -->
-<!ENTITY event.menu.title   "Dogodek">
-<!ENTITY eventMenuCmd.accesskey     "k">
+<!ENTITY event.menu.title                       "Dogodek">
+<!ENTITY eventMenuCmd.accesskey                 "k">
 
-<!ENTITY event.new.event           "Nov dogodek…">
-<!ENTITY event.new.event.accesskey "g">
+<!ENTITY event.new.event                        "Nov dogodek…">
+<!ENTITY event.new.event.key                    "N">
+<!ENTITY event.new.event.accesskey              "g">
 
-<!ENTITY event.new.todo     "Nov opravek…">
-<!ENTITY event.new.todo.accesskey "o">
+<!ENTITY event.new.todo                         "Nov opravek…">
+<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.accesskey               "o">
 
-<!ENTITY calendar.new.server.label "Nov Datoteka Koledar…">
-<!ENTITY calendar.new.server.accesskey "l">
+<!ENTITY calendar.new.server.label              "Nov Datoteka Koledar…">
+<!ENTITY calendar.new.server.key                "L">
+<!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label "Odpri Datoteka Koledar…">
-<!ENTITY calendar.open.file.accesskey "O">
+<!ENTITY calendar.open.file.label               "Odpri Datoteka Koledar…">
+<!ENTITY calendar.open.file.accesskey           "O">
 
-<!ENTITY event.edit.event   "Uredi…">
-<!ENTITY event.edit.event.accesskey "d">
+<!ENTITY event.edit.event                       "Uredi…">
+<!ENTITY event.edit.event.key                   "E">
+<!ENTITY event.edit.event.accesskey             "d">
 
-<!ENTITY event.delete.event "Izbriši izbrane dogodke">
-<!ENTITY event.delete.event.accesskey   "z">
+<!ENTITY event.delete.event                     "Izbriši izbrane dogodke">
+<!ENTITY event.delete.event.accesskey           "z">
 
-<!ENTITY event.delete.tasks "Izbriši izbrane opravke">
-<!ENTITY event.delete.tasks.accesskey   "v">
+<!ENTITY event.delete.tasks                     "Izbriši izbrane opravke">
+<!ENTITY event.delete.tasks.accesskey           "v">
 
-<!ENTITY event.mail.event   "Pošlji izbrane dogodke po e-pošti…">
-<!ENTITY event.mail.event.accesskey "t">
+<!ENTITY event.mail.event                       "Pošlji izbrane dogodke po e-pošti…">
+<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.accesskey             "t">
 
-<!ENTITY calendar.print.label   "Natisni aktivne koledarje ...">
-<!ENTITY calendar.print.accesskey   "N">
+<!ENTITY calendar.print.label                   "Natisni aktivne koledarje ...">
+<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.accesskey               "N">
 
-<!ENTITY calendar.printpreview.label    "Predogled tiskanja ...">
-<!ENTITY calendar.printpreview.accesskey    "d">
+<!ENTITY calendar.printpreview.label            "Predogled tiskanja ...">
+<!ENTITY calendar.printpreview.accesskey        "d">
 
-<!ENTITY calendar.pagesetup.label   "Priprava strani ...">
-<!ENTITY calendar.pagesetup.accesskey   "r">
+<!ENTITY calendar.pagesetup.label               "Priprava strani ...">
+<!ENTITY calendar.pagesetup.accesskey           "r">
 
-<!ENTITY calendar.import.label  "Uvozi iz datoteke ...">
-<!ENTITY calendar.import.accesskey  "U">
+<!ENTITY calendar.import.label                  "Uvozi iz datoteke ...">
+<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.accesskey              "U">
 
-<!ENTITY calendar.wizard.label  "Poženi čarovnika">
-<!ENTITY calendar.wizard.accesskey  "Č">
+<!ENTITY calendar.wizard.label                  "Poženi čarovnika">
+<!ENTITY calendar.wizard.accesskey              "Č">
 
-<!ENTITY calendar.export.label  "Izvozi izbrane dogodke ...">
-<!ENTITY calendar.export.accesskey  "I">
+<!ENTITY calendar.export.label                  "Izvozi izbrane dogodke ...">
+<!ENTITY calendar.export.key                    "O">
+<!ENTITY calendar.export.accesskey              "I">
 
-<!ENTITY calendar.subscribe.label "Prijava na oddaljeni koledar ...">
-<!ENTITY calendar.subscribe.accesskey "l">
+<!ENTITY calendar.subscribe.label               "Prijava na oddaljeni koledar ...">
+<!ENTITY calendar.subscribe.accesskey           "l">
 
-<!ENTITY calendar.publish.label "Objavi izbrane dogodke ...">
-<!ENTITY calendar.publish.accesskey "O">
+<!ENTITY calendar.publish.label                 "Objavi izbrane dogodke ...">
+<!ENTITY calendar.publish.accesskey             "O">
 
-<!ENTITY calendar.about.label   "O Koledarju">
-<!ENTITY calendar.about.accesskey   "K">
+<!ENTITY calendar.about.label                   "O Koledarju">
+<!ENTITY calendar.about.accesskey               "K">
 
-<!ENTITY calendar.cut.label "Izreži">
-<!ENTITY calendar.cut.accesskey "I">
+<!ENTITY calendar.cut.label                     "Izreži">
+<!ENTITY calendar.cut.key                       "X">
+<!ENTITY calendar.cut.accesskey                 "I">
 
-<!ENTITY calendar.copy.label    "Kopiraj">
-<!ENTITY calendar.copy.accesskey    "K">
+<!ENTITY calendar.copy.label                    "Kopiraj">
+<!ENTITY calendar.copy.key                      "C">
+<!ENTITY calendar.copy.accesskey                "K">
 
-<!ENTITY calendar.paste.label   "Prilepi">
-<!ENTITY calendar.paste.accesskey   "P">
+<!ENTITY calendar.paste.label                   "Prilepi">
+<!ENTITY calendar.paste.key                     "V">
+<!ENTITY calendar.paste.accesskey               "P">
 
-<!ENTITY calendar.selectall.label   "Izberi vse">
-<!ENTITY calendar.selectall.accesskey   "v">
+<!ENTITY calendar.selectall.label               "Izberi vse">
+<!ENTITY calendar.selectall.key                 "A">
+<!ENTITY calendar.selectall.accesskey           "v">
 
-<!ENTITY calendar.preferences.label "Osebne nastavitve ...">
-<!ENTITY calendar.preferences.accesskey "e">
+<!ENTITY calendar.preferences.label             "Osebne nastavitve ...">
+<!ENTITY calendar.preferences.accesskey         "e">
 
-<!ENTITY goMenu.label                   "Pojdi">
-<!ENTITY goMenu.accesskey               "j">
+<!ENTITY goMenu.label                           "Pojdi">
+<!ENTITY goMenu.accesskey                       "j">
 
-<!ENTITY goTodayCmd.label               "Pojdi na današnji dan">
-<!ENTITY goTodayCmd.accesskey           "š">
+<!ENTITY goTodayCmd.label                       "Pojdi na današnji dan">
+<!ENTITY goTodayCmd.accesskey                   "š">
 
-<!ENTITY goDateCmd.label                "Pojdi na datum">
-<!ENTITY goDateCmd.accesskey            "d">
+<!ENTITY goDateCmd.label                        "Pojdi na datum">
+<!ENTITY goDateCmd.accesskey                    "d">
 
-<!ENTITY goPreviousCmd.label            "Prejšnji">
-<!ENTITY goPreviousCmd.accesskey        "r">
+<!ENTITY goPreviousCmd.label                    "Prejšnji">
+<!ENTITY goPreviousCmd.accesskey                "r">
 
-<!ENTITY goNextCmd.label                "Naslednji">
-<!ENTITY goNextCmd.accesskey            "s">
+<!ENTITY goNextCmd.label                        "Naslednji">
+<!ENTITY goNextCmd.accesskey                    "s">
 
-<!ENTITY taskMenu.label                "Opravila">
-<!ENTITY taskMenu.accesskey            "a">
+<!ENTITY taskMenu.label                         "Opravila">
+<!ENTITY taskMenu.accesskey                     "a">
 
-<!ENTITY toolsMenu.label                "Orodja">
-<!ENTITY toolsMenu.accesskey            "O">
+<!ENTITY toolsMenu.label                        "Orodja">
+<!ENTITY toolsMenu.accesskey                    "O">
 
-<!ENTITY javaScriptConsoleCmd.label     "Konzola JavaScript">
-<!ENTITY javaScriptConsoleCmd.accesskey "S">
+<!ENTITY javaScriptConsoleCmd.label             "Konzola JavaScript">
+<!ENTITY javaScriptConsoleCmd.accesskey         "S">
 
-<!ENTITY navigatorCmd.label     "Brskalnik">
-<!ENTITY navigatorCmd.accesskey "B">
+<!ENTITY navigatorCmd.label                     "Brskalnik">
+<!ENTITY navigatorCmd.accesskey                 "B">
 
-<!ENTITY messengerCmd.label     "Pošta">
-<!ENTITY messengerCmd.accesskey "P">
+<!ENTITY messengerCmd.label                     "Pošta">
+<!ENTITY messengerCmd.accesskey                 "P">
 
-<!ENTITY addressBookCmd.label     "Adresar">
-<!ENTITY addressBookCmd.accesskey "A">
+<!ENTITY addressBookCmd.label                   "Adresar">
+<!ENTITY addressBookCmd.accesskey               "A">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey            "P">
+<!ENTITY helpMenu.label                         "Help">
+<!ENTITY helpMenu.accesskey                     "P">
 
-<!ENTITY walletPasswordManager.label     "Upravljalec gesel">
-<!ENTITY walletPasswordManager.accesskey "g">
+<!ENTITY walletPasswordManager.label            "Upravljalec gesel">
+<!ENTITY walletPasswordManager.accesskey        "g">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY fileMenu.label                         "File">
+<!ENTITY fileMenu.accesskey                     "F">
 
-<!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY editMenu.label                         "Edit">
+<!ENTITY editMenu.accesskey                     "E">
+<!ENTITY preferencesCmd.label                   "Options...">
+<!ENTITY preferencesCmd.accesskey               "O">
 
-<!ENTITY viewMenu.label         "View"> 
-<!ENTITY viewMenu.accesskey       "V"> 
+<!ENTITY viewMenu.label                         "View">
+<!ENTITY viewMenu.accesskey                     "V">
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
-<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY releaseCmd.label                       "Release Notes">
+<!ENTITY releaseCmd.accesskey                   "R">
+<!ENTITY aboutCmd.label                         "About &brandFullName;">
+<!ENTITY aboutCmd.accesskey                     "A">
+
+<!-- Mac OS X "Window" menu items -->
+<!ENTITY windowMenu.label                       "Window">
+<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY minimizeWindow.key                     "M">
+<!ENTITY bringAllToFront.label                  "Bring All to Front">

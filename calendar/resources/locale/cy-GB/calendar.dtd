@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Golygu" >
 <!ENTITY calendar.menu.options.remove           "Dileu" >
 <!ENTITY calendar.menu.options.close            "Cau'r Ffenestr" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Digwyddiad Dadfygio " >

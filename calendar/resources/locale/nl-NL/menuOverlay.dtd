@@ -21,6 +21,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,127 +38,146 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- Event Menu -->
-<!ENTITY event.menu.title   "Gebeurtenis">
-<!ENTITY eventMenuCmd.accesskey     "@">
+<!ENTITY event.menu.title                       "Gebeurtenis">
+<!ENTITY eventMenuCmd.accesskey                 "@">
 
-<!ENTITY event.new.event           "Nieuwe gebeurtenis…">
+<!ENTITY event.new.event                        "Nieuwe gebeurtenis…">
+<!ENTITY event.new.event.key                    "N">
 <!ENTITY event.new.event.accesskey "G">
 
-<!ENTITY event.new.todo     "Nieuwe taak…">
-<!ENTITY event.new.todo.accesskey "T">
+<!ENTITY event.new.todo                         "Nieuwe taak…">
+<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.accesskey               "T">
 
-<!ENTITY calendar.new.server.label "Nieuwe kalenderbestand…">
-<!ENTITY calendar.new.server.accesskey "l">
+<!ENTITY calendar.new.server.label              "Nieuwe kalenderbestand…">
+<!ENTITY calendar.new.server.key                "L">
+<!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label "Openen kalenderbestand…">
+<!ENTITY calendar.open.file.label               "Openen kalenderbestand…">
 <!ENTITY calendar.open.file.accesskey "O">
 
-<!ENTITY event.edit.event   "Bewerken…">
-<!ENTITY event.edit.event.accesskey "E">
+<!ENTITY event.edit.event                       "Bewerken…">
+<!ENTITY event.edit.event.key                   "E">
+<!ENTITY event.edit.event.accesskey             "E">
 
-<!ENTITY event.delete.event "Verwijder geselecteerd(e) gebeurtenis(sen)">
-<!ENTITY event.delete.event.accesskey   "G">
+<!ENTITY event.delete.event                     "Verwijder geselecteerd(e) gebeurtenis(sen)">
+<!ENTITY event.delete.event.accesskey           "G">
 
-<!ENTITY event.delete.tasks "Verwijder geselecteerd(e) ta(a)k(en)">
-<!ENTITY event.delete.tasks.accesskey   "T">
+<!ENTITY event.delete.tasks                     "Verwijder geselecteerd(e) ta(a)k(en)">
+<!ENTITY event.delete.tasks.accesskey           "T">
 
-<!ENTITY event.mail.event   "Mail geselecteerd(e) gebeurtenis(sen)…">
-<!ENTITY event.mail.event.accesskey "M">
+<!ENTITY event.mail.event                       "Mail geselecteerd(e) gebeurtenis(sen)…">
+<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.accesskey             "M">
 
-<!ENTITY calendar.print.label   "Gebeurtenissen afdrukken...">
-<!ENTITY calendar.print.accesskey   "D">
+<!ENTITY calendar.print.label                   "Gebeurtenissen afdrukken...">
+<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.accesskey               "D">
 
-<!ENTITY calendar.printpreview.label    "Afdrukvoorbeeld">
-<!ENTITY calendar.printpreview.accesskey    "V">
+<!ENTITY calendar.printpreview.label            "Afdrukvoorbeeld">
+<!ENTITY calendar.printpreview.accesskey        "V">
 
-<!ENTITY calendar.pagesetup.label   "Paginainstellingen...">
-<!ENTITY calendar.pagesetup.accesskey   "I">
+<!ENTITY calendar.pagesetup.label               "Paginainstellingen...">
+<!ENTITY calendar.pagesetup.accesskey           "I">
 
-<!ENTITY calendar.import.label  "Importeren vanuit bestand...">
-<!ENTITY calendar.import.accesskey  "I">
+<!ENTITY calendar.import.label                  "Importeren vanuit bestand...">
+<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label  "Start assistent">
-<!ENTITY calendar.wizard.accesskey  "@">
+<!ENTITY calendar.wizard.label                  "Start assistent">
+<!ENTITY calendar.wizard.accesskey              "@">
 
-<!ENTITY calendar.export.label  "Exporteer geselecteerde gebeurtenissen...">
-<!ENTITY calendar.export.accesskey  "E">
+<!ENTITY calendar.export.label                  "Exporteer geselecteerde gebeurtenissen...">
+<!ENTITY calendar.export.key                    "O">
+<!ENTITY calendar.export.accesskey              "E">
 
-<!ENTITY calendar.subscribe.label "Aanmelden bij kalender op andere computer...">
-<!ENTITY calendar.subscribe.accesskey "A">
+<!ENTITY calendar.subscribe.label               "Aanmelden bij kalender op andere computer...">
+<!ENTITY calendar.subscribe.accesskey           "A">
 
-<!ENTITY calendar.publish.label "Publiceer geselecteerde gebeurtenissen...">
-<!ENTITY calendar.publish.accesskey "P">
+<!ENTITY calendar.publish.label                 "Publiceer geselecteerde gebeurtenissen...">
+<!ENTITY calendar.publish.accesskey             "P">
 
-<!ENTITY calendar.about.label   "Over kalender">
-<!ENTITY calendar.about.accesskey   "K">
+<!ENTITY calendar.about.label                   "Over kalender">
+<!ENTITY calendar.about.accesskey               "K">
 
-<!ENTITY calendar.cut.label "Knippen">
-<!ENTITY calendar.cut.accesskey "K">
+<!ENTITY calendar.cut.label                     "Knippen">
+<!ENTITY calendar.cut.key                       "X">
+<!ENTITY calendar.cut.accesskey                 "K">
 
-<!ENTITY calendar.copy.label    "Kopi&#xEB;ren">
-<!ENTITY calendar.copy.accesskey    "I">
+<!ENTITY calendar.copy.label                    "Kopi&#xEB;ren">
+<!ENTITY calendar.copy.key                      "C">
+<!ENTITY calendar.copy.accesskey                "I">
 
-<!ENTITY calendar.paste.label   "Plakken">
-<!ENTITY calendar.paste.accesskey   "P">
+<!ENTITY calendar.paste.label                   "Plakken">
+<!ENTITY calendar.paste.key                     "V">
+<!ENTITY calendar.paste.accesskey               "P">
 
-<!ENTITY calendar.selectall.label   "Alles selecteren">
-<!ENTITY calendar.selectall.accesskey   "A">
+<!ENTITY calendar.selectall.label               "Alles selecteren">
+<!ENTITY calendar.selectall.key                 "A">
+<!ENTITY calendar.selectall.accesskey           "A">
 
-<!ENTITY calendar.preferences.label "Voorkeuren...">
-<!ENTITY calendar.preferences.accesskey "V">
+<!ENTITY calendar.preferences.label             "Voorkeuren...">
+<!ENTITY calendar.preferences.accesskey         "V">
 
-<!ENTITY goMenu.label                   "Ga naar">
-<!ENTITY goMenu.accesskey               "G">
+<!ENTITY goMenu.label                           "Ga naar">
+<!ENTITY goMenu.accesskey                       "G">
 
-<!ENTITY goTodayCmd.label               "Vandaag">
-<!ENTITY goTodayCmd.accesskey           "V">
+<!ENTITY goTodayCmd.label                       "Vandaag">
+<!ENTITY goTodayCmd.accesskey                   "V">
 
-<!ENTITY goDateCmd.label                "Ga naar datum">
-<!ENTITY goDateCmd.accesskey            "D">
+<!ENTITY goDateCmd.label                        "Ga naar datum">
+<!ENTITY goDateCmd.accesskey                    "D">
 
-<!ENTITY goPreviousCmd.label            "Vorige">
-<!ENTITY goPreviousCmd.accesskey        "O">
+<!ENTITY goPreviousCmd.label                    "Vorige">
+<!ENTITY goPreviousCmd.accesskey                "O">
 
-<!ENTITY goNextCmd.label                "Volgende">
-<!ENTITY goNextCmd.accesskey            "L">
+<!ENTITY goNextCmd.label                        "Volgende">
+<!ENTITY goNextCmd.accesskey                    "L">
 
-<!ENTITY taskMenu.label                "Taken">
-<!ENTITY taskMenu.accesskey            "@">
+<!ENTITY taskMenu.label                         "Taken">
+<!ENTITY taskMenu.accesskey                     "@">
 
-<!ENTITY toolsMenu.label                "Gereedschappen">
-<!ENTITY toolsMenu.accesskey            "R">
+<!ENTITY toolsMenu.label                        "Gereedschappen">
+<!ENTITY toolsMenu.accesskey                    "R">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey "@">
+<!ENTITY javaScriptConsoleCmd.label             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey         "@">
 
-<!ENTITY navigatorCmd.label     "Bladerprogramma">
-<!ENTITY navigatorCmd.accesskey "@">
+<!ENTITY navigatorCmd.label                     "Bladerprogramma">
+<!ENTITY navigatorCmd.accesskey                 "@">
 
-<!ENTITY messengerCmd.label     "Mail">
-<!ENTITY messengerCmd.accesskey "@">
+<!ENTITY messengerCmd.label                     "Mail">
+<!ENTITY messengerCmd.accesskey                 "@">
 
-<!ENTITY addressBookCmd.label     "Adressenboek">
-<!ENTITY addressBookCmd.accesskey "@">
+<!ENTITY addressBookCmd.label                   "Adressenboek">
+<!ENTITY addressBookCmd.accesskey               "@">
 
-<!ENTITY helpMenu.label         "Hulp">
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.label                         "Hulp">
+<!ENTITY helpMenu.accesskey                     "H">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletPasswordManager.label            "Password Manager">
+<!ENTITY walletPasswordManager.accesskey        "p">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "Bestand">
-<!ENTITY fileMenu.accesskey       "B">
+<!ENTITY fileMenu.label                         "Bestand">
+<!ENTITY fileMenu.accesskey                     "B">
 
-<!ENTITY editMenu.label         "Bewerken">
-<!ENTITY editMenu.accesskey       "E">
-<!ENTITY preferencesCmd.label       "Voorkeuren...">
-<!ENTITY preferencesCmd.accesskey     "V">
+<!ENTITY editMenu.label                         "Bewerken">
+<!ENTITY editMenu.accesskey                     "E">
+<!ENTITY preferencesCmd.label                   "Voorkeuren...">
+<!ENTITY preferencesCmd.accesskey               "V">
 
-<!ENTITY viewMenu.label         "Beeld">
-<!ENTITY viewMenu.accesskey       "L">
+<!ENTITY viewMenu.label                         "Beeld">
+<!ENTITY viewMenu.accesskey                     "L">
 
-<!ENTITY releaseCmd.label       "Uitgave opmerkingen">
-<!ENTITY releaseCmd.accesskey       "U">
-<!ENTITY aboutCmd.label         "Over &brandFullName;">
-<!ENTITY aboutCmd.accesskey       "M">
+<!ENTITY releaseCmd.label                       "Uitgave opmerkingen">
+<!ENTITY releaseCmd.accesskey                   "U">
+<!ENTITY aboutCmd.label                         "Over &brandFullName;">
+<!ENTITY aboutCmd.accesskey                     "M">
+
+<!-- Mac OS X "Window" menu items -->
+<!ENTITY windowMenu.label                       "Window">
+<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY minimizeWindow.key                     "M">
+<!ENTITY bringAllToFront.label                  "Bring All to Front">

@@ -287,6 +287,7 @@
 <!ENTITY calendar.menu.options.modify           "修正" >
 <!ENTITY calendar.menu.options.remove           "削除" >
 <!ENTITY calendar.menu.options.close            "ウィンドウを閉じる" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "イベント" >

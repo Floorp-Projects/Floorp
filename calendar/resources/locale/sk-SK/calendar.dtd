@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Upraviť" >
 <!ENTITY calendar.menu.options.remove           "Odstrániť" >
 <!ENTITY calendar.menu.options.close            "Zavrieť okno" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "Z" >
 
 <!ENTITY calendar.main.tab.label        "Udalosti" >

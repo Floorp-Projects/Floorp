@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Taisyti" >
 <!ENTITY calendar.menu.options.remove           "Pašalinti" >
 <!ENTITY calendar.menu.options.close            "Užverti langą" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Įvykiai" >

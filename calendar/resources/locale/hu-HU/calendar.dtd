@@ -286,6 +286,7 @@
 <!ENTITY calendar.menu.options.modify           "Szerkesztés" >
 <!ENTITY calendar.menu.options.remove           "Törlés" >
 <!ENTITY calendar.menu.options.close            "Ablak bezárása" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "B" >
 
 <!ENTITY calendar.main.tab.label        "Események" >

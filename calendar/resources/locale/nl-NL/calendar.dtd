@@ -284,6 +284,7 @@
 <!ENTITY calendar.menu.options.modify           "Bewerken" >
 <!ENTITY calendar.menu.options.remove           "Verwijderen" >
 <!ENTITY calendar.menu.options.close            "Sluiten" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "S" >
 
 <!ENTITY calendar.main.tab.label        "Gebeurtenissen" >

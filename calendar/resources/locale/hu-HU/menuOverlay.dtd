@@ -21,6 +21,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,127 +40,146 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- Event Menu -->
-<!ENTITY event.menu.title   "Esemény">
-<!ENTITY eventMenuCmd.accesskey     "s">
+<!ENTITY event.menu.title                       "Esemény">
+<!ENTITY eventMenuCmd.accesskey                 "s">
 
-<!ENTITY event.new.event           "Új esemény…">
-<!ENTITY event.new.event.accesskey "e">
+<!ENTITY event.new.event                        "Új esemény…">
+<!ENTITY event.new.event.key                    "N">
+<!ENTITY event.new.event.accesskey              "e">
 
-<!ENTITY event.new.todo     "Új tennivaló…">
-<!ENTITY event.new.todo.accesskey "t">
+<!ENTITY event.new.todo                         "Új tennivaló…">
+<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.accesskey               "t">
 
-<!ENTITY calendar.new.server.label "Új naptár fájl…">
-<!ENTITY calendar.new.server.accesskey "p">
+<!ENTITY calendar.new.server.label              "Új naptár fájl…">
+<!ENTITY calendar.new.server.key                "L">
+<!ENTITY calendar.new.server.accesskey          "p">
 
-<!ENTITY calendar.open.file.label "Megnyitás naptár fajl…">
-<!ENTITY calendar.open.file.accesskey "M">
+<!ENTITY calendar.open.file.label               "Megnyitás naptár fajl…">
+<!ENTITY calendar.open.file.accesskey           "M">
 
-<!ENTITY event.edit.event   "Szerkesztés…">
-<!ENTITY event.edit.event.accesskey "z">
+<!ENTITY event.edit.event                       "Szerkesztés…">
+<!ENTITY event.edit.event.key                   "E">
+<!ENTITY event.edit.event.accesskey             "z">
 
-<!ENTITY event.delete.event "Kiválasztott események törlése">
-<!ENTITY event.delete.event.accesskey   "e">
+<!ENTITY event.delete.event                     "Kiválasztott események törlése">
+<!ENTITY event.delete.event.accesskey           "e">
 
-<!ENTITY event.delete.tasks "Kiválasztott tennivalók törlése">
-<!ENTITY event.delete.tasks.accesskey   "t">
+<!ENTITY event.delete.tasks                     "Kiválasztott tennivalók törlése">
+<!ENTITY event.delete.tasks.accesskey           "t">
 
-<!ENTITY event.mail.event   "Kiválasztott események elküldése…">
-<!ENTITY event.mail.event.accesskey "e">
+<!ENTITY event.mail.event                       "Kiválasztott események elküldése…">
+<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.accesskey             "e">
 
-<!ENTITY calendar.print.label   "Az aktív naptár nyomtatása...">
-<!ENTITY calendar.print.accesskey   "n">
+<!ENTITY calendar.print.label                   "Az aktív naptár nyomtatása...">
+<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.accesskey               "n">
 
-<!ENTITY calendar.printpreview.label    "Nyomtatási kép">
-<!ENTITY calendar.printpreview.accesskey    "t">
+<!ENTITY calendar.printpreview.label            "Nyomtatási kép">
+<!ENTITY calendar.printpreview.accesskey        "t">
 
-<!ENTITY calendar.pagesetup.label   "Oldalbeállítás...">
-<!ENTITY calendar.pagesetup.accesskey   "O">
+<!ENTITY calendar.pagesetup.label               "Oldalbeállítás...">
+<!ENTITY calendar.pagesetup.accesskey           "O">
 
-<!ENTITY calendar.import.label  "Importálás fájlból...">
-<!ENTITY calendar.import.accesskey  "I">
+<!ENTITY calendar.import.label                  "Importálás fájlból...">
+<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label  "Varázsló indítása">
-<!ENTITY calendar.wizard.accesskey  "V">
+<!ENTITY calendar.wizard.label                  "Varázsló indítása">
+<!ENTITY calendar.wizard.accesskey              "V">
 
-<!ENTITY calendar.export.label  "Kiválasztott események exportálása...">
-<!ENTITY calendar.export.accesskey  "x">
+<!ENTITY calendar.export.label                  "Kiválasztott események exportálása...">
+<!ENTITY calendar.export.key                    "O">
+<!ENTITY calendar.export.accesskey              "x">
 
-<!ENTITY calendar.subscribe.label "Feliratkozás távoli naptárra...">
-<!ENTITY calendar.subscribe.accesskey "F">
+<!ENTITY calendar.subscribe.label               "Feliratkozás távoli naptárra...">
+<!ENTITY calendar.subscribe.accesskey           "F">
 
-<!ENTITY calendar.publish.label "Kiválasztott események közzététele...">
-<!ENTITY calendar.publish.accesskey "K">
+<!ENTITY calendar.publish.label                 "Kiválasztott események közzététele...">
+<!ENTITY calendar.publish.accesskey             "K">
 
-<!ENTITY calendar.about.label   "A Naptár névjegye">
-<!ENTITY calendar.about.accesskey   "N">
+<!ENTITY calendar.about.label                   "A Naptár névjegye">
+<!ENTITY calendar.about.accesskey               "N">
 
-<!ENTITY calendar.cut.label "Kivágás">
-<!ENTITY calendar.cut.accesskey "K">
+<!ENTITY calendar.cut.label                     "Kivágás">
+<!ENTITY calendar.cut.key                       "X">
+<!ENTITY calendar.cut.accesskey                 "K">
 
-<!ENTITY calendar.copy.label    "Másolás">
-<!ENTITY calendar.copy.accesskey    "M">
+<!ENTITY calendar.copy.label                    "Másolás">
+<!ENTITY calendar.copy.key                      "C">
+<!ENTITY calendar.copy.accesskey                "M">
 
-<!ENTITY calendar.paste.label   "Beszúrás">
-<!ENTITY calendar.paste.accesskey   "B">
+<!ENTITY calendar.paste.label                   "Beszúrás">
+<!ENTITY calendar.paste.key                     "V">
+<!ENTITY calendar.paste.accesskey               "B">
 
-<!ENTITY calendar.selectall.label   "Mindent kiválaszt">
-<!ENTITY calendar.selectall.accesskey   "i">
+<!ENTITY calendar.selectall.label               "Mindent kiválaszt">
+<!ENTITY calendar.selectall.key                 "A">
+<!ENTITY calendar.selectall.accesskey           "i">
 
-<!ENTITY calendar.preferences.label "Beállítások...">
-<!ENTITY calendar.preferences.accesskey "l">
+<!ENTITY calendar.preferences.label             "Beállítások...">
+<!ENTITY calendar.preferences.accesskey         "l">
 
-<!ENTITY goMenu.label                   "Ugrás">
-<!ENTITY goMenu.accesskey               "U">
+<!ENTITY goMenu.label                           "Ugrás">
+<!ENTITY goMenu.accesskey                       "U">
 
-<!ENTITY goTodayCmd.label               "Ugrás a mai napra">
-<!ENTITY goTodayCmd.accesskey           "m">
+<!ENTITY goTodayCmd.label                       "Ugrás a mai napra">
+<!ENTITY goTodayCmd.accesskey                   "m">
 
-<!ENTITY goDateCmd.label                "Ugrás adott napra">
-<!ENTITY goDateCmd.accesskey            "d">
+<!ENTITY goDateCmd.label                        "Ugrás adott napra">
+<!ENTITY goDateCmd.accesskey                    "d">
 
-<!ENTITY goPreviousCmd.label            "Előző">
-<!ENTITY goPreviousCmd.accesskey        "E">
+<!ENTITY goPreviousCmd.label                    "Előző">
+<!ENTITY goPreviousCmd.accesskey                "E">
 
-<!ENTITY goNextCmd.label                "Következő">
-<!ENTITY goNextCmd.accesskey            "K">
+<!ENTITY goNextCmd.label                        "Következő">
+<!ENTITY goNextCmd.accesskey                    "K">
 
-<!ENTITY taskMenu.label                "Tennivaló">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.label                         "Tennivaló">
+<!ENTITY taskMenu.accesskey                     "T">
 
-<!ENTITY toolsMenu.label                "Feladatok">
-<!ENTITY toolsMenu.accesskey            "F">
+<!ENTITY toolsMenu.label                        "Feladatok">
+<!ENTITY toolsMenu.accesskey                    "F">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey "J">
+<!ENTITY javaScriptConsoleCmd.label             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey         "J">
 
-<!ENTITY navigatorCmd.label     "Böngésző">
-<!ENTITY navigatorCmd.accesskey "B">
+<!ENTITY navigatorCmd.label                     "Böngésző">
+<!ENTITY navigatorCmd.accesskey                 "B">
 
-<!ENTITY messengerCmd.label     "Levelező és hírolvasó">
-<!ENTITY messengerCmd.accesskey "L">
+<!ENTITY messengerCmd.label                     "Levelező és hírolvasó">
+<!ENTITY messengerCmd.accesskey                 "L">
 
-<!ENTITY addressBookCmd.label     "Címjegyzék">
-<!ENTITY addressBookCmd.accesskey "C">
+<!ENTITY addressBookCmd.label                   "Címjegyzék">
+<!ENTITY addressBookCmd.accesskey               "C">
 
-<!ENTITY helpMenu.label         "Súgó"> 
-<!ENTITY helpMenu.accesskey            "S">
+<!ENTITY helpMenu.label                         "Súgó">
+<!ENTITY helpMenu.accesskey                     "S">
 
-<!ENTITY walletPasswordManager.label     "Jelszókezelő">
-<!ENTITY walletPasswordManager.accesskey "J">
+<!ENTITY walletPasswordManager.label            "Jelszókezelő">
+<!ENTITY walletPasswordManager.accesskey        "J">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "Fájl"> 
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY fileMenu.label                         "Fájl">
+<!ENTITY fileMenu.accesskey                     "F">
 
-<!ENTITY editMenu.label         "Szerkesztés"> 
-<!ENTITY editMenu.accesskey       "z"> 
-<!ENTITY preferencesCmd.label       "Beállítások...">
-<!ENTITY preferencesCmd.accesskey     "B"> 
+<!ENTITY editMenu.label                         "Szerkesztés">
+<!ENTITY editMenu.accesskey                     "z">
+<!ENTITY preferencesCmd.label                   "Beállítások...">
+<!ENTITY preferencesCmd.accesskey               "B">
 
-<!ENTITY viewMenu.label         "Nézet"> 
-<!ENTITY viewMenu.accesskey       "N"> 
+<!ENTITY viewMenu.label                         "Nézet">
+<!ENTITY viewMenu.accesskey                     "N">
 
-<!ENTITY releaseCmd.label       "Verzióinformáció">
-<!ENTITY releaseCmd.accesskey       "V">
-<!ENTITY aboutCmd.label         "A &brandFullName; névjegye">
-<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY releaseCmd.label                       "Verzióinformáció">
+<!ENTITY releaseCmd.accesskey                   "V">
+<!ENTITY aboutCmd.label                         "A &brandFullName; névjegye">
+<!ENTITY aboutCmd.accesskey                     "A">
+
+<!-- Mac OS X "Window" menu items -->
+<!ENTITY windowMenu.label                       "Window">
+<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY minimizeWindow.key                     "M">
+<!ENTITY bringAllToFront.label                  "Bring All to Front">

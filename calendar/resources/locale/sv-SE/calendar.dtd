@@ -285,6 +285,7 @@
 <!ENTITY calendar.menu.options.modify           "Redigera" >
 <!ENTITY calendar.menu.options.remove           "Radera" >
 <!ENTITY calendar.menu.options.close            "Stäng Fönster" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Händelser" >

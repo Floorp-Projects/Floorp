@@ -285,6 +285,7 @@
 <!ENTITY calendar.menu.options.modify           "Editar" >
 <!ENTITY calendar.menu.options.remove           "Apagar" >
 <!ENTITY calendar.menu.options.close            "Fechar Janela" >
+<!ENTITY calendar.menu.options.close.key        "W">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Eventos" >
