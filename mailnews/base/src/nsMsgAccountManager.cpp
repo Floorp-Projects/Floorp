@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -788,9 +788,10 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     nsXPIDLCString defaultKey;
     rv = m_prefs->GetCharPref(PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT, getter_Copies(defaultKey));
     
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
       GetAccount(defaultKey, getter_AddRefs(m_defaultAccount));
-    } else {
+
+    if (!m_defaultAccount) {
       PRUint32 index;
       PRBool foundValidDefaultAccount = PR_FALSE;
       for (index = 0; index < count; index++) {
@@ -816,12 +817,14 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
           }
         }
       }
+
       if (!foundValidDefaultAccount) {
         // get the first account and use it.
         // we need to fix this scenario.
+        NS_WARNING("No valid default account found, just using first (FIXME)");
         nsCOMPtr<nsIMsgAccount> firstAccount;
-        rv = m_accounts->QueryElementAt(0, NS_GET_IID(nsIMsgAccount),
-                                       (void **)getter_AddRefs(firstAccount));
+        m_accounts->QueryElementAt(0, NS_GET_IID(nsIMsgAccount),
+                                   (void **)getter_AddRefs(firstAccount));
 
         SetDefaultAccount(firstAccount);
       }
@@ -1434,36 +1437,40 @@ nsMsgAccountManager::LoadAccounts()
   if (!accountList || !accountList[0])
     return NS_OK;
   
-    /* parse accountList and run loadAccount on each string, comma-separated */   
-    nsCOMPtr<nsIMsgAccount> account;
-    char *newStr;
-    char *rest = accountList.BeginWriting();
-    nsCAutoString str;
-
-    char *token = nsCRT::strtok(rest, ",", &newStr);
-    while (token) {
-      str = token;
-      str.StripWhitespace();
+  /* parse accountList and run loadAccount on each string, comma-separated */   
+  nsCOMPtr<nsIMsgAccount> account;
+  char *newStr;
+  char *rest = accountList.BeginWriting();
+  nsCAutoString str;
+  
+  for (char *token = nsCRT::strtok(rest, ",", &newStr);
+       token;
+       token = nsCRT::strtok(newStr, ",", &newStr))
+  {
+    str = token;
+    str.StripWhitespace();
       
-      if (!str.IsEmpty()) 
-          rv = GetAccount(str.get(), getter_AddRefs(account));
-
-      // force load of accounts (need to find a better way to do this
-      nsCOMPtr<nsISupportsArray> identities;
-      account->GetIdentities(getter_AddRefs(identities));
-      
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      account->GetIncomingServer(getter_AddRefs(server));
-
-      token = nsCRT::strtok(newStr, ",", &newStr);
+    if (str.IsEmpty() ||
+        NS_FAILED(createKeyedAccount(str.get(), getter_AddRefs(account))) ||
+        !account) {
+      NS_WARNING("unexpected entry in account list; prefs corrupt?");
+      continue;
     }
 
-    nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+    // force load of accounts (need to find a better way to do this)
+    nsCOMPtr<nsISupportsArray> identities;
+    account->GetIdentities(getter_AddRefs(identities));
+    
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    account->GetIncomingServer(getter_AddRefs(server));
+  }
 
-    if (NS_SUCCEEDED(rv))
-      mailSession->AddFolderListener(this, nsIFolderListener::added | nsIFolderListener::removed);
-    /* finished loading accounts */
-    return NS_OK;
+  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+
+  if (NS_SUCCEEDED(rv))
+    mailSession->AddFolderListener(this, nsIFolderListener::added | nsIFolderListener::removed);
+  /* finished loading accounts */
+  return NS_OK;
 }
 
 PRBool
@@ -1666,13 +1673,13 @@ nsMsgAccountManager::GetAccount(const char* key,
     
     m_accounts->EnumerateForwards(findAccountByKey, (void *)&findEntry);
 
-    if (findEntry.account) {
+    if (findEntry.account)
         NS_ADDREF(*_retval = findEntry.account);
-        return NS_OK;
-    }
+    else
+        *_retval = nsnull;
 
     // not found, create on demand
-    return createKeyedAccount(key, _retval);
+    return NS_OK;
 }
 
 nsresult
@@ -2735,7 +2742,7 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted
     nsCOMPtr <nsIMsgDatabase> virtDatabase;
     nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
 
-    nsresult rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+    rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
     PRBool msgHdrIsRead;
     aHdrDeleted->GetIsRead(&msgHdrIsRead);
     if (!msgHdrIsRead)
@@ -2961,7 +2968,7 @@ NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
   {
     PRUint32 count = 0;
     allServers->Count(&count);
-    PRInt32 i;
+    PRUint32 i;
     nsCOMPtr <nsIOutputStream> outputStream;
     for (i = 0; i < count; i++) 
     {
@@ -2988,7 +2995,7 @@ NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
             WriteLineToOutputStream("version=", "1", outputStream);
 
           }
-          for (PRInt32 folderIndex = 0; folderIndex < vfCount; folderIndex++)
+          for (PRUint32 folderIndex = 0; folderIndex < vfCount; folderIndex++)
           {
             nsCOMPtr <nsIRDFResource> folderRes (do_QueryElementAt(virtualFolders, folderIndex));
             nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(folderRes);

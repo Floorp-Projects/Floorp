@@ -51,6 +51,9 @@ interface nsIFolderListener;
 interface nsIMsgAccountManager : nsISupports {
 
   nsIMsgAccount createAccount();
+  /*
+   * Return the account with the provided key, or null if none found.
+   */
   nsIMsgAccount getAccount(in string key);
     
   void removeAccount(in nsIMsgAccount account);
