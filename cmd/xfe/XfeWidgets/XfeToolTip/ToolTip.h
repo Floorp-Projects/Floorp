@@ -27,7 +27,7 @@
 #ifndef _XfeToolTip_h_							/* start ToolTip.h		*/
 #define _XfeToolTip_h_
 
-#include <Xfe/ToolTipShell.h>
+#include <Xfe/Xfe.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 
@@ -67,8 +67,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 typedef void
 (*XfeTipStringObtainCallback)	(Widget				w,
-								 XtPointer			client_data1,
-								 XtPointer			client_data2,
+								 XtPointer			client_data,
 								 XmString *			string_return,
 								 Boolean *			need_to_free_string);
 /*----------------------------------------------------------------------*/
@@ -80,32 +79,30 @@ typedef void
 /* The 'reason' given to the XfeDocStringCallback callaback below.		*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-typedef enum _XfeDocStringReason
+enum
 {
     XfeDOC_STRING_CLEAR,							/* Clear (leave)	*/
 	XfeDOC_STRING_SET								/* Set (enter)		*/
-} XfeDocStringReason;
+};
 
 /*----------------------------------------------------------------------*/
 /*																		*/
 /* XfeDocStringCallback													*/
 /*																		*/
 /* This callback is invoked when the pointer enters an item that has	*/
-/* doc string support and a valid doc string is obtain.  A valid doc	*/
-/* string can be obtained in 2 ways:									*/
+/* doc string support and a valid doc string is obtained.				*/
 /*																		*/
-/* 1.  Via an XfeTipStringObtainCallback callback which can be          */
-/*	   installed by XfeDocStringSetObtainCallback()						*/
+/* The XfeTipStringObtainCallback callback can be installed by			*/
+/* XfeDocStringSetObtainCallback().										*/
 /*																		*/
-/* 2.  Via the XmNdocumentationString resource for the item which can	*/
-/*	   be installed in an application resources file.					*/
+/* You can use XfeDocStringGetFromAppDefaults() in your callback to 	*/
+/* obtain a string for a resource named XmNdocumentationString.			*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 typedef void
 (*XfeDocStringCallback)			(Widget					w,
-								 XtPointer				client_data1,
-								 XtPointer				client_data2,
-								 XfeDocStringReason		reason,
+								 XtPointer				client_data,
+								 unsigned char			reason,
 								 XmString				string);
 /*----------------------------------------------------------------------*/
 
@@ -136,8 +133,7 @@ XfeTipStringGetEnabledState			(Widget		w);
 extern void
 XfeTipStringSetObtainCallback	(Widget							w,
 								 XfeTipStringObtainCallback		callback,
-								 XtPointer						client_data1,
-								 XtPointer						client_data2);
+								 XtPointer						client_data);
 /*----------------------------------------------------------------------*/
 extern void
 XfeTipStringClearObtainCallback	(Widget							w);
@@ -193,8 +189,7 @@ XfeDocStringGetEnabledState			(Widget		w);
 extern void
 XfeDocStringSetObtainCallback		(Widget						w,
 									 XfeTipStringObtainCallback	callback,
-									 XtPointer					client_data1,
-									 XtPointer					client_data2);
+									 XtPointer					client_data);
 /*----------------------------------------------------------------------*/
 extern void
 XfeDocStringClearObtainCallback		(Widget						w);
@@ -202,8 +197,7 @@ XfeDocStringClearObtainCallback		(Widget						w);
 extern void
 XfeDocStringSetCallback				(Widget						w,
 									 XfeDocStringCallback		callback,
-									 XtPointer					client_data1,
-									 XtPointer					client_data2);
+									 XtPointer					client_data);
 /*----------------------------------------------------------------------*/
 extern void
 XfeDocStringClearCallback			(Widget						w);
@@ -224,6 +218,28 @@ XfeDocStringGlobalSetEnabledState	(Boolean state);
 /*----------------------------------------------------------------------*/
 extern Boolean
 XfeDocStringGlobalGetEnabledState	(void);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeDocStringGetFromAppDefaults()										*/
+/*																		*/
+/* Obtain an XmString from application defaults for the resource named	*/
+/* "documentationString"												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern XmString
+XfeDocStringGetFromAppDefaults		(Widget					w);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeTipStringGetFromAppDefaults()										*/
+/*																		*/
+/* Obtain an XmString from application defaults for the resource named	*/
+/* "tipString"															*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern XmString
+XfeTipStringGetFromAppDefaults		(Widget					w);
 
 XFE_END_CPLUSPLUS_PROTECTION
 
