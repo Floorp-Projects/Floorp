@@ -55,6 +55,7 @@
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "gfxIImageFrame.h"
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsIPrintContext.h"
@@ -2976,7 +2977,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   // on the dirty rect before accounting for the background-position.
   nscoord tileWidth = imageSize.width;
   nscoord tileHeight = imageSize.height;
-  PRBool  needBackgroundColor = PR_TRUE;
+  PRBool  needBackgroundColor = !(aColor.mBackgroundFlags &
+                                  NS_STYLE_BG_COLOR_TRANSPARENT);
   PRIntn  repeat = aColor.mBackgroundRepeat;
   nscoord xDistance, yDistance;
 
@@ -2992,8 +2994,20 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     case NS_STYLE_BG_REPEAT_XY:
       xDistance = dirtyRect.width;
       yDistance = dirtyRect.height;
-      // We need to render the background color if the image is transparent
-      //needBackgroundColor = image->GetHasAlphaMask();
+      if (needBackgroundColor) {
+        // If the image is completely opaque, we do not need to paint the
+        // background color
+        nsCOMPtr<gfxIImageFrame> gfxImgFrame;
+        image->GetCurrentFrame(getter_AddRefs(gfxImgFrame));
+        if (gfxImgFrame) {
+          gfx_format frameFormat;
+          gfxImgFrame->GetFormat(&frameFormat);
+          NS_ASSERTION(frameFormat >= 0 && frameFormat <= 7,
+                       "Unknown gfxIFormats value");
+          needBackgroundColor = frameFormat != gfxIFormats::RGB &&
+                                frameFormat != gfxIFormats::BGR;
+        }
+      }
       break;
     case NS_STYLE_BG_REPEAT_OFF:
     default:
