@@ -62,6 +62,7 @@ SVG_ATOM(tspan, "tspan")
 // properties
 SVG_ATOM(alignment_baseline, "alignment-baseline")
 SVG_ATOM(baseline_shift, "baseline-shift")
+SVG_ATOM(_class, "class")
 SVG_ATOM(clip_path, "clip-path")
 SVG_ATOM(clip_rule, "clip-rule")
 SVG_ATOM(cursor, "cursor")

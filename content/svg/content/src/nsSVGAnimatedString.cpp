@@ -132,7 +132,7 @@ nsSVGAnimatedString::GetBaseVal(nsAString & aBaseVal)
 NS_IMETHODIMP
 nsSVGAnimatedString::SetBaseVal(const nsAString & aBaseVal)
 {
-  mBaseVal = aBaseVal;
+  SetValueString(aBaseVal);
   return NS_OK;
 }
 
