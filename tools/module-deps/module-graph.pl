@@ -57,8 +57,14 @@ while ($#dirs != -1) {
   # pop the curdir
   $curdir = pop @dirs;
 
-  print STDERR "Entering $curdir..                 \r";
+  print STDERR "Entering $curdir..                 \n";
   chdir "$curdir" || next;
+  if ($^O eq "linux") {
+      next if (! -e "$curdir/Makefile");
+  } elsif ($^O eq "MSWin32") {
+      next if (! -e "$curdir/makefile.win");
+  }
+
   $current_dirs = "";
   open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
 
