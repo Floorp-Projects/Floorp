@@ -1474,16 +1474,16 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
             {	/* we have not seen this message before */
                 
-				m_pop3ConData->number_of_messages_not_seen_before++;
-				m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl = 
-					PL_strdup(message_id_token);
-				if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
-				{
-					PR_FREEIF(line);
-					return MK_OUT_OF_MEMORY;
-				}
-			}
-			else if (m_pop3ConData->only_uidl && message_id_token &&
+				      m_pop3ConData->number_of_messages_not_seen_before++;
+				      m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl = 
+					    PL_strdup(message_id_token);
+				      if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
+              {
+					      PR_FREEIF(line);
+					      return MK_OUT_OF_MEMORY;
+              }
+            }
+			      else if (m_pop3ConData->only_uidl && message_id_token &&
                      !PL_strcmp(m_pop3ConData->only_uidl, message_id_token))
             {
                 m_pop3ConData->last_accessed_msg = m_pop3ConData->current_msg_to_top - 1;
@@ -1516,7 +1516,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
         }
     }
 
-	PR_FREEIF(line);
+	  PR_FREEIF(line);
     return 0;
 }
 
@@ -1545,15 +1545,15 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 */
 PRInt32 nsPop3Protocol::SendXtndXlstMsgid()
 {
-    if ((m_pop3ConData->capability_flags & POP3_HAS_XTND_XLST) ||
-        (m_pop3ConData->capability_flags & POP3_XTND_XLST_UNDEFINED))
-    {
-        m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
-        m_pop3ConData->pause_for_read = PR_TRUE;
-        return SendData(m_url, "XTND XLST Message-Id" CRLF);
-    }
-    else
-        return StartUseTopForFakeUidl();
+  if ((m_pop3ConData->capability_flags & POP3_HAS_XTND_XLST) ||
+      (m_pop3ConData->capability_flags & POP3_XTND_XLST_UNDEFINED))
+  {
+    m_pop3ConData->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
+    m_pop3ConData->pause_for_read = PR_TRUE;
+    return SendData(m_url, "XTND XLST Message-Id" CRLF);
+  }
+  else
+      return StartUseTopForFakeUidl();
 }
 
 
@@ -1596,8 +1596,8 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }        
 
-	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
+	  PRBool pauseForMoreData = PR_FALSE;
+	  line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
     if(pauseForMoreData || !line)
     {
@@ -1615,12 +1615,12 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
      * list data is terminated by a ".CRLF" line
      */
     if(!PL_strcmp(line, "."))
-	{
+    {
         m_pop3ConData->next_state = POP3_GET_MSG;
         m_pop3ConData->pause_for_read = PR_FALSE;
-		PR_FREEIF(line);
+		    PR_FREEIF(line);
         return(0);
-	}
+    }
     
     msg_num = atol(nsCRT::strtok(line, " ", &newStr));
 
@@ -2908,7 +2908,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             if (!m_pop3ConData->only_uidl) 
             {
                 if (m_pop3ConData->only_check_for_new_mail)
-                    m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, m_pop3ConData->number_of_messages_not_seen_before);	
+                    m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, m_pop3ConData->really_new_messages);	
                     /* update old style biff */
                 else 
                 {
@@ -2920,30 +2920,31 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                        show the message there. */
 
                     if (m_totalDownloadSize <= 0) 
-					{
-						UpdateStatus(POP3_NO_MESSAGES);
-                        /* There are no new messages.  */
+                    {
+						          UpdateStatus(POP3_NO_MESSAGES);
+                      /* There are no new messages.  */
                     }
                     else 
-					{
-						PRUnichar * statusTemplate = nsnull;
-            mStringService->GetStringByID(POP3_DOWNLOAD_COUNT, &statusTemplate);
-						if (statusTemplate)
-						{
-							PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
+                    {
+						          PRUnichar * statusTemplate = nsnull;
+                      mStringService->GetStringByID(POP3_DOWNLOAD_COUNT, &statusTemplate);
+						          if (statusTemplate)
+                      {
+							          PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
                               m_pop3ConData->real_new_counter - 1,
                               m_pop3ConData->really_new_messages);  
-							UpdateStatusWithString(statusString);
-							nsTextFormatter::smprintf_free(statusString);
-							nsCRT::free(statusTemplate);
-
-						}
-                        m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsIMsgFolder::nsMsgBiffState_NewMail, m_pop3ConData->number_of_messages_not_seen_before);
+							          UpdateStatusWithString(statusString);
+							          nsTextFormatter::smprintf_free(statusString);
+							          nsCRT::free(statusTemplate);
+  
+                      }
+                      
+                      m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsIMsgFolder::nsMsgBiffState_NewMail, m_pop3ConData->really_new_messages);
                     }
                 }
             }
 			
-			status = SendData(mailnewsurl, "QUIT" CRLF);
+			      status = SendData(mailnewsurl, "QUIT" CRLF);
             m_pop3ConData->next_state = POP3_WAIT_FOR_RESPONSE;
             m_pop3ConData->next_state_after_response = POP3_QUIT_RESPONSE;
             break;
@@ -2983,67 +2984,61 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             if(m_pop3ConData->msg_del_started)
                 m_nsIPop3Sink->EndMailDelivery();
 
-			if (mailnewsurl)
-				mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
-
+			      if (mailnewsurl)
+				      mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
             m_pop3ConData->next_state = POP3_FREE;
             break;
 
         case POP3_INTERRUPTED:
-			SendData(mailnewsurl, "QUIT" CRLF);
+			      SendData(mailnewsurl, "QUIT" CRLF);
             m_pop3ConData->pause_for_read = PR_FALSE;
             m_pop3ConData->next_state = POP3_ERROR_DONE;
-			break;
+			      break;
         
         case POP3_ERROR_DONE:
-
             /*  write out the state */
             CommitState(PR_TRUE);
-				
+			
             if(m_pop3ConData->msg_closure)
             {
                 m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->only_uidl != nsnull);
                 m_pop3ConData->msg_closure = NULL;
                 m_nsIPop3Sink->AbortMailDelivery();
             }
-
            
             if(m_pop3ConData->msg_del_started)
             {
-
-				PRUnichar * statusTemplate = nsnull;
-        mStringService->GetStringByID(POP3_DOWNLOAD_COUNT, &statusTemplate);
-				if (statusTemplate)
-				{
-					PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
-                             m_pop3ConData->real_new_counter - 1,
+				      PRUnichar * statusTemplate = nsnull;
+              mStringService->GetStringByID(POP3_DOWNLOAD_COUNT, &statusTemplate);
+				      if (statusTemplate)
+              {
+					      PRUnichar * statusString = nsTextFormatter::smprintf(statusTemplate, 
+                              m_pop3ConData->real_new_counter - 1,
                               m_pop3ConData->really_new_messages);  
-					UpdateStatusWithString(statusString);
-					nsTextFormatter::smprintf_free(statusString);
-					nsCRT::free(statusTemplate);
+					      UpdateStatusWithString(statusString);
+					      nsTextFormatter::smprintf_free(statusString);
+					      nsCRT::free(statusTemplate);
+              }
 
-				}
-
-                PR_ASSERT (!TestFlag(POP3_PASSWORD_FAILED));
-                m_nsIPop3Sink->AbortMailDelivery();
+               PR_ASSERT (!TestFlag(POP3_PASSWORD_FAILED));
+               m_nsIPop3Sink->AbortMailDelivery();
             }
 
             if (TestFlag(POP3_PASSWORD_FAILED))
-			{
-                /* We got here because the password was wrong, so go
-                   read a new one and re-open the connection. */
-                m_pop3ConData->next_state = POP3_READ_PASSWORD;
-				m_pop3ConData->command_succeeded = PR_TRUE;
-				status = 0;
-				break;
-			}
+            {
+              /* We got here because the password was wrong, so go
+                 read a new one and re-open the connection. */
+              m_pop3ConData->next_state = POP3_READ_PASSWORD;
+				      m_pop3ConData->command_succeeded = PR_TRUE;
+				      status = 0;
+				      break;
+            }
             else
-                /* Else we got a "real" error, so finish up. */
-                m_pop3ConData->next_state = POP3_FREE;       
+              /* Else we got a "real" error, so finish up. */
+              m_pop3ConData->next_state = POP3_FREE;       
 
-			if (mailnewsurl)
-				mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
-
+			      if (mailnewsurl)
+				      mailnewsurl->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
             m_pop3ConData->pause_for_read = PR_FALSE;
             break;
             

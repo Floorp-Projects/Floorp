@@ -86,14 +86,8 @@ nsPop3Sink::~nsPop3Sink()
 nsresult
 nsPop3Sink::SetUserAuthenticated(PRBool authed)
 {
-#ifdef DEBUG
-    if (authed)
-        printf("User is authenticated. \n");
-    else
-        printf("User is NOT authenticated. \n");
-#endif 
-    m_authed = authed;
-    return NS_OK;
+  m_authed = authed;
+  return NS_OK;
 }
 
 nsresult
@@ -109,37 +103,30 @@ nsPop3Sink::GetUserAuthenticated(PRBool* authed)
 nsresult
 nsPop3Sink::SetSenderAuthedFlag(void* closure, PRBool authed)
 {
-#ifdef DEBUG
-    if (authed)
-        printf("Sender is authenticated. \n");
-    else
-        printf("Sender is NOT authenticated. \n");
-#endif 
-    m_authed = authed;
-    return NS_OK;
-    
+  m_authed = authed;
+  return NS_OK;   
 }
 
 nsresult 
 nsPop3Sink::SetMailAccountURL(const char* urlString)
 {
-    if (urlString)
-    {
-        PR_FREEIF(m_accountUrl);
-        m_accountUrl = PL_strdup(urlString);
-    }
+  if (urlString)
+  {
+    PR_FREEIF(m_accountUrl);
+    m_accountUrl = PL_strdup(urlString);
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult
 nsPop3Sink::GetMailAccountURL(char* *urlString)
 {
-    NS_ASSERTION(urlString, "null getter in getMailAccountURL");
-    if (!urlString) return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(urlString, "null getter in getMailAccountURL");
+  if (!urlString) return NS_ERROR_NULL_POINTER;
 
-    *urlString = nsCRT::strdup(m_accountUrl);
-    return NS_OK;
+  *urlString = nsCRT::strdup(m_accountUrl);
+  return NS_OK;
 }
 
 nsresult 
@@ -515,33 +502,13 @@ nsPop3Sink::BiffGetNewMail()
 nsresult
 nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 {
-#ifdef DEBUG
-    printf("Set biff state: %d\n", aBiffState);
-#endif 
-
-    m_biffState = aBiffState;
+  m_biffState = aBiffState;
 	if(m_folder)
 	{
-		m_folder->SetBiffState(aBiffState);
 		m_folder->SetNumNewMessages(numNewMessages);
+		m_folder->SetBiffState(aBiffState);
 	}
-
-#ifdef DEBUG
-    switch (aBiffState)
-    {
-    case nsIMsgFolder::nsMsgBiffState_Unknown:
-    default:
-        printf("Excuse me, Sir. I have no idea.\n");
-        break;
-    case nsIMsgFolder::nsMsgBiffState_NewMail:
-        printf("Y'all got mail!\n");
-        break;
-    case nsIMsgFolder::nsMsgBiffState_NoMail:
-        printf("You have no mail.\n");
-        break;
-    }
-#endif 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
