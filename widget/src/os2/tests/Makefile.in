@@ -29,7 +29,7 @@ SIMPLE_PROGRAMS = dirpicker$(BIN_SUFFIX)
 
 CPPSRCS		= dirpicker.cpp
 
-LIBS		= $(DIST)/lib/libwdgtos2.lib
+LIBS		= $(DIST)/lib/wdgtos2.lib
 
 include $(topsrcdir)/config/rules.mk
 
