@@ -1,0 +1,19 @@
+The following packages are required for Grendel:
+
+For Java 1.1.x:
+	JFC/Swing 1.1
+	JavaMail 1.1
+	JavaBeans Activation Framework (JAF)
+
+For Java 2:
+	Swing 1.1 is shipped with Java 2 as part of the Java Standard
+	Extensions
+	JavaMail 1.1 and
+	JavaBeans Activation Framework (JAF) are separate downloads	
+
+Note that the Grendel sources have been updated to use the new package names for the Java Standard Extensions (javax.swing, etc.), so unless you want to change all the imports in every source file back, you won't be able to compile Grendel with older versions of the packages than are listed above.
+
+Make sure you have the appropriate packages available on your system, and edit the paths in the grendel/rules.mk file to the correct paths for your system. You'll also need to include some of the packages in your <netscape_install_dir>/java/classes directory, as parts of Grendel depend on some of the classes in those packages.
+
+--Jeff Galyan <jeffrey.galyan@sun.com>
+
