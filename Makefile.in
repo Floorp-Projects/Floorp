@@ -162,7 +162,7 @@ endif
 
 endif # BUILD_MODULES == all
 
-STATIC_MAKEFILES := $(NSPRPUB_DIR)
+STATIC_MAKEFILES := $(NSPRPUB_DIR) directory/c-sdk/ldap
 
 GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
