@@ -41,9 +41,6 @@ public:
   NS_IMETHOD  ShowPrintSetupDialog(nsIPrintSettings *aThePrintSettings);
   NS_IMETHOD  GetNativeData(PRInt16 aDataType, void * *_retval);
 
-  NS_IMETHOD  ReadPrefs();
-  NS_IMETHOD  WritePrefs();
-  
 protected:
 
   nsresult    ReadPageSetupFromPrefs();
