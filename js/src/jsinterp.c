@@ -3646,8 +3646,10 @@ no_catch:
         goto inline_return;
 
     /*
+     * Reset sp before freeing stack slots, because our caller may GC soon.
      * Restore the previous frame's execution state.
      */
+    fp->sp = fp->spbase;
     js_FreeRawStack(cx, mark);
     if (currentVersion != originalVersion)
         JS_SetVersion(cx, originalVersion);
