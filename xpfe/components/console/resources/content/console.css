@@ -17,18 +17,18 @@
   -moz-binding: url("chrome://global/content/consoleBindings.xml#message");
 }
 
-.console-error-msg {
-  white-space: normal;
-}
-    
 .console-msg-text {
-  white-space: pre;
+  white-space: -moz-pre-wrap;
 }  
 
 .console-error-source {
   -moz-binding: url("chrome://global/content/consoleBindings.xml#console-error-source");
 }
   
+.console-dots {
+  width: 1px;
+}
+
 /* :::::::::: hiding and showing of rows for each mode :::::::::: */
 
 .console-box[mode="Warnings"] > .console-box-internal > .console-rows 
