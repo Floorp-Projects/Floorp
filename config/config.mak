@@ -201,10 +201,11 @@ CFLAGS = $(CFLAGS) -FR
 CFLAGS=$(CFLAGS) -DSTANDALONE_IMAGE_LIB
 !endif
 
-!ifndef NO_NU_CACHE
-NU_CACHE = 1
-CFLAGS=$(CFLAGS) -DNU_CACHE
-!endif
+# Switching off NuCache for now...
+# !ifndef NO_NU_CACHE
+# NU_CACHE = 1
+# CFLAGS=$(CFLAGS) -DNU_CACHE
+# !endif
 
 # Crash-reporting system.  http://www.fullcirclesoftware.com
 !ifdef MOZ_FULLCIRCLE
