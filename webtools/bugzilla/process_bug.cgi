@@ -773,7 +773,7 @@ if (UserInGroup(Param('timetrackinggroup'))) {
                     $::query .= "$field = " . SqlQuote($er_time);
                 } else {
                     ThrowUserError("need_positive_number",
-                                   field => $field);
+                                   {field => $field});
                 }
             }
         }
