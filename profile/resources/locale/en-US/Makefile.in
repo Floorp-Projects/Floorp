@@ -39,7 +39,6 @@ FILES		= \
 		migration.properties		\
 		profileSelection.dtd		\
 		confirmMigration.dtd		\
-                activation.dtd                  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
