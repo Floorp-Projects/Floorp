@@ -77,10 +77,6 @@ OS_LFLAGS=
 !endif
 !endif
 
-!ifndef MODULAR_NETLIB
-OPTIMIZER=$(OPTIMIZER) -DCookieManagement -DSingleSignon
-!endif
-
 #//------------------------------------------------------------------------
 #//
 #// Select the correct RTL to link...
