@@ -807,7 +807,7 @@ public: /* ----- Cell Map public methods ----- */
                          const nsMargin& aPadding);
 
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
-  virtual PRBool IsAutoLayout(const nsHTMLReflowState* aReflowState = nsnull);
+  virtual PRBool IsAutoLayout();
 
   // compute the height of the table to be used as the basis for 
   // percentage height cells
