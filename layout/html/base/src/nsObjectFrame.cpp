@@ -543,28 +543,17 @@ PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsAutoString type;
+  nsCAutoString typeStr;
   rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE && !type.IsEmpty()) 
+  if (rv != NS_CONTENT_ATTR_HAS_VALUE || type.IsEmpty()) 
   {
-    nsXPIDLCString value;
-    char * buf = ToNewCString(type);
-    rv = catman->GetCategoryEntry("Gecko-Content-Viewers",buf, getter_Copies(value));
-    nsMemory::Free(buf);
-
-    // If we have a content viewer entry in the catagory manager for this mime type
-    // and it's not the full-page plugin one, return PR_TRUE to act like an IFRAME.
-    if (NS_SUCCEEDED(rv) && 
-        !value.IsEmpty() &&
-        !value.Equals("@mozilla.org/content/plugin/document-loader-factory;1"))
-      return PR_TRUE;
-    return PR_FALSE;
-  }
-
-  // if we don't have a TYPE= try getting the mime-type via the DATA= url
-  nsAutoString data;
-  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE && !data.IsEmpty()) 
-  {
+    // if we don't have a TYPE= try getting the mime-type via the DATA= url
+    nsAutoString data;
+    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE || data.IsEmpty()) {
+      return PR_FALSE;
+    }
+    
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
     rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURI);
@@ -575,19 +564,23 @@ PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
     
     nsXPIDLCString contentType;
     rv = mimeService->GetTypeFromURI(uri, getter_Copies(contentType));
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) || contentType.IsEmpty())
       return PR_FALSE;
-
-    nsXPIDLCString value;
-    rv = catman->GetCategoryEntry("Gecko-Content-Viewers",contentType, getter_Copies(value));
-
-    if (NS_SUCCEEDED(rv) && !value.IsEmpty())
-      return PR_TRUE;
-
-    return PR_FALSE;
+    
+    typeStr = contentType;
+  } else {
+    CopyUTF16toUTF8(type, typeStr);
   }
+    
+  nsXPIDLCString value;
+  rv = catman->GetCategoryEntry("Gecko-Content-Viewers",typeStr.get(), getter_Copies(value));
 
-  return PR_FALSE;
+  // If we have a content viewer entry in the catagory manager for this mime type
+  // and it's not the full-page plugin one, return PR_TRUE to act like an IFRAME.
+  return
+    NS_SUCCEEDED(rv) && 
+    !value.IsEmpty() &&
+    !value.Equals("@mozilla.org/content/plugin/document-loader-factory;1");
 }
 
 NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext* aPresContext,
