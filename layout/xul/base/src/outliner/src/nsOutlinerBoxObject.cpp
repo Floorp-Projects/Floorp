@@ -34,7 +34,7 @@
 class nsOutlinerBoxObject : public nsIOutlinerBoxObject, public nsBoxObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOUTLINERBOXOBJECT
 
   nsOutlinerBoxObject();

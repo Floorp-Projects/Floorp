@@ -350,7 +350,7 @@ protected: // Data Members
   nsIPresContext* mPresContext;
 
   // The cached box object parent.
-  nsIOutlinerBoxObject* mOutlinerBoxObject;
+  nsCOMPtr<nsIOutlinerBoxObject> mOutlinerBoxObject;
 
   // The current view for this outliner widget.  We get all of our row and cell data
   // from the view.
