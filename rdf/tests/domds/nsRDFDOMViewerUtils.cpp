@@ -81,3 +81,4 @@ NS_NewDOMViewerObject(const nsIID& iid, void ** aResult) {
   NS_RELEASE(obj);
   return rv;
 }
+
