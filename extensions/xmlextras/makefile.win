@@ -23,7 +23,9 @@ DEPTH=..\..
 
 DIRS= \
 	base \
+!if defined(MOZ_SOAP)
 	soap \
+!endif
 	build \
 !if !defined(DISABLE_TESTS)
 	tests \

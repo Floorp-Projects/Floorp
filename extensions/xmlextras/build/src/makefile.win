@@ -36,13 +36,23 @@ LLIBS=						      \
 		$(DIST)\lib\xpcom.lib		      \
 		$(DIST)\lib\js3250.lib		      \
                 $(DIST)\lib\xmlextrasbase_s.lib       \
+!if defined(MOZ_SOAP)
                 $(DIST)\lib\xmlextrassoap_s.lib       \
+!endif
 		$(LIBNSPR)	 	              \
 		$(NULL)
+
+!if defined(MOZ_SOAP)
+DEFINES = -DMOZ_SOAP
+!endif
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
 	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-

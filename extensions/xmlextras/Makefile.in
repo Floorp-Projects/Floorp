@@ -26,7 +26,13 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = base soap build
+DIRS            = base 
+
+ifdef MOZ_SOAP
+DIRS += soap
+endif
+
+DIRS += build
 
 ifdef ENABLE_TESTS
 DIRS += tests

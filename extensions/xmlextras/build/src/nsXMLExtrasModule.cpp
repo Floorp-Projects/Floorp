@@ -24,10 +24,6 @@
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsDOMParser.h"
-#include "nsSOAPParameter.h"
-#include "nsSOAPCall.h"
-#include "nsDefaultSOAPEncoder.h"
-#include "nsHTTPSOAPTransport.h"
 #include "nsIAppShellComponent.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptNameSetRegistry.h"
@@ -37,6 +33,13 @@
 #include "nsString.h"
 #include "nsDOMCID.h"
 #include "prprf.h"
+
+#ifdef MOZ_SOAP
+#include "nsSOAPParameter.h"
+#include "nsSOAPCall.h"
+#include "nsDefaultSOAPEncoder.h"
+#include "nsHTTPSOAPTransport.h"
+#endif
 
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
@@ -48,10 +51,12 @@ static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+#ifdef MOZ_SOAP
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
+#endif
 
 class nsXMLExtrasNameset : public nsIScriptExternalNameSet {
 public:
@@ -89,8 +94,10 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
   static NS_DEFINE_CID(kXMLSerializer_CID, NS_XMLSERIALIZER_CID);
   static NS_DEFINE_CID(kXMLHttpRequest_CID, NS_XMLHTTPREQUEST_CID);
   static NS_DEFINE_CID(kDOMParser_CID, NS_DOMPARSER_CID);
+#ifdef MOZ_SOAP
   static NS_DEFINE_CID(kSOAPCall_CID, NS_SOAPCALL_CID);
   static NS_DEFINE_CID(kSOAPParameter_CID, NS_SOAPPARAMETER_CID);
+#endif
   nsresult result = NS_OK;
   nsCOMPtr<nsIScriptNameSpaceManager> manager;
   
@@ -114,6 +121,7 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
                                          PR_TRUE);
     NS_ENSURE_SUCCESS(result, result);
 
+#ifdef MOZ_SOAP
     result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("SOAPCall"), 
                                          NS_GET_IID(nsISOAPCall),
                                          kSOAPCall_CID, 
@@ -125,6 +133,7 @@ nsXMLExtrasNameset::AddNameSet(nsIScriptContext* aScriptContext)
                                          kSOAPParameter_CID, 
                                          PR_TRUE);
     NS_ENSURE_SUCCESS(result, result);
+#endif
   }
 
   return result;
@@ -247,10 +256,12 @@ static nsModuleComponentInfo components[] = {
   { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_CONTRACTID, nsDOMSerializerConstructor },
   { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_CONTRACTID, nsXMLHttpRequestConstructor },
   { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID, nsDOMParserConstructor },
+#ifdef MOZ_SOAP
   { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_CONTRACTID, nsSOAPCallConstructor },
   { "SOAP Parameter", NS_SOAPPARAMETER_CID, NS_SOAPPARAMETER_CONTRACTID, nsSOAPParameterConstructor },
   { "Default SOAP Encoder", NS_DEFAULTSOAPENCODER_CID, NS_DEFAULTSOAPENCODER_CONTRACTID, nsDefaultSOAPEncoderConstructor },
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID, NS_HTTPSOAPTRANSPORT_CONTRACTID, nsHTTPSOAPTransportConstructor },
+#endif  
 };
 
 static void PR_CALLBACK
