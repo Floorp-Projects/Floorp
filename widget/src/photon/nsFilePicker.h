@@ -57,6 +57,7 @@ public:
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD Show(PRInt16 *_retval); 
   NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
+	NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
 
 protected:
   // method from nsBaseFilePicker
@@ -81,6 +82,7 @@ protected:
   nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
+	nsCOMPtr <nsISupportsArray> mFiles;
 
 	static char            mLastUsedDirectory[];
 };
