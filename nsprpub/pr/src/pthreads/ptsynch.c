@@ -486,36 +486,20 @@ PR_IMPLEMENT(PRInt32) PR_GetMonitorEntryCount(PRMonitor *mon)
 
 PR_IMPLEMENT(void) PR_EnterMonitor(PRMonitor *mon)
 {
-    int rv;
     pthread_t self = pthread_self();
 
     PR_ASSERT(mon != NULL);
-    rv = pthread_mutex_trylock(&mon->lock.mutex);
-#ifdef _PR_DCETHREADS
-    if (1 == rv)
-#else
-    if (0 == rv)
-#endif
+    /*
+     * This is safe only if mon->owner (a pthread_t) can be
+     * read in one instruction.  Perhaps mon->owner should be
+     * a "PRThread *"?
+     */
+    if (!pthread_equal(mon->owner, self))
     {
-        /* I now have the lock - I can play in the sandbox */
-        /* could/should/would not have gotten lock if entries != 0 */
+        PR_Lock(&mon->lock);
+        /* and now I have the lock */
         PR_ASSERT(0 == mon->entryCount);
-        PR_ASSERT(_PT_PTHREAD_THR_HANDLE_IS_ZERO(mon->lock.owner));
-        _PT_PTHREAD_COPY_THR_HANDLE(pthread_self(), mon->lock.owner);
         _PT_PTHREAD_COPY_THR_HANDLE(self, mon->owner);
-    }
-    else
-    {
-        PR_ASSERT(PT_TRYLOCK_BUSY == rv);  /* and if it isn't? */
-        /* somebody has it locked - is it me? */
-        if (!pthread_equal(mon->owner, self))
-        {
-            /* it's not me - this should block */
-            PR_Lock(&mon->lock);
-            /* and now I have the lock */
-            PR_ASSERT(0 == mon->entryCount);
-            _PT_PTHREAD_COPY_THR_HANDLE(self, mon->owner);
-        }
     }
     mon->entryCount += 1;
 }  /* PR_EnterMonitor */
