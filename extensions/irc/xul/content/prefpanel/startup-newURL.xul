@@ -40,7 +40,7 @@
     xmlns:xbl="http://www.mozilla.org/xbl"
     onload="Init();"
     class="dialog" style=" width: 25em; "
-    title="&window.title;">
+    title="&startup-newURL.window.title;">
 
   <script src="chrome://chatzilla/content/prefpanel/startup-newURL.js"/>
   

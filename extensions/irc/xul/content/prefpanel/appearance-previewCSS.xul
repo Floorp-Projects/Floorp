@@ -38,7 +38,7 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();" buttons="accept" style=" width: 50em; height: 40em; "
-    title="&window.title;">
+    title="&appearance-previewCSS.window.title;">
 
   <script src="chrome://chatzilla/content/prefpanel/appearance-previewCSS.js"/>
   

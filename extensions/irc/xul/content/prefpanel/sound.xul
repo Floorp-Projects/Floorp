@@ -35,7 +35,7 @@
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      headertitle="&window.title;" onload="Init();">
+      headertitle="&sound.window.title;" onload="Init();">
 
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://chatzilla/content/prefpanel/pref-irc.js"/>

@@ -38,7 +38,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();"
     class="dialog" style="width: 40em;"
-    title="&window.title;">
+    title="&startup-newScript.window.title;">
 
   <script type="application/x-javascript" 
       src="chrome://chatzilla/content/prefpanel/startup-newScript.js"/>

@@ -36,7 +36,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();"
-    headertitle="&window.title;">
+    headertitle="&interface.window.title;">
 
   <script src="chrome://chatzilla/content/prefpanel/interface.js"/>
   <script type="application/x-javascript">

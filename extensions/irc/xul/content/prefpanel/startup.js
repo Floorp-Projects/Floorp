@@ -50,7 +50,7 @@ function loadList(list)
     
     var prefList = gList.getAttribute("prefvalue");
     
-    if (prefList.match(/;/))
+    if (prefList)
     {
         var items = prefList.split(/\s*;\s*/);
         for (i in items)

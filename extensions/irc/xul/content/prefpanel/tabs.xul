@@ -41,7 +41,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.initPanel('chrome://chatzilla/content/prefpanel/tabs.xul');"
-    headertitle="&window.title;">
+    headertitle="&tabs.window.title;">
 
   <script type="application/x-javascript">
   <![CDATA[

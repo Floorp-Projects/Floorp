@@ -36,7 +36,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.initPanel('chrome://chatzilla/content/prefpanel/pref-irc.xul');"
-    headertitle="&window.title;">
+    headertitle="&pref-irc.window.title;">
 
   <script type="application/x-javascript">
   <![CDATA[

@@ -1,4 +1,4 @@
-<!ENTITY window.title "Appearance">
+<!ENTITY text.window.title "Appearance">
 
 <!ENTITY prePro.title "Text Munger">
 <!ENTITY prePro.desc "The Text Munger processes all text before display, and does things like convert web addresses into links you can click on. Hover the mouse over a checkbox for an explanation of the item.">
@@ -58,8 +58,8 @@
 <!ENTITY style.preview.label "Preview">
 <!ENTITY style.preview.accesskey "v">
 
-<!ENTITY window.title "Preview ChatZilla Stylesheet">
-<!ENTITY window.title "ChatZilla">
+<!ENTITY appearance-previewCSS.window.title "Preview ChatZilla Stylesheet">
+<!ENTITY pref-irc.window.title "ChatZilla">
 
 <!ENTITY userDetails.title "User Identification">
 <!ENTITY userDetails.help.label "What do these mean?">
@@ -83,7 +83,7 @@
 <!ENTITY global.nickCompleteStr.label "Nickname completion string:">
 <!ENTITY global.nickCompleteStr.accesskey "k">
 <!ENTITY global.nickCompleteStr.desc "This is appended to a nickname when tab-completed as the first word.">
-<!ENTITY window.title "Interface">
+<!ENTITY interface.window.title "Interface">
 
 <!ENTITY tabs.title "Tab Options">
 
@@ -108,7 +108,7 @@
 <!ENTITY scrollback.3.accesskey "h">
 <!ENTITY scrollback.4.label "Private message views:">
 <!ENTITY scrollback.4.accesskey "p">
-<!ENTITY window.title "Sound">
+<!ENTITY sound.window.title "Sound">
 
 <!ENTITY sndFile.label "Sound file:">
 <!ENTITY sndPresets.label "Preset sounds:">
@@ -125,7 +125,7 @@
 
 <!ENTITY sndStalkMsg.title "Sound on stalk word(s)">
 <!ENTITY sndStalkMsg.accesskey "s">
-<!ENTITY window.title "Stalking">
+<!ENTITY stalk.window.title "Stalking">
 
 <!ENTITY stalkWords.title "Stalk Words">
 <!ENTITY stalkWords.accesskey "S">
@@ -140,7 +140,7 @@
 <!ENTITY list.edit "Edit...">
 <!ENTITY list.del.label "Remove">
 <!ENTITY list.del.accesskey "R">
-<!ENTITY window.title "Startup">
+<!ENTITY startup.window.title "Startup">
 
 <!ENTITY startupOrder.label "When ChatZilla starts, it will load the JavaScript scripts first, then connect to any autoconnect servers and channels in the order shown.">
 
@@ -154,10 +154,10 @@
 <!ENTITY list.add "Add...">
 <!ENTITY list.edit "Edit...">
 <!ENTITY list.del "Remove">
-<!ENTITY window.title "ChatZilla Script Item">
+<!ENTITY startup-newScript.window.title "ChatZilla Script Item">
 
 <!ENTITY text.desc "Enter a web location (URL), or specify the local script file you want:">
-<!ENTITY window.title "ChatZilla Autoconnect Item">
+<!ENTITY startup-newURL.window.title "ChatZilla Autoconnect Item">
 
 <!ENTITY normal.label "Connect to a server or network">
 <!ENTITY normal.server "Enter the host name (irc.myserver.com) or the IP address (127.1.2.3) of the server:">
@@ -170,7 +170,7 @@
 
 <!ENTITY client.label "Open client view">
 <!ENTITY client.desc "The client view shows some basic information about ChatZilla and  how to use it.">
-<!ENTITY window.title "Tabs">
+<!ENTITY tabs.window.title "Tabs">
 
 <!ENTITY tabs.title "Tab Options">
 
@@ -195,7 +195,7 @@
 <!ENTITY scrollback.3.accesskey "">
 <!ENTITY scrollback.4.label "Private message views">
 <!ENTITY scrollback.4.accesskey "">
-<!ENTITY window.title "Appearance">
+<!ENTITY appearance.window.title "Appearance">
 
 <!ENTITY prePro.title "Text Pre-processor">
 <!ENTITY prePro.desc "The Text Pre-processor processes all text before display, and does things like convert web addresses into links you can click on.">

@@ -36,7 +36,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Init();"
-      headertitle="&window.title;">
+      headertitle="&stalk.window.title;">
 
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://chatzilla/content/prefpanel/pref-irc.js"/>
