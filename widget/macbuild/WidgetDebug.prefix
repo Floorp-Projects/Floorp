@@ -1,0 +1,11 @@
+//
+// WidgetDebug.Prefix
+//
+// Global prefix file for the debug Widget project.
+//
+
+#include "MacPrefix_debug.h"
+
+#include <Quickdraw.h>
+#include <Events.h>
+#include <MacWindows.h>
