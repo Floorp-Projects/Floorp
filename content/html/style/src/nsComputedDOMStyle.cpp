@@ -1605,7 +1605,7 @@ nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
     case NS_STYLE_DISPLAY_INLINE_TABLE :
       val->SetString("inline-table"); break;
     case NS_STYLE_DISPLAY_TABLE_ROW_GROUP :
-      val->SetString("table-row-croup"); break;
+      val->SetString("table-row-group"); break;
     case NS_STYLE_DISPLAY_TABLE_COLUMN :
       val->SetString("table-column"); break;
     case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP :
