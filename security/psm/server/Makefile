@@ -80,7 +80,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 ifdef NSM_TIMEBOMB
 CFLAGS += -DTIMEBOMB
 export::
-	gmake -f timebomb.mk export libs run
+	$(MAKE) -f timebomb.mk export libs run
 endif
 
 
@@ -224,11 +224,11 @@ link:
 		echo "rm $(PROGRAM)";	\
 		rm $(PROGRAM);		\
 	fi;				\
-	gmake				\
+	$(MAKE)				\
 
 patch: $(PROGRAM)
 #	if test ! -f $(DIST)/bin/plcypatch$(PROG_SUFFIX); then	\
-#		gmake import;					\
+#		$(MAKE) import;					\
 #	fi;
 #	-$(DIST)/bin/plcypatch $(PLCYPATCH_ARGS) $(PROGRAM)
 
