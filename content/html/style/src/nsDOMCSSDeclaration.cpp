@@ -67,8 +67,15 @@ NS_IMPL_RELEASE(nsDOMCSSDeclaration);
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsAWritableString& aCssText)
 {
+  nsCOMPtr<nsICSSDeclaration> decl;
   aCssText.Truncate();
-  // XXX TBI
+  GetCSSDeclaration(getter_AddRefs(decl), PR_FALSE);
+  NS_ASSERTION(decl, "null CSSDeclaration");
+
+  if (decl) {
+    decl->ToString(aCssText);
+  }
+
   return NS_OK;
 }
 
