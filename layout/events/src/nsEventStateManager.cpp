@@ -767,8 +767,34 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 nsresult
 nsEventStateManager::ChangeTextSize(PRInt32 change)
 {
+  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+  gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> rootWindow;
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+  NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
+
+  ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+  NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
+  
+  nsCOMPtr<nsIDOMWindow> windowContent;
+  rootWindow->Get_content(getter_AddRefs(windowContent));
+  NS_ENSURE_TRUE(windowContent, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  windowContent->GetDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsISupports> pcContainer;
-  mPresContext->GetContainer(getter_AddRefs(pcContainer));
+  presContext->GetContainer(getter_AddRefs(pcContainer));
   NS_ENSURE_TRUE(pcContainer, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
