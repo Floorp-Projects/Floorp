@@ -124,9 +124,6 @@ public:
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE) = 0;
 
-  NS_IMETHOD RemoveFocus() = 0;
-
-
   /**
    * Set the nsIWebShellContainer for the WebShell.
    */
@@ -295,20 +292,10 @@ public:
    NS_IMETHOD SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode) = 0;
 
 
-  /**
-   * Stop loading the current document.
-   */
-  NS_IMETHOD Stop(void) = 0;
-
   // XXX Temp Hacks
 
   NS_IMETHOD StopBeforeRequestingURL() = 0;
   NS_IMETHOD StopAfterURLAvailable() = 0;
-
-  /**
-   * Reload the current document.
-   */
-  NS_IMETHOD Reload(nsLoadFlags aType) = 0;
 
   //
   // History api's
@@ -329,7 +316,6 @@ public:
   // SetMenuBar
   // SetStatusBar
 
-  NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer) = 0;
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE)  = 0;
   NS_IMETHOD GetScrolling(PRInt32& aScrolling) = 0;
 
