@@ -31,6 +31,7 @@
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
+#include "nsIPrompt.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
@@ -83,8 +84,10 @@
 #include "nsCURILoader.h"
 
 #include "nsILocaleService.h"
+#include "nsIStringBundle.h"
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 #ifdef XP_PC
 #include <windows.h>
@@ -391,6 +394,7 @@ protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURI* aURL);
   nsresult GetViewManager(nsIViewManager* *viewManager);
+  nsresult InitDialogVars(void);
 
   nsIEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
@@ -401,6 +405,9 @@ protected:
   nsIPref* mPrefs;
   nsIWidget* mWindow;
   nsIDocumentLoader* mDocLoader;
+
+  nsCOMPtr<nsIPrompt> mPrompter;
+  nsCOMPtr<nsIStringBundle> mStringBundle;
 
   nsString mDefaultCharacterSet;
 
@@ -1975,8 +1982,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
           rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
       }
 
+      PRInt32 colon = -1;
       if (NS_FAILED(rv)) {
-          PRInt32 colon, fSlash = urlSpec.FindChar('/');
+          PRInt32 fSlash = urlSpec.FindChar('/');
           PRUnichar port;
           // if no scheme (protocol) is found, assume http.
           if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
@@ -2002,6 +2010,30 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
             }
           } // end if colon
           rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+          if (NS_FAILED(rv)) {
+              // we weren't able to find a protocol handler
+              rv = InitDialogVars();
+              if (NS_FAILED(rv)) return rv;
+
+              NS_ASSERTION(mPrompter && mStringBundle, "webshell is unable to throw dialogs");
+
+              nsXPIDLString messageStr;
+              nsAutoString name("protocolNotFound");
+              rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+              if (NS_FAILED(rv)) return rv;
+
+              NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
+
+              // extract the scheme
+              nsAutoString scheme;
+              urlSpec.Left(scheme, colon);
+
+              nsAutoString dnsMsg(messageStr);
+              dnsMsg.Insert(' ', 0);
+              dnsMsg.Insert(scheme, 0);
+
+              mPrompter->Alert(dnsMsg.GetUnicode());
+          }
 
 	      nsAutoString  url(aURLSpec);
 	      if (((url.Find("mailto:", PR_TRUE))<0) && (NS_FAILED(rv))) {
@@ -3104,6 +3136,25 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                     rv = LoadURL(newURL.GetUnicode(), "view");
                 } // retry
             } // end keyword load failure
+        } else {
+            rv = InitDialogVars();
+            if (NS_FAILED(rv)) {
+                nsAllocator::Free(host);
+                return rv;
+            }
+
+            NS_ASSERTION(mPrompter && mStringBundle, "webshell is unable to throw dialogs");
+
+            nsXPIDLString messageStr;
+            nsAutoString name("dnsNotFound");
+            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString dnsMsg(messageStr);
+            dnsMsg.Insert(' ', 0);
+            dnsMsg.Insert(host, 0);
+
+            mPrompter->Alert(dnsMsg.GetUnicode());
         } // end !*tmp
         nsAllocator::Free(host);
     } // unknown host
@@ -3580,6 +3631,36 @@ nsresult nsWebShell::GetViewManager(nsIViewManager* *viewManager)
 	return rv;
 }
 
+
+#define DIALOG_STRING_URI "chrome://global/locale/appstrings.properties"
+
+nsresult nsWebShell::InitDialogVars(void)
+{
+    nsresult rv = NS_OK;
+    if (!mPrompter) {
+        // Get an nsIPrompt so we can throw dialogs.
+        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+        GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+        if (topLevelWindow)
+            mPrompter = do_QueryInterface(topLevelWindow);
+    }
+
+    if (!mStringBundle) {
+        // Get a string bundle so we can retrieve dialog strings
+        nsCOMPtr<nsILocale> locale;
+        NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = localeServ->GetSystemLocale(getter_AddRefs(locale));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = service->CreateBundle(DIALOG_STRING_URI, locale, getter_AddRefs(mStringBundle));
+    }
+    return rv;
+}
 
 //*****************************************************************************
 // nsWebShell::nsIBaseWindow
