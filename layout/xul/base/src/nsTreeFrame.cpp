@@ -131,9 +131,7 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 				cellFrame = cellData->mRealCell->mCell;
 		}
 
-		// We now have the cell that should be selected.  We want to perform the selection
-		// but prevent the notification unless we're the final cell being selected.  This
-		// way we batch up the changes and only do one reflow.
+		// We now have the cell that should be selected. 
 		nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
 		mSelectedItems.AppendElement(pTreeCell);
 		pTreeCell->Select(aPresContext, PR_TRUE);
@@ -151,4 +149,63 @@ void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
 	}
 
 	mSelectedItems.Clear();
+}
+
+void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+{
+	PRInt32 rowIndex = pFrame->GetRowIndex();
+	PRInt32 colIndex = pFrame->GetColIndex();
+	if (rowIndex > 0)
+	{
+		MoveTo(aPresContext, rowIndex-1, colIndex, pFrame);
+	}
+}
+
+void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+{
+	PRInt32 rowIndex = pFrame->GetRowIndex();
+	PRInt32 colIndex = pFrame->GetColIndex();
+	PRInt32 totalRows = mCellMap->GetRowCount();
+
+	if (rowIndex < totalRows-1)
+	{
+		MoveTo(aPresContext, rowIndex+1, colIndex, pFrame);
+	}
+}
+
+void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+{
+	PRInt32 rowIndex = pFrame->GetRowIndex();
+	PRInt32 colIndex = pFrame->GetColIndex();
+	if (colIndex > 0)
+	{
+		MoveTo(aPresContext, rowIndex, colIndex-1, pFrame);
+	}
+}
+
+void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+{
+	PRInt32 rowIndex = pFrame->GetRowIndex();
+	PRInt32 colIndex = pFrame->GetColIndex();
+	PRInt32 totalCols = mCellMap->GetColCount();
+
+	if (colIndex < totalCols-1)
+	{
+		MoveTo(aPresContext, rowIndex, colIndex+1, pFrame);
+	}
+}
+
+void nsTreeFrame::MoveTo(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame)
+{
+	nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(row, col);
+	if (nsnull==cellFrame)
+	{
+		CellData *cellData = mCellMap->GetCellAt(row, col);
+		if (nsnull!=cellData)
+			cellFrame = cellData->mRealCell->mCell;
+	}
+
+	// We now have the cell that should be selected. 
+	nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
+	SetSelection(aPresContext, pTreeCell);
 }

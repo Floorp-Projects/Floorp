@@ -32,6 +32,12 @@ public:
   void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame);
 
+  void MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
+  void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
+  void MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
+  void MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
+  void MoveTo(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame);
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
