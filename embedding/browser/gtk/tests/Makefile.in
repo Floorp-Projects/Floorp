@@ -30,7 +30,9 @@ REQUIRES	= xpcom string dom
 
 CPPSRCS		= \
 		TestGtkEmbed.cpp \
-		TestGtkEmbedNotebook.cpp
+		TestGtkEmbedNotebook.cpp \
+		TestGtkEmbedSocket.cpp \
+		TestGtkEmbedChild.cpp
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 

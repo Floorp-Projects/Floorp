@@ -55,10 +55,13 @@ enum {
   DOM_MOUSE_DBL_CLICK,
   DOM_MOUSE_OVER,
   DOM_MOUSE_OUT,
-  LAST_SIGNAL
+  EMBED_LAST_SIGNAL
 };
 
-extern guint moz_embed_signals[LAST_SIGNAL];
+extern guint moz_embed_signals[EMBED_LAST_SIGNAL];
+
+extern void gtk_moz_embed_single_create_window(GtkMozEmbed **aNewEmbed,
+					       guint aChromeFlags);
 
 #ifdef __cplusplus
 }

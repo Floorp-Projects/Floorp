@@ -192,6 +192,29 @@ typedef enum
   GTK_MOZ_EMBED_FLAG_OPENASCHROME = 2147483648U 
 } GtkMozEmbedChromeFlags;
 
+/* this is a singleton object that you can hook up to to get signals
+   that are not handed out on a per widget basis. */
+
+typedef struct _GtkMozEmbedSingle      GtkMozEmbedSingle;
+typedef struct _GtkMozEmbedSingleClass GtkMozEmbedSingleClass;
+
+struct _GtkMozEmbedSingle
+{
+  GtkObject  object;
+  void      *data;
+};
+
+struct _GtkMozEmbedSingleClass
+{
+  GtkObjectClass parent_class;
+
+  void (* new_window_orphan)   (GtkMozEmbedSingle *embed,
+				GtkMozEmbed **newEmbed,
+				guint chromemask);
+};
+
+GtkMozEmbedSingle *
+gtk_moz_embed_single_get(void);
 
 #ifdef __cplusplus
 }
