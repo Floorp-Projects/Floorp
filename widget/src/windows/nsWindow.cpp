@@ -381,6 +381,7 @@ nsWindow::nsWindow()
     mIsControlDown = PR_FALSE;
     mIsAltDown     = PR_FALSE;
     mIsDestroying = PR_FALSE;
+    mOnDestroyCalled = PR_FALSE;
     mTooltip       = NULL;
     mDeferredPositioner = NULL;
     mLastPoint.x   = 0;
@@ -701,6 +702,14 @@ void nsWindow::Destroy()
     // prevent the widget from causing additional events
     mEventCallback = nsnull;
     VERIFY(::DestroyWindow(mWnd));
+    mWnd = NULL;
+    //our windows can be subclassed by
+    //others and these namless, faceless others
+    //may not let us know about WM_DESTROY. so,
+    //if OnDestroy() didn't get called, just call
+    //it now. MMP
+    if (PR_FALSE == mOnDestroyCalled)
+      OnDestroy();
   }
 }
 
@@ -1767,6 +1776,7 @@ DWORD nsWindow::WindowExStyle()
 // -----------------------------------------------------------------------
 void nsWindow::SubclassWindow(BOOL bState)
 {
+  if (NULL != mWnd) {
     NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
     
     if (bState) {
@@ -1782,6 +1792,7 @@ void nsWindow::SubclassWindow(BOOL bState)
         ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)NULL);
         mPrevWndProc = NULL;
     }
+  }
 }
 
 
@@ -1792,6 +1803,8 @@ void nsWindow::SubclassWindow(BOOL bState)
 //-------------------------------------------------------------------------
 void nsWindow::OnDestroy()
 {
+    mOnDestroyCalled = PR_TRUE;
+
     SubclassWindow(FALSE);
     mWnd = NULL;
 
