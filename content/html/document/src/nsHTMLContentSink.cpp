@@ -339,30 +339,30 @@ ReduceEntities(nsString& aString)
   // should we be doing that? If so then it needs to live in two places (bad)
   // so we should add a translate numeric entity method from the parser...
   char cbuf[100];
-  PRInt32 index = 0;
-  while (index < aString.Length()) {
+  PRInt32 i = 0;
+  while (i < aString.Length()) {
     // If we have the start of an entity (and it's not at the end of
     // our string) then translate the entity into it's unicode value.
-    if ((aString.CharAt(index++) == '&') && (index < aString.Length())) {
-      PRInt32 start = index - 1;
-      PRUnichar e = aString.CharAt(index);
+    if ((aString.CharAt(i++) == '&') && (i < aString.Length())) {
+      PRInt32 start = i - 1;
+      PRUnichar e = aString.CharAt(i);
       if (e == '#') {
         // Convert a numeric character reference
-        index++;
+        i++;
         char* cp = cbuf;
         char* limit = cp + sizeof(cbuf) - 1;
         PRBool ok = PR_FALSE;
         PRInt32 slen = aString.Length();
-        while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aString.CharAt(index);
+        while ((i < slen) && (cp < limit)) {
+          e = aString.CharAt(i);
           if (e == ';') {
-            index++;
+            i++;
             ok = PR_TRUE;
             break;
           }
           if ((e >= '0') && (e <= '9')) {
             *cp++ = char(e);
-            index++;
+            i++;
             continue;
           }
           break;
@@ -381,23 +381,23 @@ ReduceEntities(nsString& aString)
 
         // Remove entity from string and replace it with the integer
         // value.
-        aString.Cut(start, index - start);
+        aString.Cut(start, i - start);
         aString.Insert(PRUnichar(ch), start);
-        index = start + 1;
+        i = start + 1;
       }
       else if (((e >= 'A') && (e <= 'Z')) ||
                ((e >= 'a') && (e <= 'z'))) {
         // Convert a named entity
-        index++;
+        i++;
         char* cp = cbuf;
         char* limit = cp + sizeof(cbuf) - 1;
         *cp++ = char(e);
         PRBool ok = PR_FALSE;
         PRInt32 slen = aString.Length();
-        while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aString.CharAt(index);
+        while ((i < slen) && (cp < limit)) {
+          e = aString.CharAt(i);
           if (e == ';') {
-            index++;
+            i++;
             ok = PR_TRUE;
             break;
           }
@@ -405,7 +405,7 @@ ReduceEntities(nsString& aString)
               ((e >= 'A') && (e <= 'Z')) ||
               ((e >= 'a') && (e <= 'z'))) {
             *cp++ = char(e);
-            index++;
+            i++;
             continue;
           }
           break;
@@ -421,9 +421,9 @@ ReduceEntities(nsString& aString)
 
         // Remove entity from string and replace it with the integer
         // value.
-        aString.Cut(start, index - start);
+        aString.Cut(start, i - start);
         aString.Insert(PRUnichar(ch), start);
-        index = start + 1;
+        i = start + 1;
       }
       else if (e == '{') {
         // Convert a script entity
@@ -1129,6 +1129,10 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         rv = AddText(aNode.GetText());
       }
       else {
+        // Map carriage returns to newlines
+        if (tmp.CharAt(0) == '\r') {
+          tmp = "\n";
+        }
         rv = AddText(tmp);
       }
     }
@@ -2068,7 +2072,7 @@ HTMLContentSink::StartLayout()
 
     // Get initial scroll preference and save it away; disable the
     // scroll bars.
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
       nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
       if (shell) {
@@ -2547,7 +2551,7 @@ nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
   nsresult  result = NS_OK;
-  PRInt32   index;
+  PRInt32   i;
   PRInt32   count = aNode.GetAttributeCount();
 
   nsAutoString href;
@@ -2557,26 +2561,26 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   nsAutoString media; 
 
   nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-  for (index = 0; index < count; index++) {
-    const nsString& key = aNode.GetKeyAt(index);
+  for (i = 0; i < count; i++) {
+    const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, index, href, sco);
+      GetAttributeValueAt(aNode, i, href, sco);
       href.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("rel")) {
-      GetAttributeValueAt(aNode, index, rel, sco);
+      GetAttributeValueAt(aNode, i, rel, sco);
       rel.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, index, title, sco);
+      GetAttributeValueAt(aNode, i, title, sco);
       title.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, index, type, sco);
+      GetAttributeValueAt(aNode, i, type, sco);
       type.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, index, media, sco);
+      GetAttributeValueAt(aNode, i, media, sco);
       media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
     }
   }
@@ -3047,7 +3051,7 @@ nsresult
 HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  PRInt32 index, count = aNode.GetAttributeCount();
+  PRInt32 i, count = aNode.GetAttributeCount();
 
   nsAutoString src;
   nsAutoString title; 
@@ -3055,22 +3059,22 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   nsAutoString media; 
 
   nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-  for (index = 0; index < count; index++) {
-    const nsString& key = aNode.GetKeyAt(index);
+  for (i = 0; i < count; i++) {
+    const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      GetAttributeValueAt(aNode, index, src, sco);
+      GetAttributeValueAt(aNode, i, src, sco);
       src.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, index, title, sco);
+      GetAttributeValueAt(aNode, i, title, sco);
       title.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, index, type, sco);
+      GetAttributeValueAt(aNode, i, type, sco);
       type.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("media")) {
-      GetAttributeValueAt(aNode, index, media, sco);
+      GetAttributeValueAt(aNode, i, media, sco);
       media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
     }
   }
