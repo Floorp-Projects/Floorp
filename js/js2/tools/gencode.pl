@@ -140,9 +140,9 @@ $ops{"NEW_CLASS"} =
   };
 $ops{"NEW_FUNCTION"} =
   {
-   super  => "Instruction_3",
-   rem    => "dest, ICodeModule, Function Definition", 
-   params => [ ("TypedRegister", "ICodeModule*", "FunctionDefinition*") ]
+   super  => "Instruction_2",
+   rem    => "dest, ICodeModule", 
+   params => [ ("TypedRegister", "ICodeModule*") ]
   };
 $ops{"NEW_ARRAY"} =
   {
