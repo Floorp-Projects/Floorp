@@ -173,6 +173,13 @@ PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv
 nsHashtable::nsHashtable(unsigned int, int)
 CSSRuleProcessor::GetRuleCascade(nsIAtom *)
 
+<CSSRuleProcessor>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+CSSRuleProcessor::GetRuleCascade(nsIAtom *)
+
 <CSSLoaderImpl>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -272,9 +279,11 @@ __builtin_new
 __builtin_vec_new
 nsVoidArray::ReplaceElementAt(void *, int)
 
-<nsCheapVoidArray>
+<nsGenericHTMLContainerElement>
 __builtin_new
 nsCheapVoidArray::SwitchToVector(void)
+nsCheapVoidArray::AppendElement(void *)
+nsGenericHTMLContainerElement::AppendChildTo(nsIContent *, int)
 
 <nsSupportsArray>
 __builtin_new
@@ -570,6 +579,11 @@ PL_HashTableRawAdd
 FrameHashTable::Put(void *, void *)
 FrameManager::SetPlaceholderFrameFor(nsIFrame *, nsIFrame *)
 
+<FrameManager>
+__builtin_new
+nsDST::NewMemoryArena(unsigned int)
+FrameManager::Init(nsIPresShell *, nsIStyleSet *)
+
 <UndisplayedMap>
 PR_Malloc
 PL_ArenaFinish
@@ -670,6 +684,13 @@ nsDeque::GrowCapacity(void)
 nsDeque::Push(void *)
 nsHTMLTokenizer::ScanDocStructure(int)
 
+<nsHTMLTokenizer>
+__builtin_new
+__builtin_vec_new
+nsDeque::GrowCapacity(void)
+nsDeque::Push(void *)
+nsHTMLTokenizer::AddToken(CToken *&, unsigned int, nsDeque *, nsTokenAllocator *)
+
 <xptiWorkingSet>
 __builtin_new
 __builtin_vec_new
@@ -735,6 +756,26 @@ __builtin_new
 nsIDKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsProxyEventClass::nsProxyEventClass(nsID const &, nsIInterfaceInfo *)
+
+<nsProxyEventClass>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsProxyEventClass::nsProxyEventClass(nsID const &, nsIInterfaceInfo *)
+
+<nsProxyEventObject>
+__builtin_new
+nsProxyEventKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *, int, nsISupports *, nsID const &)
+
+<nsProxyEventObject>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *, int, nsISupports *, nsID const &)
 
 <nsComponentManagerImpl>
 __builtin_new
@@ -1085,6 +1126,14 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo *)
+
+<nsXULPrototypeCache>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet *)
 
 <nsXULPrototypeCache>
@@ -1263,6 +1312,13 @@ nsHashtable::nsHashtable(unsigned int, int)
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
 
 <HTMLStyleSheetImpl>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawRemove
+nsHashtable::Remove(nsHashKey *)
+HTMLStyleSheetImpl::DropMappedAttributes(nsIHTMLMappedAttributes *)
+
+<HTMLStyleSheetImpl>
 __builtin_new
 AttributeKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
@@ -1332,6 +1388,11 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 RuleHash::AppendRuleToTable(nsHashtable &, nsIAtom *, nsICSSStyleRule *)
+
+<RuleHash>
+__builtin_new
+__builtin_vec_new
+RuleHash::EnumerateAllRules(nsIAtom *, nsIAtom *, nsVoidArray const &, void (*)(nsICSSStyleRule *, void *), void *)
 
 <nsCSSSelector>
 __builtin_new
@@ -1774,6 +1835,13 @@ nsObserverService::GetObserverList(nsString const &, nsIObserverList **)
 __builtin_new
 nsObserverService::GetObserverList(nsString const &, nsIObserverList **)
 
+<nsObserverService>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsObserverService::GetObserverList(nsString const &, nsIObserverList **)
+
 <nsViewManager2>
 __builtin_new
 nsViewManager2::AddToDisplayList(int *, nsIView *, nsRect &, nsRect &, unsigned int, int, int)
@@ -1829,11 +1897,23 @@ nsHashtable::Put(nsHashKey *, void *)
 nsInt2StrHashtable::Put(unsigned int, char const *)
 nsErrorService::RegisterErrorStringBundleKey(unsigned int, char const *)
 
+<nsErrorService>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsInt2StrHashtable::Put(unsigned int, char const *)
+nsErrorService::RegisterErrorStringBundleKey(unsigned int, char const *)
+
 <nsDocument>
 __builtin_new
 ArenaImpl::Create(nsISupports *, nsID const &, void **)
 NS_NewHeapArena(nsIArena **, unsigned int)
 nsDocument::Init(void)
+
+<nsDocument>
+__builtin_new
+nsDocument::SetHeaderData(nsIAtom *, basic_nsAReadableString<unsigned short> const &)
 
 <XPCContext>
 __builtin_new
@@ -2247,10 +2327,31 @@ nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsDNSService::GetLookupEntry(char const *, nsDNSLookup **)
 
+<nsDNSService>
+__builtin_new
+nsDNSService::GetLookupEntry(char const *, nsDNSLookup **)
+
+<nsDNSService>
+__builtin_new
+nsDNSService::Lookup(char const *, nsIDNSListener *, nsISupports *, nsIRequest **)
+
+<nsDNSService>
+__builtin_new
+nsCStringKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsDNSService::GetLookupEntry(char const *, nsDNSLookup **)
+
 <nsDNSLookup>
 gethostbyname2
 PR_GetIPNodeByName
 nsDNSLookup::InitiateLookup(void)
+
+<nsDNSLookup>
+__builtin_new
+nsSupportsArray::Create(nsISupports *, nsID const &, void **)
+NS_NewISupportsArray(nsISupportsArray **)
+nsDNSLookup::Init(char const *)
 
 <nsFormControlList>
 PR_Malloc
@@ -2287,6 +2388,13 @@ nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsControllerCommandManager::RegisterCommand(unsigned short const *, nsIControllerCommand *)
 
+<nsControllerCommandManager>
+__builtin_new
+nsStringKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsControllerCommandManager::RegisterCommand(unsigned short const *, nsIControllerCommand *)
+
 <nsConsoleService>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -2296,6 +2404,10 @@ nsConsoleService::nsConsoleService(void)
 <nsGenericElement>
 PR_Malloc
 nsGenericElement::GetDOMSlots(void)
+
+<HTMLAttribute>
+__builtin_new
+HTMLAttribute::CopyHTMLAttributes(HTMLAttribute *, HTMLAttribute **)
 
 <HTMLAttributesImpl>
 __builtin_new
@@ -2384,3 +2496,38 @@ nsFloaterCacheFreeList::Alloc(void)
 <nsDocLoaderImpl>
 __builtin_new
 nsDocLoaderImpl::AddChannelInfo(nsIChannel *)
+
+<nsTokenAllocator>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::AddBucket(unsigned int)
+nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
+nsTokenAllocator::nsTokenAllocator(void)
+
+<SinkContext>
+__builtin_new
+__builtin_vec_new
+SinkContext::AddText(nsString const &)
+
+<SinkContext>
+__builtin_new
+__builtin_vec_new
+SinkContext::GrowStack(void)
+
+<nsParser>
+__builtin_new
+nsParser::Parse(nsIURI *, nsIStreamObserver *, int, void *, nsDTDMode)
+
+<nsParser>
+__builtin_new
+__builtin_vec_new
+nsParser::OnDataAvailable(nsIChannel *, nsISupports *, nsIInputStream *, unsigned int, unsigned int)
+
+<nsStorageStream>
+__builtin_new
+nsStorageStream::Init(unsigned int, unsigned int, nsIMemory *)
+
+<nsEntryStack>
+__builtin_new
+__builtin_vec_new
+nsEntryStack::EnsureCapacityFor(int, int)
