@@ -659,8 +659,14 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext,
     } // if we don't have  a load cookie already
   } // if we have a cntListener
 
-  rv = loadCookie->QueryInterface(NS_GET_IID(nsIInterfaceRequestor),
+  // loadCookie may be null - for example, <a target="popupWin"> if popupWin is
+  // not a defined window.  The following prevents a crash (Bug 32898)
+  if (loadCookie) {
+    rv = loadCookie->QueryInterface(NS_GET_IID(nsIInterfaceRequestor),
                                   (void**)aLoadCookie);
+  } else {
+    rv = NS_ERROR_UNEXPECTED;
+  }
 
   return rv;
 }
