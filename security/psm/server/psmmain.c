@@ -553,7 +553,8 @@ psm_free(void *ptr)
 
 PRIntn mainLoop(PRIntn argc, char ** argv)
 {
-    PRFileDesc              *socket, *respsocket;
+    static PRFileDesc       *socket = NULL;
+    PRFileDesc              *respsocket;    
     PRNetAddr               clientaddr;
     SSMControlConnection    *curconnect;
     SSMResourceID           ctrlID;
@@ -589,7 +590,8 @@ PRIntn mainLoop(PRIntn argc, char ** argv)
     }
 
     /* open a port for control connections, with well-known port# */
-    socket = SSM_OpenControlPort();
+    if (!socket)
+    	socket = SSM_OpenControlPort();
     if (!socket) 
     {
         SSM_DEBUG("Couldn't open control port. Exiting.\n");
@@ -653,7 +655,9 @@ PRIntn mainLoop(PRIntn argc, char ** argv)
     if (httpListenThread != NULL){
       PR_Interrupt(httpListenThread);
     }
+#ifndef XP_MAC    
     exit(1);
+#endif    
     /* ### mwelch - should we return meaningful error code? */
 
     return 0;

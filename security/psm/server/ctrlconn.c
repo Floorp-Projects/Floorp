@@ -102,6 +102,8 @@ static char * gUserDir = NULL;
 static PRMonitor *policySetLock = NULL;
 static PRBool policySet = PR_FALSE;
 
+static char *gLoadableRootsModuleName = NULL;
+
 SSMStatus SSM_InitPolicyHandler(void)
 {
     policySetLock = PR_NewMonitor();
@@ -924,12 +926,8 @@ ssm_OpenKeyDB(const char * configdir, SSMControlConnection *ctrl)
 
 SECStatus
 ssm_OpenSecModDB(const char * configdir)
-{
-    static char *secmodname;
-
-    if (secmodname) {
-        return SECSuccess;
-    }
+{   
+	char *secmodname = NULL;
 #ifdef XP_UNIX
     secmodname = PR_smprintf("%s/secmodule.db", configdir);
 #elif defined(XP_MAC)
@@ -956,6 +954,12 @@ ssm_ShutdownNSS(SSMControlConnection *ctrl)
     }
     if (ctrl->m_keydb != NULL) {
         SECKEY_CloseKeyDB(ctrl->m_keydb);
+    }
+    if (gLoadableRootsModuleName) {
+    	int type;
+    	
+    	SECMOD_DeleteModule(gLoadableRootsModuleName, &type);
+    	PR_FREEIF(gLoadableRootsModuleName);
     }
 }
 
@@ -1106,10 +1110,14 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
         PR_FREEIF(processDir);
         /* If a module exists with the same name, delete it. */
         SECMOD_DeleteModule(modName, &modType);
+        gLoadableRootsModuleName = modName;
         SSM_DEBUG("Will try to load <%s> for root certs.\n",fullModuleName);
 	    if (SECMOD_AddNewModule(modName, fullModuleName, 0, 0) != SECSuccess) {
 	        SSM_DEBUG("Couldn't load the module at <%s>",fullModuleName);
 	    }
+	    //We want to keep the modName around in gLoadableRootsModule so that
+	    //we can delete it from secmod.db on the way out.
+	    modName = NULL;
 	}
 
 loser:
@@ -1205,6 +1213,19 @@ SSMControlConnection_SetupNSS(SSMControlConnection *ctrl, PRInt32 policy)
     /* Do the libsec initialization */
     
     if (gUserDir != NULL) {
+#ifdef XP_MAC
+		ctrl->m_certdb = CERT_GetDefaultCertDB();
+        ctrl->m_keydb  = SECKEY_GetDefaultKeyDB();
+        ssm_ShutdownNSS(ctrl);
+        free(gUserDir);
+        ctrl->m_certdb = NULL;
+        ctrl->m_keydb  = NULL;
+        gUserDir = strdup(ctrl->m_dirRoot);
+        srv = SSM_InitNSS(ctrl->m_dirRoot, ctrl, policy);
+        if (srv != SECSuccess) {
+            goto loser;
+        }
+#else
 #ifndef WIN32
         if (strcmp(ctrl->m_dirRoot, gUserDir) != 0) {
             goto loser;
@@ -1221,6 +1242,7 @@ SSMControlConnection_SetupNSS(SSMControlConnection *ctrl, PRInt32 policy)
          */
         ctrl->m_certdb = CERT_GetDefaultCertDB();
         ctrl->m_keydb  = SECKEY_GetDefaultKeyDB();
+#endif        
     } else {
         gUserDir = strdup(ctrl->m_dirRoot);
         /*
