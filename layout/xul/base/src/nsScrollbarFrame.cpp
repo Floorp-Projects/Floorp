@@ -208,7 +208,7 @@ NS_INTERFACE_MAP_BEGIN(AnonymousElement)
     foundInterface = 0;
   nsresult status;
   if ( !foundInterface )
-    status = nsXMLElement::QueryInterface(aIID, &NS_STATIC_CAST(void*,foundInterface));                                             \
+    status = nsXMLElement::QueryInterface(aIID, NS_REINTERPRET_CAST(void**,&foundInterface));                                             \
   else
     {
       NS_ADDREF(foundInterface);
