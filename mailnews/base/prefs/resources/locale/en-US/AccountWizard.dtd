@@ -101,4 +101,5 @@
 <!ENTITY smtpServerNamePrefix.label "Outgoing Server Name (SMTP):">
 <!ENTITY newsServerNamePrefix.label "News Server Name (NNTP):">
 <!ENTITY accountNamePrefix.label "Account Name:">
+<!ENTITY downloadOnLogin.label "Download new messages now">
 <!ENTITY clickFinish.label "Click Finish to save these settings and exit the Account Wizard.">
