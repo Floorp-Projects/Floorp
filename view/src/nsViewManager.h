@@ -74,24 +74,24 @@ public:
 
   NS_IMETHOD  RemoveChild(nsIView *parent, nsIView *child);
 
-  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord x, nscoord y);
+  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord aX, nscoord aY);
 
-  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord x, nscoord y);
+  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY);
 
-  NS_IMETHOD  ResizeView(nsIView *aView, nscoord width, nscoord height);
+  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
-  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *rect);
+  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *aRect);
 
-  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility visible);
+  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 
-  NS_IMETHOD  SetViewZindex(nsIView *aView, PRInt32 zindex);
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRInt32 aZIndex);
 
-  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *other);
-  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *other);
+  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *aOther);
+  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *aOther);
 
   NS_IMETHOD  IsViewShown(nsIView *aView, PRBool& aResult);
 
-  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *rect, PRBool &aResult);
+  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *aRect, PRBool &aResult);
 
   NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
   NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity);

@@ -180,8 +180,8 @@ public:
    * @param sibling sibling view
    * @param above boolean above or below state
    */
-  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
-                          PRBool above) = 0;
+  NS_IMETHOD  InsertChild(nsIView *aParent, nsIView *aChild, nsIView *aSibling,
+                          PRBool aAbove) = 0;
 
   /**
    * Given a parent view, insert another view as its child. The zindex
@@ -192,8 +192,8 @@ public:
    * @param child child view
    * @param zindex z depth of child
    */
-  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
-                          PRInt32 zindex) = 0;
+  NS_IMETHOD  InsertChild(nsIView *aParent, nsIView *aChild,
+                          PRInt32 aZIndex) = 0;
 
   /**
    * Remove a specific child of a view.
@@ -201,7 +201,7 @@ public:
    * @param parent parent view
    * @param child child view
    */
-  NS_IMETHOD  RemoveChild(nsIView *parent, nsIView *child) = 0;
+  NS_IMETHOD  RemoveChild(nsIView *aParent, nsIView *aChild) = 0;
 
   /**
    * Move a view's position by the specified amount.
@@ -210,7 +210,7 @@ public:
    * @param x x offset to add to current view position
    * @param y y offset to add to current view position
    */
-  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord x, nscoord y) = 0;
+  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord aX, nscoord aY) = 0;
 
   /**
    * Move a view to the specified position,
@@ -220,7 +220,7 @@ public:
    * @param x x value for new view position
    * @param y y value for new view position
    */
-  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord x, nscoord y) = 0;
+  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY) = 0;
 
   /**
    * Resize a view to the specified width and height.
@@ -229,7 +229,7 @@ public:
    * @param width new view width
    * @param height new view height
    */
-  NS_IMETHOD  ResizeView(nsIView *aView, nscoord width, nscoord height) = 0;
+  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Set the clip of a view.
@@ -237,7 +237,7 @@ public:
    * @param aView view to to clip rect on
    * @param rect new clipping rect for view
    */
-  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *rect) = 0;
+  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *aRect) = 0;
 
   /**
    * Set the visibility of a view.
@@ -245,7 +245,7 @@ public:
    * @param aView view to change visibility state of
    * @param visible new visibility state
    */
-  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility visible) = 0;
+  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible) = 0;
 
   /**
    * Set the z-index of a view. Positive z-indices mean that a view
@@ -255,7 +255,7 @@ public:
    * @param aView view to change z depth of
    * @param zindex new z depth
    */
-  NS_IMETHOD  SetViewZindex(nsIView *aView, PRInt32 zindex) = 0;
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRInt32 aZindex) = 0;
 
   /**
    * Used to move a view above another in z-order.
@@ -263,7 +263,7 @@ public:
    * @param aView view to change z depth of
    * @param other view to move aView above
    */
-  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *other) = 0;
+  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *aOther) = 0;
 
   /**
    * Used to move a view below another in z-order.
@@ -271,7 +271,7 @@ public:
    * @param aView view to change z depth of
    * @param other view to move aView below
    */
-  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *other) = 0;
+  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *aOther) = 0;
 
   /**
    * Returns whether a view is actually shown (based on its visibility
@@ -287,7 +287,7 @@ public:
    * @param rect to set with view's clipping rect
    * @result PR_TRUE if there is a clip rect, else PR_FALSE
    */
-  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *rect, PRBool &aResult) = 0;
+  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *aRect, PRBool &aResult) = 0;
 
   /**
    * Used set the transparency status of the content in a view. see
