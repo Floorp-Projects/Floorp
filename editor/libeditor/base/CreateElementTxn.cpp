@@ -20,6 +20,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMText.h"
+#include "nsIDOMElement.h"
 #include "nsIEditorSupport.h"
 
 CreateElementTxn::CreateElementTxn()
@@ -70,7 +72,23 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     result = mEditor->GetDocument(getter_AddRefs(doc));
     if ((NS_SUCCEEDED(result)) && (doc))
     {
-      result = doc->CreateElement(mTag, getter_AddRefs(mNewNode));
+      if (nsIEditor::GetTextNodeTag() == mTag) 
+      {
+        const nsString stringData;
+        nsCOMPtr<nsIDOMText>newTextNode;
+        result = doc->CreateTextNode(stringData, getter_AddRefs(newTextNode));
+        if (NS_SUCCEEDED(result) && newTextNode) {
+          mNewNode = do_QueryInterface(newTextNode);
+        }
+      }
+      else 
+      {
+        nsCOMPtr<nsIDOMElement>newElement;
+        result = doc->CreateElement(mTag, getter_AddRefs(newElement));
+        if (NS_SUCCEEDED(result) && newElement) {
+          mNewNode = do_QueryInterface(newElement);
+        }
+      }
       NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
       if ((NS_SUCCEEDED(result)) && (mNewNode))
       {
@@ -86,8 +104,12 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
           result = mParent->GetChildNodes(getter_AddRefs(childNodes));
           if ((NS_SUCCEEDED(result)) && (childNodes))
           {
+            PRUint32 count;
+            childNodes->GetLength(&count);
+            if (mOffsetInParent>count)
+              mOffsetInParent = count;
             result = childNodes->Item(mOffsetInParent, getter_AddRefs(mRefNode));
-            if ((NS_SUCCEEDED(result)) && (mRefNode))
+            if (NS_SUCCEEDED(result)) // note, it's ok for mRefNode to be null.  that means append
             {
               result = mParent->InsertBefore(mNewNode, mRefNode, getter_AddRefs(resultNode));
               if (NS_SUCCEEDED(result))
