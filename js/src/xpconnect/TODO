@@ -1,6 +1,6 @@
 /* jband - 02/20/99 - TODO and issues list */
 
-**** ISSUES ****
+**** TODO ****
 - convert some assertions to LOG warnings
 - Ports!
 - proto object per class?
@@ -16,6 +16,7 @@
     - throw exceptions into JS?
 - loosen restrictions re. current cx when calling wrappers across cx boundaries
 
+- Construct objects for 'Components' tree.
 
 **** ISSUES ****
 

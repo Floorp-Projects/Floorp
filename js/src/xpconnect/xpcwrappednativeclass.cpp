@@ -343,13 +343,25 @@ void
 nsXPCWrappedNativeClass::ReportError(const XPCNativeMemberDescriptor* desc,
                                      const char* msg)
 {
+    JSContext* cx = GetJSContext();
+    char* sz = JS_smprintf("'%s' accessing '%s' of '%s'",
+                           msg, GetMemberName(desc), GetInterfaceName());
+    if(sz)
+    {
+        JSString* str = JS_NewStringCopyZ(cx, sz);
+        if(str)
+            JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+        JS_smprintf_free(sz);
+    }
+/*
     JS_ReportError(GetJSContext(), "'%s' accessing '%s' of '%s'",
                    msg, GetMemberName(desc), GetInterfaceName());
+*/
 }
 
-
 JSBool
-nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
+nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
+                                           nsXPCWrappedNative* wrapper,
                                            const XPCNativeMemberDescriptor* desc,
                                            JSBool isAttributeSet,
                                            uintN argc, jsval *argv, jsval *vp)
@@ -360,7 +372,6 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     JSBool retval = JS_FALSE;
 
     nsXPCVariant* dispatchParams = NULL;
-    JSContext* cx = GetJSContext();
     uint8 i;
     const nsXPTMethodInfo* info;
     uint8 requiredArgs;
@@ -505,8 +516,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
 
     if(NS_FAILED(invokeResult))
     {
-        // XXX this (and others!) should throw rather than report error
-        ReportError(desc, "XPCOM object returned failure");
+        ThrowBadResultException(cx, desc, invokeResult);
         goto done;
     }
 
@@ -617,7 +627,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     if(!desc || !desc->IsMethod())
         return JS_FALSE;
 
-    return clazz->CallWrappedMethod(wrapper, desc, JS_FALSE, argc, argv, vp);
+    return clazz->CallWrappedMethod(cx, wrapper, desc, JS_FALSE, argc, argv, vp);
 }
 
 JSObject*
@@ -685,7 +695,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             return JS_TRUE;
         }
         else    // attribute
-            return clazz->GetAttributeAsJSVal(wrapper, desc, vp);
+            return clazz->GetAttributeAsJSVal(cx, wrapper, desc, vp);
     }
     else
     {
@@ -719,7 +729,7 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if(desc)
     {
         if(desc->IsWritableAttribute())
-            return clazz->SetAttributeFromJSVal(wrapper, desc, vp);
+            return clazz->SetAttributeFromJSVal(cx, wrapper, desc, vp);
         else
             return JS_TRUE; // fail silently
     }
@@ -1196,6 +1206,7 @@ nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(JSContext* cx,
         return (nsXPCWrappedNative*) JS_GetPrivate(cx, jsobj);
     return NULL;
 }
+
 
 /***************************************************************************/
 

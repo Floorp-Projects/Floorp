@@ -135,6 +135,8 @@ public:
                                   char**   p15,
                                   uint16** p16) = 0;
     NS_IMETHOD MethodWithNative(int p1, void* p2) = 0;
+
+    NS_IMETHOD ReturnCode(int code) = 0;
 };
 
 /***************************************************************************/

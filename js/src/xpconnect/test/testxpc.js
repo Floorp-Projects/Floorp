@@ -206,6 +206,24 @@ for(i = 0; i < 16; i++) {
 if(all_ok)
     print("SendInOutManyTypes - passed");
 
+////////////////////
+// ReturnCode
+
+try {
+    echo.ReturnCode(0);
+    print("ReturnCode(0) - passed");
+}
+catch(e) {
+    print("ReturnCode(0) exception text: "+e+" - failed");
+}    
+
+try {
+    echo.ReturnCode(-1);
+    print("ReturnCode(-1) - failed");
+}
+catch(e) {
+    print("ReturnCode(-1) exception text: "+e+" - passed");
+}    
 
 print(".......................................");
 print("simple speed tests...");
@@ -221,6 +239,7 @@ echoJS.SetReciever = function(r) {this.r = r;};
 echoJS.SendOneString = function(str) {if(this.r)this.r.SendOneString(str)};
 echoJS.SimpleCallNoEcho = function(){}
 
+/*********************************************/
 /*********************************************/
 
 print("\nEcho.SimpleCallNoEcho (just makes call with no params and no callback)");

@@ -46,7 +46,8 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 static void RegAllocator()
 {
-    nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, 
+                                    PR_FALSE, PR_FALSE);
 }    
 
 
@@ -204,6 +205,8 @@ public:
                                   uint16** p16);
     NS_IMETHOD MethodWithNative(int p1, void* p2);
 
+    NS_IMETHOD ReturnCode(int code);
+
     MyEcho();
 private: 
     nsIEcho* mReciever;
@@ -332,6 +335,12 @@ MyEcho::MethodWithNative(int p1, void* p2)
 {
     return NS_OK;
 }    
+
+NS_IMETHODIMP 
+MyEcho::ReturnCode(int code)
+{
+    return (nsresult) code;        
+}
 
 /***************************************************************************/
 
