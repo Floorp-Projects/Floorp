@@ -1,4 +1,6 @@
 
+load("verify.js");
+
 
 function f1(a = 1) { return a; }
 
@@ -36,16 +38,6 @@ function f14(| a, b, c) { return a + b - c; }
 function f15(| a, b = 2, c) { return a + b - c; }
 
 
-count = 0;
-
-function verify(a, b)
-{
-    if (a == b) 
-        print("Test " + count + " succeeded");
-    else
-        print("Test " + count + " failed, expected " + b + ", got " + a);
-    count++;
-}
 
 verify( f1(), 1);
 verify( f1(2), 2);

@@ -1,3 +1,6 @@
+
+load("verify.js");
+
 class C {
 virtual var x:Integer;
 var y:Integer;
@@ -5,18 +8,6 @@ var y:Integer;
 
 class D extends C {
 override function set x(a:Integer):Integer {return y = a*2}
-}
-
-
-count = 0;
-
-function verify(a, b)
-{
-    if ((a == b) || ((b != b) && (a == undefined)) )
-        print("Test " + count + " succeeded");
-    else
-        print("Test " + count + " failed, expected " + b + ", got " + a);
-    count++;
 }
 
 
