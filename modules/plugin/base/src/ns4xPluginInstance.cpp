@@ -56,6 +56,7 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
 	mInst = (ns4xPluginInstance*) inst;
 	mStreamBuffer=nsnull;
     mPosition = 0;
+    mCurrentStreamOffset = -1;
     // Initialize the 4.x interface structure
     memset(&mNPStream, 0, sizeof(mNPStream));
 
@@ -291,10 +292,13 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
   PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
 
-  // we are getting a range request, reset mPosition since postion passed to plugin will
-  // be relative to the absolute position of the file.
-  if (sourceOffset != 0)
+  // if we are getting a range request, reset mPosition.  
+  if (sourceOffset != mCurrentStreamOffset ||
+      mCurrentStreamOffset == -1 ) 
+  {
     mPosition = 0;
+    mCurrentStreamOffset = sourceOffset;
+  }
 
   pluginInfo->GetURL(&mNPStream.url);
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
