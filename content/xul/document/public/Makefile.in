@@ -31,7 +31,6 @@ MODULE		= xuldoc
 XPIDLSRCS	= \
 		nsIController.idl \
 		nsIControllers.idl \
-		nsIControllerCommand.idl \
 		$(NULL)
 
 EXPORTS		= \

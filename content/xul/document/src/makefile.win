@@ -49,12 +49,12 @@ REQUIRES	= xpcom \
             webshell \
             webBrowser_core \
             unicharutil \
+            commandhandler \
             $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS=					        \
-        .\$(OBJDIR)\nsControllerCommandManager.obj      \
         .\$(OBJDIR)\nsElementMap.obj                    \
         .\$(OBJDIR)\nsXULCommandDispatcher.obj          \
         .\$(OBJDIR)\nsXULContentSink.obj                \

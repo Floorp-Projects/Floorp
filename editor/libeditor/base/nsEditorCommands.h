@@ -67,6 +67,8 @@ class _cmd : public nsBaseEditorCommand                 \
 public:                                                 \
   NS_IMETHOD IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval); \
   NS_IMETHOD DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon); \
+  NS_IMETHOD DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon); \
+  NS_IMETHOD GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon); \
 };
 
 

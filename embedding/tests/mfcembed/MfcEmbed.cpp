@@ -330,8 +330,12 @@ BOOL CMfcEmbedApp::InitInstance()
 CBrowserFrame* CMfcEmbedApp::CreateNewBrowserFrame(PRUint32 chromeMask,
 												   PRInt32 x, PRInt32 y,
 												   PRInt32 cx, PRInt32 cy,
+                           PRBool bIsEditor,
 												   PRBool bShowWindow)
 {
+  UINT resId = IDR_MAINFRAME;
+  if (bIsEditor)
+    resId = IDR_EDITOR;
 	// Setup a CRect with the requested window dimensions
 	CRect winSize(x, y, cx, cy);
 
@@ -345,8 +349,9 @@ CBrowserFrame* CMfcEmbedApp::CreateNewBrowserFrame(PRUint32 chromeMask,
 
 	// Now, create the browser frame
 	CBrowserFrame* pFrame = new CBrowserFrame(chromeMask);
+  pFrame->SetEditable(bIsEditor);
 	if (!pFrame->Create(NULL, strTitle, WS_OVERLAPPEDWINDOW, 
-					winSize, NULL, MAKEINTRESOURCE(IDR_MAINFRAME), 0L, NULL))
+					winSize, NULL, MAKEINTRESOURCE(resId), 0L, NULL))
 	{
 		return NULL;
 	}

@@ -77,6 +77,7 @@ IDR_SECURITY_BROKEN     ICON    DISCARDABLE     "res\\broken.ico"
 //
 
 IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
+IDR_EDITOR              BITMAP  MOVEABLE PURE   "res\\mainfram.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -96,6 +97,13 @@ BEGIN
     BUTTON      ID_APP_ABOUT
 END
 
+IDR_EDITOR TOOLBAR DISCARDABLE  20, 18
+BEGIN
+    BUTTON      ID_BOLD
+    BUTTON      ID_ITALICS
+    BUTTON      ID_UNDERLINE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -107,6 +115,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&New Browser Window\tCtrl+N", ID_NEW_BROWSER
+        MENUITEM "&New Editor Window",          ID_NEW_EDITWINDOW
         MENUITEM SEPARATOR
         MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Save Page As...\tCtrl+S",    ID_FILE_SAVE_AS
@@ -216,6 +225,41 @@ BEGIN
         MENUITEM "&Copy",                       ID_EDIT_COPY
         MENUITEM "&Paste",                      ID_EDIT_PASTE
         MENUITEM "Select &All",                 ID_EDIT_SELECT_ALL
+    END
+END
+
+IDR_EDITOR MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "New &Browser Window\tCtrl+N", ID_NEW_BROWSER
+        MENUITEM SEPARATOR
+        MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
+        MENUITEM "&Save Page As...\tCtrl+S",    ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl-P",           ID_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tCtrl+Q",               ID_APP_EXIT
+        MENUITEM "New &Editor Window",          ID_NEW_EDITORWINDOW
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All",                 ID_EDIT_SELECT_ALL
+        MENUITEM "Select &None",                ID_EDIT_SELECT_NONE
+        MENUITEM SEPARATOR
+        MENUITEM "&Find in This Page...\tCtrl+F", ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "Profiles...",                 ID_MANAGE_PROFILES
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_EDIT_PREFERENCES
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About MfcEmbed...",          ID_APP_ABOUT
     END
 END
 
@@ -525,6 +569,8 @@ BEGIN
     IDS_ENCRYPTION_LOW_GRADE "Low-grade Encryption (%1% %2!d! bit)"
     IDS_ENCRYPTION_NONE     "Connection Not Encrypted"
     IDS_SRCH_STR_NOT_FOUND  "The text you entered was not found"
+    IDS_VIEW_FRAME_SOURCE   "View Frame Source"
+    IDS_OPEN_FRAME_IN_NEW_WINDOW "Open Frame in New Window"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -597,8 +643,6 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_FILE_PRINTPREVIEW    "Print Preview"
     ID_FILE_PRINTSETUP      "Page Setup Dialog"
-    IDS_VIEW_FRAME_SOURCE   "View Frame Source"
-    IDS_OPEN_FRAME_IN_NEW_WINDOW    "Open Frame in New Window"
 END
 
 #endif    // English (U.S.) resources

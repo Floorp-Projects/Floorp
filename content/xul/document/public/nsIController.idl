@@ -47,3 +47,49 @@ interface nsIController : nsISupports {
 
 	void onEvent(in DOMString eventName);
 };
+
+
+/*
+
+  Enhanced controller interface that allows for passing of parameters
+  to commands.
+  
+*/
+
+interface nsICommandParams;
+
+[scriptable, uuid(EBE55080-C8A9-11D5-A73C-DD620D6E04BC)]
+interface nsICommandController : nsISupports
+{
+  
+  void        getCommandState( in nsICommandParams aCommandParams);
+    
+  void        doCommand(in nsICommandParams aCommandParams);
+
+};
+
+
+/*
+  An API for registering commands in groups, to allow for 
+  updating via nsIDOMWindowInternal::UpdateCommands.
+*/
+interface nsISimpleEnumerator;
+
+[scriptable, uuid(9F82C404-1C7B-11D5-A73C-ECA43CA836FC)]
+interface nsIControllerCommandGroup : nsISupports
+{
+
+  void  addCommandToGroup(in DOMString aCommand, in DOMString aGroup);
+  void  removeCommandFromGroup(in DOMString aCommand, in DOMString aGroup);
+  
+  boolean isCommandInGroup(in DOMString aCommand, in DOMString aGroup);
+
+  /*
+    We should expose some methods that allow for enumeration.
+  */
+  nsISimpleEnumerator getGroupsEnumerator();
+  
+  nsISimpleEnumerator getEnumeratorForGroup(in DOMString aGroup);
+
+};
+

@@ -39,6 +39,8 @@ REQUIRES = \
 	windowwatcher \
 	layout \
 	webbrowserpersist \
+	composer \
+	commandhandler \
 	$(NULL)
 
 DIRS=components \
@@ -61,6 +63,7 @@ OBJS =                           \
     .\$(OBJDIR)\BrowserImpl.obj \
     .\$(OBJDIR)\BrowserImplWebPrgrsLstnr.obj \
     .\$(OBJDIR)\BrowserImplCtxMenuLstnr.obj \
+    .\$(OBJDIR)\CCommandObserver.obj \
     .\$(OBJDIR)\Dialogs.obj       \
     .\$(OBJDIR)\ProfileMgr.obj \
     .\$(OBJDIR)\ProfilesDlg.obj \

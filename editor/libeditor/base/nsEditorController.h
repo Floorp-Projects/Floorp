@@ -46,6 +46,7 @@
 #include "nsIController.h"
 #include "nsIEditorController.h"
 #include "nsIControllerCommand.h"
+#include "nsIControllerCommandManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 

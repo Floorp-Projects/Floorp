@@ -34,3 +34,4 @@ nsIContentViewer.idl
 nsIContentViewerEdit.idl
 nsIContentViewerFile.idl
 nsIURIFixup.idl
+nsIEditorDocShell.idl

@@ -48,6 +48,9 @@ REQUIRES	= xpcom \
 		  chardet \
 		  appcomps \
 		  find \
+		  composer \
+		  editor \
+		  commandhandler \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

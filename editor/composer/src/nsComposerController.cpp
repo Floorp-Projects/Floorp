@@ -66,6 +66,7 @@ NS_IMPL_RELEASE(nsComposerController)
 
 NS_INTERFACE_MAP_BEGIN(nsComposerController)
 	NS_INTERFACE_MAP_ENTRY(nsIController)
+       NS_INTERFACE_MAP_ENTRY(nsICommandController)
 	NS_INTERFACE_MAP_ENTRY(nsIEditorController)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditorController)
@@ -91,7 +92,7 @@ NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
 
   mCommandRefCon = aCommandRefCon;     // no addref  
   
-  mCommandManager = do_CreateInstance("@mozilla.org/content/controller-command-manager;1", &rv);
+  mCommandManager = do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // register the commands.
@@ -255,7 +256,7 @@ nsresult nsComposerController::GetComposerCommandManager(nsIControllerCommandMan
   if (!cmdManager)
   {
     nsresult rv;
-    cmdManager = do_CreateInstance("@mozilla.org/content/controller-command-manager;1", &rv);
+    cmdManager = do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // register the commands. This just happens once per instance
@@ -271,3 +272,27 @@ nsresult nsComposerController::GetComposerCommandManager(nsIControllerCommandMan
   return NS_OK;
 }
 
+
+//GetCommandState
+/*
+cmd_bold,cmd_italic,cmd_underline ->state commands
+state_start : true,false
+state_end   : true,false
+state_all   : true,false
+state_mixed : true,false
+*/
+/* void getCommandState (in DOMString aCommandName, inout nsICommandParams aCommandParams); */
+NS_IMETHODIMP nsComposerController::GetCommandState(nsICommandParams *aCommandParams)
+{
+  if (!mCommandRefCon || !mCommandManager)
+    return NS_ERROR_NOT_INITIALIZED;
+  return mCommandManager->GetCommandState(aCommandParams,mCommandRefCon);
+}
+
+/* void doCommand (in DOMString aCommandName, in nsICommandParams aCommandParams); */
+NS_IMETHODIMP nsComposerController::DoCommand(nsICommandParams *aCommandParams)
+{
+  if (!mCommandRefCon || !mCommandManager)
+    return NS_ERROR_NOT_INITIALIZED;
+  return mCommandManager->DoCommandParams(aCommandParams,mCommandRefCon);
+}

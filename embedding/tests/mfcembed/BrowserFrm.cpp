@@ -76,12 +76,20 @@
 #include "stdafx.h"
 #include "MfcEmbed.h"
 #include "BrowserFrm.h"
+#include "BrowserImpl.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+
+//prototypes
+nsresult GetStateCommandParams(nsICommandParams **aParams);
+
+
+#define ABOUT_BLANK "about:blank"
 
 /////////////////////////////////////////////////////////////////////////////
 // CBrowserFrame
@@ -95,6 +103,13 @@ BEGIN_MESSAGE_MAP(CBrowserFrame, CFrameWnd)
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
 	ON_WM_ACTIVATE()
+	ON_COMMAND(ID_NEW_EDITWINDOW, OnNewEditor)
+	ON_COMMAND(ID_BOLD, OnBold)
+	ON_UPDATE_COMMAND_UI(ID_BOLD, OnUpdateBold)
+	ON_COMMAND(ID_ITALICS, OnItalics)
+	ON_UPDATE_COMMAND_UI(ID_ITALICS, OnUpdateItalics)
+	ON_COMMAND(ID_UNDERLINE, OnUnderline)
+	ON_UPDATE_COMMAND_UI(ID_UNDERLINE, OnUpdateUnderline)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -115,6 +130,8 @@ CBrowserFrame::CBrowserFrame(PRUint32 chromeMask)
 	// will have menubar, toolbar, statusbar etc.
 
 	m_chromeMask = chromeMask;
+  mIsEditor = FALSE;
+  NS_ADDREF(&mToolBarObserver);//make sure no one releases this
 }
 
 CBrowserFrame::~CBrowserFrame()
@@ -170,16 +187,22 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     // Load the Most Recently Used(MRU) Urls into the UrlBar
     m_wndUrlBar.LoadMRUList();
 
-	// Create the toolbar with Back, Fwd, Stop, etc. buttons..
+  UINT resID = IDR_MAINFRAME;
+  if (mIsEditor)
+      resID = IDR_EDITOR;
+
+  // Create the toolbar with Back, Fwd, Stop, etc. buttons..
 	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
 		| CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
+		!m_wndToolBar.LoadToolBar(resID))
 	{
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
 
-	// Create a ReBar window to which the toolbar and UrlBar 
+  mToolBarObserver.SetFrame(this,ID_TOOLBAR_UPDATE,100); //update if 100 ticks goes by and no more changes
+
+  // Create a ReBar window to which the toolbar and UrlBar 
 	// will be added
 	if (!m_wndReBar.Create(this))
 	{
@@ -189,7 +212,8 @@ int CBrowserFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
 	//Add the ToolBar and UrlBar windows to the rebar
 	m_wndReBar.AddBar(&m_wndToolBar);
-	m_wndReBar.AddBar(&m_wndUrlBar, "Enter URL:");
+	if (!mIsEditor)
+  	m_wndReBar.AddBar(&m_wndUrlBar, "Enter URL:");
 
 	// Create the status bar with two panes - one pane for actual status
 	// text msgs. and the other for the progress control
@@ -390,4 +414,99 @@ void CMyStatusBar::OnLButtonDown(UINT nFlags, CPoint point)
     }
     	
 	CStatusBar::OnLButtonDown(nFlags, point);
+}
+
+void CBrowserFrame::OnNewEditor() 
+{
+	// TODO: Add your command handler code here
+	// TODO: Add your command handler code here
+	// TODO: Add your command handler code here
+		// TODO: Add your command handler code here
+	CMfcEmbedApp *pApp = (CMfcEmbedApp *)AfxGetApp();
+
+  CBrowserFrame *pEditorFrame = pApp->CreateNewBrowserFrame(nsIWebBrowserChrome::CHROME_ALL, 
+                                        -1, -1, -1, -1,
+                                        PR_TRUE,PR_TRUE);
+  if (pEditorFrame)
+  {
+    CString tUrl;
+    m_wndUrlBar.GetEnteredURL(tUrl);
+    pEditorFrame->m_wndBrowserView.OpenURL(ABOUT_BLANK);
+    CBrowserImpl *impl = pEditorFrame->GetBrowserImpl();
+    if (impl)
+    {
+        ((CEditorImpl *)impl)->AddEditorObservers(&mToolBarObserver);
+        ((CEditorImpl *)impl)->MakeEditable();
+    }
+  }	
+}
+
+
+/*
+"bold"
+state_all   //setter and getter
+state_begin //getter
+state_end   //getter
+state_mixed //getter
+*/
+#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
+#define STATE_ALL NS_ConvertASCIItoUCS2("state_all")
+
+#define BOLD_COMMAND NS_ConvertASCIItoUCS2("cmd_bold")
+
+void CBrowserFrame::OnBold() 
+{
+	// TODO: Add your command handler code here
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
+	if (NS_FAILED(rv) || !params)
+    return;
+  params->SetBooleanValue(STATE_ALL,true);
+  params->SetStringValue(COMMAND_NAME,BOLD_COMMAND);
+  CEditorImpl *impl = (CEditorImpl *)GetBrowserImpl();
+  if (impl)
+    impl->DoCommand(params);
+}
+
+void CBrowserFrame::OnUpdateBold(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+  nsresult rv;
+  nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID,&rv);
+  params->SetStringValue(COMMAND_NAME,BOLD_COMMAND);
+  CEditorImpl *impl = (CEditorImpl *)GetBrowserImpl();
+  if (impl)
+  {
+    rv = impl->GetCommandState(params);
+    if (NS_SUCCEEDED(rv))
+    {
+      //set tri state of button here if we need to
+    }
+  }
+  //just return true for now
+  pCmdUI->Enable();
+}
+
+void CBrowserFrame::OnItalics() 
+{
+	// TODO: Add your command handler code here
+	
+}
+
+void CBrowserFrame::OnUpdateItalics(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
+}
+
+void CBrowserFrame::OnUnderline() 
+{
+	// TODO: Add your command handler code here
+	
+}
+
+void CBrowserFrame::OnUpdateUnderline(CCmdUI* pCmdUI) 
+{
+	// TODO: Add your command update UI handler code here
+	
 }

@@ -28,6 +28,7 @@
 #include "nsILinkHandler.h"
 #include "nsIClipboardCommands.h"
 #include "nsDocShell.h"
+#include "nsICommandManager.h"
 
 class nsIController;
 struct PRThread;
@@ -99,6 +100,7 @@ protected:
     virtual nsresult GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController );
     virtual nsresult IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled );
     virtual nsresult DoCommand ( const nsAReadableString & inCommand );
+    nsresult EnsureCommandHandler();
 
     //
     // Helper method that is called when a new document (including any
@@ -121,6 +123,8 @@ protected:
         const char* aContentType,
         const char* aCommand,
         nsIStreamListener** aResult);
+
+    nsCOMPtr<nsICommandManager> mCommandManager;
 
 #ifdef DEBUG
 private:

@@ -65,7 +65,6 @@
 #include "nsIContentIterator.h"
 #include "nsIContentSerializer.h"
 #include "nsIController.h"
-#include "nsIControllerCommand.h"
 #include "nsIControllers.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMRange.h"
@@ -354,7 +353,6 @@ MAKE_CTOR(CreateXULElementFactory,        nsIElementFactory,           NS_NewXUL
 #ifdef MOZ_SVG
 MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVGElementFactory)
 #endif
-MAKE_CTOR(CreateControllerCommandManager, nsIControllerCommandManager, NS_NewControllerCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,                nsIDocumentLoaderFactory,   NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
@@ -791,11 +789,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_SVG_ELEMENT_FACTORY_CONTRACTID,
     CreateSVGElementFactory },
 #endif
-
-  { "Controller Command Manager",
-    NS_CONTROLLERCOMMANDMANAGER_CID,
-    "@mozilla.org/content/controller-command-manager;1",
-    CreateControllerCommandManager },
 
   { "Content HTTP Startup Listener",
     NS_CONTENTHTTPSTARTUP_CID,

@@ -33,6 +33,7 @@ REQUIRES  = string \
             necko \
             appshell \
             content_xul \
+            commandhandler \
             $(NULL)
 
 include <$(DEPTH)/config/config.mak>

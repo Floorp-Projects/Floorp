@@ -230,6 +230,10 @@ SOURCE=.\res\broken.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\mainfram.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\mfcembed.ico
 # End Source File
 # Begin Source File
@@ -243,6 +247,50 @@ SOURCE=.\res\ssecur.ico
 # Begin Source File
 
 SOURCE=.\res\Toolbar.bmp
+# End Source File
+# End Group
+# Begin Group "Interfaces"
+
+# PROP Default_Filter "*.idl"
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\public\nsICommandManager.idl
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\public\nsICommandParams.idl
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\content\xul\document\public\nsIController.idl
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\public\nsIControllerCommand.idl
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\public\nsIControllerCommandManager.idl
+# End Source File
+# End Group
+# Begin Group "implementations"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\src\nsCommandManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\src\nsCommandManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\editor\composer\src\nsComposerCommands.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\components\commandhandler\src\nsControllerCommandManager.cpp
 # End Source File
 # End Group
 # End Target

@@ -58,6 +58,9 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  find \
 		  nkcache \
+		  composer \
+		  commandhandler \
+		  editor \
 		  $(NULL)
 
 XPIDLSRCS	= \
@@ -77,12 +80,14 @@ XPIDLSRCS	= \
 		nsIContentViewerEdit.idl	\
 		nsIContentViewerFile.idl	\
 		nsIURIFixup.idl			\
+		nsIEditorDocShell.idl		\
 		$(NULL)
 
 CPPSRCS		= \
 		nsDocShell.cpp		\
 		nsWebShell.cpp		\
 		nsDocShellLoadInfo.cpp		\
+		nsDocShellEditorData.cpp	\
 		nsDocShellEnumerator.cpp  \
 		nsDSURIContentListener.cpp		\
 		nsDefaultURIFixup.cpp		\

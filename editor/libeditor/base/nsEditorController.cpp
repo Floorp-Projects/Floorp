@@ -224,7 +224,7 @@ nsresult nsEditorController::GetEditorCommandManager(nsIControllerCommandManager
   if (!cmdManager)
   {
     nsresult rv;
-    cmdManager = do_CreateInstance("@mozilla.org/content/controller-command-manager;1", &rv);
+    cmdManager = do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // register the commands. This just happens once per instance
