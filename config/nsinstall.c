@@ -64,6 +64,10 @@
 #include <bsd/libc.h>
 #endif
 
+#ifdef QNX
+#include <unix.h>
+#endif
+
 #ifdef NEED_S_ISLNK
 #if !defined(S_ISLNK) && defined(S_IFLNK)
 #define S_ISLNK(a)	(((a) & S_IFMT) == S_IFLNK)

@@ -49,6 +49,12 @@
 #include "sunos4.h"
 #endif
 
+#ifdef QNX
+#define D_INO	d_stat.st_ino
+#else
+#define D_INO	d_ino
+#endif
+
 char *program;
 
 void
@@ -125,7 +131,7 @@ ino2name(ino_t ino, char *dir)
     for (;;) {
 	if (!(ep = readdir(dp)))
 	    fail("cannot find current directory");
-	if (ep->d_ino == ino)
+	if (ep->D_INO == ino)
 	    break;
     }
     name = xstrdup(ep->d_name);
