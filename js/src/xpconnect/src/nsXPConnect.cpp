@@ -208,7 +208,7 @@ AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSRuntime* rt, nsXPConn
                     {
                         mCX = ourCX;
                         // Leave the reference to the mContextStack to
-                        // indicate that we need to pop it in out dtor.
+                        // indicate that we need to pop it in our dtor.
                         return;                                                
                     }
                 }
@@ -308,6 +308,9 @@ nsXPConnect::~nsXPConnect()
     NS_IF_RELEASE(mInterfaceInfoManager);
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
+
+    nsXPCWrappedNativeScope::SystemIsBeingShutDown();
+
     if(mThrower)
         delete mThrower;
     if(mRuntime)

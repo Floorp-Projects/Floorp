@@ -139,6 +139,37 @@ nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
     return ((nsXPCWrappedNative*)supports)->GetScope();
 }        
 
+JS_STATIC_DLL_CALLBACK(intN)
+WrappedNativeShutdownEnumerator(JSHashEntry *he, intN i, void *arg)
+{
+    ((nsXPCWrappedNative*)he->value)->SystemIsBeingShutDown();
+    ++ *((int*)arg);
+    return HT_ENUMERATE_NEXT;
+}
+
+//static
+void 
+nsXPCWrappedNativeScope::SystemIsBeingShutDown()
+{
+    int count = 0;
+    int liveWrapperCount = 0;
+    nsXPCWrappedNativeScope* cur;
+    
+    for(cur = gScopes; cur; cur = cur->mNext)
+    {
+        cur->mWrappedNativeMap->
+                Enumerate(WrappedNativeShutdownEnumerator,  &liveWrapperCount);
+        ++count;
+    }
+
+#ifdef XPC_DUMP_AT_SHUTDOWN
+        if(liveWrapperCount)
+            printf("deleting nsXPConnect  with %d live nsXPCWrappedNatives\n", liveWrapperCount);
+        if(count)
+            printf("deleting nsXPConnect  with %d live nsXPCWrappedNativeScopes\n", count);
+#endif
+}
+
 // static 
 void
 nsXPCWrappedNativeScope::DebugDumpAllScopes(PRInt16 depth)

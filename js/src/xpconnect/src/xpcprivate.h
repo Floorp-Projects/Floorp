@@ -555,6 +555,9 @@ public:
     static nsXPCWrappedNativeScope* 
     FindInJSObjectScope(XPCContext* xpcc, JSObject* obj);
 
+    static void 
+    SystemIsBeingShutDown();
+
     static void
     DebugDumpAllScopes(PRInt16 depth);
 
@@ -1011,6 +1014,9 @@ public:
 
     nsIXPCScriptable* GetArbitraryScriptable() const
         {return GetClass()->GetArbitraryScriptable();}
+
+    JSBool IsValid() const {return mObj != nsnull;}
+    void SystemIsBeingShutDown();
 
     void JSObjectFinalized(JSContext *cx, JSObject *obj);
 

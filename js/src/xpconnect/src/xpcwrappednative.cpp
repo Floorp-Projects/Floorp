@@ -409,6 +409,12 @@ nsXPCWrappedNative::Find(REFNSIID aIID)
     return nsnull;
 }
 
+void 
+nsXPCWrappedNative::SystemIsBeingShutDown()
+{
+    NS_IF_RELEASE(mObj);            
+}
+
 /***************************************************************************/
 
 NS_IMETHODIMP
