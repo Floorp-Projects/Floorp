@@ -108,23 +108,6 @@ public:
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       const nsRect &aTileRect);
 
-  /** 
-   * Progressivly double the bitmap size as we blit.. very fast way to tile
-   * @param aSurface  the surface to blit to
-   * @param aDestBufferWidth   Width of buffer
-   * @param aDestBufferHeight  Height of buffer
-   * @param aScaledTileWidth   Width of tile
-   * @param aScaledTileHeight  Height of tile
-   * @param aX0,aY0,aX1,aY1    Coordinates of screen to blit to
-   * @return if TRUE, no errors
-  */
-
-  PRBool ProgressiveDoubleBlit(nsDrawingSurface aSurface,
-                              PRInt32 aDestBufferWidth, PRInt32 aDestBufferHeight,
-                              PRInt32 aScaledTileWidth,PRInt32 aScaledTileHeight,
-                              PRInt32 aX0,PRInt32 aY0,
-                              PRInt32 aX1,PRInt32 aY1);
-
    /** 
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
@@ -215,19 +198,37 @@ private:
   nsresult PrintDDB(nsDrawingSurface aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight,PRUint32  aROP);
 
 
-  
-  /** ---------------------------------------------------
-   *  build a tile area by doubling the image until it reaches its limits
-   *  @param aTheHDC -- HDC to render to
-   *  @param aSrcRect -- Rectangle we are build with the image
-   *  @param aHeight -- height of the tile
-   *  @param aWidth -- width of the tile
+  /** 
+   * Progressively double the bitmap size as we blit.. very fast way to tile
+   * @return if TRUE, no errors
    */
-  void  BuildTile(HDC aTheHDC, nsRect &aSrcRect,
-                  PRInt32 aWidth, PRInt32 aHeight, PRInt32 aCopyMode);
+  PRBool ProgressiveDoubleBlit(nsDrawingSurface aSurface,
+                               PRInt32 aSXOffset, PRInt32 aSYOffset,
+                               nsRect aDestRect);
 
-
-
+  /**
+   * Draw Image and Mask (if one exists) to another set of DCs
+   * @param aDstDC     Where aSrcDC will be drawn to
+   * @param aDstMaskDC Where aMaskDC will be drawn to.  If same as aDstDC and
+                       there's a aSrcMaskDC, blending occurs. 
+   * @param aDstX      x-pos of where to start drawing to
+   * @param aDstY      y-pos of where to start drawing to
+   * @param aWidth     Width to copy from src to dst
+   * @param aHeight    Height to copy from src to dst
+   * @param aSrcDC     Source Image
+   * @param aSrcMaskDC Source Mask. If nsnull, aDstMaskDC will be ignored
+   * @param aSrcX      copy src starting at this x position
+   * @param aSrcY      copy src starting at this y position
+   * @param aUseAlphaBlend  When True, aDstSrc is a 32-bit DC storing alpha
+                            information in the 4th byte, so use AlphaBlend API
+                            instead of BitBlt.
+                            When False, BitBlt is used.
+   */
+  void BlitImage(HDC aDstDC, HDC aDstMaskDC, PRInt32 aDstX, PRInt32 aDstY,
+                 PRInt32 aWidth, PRInt32 aHeight,
+                 HDC aSrcDC, HDC aSrcMaskDC, PRInt32 aSrcX, PRInt32 aSrcY,
+                 PRBool aUseAlphaBlend);
+  
   /** 
    * Get an index in the palette that matches as closly as possible the passed in RGB colors
    * @update dc - 4/20/2000
