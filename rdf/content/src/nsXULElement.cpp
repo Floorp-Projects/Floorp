@@ -2709,10 +2709,10 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     }
   
     // Node capturing stage
-    // XXX Needs to be implemented.  Copy from nsGenericElement at some point.
-    // Talk to joki@netscape.com for help.
-    if (NS_EVENT_FLAG_BUBBLE != aFlags) {
-      // Help! 
+    if (NS_EVENT_FLAG_BUBBLE != aFlags && mParent) {
+      // Pass off to our parent.
+      mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                              NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
 
     //Local handling stage
