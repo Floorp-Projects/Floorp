@@ -4049,12 +4049,18 @@ nsCSSDeclaration::AppendComment(const nsAString& aComment)
 }
 
 nsresult
-nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
+nsCSSDeclaration::GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue)
 {
   PRBool  isImportant = GetValueIsImportant(aProperty);
   if (isImportant) {
     return mImportant->GetValue(aProperty, aValue);
   }
+  return GetValue(aProperty, aValue);
+}
+
+nsresult
+nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
+{
   nsresult result = NS_OK;
 
   switch (aProperty) {
@@ -4797,6 +4803,13 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
   return AppendValueToString(aProperty, value, aResult);
 }
 
+PRBool nsCSSDeclaration::AppendValueOrImportantValueToString(nsCSSProperty aProperty, nsAString& aResult)
+{
+  nsCSSValue  value;
+  GetValueOrImportantValue(aProperty, value);
+  return AppendValueToString(aProperty, value, aResult);
+}
+
 PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult)
 {
   nsCSSUnit unit = aValue.GetUnit();
@@ -5406,16 +5419,16 @@ nsCSSDeclaration::AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
   // are > 0; 0 is a flag for "not set".  We here are passed the actual
   // index, which comes from finding the value in the mOrder property array.
   // Of course, re-getting the mOrder value here is pretty silly.
-  GetValue((nsCSSProperty)mOrder->ValueAt(aFirst-1), firstValue);
-  GetValue((nsCSSProperty)mOrder->ValueAt(aSecond-1), otherValue);
+  GetValueOrImportantValue((nsCSSProperty)mOrder->ValueAt(aFirst-1), firstValue);
+  GetValueOrImportantValue((nsCSSProperty)mOrder->ValueAt(aSecond-1), otherValue);
   if (firstValue != otherValue) {
     return PR_FALSE;
   }
-  GetValue((nsCSSProperty)mOrder->ValueAt(aThird-1), otherValue);
+  GetValueOrImportantValue((nsCSSProperty)mOrder->ValueAt(aThird-1), otherValue);
   if (firstValue != otherValue) {
     return PR_FALSE;
   }
-  GetValue((nsCSSProperty)mOrder->ValueAt(aFourth-1), otherValue);
+  GetValueOrImportantValue((nsCSSProperty)mOrder->ValueAt(aFourth-1), otherValue);
   if (firstValue != otherValue) {
     return PR_FALSE;
   }
@@ -5437,7 +5450,7 @@ nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
   NS_ASSERTION(aProperty, "null CSS property passed to AppendPropertyAndValueToString.");
   aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aProperty))
                  + NS_LITERAL_STRING(": "));
-  AppendValueToString(aProperty, aString);
+  AppendValueOrImportantValueToString(aProperty, aString);
   PRBool  isImportant = GetValueIsImportant(aProperty);
   AppendImportanceToString(isImportant, aString);
   aString.Append(NS_LITERAL_STRING("; "));
@@ -5494,14 +5507,14 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
     aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(eCSSProperty_border))
                    + NS_LITERAL_STRING(": "));
 
-    AppendValueToString(eCSSProperty_border_top_width, aString);
+    AppendValueOrImportantValueToString(eCSSProperty_border_top_width, aString);
     aString.Append(PRUnichar(' '));
 
-    AppendValueToString(eCSSProperty_border_top_style, aString);
+    AppendValueOrImportantValueToString(eCSSProperty_border_top_style, aString);
     aString.Append(PRUnichar(' '));
 
     nsAutoString valueString;
-    AppendValueToString(eCSSProperty_border_top_color, valueString);
+    AppendValueOrImportantValueToString(eCSSProperty_border_top_color, valueString);
     if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
       /* don't output this value, it's proprietary Mozilla and  */
       /* not intended to be exposed ; we can remove it from the */
@@ -5529,13 +5542,13 @@ nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
     aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aShorthand))
                    + NS_LITERAL_STRING(":"));
     aString.Append(PRUnichar(' '));
-    AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderWidth-1), aString);
+    AppendValueOrImportantValueToString((nsCSSProperty)mOrder->ValueAt(aBorderWidth-1), aString);
 
     aString.Append(PRUnichar(' '));
-    AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderStyle-1), aString);
+    AppendValueOrImportantValueToString((nsCSSProperty)mOrder->ValueAt(aBorderStyle-1), aString);
 
     nsAutoString valueString;
-    AppendValueToString((nsCSSProperty)mOrder->ValueAt(aBorderColor-1), valueString);
+    AppendValueOrImportantValueToString((nsCSSProperty)mOrder->ValueAt(aBorderColor-1), valueString);
     if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
       aString.Append(NS_LITERAL_STRING(" "));
       aString.Append(valueString);
@@ -5570,10 +5583,10 @@ nsCSSDeclaration::TryFourSidesShorthand(nsAString & aString,
     nsCSSProperty bottomProp = (nsCSSProperty)mOrder->ValueAt(aBottom-1);
     nsCSSProperty leftProp   = (nsCSSProperty)mOrder->ValueAt(aLeft-1);
     nsCSSProperty rightProp  = (nsCSSProperty)mOrder->ValueAt(aRight-1);
-    GetValue(topProp,    topValue);
-    GetValue(bottomProp, bottomValue);
-    GetValue(leftProp,   leftValue);
-    GetValue(rightProp,  rightValue);
+    GetValueOrImportantValue(topProp,    topValue);
+    GetValueOrImportantValue(bottomProp, bottomValue);
+    GetValueOrImportantValue(leftProp,   leftValue);
+    GetValueOrImportantValue(rightProp,  rightValue);
     AppendValueToString(topProp, topValue, aString);
     if (topValue != rightValue || topValue != leftValue || topValue != bottomValue) {
       aString.Append(PRUnichar(' '));
@@ -5617,19 +5630,19 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
                    + NS_LITERAL_STRING(":"));
 
     aString.Append(PRUnichar(' '));
-    AppendValueToString(eCSSProperty_background_color, aString);
+    AppendValueOrImportantValueToString(eCSSProperty_background_color, aString);
     aBgColor = 0;
 
     aString.Append(PRUnichar(' '));
-    AppendValueToString(eCSSProperty_background_image, aString);
+    AppendValueOrImportantValueToString(eCSSProperty_background_image, aString);
     aBgImage = 0;
 
     aString.Append(PRUnichar(' '));
-    AppendValueToString(eCSSProperty_background_repeat, aString);
+    AppendValueOrImportantValueToString(eCSSProperty_background_repeat, aString);
     aBgRepeat = 0;
 
     aString.Append(PRUnichar(' '));
-    AppendValueToString(eCSSProperty_background_attachment, aString);
+    AppendValueOrImportantValueToString(eCSSProperty_background_attachment, aString);
     aBgAttachment = 0;
 
     aString.Append(PRUnichar(' '));
@@ -5645,8 +5658,8 @@ nsCSSDeclaration::UseBackgroundPosition(nsAString & aString,
                                         PRInt32 & aBgPositionY)
 {
   nsAutoString backgroundXValue, backgroundYValue;
-  AppendValueToString(eCSSProperty_background_x_position, backgroundXValue);
-  AppendValueToString(eCSSProperty_background_y_position, backgroundYValue);
+  AppendValueOrImportantValueToString(eCSSProperty_background_x_position, backgroundXValue);
+  AppendValueOrImportantValueToString(eCSSProperty_background_y_position, backgroundYValue);
   aString.Append(backgroundYValue);
   if (!backgroundXValue.Equals(backgroundYValue, nsCaseInsensitiveStringComparator())) {
     // the two values are different
