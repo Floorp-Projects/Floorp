@@ -47,6 +47,7 @@ import javax.swing.RootPaneContainer;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
 import org.w3c.dom.Element;
@@ -253,6 +254,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     float weightx = 0.0f;
     String fill = null;
     String width = null;
+    String height = null;
 
     try {
       String s = current.getAttribute("weightx");
@@ -269,14 +271,31 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       }
     }
 
-    // gridwidth
     width = current.getAttribute("gridwidth");
     if (width != null) {
       width = width.trim();
-      if (width.equals("remainder")) {
-	constraints.gridwidth = GridBagConstraints.REMAINDER;
-      } else if (width.equals("relative")) {
-        constraints.gridwidth = GridBagConstraints.RELATIVE;
+      try {
+        constraints.gridwidth = Integer.parseInt(width);
+      } catch (NumberFormatException nfe) {
+        if (width.equals("remainder")) {
+          constraints.gridwidth = GridBagConstraints.REMAINDER;
+        } else if (width.equals("relative")) {
+          constraints.gridwidth = GridBagConstraints.RELATIVE;
+        }
+      }
+    }
+
+    height = current.getAttribute("gridheight");
+    if (height != null) {
+      height = height.trim();
+      try {
+        constraints.gridheight = Integer.parseInt(height);
+      } catch (NumberFormatException nfe) {
+        if (width.equals("remainder")) {
+          constraints.gridwidth = GridBagConstraints.REMAINDER;
+        } else if (width.equals("relative")) {
+          constraints.gridwidth = GridBagConstraints.RELATIVE;
+        }
       }
     }
 
