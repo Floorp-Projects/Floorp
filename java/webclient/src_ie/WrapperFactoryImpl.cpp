@@ -64,6 +64,7 @@ const char *gImplementedInterfaces[] = {
         "webclient.Navigation",
         "webclient.CurrentPage",
         "webclient.History",
+        "webclient.EventRegistration",
         0
         };
 

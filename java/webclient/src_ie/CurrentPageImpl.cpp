@@ -74,6 +74,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 	return urlString;
 }
 
+JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetDOM
+(JNIEnv *, jobject, jint)
+{
+    return NULL;
+}
+
+
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSource

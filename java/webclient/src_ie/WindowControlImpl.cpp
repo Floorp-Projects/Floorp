@@ -26,6 +26,7 @@
 #include "ie_util.h"
 #include "ie_globals.h"
 
+#include "CMyDialog.h"
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetBounds
@@ -69,7 +70,6 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 
     WebShellInitContext* initContext = new WebShellInitContext;
 
-    initContext->m_pWB = NULL;
     initContext->initComplete = FALSE;
     initContext->initFailCode = 0;
     initContext->parentHWnd = parentHWnd;
@@ -81,6 +81,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->y = y;
     initContext->w = width;
     initContext->h = height;
+
+    initContext->browserObject = new CMyDialog(initContext);
 
     return (jint) initContext;
 }
@@ -113,6 +115,9 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
     initContext->y = -1;
     initContext->w = -1;
     initContext->h = -1;    
+
+    delete initContext->browserObject;
+    initContext->browserObject = NULL;
 
     delete initContext;
   

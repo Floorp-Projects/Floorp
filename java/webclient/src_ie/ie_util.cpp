@@ -21,6 +21,21 @@
  */
 
 #include "ie_util.h"
+
+/**
+
+ * a null terminated array of listener interfaces we support.  This is
+ * used in NativeEventThread.cpp nativeAddListener,
+ * nativeRemoveListener, and in CBrowserContainer.cpp 
+
+ */
+
+const char *gSupportedListenerInterfaces[] = {
+    DOCUMENT_LOAD_LISTENER_CLASSNAME_VALUE,
+    0
+};
+
+
 //
 // Implementations for functions defined in ../src_share/jni_util.h, but not
 // implemented there.

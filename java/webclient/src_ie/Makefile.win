@@ -29,6 +29,9 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MODULE=webclient 
 
 OBJS =  \
+	.\$(OBJDIR)\ie_util.obj \
+	.\$(OBJDIR)\ie_util_export.obj \
+	.\$(OBJDIR)\CMyDialog.obj \
 	.\$(OBJDIR)\BookmarksImpl.obj \
 	.\$(OBJDIR)\CurrentPageImpl.obj \
 	.\$(OBJDIR)\HistoryImpl.obj \
@@ -37,8 +40,6 @@ OBJS =  \
 	.\$(OBJDIR)\NavigationImpl.obj \
 	.\$(OBJDIR)\WindowControlImpl.obj \
 	.\$(OBJDIR)\WrapperFactoryImpl.obj \
-	.\$(OBJDIR)\ie_util_export.obj \
-	.\$(OBJDIR)\ie_util.obj \
 	$(NULL) 
 
 LCFLAGS = \

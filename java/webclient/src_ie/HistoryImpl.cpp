@@ -24,6 +24,8 @@
 #include "ie_util.h"
 #include "ie_globals.h"
 
+#include "CMyDialog.h"
+
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
 (JNIEnv *env, jobject obj, jint webShellPtr)
@@ -52,8 +54,8 @@ JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanBack
     }
     	
 
-	jboolean result = JNI_TRUE;
-
+	jboolean result = initContext->browserObject->GetBackState();
+	
     return result;
 }
 
@@ -97,7 +99,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImp
       return JNI_FALSE;
     }
 
-	jboolean result = JNI_TRUE;
+    jboolean result = initContext->browserObject->GetForwardState();
  
     return result;
 }

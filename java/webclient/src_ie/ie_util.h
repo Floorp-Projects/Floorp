@@ -32,15 +32,36 @@
 
 #include "jni_util.h" // located in ../src_share, 
                       // pulls in ../src_share/jni_util_export.h
-
-#include <atlbase.h>
 #include <Exdisp.h>
+#include <atlbase.h> //for CComPtr
+#include <AtlApp.h> // for CAppModule decl WTL
+
+
+extern CAppModule _Module;
+#include <Atlwin.h> // for AtlWin 
+#include <Atlcom.h>
+
+//#include <atlhost.h>
+
+#include <Exdisp.h>  //for IWebBrowser2
+#include <exdispid.h>
+
+#include <atlhost.h>
+//#include <atlframe.h>//WTL
+#include <atlctrls.h>//WTL
+//#include <atlctrlw.h>//WTL
+//#include <atlmisc.h> //WTL
+//#include <atlimpl.cpp>
+#include <objbase.h>
+
+class CMyDialog;
+
+extern const char *gSupportedListenerInterfaces[]; // defined in ie_util.cpp
 
 struct WebShellInitContext {
 
     HWND		parentHWnd;
     HWND                browserHost;
-    CComPtr<IWebBrowser2> m_pWB;
     JNIEnv          *   env;
     jobject             nativeEventThread;
     const wchar_t *			wcharURL;
@@ -50,8 +71,9 @@ struct WebShellInitContext {
 	int					y;
 	int					w;
 	int					h;
-	bool	canForward;
-	bool	canBack;
+	jboolean	canForward;
+	jboolean	canBack;
+    CMyDialog   *browserObject;
 
 };
 

@@ -29,8 +29,9 @@
 #include "ie_globals.h"
 #include "ie_util.h"
 
+#include "CMyDialog.h"
+
 #include <atlbase.h> //for CComPtr
-#include <AtlApp.h> // for CAppModule decl
 
  CAppModule _Module;
  
@@ -42,11 +43,11 @@
 #include <exdispid.h>
 
 #include <atlhost.h>
-#include <atlframe.h>
-#include <atlctrls.h>
-#include <atlctrlw.h>
-#include <atlmisc.h>
-#include <atlimpl.cpp>
+//#include <atlframe.h>//WTL
+#include <atlctrls.h>//WTL
+//#include <atlctrlw.h>//WTL
+//#include <atlmisc.h>//WTL
+//#include <atlimpl.cpp>
 #include <objbase.h>
 
 
@@ -56,39 +57,8 @@
 
 #include <stdio.h>
 
-#include "prlog.h" // for PR_ASSERT
-
-#ifdef XP_UNIX
-#include <unistd.h>
-#include "gdksuperwin.h"
-#include "gtkmozarea.h"
-#endif
-
-class CMyDialog:
-	
-
-	public CAxWindow,
-	public IDispEventImpl<1, CMyDialog, &DIID_DWebBrowserEvents2,&LIBID_SHDocVw, 1, 0>
-{
-
-
-public:
-   //ComPtr<IUnknown> spUnk;
-	CComPtr<IWebBrowser2> m_pWB;
-   //CAxWindow happyday;
-	
-  void __stdcall OnCommandStateChange(long lCommand, BOOL bEnable);
-  void __stdcall CMyDialog::OnDownloadBegin();
-  void __stdcall OnDownloadComplete();
-  void __stdcall OnNavigateComplete2(IDispatch* pDisp, CComVariant& URL);
-
-	BEGIN_SINK_MAP(CMyDialog)
-		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_COMMANDSTATECHANGE, OnCommandStateChange)
-		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_DOWNLOADBEGIN, OnDownloadBegin)
-		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_DOWNLOADCOMPLETE, OnDownloadComplete)
-		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NAVIGATECOMPLETE2, OnNavigateComplete2)
-	END_SINK_MAP()
-};
+HWND localParent;  //these two are temporarily being used in order to test the
+HWND localChild;   //OnCommandStateChange functions, they may be eventually removed
 
 
 //
@@ -103,8 +73,6 @@ int processEventLoop(WebShellInitContext *initContext);
 // Local data
 //
 
-HWND localParent;  //these two are temporarily being used in order to test the
-HWND localChild;   //OnCommandStateChange functions, they may be eventually removed
 
 
 extern void util_ThrowExceptionToJava (JNIEnv * , const char * );
@@ -116,31 +84,6 @@ char * errorMessages[] = {
 	"Unable to initialize the WebShell instance.",
 	"Unable to show the WebShell."
 };
-
-/**
-
- * a null terminated array of listener interfaces we support.
-
- * PENDING(): this should probably live in EventRegistration.h
-
- * PENDING(edburns): need to abstract this out so we can use it from uno
- * and JNI.
-
- */
-
-const char *gSupportedListenerInterfaces[] = {
-    "org/mozilla/webclient/DocumentLoadListener",
-    0
-};
-
-// these index into the gSupportedListenerInterfaces array, this should
-// also live in EventRegistration.h
-
-typedef enum {
-    DOCUMENT_LOAD_LISTENER = 0,
-    LISTENER_NOT_FOUND
-} LISTENER_CLASSES;
-
 
 //
 // JNI methods
@@ -200,9 +143,74 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
  */
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener)
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener, 
+ jstring listenerString)
 {
-    printf("debug: glenn: nativeAddListener\n");
+    WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+    
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
+        return;
+    }
+    
+    if (nsnull == initContext->nativeEventThread) {
+        // store the java EventRegistrationImpl class in the initContext
+        initContext->nativeEventThread = 
+            ::util_NewGlobalRef(env, obj); // VERY IMPORTANT!!
+        
+        // This enables the listener to call back into java
+    }
+    
+    jclass clazz = nsnull;
+    int listenerType = 0;
+    const char *listenerStringChars = ::util_GetStringUTFChars(env, 
+                                                               listenerString);
+    if (listenerStringChars == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeAddListener: Can't get className for listener.");
+        return;
+    }
+    
+    while (nsnull != gSupportedListenerInterfaces[listenerType]) {
+        if (0 == strcmp(gSupportedListenerInterfaces[listenerType], 
+                        listenerStringChars)) {
+            // We've got a winner!
+            break;
+        }
+        listenerType++;
+    }
+    ::util_ReleaseStringUTFChars(env, listenerString, listenerStringChars);
+    listenerStringChars = nsnull;
+    
+    if (LISTENER_NOT_FOUND == (LISTENER_CLASSES) listenerType) {
+        ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't find listener \n\tclass for argument");
+        return;
+    }
+    
+    jobject globalRef = nsnull;
+    
+    // PENDING(edburns): make sure do DeleteGlobalRef on the removeListener
+    if (nsnull == (globalRef = ::util_NewGlobalRef(env, typedListener))) {
+        ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't create NewGlobalRef\n\tfor argument");
+        return;
+    }
+    util_Assert(initContext->browserObject);
+    
+    switch(listenerType) {
+    case DOCUMENT_LOAD_LISTENER:
+        initContext->browserObject->AddDocumentLoadListener(globalRef); 
+        break;
+    }
+
+    return;
+    
+}
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener,
+ jstring listenerString)
+{
+    printf("debug: glenn: nativeRemoveListener\n");
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeCleanUp
@@ -214,6 +222,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
   //AtlAdviseSinkMap(&browserHome, false)
   
 	//_Module.RemoveMessageLoop();
+    initContext->browserObject->DispEventUnadvise(initContext->browserObject->spUnk);
   	_Module.Term();
     ::CoUninitialize();
   
@@ -225,28 +234,29 @@ int processEventLoop(WebShellInitContext * initContext)
 
 	HRESULT hr;
     MSG msg;
-    
+
+
     if (::PeekMessage(&msg, nsnull, 0, 0, PM_NOREMOVE)) {
         if (::GetMessage(&msg, nsnull, 0, 0)) {
 			
 			switch (msg.message)
 			{
 			case WM_REFRESH:
-				hr = (initContext->m_pWB)->Refresh();
+				hr = (initContext->browserObject->m_pWB)->Refresh();
 				break;
 			case WM_NAVIGATE:
- 				hr = (initContext->m_pWB)->Navigate(CComBSTR(initContext->wcharURL), NULL, NULL, NULL, NULL);
+ 				hr = (initContext->browserObject->m_pWB)->Navigate(CComBSTR(initContext->wcharURL), NULL, NULL, NULL, NULL);
                 free((void *) initContext->wcharURL);
-                initContext->wcharURL = nsnull;
+                initContext->wcharURL = NULL;
 				break;
 			case WM_BACK:
-				hr = (initContext->m_pWB)->GoBack();
+				hr = (initContext->browserObject->m_pWB)->GoBack();
 				break;
 			case WM_FORWARD:
-				hr = (initContext->m_pWB)->GoForward();
+				hr = (initContext->browserObject->m_pWB)->GoForward();
 				break;
 			case WM_STOP:
-				hr = (initContext->m_pWB)->Stop();
+				hr = (initContext->browserObject->m_pWB)->Stop();
 				break;
 			case WM_RESIZE :
 				hr = MoveWindow(initContext->browserHost, initContext->x, initContext->y, initContext->w, initContext->h, TRUE);
@@ -259,8 +269,9 @@ int processEventLoop(WebShellInitContext * initContext)
 			::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
             }
-        }	
-
+    }
+    initContext->canForward = initContext->browserObject->GetForwardState();
+    initContext->canBack = initContext->browserObject->GetBackState();
     return 1;
 }
 
@@ -296,13 +307,10 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
 	hRes = _Module.Init(NULL, newInst);
 	ATLASSERT(SUCCEEDED(hRes));
 
-  
+    
+    AtlAxWinInit();
 
-	CMyDialog browserHome;
-	
-	AtlAxWinInit();
-
-	m_hWndClient = browserHome.Create(
+	m_hWndClient = initContext->browserObject->Create(
 		initContext->parentHWnd, 
 		rect,
 		_T("about:blank"), 
@@ -311,13 +319,8 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
 		WS_EX_CLIENTEDGE, 
 	    ID_WEBBROWSER);
 
-	hr = browserHome.QueryControl(&browserHome.m_pWB);
-	initContext->m_pWB = browserHome.m_pWB;
-
-
-  (initContext->browserHost) = m_hWndClient;
-
-
+	hr = initContext->browserObject->QueryControl(&(initContext->browserObject->m_pWB));
+	
 
 	if FAILED(hr)
         {
@@ -332,10 +335,12 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
             
         }
 
-//	CComPtr<IUnknown> spUnk;  //Unk Ptr will be used to sink the map
-//    hr = browserHome.QueryControl(&spUnk);
-  
-	//hr = browserHome.DispEventAdvise(spUnk);
+    (initContext->browserHost) = m_hWndClient;
+
+	if (!initContext->browserObject->spUnk) {    
+	hr = initContext->browserObject->QueryControl(&(initContext->browserObject->spUnk));
+	hr = initContext->browserObject->DispEventAdvise(initContext->browserObject->spUnk);
+	}
 
 	if FAILED(hr)
 	{
@@ -343,37 +348,10 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
 		return -1;
 	}
 
-  processEventLoop(initContext);
+    processEventLoop(initContext);
  
 
 	return 0;
 
 }
 
-void  __stdcall CMyDialog::OnCommandStateChange(long lCommand, BOOL bEnable)
-{
-
-
-//	HRESULT hr = ::PostMessage(localChild, WM_BIGTEST, 0, 0);
-//	if (CSC_NAVIGATEFORWARD == lCommand)
-//	{
-//	SetForwarders(bEnable, localParent);
-//	}
-//	else if (CSC_NAVIGATEBACK == lCommand)
-//	{
-//	SetBackers(bEnable, localParent);
-//	}
-
-}
-
-void __stdcall CMyDialog::OnDownloadBegin()
-{
-}
-
-void __stdcall CMyDialog::OnDownloadComplete()
-{
-}
-
-void __stdcall CMyDialog::OnNavigateComplete2(IDispatch* pDisp, CComVariant& URL)
-{
-}

@@ -51,7 +51,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.16 2000/07/07 18:47:25 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.17 2000/08/17 19:54:43 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -535,7 +535,7 @@ public void eventDispatched(WebclientEvent event)
             statusLabel.setText("Done.");
             currentDocument = currentPage.getDOM();
             // add the new document to the domViewer
-            if (null != domViewer) {
+            if (null != currentDocument && null != domViewer) {
                 domViewer.setDocument(currentDocument);
             }
 
