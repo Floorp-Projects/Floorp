@@ -56,7 +56,7 @@
 #include "nsMsgRDFUtils.h"
 
 #include "nsINetService.h"
-#include "nsICopyMessageStreamListener.h"
+#include "nsICopyMsgStreamListener.h"
 #include "nsICopyMessageListener.h"
 
 #include "nsIMessageView.h"
