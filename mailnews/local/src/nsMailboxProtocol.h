@@ -21,6 +21,7 @@
 
 #include "nsMsgProtocol.h"
 #include "nsCOMPtr.h"
+#include "nsIFileSpec.h"
 #include "rosetta.h"
 #include HG40855
 
@@ -115,8 +116,7 @@ private:
 
 	PRUint32	m_messageID;
 
-	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
-	nsFileSpec m_tempMessageFile;
+	nsCOMPtr<nsIFileSpec> m_tempMessageFile;
 	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 

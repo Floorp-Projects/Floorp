@@ -54,10 +54,9 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
  */
 #define OUTPUT_BUFFER_SIZE (4096*2)
 
-nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL) : m_tempMessageFile(MESSAGE_PATH)
+nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
 {
- 
-  Initialize(aURL);
+	Initialize(aURL);
 }
 
 nsMailboxProtocol::~nsMailboxProtocol()
@@ -84,6 +83,9 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
+
+	nsFileSpec fileSpec(MESSAGE_PATH);
+	NS_NewFileSpecWithSpec(fileSpec, getter_AddRefs(m_tempMessageFile));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,29 +159,29 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 
 PRInt32 nsMailboxProtocol::DoneReadingMessage()
 {
+	nsresult rv = NS_OK;
 	// and close the article file if it was open....
-	if (m_tempMessageStream)
-		m_tempMessageStream->Close();
+	if (m_tempMessageFile)
+		rv = m_tempMessageFile->closeStream();
 
 	// disply hack: run a file url on the temp file
-	if (m_displayConsumer)
+	if (m_mailboxAction == nsMailboxActionDisplayMessage && m_displayConsumer)
 	{
 		nsFilePath filePath(MESSAGE_PATH);
 		nsFileURL  fileURL(filePath);
 		char * message_path_url = PL_strdup(fileURL.GetAsString());
 
-		m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
 
 		PR_FREEIF(message_path_url);
+
+		// now mark the message as read
+		nsCOMPtr<nsIMsgDBHdr> msgHdr;
+
+		rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+		if (NS_SUCCEEDED(rv))
+			msgHdr->MarkRead(PR_TRUE);
 	}
-
-	// now mark the message as read
-	nsCOMPtr<nsIMsgDBHdr> msgHdr;
-	nsresult rv = NS_OK;
-
-	rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
-	if (NS_SUCCEEDED(rv))
-		msgHdr->MarkRead(PR_TRUE);
 
 	return rv;
 }
@@ -230,17 +232,19 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 					rv = m_runningUrl->GetMailboxParser(getter_AddRefs(m_mailboxParser));
 					m_nextState = MAILBOX_READ_FOLDER;
 					break;
-
+				case nsMailboxActionSaveMessageToDisk:
+					// ohhh, display message already writes a msg to disk (as part of a hack)
+					// so we can piggy back off of that!! We just need to change m_tempMessageFile
+					// to be the name of our save message to disk file. Since save message to disk
+					// urls are run without a webshell to display the msg into, we won't be trying
+					// to display the message after we write it to disk...
+					m_runningUrl->GetMessageFile(getter_AddRefs(m_tempMessageFile));
 				case nsMailboxActionDisplayMessage:
 					// create a temp file to write the message into. We need to do this because
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
-
-					m_tempMessageFile.Delete(PR_FALSE);
-					nsISupports * supports;
-					NS_NewIOFileStream(&supports, m_tempMessageFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-					m_tempMessageStream = do_QueryInterface(supports);
-					NS_IF_RELEASE(supports);
+				
+					m_tempMessageFile->openStreamForWriting();
 					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
@@ -333,12 +337,12 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 					terminator as it is read.
 				*/
 
-				if (m_tempMessageStream)
+				if (m_tempMessageFile)
 				{
-					PRUint32 count = 0;
+					PRInt32 count = 0;
 					if (line)
-						m_tempMessageStream->Write(line, PL_strlen(line), &count);
-					m_tempMessageStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
+						m_tempMessageFile->write(line, PL_strlen(line), &count);
+					m_tempMessageFile->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
 				}
 			} 
 		}
