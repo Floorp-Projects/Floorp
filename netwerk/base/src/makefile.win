@@ -1,0 +1,50 @@
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+MODULE = netwerk
+
+DEPTH = ..\..\..
+
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
+
+LIBRARY_NAME=netwerkbase_s
+
+EXPORTS =                    \
+        nsConnectionGroup.h  \
+        nsNetService.h       \
+        nsTransportService.h \
+        nsUrl.h              \
+        $(NULL)
+
+CPP_OBJS =                                         \
+        .\$(OBJDIR)\nsConnectionGroup.obj          \
+        .\$(OBJDIR)\nsMarshalingStreamListener.obj \
+        .\$(OBJDIR)\nsNetService.obj               \
+        .\$(OBJDIR)\nsTransportService.obj         \
+        $(NULL)
+
+LINCS =                     \
+        -I$(PUBLIC)\xpcom   \
+        -I$(PUBLIC)\raptor  \
+        -I$(PUBLIC)\netwerk \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
