@@ -2684,6 +2684,9 @@ nsresult
 nsBoxFrame::GenerateDirtyReflowCommand(nsIPresContext* aPresContext,
                                        nsIPresShell&   aPresShell)
 {
+  if (mState & NS_FRAME_IS_DIRTY)      
+       return NS_OK;
+
   // ask out parent to dirty things.
   mState |= NS_FRAME_IS_DIRTY;
   return mParent->ReflowDirtyChild(&aPresShell, this);
@@ -2887,6 +2890,10 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
  * Goes though each child asking for its size to determine our size. Returns our box size minus our border.
  * This method is defined in nsIBox interface.
  */
+/**
+ * Goes though each child asking for its size to determine our size. Returns our box size minus our border.
+ * This method is defined in nsIBox interface.
+ */
 NS_IMETHODIMP
 nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
@@ -2924,83 +2931,65 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
         // just use the size we already have.
         if ((info->mFlags & NS_FRAME_BOX_NEEDS_RECALC) || info->frame == incrementalChild || collapsedChanged)
         {
-            // if collapsed then the child will have no size
-	  // don't unset needsRecalc - therefore cause us
-	  // to be recalculated when we are uncollapsed
-          if (visibilityCollapsed) {
-              // eat up any incremental reflows targets at
-              // a collapsed child
-              if (incrementalChild == info->frame) {
-                 while(incrementalChild)
-                    aReflowState.reflowCommand->GetNext(incrementalChild);
-              }
-
-              if (collapsedChanged) {
-                 info->mFlags |= NS_FRAME_BOX_IS_COLLAPSED;
-              }
-
-              info->Clear();
-          } else {
-              if (collapsedChanged) {
+            if (visibilityCollapsed) {
                 nsFrameState childState;
                 info->frame->GetFrameState(&childState);
                 childState |= NS_FRAME_IS_DIRTY;
                 info->frame->SetFrameState(childState);
-              }
-            // get the size of the child. This is the min, max, preferred, and spring constant
-            // it does not include its border.
-            rv = GetChildBoxInfo(aPresContext, aReflowState, info->frame, *info);
+            }
 
+            if (!visibilityCollapsed || aReflowState.reflowCommand != nsnull) {
+              // get the size of the child. This is the min, max, preferred, and spring constant
+              // it does not include its border.
+              rv = GetChildBoxInfo(aPresContext, aReflowState, info->frame, *info);
 
-            /*
-            // make sure we can see the debug info
-            if (info->prefSize.width < debugInset.left)
-              info->prefSize.width = debugInset.left;
-
-            if (info->prefSize.height < debugInset.top)
-              info->prefSize.height = debugInset.top;
-            */
-
-            NS_ASSERTION(rv == NS_OK,"failed to child box info");
-            if (NS_FAILED(rv))
-             return rv;
-
-            // add in the child's margin and border/padding if there is one.
-            const nsStyleSpacing* spacing;
-            rv = info->frame->GetStyleData(eStyleStruct_Spacing,
-                                          (const nsStyleStruct*&) spacing);
-
-            NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
-            if (NS_FAILED(rv))
+              NS_ASSERTION(rv == NS_OK,"failed to child box info");
+              if (NS_FAILED(rv))
                return rv;
 
-            nsMargin margin(0,0,0,0);
-            spacing->GetMargin(margin);
-            nsSize m(margin.left+margin.right,margin.top+margin.bottom);
-            info->minSize += m;
-            info->prefSize += m;
-            if (info->maxSize.width != NS_INTRINSICSIZE)
-               info->maxSize.width += m.width;
+              // add in the child's margin and border/padding if there is one.
+              const nsStyleSpacing* spacing;
+              rv = info->frame->GetStyleData(eStyleStruct_Spacing,
+                                            (const nsStyleStruct*&) spacing);
 
-            if (info->maxSize.height != NS_INTRINSICSIZE)
-               info->maxSize.height += m.height;
+              NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
+              if (NS_FAILED(rv))
+                 return rv;
 
-            spacing->GetBorderPadding(margin);
-            nsSize b(margin.left+margin.right,margin.top+margin.bottom);
-            info->minSize += b;
-            info->prefSize += b;
-            if (info->maxSize.width != NS_INTRINSICSIZE)
-               info->maxSize.width += b.width;
+              nsMargin margin(0,0,0,0);
+              spacing->GetMargin(margin);
+              nsSize m(margin.left+margin.right,margin.top+margin.bottom);
+              info->minSize += m;
+              info->prefSize += m;
+              if (info->maxSize.width != NS_INTRINSICSIZE)
+                 info->maxSize.width += m.width;
 
-            if (info->maxSize.height != NS_INTRINSICSIZE)
-               info->maxSize.height += b.height;
+              if (info->maxSize.height != NS_INTRINSICSIZE)
+                 info->maxSize.height += m.height;
 
+              spacing->GetBorderPadding(margin);
+              nsSize b(margin.left+margin.right,margin.top+margin.bottom);
+              info->minSize += b;
+              info->prefSize += b;
+              if (info->maxSize.width != NS_INTRINSICSIZE)
+                 info->maxSize.width += b.width;
+
+              if (info->maxSize.height != NS_INTRINSICSIZE)
+                 info->maxSize.height += b.height;
+
+            }
+
+ 
             // ok we don't need to calc this guy again
             info->mFlags &= ~NS_FRAME_BOX_NEEDS_RECALC;
-          }
+
+            if (visibilityCollapsed) {
+                 info->mFlags |= NS_FRAME_BOX_IS_COLLAPSED;
+            }
         } 
 
-        AddChildSize(aSize, *info);
+        if (!visibilityCollapsed) 
+           AddChildSize(aSize, *info);
 
         // if horizontal get the largest child's ascent
         if (mState & NS_STATE_IS_HORIZONTAL) {
@@ -3012,7 +3001,6 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
                aSize.ascent += info->prefSize.height;
             else
                aSize.ascent += info->ascent;
-
         }
 
         info = info->next;
