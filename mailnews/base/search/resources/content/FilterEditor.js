@@ -45,6 +45,7 @@ var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 function filterEditorOnLoad()
 {
     initializeSearchWidgets();
+    initializeFilterWidgets();
     if (window.arguments && window.arguments[0]) {
         var args = window.arguments[0];
         if (args.filter) {
@@ -52,8 +53,9 @@ function filterEditorOnLoad()
 
             initializeDialog(gFilter);
         } else {
-            if (args.filterList)
-                setSearchScope(getScopeFromFilterList(args.filterList));
+            gFilterList = args.filterList;
+            if (gFilterList)
+                setSearchScope(getScopeFromFilterList(gFilterList));
         }
     }
 
@@ -99,6 +101,7 @@ function booleanChanged(event) {
 
 function getScopeFromFilterList(filterList)
 {
+    if (!filterList) return;
     var type = filterList.folder.server.type;
     if (type == "nntp") return nsIMsgSearchValidityManager.news;
     return nsIMsgSearchValidityManager.onlineMail;
@@ -108,15 +111,20 @@ function getScope(filter) {
     return getScopeFromFilterList(filter.filterList);
 }
 
-function initializeDialog(filter)
+function initializeFilterWidgets()
 {
     gFilterNameElement = document.getElementById("filterName");
+    gActionElement = document.getElementById("actionMenu");
+    gActionTargetElement = document.getElementById("actionTargetFolder");
+}
+
+function initializeDialog(filter)
+{
     gFilterNameElement.value = filter.filterName;
 
-    gActionElement = document.getElementById("actionMenu");
     gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
 
-    gActionTargetElement = document.getElementById("actionTargetFolder");
+
     if (filter.action == nsMsgFilterAction.MoveToFolder) {
         // there are multiple sub-items that have given attribute
         var targets = gActionTargetElement.getElementsByAttribute("data", filter.actionTargetFolderUri);
@@ -135,12 +143,12 @@ function initializeDialog(filter)
 }
 
 function initializeSearchWidgets() {
+    gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
     gSearchRowContainer = document.getElementById("searchTermList");
     gSearchTermContainer = document.getElementById("searchterms");
 }
 
 function initializeBooleanWidgets() {
-    gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
 
     var booleanAnd = true;
     // get the boolean value from the first term
@@ -160,7 +168,6 @@ function initializeBooleanWidgets() {
 // move to overlay
 function initializeSearchRows(scope, searchTerms)
 {
-    initializeSearchWidgets();
     gTotalSearchTerms = searchTerms.Count();
     for (var i=0; i<gTotalSearchTerms; i++) {
         var searchTerm = searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
@@ -282,10 +289,7 @@ function removeSearchRow(index)
 
 function getBooleanAnd()
 {
-    var booleanAndElement = document.getElementById("booleanAndGroup");
-    if (!booleanAndElement) return;
-
-    if (booleanAndElement.selectedItem)
+    if (gSearchBooleanRadiogroup.selectedItem)
         return (booleanAndElement.selectedItem.getAttribute("data") == "and") ? true : false;
 
     // default to false
@@ -294,16 +298,35 @@ function getBooleanAnd()
 
 function saveFilter() {
 
+    var isNewFilter;
     if (!gFilter) {
         gFilter = gFilterList.createFilter(gFilterNameElement.value);
+        isNewFilter = true;
     } else {
         gFilter.filterName = gFilterNameElement.value;
+        isNewFilter = false;
     }
 
+    saveSearchTerms(gFilter.searchTerms, gFilter);
+
+    var action = gActionElement.selectedItem.getAttribute("data");
+    gFilter.action = action;
+    if (action == nsMsgFilterAction.MoveToFolder &&
+        gActionElement.selectedItem)
+        gFilter.actionTargetFolderUri =
+            gActionTargetElement.selectedItem.getAttribute("data");
+    else if (action == nsMsgFilterAction.ChangePriority)
+        gFilter.actionPriority = 0; // whatever, fix this
+
+    if (isNewFilter)
+        gFilterList.insertFilterAt(0, gFilter);
+}
+
+// move to overlay 
+function saveSearchTerms(searchTerms, termOwner)
+{
     var searchTermElements =
-        document.getElementById("searchterms").childNodes;
-    
-    var searchTerms = gFilter.searchTerms;
+        gSearchTermContainer.childNodes;
     
     for (var i = 0; i<searchTermElements.length; i++) {
         try {
@@ -314,9 +337,9 @@ function saveFilter() {
             else {
                 // need to create a new searchTerm, and somehow save it to that
                 dump("Need to create searchterm " + i + "\n");
-                searchTerm = gFilter.createTerm();
+                searchTerm = termOwner.createTerm();
                 searchTermElements[i].saveTo(searchTerm);
-                gFilter.appendTerm(searchTerm);
+                termOwner.appendTerm(searchTerm);
             }
         } catch (ex) {
 
@@ -324,25 +347,15 @@ function saveFilter() {
         }
     }
 
-    var searchTerms = gFilter.searchTerms;
     // now remove the queued elements
-    dump("Removing " + gSearchRemovedTerms.length + "\n");
     for (var i=0; i<gSearchRemovedTerms.length; i++) {
         // this is so nasty, we have to iterate through
         // because GetIndexOf is acting funny
-        var searchTermSupports = gSearchRemovedTerms[i].QueryInterface(Components.interfaces.nsISupports);
-        dump("removing " + gSearchRemovedTerms[i] + "\n");
+        var searchTermSupports =
+            gSearchRemovedTerms[i].QueryInterface(Components.interfaces.nsISupports);
         searchTerms.RemoveElement(searchTermSupports);
     }
 
-    var action = gActionElement.selectedItem.getAttribute("data");
-    gFilter.action = action;
-    if (action == nsMsgFilterAction.MoveToFolder &&
-        gActionElement.selectedItem)
-        gFilter.actionTargetFolderUri =
-            gActionTargetElement.selectedItem.getAttribute("data");
-    else if (action == nsMsgFilterAction.ChangePriority)
-        gFilter.actionPriority = 0; // whatever, fix this
 }
 
 function onMore(event)
