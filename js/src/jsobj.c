@@ -1865,7 +1865,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
         nslots += (nslots + 1) / 2;
 
         nbytes = (nslots + 1) * sizeof(jsval);
-#if defined(XP_PC) && defined _MSC_VER && _MSC_VER <= 800
+#if defined _MSC_VER && _MSC_VER <= 800
         if (nbytes > 60000U) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;

@@ -215,11 +215,11 @@ PrintChar(jschar c)
     if (c >> 8)
 	printf("\\u%04X", c);
     else
-#if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
-	putchar((char)c);
-#else
+#if defined _MSC_VER && _MSC_VER <= 800
 	/* XXX is there a better way with MSVC1.52? */
 	printf("%c", c);
+#else
+	putchar((char)c);
 #endif
 }
 

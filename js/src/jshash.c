@@ -113,7 +113,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
     memset(ht, 0, sizeof *ht);
     ht->shift = JS_HASH_BITS - n;
     n = JS_BIT(n);
-#if defined(XP_PC) && defined _MSC_VER && _MSC_VER <= 800
+#if defined _MSC_VER && _MSC_VER <= 800
     if (n > 16000) {
         (*allocOps->freeTable)(allocPriv, ht);
         return NULL;
@@ -206,7 +206,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
     n = NBUCKETS(ht);
     if (ht->nentries >= OVERLOADED(n)) {
         oldbuckets = ht->buckets;
-#if defined(XP_PC) && defined _MSC_VER && _MSC_VER <= 800
+#if defined _MSC_VER && _MSC_VER <= 800
         if (2 * n > 16000)
             return NULL;
 #endif  /* WIN16 */

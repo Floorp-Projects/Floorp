@@ -261,7 +261,7 @@ js_filenameHasAPipe(const char *filename)
 static JSBool
 js_isAbsolute(const char *name)
 {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     return (strlen(name)>1)?((name[1]==':')?JS_TRUE:JS_FALSE):JS_FALSE;
 #else
     return (name[0]
@@ -289,7 +289,7 @@ js_combinePath(JSContext *cx, const char *base, const char *name)
     strcpy(result, base);
 
     if (base[len-1]!=FILESEPARATOR
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
             && base[len-1]!=FILESEPARATOR2
 #endif
             ) {
@@ -307,7 +307,7 @@ js_fileBaseName(JSContext *cx, const char *pathname)
     jsint index, aux;
     char *result;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     /* First, get rid of the drive selector */
     if ((strlen(pathname)>=2)&&(pathname[1]==':')) {
         pathname = &pathname[2];
@@ -342,7 +342,7 @@ js_fileDirectoryName(JSContext *cx, const char *pathname)
     jsint index;
     char  *result;
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     char  drive = '\0';
     const char *oldpathname = pathname;
 
@@ -361,7 +361,7 @@ js_fileDirectoryName(JSContext *cx, const char *pathname)
     if (index>=0){
         result = (char*)JS_malloc(cx, index+4);
         if (!result)  return NULL;
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         if (drive!='\0') {
             result[0] = toupper(drive);
             result[1] = ':';
@@ -379,7 +379,7 @@ js_fileDirectoryName(JSContext *cx, const char *pathname)
         result[index] = FILESEPARATOR;
         result[index+1] = '\0';
     } else{
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         result = JS_strdup(cx, oldpathname); /* may include drive selector */
 #else
         result = JS_strdup(cx, pathname);

@@ -148,7 +148,7 @@
 #define SecondsPerHour  (MinutesPerHour * SecondsPerMinute)
 #define SecondsPerMinute 60.0
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 /* Work around msvc double optimization bug by making these runtime values; if
  * they're available at compile time, msvc optimizes division by them by
  * computing the reciprocal and multiplying instead of dividing - this loses

@@ -83,7 +83,7 @@
 #include <sys/wait.h>
 #endif
 
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #include <io.h>     /* for isatty() */
 #endif
 
