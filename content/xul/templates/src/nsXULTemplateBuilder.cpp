@@ -59,7 +59,6 @@
 #include "nsIBindingManager.h"
 #include "nsIDOMNodeList.h"
 #include "nsIHTMLContent.h"
-#include "nsIElementFactory.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"

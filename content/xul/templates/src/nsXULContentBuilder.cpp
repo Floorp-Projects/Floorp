@@ -1634,21 +1634,12 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
 void 
 nsXULContentBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
 {
-  nsresult rv;
-  nsAutoString nameSpace;
-  gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
+    gNameSpaceManager->GetElementFactory(aNameSpaceID, aResult);
 
-  nsCAutoString contractID(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
-  contractID.AppendWithConversion(nameSpace.get());
-
-  // Retrieve the appropriate factory.
-  nsCOMPtr<nsIElementFactory> elementFactory(do_GetService(contractID, &rv));
-
-  if (!elementFactory)
-    elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.
-
-  *aResult = elementFactory;
-  NS_IF_ADDREF(*aResult);
+    if (!*aResult) {
+        *aResult = gXMLElementFactory; // Nothing found. Use generic XML element.
+        NS_IF_ADDREF(*aResult);
+    }
 }
 
 //----------------------------------------------------------------------

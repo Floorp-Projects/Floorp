@@ -193,6 +193,8 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
                        nsIURI* aURL,
                        nsIWebShell* aContainer)
 {
+  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
+
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
   NS_PRECONDITION(nsnull != aURL, "null ptr");
   if ((nsnull == aDoc) || (nsnull == aURL)) {
@@ -691,8 +693,6 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     // This is done based off a contractid/namespace scheme.
     nsCOMPtr<nsIElementFactory> elementFactory;
 
-    // This should *not* be done for every node, only when we find
-    // a new namespace!!! -- jst
     GetElementFactory(nameSpaceID, getter_AddRefs(elementFactory));
     if (elementFactory) {
       // Create the content element using the element factory.
@@ -1542,7 +1542,8 @@ PRInt32
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
   PRInt32 id = (nsnull == aPrefix) ? kNameSpaceID_None : kNameSpaceID_Unknown;
-  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
+
+  if (mNameSpaceStack && mNameSpaceStack->Count() > 0) {
     PRInt32 index = mNameSpaceStack->Count() - 1;
     nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
     nameSpace->FindNameSpaceID(aPrefix, id);
@@ -1890,18 +1891,8 @@ XMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 }
 
 void 
-nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
+nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID,
+                                    nsIElementFactory** aResult)
 {
-  nsresult rv;
-  nsAutoString nameSpace;
-  gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
-
-  nsCAutoString contractID( NS_ELEMENT_FACTORY_CONTRACTID_PREFIX );
-  contractID.AppendWithConversion(nameSpace);
-
-  // Retrieve the appropriate factory.
-  nsCOMPtr<nsIElementFactory> elementFactory(do_GetService(contractID, &rv));
-
-  *aResult = elementFactory;
-  NS_IF_ADDREF(*aResult);
+  gNameSpaceManager->GetElementFactory(aNameSpaceID, aResult);
 }

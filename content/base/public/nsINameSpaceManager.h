@@ -30,6 +30,7 @@
 class nsIAtom;
 class nsString;
 class nsINameSpace;
+class nsIElementFactory;
 
 #define kNameSpaceID_Unknown -1
 #define kNameSpaceID_None     0
@@ -67,17 +68,24 @@ class nsINameSpace;
  * The "html" and "xml" namespaces come "pre-canned" from the root.
  *
  */
-class nsINameSpaceManager : public nsISupports {
+
+class nsINameSpaceManager : public nsISupports
+{
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_INAMESPACEMANAGER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
 
   NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace) = 0;
 
   NS_IMETHOD RegisterNameSpace(const nsAReadableString& aURI, 
 			                         PRInt32& aNameSpaceID) = 0;
 
-  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsAWritableString& aURI) = 0;
-  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI, PRInt32& aNameSpaceID) = 0;
+  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID,
+                             nsAWritableString& aURI) = 0;
+  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI,
+                            PRInt32& aNameSpaceID) = 0;
+
+  NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
+                               nsIElementFactory **aElementFactory) = 0;
 };
 
 extern NS_LAYOUT nsresult

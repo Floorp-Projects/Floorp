@@ -4347,14 +4347,6 @@ nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
         rv = nsXULElement::Create(aNodeInfo, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
-    else if (aNodeInfo->NamespaceEquals(kNameSpaceID_HTML)) {
-        rv = gHTMLElementFactory->CreateInstanceByTag(aNodeInfo,
-                                                      getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
-    }
     else {
         PRInt32 namespaceID;
         aNodeInfo->GetNamespaceID(namespaceID);
@@ -5844,8 +5836,8 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         nsCOMPtr<nsIElementFactory> elementFactory;
         GetElementFactory(namespaceID,
                           getter_AddRefs(elementFactory));
-        elementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
-                                            getter_AddRefs(result));
+        rv = elementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
+                                                 getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         if (! result)
@@ -6582,27 +6574,18 @@ nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
     return NS_OK;
 }
 
-
-
-
-void
-nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
+void 
+nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID,
+                                 nsIElementFactory** aResult)
 {
-  nsresult rv;
-  nsAutoString nameSpace;
-  gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
+    // Retrieve the appropriate factory.
+    gNameSpaceManager->GetElementFactory(aNameSpaceID, aResult);
 
-  nsCAutoString contractID(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
-  contractID.AppendWithConversion(nameSpace);
-
-  // Retrieve the appropriate factory.
-  nsCOMPtr<nsIElementFactory> elementFactory(do_GetService(contractID, &rv));
-
-  if (!elementFactory)
-    elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.
-
-  *aResult = elementFactory;
-  NS_IF_ADDREF(*aResult);
+    if (!*aResult) {
+        // Nothing found. Use generic XML element.
+        *aResult = gXMLElementFactory;
+        NS_IF_ADDREF(*aResult);
+    }
 }
 
 NS_IMETHODIMP
