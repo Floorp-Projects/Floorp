@@ -38,17 +38,17 @@ static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 
-struct findEntry {
+typedef struct _findEntry {
   nsIMsgAccount *account;
   PRBool found;
   nsHashKey* hashKey;
-};
+} findEntry;
 
-struct findServerEntry {
+typedef struct _findServerEntry {
   const char *hostname;
-  nsIID iid;
+  const nsIID *iid;
   nsISupportsArray *servers;
-};
+} findServerEntry;
 
 class nsMsgAccountManager : public nsIMsgAccountManager {
 public:
@@ -635,7 +635,7 @@ nsMsgAccountManager::FindServersByHostname(const char* hostname,
   rv = NS_NewISupportsArray(matchingServers);
   if (NS_FAILED(rv)) return rv;
   
-  findServerEntry serverInfo = { hostname, iid, *matchingServers};
+  findServerEntry serverInfo = { hostname, &iid, *matchingServers};
   servers->EnumerateForwards(findServerByName, (void *)&serverInfo);
 
   // as long as we have an nsISupportsArray, we are successful
@@ -659,7 +659,7 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
   // do a QI to see if we support this interface, but be sure to release it!
   nsISupports *dummy;
   if (PL_strcasecmp(entry->hostname, thisHostname)==0 &&
-      NS_SUCCEEDED(server->QueryInterface(entry->iid, (void **)&dummy))) {
+      NS_SUCCEEDED(server->QueryInterface(*(entry->iid), (void **)&dummy))) {
     NS_RELEASE(dummy);
     entry->servers->AppendElement(aElement);
   }
