@@ -89,6 +89,8 @@ public:
     mLineNumber++;
   }
 
+  void AddFloater(nsIFrame* aFrame);
+
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
 
