@@ -75,15 +75,15 @@ function sidebarOverlayInit(usersidebar)
     sidebar = defaultsidebar
   }
 
-  var sidebar_element = document.getElementById('sidebarbox')
+  var sidebar_element = document.getElementById('sidebar-box')
   if (sidebar_element.getAttribute('hidden') == 'true') {
     sidebar_element.setAttribute('style', 'display:none')
     return
   }
 
-  //dump("sidebar = " + sidebar + "\n")
-  //dump("sidebar.resource = " + sidebar.resource + "\n")
-  //dump("sidebar.db = " + sidebar.db + "\n")
+  dump("sidebar = " + sidebar + "\n")
+  dump("sidebar.resource = " + sidebar.resource + "\n")
+  dump("sidebar.db = " + sidebar.db + "\n")
 
   var registry
   try {
@@ -119,10 +119,14 @@ function sidebarOverlayInit(usersidebar)
     sb_datasource.Init(registry, RDF.GetResource(sidebar.resource))
   }
   catch (ex) {
-  //dump("failed to init sb_datasource\n")
+    dump("failed to init sb_datasource\n")
   }
   
-  var mypanelsbox = document.getElementById('sidebarpanels')
+  var mypanelsbox = document.getElementById('sidebar-panels')
+  if (!mypanelsbox) {
+    dump("Unable to find sidebar panels\n")
+    return;
+  }
 
   // Now enumerate all of the flash datasources.
   var enumerator = null
@@ -130,7 +134,7 @@ function sidebarOverlayInit(usersidebar)
   enumerator = sb_datasource.GetElements()
   }
   catch (ex) {
-  //dump("sb_datasource has no elements.\n")
+   dump("sb_datasource has no elements.\n")
   }
 
   if (!enumerator) return
@@ -153,13 +157,7 @@ function sidebarAddPanel(parent, registry, service, is_last) {
 
   iframe.setAttribute('src', panel_content)
   if (panel_height) iframe.setAttribute('height', panel_height)
-  //dump("panel_content="+panel_content+"\n")
-  if (is_last) {
-    //iframe.setAttribute('flex', '100%')
-    iframe.setAttribute('class','panelframe')
-  } else {
-    iframe.setAttribute('class','panelframe notlast')
-  }
+  iframe.setAttribute('class','panel-frame')
 
   sidebarAddPanelTitle(parent, panel_title, is_last)
   parent.appendChild(iframe)
@@ -168,7 +166,7 @@ function sidebarAddPanel(parent, registry, service, is_last) {
 function sidebarAddPanelTitle(parent, titletext, is_last)
 {
   var splitter  = document.createElement('splitter')
-  splitter.setAttribute('class', 'panelbar')
+  splitter.setAttribute('class', 'panel-bar')
   splitter.setAttribute('resizeafter', 'grow')
   splitter.setAttribute('collapse', 'after')
   splitter.setAttribute('onclick', 'sidebarSavePanelState(this)')
@@ -176,20 +174,14 @@ function sidebarAddPanelTitle(parent, titletext, is_last)
   var label = document.createElement('html:div')
   var text = document.createTextNode(titletext)
   label.appendChild(text)
-  label.setAttribute('class','panelbar')
+  label.setAttribute('class','panel-bar')
 
   var spring = document.createElement('spring')
   spring.setAttribute('flex','100%')
 
   var titledbutton = document.createElement('titledbutton')
-  titledbutton.setAttribute('class', 'borderless showhide')
-  if (!is_last) {
-    titledbutton.setAttribute('onclick', 'sidebarOpenClosePanel(this.parentNode)')
-  }
-
-  //var corner    = document.createElement('html:img')
-  //corner.setAttribute('src', 'chrome://sidebar/skin/corner.gif')
-  //splitter.appendChild(corner)
+  titledbutton.setAttribute('class', 'borderless show-hide')
+  titledbutton.setAttribute('onclick','sidebarOpenClosePanel(this.parentNode)')
 
   splitter.appendChild(label)
   splitter.appendChild(spring)
@@ -211,7 +203,12 @@ function sidebarGetAttr(registry,service,attr_name) {
 
 function sidebarOpenClosePanel(splitter) {
   var state = splitter.getAttribute("state")
+  var resizeafter = splitter.getAttribute("resizeafter")
+  var hasOlderSibling = splitter.previousSibling
 
+  if (!hasOlderSibling && resizeafter != 'grow') {
+    return
+  }
   if (state == "" || state == "open") {
     splitter.setAttribute("state", "collapsed")
   } else {
@@ -220,7 +217,7 @@ function sidebarOpenClosePanel(splitter) {
 }
 
 function sidebarReload() {
-  var panelsparent = document.getElementById('sidebarpanels')
+  var panelsparent = document.getElementById('sidebar-panels')
   var panel = panelsparent.firstChild
 
   while (panel) {
@@ -237,8 +234,8 @@ function sidebarCustomize() {
 }
 
 function sidebarShowHide() {
-  var sidebar = document.getElementById('sidebarbox')
-  var sidebar_splitter = document.getElementById('sidebarsplitter')
+  var sidebar = document.getElementById('sidebar-box')
+  var sidebar_splitter = document.getElementById('sidebar-splitter')
   var is_hidden = sidebar.getAttribute('hidden')
   if (is_hidden && is_hidden == "true") {
     //dump("Showing the sidebar\n")
@@ -302,3 +299,16 @@ function dumpTree(node, depth) {
   }
 }
 
+// To get around "window.onload" not working in viewer.
+function sidebarOverlayBoot()
+{
+    var tree = document.getElementById('sidebar-box');
+    if (tree == null) {
+        setTimeout(sidebarOverlayBoot, 1);
+    }
+    else {
+        sidebarOverlayInit();
+    }
+}
+
+setTimeout('sidebarOverlayBoot()', 0);
