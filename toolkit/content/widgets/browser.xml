@@ -500,7 +500,12 @@
           <![CDATA[
             if (aTopic != "browser:purge-session-history")
               return;
-            this.sessionHistory.PurgeHistory(this.sessionHistory.count);
+              
+            var purge = this.sessionHistory.count;
+            if (this.currentURI != "about:blank")
+              --purge; // Don't remove the page the user's staring at from shistory
+              
+            this.sessionHistory.PurgeHistory(purge);
           ]]>
         </body>
       </method>
