@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.30 $ 
-# $Date: 2002/05/03 21:25:24 $ 
+# $Revision: 1.31 $ 
+# $Date: 2002/05/03 21:28:51 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.30 $ )[1];
+$VERSION = ( qw $Revision: 1.31 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -403,7 +403,7 @@ sub status_table_row {
                      "Next_End: $lc_time, ".
                      "-->\n".
                      
-                     "\t\t<td align=center $cell_options>".
+                     "\t\t<td rowspan=$rowspan align=center $cell_options>".
                      "$EMPTY_TABLE_CELL</td>\n");
 
       $NEXT_ROW{$tree} =  $row_index + $rowspan;
