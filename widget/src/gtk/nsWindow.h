@@ -114,7 +114,7 @@ public:
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
   NS_IMETHOD           HideWindowChrome(PRBool aShouldHide);
-
+  NS_IMETHOD           SetIcon(const nsAString& aIcon);
   GdkCursor           *GtkCreateCursor(nsCursor aCursorType);
   virtual void         LoseFocus(void);
 
@@ -187,6 +187,14 @@ public:
 
   void HandleMozAreaFocusIn(void);
   void HandleMozAreaFocusOut(void);
+
+  // Window icon cache
+  static PRBool IconEntryMatches(PLDHashTable* aTable,
+                                 const PLDHashEntryHdr* aHdr,
+                                 const void* aKey);
+  static void ClearIconEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr);
+  static void FreeIconCache(void);
+
 protected:
 
   virtual void OnRealize(GtkWidget *aWidget);
@@ -321,6 +329,9 @@ protected:
   static guint DragMotionTimerCallback (gpointer aClosure);
   static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
 
+  // Hash table for icon spec -> icon set lookup
+  static PLDHashTable* sIconCache;
+
 #ifdef USE_XIM
 protected:
   PRBool              mIMEEnable;
@@ -375,7 +386,6 @@ private:
                            GdkBitmap *window_mask);
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
-  nsresult     SetIcon();
   PRBool       mLastGrabFailed;
   void         NativeGrab(PRBool aGrab);
 
