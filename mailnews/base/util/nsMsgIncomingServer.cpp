@@ -591,6 +591,7 @@ nsMsgIncomingServer::GetRememberPassword(PRBool* value)
 
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
+NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, Port, "port");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");

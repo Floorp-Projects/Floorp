@@ -43,6 +43,7 @@
 #include "nsFileLocations.h" 
 #include "nsIURL.h"
 #include "nsISmtpService.h"
+#include "nsString.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -55,7 +56,7 @@
 
 #define BUF_STR_LEN 1024
 
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_ACCOUNTMANAGER)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
@@ -1912,11 +1913,12 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
 }
 
 nsresult
-nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname)
+nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostAndPort)
 {
   nsresult rv;
 
-  if (!hostname) return NS_ERROR_NULL_POINTER;
+  if (!hostAndPort) return NS_ERROR_NULL_POINTER;
+ 
   
   // create the account
   nsCOMPtr<nsIMsgAccount> account;
@@ -1928,8 +1930,27 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = CreateIncomingServer("imap", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
   server->SetType("imap");
-  server->SetHostName((char *)hostname);
-  
+
+  nsCString hostname(hostAndPort);
+  PRInt32 colonPos = hostname.FindChar(':');
+  if (colonPos != -1) {
+	nsCString portStr(hostAndPort + colonPos);
+	hostname.Truncate(colonPos);
+	PRInt32 err;
+	PRInt32 port = portStr.ToInteger(&err);
+	NS_ASSERTION(err == 0, "failed to get the port\n");
+	if (NS_SUCCEEDED(rv)) {
+#ifdef DEBUG_ACCOUNTMANAGER
+		printf("PORT = %d\n", port);
+#endif /* DEBUG_ACCOUNTMANAGER */
+		server->SetPort(port);
+	}
+  }
+#ifdef DEBUG_ACCOUNTMANAGER
+  printf("HOSTNAME = %s\n", (const char *)hostname);
+#endif /* DEBUG_ACCOUNTMANAGER */
+  server->SetHostName((const char *)hostname);
+
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
   rv = CreateIdentity(getter_AddRefs(copied_identity));
@@ -1949,7 +1970,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
   // now upgrade all the prefs
 
-  rv = MigrateOldImapPrefs(server, hostname);
+  rv = MigrateOldImapPrefs(server, hostAndPort);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsIFileSpec> imapMailDir;
@@ -1978,7 +1999,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   }
   
   // we want .../ImapMail/<hostname>, not .../ImapMail
-  rv = imapMailDir->AppendRelativeUnixPath(hostname);
+  rv = imapMailDir->AppendRelativeUnixPath((const char *)hostname);
   if (NS_FAILED(rv)) return rv;
 
   // set the local path for this "imap" server

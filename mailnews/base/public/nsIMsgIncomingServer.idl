@@ -39,6 +39,9 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* hostname of the server */
   attribute string hostName;
+  
+  /* port of the server */
+  attribute long port;
 
   /* userid to log into the server */
   attribute string username;
