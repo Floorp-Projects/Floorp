@@ -249,13 +249,12 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
     // Loop and destroy the frame and all of its continuations.
     PRBool generateReflowCommand = PR_FALSE;
 
-    // If the frame we are removing is a brFrame and we have a
-    // nextInFlow, we need a reflow so we can attempt to pull up
-    // any frames in the nextInFlow that can fit on the line
-    // the brFrame was on.
+    // If the frame we are removing is a brFrame, we need a reflow so
+    // the line the brFrame was on can attempt to pull up any frames
+    // that can fit from lines below it.
     nsCOMPtr<nsIAtom> frameType;
     aOldFrame->GetFrameType(getter_AddRefs(frameType));
-    if (frameType == nsLayoutAtoms::brFrame && mNextInFlow)
+    if (frameType == nsLayoutAtoms::brFrame)
       generateReflowCommand = PR_TRUE;
 
     nsIFrame* oldFrameParent;
