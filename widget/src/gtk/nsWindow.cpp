@@ -34,11 +34,6 @@
 #include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
 
-#include "X11/Xlib.h"
-
-#include "X11/Intrinsic.h"
-#include "X11/cursorfont.h"
-
 #include "stdio.h"
 
 #define DBG 0
@@ -324,25 +319,21 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-#if 0
-  XtAddEventHandler(mWidget,
-		    ButtonPressMask,
-		    PR_FALSE,
-		    nsXtWidget_ButtonPressMask_EventHandler,
-		    this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "button_press_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonPressMask_EventHandler),
+		     this);
 
-  XtAddEventHandler(mWidget,
-		    ButtonReleaseMask,
-		    PR_FALSE,
-		    nsXtWidget_ButtonReleaseMask_EventHandler,
-		    this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "button_release_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonReleaseMask_EventHandler),
+		     this);
 
-  XtAddEventHandler(mWidget,
-		    ButtonMotionMask,
-		    PR_FALSE,
-		    nsXtWidget_ButtonMotionMask_EventHandler,
-		    this);
-
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "motion_notify_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonMotionMask_EventHandler),
+		     this);
+/*
   XtAddEventHandler(mWidget,
 		    PointerMotionMask,
 		    PR_FALSE,
@@ -354,31 +345,31 @@ void nsWindow::InitCallbacks(char * aName)
 		    PR_FALSE,
 		    nsXtWidget_EnterMask_EventHandler,
 		    this);
+*/
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "enter_notify_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_EnterMask_EventHandler),
+		     this);
 
-  XtAddEventHandler(mWidget,
-		    LeaveWindowMask,
-		    PR_FALSE,
-		    nsXtWidget_LeaveMask_EventHandler,
-		    this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "leave_notify_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_LeaveMask_EventHandler),
+		     this);
 
-  XtAddEventHandler(mWidget,
-		    ExposureMask,
-		    PR_TRUE,
-		    nsXtWidget_ExposureMask_EventHandler,
-		    this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "expose_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_ExposureMask_EventHandler),
+		     this);
 
-  XtAddEventHandler(mWidget,
-                    KeyPressMask,
-                    PR_FALSE,
-                    nsXtWidget_KeyPressMask_EventHandler,
-                    this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "key_press_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyPressMask_EventHandler),
+		     this);
 
-  XtAddEventHandler(mWidget,
-                    KeyReleaseMask,
-                    PR_FALSE,
-                    nsXtWidget_KeyReleaseMask_EventHandler,
-                    this);
-#endif
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "key_release_event",
+		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
+		     this);
 }
 
 //-------------------------------------------------------------------------
@@ -1203,7 +1194,6 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
-#if 0
   NS_ADDREF(event->widget);
 
   aStatus = nsEventStatus_eIgnore;
@@ -1216,18 +1206,15 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
     aStatus = mEventListener->ProcessEvent(*event);
   }
   NS_RELEASE(event->widget);
-#endif
   return NS_OK;
 
 }
 
 PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
-#if 0
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
-#endif
 }
 
 
@@ -1238,7 +1225,6 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
-#if 0
   PRBool result = PR_FALSE;
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
     return result;
@@ -1284,7 +1270,6 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
     } // switch
   }
   return result;
-#endif
 }
 
 
@@ -1294,7 +1279,6 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
  **/
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
-#if 0
   nsresult result ;
 
   // call the event callback
@@ -1331,7 +1315,6 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
       }
   }
   return result;
-#endif
 }
 
 
@@ -1358,35 +1341,29 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-#if 0
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
     return DispatchWindowEvent(&aEvent);
   }
-#endif
   return FALSE;
 }
 
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
-#if 0
   if (mEventCallback) {
     return DispatchWindowEvent(aEvent);
   }
   else
-#endif
    return FALSE;
 }
 
 
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
-#if 0
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
-#endif
  return FALSE;
 }
 
@@ -1430,10 +1407,12 @@ PRBool nsWindow::GetResized()
 
 void nsWindow::UpdateVisibilityFlag()
 {
-#if 0
-  Widget parent = XtParent(mWidget);
+  GtkWidget *parent = mWidget->parent;
 
   if (parent) {
+    mVisible = GTK_WIDGET_VISIBLE(parent);
+  }
+    /*
     PRUint32 pWidth = 0;
     PRUint32 pHeight = 0;
     XtVaGetValues(parent, XmNwidth, &pWidth, XmNheight, &pHeight, nsnull);
@@ -1447,28 +1426,27 @@ void nsWindow::UpdateVisibilityFlag()
   }
 
   mVisible = PR_TRUE;
-#endif
+  */
 }
 
 void nsWindow::UpdateDisplay()
 {
-#if 0
     // If not displayed and needs to be displayed
   if ((PR_FALSE==mDisplayed) &&
      (PR_TRUE==mShown) &&
      (PR_TRUE==mVisible)) {
-    XtManageChild(mWidget);
+    gtk_widget_show(mWidget);
     mDisplayed = PR_TRUE;
   }
 
     // Displayed and needs to be removed
   if (PR_TRUE==mDisplayed) {
     if ((PR_FALSE==mShown) || (PR_FALSE==mVisible)) {
-      XtUnmanageChild(mWidget);
+      gtk_widget_hide(mWidget);
+      //XtUnmanageChild(mWidget);
       mDisplayed = PR_FALSE;
     }
   }
-#endif
 }
 
 PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
@@ -1486,7 +1464,7 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 //-----------------------------------------------------
 //
 
-void nsWindow_ResetResize_Callback(XtPointer call_data)
+void nsWindow_ResetResize_Callback(gpointer call_data)
 {
 #if 0
     nsWindow* widgetWindow = (nsWindow*)call_data;
@@ -1494,7 +1472,7 @@ void nsWindow_ResetResize_Callback(XtPointer call_data)
 #endif
 }
 
-void nsWindow_Refresh_Callback(XtPointer call_data)
+void nsWindow_Refresh_Callback(gpointer call_data)
 {
 #if 0
     nsWindow* widgetWindow = (nsWindow*)call_data;
@@ -1525,7 +1503,7 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
 // this to resize. The nsManageWidget passes all resize
 // request's directly to this function.
 
-extern "C" void nsWindow_ResizeWidget(Widget w)
+extern "C" void nsWindow_ResizeWidget(GtkWidget *w)
 {
 #if 0
   int width = 0;

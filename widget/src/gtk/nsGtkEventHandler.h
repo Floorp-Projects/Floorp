@@ -25,15 +25,15 @@
 class nsIWidget;
 class nsIMenuItem;
 
-void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_ExposureMask_EventHandler(GtkWidget * w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget * w,gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
-void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
+void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
+void nsGtkWidget_ExposureMask_EventHandler(GtkWidget * w, GdkEventExpose * event, gpointer p);
+void nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget * w, GdkEvent * event, gpointer p);
+void nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
+void nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
+void nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
+void nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
+void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p);
 //----------------------------------------------------
 
 void nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p, gpointer call_data);
