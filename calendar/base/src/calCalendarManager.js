@@ -120,7 +120,7 @@ calCalendarManager.prototype = {
         this.mInsertPref = createStatement (
             this.mDB,
             "INSERT INTO cal_calendars_prefs (calendar, name, value) " +
-            "VALUES (:calendar, :name, :value)"
+            "VALUES (:calendar, :name, :value)");
 
 
     },
