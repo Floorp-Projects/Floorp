@@ -117,7 +117,16 @@ sub BuildMozilla()
 		BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 		BuildProject(":mozilla:modules:libfont:macbuild:FontBroker.mcp",					"FontBroker$D.o");
 		BuildProject(":mozilla:lib:libmocha:macbuild:LibMocha.mcp",							"LibMocha$D.o");	
-		BuildProject(":mozilla:network:macbuild:network.mcp",								"Network$D.o");
+
+		if ( $main::MOZ_DARK == 1 )
+		{
+			BuildProject(":mozilla:network:macbuild:network.mcp",							"Network$D.o (mailnews)");
+		}
+		else
+		{
+			BuildProject(":mozilla:network:macbuild:network.mcp",							"Network$D.o");
+		}
+
 		BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
 		BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
 
@@ -250,7 +259,9 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:network:protocol:ftp:MANIFEST",					":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:gopher:MANIFEST",				":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:http:MANIFEST",					":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:imap4:MANIFEST",					":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:js:MANIFEST",					":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:ldap:MANIFEST",					":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:mailbox:MANIFEST",				":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:marimba:MANIFEST",				":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:nntp:MANIFEST",					":mozilla:dist:network:");
