@@ -61,7 +61,6 @@
 #include "nsIExternalProtocolService.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static const char kExternalProtocolPrefPrefix[] = "network.protocol-handler.external.";
 
 
 
@@ -83,15 +82,14 @@ public:
 
     nsresult SetURI(nsIURI*);
 
+private:
     nsresult OpenURL();
 
-private:
     nsCOMPtr<nsIURI> mUrl;
     nsCOMPtr<nsIURI> mOriginalURI;
     nsresult mStatus;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    PRBool PromptForScheme(nsIURI *aURI);
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsExtProtocolChannel)
@@ -168,158 +166,29 @@ nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
   return NS_OK; 
 }
  
-PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI)
-{
-  // deny the load if we aren't able to ask but prefs say we should
-  nsCAutoString scheme;
-  nsresult rv = aURI->GetScheme(scheme);
-  if (!mCallbacks) {
-    NS_WARNING("Notification Callbacks not set!");
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(mCallbacks);
-  if (!prompt) {
-    NS_WARNING("No prompt interface on channel");
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIStringBundleService> sbSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-  if (!sbSvc) {
-    NS_WARNING("Couldn't load StringBundleService");
-    return PR_FALSE;
-  }
-
-  nsXPIDLString desc;
-  nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-  if (extProtService)
-    extProtService->GetApplicationDescription(scheme, desc);
-
-  nsCOMPtr<nsIStringBundle> appstrings;
-  rv = sbSvc->CreateBundle("chrome://global/locale/appstrings.properties",
-                           getter_AddRefs(appstrings));
-  if (NS_FAILED(rv) || !appstrings) {
-    NS_WARNING("Failed to create appstrings.properties bundle");
-    return PR_FALSE;
-  }
-
-  nsCAutoString spec;
-  aURI->GetSpec(spec);
-  NS_ConvertUTF8toUTF16 uri(spec);
-  NS_ConvertUTF8toUTF16 utf16scheme(scheme);
-
-  nsXPIDLString title;
-  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolTitle").get(),
-                                getter_Copies(title));
-  nsXPIDLString checkMsg;
-  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolChkMsg").get(),
-                                getter_Copies(checkMsg));
-  nsXPIDLString launchBtn;
-  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolLaunchBtn").get(),
-                                getter_Copies(launchBtn));
-
-  if (desc.IsEmpty())
-    appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolUnknown").get(),
-                                  getter_Copies(desc));
-
-
-  nsXPIDLString message;
-  const PRUnichar* msgArgs[] = { utf16scheme.get(), uri.get(), desc.get() };
-  appstrings->FormatStringFromName(NS_LITERAL_STRING("externalProtocolPrompt").get(),
-                                   msgArgs,
-                                   NS_ARRAY_LENGTH(msgArgs),
-                                   getter_Copies(message));
-
-  if (utf16scheme.IsEmpty() || uri.IsEmpty() || title.IsEmpty() ||
-      checkMsg.IsEmpty() || launchBtn.IsEmpty() || message.IsEmpty() ||
-      desc.IsEmpty())
-    return PR_FALSE;
-
-  // all pieces assembled, now we can pose the dialog
-  PRBool allowLoad = PR_FALSE;
-  PRBool remember = PR_FALSE;
-  PRInt32 choice = 1; // assume "cancel" in case of failure
-  rv = prompt->ConfirmEx(title.get(), message.get(),
-                         nsIPrompt::BUTTON_DELAY_ENABLE +
-                         nsIPrompt::BUTTON_POS_1_DEFAULT +
-                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
-                         (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
-                         launchBtn.get(), 0, 0, checkMsg.get(),
-                         &remember, &choice);
-  if (NS_SUCCEEDED(rv))
-  {
-    if (choice == 0)
-      allowLoad = PR_TRUE;
-
-    if (remember)
-    {
-      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefs)
-      {
-          nsCAutoString prefname(kExternalProtocolPrefPrefix);
-          prefname += scheme;
-          prefs->SetBoolPref(prefname.get(), allowLoad);
-      }
-    }
-  }
-
-  return allowLoad;
-}
-
 nsresult nsExtProtocolChannel::OpenURL()
 {
   nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-  nsCAutoString urlScheme;
-  mUrl->GetScheme(urlScheme);
 
   if (extProtService)
   {
 #ifdef DEBUG
+    nsCAutoString urlScheme;
+    mUrl->GetScheme(urlScheme);
     PRBool haveHandler = PR_FALSE;
     extProtService->ExternalProtocolHandlerExists(urlScheme.get(), &haveHandler);
     NS_ASSERTION(haveHandler, "Why do we have a channel for this url if we don't support the protocol?");
 #endif
 
-    // Check that it's OK to hand this scheme off to the OS
-
-    PRBool allowLoad    = PR_FALSE;
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-
-    if (prefs)
+    // get an nsIPrompt from the channel if we can
+    nsCOMPtr<nsIPrompt> prompt;
+    if (mCallbacks)
     {
-      // check whether it's explicitly approved or denied in prefs
-      nsCAutoString schemePref(kExternalProtocolPrefPrefix);
-      schemePref += urlScheme;
-
-      nsresult rv = prefs->GetBoolPref(schemePref.get(), &allowLoad);
-
-      if (NS_FAILED(rv))
-      {
-        // scheme not explicitly listed, what is the default action?
-        const PRInt32 kExternalProtocolNever  = 0;
-        const PRInt32 kExternalProtocolAlways = 1;
-        const PRInt32 kExternalProtocolAsk    = 2;
-
-        PRInt32 externalDefault = kExternalProtocolAsk;
-        prefs->GetIntPref("network.protocol-handler.external-default",
-                          &externalDefault);
-
-        if (externalDefault == kExternalProtocolAlways)
-        {
-          // original behavior -- just do it
-          allowLoad = PR_TRUE;
-        }
-        else if (externalDefault == kExternalProtocolAsk)
-        {
-          allowLoad = PromptForScheme(mUrl);
-        }
-      }
+      mCallbacks->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
     }
 
-    if (allowLoad)
-      return extProtService->LoadUrl(mUrl);
+    return extProtService->LoadURI(mUrl, prompt);
   }
-
   return NS_ERROR_FAILURE;
 }
 
@@ -329,44 +198,9 @@ NS_IMETHODIMP nsExtProtocolChannel::Open(nsIInputStream **_retval)
   return NS_ERROR_NO_CONTENT; // force caller to abort.
 }
 
-static void *PR_CALLBACK handleExtProtoEvent(PLEvent *event)
-{
-  nsExtProtocolChannel *channel =
-      NS_STATIC_CAST(nsExtProtocolChannel*, PL_GetEventOwner(event));
-
-  NS_ASSERTION(channel, "Where has the channel gone?");
-  channel->OpenURL();
-
-  return nsnull;
-}
-
-static void PR_CALLBACK destroyExtProtoEvent(PLEvent *event)
-{
-  nsExtProtocolChannel *channel =
-      NS_STATIC_CAST(nsExtProtocolChannel*, PL_GetEventOwner(event));
-  NS_ASSERTION(channel, "Where has the channel gone?");
-  NS_RELEASE(channel);
-  delete event;
-}
-
 NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
-  nsCOMPtr<nsIEventQueue> eventQ;
-  nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-  if (NS_FAILED(rv))
-    return rv;
-
-  PLEvent *event = new PLEvent;
-  if (event)
-  {
-    NS_ADDREF_THIS();
-    PL_InitEvent(event, this, handleExtProtoEvent, destroyExtProtoEvent);
-
-    rv = eventQ->PostEvent(event);
-    if (NS_FAILED(rv))
-      PL_DestroyEvent(event);
-  }
-
+  OpenURL();
   return NS_ERROR_NO_CONTENT; // force caller to abort.
 }
 

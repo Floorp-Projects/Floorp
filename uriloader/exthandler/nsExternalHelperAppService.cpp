@@ -102,6 +102,7 @@
 #include "nsIMIMEHeaderParam.h"
 
 #include "nsIPrefService.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsIGlobalHistory.h" // to mark downloads as visited
 
@@ -1063,8 +1064,211 @@ NS_IMETHODIMP nsExternalHelperAppService::IsExposedProtocol(const char * aProtoc
 
 NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
 {
-  // this method should only be implemented by each OS specific implementation of this service.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return LoadURI(aURL, nsnull);
+}
+
+
+//  nsExternalHelperAppService::LoadURI() may now pose a confirm dialog
+//  that existing callers aren't expecting. We must do it on an event
+//  callback to make sure we don't hang someone up.
+
+struct extLoadRequest : PLEvent {
+    nsCOMPtr<nsIURI>        uri;
+    nsCOMPtr<nsIPrompt>     prompt;
+};
+
+void *PR_CALLBACK
+nsExternalHelperAppService::handleExternalLoadEvent(PLEvent *event)
+{
+  extLoadRequest* req = NS_STATIC_CAST(extLoadRequest*, event);
+  if (req && sSrv && sSrv->isExternalLoadOK(req->uri, req->prompt))
+    sSrv->LoadUriInternal(req->uri);
+
+  return nsnull;
+}
+
+static void PR_CALLBACK destroyExternalLoadEvent(PLEvent *event)
+{
+  delete NS_STATIC_CAST(extLoadRequest*, event);
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::LoadURI(nsIURI * aURL, nsIPrompt * aPrompt)
+{
+  // post external load event
+  nsCOMPtr<nsIEventQueue> eventQ;
+  nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+  if (NS_FAILED(rv))
+    return rv;
+
+  extLoadRequest *event = new extLoadRequest;
+  if (!event)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  event->uri    = aURL;
+  event->prompt = aPrompt;
+  PL_InitEvent(event, nsnull, handleExternalLoadEvent, destroyExternalLoadEvent);
+
+  rv = eventQ->PostEvent(event);
+  if (NS_FAILED(rv))
+    PL_DestroyEvent(event);
+
+  return rv;
+}
+
+// helper routines used by LoadURI to check whether we're allowed
+// to load external schemes and whether or not to warn the user
+
+static const char kExternalProtocolPrefPrefix[]  = "network.protocol-handler.external.";
+static const char kExternalProtocolDefaultPref[] = "network.protocol-handler.external-default";
+static const char kExternalWarningPrefPrefix[]   = "network.protocol-handler.warn-external.";
+static const char kExternalWarningDefaultPref[]  = "network.protocol-handler.warn-external-default";
+
+
+PRBool nsExternalHelperAppService::isExternalLoadOK(nsIURI* aURL, nsIPrompt* aPrompt)
+{
+  if (!aURL)
+    return PR_FALSE;
+
+  nsCAutoString scheme;
+  aURL->GetScheme(scheme);
+  if (scheme.IsEmpty())
+    return PR_FALSE; // must have a scheme
+
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefs)
+    return PR_FALSE; // deny if we can't check prefs
+
+
+  // Deny load if the prefs say to do so
+  nsCAutoString externalPref(kExternalProtocolPrefPrefix);
+  externalPref += scheme;
+  PRBool allowLoad  = PR_FALSE;
+  nsresult rv = prefs->GetBoolPref(externalPref.get(), &allowLoad);
+  if (NS_FAILED(rv))
+  {
+    // no scheme-specific value, check the default
+    rv = prefs->GetBoolPref(kExternalProtocolDefaultPref, &allowLoad);
+  }
+  if (NS_FAILED(rv) || !allowLoad)
+    return PR_FALSE; // explicitly denied or missing default pref
+
+
+  // allowLoad is now true. See whether we have to ask the user
+  nsCAutoString warningPref(kExternalWarningPrefPrefix);
+  warningPref += scheme;
+  PRBool warn = PR_TRUE;
+  rv = prefs->GetBoolPref(warningPref.get(), &warn);
+  if (NS_FAILED(rv))
+  {
+    // no scheme-specific value, check the default
+    rv = prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
+  }
+
+
+  if (NS_FAILED(rv) || warn)
+  {
+    // explicit "warn" setting or missing default pref:
+    // we must ask the user before loading this type externally
+    PRBool remember = PR_FALSE;
+    allowLoad = promptForScheme(aURL, aPrompt, &remember);
+
+    if (remember)
+    {
+      if (allowLoad)
+        // suppress future warnings for this scheme
+        prefs->SetBoolPref(warningPref.get(), PR_FALSE);
+      else
+        // prevent externally loading this scheme in the future
+        prefs->SetBoolPref(externalPref.get(), PR_FALSE);
+    }
+  }
+
+  return allowLoad;
+}
+
+PRBool nsExternalHelperAppService::promptForScheme(nsIURI* aURI,
+                                                   nsIPrompt* aPrompt,
+                                                   PRBool *aRemember)
+{
+  // if no prompt passed in get one from the windowwatcher
+  nsCOMPtr<nsIPrompt> prompt(aPrompt);
+  if (!prompt)
+  {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
+  }
+  if (!prompt) {
+    NS_ERROR("No prompt to warn user about external load, denying");
+    return PR_FALSE; // told to warn but no prompt: deny
+  }
+
+  // load the strings we need
+  nsCOMPtr<nsIStringBundleService> sbSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!sbSvc) {
+    NS_ERROR("Couldn't load StringBundleService");
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIStringBundle> appstrings;
+  nsresult rv = sbSvc->CreateBundle("chrome://global/locale/appstrings.properties",
+                                    getter_AddRefs(appstrings));
+  if (NS_FAILED(rv) || !appstrings) {
+    NS_ERROR("Failed to create appstrings.properties bundle");
+    return PR_FALSE;
+  }
+
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
+  NS_ConvertUTF8toUTF16 uri(spec);
+
+  nsCAutoString asciischeme;
+  aURI->GetScheme(asciischeme);
+  NS_ConvertUTF8toUTF16 scheme(asciischeme);
+
+  nsXPIDLString desc;
+  GetApplicationDescription(asciischeme, desc);
+
+  nsXPIDLString title;
+  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolTitle").get(),
+                                getter_Copies(title));
+  nsXPIDLString checkMsg;
+  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolChkMsg").get(),
+                                getter_Copies(checkMsg));
+  nsXPIDLString launchBtn;
+  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolLaunchBtn").get(),
+                                getter_Copies(launchBtn));
+
+  if (desc.IsEmpty())
+    appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolUnknown").get(),
+                                  getter_Copies(desc));
+
+  nsXPIDLString message;
+  const PRUnichar* msgArgs[] = { scheme.get(), uri.get(), desc.get() };
+  appstrings->FormatStringFromName(NS_LITERAL_STRING("externalProtocolPrompt").get(),
+                                   msgArgs,
+                                   NS_ARRAY_LENGTH(msgArgs),
+                                   getter_Copies(message));
+
+  if (scheme.IsEmpty() || uri.IsEmpty() || title.IsEmpty() ||
+      checkMsg.IsEmpty() || launchBtn.IsEmpty() || message.IsEmpty() ||
+      desc.IsEmpty())
+    return PR_FALSE;
+
+  // all pieces assembled, now we can pose the dialog
+  PRInt32 choice = 1; // assume "cancel" in case of failure
+  rv = prompt->ConfirmEx(title.get(), message.get(),
+                         nsIPrompt::BUTTON_DELAY_ENABLE +
+                         nsIPrompt::BUTTON_POS_1_DEFAULT +
+                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
+                         (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
+                         launchBtn.get(), 0, 0, checkMsg.get(),
+                         aRemember, &choice);
+
+  if (NS_SUCCEEDED(rv) && choice == 0)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
@@ -1811,6 +2015,11 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
       // XXX Put progress dialog in barber-pole mode
       //     and change text to say "Copying from:".
       rv = MoveFile(mFinalFileDestination);
+      if (NS_SUCCEEDED(rv) && action == nsIMIMEInfo::saveToDisk)
+      {
+        nsCOMPtr<nsILocalFile> destfile(do_QueryInterface(mFinalFileDestination));
+        sSrv->FixFilePermissions(destfile);
+      }
     }
     
     // Notify dialog that download is complete.
@@ -1990,7 +2199,6 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
      if (directoryLocation)
      {
        rv = mTempFile->MoveToNative(directoryLocation, fileName);
-       sSrv->FixFilePermissions(fileToUse);
      }
      if (NS_FAILED(rv))
      {

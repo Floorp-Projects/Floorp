@@ -224,7 +224,7 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 
 // this implementation was pretty much copied verbatime from Tony Robinson's code in nsExternalProtocolWin.cpp
 
-NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
+nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 {
   nsresult rv = NS_OK;
 

@@ -76,6 +76,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  uconv \
 		  docshell \
+		  windowwatcher \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX

@@ -56,7 +56,7 @@ public:
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
-  NS_IMETHOD LoadUrl(nsIURI * aURL);
+  nsresult LoadUriInternal(nsIURI * aURL);
   
   // method overrides --> used to hook the mime service into internet config....
   NS_IMETHOD GetFromTypeAndExtension(const nsACString& aType, const nsACString& aFileExt, nsIMIMEInfo ** aMIMEInfo);

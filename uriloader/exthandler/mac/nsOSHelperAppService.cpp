@@ -118,7 +118,7 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
   return rv;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
+nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 {
   nsCAutoString url;
   nsresult rv = NS_ERROR_FAILURE;

@@ -81,7 +81,7 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
+nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 {
 	LOG(("-- nsOSHelperAppService::LoadUrl\n"));
 	nsresult rv = NS_OK;
