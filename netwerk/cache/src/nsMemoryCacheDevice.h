@@ -49,16 +49,25 @@ public:
                                            nsITransport **transport );
 
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize );
+
+    static int PR_CALLBACK MemoryCacheSizeChanged(const char * pref, void * closure);
  
 private:
+    nsresult  AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit);
+    nsresult  EvictEntries(void);
+
     nsCacheEntryHashTable   mMemCacheEntries;
+    PRCList                 mEvictionList;
 
     PRUint32                mHardLimit;
     PRUint32                mSoftLimit;
-    PRUint32                mCurrentTotal;
 
-    PRCList                 mEvictionList;
+    PRUint32                mTotalSize;
+    PRUint32                mInactiveSize;
 
+    PRUint32                mEntryCount;
+
+    PRUint32                mMaxEntryCount;
     // XXX what other stats do we want to keep?
 };
 

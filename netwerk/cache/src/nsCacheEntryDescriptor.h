@@ -27,15 +27,14 @@
 
 #include "nsICacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
+#include "nsIOutputStream.h"
 
 class nsCacheEntryDescriptor :
     public PRCList,
-    public nsICacheEntryDescriptor,
-    public nsITransport
-{
+    public nsICacheEntryDescriptor
+ {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSITRANSPORT
     NS_DECL_NSICACHEENTRYDESCRIPTOR
     
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
@@ -55,11 +54,103 @@ public:
      */
     nsCacheEntry * CacheEntry(void) { return mCacheEntry; }    
 
-protected:
+private:
+
+     /**
+      * transport wrapper class - 
+      *
+      * we want the transport wrapper to have the same lifetime as the descriptor,
+      * but since they each need to reference the other, we have the descriptor
+      * include the transport wrapper as a member, rather than just pointing to it,
+      * which avoids circular AddRefs.
+      */
+     class nsTransportWrapper : public nsITransport
+     {
+     public:
+         NS_DECL_ISUPPORTS_INHERITED
+         NS_DECL_NSITRANSPORT
+
+         nsTransportWrapper() : mTransport(nsnull) {}
+         virtual ~nsTransportWrapper() {}
+
+         nsresult EnsureTransportWithAccess(nsCacheAccessMode  mode);
+
+         nsCOMPtr<nsITransport>   mTransport;
+     }; // end of class nsTransportWrapper
+     friend class nsTransportWrapper;
+
+
+     /**
+      * output stream wrapper class -
+      *
+      * The output stream wrapper references the descriptor, but the descriptor doesn't
+      * need any references to the stream wrapper, so we don't need the same kind of
+      * tricks that we're using for the transport wrapper.
+      */
+     class nsOutputStreamWrapper : public nsIOutputStream {
+     private:
+         nsCacheEntryDescriptor *  mDescriptor;
+         nsCOMPtr<nsIOutputStream> mOutput;
+     public:
+         NS_DECL_ISUPPORTS
+         // NS_DECL_NSIOUTPUTSTREAM
+         NS_IMETHOD Close(void) { return mOutput->Close(); }
+         NS_IMETHOD Flush(void) { return mOutput->Flush(); }
+
+         NS_IMETHOD Write(const char * buf,
+                          PRUint32     count,
+                          PRUint32 *   result);
+
+         NS_IMETHOD WriteFrom(nsIInputStream * inStr,
+                              PRUint32         count,
+                              PRUint32 *       result);
+
+         NS_IMETHOD WriteSegments(nsReadSegmentFun reader,
+                                  void *           closure,
+                                  PRUint32         count,
+                                  PRUint32 *       result);
+
+         NS_IMETHOD GetNonBlocking(PRBool * nonBlocking)
+         { return mOutput->GetNonBlocking(nonBlocking); }
+
+         NS_IMETHOD SetNonBlocking(PRBool nonBlocking)
+         { return mOutput->SetNonBlocking(nonBlocking); }
+
+         NS_IMETHOD GetObserver(nsIOutputStreamObserver ** observer)
+         { return mOutput->GetObserver(observer); }
+
+         NS_IMETHOD SetObserver(nsIOutputStreamObserver * observer)
+         { return mOutput->SetObserver(observer); }
+
+         nsOutputStreamWrapper(nsCacheEntryDescriptor * descriptor,
+                               nsIOutputStream *        output)
+             : mDescriptor(nsnull), mOutput(output)
+         {
+             NS_INIT_ISUPPORTS();
+             NS_ADDREF(mDescriptor = descriptor);
+         }
     
-    nsCacheEntry          * mCacheEntry; // we are a child of the entry
-    nsCacheAccessMode       mAccessGranted;
-    nsCOMPtr<nsITransport>  mTransport;
+         virtual ~nsOutputStreamWrapper()
+         {
+             NS_RELEASE(mDescriptor);
+         }
+    
+         nsresult Init();
+
+
+     private:
+         nsresult OnWrite(PRUint32 count);
+     }; // end of class nsOutputStreamWrapper
+     friend class nsOutputStreamWrapper;
+
+
+ private:
+     /**
+      * nsCacheEntryDescriptor data members
+      */
+     nsCacheEntry          * mCacheEntry; // we are a child of the entry
+     nsCacheAccessMode       mAccessGranted;
+     nsTransportWrapper      mTransportWrapper;
 };
 
 

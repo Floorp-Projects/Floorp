@@ -76,6 +76,22 @@ nsCacheEntry::~nsCacheEntry()
     delete mMetaData;
 }
 
+nsresult
+nsCacheEntry::GetSecurityInfo( nsISupports ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    NS_IF_ADDREF(*result = mSecurityInfo);
+    return NS_OK;
+}
+
+
+nsresult
+nsCacheEntry::SetSecurityInfo( nsISupports *  info)
+{
+    mSecurityInfo = info;
+    return NS_OK;
+}
+
 
 nsresult
 nsCacheEntry::GetData(nsISupports **result)
@@ -197,6 +213,11 @@ nsCacheEntry::RequestAccess(nsCacheRequest * request, nsCacheAccessMode *accessG
     if (PR_CLIST_IS_EMPTY(&mDescriptorQ)) {
         // 1st descriptor for existing bound entry
         *accessGranted = request->AccessRequested();
+        if (*accessGranted & nsICache::ACCESS_WRITE) {
+            MarkInvalid();
+        } else {
+            MarkValid();
+        }
     } else {
         // nth request for existing, bound entry
         *accessGranted = request->AccessRequested() & ~nsICache::ACCESS_WRITE;

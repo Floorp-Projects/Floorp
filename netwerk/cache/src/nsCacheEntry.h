@@ -80,6 +80,9 @@ public:
     nsCacheDevice * CacheDevice(void)                        { return mCacheDevice;}
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
 
+    nsresult GetSecurityInfo( nsISupports ** result);
+    nsresult SetSecurityInfo( nsISupports *  info);
+
     nsresult GetData( nsISupports ** result);
     nsresult SetData( nsISupports *  data);
 
@@ -169,10 +172,11 @@ private:
     PRUint32               mDataSize;       // 4
     PRUint32               mMetaSize;       // 4
     nsCacheDevice *        mCacheDevice;    // 4
-    nsCOMPtr<nsISupports>  mData;           // 4
+    nsCOMPtr<nsISupports>  mSecurityInfo;
+    nsCOMPtr<nsISupports>  mData;           // 
     nsCacheMetaData *      mMetaData;       // 4
-    PRCList                mRequestQ;       // 8 = 64
-    PRCList                mDescriptorQ;    // 8 = 72
+    PRCList                mRequestQ;       // 8
+    PRCList                mDescriptorQ;    // 8
 };
 
 
