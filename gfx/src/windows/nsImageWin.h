@@ -189,7 +189,7 @@ private:
 
   /** 
    * Get an index in the palette that matches as closly as possible the passed in RGB colors
-   * @update dc - 10/29/98
+   * @update dc - 4/20/2000
    * @param aR - Red component of the color to match
    * @param aG - Green component of the color to match
    * @param aB - Blue component of the color to match
@@ -199,7 +199,7 @@ private:
 
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRBool              mIsTopToBottom;     // rows in image are top to bottom 
-  PRInt16             mNumPaletteColors;  // either 8 or 0
+  PRInt16             mNumPaletteColors;  // Number of colors in the pallete 256 
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8*            mImageBits;         // starting address of DIB bits
