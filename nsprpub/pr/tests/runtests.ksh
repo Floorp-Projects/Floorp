@@ -151,6 +151,7 @@ sel_spd
 selct_er
 selct_nm
 selct_to
+selintr
 sema
 semaerr
 semaping

@@ -129,6 +129,7 @@ CSRCS =             \
 	selct_nm.c	    \
 	selct_to.c	    \
 	select2.c  		\
+	selintr.c  		\
 	sem.c 	  		\
 	sema.c 	  		\
 	semaerr.c 		\
